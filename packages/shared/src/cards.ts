@@ -47,6 +47,8 @@ export interface OracleCard {
   power: string | null;
   toughness: string | null;
   loyalty: string | null;
+  /** Printed starting defense (Battle cards, CR 310.6) as a string; `null` otherwise. */
+  defense: string | null;
   /** Scryfall keyword list (e.g. `["Partner", "Flying"]`). */
   keywords: string[];
   /** Scryfall card layout (`normal`, `modal_dfc`, `split`, …). */

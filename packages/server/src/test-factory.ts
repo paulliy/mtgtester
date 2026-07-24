@@ -22,6 +22,7 @@ export function makeOracleCard(over: Partial<OracleCard> & { name: string }): Or
     power: null,
     toughness: null,
     loyalty: null,
+    defense: null,
     keywords: [],
     layout: 'normal',
     commanderLegality: 'legal',

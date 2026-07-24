@@ -1,24 +1,57 @@
-import type { EngineStep, DecisionResponse } from '@mtg/shared';
-
 /**
- * `@mtg/engine` — the deterministic, authoritative MTG rules engine. Pure TypeScript:
- * no I/O, no network, no framework, and no knowledge that an AI exists (brief §5). It
- * exposes decision points and receives decisions.
+ * `@mtg/engine` — the deterministic, authoritative MTG Commander rules engine (brief §5).
+ * Pure TypeScript: no I/O, no network, no framework, no knowledge that an AI exists. It
+ * exposes decision points (`advance`) and receives decisions (`submit`).
  *
- * This is a Phase 0 scaffold. The real engine — game state, seeded RNG, turn structure,
- * priority/APNAP, the stack, state-based actions, combat, Commander rules, mulligans, and
- * legal-action generation — is built in Phase 2 (brief §14.1), directory-by-directory
- * under `src/` (state, turn, stack, sba, combat, actions, commander, rng, log).
+ * Phase 2: full turn structure, priority/APNAP, the stack, state-based actions, combat,
+ * Commander rules, London mulligans, and legal-action generation — driven by scripted or
+ * random decision providers. AI integration arrives in Phase 3 behind the same contract.
  */
-export const ENGINE_VERSION = '0.0.0-phase0';
 
-/**
- * The driver shape the orchestrator will loop over (brief §5.1):
- * `advance()` → if `decision`, get a choice → `submit()` → repeat.
- *
- * TODO(phase-2): implement a concrete engine that satisfies this interface.
- */
-export interface EngineDriver {
-  advance(): EngineStep;
-  submit(decision: DecisionResponse): void;
-}
+export const ENGINE_VERSION = '0.2.0-phase2';
+
+// The driver.
+export { Engine } from './engine';
+export type { EngineDriver } from './engine';
+
+// Game construction.
+export { createGame } from './state/game';
+export type {
+  EnginePlayerConfig,
+  GameConfig,
+  GameContext,
+  DebugEntry,
+  EngineState,
+} from './state/types';
+
+// Card interpretation (the server will reuse this to pre-flight decks in Phase 3).
+export { interpretCard } from './cards/interpret';
+export type {
+  CardDefinition,
+  Ability,
+  Effect,
+  TargetSpec,
+  TargetKind,
+  KeywordAbility,
+  TriggerEvent,
+} from './cards/definition';
+export { IMPLEMENTED_KEYWORDS } from './cards/definition';
+
+// Errors.
+export { IllegalDecisionError, EngineUsageError, UnmodeledCardError } from './errors';
+
+// Seeded PRNG (exposed for providers/tests; the engine owns its own instance).
+export { Prng } from './rng/prng';
+
+// The anti-cheat projection (brief §7.1).
+export { buildPlayerView } from './view/view';
+
+// Scripted/random decision providers and the completion driver (Phase 2 — brief §14.1).
+export {
+  RandomDecisionProvider,
+  ScriptedDecisionProvider,
+  choose,
+  chooseFirst,
+  runToCompletion,
+} from './providers/providers';
+export type { DecisionProvider, ScriptedStep } from './providers/providers';

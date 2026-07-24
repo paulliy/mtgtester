@@ -23,6 +23,7 @@ export interface RawScryfallCard {
   power?: string;
   toughness?: string;
   loyalty?: string;
+  defense?: string;
   keywords?: string[];
   legalities?: Record<string, string>;
   /** Present on multi-face cards (transform, MDFC, split, adventure). */
@@ -39,6 +40,7 @@ interface RawCardFace {
   power?: string;
   toughness?: string;
   loyalty?: string;
+  defense?: string;
   colors?: string[];
 }
 
@@ -124,6 +126,7 @@ export function toOracleCard(card: RawScryfallCard): OracleCard | null {
     power: card.power ?? card.card_faces?.[0]?.power ?? null,
     toughness: card.toughness ?? card.card_faces?.[0]?.toughness ?? null,
     loyalty: card.loyalty ?? card.card_faces?.[0]?.loyalty ?? null,
+    defense: card.defense ?? card.card_faces?.[0]?.defense ?? null,
     keywords: card.keywords ?? [],
     layout: card.layout ?? 'normal',
     commanderLegality: toCommanderLegality(card.legalities),
