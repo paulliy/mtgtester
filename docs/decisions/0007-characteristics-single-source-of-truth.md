@@ -39,9 +39,10 @@ Measured against our engine, three concrete problems:
    `queries.ts`). A permanent that loses its abilities still triggered, a granted trigger was
    inexpressible, and `manaOverride` existed only as a bolt-on for Blood Moon.
 3. **Types and subtypes bypass it inconsistently.** `isCreaturePermanent` routed through the
-   layers, but the Planeswalker, Battle, Aura and Equipment state-based actions and the
-   land-play/flash legality checks read printed values. An animated permanent got the right
-   combat math and the wrong SBA.
+   layers, but the Planeswalker, Battle, Aura and Equipment state-based actions and the legend
+   rule read printed values. An animated permanent got the right combat math and the wrong SBA.
+   (The initial survey also flagged the land-play and flash legality checks; on inspection
+   those read cards outside the battlefield and are correct — see section 3.)
 
 ## Decision
 
