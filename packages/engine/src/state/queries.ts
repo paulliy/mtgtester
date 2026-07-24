@@ -1,11 +1,11 @@
 /**
- * Read-only state queries: definitions, effective characteristics (printed values +
- * counters + until-end-of-turn effects — the Phase 2 subset of the CR 613 layer system),
- * players in the game, and mana sources.
+ * Read-only state queries: definitions, effective characteristics (computed through the CR
+ * 613 layer engine — see `effects/continuous.ts`), players in the game, and mana sources.
  */
 
 import type { ObjectId, OracleId, PlayerId } from '@mtg/shared';
 import type { CardDefinition, KeywordAbility } from '../cards/definition';
+import { computeCharacteristics } from '../effects/continuous';
 import { UnmodeledCardError } from '../errors';
 import type { ManaSource } from '../mana/cost';
 import type { EnginePermanent, EnginePlayerState, GameContext } from './types';
@@ -33,37 +33,23 @@ export function findPermanent(ctx: GameContext, id: ObjectId): EnginePermanent |
   return ctx.state.battlefield.find((p) => p.id === id);
 }
 
+/** Current card types include Creature after the layer system (Mutavault, etc.). */
 export function isCreaturePermanent(ctx: GameContext, perm: EnginePermanent): boolean {
-  return getDefByOracleId(ctx, perm.oracleId, perm.name).types.includes('Creature');
+  return computeCharacteristics(ctx, perm).types.includes('Creature');
 }
 
-/** Effective power/toughness: printed + counters + until-EOT deltas (Phase 2 layers). */
+/** Effective power/toughness through the CR 613 layer engine. */
 export function effectivePT(
   ctx: GameContext,
   perm: EnginePermanent,
 ): { power: number; toughness: number } {
-  let power = perm.power ?? 0;
-  let toughness = perm.toughness ?? 0;
-  const plus = perm.counters['+1/+1'] ?? 0;
-  const minus = perm.counters['-1/-1'] ?? 0;
-  power += plus - minus;
-  toughness += plus - minus;
-  for (const eff of ctx.state.effects) {
-    if (eff.kind === 'ptDelta' && eff.targetCardId === perm.cardId) {
-      power += eff.power ?? 0;
-      toughness += eff.toughness ?? 0;
-    }
-  }
-  return { power, toughness };
+  const c = computeCharacteristics(ctx, perm);
+  return { power: c.power, toughness: c.toughness };
 }
 
-/** Effective keywords: definition keywords + until-EOT grants. */
+/** Effective keywords through the CR 613 layer engine (grants in layer 6). */
 export function hasKeyword(ctx: GameContext, perm: EnginePermanent, kw: KeywordAbility): boolean {
-  const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-  if (def.keywords.includes(kw)) return true;
-  return ctx.state.effects.some(
-    (eff) => eff.kind === 'grantKeyword' && eff.targetCardId === perm.cardId && eff.keyword === kw,
-  );
+  return computeCharacteristics(ctx, perm).keywords.includes(kw);
 }
 
 /** Players still in the game, in turn order starting from the active player (APNAP). */
@@ -102,19 +88,24 @@ export function controlledPermanents(ctx: GameContext, playerId: PlayerId): Engi
 export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource[] {
   const sources: ManaSource[] = [];
   for (const perm of controlledPermanents(ctx, playerId)) {
+    if (perm.tapped) continue;
     const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-    if (def.manaAbilities.length === 0 || perm.tapped) continue;
-    if (def.types.includes('Creature') && perm.summoningSick && !hasKeyword(ctx, perm, 'haste')) {
+    const chars = computeCharacteristics(ctx, perm);
+    // A layer-4 effect can override mana production (Blood Moon → a Mountain that taps for R).
+    const abilities =
+      chars.manaOverride !== null ? [{ units: chars.manaOverride }] : def.manaAbilities;
+    if (abilities.length === 0) continue;
+    if (chars.types.includes('Creature') && perm.summoningSick && !hasKeyword(ctx, perm, 'haste')) {
       continue;
     }
-    if (def.manaAbilities.length > 1) {
+    if (abilities.length > 1) {
       throw new UnmodeledCardError(
         def.name,
         ['multiple mana abilities on one permanent'],
         'choosing among mana abilities',
       );
     }
-    const ability = def.manaAbilities[0];
+    const ability = abilities[0];
     if (ability !== undefined) {
       sources.push({ cardId: perm.cardId, units: ability.units });
     }

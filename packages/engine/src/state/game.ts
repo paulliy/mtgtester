@@ -117,6 +117,7 @@ export function createGame(config: GameConfig): GameContext {
     nextObjectNum,
     nextEventSequence: 1,
     nextDecisionNum: 1,
+    nextTimestamp: 1,
     combat: null,
     seating: players.map((p) => p.id as PlayerId),
     currentTurnPlayer: players[0]?.id as PlayerId,

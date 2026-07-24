@@ -55,6 +55,7 @@ function customDef(
     entersTapped: false,
     spellAbility: null,
     triggers: [],
+    staticEffects: [],
     modeled: true,
     unmodeledReasons: [],
     ...partial,

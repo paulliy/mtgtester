@@ -168,6 +168,7 @@ export function* executeAbility(
           kind: 'ptDelta',
           power: effect.power,
           toughness: effect.toughness,
+          timestamp: ctx.state.nextTimestamp++,
         });
         const pt = effectivePT(ctx, perm);
         emit(ctx, 'pump', {
@@ -191,6 +192,7 @@ export function* executeAbility(
           targetCardId: perm.cardId,
           kind: 'grantKeyword',
           keyword: effect.keyword,
+          timestamp: ctx.state.nextTimestamp++,
         });
         emit(ctx, 'grantKeyword', {
           source: source.name,

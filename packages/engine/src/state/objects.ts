@@ -117,6 +117,7 @@ export function makePermanent(
     blockedByOrdered: [],
     damagedByDeathtouch: false,
     dealtFirstStrikeDamage: false,
+    timestamp: ctx.state.nextTimestamp++,
   };
 }
 

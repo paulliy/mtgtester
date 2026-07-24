@@ -51,6 +51,8 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   damagedByDeathtouch: boolean;
   /** Set when this permanent dealt first-strike damage this combat (CR 510.5). */
   dealtFirstStrikeDamage: boolean;
+  /** Timestamp assigned on entry (CR 613.7 ordering of continuous effects). */
+  timestamp: number;
   /**
    * 903.9a: set when a commander arrives in graveyard/exile, cleared at the next SBA
    * check after its owner has been offered the command-zone move.
@@ -101,6 +103,8 @@ export interface UntilEotEffect extends ContinuousEffect {
   power?: number;
   toughness?: number;
   keyword?: KeywordAbility;
+  /** Timestamp assigned on creation (CR 613.7 within-layer ordering). */
+  timestamp: number;
 }
 
 /** Per-combat bookkeeping, reset every combat phase. */
@@ -129,6 +133,8 @@ export interface EngineState extends GameState {
   nextObjectNum: number;
   nextEventSequence: number;
   nextDecisionNum: number;
+  /** Monotonic timestamp for continuous-effect ordering (CR 613.7). */
+  nextTimestamp: number;
   combat: CombatState | null;
   /** Fixed seating (never mutated) — `turnOrder` shrinks as players are eliminated. */
   seating: PlayerId[];

@@ -34,7 +34,12 @@ export function oracle(partial: Partial<OracleCard> & { name: string }): OracleC
     colors: partial.colors ?? [],
     colorIdentity: partial.colorIdentity ?? [],
     typeLine,
-    supertypes: partial.supertypes ?? (typeLine.startsWith('Legendary') ? ['Legendary'] : []),
+    supertypes:
+      partial.supertypes ??
+      (typeLine.split('—')[0] ?? '')
+        .trim()
+        .split(/\s+/)
+        .filter((w) => ['Basic', 'Legendary', 'Snow', 'World'].includes(w)),
     types:
       partial.types ??
       typeLine

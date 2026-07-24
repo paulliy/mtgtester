@@ -22,6 +22,8 @@ import type {
   TargetSpec,
   TriggerEvent,
 } from './ability';
+import type { StaticEffect } from './continuous-types';
+import type { Value } from './value';
 import type { CardDefinition, ManaAbilitySpec } from './definition';
 
 /** Allocates a target slot of the given kind and returns its index (ADR 0004). */
@@ -212,6 +214,40 @@ function parseTriggerLine(line: string): Ability | null {
 
 const MANA_ABILITY_RE = /^\{t\}: add ((?:\{[wubrgc]\})+)$/;
 
+/**
+ * Parse a continuous static ability or CDA into a `StaticEffect` (ADR 0005). `lower` is the
+ * lowercased, period-stripped line with `~` substituted for the card name. Returns null when
+ * unrecognized. These card-specific patterns are the seed of the authored-override registry.
+ */
+function parseStaticLine(lower: string): StaticEffect | null {
+  // Blood Moon — "Nonbasic lands are Mountains." (layer 4: set subtype, lose abilities.)
+  if (lower === 'nonbasic lands are mountains') {
+    return {
+      affects: { kind: 'nonbasicLands' },
+      op: { layer: 4, setLandSubtype: 'Mountain', loseAbilities: true },
+    };
+  }
+  // Tarmogoyf — CDA (layer 7a): power = card types in all graveyards, toughness = that + N.
+  {
+    const m = lower.match(
+      /^~['’]s power is equal to the number of card types among cards in all graveyards and its toughness is equal to that number plus (\d+)$/,
+    );
+    if (m) {
+      const types: Value = { kind: 'cardTypesInAllGraveyards' };
+      return {
+        affects: { kind: 'self' },
+        op: {
+          layer: 7,
+          sublayer: 'a',
+          power: types,
+          toughness: { kind: 'plus', of: types, n: Number(m[1]) },
+        },
+      };
+    }
+  }
+  return null;
+}
+
 /** Interpret one oracle card. Never throws — unmodeled cards are reported, not errors. */
 export function interpretCard(card: OracleCard): CardDefinition {
   const reasons: string[] = [];
@@ -230,8 +266,12 @@ export function interpretCard(card: OracleCard): CardDefinition {
     }
     return Number(value);
   };
-  const power = parseNumeric(card.power, 'power/toughness');
-  const toughness = parseNumeric(card.toughness, 'power/toughness');
+  // P/T may be non-numeric ("*") when a CDA defines it; defer the reason until after the
+  // text is parsed (checked below once we know whether a layer-7a CDA was found).
+  const parseIntOrNull = (value: string | null): number | null =>
+    value !== null && /^[+-]?\d+$/.test(value) ? Number(value) : null;
+  const power = parseIntOrNull(card.power);
+  const toughness = parseIntOrNull(card.toughness);
   const loyalty = parseNumeric(card.loyalty, 'loyalty');
   const defense = parseNumeric(card.defense, 'defense');
 
@@ -268,6 +308,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   const spellTargets: TargetSpec[] = [];
   const spellEffects: Effect[] = [];
   const triggers: Ability[] = [];
+  const staticEffects: StaticEffect[] = [];
   let entersTapped = false;
 
   const isSpell = card.types.includes('Instant') || card.types.includes('Sorcery');
@@ -309,6 +350,15 @@ export function interpretCard(card: OracleCard): CardDefinition {
         continue;
       }
     }
+    // 4b. A continuous static ability / CDA (ADR 0005). These specific patterns will move to
+    //     the authored-override registry; here they prove the layer engine end-to-end.
+    {
+      const stat = parseStaticLine(lower);
+      if (stat !== null) {
+        staticEffects.push(stat);
+        continue;
+      }
+    }
     // 5. Spell effect sentences (instants/sorceries only). Parse into a scratch slot list
     //    (based at the current spell slot count) so a partially-parsing line allocates no
     //    slots; merge only when the whole line parses.
@@ -347,6 +397,16 @@ export function interpretCard(card: OracleCard): CardDefinition {
     }
   }
 
+  // Non-numeric printed P/T ("*") is only OK if a CDA (layer 7a) defines it; otherwise it's
+  // an unmodeled characteristic-defining ability.
+  const hasCdaPT = staticEffects.some((s) => s.op.layer === 7 && s.op.sublayer === 'a');
+  if (!hasCdaPT) {
+    if (card.power !== null && power === null)
+      reasons.push(`non-numeric power/toughness "${card.power}"`);
+    if (card.toughness !== null && toughness === null)
+      reasons.push(`non-numeric power/toughness "${card.toughness}"`);
+  }
+
   // A spell that parsed to zero effects does nothing when it resolves — that is almost
   // certainly a modeling gap, not a real no-op card.
   if (isSpell && spellEffects.length === 0 && reasons.length === 0) {
@@ -375,6 +435,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         ? { kind: 'spell', targets: spellTargets, effects: spellEffects }
         : null,
     triggers,
+    staticEffects,
     modeled: reasons.length === 0,
     unmodeledReasons: reasons,
   };

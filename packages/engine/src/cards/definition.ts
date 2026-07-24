@@ -9,6 +9,11 @@
 import type { Color, OracleId } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { Ability, KeywordAbility } from './ability';
+import type { StaticEffect } from './continuous-types';
+
+export type { StaticEffect, ContinuousOp, Characteristics } from './continuous-types';
+export type { Value } from './value';
+export type { Selector } from './selector';
 
 // The card model's behavior lives in the ability IR (ADR 0004); re-export the pieces
 // consumers reference so existing imports from `definition` keep working.
@@ -54,6 +59,8 @@ export interface CardDefinition {
   spellAbility: Ability | null;
   /** Triggered abilities (kind 'triggered'). */
   triggers: Ability[];
+  /** Continuous effects this card contributes while a permanent (static abilities / CDAs). */
+  staticEffects: StaticEffect[];
   /**
    * False when any behavior of this card is beyond the Phase 2 engine. The engine halts
    * with `UnmodeledCardError` the moment such a card's behavior is needed (brief §6.3).
