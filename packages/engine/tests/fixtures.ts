@@ -47,6 +47,7 @@ export function oracle(partial: Partial<OracleCard> & { name: string }): OracleC
     power: partial.power ?? (typeLine.includes('Creature') ? '2' : null),
     toughness: partial.toughness ?? (typeLine.includes('Creature') ? '2' : null),
     loyalty: partial.loyalty ?? null,
+    defense: partial.defense ?? null,
     keywords: partial.keywords ?? [],
     layout: partial.layout ?? 'normal',
     commanderLegality: partial.commanderLegality ?? 'legal',

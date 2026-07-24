@@ -27,17 +27,13 @@ function payCost(ctx: GameContext, player: EnginePlayerState, cost: ParsedManaCo
     if (perm === undefined) throw new Error('engine bug: payment source vanished');
     perm.tapped = true;
     emit(ctx, 'tapForMana', { name: perm.name, cardId }, player.id);
-    const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-    for (const ability of def.manaAbilities) {
-      for (const unit of ability.units) {
-        // Phase 2 sources produce single-choice units (see manaSourcesFor).
-        const sym = unit[0];
-        if (sym !== undefined) player.manaPool[sym] += 1;
-      }
-    }
   }
-  // Deduct: exact colored pips, then {C}, then generic (colorless first, then WUBRG).
+  // Add exactly the mana the planner chose to produce (the SPECIFIC symbol per unit —
+  // correct for multi-color sources, where the first symbol would mispay). Surplus floats
+  // and is drained at end of step.
   const pool = player.manaPool;
+  for (const sym of ['W', 'U', 'B', 'R', 'G', 'C'] as const) pool[sym] += plan.produced[sym];
+  // Deduct: exact colored pips, then {C}, then generic (colorless first, then WUBRG).
   for (const c of ['W', 'U', 'B', 'R', 'G'] as const) {
     if (pool[c] < cost.colored[c]) throw new Error('engine bug: colored payment shortfall');
     pool[c] -= cost.colored[c];

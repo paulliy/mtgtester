@@ -102,6 +102,10 @@ export interface CardDefinition {
   /** Parsed printed P/T; null for non-creatures. `*` values are unmodeled. */
   power: number | null;
   toughness: number | null;
+  /** Parsed starting loyalty (planeswalkers, CR 306.5b); null otherwise. `*` is unmodeled. */
+  loyalty: number | null;
+  /** Parsed starting defense (battles, CR 310.6); null otherwise. `*` is unmodeled. */
+  defense: number | null;
   keywords: KeywordAbility[];
   manaAbilities: ManaAbilitySpec[];
   entersTapped: boolean;
@@ -132,7 +136,17 @@ export function isLegendary(def: CardDefinition): boolean {
   return def.supertypes.includes('Legendary');
 }
 
-/** Permanent card types castable/playable onto the battlefield in Phase 2. */
+/** Card types that resolve/play onto the battlefield as permanents (CR 110.4a). */
+export const PERMANENT_CARD_TYPES = [
+  'Creature',
+  'Artifact',
+  'Enchantment',
+  'Land',
+  'Planeswalker',
+  'Battle',
+] as const;
+
+/** Permanent card types castable/playable onto the battlefield. */
 export function isPermanentCard(def: CardDefinition): boolean {
-  return def.types.some((t) => ['Creature', 'Artifact', 'Enchantment', 'Land'].includes(t));
+  return def.types.some((t) => (PERMANENT_CARD_TYPES as readonly string[]).includes(t));
 }

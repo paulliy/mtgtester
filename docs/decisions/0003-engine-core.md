@@ -52,7 +52,11 @@ opening hands to a single winner (see Verification).
    single-choice units (all Phase 2 sources; the backtracking path degenerated on
    unpayable costs over many interchangeable lands). Floating pool mana is spent before
    tapping; pools empty at each step/phase end (CR 500.4). Permanents with **multiple**
-   mana abilities halt as unmodeled (choice-of-ability not implemented).
+   mana abilities halt as unmodeled (choice-of-ability not implemented). The plan carries
+   the **specific symbol produced by each tapped unit** (`PaymentPlan.produced`), and
+   payment adds exactly that to the pool — so a multi-color source ("Add {W} or {U}") pays
+   the color the cost needs rather than its first symbol. (Single-symbol Phase 2 sources
+   are unaffected; behavior stays byte-identical.)
 
 5. **Multi-select decisions are sequential single-pick menus.** Attack declarations (one
    decision per eligible creature: which opponent or none), blocks (per potential
@@ -102,15 +106,32 @@ opening hands to a single winner (see Verification).
 Implemented keywords: flying, reach, trample, deathtouch, lifelink, first/double strike,
 vigilance, haste, defender, indestructible, hexproof, flash. **Unmodeled (halt loudly):**
 menace (needs block-set constraint validation), ward, protection, {X}/hybrid/Phyrexian/snow
-costs, modal spells, planeswalker cards as casts, auras/equipment as casts, non-mana
-activated abilities, multi-choice mana abilities ("Add {G} or {W}"), non-`normal` layouts
-(DFC/split/adventure), `*` power/toughness. Each halts with a named reason rather than
-misplaying; they form the ordered backlog for early Phase 3 / follow-up work, sized by how
-often real decks hit them.
+costs, modal spells, auras/equipment as casts, non-mana activated abilities (including
+planeswalker loyalty abilities), multi-choice mana abilities ("Add {G} or {W}") as _card
+text_, non-`normal` layouts (DFC/split/adventure), `*` power/toughness. Each halts with a
+named reason rather than misplaying; they form the ordered backlog for early Phase 3 /
+follow-up work, sized by how often real decks hit them.
+
+## Post-review follow-ups (2026-07-24)
+
+A rules review flagged two latent traps; both are now fixed:
+
+- **Planeswalkers and battles are permanent card types.** Structural handling is complete:
+  the interpreter accepts both types and requires a readable starting loyalty/defense; such
+  a spell resolves **onto the battlefield** (was: graveyard) under its caster, entering with
+  its printed loyalty/defense counters (CR 306.5b / 310.6); and it leaves via the matching
+  SBA when that reaches zero (CR 704.5i / 704.5s). Their _abilities_ (loyalty abilities;
+  attacking/defending a battle) remain unmodeled — and every real planeswalker/battle is
+  double-faced, so real cards still halt — but a single-faced or fixture-injected one is now
+  handled correctly instead of being tucked to the graveyard on resolution.
+- **Payment consistency** — see decision 4: the payment planner now returns the exact mana
+  it chose (`produced`), and `payCost` adds that rather than each source's first symbol, so
+  a future multi-color source can never mispay.
 
 ## Verification
 
-- `typecheck` / `lint` / `test` green — 114 tests (77 new engine tests + Phase 0/1).
+- `typecheck` / `lint` / `test` green — 122 tests (incl. planeswalker/battle enter-and-die,
+  and multi-color payment `produced` correctness).
 - §12 scenario coverage: stack LIFO; counterspell; fizzle on illegal target; the
   Giant-Growth-during-blocks §5.4 worked example end to end; APNAP with four players
   (incl. caster-retains-priority and zero-response auto-pass); simultaneous triggers for

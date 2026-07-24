@@ -84,11 +84,18 @@ export interface ManaSource {
   units: ManaUnit[];
 }
 
-interface PaymentPlan {
+export interface PaymentPlan {
   /** Card ids of the sources to tap, in a deterministic order. */
   tapCardIds: string[];
   /** Mana drawn from the floating pool, by symbol. */
   fromPool: ManaPool;
+  /**
+   * Mana added to the pool by tapping `tapCardIds` — the SPECIFIC symbol chosen for each
+   * produced unit (for multi-symbol sources, the choice that pays the cost). Callers must
+   * add exactly this to the pool; re-deriving it from a source's first symbol mispays a
+   * multi-color source (e.g. a {W}-or-{U} land used to pay {U}).
+   */
+  produced: ManaPool;
 }
 
 /**
@@ -145,7 +152,7 @@ export function planPayment(
   //    all-or-nothing (tapping produces all its units; surplus floats and is then
   //    drained at end of step, which is fine).
   const need = remaining;
-  if (totalPips(need) === 0) return { tapCardIds: [], fromPool };
+  if (totalPips(need) === 0) return { tapCardIds: [], fromPool, produced: emptyPool() };
 
   // Fast path: every unit of every source is single-choice (true for all Phase 2
   // sources — basics, Sol Ring-alikes). Payment is then plain arithmetic: exact-color
@@ -158,8 +165,11 @@ export function planPayment(
 
   // Backtracking over sources: for each source decide tap / don't tap; for each unit of
   // a tapped source decide which symbol it produces and which pip it covers (or floats).
-  // Source counts are small (≤ dozens of lands), and we prune on total production.
+  // Source counts are small (≤ dozens of lands), and we prune on total production. The
+  // `produced` accumulator records the symbol actually chosen for each unit of every tapped
+  // source (increments are undone on backtrack), so callers add exactly what was chosen.
   const chosen: string[] = [];
+  const produced = emptyPool();
 
   const solve = (srcIdx: number, need2: ParsedManaCost): boolean => {
     if (totalPips(need2) === 0) return true;
@@ -172,7 +182,8 @@ export function planPayment(
 
     const src = sources[srcIdx] as ManaSource;
 
-    // Option A: tap this source. Assign each unit to a pip (or let it float).
+    // Option A: tap this source. Assign each unit to a pip (or let it float). A tapped
+    // source produces ALL its units, so each unit adds a symbol to `produced`.
     const assignUnits = (unitIdx: number, needNow: ParsedManaCost): boolean => {
       if (unitIdx >= src.units.length) {
         return solve(srcIdx + 1, needNow);
@@ -183,21 +194,32 @@ export function planPayment(
         if (sym !== 'C' && needNow.colored[sym] > 0) {
           const next = { ...needNow, colored: { ...needNow.colored } };
           next.colored[sym] -= 1;
+          produced[sym] += 1;
           if (assignUnits(unitIdx + 1, next)) return true;
+          produced[sym] -= 1;
         }
         if (sym === 'C' && needNow.colorless > 0) {
           const next = { ...needNow, colored: { ...needNow.colored } };
           next.colorless -= 1;
+          produced.C += 1;
           if (assignUnits(unitIdx + 1, next)) return true;
+          produced.C -= 1;
         }
         if (needNow.generic > 0) {
           const next = { ...needNow, colored: { ...needNow.colored } };
           next.generic -= 1;
+          produced[sym] += 1;
           if (assignUnits(unitIdx + 1, next)) return true;
+          produced[sym] -= 1;
         }
       }
-      // Let this unit float (produce surplus).
-      return assignUnits(unitIdx + 1, needNow);
+      // Let this unit float (produce surplus): it still yields mana — count its first
+      // symbol so `produced` matches what tapping actually adds to the pool.
+      const floatSym = unit[0] as Color | 'C';
+      produced[floatSym] += 1;
+      if (assignUnits(unitIdx + 1, needNow)) return true;
+      produced[floatSym] -= 1;
+      return false;
     };
 
     chosen.push(src.cardId);
@@ -209,7 +231,7 @@ export function planPayment(
   };
 
   if (!solve(0, need)) return null;
-  return { tapCardIds: chosen, fromPool };
+  return { tapCardIds: chosen, fromPool, produced };
 }
 
 /**
@@ -282,9 +304,15 @@ function planSingleChoice(
   }
   if (genericLeft > 0) return null;
 
-  // Preserve the caller-supplied (battlefield) order for determinism.
-  const tapCardIds = prods.filter((p) => tapped.has(p)).map((p) => p.source.cardId);
-  return { tapCardIds, fromPool };
+  // Preserve the caller-supplied (battlefield) order for determinism. A tapped source
+  // produces all its units; `produced` is the sum of every tapped source's output.
+  const tappedProds = prods.filter((p) => tapped.has(p));
+  const produced = emptyPool();
+  for (const p of tappedProds) {
+    for (const sym of ['W', 'U', 'B', 'R', 'G', 'C'] as const) produced[sym] += p.counts[sym];
+  }
+  const tapCardIds = tappedProds.map((p) => p.source.cardId);
+  return { tapCardIds, fromPool, produced };
 }
 
 /** True iff `cost` is payable from `pool` + `sources`. */

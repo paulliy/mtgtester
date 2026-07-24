@@ -96,6 +96,10 @@ export function makePermanent(
   controllerId: PlayerId,
 ): EnginePermanent {
   const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+  // Planeswalkers/battles enter with their printed loyalty/defense (CR 306.5b, 310.6).
+  const counters: Record<string, number> = {};
+  if (def.types.includes('Planeswalker') && def.loyalty !== null) counters['loyalty'] = def.loyalty;
+  if (def.types.includes('Battle') && def.defense !== null) counters['defense'] = def.defense;
   return {
     ...reincarnate(ctx, obj, 'battlefield'),
     zone: 'battlefield',
@@ -104,7 +108,7 @@ export function makePermanent(
     power: def.power,
     toughness: def.toughness,
     damageMarked: 0,
-    counters: {},
+    counters,
     statuses: [],
     summoningSick: true,
     attachedTo: null,

@@ -200,24 +200,45 @@ export function interpretCard(card: OracleCard): CardDefinition {
     reasons.push(`unsupported mana cost symbols: ${costResult.unsupportedSymbols.join(' ')}`);
   }
 
-  const parsePT = (value: string | null): number | null => {
+  const parseNumeric = (value: string | null, label: string): number | null => {
     if (value === null) return null;
     if (!/^[+-]?\d+$/.test(value)) {
-      reasons.push(`non-numeric power/toughness "${value}"`);
+      reasons.push(`non-numeric ${label} "${value}"`);
       return null;
     }
     return Number(value);
   };
-  const power = parsePT(card.power);
-  const toughness = parsePT(card.toughness);
+  const power = parseNumeric(card.power, 'power/toughness');
+  const toughness = parseNumeric(card.toughness, 'power/toughness');
+  const loyalty = parseNumeric(card.loyalty, 'loyalty');
+  const defense = parseNumeric(card.defense, 'defense');
 
   if (card.layout !== 'normal') {
     reasons.push(`unsupported layout "${card.layout}"`);
   }
+  const KNOWN_TYPES = [
+    'Creature',
+    'Artifact',
+    'Enchantment',
+    'Land',
+    'Instant',
+    'Sorcery',
+    'Planeswalker',
+    'Battle',
+  ];
   for (const t of card.types) {
-    if (!['Creature', 'Artifact', 'Enchantment', 'Land', 'Instant', 'Sorcery'].includes(t)) {
+    if (!KNOWN_TYPES.includes(t)) {
       reasons.push(`unsupported card type "${t}"`);
     }
+  }
+  // A planeswalker/battle must know its starting loyalty/defense to enter correctly
+  // (CR 306.5b / 310.6). Real cards of these types are double-faced and already unmodeled;
+  // this guards a single-faced or fixture-injected one from entering at 0 and dying.
+  if (card.types.includes('Planeswalker') && loyalty === null) {
+    reasons.push('planeswalker with no readable starting loyalty');
+  }
+  if (card.types.includes('Battle') && defense === null) {
+    reasons.push('battle with no readable starting defense');
   }
 
   const keywords: KeywordAbility[] = [];
@@ -312,6 +333,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
     hasUnsupportedCost: costResult.unsupportedSymbols.length > 0,
     power,
     toughness,
+    loyalty,
+    defense,
     keywords,
     manaAbilities,
     entersTapped,

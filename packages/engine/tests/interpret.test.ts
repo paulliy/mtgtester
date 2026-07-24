@@ -116,6 +116,71 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(def.hasUnsupportedCost).toBe(true);
   });
 
+  it('models planeswalkers/battles with a readable starting loyalty/defense', () => {
+    const pw = interpretCard(
+      oracle({
+        name: 'Test Beacon',
+        typeLine: 'Legendary Planeswalker — Beacon',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+        loyalty: '4',
+      }),
+    );
+    expect(pw.modeled).toBe(true);
+    expect(pw.types).toContain('Planeswalker');
+    expect(pw.loyalty).toBe(4);
+
+    const bat = interpretCard(
+      oracle({
+        name: 'Test Siege',
+        typeLine: 'Battle — Siege',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+        defense: '3',
+      }),
+    );
+    expect(bat.modeled).toBe(true);
+    expect(bat.types).toContain('Battle');
+    expect(bat.defense).toBe(3);
+  });
+
+  it('halts a planeswalker/battle missing its loyalty/defense, or with ability text', () => {
+    const noLoyalty = interpretCard(
+      oracle({
+        name: 'Loyaltyless',
+        typeLine: 'Planeswalker — Test',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+      }),
+    );
+    expect(noLoyalty.modeled).toBe(false);
+    expect(noLoyalty.unmodeledReasons.join()).toContain('starting loyalty');
+
+    const noDefense = interpretCard(
+      oracle({ name: 'Defenseless', typeLine: 'Battle — Siege', power: null, toughness: null }),
+    );
+    expect(noDefense.modeled).toBe(false);
+    expect(noDefense.unmodeledReasons.join()).toContain('starting defense');
+
+    // Real planeswalkers carry loyalty abilities, which are activated abilities we don't
+    // model — so they still halt, on the ability text.
+    const realWalker = interpretCard(
+      oracle({
+        name: 'Real Walker',
+        typeLine: 'Legendary Planeswalker — Test',
+        manaCost: '{2}{U}',
+        power: null,
+        toughness: null,
+        loyalty: '3',
+        oracleText: '[+1]: Draw a card.',
+      }),
+    );
+    expect(realWalker.modeled).toBe(false);
+  });
+
   it('marks a spell with uninterpretable effects as unmodeled', () => {
     const def = interpretCard(
       oracle({

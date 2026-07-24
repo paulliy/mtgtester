@@ -48,6 +48,8 @@ function customDef(
     hasUnsupportedCost: false,
     power: null,
     toughness: null,
+    loyalty: null,
+    defense: null,
     keywords: [],
     manaAbilities: [],
     entersTapped: false,

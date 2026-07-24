@@ -5,7 +5,7 @@
  */
 
 import type { GameGen } from '../decisions';
-import { effectTargetKind } from '../cards/definition';
+import { effectTargetKind, isPermanentCard } from '../cards/definition';
 import { isTargetStillLegal, resolveEffects } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import { moveObject } from '../state/objects';
@@ -81,7 +81,9 @@ function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): GameGen<v
   const card = spell.card;
   if (card === null) return;
   const def = getDefByOracleId(ctx, card.oracleId, card.name);
-  if (def.types.some((t) => ['Creature', 'Artifact', 'Enchantment'].includes(t))) {
+  // Permanent spells (creatures, artifacts, enchantments, planeswalkers, battles) enter
+  // the battlefield under their caster; instants/sorceries head to the graveyard (CR 608.3).
+  if (isPermanentCard(def)) {
     yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: spell.controllerId });
   } else {
     yield* moveObject(ctx, card, { zone: 'graveyard' });

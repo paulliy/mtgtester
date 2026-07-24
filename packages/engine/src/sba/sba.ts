@@ -159,6 +159,15 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
       return true;
     }
 
+    // Battle with zero defense (CR 704.5s). Enters with printed defense; when it hits 0
+    // its controller puts it into its owner's graveyard.
+    if (def.types.includes('Battle') && (perm.counters['defense'] ?? 0) <= 0) {
+      debug(ctx, 'sba', `${perm.name} has 0 defense — to graveyard`);
+      emit(ctx, 'sbaBattleDies', { name: perm.name });
+      yield* moveObject(ctx, perm, { zone: 'graveyard' });
+      return true;
+    }
+
     // Aura attached to nothing/illegally (CR 704.5m). Auras enter Phase 2 only via test
     // fixtures, but the SBA is real.
     if (def.subtypes.includes('Aura')) {
