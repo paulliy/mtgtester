@@ -21,11 +21,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "tsc --build",
-    "dev:web": "bun run --cwd apps/web dev"
+    "dev:web": "bun run --cwd apps/web dev",
+    "decks": "bun run packages/server/src/cli/import-decks.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@playwright/test": "^1.49.0",
+    "@types/bun": "^1.3.14",
     "@types/node": "^22.10.0",
     "eslint": "^9.17.0",
     "prettier": "^3.4.0",

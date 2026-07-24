@@ -1,0 +1,95 @@
+/**
+ * The in-memory oracle-card index used to resolve decklist names (brief §8.2). Built once from
+ * the Scryfall bulk file at import time; games never read the bulk file (§3) — they read the
+ * SQLite card cache that resolution populates.
+ *
+ * Resolution is deliberately conservative: strict key first (apostrophes + case), then a loose
+ * key (diacritics, punctuation, front-face) *only when it is unambiguous*. On any miss we report
+ * the name and never guess (§8.2 step 2).
+ */
+
+import { readFileSync } from 'node:fs';
+import type { OracleCard } from '@mtg/shared';
+import { looseKey, strictKey } from './normalize';
+import { toOracleCard, type RawScryfallCard } from './scryfall';
+
+export interface OracleIndex {
+  /** Total resolvable cards indexed. */
+  readonly size: number;
+  /** Resolve one name, or `null` if it does not resolve unambiguously. */
+  resolve(name: string): OracleCard | null;
+  /** Look up a card by its oracle id (used to rehydrate a snapshot's card list). */
+  getByOracleId(oracleId: string): OracleCard | null;
+}
+
+/**
+ * Build an index from already-parsed raw cards. Pure and synchronous so it can be unit-tested
+ * with a handful of fixtures instead of the 180 MB file.
+ */
+export function buildOracleIndex(rawCards: RawScryfallCard[]): OracleIndex {
+  const byOracleId = new Map<string, OracleCard>();
+  const byStrict = new Map<string, OracleCard>();
+  const byLoose = new Map<string, OracleCard | null>(); // null marks an ambiguous loose key
+
+  const addStrict = (key: string, card: OracleCard): void => {
+    // Prefer the full-name mapping; don't let a front-face alias overwrite an exact name.
+    if (!byStrict.has(key)) byStrict.set(key, card);
+  };
+  const addLoose = (key: string, card: OracleCard): void => {
+    if (!byLoose.has(key)) byLoose.set(key, card);
+    else if (byLoose.get(key) !== card) byLoose.set(key, null); // collision → ambiguous
+  };
+
+  for (const raw of rawCards) {
+    const card = toOracleCard(raw);
+    if (!card) continue;
+    if (byOracleId.has(card.oracleId)) continue; // oracle-cards is one-per-id; keep the first
+    byOracleId.set(card.oracleId, card);
+
+    addStrict(strictKey(card.name), card);
+    addLoose(looseKey(card.name), card);
+
+    // Index the front face of a `A // B` card so a front-only name still resolves.
+    if (card.name.includes('//')) {
+      const front = card.name.split('//')[0]?.trim();
+      if (front) {
+        addStrict(strictKey(front), card);
+        addLoose(looseKey(front), card);
+      }
+    }
+  }
+
+  return {
+    size: byOracleId.size,
+    resolve(name: string): OracleCard | null {
+      const strict = byStrict.get(strictKey(name));
+      if (strict) return strict;
+      const loose = byLoose.get(looseKey(name));
+      return loose ?? null; // `null` (ambiguous) and `undefined` (miss) both mean "unresolved"
+    },
+    getByOracleId(oracleId: string): OracleCard | null {
+      return byOracleId.get(oracleId) ?? null;
+    },
+  };
+}
+
+/**
+ * Load and index the Scryfall bulk file. Reads the whole file once (acceptable for a one-time
+ * import; games use the cache). Throws a clear error if the file is missing so the operator
+ * knows to run the download in `data/README.md`.
+ */
+export function loadOracleIndexFromFile(path: string): OracleIndex {
+  let text: string;
+  try {
+    text = readFileSync(path, 'utf8');
+  } catch {
+    throw new Error(
+      `Scryfall bulk data not found at "${path}". Download it first — see data/README.md.`,
+    );
+  }
+  const parsed: unknown = JSON.parse(text);
+  if (!Array.isArray(parsed)) {
+    throw new Error(`Expected a JSON array of cards in "${path}", got ${typeof parsed}.`);
+  }
+  return buildOracleIndex(parsed as RawScryfallCard[]);
+}

@@ -9,6 +9,8 @@
 export { ALL_COLORS } from './mana';
 export { PHASES, STEPS, ZONES, DECISION_TYPES, LOSS_REASONS } from './enums';
 export { PERMANENT_STATUSES } from './objects';
+export { COMMANDER_LEGALITIES } from './cards';
+export { DECK_SOURCE_TYPES, VALIDATION_CODES } from './decks';
 export { SERVER_TO_CLIENT_TYPES, CLIENT_TO_SERVER_TYPES } from './protocol';
 
 // --- Identifier types ---
@@ -31,6 +33,24 @@ export type {
 export type { PlayerState, GameState, GameResult } from './state';
 export type { ContinuousEffect } from './effects';
 export type { GameEvent } from './events';
+
+// --- Card data (deck pipeline + engine card cache) ---
+export type { OracleCard, CommanderLegality } from './cards';
+
+// --- Deck pipeline (import → resolve → validate → snapshot) ---
+export type {
+  DeckSourceType,
+  ParsedDeckEntry,
+  ParsedDeck,
+  ResolvedDeckEntry,
+  ResolvedDeck,
+  ResolutionResult,
+  ValidationCode,
+  ValidationIssue,
+  ValidationResult,
+  DeckCardEntry,
+  DeckSnapshot,
+} from './decks';
 
 // --- Engine decision contract ---
 export type {

@@ -6,7 +6,8 @@ until you've read it. (The brief and this file historically referenced
 `docs/project-brief.md`; the real filename is the link above. See
 [docs/decisions/0001-foundations.md](docs/decisions/0001-foundations.md).)
 
-**Current phase: Phase 0 — Foundations — COMPLETE, awaiting approval to begin Phase 1.**
+**Current phase: Phase 1 — Deck pipeline — implementation complete; awaiting the four demo
+deck URLs for the live-import demonstration and phase-boundary approval.**
 
 ## Model preference
 
@@ -40,6 +41,10 @@ bun run typecheck   # tsc --build across all packages (full strict)
 bun run lint        # eslint (flat config)
 bun run test        # vitest
 bun run dev:web     # Vite dev server (stub until Phase 4)
+
+# Phase 1 deck pipeline (import → resolve → validate → snapshot):
+bun run decks <deckUrlOrFile> [more...]   # Moxfield/Archidekt URL or plaintext file
+bun run decks --no-save <...>             # validate only, skip SQLite
 ```
 
 ## Reference data
@@ -65,3 +70,8 @@ bun run dev:web     # Vite dev server (stub until Phase 4)
   Vitest + Playwright stub; shared types transcribed from the brief; reference docs fetched;
   Scryfall bulk cached. `typecheck` / `lint` / `test` green.
   See [docs/decisions/0001-foundations.md](docs/decisions/0001-foundations.md).
+- **Phase 1 — Deck pipeline** (implementation complete): Moxfield/Archidekt live adapters +
+  plaintext paste behind a `DeckSource` interface; Scryfall oracle-name resolution (strict then
+  unambiguous-loose, never guesses); full §8.3 validation reporting _every_ problem; immutable
+  snapshotting into `bun:sqlite` with a per-deck card cache; the `bun run decks` CLI. 37 tests
+  green. See [docs/decisions/0002-deck-pipeline.md](docs/decisions/0002-deck-pipeline.md).
