@@ -299,7 +299,7 @@ function* placePendingTriggers(ctx: GameContext): GameGen<boolean> {
             'Multiple of your abilities triggered simultaneously. Choose which to put on the stack next (the last one placed resolves first).',
           options: mine.map((t) => ({
             type: 'placeTrigger',
-            description: `${t.sourceName}: ${t.spec.description}`,
+            description: `${t.sourceName}: ${t.ability.description ?? ''}`,
           })),
         };
         pick = outcome.index;
@@ -315,27 +315,22 @@ function* placePendingTriggers(ctx: GameContext): GameGen<boolean> {
 function pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): void {
   const s = ctx.state;
   const id = `o-${s.nextObjectNum++}` as ObjectId;
+  const description = trigger.ability.description ?? trigger.sourceName;
   s.stack.push({
     id,
     sourceId: trigger.sourceCardId,
     controllerId: trigger.controllerId,
     kind: 'triggeredAbility',
-    description: `${trigger.sourceName} — ${trigger.spec.description}`,
+    description: `${trigger.sourceName} — ${description}`,
     targets: [],
     card: null,
-    effects: trigger.spec.effects,
-    triggerSpec: trigger.spec,
+    ability: trigger.ability,
     sourceOracleId: trigger.sourceOracleId,
     sourceCardId: trigger.sourceCardId,
     isCommanderCast: false,
   });
-  emit(
-    ctx,
-    'triggerOnStack',
-    { source: trigger.sourceName, description: trigger.spec.description },
-    trigger.controllerId,
-  );
-  debug(ctx, 'stack', `trigger on stack: ${trigger.sourceName} — ${trigger.spec.description}`);
+  emit(ctx, 'triggerOnStack', { source: trigger.sourceName, description }, trigger.controllerId);
+  debug(ctx, 'stack', `trigger on stack: ${trigger.sourceName} — ${description}`);
 }
 
 /**

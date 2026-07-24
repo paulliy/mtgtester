@@ -8,78 +8,19 @@
 
 import type { Color, OracleId } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
+import type { Ability, KeywordAbility } from './ability';
 
-/** CR 702 keywords with real engine implementations in Phase 2 (brief §6.1). */
-export const IMPLEMENTED_KEYWORDS = [
-  'flying',
-  'reach',
-  'trample',
-  'deathtouch',
-  'lifelink',
-  'first strike',
-  'double strike',
-  'vigilance',
-  'haste',
-  'defender',
-  'indestructible',
-  'hexproof',
-  'flash',
-] as const;
-export type KeywordAbility = (typeof IMPLEMENTED_KEYWORDS)[number];
-
-/** What a targeted effect may target. Options are computed at cast time. */
-export type TargetKind = 'creature' | 'anyTarget' | 'spell';
-
-/**
- * One mechanical effect. Targeted effects consume target slots in order of appearance;
- * trigger effects are restricted to targetless kinds so trigger announcement never needs
- * a target decision in Phase 2.
- */
-export type EffectSpec =
-  | { kind: 'pump'; power: number; toughness: number } // target creature, until end of turn
-  | { kind: 'grantKeyword'; keyword: KeywordAbility } // target creature, until end of turn
-  | { kind: 'damageTarget'; amount: number; targetKind: 'creature' | 'anyTarget' }
-  | { kind: 'destroyTarget' } // target creature
-  | { kind: 'exileTarget' } // target creature
-  | { kind: 'counterTarget' } // target spell
-  | { kind: 'draw'; count: number } // controller draws
-  | { kind: 'gainLife'; amount: number } // controller gains
-  | { kind: 'eachOpponentLosesLife'; amount: number }
-  | { kind: 'eachOpponentDamage'; amount: number }; // damage from source to each opponent
-
-/** The target slot an `EffectSpec` requires, or null for targetless effects. */
-export function effectTargetKind(effect: EffectSpec): TargetKind | null {
-  switch (effect.kind) {
-    case 'pump':
-    case 'grantKeyword':
-      return 'creature';
-    case 'damageTarget':
-      return effect.targetKind;
-    case 'destroyTarget':
-    case 'exileTarget':
-      return 'creature';
-    case 'counterTarget':
-      return 'spell';
-    default:
-      return null;
-  }
-}
-
-/** Events a Phase 2 triggered ability can listen for. */
-export type TriggerEvent =
-  | 'etbSelf' // "When ~ enters the battlefield, …"
-  | 'diesSelf' // "When ~ dies, …"
-  | 'upkeepYours' // "At the beginning of your upkeep, …"
-  | 'upkeepEach'; // "At the beginning of each upkeep, …" (controller executes each upkeep)
-
-export interface TriggerSpec {
-  event: TriggerEvent;
-  /** "you may …" — a yes/no AI decision on resolution (brief §5.6 optional triggers). */
-  optional: boolean;
-  /** Targetless effects only (Phase 2 restriction). */
-  effects: EffectSpec[];
-  description: string;
-}
+// The card model's behavior lives in the ability IR (ADR 0004); re-export the pieces
+// consumers reference so existing imports from `definition` keep working.
+export { IMPLEMENTED_KEYWORDS } from './ability';
+export type {
+  Ability,
+  Effect,
+  KeywordAbility,
+  TargetKind,
+  TargetSpec,
+  TriggerEvent,
+} from './ability';
 
 /** A mana ability: "{T}: Add …". Never uses the stack (CR 605). */
 export interface ManaAbilitySpec {
@@ -109,9 +50,10 @@ export interface CardDefinition {
   keywords: KeywordAbility[];
   manaAbilities: ManaAbilitySpec[];
   entersTapped: boolean;
-  /** For instants/sorceries: the resolved effects, in order. */
-  spellEffects: EffectSpec[];
-  triggers: TriggerSpec[];
+  /** For instants/sorceries: the spell's ability (kind 'spell'), or null. */
+  spellAbility: Ability | null;
+  /** Triggered abilities (kind 'triggered'). */
+  triggers: Ability[];
   /**
    * False when any behavior of this card is beyond the Phase 2 engine. The engine halts
    * with `UnmodeledCardError` the moment such a card's behavior is needed (brief §6.3).

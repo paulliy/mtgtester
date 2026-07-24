@@ -13,14 +13,19 @@
 import type { OracleCard } from '@mtg/shared';
 import { parseManaCost } from '../mana/cost';
 import type { ManaUnit } from '../mana/cost';
+import { IMPLEMENTED_KEYWORDS } from './ability';
 import type {
-  CardDefinition,
-  EffectSpec,
+  Ability,
+  Effect,
   KeywordAbility,
-  ManaAbilitySpec,
-  TriggerSpec,
-} from './definition';
-import { IMPLEMENTED_KEYWORDS, effectTargetKind } from './definition';
+  TargetKind,
+  TargetSpec,
+  TriggerEvent,
+} from './ability';
+import type { CardDefinition, ManaAbilitySpec } from './definition';
+
+/** Allocates a target slot of the given kind and returns its index (ADR 0004). */
+type SlotAllocator = (kind: TargetKind) => number;
 
 /** Basic land subtypes → intrinsic mana ability (CR 305.6). */
 const BASIC_LAND_MANA: Record<string, ManaUnit> = {
@@ -79,10 +84,11 @@ function splitSentences(line: string): string[] {
 const KEYWORD_SET = new Set<string>(IMPLEMENTED_KEYWORDS);
 
 /**
- * Parse one sentence as a spell/trigger effect. Returns null when unrecognized.
- * Sentences are matched lowercased with `~` substituted for the card's name.
+ * Parse one sentence into effect primitives (ADR 0004). Returns null when unrecognized.
+ * Targeted primitives allocate a slot via `alloc` and reference it by index. Sentences are
+ * matched lowercased with `~` substituted for the card's name.
  */
-function parseEffectSentence(sentence: string): EffectSpec[] | null {
+function parseEffectSentence(sentence: string, alloc: SlotAllocator): Effect[] | null {
   const s = sentence.toLowerCase();
 
   // "target creature gets +3/+3 until end of turn"
@@ -92,12 +98,21 @@ function parseEffectSentence(sentence: string): EffectSpec[] | null {
       /^target creature gets ([+-]\d+)\/([+-]\d+)(?: and gains ([a-z ]+))? until end of turn$/,
     );
     if (m) {
-      const effects: EffectSpec[] = [
-        { kind: 'pump', power: Number(m[1]), toughness: Number(m[2]) },
+      const effects: Effect[] = [
+        {
+          op: 'pumpUntilEot',
+          target: alloc('creature'),
+          power: Number(m[1]),
+          toughness: Number(m[2]),
+        },
       ];
       if (m[3] !== undefined) {
         if (!KEYWORD_SET.has(m[3])) return null;
-        effects.push({ kind: 'grantKeyword', keyword: m[3] as KeywordAbility });
+        effects.push({
+          op: 'grantKeywordUntilEot',
+          target: alloc('creature'),
+          keyword: m[3] as KeywordAbility,
+        });
       }
       return effects;
     }
@@ -107,7 +122,9 @@ function parseEffectSentence(sentence: string): EffectSpec[] | null {
     const m = s.match(/^target creature gains ([a-z ]+) until end of turn$/);
     if (m) {
       if (!KEYWORD_SET.has(m[1] as string)) return null;
-      return [{ kind: 'grantKeyword', keyword: m[1] as KeywordAbility }];
+      return [
+        { op: 'grantKeywordUntilEot', target: alloc('creature'), keyword: m[1] as KeywordAbility },
+      ];
     }
   }
   // "~ deals 3 damage to any target" / "… to target creature" / "… to each opponent"
@@ -116,22 +133,22 @@ function parseEffectSentence(sentence: string): EffectSpec[] | null {
     if (m) {
       const amount = parseAmount(m[1] as string);
       if (amount === null) return null;
-      if (m[2] === 'any target') return [{ kind: 'damageTarget', amount, targetKind: 'anyTarget' }];
+      if (m[2] === 'any target') return [{ op: 'dealDamage', target: alloc('anyTarget'), amount }];
       if (m[2] === 'target creature')
-        return [{ kind: 'damageTarget', amount, targetKind: 'creature' }];
-      return [{ kind: 'eachOpponentDamage', amount }];
+        return [{ op: 'dealDamage', target: alloc('creature'), amount }];
+      return [{ op: 'eachOpponentDamage', amount }];
     }
   }
-  if (s === 'destroy target creature') return [{ kind: 'destroyTarget' }];
-  if (s === 'exile target creature') return [{ kind: 'exileTarget' }];
-  if (s === 'counter target spell') return [{ kind: 'counterTarget' }];
+  if (s === 'destroy target creature') return [{ op: 'destroy', target: alloc('creature') }];
+  if (s === 'exile target creature') return [{ op: 'exile', target: alloc('creature') }];
+  if (s === 'counter target spell') return [{ op: 'counter', target: alloc('spell') }];
   // "draw a card" / "draw two cards" / "you draw a card"
   {
     const m = s.match(/^(?:you )?draw (\w+) cards?$/);
     if (m) {
       const count = parseAmount(m[1] as string);
       if (count === null) return null;
-      return [{ kind: 'draw', count }];
+      return [{ op: 'draw', count }];
     }
   }
   // "you gain 3 life"
@@ -140,7 +157,7 @@ function parseEffectSentence(sentence: string): EffectSpec[] | null {
     if (m) {
       const amount = parseAmount(m[1] as string);
       if (amount === null) return null;
-      return [{ kind: 'gainLife', amount }];
+      return [{ op: 'gainLife', amount }];
     }
   }
   // "each opponent loses 1 life"
@@ -149,7 +166,7 @@ function parseEffectSentence(sentence: string): EffectSpec[] | null {
     if (m) {
       const amount = parseAmount(m[1] as string);
       if (amount === null) return null;
-      return [{ kind: 'eachOpponentLosesLife', amount }];
+      return [{ op: 'eachOpponentLosesLife', amount }];
     }
   }
   return null;
@@ -158,8 +175,8 @@ function parseEffectSentence(sentence: string): EffectSpec[] | null {
 const TRIGGER_HEAD_RE =
   /^(when ~ enters(?: the battlefield)?|when ~ dies|at the beginning of your upkeep|at the beginning of each(?: player's)? upkeep), (.*)$/;
 
-/** Parse a full line as a triggered ability. Returns null when unrecognized. */
-function parseTriggerLine(line: string): TriggerSpec | null {
+/** Parse a full line as a triggered ability (an `Ability`). Returns null when unrecognized. */
+function parseTriggerLine(line: string): Ability | null {
   const m = line.toLowerCase().match(TRIGGER_HEAD_RE);
   if (!m) return null;
   const head = m[1] as string;
@@ -167,25 +184,30 @@ function parseTriggerLine(line: string): TriggerSpec | null {
   const optional = body.startsWith('you may ');
   if (optional) body = body.slice('you may '.length);
 
-  const effects: EffectSpec[] = [];
+  // Phase 2 restriction: trigger effects must be targetless, so announcing a trigger never
+  // needs a target decision. Any target allocation ⇒ reject.
+  const targets: TargetSpec[] = [];
+  const alloc: SlotAllocator = (kind) => {
+    targets.push({ kind });
+    return targets.length - 1;
+  };
+
+  const effects: Effect[] = [];
   for (const sentence of splitSentences(body)) {
-    const parsed = parseEffectSentence(sentence);
+    const parsed = parseEffectSentence(sentence, alloc);
     if (parsed === null) return null;
-    // Phase 2 restriction: trigger effects must be targetless, so announcing a trigger
-    // never needs a target decision.
-    if (parsed.some((e) => effectTargetKind(e) !== null)) return null;
     effects.push(...parsed);
   }
-  if (effects.length === 0) return null;
+  if (effects.length === 0 || targets.length > 0) return null;
 
-  const event = head.startsWith('when ~ enters')
+  const event: TriggerEvent = head.startsWith('when ~ enters')
     ? 'etbSelf'
     : head === 'when ~ dies'
       ? 'diesSelf'
       : head === 'at the beginning of your upkeep'
         ? 'upkeepYours'
         : 'upkeepEach';
-  return { event, optional, effects, description: line };
+  return { kind: 'triggered', trigger: event, optional, targets: [], effects, description: line };
 }
 
 const MANA_ABILITY_RE = /^\{t\}: add ((?:\{[wubrgc]\})+)$/;
@@ -243,8 +265,9 @@ export function interpretCard(card: OracleCard): CardDefinition {
 
   const keywords: KeywordAbility[] = [];
   const manaAbilities: ManaAbilitySpec[] = [];
-  const spellEffects: EffectSpec[] = [];
-  const triggers: TriggerSpec[] = [];
+  const spellTargets: TargetSpec[] = [];
+  const spellEffects: Effect[] = [];
+  const triggers: Ability[] = [];
   let entersTapped = false;
 
   const isSpell = card.types.includes('Instant') || card.types.includes('Sorcery');
@@ -286,13 +309,21 @@ export function interpretCard(card: OracleCard): CardDefinition {
         continue;
       }
     }
-    // 5. Spell effect sentences (instants/sorceries only).
+    // 5. Spell effect sentences (instants/sorceries only). Parse into a scratch slot list
+    //    (based at the current spell slot count) so a partially-parsing line allocates no
+    //    slots; merge only when the whole line parses.
     if (isSpell) {
       const sentences = splitSentences(line);
-      const lineEffects: EffectSpec[] = [];
+      const lineEffects: Effect[] = [];
+      const lineTargets: TargetSpec[] = [];
+      const base = spellTargets.length;
+      const lineAlloc: SlotAllocator = (kind) => {
+        lineTargets.push({ kind });
+        return base + lineTargets.length - 1;
+      };
       let allParsed = sentences.length > 0;
       for (const sentence of sentences) {
-        const parsed = parseEffectSentence(sentence);
+        const parsed = parseEffectSentence(sentence, lineAlloc);
         if (parsed === null) {
           allParsed = false;
           break;
@@ -300,6 +331,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         lineEffects.push(...parsed);
       }
       if (allParsed) {
+        spellTargets.push(...lineTargets);
         spellEffects.push(...lineEffects);
         continue;
       }
@@ -338,7 +370,10 @@ export function interpretCard(card: OracleCard): CardDefinition {
     keywords,
     manaAbilities,
     entersTapped,
-    spellEffects,
+    spellAbility:
+      isSpell && spellEffects.length > 0
+        ? { kind: 'spell', targets: spellTargets, effects: spellEffects }
+        : null,
     triggers,
     modeled: reasons.length === 0,
     unmodeledReasons: reasons,

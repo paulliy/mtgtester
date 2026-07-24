@@ -51,16 +51,17 @@ function queueUpkeepTriggers(ctx: GameContext): void {
   const apId = ctx.state.currentTurnPlayer;
   for (const perm of ctx.state.battlefield) {
     const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-    for (const spec of def.triggers) {
+    for (const ability of def.triggers) {
       const fires =
-        (spec.event === 'upkeepYours' && perm.controllerId === apId) || spec.event === 'upkeepEach';
+        (ability.trigger === 'upkeepYours' && perm.controllerId === apId) ||
+        ability.trigger === 'upkeepEach';
       if (fires) {
         ctx.state.pendingTriggers.push({
           controllerId: perm.controllerId,
           sourceCardId: perm.cardId,
           sourceOracleId: perm.oracleId,
           sourceName: perm.name,
-          spec,
+          ability,
         });
         debug(ctx, 'stack', `upkeep trigger queued: ${perm.name}`);
       }

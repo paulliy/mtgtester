@@ -5,8 +5,8 @@
  */
 
 import type { GameGen } from '../decisions';
-import { effectTargetKind, isPermanentCard } from '../cards/definition';
-import { isTargetStillLegal, resolveEffects } from '../effects/resolve';
+import { isPermanentCard } from '../cards/definition';
+import { executeAbility, isTargetStillLegal } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import { moveObject } from '../state/objects';
 import { getDefByOracleId } from '../state/queries';
@@ -21,7 +21,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   debug(ctx, 'stack', `resolving: ${top.description}`, { targets: top.targets });
 
   // Optional ("you may") triggered ability: the yes/no choice is made on resolution.
-  if (top.kind === 'triggeredAbility' && top.triggerSpec?.optional === true) {
+  if (top.kind === 'triggeredAbility' && top.ability?.optional === true) {
     const outcome = yield {
       decisionType: 'optionalTrigger',
       player: top.controllerId,
@@ -40,11 +40,9 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   // Fizzle check (CR 608.2b): if the object has targets and every one is now illegal,
   // it doesn't resolve. Spell cards go to the graveyard.
   if (top.targets.length > 0) {
-    const kinds = top.effects
-      .map((e) => effectTargetKind(e))
-      .filter((k): k is NonNullable<typeof k> => k !== null);
+    const specs = top.ability?.targets ?? [];
     const anyLegal = top.targets.some((t, i) => {
-      const kind = kinds[i];
+      const kind = specs[i]?.kind;
       return kind !== undefined && isTargetStillLegal(ctx, t, kind, top.controllerId);
     });
     if (!anyLegal) {
@@ -57,17 +55,19 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     }
   }
 
-  yield* resolveEffects(
-    ctx,
-    {
-      cardId: top.sourceCardId,
-      name: top.card?.name ?? top.description,
-      oracleId: top.sourceOracleId,
-      controllerId: top.controllerId,
-    },
-    top.effects,
-    top.targets,
-  );
+  if (top.ability !== null) {
+    yield* executeAbility(
+      ctx,
+      {
+        cardId: top.sourceCardId,
+        name: top.card?.name ?? top.description,
+        oracleId: top.sourceOracleId,
+        controllerId: top.controllerId,
+      },
+      top.ability,
+      top.targets,
+    );
+  }
 
   // Destination (CR 608.3): permanent spells enter the battlefield under their caster;
   // instants/sorceries go to their owner's graveyard.

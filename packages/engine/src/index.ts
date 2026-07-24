@@ -28,9 +28,11 @@ export type {
 export { interpretCard } from './cards/interpret';
 export type {
   CardDefinition,
-  EffectSpec,
+  Ability,
+  Effect,
+  TargetSpec,
+  TargetKind,
   KeywordAbility,
-  TriggerSpec,
   TriggerEvent,
 } from './cards/definition';
 export { IMPLEMENTED_KEYWORDS } from './cards/definition';

@@ -53,7 +53,7 @@ function customDef(
     keywords: [],
     manaAbilities: [],
     entersTapped: false,
-    spellEffects: [],
+    spellAbility: null,
     triggers: [],
     modeled: true,
     unmodeledReasons: [],

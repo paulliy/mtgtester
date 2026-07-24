@@ -10,7 +10,6 @@
 
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { CardDefinition } from '../cards/definition';
-import { effectTargetKind } from '../cards/definition';
 import type { EngineActionOption } from '../decisions';
 import { addGeneric, canPay, emptyCost } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
@@ -61,10 +60,8 @@ function computeCastTargets(
 ): { slot: number; options: ObjectId[] }[] | null {
   const slots: { slot: number; options: ObjectId[] }[] = [];
   let slotNum = 0;
-  for (const effect of def.spellEffects) {
-    const kind = effectTargetKind(effect);
-    if (kind === null) continue;
-    const options = computeTargetOptions(ctx, kind, casterId);
+  for (const spec of def.spellAbility?.targets ?? []) {
+    const options = computeTargetOptions(ctx, spec.kind, casterId);
     if (options.length === 0) return null; // can't cast without a legal target (CR 601.2c)
     slots.push({ slot: slotNum++, options });
   }
@@ -180,14 +177,12 @@ export function validateChosenTargets(
 ): ObjectId[] {
   const targets: ObjectId[] = [];
   let slotNum = 0;
-  for (const effect of def.spellEffects) {
-    const kind = effectTargetKind(effect);
-    if (kind === null) continue;
+  for (const spec of def.spellAbility?.targets ?? []) {
     const choice = chosen.get(slotNum);
     if (choice === undefined) {
       throw new Error(`missing target for slot ${slotNum} of ${def.name}`);
     }
-    const legal = computeTargetOptions(ctx, kind, casterId);
+    const legal = computeTargetOptions(ctx, spec.kind, casterId);
     if (!legal.includes(choice)) {
       throw new Error(`illegal target ${choice} for slot ${slotNum} of ${def.name}`);
     }

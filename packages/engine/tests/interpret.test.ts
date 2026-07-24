@@ -70,16 +70,21 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(def.manaAbilities).toEqual([{ units: [['W']] }]);
   });
 
-  it('parses the Phase 2 spell-effect patterns', () => {
-    expect(interpretCard(giantGrowth()).spellEffects).toEqual([
-      { kind: 'pump', power: 3, toughness: 3 },
+  it('parses the Phase 2 spell-effect patterns into the ability IR', () => {
+    const gg = interpretCard(giantGrowth());
+    expect(gg.spellAbility?.effects).toEqual([
+      { op: 'pumpUntilEot', target: 0, power: 3, toughness: 3 },
     ]);
-    expect(interpretCard(bolt()).spellEffects).toEqual([
-      { kind: 'damageTarget', amount: 3, targetKind: 'anyTarget' },
-    ]);
-    expect(interpretCard(doom()).spellEffects).toEqual([{ kind: 'destroyTarget' }]);
-    expect(interpretCard(cancel()).spellEffects).toEqual([{ kind: 'counterTarget' }]);
-    expect(interpretCard(divination()).spellEffects).toEqual([{ kind: 'draw', count: 2 }]);
+    expect(gg.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+
+    const b = interpretCard(bolt());
+    expect(b.spellAbility?.effects).toEqual([{ op: 'dealDamage', target: 0, amount: 3 }]);
+    expect(b.spellAbility?.targets).toEqual([{ kind: 'anyTarget' }]);
+
+    expect(interpretCard(doom()).spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }]);
+    expect(interpretCard(cancel()).spellAbility?.effects).toEqual([{ op: 'counter', target: 0 }]);
+    expect(interpretCard(divination()).spellAbility?.effects).toEqual([{ op: 'draw', count: 2 }]);
+    expect(interpretCard(divination()).spellAbility?.targets).toEqual([]);
   });
 
   it('parses triggers: ETB, dies, upkeep — including optional ("you may")', () => {
@@ -92,9 +97,17 @@ describe('oracle-text interpreter (brief §6)', () => {
     );
     expect(def.modeled).toBe(true);
     expect(def.triggers).toHaveLength(3);
-    expect(def.triggers[0]).toMatchObject({ event: 'etbSelf', optional: false });
-    expect(def.triggers[1]).toMatchObject({ event: 'diesSelf', optional: true });
-    expect(def.triggers[2]).toMatchObject({ event: 'upkeepYours' });
+    expect(def.triggers[0]).toMatchObject({
+      kind: 'triggered',
+      trigger: 'etbSelf',
+      optional: false,
+    });
+    expect(def.triggers[1]).toMatchObject({
+      kind: 'triggered',
+      trigger: 'diesSelf',
+      optional: true,
+    });
+    expect(def.triggers[2]).toMatchObject({ trigger: 'upkeepYours' });
   });
 
   it('marks unrecognized rules text, weird layouts, and * P/T as unmodeled', () => {

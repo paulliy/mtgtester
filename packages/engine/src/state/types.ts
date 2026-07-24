@@ -25,7 +25,7 @@ import type {
   PlayerState,
   StackObject,
 } from '@mtg/shared';
-import type { CardDefinition, EffectSpec, KeywordAbility, TriggerSpec } from '../cards/definition';
+import type { Ability, CardDefinition, KeywordAbility } from '../cards/definition';
 import type { Prng } from '../rng/prng';
 
 /** Stable physical-card identity, assigned once at game creation. */
@@ -67,10 +67,8 @@ export interface EngineCardObject extends EngineObject {
 export interface EngineStackObject extends StackObject {
   /** The card object being cast, for spells (moves to its destination on resolution). */
   card: EngineCardObject | null;
-  /** Resolved-effect list for spells and triggered abilities. */
-  effects: EffectSpec[];
-  /** For triggered abilities: the original spec (for optional "you may"). */
-  triggerSpec: TriggerSpec | null;
+  /** The ability being resolved (spell or triggered) — drives the executor and fizzle. */
+  ability: Ability | null;
   /** Oracle id of the source, for definition lookup. */
   sourceOracleId: OracleId;
   /** Stable card id of the source (commander damage / identity tracking). */
@@ -117,7 +115,7 @@ export interface PendingTrigger {
   sourceCardId: CardId;
   sourceOracleId: OracleId;
   sourceName: string;
-  spec: TriggerSpec;
+  ability: Ability;
 }
 
 export interface EngineState extends GameState {

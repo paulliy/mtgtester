@@ -4,8 +4,7 @@
  */
 
 import type { ObjectId, PlayerId } from '@mtg/shared';
-import type { EffectSpec } from '../cards/definition';
-import { effectTargetKind } from '../cards/definition';
+import type { Ability, TargetKind } from '../cards/definition';
 import type { GameGen } from '../decisions';
 import { debug, emit } from '../log/log';
 import { moveObject, playerById } from '../state/objects';
@@ -131,33 +130,36 @@ export function isTargetStillLegal(
 }
 
 /**
- * Resolve a list of effects with pre-chosen targets (one entry per targeted effect, in
- * order). Individual targets that became illegal are skipped (CR 608.2b); the all-illegal
- * "fizzle" case is handled by the caller before invoking this.
+ * Execute an ability's effects with pre-chosen targets (ADR 0004). Targeted primitives
+ * reference a slot index into `ability.targets`; a slot whose target became illegal is
+ * skipped (CR 608.2b). The all-illegal "fizzle" case is handled by the caller before this.
  */
-export function* resolveEffects(
+export function* executeAbility(
   ctx: GameContext,
   source: EffectSource,
-  effects: EffectSpec[],
+  ability: Ability,
   targets: ObjectId[],
 ): GameGen<void> {
   const controller = playerById(ctx, source.controllerId);
-  let targetIdx = 0;
 
-  for (const effect of effects) {
-    const kind = effectTargetKind(effect);
-    let targetId: ObjectId | null = null;
-    if (kind !== null) {
-      targetId = targets[targetIdx++] ?? null;
-      if (targetId === null || !isTargetStillLegal(ctx, targetId, kind, source.controllerId)) {
-        debug(ctx, 'effect', `${source.name}: target ${targetId ?? '(none)'} illegal — skipped`);
-        continue;
-      }
+  /** Resolve a target slot, or null when it is missing / no longer legal. */
+  const slot = (i: number): { id: ObjectId; kind: TargetKind } | null => {
+    const id = targets[i];
+    const spec = ability.targets[i];
+    if (id === undefined || spec === undefined) return null;
+    if (!isTargetStillLegal(ctx, id, spec.kind, source.controllerId)) {
+      debug(ctx, 'effect', `${source.name}: target ${id} illegal — skipped`);
+      return null;
     }
+    return { id, kind: spec.kind };
+  };
 
-    switch (effect.kind) {
-      case 'pump': {
-        const perm = findPermanent(ctx, targetId as ObjectId) as EnginePermanent;
+  for (const effect of ability.effects) {
+    switch (effect.op) {
+      case 'pumpUntilEot': {
+        const t = slot(effect.target);
+        if (t === null) break;
+        const perm = findPermanent(ctx, t.id) as EnginePermanent;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
@@ -178,8 +180,10 @@ export function* resolveEffects(
         });
         break;
       }
-      case 'grantKeyword': {
-        const perm = findPermanent(ctx, targetId as ObjectId) as EnginePermanent;
+      case 'grantKeywordUntilEot': {
+        const t = slot(effect.target);
+        if (t === null) break;
+        const perm = findPermanent(ctx, t.id) as EnginePermanent;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
@@ -195,8 +199,10 @@ export function* resolveEffects(
         });
         break;
       }
-      case 'damageTarget': {
-        const targetPlayer = ctx.state.players.find((p) => p.id === targetId);
+      case 'dealDamage': {
+        const t = slot(effect.target);
+        if (t === null) break;
+        const targetPlayer = ctx.state.players.find((p) => p.id === t.id);
         if (targetPlayer !== undefined) {
           dealDamageToPlayer(ctx, source, targetPlayer, effect.amount, {
             combat: false,
@@ -204,7 +210,7 @@ export function* resolveEffects(
             sourceHasLifelink: false,
           });
         } else {
-          const perm = findPermanent(ctx, targetId as ObjectId) as EnginePermanent;
+          const perm = findPermanent(ctx, t.id) as EnginePermanent;
           dealDamageToCreature(ctx, source, perm, effect.amount, {
             combat: false,
             sourceHasDeathtouch: false,
@@ -213,8 +219,10 @@ export function* resolveEffects(
         }
         break;
       }
-      case 'destroyTarget': {
-        const perm = findPermanent(ctx, targetId as ObjectId) as EnginePermanent;
+      case 'destroy': {
+        const t = slot(effect.target);
+        if (t === null) break;
+        const perm = findPermanent(ctx, t.id) as EnginePermanent;
         if (hasKeyword(ctx, perm, 'indestructible')) {
           debug(ctx, 'effect', `${perm.name} is indestructible — destroy has no effect`);
           emit(ctx, 'destroyPrevented', { target: perm.name, source: source.name });
@@ -224,14 +232,18 @@ export function* resolveEffects(
         }
         break;
       }
-      case 'exileTarget': {
-        const perm = findPermanent(ctx, targetId as ObjectId) as EnginePermanent;
+      case 'exile': {
+        const t = slot(effect.target);
+        if (t === null) break;
+        const perm = findPermanent(ctx, t.id) as EnginePermanent;
         emit(ctx, 'exile', { target: perm.name, source: source.name });
         yield* moveObject(ctx, perm, { zone: 'exile' });
         break;
       }
-      case 'counterTarget': {
-        const idx = ctx.state.stack.findIndex((s) => s.id === targetId);
+      case 'counter': {
+        const t = slot(effect.target);
+        if (t === null) break;
+        const idx = ctx.state.stack.findIndex((s) => s.id === t.id);
         const countered = ctx.state.stack[idx];
         if (countered !== undefined) {
           ctx.state.stack.splice(idx, 1);
