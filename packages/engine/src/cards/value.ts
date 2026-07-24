@@ -25,6 +25,21 @@ const CARD_TYPES = [
   'Sorcery',
 ] as const;
 
+/**
+ * Does evaluating this read game state outside the permanent itself? Used by the layer cache
+ * to decide whether graveyard contents belong in its key (ADR 0007).
+ */
+export function isDynamicValue(value: Value): boolean {
+  switch (value.kind) {
+    case 'const':
+      return false;
+    case 'plus':
+      return isDynamicValue(value.of);
+    case 'cardTypesInAllGraveyards':
+      return true;
+  }
+}
+
 export function evaluateValue(ctx: GameContext, value: Value): number {
   switch (value.kind) {
     case 'const':

@@ -43,6 +43,11 @@ can influence another's characteristics, and only the queried permanent is compu
 whole-battlefield pass, and with it all dependency analysis, engages exactly when something in
 play could make it matter. Suite runtime is back to its pre-change 4s.
 
+> **Superseded by [ADR 0007](./0007-characteristics-single-source-of-truth.md).** This fast path
+> protected the test suite, not real decks: it switches off the moment any anthem, lord, or
+> Blood Moon is on the board. Measured, a four-static board cost 17× the fast path. ADR 0007
+> replaces it with a digest-keyed cache and removes the fast path entirely.
+
 ### 2. Dependency detected empirically, not by static analysis
 
 CR 613.8a asks whether applying Y first would change X's existence, what X applies to, or what

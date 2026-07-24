@@ -34,9 +34,10 @@
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
 import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
-import { evaluateValue } from '../cards/value';
+import { evaluateValue, isDynamicValue } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
+import { digestOf, getCached, setCached } from './layer-cache';
 
 /** Basic-land subtype → intrinsic mana ability (CR 305.6), for Blood Moon's mana override. */
 const BASIC_LAND_MANA: Record<string, ManaUnit> = {
@@ -218,12 +219,25 @@ function dependsOn(
   return fingerprint(ctx, trial, effect) !== before;
 }
 
-/** Apply one layer/sublayer's effects in CR 613.8 dependency order, then 613.7 timestamp. */
-function applyGroup(ctx: GameContext, work: WorkMap, group: LayerEffect[]): void {
+/**
+ * Apply one layer/sublayer's effects in CR 613.8 dependency order, then 613.7 timestamp.
+ *
+ * `dependencyPossible` mirrors Forge's `CONTINUOUS_LAYERS_WITH_DEPENDENCY`: some layers are
+ * excluded because no effect in them can change another's existence, affected set, or
+ * magnitude. Sublayer 7d (pump) is ours — probing there is pure cost.
+ */
+function applyGroup(
+  ctx: GameContext,
+  work: WorkMap,
+  group: LayerEffect[],
+  dependencyPossible = true,
+): void {
   // One effect cannot depend on anything; skip the analysis entirely (the common case).
   if (group.length === 0) return;
-  if (group.length === 1) {
-    applyOne(ctx, work, group[0] as LayerEffect);
+  if (group.length === 1 || !dependencyPossible) {
+    for (const effect of [...group].sort((a, b) => a.timestamp - b.timestamp)) {
+      applyOne(ctx, work, effect);
+    }
     return;
   }
 
@@ -282,8 +296,21 @@ function applyCounters(work: WorkMap): void {
   }
 }
 
+/** Did any effect in play read state beyond the permanent itself (for the cache key)? */
+function readsGameState(effects: LayerEffect[]): boolean {
+  return effects.some(
+    (e) =>
+      e.op.layer === 7 &&
+      e.op.sublayer !== 'd' &&
+      (isDynamicValue(e.op.power) || isDynamicValue(e.op.toughness)),
+  );
+}
+
 /** Run the full layer pass over `perms` as the candidate set. */
-function runLayers(ctx: GameContext, perms: EnginePermanent[]): Map<string, Characteristics> {
+function runLayers(
+  ctx: GameContext,
+  perms: EnginePermanent[],
+): { map: Map<string, Characteristics>; usedGraveyards: boolean } {
   const work: WorkMap = new Map();
   for (const perm of perms) {
     const def = ctx.defs.get(perm.oracleId);
@@ -305,6 +332,7 @@ function runLayers(ctx: GameContext, perms: EnginePermanent[]): Map<string, Char
   }
 
   const effects = gatherEffects(ctx);
+  const usedGraveyards = readsGameState(effects);
   const group = (key: string): LayerEffect[] => effects.filter((e) => groupOf(e.op) === key);
 
   applyGroup(ctx, work, group('4'));
@@ -313,49 +341,69 @@ function runLayers(ctx: GameContext, perms: EnginePermanent[]): Map<string, Char
   applyGroup(ctx, work, group('7a'));
   applyGroup(ctx, work, group('7b'));
   applyCounters(work); // 7c
-  applyGroup(ctx, work, group('7d'));
+  applyGroup(ctx, work, group('7d'), false);
 
   const out = new Map<string, Characteristics>();
   for (const [cardId, entry] of work) out.set(cardId, entry.chars);
-  return out;
+  return { map: out, usedGraveyards };
 }
 
+/** Set `MTG_VERIFY_LAYER_CACHE=1` to recompute on every cache hit and assert they agree. */
+const VERIFY_CACHE = process.env['MTG_VERIFY_LAYER_CACHE'] === '1';
+
 /**
- * Compute current characteristics for every permanent on the battlefield in one layered pass.
- * `extra` includes a permanent that has left (or not yet joined) the battlefield, so it can
- * still be measured; it is a candidate for continuous effects but contributes none.
+ * Compute current characteristics for every permanent on the battlefield in one layered pass,
+ * memoized on a digest of the state the pass reads (ADR 0007). `extra` includes a permanent
+ * that has left (or not yet joined) the battlefield, so it can still be measured; it is a
+ * candidate for continuous effects but contributes none.
  */
 export function computeAllCharacteristics(
   ctx: GameContext,
   extra?: EnginePermanent,
 ): Map<string, Characteristics> {
+  const extraCardId = extra?.cardId ?? null;
+  const cached = getCached(ctx);
+  // On the first pass nothing is known, so include graveyards; thereafter follow what the
+  // last pass actually read.
+  const includeGraveyards = cached?.usedGraveyards ?? true;
+  const digest = digestOf(ctx, extra, includeGraveyards);
+
+  if (cached !== undefined && cached.digest === digest && cached.extraCardId === extraCardId) {
+    if (!VERIFY_CACHE) return cached.map;
+    const fresh = runLayers(ctx, permsFor(ctx, extra));
+    const a = JSON.stringify([...cached.map.entries()]);
+    const b = JSON.stringify([...fresh.map.entries()]);
+    if (a !== b) {
+      throw new Error(
+        `engine bug: stale layer cache — digest collided or an input is missing from it.\ncached: ${a}\nfresh:  ${b}`,
+      );
+    }
+    return cached.map;
+  }
+
+  const { map, usedGraveyards } = runLayers(ctx, permsFor(ctx, extra));
+  setCached(ctx, {
+    // Re-digest with the flag this pass actually established, so the next comparison matches.
+    digest: usedGraveyards === includeGraveyards ? digest : digestOf(ctx, extra, usedGraveyards),
+    usedGraveyards,
+    extraCardId,
+    map,
+  });
+  return map;
+}
+
+function permsFor(ctx: GameContext, extra: EnginePermanent | undefined): EnginePermanent[] {
   const perms = [...ctx.state.battlefield];
   if (extra !== undefined && !perms.some((p) => p.cardId === extra.cardId)) perms.push(extra);
-  return runLayers(ctx, perms);
+  return perms;
 }
 
-/** Does any permanent in play contribute a static ability / CDA? */
-function anyStaticAbilityInPlay(ctx: GameContext): boolean {
-  for (const perm of ctx.state.battlefield) {
-    const def = ctx.defs.get(perm.oracleId);
-    if (def !== undefined && def.staticEffects.length > 0) return true;
-  }
-  return false;
-}
-
-/**
- * Compute one permanent's current characteristics through the layer system.
- *
- * Fast path: with no static ability anywhere in play, the only continuous effects are
- * until-end-of-turn ones, and each is pinned to a single object — so no permanent can
- * influence another's characteristics and only `perm` itself needs computing. This keeps the
- * per-call cost independent of battlefield size for the ordinary case; the whole-battlefield
- * pass (and with it dependency analysis) engages exactly when something in play could matter.
- */
+/** Compute one permanent's current characteristics through the layer system. */
 export function computeCharacteristics(ctx: GameContext, perm: EnginePermanent): Characteristics {
-  const all = anyStaticAbilityInPlay(ctx)
-    ? computeAllCharacteristics(ctx, perm)
-    : runLayers(ctx, [perm]);
+  // Only pass `extra` when the permanent is genuinely off the battlefield — otherwise every
+  // query for a different permanent would be a distinct cache key and never hit.
+  const onBattlefield = ctx.state.battlefield.some((p) => p.cardId === perm.cardId);
+  const all = computeAllCharacteristics(ctx, onBattlefield ? undefined : perm);
   const chars = all.get(perm.cardId);
   if (chars === undefined) throw new Error(`engine bug: no characteristics for ${perm.name}`);
   return chars;
