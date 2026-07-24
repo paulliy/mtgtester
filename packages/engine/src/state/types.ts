@@ -98,7 +98,13 @@ export interface EnginePlayerState extends PlayerState {
 
 /** An until-end-of-turn continuous effect (the Phase 2 subset of CR 613). */
 export interface UntilEotEffect extends ContinuousEffect {
-  targetCardId: CardId;
+  /**
+   * The permanents this effect applies to, fixed when the spell or ability that created it
+   * resolved (CR 611.2c) and never recomputed. A single-target pump is the one-element case;
+   * "creatures you control get +3/+3" snapshots the set that existed at resolution, so a
+   * creature entering afterwards is not pumped and one that leaves and returns is not either.
+   */
+  targetCardIds: CardId[];
   kind: 'ptDelta' | 'grantKeyword';
   power?: number;
   toughness?: number;

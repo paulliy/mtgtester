@@ -28,7 +28,7 @@ const ALLOWED: Record<string, string> = {
   'cards/value.ts': 'counts card types of cards in graveyards, not permanents',
 };
 
-const PATTERN = /\bdef\.(types|subtypes|supertypes|keywords|triggers|manaAbilities)\b/;
+const PATTERN = /\bdef\.(types|subtypes|supertypes|colors|keywords|triggers|manaAbilities)\b/;
 
 function sourceFiles(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {

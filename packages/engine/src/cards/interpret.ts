@@ -10,7 +10,7 @@
  * and the reasons form the backlog of mechanics to implement next.
  */
 
-import type { OracleCard } from '@mtg/shared';
+import type { Color, OracleCard } from '@mtg/shared';
 import { parseManaCost } from '../mana/cost';
 import type { ManaUnit } from '../mana/cost';
 import { IMPLEMENTED_KEYWORDS } from './ability';
@@ -23,6 +23,17 @@ import type {
   TriggerEvent,
 } from './ability';
 import type { StaticEffect } from './continuous-types';
+import type { Selector } from './selector';
+import {
+  NONBASIC_LANDS,
+  OPPONENTS,
+  OTHER,
+  YOURS,
+  allOf,
+  ofColor,
+  ofSubtype,
+  ofType,
+} from './selector';
 import type { Value } from './value';
 import type { CardDefinition, ManaAbilitySpec } from './definition';
 
@@ -85,12 +96,123 @@ function splitSentences(line: string): string[] {
 
 const KEYWORD_SET = new Set<string>(IMPLEMENTED_KEYWORDS);
 
+/** "flying and vigilance" / "flying, first strike" → keywords, or null if any is unimplemented. */
+function parseKeywordList(text: string): KeywordAbility[] | null {
+  const parts = text
+    .split(/,| and /)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+  if (parts.length === 0 || parts.some((p) => !KEYWORD_SET.has(p))) return null;
+  return parts as KeywordAbility[];
+}
+
+/** Color adjectives a subject can carry ("Black creatures get +1/+1" — Bad Moon). */
+const COLOR_WORDS: Record<string, Color> = {
+  white: 'W',
+  blue: 'U',
+  black: 'B',
+  red: 'R',
+  green: 'G',
+};
+
+/** Plural card types that can head a subject noun phrase. */
+const CARD_TYPE_PLURALS: Record<string, string> = {
+  creatures: 'Creature',
+  artifacts: 'Artifact',
+  enchantments: 'Enchantment',
+  lands: 'Land',
+  planeswalkers: 'Planeswalker',
+};
+
+/** English plural forms a creature type could be written as: "Elf" → …/elfs/elves. */
+function pluralForms(word: string): string[] {
+  const w = word.toLowerCase();
+  const forms = [w, `${w}s`, `${w}es`];
+  if (w.endsWith('fe')) forms.push(`${w.slice(0, -2)}ves`);
+  else if (w.endsWith('f')) forms.push(`${w.slice(0, -1)}ves`);
+  if (w.endsWith('y')) forms.push(`${w.slice(0, -1)}ies`);
+  return forms;
+}
+
+/**
+ * Resolve a tribe as rules text writes it ("elves") back to the printed subtype ("Elf").
+ *
+ * The vocabulary is the card's OWN subtypes — the engine has no subtype dictionary, and
+ * guessing a singular from a plural silently produces a selector that matches nothing, which
+ * is exactly the misplay-in-silence the brief forbids. A lord is virtually always a member of
+ * the tribe it pumps ("Other Elves you control" is printed on an Elf), so this resolves the
+ * real cases; anything else returns null and leaves the card unmodeled, which halts loudly.
+ */
+function resolveSubtype(word: string, card: OracleCard): string | null {
+  return card.subtypes.find((s) => pluralForms(s).includes(word)) ?? null;
+}
+
+/**
+ * Parse the subject of an anthem — "other Elves you control", "creatures your opponents
+ * control" — into a `Selector`. Returns null when any part is unrecognized.
+ */
+function parseSubject(phrase: string, card: OracleCard): Selector | null {
+  const parts: Selector[] = [];
+  let noun = phrase;
+
+  if (noun.startsWith('other ')) {
+    parts.push(OTHER);
+    noun = noun.slice('other '.length);
+  }
+  for (const [suffix, who] of [
+    [' you control', YOURS],
+    [' your opponents control', OPPONENTS],
+  ] as const) {
+    if (noun.endsWith(suffix)) {
+      parts.push(who);
+      noun = noun.slice(0, -suffix.length);
+      break;
+    }
+  }
+
+  const colorMatch = noun.match(/^(white|blue|black|red|green) (.+)$/);
+  if (colorMatch !== null) {
+    parts.push(ofColor(COLOR_WORDS[colorMatch[1] as string] as Color));
+    noun = colorMatch[2] as string;
+  }
+
+  const bareType = CARD_TYPE_PLURALS[noun];
+  if (bareType !== undefined) {
+    parts.push(ofType(bareType));
+  } else if (noun !== 'permanents') {
+    // Either a bare tribe ("elves") or a tribe plus a card type ("elf creatures").
+    const m = noun.match(/^(.+) (creatures|artifacts|enchantments|lands|planeswalkers)$/);
+    const subtype = resolveSubtype(m?.[1] ?? noun, card);
+    if (subtype === null) return null;
+    parts.push(ofSubtype(subtype));
+    if (m !== null) parts.push(ofType(CARD_TYPE_PLURALS[m[2] as string] as string));
+  }
+
+  if (parts.length === 0) return null;
+  return parts.length === 1 ? (parts[0] as Selector) : allOf(...parts);
+}
+
+/**
+ * "<subject> get +X/+X [and have <keywords>]" / "<subject> have <keywords>" — the anthem and
+ * lord shape. The same grammar with "gain" instead of "have" and a trailing "until end of
+ * turn" is the spell form (Overrun); see `MASS_UNTIL_EOT_RE`.
+ */
+const ANTHEM_RE = /^(.+?) (?:get ([+-]\d+)\/([+-]\d+)(?: and have (.+))?|have (.+))$/;
+
+/** The spell form of `ANTHEM_RE` — "Creatures you control get +3/+3 … until end of turn". */
+const MASS_UNTIL_EOT_RE =
+  /^(.+?) (?:get ([+-]\d+)\/([+-]\d+)(?: and gain (.+?))?|gain (.+?)) until end of turn$/;
+
 /**
  * Parse one sentence into effect primitives (ADR 0004). Returns null when unrecognized.
  * Targeted primitives allocate a slot via `alloc` and reference it by index. Sentences are
  * matched lowercased with `~` substituted for the card's name.
  */
-function parseEffectSentence(sentence: string, alloc: SlotAllocator): Effect[] | null {
+function parseEffectSentence(
+  sentence: string,
+  alloc: SlotAllocator,
+  card: OracleCard,
+): Effect[] | null {
   const s = sentence.toLowerCase();
 
   // "target creature gets +3/+3 until end of turn"
@@ -127,6 +249,33 @@ function parseEffectSentence(sentence: string, alloc: SlotAllocator): Effect[] |
       return [
         { op: 'grantKeywordUntilEot', target: alloc('creature'), keyword: m[1] as KeywordAbility },
       ];
+    }
+  }
+  // "Creatures you control get +3/+3 and gain trample until end of turn" (Overrun). Untargeted:
+  // the subject is a selector, evaluated once at resolution (CR 611.2c).
+  {
+    const m = s.match(MASS_UNTIL_EOT_RE);
+    if (m) {
+      const selector = parseSubject(m[1] as string, card);
+      if (selector === null) return null;
+      const effects: Effect[] = [];
+      if (m[2] !== undefined) {
+        effects.push({
+          op: 'pumpEachUntilEot',
+          selector,
+          power: Number(m[2]),
+          toughness: Number(m[3]),
+        });
+      }
+      const keywordText = m[4] ?? m[5];
+      if (keywordText !== undefined) {
+        const keywords = parseKeywordList(keywordText);
+        if (keywords === null) return null;
+        for (const keyword of keywords) {
+          effects.push({ op: 'grantKeywordEachUntilEot', selector, keyword });
+        }
+      }
+      if (effects.length > 0) return effects;
     }
   }
   // "~ deals 3 damage to any target" / "… to target creature" / "… to each opponent"
@@ -178,7 +327,7 @@ const TRIGGER_HEAD_RE =
   /^(when ~ enters(?: the battlefield)?|when ~ dies|at the beginning of your upkeep|at the beginning of each(?: player's)? upkeep), (.*)$/;
 
 /** Parse a full line as a triggered ability (an `Ability`). Returns null when unrecognized. */
-function parseTriggerLine(line: string): Ability | null {
+function parseTriggerLine(line: string, card: OracleCard): Ability | null {
   const m = line.toLowerCase().match(TRIGGER_HEAD_RE);
   if (!m) return null;
   const head = m[1] as string;
@@ -196,7 +345,7 @@ function parseTriggerLine(line: string): Ability | null {
 
   const effects: Effect[] = [];
   for (const sentence of splitSentences(body)) {
-    const parsed = parseEffectSentence(sentence, alloc);
+    const parsed = parseEffectSentence(sentence, alloc, card);
     if (parsed === null) return null;
     effects.push(...parsed);
   }
@@ -215,17 +364,20 @@ function parseTriggerLine(line: string): Ability | null {
 const MANA_ABILITY_RE = /^\{t\}: add ((?:\{[wubrgc]\})+)$/;
 
 /**
- * Parse a continuous static ability or CDA into a `StaticEffect` (ADR 0005). `lower` is the
+ * Parse a continuous static ability or CDA into `StaticEffect`s (ADR 0005). `lower` is the
  * lowercased, period-stripped line with `~` substituted for the card name. Returns null when
- * unrecognized. These card-specific patterns are the seed of the authored-override registry.
+ * unrecognized. One line can yield several effects: "Other Elves you control get +1/+1 and
+ * have haste" is one layer-7d effect and one layer-6 effect over the same subject.
  */
-function parseStaticLine(lower: string): StaticEffect | null {
+function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null {
   // Blood Moon — "Nonbasic lands are Mountains." (layer 4: set subtype, lose abilities.)
   if (lower === 'nonbasic lands are mountains') {
-    return {
-      affects: { kind: 'nonbasicLands' },
-      op: { layer: 4, setLandSubtype: 'Mountain', loseAbilities: true },
-    };
+    return [
+      {
+        affects: NONBASIC_LANDS,
+        op: { layer: 4, setLandSubtype: 'Mountain', loseAbilities: true },
+      },
+    ];
   }
   // Tarmogoyf — CDA (layer 7a): power = card types in all graveyards, toughness = that + N.
   {
@@ -234,15 +386,40 @@ function parseStaticLine(lower: string): StaticEffect | null {
     );
     if (m) {
       const types: Value = { kind: 'cardTypesInAllGraveyards' };
-      return {
-        affects: { kind: 'self' },
-        op: {
-          layer: 7,
-          sublayer: 'a',
-          power: types,
-          toughness: { kind: 'plus', of: types, n: Number(m[1]) },
+      return [
+        {
+          affects: { kind: 'self' },
+          op: {
+            layer: 7,
+            sublayer: 'a',
+            power: types,
+            toughness: { kind: 'plus', of: types, n: Number(m[1]) },
+          },
         },
-      };
+      ];
+    }
+  }
+  // Anthems and lords — "Creatures you control get +1/+1", "Other Elves you control have haste".
+  {
+    const m = lower.match(ANTHEM_RE);
+    if (m) {
+      const affects = parseSubject(m[1] as string, card);
+      if (affects === null) return null;
+      const out: StaticEffect[] = [];
+      if (m[2] !== undefined) {
+        out.push({
+          affects,
+          op: { layer: 7, sublayer: 'd', power: Number(m[2]), toughness: Number(m[3]) },
+        });
+      }
+      const keywordText = m[4] ?? m[5];
+      if (keywordText !== undefined) {
+        const keywords = parseKeywordList(keywordText);
+        if (keywords === null) return null;
+        for (const keyword of keywords)
+          out.push({ affects, op: { layer: 6, addKeyword: keyword } });
+      }
+      if (out.length > 0) return out;
     }
   }
   return null;
@@ -344,7 +521,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
     }
     // 4. A triggered ability.
     {
-      const trigger = parseTriggerLine(line);
+      const trigger = parseTriggerLine(line, card);
       if (trigger !== null) {
         triggers.push(trigger);
         continue;
@@ -353,9 +530,9 @@ export function interpretCard(card: OracleCard): CardDefinition {
     // 4b. A continuous static ability / CDA (ADR 0005). These specific patterns will move to
     //     the authored-override registry; here they prove the layer engine end-to-end.
     {
-      const stat = parseStaticLine(lower);
+      const stat = parseStaticLine(lower, card);
       if (stat !== null) {
-        staticEffects.push(stat);
+        staticEffects.push(...stat);
         continue;
       }
     }
@@ -373,7 +550,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
       };
       let allParsed = sentences.length > 0;
       for (const sentence of sentences) {
-        const parsed = parseEffectSentence(sentence, lineAlloc);
+        const parsed = parseEffectSentence(sentence, lineAlloc, card);
         if (parsed === null) {
           allParsed = false;
           break;

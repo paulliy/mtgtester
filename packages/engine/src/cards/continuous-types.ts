@@ -4,6 +4,7 @@
  * engine that applies them lives in `effects/continuous.ts`.
  */
 
+import type { Color } from '@mtg/shared';
 import type { Ability, KeywordAbility, ManaAbilitySpec } from './ability';
 import type { Selector } from './selector';
 import type { Value } from './value';
@@ -59,6 +60,12 @@ export interface Characteristics {
   supertypes: string[];
   types: string[];
   subtypes: string[];
+  /**
+   * Colors (CR 105). Layer 5 (color-changing) is NOT implemented, so this is always the
+   * printed color — but selectors read it from here, so layer 5 lands in exactly one place
+   * when it arrives instead of chasing down printed-color reads (the ADR 0007 problem).
+   */
+  colors: Color[];
   keywords: KeywordAbility[];
   /** Triggered abilities the permanent currently has (CR 603). */
   triggers: Ability[];

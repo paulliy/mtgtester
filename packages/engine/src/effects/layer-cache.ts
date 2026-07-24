@@ -18,6 +18,12 @@
  * cache records whether the last pass actually used one. If it did not, graveyards are left out
  * of the key — which is sound, because a change no effect reads cannot change the answer, and
  * a Tarmogoyf *entering* changes the battlefield portion of the digest and forces a miss.
+ *
+ * `MTG_VERIFY_LAYER_CACHE=1` recomputes on every hit and throws if the results disagree. It is
+ * ~20× slower, so it needs a raised timeout or the whole-game tests fail as timeouts rather
+ * than staleness:
+ *
+ *     MTG_VERIFY_LAYER_CACHE=1 npx vitest run --testTimeout=300000
  */
 
 import type { EnginePermanent, GameContext } from '../state/types';
@@ -93,6 +99,9 @@ export function digestOf(
   for (const perm of s.battlefield) {
     h = mix(h, perm.timestamp);
     h = mix(h, hashString(perm.oracleId));
+    // Selectors read the controller ("creatures you control"). Nothing reassigns this today —
+    // layer 2 is not implemented — but folding it keeps the digest honest when it arrives.
+    h = mix(h, hashString(perm.controllerId));
     h = mix(h, (perm.power ?? 0) + 0x10000);
     h = mix(h, (perm.toughness ?? 0) + 0x10000);
     h = foldCounters(h, perm);

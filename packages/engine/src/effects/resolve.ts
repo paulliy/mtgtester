@@ -4,8 +4,9 @@
  */
 
 import type { ObjectId, PlayerId } from '@mtg/shared';
-import type { Ability, TargetKind } from '../cards/definition';
+import type { Ability, Selector, TargetKind } from '../cards/definition';
 import type { GameGen } from '../decisions';
+import { selectPermanents } from './continuous';
 import { debug, emit } from '../log/log';
 import { moveObject, playerById } from '../state/objects';
 import {
@@ -129,6 +130,29 @@ export function isTargetStillLegal(
   return true;
 }
 
+const signed = (n: number): string => `${n >= 0 ? '+' : ''}${n}`;
+
+/**
+ * The permanents a selector-scoped until-end-of-turn effect applies to, fixed once here.
+ *
+ * CR 611.2c: a continuous effect created by a resolving spell or ability determines its set of
+ * affected objects at resolution, and that set never changes afterwards — unlike a static
+ * ability, which re-derives its set on every layer pass. A creature that enters after Overrun
+ * resolves is not pumped; one that leaves and returns comes back as a new object and is not
+ * pumped either. The engine gets this for free by storing card ids rather than the selector.
+ */
+function affectedBy(ctx: GameContext, source: EffectSource, selector: Selector): EnginePermanent[] {
+  return selectPermanents(ctx, selector, {
+    cardId: source.cardId,
+    controllerId: source.controllerId,
+  });
+}
+
+/** "Grizzly Bears, Llanowar Elves get +3/+3 until end of turn" — the locked-in set, by name. */
+function describeMassEffect(affected: EnginePermanent[], clause: string): string {
+  return `${affected.map((p) => p.name).join(', ')} ${clause} until end of turn`;
+}
+
 /**
  * Execute an ability's effects with pre-chosen targets (ADR 0004). Targeted primitives
  * reference a slot index into `ability.targets`; a slot whose target became illegal is
@@ -163,8 +187,8 @@ export function* executeAbility(
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
-          description: `${perm.name} gets ${effect.power >= 0 ? '+' : ''}${effect.power}/${effect.toughness >= 0 ? '+' : ''}${effect.toughness} until end of turn`,
-          targetCardId: perm.cardId,
+          description: `${perm.name} gets ${signed(effect.power)}/${signed(effect.toughness)} until end of turn`,
+          targetCardIds: [perm.cardId],
           kind: 'ptDelta',
           power: effect.power,
           toughness: effect.toughness,
@@ -189,7 +213,7 @@ export function* executeAbility(
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
           description: `${perm.name} gains ${effect.keyword} until end of turn`,
-          targetCardId: perm.cardId,
+          targetCardIds: [perm.cardId],
           kind: 'grantKeyword',
           keyword: effect.keyword,
           timestamp: ctx.state.nextTimestamp++,
@@ -197,6 +221,49 @@ export function* executeAbility(
         emit(ctx, 'grantKeyword', {
           source: source.name,
           target: perm.name,
+          keyword: effect.keyword,
+        });
+        break;
+      }
+      case 'pumpEachUntilEot': {
+        const affected = affectedBy(ctx, source, effect.selector);
+        const clause = `get ${signed(effect.power)}/${signed(effect.toughness)}`;
+        if (affected.length > 0) {
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: describeMassEffect(affected, clause),
+            targetCardIds: affected.map((p) => p.cardId),
+            kind: 'ptDelta',
+            power: effect.power,
+            toughness: effect.toughness,
+            timestamp: ctx.state.nextTimestamp++,
+          });
+        }
+        emit(ctx, 'pump', {
+          source: source.name,
+          targets: affected.map((p) => p.name),
+          power: effect.power,
+          toughness: effect.toughness,
+        });
+        break;
+      }
+      case 'grantKeywordEachUntilEot': {
+        const affected = affectedBy(ctx, source, effect.selector);
+        if (affected.length > 0) {
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: describeMassEffect(affected, `gain ${effect.keyword}`),
+            targetCardIds: affected.map((p) => p.cardId),
+            kind: 'grantKeyword',
+            keyword: effect.keyword,
+            timestamp: ctx.state.nextTimestamp++,
+          });
+        }
+        emit(ctx, 'grantKeyword', {
+          source: source.name,
+          targets: affected.map((p) => p.name),
           keyword: effect.keyword,
         });
         break;

@@ -33,7 +33,7 @@
 
 import type { ManaAbilitySpec } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
-import type { Selector } from '../cards/selector';
+import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import { evaluateValue, isDynamicValue } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
@@ -50,11 +50,15 @@ const BASIC_LAND_MANA: Record<string, ManaUnit> = {
   Wastes: ['C'],
 };
 
-/** What an effect applies to: a selector relative to its source, or one fixed card. */
+/**
+ * What an effect applies to. A static ability re-evaluates its selector every pass, against
+ * current characteristics. An until-end-of-turn effect from a resolved spell does NOT: CR
+ * 611.2c fixes its affected set at resolution, so it carries the resulting card ids instead.
+ */
 type Applicability =
-  | { kind: 'selector'; selector: Selector; sourceCardId: string }
-  /** An until-end-of-turn effect, pinned to the object it resolved against. */
-  | { kind: 'fixed'; cardId: string };
+  | { kind: 'selector'; selector: Selector; source: SelectorSource }
+  /** An until-end-of-turn effect, pinned to the objects it resolved against (CR 611.2c). */
+  | { kind: 'fixed'; cardIds: readonly string[] };
 
 interface LayerEffect {
   applies: Applicability;
@@ -84,7 +88,11 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
     if (def === undefined) continue;
     for (const s of def.staticEffects as StaticEffect[]) {
       out.push({
-        applies: { kind: 'selector', selector: s.affects, sourceCardId: source.cardId },
+        applies: {
+          kind: 'selector',
+          selector: s.affects,
+          source: { cardId: source.cardId, controllerId: source.controllerId },
+        },
         op: s.op,
         timestamp: source.timestamp,
       });
@@ -92,18 +100,15 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
   }
 
   for (const eff of ctx.state.effects) {
+    const applies = { kind: 'fixed', cardIds: eff.targetCardIds } as const;
     if (eff.kind === 'ptDelta') {
       out.push({
-        applies: { kind: 'fixed', cardId: eff.targetCardId },
+        applies,
         op: { layer: 7, sublayer: 'd', power: eff.power ?? 0, toughness: eff.toughness ?? 0 },
         timestamp: eff.timestamp,
       });
     } else if (eff.kind === 'grantKeyword' && eff.keyword !== undefined) {
-      out.push({
-        applies: { kind: 'fixed', cardId: eff.targetCardId },
-        op: { layer: 6, addKeyword: eff.keyword },
-        timestamp: eff.timestamp,
-      });
+      out.push({ applies, op: { layer: 6, addKeyword: eff.keyword }, timestamp: eff.timestamp });
     }
   }
 
@@ -117,21 +122,30 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
  * one layer-4 effect delete another's, so the deleted one is *dependent* and must wait.
  */
 function effectExists(work: WorkMap, effect: LayerEffect): boolean {
+  // CR 611.2c: a resolved spell's effect is independent of its source, which may be long gone.
   if (effect.applies.kind === 'fixed') return true;
-  const source = work.get(effect.applies.sourceCardId);
+  const source = work.get(effect.applies.source.cardId);
   return source !== undefined && !source.chars.loseAbilities;
 }
 
+/** The one place a `SelectorCandidate` is built, so every selector reads the same fields. */
+function candidateOf(perm: EnginePermanent, chars: Characteristics): SelectorCandidate {
+  return {
+    cardId: perm.cardId,
+    controllerId: perm.controllerId,
+    types: chars.types,
+    supertypes: chars.supertypes,
+    subtypes: chars.subtypes,
+    colors: chars.colors,
+  };
+}
+
 function affects(effect: LayerEffect, entry: Working): boolean {
-  if (effect.applies.kind === 'fixed') return entry.perm.cardId === effect.applies.cardId;
+  if (effect.applies.kind === 'fixed') return effect.applies.cardIds.includes(entry.perm.cardId);
   return selectMatches(
-    {
-      cardId: entry.perm.cardId,
-      types: entry.chars.types,
-      supertypes: entry.chars.supertypes,
-    },
+    candidateOf(entry.perm, entry.chars),
     effect.applies.selector,
-    effect.applies.sourceCardId,
+    effect.applies.source,
   );
 }
 
@@ -205,6 +219,7 @@ function cloneWork(work: WorkMap): WorkMap {
         supertypes: [...entry.chars.supertypes],
         types: [...entry.chars.types],
         subtypes: [...entry.chars.subtypes],
+        colors: [...entry.chars.colors],
         keywords: [...entry.chars.keywords],
         triggers: [...entry.chars.triggers],
         manaAbilities: [...entry.chars.manaAbilities],
@@ -235,7 +250,15 @@ function dependsOn(
  *
  * `dependencyPossible` mirrors Forge's `CONTINUOUS_LAYERS_WITH_DEPENDENCY`: some layers are
  * excluded because no effect in them can change another's existence, affected set, or
- * magnitude. Sublayer 7d (pump) is ours — probing there is pure cost.
+ * magnitude. Sublayer 7d (pump) is ours, and it stays excluded now that anthems put many
+ * effects in it: 7d ops only change power and toughness, `Selector` cannot read power or
+ * toughness (see `cards/selector.ts`), and existence turns on `loseAbilities`, which only
+ * layers 4 and 6 set. So no 7d effect can change what another 7d effect does.
+ *
+ * The justification is that reasoning, not speed: measured on a 40-creature board with eight
+ * anthems, turning the probing back on costs less than the run-to-run noise. What the
+ * exclusion buys is that the quadratic probe count cannot start mattering as boards grow,
+ * in the one sublayer most likely to accumulate effects.
  */
 function applyGroup(
   ctx: GameContext,
@@ -335,6 +358,8 @@ function runLayers(
         supertypes: [...def.supertypes],
         types: [...def.types],
         subtypes: [...def.subtypes],
+        // Layer 5 is not implemented — printed color, read from here so it has one home.
+        colors: [...def.colors],
         keywords: [...def.keywords],
         triggers: [...def.triggers],
         manaAbilities: [...def.manaAbilities],
@@ -411,6 +436,25 @@ function permsFor(ctx: GameContext, extra: EnginePermanent | undefined): EngineP
   const perms = [...ctx.state.battlefield];
   if (extra !== undefined && !perms.some((p) => p.cardId === extra.cardId)) perms.push(extra);
   return perms;
+}
+
+/**
+ * Battlefield permanents matching `selector`, judged on their CURRENT characteristics — an
+ * animated Mutavault is a creature here, and a land under Blood Moon is a Mountain.
+ *
+ * This is the "each" half of `Selector` (ADR 0005): a resolving spell uses it once to fix its
+ * affected set (CR 611.2c), where a static ability's set is re-derived every layer pass.
+ */
+export function selectPermanents(
+  ctx: GameContext,
+  selector: Selector,
+  source: SelectorSource,
+): EnginePermanent[] {
+  const all = computeAllCharacteristics(ctx);
+  return ctx.state.battlefield.filter((perm) => {
+    const chars = all.get(perm.cardId);
+    return chars !== undefined && selectMatches(candidateOf(perm, chars), selector, source);
+  });
 }
 
 /** Compute one permanent's current characteristics through the layer system. */

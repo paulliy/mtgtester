@@ -27,6 +27,7 @@ import {
 } from './fixtures';
 import { effectivePT, isCreaturePermanent, manaSourcesFor } from '../src/state/queries';
 import { computeCharacteristics } from '../src/effects/continuous';
+import { NONBASIC_LANDS, ofType } from '../src/cards/selector';
 import { UnmodeledCardError } from '../src/errors';
 
 function ctx4(): GameContext {
@@ -104,7 +105,7 @@ function urborgDef(oracleId: string): CardDefinition {
     name: 'Test Urborg',
     typeLine: 'Legendary Land',
     supertypes: ['Legendary'],
-    staticEffects: [{ affects: { kind: 'lands' }, op: { layer: 4, addSubtypes: ['Swamp'] } }],
+    staticEffects: [{ affects: ofType('Land'), op: { layer: 4, addSubtypes: ['Swamp'] } }],
   });
 }
 
@@ -115,7 +116,7 @@ function moonLandDef(oracleId: string, name: string, subtype: string): CardDefin
     name,
     staticEffects: [
       {
-        affects: { kind: 'nonbasicLands' },
+        affects: NONBASIC_LANDS,
         op: { layer: 4, setLandSubtype: subtype, loseAbilities: true },
       },
     ],
@@ -189,7 +190,7 @@ describe('CR 613 layer engine (ADR 0005)', () => {
       id: 'eff-test',
       sourceId: 'x',
       description: 'pump',
-      targetCardId: manland.cardId,
+      targetCardIds: [manland.cardId],
       kind: 'ptDelta',
       power: 3,
       toughness: 3,
@@ -265,7 +266,7 @@ describe('CR 613.8 dependency ordering (ADR 0006)', () => {
         name: 'Test Animator',
         typeLine: 'Enchantment',
         types: ['Enchantment'],
-        staticEffects: [{ affects: { kind: 'artifacts' }, op: { layer: 4, addTypes: ['Land'] } }],
+        staticEffects: [{ affects: ofType('Artifact'), op: { layer: 4, addTypes: ['Land'] } }],
       }),
     );
     spawn(

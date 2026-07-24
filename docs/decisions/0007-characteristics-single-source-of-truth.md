@@ -67,6 +67,12 @@ the battlefield portion of the digest, forcing a miss.
 `MTG_VERIFY_LAYER_CACHE=1` recomputes on every cache hit and throws if the results disagree.
 The full suite — including four complete games and the determinism runs — passes under it.
 
+> **Correction (ADR 0008).** Verify mode recomputes the whole battlefield on every query, which
+> is roughly 20× slower, so the two whole-game tests exceed vitest's default 5s per-test limit
+> and report as failures. They are timeouts, not staleness. The check must be run as
+> `MTG_VERIFY_LAYER_CACHE=1 npx vitest run --testTimeout=300000`; under that it is green, with
+> no "stale layer cache" error. The unqualified claim above was an overstatement.
+
 With the cache in place the ADR 0006 fast path is deleted: one pass serves every subsequent
 query until state changes.
 

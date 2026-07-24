@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition } from '../src/cards/definition';
+import { OTHER } from '../src/cards/selector';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { createGame } from '../src/state/game';
 import { queueTriggers } from '../src/state/objects';
@@ -46,7 +47,7 @@ function humilityDef(oracleId: string): CardDefinition {
     entersTapped: false,
     spellAbility: null,
     triggers: [],
-    staticEffects: [{ affects: { kind: 'others' }, op: { layer: 6, loseAllAbilities: true } }],
+    staticEffects: [{ affects: OTHER, op: { layer: 6, loseAllAbilities: true } }],
     modeled: true,
     unmodeledReasons: [],
   };

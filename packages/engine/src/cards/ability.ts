@@ -9,6 +9,7 @@
  */
 
 import type { ManaUnit } from '../mana/cost';
+import type { Selector } from './selector';
 
 /** A mana ability: "{T}: Add …". Never uses the stack (CR 605). */
 export interface ManaAbilitySpec {
@@ -45,10 +46,17 @@ export interface TargetSpec {
  * One atomic mechanical primitive. Targeted primitives carry `target`: the index into the
  * owning `Ability.targets` whose chosen object they act on. Untargeted primitives affect the
  * ability's controller / each opponent.
+ *
+ * The `…EachUntilEot` primitives take a `Selector` instead of a target slot — "creatures you
+ * control", not "target creature". They choose no targets and so are never announced; the
+ * selector is evaluated once, when the spell resolves, and the resulting set is then fixed
+ * (CR 611.2c).
  */
 export type Effect =
   | { op: 'pumpUntilEot'; target: number; power: number; toughness: number }
   | { op: 'grantKeywordUntilEot'; target: number; keyword: KeywordAbility }
+  | { op: 'pumpEachUntilEot'; selector: Selector; power: number; toughness: number }
+  | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
   | { op: 'dealDamage'; target: number; amount: number } // to the slot's creature or player
   | { op: 'destroy'; target: number } // target creature
   | { op: 'exile'; target: number } // target creature
