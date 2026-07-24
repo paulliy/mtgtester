@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { ALL_COLORS } from '@mtg/shared';
 import { ENGINE_VERSION } from '../src/index';
 
-// Phase 0 smoke test: proves the package builds and the workspace linkage to @mtg/shared
-// resolves. Fixture-based rules scenarios (brief §12) begin in Phase 2 under this dir.
+// Workspace smoke test: proves the package builds and the linkage to @mtg/shared
+// resolves. The real engine coverage lives in the sibling test files (brief §12).
 describe('@mtg/engine scaffold', () => {
   it('exposes a package marker', () => {
-    expect(ENGINE_VERSION).toContain('phase0');
+    expect(ENGINE_VERSION).toContain('phase2');
   });
 
   it('consumes @mtg/shared across the workspace', () => {

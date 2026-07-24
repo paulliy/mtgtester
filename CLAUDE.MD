@@ -6,8 +6,10 @@ until you've read it. (The brief and this file historically referenced
 `docs/project-brief.md`; the real filename is the link above. See
 [docs/decisions/0001-foundations.md](docs/decisions/0001-foundations.md).)
 
-**Current phase: Phase 1 — Deck pipeline — implementation complete; awaiting the four demo
-deck URLs for the live-import demonstration and phase-boundary approval.**
+**Current phase: Phase 2 — Engine core — implementation complete; awaiting phase-boundary
+approval (and review of the Phase 2 scope cuts listed in
+[docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md)). Phase 1's
+live-import demonstration against four real deck URLs is still pending user-supplied URLs.**
 
 ## Model preference
 
@@ -75,3 +77,14 @@ bun run decks --no-save <...>             # validate only, skip SQLite
   unambiguous-loose, never guesses); full §8.3 validation reporting _every_ problem; immutable
   snapshotting into `bun:sqlite` with a per-deck card cache; the `bun run decks` CLI. 37 tests
   green. See [docs/decisions/0002-deck-pipeline.md](docs/decisions/0002-deck-pipeline.md).
+- **Phase 2 — Engine core** (implementation complete): generator-driven `Engine` behind
+  `advance()`/`submit()` with forced-decision auto-resolve; identity-stable objects + stable
+  `cardId`; seeded xoshiro128\*\* PRNG; full CR 500–514 turn structure; priority/APNAP per
+  CR 117; the stack with trigger ordering, fizzling, countering; every §5.6 SBA; combat with
+  first-strike step, trample/deathtouch/lifelink, 21-commander-damage; commander tax +
+  CR 903.9a/b command-zone returns; London mulligans (free first); complete legal-action
+  generation with engine auto-payment of mana; oracle-text interpreter that halts loudly on
+  unmodeled cards (§6.3); `PlayerView` projection; scripted/random providers. Full 4-player
+  random games play to a winner; 114 tests green. Scope cuts (menace, ward, protection, {X},
+  modal, DFC, activated abilities, …) are listed for approval in
+  [docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md).
