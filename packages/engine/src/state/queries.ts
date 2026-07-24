@@ -93,7 +93,9 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
     const chars = computeCharacteristics(ctx, perm);
     // A layer-4 effect can override mana production (Blood Moon → a Mountain that taps for R).
     const abilities =
-      chars.manaOverride !== null ? [{ units: chars.manaOverride }] : def.manaAbilities;
+      chars.manaOverride !== null
+        ? chars.manaOverride.map((units) => ({ units }))
+        : def.manaAbilities;
     if (abilities.length === 0) continue;
     if (chars.types.includes('Creature') && perm.summoningSick && !hasKeyword(ctx, perm, 'haste')) {
       continue;

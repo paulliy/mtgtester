@@ -50,10 +50,11 @@ permanents, with the mana-ability consequence), and **Mutavault**'s continuous e
 
 ### Deliberately deferred (documented, not silent)
 
-- **CR 613.8 dependency reordering** (the Humility + Opalescence pretzel). This increment does
-  layer + sublayer + **timestamp** ordering (613.7), correct for the vast majority; selectors
-  are evaluated against base characteristics, so a dependency where one effect changes what
-  another applies to is not yet reordered. Next layer-system step.
+- ~~**CR 613.8 dependency reordering.** This increment does layer + sublayer + **timestamp**
+  ordering (613.7), correct for the vast majority; selectors are evaluated against base
+  characteristics, so a dependency where one effect changes what another applies to is not yet
+  reordered.~~ **Done in [ADR 0006](./0006-layer-dependency-ordering.md)** — selectors now read
+  current characteristics, and within a layer the order is dependency (613.8) then timestamp.
 - Copy (layer 1), control (2), text (3), color (5) effects; P/T switch (7e).
 
 ### Policy exclusion list (never modeled — as in every production engine)

@@ -2,32 +2,48 @@
  * `Selector` — a predicate over permanents (ADR 0005). One abstraction covers targeting,
  * "each", and the *affected set* of a continuous effect (e.g. Blood Moon's "nonbasic lands").
  *
- * Selectors are evaluated against a candidate's BASE characteristics (printed types), not its
- * layer-computed ones — so an effect never depends on another effect's output yet. Full CR
- * 613.8 dependency ordering is a documented follow-up (ADR 0005).
+ * Selectors are evaluated against a candidate's CURRENT characteristics — the working values
+ * produced by the layers applied so far (ADR 0006). That is what makes one continuous effect
+ * able to change another's affected set, and therefore what makes CR 613.8 dependency
+ * ordering meaningful. The candidate is passed as plain fields rather than `Characteristics`
+ * to keep this module free of engine imports.
  */
 
-import type { EnginePermanent, GameContext } from '../state/types';
+/** The subset of a permanent's current characteristics a selector can read. */
+export interface SelectorCandidate {
+  cardId: string;
+  types: readonly string[];
+  supertypes: readonly string[];
+}
 
 export type Selector =
+  /** The effect's own source (a CDA or self-buff). */
   | { kind: 'self' }
-  /** Nonbasic lands (Blood Moon). */
-  | { kind: 'nonbasicLands' };
+  /** Every land (Urborg, Tomb of Yawgmoth / Yavimaya, Cradle of Growth). */
+  | { kind: 'lands' }
+  /** Nonbasic lands (Blood Moon, Magus of the Moon). */
+  | { kind: 'nonbasicLands' }
+  /** Every artifact (animation effects). */
+  | { kind: 'artifacts' }
+  /** Every permanent other than the source ("each other …"). */
+  | { kind: 'others' };
 
-/** Does `candidate` match `selector`, given the effect's `source` permanent? */
+/** Does `candidate` match `selector` for an effect whose source is `sourceCardId`? */
 export function selectMatches(
-  ctx: GameContext,
-  candidate: EnginePermanent,
+  candidate: SelectorCandidate,
   selector: Selector,
-  source: EnginePermanent,
+  sourceCardId: string,
 ): boolean {
   switch (selector.kind) {
     case 'self':
-      return candidate.id === source.id;
-    case 'nonbasicLands': {
-      const def = ctx.defs.get(candidate.oracleId);
-      if (def === undefined) return false;
-      return def.types.includes('Land') && !def.supertypes.includes('Basic');
-    }
+      return candidate.cardId === sourceCardId;
+    case 'others':
+      return candidate.cardId !== sourceCardId;
+    case 'lands':
+      return candidate.types.includes('Land');
+    case 'nonbasicLands':
+      return candidate.types.includes('Land') && !candidate.supertypes.includes('Basic');
+    case 'artifacts':
+      return candidate.types.includes('Artifact');
   }
 }

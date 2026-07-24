@@ -16,9 +16,15 @@ export type ContinuousOp =
       layer: 4;
       /** Card types to add (Mutavault → Creature; kept alongside existing types). */
       addTypes?: string[];
+      /** Subtypes to add, keeping the existing ones (Urborg → "a Swamp in addition"). */
+      addSubtypes?: string[];
       /** Set the land subtype and drop other land subtypes (Blood Moon → Mountain). */
       setLandSubtype?: string;
-      /** Remove the permanent's other abilities (Blood Moon). */
+      /**
+       * Remove the abilities the affected permanent generates from its rules text (CR 305.7,
+       * the consequence of Blood Moon *setting* a land's subtype). This is what lets one
+       * continuous effect extinguish another's — the core CR 613.8 dependency.
+       */
       loseAbilities?: boolean;
     }
   // Layer 6 — ability add.
@@ -39,13 +45,18 @@ export interface StaticEffect {
 
 /** A permanent's characteristics after the layer system has been applied. */
 export interface Characteristics {
+  supertypes: string[];
   types: string[];
   subtypes: string[];
   keywords: KeywordAbility[];
   power: number;
   toughness: number;
-  /** True when a layer-4 effect stripped this permanent's abilities (Blood Moon). */
+  /** True when a layer-4 effect stripped this permanent's rules-text abilities (CR 305.7). */
   loseAbilities: boolean;
-  /** Non-null when a layer-4 effect overrides mana production (Blood Moon → Mountain → {R}). */
-  manaOverride: ManaUnit[] | null;
+  /**
+   * Non-null when layer 4 changed this permanent's land subtypes, in which case it replaces
+   * the printed mana abilities entirely: one entry per mana ability (Blood Moon → `[[['R']]]`;
+   * an empty array means the permanent produces no mana at all).
+   */
+  manaOverride: ManaUnit[][] | null;
 }
