@@ -4,7 +4,7 @@
  */
 
 import type { ObjectId, OracleId, PlayerId } from '@mtg/shared';
-import type { CardDefinition, KeywordAbility } from '../cards/definition';
+import type { Ability, CardDefinition, KeywordAbility } from '../cards/definition';
 import { computeCharacteristics } from '../effects/continuous';
 import { UnmodeledCardError } from '../errors';
 import type { ManaSource } from '../mana/cost';
@@ -45,6 +45,15 @@ export function effectivePT(
 ): { power: number; toughness: number } {
   const c = computeCharacteristics(ctx, perm);
   return { power: c.power, toughness: c.toughness };
+}
+
+/**
+ * Triggered abilities the permanent currently has, through the layer system. Reading these
+ * from the `CardDefinition` instead would mean a permanent that lost its abilities still
+ * triggered, and a granted trigger could never fire (ADR 0007).
+ */
+export function triggersOf(ctx: GameContext, perm: EnginePermanent): Ability[] {
+  return computeCharacteristics(ctx, perm).triggers;
 }
 
 /** Effective keywords through the CR 613 layer engine (grants in layer 6). */
@@ -89,20 +98,17 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
   const sources: ManaSource[] = [];
   for (const perm of controlledPermanents(ctx, playerId)) {
     if (perm.tapped) continue;
-    const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
     const chars = computeCharacteristics(ctx, perm);
-    // A layer-4 effect can override mana production (Blood Moon → a Mountain that taps for R).
-    const abilities =
-      chars.manaOverride !== null
-        ? chars.manaOverride.map((units) => ({ units }))
-        : def.manaAbilities;
+    // Mana abilities are computed, not printed: a layer-4 subtype change replaces them
+    // (Blood Moon → a Mountain that taps for R) and layer 6 can remove them outright.
+    const abilities = chars.manaAbilities;
     if (abilities.length === 0) continue;
     if (chars.types.includes('Creature') && perm.summoningSick && !hasKeyword(ctx, perm, 'haste')) {
       continue;
     }
     if (abilities.length > 1) {
       throw new UnmodeledCardError(
-        def.name,
+        perm.name,
         ['multiple mana abilities on one permanent'],
         'choosing among mana abilities',
       );

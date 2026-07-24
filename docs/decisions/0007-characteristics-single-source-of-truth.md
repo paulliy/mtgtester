@@ -73,11 +73,61 @@ query until state changes.
 0/1/2/4 statics, against 130/421/698/**2215** ms before. The honest worst case, state mutated
 between every single query, is unchanged at ~2.3 s; in play, reads greatly outnumber mutations.
 
+### 2. Abilities are characteristics
+
+`Characteristics` now carries `triggers` and `manaAbilities` alongside `keywords`, and layer 6
+gained `loseAllAbilities` as an effect in its own right — distinct from the CR 305.7 ability
+loss that follows a layer-4 subtype change. `manaOverride` is deleted: mana abilities are just
+abilities, replaced by a subtype change or removed by layer 6 like anything else.
+
+`triggersOf(ctx, perm)` replaces `def.triggers` at both queue sites. For a `diesSelf` trigger
+the permanent has already left the battlefield, so this is last-known information — continuous
+effects from _other_ permanents still apply to it, which is what decides whether it had the
+trigger at all.
+
+`ManaAbilitySpec` moved from `definition.ts` to `ability.ts` so `Characteristics` can hold it
+without an import cycle. A mana ability is an ability; it belongs with the IR.
+
+### 3. Routing the remaining reads, and one non-bug
+
+The four state-based actions that read printed values — planeswalker loyalty, battle defense,
+Aura attachment, Equipment attachment — plus the legend rule's `Legendary` check now read
+computed characteristics. Previously an animated permanent got the right combat math and the
+wrong SBA.
+
+**`actions/legal.ts` was listed as a bug in the plan and is not one.** Its `def.types` and
+`def.keywords` reads are against cards in hand or the command zone, which no modeled continuous
+effect reaches — printed values are correct there. (Play-permission effects like Leyline of
+Anticipation are Forge's layer 8 `RULES`, a separate mechanism, not layer 6 on the card.)
+
+`tests/characteristics-source.test.ts` guards the boundary: it fails if any module outside an
+explicit, reasoned allowlist reads `def.types|subtypes|supertypes|keywords|triggers|
+manaAbilities`. A second assertion fails when an allowlist entry stops being needed, so the
+list cannot rot — it caught `cards/interpret.ts` immediately, which builds definitions from
+locals and never reads one.
+
 ## Consequences
+
+134 tests pass (up from 129). The determinism log stays byte-identical, and the full suite —
+four complete games included — passes under `MTG_VERIFY_LAYER_CACHE=1`.
+
+Three new behavioral tests, and the trigger one was checked to fail when `queueTriggers` is
+reverted to `def.triggers`, so it is evidence rather than decoration.
 
 - ADR 0006's fast-path section is superseded.
 - Dependency analysis is skipped in sublayer 7d, following Forge's
   `CONTINUOUS_LAYERS_WITH_DEPENDENCY`: pump effects cannot change each other's existence,
   affected set, or magnitude.
 
-<!-- Sections 2 (abilities into Characteristics) and 3 (routing the remaining reads) follow. -->
+### Deliberately not done
+
+- **Layer-6 ability removal does not retroactively unmake layer-4 effects.** A source stripped
+  in layer 6 stops contributing to layers 6 and later, but a layer-4 effect it already
+  contributed stays applied — which is the correct reading, and the reason Humility +
+  Opalescence is still the open stress case. Opalescence additionally needs a
+  `Value` for mana value.
+- **Activated abilities are not yet characteristics**, because the engine has no activated
+  abilities at all. When they arrive they belong in `Characteristics` next to `triggers`, and
+  Mutavault's self-animation becomes expressible.
+- **The interpreter emits no `loseAllAbilities`**; it is reachable only from hand-written
+  definitions. Real Humility needs layer-7b set-P/T from a `Value` as well.

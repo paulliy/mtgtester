@@ -4,8 +4,7 @@
  * engine that applies them lives in `effects/continuous.ts`.
  */
 
-import type { ManaUnit } from '../mana/cost';
-import type { KeywordAbility } from './ability';
+import type { Ability, KeywordAbility, ManaAbilitySpec } from './ability';
 import type { Selector } from './selector';
 import type { Value } from './value';
 
@@ -27,8 +26,11 @@ export type ContinuousOp =
        */
       loseAbilities?: boolean;
     }
-  // Layer 6 — ability add.
+  // Layer 6 — ability adding and removing.
   | { layer: 6; addKeyword: KeywordAbility }
+  /** "Loses all abilities" as an effect in its own right (Humility), distinct from the
+   *  CR 305.7 consequence of a layer-4 subtype change. */
+  | { layer: 6; loseAllAbilities: true }
   // Layer 7a — characteristic-defining P/T (Tarmogoyf).
   | { layer: 7; sublayer: 'a'; power: Value; toughness: Value }
   // Layer 7b — set P/T to a specific value (Mutavault becomes 2/2).
@@ -43,20 +45,31 @@ export interface StaticEffect {
   op: ContinuousOp;
 }
 
-/** A permanent's characteristics after the layer system has been applied. */
+/**
+ * A permanent's characteristics after the layer system has been applied. This is the single
+ * source of truth: nothing outside the interpreter should read a permanent's types, keywords,
+ * abilities or mana production off its `CardDefinition` (ADR 0007).
+ *
+ * `triggers` and `manaAbilities` live here, not just `keywords`, because layer 6 adds and
+ * removes *abilities* — Forge's equivalent layer covers "keywords, spellabilities, triggers,
+ * replacements". Keeping them printed-only made "loses all abilities" unrepresentable and
+ * forced mana production to be special-cased.
+ */
 export interface Characteristics {
   supertypes: string[];
   types: string[];
   subtypes: string[];
   keywords: KeywordAbility[];
+  /** Triggered abilities the permanent currently has (CR 603). */
+  triggers: Ability[];
+  /** Mana abilities the permanent currently has — printed, or replaced by a subtype change. */
+  manaAbilities: ManaAbilitySpec[];
   power: number;
   toughness: number;
-  /** True when a layer-4 effect stripped this permanent's rules-text abilities (CR 305.7). */
-  loseAbilities: boolean;
   /**
-   * Non-null when layer 4 changed this permanent's land subtypes, in which case it replaces
-   * the printed mana abilities entirely: one entry per mana ability (Blood Moon → `[[['R']]]`;
-   * an empty array means the permanent produces no mana at all).
+   * True once this permanent's rules-text abilities have been stripped — by a layer-4 subtype
+   * change (CR 305.7) or by a layer-6 "loses all abilities". Continuous effects sourced from
+   * it stop existing from that layer onward.
    */
-  manaOverride: ManaUnit[][] | null;
+  loseAbilities: boolean;
 }

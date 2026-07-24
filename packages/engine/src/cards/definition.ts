@@ -7,8 +7,8 @@
  */
 
 import type { Color, OracleId } from '@mtg/shared';
-import type { ManaUnit, ParsedManaCost } from '../mana/cost';
-import type { Ability, KeywordAbility } from './ability';
+import type { ParsedManaCost } from '../mana/cost';
+import type { Ability, KeywordAbility, ManaAbilitySpec } from './ability';
 import type { StaticEffect } from './continuous-types';
 
 export type { StaticEffect, ContinuousOp, Characteristics } from './continuous-types';
@@ -22,15 +22,11 @@ export type {
   Ability,
   Effect,
   KeywordAbility,
+  ManaAbilitySpec,
   TargetKind,
   TargetSpec,
   TriggerEvent,
 } from './ability';
-
-/** A mana ability: "{T}: Add …". Never uses the stack (CR 605). */
-export interface ManaAbilitySpec {
-  units: ManaUnit[];
-}
 
 /** Interpreted card. Immutable; one per oracle id per game. */
 export interface CardDefinition {

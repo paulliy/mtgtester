@@ -8,6 +8,13 @@
  * depend on it without a cycle.
  */
 
+import type { ManaUnit } from '../mana/cost';
+
+/** A mana ability: "{T}: Add …". Never uses the stack (CR 605). */
+export interface ManaAbilitySpec {
+  units: ManaUnit[];
+}
+
 /** CR 702 keywords with real engine implementations in Phase 2 (brief §6.1). */
 export const IMPLEMENTED_KEYWORDS = [
   'flying',

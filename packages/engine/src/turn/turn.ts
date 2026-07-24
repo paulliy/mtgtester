@@ -11,7 +11,7 @@ import { drawCards, endUntilEotEffects } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import { priorityCheckpoint } from '../sba/sba';
 import { moveObject, playerById } from '../state/objects';
-import { getDefByOracleId } from '../state/queries';
+import { triggersOf } from '../state/queries';
 import type { EngineCardObject, GameContext } from '../state/types';
 import { emptyManaPools, runPrioritySequence } from './priority';
 
@@ -50,8 +50,7 @@ function untapStep(ctx: GameContext): void {
 function queueUpkeepTriggers(ctx: GameContext): void {
   const apId = ctx.state.currentTurnPlayer;
   for (const perm of ctx.state.battlefield) {
-    const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-    for (const ability of def.triggers) {
+    for (const ability of triggersOf(ctx, perm)) {
       const fires =
         (ability.trigger === 'upkeepYours' && perm.controllerId === apId) ||
         ability.trigger === 'upkeepEach';

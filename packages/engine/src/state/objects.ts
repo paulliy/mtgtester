@@ -11,7 +11,7 @@
 import type { ObjectId, PlayerId, Zone } from '@mtg/shared';
 import type { GameGen } from '../decisions';
 import { debug, emit } from '../log/log';
-import { getDefByOracleId } from './queries';
+import { getDefByOracleId, triggersOf } from './queries';
 import type {
   EngineCardObject,
   EngineObject,
@@ -216,14 +216,18 @@ export function* moveObject(
   return next;
 }
 
-/** Queue matching triggers from a permanent's definition (CR 603.3b). */
+/**
+ * Queue matching triggers from a permanent's *current* abilities (CR 603.3b). For `diesSelf`
+ * the permanent has already left the battlefield, so this is last-known information: continuous
+ * effects from other permanents still apply to it, which is what decides whether it had the
+ * trigger at all.
+ */
 export function queueTriggers(
   ctx: GameContext,
   perm: EnginePermanent,
   event: 'etbSelf' | 'diesSelf',
 ): void {
-  const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-  for (const ability of def.triggers) {
+  for (const ability of triggersOf(ctx, perm)) {
     if (ability.trigger === event) {
       ctx.state.pendingTriggers.push({
         controllerId: perm.controllerId,

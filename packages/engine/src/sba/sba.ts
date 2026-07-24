@@ -9,12 +9,12 @@
 
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
 import type { GameGen } from '../decisions';
+import { computeCharacteristics } from '../effects/continuous';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
 import { moveObject } from '../state/objects';
 import {
   effectivePT,
-  getDefByOracleId,
   hasKeyword,
   isCreaturePermanent,
   playersInApnapOrder,
@@ -125,7 +125,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   // --- Battlefield checks ---
   for (const perm of [...s.battlefield]) {
     if (!s.battlefield.includes(perm)) continue; // removed by an earlier action this pass
-    const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
+    const chars = computeCharacteristics(ctx, perm);
 
     if (isCreaturePermanent(ctx, perm)) {
       const pt = effectivePT(ctx, perm);
@@ -151,8 +151,9 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
       }
     }
 
-    // Planeswalker with zero loyalty (CR 704.5i).
-    if (def.types.includes('Planeswalker') && (perm.counters['loyalty'] ?? 0) <= 0) {
+    // Planeswalker with zero loyalty (CR 704.5i). Types are computed, not printed: a
+    // permanent animated into (or out of) a planeswalker gets the matching SBA.
+    if (chars.types.includes('Planeswalker') && (perm.counters['loyalty'] ?? 0) <= 0) {
       debug(ctx, 'sba', `${perm.name} has 0 loyalty — to graveyard`);
       emit(ctx, 'sbaPlaneswalkerDies', { name: perm.name });
       yield* moveObject(ctx, perm, { zone: 'graveyard' });
@@ -161,7 +162,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
 
     // Battle with zero defense (CR 704.5s). Enters with printed defense; when it hits 0
     // its controller puts it into its owner's graveyard.
-    if (def.types.includes('Battle') && (perm.counters['defense'] ?? 0) <= 0) {
+    if (chars.types.includes('Battle') && (perm.counters['defense'] ?? 0) <= 0) {
       debug(ctx, 'sba', `${perm.name} has 0 defense — to graveyard`);
       emit(ctx, 'sbaBattleDies', { name: perm.name });
       yield* moveObject(ctx, perm, { zone: 'graveyard' });
@@ -170,7 +171,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
 
     // Aura attached to nothing/illegally (CR 704.5m). Auras enter Phase 2 only via test
     // fixtures, but the SBA is real.
-    if (def.subtypes.includes('Aura')) {
+    if (chars.subtypes.includes('Aura')) {
       const host =
         perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
       if (host === undefined) {
@@ -182,7 +183,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     }
 
     // Equipment illegally attached becomes unattached (CR 704.5p).
-    if (def.subtypes.includes('Equipment') && perm.attachedTo !== null) {
+    if (chars.subtypes.includes('Equipment') && perm.attachedTo !== null) {
       const host = s.battlefield.find((p) => p.id === perm.attachedTo);
       if (host === undefined || !isCreaturePermanent(ctx, host)) {
         debug(ctx, 'sba', `equipment ${perm.name} illegally attached — unattached`);
@@ -214,8 +215,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     const byName = new Map<string, EnginePermanent[]>();
     for (const perm of s.battlefield) {
       if (perm.controllerId !== player.id) continue;
-      const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-      if (!def.supertypes.includes('Legendary')) continue;
+      if (!computeCharacteristics(ctx, perm).supertypes.includes('Legendary')) continue;
       const group = byName.get(perm.name) ?? [];
       group.push(perm);
       byName.set(perm.name, group);

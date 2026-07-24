@@ -31,6 +31,7 @@
  * previous layer produced, not the printed ones.
  */
 
+import type { ManaAbilitySpec } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
 import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
@@ -144,7 +145,16 @@ function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): 
       if (op.loseAbilities === true) chars.loseAbilities = true;
       break;
     case 6:
-      if (!chars.keywords.includes(op.addKeyword)) chars.keywords.push(op.addKeyword);
+      if ('loseAllAbilities' in op) {
+        // Strip everything the permanent generates from its own rules text. Anything granted
+        // by a later-applied layer-6 effect survives, which is the whole point of the order.
+        chars.keywords = [];
+        chars.triggers = [];
+        chars.manaAbilities = [];
+        chars.loseAbilities = true;
+      } else if (!chars.keywords.includes(op.addKeyword)) {
+        chars.keywords.push(op.addKeyword);
+      }
       break;
     case 7:
       if (op.sublayer === 'd') {
@@ -196,10 +206,11 @@ function cloneWork(work: WorkMap): WorkMap {
         types: [...entry.chars.types],
         subtypes: [...entry.chars.subtypes],
         keywords: [...entry.chars.keywords],
+        triggers: [...entry.chars.triggers],
+        manaAbilities: [...entry.chars.manaAbilities],
         power: entry.chars.power,
         toughness: entry.chars.toughness,
         loseAbilities: entry.chars.loseAbilities,
-        manaOverride: entry.chars.manaOverride,
       },
     });
   }
@@ -266,7 +277,10 @@ function finishLayer4(ctx: GameContext, work: WorkMap): void {
     const def = ctx.defs.get(entry.perm.oracleId);
     if (def === undefined) continue;
 
-    if (chars.loseAbilities) chars.keywords = [];
+    if (chars.loseAbilities) {
+      chars.keywords = [];
+      chars.triggers = [];
+    }
 
     const printedBasics = def.subtypes.filter((s) => BASIC_LAND_MANA[s] !== undefined);
     const currentBasics = chars.subtypes.filter((s) => BASIC_LAND_MANA[s] !== undefined);
@@ -274,14 +288,14 @@ function finishLayer4(ctx: GameContext, work: WorkMap): void {
       [...currentBasics].sort().join(',') !== [...printedBasics].sort().join(',');
     if (!chars.loseAbilities && !subtypesChanged) continue;
 
-    const intrinsic = (types: string[]): ManaUnit[][] =>
-      types.map((s) => [BASIC_LAND_MANA[s] as ManaUnit]);
-    chars.manaOverride = chars.loseAbilities
+    const intrinsic = (types: string[]): ManaAbilitySpec[] =>
+      types.map((s) => ({ units: [BASIC_LAND_MANA[s] as ManaUnit] }));
+    chars.manaAbilities = chars.loseAbilities
       ? // Rules text gone: only the intrinsic ability of each current basic land type.
         intrinsic(currentBasics)
       : // Types added "in addition": printed mana abilities plus the new intrinsic ones.
         [
-          ...def.manaAbilities.map((a) => a.units),
+          ...def.manaAbilities,
           ...intrinsic(currentBasics.filter((s) => !printedBasics.includes(s))),
         ];
   }
@@ -322,11 +336,12 @@ function runLayers(
         types: [...def.types],
         subtypes: [...def.subtypes],
         keywords: [...def.keywords],
+        triggers: [...def.triggers],
+        manaAbilities: [...def.manaAbilities],
         // Base P/T comes from the permanent (a copy effect would set it there — layer 1).
         power: perm.power ?? 0,
         toughness: perm.toughness ?? 0,
         loseAbilities: false,
-        manaOverride: null,
       },
     });
   }
