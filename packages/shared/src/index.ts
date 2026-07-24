@@ -1,0 +1,61 @@
+/**
+ * `@mtg/shared` — the single source of truth for types (and a few runtime enum tuples)
+ * shared across the engine, server, and web app. No logic lives here.
+ *
+ * `verbatimModuleSyntax` is on, so runtime values and types are re-exported separately.
+ */
+
+// --- Runtime values (enum tuples) ---
+export { ALL_COLORS } from './mana';
+export { PHASES, STEPS, ZONES, DECISION_TYPES, LOSS_REASONS } from './enums';
+export { PERMANENT_STATUSES } from './objects';
+export { SERVER_TO_CLIENT_TYPES, CLIENT_TO_SERVER_TYPES } from './protocol';
+
+// --- Identifier types ---
+export type { PlayerId, ObjectId, OracleId, DeckId, DeckSnapshotId, GameId } from './ids';
+
+// --- Mana ---
+export type { Color, ManaCostString, ManaPool } from './mana';
+
+// --- Enumerations ---
+export type { Phase, Step, Zone, DecisionType, LossReason } from './enums';
+
+// --- Game objects & state ---
+export type {
+  GameObject,
+  PermanentState,
+  PermanentStatus,
+  StackObject,
+  StackObjectKind,
+} from './objects';
+export type { PlayerState, GameState, GameResult } from './state';
+export type { ContinuousEffect } from './effects';
+export type { GameEvent } from './events';
+
+// --- Engine decision contract ---
+export type {
+  EngineStep,
+  DecisionRequest,
+  DecisionResponse,
+  LegalAction,
+  TargetSlot,
+  TargetChoice,
+} from './engine';
+
+// --- Player-visible projection (anti-cheat boundary) ---
+export type {
+  PlayerView,
+  OpponentView,
+  CommanderView,
+  CardView,
+  PermanentView,
+  StackObjectView,
+} from './view';
+
+// --- WebSocket protocol ---
+export type {
+  ServerToClientMessage,
+  ClientToServerMessage,
+  ServerToClientType,
+  ClientToServerType,
+} from './protocol';

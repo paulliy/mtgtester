@@ -1,0 +1,16 @@
+{
+  "name": "@mtg/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@mtg/shared": "workspace:*",
+    "@mtg/engine": "workspace:*"
+  },
+  "scripts": {
+    "typecheck": "tsc --build"
+  }
+}

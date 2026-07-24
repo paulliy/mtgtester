@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+*.tsbuildinfo
+bun.lock
+bun.lockb
+
+# Vendored reference material — never reformat (brief §3)
+data
+docs/rules
+
+# The authoritative spec — an input artifact, do not reformat
+docs/mtg-commander-ai-simulator-brief.md
