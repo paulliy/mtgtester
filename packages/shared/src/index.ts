@@ -57,6 +57,7 @@ export type {
   EngineStep,
   DecisionRequest,
   DecisionResponse,
+  PlannedAction,
   LegalAction,
   TargetSlot,
   TargetChoice,

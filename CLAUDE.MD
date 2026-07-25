@@ -8,12 +8,36 @@ until you've read it. (The brief and this file historically referenced
 
 **Current phase: Phase 2 — Engine core — implementation complete; awaiting phase-boundary
 approval (and review of the Phase 2 scope cuts listed in
-[docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md)). Phase 1's
-live-import demonstration against four real deck URLs is still pending user-supplied URLs.**
+[docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md)).**
 
-## Model preference
+**Card coverage is the live constraint, and the strategy for it changed — read
+[docs/decisions/0009-supported-pool-decks.md](docs/decisions/0009-supported-pool-decks.md)
+before doing coverage work.** Because the engine halts on any unmodeled card, deck playability
+is all-or-nothing, and incremental coverage does not converge (94% of unparsed rules lines
+occur on exactly one card). Playable decks are therefore generated from the engine-supported
+pool (`bun run pool --play`); simulating a *specific* real decklist is a per-deck effort, not a
+coverage threshold. `bun run coverage` remains the instrument that ranks which mechanics to
+build next.
 
-- Phase 2: prefer Fable 5 for architecture/design steps, Opus 4.8 for routine implementation.
+### Task Offloading Rules (`agy`)
+
+You have access to the `antigravity_delegate` MCP tool. Follow these guidelines for task delegation:
+
+- **When to delegate to `agy`:**
+  - Generating large amounts of boilerplate or new feature scaffolds.
+  - Multi-file refactoring or widespread code rewrites.
+  - Writing comprehensive unit/integration test suites.
+  - High-volume, implementation-heavy coding work.
+
+- **When to handle directly:**
+  - Quick single-file edits, minor bug fixes, or tweaking configs.
+  - Answering architectural questions or explaining code.
+  - Inspecting errors and immediate debugging.
+
+- **Execution guidelines:**
+  - Default to `mode: "accept-edits"` unless asked for a dry-run plan (`mode: "plan"`).
+  - After `antigravity_delegate` finishes, inspect the modified files to verify the implementation.
+  - always use high effort and use gemini 3.6 flash pro is too slow and worse at coding
 
 ## Key constraints (from the brief)
 
@@ -47,6 +71,17 @@ bun run dev:web     # Vite dev server (stub until Phase 4)
 # Phase 1 deck pipeline (import → resolve → validate → snapshot):
 bun run decks <deckUrlOrFile> [more...]   # Moxfield/Archidekt URL or plaintext file
 bun run decks --no-save <...>             # validate only, skip SQLite
+
+# Playable decks from the engine-supported card pool (ADR 0009):
+bun run pool                              # what the engine can currently play with
+bun run pool --commanders                 # every commander the pool supports
+bun run pool --play [--seed S]            # build 4 decks and play a full game
+bun run pool --write [--seed S]           # commit the 4 decks as fixtures
+
+# Real-deck model coverage — the mechanics backlog:
+bun run coverage                          # per-deck + aggregate, ranked blocking mechanics
+bun run coverage --json                   # machine-diffable
+bun run coverage:snapshot [url...]        # refresh/add deck fixtures from live URLs
 ```
 
 ## Reference data

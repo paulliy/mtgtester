@@ -5,6 +5,7 @@
  */
 
 import type { GameGen } from '../decisions';
+import { evaluateCondition } from '../cards/condition';
 import { isPermanentCard } from '../cards/definition';
 import { executeAbility, isTargetStillLegal } from '../effects/resolve';
 import { emit, debug } from '../log/log';
@@ -19,6 +20,22 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   if (top === undefined) throw new Error('engine bug: resolveTopOfStack on empty stack');
 
   debug(ctx, 'stack', `resolving: ${top.description}`, { targets: top.targets });
+
+  // Intervening-if, second check (CR 603.4): the condition is checked again on resolution, and
+  // a trigger whose condition has since become false is simply removed. Checked before the
+  // "you may" prompt, because an ability that does nothing should not be offered.
+  const intervening = top.ability?.trigger?.condition;
+  if (
+    intervening !== undefined &&
+    !evaluateCondition(ctx, intervening, {
+      cardId: top.sourceCardId,
+      controllerId: top.controllerId,
+    })
+  ) {
+    emit(ctx, 'triggerConditionFailed', { description: top.description }, top.controllerId);
+    debug(ctx, 'stack', `${top.description} removed — intervening-if false on resolution`);
+    return;
+  }
 
   // Optional ("you may") triggered ability: the yes/no choice is made on resolution.
   if (top.kind === 'triggeredAbility' && top.ability?.optional === true) {
@@ -66,6 +83,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
       },
       top.ability,
       top.targets,
+      top.triggerObjectCardId,
     );
   }
 

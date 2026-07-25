@@ -77,6 +77,8 @@ export interface EngineStackObject extends StackObject {
   sourceCardId: CardId;
   /** True when the "spell" is a commander cast from the command zone. */
   isCommanderCast: boolean;
+  /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
+  triggerObjectCardId?: CardId;
 }
 
 export interface EnginePlayerState extends PlayerState {
@@ -94,6 +96,10 @@ export interface EnginePlayerState extends PlayerState {
   decklistOracleIds: OracleId[];
   /** True once the companion has been moved to hand (once per game). */
   companionMovedToHand: boolean;
+  /** True when player chose "Pass and yield until end of turn". */
+  yieldUntilEndOfTurn?: boolean;
+  /** Oracle IDs of triggered abilities the player has chosen to "Yield to this ability". */
+  yieldedAbilities?: OracleId[];
 }
 
 /** An until-end-of-turn continuous effect (the Phase 2 subset of CR 613). */
@@ -126,6 +132,12 @@ export interface PendingTrigger {
   sourceOracleId: OracleId;
   sourceName: string;
   ability: Ability;
+  /**
+   * The object whose event fired this trigger — the attacking Dragon, the creature that
+   * entered. Absent for `self` and step triggers, where the source IS the object. Effects
+   * reference it with `target: 'triggerObject'`.
+   */
+  triggerObjectCardId?: CardId;
 }
 
 export interface EngineState extends GameState {

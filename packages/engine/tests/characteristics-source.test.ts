@@ -26,6 +26,9 @@ const ALLOWED: Record<string, string> = {
     'makePermanent, before the object is on the battlefield: a permanent enters with its ' +
     'printed loyalty/defense (CR 306.5b, 310.6)',
   'cards/value.ts': 'counts card types of cards in graveyards, not permanents',
+  'effects/resolve.ts':
+    'cardCandidate builds a selector candidate for a card in a LIBRARY (search, look-at-top). ' +
+    'No continuous effect reaches those, so printed characteristics are the only ones they have',
 };
 
 const PATTERN = /\bdef\.(types|subtypes|supertypes|colors|keywords|triggers|manaAbilities)\b/;

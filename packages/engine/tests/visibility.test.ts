@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { Engine } from '../src/engine';
 import { buildPlayerView } from '../src/view/view';
 import { createGame } from '../src/state/game';
-import { commanderFor, conjure, copies, forest, gameConfig, oracle } from './fixtures';
+import { commanderFor, conjure, copies, forest, gameConfig, oracle, spawn } from './fixtures';
 
 function secretPod(): ReturnType<typeof gameConfig> {
   const secret = (name: string): ReturnType<typeof oracle> =>
@@ -119,5 +119,76 @@ describe('PlayerView visibility (brief §7.1)', () => {
 
     const view = buildPlayerView(ctx, 'P1');
     expect(JSON.stringify(view)).not.toContain('Deep Secret');
+  });
+
+  it('exposes battlefield rules text, but never a face-down permanent\'s (§7.1, §7.4)', () => {
+    const ctx = createGame(secretPod());
+    const menace = oracle({
+      name: 'Public Threat',
+      typeLine: 'Creature — Test Ogre',
+      manaCost: '{2}{R}',
+      power: '3',
+      toughness: '3',
+      oracleText: 'Trample',
+    });
+    const hidden = oracle({
+      name: 'Morph Target',
+      typeLine: 'Creature — Test Shapeshifter',
+      manaCost: '{2}{U}',
+      power: '2',
+      toughness: '2',
+      oracleText: 'When this creature is turned face up, draw three cards.',
+    });
+
+    // An opponent's ordinary permanent: its text box is public, so the AI must see it —
+    // otherwise it can read the name "Blood Moon" and not know what it does.
+    spawn(ctx, 'P2', menace);
+    const facedown = spawn(ctx, 'P2', hidden);
+    facedown.statuses.push('faceDown');
+
+    const view = buildPlayerView(ctx, 'P1');
+    const shown = view.battlefield.find((p) => p.name === 'Public Threat');
+    const concealed = view.battlefield.find((p) => p.name === 'Morph Target');
+
+    expect(shown?.oracleText).toBe('Trample');
+    expect(shown?.typeLine).toBe('Creature — Test Ogre');
+
+    // Face down: identity withheld. The permanent is still visible as an object.
+    expect(concealed).toBeDefined();
+    expect(concealed?.oracleText).toBeUndefined();
+    expect(concealed?.typeLine).toBeUndefined();
+    expect(JSON.stringify(view)).not.toContain('turned face up');
+  });
+
+  it('includes power and toughness for creature cards in hand', () => {
+    const ctx = createGame(secretPod());
+    const bearCard = oracle({
+      name: 'Forest Bear',
+      typeLine: 'Creature — Bear',
+      manaCost: '{1}{G}',
+      power: '2',
+      toughness: '2',
+      oracleText: '',
+    });
+    const spellCard = oracle({
+      name: 'Forest Spell',
+      typeLine: 'Sorcery',
+      manaCost: '{G}',
+      power: null,
+      toughness: null,
+      oracleText: 'Gain 3 life.',
+    });
+
+    conjure(ctx, 'P1', bearCard, 'hand');
+    conjure(ctx, 'P1', spellCard, 'hand');
+
+    const view = buildPlayerView(ctx, 'P1');
+    const bearInHand = view.hand.find((c) => c.name === 'Forest Bear');
+    const spellInHand = view.hand.find((c) => c.name === 'Forest Spell');
+
+    expect(bearInHand?.power).toBe(2);
+    expect(bearInHand?.toughness).toBe(2);
+    expect(spellInHand?.power).toBeUndefined();
+    expect(spellInHand?.toughness).toBeUndefined();
   });
 });

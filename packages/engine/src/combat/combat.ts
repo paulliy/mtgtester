@@ -3,6 +3,11 @@
  * which opponent it attacks (CR 802). Declarations are sequential per-creature decisions
  * (one menu each — fits the pick-one decision contract; recorded in ADR 0003).
  *
+ * Each declaration menu also carries batch shortcuts ("no further attacks", "everyone left
+ * attacks X", "no blocks at all") so a decider that wants the whole set can say so in one
+ * decision instead of one per creature — decisions are metered network calls for a remote
+ * decision provider (ADR 0010). See `declareAttackers`.
+ *
  * Damage assignment follows the CR defaults deterministically: lethal damage to each
  * blocker in the chosen order, excess to the last blocker, or to the defending player
  * with trample (CR 510.1c-d, 702.19). First/double strike create the extra combat damage
@@ -10,7 +15,7 @@
  */
 
 import type { ObjectId, PlayerId } from '@mtg/shared';
-import type { GameGen } from '../decisions';
+import type { EngineActionOption, GameGen } from '../decisions';
 import {
   combatDamageTraits,
   dealDamageToCreature,
@@ -18,7 +23,7 @@ import {
   permanentSource,
 } from '../effects/resolve';
 import { emit, debug } from '../log/log';
-import { playerById } from '../state/objects';
+import { playerById, queueTriggersForEvent } from '../state/objects';
 import {
   controlledPermanents,
   effectivePT,
@@ -26,6 +31,7 @@ import {
   hasKeyword,
   isCreaturePermanent,
   playersInApnapOrder,
+  triggersOf,
 } from '../state/queries';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { emptyManaPools, runPrioritySequence } from '../turn/priority';
@@ -64,46 +70,134 @@ function blockersInCombat(ctx: GameContext): EnginePermanent[] {
   return ctx.state.battlefield.filter((p) => p.blocking !== null);
 }
 
-/** Declare attackers (CR 508.1): one decision per eligible creature. */
+/** Commit one creature to attacking a defender (CR 508.1a, 508.1f). */
+function commitAttacker(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  defenderId: PlayerId,
+  apId: PlayerId,
+): void {
+  creature.attacking = defenderId;
+  creature.statuses.push('attacking');
+  if (!hasKeyword(ctx, creature, 'vigilance')) creature.tapped = true; // CR 508.1f
+  emit(
+    ctx,
+    'attack',
+    { attacker: creature.name, attackerCardId: creature.cardId, defender: defenderId },
+    apId,
+  );
+  debug(ctx, 'combat', `${creature.name} attacks ${defenderId}`);
+}
+
+/**
+ * Declare attackers (CR 508.1): one decision per eligible creature, each of which can also
+ * settle every creature still undeclared in one go.
+ *
+ * Attackers are legally declared as a single simultaneous set (CR 508.1), but a "pick one
+ * option" menu cannot express a set without enumerating every subset — 4^creatures in a
+ * four-player game. So the declaration stays sequential (ADR 0003), and the batch is offered
+ * as *shortcuts* instead: alongside this creature's own choices, the menu carries "no further
+ * attacks" and "everyone left attacks <opponent>". Those cover the two overwhelmingly common
+ * shapes — an empty attack on a stalled board, and an all-in alpha strike — in a single
+ * decision instead of one per creature, which matters because each decision surfaced to a
+ * remote decision provider is a metered network call.
+ *
+ * The shortcuts only ever *add* options, so no per-creature choice is taken away: an AI that
+ * wants a mixed attack still declares creature by creature exactly as before, and the call
+ * count in that case is unchanged. They are offered only while creatures remain undeclared,
+ * since with one creature left they would just restate its own menu.
+ */
 function* declareAttackers(ctx: GameContext): GameGen<void> {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
   const opponents = playersInApnapOrder(ctx).filter((p) => p.id !== ap.id);
+  // Snapshot up front: declaring one attacker taps it but cannot change whether any *other*
+  // creature is eligible, so this is the same set the per-iteration check used to produce.
+  const eligible = creaturesOf(ctx, ap.id).filter((c) => canAttack(ctx, c));
 
-  for (const creature of creaturesOf(ctx, ap.id)) {
-    if (!canAttack(ctx, creature)) continue;
+  for (let i = 0; i < eligible.length; i++) {
+    const creature = eligible[i] as EnginePermanent;
+    const rest = eligible.slice(i + 1);
     const pt = effectivePT(ctx, creature);
+    // Descriptive only (see `EngineActionOption.data`). `hasTriggers` matters to a consumer
+    // judging whether attacking could ever be worth it: a creature that puts something on the
+    // stack when it attacks is worth attacking with at any power. It counts *every* trigger on
+    // the creature, not only attack triggers, so it over-reports — a hint, never a rule.
+    const hasTriggers = triggersOf(ctx, creature).length > 0;
+    const attackData = { power: pt.power, toughness: pt.toughness, hasTriggers };
+
+    const options: EngineActionOption[] = [
+      { type: 'noAttack', description: `${creature.name} does not attack`, data: attackData },
+      ...opponents.map((opp) => ({
+        type: 'attack',
+        description: `${creature.name} attacks ${opp.id} (${opp.life} life)`,
+        payload: opp.id,
+        data: attackData,
+      })),
+    ];
+
+    // Batch shortcuts, appended so the per-creature option indices never move.
+    if (rest.length > 0) {
+      const group = [creature, ...rest];
+      // Aggregates over the whole undeclared group, for a consumer deciding whether the batch
+      // could matter at all (same reasoning as `attackData`, widened from one creature to all).
+      const groupData = {
+        count: group.length,
+        maxPower: Math.max(...group.map((c) => effectivePT(ctx, c).power)),
+        hasTriggers: group.some((c) => triggersOf(ctx, c).length > 0),
+      };
+      options.push({
+        type: 'noAttackRest',
+        description: `No further attacks: ${creature.name} and the ${rest.length} other undeclared creature(s) all stay home`,
+        data: groupData,
+      });
+      options.push(
+        ...opponents.map((opp) => ({
+          type: 'attackRest',
+          description: `All ${group.length} undeclared creatures (${creature.name} + ${rest.length} more) attack ${opp.id} (${opp.life} life)`,
+          payload: opp.id,
+          data: groupData,
+        })),
+      );
+    }
+
     const outcome = yield {
       decisionType: 'declareAttackers',
       player: ap.id,
-      prompt: `Declare attackers: does ${creature.name} (${pt.power}/${pt.toughness}) attack?`,
-      options: [
-        { type: 'noAttack', description: `${creature.name} does not attack` },
-        ...opponents.map((opp) => ({
-          type: 'attack',
-          description: `${creature.name} attacks ${opp.id} (${opp.life} life)`,
-          payload: opp.id,
-        })),
-      ],
+      prompt:
+        `Declare attackers: does ${creature.name} (${pt.power}/${pt.toughness}) attack?` +
+        (rest.length > 0 ? ` (${rest.length} more creature(s) still to declare)` : ''),
+      options,
     };
+
     if (outcome.index === 0) continue;
-    const target = opponents[outcome.index - 1];
-    if (target === undefined) throw new Error('engine bug: attack target out of range');
-    creature.attacking = target.id;
-    creature.statuses.push('attacking');
-    if (!hasKeyword(ctx, creature, 'vigilance')) creature.tapped = true; // CR 508.1f
-    emit(
-      ctx,
-      'attack',
-      { attacker: creature.name, attackerCardId: creature.cardId, defender: target.id },
-      ap.id,
-    );
-    debug(ctx, 'combat', `${creature.name} attacks ${target.id}`);
+    if (outcome.index <= opponents.length) {
+      const target = opponents[outcome.index - 1];
+      if (target === undefined) throw new Error('engine bug: attack target out of range');
+      commitAttacker(ctx, creature, target.id, ap.id);
+      continue;
+    }
+
+    // A batch shortcut: either way, nothing undeclared is asked about again.
+    const batchIndex = outcome.index - (opponents.length + 1);
+    if (batchIndex === 0) break; // noAttackRest
+    const batchTarget = opponents[batchIndex - 1];
+    if (batchTarget === undefined) throw new Error('engine bug: attack target out of range');
+    for (const c of [creature, ...rest]) commitAttacker(ctx, c, batchTarget.id, ap.id);
+    break;
   }
 
   const declared = attackers(ctx);
+  const defendingPlayers = [...new Set(declared.map((a) => a.attacking as PlayerId))];
+  for (const defId of defendingPlayers) {
+    playerById(ctx, defId).yieldUntilEndOfTurn = false;
+  }
   ctx.state.combat = {
-    defendingPlayers: [...new Set(declared.map((a) => a.attacking as PlayerId))],
+    defendingPlayers,
   };
+  // CR 508.2: "whenever ~ attacks" triggers fire once the whole set is declared, not as each
+  // creature is committed — so this is deliberately outside the declaration loop. They wait in
+  // `pendingTriggers` until the declare-attackers step's priority checkpoint.
+  for (const attacker of declared) queueTriggersForEvent(ctx, 'attacks', attacker);
   emit(ctx, 'attackersDeclared', { count: declared.length }, ap.id);
 }
 
@@ -115,29 +209,55 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
     const incoming = attackers(ctx).filter((a) => a.attacking === defenderId);
     if (incoming.length === 0) continue;
 
-    for (const blocker of creaturesOf(ctx, defenderId)) {
-      const blockable = incoming.filter(
-        (a) => canBlock(ctx, blocker, a) && findPermanent(ctx, a.id) !== undefined,
-      );
-      if (blocker.tapped || blockable.length === 0) continue;
+    // Snapshot the creatures with a legal block available: assigning one block never changes
+    // whether another creature could block (it neither taps it nor removes an attacker).
+    const candidates = creaturesOf(ctx, defenderId)
+      .map((blocker) => ({
+        blocker,
+        blockable: incoming.filter(
+          (a) => canBlock(ctx, blocker, a) && findPermanent(ctx, a.id) !== undefined,
+        ),
+      }))
+      .filter(({ blocker, blockable }) => !blocker.tapped && blockable.length > 0);
+
+    for (let i = 0; i < candidates.length; i++) {
+      const { blocker, blockable } = candidates[i] as (typeof candidates)[number];
+      const remaining = candidates.length - 1 - i;
       const pt = effectivePT(ctx, blocker);
+      const options: EngineActionOption[] = [
+        { type: 'noBlock', description: `${blocker.name} does not block` },
+        ...blockable.map((a) => {
+          const apt = effectivePT(ctx, a);
+          return {
+            type: 'block',
+            description: `${blocker.name} blocks ${a.name} (${apt.power}/${apt.toughness})`,
+            payload: a.id,
+          };
+        }),
+      ];
+      // "Take no blocks at all" is one coherent intent and by far the most common answer on a
+      // board that cannot block profitably, so it gets a shortcut (see `declareAttackers`).
+      // There is deliberately no `blockRest` counterpart: throwing every creature in front of
+      // one attacker is not a plan a defender usually means, so batching it would invite bad
+      // blocks rather than save a call on a common one.
+      if (remaining > 0) {
+        options.push({
+          type: 'noBlockRest',
+          description: `No blocks at all: ${blocker.name} and the ${remaining} other potential blocker(s) all stay back`,
+          data: { count: remaining + 1 },
+        });
+      }
+
       const outcome = yield {
         decisionType: 'declareBlockers',
         player: defenderId,
-        prompt: `Declare blockers: does ${blocker.name} (${pt.power}/${pt.toughness}) block?`,
-        options: [
-          { type: 'noBlock', description: `${blocker.name} does not block` },
-          ...blockable.map((a) => {
-            const apt = effectivePT(ctx, a);
-            return {
-              type: 'block',
-              description: `${blocker.name} blocks ${a.name} (${apt.power}/${apt.toughness})`,
-              payload: a.id,
-            };
-          }),
-        ],
+        prompt:
+          `Declare blockers: does ${blocker.name} (${pt.power}/${pt.toughness}) block?` +
+          (remaining > 0 ? ` (${remaining} more potential blocker(s) to declare)` : ''),
+        options,
       };
       if (outcome.index === 0) continue;
+      if (outcome.index > blockable.length) break; // noBlockRest
       const attacker = blockable[outcome.index - 1];
       if (attacker === undefined) throw new Error('engine bug: block target out of range');
       blocker.blocking = attacker.id;

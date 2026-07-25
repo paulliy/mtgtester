@@ -54,6 +54,123 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(def.manaAbilities).toEqual([{ units: [['C'], ['C']] }]);
   });
 
+  it('parses a choice-of-color mana ability as ONE unit with several symbols', () => {
+    // "{G} or {W}" is one mana whose color the player picks — NOT two mana. Getting this
+    // wrong would let a dual land pay a two-pip cost by itself.
+    const def = interpretCard(
+      oracle({
+        name: 'Test Dual',
+        typeLine: 'Land',
+        manaCost: null,
+        power: null,
+        toughness: null,
+        oracleText: '{T}: Add {G} or {W}.',
+      }),
+    );
+    expect(def.modeled).toBe(true);
+    expect(def.manaAbilities).toEqual([{ units: [['G', 'W']] }]);
+  });
+
+  it('parses a three-way choice-of-color mana ability', () => {
+    const def = interpretCard(
+      oracle({
+        name: 'Test Triome',
+        typeLine: 'Land',
+        manaCost: null,
+        power: null,
+        toughness: null,
+        oracleText: '{T}: Add {W}, {U}, or {B}.',
+      }),
+    );
+    expect(def.modeled).toBe(true);
+    expect(def.manaAbilities).toEqual([{ units: [['W', 'U', 'B']] }]);
+  });
+
+  it('parses "Add one mana of any color" as a five-symbol choice', () => {
+    const def = interpretCard(
+      oracle({
+        name: 'Test Tower',
+        typeLine: 'Land',
+        manaCost: null,
+        power: null,
+        toughness: null,
+        oracleText: '{T}: Add one mana of any color.',
+      }),
+    );
+    expect(def.modeled).toBe(true);
+    expect(def.manaAbilities).toEqual([{ units: [['W', 'U', 'B', 'R', 'G']] }]);
+  });
+
+  it('refuses restricted or amount-varying mana production rather than over-permitting', () => {
+    // Both would silently produce mana the player cannot legally spend — worse than an
+    // honest halt (brief §6.3). They get their own reason so coverage can rank them.
+    for (const text of [
+      '{T}: Add two mana of any one color.',
+      '{T}: Add {C}. Spend this mana only to cast artifact spells.',
+    ]) {
+      const def = interpretCard(
+        oracle({
+          name: 'Test Restricted',
+          typeLine: 'Land',
+          manaCost: null,
+          power: null,
+          toughness: null,
+          oracleText: text,
+        }),
+      );
+      expect(def.modeled).toBe(false);
+      expect(def.manaAbilities).toEqual([]);
+    }
+  });
+
+  it('normalizes modern "This creature" self-reference templating', () => {
+    // Cards printed since ~2021 say "this creature" instead of repeating the name; without
+    // normalization every `~`-anchored pattern misses them.
+    const def = interpretCard(
+      oracle({
+        name: 'Test Zapper',
+        typeLine: 'Instant',
+        manaCost: '{R}',
+        power: null,
+        toughness: null,
+        oracleText: 'This creature deals 3 damage to any target.',
+      }),
+    );
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.effects).toEqual([{ op: 'dealDamage', target: 0, amount: 3 }]);
+  });
+
+  it('drops an ability word so the ability it labels still parses (CR 207.2c)', () => {
+    const def = interpretCard(
+      oracle({
+        name: 'Test Crafter',
+        typeLine: 'Creature — Test Artificer',
+        manaCost: '{1}{U}',
+        power: '2',
+        toughness: '2',
+        oracleText: 'Metalcraft — When Test Crafter enters the battlefield, draw a card.',
+      }),
+    );
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.effects).toEqual([{ op: 'draw', count: 1 }]);
+  });
+
+  it('does NOT drop an em-dash prefix that carries rules meaning', () => {
+    // Saga chapter markers and Vehicle flavor-name headers look similar but are not ability
+    // words; stripping them would change behavior, so they stay unmodeled.
+    const def = interpretCard(
+      oracle({
+        name: 'Test Saga',
+        typeLine: 'Enchantment — Saga',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+        oracleText: 'I — You gain 3 life.',
+      }),
+    );
+    expect(def.modeled).toBe(false);
+  });
+
   it('parses enters-tapped lands', () => {
     const def = interpretCard(
       oracle({
@@ -99,15 +216,15 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(def.triggers).toHaveLength(3);
     expect(def.triggers[0]).toMatchObject({
       kind: 'triggered',
-      trigger: 'etbSelf',
+      trigger: { when: 'enters', subject: { kind: 'self' } },
       optional: false,
     });
     expect(def.triggers[1]).toMatchObject({
       kind: 'triggered',
-      trigger: 'diesSelf',
+      trigger: { when: 'dies', subject: { kind: 'self' } },
       optional: true,
     });
-    expect(def.triggers[2]).toMatchObject({ trigger: 'upkeepYours' });
+    expect(def.triggers[2]).toMatchObject({ trigger: { when: 'upkeep', player: 'you' } });
   });
 
   it('marks unrecognized rules text, weird layouts, and * P/T as unmodeled', () => {

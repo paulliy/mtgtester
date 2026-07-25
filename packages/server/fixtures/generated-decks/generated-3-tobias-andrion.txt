@@ -1,0 +1,72 @@
+# generated-3-tobias-andrion
+# generated from the engine-supported card pool
+
+Commander
+1 Tobias Andrion
+
+Deck
+18 Island
+18 Plains
+1 Daring Thunder-Thief
+1 Leonin Skyhunter
+1 Warrior's Honor
+1 Pilgrim of the Fires
+1 Knighthood
+1 Standing Troops
+1 Scour from Existence
+1 Reach Through Mists
+1 Chardalyn Dragon
+1 Esper Cormorants
+1 Steel Wall
+1 Ageless Guardian
+1 Tolarian Scholar
+1 Mistral Charger
+1 Akroma's Devoted
+1 Dictate of Heliod
+1 Wall of Mist
+1 Kyoshi Warrior Guard
+1 Bewildering Blizzard
+1 Savai Sabertooth
+1 Border Guard
+1 Silent Artisan
+1 Darksteel Ingot
+1 The Terror of Serpent's Pass
+1 Nyxborn Courser
+1 Shadow Glider
+1 Warrior's Charge
+1 Shield Wall
+1 Azorius Skyguard
+1 Cloaked Siren
+1 Healer's Hawk
+1 Sungrace Pegasus
+1 Territorial Roc
+1 Omega Myr
+1 Sun Sentinel
+1 Cursebreak
+1 Celestial Force
+1 Fortified Rampart
+1 Whitesun's Passage
+1 Counsel of the Soratami
+1 Seraph of the Suns
+1 Benthic Giant
+1 Tormented Angel
+1 Alaborn Musketeer
+1 Zephyr Sprite
+1 Pegasus Charger
+1 Mortal's Ardor
+1 Sworn Guardian
+1 Jhovall Queen
+1 Flying Men
+1 Azure Drake
+1 Leap
+1 Armored Griffin
+1 Sunspire Griffin
+1 Colorful Feiyi Sparrow
+1 Cloud Crusader
+1 Sliver Construct
+1 Tundra Wall
+1 Herald of Dromoka
+1 Manakin
+1 Turn the Tide
+1 Loxodon Line Breaker
+1 Talon Trooper

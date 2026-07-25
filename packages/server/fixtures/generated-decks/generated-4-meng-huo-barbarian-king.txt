@@ -1,0 +1,71 @@
+# generated-4-meng-huo-barbarian-king
+# generated from the engine-supported card pool
+
+Commander
+1 Meng Huo, Barbarian King
+
+Deck
+36 Forest
+1 Thran Dynamo
+1 Scryb Sprites
+1 Copper Host Crusher
+1 Slice in Twain
+1 Kozilek's Channeler
+1 Druid of the Cowl
+1 Nyxborn Colossus
+1 Pheres-Band Warchief
+1 Rubbleback Rhino
+1 Sacred Wolf
+1 Colossal Dreadmaw
+1 Yavimaya Wurm
+1 Crash of Rhinos
+1 Force of Savagery
+1 Spined Karok
+1 Vastwood Gorger
+1 Consulate Skygate
+1 Serpent's Gift
+1 Norwood Ranger
+1 Broodhunter Wurm
+1 Tangle Spider
+1 Awaken the Bear
+1 Roughshod Mentor
+1 Wall of Wood
+1 Crossbow Ambush
+1 Tread Upon
+1 Guardians of Meletis
+1 King Cheetah
+1 Elvish Ranger
+1 Wall of Ice
+1 Moss Kami
+1 Predator's Strike
+1 Primal Rage
+1 Nettle Swine
+1 Wildsize
+1 Moss Diamond
+1 Millennial Gargoyle
+1 Ebony Rhino
+1 Underdark Basilisk
+1 Golden Bear
+1 Quakestrider Ceratops
+1 The Fabulous Frog-Man
+1 Chardalyn Dragon
+1 The Walls of Ba Sing Se
+1 Oakgnarl Warrior
+1 Anvilwrought Raptor
+1 Gnarled Mass
+1 Nylea's Forerunner
+1 Land Leeches
+1 Kessig Recluse
+1 Copper Myr
+1 Canopy Gorger
+1 Grazing Whiptail
+1 Bassara Tower Archer
+1 Feral Krushok
+1 Forest Bear
+1 Barbary Apes
+1 Boreal Druid
+1 Tajuru Snarecaster
+1 Forgotten Sentinel
+1 Swift Spinner
+1 Withstand Death
+1 Moon Sprite

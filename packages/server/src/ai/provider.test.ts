@@ -1,0 +1,325 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { DecisionRequest } from '@mtg/shared';
+import { OpenAiDecisionProvider } from './provider';
+import type { AiClient } from './client';
+import {
+  AuthenticationError,
+  DailyQuotaExhaustedError,
+  HttpError,
+  NoAvailableModelError,
+} from './errors';
+import { DEFAULT_AI_CONFIG } from './config';
+import { AiCallLogger } from './logger';
+import type { Engine } from '@mtg/engine';
+
+describe('OpenAiDecisionProvider', () => {
+  const mockEngine = {
+    view: vi.fn().mockReturnValue({
+      seat: 'P1',
+      life: 40,
+      hand: [],
+      deck: [],
+      graveyard: [],
+      commanders: [],
+      availableMana: {},
+      opponents: [],
+      battlefield: [],
+      stack: [],
+      recentLog: [],
+    }),
+  } as unknown as Engine;
+
+  const mockQueue = {
+    enqueue: vi.fn().mockImplementation((fn: () => Promise<unknown>) => fn()),
+  };
+
+  beforeEach(() => {
+    mockQueue.enqueue.mockClear();
+  });
+
+  const fixtureReq: DecisionRequest = {
+    requestId: 'req-1',
+    gameId: 'g1',
+    turn: 1,
+    activePlayer: 'P1',
+    decidingPlayer: 'P1',
+    phase: 'precombatMain',
+    step: null,
+    decisionType: 'priority',
+    prompt: 'You have priority.',
+    legalActions: [
+      { id: 0, type: 'pass', description: 'Pass priority' },
+      { id: 1, type: 'castSpell', description: 'Cast Spell' },
+    ],
+  };
+
+  it('returns valid primary decision on first try', async () => {
+    const mockClient: AiClient = {
+      activeModel: 'm1',
+      requestDecision: vi.fn().mockResolvedValue({
+        response: { requestId: 'req-1', actionId: 0, note: 'Pass' },
+        meta: {
+          model: 'm1',
+          promptTokens: 10,
+          responseTokens: 5,
+          latencyMs: 100,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{"actionId":0}',
+        },
+      }),
+    };
+
+    const provider = new OpenAiDecisionProvider(mockClient, mockQueue, mockEngine, DEFAULT_AI_CONFIG);
+    const res = await provider.decide(fixtureReq);
+
+    expect(res.actionId).toBe(0);
+    expect(mockEngine.view).toHaveBeenCalledWith('P1');
+    expect(mockClient.requestDecision).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries once with corrective error message when primary is invalid', async () => {
+    let calls = 0;
+    const mockClient: AiClient = {
+      activeModel: 'm1',
+      requestDecision: vi.fn().mockImplementation(async () => {
+        calls++;
+        if (calls === 1) {
+          // Invalid actionId
+          return {
+            response: { requestId: 'req-1', actionId: 99 },
+            meta: { rawResponse: '{"actionId":99}' },
+          };
+        }
+        return {
+          response: { requestId: 'req-1', actionId: 0 },
+          meta: { rawResponse: '{"actionId":0}' },
+        };
+      }),
+    };
+
+    const provider = new OpenAiDecisionProvider(mockClient, mockQueue, mockEngine, DEFAULT_AI_CONFIG);
+    const res = await provider.decide(fixtureReq);
+
+    expect(res.actionId).toBe(0);
+    expect(calls).toBe(2);
+  });
+
+  it('falls back to safest conservative action when retries also fail', async () => {
+    const mockClient: AiClient = {
+      activeModel: 'm1',
+      requestDecision: vi.fn().mockResolvedValue({
+        response: { requestId: 'req-1', actionId: 99 },
+        meta: { rawResponse: '{"actionId":99}' },
+      }),
+    };
+
+    const provider = new OpenAiDecisionProvider(mockClient, mockQueue, mockEngine, DEFAULT_AI_CONFIG);
+    const res = await provider.decide(fixtureReq);
+
+    // Menu has action 0 as 'pass'
+    expect(res.actionId).toBe(0);
+    expect(res.note).toContain('Fallback');
+  });
+
+  describe('a request that never returns a response at all (§7.7 step 3)', () => {
+    /**
+     * The §7.7 chain used to cover only responses that arrived and failed validation. A
+     * transport-layer failure propagated out of `decide()` and ended the game — which is what
+     * `HTTP 400 json_validate_failed` did at turn 22 of a real Groq run.
+     */
+    const throwingClient = (err: Error): AiClient => ({
+      activeModel: 'm1',
+      requestDecision: vi.fn().mockRejectedValue(err),
+    });
+
+    it('falls back to the safest legal action instead of ending the game', async () => {
+      const provider = new OpenAiDecisionProvider(
+        throwingClient(new HttpError(400, '{"code":"json_validate_failed"}')),
+        mockQueue,
+        mockEngine,
+        DEFAULT_AI_CONFIG,
+      );
+
+      const res = await provider.decide(fixtureReq);
+      expect(res.actionId).toBe(0); // "Pass priority" — the conservative option
+    });
+
+    it.each([
+      ['daily quota', new DailyQuotaExhaustedError()],
+      ['no available model', new NoAvailableModelError(['m1'])],
+      ['authentication', new AuthenticationError()],
+    ])('still propagates a terminal %s error rather than silently falling back', async (_l, err) => {
+      // Falling back here would quietly turn every remaining decision into a fallback and
+      // report a "completed" game that barely consulted the model.
+      const provider = new OpenAiDecisionProvider(
+        throwingClient(err),
+        mockQueue,
+        mockEngine,
+        DEFAULT_AI_CONFIG,
+      );
+
+      await expect(provider.decide(fixtureReq)).rejects.toThrow(err.constructor as never);
+    });
+  });
+});
+
+describe('OpenAiDecisionProvider — local short-circuits', () => {
+  const mockEngine = {
+    view: vi.fn().mockReturnValue({
+      seat: 'P1',
+      life: 40,
+      hand: [],
+      deck: [],
+      graveyard: [],
+      commanders: [],
+      availableMana: {},
+      opponents: [],
+      battlefield: [],
+      stack: [],
+      recentLog: [],
+    }),
+  } as unknown as Engine;
+
+  /** An upkeep where the only alternative to passing is holding an instant. */
+  const idleUpkeep: DecisionRequest = {
+    requestId: 'req-h1',
+    gameId: 'g1',
+    turn: 8,
+    activePlayer: 'P2',
+    decidingPlayer: 'P1',
+    phase: 'beginning',
+    step: 'upkeep',
+    decisionType: 'priority',
+    prompt: 'You have priority.',
+    legalActions: [
+      { id: 0, type: 'pass', description: 'Pass priority' },
+      {
+        id: 1,
+        type: 'castSpell',
+        description: "Cast Predator's Strike",
+        data: { instantSpeed: true },
+      },
+    ],
+  };
+
+  /** A real decision no heuristic covers: a sorcery-speed cast alongside a land drop. */
+  const realChoice: DecisionRequest = {
+    ...idleUpkeep,
+    requestId: 'req-m1',
+    phase: 'precombatMain',
+    step: null,
+    activePlayer: 'P1',
+    legalActions: [
+      { id: 0, type: 'pass', description: 'Pass priority' },
+      { id: 1, type: 'playLand', description: 'Play Forest' },
+      {
+        id: 2,
+        type: 'castSpell',
+        description: 'Cast Tor Giant ({3}{R})',
+        data: { instantSpeed: false },
+      },
+    ],
+  };
+
+  function makeQueue(): { enqueue: ReturnType<typeof vi.fn> } {
+    return { enqueue: vi.fn().mockImplementation((fn: () => Promise<unknown>) => fn()) };
+  }
+
+  function makeClient(actionId = 0): AiClient {
+    return {
+      activeModel: 'm1',
+      requestDecision: vi.fn().mockImplementation((_prompt, request: DecisionRequest) =>
+        Promise.resolve({
+          response: { requestId: request.requestId, actionId },
+          meta: {
+            model: 'm1',
+            promptTokens: 10,
+            responseTokens: 5,
+            latencyMs: 100,
+            wasRetry: false,
+            wasFallback: false,
+            rawResponse: `{"actionId":${actionId}}`,
+          },
+        }),
+      ),
+    };
+  }
+
+  it('answers a heuristic-covered decision without touching the queue', async () => {
+    const queue = makeQueue();
+    const client = makeClient();
+    const provider = new OpenAiDecisionProvider(client, queue, mockEngine, DEFAULT_AI_CONFIG);
+
+    const res = await provider.decide(idleUpkeep);
+
+    expect(res.actionId).toBe(0);
+    expect(res.note).toContain('Heuristic');
+    expect(queue.enqueue).not.toHaveBeenCalled();
+    expect(client.requestDecision).not.toHaveBeenCalled();
+  });
+
+  it('still records the skipped call so the savings are measurable', async () => {
+    const logger = new AiCallLogger(null, 'g1');
+    const provider = new OpenAiDecisionProvider(
+      makeClient(),
+      makeQueue(),
+      mockEngine,
+      DEFAULT_AI_CONFIG,
+      logger,
+    );
+
+    await provider.decide(idleUpkeep);
+
+    expect(logger.summary()).toMatchObject({
+      totalDecisions: 1,
+      totalCalls: 0,
+      skippedCalls: 1,
+    });
+  });
+
+  it('calls the model when heuristics are disabled', async () => {
+    const queue = makeQueue();
+    const provider = new OpenAiDecisionProvider(
+      makeClient(),
+      queue,
+      mockEngine,
+      { ...DEFAULT_AI_CONFIG, heuristicsEnabled: false, decisionCacheEnabled: false },
+      undefined,
+    );
+
+    await provider.decide(idleUpkeep);
+
+    expect(queue.enqueue).toHaveBeenCalledTimes(1);
+  });
+
+  it('serves a repeat of the same decision from cache instead of calling again', async () => {
+    const queue = makeQueue();
+    const client = makeClient(1);
+    const provider = new OpenAiDecisionProvider(client, queue, mockEngine, DEFAULT_AI_CONFIG);
+
+    const first = await provider.decide(realChoice);
+    const second = await provider.decide({ ...realChoice, requestId: 'req-m2', turn: 12 });
+
+    expect(first.actionId).toBe(1);
+    expect(second.actionId).toBe(1);
+    expect(second.requestId).toBe('req-m2');
+    expect(second.note).toContain('Cache');
+    expect(client.requestDecision).toHaveBeenCalledTimes(1);
+    expect(queue.enqueue).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls the model again when the cache is disabled', async () => {
+    const queue = makeQueue();
+    const provider = new OpenAiDecisionProvider(makeClient(1), queue, mockEngine, {
+      ...DEFAULT_AI_CONFIG,
+      decisionCacheEnabled: false,
+    });
+
+    await provider.decide(realChoice);
+    await provider.decide({ ...realChoice, requestId: 'req-m2' });
+
+    expect(queue.enqueue).toHaveBeenCalledTimes(2);
+  });
+
+});

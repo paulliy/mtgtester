@@ -15,6 +15,13 @@ export interface EngineActionOption {
   /** Target slots this option requires; each choice must come from `options`. */
   targets?: { slot: number; options: ObjectId[] }[];
   payload?: unknown;
+  /**
+   * Structured facts about this option, mirrored into `LegalAction.data` and sent to the
+   * decision provider. Purely descriptive — the engine never reads it back, and legality
+   * never depends on it. It exists so a consumer can reason about an option numerically
+   * (is this instant-speed? what is this attacker's power?) instead of parsing `description`.
+   */
+  data?: Record<string, unknown>;
 }
 
 export interface PendingDecision {
@@ -35,11 +42,19 @@ export interface DecisionOutcome {
 /** Generator type for all engine flow code. */
 export type GameGen<T> = Generator<PendingDecision, T, DecisionOutcome>;
 
+function isPassOption(opt: EngineActionOption): boolean {
+  return opt.type === 'pass' || opt.type === 'passAndYieldTurn' || opt.type === 'yieldToAbility';
+}
+
 /**
  * True when a pending decision has no real choice: a single option whose every target
- * slot has at most one candidate. The pump resolves these itself (brief §5.1).
+ * slot has at most one candidate, or a priority window where all options are pass variations.
+ * The pump resolves these itself (brief §5.1).
  */
 export function isForced(decision: PendingDecision): boolean {
+  if (decision.decisionType === 'priority' && decision.options.every(isPassOption)) {
+    return true;
+  }
   if (decision.options.length !== 1) return false;
   const only = decision.options[0] as EngineActionOption;
   return (only.targets ?? []).every((t) => t.options.length <= 1);
@@ -47,6 +62,9 @@ export function isForced(decision: PendingDecision): boolean {
 
 /** Build the outcome for a forced decision. */
 export function forcedOutcome(decision: PendingDecision): DecisionOutcome {
+  if (decision.decisionType === 'priority' && decision.options.every(isPassOption)) {
+    return { index: 0, targets: new Map() };
+  }
   const only = decision.options[0] as EngineActionOption;
   const targets = new Map<number, ObjectId>();
   for (const slot of only.targets ?? []) {

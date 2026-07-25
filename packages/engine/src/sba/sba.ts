@@ -8,10 +8,12 @@
  */
 
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
+import { computeTargetOptions } from '../actions/legal';
 import type { GameGen } from '../decisions';
 import { computeCharacteristics } from '../effects/continuous';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
+import { resetOpponentYields } from '../turn/priority';
 import { moveObject } from '../state/objects';
 import {
   effectivePT,
@@ -254,13 +256,15 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
           obj.commanderSbaPending = false;
           continue;
         }
+        // Default to command zone: Phase 2 models no graveyard/exile recursion, so
+        // leaving a commander out of the command zone is never correct. By offering a
+        // single option, isForced() auto-resolves this without querying the AI.
         const outcome = yield {
           decisionType: 'commanderReplacement',
           player: player.id,
           prompt: `${obj.name} is in ${obj.zone === 'graveyard' ? 'your graveyard' : 'exile'}. Move it to the command zone?`,
           options: [
             { type: 'commanderToCommandZone', description: `Move ${obj.name} to the command zone` },
-            { type: 'leave', description: `Leave ${obj.name} where it is` },
           ],
         };
         obj.commanderSbaPending = false;
@@ -306,14 +310,65 @@ function* placePendingTriggers(ctx: GameContext): GameGen<boolean> {
       }
       const trigger = mine[pick] as PendingTrigger;
       mine = mine.filter((_, i) => i !== pick);
-      pushTriggerOnStack(ctx, trigger);
+      yield* pushTriggerOnStack(ctx, trigger);
     }
   }
   return true;
 }
 
-function pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): void {
+/**
+ * Put one trigger on the stack, choosing its targets on the way (CR 603.3d — a triggered
+ * ability's targets are chosen as it is put on the stack, not when it resolves).
+ *
+ * CR 603.3d also says an ability whose targets cannot all be chosen is simply removed from
+ * the stack. So a slot with zero legal options means the trigger never arrives at all —
+ * distinct from fizzling, which happens later if the chosen targets stop being legal.
+ */
+function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen<void> {
   const s = ctx.state;
+  const specs = trigger.ability.targets;
+  const chosen: ObjectId[] = [];
+
+  if (specs.length > 0) {
+    const slots: { slot: number; options: ObjectId[] }[] = [];
+    for (const [i, spec] of specs.entries()) {
+      const options = computeTargetOptions(ctx, spec, trigger.controllerId);
+      if (options.length === 0) {
+        emit(
+          ctx,
+          'triggerRemovedNoTargets',
+          { source: trigger.sourceName, kind: spec.kind },
+          trigger.controllerId,
+        );
+        debug(
+          ctx,
+          'stack',
+          `${trigger.sourceName}: no legal ${spec.kind} for slot ${i} — trigger removed (CR 603.3d)`,
+        );
+        return;
+      }
+      slots.push({ slot: i, options });
+    }
+
+    // One decision carrying every slot. `isForced` auto-resolves it when each slot has a
+    // single candidate, so the common "ETB, destroy the only creature" costs no AI call.
+    const outcome = yield {
+      decisionType: 'chooseTargets',
+      player: trigger.controllerId,
+      prompt: `Choose targets for ${trigger.sourceName} — ${trigger.ability.description ?? ''}`,
+      options: [
+        {
+          type: 'chooseTargets',
+          description: `Targets for ${trigger.sourceName}`,
+          targets: slots,
+        },
+      ],
+    };
+    for (const { slot, options } of slots) {
+      chosen.push(outcome.targets.get(slot) ?? (options[0] as ObjectId));
+    }
+  }
+
   const id = `o-${s.nextObjectNum++}` as ObjectId;
   const description = trigger.ability.description ?? trigger.sourceName;
   s.stack.push({
@@ -322,13 +377,17 @@ function pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): void {
     controllerId: trigger.controllerId,
     kind: 'triggeredAbility',
     description: `${trigger.sourceName} — ${description}`,
-    targets: [],
+    targets: chosen,
     card: null,
     ability: trigger.ability,
     sourceOracleId: trigger.sourceOracleId,
     sourceCardId: trigger.sourceCardId,
     isCommanderCast: false,
+    ...(trigger.triggerObjectCardId !== undefined
+      ? { triggerObjectCardId: trigger.triggerObjectCardId }
+      : {}),
   });
+  resetOpponentYields(ctx, trigger.controllerId);
   emit(ctx, 'triggerOnStack', { source: trigger.sourceName, description }, trigger.controllerId);
   debug(ctx, 'stack', `trigger on stack: ${trigger.sourceName} — ${description}`);
 }

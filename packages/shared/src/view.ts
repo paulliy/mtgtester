@@ -11,6 +11,8 @@ export interface CardView {
   manaCost?: string;
   typeLine?: string;
   oracleText?: string;
+  power?: number | null;
+  toughness?: number | null;
 }
 
 export interface CommanderView {
@@ -26,6 +28,18 @@ export interface PermanentView {
   id: ObjectId;
   controller: PlayerId;
   name: string;
+  /**
+   * Printed type line and rules text. Populated for every permanent: a battlefield is
+   * public information, and §7.4 names permanents on the battlefield as one of the zones
+   * whose oracle text is relevant to the decision. Without it the AI can see that an
+   * opponent controls "Blood Moon" but not what it does.
+   *
+   * These are the PRINTED characteristics, not the layer-computed ones — power/toughness
+   * below already carry the computed values, and re-deriving a full text box after
+   * continuous effects is not something the engine models.
+   */
+  typeLine?: string;
+  oracleText?: string;
   power?: number | null;
   toughness?: number | null;
   tapped: boolean;

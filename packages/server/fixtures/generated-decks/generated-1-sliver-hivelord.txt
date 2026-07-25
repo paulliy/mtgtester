@@ -1,0 +1,75 @@
+# generated-1-sliver-hivelord
+# generated from the engine-supported card pool
+
+Commander
+1 Sliver Hivelord
+
+Deck
+8 Swamp
+7 Forest
+7 Mountain
+7 Island
+7 Plains
+1 Dawnstrike Paladin
+1 Aang, Air Nomad
+1 Leaf Gilder
+1 Alaborn Trooper
+1 Shadow Glider
+1 War Mammoth
+1 Uncomfortable Chill
+1 Goblin Hero
+1 Raging Goblin
+1 Savannah Lions
+1 Cumber Stone
+1 Antagonize
+1 Knight Exemplar
+1 Nyxborn Brute
+1 Kasimir the Lone Wolf
+1 Galewind Moose
+1 Steward of Valeron
+1 Raging Poltergeist
+1 Needlepeak Spider
+1 Warclamp Mastiff
+1 Ritual of Rejuvenation
+1 Birds of Paradise
+1 Impale
+1 Tobias Andrion
+1 Path of Anger's Flame
+1 Tarmogoyf
+1 Noxious Newt
+1 Happy Hogan, Dauntless Driver
+1 Nyxborn Seaguard
+1 Lowland Giant
+1 Armored Warhorse
+1 Rib Cage Spider
+1 Moment of Triumph
+1 Sungrace Pegasus
+1 Magnigoth Sentry
+1 Tidings
+1 Gaea's Anthem
+1 Springsage Ritual
+1 Dampening Pulse
+1 Aven Sentry
+1 Raging Kavu
+1 Maw of the Mire
+1 Blight Rot
+1 Giant Scorpion
+1 Copper Myr
+1 Maned Serval
+1 Nylea's Forerunner
+1 A.I.M. Bot
+1 Plated Slagwurm
+1 Dross Crocodile
+1 Axegrinder Giant
+1 Traveling Philosopher
+1 Spiked Baloth
+1 Golden Bear
+1 Moldering Karok
+1 Ray of Dissolution
+1 Wild Ceratok
+1 Geist of the Moors
+1 Hill Giant
+1 Scryb Sprites
+1 Tajuru Snarecaster
+1 Azure Drake
+1 Headwater Sentries

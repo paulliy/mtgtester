@@ -47,6 +47,7 @@ describe('the stack (brief §5.5)', () => {
   it('resolves LIFO: a response resolves before the original spell', () => {
     const ctx = mainPhaseContext();
     const target = spawn(ctx, 'P1', bear());
+    target.attacking = 'P2'; // In combat: combat tricks are legally available
     spawn(ctx, 'P1', forest());
     spawn(ctx, 'P2', mountain());
     conjure(ctx, 'P1', giantGrowth(), 'hand');
@@ -124,6 +125,7 @@ describe('the stack (brief §5.5)', () => {
     // target survives a response that did NOT kill it.
     const ctx = mainPhaseContext();
     const target = spawn(ctx, 'P1', bear());
+    target.attacking = 'P2'; // In combat: combat tricks are legally available
     spawn(ctx, 'P1', forest());
     conjure(ctx, 'P1', giantGrowth(), 'hand');
 

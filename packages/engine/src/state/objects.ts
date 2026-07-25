@@ -9,7 +9,10 @@
  */
 
 import type { ObjectId, PlayerId, Zone } from '@mtg/shared';
+import { evaluateCondition, resolveCondition } from '../cards/condition';
+import type { SelectorSource } from '../cards/selector';
 import type { GameGen } from '../decisions';
+import { matchesSelector } from '../effects/continuous';
 import { debug, emit } from '../log/log';
 import { getDefByOracleId, triggersOf } from './queries';
 import type {
@@ -35,6 +38,12 @@ export interface MoveDestination {
   zone: Zone;
   /** Battlefield only: the controller it enters under (defaults to its owner). */
   controllerId?: PlayerId;
+  /**
+   * Battlefield only: the moving EFFECT says it enters tapped ("put it onto the battlefield
+   * tapped"). Independent of the card's own `entersTapped`/`entersTappedUnless`, and decisive:
+   * a condition that would have let it enter untapped cannot untap it (CR 614.1c).
+   */
+  entersTapped?: boolean;
   /** Library only: where to put it. Defaults to 'top'. Index 0 is the top. */
   libraryPosition?: 'top' | 'bottom';
 }
@@ -94,17 +103,28 @@ export function makePermanent(
   ctx: GameContext,
   obj: EngineObject,
   controllerId: PlayerId,
+  /**
+   * Tapped-ness already decided by an as-enters replacement (`entersTappedUnless`). Resolved by
+   * the caller because that condition can be a *choice* ("you may pay 2 life"), and this
+   * function is not a generator so it cannot ask.
+   */
+  entersTappedOverride?: boolean,
 ): EnginePermanent {
   const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
   // Planeswalkers/battles enter with their printed loyalty/defense (CR 306.5b, 310.6).
   const counters: Record<string, number> = {};
   if (def.types.includes('Planeswalker') && def.loyalty !== null) counters['loyalty'] = def.loyalty;
   if (def.types.includes('Battle') && def.defense !== null) counters['defense'] = def.defense;
+  // "~ enters with N +1/+1 counters on it" is a replacement effect (CR 614.1c): the counters
+  // are already there as it enters, so it is never momentarily 0-toughness.
+  for (const [counter, n] of Object.entries(def.entersWithCounters ?? {})) {
+    counters[counter] = (counters[counter] ?? 0) + n;
+  }
   return {
     ...reincarnate(ctx, obj, 'battlefield'),
     zone: 'battlefield',
     controllerId,
-    tapped: def.entersTapped,
+    tapped: entersTappedOverride ?? def.entersTapped,
     power: def.power,
     toughness: def.toughness,
     damageMarked: 0,
@@ -161,7 +181,23 @@ export function* moveObject(
 
   let next: EngineCardObject | EnginePermanent;
   if (target.zone === 'battlefield') {
-    const perm = makePermanent(ctx, obj, target.controllerId ?? obj.ownerId);
+    const controllerId = target.controllerId ?? obj.ownerId;
+    // As-enters replacement (CR 614.1c): "enters tapped unless <condition>". Resolved BEFORE
+    // the permanent exists, so it is never momentarily tapped-then-untapped — and because the
+    // condition may be a choice ("you may pay 2 life"), it is resolved here, in the generator.
+    const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+    let entersTappedOverride: boolean | undefined;
+    if (def.entersTappedUnless !== undefined) {
+      const met = yield* resolveCondition(
+        ctx,
+        def.entersTappedUnless,
+        { cardId: obj.cardId, controllerId },
+        obj.name,
+      );
+      entersTappedOverride = !met;
+    }
+    if (target.entersTapped === true) entersTappedOverride = true;
+    const perm = makePermanent(ctx, obj, controllerId, entersTappedOverride);
     ctx.state.battlefield.push(perm);
     next = perm;
   } else {
@@ -205,9 +241,9 @@ export function* moveObject(
   });
   debug(ctx, 'zoneChange', `${obj.name}: ${from} → ${target.zone}`, { cardId: obj.cardId });
 
-  // Triggers (Phase 2 set): ETB on arriving, dies on battlefield → graveyard.
+  // Triggers: enters on arriving, dies on battlefield → graveyard.
   if (target.zone === 'battlefield' && from !== 'battlefield') {
-    queueTriggers(ctx, next as EnginePermanent, 'etbSelf');
+    queueTriggersForEvent(ctx, 'enters', next as EnginePermanent);
   }
   if (from === 'battlefield') {
     queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
@@ -217,26 +253,57 @@ export function* moveObject(
 }
 
 /**
- * Queue matching triggers from a permanent's *current* abilities (CR 603.3b). For `diesSelf`
- * the permanent has already left the battlefield, so this is last-known information: continuous
- * effects from other permanents still apply to it, which is what decides whether it had the
- * trigger at all.
+ * Queue every ability that triggers on `subject`'s event (CR 603.3b).
+ *
+ * Two vantage points, one mechanism. The subject's OWN abilities fire on `{kind:'self'}`; every
+ * other battlefield permanent's abilities fire if their selector matches the subject ("whenever
+ * a Dragon you control attacks"). So this scans the whole battlefield, not just the object the
+ * event happened to.
+ *
+ * Everything is read from *current* characteristics. For a `dies` event the permanent has
+ * already left, so that is last-known information — continuous effects from other permanents
+ * still applied to it, and that is what decides whether it had the trigger at all.
  */
-export function queueTriggers(
+export function queueTriggersForEvent(
   ctx: GameContext,
-  perm: EnginePermanent,
-  event: 'etbSelf' | 'diesSelf',
+  when: 'enters' | 'dies' | 'attacks',
+  subject: EnginePermanent,
 ): void {
-  for (const ability of triggersOf(ctx, perm)) {
-    if (ability.trigger === event) {
+  // A dying permanent is gone from the battlefield but is still an ability source for its own
+  // "when this dies" trigger, so it has to be added back as a candidate source.
+  const sources = ctx.state.battlefield.some((p) => p.cardId === subject.cardId)
+    ? ctx.state.battlefield
+    : [...ctx.state.battlefield, subject];
+
+  for (const source of [...sources]) {
+    for (const ability of triggersOf(ctx, source)) {
+      const spec = ability.trigger;
+      if (spec === undefined || spec.when !== when) continue;
+
+      const from: SelectorSource = { cardId: source.cardId, controllerId: source.controllerId };
+      const matches =
+        spec.subject.kind === 'self'
+          ? source.cardId === subject.cardId
+          : matchesSelector(ctx, subject, spec.subject.selector, from);
+      if (!matches) continue;
+
+      // Intervening-if, first check (CR 603.4): a trigger whose condition is false right now
+      // never goes on the stack at all.
+      if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) {
+        debug(ctx, 'stack', `trigger not queued: ${source.name} — intervening-if false`);
+        continue;
+      }
+
       ctx.state.pendingTriggers.push({
-        controllerId: perm.controllerId,
-        sourceCardId: perm.cardId,
-        sourceOracleId: perm.oracleId,
-        sourceName: perm.name,
+        controllerId: source.controllerId,
+        sourceCardId: source.cardId,
+        sourceOracleId: source.oracleId,
+        sourceName: source.name,
         ability,
+        // Only meaningful when the subject is something other than the source itself.
+        ...(spec.subject.kind === 'self' ? {} : { triggerObjectCardId: subject.cardId }),
       });
-      debug(ctx, 'stack', `trigger queued: ${perm.name} — ${ability.description ?? ''}`);
+      debug(ctx, 'stack', `trigger queued: ${source.name} — ${ability.description ?? ''}`);
     }
   }
 }
@@ -247,5 +314,5 @@ function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: 
   if (to !== 'graveyard') return;
   const perm = obj as EnginePermanent;
   if (perm.controllerId === undefined) return;
-  queueTriggers(ctx, perm, 'diesSelf');
+  queueTriggersForEvent(ctx, 'dies', perm);
 }

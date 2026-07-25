@@ -6,11 +6,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
+import { queueTriggersForEvent } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
 import { runTurn } from '../src/turn/turn';
-import { conjure, copies, forest, gameConfig, oracle, pick, pump, spawn } from './fixtures';
+import { bear, conjure, copies, forest, gameConfig, oracle, pick, pump, spawn } from './fixtures';
 
 function ctx4(seed = 'triggers'): GameContext {
   const ctx = createGame(
@@ -160,5 +162,113 @@ describe('triggered abilities (brief §5.5)', () => {
     expect(ctx.state.battlefield.some((p) => p.name === 'Test Sage')).toBe(true);
     expect(ctx.state.eventLog.some((e) => e.type === 'triggerOnStack')).toBe(true);
     expect(ctx.state.eventLog.filter((e) => e.type === 'draw')).toHaveLength(1);
+  });
+});
+
+/**
+ * CR 603.3d: a triggered ability's targets are chosen as it is PUT ON THE STACK, not when it
+ * resolves — and an ability whose targets cannot be chosen is removed from the stack rather
+ * than fizzling later. The three paths below are the whole rule.
+ */
+describe('targeted triggered abilities (CR 603.3d)', () => {
+  const etbSlayer = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Test Slayer',
+      typeLine: 'Creature — Test Assassin',
+      manaCost: '{2}{B}',
+      power: '2',
+      toughness: '2',
+      oracleText: 'When Test Slayer enters the battlefield, destroy target creature.',
+    });
+
+  it('parses a trigger that declares a target', () => {
+    const def = interpretCard(etbSlayer());
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.targets).toEqual([{ kind: 'creature' }]);
+    expect(def.triggers[0]?.effects).toEqual([{ op: 'destroy', target: 0 }]);
+  });
+
+  it('surfaces a target choice when several are legal, and destroys the chosen one', () => {
+    const ctx = ctx4();
+    const decoy = spawn(ctx, 'P2', bear());
+    const victim = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Test Victim', typeLine: 'Creature — Test Ox', power: '3', toughness: '3' }),
+    );
+    const slayer = spawn(ctx, 'P1', etbSlayer());
+    queueTriggersForEvent(ctx, 'enters', slayer);
+
+    const { decisions } = pump(runTurn(ctx), (d) => {
+      if (d.decisionType === 'chooseTargets') {
+        return { index: 0, targets: new Map([[0, victim.id]]) };
+      }
+      return { index: 0, targets: new Map() };
+    });
+
+    expect(decisions.some((d) => d.decisionType === 'chooseTargets')).toBe(true);
+    expect(ctx.state.battlefield.some((p) => p.id === victim.id)).toBe(false);
+    expect(ctx.state.battlefield.some((p) => p.id === decoy.id)).toBe(true);
+  });
+
+  it('auto-resolves the choice when only one target is legal (no AI call — brief §5.1)', () => {
+    const ctx = ctx4();
+    const only = spawn(ctx, 'P2', bear());
+    // The trigger is queued without putting its source on the battlefield, so the bear is the
+    // ONLY creature — a slayer permanent would itself be a second legal target.
+    const slayerCard = etbSlayer();
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: 'test-slayer-card',
+      sourceOracleId: slayerCard.oracleId,
+      sourceName: slayerCard.name,
+      ability: interpretCard(slayerCard).triggers[0]!,
+    });
+
+    const { decisions } = pump(runTurn(ctx));
+
+    expect(decisions.some((d) => d.decisionType === 'chooseTargets')).toBe(false);
+    expect(ctx.state.battlefield.some((p) => p.id === only.id)).toBe(false);
+  });
+
+  it('removes the trigger from the stack when no legal target exists', () => {
+    const ctx = ctx4();
+    // A creature-less battlefield: the slayer itself is never spawned, so "target creature"
+    // has no candidates at all and the ability never arrives (CR 603.3d).
+    const slayerCard = etbSlayer();
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: 'test-slayer-card',
+      sourceOracleId: slayerCard.oracleId,
+      sourceName: slayerCard.name,
+      ability: interpretCard(slayerCard).triggers[0]!,
+    });
+
+    const { decisions } = pump(runTurn(ctx));
+
+    expect(decisions.some((d) => d.decisionType === 'chooseTargets')).toBe(false);
+    expect(ctx.state.eventLog.some((e) => e.type === 'triggerRemovedNoTargets')).toBe(true);
+    expect(ctx.state.eventLog.some((e) => e.type === 'triggerOnStack')).toBe(false);
+  });
+
+  it('fizzles when the chosen target becomes illegal before resolution (CR 608.2b)', () => {
+    const ctx = ctx4();
+    const victim = spawn(ctx, 'P2', bear());
+    const slayer = spawn(ctx, 'P1', etbSlayer());
+    queueTriggersForEvent(ctx, 'enters', slayer);
+
+    // Remove the target in response — after it was chosen, before the trigger resolves.
+    const gen = runTurn(ctx);
+    let step = gen.next();
+    while (step.done !== true) {
+      if (step.value.decisionType === 'chooseTargets') {
+        step = gen.next({ index: 0, targets: new Map([[0, victim.id]]) });
+        ctx.state.battlefield = ctx.state.battlefield.filter((p) => p.id !== victim.id);
+        continue;
+      }
+      step = gen.next({ index: 0, targets: new Map() });
+    }
+
+    expect(ctx.state.eventLog.some((e) => e.type === 'fizzle')).toBe(true);
   });
 });

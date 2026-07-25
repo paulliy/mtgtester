@@ -5,6 +5,13 @@
  * shapes follow §9's suggested schema. JSON columns hold arrays/objects serialized as text.
  */
 
+/**
+ * Columns added to a table that already exists in someone's on-disk database. `CREATE TABLE IF
+ * NOT EXISTS` silently leaves an older table alone, so each of these runs separately and its
+ * "duplicate column name" error is expected and ignored. Idempotent by construction.
+ */
+export const MIGRATIONS_SQL: readonly string[] = [`ALTER TABLE ai_calls ADD COLUMN source TEXT`];
+
 export const SCHEMA_SQL = `
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
@@ -98,6 +105,9 @@ CREATE TABLE IF NOT EXISTS ai_calls (
   was_retry       INTEGER,
   was_fallback    INTEGER,
   latency_ms      INTEGER,
+  -- How the decision was answered: 'primary' | 'retry' | 'fallback' | 'heuristic' | 'cache'.
+  -- The last two cost no network call; counting them is how the RPM savings are measured.
+  source          TEXT,
   PRIMARY KEY (game_id, sequence)
 );
 

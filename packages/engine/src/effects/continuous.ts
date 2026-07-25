@@ -34,7 +34,7 @@
 import type { ManaAbilitySpec } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
-import { selectMatches } from '../cards/selector';
+import { selectMatches, selectorIsEventOnly } from '../cards/selector';
 import { evaluateValue, isDynamicValue } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
@@ -87,6 +87,15 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
     const def = ctx.defs.get(source.oracleId);
     if (def === undefined) continue;
     for (const s of def.staticEffects as StaticEffect[]) {
+      // A selector that reads power cannot be a continuous effect's affected set: it would make
+      // one 7d effect able to change another's, reinstating the dependency analysis `applyGroup`
+      // deliberately skips for 7d. Event-only selectors are legal in triggers and conditions
+      // (see `cards/selector.ts`), so this is a modeling error, not an unmodeled card.
+      if (selectorIsEventOnly(s.affects)) {
+        throw new Error(
+          `engine bug: ${def.name} has a static effect whose selector reads power or keywords — event-only selectors cannot be a continuous effect's affected set`,
+        );
+      }
       out.push({
         applies: {
           kind: 'selector',
@@ -137,7 +146,23 @@ function candidateOf(perm: EnginePermanent, chars: Characteristics): SelectorCan
     supertypes: chars.supertypes,
     subtypes: chars.subtypes,
     colors: chars.colors,
+    power: chars.power,
+    keywords: chars.keywords,
   };
+}
+
+/**
+ * Does `perm` match `selector` right now? The event-time counterpart to `selectPermanents`:
+ * a trigger asks about one specific object ("whenever a Dragon YOU CONTROL attacks") rather
+ * than enumerating the board.
+ */
+export function matchesSelector(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  selector: Selector,
+  source: SelectorSource,
+): boolean {
+  return selectMatches(candidateOf(perm, computeCharacteristics(ctx, perm)), selector, source);
 }
 
 function affects(effect: LayerEffect, entry: Working): boolean {
@@ -166,6 +191,8 @@ function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): 
         chars.triggers = [];
         chars.manaAbilities = [];
         chars.loseAbilities = true;
+      } else if ('addManaAbility' in op) {
+        chars.manaAbilities.push(op.addManaAbility);
       } else if (!chars.keywords.includes(op.addKeyword)) {
         chars.keywords.push(op.addKeyword);
       }

@@ -1,0 +1,137 @@
+/**
+ * Real-deck model-coverage report (see `cards/coverage.ts` for what the families mean).
+ *
+ *   bun run coverage                          # the committed fixture decks
+ *   bun run coverage --json                   # machine-diffable, for tracking a delta
+ *   bun run coverage <fileOrUrl> [more...]    # arbitrary decks, including live URLs
+ *
+ * Paths are resolved from the repository root (the process working directory).
+ */
+
+import { readFileSync, readdirSync } from 'node:fs';
+import { resolve, join, basename } from 'node:path';
+import type { OracleCard } from '@mtg/shared';
+import { loadOracleIndexFromFile } from '../cards/oracle-index';
+import { measureCoverage, type DeckCards } from '../cards/coverage';
+import { importDeck } from '../decks/source';
+import { resolveDeck } from '../decks/resolve';
+
+const BULK_PATH = 'data/scryfall-oracle-cards.json';
+const FIXTURE_DIR = 'packages/server/fixtures/coverage-decks';
+
+function parseArgs(argv: string[]): { inputs: string[]; json: boolean } {
+  const inputs: string[] = [];
+  let json = false;
+  for (const arg of argv) {
+    if (arg === '--json') json = true;
+    else inputs.push(arg);
+  }
+  return { inputs, json };
+}
+
+/**
+ * Default to every fixture in the directory. Listed explicitly rather than via a shell glob:
+ * PowerShell does not expand `*.txt`, so a glob argument would arrive here literal.
+ */
+function defaultInputs(): string[] {
+  return readdirSync(resolve(FIXTURE_DIR))
+    .filter((f) => f.endsWith('.txt'))
+    .sort()
+    .map((f) => join(FIXTURE_DIR, f));
+}
+
+function readInput(arg: string): string {
+  if (/^https?:\/\//i.test(arg)) return arg;
+  return readFileSync(resolve(arg), 'utf8');
+}
+
+const pct = (n: number, of: number): string =>
+  of === 0 ? '0.0%' : `${((n / of) * 100).toFixed(1)}%`;
+
+async function main(): Promise<void> {
+  const { inputs: userInputs, json } = parseArgs(process.argv.slice(2));
+  const inputs = userInputs.length > 0 ? userInputs : defaultInputs();
+  if (inputs.length === 0) {
+    console.error(`No decks to measure. Run "bun run coverage:snapshot" to populate ${FIXTURE_DIR}.`);
+    process.exit(2);
+  }
+
+  if (!json) console.error(`Loading oracle data from ${BULK_PATH} …`);
+  const index = loadOracleIndexFromFile(resolve(BULK_PATH));
+  if (!json) console.error(`  indexed ${index.size.toLocaleString()} cards.`);
+
+  const decks: DeckCards[] = [];
+  for (const arg of inputs) {
+    let raw: string;
+    try {
+      raw = readInput(arg);
+    } catch (err) {
+      console.error(`  ✗ could not read "${arg}": ${(err as Error).message}`);
+      continue;
+    }
+
+    let parsed;
+    try {
+      parsed = await importDeck(raw);
+    } catch (err) {
+      console.error(`  ✗ import failed for "${arg}": ${(err as Error).message}`);
+      continue;
+    }
+
+    const { resolved, unresolvedNames } = resolveDeck(parsed, index);
+    if (resolved === null) {
+      console.error(`  ✗ unresolved names in "${arg}": ${unresolvedNames.join(', ')}`);
+      continue;
+    }
+
+    // Commanders and the companion live OUTSIDE `.cards` — unioning them is not optional,
+    // or the commander (the most mechanically complex card in the deck) goes unmeasured.
+    const cards: OracleCard[] = [
+      ...resolved.commanders,
+      ...(resolved.companion === null ? [] : [resolved.companion]),
+      ...resolved.cards.map((e) => e.card),
+    ];
+    decks.push({ name: resolved.name ?? parsed.name ?? basename(arg), cards });
+  }
+
+  const report = measureCoverage(decks);
+
+  if (json) {
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+
+  console.log('\nPer-deck coverage');
+  console.log('─'.repeat(17));
+  for (const deck of report.decks) {
+    const label = deck.name.length > 52 ? `${deck.name.slice(0, 49)}…` : deck.name;
+    console.log(
+      `  ${label.padEnd(53)} ${String(deck.modeled).padStart(3)}/${String(deck.uniqueCards).padEnd(4)} ${pct(deck.modeled, deck.uniqueCards)}`,
+    );
+  }
+
+  console.log('\nAggregate (unique cards across all decks)');
+  console.log('─'.repeat(41));
+  console.log(`  unique cards: ${report.uniqueCards}`);
+  console.log(
+    `  modeled:      ${report.modeledCards} (${pct(report.modeledCards, report.uniqueCards)})`,
+  );
+
+  console.log('\nBlocking mechanics — cards each would unblock, at most');
+  console.log('─'.repeat(53));
+  console.log('  (overlapping: a card blocked by three mechanics counts in all three)\n');
+  for (const { family, cards } of report.byFamily) {
+    console.log(`  ${String(cards).padStart(4)}  ${family}`);
+  }
+
+  console.log('\nTop reason strings');
+  console.log('─'.repeat(18));
+  for (const { reason, count } of report.topReasons.slice(0, 15)) {
+    const flat = reason.replace(/\s+/g, ' ');
+    const shown = flat.length > 96 ? `${flat.slice(0, 93)}…` : flat;
+    console.log(`  ${String(count).padStart(3)}  ${shown}`);
+  }
+  console.log();
+}
+
+void main();

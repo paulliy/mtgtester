@@ -95,6 +95,8 @@ export function createGame(config: GameConfig): GameContext {
         ...pc.cards.map((c) => c.oracleId),
       ],
       companionMovedToHand: false,
+      yieldUntilEndOfTurn: false,
+      yieldedAbilities: [],
     };
   });
 

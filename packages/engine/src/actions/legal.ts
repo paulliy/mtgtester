@@ -8,48 +8,118 @@
  * halts loudly (brief §6.3) rather than silently excluding it.
  */
 
-import type { ObjectId, PlayerId } from '@mtg/shared';
-import type { CardDefinition } from '../cards/definition';
+import type { ObjectId, OracleId, PlayerId } from '@mtg/shared';
+import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../cards/definition';
 import type { EngineActionOption } from '../decisions';
+import { computeCharacteristics } from '../effects/continuous';
 import { addGeneric, canPay, emptyCost } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import {
+  canPayNonManaCosts,
   findPermanent,
   getDefByOracleId,
   hasKeyword,
-  isCreaturePermanent,
   manaSourcesFor,
   playersInApnapOrder,
   requireModeled,
 } from '../state/queries';
-import type { EngineCardObject, EnginePlayerState, GameContext } from '../state/types';
+import type {
+  EngineCardObject,
+  EnginePermanent,
+  EnginePlayerState,
+  GameContext,
+} from '../state/types';
 
 /** Payloads attached to priority-window options, interpreted by `applyPriorityAction`. */
 export type PriorityActionPayload =
   | { kind: 'pass' }
+  | { kind: 'passAndYieldTurn' }
+  | { kind: 'yieldToAbility'; sourceOracleId: OracleId }
   | { kind: 'playLand'; objectId: ObjectId }
   | { kind: 'castSpell'; objectId: ObjectId; fromCommand: boolean }
+  /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
+  | { kind: 'activateAbility'; objectId: ObjectId; index: number }
   | { kind: 'companionToHand' };
 
 const COMPANION_COST: ParsedManaCost = { ...emptyCost(), generic: 3 };
 
-/** Legal target object-ids (or player ids) for one target kind, from `caster`'s seat. */
+/**
+ * The mana components of an activation cost, summed. Everything else (tap, sacrifice, counters)
+ * is checked by `canPayNonManaCosts` — this is the half `planPayment` understands.
+ */
+export function manaPortionOf(costs: readonly AbilityCost[]): ParsedManaCost {
+  const total = emptyCost();
+  for (const cost of costs) {
+    if (cost.kind !== 'mana') continue;
+    total.generic += cost.cost.generic;
+    total.colorless += cost.cost.colorless;
+    for (const c of ['W', 'U', 'B', 'R', 'G'] as const) total.colored[c] += cost.cost.colored[c];
+  }
+  return total;
+}
+
+/**
+ * Does a permanent match a target kind, by its COMPUTED types (ADR 0007) — an animated
+ * Mutavault is a legal "target creature" while a Blood-Mooned land is not a legal "target
+ * artifact". Shared by option generation and the CR 608.2b re-check at resolution so the two
+ * cannot drift.
+ */
+export function permanentMatchesKind(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  kind: TargetKind,
+): boolean {
+  const types = computeCharacteristics(ctx, perm).types;
+  switch (kind) {
+    case 'creature':
+      return types.includes('Creature');
+    case 'artifact':
+      return types.includes('Artifact');
+    case 'enchantment':
+      return types.includes('Enchantment');
+    case 'land':
+      return types.includes('Land');
+    case 'artifactOrEnchantment':
+      return types.includes('Artifact') || types.includes('Enchantment');
+    case 'nonlandPermanent':
+      return !types.includes('Land');
+    case 'permanent':
+      return true;
+    case 'anyTarget':
+      return types.includes('Creature');
+    case 'player':
+    case 'spell':
+      return false;
+  }
+}
+
+/** Legal target object-ids (or player ids) for one target slot, from `caster`'s seat. */
 export function computeTargetOptions(
   ctx: GameContext,
-  kind: 'creature' | 'anyTarget' | 'spell',
+  spec: TargetKind | TargetSpec,
   casterId: PlayerId,
 ): ObjectId[] {
+  const { kind, controller } = typeof spec === 'string' ? { kind: spec, controller: undefined } : spec;
+
   if (kind === 'spell') {
     return ctx.state.stack.filter((s) => s.kind === 'spell').map((s) => s.id);
   }
-  const creatures = ctx.state.battlefield
-    .filter((p) => isCreaturePermanent(ctx, p))
+  const players = playersInApnapOrder(ctx).map((p) => p.id);
+  if (kind === 'player') return players;
+
+  const permanents = ctx.state.battlefield
+    .filter((p) => permanentMatchesKind(ctx, p, kind))
     // Hexproof: can't be the target of spells/abilities OPPONENTS control (CR 702.11).
     .filter((p) => p.controllerId === casterId || !hasKeyword(ctx, p, 'hexproof'))
+    .filter(
+      (p) =>
+        controller === undefined ||
+        (controller === 'you' ? p.controllerId === casterId : p.controllerId !== casterId),
+    )
     .map((p) => p.id);
-  if (kind === 'creature') return creatures;
-  const players = playersInApnapOrder(ctx).map((p) => p.id);
-  return [...creatures, ...players];
+
+  // "Any target" is creature-or-player (CR 115.4). Players are never hexproof-filtered.
+  return kind === 'anyTarget' ? [...permanents, ...players] : permanents;
 }
 
 /** Target slots for casting a card, or null when a required slot has zero options. */
@@ -61,7 +131,7 @@ function computeCastTargets(
   const slots: { slot: number; options: ObjectId[] }[] = [];
   let slotNum = 0;
   for (const spec of def.spellAbility?.targets ?? []) {
-    const options = computeTargetOptions(ctx, spec.kind, casterId);
+    const options = computeTargetOptions(ctx, spec, casterId);
     if (options.length === 0) return null; // can't cast without a legal target (CR 601.2c)
     slots.push({ slot: slotNum++, options });
   }
@@ -92,7 +162,29 @@ export function computePriorityOptions(
   const s = ctx.state;
   const options: EngineActionOption[] = [
     { type: 'pass', description: 'Pass priority', payload: { kind: 'pass' } },
+    {
+      type: 'passAndYieldTurn',
+      description: 'Pass and yield until end of turn',
+      payload: { kind: 'passAndYieldTurn' },
+    },
   ];
+
+  if (s.stack.length > 0) {
+    const top = s.stack[s.stack.length - 1];
+    if (
+      top !== undefined &&
+      top.kind === 'triggeredAbility' &&
+      !player.yieldedAbilities?.includes(top.sourceOracleId)
+    ) {
+      const sourceName = top.card?.name ?? top.description;
+      options.push({
+        type: 'yieldToAbility',
+        description: `Yield to this ability (${sourceName})`,
+        payload: { kind: 'yieldToAbility', sourceOracleId: top.sourceOracleId },
+        data: { sourceOracleId: top.sourceOracleId },
+      });
+    }
+  }
 
   const isActive = s.turnOrder[s.activePlayerIndex] === player.id;
   const sorcerySpeed =
@@ -143,6 +235,9 @@ export function computePriorityOptions(
         `Cast ${obj.name} (${describeCost(def, tax)})` +
         (fromCommand ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}` : ''),
       payload: { kind: 'castSpell', objectId: obj.id, fromCommand },
+      // Descriptive only (see `EngineActionOption.data`): lets a decision consumer tell a
+      // hold-priority instant apart from a sorcery-speed play without parsing the description.
+      data: { instantSpeed },
     };
     if (targets.length > 0) option.targets = targets;
     options.push(option);
@@ -150,6 +245,46 @@ export function computePriorityOptions(
 
   for (const obj of player.hand) considerCast(obj, false);
   for (const obj of player.commandZone) considerCast(obj, true);
+
+  // Activated abilities of permanents this player controls (CR 602).
+  for (const perm of ctx.state.battlefield) {
+    if (perm.controllerId !== player.id) continue;
+    const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
+    for (const [index, activated] of def.activatedAbilities.entries()) {
+      if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
+      if (!canPayNonManaCosts(ctx, perm, activated.costs)) continue;
+      // A cost that taps or sacrifices the source spends the source, so it cannot ALSO be
+      // tapped for mana toward the same cost. `payActivationCosts` enforces the same thing by
+      // paying the non-mana half first; excluding it here keeps the two in agreement.
+      const spendsSelf = activated.costs.some(
+        (c) => c.kind === 'tap' || c.kind === 'sacrificeSelf',
+      );
+      const usable = spendsSelf ? sources.filter((s) => s.cardId !== perm.cardId) : sources;
+      if (!canPay(manaPortionOf(activated.costs), player.manaPool, usable)) continue;
+
+      const slots: { slot: number; options: ObjectId[] }[] = [];
+      let slotNum = 0;
+      let missingTarget = false;
+      for (const spec of activated.ability.targets) {
+        const targetOptions = computeTargetOptions(ctx, spec, player.id);
+        // CR 602.2b: an ability with no legal target for a slot cannot be activated at all.
+        if (targetOptions.length === 0) {
+          missingTarget = true;
+          break;
+        }
+        slots.push({ slot: slotNum++, options: targetOptions });
+      }
+      if (missingTarget) continue;
+
+      const option: EngineActionOption = {
+        type: 'activateAbility',
+        description: `${perm.name}: ${activated.ability.description ?? 'activate ability'}`,
+        payload: { kind: 'activateAbility', objectId: perm.id, index },
+      };
+      if (slots.length > 0) option.targets = slots;
+      options.push(option);
+    }
+  }
 
   // Companion: pay {3} at sorcery speed to move it to hand, once per game (brief §5.7).
   if (
@@ -163,6 +298,54 @@ export function computePriorityOptions(
       description: `Pay {3}: put your companion ${player.companion.name} into your hand`,
       payload: { kind: 'companionToHand' },
     });
+  }
+
+  // Phase-restricted action filtering: exclude temporary stat-buff abilities and combat
+  // tricks during non-combat phases when no creatures are in combat. This prevents the
+  // engine from querying the AI about Sacred Armory activation or Zealous Strike during
+  // upkeep, main phases, and end steps — the AI always passes in these situations anyway.
+  const inCombatPhase = s.phase === 'combat';
+  const creaturesInCombat = ctx.state.battlefield.some(
+    (p) => p.attacking !== null || p.blocking !== null,
+  );
+  if (!inCombatPhase && !creaturesInCombat) {
+    const isCombatOnlyEffect = (effects: readonly import('../cards/ability').Effect[]): boolean =>
+      effects.length > 0 &&
+      effects.every(
+        (e) => e.op === 'pumpUntilEot' || e.op === 'grantKeywordUntilEot',
+      );
+
+    const filtered = options.filter((opt) => {
+      const payload = opt.payload as PriorityActionPayload | undefined;
+      if (payload === undefined) return true;
+
+      if (payload.kind === 'activateAbility') {
+        const perm = ctx.state.battlefield.find((p) => p.id === payload.objectId);
+        if (perm === undefined) return true;
+        const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
+        const activated = def.activatedAbilities[payload.index];
+        if (activated === undefined) return true;
+        return !isCombatOnlyEffect(activated.ability.effects);
+      }
+
+      if (payload.kind === 'castSpell') {
+        // Find the card object in hand or command zone
+        const allCards = [...player.hand, ...player.commandZone];
+        const cardObj = allCards.find((c) => c.id === payload.objectId);
+        if (cardObj === undefined) return true;
+        const def = getDefByOracleId(ctx, cardObj.oracleId, cardObj.name);
+        if (def.spellAbility === null) return true;
+        // Only filter instant-speed combat tricks
+        const isInstant = def.types.includes('Instant') || def.keywords.includes('flash');
+        if (!isInstant) return true;
+        return !isCombatOnlyEffect(def.spellAbility.effects);
+      }
+
+      return true;
+    });
+
+    // Only use filtered list if it still has at least one option (pass is always there)
+    if (filtered.length > 0) return filtered;
   }
 
   return options;
@@ -182,7 +365,7 @@ export function validateChosenTargets(
     if (choice === undefined) {
       throw new Error(`missing target for slot ${slotNum} of ${def.name}`);
     }
-    const legal = computeTargetOptions(ctx, spec.kind, casterId);
+    const legal = computeTargetOptions(ctx, spec, casterId);
     if (!legal.includes(choice)) {
       throw new Error(`illegal target ${choice} for slot ${slotNum} of ${def.name}`);
     }

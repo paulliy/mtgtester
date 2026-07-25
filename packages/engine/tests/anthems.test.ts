@@ -151,6 +151,7 @@ describe('anthems and lords (ADR 0008)', () => {
       types: ['Land'],
       subtypes: [],
       colors: [],
+      colorIdentity: [],
       manaCost: null,
       hasUnsupportedCost: false,
       power: null,
@@ -159,6 +160,7 @@ describe('anthems and lords (ADR 0008)', () => {
       defense: null,
       keywords: [],
       manaAbilities: [],
+      activatedAbilities: [],
       entersTapped: false,
       spellAbility: null,
       triggers: [],
@@ -367,9 +369,9 @@ describe('verbatim oracle text from printed cards (ADR 0008)', () => {
 });
 
 describe('the interpreter halts rather than guess a tribe (ADR 0008)', () => {
-  it("leaves a lord unmodeled when the tribe is not one of the card's own subtypes", () => {
-    // "Slivers" cannot be resolved to the printed subtype "Sliver" from a card that is not a
-    // Sliver: there is no subtype dictionary, and a wrong guess would silently buff nothing.
+  it("resolves a tribe the card is not a member of, from CR 205.3m's closed list", () => {
+    // "Slivers" → the printed subtype "Sliver" on a card that is not a Sliver. The vocabulary
+    // is the rules' own complete creature-type list, so this is a lookup, not a guess.
     const def = interpretCard(
       oracle({
         name: 'Test Hivestone',
@@ -380,9 +382,28 @@ describe('the interpreter halts rather than guess a tribe (ADR 0008)', () => {
         oracleText: 'Slivers you control get +1/+1.',
       }),
     );
+    expect(def.modeled).toBe(true);
+    expect(def.staticEffects[0]?.affects).toEqual(
+      allOf({ kind: 'controller', who: 'you' }, { kind: 'subtype', value: 'Sliver' }),
+    );
+  });
+
+  it('still halts on a tribe that is in neither vocabulary', () => {
+    // Not a creature type and not one of the card's own subtypes: a wrong guess here would
+    // silently buff nothing, so the card stays unmodeled and the engine halts loudly.
+    const def = interpretCard(
+      oracle({
+        name: 'Test Oddity',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+        oracleText: 'Blorbs you control get +1/+1.',
+      }),
+    );
     expect(def.modeled).toBe(false);
     expect(def.unmodeledReasons).toEqual([
-      'unrecognized rules text: "Slivers you control get +1/+1."',
+      'unrecognized rules text: "Blorbs you control get +1/+1."',
     ]);
   });
 

@@ -5,6 +5,7 @@
  */
 
 import type { Phase, Step } from '@mtg/shared';
+import { evaluateCondition } from '../cards/condition';
 import { runCombatPhase } from '../combat/combat';
 import type { GameGen } from '../decisions';
 import { drawCards, endUntilEotEffects } from '../effects/resolve';
@@ -33,6 +34,9 @@ function untapStep(ctx: GameContext): void {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
   setPhase(ctx, 'beginning', 'untap');
   ap.landsPlayedThisTurn = 0;
+  for (const p of ctx.state.players) {
+    p.yieldUntilEndOfTurn = false;
+  }
   let untapped = 0;
   for (const perm of ctx.state.battlefield) {
     if (perm.controllerId !== ap.id) continue;
@@ -49,21 +53,22 @@ function untapStep(ctx: GameContext): void {
 /** Queue "beginning of upkeep" triggers (CR 503) for the current active player's upkeep. */
 function queueUpkeepTriggers(ctx: GameContext): void {
   const apId = ctx.state.currentTurnPlayer;
-  for (const perm of ctx.state.battlefield) {
+  for (const perm of [...ctx.state.battlefield]) {
     for (const ability of triggersOf(ctx, perm)) {
-      const fires =
-        (ability.trigger === 'upkeepYours' && perm.controllerId === apId) ||
-        ability.trigger === 'upkeepEach';
-      if (fires) {
-        ctx.state.pendingTriggers.push({
-          controllerId: perm.controllerId,
-          sourceCardId: perm.cardId,
-          sourceOracleId: perm.oracleId,
-          sourceName: perm.name,
-          ability,
-        });
-        debug(ctx, 'stack', `upkeep trigger queued: ${perm.name}`);
-      }
+      const spec = ability.trigger;
+      if (spec === undefined || spec.when !== 'upkeep') continue;
+      if (spec.player === 'you' && perm.controllerId !== apId) continue;
+      const source = { cardId: perm.cardId, controllerId: perm.controllerId };
+      // Intervening-if, first check (CR 603.4) — see `queueTriggersForEvent`.
+      if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
+      ctx.state.pendingTriggers.push({
+        controllerId: perm.controllerId,
+        sourceCardId: perm.cardId,
+        sourceOracleId: perm.oracleId,
+        sourceName: perm.name,
+        ability,
+      });
+      debug(ctx, 'stack', `upkeep trigger queued: ${perm.name}`);
     }
   }
 }

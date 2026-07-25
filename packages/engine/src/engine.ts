@@ -31,6 +31,7 @@ import { buildPlayerView } from './view/view';
 export interface EngineDriver {
   advance(): EngineStep;
   submit(decision: DecisionResponse): void;
+  addDebug(category: DebugEntry['category'], message: string, data?: Record<string, unknown>): void;
 }
 
 export class Engine implements EngineDriver {
@@ -183,6 +184,10 @@ export class Engine implements EngineDriver {
     return this.ctx.debugLog;
   }
 
+  addDebug(category: DebugEntry['category'], message: string, data?: Record<string, unknown>): void {
+    debug(this.ctx, category, message, data);
+  }
+
   getResult(): GameResult | null {
     return this.finished;
   }
@@ -192,6 +197,7 @@ export class Engine implements EngineDriver {
     const legalActions: LegalAction[] = decision.options.map((opt, i) => {
       const action: LegalAction = { id: i, type: opt.type, description: opt.description };
       if (opt.targets !== undefined && opt.targets.length > 0) action.targets = opt.targets;
+      if (opt.data !== undefined) action.data = opt.data;
       return action;
     });
     return {

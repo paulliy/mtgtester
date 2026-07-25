@@ -17,7 +17,6 @@ export { buildOracleIndex, loadOracleIndexFromFile, type OracleIndex } from './c
 export { toOracleCard, type RawScryfallCard } from './cards/scryfall';
 export { GameStore, type DeckRow } from './db';
 
-/**
- * TODO(phase-3): Gemini client, context assembly with caching, decision queue + backoff,
- *   invalid-response handling, and the WebSocket protocol.
- */
+// --- Phase 3: AI agent integration ---
+export * from './ai';
+

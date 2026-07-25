@@ -6,7 +6,7 @@
 
 import { Database } from 'bun:sqlite';
 import type { DeckSnapshot, DeckSourceType, OracleCard } from '@mtg/shared';
-import { SCHEMA_SQL } from './schema';
+import { MIGRATIONS_SQL, SCHEMA_SQL } from './schema';
 
 export interface DeckRow {
   id: string;
@@ -23,6 +23,15 @@ export class GameStore {
   constructor(path: string) {
     this.db = new Database(path);
     this.db.exec(SCHEMA_SQL);
+    for (const statement of MIGRATIONS_SQL) {
+      // Already-applied migrations throw "duplicate column name"; that is the success case
+      // on an up-to-date database, so it is not distinguishable from a no-op and not an error.
+      try {
+        this.db.exec(statement);
+      } catch {
+        // no-op
+      }
+    }
   }
 
   close(): void {

@@ -22,7 +22,58 @@ import { priorityCheckpoint } from '../sba/sba';
 import { resolveTopOfStack } from '../stack/stack';
 import { playersInApnapOrder } from '../state/queries';
 import { playerById } from '../state/objects';
-import type { GameContext } from '../state/types';
+import type { EnginePlayerState, GameContext } from '../state/types';
+
+function shouldAutoPassPriority(ctx: GameContext, player: EnginePlayerState): boolean {
+  if (player.yieldUntilEndOfTurn === true) {
+    return true;
+  }
+  if (ctx.state.stack.length > 0) {
+    const top = ctx.state.stack[ctx.state.stack.length - 1];
+    if (
+      top !== undefined &&
+      top.kind === 'triggeredAbility' &&
+      player.yieldedAbilities?.includes(top.sourceOracleId) === true
+    ) {
+      return true;
+    }
+  }
+
+  // MTGA/MTGO-style Upkeep & Draw auto-pass: skip priority for all players when the
+  // stack is empty and no triggers are pending. Upkeep/draw priority windows are only
+  // meaningful when something is happening (e.g., Nyx-Fleece Ram upkeep trigger).
+  if (
+    (ctx.state.step === 'upkeep' || ctx.state.step === 'draw') &&
+    ctx.state.stack.length === 0 &&
+    ctx.state.pendingTriggers.length === 0
+  ) {
+    return true;
+  }
+
+  // Bystander combat auto-pass: a player who is neither the active player (attacker)
+  // nor a defending player has no meaningful combat actions when the stack is empty.
+  // In the log this eliminated ~5 API calls per combat for each bystander.
+  if (
+    ctx.state.phase === 'combat' &&
+    player.id !== ctx.state.currentTurnPlayer &&
+    !(ctx.state.combat?.defendingPlayers.includes(player.id) === true) &&
+    ctx.state.stack.length === 0 &&
+    ctx.state.pendingTriggers.length === 0
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/** Reset yield until end of turn for all opponents of a specified player. */
+export function resetOpponentYields(ctx: GameContext, controllerId: PlayerId): void {
+  for (const p of ctx.state.players) {
+    if (p.id !== controllerId) {
+      p.yieldUntilEndOfTurn = false;
+    }
+  }
+}
 
 /** Empty every player's mana pool (end of each step and phase, CR 500.4). */
 export function emptyManaPools(ctx: GameContext): void {
@@ -68,6 +119,24 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
     const player = playerById(ctx, holder);
     s.priorityPlayerIndex = s.turnOrder.indexOf(holder);
 
+    if (shouldAutoPassPriority(ctx, player)) {
+      debug(ctx, 'priority', `${player.id} auto-passes priority (yield active)`);
+      passesInARow += 1;
+      if (passesInARow >= players.length) {
+        if (s.stack.length === 0) {
+          s.priorityPlayerIndex = null;
+          return;
+        }
+        yield* resolveTopOfStack(ctx);
+        passesInARow = 0;
+        holder = null;
+      } else {
+        const idx = players.findIndex((p) => p.id === holder);
+        holder = (players[(idx + 1) % players.length] as (typeof players)[number]).id;
+      }
+      continue;
+    }
+
     const options = computePriorityOptions(ctx, player);
     debug(
       ctx,
@@ -85,8 +154,27 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
     const chosen = options[outcome.index] as EngineActionOption;
     const payload = chosen.payload as PriorityActionPayload;
 
-    if (payload.kind === 'pass') {
-      debug(ctx, 'priority', `${player.id} passes priority`);
+    if (
+      payload.kind === 'pass' ||
+      payload.kind === 'passAndYieldTurn' ||
+      payload.kind === 'yieldToAbility'
+    ) {
+      if (payload.kind === 'passAndYieldTurn') {
+        player.yieldUntilEndOfTurn = true;
+        debug(ctx, 'priority', `${player.id} passes priority and yields until end of turn`);
+      } else if (payload.kind === 'yieldToAbility') {
+        if (!player.yieldedAbilities) player.yieldedAbilities = [];
+        if (!player.yieldedAbilities.includes(payload.sourceOracleId)) {
+          player.yieldedAbilities.push(payload.sourceOracleId);
+        }
+        debug(
+          ctx,
+          'priority',
+          `${player.id} passes priority and yields to ability ${payload.sourceOracleId}`,
+        );
+      } else {
+        debug(ctx, 'priority', `${player.id} passes priority`);
+      }
       passesInARow += 1;
       if (passesInARow >= players.length) {
         if (s.stack.length === 0) {

@@ -57,6 +57,14 @@ export interface TargetChoice {
   choice: ObjectId;
 }
 
+/** A planned future action returned by an active player's AI decision during turn planning. */
+export interface PlannedAction {
+  type: string;
+  name?: string;
+  description?: string;
+  targets?: TargetChoice[];
+}
+
 /**
  * A player's decision (brief §7.3). Must reference a `LegalAction.id`. Anything not on the
  * menu is rejected (brief §7.7 handles retry → user prompt → safest fallback). `note` is
@@ -72,6 +80,8 @@ export interface DecisionResponse {
   xValue?: number;
   /** An ordering the decision asked for (e.g. trigger order, damage assignment). */
   order?: number[];
+  /** Optional sequence of planned future actions for turn pre-planning. */
+  plannedActions?: PlannedAction[];
   /** One-sentence rationale; stored in the debug log only. */
   note?: string;
 }

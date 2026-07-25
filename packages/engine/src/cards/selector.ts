@@ -16,9 +16,22 @@
  * meaningful. The candidate is passed as plain fields rather than `Characteristics` to keep
  * this module free of engine imports.
  *
- * Note what a selector deliberately CANNOT read: power, toughness, tapped-ness, damage. That
- * is what keeps sublayer 7d free of dependency analysis (ADR 0007) — a pump effect cannot
- * change any selector's answer, so pumps can never depend on one another.
+ * Note what a selector deliberately CANNOT read: toughness, tapped-ness, damage. That is what
+ * keeps sublayer 7d free of dependency analysis (ADR 0007) — a pump effect cannot change any
+ * selector's answer, so pumps can never depend on one another.
+ *
+ * Two leaves break that and are therefore **event-only**: legal in a trigger's subject, a
+ * `Condition`, or a resolving spell's "each", and illegal inside a continuous effect.
+ * `selectorIsEventOnly` marks them and `gatherEffects` enforces the ban.
+ *
+ * - `powerAtLeast` reads sublayer 7d's own output. Allowing it in a layer would mean one pump
+ *   effect could change another's affected set, reinstating the dependency analysis 7d skips.
+ * - `hasKeyword` reads layer 6's output. Allowing it in a layer-6 effect would let one keyword
+ *   grant change another's affected set.
+ *
+ * The distinction is real, not bookkeeping: "5 damage to each creature without flying" asks its
+ * question once, at a moment when keywords are already fully computed; a static ability would
+ * have to ask it *during* the computation that produces them.
  */
 
 import type { Color } from '@mtg/shared';
@@ -31,6 +44,10 @@ export interface SelectorCandidate {
   supertypes: readonly string[];
   subtypes: readonly string[];
   colors: readonly Color[];
+  /** Current power. Only `powerAtLeast` reads it — see the module comment. */
+  power: number;
+  /** Current keywords. Only `hasKeyword` reads them — see the module comment. */
+  keywords: readonly string[];
 }
 
 /** The object a relative selector ("self", "you control") is resolved against. */
@@ -50,6 +67,10 @@ export type Selector =
   | { kind: 'color'; value: Color }
   /** Controlled by the source's controller, or by any of their opponents. */
   | { kind: 'controller'; who: 'you' | 'opponents' }
+  /** EVENT-ONLY (see the module comment): "with power 4 or greater". */
+  | { kind: 'powerAtLeast'; n: number }
+  /** EVENT-ONLY (see the module comment): "with flying" / (negated) "without flying". */
+  | { kind: 'hasKeyword'; keyword: string }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -70,6 +91,31 @@ export const not = (of: Selector): Selector => ({ kind: 'not', of });
 
 /** Blood Moon's subject — a land without the Basic supertype. */
 export const NONBASIC_LANDS: Selector = allOf(ofType('Land'), not(ofSupertype('Basic')));
+
+export const powerAtLeast = (n: number): Selector => ({ kind: 'powerAtLeast', n });
+export const withKeyword = (keyword: string): Selector => ({ kind: 'hasKeyword', keyword });
+
+/**
+ * Does this selector read a layer's own output anywhere inside it?
+ *
+ * A `true` answer means the selector may only be evaluated at event or resolution time, never
+ * as a continuous effect's affected set — see the module comment. `gatherEffects` is the
+ * enforcement point.
+ */
+export function selectorIsEventOnly(selector: Selector): boolean {
+  switch (selector.kind) {
+    case 'powerAtLeast':
+    case 'hasKeyword':
+      return true;
+    case 'allOf':
+    case 'anyOf':
+      return selector.of.some(selectorIsEventOnly);
+    case 'not':
+      return selectorIsEventOnly(selector.of);
+    default:
+      return false;
+  }
+}
 
 /** Does `candidate` match `selector` for an effect whose source is `source`? */
 export function selectMatches(
@@ -94,6 +140,10 @@ export function selectMatches(
       return selector.who === 'you'
         ? candidate.controllerId === source.controllerId
         : candidate.controllerId !== source.controllerId;
+    case 'powerAtLeast':
+      return candidate.power >= selector.n;
+    case 'hasKeyword':
+      return candidate.keywords.includes(selector.keyword);
     case 'allOf':
       return selector.of.every((s) => selectMatches(candidate, s, source));
     case 'anyOf':

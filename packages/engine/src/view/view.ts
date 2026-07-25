@@ -29,11 +29,18 @@ import { playerById } from '../state/objects';
 import type { EngineCardObject, EnginePlayerState, GameContext } from '../state/types';
 
 /** Full card view — for zones where oracle text is relevant (brief §7.4). */
-function fullCardView(obj: EngineCardObject): CardView {
+function fullCardView(obj: EngineCardObject, ctx?: GameContext): CardView {
   const view: CardView = { id: obj.id, name: obj.name };
   if (obj.manaCost !== null) view.manaCost = obj.manaCost;
   view.typeLine = obj.typeLine;
   view.oracleText = obj.oracleText;
+  if (ctx !== undefined) {
+    const def = ctx.defs.get(obj.oracleId);
+    if (def !== undefined && (def.power !== null || def.toughness !== null)) {
+      view.power = def.power;
+      view.toughness = def.toughness;
+    }
+  }
   return view;
 }
 
@@ -89,6 +96,18 @@ function permanentViews(ctx: GameContext): PermanentView[] {
         ...(perm.summoningSick && isCreaturePermanent(ctx, perm) ? ['summoningSick'] : []),
       ],
     };
+    // A battlefield is public information, and §7.4 lists battlefield permanents among the
+    // zones whose oracle text is relevant. The projection is faithful; trimming redundant
+    // text (basic lands, repeats) is the context assembler's job, as it already is for hand.
+    //
+    // EXCEPT face down (§7.1: "face-down cards' identities" are never visible). Nothing sets
+    // this status today — morph/manifest are unmodeled — but the status is already in the
+    // vocabulary, so the guard is written now: when manifest lands, a permanent that gains it
+    // must not start leaking its text box through a projection nobody re-reads.
+    if (!perm.statuses.includes('faceDown')) {
+      view.typeLine = perm.typeLine;
+      view.oracleText = perm.oracleText;
+    }
     if (isCreaturePermanent(ctx, perm)) {
       const pt = effectivePT(ctx, perm);
       view.power = pt.power;
@@ -170,7 +189,7 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
   return {
     seat: playerId,
     life: viewer.life,
-    hand: viewer.hand.map(fullCardView),
+    hand: viewer.hand.map((o) => fullCardView(o, ctx)),
     // Own decklist: CONTENTS only, never order — keyed by oracle id, not object id.
     deck: viewer.decklistOracleIds.map((oracleId, i) => {
       const def = ctx.defs.get(oracleId);

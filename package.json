@@ -22,7 +22,11 @@
     "test:watch": "vitest",
     "build": "tsc --build",
     "dev:web": "bun run --cwd apps/web dev",
-    "decks": "bun run packages/server/src/cli/import-decks.ts"
+    "decks": "bun run packages/server/src/cli/import-decks.ts",
+    "pool": "bun run packages/server/src/cli/pool.ts",
+    "coverage": "bun run packages/server/src/cli/coverage.ts",
+    "coverage:snapshot": "bun run packages/server/src/cli/snapshot-coverage-decks.ts",
+    "snapshot:oracle": "bun run packages/server/src/cli/snapshot-deck-oracle.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

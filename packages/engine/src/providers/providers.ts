@@ -114,12 +114,18 @@ export function chooseFirst(): ScriptedStep {
 /**
  * Drive an engine to completion: per-seat providers answer surfaced decisions.
  * `maxDecisions` guards against runaway loops in tests.
+ * `onDecision` callback fires after each decision is submitted.
  */
 export function runToCompletion(
   engine: Engine,
   providerFor: (playerId: string) => DecisionProvider,
-  maxDecisions = 100_000,
+  opts?: {
+    maxDecisions?: number;
+    onDecision?: (request: DecisionRequest, response: DecisionResponse) => void;
+  },
 ): GameResult {
+  const maxDecisions = typeof opts === 'number' ? opts : (opts?.maxDecisions ?? 100_000);
+  const onDecision = typeof opts === 'object' ? opts?.onDecision : undefined;
   let decisions = 0;
   for (;;) {
     const step = engine.advance();
@@ -130,5 +136,40 @@ export function runToCompletion(
     }
     const response = providerFor(step.request.decidingPlayer).decide(step.request);
     engine.submit(response);
+    onDecision?.(step.request, response);
   }
 }
+
+export interface AsyncDecisionProvider {
+  decide(request: DecisionRequest): Promise<DecisionResponse>;
+}
+
+/**
+ * Drive an engine to completion: per-seat providers answer surfaced decisions asynchronously.
+ * `maxDecisions` guards against runaway loops in tests.
+ * `onDecision` callback fires after each decision is submitted (e.g. for persistence/logging).
+ */
+export async function runToCompletionAsync(
+  engine: Engine,
+  providerFor: (playerId: string) => AsyncDecisionProvider,
+  opts?: {
+    maxDecisions?: number;
+    onDecision?: (request: DecisionRequest, response: DecisionResponse) => void;
+  },
+): Promise<GameResult> {
+  const maxDecisions = opts?.maxDecisions ?? 100_000;
+  let decisions = 0;
+  for (;;) {
+    const step = engine.advance();
+    if (step.kind === 'gameOver') return step.result;
+    if (step.kind === 'continue') continue;
+    if (++decisions > maxDecisions) {
+      throw new Error(`exceeded ${maxDecisions} surfaced decisions — runaway game?`);
+    }
+    const response = await providerFor(step.request.decidingPlayer).decide(step.request);
+    engine.submit(response);
+    opts?.onDecision?.(step.request, response);
+  }
+}
+
+

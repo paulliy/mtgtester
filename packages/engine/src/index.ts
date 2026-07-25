@@ -33,7 +33,9 @@ export type {
   TargetSpec,
   TargetKind,
   KeywordAbility,
-  TriggerEvent,
+  TriggerSpec,
+  TriggerSubject,
+  TriggerWhen,
 } from './cards/definition';
 export { IMPLEMENTED_KEYWORDS } from './cards/definition';
 
@@ -53,5 +55,7 @@ export {
   choose,
   chooseFirst,
   runToCompletion,
+  runToCompletionAsync,
 } from './providers/providers';
-export type { DecisionProvider, ScriptedStep } from './providers/providers';
+export type { DecisionProvider, AsyncDecisionProvider, ScriptedStep } from './providers/providers';
+

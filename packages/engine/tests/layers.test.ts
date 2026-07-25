@@ -51,6 +51,7 @@ function customDef(
     types: ['Land'],
     subtypes: [],
     colors: [],
+    colorIdentity: [],
     manaCost: null,
     hasUnsupportedCost: false,
     power: null,
@@ -59,6 +60,7 @@ function customDef(
     defense: null,
     keywords: [],
     manaAbilities: [],
+    activatedAbilities: [],
     entersTapped: false,
     spellAbility: null,
     triggers: [],
@@ -323,16 +325,37 @@ describe('CR 613.8 dependency ordering (ADR 0006)', () => {
     }
   });
 
-  it('a land given a second basic type has two mana abilities — the engine halts, not guesses', () => {
-    // Urborg alone (no Blood Moon): the basic Forest is a Forest Swamp and can tap for G or B.
-    // Choosing between mana abilities is not modeled, so asking for mana sources halts loudly
-    // (brief §6.3) rather than silently picking one.
+  it('a land given a second basic type taps for either color, as one choice', () => {
+    // Urborg alone (no Blood Moon): the basic Forest is a Forest Swamp. Its two intrinsic mana
+    // abilities collapse into ONE source offering a choice of symbol — exact, not a guess,
+    // because the land can only be tapped once either way (CR 305.6).
     const ctx = ctx4();
     registerCustomDef(ctx, urborgDef('urborg'));
     spawn(ctx, 'P1', land('Test Urborg', { oracleId: 'urborg', typeLine: 'Legendary Land' }));
     const forestPerm = spawn(ctx, 'P1', forest());
 
     expect(computeCharacteristics(ctx, forestPerm).subtypes).toEqual(['Forest', 'Swamp']);
+    const forestSource = manaSourcesFor(ctx, 'P1').find((s) => s.cardId === forestPerm.cardId);
+    expect(forestSource).toMatchObject({ cardId: forestPerm.cardId, units: [['G', 'B']] });
+  });
+
+  it('halts rather than guessing when mana abilities differ in how much they produce', () => {
+    // The collapse above is only sound because each ability makes exactly one mana. A permanent
+    // offering "{T}: Add {G}" or "{T}: Add {C}{C}" is a real strategic choice, and picking one
+    // silently would be a misplay — so it still halts loudly (brief §6.3).
+    const ctx = ctx4();
+    registerCustomDef(
+      ctx,
+      customDef({
+        oracleId: 'ambiguous-rock',
+        name: 'Test Ambiguous Rock',
+        typeLine: 'Artifact',
+        types: ['Artifact'],
+        manaAbilities: [{ units: [['G']] }, { units: [['C'], ['C']] }],
+      }),
+    );
+    spawn(ctx, 'P1', land('Test Ambiguous Rock', { oracleId: 'ambiguous-rock' }));
+
     expect(() => manaSourcesFor(ctx, 'P1')).toThrow(UnmodeledCardError);
   });
 });

@@ -90,7 +90,7 @@ describe('commander rules (brief §5.7)', () => {
     expect(ctx.state.battlefield.filter((p) => p.name === 'Forest' && p.tapped)).toHaveLength(4);
   });
 
-  it('returns from the graveyard via the 903.9a SBA choice', () => {
+  it('automatically returns from the graveyard to the command zone via 903.9a SBA', () => {
     const { ctx, commander } = commanderCtx();
     const perm = spawn(ctx, 'P1', commanderFor('G', 'General 1'), { isCommander: true });
     perm.cardId = commander.cardId;
@@ -101,27 +101,11 @@ describe('commander rules (brief §5.7)', () => {
     pump(moveObject(ctx, perm, { zone: 'graveyard' }));
     expect(p1.graveyard.some((c) => c.cardId === commander.cardId)).toBe(true);
 
-    const { decisions } = pump(priorityCheckpoint(ctx), (d) => pick(d, 'command zone'));
-    expect(decisions.some((d) => d.decisionType === 'commanderReplacement')).toBe(true);
+    const { decisions } = pump(priorityCheckpoint(ctx));
+    // Forced single option auto-resolves without surfacing an AI decision
+    expect(decisions.filter((d) => d.decisionType === 'commanderReplacement')).toHaveLength(0);
     expect(p1.graveyard.some((c) => c.cardId === commander.cardId)).toBe(false);
     expect(p1.commandZone.some((c) => c.cardId === commander.cardId)).toBe(true);
-  });
-
-  it('may DECLINE the 903.9a return and is not asked again until it moves zones', () => {
-    const { ctx, commander } = commanderCtx();
-    const perm = spawn(ctx, 'P1', commanderFor('G', 'General 1'), { isCommander: true });
-    perm.cardId = commander.cardId;
-    const p1 = ctx.state.players.find((p) => p.id === 'P1');
-    if (p1 === undefined) throw new Error('no P1');
-    p1.commandZone = [];
-
-    pump(moveObject(ctx, perm, { zone: 'graveyard' }));
-    const first = pump(priorityCheckpoint(ctx), (d) => pick(d, 'Leave'));
-    expect(first.decisions).toHaveLength(1);
-    expect(p1.graveyard.some((c) => c.cardId === commander.cardId)).toBe(true);
-    // Next checkpoint: no new zone change, no new offer.
-    const second = pump(priorityCheckpoint(ctx));
-    expect(second.decisions).toHaveLength(0);
   });
 
   it('returns from exile via the 903.9a SBA choice', () => {
@@ -134,7 +118,7 @@ describe('commander rules (brief §5.7)', () => {
 
     pump(moveObject(ctx, perm, { zone: 'exile' }));
     expect(ctx.state.exile.some((c) => c.cardId === commander.cardId)).toBe(true);
-    pump(priorityCheckpoint(ctx), (d) => pick(d, 'command zone'));
+    pump(priorityCheckpoint(ctx));
     expect(ctx.state.exile.some((c) => c.cardId === commander.cardId)).toBe(false);
     expect(p1.commandZone.some((c) => c.cardId === commander.cardId)).toBe(true);
   });

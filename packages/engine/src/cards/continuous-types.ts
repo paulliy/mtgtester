@@ -29,6 +29,8 @@ export type ContinuousOp =
     }
   // Layer 6 — ability adding and removing.
   | { layer: 6; addKeyword: KeywordAbility }
+  /** Grant a mana ability — Chromatic Lantern's "Lands you control have '{T}: Add …'". */
+  | { layer: 6; addManaAbility: ManaAbilitySpec }
   /** "Loses all abilities" as an effect in its own right (Humility), distinct from the
    *  CR 305.7 consequence of a layer-4 subtype change. */
   | { layer: 6; loseAllAbilities: true }

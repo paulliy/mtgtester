@@ -41,6 +41,10 @@ function combatContext(): GameContext {
   return ctx;
 }
 
+/** Declarations are wiped by end-of-combat cleanup, so assert on the events instead. */
+const attackEvents = (ctx: GameContext): GameContext['state']['eventLog'] =>
+  ctx.state.eventLog.filter((e) => e.type === 'attack');
+
 const attackWith =
   (name: string, defender: string) => (d: import('../src/decisions').PendingDecision) =>
     d.options.some((o) => o.description.includes(`${name} attacks ${defender}`))
@@ -187,6 +191,102 @@ describe('combat (brief §5.4 worked example and CR 506–511)', () => {
     // (its only possible block is illegal, so it has no choice to make).
     expect(blockDecisions).toHaveLength(1);
     expect(blockDecisions[0]?.some((desc) => desc.includes('Test Spider blocks'))).toBe(true);
+  });
+
+  it('batches the whole attack with one decision, and leaves per-creature control intact', () => {
+    const ctx = combatContext();
+    for (const name of ['Test Alpha', 'Test Beta', 'Test Gamma']) {
+      spawn(ctx, 'P1', keywordCreature(name, '', '{1}{G}', '2/2'));
+    }
+
+    const attackDecisions: string[] = [];
+    pump(runCombatPhase(ctx), (d) => {
+      if (d.decisionType === 'declareAttackers') {
+        attackDecisions.push(d.prompt);
+        return pick(d, /All 3 undeclared creatures .* attack P2/);
+      }
+      return pick(d, /Pass|does not/);
+    });
+
+    // Three eligible attackers, one decision: the batch settled the creatures behind it.
+    expect(attackDecisions).toHaveLength(1);
+    expect(attackEvents(ctx).map((e) => e.payload['attacker'])).toEqual([
+      'Test Alpha',
+      'Test Beta',
+      'Test Gamma',
+    ]);
+    expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(34);
+  });
+
+  it('declining the batch stops asking about the creatures behind it', () => {
+    const ctx = combatContext();
+    for (const name of ['Test Alpha', 'Test Beta', 'Test Gamma']) {
+      spawn(ctx, 'P1', keywordCreature(name, '', '{1}{G}', '2/2'));
+    }
+
+    let attackDecisions = 0;
+    pump(runCombatPhase(ctx), (d) => {
+      if (d.decisionType === 'declareAttackers') {
+        attackDecisions++;
+        return pick(d, 'No further attacks');
+      }
+      return pick(d, /Pass|does not/);
+    });
+
+    expect(attackDecisions).toBe(1);
+    expect(attackEvents(ctx)).toHaveLength(0);
+    expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(40);
+  });
+
+  it('a mixed attack still declares creature by creature, unchanged', () => {
+    const ctx = combatContext();
+    for (const name of ['Test Alpha', 'Test Beta', 'Test Gamma']) {
+      spawn(ctx, 'P1', keywordCreature(name, '', '{1}{G}', '2/2'));
+    }
+
+    const menus: string[][] = [];
+    pump(runCombatPhase(ctx), (d) => {
+      if (d.decisionType === 'declareAttackers') {
+        menus.push(d.options.map((o) => o.description));
+        // Attack with Alpha and Gamma; keep Beta home. No batch option is used.
+        return d.prompt.includes('Test Beta')
+          ? pick(d, 'Test Beta does not attack')
+          : pick(d, /Test (Alpha|Gamma) attacks P2/);
+      }
+      return pick(d, /Pass|does not/);
+    });
+
+    expect(menus).toHaveLength(3);
+    // The last creature has nothing behind it, so it gets no batch shortcut.
+    expect(menus[2]?.some((desc) => desc.includes('No further attacks'))).toBe(false);
+    expect(attackEvents(ctx).map((e) => e.payload['attacker'])).toEqual([
+      'Test Alpha',
+      'Test Gamma',
+    ]);
+    expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(36);
+  });
+
+  it('offers a no-blocks-at-all shortcut that settles every remaining blocker', () => {
+    const ctx = combatContext();
+    spawn(ctx, 'P1', keywordCreature('Test Raider', '', '{1}{R}', '3/3'));
+    for (const name of ['Test Wall A', 'Test Wall B']) {
+      spawn(ctx, 'P2', keywordCreature(name, '', '{2}', '0/4'));
+    }
+
+    let blockDecisions = 0;
+    pump(runCombatPhase(ctx), (d) => {
+      const attack = attackWith('Test Raider', 'P2')(d);
+      if (attack !== null) return attack;
+      if (d.decisionType === 'declareBlockers') {
+        blockDecisions++;
+        return pick(d, 'No blocks at all');
+      }
+      return pick(d, /Pass|does not/);
+    });
+
+    expect(blockDecisions).toBe(1);
+    expect(ctx.state.battlefield.filter((p) => p.blocking !== null)).toHaveLength(0);
+    expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(37);
   });
 
   it('21 combat damage from the same commander eliminates across multiple combats', () => {

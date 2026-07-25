@@ -1,0 +1,71 @@
+# generated-2-hawkeye-clint-barton
+# generated from the engine-supported card pool
+
+Commander
+1 Hawkeye, Clint Barton
+
+Deck
+36 Plains
+1 Moment of Heroism
+1 Honor
+1 Snare Thopter
+1 Ghirapur Osprey
+1 For the Emperor!
+1 Knight of the Keep
+1 Aegis of the Heavens
+1 Maned Serval
+1 True Conviction
+1 Enforcer Griffin
+1 Serra Angel
+1 Jhovall Queen
+1 Lucent Liminid
+1 Knighthood
+1 Glory Seeker
+1 Gallows Warden
+1 Bonescythe Sliver
+1 Chapel Geist
+1 Phyrexian Hulk
+1 Show of Valor
+1 Eldrazi Devastator
+1 Mighty Leap
+1 Great-Horn Krushok
+1 Kitesail Scout
+1 King of the Pride
+1 Demystify
+1 Shu Foot Soldiers
+1 Sunspire Griffin
+1 Gold Myr
+1 Valiant Guard
+1 Ageless Guardian
+1 Darksteel Relic
+1 Archangel
+1 Cliffhaven Sell-Sword
+1 Alpha Myr
+1 Steelform Sliver
+1 Darksteel Myr
+1 Benalish Marshal
+1 Shining Aerosaur
+1 Guided Strike
+1 Skyspear Cavalry
+1 Looming Altisaur
+1 Knight of Meadowgrain
+1 Thran Dynamo
+1 Bishop's Soldier
+1 Steeple Roc
+1 Akroma's Devoted
+1 True Love's Kiss
+1 Celestial Force
+1 Longbow Archer
+1 Adaptive Shimmerer
+1 Cursebreak
+1 Chardalyn Dragon
+1 Steel Wall
+1 Pillarfield Ox
+1 Skyshroud Falcon
+1 Indomitable Ancients
+1 Yotian Medic
+1 Kami of Old Stone
+1 Mistral Charger
+1 Traveling Philosopher
+1 Worn Powerstone
+1 Arachnoid

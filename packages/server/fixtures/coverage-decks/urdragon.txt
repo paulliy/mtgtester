@@ -1,0 +1,99 @@
+# urdragon
+# snapshot of https://moxfield.com/decks/wrCzCStOikeFbl4UmYL3oQ
+
+Commander
+1 The Ur-Dragon
+
+Deck
+4 Mountain
+1 Overgrown Tomb
+1 Steam Vents
+1 Watery Grave
+1 Kiora, Behemoth Beckoner
+1 Stubborn Denial
+1 Vaevictis Asmadi, the Dire
+1 Ryusei, the Falling Star
+1 Bladewing the Risen
+1 Karrthus, Tyrant of Jund
+1 Orb of Dragonkind
+1 Iymrith, Desert Doom
+1 Rhythm of the Wild
+1 Kairi, the Swirling Sky
+1 Spinerock Knoll
+1 Lozhan, Dragons' Legacy
+1 Korlessa, Scale Singer
+1 Monster Manual // Zoological Study
+1 Thrakkus the Butcher
+1 Miirym, Sentinel Wyrm
+1 Scaled Nurturer
+1 Thunder Dragon
+1 Old Gnawbone
+1 Rith, Liberated Primeval
+1 Rivaz of the Claw
+1 Zurgo and Ojutai
+1 Mosswort Bridge
+1 Last March of the Ents
+1 Farseek
+1 Earthquake
+1 Fellwar Stone
+1 Path of Ancestry
+1 Cyclonic Rift
+1 Ilysian Caryatid
+1 Kodama's Reach
+1 Command Tower
+1 Rejuvenating Springs
+1 Spectator Seating
+1 Hunter's Insight
+1 Temple of Mystery
+1 Rootbound Crag
+1 Arcane Signet
+1 Sol Ring
+1 Morophon, the Boundless
+1 Beledros Witherbloom
+1 Razorverge Thicket
+1 Klauth, Unrivaled Ancient
+1 Reckless Barbarian
+1 Drakuseth, Maw of Flames
+1 Carnelian Orb of Dragonkind
+1 Sarkhan, Dragon Ascendant
+1 Mox Jasper
+1 Marang River Regent // Coil and Catch
+1 Ureni, the Song Unending
+1 Ureni of the Unwritten
+1 Bloomvine Regent // Claim Territory
+1 Battlefield Forge
+1 Lightning Greaves
+1 Woodland Cemetery
+1 Herd Heirloom
+1 Dragon Tempest
+1 Broodcaller Scourge
+1 Hellkite Courser
+1 Dragonlord Dromoka
+1 Haven of the Spirit Dragon
+1 Sarkhan, Soul Aflame
+1 Atarka, World Render
+1 Temur Ascendancy
+1 Yavimaya Coast
+1 Dragon's Hoard
+1 Maelstrom of the Spirit Dragon
+1 Neriv, Heart of the Storm
+1 Crux of Fate
+1 Three Visits
+1 Skycloud Expanse
+1 Island
+1 Temple Garden
+1 Blood Crypt
+1 Chromatic Lantern
+1 Garruk's Uprising
+1 Exotic Orchard
+1 Dreamroot Cascade
+1 Stormcarved Coast
+1 Sundown Pass
+1 Scorched Geyser
+1 Turbulent Springs
+1 Nature's Lore
+3 Forest
+3 Swamp
+1 Firkraag, Cunning Instigator
+1 Temur Battlecrier
+1 Sivitri, Dragon Master

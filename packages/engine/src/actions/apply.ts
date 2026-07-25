@@ -5,18 +5,37 @@
  */
 
 import type { ObjectId } from '@mtg/shared';
+import type { AbilityCost } from '../cards/definition';
+import { TAP_COST } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
+import { computeCharacteristics } from '../effects/continuous';
+import { applyManaRider } from '../effects/resolve';
 import { emit, debug } from '../log/log';
-import { addGeneric, emptyCost, planPayment } from '../mana/cost';
+import { addGeneric, emptyCost, planPayment, totalPips } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import { makePermanent, moveObject, removeFromCurrentZone } from '../state/objects';
 import { getDefByOracleId, manaSourcesFor } from '../state/queries';
-import type { EngineCardObject, EnginePlayerState, GameContext } from '../state/types';
+import type {
+  EngineCardObject,
+  EnginePermanent,
+  EnginePlayerState,
+  GameContext,
+} from '../state/types';
 import type { PriorityActionPayload } from './legal';
-import { validateChosenTargets } from './legal';
+import { computeTargetOptions, manaPortionOf, validateChosenTargets } from './legal';
+import { resetOpponentYields } from '../turn/priority';
 
-/** Tap sources per plan, add their production to the pool, then deduct `cost`. */
-function payCost(ctx: GameContext, player: EnginePlayerState, cost: ParsedManaCost): void {
+/**
+ * Activate sources per plan, add their production to the pool, then deduct `cost`.
+ *
+ * A generator because not every mana ability costs {T}: "Sacrifice this creature: Add {R}{R}"
+ * moves a permanent to the graveyard, and `moveObject` can ask the CR 903.9b commander question.
+ */
+function* payCost(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  cost: ParsedManaCost,
+): GameGen<void> {
   const sources = manaSourcesFor(ctx, player.id);
   const plan = planPayment(cost, player.manaPool, sources);
   if (plan === null) {
@@ -25,8 +44,16 @@ function payCost(ctx: GameContext, player: EnginePlayerState, cost: ParsedManaCo
   for (const cardId of plan.tapCardIds) {
     const perm = ctx.state.battlefield.find((p) => p.cardId === cardId);
     if (perm === undefined) throw new Error('engine bug: payment source vanished');
-    perm.tapped = true;
-    emit(ctx, 'tapForMana', { name: perm.name, cardId }, player.id);
+    // Riders on the mana ability itself — a painland's "deals 1 damage to you". Mana abilities
+    // never use the stack (CR 605.3a), so this resolves immediately rather than being queued.
+    // Applied BEFORE the cost, so a source that sacrifices itself still exists to do it.
+    for (const ability of computeCharacteristics(ctx, perm).manaAbilities) {
+      for (const effect of ability.onActivate ?? []) {
+        applyManaRider(ctx, perm, player, effect);
+      }
+    }
+    const source = sources.find((s) => s.cardId === cardId);
+    yield* payAbilityCosts(ctx, player, perm, source?.costs ?? TAP_COST, 'tapForMana');
   }
   // Add exactly the mana the planner chose to produce (the SPECIFIC symbol per unit —
   // correct for multi-color sources, where the first symbol would mispay). Surplus floats
@@ -48,6 +75,73 @@ function payCost(ctx: GameContext, player: EnginePlayerState, cost: ParsedManaCo
     generic -= take;
   }
   if (generic > 0) throw new Error('engine bug: generic payment shortfall');
+}
+
+/**
+ * Pay the NON-mana components of an activation cost (CR 601.2h): tap, remove counters,
+ * sacrifice. A generator because sacrificing is a zone change, and `moveObject` can ask the
+ * CR 903.9b commander question.
+ *
+ * Sacrifice is applied last so a tap/counter cost on the same permanent is recorded on a
+ * permanent that still exists.
+ */
+function* payAbilityCosts(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  perm: EnginePermanent,
+  costs: readonly AbilityCost[],
+  tapEvent: 'tap' | 'tapForMana',
+): GameGen<void> {
+  for (const cost of costs) {
+    switch (cost.kind) {
+      case 'tap':
+        perm.tapped = true;
+        emit(ctx, tapEvent, { name: perm.name, cardId: perm.cardId }, player.id);
+        break;
+      case 'removeCounters': {
+        const have = perm.counters[cost.counter] ?? 0;
+        if (have < cost.count) throw new Error('engine bug: counter cost became unpayable');
+        perm.counters[cost.counter] = have - cost.count;
+        emit(
+          ctx,
+          'counters',
+          {
+            target: perm.name,
+            targetCardId: perm.cardId,
+            counter: cost.counter,
+            added: -cost.count,
+            total: perm.counters[cost.counter],
+          },
+          player.id,
+        );
+        break;
+      }
+      case 'mana':
+        break; // paid separately — see `payActivationCosts`
+      case 'sacrificeSelf':
+        break; // applied below
+    }
+  }
+  if (costs.some((c) => c.kind === 'sacrificeSelf')) {
+    emit(ctx, 'sacrifice', { name: perm.name, cardId: perm.cardId }, player.id);
+    yield* moveObject(ctx, perm, { zone: 'graveyard' });
+  }
+}
+
+/**
+ * Pay a whole activation cost. Non-mana components go first: they take the source out of play
+ * (or tap it), so it cannot then also be tapped for mana to pay the same cost's mana half.
+ * `computePriorityOptions` excludes the source for the same reason, so the two agree.
+ */
+function* payActivationCosts(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  perm: EnginePermanent,
+  costs: readonly AbilityCost[],
+): GameGen<void> {
+  yield* payAbilityCosts(ctx, player, perm, costs, 'tap');
+  const mana = manaPortionOf(costs);
+  if (totalPips(mana) > 0) yield* payCost(ctx, player, mana);
 }
 
 /**
@@ -85,13 +179,13 @@ export function* applyPriorityAction(
       const cost = addGeneric(def.manaCost ?? emptyCost(), tax);
       const targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
 
-      payCost(ctx, player, cost);
+      yield* payCost(ctx, player, cost);
 
       if (payload.fromCommand) {
         player.commanderCastCount[obj.cardId] = (player.commanderCastCount[obj.cardId] ?? 0) + 1;
       }
 
-      // The card leaves its zone and becomes a spell on the stack (CR 601.2a).
+      resetOpponentYields(ctx, player.id);
       removeFromCurrentZone(ctx, obj);
       const spellCard: EngineCardObject = {
         ...obj,
@@ -130,12 +224,63 @@ export function* applyPriorityAction(
       return;
     }
 
+    case 'activateAbility': {
+      const perm = ctx.state.battlefield.find((p) => p.id === payload.objectId);
+      if (perm === undefined) throw new Error('engine bug: ability source not on the battlefield');
+      const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
+      const activated = def.activatedAbilities[payload.index];
+      if (activated === undefined) throw new Error('engine bug: activated ability index invalid');
+
+      // CR 601.2c/601.2h: targets are chosen, then costs are paid, then the ability is on the
+      // stack. Paying is one indivisible act and happens even if the ability never resolves —
+      // which is why sacrificing the source does not remove the ability from the stack.
+      const targets: ObjectId[] = [];
+      for (const [slot, spec] of activated.ability.targets.entries()) {
+        const choice = outcome.targets.get(slot);
+        if (choice === undefined) throw new Error(`missing target for slot ${slot} of ${perm.name}`);
+        if (!computeTargetOptions(ctx, spec, player.id).includes(choice)) {
+          throw new Error(`illegal target ${choice} for slot ${slot} of ${perm.name}`);
+        }
+        targets.push(choice);
+      }
+
+      const description = activated.ability.description ?? 'activated ability';
+      const id = `o-${s.nextObjectNum++}` as ObjectId;
+      // Snapshot before paying: a sacrifice cost removes the permanent, and the stack entry
+      // must still name its source (CR 608.2f — the ability resolves regardless).
+      const stackEntry = {
+        id,
+        sourceId: perm.id,
+        controllerId: player.id,
+        kind: 'activatedAbility' as const,
+        description: `${perm.name} — ${description}`,
+        targets,
+        card: null,
+        ability: activated.ability,
+        sourceOracleId: perm.oracleId,
+        sourceCardId: perm.cardId,
+        isCommanderCast: false,
+      };
+
+      yield* payActivationCosts(ctx, player, perm, activated.costs);
+      resetOpponentYields(ctx, player.id);
+      s.stack.push(stackEntry);
+      emit(
+        ctx,
+        'activateAbility',
+        { player: player.id, source: perm.name, cardId: perm.cardId, description, targets },
+        player.id,
+      );
+      debug(ctx, 'stack', `${player.id} activates ${perm.name} — ${description}`);
+      return;
+    }
+
     case 'companionToHand': {
       const companion = player.companion;
       if (companion === null || player.companionMovedToHand) {
         throw new Error('engine bug: companion action without a companion');
       }
-      payCost(ctx, player, { ...emptyCost(), generic: 3 });
+      yield* payCost(ctx, player, { ...emptyCost(), generic: 3 });
       player.companionMovedToHand = true;
       const handObj: EngineCardObject = {
         ...companion,

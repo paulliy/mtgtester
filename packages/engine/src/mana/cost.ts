@@ -10,6 +10,9 @@
 
 import type { Color, ManaCostString, ManaPool } from '@mtg/shared';
 import { ALL_COLORS } from '@mtg/shared';
+// Type-only, so this does not close a runtime cycle with `cards/ability.ts` (which imports
+// `ParsedManaCost` from here).
+import type { AbilityCost } from '../cards/ability';
 
 /** A parsed, payable mana cost: generic amount plus per-symbol colored/colorless pips. */
 export interface ParsedManaCost {
@@ -76,16 +79,29 @@ export function totalPips(cost: ParsedManaCost): number {
  */
 export type ManaUnit = readonly (Color | 'C')[];
 
-/** An activatable mana source (an untapped permanent with a mana ability). */
+/**
+ * An activatable mana source — a permanent whose mana ability can be paid for right now.
+ * Availability (untapped? not summoning-sick?) is decided by `manaSourcesFor` before the
+ * source is offered, so the solver never has to know what the ability costs.
+ */
 export interface ManaSource {
-  /** Stable card id of the permanent to tap. */
+  /** Stable card id of the permanent to activate. */
   cardId: string;
-  /** The units of mana produced when tapped, each a choice among symbols. */
+  /** The units of mana produced when activated, each a choice among symbols. */
   units: ManaUnit[];
+  /**
+   * What activating it costs. The solver ignores this — availability was already decided — but
+   * the caller applying the plan needs it, because "tap it" is not the only way to pay.
+   */
+  costs: readonly AbilityCost[];
 }
 
 export interface PaymentPlan {
-  /** Card ids of the sources to tap, in a deterministic order. */
+  /**
+   * Card ids of the sources to activate, in a deterministic order. Named for the {T} cost
+   * every Phase 2 source had; a source with a different cost (Reckless Barbarian's "sacrifice
+   * this creature") appears here too, and the caller pays whatever that source's cost is.
+   */
   tapCardIds: string[];
   /** Mana drawn from the floating pool, by symbol. */
   fromPool: ManaPool;
