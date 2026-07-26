@@ -34,6 +34,8 @@ function untapStep(ctx: GameContext): void {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
   setPhase(ctx, 'beginning', 'untap');
   ap.landsPlayedThisTurn = 0;
+  ctx.state.excessDamageControllerIds = [];
+  ctx.state.damageDealtToPlayersThisTurn = {};
   for (const p of ctx.state.players) {
     p.yieldUntilEndOfTurn = false;
   }
@@ -81,6 +83,26 @@ function queueStepTriggers(ctx: GameContext, when: 'upkeep' | 'endStep'): void {
       debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
     }
   }
+
+  const remainingDelayed = [];
+  for (const delayed of ctx.state.delayedTriggers) {
+    if (delayed.when === when) {
+      ctx.state.pendingTriggers.push({
+        controllerId: delayed.controllerId,
+        sourceCardId: delayed.sourceCardId,
+        sourceOracleId: delayed.sourceOracleId,
+        sourceName: 'Delayed Trigger',
+        ability: delayed.ability,
+        ...(delayed.targetId !== undefined ? { triggerObjectCardId: delayed.targetId } : {}),
+      });
+      debug(ctx, 'stack', `delayed ${when} trigger queued: ${delayed.id}`);
+      if (delayed.expiry === 'endStep') {
+        continue;
+      }
+    }
+    remainingDelayed.push(delayed);
+  }
+  ctx.state.delayedTriggers = remainingDelayed;
 }
 
 /** Cleanup step (CR 514), repeating while SBAs/triggers give players priority (514.3a). */
@@ -112,6 +134,7 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
       perm.damagedByDeathtouch = false;
     }
     endUntilEotEffects(ctx);
+    ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter((dt) => dt.expiry !== 'cleanup');
     // End of TURN: "you don't lose this mana as steps and phases end" runs out here too, so
     // cleanup drains persistent mana as well (Klauth's is explicitly "until end of turn").
     emptyManaPools(ctx, true);

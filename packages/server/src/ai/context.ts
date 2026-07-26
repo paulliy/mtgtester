@@ -68,6 +68,9 @@ export function assemblePrompt(
           ...(card.power !== undefined && card.power !== null
             ? { p: card.power, t: card.toughness }
             : {}),
+          ...(card.name.includes(' // ')
+            ? { layoutNote: 'Dual-face Adventure/Omen card (castable as spell or permanent)' }
+            : {}),
           ...(isBasic || !card.oracleText ? {} : { text: card.oracleText }),
         };
       }),

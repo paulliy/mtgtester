@@ -13,7 +13,7 @@ import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../car
 import type { SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EngineActionOption } from '../decisions';
-import { computeCharacteristics } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import { addGeneric, canPay, describeManaCost, emptyCost, subtractGeneric, withX } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
@@ -32,10 +32,12 @@ import {
   playersInApnapOrder,
   requireModeled,
 } from '../state/queries';
+import { playerById } from '../state/objects';
 import type {
   EngineCardObject,
   EnginePermanent,
   EnginePlayerState,
+  EngineStackObject,
   GameContext,
 } from '../state/types';
 
@@ -51,7 +53,12 @@ export type PriorityActionPayload =
       fromCommand: boolean;
       /** Korlessa, Scale Singer's "cast Dragon spells from the top of your library". */
       fromLibraryTop?: boolean;
+      fromExile?: boolean;
       x?: number;
+      /** Which modal option was chosen (CR 601.2b), when `spellAbility.modes` is present. */
+      mode?: number;
+      alternativeCast?: 'overload' | 'adventure' | 'omen';
+      altIndex?: number;
     }
   /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
   | { kind: 'activateAbility'; objectId: ObjectId; index: number }
@@ -101,6 +108,7 @@ export function costReductionFor(
     power: def.power ?? 0,
     keywords: def.keywords,
     isToken: false,
+    enteredThisTurn: false,
   };
   const source: SelectorSource = { cardId: castCardId, controllerId: casterId };
 
@@ -158,8 +166,21 @@ export function permanentMatchesKind(
     case 'player':
     case 'spell':
     case 'cardInGraveyard':
+    case 'noncreatureSpell':
+    case 'commanderInCommandZone':
       return false;
   }
+}
+
+/**
+ * Does the object a stack `spell` entry is casting have the Creature type? Shared by
+ * `computeTargetOptions` and `isTargetStillLegal` (`effects/resolve.ts`) so "noncreature spell"
+ * cannot drift between offering a target and rechecking it at resolution — the same reason
+ * `permanentMatchesKind` is shared for battlefield kinds.
+ */
+export function isCreatureSpell(ctx: GameContext, entry: EngineStackObject): boolean {
+  const def = getDefByOracleId(ctx, entry.sourceOracleId, entry.description);
+  return def.types.includes('Creature');
 }
 
 /** Legal target object-ids (or player ids) for one target slot, from `caster`'s seat. */
@@ -173,8 +194,15 @@ export function computeTargetOptions(
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
 
-  if (kind === 'spell') {
-    return ctx.state.stack.filter((s) => s.kind === 'spell').map((s) => s.id);
+  if (kind === 'spell' || kind === 'noncreatureSpell') {
+    return ctx.state.stack
+      .filter((s) => s.kind === 'spell')
+      .filter((s) => kind !== 'noncreatureSpell' || !isCreatureSpell(ctx, s))
+      .map((s) => s.id);
+  }
+  if (kind === 'commanderInCommandZone') {
+    const player = playerById(ctx, casterId);
+    return player.commandZone.filter((c) => c.isCommander).map((c) => c.id);
   }
   // A card in a graveyard, not a permanent — always the caster's own (see `TargetKind`).
   if (kind === 'cardInGraveyard') {
@@ -197,6 +225,7 @@ export function computeTargetOptions(
         controller === undefined ||
         (controller === 'you' ? p.controllerId === casterId : p.controllerId !== casterId),
     )
+    .filter((p) => filter === undefined || matchesSelector(ctx, p, filter, { cardId: '', controllerId: casterId }))
     .map((p) => p.id);
 
   // "Any target" is creature-or-player (CR 115.4). Players are never hexproof-filtered.
@@ -272,6 +301,7 @@ export function computePriorityOptions(
     obj: EngineCardObject,
     fromCommand: boolean,
     fromLibraryTop = false,
+    fromExile = false,
   ): void => {
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
     requireModeled(
@@ -328,6 +358,12 @@ export function computePriorityOptions(
       if (xChoices.length === 0) return;
     }
 
+    // A modal spell (CR 700.2) is announced with its mode chosen at cast time, before targets —
+    // so each mode is its own cast option, the same "the option menu is the contract" treatment
+    // {X} gets above. A non-modal spell has exactly one "mode" (undefined), so this loop is a
+    // single iteration when `modes` is absent.
+    const modeIndices = def.spellAbility?.modes?.options.map((_, i) => i) ?? [undefined];
+
     let offered = false;
     for (const x of xChoices) {
       const cost = withX(base, x);
@@ -336,27 +372,79 @@ export function computePriorityOptions(
       const targets = computeCastTargets(ctx, def, player.id);
       if (targets === null) return;
 
-      const option: EngineActionOption = {
-        type: 'castSpell',
-        description:
-          `Cast ${obj.name} (${describeManaCost(cost)})` +
-          (xSymbols > 0 ? ` with X=${x}` : '') +
-          (fromCommand ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}` : '') +
-          (fromLibraryTop ? ' from the top of your library' : ''),
-        payload: {
-          kind: 'castSpell',
-          objectId: obj.id,
-          fromCommand,
-          ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
-          ...(xSymbols > 0 ? { x } : {}),
-        },
-        // Descriptive only (see `EngineActionOption.data`): lets a decision consumer tell a
-        // hold-priority instant apart from a sorcery-speed play without parsing the description.
-        data: { instantSpeed, ...(xSymbols > 0 ? { x } : {}) },
-      };
-      if (targets.length > 0) option.targets = targets;
-      options.push(option);
-      offered = true;
+      for (const mode of modeIndices) {
+        const modeLabel =
+          mode === undefined ? undefined : (def.spellAbility?.modes?.options[mode]?.description ??
+            `mode ${mode + 1}`);
+        const option: EngineActionOption = {
+          type: 'castSpell',
+          description:
+            `Cast ${obj.name} (${describeManaCost(cost)})` +
+            (xSymbols > 0 ? ` with X=${x}` : '') +
+            (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
+            (fromCommand ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}` : '') +
+            (fromLibraryTop ? ' from the top of your library' : '') +
+            (fromExile ? ' from exile' : ''),
+          payload: {
+            kind: 'castSpell',
+            objectId: obj.id,
+            fromCommand,
+            ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
+            ...(xSymbols > 0 ? { x } : {}),
+            ...(mode !== undefined ? { mode } : {}),
+          },
+          // Descriptive only (see `EngineActionOption.data`): lets a decision consumer tell a
+          // hold-priority instant apart from a sorcery-speed play without parsing the description.
+          data: { instantSpeed, ...(xSymbols > 0 ? { x } : {}) },
+        };
+        if (targets.length > 0) option.targets = targets;
+        options.push(option);
+        offered = true;
+      }
+    }
+    if (def.alternativeCasts && def.alternativeCasts.length > 0 && !fromExile) {
+      for (const [index, alt] of def.alternativeCasts.entries()) {
+        if (alt.kind === 'overload') {
+          const cost = subtractGeneric(alt.manaCost, reduction);
+          if (canPay(cost, player.manaEntries, sources, allows)) {
+            options.push({
+              type: 'castSpell',
+              description: `Cast ${obj.name} via Overload (${describeManaCost(cost)})`,
+              payload: {
+                kind: 'castSpell',
+                objectId: obj.id,
+                fromCommand,
+                alternativeCast: 'overload',
+                altIndex: index,
+              },
+              data: { instantSpeed },
+            });
+            offered = true;
+          }
+        } else if (alt.kind === 'adventure' || alt.kind === 'omen') {
+          const cost = subtractGeneric(alt.manaCost, reduction);
+          if (canPay(cost, player.manaEntries, sources, allows)) {
+            const altName = alt.name ?? alt.description;
+            const note =
+              alt.kind === 'omen'
+                ? '[Omen Spell: shuffles into library on resolution]'
+                : '[Adventure Spell: exiles on resolution, cast main face later]';
+            options.push({
+              type: 'castSpell',
+              description: `Cast ${altName} via ${alt.kind === 'omen' ? 'Omen' : 'Adventure'} (${describeManaCost(cost)}) ${note}`,
+              payload: {
+                kind: 'castSpell',
+                objectId: obj.id,
+                fromCommand: false,
+                alternativeCast: alt.kind,
+                altIndex: index,
+              },
+              data: { instantSpeed: alt.typeLine?.includes('Instant') ?? false },
+            });
+            offered = true;
+          }
+        }
+      }
     }
     if (offered) seen.add(key);
   };
@@ -364,6 +452,11 @@ export function computePriorityOptions(
   for (const obj of player.hand) considerCast(obj, false);
   for (const obj of player.commandZone) considerCast(obj, true);
   for (const obj of castFromLibraryTopCandidates(ctx, player.id)) considerCast(obj, false, true);
+  for (const obj of ctx.state.exile) {
+    if (obj.ownerId === player.id && obj.onAdventure === true) {
+      considerCast(obj, false, false, true);
+    }
+  }
 
   // Activated abilities of permanents this player controls (CR 602).
   for (const perm of ctx.state.battlefield) {

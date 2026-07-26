@@ -5,7 +5,7 @@
 
 import type { Color, ObjectId, PlayerId } from '@mtg/shared';
 import { ALL_COLORS } from '@mtg/shared';
-import { permanentMatchesKind } from '../actions/legal';
+import { isCreatureSpell, permanentMatchesKind } from '../actions/legal';
 import type {
   Ability,
   AbilityCost,
@@ -17,10 +17,11 @@ import type {
   TargetSpec,
 } from '../cards/definition';
 import { TAP_COST } from '../cards/definition';
+import { evaluateCondition } from '../cards/condition';
 import { selectMatches } from '../cards/selector';
 import type { GameGen } from '../decisions';
 import { UnmodeledCardError } from '../errors';
-import { computeCharacteristics, selectPermanents } from './continuous';
+import { candidateOf, computeCharacteristics, matchesSelector, selectPermanents } from './continuous';
 import { evaluateValueIn } from './values';
 import type { Value, ValueScope } from '../cards/value';
 import { evaluateValue } from '../cards/value';
@@ -40,6 +41,7 @@ import {
   allowanceFor,
   cardZoneCandidate,
   colorsOf,
+  damageMultiplierFor,
   effectivePT,
   findPermanent,
   getDefByOracleId,
@@ -82,6 +84,10 @@ export function dealDamageToCreature(
   },
 ): void {
   if (amount <= 0) return;
+  // Damage-doubling replacement (CR 616 — Neriv, Heart of the Storm), applied to the amount
+  // BEFORE protection: the source deals more damage, independent of whether the target can
+  // prevent it.
+  amount *= damageMultiplierFor(ctx, source.cardId);
   // Protection (CR 702.16), the D in DEBT: damage from a source of a protected-from color is
   // prevented entirely, so no damage is marked and no lifelink is gained.
   if (opts.sourceColors !== undefined && hasProtectionFrom(ctx, target, opts.sourceColors)) {
@@ -93,6 +99,13 @@ export function dealDamageToCreature(
       reason: 'protection',
     });
     return;
+  }
+  // Excess damage this turn (Rith, Liberated Primeval) — the amount by which this single hit
+  // exceeded what was needed to reduce the target to 0 toughness, accounting for damage already
+  // marked. Tracked by the DAMAGED permanent's controller, regardless of who dealt it.
+  const neededToKill = Math.max(0, effectivePT(ctx, target).toughness - target.damageMarked);
+  if (amount > neededToKill) {
+    ctx.state.excessDamageControllerIds.push(target.controllerId);
   }
   target.damageMarked += amount;
   if (opts.sourceHasDeathtouch) target.damagedByDeathtouch = true;
@@ -116,7 +129,11 @@ export function dealDamageToPlayer(
   opts: { combat: boolean; sourceIsCommander: boolean; sourceHasLifelink: boolean },
 ): void {
   if (amount <= 0) return;
+  // Damage-doubling replacement (CR 616 — Neriv, Heart of the Storm).
+  amount *= damageMultiplierFor(ctx, source.cardId);
   target.life -= amount;
+  ctx.state.damageDealtToPlayersThisTurn[target.id] =
+    (ctx.state.damageDealtToPlayersThisTurn[target.id] ?? 0) + amount;
   // 21+ combat damage from the same commander eliminates — COMBAT damage only (§5.7).
   if (opts.combat && opts.sourceIsCommander) {
     target.commanderDamageTaken[source.cardId] =
@@ -130,6 +147,31 @@ export function dealDamageToPlayer(
     amount,
     combat: opts.combat,
     commanderDamage: opts.combat && opts.sourceIsCommander,
+  });
+}
+
+/** Deal non-combat damage from `source` to whichever kind of object `id` names. */
+function dealDamageToObject(
+  ctx: GameContext,
+  source: EffectSource,
+  id: ObjectId,
+  amount: number,
+): void {
+  const targetPlayer = ctx.state.players.find((p) => p.id === id);
+  if (targetPlayer !== undefined) {
+    dealDamageToPlayer(ctx, source, targetPlayer, amount, {
+      combat: false,
+      sourceIsCommander: false,
+      sourceHasLifelink: false,
+    });
+    return;
+  }
+  const perm = findPermanent(ctx, id);
+  if (perm === undefined) return;
+  dealDamageToCreature(ctx, source, perm, amount, {
+    combat: false,
+    sourceHasDeathtouch: false,
+    sourceHasLifelink: false,
   });
 }
 
@@ -186,8 +228,14 @@ export function isTargetStillLegal(
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
 
-  if (kind === 'spell') {
-    return ctx.state.stack.some((s) => s.id === targetId && s.kind === 'spell');
+  if (kind === 'spell' || kind === 'noncreatureSpell') {
+    const entry = ctx.state.stack.find((s) => s.id === targetId && s.kind === 'spell');
+    if (entry === undefined) return false;
+    return kind !== 'noncreatureSpell' || !isCreatureSpell(ctx, entry);
+  }
+  if (kind === 'commanderInCommandZone') {
+    const player = playerById(ctx, spellControllerId);
+    return player.commandZone.some((c) => (c.cardId === targetId || c.id === targetId) && c.isCommander);
   }
   if (kind === 'cardInGraveyard') {
     return graveyardTargets(ctx, spellControllerId, filter).some((c) => c.id === targetId);
@@ -198,6 +246,7 @@ export function isTargetStillLegal(
   }
   const perm = findPermanent(ctx, targetId);
   if (perm === undefined || !permanentMatchesKind(ctx, perm, kind)) return false;
+  if (filter !== undefined && !matchesSelector(ctx, perm, filter, { cardId: '', controllerId: spellControllerId })) return false;
   // Shroud (CR 702.18): untargetable by anything, including its own controller.
   if (hasKeyword(ctx, perm, 'shroud')) return false;
   if (perm.controllerId !== spellControllerId && hasKeyword(ctx, perm, 'hexproof')) return false;
@@ -288,6 +337,10 @@ export function* executeAbility(
   triggerObjectCardId?: string,
   /** X, plus what the firing event contributed — everything a `Value` needs beyond the board. */
   extraScope?: Omit<ValueScope, 'controllerId' | 'sourceCardId'>,
+  /** Chosen ids for a variable-count target slot (`TargetSpec.count`), keyed by slot index. */
+  countTargets?: Record<number, ObjectId[]>,
+  /** The announced division of a `dealDamageDivided` effect's total, keyed by object id. */
+  divisionAmounts?: Record<ObjectId, number>,
 ): GameGen<void> {
   const controller = playerById(ctx, source.controllerId);
 
@@ -416,20 +469,34 @@ export function* executeAbility(
       case 'dealDamage': {
         const t = ref(effect.target);
         if (t === null) break;
-        const targetPlayer = ctx.state.players.find((p) => p.id === t);
-        if (targetPlayer !== undefined) {
-          dealDamageToPlayer(ctx, source, targetPlayer, amountOf(effect.amount), {
-            combat: false,
-            sourceIsCommander: false,
-            sourceHasLifelink: false,
-          });
-        } else {
-          const perm = findPermanent(ctx, t) as EnginePermanent;
-          dealDamageToCreature(ctx, source, perm, amountOf(effect.amount), {
-            combat: false,
-            sourceHasDeathtouch: false,
-            sourceHasLifelink: false,
-          });
+        dealDamageToObject(ctx, source, t, amountOf(effect.amount));
+        break;
+      }
+      case 'dealDamageEachChosen': {
+        // "3 damage to each of up to two other targets" (Drakuseth) — each chosen id gets the
+        // FULL amount independently, unlike `dealDamageDivided`'s shared total.
+        const spec = ability.targets[effect.targetSlot];
+        const amount = amountOf(effect.amount);
+        for (const id of countTargets?.[effect.targetSlot] ?? []) {
+          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+            continue;
+          }
+          dealDamageToObject(ctx, source, id, amount);
+        }
+        break;
+      }
+      case 'dealDamageDivided': {
+        // Ureni: the split was decided at announcement (CR 601.2d) and rides on
+        // `divisionAmounts`; a target that left before resolution is simply skipped, same as
+        // any other target (CR 608.2b) rather than redistributing its share.
+        const spec = ability.targets[effect.targetSlot];
+        for (const id of countTargets?.[effect.targetSlot] ?? []) {
+          const amount = divisionAmounts?.[id] ?? 0;
+          if (amount <= 0) continue;
+          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+            continue;
+          }
+          dealDamageToObject(ctx, source, id, amount);
         }
         break;
       }
@@ -441,6 +508,19 @@ export function* executeAbility(
           debug(ctx, 'effect', `${perm.name} is indestructible — destroy has no effect`);
           emit(ctx, 'destroyPrevented', { target: perm.name, source: source.name });
         } else {
+          emit(ctx, 'destroy', { target: perm.name, source: source.name });
+          yield* moveObject(ctx, perm, { zone: 'graveyard' });
+        }
+        break;
+      }
+      case 'destroyEach': {
+        // The affected set is fixed here (CR 611.2c), mirroring `damageEach`/`putCountersEach`.
+        for (const perm of affectedBy(ctx, source, effect.selector)) {
+          if (hasKeyword(ctx, perm, 'indestructible')) {
+            debug(ctx, 'effect', `${perm.name} is indestructible — destroy has no effect`);
+            emit(ctx, 'destroyPrevented', { target: perm.name, source: source.name });
+            continue;
+          }
           emit(ctx, 'destroy', { target: perm.name, source: source.name });
           yield* moveObject(ctx, perm, { zone: 'graveyard' });
         }
@@ -601,6 +681,21 @@ export function* executeAbility(
           perm.tapped = false;
         }
         break;
+      case 'gainControl':
+        for (const perm of affectedBy(ctx, source, effect.selector)) {
+          if (perm.controllerId === source.controllerId) continue;
+          perm.controllerId = source.controllerId;
+          perm.timestamp = ctx.state.nextTimestamp++;
+          // CR 302.6: not continuously controlled by the new controller since their turn began.
+          // Left true under haste, exactly like a freshly cast creature.
+          perm.summoningSick = true;
+          emit(ctx, 'gainControl', {
+            source: source.name,
+            target: perm.name,
+            newController: source.controllerId,
+          });
+        }
+        break;
       case 'graveyardToBattlefield': {
         const t = ref(effect.target);
         if (t === null) break;
@@ -638,6 +733,217 @@ export function* executeAbility(
       }
       case 'addMana':
         yield* addManaFromAbility(ctx, source, controller, effect, amountOf(effect.amount));
+        break;
+      case 'goad': {
+        const t = ref(effect.target);
+        if (t !== null) {
+          const perm = findPermanent(ctx, t);
+          if (perm) emit(ctx, 'goad', { target: perm.name, source: source.name });
+        }
+        break;
+      }
+      case 'doublePower': {
+        for (const perm of ctx.state.battlefield) {
+          if (
+            selectMatches(
+              candidateOf(ctx, perm, computeCharacteristics(ctx, perm)),
+              effect.selector,
+              { cardId: source.cardId, controllerId: source.controllerId },
+            )
+          ) {
+            const currentPower = computeCharacteristics(ctx, perm).power;
+            ctx.state.effects.push({
+              id: `eff-${ctx.state.nextObjectNum++}`,
+              sourceId: source.cardId,
+              description: `Double power of ${perm.name}`,
+              targetCardIds: [perm.cardId],
+              kind: 'ptDelta',
+              power: currentPower,
+              toughness: 0,
+              timestamp: ctx.state.nextTimestamp++,
+            });
+          }
+        }
+        break;
+      }
+      case 'drawUpTo': {
+        const currentHand = controller.hand.length;
+        const diff = effect.count - currentHand;
+        if (diff > 0) {
+          yield* drawCards(ctx, controller, diff);
+        }
+        break;
+      }
+      case 'conditionalEffect': {
+        // "Ferocious — if you control a creature with power 4 or greater, counter that spell
+        // instead" (Stubborn Denial) — checked at RESOLUTION, when the board is current, not at
+        // announcement. Recurses into `executeAbility` with the chosen branch substituted for
+        // `effects`, so it reuses every existing op (and `ref`'s legality re-check) unchanged
+        // rather than duplicating the dispatch.
+        const holds = evaluateCondition(ctx, effect.condition, {
+          cardId: source.cardId,
+          controllerId: source.controllerId,
+        });
+        const chosen = holds ? effect.then : effect.else;
+        if (chosen.length > 0) {
+          yield* executeAbility(
+            ctx,
+            source,
+            { ...ability, effects: chosen },
+            targets,
+            triggerObjectCardId,
+            extraScope,
+            countTargets,
+            divisionAmounts,
+          );
+        }
+        break;
+      }
+      case 'counterUnlessControllerPays': {
+        // Stubborn Denial's base mode. Unlike ward's `counterUnlessPays`, this reads a real,
+        // announced target slot rather than a recorded stack-object id — `ref` already reruns
+        // the CR 608.2b legality check before handing back an id.
+        const t = ref(effect.target);
+        if (t === null) break;
+        yield* counterUnlessPays(ctx, source, t, effect.cost);
+        break;
+      }
+      case 'grantAbilityUntilEot': {
+        const t = ref(effect.target);
+        if (t === null) break;
+        const perm = findPermanent(ctx, t) as EnginePermanent;
+        if (perm) {
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: `${perm.name} gains ability until end of turn`,
+            targetCardIds: [perm.cardId],
+            kind: 'grantAbility',
+            ability: effect.ability,
+            timestamp: ctx.state.nextTimestamp++,
+          });
+        }
+        break;
+      }
+      case 'registerDelayedTrigger': {
+        const t = effect.target !== undefined ? ref(effect.target) : null;
+        const targetId = t !== null ? (findPermanent(ctx, t)?.cardId ?? undefined) : undefined;
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId,
+          controllerId: source.controllerId,
+          ...(targetId !== undefined ? { targetId } : {}),
+          when: effect.when,
+          ability: effect.ability,
+          expiry: effect.expiry,
+        });
+        break;
+      }
+      case 'commandZoneToBattlefield': {
+        const t = ref(effect.target);
+        if (t === null) break;
+        const player = playerById(ctx, source.controllerId);
+        const card = player.commandZone.find((c) => c.cardId === t || c.id === t) ?? player.commandZone[0];
+        if (card) {
+          yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: source.controllerId });
+          if (effect.entersHaste) {
+            ctx.state.effects.push({
+              id: `eff-${ctx.state.nextObjectNum++}`,
+              sourceId: source.cardId,
+              description: `${card.name} gains haste until end of turn`,
+              targetCardIds: [card.cardId],
+              kind: 'grantKeyword',
+              keyword: 'haste',
+              timestamp: ctx.state.nextTimestamp++,
+            });
+          }
+        }
+        break;
+      }
+      case 'returnToCommandZone': {
+        const t = ref(effect.target);
+        if (t === null) break;
+        const perm = findPermanent(ctx, t);
+        if (perm) {
+          yield* moveObject(ctx, perm, { zone: 'command' });
+        }
+        break;
+      }
+      case 'grantHasteToResolvingSpell': {
+        const spell = ctx.state.stack.find((s) => s.kind === 'spell');
+        if (spell) {
+          spell.grantHasteOnResolution = true;
+        }
+        break;
+      }
+      case 'untapTarget': {
+        const t = ref(effect.target);
+        if (t === null) break;
+        const perm = findPermanent(ctx, t);
+        if (perm) perm.tapped = false;
+        break;
+      }
+      case 'overloadBounceAllNonlandOpponents': {
+        const toBounce = ctx.state.battlefield.filter((p) => {
+          if (p.controllerId === source.controllerId) return false;
+          const chars = computeCharacteristics(ctx, p);
+          return !chars.types.includes('Land');
+        });
+        for (const perm of toBounce) {
+          yield* moveObject(ctx, perm, { zone: 'hand' });
+        }
+        break;
+      }
+      case 'hideawayExileTop4': {
+        const player = playerById(ctx, source.controllerId);
+        const top4 = player.library.slice(0, 4);
+        if (top4.length === 0) break;
+        const chosenCard =
+          top4.find((c) => !getDefByOracleId(ctx, c.oracleId, c.name).types.includes('Land')) ??
+          top4[0]!;
+        yield* moveObject(ctx, chosenCard, { zone: 'exile' });
+        chosenCard.attachedToCardId = source.cardId;
+
+        const rest = top4.filter((c) => c.id !== chosenCard.id);
+        ctx.rng.shuffle(rest);
+        for (const c of rest) {
+          yield* moveObject(ctx, c, { zone: 'library', libraryPosition: 'bottom' });
+        }
+        break;
+      }
+      case 'playExiledCardFree': {
+        const card = ctx.state.exile.find((c: EngineCardObject) => c.attachedToCardId === source.cardId);
+        if (!card) break;
+        const def = getDefByOracleId(ctx, card.oracleId, card.name);
+        const isLand = def.types.includes('Land');
+        if (isLand) {
+          yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: source.controllerId });
+        } else {
+          const isPermanent = def.types.some((t) =>
+            ['Creature', 'Artifact', 'Enchantment', 'Planeswalker', 'Battle'].includes(t),
+          );
+          if (isPermanent) {
+            yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: source.controllerId });
+          } else {
+            const spellAbility = def.spellAbility ?? { kind: 'spell', targets: [], effects: [] };
+            yield* executeAbility(
+              ctx,
+              {
+                cardId: card.cardId,
+                name: card.name,
+                oracleId: card.oracleId,
+                controllerId: source.controllerId,
+              },
+              spellAbility,
+              [],
+            );
+            yield* moveObject(ctx, card, { zone: 'graveyard' });
+          }
+        }
+        break;
+      }
+      case 'noOp':
         break;
     }
   }
@@ -1110,6 +1416,23 @@ export function* payAbilityCosts(
         // damage — nothing replaces or prevents it.
         loseLife(ctx, player, cost.amount);
         break;
+      case 'loyalty': {
+        const have = perm.counters['loyalty'] ?? 0;
+        perm.counters['loyalty'] = Math.max(0, have + cost.delta);
+        emit(
+          ctx,
+          'counters',
+          {
+            target: perm.name,
+            targetCardId: perm.cardId,
+            counter: 'loyalty',
+            added: cost.delta,
+            total: perm.counters['loyalty'],
+          },
+          player.id,
+        );
+        break;
+      }
       case 'mana':
         break; // paid separately — see `payActivationCosts`
       case 'sacrificeSelf':

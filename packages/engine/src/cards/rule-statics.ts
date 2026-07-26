@@ -40,4 +40,14 @@ export type RuleStatic =
   /** "Your opponents can't cast spells during your turn" (Dragonlord Dromoka). */
   | { kind: 'cantCastSpells'; who: 'opponents'; yourTurnOnly: boolean }
   /** "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer). */
-  | { kind: 'castFromZone'; zone: 'libraryTop'; filter?: Selector };
+  | { kind: 'castFromZone'; zone: 'libraryTop'; filter?: Selector }
+  /**
+   * "If a creature you control that entered this turn would deal damage, it deals twice that
+   * much damage instead" (Neriv, Heart of the Storm) — a damage REPLACEMENT effect (CR 616),
+   * not a layer op: it changes an amount at the moment damage would be dealt, which `StaticEffect`
+   * has no op for (that machinery only ever touches a permanent's own characteristics).
+   *
+   * `sourceFilter` is matched against the permanent DEALING damage, not the static's own source —
+   * unlike every other `RuleStatic`, whose filter narrows the spell/ability being cast/countered.
+   */
+  | { kind: 'damageDoubled'; sourceFilter: Selector };

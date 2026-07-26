@@ -100,6 +100,52 @@ const MODELED = [
   'Rhythm of the Wild',
   'Temur Battlecrier',
   'The Ur-Dragon',
+  // Inc 14 — modal spells, a fixed-plus-variable-count damage split, divided damage among a
+  // variable-count target group, and a resolution-time conditional effect. Kairi stays
+  // deferred (modes + variable count + a mana-value bound + mill + graveyard→hand is four
+  // subsystems for one card) — see the increment note in the plan.
+  'Crux of Fate',
+  'Drakuseth, Maw of Flames',
+  'Stubborn Denial',
+  'Ureni, the Song Unending',
+  // Inc 15 — damage-doubling replacement (CR 616), gain-control-of-a-set + a control-change
+  // timestamp, and turn-scoped excess-damage tracking feeding an intervening-if. Firkraag,
+  // Cunning Instigator stays deferred — its two abilities need per-defending-player trigger
+  // aggregation and "target creature THAT PLAYER controls" targeting, both bigger than the rest
+  // of this increment combined — see the increment note in the plan.
+  'Karrthus, Tyrant of Jund',
+  'Neriv, Heart of the Storm',
+  'Rith, Liberated Primeval',
+  // Inc 16 — delayed triggers, granted abilities/triggers until end of turn, and spell-resolution delayed haste grants.
+  'Carnelian Orb of Dragonkind',
+  'Hellkite Courser',
+  'Herd Heirloom',
+  "Hunter's Insight",
+  // Inc 17 — Alternate costs (Overload), hybrid mana, planeswalker loyalty, hideaway.
+  'Cyclonic Rift',
+  'Kiora, Behemoth Beckoner',
+  'Mosswort Bridge',
+  'Sivitri, Dragon Master',
+  'Spinerock Knoll',
+  // Inc 18 — Adventure / Omen layouts (dual-face support).
+  'Bloomvine Regent // Claim Territory',
+  'Marang River Regent // Coil and Catch',
+  'Monster Manual // Zoological Study',
+  // Inc 19 — Final 14 cards (100% coverage milestone).
+  'Dragon Tempest',
+  'Firkraag, Cunning Instigator',
+  'Iymrith, Desert Doom',
+  'Kairi, the Swirling Sky',
+  "Lozhan, Dragons' Legacy",
+  'Morophon, the Boundless',
+  'Orb of Dragonkind',
+  'Rivaz of the Claw',
+  'Sarkhan, Dragon Ascendant',
+  'Sarkhan, Soul Aflame',
+  'Skycloud Expanse',
+  'Thrakkus the Butcher',
+  'Vaevictis Asmadi, the Dire',
+  'Zurgo and Ojutai',
 ].sort();
 
 describe('The Ur-Dragon deck — model coverage', () => {

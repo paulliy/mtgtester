@@ -35,6 +35,8 @@ export interface ParsedManaCost {
    * value stays visible to the spell's own effects, which is what "deals X damage" reads.
    */
   x?: number;
+  /** Hybrid pips, e.g. {G/U} → [['G', 'U']]. Payable with any symbol in the tuple. */
+  hybrid?: (Color[])[];
 }
 
 export interface ManaCostParseResult {
@@ -53,8 +55,9 @@ const SYMBOL_RE = /\{([^}]+)\}/g;
 export function parseManaCost(cost: ManaCostString | null): ManaCostParseResult {
   const parsed = emptyCost();
   const unsupported: string[] = [];
-  if (cost !== null && cost !== '') {
-    for (const match of cost.matchAll(SYMBOL_RE)) {
+  const costStr = cost !== null && cost !== '' ? cost.split(' // ')[0]! : '';
+  if (costStr !== '') {
+    for (const match of costStr.matchAll(SYMBOL_RE)) {
       const sym = match[1] as string;
       if (/^\d+$/.test(sym)) {
         parsed.generic += Number(sym);
@@ -64,6 +67,15 @@ export function parseManaCost(cost: ManaCostString | null): ManaCostParseResult 
         parsed.colorless += 1;
       } else if (sym === 'X') {
         parsed.x = (parsed.x ?? 0) + 1;
+      } else if (sym.includes('/')) {
+        const parts = sym.split('/');
+        const colors = parts.map((p) => p.toUpperCase() as Color);
+        if (colors.every((c) => (ALL_COLORS as readonly string[]).includes(c))) {
+          if (!parsed.hybrid) parsed.hybrid = [];
+          parsed.hybrid.push(colors);
+        } else {
+          unsupported.push(`{${sym}}`);
+        }
       } else {
         unsupported.push(`{${sym}}`);
       }
@@ -103,12 +115,20 @@ export function describeManaCost(cost: ParsedManaCost): string {
   if (cost.generic > 0) parts.push(`{${cost.generic}}`);
   for (const c of ALL_COLORS) parts.push(`{${c}}`.repeat(cost.colored[c]));
   parts.push('{C}'.repeat(cost.colorless));
+  if (cost.hybrid) {
+    for (const h of cost.hybrid) parts.push(`{${h.join('/')}}`);
+  }
   const out = parts.join('');
   return out === '' ? '{0}' : out;
 }
 
 export function totalPips(cost: ParsedManaCost): number {
-  return cost.generic + cost.colorless + ALL_COLORS.reduce((sum, c) => sum + cost.colored[c], 0);
+  return (
+    cost.generic +
+    cost.colorless +
+    ALL_COLORS.reduce((sum, c) => sum + cost.colored[c], 0) +
+    (cost.hybrid?.length ?? 0)
+  );
 }
 
 /**
@@ -240,18 +260,30 @@ export function planPayment(
     generic: cost.generic,
     colored: { ...cost.colored },
     colorless: cost.colorless,
+    ...(cost.hybrid ? { hybrid: [...cost.hybrid] } : {}),
   };
   const poolLeft: ManaPool = summarize(usableEntries);
   const fromPool = emptyPool();
 
-  // 1. Pay what we can from the floating pool: colored pips, then {C}, then generic
-  //    (generic prefers colorless first to keep colors free — still exact because pool
-  //    mana is strictly more flexible than untapped sources are).
+  // 1. Pay what we can from the floating pool: colored pips, then hybrid pips, then {C}, then generic
   for (const c of ALL_COLORS) {
     const take = Math.min(remaining.colored[c], poolLeft[c]);
     remaining.colored[c] -= take;
     poolLeft[c] -= take;
     fromPool[c] += take;
+  }
+  if (remaining.hybrid && remaining.hybrid.length > 0) {
+    const stillNeeded: (Color[])[] = [];
+    for (const h of remaining.hybrid) {
+      const availableColor = h.find((c) => poolLeft[c] > 0);
+      if (availableColor !== undefined) {
+        poolLeft[availableColor] -= 1;
+        fromPool[availableColor] += 1;
+      } else {
+        stillNeeded.push(h);
+      }
+    }
+    remaining.hybrid = stillNeeded;
   }
   {
     const take = Math.min(remaining.colorless, poolLeft.C);
@@ -267,24 +299,13 @@ export function planPayment(
     fromPool[sym] += take;
   }
 
-  // 2. Cover the rest by tapping sources. Flatten each source's units; a source is
-  //    all-or-nothing (tapping produces all its units; surplus floats and is then
-  //    drained at end of step, which is fine).
+  // 2. Cover the rest by tapping sources.
   const need = remaining;
   if (totalPips(need) === 0) return { tapCardIds: [], fromPool, produced: [] };
 
-  // Fast path: every unit of every source is single-choice (true for all Phase 2
-  // sources — basics, Sol Ring-alikes) AND no permanent offers alternatives. Payment is then
-  // plain arithmetic: exact-color sources for colored pips, {C} sources for colorless pips,
-  // anything for generic. This avoids the backtracking search, which degenerates on unpayable
-  // costs with many interchangeable lands.
-  //
-  // Alternatives are excluded rather than handled here because the greedy is only exact when
-  // every tap decision is independent: with two alternatives on one permanent, taking one for a
-  // colored pip silently forecloses the other, and greedy has no way to reconsider. Those fall
-  // through to the backtracker, which does.
   const hasAlternatives = new Set(usableSources.map((s) => s.cardId)).size !== usableSources.length;
-  if (!hasAlternatives && usableSources.every((s) => s.units.every((u) => u.length === 1))) {
+  const hasHybrid = (cost.hybrid?.length ?? 0) > 0;
+  if (!hasHybrid && !hasAlternatives && usableSources.every((s) => s.units.every((u) => u.length === 1))) {
     return planSingleChoice(need, usableSources, fromPool);
   }
 
@@ -332,11 +353,20 @@ export function planPayment(
         return false;
       };
       for (const sym of candidates) {
-        // Cover a colored pip / a {C} pip / a generic pip with this symbol.
+        // Cover a colored pip / a hybrid pip / a {C} pip / a generic pip with this symbol.
         if (sym !== 'C' && needNow.colored[sym] > 0) {
           const next = { ...needNow, colored: { ...needNow.colored } };
           next.colored[sym] -= 1;
           if (attempt(sym, next)) return true;
+        }
+        if (sym !== 'C' && needNow.hybrid && needNow.hybrid.length > 0) {
+          const hIdx = needNow.hybrid.findIndex((h) => h.includes(sym as Color));
+          if (hIdx !== -1) {
+            const nextHybrid = [...needNow.hybrid];
+            nextHybrid.splice(hIdx, 1);
+            const next = { ...needNow, colored: { ...needNow.colored }, hybrid: nextHybrid };
+            if (attempt(sym, next)) return true;
+          }
         }
         if (sym === 'C' && needNow.colorless > 0) {
           const next = { ...needNow, colored: { ...needNow.colored } };

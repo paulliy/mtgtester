@@ -31,7 +31,17 @@ export type AbilityCost =
   | { kind: 'removeCounters'; counter: string; count: number }
   /** "Pay 10 life" (CR 118.8) — payable only if the controller's life is at least this much. */
   | { kind: 'payLife'; amount: number }
+  | { kind: 'loyalty'; delta: number }
   | { kind: 'mana'; cost: ParsedManaCost };
+
+export interface AlternativeCast {
+  kind: 'overload' | 'adventure' | 'omen';
+  manaCost: ParsedManaCost;
+  description: string;
+  name?: string;
+  typeLine?: string;
+  ability?: Ability;
+}
 
 /** The `{T}` cost every mana ability has unless it says otherwise. */
 export const TAP_COST: readonly AbilityCost[] = [{ kind: 'tap' }];
@@ -227,7 +237,16 @@ export type TargetKind =
    * "from your graveyard" (Bladewing the Risen); a future "target card in a graveyard" (any
    * player's) needs its own kind rather than silently widening this one.
    */
-  | 'cardInGraveyard';
+  | 'cardInGraveyard'
+  /**
+   * "Counter target noncreature spell" (Stubborn Denial) — a spell on the stack whose card is
+   * NOT a creature. A separate kind rather than a `filter` on `'spell'`: a spell target has no
+   * permanent to run `permanentMatchesKind` over, so the filter machinery built for
+   * `cardInGraveyard` does not reach it, and one closed-set adjective does not earn a whole
+   * general spell-filter mechanism.
+   */
+  | 'noncreatureSpell'
+  | 'commanderInCommandZone';
 
 /** One declared target slot of an ability. Effects reference it by its index. */
 export interface TargetSpec {
@@ -243,6 +262,18 @@ export interface TargetSpec {
    * card". Unused for battlefield kinds, which use `permanentMatchesKind` instead.
    */
   filter?: Selector;
+  /**
+   * "up to two other targets" (Drakuseth) / "any number of target creatures" (Ureni) — a
+   * VARIABLE number of objects chosen together at announcement (CR 601.2b/603.3d), instead of
+   * the ordinary case of exactly one. Absent means the ordinary case, unchanged.
+   *
+   * A count slot's chosen ids live on `EngineStackObject.countTargets`, keyed by this slot's
+   * index — the flat `targets` array a single-target slot uses has nothing sensible to hold
+   * when a slot may end up with zero, one, or several objects. By convention every count slot
+   * is allocated AFTER all of an ability's ordinary slots, so `targets` stays a dense array
+   * covering exactly the ordinary slots and never needs a placeholder for the rest.
+   */
+  count?: { min: number; max: number };
 }
 
 /**
@@ -316,6 +347,13 @@ export type Effect =
   | { op: 'createTokenCopyOf'; ref: EffectRef; count: Value; exceptNonLegendary?: boolean }
   /** "Untap all lands you control" (Beledros). */
   | { op: 'untapEach'; selector: Selector }
+  /**
+   * "Gain control of all Dragons" (Karrthus, Tyrant of Jund) — CR 613.7's control-change
+   * timestamp is a real rules event, so the affected permanents' `timestamp` is bumped too, the
+   * same as a copy effect would. A permanent already under the caster's control is left alone
+   * (no timestamp churn for something that didn't actually change hands).
+   */
+  | { op: 'gainControl'; selector: Selector }
   /** "Return target Dragon permanent card from your graveyard to the battlefield" (Bladewing). */
   | { op: 'graveyardToBattlefield'; target: EffectRef }
   /** "Return target Dragon creature card from your graveyard to your hand" (Haven). */
@@ -349,6 +387,37 @@ export type Effect =
       /** Where everything not taken ends up. */
       rest: 'bottomRandom';
     }
+  /** "Destroy all Dragon creatures" (Crux of Fate) — the untargeted mass form of `destroy`. */
+  | { op: 'destroyEach'; selector: Selector }
+  /**
+   * "3 damage to each of up to two other targets" (Drakuseth, Maw of Flames) — a FIXED amount
+   * dealt independently to every object chosen in a variable-count slot (`TargetSpec.count`).
+   * Distinct from `dealDamageDivided`: here each chosen target gets the full `amount`, not a
+   * share of a total.
+   */
+  | { op: 'dealDamageEachChosen'; targetSlot: number; amount: Value }
+  /**
+   * "X damage divided as you choose among any number of target creatures…" (Ureni, the Song
+   * Unending) — CR 601.2d: the division is chosen at announcement, alongside the targets
+   * themselves (every target must receive at least 1), and replayed unchanged at resolution —
+   * the same "announce once, replay identically" shape `announcedX` already uses. The chosen
+   * split rides on `EngineStackObject.divisionAmounts`.
+   */
+  | { op: 'dealDamageDivided'; targetSlot: number; total: Value }
+  /**
+   * "Ferocious — if you control a creature with power 4 or greater, `<do this>` instead"
+   * (Stubborn Denial) — the smallest general shape that composes two already-tested effect
+   * lists, rather than a card-specific op. `condition` is read at RESOLUTION (its board state
+   * must be current then, not at announcement).
+   */
+  | { op: 'conditionalEffect'; condition: Condition; then: Effect[]; else: Effect[] }
+  /**
+   * "Counter target spell unless its controller pays `<cost>`" (Stubborn Denial's base mode).
+   * Unlike ward's `counterUnlessPays`, which acts on the object below it on the stack (recorded
+   * by id because ward's trigger is never targeted), this reads its OWN ability's `target`
+   * slot — an ordinary, announced target.
+   */
+  | { op: 'counterUnlessControllerPays'; target: number; cost: ParsedManaCost }
   /**
    * "Add X mana in any combination of colors" (Klauth) — mana entering the pool from a
    * RESOLVING ability rather than an activation (CR 605 vs the stack). One color decision per
@@ -364,7 +433,27 @@ export type Effect =
       restriction?: ManaRestriction;
       /** "Until end of turn, you don't lose this mana as steps and phases end." */
       persistent?: boolean;
-    };
+    }
+  | {
+      op: 'registerDelayedTrigger';
+      when: TriggerWhen;
+      ability: Ability;
+      expiry: 'endStep' | 'cleanup';
+      target?: EffectRef;
+    }
+  | { op: 'commandZoneToBattlefield'; target: EffectRef; entersHaste?: boolean }
+  | { op: 'returnToCommandZone'; target: EffectRef }
+  | { op: 'grantAbilityUntilEot'; target: EffectRef; ability: Ability }
+  | { op: 'grantHasteToResolvingSpell' }
+  | { op: 'grantHasteOnResolution'; target: EffectRef }
+  | { op: 'overloadBounceAllNonlandOpponents' }
+  | { op: 'goad'; target: EffectRef }
+  | { op: 'doublePower'; selector: Selector }
+  | { op: 'drawUpTo'; count: number }
+  | { op: 'untapTarget'; target: EffectRef }
+  | { op: 'hideawayExileTop4' }
+  | { op: 'playExiledCardFree' }
+  | { op: 'noOp' };
 
 /**
  * A token's printed face (CR 111.2) — everything a `CardDefinition` needs that a token has.
@@ -490,4 +579,14 @@ export interface Ability {
    * "still a legal target, but the consequence is prevented" pattern as `indestructible`/`destroy`.
    */
   cantBeCountered?: boolean;
+  /**
+   * "Choose one — •… •…" (CR 700.2, Crux of Fate). The mode is chosen at announcement
+   * (CR 601.2b), before targets — so `computePriorityOptions`/`applyPriorityAction` enumerate
+   * one CAST OPTION per mode (the same "the option menu is the contract" treatment `{X}`
+   * already gets) rather than asking a resolution-time decision; the chosen mode's `effects`
+   * are substituted for `effects` at cast time, and the executor never sees `modes` at all.
+   * `choose` is always 1 for every mode this engine reads today — a "choose two" grammar is not
+   * something any closed-set card here needs, so it is not built.
+   */
+  modes?: { choose: number; options: { effects: Effect[]; description?: string }[] };
 }

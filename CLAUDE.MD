@@ -22,28 +22,22 @@ pool (`bun run pool --play`); simulating a *specific* real decklist is a per-dec
 coverage threshold. `bun run coverage` remains the instrument that ranks which mechanics to
 build next.
 
-### MANDATORY PROTOCOL: Task Offloading (`antigravity_delegate`)
+### Task Offloading Rules (`agy`)
 
-**CRITICAL INSTRUCTION:** BEFORE invoking any file-editing or code-generation tools (`edit_file`, `write_file`, etc.), you MUST perform this delegation check.
+You have access to the `antigravity_delegate` MCP tool. Follow these guidelines for task delegation:
 
-#### 1. Delegation Pre-Flight Check
-Evaluate the user request against the criteria below. If ANY trigger is met, you **MUST NOT** edit files directly—you MUST call `antigravity_delegate`.
+- **Delegate to `agy` when:**
+  - **Easy/Simple Tasks:** Generating standard boilerplate, writing simple scripts, adding straightforward CRUD functions, or making simple/repetitive code edits.
+  - **Research & Planning:** Gathering information, analyzing codebase structure, researching external libraries, or drafting architectural plans.
 
-#### 2. Mandatory Delegation Triggers (Delegate to `agy` if ANY apply)
-* **Multi-File Scope:** Modifying, creating, or refactoring **2 or more files**.
-* **Code Volume:** Writing or changing **>50 total lines** of code or tests.
-* **Scaffolding & Tests:** Writing new feature scaffolds, boilerplate, or whole test suites.
-* **Repetitive Rewrites:** Systemic pattern updates across imports, exports, or schemas.
+- **Handle directly in Claude Code when:**
+  - Tasks involve complex business logic, subtle bugs, or deep architectural decision-making.
+  - Multi-step, highly context-sensitive refactoring across interconnected systems.
 
-#### 3. Direct Handling Allowed ONLY If ALL Apply
-Handle directly using standard file tools **ONLY** if:
-* The edit is strictly confined to a **single file** AND **< 50 lines**.
-* You are reading files, inspecting errors, debugging, or explaining code/architecture.
-
-#### 4. Execution Parameters for `antigravity_delegate`
-* **Forbidden Action:** Do NOT attempt multi-file edits directly via individual file tools when `agy` criteria are met.
-* **Default Mode:** Always set `mode: "accept-edits"` unless the user explicitly requested a dry-run plan (`mode: "plan"`).
-* **Verification:** After `antigravity_delegate` completes, inspect the output/modified files to verify correctness before concluding your response.
+- **Execution guidelines:**
+  - Use `mode: "plan"` for research and exploratory planning tasks.
+  - Use `mode: "accept-edits"` for simple coding and boilerplate generation tasks.
+  - Briefly verify or test the output from `agy` once the delegate call finishes.
 
 ## Key constraints (from the brief)
 

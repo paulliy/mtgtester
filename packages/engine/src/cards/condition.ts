@@ -24,8 +24,11 @@ import { loseLife } from '../effects/resolve';
 import { emit } from '../log/log';
 import { opponentsOf } from '../state/queries';
 import type { GameContext } from '../state/types';
-import { selectPermanents } from '../effects/continuous';
+import { computeCharacteristics, selectPermanents } from '../effects/continuous';
 import type { Selector, SelectorSource } from './selector';
+import { ofType } from './selector';
+import type { PlayerId } from '@mtg/shared';
+import type { EnginePermanent } from '../state/types';
 
 export type Condition =
   /**
@@ -44,6 +47,18 @@ export type Condition =
   | { kind: 'opponentCount'; cmp: '>=' | '<='; n: number }
   /** "you may pay 2 life" — a choice, not a fact. Only `resolveCondition` can answer it. */
   | { kind: 'mayPayLife'; n: number }
+  /**
+   * "a creature or planeswalker an opponent controlled was dealt excess damage this turn"
+   * (Rith, Liberated Primeval). `ctx.state.excessDamageControllerIds` is turn-scoped and
+   * records CONTROLLERS, not permanents, so this only asks whether any of them is an opponent.
+   */
+  | { kind: 'excessDamageDealtTo'; scope: 'opponents' }
+  /** "an opponent was dealt 7 or more damage this turn" (Spinerock Knoll). */
+  | { kind: 'opponentDealtDamageThisTurn'; minDamage: number }
+  /** "creatures you control have total power 10 or greater" (Mosswort Bridge). */
+  | { kind: 'totalCreaturePower'; scope: 'you' | 'opponents' | 'all'; cmp: '>=' | '<='; n: number }
+  | { kind: 'isUntapped' }
+  | { kind: 'enteredThisTurn' }
   | { kind: 'allOf'; of: Condition[] }
   | { kind: 'anyOf'; of: Condition[] }
   | { kind: 'not'; of: Condition };
@@ -102,6 +117,40 @@ export function evaluateCondition(
     }
     case 'opponentCount':
       return compare(opponentsOf(ctx, source.controllerId).length, condition.cmp, condition.n);
+    case 'excessDamageDealtTo': {
+      const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
+      return ctx.state.excessDamageControllerIds.some((id) => opponentIds.has(id));
+    }
+    case 'opponentDealtDamageThisTurn': {
+      const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
+      return Object.entries(ctx.state.damageDealtToPlayersThisTurn).some(
+        ([playerId, amount]) => opponentIds.has(playerId as PlayerId) && amount >= condition.minDamage,
+      );
+    }
+    case 'totalCreaturePower': {
+      const matched = selectPermanents(ctx, ofType('Creature'), source);
+      const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
+      const inScope = matched.filter((perm: EnginePermanent) => {
+        if (condition.scope === 'you') return perm.controllerId === source.controllerId;
+        if (condition.scope === 'opponents') return opponentIds.has(perm.controllerId);
+        return true;
+      });
+      const totalPower = inScope.reduce((sum: number, p: EnginePermanent) => {
+        const chars = computeCharacteristics(ctx, p);
+        return sum + (chars.power ?? 0);
+      }, 0);
+      return compare(totalPower, condition.cmp, condition.n);
+    }
+    case 'isUntapped': {
+      if (source?.cardId === undefined) return false;
+      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      return perm !== undefined && !perm.tapped;
+    }
+    case 'enteredThisTurn': {
+      if (source?.cardId === undefined) return false;
+      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      return perm !== undefined && perm.enteredTurnNumber === ctx.state.turnNumber;
+    }
     case 'allOf':
       return condition.of.every((c) => evaluateCondition(ctx, c, source));
     case 'anyOf':

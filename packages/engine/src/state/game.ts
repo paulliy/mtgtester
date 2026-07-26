@@ -125,6 +125,9 @@ export function createGame(config: GameConfig): GameContext {
     seating: players.map((p) => p.id as PlayerId),
     currentTurnPlayer: players[0]?.id as PlayerId,
     pendingTriggers: [],
+    delayedTriggers: [],
+    excessDamageControllerIds: [],
+    damageDealtToPlayersThisTurn: {},
     turnCap: config.turnCap ?? DEFAULT_TURN_CAP,
   };
 

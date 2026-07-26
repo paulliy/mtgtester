@@ -54,22 +54,32 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     }
   }
 
-  // Fizzle check (CR 608.2b): if the object has targets and every one is now illegal,
-  // it doesn't resolve. Spell cards go to the graveyard.
-  if (top.targets.length > 0) {
-    const specs = top.ability?.targets ?? [];
-    const anyLegal = top.targets.some((t, i) => {
-      const kind = specs[i]?.kind;
-      return kind !== undefined && isTargetStillLegal(ctx, t, kind, top.controllerId);
-    });
-    if (!anyLegal) {
-      emit(ctx, 'fizzle', { description: top.description }, top.controllerId);
-      debug(ctx, 'stack', `${top.description} fizzles — all targets illegal`);
-      if (top.card !== null) {
-        yield* moveObject(ctx, top.card, { zone: 'graveyard' });
-      }
-      return;
+  // Fizzle check (CR 608.2b): if the object HAD targets and every one is now illegal, it
+  // doesn't resolve. Spell cards go to the graveyard. A variable-count slot chosen at zero
+  // (Ureni with no opponent creatures) contributes no targets and so cannot itself fizzle
+  // anything — `anyChosen` tracks whether there was ever a target to check at all.
+  const specs = top.ability?.targets ?? [];
+  let anyChosen = false;
+  let anyLegal = false;
+  top.targets.forEach((t, i) => {
+    anyChosen = true;
+    const kind = specs[i]?.kind;
+    if (kind !== undefined && isTargetStillLegal(ctx, t, kind, top.controllerId)) anyLegal = true;
+  });
+  for (const [slotKey, ids] of Object.entries(top.countTargets ?? {})) {
+    const spec = specs[Number(slotKey)];
+    for (const id of ids) {
+      anyChosen = true;
+      if (spec !== undefined && isTargetStillLegal(ctx, id, spec, top.controllerId)) anyLegal = true;
     }
+  }
+  if (anyChosen && !anyLegal) {
+    emit(ctx, 'fizzle', { description: top.description }, top.controllerId);
+    debug(ctx, 'stack', `${top.description} fizzles — all targets illegal`);
+    if (top.card !== null) {
+      yield* moveObject(ctx, top.card, { zone: 'graveyard' });
+    }
+    return;
   }
 
   if (top.ability !== null) {
@@ -88,6 +98,8 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         ...top.triggerScope,
         ...(top.announcedX === undefined ? {} : { x: top.announcedX }),
       },
+      top.countTargets,
+      top.divisionAmounts,
     );
   }
 
@@ -99,14 +111,36 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   emit(ctx, 'resolved', { description: top.description }, top.controllerId);
 }
 
-function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): GameGen<void> {
+export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): GameGen<void> {
   const card = spell.card;
   if (card === null) return;
   const def = getDefByOracleId(ctx, card.oracleId, card.name);
+  if (spell.alternativeCastKind === 'adventure') {
+    yield* moveObject(ctx, card, { zone: 'exile' });
+    card.onAdventure = true;
+    return;
+  }
+  if (spell.alternativeCastKind === 'omen') {
+    yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'bottom' });
+    const player = ctx.state.players.find((p) => p.id === card.ownerId);
+    if (player) ctx.rng.shuffle(player.library);
+    return;
+  }
   // Permanent spells (creatures, artifacts, enchantments, planeswalkers, battles) enter
   // the battlefield under their caster; instants/sorceries head to the graveyard (CR 608.3).
   if (isPermanentCard(def)) {
-    yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: spell.controllerId });
+    const moved = yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: spell.controllerId });
+    if (spell.grantHasteOnResolution && moved && moved.zone === 'battlefield') {
+      ctx.state.effects.push({
+        id: `eff-${ctx.state.nextObjectNum++}`,
+        sourceId: spell.sourceCardId,
+        description: `${moved.name} gains haste until end of turn`,
+        targetCardIds: [moved.cardId],
+        kind: 'grantKeyword',
+        keyword: 'haste',
+        timestamp: ctx.state.nextTimestamp++,
+      });
+    }
   } else {
     yield* moveObject(ctx, card, { zone: 'graveyard' });
   }

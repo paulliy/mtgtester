@@ -144,6 +144,7 @@ export function makePermanent(
     dealtFirstStrikeDamage: false,
     timestamp: ctx.state.nextTimestamp++,
     activationsThisTurn: [],
+    enteredTurnNumber: ctx.state.turnNumber,
   };
 }
 
@@ -463,6 +464,33 @@ export function queueTriggersForEvent(
       }
     }
   }
+
+  for (const delayed of ctx.state.delayedTriggers) {
+    if (delayed.when !== when) continue;
+    const matchingSubject = delayed.targetId !== undefined
+      ? subjects.find((s) => s.permanent.cardId === delayed.targetId)
+      : subjects[0];
+
+    if (matchingSubject === undefined) continue;
+
+    const amounts = subjects.filter((s) => s.amount !== undefined);
+    const scope: TriggerScope = {
+      ...(amounts.length > 0
+        ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
+        : {}),
+    };
+
+    ctx.state.pendingTriggers.push({
+      controllerId: delayed.controllerId,
+      sourceCardId: delayed.sourceCardId,
+      sourceOracleId: delayed.sourceOracleId,
+      sourceName: 'Delayed Trigger',
+      ability: delayed.ability,
+      triggerObjectCardId: matchingSubject.permanent.cardId,
+      ...(Object.keys(scope).length > 0 ? { scope } : {}),
+    });
+    debug(ctx, 'stack', `delayed trigger queued: ${delayed.id}`);
+  }
 }
 
 /** The one-subject case, which is every event except attacks and combat damage. */
@@ -500,6 +528,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
     // A spell on the stack is a card, never a token (CR 111.1) — a token is only ever a
     // permanent, so nothing that gets here can be one.
     isToken: false,
+    enteredThisTurn: false,
   };
   const manaValue = spellManaValue(def, spell.announcedX);
 

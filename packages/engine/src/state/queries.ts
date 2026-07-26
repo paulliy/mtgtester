@@ -17,7 +17,7 @@ import type { RuleStatic } from '../cards/rule-statics';
 import { evaluateCondition } from '../cards/condition';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
-import { computeCharacteristics } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { UnmodeledCardError } from '../errors';
 import type { ManaAllowance, ManaSource, ManaUnit, ParsedManaCost } from '../mana/cost';
 import type {
@@ -157,6 +157,8 @@ export function cardZoneCandidate(
     // A card off the battlefield is never a token: tokens cease to exist on leaving it
     // (CR 704.5d), so nothing this function is handed can be one.
     isToken: false,
+    // Not a permanent at all — "entered this turn" is meaningless here.
+    enteredThisTurn: false,
   };
 }
 
@@ -196,6 +198,7 @@ export function manaRestrictionAllows(
     power: def.power ?? 0,
     keywords: def.keywords,
     isToken: false,
+    enteredThisTurn: false,
   };
   const source: SelectorSource = { cardId: '', controllerId: '' };
   if (restriction.filter !== undefined && !selectMatches(candidate, restriction.filter, source)) {
@@ -376,6 +379,9 @@ export function canPayNonManaCosts(
         if (controller === undefined || controller.life < cost.amount) return false;
         break;
       }
+      case 'loyalty':
+        if (cost.delta < 0 && (perm.counters['loyalty'] ?? 0) < Math.abs(cost.delta)) return false;
+        break;
       case 'mana':
         break;
     }
@@ -568,6 +574,7 @@ export function spellProtectedFromCounter(
     power: def.power ?? 0,
     keywords: def.keywords,
     isToken: false,
+    enteredThisTurn: false,
   };
   const source: SelectorSource = { cardId: '', controllerId: casterId };
   return gatherRuleStatics(ctx).some((entry) => {
@@ -604,4 +611,26 @@ export function castFromLibraryTopCandidates(
     );
   });
   return eligible ? [top] : [];
+}
+
+/**
+ * The damage multiplier in effect for damage about to be dealt BY `sourceCardId` (Neriv, Heart
+ * of the Storm — CR 616 replacement, not a layer op). Multiplicative across every matching
+ * `damageDoubled` static: two such statics double twice, matching CR 616.1's "apply both" for
+ * independent replacement effects.
+ *
+ * Returns 1 (and does nothing) when the source has already left the battlefield — a replacement
+ * effect is a property of the event as it's about to happen, and there is nothing left here to
+ * read "entered this turn" from.
+ */
+export function damageMultiplierFor(ctx: GameContext, sourceCardId: string): number {
+  const sourcePerm = ctx.state.battlefield.find((p) => p.cardId === sourceCardId);
+  if (sourcePerm === undefined) return 1;
+  let multiplier = 1;
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'damageDoubled') continue;
+    const from: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
+    if (matchesSelector(ctx, sourcePerm, entry.static.sourceFilter, from)) multiplier *= 2;
+  }
+  return multiplier;
 }

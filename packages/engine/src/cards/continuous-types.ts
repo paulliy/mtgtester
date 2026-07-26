@@ -7,6 +7,7 @@
 import type { Color } from '@mtg/shared';
 import type { ParsedManaCost } from '../mana/cost';
 import type { Ability, KeywordAbility, ManaAbilitySpec } from './ability';
+import type { Condition } from './condition';
 import type { Selector } from './selector';
 import type { Value } from './value';
 
@@ -55,6 +56,8 @@ export interface StaticEffect {
   /** Which permanents it affects (its own permanent for a CDA / self-buff). */
   affects: Selector;
   op: ContinuousOp;
+  /** Optional condition evaluated when gathering static effects (e.g. ward while untapped). */
+  condition?: Condition;
 }
 
 /**

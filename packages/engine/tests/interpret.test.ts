@@ -260,7 +260,7 @@ describe('oracle-text interpreter (brief §6)', () => {
   });
 
   it('marks unsupported cost symbols as unmodeled', () => {
-    const def = interpretCard(oracle({ name: 'Hybrid', manaCost: '{W/U}{W/U}' }));
+    const def = interpretCard(oracle({ name: 'Phyrexian', manaCost: '{G/P}' }));
     expect(def.modeled).toBe(false);
     expect(def.hasUnsupportedCost).toBe(true);
   });

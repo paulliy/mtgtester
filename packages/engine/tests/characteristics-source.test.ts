@@ -30,6 +30,7 @@ const ALLOWED: Record<string, string> = {
     'cardZoneCandidate builds a selector candidate for a card in a LIBRARY, HAND, or GRAVEYARD ' +
     '(search, look-at-top, reanimation targets). No continuous effect reaches those, so printed ' +
     'characteristics are the only ones they have',
+  'effects/resolve.ts': 'reads cards in exile for playExiledCardFree (not battlefield permanents)',
 };
 
 const PATTERN = /\bdef\.(types|subtypes|supertypes|colors|keywords|triggers|manaAbilities)\b/;

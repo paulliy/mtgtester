@@ -31,6 +31,7 @@
  * previous layer produced, not the printed ones.
  */
 
+import { evaluateCondition } from '../cards/condition';
 import type { ManaAbilitySpec } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
@@ -103,6 +104,15 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
           `engine bug: ${def.name} has a static effect whose selector reads power or keywords — event-only selectors cannot be a continuous effect's affected set`,
         );
       }
+      if (
+        s.condition !== undefined &&
+        !evaluateCondition(ctx, s.condition, {
+          cardId: source.cardId,
+          controllerId: source.controllerId,
+        })
+      ) {
+        continue;
+      }
       out.push({
         applies: {
           kind: 'selector',
@@ -130,6 +140,8 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       });
     } else if (eff.kind === 'grantKeyword' && eff.keyword !== undefined) {
       out.push({ applies, op: { layer: 6, addKeyword: eff.keyword }, timestamp: eff.timestamp });
+    } else if (eff.kind === 'grantAbility' && eff.ability !== undefined) {
+      out.push({ applies, op: { layer: 6, addTrigger: eff.ability }, timestamp: eff.timestamp });
     }
   }
 
@@ -150,7 +162,11 @@ function effectExists(work: WorkMap, effect: LayerEffect): boolean {
 }
 
 /** The one place a `SelectorCandidate` is built, so every selector reads the same fields. */
-function candidateOf(perm: EnginePermanent, chars: Characteristics): SelectorCandidate {
+export function candidateOf(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  chars: Characteristics,
+): SelectorCandidate {
   return {
     cardId: perm.cardId,
     controllerId: perm.controllerId,
@@ -161,6 +177,7 @@ function candidateOf(perm: EnginePermanent, chars: Characteristics): SelectorCan
     power: chars.power,
     keywords: chars.keywords,
     isToken: perm.isToken,
+    enteredThisTurn: perm.enteredTurnNumber === ctx.state.turnNumber,
   };
 }
 
@@ -175,13 +192,13 @@ export function matchesSelector(
   selector: Selector,
   source: SelectorSource,
 ): boolean {
-  return selectMatches(candidateOf(perm, computeCharacteristics(ctx, perm)), selector, source);
+  return selectMatches(candidateOf(ctx, perm, computeCharacteristics(ctx, perm)), selector, source);
 }
 
-function affects(effect: LayerEffect, entry: Working): boolean {
+function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean {
   if (effect.applies.kind === 'fixed') return effect.applies.cardIds.includes(entry.perm.cardId);
   return selectMatches(
-    candidateOf(entry.perm, entry.chars),
+    candidateOf(ctx, entry.perm, entry.chars),
     effect.applies.selector,
     effect.applies.source,
   );
@@ -241,7 +258,7 @@ function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): 
 function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
   if (!effectExists(work, effect)) return;
   for (const entry of work.values()) {
-    if (affects(effect, entry)) applyOpTo(ctx, entry.chars, effect.op);
+    if (affects(ctx, effect, entry)) applyOpTo(ctx, entry.chars, effect.op);
   }
 }
 
@@ -254,7 +271,7 @@ function fingerprint(ctx: GameContext, work: WorkMap, effect: LayerEffect): stri
   if (!effectExists(work, effect)) return '<nonexistent>';
   const targets: string[] = [];
   for (const entry of work.values()) {
-    if (affects(effect, entry)) targets.push(entry.perm.cardId);
+    if (affects(ctx, effect, entry)) targets.push(entry.perm.cardId);
   }
   const op = effect.op;
   // Resolve any `Value`s, so an effect whose *magnitude* changes counts as changed too.
@@ -514,7 +531,7 @@ export function selectPermanents(
   const all = computeAllCharacteristics(ctx);
   return ctx.state.battlefield.filter((perm) => {
     const chars = all.get(perm.cardId);
-    return chars !== undefined && selectMatches(candidateOf(perm, chars), selector, source);
+    return chars !== undefined && selectMatches(candidateOf(ctx, perm, chars), selector, source);
   });
 }
 

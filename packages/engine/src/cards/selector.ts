@@ -50,6 +50,11 @@ export interface SelectorCandidate {
   keywords: readonly string[];
   /** Token-ness (CR 111.1). NOT event-only: no layer can change it. */
   isToken: boolean;
+  /**
+   * Did this permanent enter the battlefield during the CURRENT turn (Neriv, Heart of the
+   * Storm)? NOT event-only: no CR 613 layer can change when an object entered.
+   */
+  enteredThisTurn: boolean;
 }
 
 /** The object a relative selector ("self", "you control") is resolved against. */
@@ -84,6 +89,8 @@ export type Selector =
    * permanent become or stop being a token, so no layer's output can change this answer.
    */
   | { kind: 'isToken' }
+  /** "a creature you control that entered this turn" (Neriv, Heart of the Storm). */
+  | { kind: 'enteredThisTurn' }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -110,6 +117,9 @@ export const withKeyword = (keyword: string): Selector => ({ kind: 'hasKeyword',
 
 /** Miirym's subject leaf — see the  variant. */
 export const IS_TOKEN: Selector = { kind: 'isToken' };
+
+/** Neriv's subject leaf. */
+export const ENTERED_THIS_TURN: Selector = { kind: 'enteredThisTurn' };
 
 /**
  * Does this selector read a layer's own output anywhere inside it?
@@ -166,6 +176,8 @@ export function selectMatches(
       return candidate.keywords.includes(selector.keyword);
     case 'isToken':
       return candidate.isToken;
+    case 'enteredThisTurn':
+      return candidate.enteredThisTurn;
     case 'allOf':
       return selector.of.every((s) => selectMatches(candidate, s, source));
     case 'anyOf':

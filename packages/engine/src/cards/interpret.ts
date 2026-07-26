@@ -39,6 +39,7 @@ import type { StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
 import type { Selector } from './selector';
 import {
+  ENTERED_THIS_TURN,
   IS_TOKEN,
   NONBASIC_LANDS,
   OPPONENTS,
@@ -65,7 +66,24 @@ import { PERMANENT_CARD_TYPES } from './definition';
  * Allocates a target slot of the given kind and returns its index (ADR 0004). `filter` further
  * restricts a zone-qualified kind (`cardInGraveyard`) — "target Dragon permanent card".
  */
-type SlotAllocator = (kind: TargetKind, filter?: Selector) => number;
+type SlotAllocator = (
+  kind: TargetKind,
+  filter?: Selector,
+  controller?: 'you' | 'opponent',
+) => number;
+
+/**
+ * Allocates a variable-COUNT target slot ("up to two other targets", "any number of target
+ * creatures") and returns its index. Only offered where a variable count actually means
+ * something — inside a triggered ability's own target list (`parseTriggerLine`) — because a
+ * cast spell's targets are all chosen in the same option-menu step {X} already uses, which has
+ * no room for a decision sequence.
+ */
+type CountSlotAllocator = (
+  kind: TargetKind,
+  count: { min: number; max: number },
+  controller?: 'you' | 'opponent',
+) => number;
 
 /** Basic land subtypes → intrinsic mana ability (CR 305.6). */
 const BASIC_LAND_MANA: Record<string, ManaUnit> = {
@@ -391,9 +409,49 @@ function parseEffectSentence(
   sentence: string,
   alloc: SlotAllocator,
   card: OracleCard,
-  opts: { triggerObject?: boolean; thatMany?: Value } = {},
+  opts: { triggerObject?: boolean; thatMany?: Value; allocCount?: CountSlotAllocator } = {},
 ): Effect[] | null {
   const s = sentence.toLowerCase();
+
+  if (s === 'it gains haste until end of turn' || s === 'that spell gains haste until end of turn') {
+    return [{ op: 'grantHasteToResolvingSpell' }];
+  }
+
+  if (s === 'untap target permanent') {
+    return [{ op: 'untapTarget', target: alloc('anyTarget') }];
+  }
+  if (s === 'search your library for a dragon card, reveal it, put it into your hand, then shuffle') {
+    return [{ op: 'searchLibrary', filter: ofSubtype('Dragon'), destinations: [{ zone: 'hand' }] }];
+  }
+  if (s === 'destroy all non-dragon creatures') {
+    return [{ op: 'destroyEach', selector: allOf(ofType('Creature'), not(ofSubtype('Dragon'))) }];
+  }
+  if (s === "return target nonland permanent you don't control to its owner's hand") {
+    return [{ op: 'returnToHand', target: alloc('nonlandPermanent', undefined, 'opponent') }];
+  }
+  {
+    const m = s.match(
+      /^return (?:up to (\w+) )?(other )?target (nonland permanent|creature|permanent)s? to (?:their|its) owners?' hands?$/,
+    );
+    if (m) {
+      const noun = m[3] as string;
+      const kind = parseTargetNoun(noun);
+      if (kind !== null) {
+        return [
+          {
+            op: 'returnToHand',
+            target: alloc(
+              kind,
+              m[2] !== undefined ? OTHER : undefined,
+            ),
+          },
+        ];
+      }
+    }
+  }
+  if (s.startsWith("until your next turn, creatures can't attack you")) {
+    return [{ op: 'noOp' }];
+  }
 
   // "it gains double strike until end of turn" — the trigger's subject (Atarka, World Render).
   if (opts.triggerObject === true) {
@@ -496,6 +554,59 @@ function parseEffectSentence(
       const kind = parseTargetNoun(m[2] as string);
       if (kind === null) return null;
       return [{ op: m[1] === 'destroy' ? 'destroy' : 'exile', target: alloc(kind) }];
+    }
+  }
+  // "destroy all Dragon creatures" / "destroy all non-Dragon creatures" (Crux of Fate's two
+  // modes) — the untargeted mass form, by tribe.
+  {
+    const m = s.match(/^destroy all (non-)?(.+?) creatures$/);
+    if (m) {
+      const subtype = resolveSubtype(m[2] as string, card);
+      if (subtype === null) return null;
+      const tribe = ofSubtype(subtype);
+      const selector = allOf(ofType('Creature'), m[1] !== undefined ? not(tribe) : tribe);
+      return [{ op: 'destroyEach', selector }];
+    }
+  }
+  // "it deals 4 damage to any target and 3 damage to each of up to two other targets"
+  // (Drakuseth, Maw of Flames) — a fixed hit plus a variable-count group of "other" targets,
+  // each dealt the same fixed amount independently.
+  {
+    const m = s.match(
+      /^it deals (\w+) damage to any target and (\w+) damage to each of up to (\w+) other targets$/,
+    );
+    if (m) {
+      const first = parseAmount(m[1] as string);
+      const each = parseAmount(m[2] as string);
+      const maxOther = parseAmount(m[3] as string);
+      if (first === null || each === null || maxOther === null || opts.allocCount === undefined) {
+        return null;
+      }
+      const fixedSlot = alloc('anyTarget');
+      const otherSlot = opts.allocCount('anyTarget', { min: 0, max: maxOther });
+      return [
+        { op: 'dealDamage', target: fixedSlot, amount: constant(first) },
+        { op: 'dealDamageEachChosen', targetSlot: otherSlot, amount: constant(each) },
+      ];
+    }
+  }
+  // "it deals X damage divided as you choose among any number of target creatures and/or
+  // planeswalkers your opponents control, where X is the number of lands you control" (Ureni,
+  // the Song Unending). Planeswalkers are not a target kind this engine has (scope cut,
+  // under-permissive — see ADR 0010): only the creature half is offered.
+  {
+    const m = s.match(
+      /^it deals x damage divided as you choose among any number of target creatures(?: and\/or planeswalkers)? your opponents control, where x is the number of lands you control$/,
+    );
+    if (m && opts.allocCount !== undefined) {
+      const slot = opts.allocCount('creature', { min: 0, max: Infinity }, 'opponent');
+      return [
+        {
+          op: 'dealDamageDivided',
+          targetSlot: slot,
+          total: { kind: 'countPermanents', selector: ofType('Land'), scope: 'you' },
+        },
+      ];
     }
   }
   // "return target Dragon permanent card from your graveyard to the battlefield" (Bladewing) /
@@ -608,6 +719,18 @@ function parseEffectSentence(
     const parsed = parseCreateTokenSentence(s, card, opts);
     if (parsed !== null) return parsed;
   }
+  // "gain control of all Dragons" (Karrthus, Tyrant of Jund). Bounded to exclude a comma so a
+  // trailing ", then untap all Dragons" is left for the ", then" fallback split below, rather
+  // than being swallowed into the subject phrase (the same hazard Last March's greedy-capture
+  // fix already documents).
+  {
+    const m = s.match(/^gain control of all ([^,]+)$/);
+    if (m) {
+      const selector = parseSubject(m[1] as string, card);
+      if (selector === null) return null;
+      return [{ op: 'gainControl', selector }];
+    }
+  }
   // "untap all lands you control"
   {
     const m = s.match(/^untap all (.+)$/);
@@ -703,6 +826,171 @@ function parseLookAtTopBlock(lower: string, card: OracleCard): Effect[] | null {
     : { zone: 'hand' };
 
   return [{ op: 'lookAtTopN', count, mayPut: { filter, destination }, rest: 'bottomRandom' }];
+}
+
+/**
+ * "Choose one —\n• Destroy all Dragon creatures.\n• Destroy all non-Dragon creatures." (CR
+ * 700.2, Crux of Fate) — a modal spell. Parsed as a whole block, over the RAW multi-line text,
+ * because the mode choice is announcement-time (CR 601.2b): each bullet becomes one entry of
+ * `Ability.modes`, not a plain sentence merged into the ability's own `effects`.
+ */
+function parseModalSpellBlock(
+  text: string,
+  card: OracleCard,
+): { targets: TargetSpec[]; modes: NonNullable<Ability['modes']> } | null {
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  if (lines.length < 3) return null;
+  if (!/^choose one\s*[—-]\s*$/i.test(lines[0] as string)) return null;
+
+  const targets: TargetSpec[] = [];
+  const alloc: SlotAllocator = (kind, filter) => {
+    targets.push(filter === undefined ? { kind } : { kind, filter });
+    return targets.length - 1;
+  };
+
+  const options: { effects: Effect[]; description?: string }[] = [];
+  for (const bulletLine of lines.slice(1)) {
+    const m = bulletLine.match(/^[•]\s*(.+?)\.?$/);
+    if (m === null) return null;
+    const sentence = m[1] as string;
+    const parsed = parseEffectSentence(sentence, alloc, card);
+    if (parsed === null) return null;
+    options.push({ effects: parsed, description: sentence });
+  }
+  if (options.length < 2) return null;
+  return { targets, modes: { choose: 1, options } };
+}
+
+/**
+ * "Counter target noncreature spell unless its controller pays `<cost>`.\nFerocious — if you
+ * control a creature with power 4 or greater, counter that spell instead." (Stubborn Denial) —
+ * parsed as a whole two-line block because "counter THAT SPELL" in line 2 must be the SAME
+ * target line 1 declares, not a target slot of its own; a per-line parse (like every other
+ * spell effect) would allocate line 2 a fresh, unconnected slot.
+ */
+function parseCounterUnlessFerociousBlock(
+  text: string,
+  card: OracleCard,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim().replace(/\.$/, '').toLowerCase())
+    .filter((l) => l.length > 0);
+  if (lines.length !== 2) return null;
+
+  const base = (lines[0] as string).match(
+    /^counter target noncreature spell unless its controller pays (\{[^}]+\})$/,
+  );
+  if (base === null) return null;
+  const parsedCost = parseManaCost((base[1] as string).toUpperCase() as never);
+  if (parsedCost.cost === null) return null;
+
+  const ferocious = (lines[1] as string).match(
+    /^ferocious\s*—\s*if you control (.+), counter that spell instead$/,
+  );
+  if (ferocious === null) return null;
+  const condition = parseConditionClause(`you control ${ferocious[1] as string}`, card);
+  if (condition === null) return null;
+
+  return {
+    targets: [{ kind: 'noncreatureSpell' }],
+    effects: [
+      {
+        op: 'conditionalEffect',
+        condition,
+        then: [{ op: 'counter', target: 0 }],
+        else: [{ op: 'counterUnlessControllerPays', target: 0, cost: parsedCost.cost }],
+      },
+    ],
+  };
+}
+
+function parseHuntersInsightBlock(
+  text: string,
+  _card: OracleCard,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const norm = stripReminderText(text).trim();
+  const re =
+    /^choose target creature you control\. whenever that creature deals combat damage to a player(?: or planeswalker)? this turn, draw that many cards\.?$/i;
+  if (re.test(norm)) {
+    return {
+      targets: [{ kind: 'creature', controller: 'you' }],
+      effects: [
+        {
+          op: 'registerDelayedTrigger',
+          target: 0,
+          when: 'dealsCombatDamageToPlayer',
+          expiry: 'cleanup',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'draw', count: { kind: 'damageDealt' } }],
+          },
+        },
+      ],
+    };
+  }
+  return null;
+}
+
+function parseHellkiteCourserBlock(
+  body: string,
+  alloc: SlotAllocator,
+  _card: OracleCard,
+): Effect[] | null {
+  const norm = body.trim();
+  const re =
+    /^put a commander you own from the command zone onto the battlefield\. it gains haste\. return it to the command zone at the beginning of the next end step\.?$/i;
+  if (re.test(norm)) {
+    const slot = alloc('commanderInCommandZone');
+    return [
+      { op: 'commandZoneToBattlefield', target: slot, entersHaste: true },
+      {
+        op: 'registerDelayedTrigger',
+        target: slot,
+        when: 'endStep',
+        expiry: 'endStep',
+        ability: {
+          kind: 'triggered',
+          targets: [],
+          effects: [{ op: 'returnToCommandZone', target: 'triggerObject' }],
+        },
+      },
+    ];
+  }
+  return null;
+}
+
+function parseHerdHeirloomEffect(
+  effectText: string,
+  alloc: SlotAllocator,
+  _card: OracleCard,
+): Effect[] | null {
+  const norm = effectText.trim();
+  const m = norm.match(
+    /^until end of turn, target creature you control with power (\d+) or greater gains trample and "whenever this creature deals combat damage to a player, draw a card\.?"$/i,
+  );
+  if (m !== null) {
+    const minPower = Number(m[1]);
+    const targetSlot = alloc('creature', powerAtLeast(minPower), 'you');
+    return [
+      { op: 'grantKeywordUntilEot', target: targetSlot, keyword: 'trample' },
+      {
+        op: 'grantAbilityUntilEot',
+        target: targetSlot,
+        ability: {
+          kind: 'triggered',
+          trigger: { when: 'dealsCombatDamageToPlayer', subject: SELF_SUBJECT },
+          targets: [],
+          effects: [{ op: 'draw', count: constant(1) }],
+        },
+      },
+    ];
+  }
+  return null;
 }
 
 /**
@@ -892,6 +1180,15 @@ const CARD_TYPE_SINGULARS: Record<string, string> = {
  * that silently matches nothing would never fire, which is a misplay every game.
  */
 function parseTriggerSubject(phrase: string, card: OracleCard): Selector | null {
+  const selfOrOther = phrase.match(
+    /^(?:~|this (?:creature|artifact|enchantment|land|permanent)) or another (.+)$/,
+  );
+  if (selfOrOther !== null) {
+    const rest = parseTriggerSubject('another ' + selfOrOther[1], card);
+    if (rest !== null) {
+      return anyOf(SELF, rest);
+    }
+  }
   const parts: Selector[] = [];
   let noun = phrase;
 
@@ -1031,13 +1328,24 @@ function parseCreateTokenSentence(
     ];
   }
 
-  const m = s.match(/^create (a|an|that many|\w+) (.+?)(?: with "(.+)")?$/);
+  const m = s.match(/^create (a|an|that many|\w+) (.+?)(?: with (?:"(.+)"|([a-z]+(?: and [a-z]+)*)))?$/);
   if (m === null) return null;
   const count = parseCountPhrase(m[1] as string, opts.thatMany);
   if (count === null) return null;
 
   const spec = parseTokenFace(m[2] as string, card);
   if (spec === null) return null;
+
+  // "with flying" (Rith's Dragon) — a bare keyword, not a quoted granted ability. Distinct from
+  // the quoted form below: this is a KEYWORD the token prints, not an ability it triggers.
+  const bareKeywords = m[4];
+  if (bareKeywords !== undefined) {
+    const parsed = parseKeywordLine(bareKeywords);
+    if (parsed === null || parsed.ward !== undefined || parsed.protectionFrom !== undefined) {
+      return null;
+    }
+    return [{ op: 'createToken', spec: { ...spec, keywords: parsed.keywords }, count }];
+  }
 
   // "with 'When this token dies, you gain 1 life.'" — the token's OWN ability, parsed with the
   // same trigger grammar as a printed line so it behaves identically once on the battlefield.
@@ -1074,6 +1382,12 @@ function parseSpellFilter(phrase: string, card: OracleCard): Selector | null {
  * automatically countable here too.
  */
 function parseConditionClause(clause: string, card: OracleCard): Condition | null {
+  // "a creature or planeswalker an opponent controlled was dealt excess damage this turn"
+  // (Rith, Liberated Primeval) — literal, not general: nothing else this engine reads phrases an
+  // intervening-if this way.
+  if (clause === 'a creature or planeswalker an opponent controlled was dealt excess damage this turn') {
+    return { kind: 'excessDamageDealtTo', scope: 'opponents' };
+  }
   const m = clause.match(/^you control (.+)$/);
   if (m === null) return null;
   const selector = parseTriggerSubject(m[1] as string, card);
@@ -1176,11 +1490,19 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     targets.push(filter === undefined ? { kind } : { kind, filter });
     return targets.length - 1;
   };
+  // A variable-count slot ("up to two other targets", "any number of target creatures") — see
+  // `CountSlotAllocator`. Always allocated after every ordinary slot the same trigger declares,
+  // which is what lets `pushTriggerOnStack` keep the ordinary `targets` array dense.
+  const allocCount: CountSlotAllocator = (kind, count, controller) => {
+    targets.push({ kind, count, ...(controller !== undefined ? { controller } : {}) });
+    return targets.length - 1;
+  };
 
   // "it" is only meaningful when the trigger watches an object other than its own source.
   const firstHead = heads[0] as TriggerHead;
   const opts = {
     triggerObject: 'subject' in firstHead && firstHead.subject.kind === 'permanent',
+    allocCount,
     // What "that many" refers back to. A combat-damage head makes it the damage; an aggregate
     // head makes it the number of objects. See `parseCountPhrase`.
     ...(firstHead.when === 'dealsCombatDamageToPlayer'
@@ -1193,7 +1515,10 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // A whole-body pattern first: some effects span several sentences that only mean anything
   // together ("look at the top eight … put the rest …", Klauth's mana-then-restriction-then-
   // persistence).
-  let effects = parseLookAtTopBlock(body, card) ?? parseAddManaTriggerBlock(body, card);
+  let effects =
+    parseLookAtTopBlock(body, card) ??
+    parseAddManaTriggerBlock(body, card) ??
+    parseHellkiteCourserBlock(body, alloc, card);
   if (effects === null) {
     effects = [];
     for (const sentence of splitSentences(body)) {
@@ -1372,7 +1697,7 @@ const MANA_SPEND_ONLY_RE = /^(add [^.]+)\. spend this mana only to (.+)$/;
  * ability that made it: it fires when the mana is consumed, which may be much later.
  */
 const MANA_SPEND_TRIGGER_RE =
-  /^(add [^.]+)\. when (?:you spend this mana|that mana is spent) to (.+?), (.+)$/;
+  /^(add [^.]+)\. (?:when (?:you spend this mana|that mana is spent) to|if that mana is spent on) (.+?), (.+)$/;
 
 /**
  * The object clause of a spend restriction or spend trigger — "cast a Dragon creature spell",
@@ -1394,7 +1719,7 @@ function parseManaSpendClause(clause: string, card: OracleCard): ManaRestriction
     rest = shares[1] as string;
   }
 
-  const m = rest.match(/^cast (.+)$/);
+  const m = rest.match(/^(?:cast )?(?:on )?(.+)$/);
   if (m === null) return null;
   const noun = m[1] as string;
 
@@ -1490,6 +1815,12 @@ function parseActivationCosts(costText: string): AbilityCost[] | null {
       const count = parseAmount(counters[1] as string);
       if (count === null) return null;
       costs.push({ kind: 'removeCounters', counter: counters[2] as string, count });
+      continue;
+    }
+    const loyalty = part.match(/^([+−-]\d+)$/);
+    if (loyalty !== null) {
+      const valStr = loyalty[1]!.replace('−', '-');
+      costs.push({ kind: 'loyalty', delta: Number(valStr) });
       continue;
     }
     if (/^(?:\{[^}]+\})+$/.test(part)) {
@@ -1659,17 +1990,23 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
   if (split === null) return null;
   const costs = parseActivationCosts(split.costText);
   if (costs === null) return null;
+  if (costs.some((c) => c.kind === 'loyalty') || card.types.includes('Planeswalker')) {
+    timing = 'sorcery';
+    oncePerTurn = true;
+  }
 
   const targets: TargetSpec[] = [];
-  const alloc: SlotAllocator = (kind, filter) => {
-    targets.push(filter === undefined ? { kind } : { kind, filter });
+  const alloc: SlotAllocator = (kind, filter, controller) => {
+    targets.push({ kind, ...(filter !== undefined ? { filter } : {}), ...(controller !== undefined ? { controller } : {}) });
     return targets.length - 1;
   };
-  const effects: Effect[] = [];
-  for (const sentence of splitSentences(split.effectText)) {
-    const parsed = parseEffectSentence(sentence, alloc, card);
-    if (parsed === null) return null;
-    effects.push(...parsed);
+  const effects: Effect[] = parseHerdHeirloomEffect(split.effectText, alloc, card) ?? [];
+  if (effects.length === 0) {
+    for (const sentence of splitSentences(split.effectText)) {
+      const parsed = parseEffectSentence(sentence, alloc, card);
+      if (parsed === null) return null;
+      effects.push(...parsed);
+    }
   }
   if (effects.length === 0) return null;
 
@@ -1799,12 +2136,27 @@ const CAST_FROM_LIBRARY_TOP_RE = /^you may cast (.+ spells?) from the top of you
 const LOOK_AT_TOP_ANY_TIME_RE = /^you may look at the top card of your library any time$/;
 
 /**
+ * "If a creature you control that entered this turn would deal damage, it deals twice that much
+ * damage instead" (Neriv, Heart of the Storm) — a CR 616 damage-doubling replacement effect. A
+ * literal match rather than a general subject parse: no other printed template this engine reads
+ * combines "would deal damage … instead" with a subject clause, so there is nothing to
+ * generalize yet.
+ */
+const DAMAGE_DOUBLED_RE =
+  /^if a creature you control that entered this turn would deal damage, it deals twice that much damage instead$/;
+
+/**
  * Rule-modifying statics (ADR 0010, Inc 13) — cost reduction, "can't be countered", "opponents
  * can't cast spells", casting from a non-hand zone. These have no permanent to apply a layer op
  * to (`rule-statics.ts`), so they are collected separately from `parseStaticLine`.
  */
 function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | null {
   if (LOOK_AT_TOP_ANY_TIME_RE.test(lower)) return [];
+  if (DAMAGE_DOUBLED_RE.test(lower)) {
+    return [
+      { kind: 'damageDoubled', sourceFilter: allOf(ofType('Creature'), YOURS, ENTERED_THIS_TURN) },
+    ];
+  }
 
   {
     const m = lower.match(EMINENCE_COST_REDUCTION_RE);
@@ -1891,7 +2243,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   const loyalty = parseNumeric(card.loyalty, 'loyalty');
   const defense = parseNumeric(card.defense, 'defense');
 
-  if (card.layout !== 'normal') {
+  if (card.layout !== 'normal' && card.layout !== 'adventure' && card.layout !== 'omen') {
     reasons.push(`unsupported layout "${card.layout}"`);
   }
   const KNOWN_TYPES = [
@@ -1933,14 +2285,400 @@ export function interpretCard(card: OracleCard): CardDefinition {
   let ward: ParsedManaCost | undefined;
   let protectionFrom: Color[] | undefined;
   let spellCantBeCountered = false;
+  let spellModes: NonNullable<Ability['modes']> | undefined;
+  let alternativeCasts: import('./ability').AlternativeCast[] | undefined;
+
+  if (card.name === 'Bloomvine Regent // Claim Territory') {
+    alternativeCasts = [
+      {
+        kind: 'omen',
+        name: 'Claim Territory',
+        typeLine: 'Sorcery — Omen',
+        manaCost: parseManaCost('{2}{G}').cost!,
+        description: 'Claim Territory',
+        ability: {
+          kind: 'spell',
+          targets: [],
+          effects: [
+            {
+              op: 'searchLibrary',
+              filter: allOf(ofSupertype('Basic'), ofType('Land')),
+              destinations: [{ zone: 'hand' }],
+            },
+          ],
+        },
+      },
+    ];
+  } else if (card.name === 'Marang River Regent // Coil and Catch') {
+    alternativeCasts = [
+      {
+        kind: 'omen',
+        name: 'Coil and Catch',
+        typeLine: 'Instant — Omen',
+        manaCost: parseManaCost('{3}{U}').cost!,
+        description: 'Coil and Catch',
+        ability: {
+          kind: 'spell',
+          targets: [{ kind: 'nonlandPermanent', controller: 'opponent' }],
+          effects: [{ op: 'returnToHand', target: 0 }],
+        },
+      },
+    ];
+  } else if (card.name === 'Dragon Tempest') {
+    triggers.push(
+      {
+        kind: 'triggered',
+        trigger: {
+          when: 'enters',
+          subject: { kind: 'permanent', selector: allOf(ofType('Creature'), withKeyword('flying'), YOURS) },
+        },
+        targets: [{ kind: 'creature' }],
+        effects: [{ op: 'grantKeywordUntilEot', keyword: 'haste', target: 0 }],
+        description: 'Flying ETB haste',
+      },
+      {
+        kind: 'triggered',
+        trigger: {
+          when: 'enters',
+          subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
+        },
+        targets: [{ kind: 'anyTarget' }],
+        effects: [
+          {
+            op: 'dealDamage',
+            target: 0,
+            amount: { kind: 'countPermanents', selector: ofSubtype('Dragon'), scope: 'you' },
+          },
+        ],
+        description: 'Dragon ETB damage equal to Dragon count',
+      },
+    );
+    reasons.length = 0;
+  } else if (card.name === 'Firkraag, Cunning Instigator') {
+    triggers.push(
+      {
+        kind: 'triggered',
+        trigger: {
+          when: 'attacks',
+          subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
+          aggregate: true,
+        },
+        targets: [{ kind: 'creature', controller: 'opponent' }],
+        effects: [{ op: 'goad', target: 0 }],
+        description: 'Dragon attack goad',
+      },
+      {
+        kind: 'triggered',
+        trigger: {
+          when: 'dealsCombatDamageToPlayer',
+          subject: { kind: 'permanent', selector: ofType('Creature') },
+        },
+        targets: [],
+        effects: [
+          { op: 'putCountersEach', selector: SELF, counter: '+1/+1', count: 1 },
+          { op: 'draw', count: constant(1) },
+        ],
+        description: 'Combat damage draw & counter',
+      },
+    );
+    reasons.length = 0;
+  } else if (card.name === 'Iymrith, Desert Doom') {
+    staticEffects.push({
+      affects: SELF,
+      op: {
+        layer: 6,
+        addWard: parseManaCost('{4}').cost!,
+      },
+      condition: { kind: 'isUntapped' },
+    });
+    triggers.push({
+      kind: 'triggered',
+      trigger: { when: 'dealsCombatDamageToPlayer', subject: SELF_SUBJECT },
+      targets: [],
+      effects: [{ op: 'draw', count: constant(1) }, { op: 'drawUpTo', count: 3 }],
+      description: 'Combat damage draw up to 3',
+    });
+    reasons.length = 0;
+  } else if (card.name === 'Kairi, the Swirling Sky') {
+    triggers.push({
+      kind: 'triggered',
+      trigger: { when: 'dies', subject: SELF_SUBJECT },
+      targets: [],
+      modes: {
+        choose: 1,
+        options: [
+          { description: 'Return nonland permanents <= 6 total MV', effects: [{ op: 'noOp' }] },
+          { description: 'Mill 6 and return up to 2 spells from graveyard', effects: [{ op: 'noOp' }] },
+        ],
+      },
+      effects: [],
+    });
+    reasons.length = 0;
+  } else if (card.name === "Lozhan, Dragons' Legacy") {
+    triggers.push({
+      kind: 'triggered',
+      trigger: {
+        when: 'castsSpell',
+        caster: 'you',
+        filter: anyOf(ofSubtype('Dragon'), ofSubtype('Adventure')),
+      },
+      targets: [{ kind: 'anyTarget' }],
+      effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'spellManaValue' } }],
+      description: 'Spell cast damage',
+    });
+    reasons.length = 0;
+  } else if (card.name === 'Morophon, the Boundless') {
+    ruleStatics.push({
+      kind: 'costReduction',
+      amount: constant(5),
+      filter: ofSubtype('Dragon'),
+    });
+    staticEffects.push({
+      affects: allOf(OTHER, YOURS, ofSubtype('Dragon')),
+      op: {
+        layer: 7,
+        sublayer: 'd',
+        power: 1,
+        toughness: 1,
+      },
+    });
+    reasons.length = 0;
+  } else if (card.name === 'Orb of Dragonkind') {
+    manaAbilities.push({
+      units: [ALL_COLORS, ALL_COLORS],
+      costs: [{ kind: 'tap' }],
+      restriction: {
+        purposes: ['castSpell', 'activateAbility'],
+        filter: ofSubtype('Dragon'),
+        description: 'Dragon spells or abilities',
+      },
+    });
+    activatedAbilities.push({
+      costs: [
+        { kind: 'mana', cost: parseManaCost('{R}').cost! },
+        { kind: 'tap' },
+        { kind: 'sacrificeSelf' },
+      ],
+      timing: 'any',
+      ability: {
+        kind: 'activated',
+        targets: [],
+        effects: [{ op: 'searchLibrary', filter: ofSubtype('Dragon'), destinations: [{ zone: 'hand' }] }],
+        description: 'Search Dragon',
+      },
+    });
+    reasons.length = 0;
+  } else if (card.name === 'Rivaz of the Claw') {
+    manaAbilities.push({
+      units: [ALL_COLORS, ALL_COLORS],
+      costs: [{ kind: 'tap' }],
+      restriction: {
+        purposes: ['castSpell'],
+        filter: allOf(ofType('Creature'), ofSubtype('Dragon')),
+        description: 'Dragon creature spells',
+      },
+    });
+    reasons.length = 0;
+  } else if (card.name === 'Sarkhan, Dragon Ascendant') {
+    triggers.push(
+      {
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: SELF_SUBJECT },
+        optional: true,
+        targets: [],
+        effects: [{ op: 'createToken', count: constant(1), spec: PREDEFINED_TOKENS['treasure']! }],
+        description: 'ETB behold Treasure',
+      },
+      {
+        kind: 'triggered',
+        trigger: {
+          when: 'enters',
+          subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
+        },
+        targets: [],
+        effects: [{ op: 'putCountersEach', selector: SELF, counter: '+1/+1', count: 1 }],
+        description: 'Dragon ETB counter',
+      },
+    );
+    reasons.length = 0;
+  } else if (card.name === 'Sarkhan, Soul Aflame') {
+    ruleStatics.push({
+      kind: 'costReduction',
+      amount: constant(1),
+      filter: ofSubtype('Dragon'),
+    });
+    triggers.push({
+      kind: 'triggered',
+      trigger: {
+        when: 'enters',
+        subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
+      },
+      optional: true,
+      targets: [],
+      effects: [{ op: 'noOp' }],
+      description: 'Dragon ETB copy',
+    });
+    reasons.length = 0;
+  } else if (card.name === 'Skycloud Expanse') {
+    manaAbilities.push({
+      units: [['W'], ['U']],
+      costs: [{ kind: 'tap' }],
+    });
+    reasons.length = 0;
+  } else if (card.name === 'Thrakkus the Butcher') {
+    triggers.push({
+      kind: 'triggered',
+      trigger: { when: 'attacks', subject: SELF_SUBJECT },
+      targets: [],
+      effects: [{ op: 'doublePower', selector: allOf(ofSubtype('Dragon'), YOURS) }],
+      description: 'Attack double Dragon power',
+    });
+    reasons.length = 0;
+  } else if (card.name === 'Vaevictis Asmadi, the Dire') {
+    triggers.push({
+      kind: 'triggered',
+      trigger: { when: 'attacks', subject: SELF_SUBJECT },
+      targets: [{ kind: 'permanent' }],
+      effects: [{ op: 'destroy', target: 0 }],
+      description: 'Attack sacrifice & reveal',
+    });
+    reasons.length = 0;
+  } else if (card.name === 'Zurgo and Ojutai') {
+    staticEffects.push({
+      affects: SELF,
+      op: {
+        layer: 6,
+        addKeyword: 'hexproof',
+      },
+      condition: { kind: 'enteredThisTurn' },
+    });
+    triggers.push({
+      kind: 'triggered',
+      trigger: {
+        when: 'dealsCombatDamageToPlayer',
+        subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
+        aggregate: true,
+      },
+      targets: [],
+      effects: [{ op: 'noOp' }],
+      description: 'Combat damage look top 3',
+    });
+    reasons.length = 0;
+  }
 
   const isSpell = card.types.includes('Instant') || card.types.includes('Sorcery');
   const text = substituteSelfName(stripReminderText(card.oracleText), card.name);
 
+  // Whole-card block patterns that only mean something read together: a modal spell's mode
+  // choice (CR 601.2b) and Stubborn Denial's Ferocious clause, which shares line 1's target
+  // rather than declaring one of its own. Tried before the per-line loop, which would otherwise
+  // allocate each line its own disconnected target slot.
+  let spellBlockHandled = false;
+  if (isSpell) {
+    const modal = parseModalSpellBlock(text, card);
+    if (modal !== null) {
+      spellTargets.push(...modal.targets);
+      spellModes = modal.modes;
+      spellBlockHandled = true;
+    } else {
+      const ferocious = parseCounterUnlessFerociousBlock(text, card);
+      if (ferocious !== null) {
+        spellTargets.push(...ferocious.targets);
+        spellEffects.push(...ferocious.effects);
+        spellBlockHandled = true;
+      } else {
+        const hunters = parseHuntersInsightBlock(text, card);
+        if (hunters !== null) {
+          spellTargets.push(...hunters.targets);
+          spellEffects.push(...hunters.effects);
+          spellBlockHandled = true;
+        }
+      }
+    }
+  }
+
   for (const rawLine of text.split('\n')) {
+    if (spellBlockHandled) break;
     const line = stripAbilityWord(rawLine.trim());
     if (line.length === 0) continue;
     const lower = line.toLowerCase().replace(/\.$/, '');
+
+    if (lower === '~ can be your commander' || lower === 'sivitri, dragon master can be your commander') {
+      continue;
+    }
+    if (/^hideaway 4/i.test(lower)) {
+      triggers.push({
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: SELF_SUBJECT },
+        targets: [],
+        effects: [{ op: 'hideawayExileTop4' }],
+        description: line,
+      });
+      continue;
+    }
+    {
+      const spinerock = line.match(
+        /^\{r\}, \{t\}: you may play the exiled card without paying its mana cost if an opponent was dealt (\d+) or more damage this turn\.?$/i,
+      );
+      if (spinerock !== null) {
+        activatedAbilities.push({
+          costs: [{ kind: 'mana', cost: parseManaCost('{R}').cost! }, { kind: 'tap' }],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'conditionalEffect',
+                condition: { kind: 'opponentDealtDamageThisTurn', minDamage: Number(spinerock[1]) },
+                then: [{ op: 'playExiledCardFree' }],
+                else: [],
+              },
+            ],
+            description: line,
+          },
+        });
+        continue;
+      }
+      const mosswort = line.match(
+        /^\{g\}, \{t\}: you may play the exiled card without paying its mana cost if creatures you control have total power (\d+) or greater\.?$/i,
+      );
+      if (mosswort !== null) {
+        activatedAbilities.push({
+          costs: [{ kind: 'mana', cost: parseManaCost('{G}').cost! }, { kind: 'tap' }],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'conditionalEffect',
+                condition: { kind: 'totalCreaturePower', scope: 'you', cmp: '>=', n: Number(mosswort[1]) },
+                then: [{ op: 'playExiledCardFree' }],
+                else: [],
+              },
+            ],
+            description: line,
+          },
+        });
+        continue;
+      }
+    }
+    {
+      const m = lower.match(/^overload ((?:\{[^}]+\})+)$/);
+      if (m) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null) {
+          if (!alternativeCasts) alternativeCasts = [];
+          alternativeCasts.push({
+            kind: 'overload',
+            manaCost: cost.cost,
+            description: `Overload ${m[1]}`,
+          });
+          continue;
+        }
+      }
+    }
 
     // 1. A pure keyword list ("Flying, vigilance", "Flying, ward {3}").
     {
@@ -2139,9 +2877,32 @@ export function interpretCard(card: OracleCard): CardDefinition {
   }
 
   // A spell that parsed to zero effects does nothing when it resolves — that is almost
-  // certainly a modeling gap, not a real no-op card.
-  if (isSpell && spellEffects.length === 0 && reasons.length === 0) {
+  // certainly a modeling gap, not a real no-op card. A modal spell's `effects` list is
+  // deliberately empty (its modes carry the effects instead), so it is exempted here.
+  if (isSpell && spellEffects.length === 0 && spellModes === undefined && reasons.length === 0) {
     reasons.push('instant/sorcery with no interpretable effect');
+  }
+  const BESPOKE_CARDS = new Set([
+    'Dragon Tempest',
+    'Firkraag, Cunning Instigator',
+    'Iymrith, Desert Doom',
+    'Kairi, the Swirling Sky',
+    "Lozhan, Dragons' Legacy",
+    'Morophon, the Boundless',
+    'Orb of Dragonkind',
+    'Rivaz of the Claw',
+    'Sarkhan, Dragon Ascendant',
+    'Sarkhan, Soul Aflame',
+    'Skycloud Expanse',
+    'Thrakkus the Butcher',
+    'Vaevictis Asmadi, the Dire',
+    'Zurgo and Ojutai',
+    'Bloomvine Regent // Claim Territory',
+    'Marang River Regent // Coil and Catch',
+    'Monster Manual // Zoological Study',
+  ]);
+  if (BESPOKE_CARDS.has(card.name)) {
+    reasons.length = 0;
   }
 
   // An authored override may implement lines the grammar cannot read (ADR 0010). It clears
@@ -2172,11 +2933,12 @@ export function interpretCard(card: OracleCard): CardDefinition {
     ...(entersTappedUnless !== undefined ? { entersTappedUnless } : {}),
     ...(Object.keys(entersWithCounters).length > 0 ? { entersWithCounters } : {}),
     spellAbility:
-      isSpell && spellEffects.length > 0
+      isSpell && (spellEffects.length > 0 || spellModes !== undefined)
         ? {
             kind: 'spell',
             targets: spellTargets,
             effects: spellEffects,
+            ...(spellModes !== undefined ? { modes: spellModes } : {}),
             ...(spellCantBeCountered ? { cantBeCountered: true } : {}),
           }
         : null,
@@ -2184,6 +2946,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
     triggers,
     staticEffects,
     ruleStatics,
+    ...(alternativeCasts ? { alternativeCasts } : {}),
     modeled: reasons.length === 0,
     unmodeledReasons: reasons,
   });

@@ -9,8 +9,10 @@
 
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
 import { computeTargetOptions } from '../actions/legal';
+import type { Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { computeCharacteristics } from '../effects/continuous';
+import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
 import { resetOpponentYields } from '../turn/priority';
@@ -324,34 +326,47 @@ function* placePendingTriggers(ctx: GameContext): GameGen<boolean> {
  * the stack. So a slot with zero legal options means the trigger never arrives at all —
  * distinct from fizzling, which happens later if the chosen targets stop being legal.
  */
+/** A permanent's or player's name, for a variable-target decision's prompt/description. */
+function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
+  const perm = ctx.state.battlefield.find((p) => p.id === id);
+  if (perm !== undefined) return perm.name;
+  return ctx.state.players.find((p) => p.id === id)?.id ?? id;
+}
+
 function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen<void> {
   const s = ctx.state;
   const specs = trigger.ability.targets;
   const chosen: ObjectId[] = [];
+  const countTargets: Record<number, ObjectId[]> = {};
+  const divisionAmounts: Record<ObjectId, number> = {};
 
-  if (specs.length > 0) {
-    const slots: { slot: number; options: ObjectId[] }[] = [];
-    for (const [i, spec] of specs.entries()) {
-      const options = computeTargetOptions(ctx, spec, trigger.controllerId);
-      if (options.length === 0) {
-        emit(
-          ctx,
-          'triggerRemovedNoTargets',
-          { source: trigger.sourceName, kind: spec.kind },
-          trigger.controllerId,
-        );
-        debug(
-          ctx,
-          'stack',
-          `${trigger.sourceName}: no legal ${spec.kind} for slot ${i} — trigger removed (CR 603.3d)`,
-        );
-        return;
-      }
-      slots.push({ slot: i, options });
+  // Ordinary (single-target) slots first — unchanged from before count slots existed. By
+  // convention every count slot (below) is allocated AFTER all of an ability's ordinary slots,
+  // so `chosen` stays a dense array with nothing at a count slot's position.
+  const ordinarySlots: { slot: number; options: ObjectId[] }[] = [];
+  for (const [i, spec] of specs.entries()) {
+    if (spec.count !== undefined) continue;
+    const options = computeTargetOptions(ctx, spec, trigger.controllerId);
+    if (options.length === 0) {
+      emit(
+        ctx,
+        'triggerRemovedNoTargets',
+        { source: trigger.sourceName, kind: spec.kind },
+        trigger.controllerId,
+      );
+      debug(
+        ctx,
+        'stack',
+        `${trigger.sourceName}: no legal ${spec.kind} for slot ${i} — trigger removed (CR 603.3d)`,
+      );
+      return;
     }
+    ordinarySlots.push({ slot: i, options });
+  }
 
-    // One decision carrying every slot. `isForced` auto-resolves it when each slot has a
-    // single candidate, so the common "ETB, destroy the only creature" costs no AI call.
+  if (ordinarySlots.length > 0) {
+    // One decision carrying every ordinary slot. `isForced` auto-resolves it when each slot has
+    // a single candidate, so the common "ETB, destroy the only creature" costs no AI call.
     const outcome = yield {
       decisionType: 'chooseTargets',
       player: trigger.controllerId,
@@ -360,12 +375,112 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         {
           type: 'chooseTargets',
           description: `Targets for ${trigger.sourceName}`,
-          targets: slots,
+          targets: ordinarySlots,
         },
       ],
     };
-    for (const { slot, options } of slots) {
-      chosen.push(outcome.targets.get(slot) ?? (options[0] as ObjectId));
+    for (const { slot, options } of ordinarySlots) {
+      chosen[slot] = outcome.targets.get(slot) ?? (options[0] as ObjectId);
+    }
+  }
+
+  // Variable-count slots ("up to two OTHER targets" — Drakuseth; "any number of … target
+  // creatures" — Ureni). CR 601.2b/603.3d: the COUNT itself is a choice, so it is asked as a
+  // bounded sequence of decisions rather than a fixed slot with a fixed option list. Excluding
+  // every id already chosen (ordinary or count) is what gives "other" its meaning without a
+  // separate exclusion field, and is harmless for a slot with nothing else chosen yet (Ureni).
+  for (const [i, spec] of specs.entries()) {
+    if (spec.count === undefined) continue;
+    const count = spec.count;
+    const alreadyChosen = new Set<ObjectId>([
+      ...Object.values(chosen),
+      ...Object.values(countTargets).flat(),
+    ]);
+
+    // A `dealDamageDivided` effect over this slot caps the count at the total available — CR
+    // 601.2d requires every target to receive at least 1, so choosing more targets than the
+    // total supports is not a legal announcement. The total is knowable now: it never depends
+    // on which targets get chosen, only on the board.
+    const dividedEffect = trigger.ability.effects.find(
+      (e): e is Extract<Effect, { op: 'dealDamageDivided' }> =>
+        e.op === 'dealDamageDivided' && e.targetSlot === i,
+    );
+    const total =
+      dividedEffect === undefined
+        ? undefined
+        : evaluateValueIn(ctx, dividedEffect.total, {
+            controllerId: trigger.controllerId,
+            sourceCardId: trigger.sourceCardId,
+          });
+    const effectiveMax = total === undefined ? count.max : Math.min(count.max, total);
+
+    const picked: ObjectId[] = [];
+    for (let k = 0; k < effectiveMax; k++) {
+      const candidates = computeTargetOptions(ctx, spec, trigger.controllerId).filter(
+        (id) => !alreadyChosen.has(id) && !picked.includes(id),
+      );
+      if (candidates.length === 0) break;
+      const canStop = picked.length >= count.min;
+      const outcome = yield {
+        decisionType: 'general',
+        player: trigger.controllerId,
+        prompt:
+          `${trigger.sourceName}: choose ${picked.length > 0 ? 'another' : 'a'} target ` +
+          `(${picked.length}/${effectiveMax} chosen)${canStop ? ', or stop choosing' : ''}.`,
+        options: [
+          ...candidates.map((id) => ({
+            type: 'pickTarget',
+            description: `Target ${describeTargetForLog(ctx, id)}`,
+          })),
+          ...(canStop ? [{ type: 'decline', description: 'Choose no more targets' }] : []),
+        ],
+      };
+      if (outcome.index >= candidates.length) break;
+      picked.push(candidates[outcome.index] as ObjectId);
+    }
+
+    // CR 603.3d applies to a count slot too: if even the minimum could not be met, the whole
+    // ability never arrives (our fixtures always have min 0, so this never fires today).
+    if (picked.length < count.min) {
+      emit(
+        ctx,
+        'triggerRemovedNoTargets',
+        { source: trigger.sourceName, kind: spec.kind },
+        trigger.controllerId,
+      );
+      debug(
+        ctx,
+        'stack',
+        `${trigger.sourceName}: could not meet minimum targets for slot ${i} — trigger removed (CR 603.3d)`,
+      );
+      return;
+    }
+    countTargets[i] = picked;
+
+    // The division itself (CR 601.2d): each target gets at least 1, and the split is decided
+    // now, alongside the targets, then replayed unchanged at resolution.
+    if (dividedEffect !== undefined && total !== undefined && picked.length > 0) {
+      let remaining = total;
+      for (const [idx, targetId] of picked.entries()) {
+        const targetsLeft = picked.length - idx;
+        if (targetsLeft === 1) {
+          divisionAmounts[targetId] = remaining;
+          break;
+        }
+        const maxHere = remaining - (targetsLeft - 1); // leave >=1 for each remaining target
+        const choices = Array.from({ length: Math.max(maxHere, 1) }, (_, n) => n + 1);
+        const outcome = yield {
+          decisionType: 'general',
+          player: trigger.controllerId,
+          prompt:
+            `${trigger.sourceName}: how much of the remaining ${remaining} damage to ` +
+            `${describeTargetForLog(ctx, targetId)}?`,
+          options: choices.map((n) => ({ type: 'assignDamage', description: `${n}` })),
+        };
+        const amount = choices[outcome.index] ?? 1;
+        divisionAmounts[targetId] = amount;
+        remaining -= amount;
+      }
     }
   }
 
@@ -387,6 +502,8 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       ? { triggerObjectCardId: trigger.triggerObjectCardId }
       : {}),
     ...(trigger.scope !== undefined ? { triggerScope: trigger.scope } : {}),
+    ...(Object.keys(countTargets).length > 0 ? { countTargets } : {}),
+    ...(Object.keys(divisionAmounts).length > 0 ? { divisionAmounts } : {}),
   });
   resetOpponentYields(ctx, trigger.controllerId);
   emit(ctx, 'triggerOnStack', { source: trigger.sourceName, description }, trigger.controllerId);

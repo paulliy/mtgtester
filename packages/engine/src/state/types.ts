@@ -25,7 +25,7 @@ import type {
   PlayerState,
   StackObject,
 } from '@mtg/shared';
-import type { ManaEntry } from '../cards/ability';
+import type { ManaEntry, TriggerWhen } from '../cards/ability';
 import type { Ability, CardDefinition, KeywordAbility } from '../cards/definition';
 import type { TriggerScope } from '../cards/value';
 import type { Prng } from '../rng/prng';
@@ -55,6 +55,8 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   dealtFirstStrikeDamage: boolean;
   /** Timestamp assigned on entry (CR 613.7 ordering of continuous effects). */
   timestamp: number;
+  /** `state.turnNumber` when this object entered the battlefield — "entered this turn" (Neriv). */
+  enteredTurnNumber: number;
   /**
    * Indices into this permanent's `activatedAbilities` used this turn, for "activate only once
    * each turn" (CR 602.5f).
@@ -74,6 +76,10 @@ export interface EnginePermanent extends PermanentState, EngineObject {
 export interface EngineCardObject extends EngineObject {
   /** 903.9a flag — see `EnginePermanent.commanderSbaPending`. */
   commanderSbaPending?: boolean;
+  /** For cards exiled by Hideaway (Spinerock Knoll, Mosswort Bridge). */
+  attachedToCardId?: string;
+  /** For Adventure cards in exile (CR 715.3d). */
+  onAdventure?: boolean;
 }
 
 export interface EngineStackObject extends StackObject {
@@ -87,12 +93,31 @@ export interface EngineStackObject extends StackObject {
   sourceCardId: CardId;
   /** True when the "spell" is a commander cast from the command zone. */
   isCommanderCast: boolean;
+  /** Kind of alternative cast used, if any (overload, adventure, omen). */
+  alternativeCastKind?: 'overload' | 'adventure' | 'omen';
+  altIndex?: number;
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;
   /** Numbers the firing event contributed (count, damage, spell mana value). */
   triggerScope?: TriggerScope;
   /** The X announced when this spell was cast (CR 601.2b), for its own effects to read. */
   announcedX?: number;
+  /**
+   * Chosen ids for a variable-count target slot (`TargetSpec.count`), keyed by slot index —
+   * "up to two other targets" (Drakuseth), "any number of … target creatures" (Ureni). A
+   * single-target slot's choice lives in the inherited `targets` array at its own index
+   * instead; a slot that can hold zero, one, or several objects has nothing sensible to put
+   * there.
+   */
+  countTargets?: Record<number, ObjectId[]>;
+  /**
+   * The per-target division of a `dealDamageDivided` effect's total, decided at announcement
+   * alongside the count-slot's targets (CR 601.2d) and replayed identically at resolution —
+   * keyed by object id rather than slot, since one ability carries at most one divided effect
+   * in every card this engine reads today.
+   */
+  divisionAmounts?: Record<ObjectId, number>;
+  grantHasteOnResolution?: boolean;
 }
 
 export interface EnginePlayerState extends PlayerState {
@@ -135,10 +160,11 @@ export interface UntilEotEffect extends ContinuousEffect {
    * creature entering afterwards is not pumped and one that leaves and returns is not either.
    */
   targetCardIds: CardId[];
-  kind: 'ptDelta' | 'grantKeyword';
+  kind: 'ptDelta' | 'grantKeyword' | 'grantAbility';
   power?: number;
   toughness?: number;
   keyword?: KeywordAbility;
+  ability?: Ability;
   /** Timestamp assigned on creation (CR 613.7 within-layer ordering). */
   timestamp: number;
 }
@@ -174,6 +200,17 @@ export interface PendingTrigger {
   scope?: TriggerScope;
 }
 
+export interface DelayedTrigger {
+  id: string;
+  sourceCardId: CardId;
+  sourceOracleId: OracleId;
+  controllerId: PlayerId;
+  targetId?: CardId;
+  when: TriggerWhen;
+  ability: Ability;
+  expiry: 'endStep' | 'cleanup';
+}
+
 export interface EngineState extends GameState {
   players: EnginePlayerState[];
   battlefield: EnginePermanent[];
@@ -194,6 +231,15 @@ export interface EngineState extends GameState {
   currentTurnPlayer: PlayerId;
   /** Triggers waiting to be put on the stack at the next priority checkpoint (CR 603.3b). */
   pendingTriggers: PendingTrigger[];
+  delayedTriggers: DelayedTrigger[];
+  /**
+   * Controllers of a permanent dealt excess damage THIS TURN (Rith, Liberated Primeval) — the
+   * amount by which a single hit exceeded what was needed to reduce it to 0 toughness. Reset at
+   * the next untap step (CR 514.2 doesn't clear this; it is turn-scoped, not step-scoped).
+   */
+  excessDamageControllerIds: PlayerId[];
+  /** Total damage dealt to each player THIS TURN (Spinerock Knoll). Reset at untap step. */
+  damageDealtToPlayersThisTurn: Record<PlayerId, number>;
   /** Safety cap: exceeding this halts the game as a probable bug (brief §4). */
   turnCap: number;
 }

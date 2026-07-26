@@ -5,10 +5,11 @@
  */
 
 import type { ObjectId, PlayerId } from '@mtg/shared';
-import type { AbilityCost } from '../cards/definition';
+import type { Ability, AbilityCost, CardDefinition } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
 import { payAbilityCosts, payManaCost } from '../effects/resolve';
 import { emit, debug } from '../log/log';
+import type { ParsedManaCost } from '../mana/cost';
 import { addGeneric, describeManaCost, emptyCost, subtractGeneric, totalPips, withX } from '../mana/cost';
 import {
   makePermanent,
@@ -27,6 +28,33 @@ import type {
 import type { PriorityActionPayload } from './legal';
 import { computeTargetOptions, costReductionFor, manaPortionOf, validateChosenTargets } from './legal';
 import { resetOpponentYields } from '../turn/priority';
+
+/**
+ * The `Ability` a cast actually puts on the stack. A permanent card can print "this spell can't
+ * be countered" with no `spellAbility` to carry the flag on (Dragonlord Dromoka) — give such a
+ * cast a minimal zero-effect stack ability instead, purely so `protectedFromCounter` can see it.
+ *
+ * A modal spell's mode was chosen at announcement (CR 601.2b), as part of the option offered by
+ * `computePriorityOptions` — substitute the chosen mode's `effects` for the ability's own here,
+ * so the executor and every downstream consumer (fizzle check, description) never has to know
+ * `modes` exists at all.
+ */
+function resolveCastAbility(
+  def: CardDefinition,
+  mode: number | undefined,
+  cardName: string,
+): Ability | null {
+  if (def.spellAbility === null) {
+    return def.spellCantBeCountered === true
+      ? { kind: 'spell', targets: [], effects: [], cantBeCountered: true }
+      : null;
+  }
+  const modes = def.spellAbility.modes;
+  if (modes === undefined) return def.spellAbility;
+  const chosen = modes.options[mode ?? 0];
+  if (chosen === undefined) throw new Error(`engine bug: invalid mode ${mode} for ${cardName}`);
+  return { ...def.spellAbility, effects: chosen.effects };
+}
 
 /**
  * Pay a whole activation cost. Non-mana components go first: they take the source out of play
@@ -118,22 +146,52 @@ export function* applyPriorityAction(
 
     case 'castSpell': {
       const fromZone =
-        payload.fromLibraryTop === true
-          ? player.library
-          : payload.fromCommand
-            ? player.commandZone
-            : player.hand;
+        payload.fromExile === true
+          ? s.exile
+          : payload.fromLibraryTop === true
+            ? player.library
+            : payload.fromCommand
+              ? player.commandZone
+              : player.hand;
       const obj = fromZone.find((o) => o.id === payload.objectId);
       if (obj === undefined) throw new Error('engine bug: spell to cast not found');
       const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
 
       const tax = payload.fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
       const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
-      const cost = withX(
-        subtractGeneric(addGeneric(def.manaCost ?? emptyCost(), tax), reduction),
-        payload.x ?? 0,
-      );
-      const targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
+      let cost: ParsedManaCost;
+      let ability: Ability;
+      let targets: ObjectId[];
+      if (payload.alternativeCast === 'overload') {
+        const alt = def.alternativeCasts?.find((a) => a.kind === 'overload');
+        if (!alt) throw new Error('missing overload cost');
+        cost = subtractGeneric(alt.manaCost, reduction);
+        ability = {
+          kind: 'spell',
+          targets: [],
+          effects: [{ op: 'overloadBounceAllNonlandOpponents' }],
+        };
+        targets = [];
+      } else if (payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen') {
+        const alt =
+          def.alternativeCasts?.[payload.altIndex ?? 0] ??
+          def.alternativeCasts?.find((a) => a.kind === payload.alternativeCast);
+        if (!alt) throw new Error(`missing ${payload.alternativeCast} cost`);
+        cost = subtractGeneric(alt.manaCost, reduction);
+        ability = alt.ability ?? { kind: 'spell', targets: [], effects: [] };
+        targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
+      } else {
+        cost = withX(
+          subtractGeneric(addGeneric(def.manaCost ?? emptyCost(), tax), reduction),
+          payload.x ?? 0,
+        );
+        ability = resolveCastAbility(def, payload.mode, obj.name) ?? {
+          kind: 'spell',
+          targets: [],
+          effects: [],
+        };
+        targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
+      }
 
       yield* payManaCost(ctx, player, cost, { kind: 'castSpell', oracleId: obj.oracleId });
 
@@ -148,14 +206,6 @@ export function* applyPriorityAction(
         id: `o-${s.nextObjectNum++}` as ObjectId,
         zone: 'stack',
       };
-      // A permanent card can print "this spell can't be countered" too (Dragonlord Dromoka),
-      // where there is no `spellAbility` to carry the flag on — give such a cast a minimal
-      // zero-effect stack ability instead, purely so `protectedFromCounter` can see it.
-      const ability =
-        def.spellAbility ??
-        (def.spellCantBeCountered === true
-          ? { kind: 'spell' as const, targets: [], effects: [], cantBeCountered: true }
-          : null);
       const spellEntry: EngineStackObject = {
         id: spellCard.id,
         sourceId: spellCard.id,
@@ -168,6 +218,7 @@ export function* applyPriorityAction(
         sourceOracleId: obj.oracleId,
         sourceCardId: obj.cardId,
         isCommanderCast: payload.fromCommand,
+        ...(payload.alternativeCast ? { alternativeCastKind: payload.alternativeCast } : {}),
         ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
       };
       s.stack.push(spellEntry);

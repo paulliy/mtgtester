@@ -34,12 +34,18 @@ describe('mana cost parsing', () => {
     expect(parseManaCost('').cost?.generic).toBe(0);
   });
 
-  it('reports hybrid, Phyrexian, and snow symbols as unsupported', () => {
-    for (const costStr of ['{W/U}', '{2/W}', '{G/P}', '{S}']) {
+  it('reports Phyrexian, generic-hybrid, and snow symbols as unsupported', () => {
+    for (const costStr of ['{2/W}', '{G/P}', '{S}']) {
       const result = parseManaCost(costStr);
       expect(result.cost).toBeNull();
       expect(result.unsupportedSymbols.length).toBeGreaterThan(0);
     }
+  });
+
+  it('parses hybrid mana symbols into hybrid pips', () => {
+    const result = parseManaCost('{W/U}');
+    expect(result.cost).not.toBeNull();
+    expect(result.cost?.hybrid).toEqual([['W', 'U']]);
   });
 
   it('counts {X} rather than rejecting it — the caster announces its value (CR 601.2b)', () => {

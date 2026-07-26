@@ -23,6 +23,7 @@ export type { RuleStatic } from './rule-statics';
 // consumers reference so existing imports from `definition` keep working.
 export { IMPLEMENTED_KEYWORDS, TAP_COST } from './ability';
 export type {
+  AlternativeCast,
   Ability,
   AbilityCost,
   ActivatedAbility,
@@ -102,6 +103,8 @@ export interface CardDefinition {
    * such a cast a minimal (zero-effect) stack `Ability` so `protectedFromCounter` can see it.
    */
   spellCantBeCountered?: boolean;
+  /** Alternative casting costs/modes (e.g. Overload). */
+  alternativeCasts?: import('./ability').AlternativeCast[];
   /** Triggered abilities (kind 'triggered'). */
   triggers: Ability[];
   /** Continuous effects this card contributes while a permanent (static abilities / CDAs). */
