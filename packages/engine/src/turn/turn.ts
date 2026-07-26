@@ -37,6 +37,10 @@ function untapStep(ctx: GameContext): void {
   for (const p of ctx.state.players) {
     p.yieldUntilEndOfTurn = false;
   }
+  // "Activate only once each turn" (CR 602.5f) is measured in turns, not in *your* turns, so
+  // this clears for every permanent on the battlefield — not just the active player's.
+  for (const perm of ctx.state.battlefield) perm.activationsThisTurn = [];
+
   let untapped = 0;
   for (const perm of ctx.state.battlefield) {
     if (perm.controllerId !== ap.id) continue;
@@ -50,13 +54,19 @@ function untapStep(ctx: GameContext): void {
   emit(ctx, 'untap', { player: ap.id, count: untapped }, ap.id);
 }
 
-/** Queue "beginning of upkeep" triggers (CR 503) for the current active player's upkeep. */
-function queueUpkeepTriggers(ctx: GameContext): void {
+/**
+ * Queue "at the beginning of your/each `<step>`" triggers (CR 503 upkeep, CR 513 end step).
+ *
+ * One function for both because the only thing that differs is which step is beginning: the
+ * `player === 'you'` filter, the intervening-if check and the queue entry are identical, and a
+ * second copy is how the two drift apart.
+ */
+function queueStepTriggers(ctx: GameContext, when: 'upkeep' | 'endStep'): void {
   const apId = ctx.state.currentTurnPlayer;
   for (const perm of [...ctx.state.battlefield]) {
     for (const ability of triggersOf(ctx, perm)) {
       const spec = ability.trigger;
-      if (spec === undefined || spec.when !== 'upkeep') continue;
+      if (spec === undefined || spec.when !== when) continue;
       if (spec.player === 'you' && perm.controllerId !== apId) continue;
       const source = { cardId: perm.cardId, controllerId: perm.controllerId };
       // Intervening-if, first check (CR 603.4) — see `queueTriggersForEvent`.
@@ -68,7 +78,7 @@ function queueUpkeepTriggers(ctx: GameContext): void {
         sourceName: perm.name,
         ability,
       });
-      debug(ctx, 'stack', `upkeep trigger queued: ${perm.name}`);
+      debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
     }
   }
 }
@@ -102,7 +112,9 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
       perm.damagedByDeathtouch = false;
     }
     endUntilEotEffects(ctx);
-    emptyManaPools(ctx);
+    // End of TURN: "you don't lose this mana as steps and phases end" runs out here too, so
+    // cleanup drains persistent mana as well (Klauth's is explicitly "until end of turn").
+    emptyManaPools(ctx, true);
 
     // Normally no priority in cleanup; but if SBAs act or triggers are waiting, players
     // get priority, then ANOTHER cleanup step happens (CR 514.3a).
@@ -111,7 +123,7 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
       return;
     }
     yield* runPrioritySequence(ctx);
-    emptyManaPools(ctx);
+    emptyManaPools(ctx, true);
   }
 }
 
@@ -126,7 +138,7 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   untapStep(ctx);
 
   setStep(ctx, 'upkeep');
-  queueUpkeepTriggers(ctx);
+  queueStepTriggers(ctx, 'upkeep');
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
@@ -149,8 +161,10 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
-  // Ending phase.
+  // Ending phase. "At the beginning of the end step" triggers are queued as the step begins
+  // (CR 513.1), before anyone receives priority in it.
   setPhase(ctx, 'ending', 'end');
+  queueStepTriggers(ctx, 'endStep');
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 

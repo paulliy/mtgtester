@@ -84,6 +84,10 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
       top.ability,
       top.targets,
       top.triggerObjectCardId,
+      {
+        ...top.triggerScope,
+        ...(top.announcedX === undefined ? {} : { x: top.announcedX }),
+      },
     );
   }
 

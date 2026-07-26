@@ -1,17 +1,77 @@
 /**
  * `Value` — a number that is either constant or computed from game state (ADR 0005). This is
  * the abstraction X spells, characteristic-defining abilities (Tarmogoyf), and "equal to its
- * power" effects share. Introduced before more effects hardcode `amount: number`.
+ * power" effects share.
+ *
+ * Evaluation is deliberately split in two, and the split is structural rather than stylistic:
+ *
+ * - **`evaluateValue` (here)** answers the values the LAYER ENGINE needs — layer 7a/7b P/T. It
+ *   reads printed cards and graveyards only. It must never read a permanent's *current*
+ *   characteristics, because the layer pass is what produces those: a Value that called back
+ *   into `computeCharacteristics` would re-enter the pass that is asking it.
+ * - **`effects/values.ts::evaluateValueIn`** answers everything, including selector counts and
+ *   the announced X. It runs at resolution, when the layer pass has already finished, so
+ *   reading current characteristics there is safe.
+ *
+ * `evaluateValue` therefore THROWS on a value it cannot answer rather than returning 0 — a
+ * silent zero would make an X-valued effect quietly do nothing (brief §6.3).
  */
 
+import type { PlayerId } from '@mtg/shared';
 import type { GameContext } from '../state/types';
+import type { Selector } from './selector';
+
+/** What a resolving ability knows that the board alone does not. */
+export interface ValueScope {
+  /** Whose "you" this is. */
+  controllerId: PlayerId;
+  /** The source object's card id, for `self`-relative selectors. */
+  sourceCardId?: string;
+  /** The X announced when the spell was cast (CR 601.2b). */
+  x?: number;
+  /** Damage that caused the trigger — Old Gnawbone's "that many". */
+  damageDealt?: number;
+  /**
+   * How many objects fired an *aggregate* trigger — the "that many" in "whenever one or more
+   * Dragons you control attack, draw that many cards" (CR 603.2c). Distinct from `damageDealt`:
+   * the same event can carry both a count and a total.
+   */
+  triggerCount?: number;
+  /** Mana value of the spell that fired a `castsSpell` trigger (Lozhan). */
+  spellManaValue?: number;
+}
+
+/**
+ * The numeric facts an *event* contributes to a trigger's scope, captured when it fires and
+ * carried through the stack. Everything else in a `ValueScope` is re-derived at resolution;
+ * these cannot be, because the event is over by then.
+ */
+export type TriggerScope = Pick<ValueScope, 'damageDealt' | 'triggerCount' | 'spellManaValue'>;
 
 export type Value =
   | { kind: 'const'; n: number }
   /** Number of card types among cards in all graveyards (Tarmogoyf, CR 208.2b). */
   | { kind: 'cardTypesInAllGraveyards' }
   /** `of` plus a constant, e.g. Tarmogoyf's toughness = types + 1. */
-  | { kind: 'plus'; of: Value; n: number };
+  | { kind: 'plus'; of: Value; n: number }
+  /** `of` multiplied — Thrakkus's "double the power of each Dragon". */
+  | { kind: 'times'; of: Value; n: number }
+  /** "the number of Dragons you control" / "the number of lands you control". */
+  | { kind: 'countPermanents'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
+  /** "the greatest toughness among creatures you control" (Last March of the Ents). */
+  | { kind: 'greatestToughnessAmong'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
+  /** "the total power of attacking creatures" (Klauth). */
+  | { kind: 'totalPowerOfAttackers' }
+  /** The X announced for this spell (CR 601.2b). */
+  | { kind: 'xValue' }
+  /** "that many" / "equal to that damage" — the damage that caused this trigger. */
+  | { kind: 'damageDealt' }
+  /** "that many" where the trigger aggregated several objects (CR 603.2c). */
+  | { kind: 'triggerCount' }
+  /** "equal to that spell's mana value" — the spell that fired a `castsSpell` trigger. */
+  | { kind: 'spellManaValue' };
+
+export const constant = (n: number): Value => ({ kind: 'const', n });
 
 /** The eight card types a permanent/card can have (for graveyard-type counting). */
 const CARD_TYPES = [
@@ -34,30 +94,56 @@ export function isDynamicValue(value: Value): boolean {
     case 'const':
       return false;
     case 'plus':
+    case 'times':
       return isDynamicValue(value.of);
-    case 'cardTypesInAllGraveyards':
+    default:
       return true;
   }
 }
 
+/** True when this value needs a resolving ability's scope, so the layer engine cannot answer it. */
+export function needsScope(value: Value): boolean {
+  switch (value.kind) {
+    case 'const':
+    case 'cardTypesInAllGraveyards':
+      return false;
+    case 'plus':
+    case 'times':
+      return needsScope(value.of);
+    default:
+      return true;
+  }
+}
+
+/** Number of card types among cards in all graveyards (CR 208.2b). */
+export function cardTypesInAllGraveyards(ctx: GameContext): number {
+  const present = new Set<string>();
+  for (const player of ctx.state.players) {
+    for (const card of player.graveyard) {
+      const def = ctx.defs.get(card.oracleId);
+      if (def === undefined) continue;
+      for (const t of def.types) {
+        if ((CARD_TYPES as readonly string[]).includes(t)) present.add(t);
+      }
+    }
+  }
+  return present.size;
+}
+
+/** Board-only evaluation, for the layer engine. See the module comment for what it refuses. */
 export function evaluateValue(ctx: GameContext, value: Value): number {
   switch (value.kind) {
     case 'const':
       return value.n;
     case 'plus':
       return evaluateValue(ctx, value.of) + value.n;
-    case 'cardTypesInAllGraveyards': {
-      const present = new Set<string>();
-      for (const player of ctx.state.players) {
-        for (const card of player.graveyard) {
-          const def = ctx.defs.get(card.oracleId);
-          if (def === undefined) continue;
-          for (const t of def.types) {
-            if ((CARD_TYPES as readonly string[]).includes(t)) present.add(t);
-          }
-        }
-      }
-      return present.size;
-    }
+    case 'times':
+      return evaluateValue(ctx, value.of) * value.n;
+    case 'cardTypesInAllGraveyards':
+      return cardTypesInAllGraveyards(ctx);
+    default:
+      throw new Error(
+        `engine bug: value "${value.kind}" needs a resolving ability's scope — use evaluateValueIn`,
+      );
   }
 }

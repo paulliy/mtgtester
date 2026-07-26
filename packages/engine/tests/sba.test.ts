@@ -58,6 +58,7 @@ function customDef(
     spellAbility: null,
     triggers: [],
     staticEffects: [],
+    ruleStatics: [],
     modeled: true,
     unmodeledReasons: [],
     ...partial,

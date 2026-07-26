@@ -11,7 +11,8 @@ describe('AI Config', () => {
   it('defaults to OpenRouter (ADR 0011)', () => {
     const config = loadAiConfig({});
     expect(config.baseUrl).toBe('https://openrouter.ai/api/v1');
-    expect(config.models[0]).toBe('google/gemma-4-31b-it');
+    expect(config.models[0]).toBe('deepseek/deepseek-v4-flash');
+    expect(config.filterNonCachingProviders).toBe(true);
   });
 
   it('never pairs one vendor\'s key with another vendor\'s endpoint or models', () => {
@@ -57,12 +58,14 @@ describe('AI Config', () => {
       AI_API_KEY: 'groq-secret-key',
       AI_MODELS: 'llama-3.1-8b-instant, llama-3.3-70b-versatile',
       AI_RPM_LIMIT: '60',
+      AI_REQUEST_TIMEOUT_MS: '120000',
     });
 
     expect(config.baseUrl).toBe('https://api.groq.com/openai/v1');
     expect(config.apiKey).toBe('groq-secret-key');
     expect(config.models).toEqual(['llama-3.1-8b-instant', 'llama-3.3-70b-versatile']);
     expect(config.rpmLimit).toBe(60);
+    expect(config.requestTimeoutMs).toBe(120000);
   });
 
   it('falls back to provider-specific env keys (OPENROUTER_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, etc.)', () => {
@@ -87,9 +90,11 @@ describe('AI Config', () => {
     const config = loadAiConfig({
       AI_RPM_LIMIT: 'not-a-number',
       AI_MAX_RETRIES: '-5',
+      AI_REQUEST_TIMEOUT_MS: '0',
     });
 
     expect(config.rpmLimit).toBe(DEFAULT_AI_CONFIG.rpmLimit);
     expect(config.maxRetries).toBe(DEFAULT_AI_CONFIG.maxRetries);
+    expect(config.requestTimeoutMs).toBe(DEFAULT_AI_CONFIG.requestTimeoutMs);
   });
 });

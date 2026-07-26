@@ -101,26 +101,45 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(def.manaAbilities).toEqual([{ units: [['W', 'U', 'B', 'R', 'G']] }]);
   });
 
-  it('refuses restricted or amount-varying mana production rather than over-permitting', () => {
-    // Both would silently produce mana the player cannot legally spend — worse than an
-    // honest halt (brief §6.3). They get their own reason so coverage can rank them.
-    for (const text of [
-      '{T}: Add two mana of any one color.',
-      '{T}: Add {C}. Spend this mana only to cast artifact spells.',
-    ]) {
-      const def = interpretCard(
-        oracle({
-          name: 'Test Restricted',
-          typeLine: 'Land',
-          manaCost: null,
-          power: null,
-          toughness: null,
-          oracleText: text,
-        }),
-      );
-      expect(def.modeled).toBe(false);
-      expect(def.manaAbilities).toEqual([]);
-    }
+  const manaLand = (oracleText: string): ReturnType<typeof interpretCard> =>
+    interpretCard(
+      oracle({
+        name: 'Test Restricted',
+        typeLine: 'Land',
+        manaCost: null,
+        power: null,
+        toughness: null,
+        oracleText,
+      }),
+    );
+
+  it('reads a CR 106.6 spending restriction onto the mana produced', () => {
+    // Restricted mana became expressible in Inc 12a: the restriction rides on the `ManaEntry`,
+    // and `planPayment` drops it for any payment it does not permit.
+    const def = manaLand('{T}: Add {C}. Spend this mana only to cast artifact spells.');
+
+    expect(def.modeled).toBe(true);
+    expect(def.manaAbilities).toEqual([
+      {
+        units: [['C']],
+        restriction: {
+          purposes: ['castSpell'],
+          filter: { kind: 'type', value: 'Artifact' },
+          description: 'cast artifact spells',
+        },
+      },
+    ]);
+  });
+
+  it('still refuses "two mana of any ONE color" rather than over-permitting', () => {
+    // Two units each offering all five colors would let one tap pay {W}{U}, which this land
+    // cannot do — the symbols are LINKED. Over-permissive modeling is worse than an honest halt
+    // (brief §6.3), so it keeps its own reason until the linkage is modeled (Ilysian Caryatid).
+    const def = manaLand('{T}: Add two mana of any one color.');
+
+    expect(def.modeled).toBe(false);
+    expect(def.manaAbilities).toEqual([]);
+    expect(def.unmodeledReasons.join(' ')).toContain('unsupported mana production');
   });
 
   it('normalizes modern "This creature" self-reference templating', () => {
@@ -137,7 +156,7 @@ describe('oracle-text interpreter (brief §6)', () => {
       }),
     );
     expect(def.modeled).toBe(true);
-    expect(def.spellAbility?.effects).toEqual([{ op: 'dealDamage', target: 0, amount: 3 }]);
+    expect(def.spellAbility?.effects).toEqual([{ op: 'dealDamage', target: 0, amount: { kind: 'const', n: 3 } }]);
   });
 
   it('drops an ability word so the ability it labels still parses (CR 207.2c)', () => {
@@ -152,7 +171,7 @@ describe('oracle-text interpreter (brief §6)', () => {
       }),
     );
     expect(def.modeled).toBe(true);
-    expect(def.triggers[0]?.effects).toEqual([{ op: 'draw', count: 1 }]);
+    expect(def.triggers[0]?.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
   });
 
   it('does NOT drop an em-dash prefix that carries rules meaning', () => {
@@ -195,12 +214,12 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(gg.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
 
     const b = interpretCard(bolt());
-    expect(b.spellAbility?.effects).toEqual([{ op: 'dealDamage', target: 0, amount: 3 }]);
+    expect(b.spellAbility?.effects).toEqual([{ op: 'dealDamage', target: 0, amount: { kind: 'const', n: 3 } }]);
     expect(b.spellAbility?.targets).toEqual([{ kind: 'anyTarget' }]);
 
     expect(interpretCard(doom()).spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }]);
     expect(interpretCard(cancel()).spellAbility?.effects).toEqual([{ op: 'counter', target: 0 }]);
-    expect(interpretCard(divination()).spellAbility?.effects).toEqual([{ op: 'draw', count: 2 }]);
+    expect(interpretCard(divination()).spellAbility?.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 2 } }]);
     expect(interpretCard(divination()).spellAbility?.targets).toEqual([]);
   });
 

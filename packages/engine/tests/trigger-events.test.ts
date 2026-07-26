@@ -21,7 +21,7 @@ import { runCombatPhase } from '../src/combat/combat';
 import { interpretCard } from '../src/cards/interpret';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { createGame } from '../src/state/game';
-import { moveObject, queueTriggersForEvent } from '../src/state/objects';
+import { moveObject, queueTriggersForObject } from '../src/state/objects';
 import { hasKeyword } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -143,7 +143,7 @@ describe('selector-subject triggers', () => {
 
     // The selector reads CURRENT characteristics (layer 7c), not printed power.
     small.counters['+1/+1'] = 3;
-    queueTriggersForEvent(ctx, 'enters', small);
+    queueTriggersForObject(ctx, 'enters', small);
 
     expect(ctx.state.pendingTriggers).toHaveLength(1);
   });
@@ -205,7 +205,7 @@ describe('attack triggers and the trigger-object referent', () => {
     spawn(ctx, 'P1', atarka());
     const doomed = spawn(ctx, 'P1', dragon('Test Whelp'));
 
-    queueTriggersForEvent(ctx, 'attacks', doomed);
+    queueTriggersForObject(ctx, 'attacks', doomed);
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     // The Dragon dies with the trigger still waiting — the referent has nothing to point at.
     // `'triggerObject'` is not a target (CR 115.10a), so this is a no-op, not a fizzle.
@@ -221,7 +221,7 @@ describe('attack triggers and the trigger-object referent', () => {
     spawn(ctx, 'P1', atarka());
     const other = spawn(ctx, 'P1', dragon('Test Whelp'));
 
-    queueTriggersForEvent(ctx, 'attacks', other);
+    queueTriggersForObject(ctx, 'attacks', other);
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     const { decisions } = pump(runPrioritySequence(ctx));
 

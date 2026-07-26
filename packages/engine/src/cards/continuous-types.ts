@@ -5,6 +5,7 @@
  */
 
 import type { Color } from '@mtg/shared';
+import type { ParsedManaCost } from '../mana/cost';
 import type { Ability, KeywordAbility, ManaAbilitySpec } from './ability';
 import type { Selector } from './selector';
 import type { Value } from './value';
@@ -18,6 +19,8 @@ export type ContinuousOp =
       addTypes?: string[];
       /** Subtypes to add, keeping the existing ones (Urborg → "a Swamp in addition"). */
       addSubtypes?: string[];
+      /** Changeling (CR 702.73): every creature type in CR 205.3m. */
+      addAllCreatureTypes?: boolean;
       /** Set the land subtype and drop other land subtypes (Blood Moon → Mountain). */
       setLandSubtype?: string;
       /**
@@ -29,6 +32,12 @@ export type ContinuousOp =
     }
   // Layer 6 — ability adding and removing.
   | { layer: 6; addKeyword: KeywordAbility }
+  /** "Other Dragons you control have ward {2}" — parameterized, so not an `addKeyword`. */
+  | { layer: 6; addWard: ParsedManaCost }
+  /** "Protection from white and from black" (CR 702.16). */
+  | { layer: 6; addProtection: Color[] }
+  /** Grant a triggered ability — "Equipped creature has 'Whenever …'". */
+  | { layer: 6; addTrigger: Ability }
   /** Grant a mana ability — Chromatic Lantern's "Lands you control have '{T}: Add …'". */
   | { layer: 6; addManaAbility: ManaAbilitySpec }
   /** "Loses all abilities" as an effect in its own right (Humility), distinct from the
@@ -69,6 +78,14 @@ export interface Characteristics {
    */
   colors: Color[];
   keywords: KeywordAbility[];
+  /**
+   * Ward cost (CR 702.21), or null. Parameterized, so it is a field rather than a keyword: a
+   * permanent has at most one ward here — the cheapest is not merged, because no card in the
+   * pool grants a second one, and silently combining them would be a guess.
+   */
+  ward: ParsedManaCost | null;
+  /** Colors this permanent has protection from (CR 702.16). */
+  protectionFrom: Color[];
   /** Triggered abilities the permanent currently has (CR 603). */
   triggers: Ability[];
   /** Mana abilities the permanent currently has — printed, or replaced by a subtype change. */

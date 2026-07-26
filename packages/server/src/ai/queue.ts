@@ -37,7 +37,7 @@ export class RequestQueue {
     try {
       const now = Date.now();
       this.recentTimestamps = this.recentTimestamps.filter((t) => now - t < 60_000);
-      if (this.recentTimestamps.length >= this.rpmLimit) {
+      if (this.rpmLimit < 10000 && this.recentTimestamps.length >= this.rpmLimit) {
         const oldest = this.recentTimestamps[0]!;
         const waitTime = Math.max(0, 60_000 - (now - oldest));
         if (waitTime > 0) {

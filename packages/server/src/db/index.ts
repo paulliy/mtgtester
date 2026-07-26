@@ -5,7 +5,8 @@
  */
 
 import { Database } from 'bun:sqlite';
-import type { DeckSnapshot, DeckSourceType, OracleCard } from '@mtg/shared';
+import type { DeckCardEntry, DeckSnapshot, DeckSourceType, OracleCard } from '@mtg/shared';
+import { GameRecorder, type SqliteLike } from './games';
 import { MIGRATIONS_SQL, SCHEMA_SQL } from './schema';
 
 export interface DeckRow {
@@ -101,5 +102,33 @@ export class GameStore {
         importedAt,
       );
     return { ...snapshot, id, importedAt };
+  }
+
+  /**
+   * The card list of an immutable snapshot (brief §8.2). Phase 4's setup path needs it to seat
+   * an imported deck: the pipeline returns names and a snapshot id, the engine needs cards.
+   */
+  snapshotCards(snapshotId: string): DeckCardEntry[] | null {
+    const row = this.db
+      .query<{ card_list_json: string }, [string]>(
+        `SELECT card_list_json FROM deck_snapshots WHERE id = ?`,
+      )
+      .get(snapshotId);
+    return row ? (JSON.parse(row.card_list_json) as DeckCardEntry[]) : null;
+  }
+
+  // --- Phase 4: game recording (brief §9, ADR 0012) -----------------------------------------
+
+  /**
+   * A recorder bound to one game id. The SQL lives in `./games` behind a narrow interface so
+   * it is testable without `bun:sqlite`, which the Vitest runner cannot load.
+   */
+  recorderFor(gameId: string): GameRecorder {
+    return new GameRecorder(this.db as unknown as SqliteLike, gameId);
+  }
+
+  /** The raw `bun:sqlite` handle, for `AiCallLogger` (brief §9 `ai_calls`). */
+  get raw(): Database {
+    return this.db;
   }
 }

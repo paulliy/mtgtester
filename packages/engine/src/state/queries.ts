@@ -4,6 +4,7 @@
  */
 
 import type { Color, ObjectId, OracleId, PlayerId } from '@mtg/shared';
+import type { ManaRestriction, PaymentPurpose } from '../cards/ability';
 import type {
   Ability,
   AbilityCost,
@@ -12,11 +13,20 @@ import type {
   ManaAbilitySpec,
 } from '../cards/definition';
 import { TAP_COST } from '../cards/definition';
+import type { RuleStatic } from '../cards/rule-statics';
 import { evaluateCondition } from '../cards/condition';
+import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
+import { selectMatches } from '../cards/selector';
 import { computeCharacteristics } from '../effects/continuous';
 import { UnmodeledCardError } from '../errors';
-import type { ManaSource, ManaUnit } from '../mana/cost';
-import type { EngineObject, EnginePermanent, EnginePlayerState, GameContext } from './types';
+import type { ManaAllowance, ManaSource, ManaUnit, ParsedManaCost } from '../mana/cost';
+import type {
+  EngineCardObject,
+  EngineObject,
+  EnginePermanent,
+  EnginePlayerState,
+  GameContext,
+} from './types';
 
 export function getDefByOracleId(
   ctx: GameContext,
@@ -69,6 +79,31 @@ export function hasKeyword(ctx: GameContext, perm: EnginePermanent, kw: KeywordA
   return computeCharacteristics(ctx, perm).keywords.includes(kw);
 }
 
+/** Effective ward cost (CR 702.21), or null. */
+export function wardCostOf(ctx: GameContext, perm: EnginePermanent): ParsedManaCost | null {
+  return computeCharacteristics(ctx, perm).ward;
+}
+
+/**
+ * Protection (CR 702.16): does `perm` have protection from `source`'s colors?
+ *
+ * One predicate for all four consequences (DEBT — can't be Damaged, Enchanted/Equipped, Blocked
+ * or Targeted), so a new consequence cannot be added on one path and forgotten on another.
+ */
+export function hasProtectionFrom(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  colors: readonly Color[],
+): boolean {
+  const from = computeCharacteristics(ctx, perm).protectionFrom;
+  return colors.some((c) => from.includes(c));
+}
+
+/** The current colors of a permanent, through the layer engine. */
+export function colorsOf(ctx: GameContext, perm: EnginePermanent): Color[] {
+  return computeCharacteristics(ctx, perm).colors;
+}
+
 /** Players still in the game, in turn order starting from the active player (APNAP). */
 export function playersInApnapOrder(ctx: GameContext): EnginePlayerState[] {
   const s = ctx.state;
@@ -94,6 +129,129 @@ export function opponentsOf(ctx: GameContext, playerId: PlayerId): EnginePlayerS
 
 export function controlledPermanents(ctx: GameContext, playerId: PlayerId): EnginePermanent[] {
   return ctx.state.battlefield.filter((p) => p.controllerId === playerId);
+}
+
+/**
+ * The candidate a selector is matched against for a card that is NOT on the battlefield — a
+ * library, graveyard, or hand card. Reads the PRINTED definition: nothing continuous applies
+ * outside the battlefield, so there is nothing to layer. `self`/`other` are meaningless here.
+ *
+ * Shared by every zone-qualified target and search (`searchLibrary`, `lookAtTopN`,
+ * `graveyardTargets`, `handToBattlefield`) so this projection has exactly one implementation.
+ */
+export function cardZoneCandidate(
+  ctx: GameContext,
+  card: EngineCardObject,
+  ownerId: PlayerId,
+): SelectorCandidate {
+  const def = getDefByOracleId(ctx, card.oracleId, card.name);
+  return {
+    cardId: card.cardId,
+    controllerId: ownerId,
+    types: def.types,
+    supertypes: def.supertypes,
+    subtypes: def.subtypes,
+    colors: def.colors,
+    power: def.power ?? 0,
+    keywords: def.keywords,
+    // A card off the battlefield is never a token: tokens cease to exist on leaving it
+    // (CR 704.5d), so nothing this function is handed can be one.
+    isToken: false,
+  };
+}
+
+/**
+ * Does a CR 106.6 restriction permit paying for `purpose`?
+ *
+ * The engine-state half of restricted mana; the payment solver takes the resulting boolean and
+ * never learns what the restriction said (see `mana/cost.ts::ManaAllowance`). A purpose the
+ * restriction does not list fails closed, which is what makes `{kind:'other'}` — a ward tax, the
+ * companion {3} — unpayable with "spend only to cast a Dragon spell" mana.
+ */
+export function manaRestrictionAllows(
+  ctx: GameContext,
+  restriction: ManaRestriction,
+  purpose: PaymentPurpose,
+  /** Whose "your commander" this is — the player making the payment. */
+  playerId: PlayerId,
+): boolean {
+  if (purpose.kind === 'other') return false;
+  if (!restriction.purposes.includes(purpose.kind)) return false;
+
+  const oracleId = (
+    purpose.kind === 'castSpell' ? purpose.oracleId : purpose.sourceOracleId
+  ) as OracleId;
+  const def = ctx.defs.get(oracleId);
+  if (def === undefined) return false;
+
+  // Matched on PRINTED characteristics: a spell is on the stack and an ability's source is
+  // named by oracle id, so in neither case is there a layered permanent to read.
+  const candidate: SelectorCandidate = {
+    cardId: '',
+    controllerId: '',
+    types: def.types,
+    supertypes: def.supertypes,
+    subtypes: def.subtypes,
+    colors: def.colors,
+    power: def.power ?? 0,
+    keywords: def.keywords,
+    isToken: false,
+  };
+  const source: SelectorSource = { cardId: '', controllerId: '' };
+  if (restriction.filter !== undefined && !selectMatches(candidate, restriction.filter, source)) {
+    return false;
+  }
+  if (restriction.sharesCreatureTypeWithCommander === true) {
+    // Path of Ancestry. Read from the commander's PRINTED subtypes for the same reason: it may
+    // be sitting in the command zone, where no continuous effect reaches it.
+    const owner = ctx.state.players.find((p) => p.id === playerId);
+    if (owner === undefined) return false;
+    const commanderTypes = new Set<string>();
+    for (const cardId of owner.commanderCardIds) {
+      const commander = findObjectByCardId(ctx, cardId);
+      if (commander === undefined) continue;
+      for (const t of ctx.defs.get(commander.oracleId)?.subtypes ?? []) commanderTypes.add(t);
+    }
+    if (!def.subtypes.some((t) => commanderTypes.has(t))) return false;
+  }
+  return true;
+}
+
+/**
+ * The `ManaAllowance` closure for one payment: binds the deciding context and player so the
+ * payment solver can ask about a restriction without knowing what restrictions mean.
+ *
+ * Used by `computePriorityOptions` to decide affordability and by `payManaCost` to make the
+ * payment. Both must use the SAME purpose for the same action, or the engine offers a cast it
+ * then cannot pay for — the option-menu contract in `actions/legal.ts`.
+ */
+export function allowanceFor(
+  ctx: GameContext,
+  playerId: PlayerId,
+  purpose: PaymentPurpose,
+): ManaAllowance {
+  return (restriction) => manaRestrictionAllows(ctx, restriction, purpose, playerId);
+}
+
+/**
+ * Cards in `casterId`'s own graveyard matching a `cardInGraveyard` target's filter.
+ *
+ * Shared by `computeTargetOptions` (`actions/legal.ts`) and `isTargetStillLegal`
+ * (`effects/resolve.ts`) so the kind cannot be read by one and not the other — see the
+ * `TargetKind` doc for why drift here is exactly the class of bug this guards against.
+ */
+export function graveyardTargets(
+  ctx: GameContext,
+  casterId: PlayerId,
+  filter: Selector | undefined,
+): EngineCardObject[] {
+  const owner = ctx.state.players.find((p) => p.id === casterId);
+  if (owner === undefined) return [];
+  if (filter === undefined) return owner.graveyard;
+  const source: SelectorSource = { cardId: '', controllerId: casterId };
+  return owner.graveyard.filter((card) =>
+    selectMatches(cardZoneCandidate(ctx, card, casterId), filter, source),
+  );
 }
 
 /** Any object with this stable `cardId`, in whatever zone it currently occupies. */
@@ -160,6 +318,29 @@ function resolveDynamicUnits(
 }
 
 /**
+ * "If you control a creature with power 4 or greater, add two mana of any one color INSTEAD"
+ * (Ilysian Caryatid) — a conditional AMOUNT, distinct from `condition` (which gates whether the
+ * ability is offered at all). When the condition holds, `units`/`linked` are REPLACED, not
+ * unioned: the base production is not also on offer, matching "instead".
+ */
+function resolveConditionalUnits(
+  ctx: GameContext,
+  spec: ManaAbilitySpec,
+  perm: EnginePermanent,
+): ManaAbilitySpec {
+  if (spec.conditionalUnits === undefined) return spec;
+  const { condition, units, linked } = spec.conditionalUnits;
+  const holds = evaluateCondition(ctx, condition, {
+    cardId: perm.cardId,
+    controllerId: perm.controllerId,
+  });
+  if (!holds) return spec;
+  const { conditionalUnits, ...rest } = spec;
+  void conditionalUnits;
+  return { ...rest, units, ...(linked === true ? { linked: true } : {}) };
+}
+
+/**
  * Can this permanent pay the NON-mana components of an activation cost right now?
  *
  * The `mana` component is deliberately excluded and always answers true: deciding it needs the
@@ -189,6 +370,12 @@ export function canPayNonManaCosts(
       case 'removeCounters':
         if ((perm.counters[cost.counter] ?? 0) < cost.count) return false;
         break;
+      case 'payLife': {
+        // CR 118.8: a player may pay life only down to 0, never into a negative total.
+        const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
+        if (controller === undefined || controller.life < cost.amount) return false;
+        break;
+      }
       case 'mana':
         break;
     }
@@ -196,25 +383,43 @@ export function canPayNonManaCosts(
   return true;
 }
 
-/** A stable key for a cost list, so abilities with identical costs can be grouped. */
-function costSignature(costs: readonly AbilityCost[]): string {
-  return JSON.stringify(costs);
+/**
+ * A stable key grouping mana abilities whose PRODUCTION is interchangeable: same activation
+ * cost, same CR 106.6 restriction, same spend trigger, same persistence. Two abilities in one
+ * group differ only in which symbols they make.
+ */
+function interchangeableSignature(ability: ManaAbilitySpec): string {
+  return JSON.stringify([
+    ability.costs ?? TAP_COST,
+    ability.restriction ?? null,
+    ability.spendTrigger ?? null,
+    ability.persistent ?? false,
+    ability.linked ?? false,
+  ]);
 }
 
 /**
  * Untapped mana sources `playerId` could activate right now. A creature's {T} mana
  * ability is unavailable while summoning-sick without haste (CR 302.6).
  *
- * A permanent with several mana abilities — a dual-typed land, or a basic given a second type
- * by Urborg — is collapsed into ONE source whose single unit offers every symbol as a choice.
- * That is exact rather than an approximation: a permanent can only be tapped once, so N
- * abilities each producing one mana are indistinguishable from one mana chosen among their
- * symbols. `planPayment`'s per-unit backtracking already solves multi-choice units.
+ * Two levels of structure, and the distinction between them is load-bearing:
  *
- * Two cases break that equivalence and halt loudly instead (brief §6.3):
- *   - abilities producing *different amounts*, where the choice is strategic, not cosmetic;
- *   - abilities with *different costs*, where "it can only be tapped once" no longer holds —
- *     a sacrifice ability and a tap ability are not interchangeable at all.
+ * - **Collapsed.** Mana abilities that are interchangeable — same cost, same restriction, same
+ *   rider, one mana each — become ONE source whose single unit offers every symbol as a choice.
+ *   A dual-typed land, or a basic given a second type by Urborg, is exactly this: the permanent
+ *   can only be tapped once, so N one-mana abilities are indistinguishable from one mana chosen
+ *   among their symbols, and `planPayment`'s per-unit backtracking already solves that.
+ * - **Alternatives.** Everything else is emitted as several sources SHARING the permanent's
+ *   `cardId`, and `planPayment` taps at most one of them. Haven of the Spirit Dragon's plain
+ *   {C} and its Dragons-only any-color are not interchangeable — collapsing them would let the
+ *   restricted mana pay for anything — and neither are two abilities with different costs or
+ *   different amounts.
+ *
+ * Alternatives replace what used to be two `UnmodeledCardError` halts here (different costs,
+ * different amounts). Those halts were correct while the solver could only see one source per
+ * permanent; they were never a statement that the CARD was unmodelable, and Sachi, Daughter of
+ * Seshiro granting "{T}: Add {G}{G}" to a Shaman that already taps for any color used to halt a
+ * real pool game on exactly that.
  */
 export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource[] {
   const sources: ManaSource[] = [];
@@ -233,6 +438,7 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
             controllerId: perm.controllerId,
           }),
       )
+      .map((a) => resolveConditionalUnits(ctx, a, perm))
       .map((a) => resolveDynamicUnits(ctx, a, perm))
       // A dynamic source can resolve to nothing at all — Fellwar Stone with no opposing
       // lands taps for no mana, so it must not be offered as a payment source.
@@ -241,37 +447,161 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
       // from a tapped, summoning-sick creature. Availability is per ability, not per permanent.
       .filter((a) => canPayNonManaCosts(ctx, perm, a.costs ?? TAP_COST));
     if (abilities.length === 0) continue;
-    const costs = (abilities[0] as ManaAbilitySpec).costs ?? TAP_COST;
-    if (abilities.length === 1) {
-      sources.push({ cardId: perm.cardId, units: (abilities[0] as ManaAbilitySpec).units, costs });
-      continue;
-    }
-    const signatures = new Set(abilities.map((a) => costSignature(a.costs ?? TAP_COST)));
-    if (signatures.size > 1) {
-      throw new UnmodeledCardError(
-        perm.name,
-        [`choice among mana abilities with different costs: ${[...signatures].join(' | ')}`],
-        'choosing among mana abilities',
-      );
-    }
-    if (abilities.some((a) => a.units.length !== 1)) {
-      throw new UnmodeledCardError(
-        perm.name,
-        [
-          `choice among mana abilities producing different amounts: ${abilities
-            .map((a) => a.units.map((u) => u.join('/')).join('+') || '<nothing>')
-            .join(' | ')}`,
-        ],
-        'choosing among mana abilities',
-      );
-    }
-    const symbols: (Color | 'C')[] = [];
+
+    // Group interchangeable abilities, preserving first-seen order for determinism.
+    const groups = new Map<string, ManaAbilitySpec[]>();
     for (const ability of abilities) {
-      for (const symbol of ability.units[0] as ManaUnit) {
-        if (!symbols.includes(symbol)) symbols.push(symbol);
+      const key = interchangeableSignature(ability);
+      const group = groups.get(key);
+      if (group === undefined) groups.set(key, [ability]);
+      else group.push(ability);
+    }
+
+    for (const group of groups.values()) {
+      const first = group[0] as ManaAbilitySpec;
+      const rider = {
+        costs: first.costs ?? TAP_COST,
+        ...(first.restriction !== undefined ? { restriction: first.restriction } : {}),
+        ...(first.spendTrigger !== undefined ? { spendTrigger: first.spendTrigger } : {}),
+        ...(first.persistent === true ? { persistent: true } : {}),
+        ...(first.linked === true ? { linked: true as const } : {}),
+      };
+      // Collapse only when every member makes exactly one mana; otherwise the members differ in
+      // AMOUNT, which is a real choice and belongs to the alternatives path below.
+      if (group.length > 1 && group.every((a) => a.units.length === 1)) {
+        const symbols: (Color | 'C')[] = [];
+        for (const ability of group) {
+          for (const symbol of ability.units[0] as ManaUnit) {
+            if (!symbols.includes(symbol)) symbols.push(symbol);
+          }
+        }
+        sources.push({ cardId: perm.cardId, units: [symbols], ...rider });
+        continue;
+      }
+      for (const ability of group) {
+        sources.push({ cardId: perm.cardId, units: ability.units, ...rider });
       }
     }
-    sources.push({ cardId: perm.cardId, units: [symbols], costs });
   }
   return sources;
+}
+
+/** One card's `RuleStatic` plus who contributes it, for `gatherRuleStatics`. */
+export interface RuleStaticEntry {
+  static: RuleStatic;
+  sourceCardId: string;
+  sourceOracleId: OracleId;
+  controllerId: PlayerId;
+}
+
+/**
+ * Every active rule-modifying static in the game right now (`RuleStatic` — cost reduction,
+ * "can't be countered", "can't cast spells", casting from a non-hand zone; see `rule-statics.ts`).
+ *
+ * Battlefield permanents always contribute theirs. A card in a COMMAND ZONE contributes only a
+ * cost reduction marked `alsoFromCommandZone` (Eminence, CR 702.114) — the one shape any printed
+ * Eminence card in this pool uses; a card can never be in both zones at once, so this never
+ * double-counts a permanent that is also on the battlefield.
+ */
+export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
+  const out: RuleStaticEntry[] = [];
+  for (const perm of ctx.state.battlefield) {
+    const def = ctx.defs.get(perm.oracleId);
+    if (def === undefined) continue;
+    for (const rs of def.ruleStatics) {
+      out.push({
+        static: rs,
+        sourceCardId: perm.cardId,
+        sourceOracleId: perm.oracleId,
+        controllerId: perm.controllerId,
+      });
+    }
+  }
+  for (const player of ctx.state.players) {
+    for (const obj of player.commandZone) {
+      const def = ctx.defs.get(obj.oracleId);
+      if (def === undefined) continue;
+      for (const rs of def.ruleStatics) {
+        if (rs.kind === 'costReduction' && rs.alsoFromCommandZone === true) {
+          out.push({
+            static: rs,
+            sourceCardId: obj.cardId,
+            sourceOracleId: obj.oracleId,
+            controllerId: obj.ownerId,
+          });
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/** Does an active `cantCastSpells` rule static currently forbid `playerId` from casting? */
+export function castingSpellsBlockedFor(ctx: GameContext, playerId: PlayerId): boolean {
+  return gatherRuleStatics(ctx).some((entry) => {
+    if (entry.static.kind !== 'cantCastSpells') return false;
+    // "Your OPPONENTS can't cast spells" — the source's own controller is never blocked by it.
+    if (entry.controllerId === playerId) return false;
+    return entry.static.yourTurnOnly !== true || ctx.state.currentTurnPlayer === entry.controllerId;
+  });
+}
+
+/**
+ * Does an active `cantBeCountered` rule static protect a spell (printed as `spellOracleId`, cast
+ * by `casterId`) right now? Distinct from `Ability.cantBeCountered`, which is fixed at cast time
+ * (Last March of the Ents) — this is re-checked at the moment of countering (CR 611.2), since the
+ * source (Rhythm of the Wild) could have left the battlefield since the spell was cast.
+ */
+export function spellProtectedFromCounter(
+  ctx: GameContext,
+  casterId: PlayerId,
+  spellOracleId: OracleId,
+): boolean {
+  const def = getDefByOracleId(ctx, spellOracleId, spellOracleId);
+  const candidate: SelectorCandidate = {
+    cardId: '',
+    controllerId: casterId,
+    types: def.types,
+    supertypes: def.supertypes,
+    subtypes: def.subtypes,
+    colors: def.colors,
+    power: def.power ?? 0,
+    keywords: def.keywords,
+    isToken: false,
+  };
+  const source: SelectorSource = { cardId: '', controllerId: casterId };
+  return gatherRuleStatics(ctx).some((entry) => {
+    if (entry.static.kind !== 'cantBeCountered') return false;
+    // Only the CASTER's own such statics apply — every printed template here reads "you control".
+    if (entry.controllerId !== casterId) return false;
+    return (
+      entry.static.filter === undefined ||
+      selectMatches(candidate, entry.static.filter, source)
+    );
+  });
+}
+
+/**
+ * Cards `playerId` may cast from the top of their library right now (Korlessa, Scale Singer).
+ * Always at most one card — the printed template names the top card specifically, never "a card
+ * in your library".
+ */
+export function castFromLibraryTopCandidates(
+  ctx: GameContext,
+  playerId: PlayerId,
+): EngineCardObject[] {
+  const player = ctx.state.players.find((p) => p.id === playerId);
+  const top = player?.library[0];
+  if (player === undefined || top === undefined) return [];
+  const candidate = cardZoneCandidate(ctx, top, playerId);
+  const source: SelectorSource = { cardId: '', controllerId: playerId };
+  const eligible = gatherRuleStatics(ctx).some((entry) => {
+    if (entry.static.kind !== 'castFromZone' || entry.static.zone !== 'libraryTop') return false;
+    if (entry.controllerId !== playerId) return false;
+    return (
+      entry.static.filter === undefined ||
+      selectMatches(candidate, entry.static.filter, source)
+    );
+  });
+  return eligible ? [top] : [];
 }

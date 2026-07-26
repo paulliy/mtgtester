@@ -22,6 +22,8 @@ export interface AiConfig {
   rpmLimit: number;
   /** Max retries on HTTP 429 / 5xx before giving up. Default: 6. */
   maxRetries: number;
+  /** Request timeout in ms for AI calls. Default: 45000. */
+  requestTimeoutMs: number;
   /** Base backoff in ms for exponential retry. Default: 1000. */
   baseBackoffMs: number;
   /** Max backoff cap in ms. Default: 32000. */
@@ -38,6 +40,11 @@ export interface AiConfig {
    * (see `decision-cache.ts`). Default: true.
    */
   decisionCacheEnabled: boolean;
+  /**
+   * Filter out OpenRouter providers that do not support prompt caching.
+   * Default: true.
+   */
+  filterNonCachingProviders: boolean;
 }
 
 /** A vendor: its endpoint, its default chain, and the env var holding its key. */
@@ -62,6 +69,8 @@ export interface ProviderPreset {
 const OPENROUTER: ProviderPreset = {
   baseUrl: 'https://openrouter.ai/api/v1',
   models: [
+    'deepseek/deepseek-v4-flash',
+    'google/gemma-4-26b-a4b-it',
     'google/gemma-4-31b-it',
     'meta-llama/llama-3.3-70b-instruct',
     'deepseek/deepseek-chat',
@@ -126,13 +135,15 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   baseUrl: OPENROUTER.baseUrl,
   apiKey: '',
   models: OPENROUTER.models,
-  rpmLimit: 30,
+  rpmLimit: 10000,
   maxRetries: 6,
+  requestTimeoutMs: 45000,
   baseBackoffMs: 1000,
   maxBackoffMs: 32000,
   concurrency: 1,
   heuristicsEnabled: true,
   decisionCacheEnabled: true,
+  filterNonCachingProviders: true,
 };
 
 /** Env booleans are opt-OUT: anything but an explicit falsey word leaves the default alone. */
@@ -215,6 +226,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     models,
     rpmLimit,
     maxRetries: parseNumber(env['AI_MAX_RETRIES'], DEFAULT_AI_CONFIG.maxRetries),
+    requestTimeoutMs: parseNumber(
+      env['AI_REQUEST_TIMEOUT_MS'] || env[`${preset.envPrefix}_REQUEST_TIMEOUT_MS`],
+      DEFAULT_AI_CONFIG.requestTimeoutMs,
+    ),
     heuristicsEnabled: parseBoolean(
       env['AI_HEURISTICS_ENABLED'],
       DEFAULT_AI_CONFIG.heuristicsEnabled,
@@ -222,6 +237,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     decisionCacheEnabled: parseBoolean(
       env['AI_DECISION_CACHE_ENABLED'],
       DEFAULT_AI_CONFIG.decisionCacheEnabled,
+    ),
+    filterNonCachingProviders: parseBoolean(
+      env['AI_FILTER_NON_CACHING_PROVIDERS'] || env['OPENROUTER_FILTER_NON_CACHING'],
+      DEFAULT_AI_CONFIG.filterNonCachingProviders,
     ),
   };
 }

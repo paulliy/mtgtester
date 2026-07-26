@@ -20,3 +20,32 @@ export { GameStore, type DeckRow } from './db';
 // --- Phase 3: AI agent integration ---
 export * from './ai';
 
+// --- Phase 4: match orchestration, persistence, and the WebSocket server (brief §10, §11) ---
+export {
+  GameRecorder,
+  finishingPositions,
+  seatIndex,
+  type GameStatus,
+  type GameSeatRecord,
+  type SqliteLike,
+} from './db/games';
+export {
+  MatchRunner,
+  ComputeHaltError,
+  LOOKAHEAD_TURNS,
+  ESCALATION_TIMEOUT_MS,
+  type MatchStatus,
+  type MatchRunnerOptions,
+  type HaltInfo,
+} from './match/runner';
+export { MatchSession, type MatchSessionOptions } from './match/session';
+export {
+  setupSeats,
+  unmodeledCardNames,
+  type SeatSetup,
+  type SeatSetupDeps,
+  type SeatProblem,
+  type SetupResult,
+} from './match/setup';
+export { GameServer, type GameServerDeps } from './ws/server';
+

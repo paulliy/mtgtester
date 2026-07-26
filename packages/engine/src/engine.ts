@@ -13,11 +13,13 @@ import type {
   DecisionRequest,
   DecisionResponse,
   EngineStep,
+  GameEvent,
   GameResult,
   GameState,
   LegalAction,
   ObjectId,
   PlayerView,
+  SpectatorState,
 } from '@mtg/shared';
 import type { DecisionOutcome, GameGen, PendingDecision } from './decisions';
 import { forcedOutcome, isForced } from './decisions';
@@ -26,6 +28,7 @@ import { playGame } from './flow/game';
 import { debug, emit } from './log/log';
 import { createGame } from './state/game';
 import type { DebugEntry, GameConfig, GameContext } from './state/types';
+import { buildSpectatorState } from './view/spectator';
 import { buildPlayerView } from './view/view';
 
 export interface EngineDriver {
@@ -178,6 +181,23 @@ export class Engine implements EngineDriver {
   /** The hidden-information-safe projection for one player (brief §7.1). */
   view(playerId: string): PlayerView {
     return buildPlayerView(this.ctx, playerId);
+  }
+
+  /**
+   * The spectator projection (brief §10.2). Unlike `view()` this hides nothing for anti-cheat
+   * reasons — the human is watching, not playing — but it is still a projection, so the UI
+   * never has to re-derive a rule the engine is authoritative on.
+   */
+  spectatorState(): SpectatorState {
+    return buildSpectatorState(this.ctx);
+  }
+
+  /**
+   * Events appended since `sequence`, for incremental log streaming. `GameEvent.sequence` is
+   * monotonic per game, so the caller tracks one number rather than a cursor object.
+   */
+  eventsSince(sequence: number): GameEvent[] {
+    return this.ctx.state.eventLog.filter((e) => e.sequence >= sequence);
   }
 
   getDebugLog(): readonly DebugEntry[] {

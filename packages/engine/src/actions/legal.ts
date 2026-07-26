@@ -8,15 +8,24 @@
  * halts loudly (brief §6.3) rather than silently excluding it.
  */
 
-import type { ObjectId, OracleId, PlayerId } from '@mtg/shared';
+import type { Color, ObjectId, OracleId, PlayerId } from '@mtg/shared';
 import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../cards/definition';
+import type { SelectorCandidate, SelectorSource } from '../cards/selector';
+import { selectMatches } from '../cards/selector';
 import type { EngineActionOption } from '../decisions';
 import { computeCharacteristics } from '../effects/continuous';
-import { addGeneric, canPay, emptyCost } from '../mana/cost';
+import { evaluateValueIn } from '../effects/values';
+import { addGeneric, canPay, describeManaCost, emptyCost, subtractGeneric, withX } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import {
+  allowanceFor,
   canPayNonManaCosts,
+  castFromLibraryTopCandidates,
+  castingSpellsBlockedFor,
   findPermanent,
+  gatherRuleStatics,
+  graveyardTargets,
+  hasProtectionFrom,
   getDefByOracleId,
   hasKeyword,
   manaSourcesFor,
@@ -36,7 +45,14 @@ export type PriorityActionPayload =
   | { kind: 'passAndYieldTurn' }
   | { kind: 'yieldToAbility'; sourceOracleId: OracleId }
   | { kind: 'playLand'; objectId: ObjectId }
-  | { kind: 'castSpell'; objectId: ObjectId; fromCommand: boolean }
+  | {
+      kind: 'castSpell';
+      objectId: ObjectId;
+      fromCommand: boolean;
+      /** Korlessa, Scale Singer's "cast Dragon spells from the top of your library". */
+      fromLibraryTop?: boolean;
+      x?: number;
+    }
   /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
   | { kind: 'activateAbility'; objectId: ObjectId; index: number }
   | { kind: 'companionToHand' };
@@ -54,6 +70,58 @@ export function manaPortionOf(costs: readonly AbilityCost[]): ParsedManaCost {
     total.generic += cost.cost.generic;
     total.colorless += cost.cost.colorless;
     for (const c of ['W', 'U', 'B', 'R', 'G'] as const) total.colored[c] += cost.cost.colored[c];
+  }
+  return total;
+}
+
+/**
+ * Total generic-mana reduction active on a cast of `castOracleId`/`castCardId` by `casterId`
+ * (Temur Battlecrier, Eminence). Lives here rather than `state/queries.ts`: it needs
+ * `evaluateValueIn` (a dynamic amount reads *current* board state), and `effects/values.ts`
+ * already imports `state/queries.ts`, so the reverse import would cycle.
+ *
+ * Both `computePriorityOptions` (the displayed/affordability cost) and `applyPriorityAction`
+ * (the charged cost) must call this identically, or the engine could offer a cast it then
+ * charges a different price for — the same option-menu contract `allowanceFor` protects.
+ */
+export function costReductionFor(
+  ctx: GameContext,
+  casterId: PlayerId,
+  castOracleId: OracleId,
+  castCardId: string,
+): number {
+  const def = getDefByOracleId(ctx, castOracleId, castOracleId);
+  const candidate: SelectorCandidate = {
+    cardId: castCardId,
+    controllerId: casterId,
+    types: def.types,
+    supertypes: def.supertypes,
+    subtypes: def.subtypes,
+    colors: def.colors,
+    power: def.power ?? 0,
+    keywords: def.keywords,
+    isToken: false,
+  };
+  const source: SelectorSource = { cardId: castCardId, controllerId: casterId };
+
+  let total = 0;
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'costReduction') continue;
+    // Every printed reduction in this pool is "spells YOU cast" — a reduction never applies to
+    // anyone but its own source's controller.
+    if (entry.controllerId !== casterId) continue;
+    if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== casterId) continue;
+    if (entry.static.excludesSelf === true && entry.sourceCardId === castCardId) continue;
+    if (
+      entry.static.filter !== undefined &&
+      !selectMatches(candidate, entry.static.filter, source)
+    ) {
+      continue;
+    }
+    total += evaluateValueIn(ctx, entry.static.amount, {
+      controllerId: entry.controllerId,
+      sourceCardId: entry.sourceCardId,
+    });
   }
   return total;
 }
@@ -89,6 +157,7 @@ export function permanentMatchesKind(
       return types.includes('Creature');
     case 'player':
     case 'spell':
+    case 'cardInGraveyard':
       return false;
   }
 }
@@ -98,19 +167,31 @@ export function computeTargetOptions(
   ctx: GameContext,
   spec: TargetKind | TargetSpec,
   casterId: PlayerId,
+  /** The targeting source's colors, for protection (CR 702.16). Omitted ⇒ colorless. */
+  sourceColors?: readonly Color[],
 ): ObjectId[] {
-  const { kind, controller } = typeof spec === 'string' ? { kind: spec, controller: undefined } : spec;
+  const { kind, controller, filter } =
+    typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
 
   if (kind === 'spell') {
     return ctx.state.stack.filter((s) => s.kind === 'spell').map((s) => s.id);
+  }
+  // A card in a graveyard, not a permanent — always the caster's own (see `TargetKind`).
+  if (kind === 'cardInGraveyard') {
+    return graveyardTargets(ctx, casterId, filter).map((c) => c.id);
   }
   const players = playersInApnapOrder(ctx).map((p) => p.id);
   if (kind === 'player') return players;
 
   const permanents = ctx.state.battlefield
     .filter((p) => permanentMatchesKind(ctx, p, kind))
+    // Shroud (CR 702.18) removes a permanent from every target list, its controller's included.
+    .filter((p) => !hasKeyword(ctx, p, 'shroud'))
     // Hexproof: can't be the target of spells/abilities OPPONENTS control (CR 702.11).
     .filter((p) => p.controllerId === casterId || !hasKeyword(ctx, p, 'hexproof'))
+    // Protection (CR 702.16). Kept in lockstep with `isTargetStillLegal`, which re-checks the
+    // same three at resolution — a divergence means offering a target we would then refuse.
+    .filter((p) => sourceColors === undefined || !hasProtectionFrom(ctx, p, sourceColors))
     .filter(
       (p) =>
         controller === undefined ||
@@ -136,19 +217,6 @@ function computeCastTargets(
     slots.push({ slot: slotNum++, options });
   }
   return slots;
-}
-
-function describeCost(def: CardDefinition, tax: number): string {
-  const base = def.manaCost;
-  if (base === null) return '';
-  const parts: string[] = [];
-  const generic = base.generic + tax;
-  if (generic > 0) parts.push(`{${generic}}`);
-  for (const c of ['W', 'U', 'B', 'R', 'G'] as const) {
-    parts.push(`{${c}}`.repeat(base.colored[c]));
-  }
-  parts.push('{C}'.repeat(base.colorless));
-  return parts.join('');
 }
 
 /**
@@ -195,11 +263,26 @@ export function computePriorityOptions(
   const sources = manaSourcesFor(ctx, player.id);
   const seen = new Set<string>();
 
-  const considerCast = (obj: EngineCardObject, fromCommand: boolean): void => {
+  // "Your opponents can't cast spells during your turn" (Dragonlord Dromoka) — computed once;
+  // it blocks every nonland cast source uniformly and never blocks playing a land (CR 305 —
+  // a land is played, not cast).
+  const spellCastingBlocked = castingSpellsBlockedFor(ctx, player.id);
+
+  const considerCast = (
+    obj: EngineCardObject,
+    fromCommand: boolean,
+    fromLibraryTop = false,
+  ): void => {
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
-    requireModeled(def, fromCommand ? 'in the command zone' : 'in hand');
+    requireModeled(
+      def,
+      fromLibraryTop ? 'on top of your library' : fromCommand ? 'in the command zone' : 'in hand',
+    );
 
     if (def.types.includes('Land')) {
+      // Korlessa's static only grants casting SPELLS from the library top, never playing a
+      // land — nothing to offer here for that source.
+      if (fromLibraryTop) return;
       // Lands are played, not cast — one per turn, main phase, empty stack (CR 305).
       if (sorcerySpeed && player.landsPlayedThisTurn < 1) {
         const key = `playLand:${obj.name}`;
@@ -215,36 +298,72 @@ export function computePriorityOptions(
       return;
     }
 
+    if (spellCastingBlocked) return;
     if (def.manaCost === null) return; // cost-less nonland card: not castable
     const instantSpeed = def.types.includes('Instant') || def.keywords.includes('flash');
     if (!instantSpeed && !sorcerySpeed) return;
 
     const tax = fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
-    const cost = addGeneric(def.manaCost, tax);
-    if (!canPay(cost, player.manaPool, sources)) return;
+    const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
+    const base = subtractGeneric(addGeneric(def.manaCost, tax), reduction);
 
-    const targets = computeCastTargets(ctx, def, player.id);
-    if (targets === null) return;
-
-    const key = `cast:${obj.name}:${fromCommand}`;
+    const key = `cast:${obj.name}:${fromCommand}:${fromLibraryTop}`;
     if (seen.has(key)) return; // duplicate copies are interchangeable
-    seen.add(key);
-    const option: EngineActionOption = {
-      type: 'castSpell',
-      description:
-        `Cast ${obj.name} (${describeCost(def, tax)})` +
-        (fromCommand ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}` : ''),
-      payload: { kind: 'castSpell', objectId: obj.id, fromCommand },
-      // Descriptive only (see `EngineActionOption.data`): lets a decision consumer tell a
-      // hold-priority instant apart from a sorcery-speed play without parsing the description.
-      data: { instantSpeed },
-    };
-    if (targets.length > 0) option.targets = targets;
-    options.push(option);
+
+    // {X} is announced as part of casting (CR 601.2b), so each affordable value of X is its own
+    // option. Enumerated rather than asked as a follow-up decision because the option menu is
+    // the contract: an action offered here must be applicable with no further legality check.
+    // Restricted mana ("spend only to cast a Dragon spell") may or may not pay for THIS card,
+    // so affordability is asked with the purpose attached — see `mana/cost.ts::ManaAllowance`.
+    const allows = allowanceFor(ctx, player.id, { kind: 'castSpell', oracleId: obj.oracleId });
+
+    const xSymbols = def.manaCost.x ?? 0;
+    const xChoices: number[] = [];
+    if (xSymbols === 0) xChoices.push(0);
+    else {
+      for (let x = 0; ; x++) {
+        if (!canPay(withX(base, x), player.manaEntries, sources, allows)) break;
+        xChoices.push(x);
+      }
+      if (xChoices.length === 0) return;
+    }
+
+    let offered = false;
+    for (const x of xChoices) {
+      const cost = withX(base, x);
+      if (!canPay(cost, player.manaEntries, sources, allows)) continue;
+
+      const targets = computeCastTargets(ctx, def, player.id);
+      if (targets === null) return;
+
+      const option: EngineActionOption = {
+        type: 'castSpell',
+        description:
+          `Cast ${obj.name} (${describeManaCost(cost)})` +
+          (xSymbols > 0 ? ` with X=${x}` : '') +
+          (fromCommand ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}` : '') +
+          (fromLibraryTop ? ' from the top of your library' : ''),
+        payload: {
+          kind: 'castSpell',
+          objectId: obj.id,
+          fromCommand,
+          ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
+          ...(xSymbols > 0 ? { x } : {}),
+        },
+        // Descriptive only (see `EngineActionOption.data`): lets a decision consumer tell a
+        // hold-priority instant apart from a sorcery-speed play without parsing the description.
+        data: { instantSpeed, ...(xSymbols > 0 ? { x } : {}) },
+      };
+      if (targets.length > 0) option.targets = targets;
+      options.push(option);
+      offered = true;
+    }
+    if (offered) seen.add(key);
   };
 
   for (const obj of player.hand) considerCast(obj, false);
   for (const obj of player.commandZone) considerCast(obj, true);
+  for (const obj of castFromLibraryTopCandidates(ctx, player.id)) considerCast(obj, false, true);
 
   // Activated abilities of permanents this player controls (CR 602).
   for (const perm of ctx.state.battlefield) {
@@ -252,6 +371,8 @@ export function computePriorityOptions(
     const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
     for (const [index, activated] of def.activatedAbilities.entries()) {
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
+      // CR 602.5f — "activate only once each turn", tracked on the permanent.
+      if (activated.oncePerTurn === true && perm.activationsThisTurn.includes(index)) continue;
       if (!canPayNonManaCosts(ctx, perm, activated.costs)) continue;
       // A cost that taps or sacrifices the source spends the source, so it cannot ALSO be
       // tapped for mana toward the same cost. `payActivationCosts` enforces the same thing by
@@ -260,7 +381,11 @@ export function computePriorityOptions(
         (c) => c.kind === 'tap' || c.kind === 'sacrificeSelf',
       );
       const usable = spendsSelf ? sources.filter((s) => s.cardId !== perm.cardId) : sources;
-      if (!canPay(manaPortionOf(activated.costs), player.manaPool, usable)) continue;
+      const allows = allowanceFor(ctx, player.id, {
+        kind: 'activateAbility',
+        sourceOracleId: perm.oracleId,
+      });
+      if (!canPay(manaPortionOf(activated.costs), player.manaEntries, usable, allows)) continue;
 
       const slots: { slot: number; options: ObjectId[] }[] = [];
       let slotNum = 0;
@@ -291,7 +416,9 @@ export function computePriorityOptions(
     sorcerySpeed &&
     player.companion !== null &&
     !player.companionMovedToHand &&
-    canPay(COMPANION_COST, player.manaPool, sources)
+    // No purpose: the companion {3} is neither casting nor activating, so restricted mana
+    // cannot pay it — which is correct, and is what the default allowance expresses.
+    canPay(COMPANION_COST, player.manaEntries, sources)
   ) {
     options.push({
       type: 'companionToHand',

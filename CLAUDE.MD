@@ -6,9 +6,12 @@ until you've read it. (The brief and this file historically referenced
 `docs/project-brief.md`; the real filename is the link above. See
 [docs/decisions/0001-foundations.md](docs/decisions/0001-foundations.md).)
 
-**Current phase: Phase 2 — Engine core — implementation complete; awaiting phase-boundary
-approval (and review of the Phase 2 scope cuts listed in
-[docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md)).**
+**Current phase: Phase 4 — Spectator UI — implementation complete; awaiting phase-boundary
+approval.** The Phase 4 plan was adjusted against the state of the tree before implementing;
+the six adjustments are recorded in
+[docs/decisions/0012-spectator-ui.md](docs/decisions/0012-spectator-ui.md). The Phase 2 scope
+cuts in [docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md) are still
+outstanding for review.
 
 **Card coverage is the live constraint, and the strategy for it changed — read
 [docs/decisions/0009-supported-pool-decks.md](docs/decisions/0009-supported-pool-decks.md)
@@ -19,25 +22,28 @@ pool (`bun run pool --play`); simulating a *specific* real decklist is a per-dec
 coverage threshold. `bun run coverage` remains the instrument that ranks which mechanics to
 build next.
 
-### Task Offloading Rules (`agy`)
+### MANDATORY PROTOCOL: Task Offloading (`antigravity_delegate`)
 
-You have access to the `antigravity_delegate` MCP tool. Follow these guidelines for task delegation:
+**CRITICAL INSTRUCTION:** BEFORE invoking any file-editing or code-generation tools (`edit_file`, `write_file`, etc.), you MUST perform this delegation check.
 
-- **When to delegate to `agy`:**
-  - Generating large amounts of boilerplate or new feature scaffolds.
-  - Multi-file refactoring or widespread code rewrites.
-  - Writing comprehensive unit/integration test suites.
-  - High-volume, implementation-heavy coding work.
+#### 1. Delegation Pre-Flight Check
+Evaluate the user request against the criteria below. If ANY trigger is met, you **MUST NOT** edit files directly—you MUST call `antigravity_delegate`.
 
-- **When to handle directly:**
-  - Quick single-file edits, minor bug fixes, or tweaking configs.
-  - Answering architectural questions or explaining code.
-  - Inspecting errors and immediate debugging.
+#### 2. Mandatory Delegation Triggers (Delegate to `agy` if ANY apply)
+* **Multi-File Scope:** Modifying, creating, or refactoring **2 or more files**.
+* **Code Volume:** Writing or changing **>50 total lines** of code or tests.
+* **Scaffolding & Tests:** Writing new feature scaffolds, boilerplate, or whole test suites.
+* **Repetitive Rewrites:** Systemic pattern updates across imports, exports, or schemas.
 
-- **Execution guidelines:**
-  - Default to `mode: "accept-edits"` unless asked for a dry-run plan (`mode: "plan"`).
-  - After `antigravity_delegate` finishes, inspect the modified files to verify the implementation.
-  - always use high effort and use gemini 3.6 flash pro is too slow and worse at coding
+#### 3. Direct Handling Allowed ONLY If ALL Apply
+Handle directly using standard file tools **ONLY** if:
+* The edit is strictly confined to a **single file** AND **< 50 lines**.
+* You are reading files, inspecting errors, debugging, or explaining code/architecture.
+
+#### 4. Execution Parameters for `antigravity_delegate`
+* **Forbidden Action:** Do NOT attempt multi-file edits directly via individual file tools when `agy` criteria are met.
+* **Default Mode:** Always set `mode: "accept-edits"` unless the user explicitly requested a dry-run plan (`mode: "plan"`).
+* **Verification:** After `antigravity_delegate` completes, inspect the output/modified files to verify correctness before concluding your response.
 
 ## Key constraints (from the brief)
 
@@ -53,7 +59,7 @@ You have access to the `antigravity_delegate` MCP tool. Follow these guidelines 
 | ----------------- | ------------- | ------------------------------------------------------- |
 | `packages/shared` | `@mtg/shared` | Types shared across engine/server/web (no logic)        |
 | `packages/engine` | `@mtg/engine` | Pure TS rules engine — no I/O, no network, no framework |
-| `packages/server` | `@mtg/server` | Bun server: Gemini, SQLite, WebSocket, deck import      |
+| `packages/server` | `@mtg/server` | Bun server: AI provider, SQLite, WebSocket, deck import |
 | `apps/web`        | `@mtg/web`    | Vue 3 spectator UI                                      |
 | `docs/rules`      | —             | Reference material (CR, commander rules, banned list)   |
 | `docs/decisions`  | —             | ADRs for significant choices                            |
@@ -66,7 +72,12 @@ bun install
 bun run typecheck   # tsc --build across all packages (full strict)
 bun run lint        # eslint (flat config)
 bun run test        # vitest
-bun run dev:web     # Vite dev server (stub until Phase 4)
+
+# Watch a game — server owns the engine and the API key, web app is a view; one command starts both:
+bun run dev                          # server on :3001 + Vue spectator UI on :5173
+# ...or separately, e.g. to restart just one:
+bun run serve [--port N] [--no-db]   # HTTP + /ws on :3001; GET /health for a liveness check
+bun run dev:web                      # Vue spectator UI on :5173, proxying /ws to the server
 
 # Phase 1 deck pipeline (import → resolve → validate → snapshot):
 bun run decks <deckUrlOrFile> [more...]   # Moxfield/Archidekt URL or plaintext file
@@ -123,3 +134,27 @@ bun run coverage:snapshot [url...]        # refresh/add deck fixtures from live 
   random games play to a winner; 114 tests green. Scope cuts (menace, ward, protection, {X},
   modal, DFC, activated abilities, …) are listed for approval in
   [docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md).
+- **Phase 3 — AI integration** (implementation complete): an OpenAI-compatible client with an
+  ordered model fallback chain and vendor auto-detection from whichever key is present, in place
+  of `@google/genai` — see
+  [docs/decisions/0011-openai-compatible-provider.md](docs/decisions/0011-openai-compatible-provider.md);
+  the compact rules primer + `PlayerView` context builder; strict response validation with the
+  §7.7 corrective retry and safest-legal-action fallback; an RPM-limited request queue with
+  backoff; per-call logging into `ai_calls` for cost visibility. Decisions are metered rather
+  than merely retried — local heuristics for dominated decisions, a decision cache, and a
+  turn plan answer upstream of the rate limiter, per
+  [docs/decisions/0010-decision-call-budget.md](docs/decisions/0010-decision-call-budget.md).
+  (This entry was written during Phase 4 from those two ADRs and the tree; the log had not been
+  updated when the work landed in `5e5c379`.)
+- **Phase 4 — Spectator UI** (implementation complete): a `SpectatorState` projection that is the
+  deliberate inverse of `PlayerView` — hands visible, library reduced to a count, effective P/T
+  and keywords precomputed via `computeCharacteristics` so the UI never re-derives a rule; a typed
+  discriminated-union WebSocket protocol with a runtime guard on every inbound frame; the
+  `MatchRunner` incremental driver enforcing the compute-ahead cap (5 turns past the viewer) and
+  hold-and-wait, which `runToCompletion` structurally could not; per-turn snapshots + an event log
+  persisted to SQLite, making the scrubber seekable backward and refusing forward seeks past the
+  frontier; game setup from generated pool decks or imported decks with an unmodeled-card
+  pre-flight (ADR 0009); selectable `random`/`ai` providers; the Bun HTTP + `/ws` server and
+  `bun run serve`; the Vue 3 spectator UI (board, action log, scrubber, playback modes, held
+  decisions). 466 tests green. See
+  [docs/decisions/0012-spectator-ui.md](docs/decisions/0012-spectator-ui.md).

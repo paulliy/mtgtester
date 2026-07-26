@@ -11,9 +11,13 @@ four-player game play to a single winner — then review per-deck statistics acr
 ## Architecture (the one decision that matters)
 
 A **hybrid**: a deterministic TypeScript **engine** is authoritative on all rules — it
-computes the complete set of legal actions at every decision point. The **AI** (Google
-Gemini) only _chooses_ among engine-offered options; it never adjudicates legality. When
-there is only one legal action, the engine resolves it with no AI call.
+computes the complete set of legal actions at every decision point. The **AI** only
+_chooses_ among engine-offered options; it never adjudicates legality. When there is only
+one legal action, the engine resolves it with no AI call.
+
+Any OpenAI-compatible provider works; OpenRouter is the default and the vendor is
+auto-detected from whichever key is present. See
+[docs/decisions/0011-openai-compatible-provider.md](docs/decisions/0011-openai-compatible-provider.md).
 
 ## Repository layout
 
@@ -38,11 +42,38 @@ data/          Card cache + Scryfall bulk data (gitignored)
 
 ```bash
 bun install
-cp .env.example .env    # then add your GEMINI_API_KEY
+cp .env.example .env    # then add one provider API key (OpenRouter by default)
 bun run typecheck
 bun run lint
 bun run test
 ```
+
+## Watching a game
+
+Two processes under the hood — the server owns the engine and the API key, the web app is a
+view — but one command starts both:
+
+```bash
+bun run dev        # server on :3001 + Vue spectator UI on :5173
+```
+
+Or run them separately (useful for restarting one without the other):
+
+```bash
+bun run serve      # http://localhost:3001 — HTTP + /ws, holds the engine
+bun run dev:web    # http://localhost:5173 — Vue spectator UI (proxies /ws)
+```
+
+Open the UI, pick four decks, and press start. Decks come from two places:
+
+- **Generated from the engine-supported pool** (the default) — always playable.
+- **Imported** from a Moxfield/Archidekt URL or a pasted list. These are **pre-flighted**: any
+  card the engine cannot yet model is reported by name on the setup screen, because a deck must
+  be fully modeled to be simulated. See
+  [docs/decisions/0009-supported-pool-decks.md](docs/decisions/0009-supported-pool-decks.md).
+
+The provider is selectable per game — `random` needs no API key and is the fast way to exercise
+the UI; `ai` spends real calls.
 
 ## Reference data
 
@@ -52,11 +83,15 @@ bun run test
 
 ## Privacy note
 
-The AI runs on Google Gemini. On Google's free tier, requests may be used by Google for
-model improvement. This tool sends decklists and board state; decklists are not sensitive,
-so this is acceptable — but be aware of it if you use a free-tier key.
+Requests go to whichever OpenAI-compatible provider you configure. On free tiers (Google's
+included) requests may be used for model improvement. This tool sends decklists and board
+state; decklists are not sensitive, so this is acceptable — but be aware of it if you use a
+free-tier key. The Comprehensive Rules are **never** sent to the model: they are a reference
+for implementing the engine, not runtime context (brief §7.4).
 
 ## Status
 
-**Phase 0 — Foundations.** Development proceeds in the phases defined in the brief §14,
-stopping for approval at each boundary.
+**Phase 4 — Spectator UI.** Complete pending phase-boundary approval. Phases 0–3
+(foundations, deck pipeline, engine core, AI integration) are in; see the phase log in
+[CLAUDE.md](CLAUDE.md) and the ADRs in [docs/decisions/](docs/decisions/). Development
+proceeds in the phases defined in the brief §14, stopping for approval at each boundary.

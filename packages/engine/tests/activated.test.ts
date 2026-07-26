@@ -83,7 +83,7 @@ describe('parsing costs', () => {
       { kind: 'tap' },
       { kind: 'removeCounters', counter: 'gold', count: 1 },
     ]);
-    expect(hoard.activatedAbilities[0]?.ability.effects).toEqual([{ op: 'draw', count: 1 }]);
+    expect(hoard.activatedAbilities[0]?.ability.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
   });
 
   it('records a sacrifice cost on the mana ability rather than assuming {T}', () => {

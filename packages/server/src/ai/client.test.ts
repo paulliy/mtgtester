@@ -237,4 +237,47 @@ describe('OpenAiCompatibleClient', () => {
     expect(attempts).toBe(3);
     expect(mockSleep).toHaveBeenCalledWith(60000);
   });
+
+  it('includes provider.ignore in POST body for non-caching providers when using OpenRouter', async () => {
+    const mockFetch = vi.fn().mockImplementation(async (url: string) => {
+      if (url.includes('/models/') && url.includes('/endpoints')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              endpoints: [
+                { provider_name: 'CachingProvider', supports_implicit_caching: true },
+                { provider_name: 'NonCachingProvider', supports_implicit_caching: false },
+              ],
+            },
+          }),
+        };
+      }
+
+      return {
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }],
+        }),
+      };
+    });
+
+    const client = new OpenAiCompatibleClient(
+      {
+        ...DEFAULT_AI_CONFIG,
+        baseUrl: 'https://openrouter.ai/api/v1',
+        models: ['vendor/test-model'],
+        filterNonCachingProviders: true,
+      },
+      mockFetch as unknown as typeof fetch,
+    );
+
+    await client.requestDecision(fixturePrompt(), fixtureRequest());
+
+    const chatCall = mockFetch.mock.calls.find((c) => (c[0] as string).includes('/chat/completions'));
+    expect(chatCall).toBeDefined();
+    const sentBody = JSON.parse((chatCall![1] as RequestInit).body as string);
+    expect(sentBody.provider).toEqual({ ignore: ['NonCachingProvider'] });
+  });
 });
+

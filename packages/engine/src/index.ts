@@ -48,6 +48,13 @@ export { Prng } from './rng/prng';
 // The anti-cheat projection (brief §7.1).
 export { buildPlayerView } from './view/view';
 
+// The spectator projection and action log (brief §10.2 — Phase 4).
+export {
+  buildSpectatorState,
+  formatSpectatorLine,
+  formatSpectatorLog,
+} from './view/spectator';
+
 // Scripted/random decision providers and the completion driver (Phase 2 — brief §14.1).
 export {
   RandomDecisionProvider,

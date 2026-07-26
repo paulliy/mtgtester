@@ -1,0 +1,86 @@
+/**
+ * Plain CSS. Flat, minimal, functional — no component framework, no animation library
+ * (brief §2, §10). Information density matters far more than aesthetics here.
+ */
+
+:root {
+  --bg: #14161a;
+  --surface: #1c1f25;
+  --surface-2: #23272e;
+  --line: #333941;
+  --text: #e6e8ec;
+  --muted: #8b939f;
+  --accent: #6ea8fe;
+  --ok: #5ec98a;
+  --warn: #e0b341;
+  --danger: #e2685f;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --surface-2: #eef0f4;
+    --line: #d2d7de;
+    --text: #1b1e23;
+    --muted: #667080;
+    --accent: #1c62d6;
+    --ok: #1d8b4d;
+    --warn: #9a6d00;
+    --danger: #c0362c;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+}
+
+button {
+  font: inherit;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+input[type='text'],
+textarea {
+  font: inherit;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.3rem 0.4rem;
+  width: 100%;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}

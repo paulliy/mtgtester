@@ -1,7 +1,8 @@
 /**
- * Creature types, verbatim from CR 205.3m (docs/rules/comprehensive-rules.txt, effective
- * 2026-06-19). Reference DATA, not a heuristic: 205.3m is the complete, closed list, so a
- * tribe this lookup cannot find genuinely is not a creature type.
+ * Subtype vocabularies, verbatim from CR 205.3 (docs/rules/comprehensive-rules.txt, effective
+ * 2026-06-19) — creature types (205.3m), planeswalker types (205.3j) and spell types (205.3k).
+ * Reference DATA, not a heuristic: each is a complete, closed list, so a subtype these lookups
+ * cannot find genuinely is not one.
  *
  * Why it exists: `resolveSubtype` originally used only the card's OWN subtypes as vocabulary,
  * which works for lords ("Other Elves you control" is printed on an Elf) and fails for every
@@ -55,4 +56,34 @@ export const CREATURE_TYPES: readonly string[] = [
 /** Lowercased index for parser lookups. */
 export const CREATURE_TYPE_BY_LOWER = new Map<string, string>(
   CREATURE_TYPES.map((t) => [t.toLowerCase(), t]),
+);
+
+/**
+ * Planeswalker types, verbatim from CR 205.3j. A planeswalker's subtype is its name, which is
+ * how "target Ugin planeswalker card" (Haven of the Spirit Dragon) is a SUBTYPE filter and not
+ * a card-name filter — the engine needs no name-matching machinery to read it.
+ */
+export const PLANESWALKER_TYPES: readonly string[] = [
+  "Ajani", "Aminatou", "Angrath", "Arlinn", "Ashiok", "Bahamut", "Basri", "Bolas", "Calix",
+  "Chandra", "Comet", "Dack", "Dakkon", "Daretti", "Davriel", "Dellian", "Dihada", "Domri",
+  "Dovin", "Ellywick", "Elminster", "Elspeth", "Estrid", "Freyalise", "Garruk", "Gideon",
+  "Grist", "Guff", "Huatli", "Jace", "Jared", "Jaya", "Jeska", "Kaito", "Karn", "Kasmina",
+  "Kaya", "Kiora", "Koth", "Liliana", "Lolth", "Lukka", "Minsc", "Mordenkainen", "Nahiri",
+  "Narset", "Niko", "Nissa", "Nixilis", "Oko", "Quintorius", "Ral", "Rowan", "Saheeli", "Samut",
+  "Sarkhan", "Serra", "Sivitri", "Sorin", "Szat", "Tamiyo", "Tasha", "Teferi", "Teyo",
+  "Tezzeret", "Tibalt", "Tyvar", "Ugin", "Urza", "Venser", "Vivien", "Vraska", "Vronos", "Will",
+  "Windgrace", "Wrenn", "Xenagos", "Yanggu", "Yanling", "Zariel",
+];
+
+/**
+ * Spell types, verbatim from CR 205.3k — the subtypes instants and sorceries share. Small and
+ * closed; "an Omen spell" (Maelstrom of the Spirit Dragon) is one of these.
+ */
+export const SPELL_TYPES: readonly string[] = [
+  "Adventure", "Arcane", "Lesson", "Omen", "Trap",
+];
+
+/** Lowercased index over every non-creature subtype vocabulary above. */
+export const NONCREATURE_SUBTYPE_BY_LOWER = new Map<string, string>(
+  [...PLANESWALKER_TYPES, ...SPELL_TYPES].map((t) => [t.toLowerCase(), t]),
 );

@@ -18,6 +18,7 @@ import { TurnAbortedSignal } from '../signals';
 import { applyPriorityAction } from '../actions/apply';
 import { computePriorityOptions } from '../actions/legal';
 import type { PriorityActionPayload } from '../actions/legal';
+import { drainPool } from '../mana/pool';
 import { priorityCheckpoint } from '../sba/sba';
 import { resolveTopOfStack } from '../stack/stack';
 import { playersInApnapOrder } from '../state/queries';
@@ -75,10 +76,16 @@ export function resetOpponentYields(ctx: GameContext, controllerId: PlayerId): v
   }
 }
 
-/** Empty every player's mana pool (end of each step and phase, CR 500.4). */
-export function emptyManaPools(ctx: GameContext): void {
+/**
+ * Empty every player's mana pool (end of each step and phase, CR 500.4).
+ *
+ * Mana marked `persistent` survives — "until end of turn, you don't lose this mana as steps and
+ * phases end" (Klauth). `includePersistent` is set by the cleanup step, where end of TURN drops
+ * it along with everything else.
+ */
+export function emptyManaPools(ctx: GameContext, includePersistent = false): void {
   for (const p of ctx.state.players) {
-    p.manaPool = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+    drainPool(p, includePersistent);
   }
 }
 

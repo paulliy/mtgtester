@@ -13,11 +13,20 @@ export interface CallResult {
 }
 
 /**
- * How a decision was answered. `heuristic` and `cache` cost no network call at all — they are
- * still recorded, because the point of them is the ratio, and a decision that never appears in
- * the table would make the game look like it made fewer decisions rather than fewer calls.
+ * How a decision was answered. `heuristic`, `cache`, and `plan` cost no network call at all —
+ * they are still recorded, because the point of them is the ratio, and a decision that never
+ * appears in the table would make the game look like it made fewer decisions rather than fewer
+ * calls. `human` is the §7.7 step-2 override: the model failed twice and the watching user
+ * picked. It is deliberately NOT counted as skipped — it cost two calls before the human saw it.
  */
-export type DecisionSource = 'primary' | 'retry' | 'fallback' | 'heuristic' | 'cache' | 'plan';
+export type DecisionSource =
+  | 'primary'
+  | 'retry'
+  | 'fallback'
+  | 'heuristic'
+  | 'cache'
+  | 'plan'
+  | 'human';
 
 /** Sources answered locally: recorded, but never billed and never rate-limited. */
 const SKIPPED_SOURCES: ReadonlySet<DecisionSource> = new Set<DecisionSource>([

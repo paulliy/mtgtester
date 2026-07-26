@@ -25,10 +25,12 @@ import {
 import { emit, debug } from '../log/log';
 import { playerById, queueTriggersForEvent } from '../state/objects';
 import {
+  colorsOf,
   controlledPermanents,
   effectivePT,
   findPermanent,
   hasKeyword,
+  hasProtectionFrom,
   isCreaturePermanent,
   playersInApnapOrder,
   triggersOf,
@@ -53,13 +55,28 @@ function canAttack(ctx: GameContext, perm: EnginePermanent): boolean {
   return true;
 }
 
-/** Evasion check: may `blocker` block `attacker`? (Phase 2: flying/reach.) */
+/** Evasion check: may `blocker` block `attacker`? (flying/reach, protection — CR 509.1b.) */
 function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePermanent): boolean {
   if (blocker.tapped) return false;
+  // Protection (CR 702.16), the B in DEBT: an attacker with protection from the blocker's
+  // colors cannot be blocked by it.
+  if (hasProtectionFrom(ctx, attacker, colorsOf(ctx, blocker))) return false;
   if (hasKeyword(ctx, attacker, 'flying')) {
     return hasKeyword(ctx, blocker, 'flying') || hasKeyword(ctx, blocker, 'reach');
   }
   return true;
+}
+
+/**
+ * Menace (CR 702.111): an attacker with menace can't be blocked except by two or more
+ * creatures. Enforced after the whole block set is declared, because the requirement is about
+ * the set, not about any individual block — a first legal block would otherwise be refused.
+ */
+function menaceViolations(ctx: GameContext): EnginePermanent[] {
+  return attackers(ctx).filter((attacker) => {
+    if (!hasKeyword(ctx, attacker, 'menace')) return false;
+    return attacker.blockedByOrdered.length === 1;
+  });
 }
 
 function attackers(ctx: GameContext): EnginePermanent[] {
@@ -197,7 +214,14 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   // CR 508.2: "whenever ~ attacks" triggers fire once the whole set is declared, not as each
   // creature is committed — so this is deliberately outside the declaration loop. They wait in
   // `pendingTriggers` until the declare-attackers step's priority checkpoint.
-  for (const attacker of declared) queueTriggersForEvent(ctx, 'attacks', attacker);
+  //
+  // The whole set goes in one call so that an aggregate trigger ("whenever one or more Dragons
+  // you control attack") sees its count. Per-attacker triggers still fire once each.
+  queueTriggersForEvent(
+    ctx,
+    'attacks',
+    declared.map((permanent) => ({ permanent })),
+  );
   emit(ctx, 'attackersDeclared', { count: declared.length }, ap.id);
 }
 
@@ -270,6 +294,26 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
         defenderId,
       );
       debug(ctx, 'combat', `${blocker.name} blocks ${attacker.name}`);
+    }
+  }
+
+  // Menace (CR 702.111) constrains the block SET, not any individual block, so it is checked
+  // once the whole set exists. An illegal single block is undone rather than refused up front:
+  // refusing it would have meant never offering the first of the two blocks menace requires.
+  for (const attacker of menaceViolations(ctx)) {
+    const [onlyBlockerId] = attacker.blockedByOrdered;
+    const blocker = onlyBlockerId === undefined ? undefined : findPermanent(ctx, onlyBlockerId);
+    attacker.blockedByOrdered = [];
+    if (blocker !== undefined) {
+      blocker.blocking = null;
+      blocker.statuses = blocker.statuses.filter((s) => s !== 'blocking');
+      emit(
+        ctx,
+        'blockIllegal',
+        { blocker: blocker.name, attacker: attacker.name, reason: 'menace' },
+        blocker.controllerId,
+      );
+      debug(ctx, 'combat', `${blocker.name}'s block on ${attacker.name} undone — menace`);
     }
   }
 
@@ -396,6 +440,13 @@ function dealCombatDamage(ctx: GameContext, step: 'first' | 'regular'): void {
 
   // All combat damage in a step is dealt simultaneously (CR 510.2).
   emit(ctx, 'combatDamageStep', { step, assignments: assignments.length });
+
+  // "Whenever ~ deals combat damage to a player" watches this step as one event, so the totals
+  // are accumulated across assignments and the triggers queued once, after the damage is dealt.
+  // A trampling attacker that hits a blocker and the player deals ONE player-damage amount, not
+  // two, and a double-striker fires in each step it deals damage in (CR 702.4b).
+  const damageToPlayers = new Map<EnginePermanent, number>();
+
   for (const a of assignments) {
     const traits = combatDamageTraits(ctx, a.source);
     if (a.targetCreature !== null) {
@@ -403,6 +454,7 @@ function dealCombatDamage(ctx: GameContext, step: 'first' | 'regular'): void {
         combat: true,
         sourceHasDeathtouch: traits.deathtouch,
         sourceHasLifelink: traits.lifelink,
+        sourceColors: traits.colors,
       });
     } else if (a.targetPlayer !== null) {
       dealDamageToPlayer(
@@ -416,9 +468,16 @@ function dealCombatDamage(ctx: GameContext, step: 'first' | 'regular'): void {
           sourceHasLifelink: traits.lifelink,
         },
       );
+      damageToPlayers.set(a.source, (damageToPlayers.get(a.source) ?? 0) + a.amount);
     }
     if (step === 'first') a.source.dealtFirstStrikeDamage = true;
   }
+
+  queueTriggersForEvent(
+    ctx,
+    'dealsCombatDamageToPlayer',
+    [...damageToPlayers].map(([permanent, amount]) => ({ permanent, amount })),
+  );
 }
 
 /** Any combatant with first or double strike ⇒ the extra damage step exists (CR 510.5). */

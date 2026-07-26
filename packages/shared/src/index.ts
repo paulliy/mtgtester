@@ -11,7 +11,11 @@ export { PHASES, STEPS, ZONES, DECISION_TYPES, LOSS_REASONS } from './enums';
 export { PERMANENT_STATUSES } from './objects';
 export { COMMANDER_LEGALITIES } from './cards';
 export { DECK_SOURCE_TYPES, VALIDATION_CODES } from './decks';
-export { SERVER_TO_CLIENT_TYPES, CLIENT_TO_SERVER_TYPES } from './protocol';
+export {
+  SERVER_TO_CLIENT_TYPES,
+  CLIENT_TO_SERVER_TYPES,
+  isClientToServerMessage,
+} from './protocol';
 
 // --- Identifier types ---
 export type { PlayerId, ObjectId, OracleId, DeckId, DeckSnapshotId, GameId } from './ids';
@@ -73,10 +77,41 @@ export type {
   StackObjectView,
 } from './view';
 
+// --- Spectator projection (brief §10.2) — the inverse of PlayerView: the human watches ---
+export type {
+  SpectatorState,
+  SpectatorSeat,
+  SpectatorCard,
+  SpectatorPermanent,
+  SpectatorCommander,
+  SpectatorStackObject,
+  SpectatorLogLine,
+  CommanderDamageEntry,
+} from './spectator';
+
 // --- WebSocket protocol ---
 export type {
   ServerToClientMessage,
   ClientToServerMessage,
   ServerToClientType,
   ClientToServerType,
+  ServerMessageOf,
+  ClientMessageOf,
+  ProviderKind,
+  PlaybackMode,
+  SeatSource,
+  SeatSummary,
+  HaltKind,
+  GameStartedPayload,
+  StateSnapshotPayload,
+  EventBatchPayload,
+  DecisionPendingPayload,
+  ComputeHaltedPayload,
+  ApiWaitingPayload,
+  GameOverPayload,
+  ErrorPayload,
+  StartGamePayload,
+  JumpToTurnPayload,
+  SetPlaybackModePayload,
+  ResolveHeldDecisionPayload,
 } from './protocol';

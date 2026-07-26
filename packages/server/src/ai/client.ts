@@ -15,6 +15,8 @@ import {
   NoAvailableModelError,
   RpmLimitError,
 } from './errors';
+import { DEFAULT_AI_CONFIG } from './config';
+import { getNonCachingProviders } from './openrouter-provider-filter';
 import { withRetry } from './retry';
 
 export interface CallMeta {
@@ -70,6 +72,7 @@ export class OpenAiCompatibleClient implements AiClient {
   ): Promise<{ response: DecisionResponse; meta: CallMeta }> {
     const endpoint = this.resolveEndpoint();
     const rpmModelsThisAttempt = new Set<string>();
+    let rpmWaitCycles = 0;
     let lastHardError: Error | null = null;
 
     for (;;) {
@@ -87,8 +90,14 @@ export class OpenAiCompatibleClient implements AiClient {
 
       const nonRpmAvailable = availableModels.filter((m) => !rpmModelsThisAttempt.has(m));
       if (nonRpmAvailable.length === 0) {
+        rpmWaitCycles++;
+        if (rpmWaitCycles > 2) {
+          throw new DailyQuotaExhaustedError(
+            `Rate limits / RPM ceiling persisted across multiple reset cycles for all models (${availableModels.join(', ')}).`,
+          );
+        }
         console.warn(
-          `  ⚠ All available models (${availableModels.join(', ')}) hit RPM ceiling — waiting 60s for RPM reset...`,
+          `  ⚠ All available models (${availableModels.join(', ')}) hit RPM ceiling — waiting 60s for RPM reset (cycle ${rpmWaitCycles}/2)...`,
         );
         await this.sleepImpl(60000);
         rpmModelsThisAttempt.clear();
@@ -102,21 +111,36 @@ export class OpenAiCompatibleClient implements AiClient {
       }
 
       const startTime = Date.now();
+      const isOpenRouter = this.config.baseUrl.includes('openrouter.ai');
+      const ignoreProviders =
+        isOpenRouter &&
+        this.config.filterNonCachingProviders !== false &&
+        currentModel.includes('/')
+          ? await getNonCachingProviders(currentModel, this.fetchImpl, this.config.baseUrl)
+          : [];
 
       try {
         const metaResult = await withRetry(async () => {
+          const bodyPayload: Record<string, unknown> = {
+            model: currentModel,
+            messages: prompt.messages,
+            temperature: 0.1,
+            response_format: { type: 'json_object' },
+          };
+          if (ignoreProviders.length > 0) {
+            bodyPayload['provider'] = { ignore: ignoreProviders };
+          }
+
           const res = await this.fetchImpl(endpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               ...(this.config.apiKey ? { Authorization: `Bearer ${this.config.apiKey}` } : {}),
             },
-            body: JSON.stringify({
-              model: currentModel,
-              messages: prompt.messages,
-              temperature: 0.1,
-              response_format: { type: 'json_object' },
-            }),
+            body: JSON.stringify(bodyPayload),
+            signal: AbortSignal.timeout(
+              this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
+            ),
           });
 
           if (!res.ok) {
@@ -147,7 +171,7 @@ export class OpenAiCompatibleClient implements AiClient {
           }
 
           const latencyMs = Date.now() - startTime;
-          const parsed = parseJsonResponse(rawContent, request.requestId);
+          const parsed = parseJsonResponse(rawContent, request);
 
           const meta: CallMeta = {
             model: currentModel,
@@ -188,7 +212,7 @@ export class OpenAiCompatibleClient implements AiClient {
 }
 
 /** Helper to strip markdown code blocks, extract JSON object, and parse JSON response. */
-function parseJsonResponse(raw: string, expectedRequestId: string): DecisionResponse {
+function parseJsonResponse(raw: string, request: DecisionRequest): DecisionResponse {
   let cleaned = raw.trim();
 
   // Extract JSON object if surrounded by markdown code fences or conversational text
@@ -212,18 +236,42 @@ function parseJsonResponse(raw: string, expectedRequestId: string): DecisionResp
 
   const obj = parsed as Record<string, unknown>;
   const rawActionId =
-    obj['actionId'] ?? obj['action_id'] ?? obj['action'] ?? obj['choice'] ?? obj['id'];
-  const actionId =
+    obj['actionId'] ??
+    obj['action_id'] ??
+    obj['action'] ??
+    obj['choice'] ??
+    obj['id'] ??
+    obj['selected_action'] ??
+    obj['index'] ??
+    obj['actionIndex'] ??
+    obj['action_index'] ??
+    obj['decision'];
+
+  let actionId =
     typeof rawActionId === 'number'
       ? Math.floor(rawActionId)
       : Number.parseInt(String(rawActionId), 10);
+
+  if (Number.isNaN(actionId) && typeof rawActionId === 'string') {
+    const rawStr = rawActionId.trim().toLowerCase();
+    const matched = request.legalActions.find(
+      (a) =>
+        a.description.trim().toLowerCase() === rawStr ||
+        a.type.trim().toLowerCase() === rawStr ||
+        a.description.trim().toLowerCase().includes(rawStr) ||
+        rawStr.includes(a.description.trim().toLowerCase()),
+    );
+    if (matched !== undefined) {
+      actionId = matched.id;
+    }
+  }
 
   if (Number.isNaN(actionId)) {
     throw new AiResponseValidationError('Missing or invalid actionId in response', raw);
   }
 
   const response: DecisionResponse = {
-    requestId: (obj['requestId'] as string) || expectedRequestId,
+    requestId: (obj['requestId'] as string) || request.requestId,
     actionId,
   };
 

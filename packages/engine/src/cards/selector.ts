@@ -48,12 +48,16 @@ export interface SelectorCandidate {
   power: number;
   /** Current keywords. Only `hasKeyword` reads them — see the module comment. */
   keywords: readonly string[];
+  /** Token-ness (CR 111.1). NOT event-only: no layer can change it. */
+  isToken: boolean;
 }
 
 /** The object a relative selector ("self", "you control") is resolved against. */
 export interface SelectorSource {
   cardId: string;
   controllerId: string;
+  /** For an Aura/Equipment: the card id of the permanent it is attached to, if any. */
+  attachedToCardId?: string | null;
 }
 
 export type Selector =
@@ -61,6 +65,8 @@ export type Selector =
   | { kind: 'self' }
   /** Every permanent other than the source ("each other …"). */
   | { kind: 'other' }
+  /** The permanent the source is attached to — "equipped creature", "enchanted creature". */
+  | { kind: 'attachedToSource' }
   | { kind: 'type'; value: string }
   | { kind: 'subtype'; value: string }
   | { kind: 'supertype'; value: string }
@@ -71,6 +77,13 @@ export type Selector =
   | { kind: 'powerAtLeast'; n: number }
   /** EVENT-ONLY (see the module comment): "with flying" / (negated) "without flying". */
   | { kind: 'hasKeyword'; keyword: string }
+  /**
+   * "another **nontoken** Dragon you control" (Miirym), as `not(IS_TOKEN)`.
+   *
+   * Deliberately NOT event-only, unlike the two leaves above: nothing in CR 613 can make a
+   * permanent become or stop being a token, so no layer's output can change this answer.
+   */
+  | { kind: 'isToken' }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -94,6 +107,9 @@ export const NONBASIC_LANDS: Selector = allOf(ofType('Land'), not(ofSupertype('B
 
 export const powerAtLeast = (n: number): Selector => ({ kind: 'powerAtLeast', n });
 export const withKeyword = (keyword: string): Selector => ({ kind: 'hasKeyword', keyword });
+
+/** Miirym's subject leaf — see the  variant. */
+export const IS_TOKEN: Selector = { kind: 'isToken' };
 
 /**
  * Does this selector read a layer's own output anywhere inside it?
@@ -128,6 +144,10 @@ export function selectMatches(
       return candidate.cardId === source.cardId;
     case 'other':
       return candidate.cardId !== source.cardId;
+    case 'attachedToSource':
+      // Nothing attached ⇒ matches nothing, which is exactly right: an unattached Equipment's
+      // "equipped creature has …" applies to no creature at all.
+      return source.attachedToCardId != null && candidate.cardId === source.attachedToCardId;
     case 'type':
       return candidate.types.includes(selector.value);
     case 'subtype':
@@ -144,6 +164,8 @@ export function selectMatches(
       return candidate.power >= selector.n;
     case 'hasKeyword':
       return candidate.keywords.includes(selector.keyword);
+    case 'isToken':
+      return candidate.isToken;
     case 'allOf':
       return selector.of.every((s) => selectMatches(candidate, s, source));
     case 'anyOf':

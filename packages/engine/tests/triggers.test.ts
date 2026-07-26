@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
-import { queueTriggersForEvent } from '../src/state/objects';
+import { queueTriggersForObject } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
 import { runTurn } from '../src/turn/turn';
@@ -197,7 +197,7 @@ describe('targeted triggered abilities (CR 603.3d)', () => {
       oracle({ name: 'Test Victim', typeLine: 'Creature — Test Ox', power: '3', toughness: '3' }),
     );
     const slayer = spawn(ctx, 'P1', etbSlayer());
-    queueTriggersForEvent(ctx, 'enters', slayer);
+    queueTriggersForObject(ctx, 'enters', slayer);
 
     const { decisions } = pump(runTurn(ctx), (d) => {
       if (d.decisionType === 'chooseTargets') {
@@ -255,7 +255,7 @@ describe('targeted triggered abilities (CR 603.3d)', () => {
     const ctx = ctx4();
     const victim = spawn(ctx, 'P2', bear());
     const slayer = spawn(ctx, 'P1', etbSlayer());
-    queueTriggersForEvent(ctx, 'enters', slayer);
+    queueTriggersForObject(ctx, 'enters', slayer);
 
     // Remove the target in response — after it was chosen, before the trigger resolves.
     const gen = runTurn(ctx);

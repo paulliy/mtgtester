@@ -82,6 +82,7 @@ export function createGame(config: GameConfig): GameContext {
       commanderCastCount: {},
       commanderDamageTaken: {},
       manaPool: emptyPool(),
+      manaEntries: [],
       landsPlayedThisTurn: 0,
       poisonCounters: 0,
       hasLost: false,

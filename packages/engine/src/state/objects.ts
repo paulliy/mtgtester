@@ -8,9 +8,13 @@
  * (CR 903.9a) handled by the SBA loop, not here.
  */
 
-import type { ObjectId, PlayerId, Zone } from '@mtg/shared';
+import type { ObjectId, OracleId, PlayerId, Zone } from '@mtg/shared';
+import type { ObjectTriggerWhen, TokenSpec } from '../cards/ability';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
-import type { SelectorSource } from '../cards/selector';
+import type { CardDefinition } from '../cards/definition';
+import type { SelectorCandidate, SelectorSource } from '../cards/selector';
+import { selectMatches } from '../cards/selector';
+import type { TriggerScope } from '../cards/value';
 import type { GameGen } from '../decisions';
 import { matchesSelector } from '../effects/continuous';
 import { debug, emit } from '../log/log';
@@ -20,6 +24,7 @@ import type {
   EngineObject,
   EnginePermanent,
   EnginePlayerState,
+  EngineStackObject,
   GameContext,
 } from './types';
 
@@ -138,6 +143,7 @@ export function makePermanent(
     damagedByDeathtouch: false,
     dealtFirstStrikeDamage: false,
     timestamp: ctx.state.nextTimestamp++,
+    activationsThisTurn: [],
   };
 }
 
@@ -243,7 +249,7 @@ export function* moveObject(
 
   // Triggers: enters on arriving, dies on battlefield → graveyard.
   if (target.zone === 'battlefield' && from !== 'battlefield') {
-    queueTriggersForEvent(ctx, 'enters', next as EnginePermanent);
+    queueTriggersForObject(ctx, 'enters', next as EnginePermanent);
   }
   if (from === 'battlefield') {
     queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
@@ -253,12 +259,144 @@ export function* moveObject(
 }
 
 /**
- * Queue every ability that triggers on `subject`'s event (CR 603.3b).
+ * Register a token's face as a `CardDefinition` and return its synthetic oracle id.
  *
- * Two vantage points, one mechanism. The subject's OWN abilities fire on `{kind:'self'}`; every
- * other battlefield permanent's abilities fire if their selector matches the subject ("whenever
- * a Dragon you control attacks"). So this scans the whole battlefield, not just the object the
+ * Tokens are not cards (CR 111.1), but everything downstream of `makePermanent` — the layer
+ * engine, `triggersOf`, `manaSourcesFor` — reaches a permanent's behavior through
+ * `ctx.defs.get(oracleId)`. Giving a token a definition is what lets it participate in all of
+ * that without a parallel code path, which is where a token that quietly ignores anthems or
+ * fails to fire its own dies trigger would come from.
+ *
+ * The id is derived from the spec, so N Treasures share one definition entry.
+ */
+function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
+  const oracleId =
+    `token:${spec.name}:${spec.typeLine}:${(spec.supertypes ?? []).join('+')}:${spec.power ?? ''}/${spec.toughness ?? ''}` as OracleId;
+  if (!ctx.defs.has(oracleId)) {
+    ctx.defs.set(oracleId, {
+      oracleId,
+      name: spec.name,
+      typeLine: spec.typeLine,
+      supertypes: spec.supertypes ?? [],
+      types: spec.types,
+      subtypes: spec.subtypes,
+      colors: spec.colors,
+      colorIdentity: spec.colors,
+      manaCost: null,
+      hasUnsupportedCost: false,
+      power: spec.power,
+      toughness: spec.toughness,
+      loyalty: null,
+      defense: null,
+      keywords: spec.keywords ?? [],
+      manaAbilities: spec.manaAbilities ?? [],
+      activatedAbilities: spec.activatedAbilities ?? [],
+      entersTapped: false,
+      spellAbility: null,
+      triggers: spec.triggers ?? [],
+      staticEffects: [],
+      ruleStatics: [],
+      modeled: true,
+      unmodeledReasons: [],
+    });
+  }
+  return oracleId;
+}
+
+/**
+ * Put a token onto the battlefield (CR 111.1). Returns the new permanent.
+ *
+ * It goes through `makePermanent` and `queueTriggersForObject` exactly as a resolving permanent
+ * spell does, so a token with an ETB trigger fires it and a token entering under an anthem is
+ * pumped. It does NOT go through `moveObject`, because a token has no previous zone to leave.
+ */
+export function createToken(
+  ctx: GameContext,
+  spec: TokenSpec,
+  controllerId: PlayerId,
+): EnginePermanent {
+  const oracleId = registerTokenDef(ctx, spec);
+  const stub: EngineObject = {
+    id: newObjectId(ctx),
+    // Tokens need a stable `cardId` like any other object — commander damage, until-EOT effect
+    // sets and the layer cache are all keyed by it — but no two tokens ever share one.
+    cardId: `tok-${ctx.state.nextObjectNum++}`,
+    oracleId,
+    ownerId: controllerId,
+    name: spec.name,
+    typeLine: spec.typeLine,
+    oracleText: '',
+    manaCost: null,
+    isToken: true,
+    isCommander: false,
+    zone: 'battlefield',
+  };
+  const perm = makePermanent(ctx, stub, controllerId);
+  ctx.state.battlefield.push(perm);
+  emit(ctx, 'tokenCreated', { name: spec.name, controller: controllerId, cardId: perm.cardId });
+  debug(ctx, 'zoneChange', `token created: ${spec.name} under ${controllerId}`);
+  queueTriggersForObject(ctx, 'enters', perm);
+  return perm;
+}
+
+/**
+ * The token spec for "a copy of `<permanent>`" (CR 707.2).
+ *
+ * Reads the PRINTED definition, never `computeCharacteristics`: copiable values exclude
+ * everything layers 4–7 did to the original, so a copy of a Dragon wearing +3/+3 is a plain
+ * Dragon. Reading current characteristics here is the subtle way to make Miirym generate a
+ * snowballing board that the printed rules do not.
+ */
+export function tokenSpecCopying(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  exceptNonLegendary: boolean,
+): TokenSpec {
+  const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
+  return {
+    name: def.name,
+    // The type LINE is display text, but it is also what `registerTokenDef` keys on, so the
+    // exception has to be applied to both or a non-legendary copy shares a definition with a
+    // legendary one.
+    typeLine: exceptNonLegendary ? def.typeLine.replace(/^Legendary /, '') : def.typeLine,
+    supertypes: exceptNonLegendary
+      ? def.supertypes.filter((t) => t !== 'Legendary')
+      : def.supertypes,
+    types: def.types,
+    subtypes: def.subtypes,
+    colors: def.colors,
+    power: def.power,
+    toughness: def.toughness,
+    keywords: def.keywords,
+    triggers: def.triggers,
+    manaAbilities: def.manaAbilities,
+    activatedAbilities: def.activatedAbilities,
+  };
+}
+
+/**
+ * One object's participation in an event: the permanent, plus whatever the event knows about
+ * it that the board does not. Combat damage is the reason this is a record rather than a bare
+ * permanent — "create that many Treasure tokens" needs the amount *this* creature dealt.
+ */
+export interface TriggerEventSubject {
+  permanent: EnginePermanent;
+  /** Damage this object dealt in the event (`dealsCombatDamageToPlayer`). */
+  amount?: number;
+}
+
+/**
+ * Queue every ability that triggers on this event (CR 603.3b).
+ *
+ * Two vantage points, one mechanism. A subject's OWN abilities fire on `{kind:'self'}`; every
+ * other battlefield permanent's abilities fire if their selector matches a subject ("whenever
+ * a Dragon you control attacks"). So this scans the whole battlefield, not just the objects the
  * event happened to.
+ *
+ * It takes a LIST of subjects because some events are genuinely simultaneous — all attackers are
+ * declared at once (CR 508.1), all combat damage is dealt at once (CR 510.2) — and an aggregate
+ * trigger has to see the whole set to know its count. Non-aggregate triggers still fire once per
+ * matching subject, so passing a one-element list reproduces the old per-object behavior exactly.
  *
  * Everything is read from *current* characteristics. For a `dies` event the permanent has
  * already left, so that is last-known information — continuous effects from other permanents
@@ -266,26 +404,30 @@ export function* moveObject(
  */
 export function queueTriggersForEvent(
   ctx: GameContext,
-  when: 'enters' | 'dies' | 'attacks',
-  subject: EnginePermanent,
+  when: ObjectTriggerWhen,
+  subjects: TriggerEventSubject[],
 ): void {
+  if (subjects.length === 0) return;
+
   // A dying permanent is gone from the battlefield but is still an ability source for its own
   // "when this dies" trigger, so it has to be added back as a candidate source.
-  const sources = ctx.state.battlefield.some((p) => p.cardId === subject.cardId)
-    ? ctx.state.battlefield
-    : [...ctx.state.battlefield, subject];
+  const missing = subjects
+    .map((s) => s.permanent)
+    .filter((perm) => !ctx.state.battlefield.some((p) => p.cardId === perm.cardId));
+  const sources = [...ctx.state.battlefield, ...missing];
 
-  for (const source of [...sources]) {
+  for (const source of sources) {
     for (const ability of triggersOf(ctx, source)) {
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
 
       const from: SelectorSource = { cardId: source.cardId, controllerId: source.controllerId };
-      const matches =
+      const matched = subjects.filter((s) =>
         spec.subject.kind === 'self'
-          ? source.cardId === subject.cardId
-          : matchesSelector(ctx, subject, spec.subject.selector, from);
-      if (!matches) continue;
+          ? source.cardId === s.permanent.cardId
+          : matchesSelector(ctx, s.permanent, spec.subject.selector, from),
+      );
+      if (matched.length === 0) continue;
 
       // Intervening-if, first check (CR 603.4): a trigger whose condition is false right now
       // never goes on the stack at all.
@@ -294,18 +436,112 @@ export function queueTriggersForEvent(
         continue;
       }
 
+      // Aggregate: one firing carrying the count and the total. Otherwise one firing each.
+      const firings: TriggerEventSubject[][] =
+        spec.aggregate === true ? [matched] : matched.map((s) => [s]);
+
+      for (const group of firings) {
+        const first = group[0] as TriggerEventSubject;
+        const amounts = group.filter((s) => s.amount !== undefined);
+        const scope: TriggerScope = {
+          ...(spec.aggregate === true ? { triggerCount: group.length } : {}),
+          ...(amounts.length > 0
+            ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
+            : {}),
+        };
+        ctx.state.pendingTriggers.push({
+          controllerId: source.controllerId,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId,
+          sourceName: source.name,
+          ability,
+          // Only meaningful when the subject is something other than the source itself.
+          ...(spec.subject.kind === 'self' ? {} : { triggerObjectCardId: first.permanent.cardId }),
+          ...(Object.keys(scope).length > 0 ? { scope } : {}),
+        });
+        debug(ctx, 'stack', `trigger queued: ${source.name} — ${ability.description ?? ''}`);
+      }
+    }
+  }
+}
+
+/** The one-subject case, which is every event except attacks and combat damage. */
+export function queueTriggersForObject(
+  ctx: GameContext,
+  when: ObjectTriggerWhen,
+  permanent: EnginePermanent,
+): void {
+  queueTriggersForEvent(ctx, when, [{ permanent }]);
+}
+
+/**
+ * Queue "whenever you cast …" triggers (CR 603.2). The subject is a spell on the stack, not a
+ * permanent, so it is matched against the *card's* characteristics via `cardCandidate` — the
+ * same projection library searches use.
+ *
+ * Fired at announcement, after the spell is on the stack, so the trigger resolves FIRST
+ * (CR 603.3b puts it above the spell that caused it).
+ */
+export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): void {
+  const def = ctx.defs.get(spell.sourceOracleId);
+  if (def === undefined) return;
+
+  // A spell is matched on its printed characteristics: it is not on the battlefield, so the
+  // layer engine has produced nothing for it.
+  const candidate: SelectorCandidate = {
+    cardId: spell.sourceCardId,
+    controllerId: spell.controllerId,
+    types: def.types,
+    supertypes: def.supertypes,
+    subtypes: def.subtypes,
+    colors: def.colors,
+    power: def.power ?? 0,
+    keywords: def.keywords,
+    // A spell on the stack is a card, never a token (CR 111.1) — a token is only ever a
+    // permanent, so nothing that gets here can be one.
+    isToken: false,
+  };
+  const manaValue = spellManaValue(def, spell.announcedX);
+
+  for (const source of ctx.state.battlefield) {
+    for (const ability of triggersOf(ctx, source)) {
+      const spec = ability.trigger;
+      if (spec === undefined || spec.when !== 'castsSpell') continue;
+
+      const isController = spell.controllerId === source.controllerId;
+      if (spec.caster === 'you' && !isController) continue;
+      if (spec.caster === 'opponent' && isController) continue;
+
+      const from: SelectorSource = { cardId: source.cardId, controllerId: source.controllerId };
+      // `selectMatches`, not `matchesSelector`: the spell is not a permanent, so there are no
+      // layered characteristics to compute — the candidate above is already the whole answer.
+      if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
+      if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;
+
       ctx.state.pendingTriggers.push({
         controllerId: source.controllerId,
         sourceCardId: source.cardId,
         sourceOracleId: source.oracleId,
         sourceName: source.name,
         ability,
-        // Only meaningful when the subject is something other than the source itself.
-        ...(spec.subject.kind === 'self' ? {} : { triggerObjectCardId: subject.cardId }),
+        scope: { spellManaValue: manaValue },
       });
-      debug(ctx, 'stack', `trigger queued: ${source.name} — ${ability.description ?? ''}`);
+      debug(ctx, 'stack', `cast trigger queued: ${source.name} — ${spell.description}`);
     }
   }
+}
+
+/**
+ * Mana value of a card (CR 202.3). `{X}` counts as the value announced for it (CR 202.3b) when
+ * it is on the stack, or 0 off the stack — which is why this takes the announced X rather than
+ * reading the printed cost alone: Lozhan off an X spell would otherwise always deal 0, and a
+ * card sitting in a hand (`handToBattlefield`'s mana-value bound) is correctly valued at X=0.
+ */
+export function spellManaValue(def: CardDefinition, announcedX: number | undefined): number {
+  const cost = def.manaCost;
+  if (cost === null) return 0;
+  const colored = Object.values(cost.colored).reduce((sum, n) => sum + n, 0);
+  return cost.generic + colored + cost.colorless + (cost.x ?? 0) * (announcedX ?? 0);
 }
 
 function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: Zone): void {
@@ -314,5 +550,5 @@ function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: 
   if (to !== 'graveyard') return;
   const perm = obj as EnginePermanent;
   if (perm.controllerId === undefined) return;
-  queueTriggersForEvent(ctx, 'dies', perm);
+  queueTriggersForObject(ctx, 'dies', perm);
 }

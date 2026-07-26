@@ -10,7 +10,7 @@
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
-import { queueTriggersForEvent } from '../src/state/objects';
+import { queueTriggersForObject } from '../src/state/objects';
 import { effectivePT } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import { runTurn } from '../src/turn/turn';
@@ -110,7 +110,7 @@ describe('counter placement', () => {
         oracleText: 'When Test Grower enters the battlefield, put three +1/+1 counters on Test Grower.',
       }),
     );
-    queueTriggersForEvent(ctx, 'enters', grower);
+    queueTriggersForObject(ctx, 'enters', grower);
 
     pump(runTurn(ctx));
 

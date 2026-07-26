@@ -28,7 +28,7 @@ import {
 import { effectivePT, isCreaturePermanent, manaSourcesFor } from '../src/state/queries';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { NONBASIC_LANDS, ofType } from '../src/cards/selector';
-import { UnmodeledCardError } from '../src/errors';
+import { canPay, parseManaCost } from '../src/mana/cost';
 
 function ctx4(): GameContext {
   const c = createGame(
@@ -65,6 +65,7 @@ function customDef(
     spellAbility: null,
     triggers: [],
     staticEffects: [],
+    ruleStatics: [],
     modeled: true,
     unmodeledReasons: [],
     ...partial,
@@ -339,10 +340,16 @@ describe('CR 613.8 dependency ordering (ADR 0006)', () => {
     expect(forestSource).toMatchObject({ cardId: forestPerm.cardId, units: [['G', 'B']] });
   });
 
-  it('halts rather than guessing when mana abilities differ in how much they produce', () => {
+  it('offers ALTERNATIVES when mana abilities differ in how much they produce', () => {
     // The collapse above is only sound because each ability makes exactly one mana. A permanent
-    // offering "{T}: Add {G}" or "{T}: Add {C}{C}" is a real strategic choice, and picking one
-    // silently would be a misplay — so it still halts loudly (brief §6.3).
+    // offering "{T}: Add {G}" or "{T}: Add {C}{C}" is a real choice between different amounts,
+    // so the two are emitted as separate sources sharing the permanent's `cardId` — and
+    // `planPayment` taps at most one of them (Inc 12).
+    //
+    // This used to halt as an unmodeled card. That halt was a limitation of the SOURCE MODEL
+    // (one source per permanent), never a statement that the card was unmodelable: Sachi,
+    // Daughter of Seshiro granting "{T}: Add {G}{G}" to a Shaman that already taps for any
+    // color halted a real pool game on exactly this shape.
     const ctx = ctx4();
     registerCustomDef(
       ctx,
@@ -354,8 +361,15 @@ describe('CR 613.8 dependency ordering (ADR 0006)', () => {
         manaAbilities: [{ units: [['G']] }, { units: [['C'], ['C']] }],
       }),
     );
-    spawn(ctx, 'P1', land('Test Ambiguous Rock', { oracleId: 'ambiguous-rock' }));
+    const rock = spawn(ctx, 'P1', land('Test Ambiguous Rock', { oracleId: 'ambiguous-rock' }));
 
-    expect(() => manaSourcesFor(ctx, 'P1')).toThrow(UnmodeledCardError);
+    const sources = manaSourcesFor(ctx, 'P1').filter((s) => s.cardId === rock.cardId);
+    expect(sources.map((s) => s.units)).toEqual([[['G']], [['C'], ['C']]]);
+
+    // Either alternative is reachable…
+    expect(canPay(parseManaCost('{G}').cost!, [], sources)).toBe(true);
+    expect(canPay(parseManaCost('{2}').cost!, [], sources)).toBe(true);
+    // …but not both at once: one permanent, one tap.
+    expect(canPay(parseManaCost('{2}{G}').cost!, [], sources)).toBe(false);
   });
 });

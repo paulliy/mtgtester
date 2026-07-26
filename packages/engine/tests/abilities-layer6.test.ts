@@ -9,7 +9,7 @@ import type { CardDefinition } from '../src/cards/definition';
 import { OTHER } from '../src/cards/selector';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { createGame } from '../src/state/game';
-import { queueTriggersForEvent } from '../src/state/objects';
+import { queueTriggersForObject } from '../src/state/objects';
 import { manaSourcesFor, triggersOf } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import { copies, forest, gameConfig, oracle, registerCustomDef, spawn } from './fixtures';
@@ -50,6 +50,7 @@ function humilityDef(oracleId: string): CardDefinition {
     spellAbility: null,
     triggers: [],
     staticEffects: [{ affects: OTHER, op: { layer: 6, loseAllAbilities: true } }],
+    ruleStatics: [],
     modeled: true,
     unmodeledReasons: [],
   };
@@ -87,7 +88,7 @@ describe('layer 6 removes abilities, not just keywords (ADR 0007)', () => {
 
     expect(triggersOf(ctx, perm)).toHaveLength(0);
     // And the queue honors that — the ETB trigger does not go on the stack.
-    queueTriggersForEvent(ctx, 'enters', perm);
+    queueTriggersForObject(ctx, 'enters', perm);
     expect(ctx.state.pendingTriggers).toHaveLength(0);
   });
 

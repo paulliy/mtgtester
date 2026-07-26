@@ -4,129 +4,29 @@
  * legality holds; payment plans are recomputed here and must succeed.
  */
 
-import type { ObjectId } from '@mtg/shared';
+import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { AbilityCost } from '../cards/definition';
-import { TAP_COST } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
-import { computeCharacteristics } from '../effects/continuous';
-import { applyManaRider } from '../effects/resolve';
+import { payAbilityCosts, payManaCost } from '../effects/resolve';
 import { emit, debug } from '../log/log';
-import { addGeneric, emptyCost, planPayment, totalPips } from '../mana/cost';
-import type { ParsedManaCost } from '../mana/cost';
-import { makePermanent, moveObject, removeFromCurrentZone } from '../state/objects';
-import { getDefByOracleId, manaSourcesFor } from '../state/queries';
+import { addGeneric, describeManaCost, emptyCost, subtractGeneric, totalPips, withX } from '../mana/cost';
+import {
+  makePermanent,
+  moveObject,
+  queueCastTriggers,
+  removeFromCurrentZone,
+} from '../state/objects';
+import { getDefByOracleId, wardCostOf } from '../state/queries';
 import type {
   EngineCardObject,
   EnginePermanent,
   EnginePlayerState,
+  EngineStackObject,
   GameContext,
 } from '../state/types';
 import type { PriorityActionPayload } from './legal';
-import { computeTargetOptions, manaPortionOf, validateChosenTargets } from './legal';
+import { computeTargetOptions, costReductionFor, manaPortionOf, validateChosenTargets } from './legal';
 import { resetOpponentYields } from '../turn/priority';
-
-/**
- * Activate sources per plan, add their production to the pool, then deduct `cost`.
- *
- * A generator because not every mana ability costs {T}: "Sacrifice this creature: Add {R}{R}"
- * moves a permanent to the graveyard, and `moveObject` can ask the CR 903.9b commander question.
- */
-function* payCost(
-  ctx: GameContext,
-  player: EnginePlayerState,
-  cost: ParsedManaCost,
-): GameGen<void> {
-  const sources = manaSourcesFor(ctx, player.id);
-  const plan = planPayment(cost, player.manaPool, sources);
-  if (plan === null) {
-    throw new Error(`engine bug: cost for ${player.id} became unpayable at application time`);
-  }
-  for (const cardId of plan.tapCardIds) {
-    const perm = ctx.state.battlefield.find((p) => p.cardId === cardId);
-    if (perm === undefined) throw new Error('engine bug: payment source vanished');
-    // Riders on the mana ability itself — a painland's "deals 1 damage to you". Mana abilities
-    // never use the stack (CR 605.3a), so this resolves immediately rather than being queued.
-    // Applied BEFORE the cost, so a source that sacrifices itself still exists to do it.
-    for (const ability of computeCharacteristics(ctx, perm).manaAbilities) {
-      for (const effect of ability.onActivate ?? []) {
-        applyManaRider(ctx, perm, player, effect);
-      }
-    }
-    const source = sources.find((s) => s.cardId === cardId);
-    yield* payAbilityCosts(ctx, player, perm, source?.costs ?? TAP_COST, 'tapForMana');
-  }
-  // Add exactly the mana the planner chose to produce (the SPECIFIC symbol per unit —
-  // correct for multi-color sources, where the first symbol would mispay). Surplus floats
-  // and is drained at end of step.
-  const pool = player.manaPool;
-  for (const sym of ['W', 'U', 'B', 'R', 'G', 'C'] as const) pool[sym] += plan.produced[sym];
-  // Deduct: exact colored pips, then {C}, then generic (colorless first, then WUBRG).
-  for (const c of ['W', 'U', 'B', 'R', 'G'] as const) {
-    if (pool[c] < cost.colored[c]) throw new Error('engine bug: colored payment shortfall');
-    pool[c] -= cost.colored[c];
-  }
-  if (pool.C < cost.colorless) throw new Error('engine bug: colorless payment shortfall');
-  pool.C -= cost.colorless;
-  let generic = cost.generic;
-  for (const sym of ['C', 'W', 'U', 'B', 'R', 'G'] as const) {
-    if (generic === 0) break;
-    const take = Math.min(generic, pool[sym]);
-    pool[sym] -= take;
-    generic -= take;
-  }
-  if (generic > 0) throw new Error('engine bug: generic payment shortfall');
-}
-
-/**
- * Pay the NON-mana components of an activation cost (CR 601.2h): tap, remove counters,
- * sacrifice. A generator because sacrificing is a zone change, and `moveObject` can ask the
- * CR 903.9b commander question.
- *
- * Sacrifice is applied last so a tap/counter cost on the same permanent is recorded on a
- * permanent that still exists.
- */
-function* payAbilityCosts(
-  ctx: GameContext,
-  player: EnginePlayerState,
-  perm: EnginePermanent,
-  costs: readonly AbilityCost[],
-  tapEvent: 'tap' | 'tapForMana',
-): GameGen<void> {
-  for (const cost of costs) {
-    switch (cost.kind) {
-      case 'tap':
-        perm.tapped = true;
-        emit(ctx, tapEvent, { name: perm.name, cardId: perm.cardId }, player.id);
-        break;
-      case 'removeCounters': {
-        const have = perm.counters[cost.counter] ?? 0;
-        if (have < cost.count) throw new Error('engine bug: counter cost became unpayable');
-        perm.counters[cost.counter] = have - cost.count;
-        emit(
-          ctx,
-          'counters',
-          {
-            target: perm.name,
-            targetCardId: perm.cardId,
-            counter: cost.counter,
-            added: -cost.count,
-            total: perm.counters[cost.counter],
-          },
-          player.id,
-        );
-        break;
-      }
-      case 'mana':
-        break; // paid separately — see `payActivationCosts`
-      case 'sacrificeSelf':
-        break; // applied below
-    }
-  }
-  if (costs.some((c) => c.kind === 'sacrificeSelf')) {
-    emit(ctx, 'sacrifice', { name: perm.name, cardId: perm.cardId }, player.id);
-    yield* moveObject(ctx, perm, { zone: 'graveyard' });
-  }
-}
 
 /**
  * Pay a whole activation cost. Non-mana components go first: they take the source out of play
@@ -141,7 +41,54 @@ function* payActivationCosts(
 ): GameGen<void> {
   yield* payAbilityCosts(ctx, player, perm, costs, 'tap');
   const mana = manaPortionOf(costs);
-  if (totalPips(mana) > 0) yield* payCost(ctx, player, mana);
+  if (totalPips(mana) > 0) {
+    // The purpose must match the one `computePriorityOptions` used to decide affordability, or
+    // restricted mana that made the ability appear payable would not be spendable here.
+    yield* payManaCost(ctx, player, mana, {
+      kind: 'activateAbility',
+      sourceOracleId: perm.oracleId,
+    });
+  }
+}
+
+/**
+ * Ward (CR 702.21b): "whenever this becomes the target of a spell or ability an opponent
+ * controls, counter it unless that player pays `<cost>`".
+ *
+ * Modeled as a *triggered ability*, not as a targeting restriction, and that is the load-bearing
+ * decision. "Unless the controller pays" is a decision, and `isTargetStillLegal` — the function
+ * a legality filter would have to live in — is a pure predicate that cannot ask a player
+ * anything. As a trigger it also behaves correctly: it goes on the stack above the spell, so
+ * the spell is still countered if ward resolves, and other responses can happen in between.
+ */
+function queueWardTriggers(
+  ctx: GameContext,
+  controllerId: PlayerId,
+  stackObjectId: ObjectId,
+  targets: readonly ObjectId[],
+): void {
+  for (const targetId of targets) {
+    const perm = ctx.state.battlefield.find((p) => p.id === targetId);
+    if (perm === undefined) continue;
+    // "an opponent controls" — a permanent's own controller never triggers its ward.
+    if (perm.controllerId === controllerId) continue;
+    const cost = wardCostOf(ctx, perm);
+    if (cost === null) continue;
+
+    ctx.state.pendingTriggers.push({
+      controllerId: perm.controllerId,
+      sourceCardId: perm.cardId,
+      sourceOracleId: perm.oracleId,
+      sourceName: perm.name,
+      ability: {
+        kind: 'triggered',
+        targets: [],
+        effects: [{ op: 'counterUnlessPays', cost, stackObjectId }],
+        description: `ward ${describeManaCost(cost)}`,
+      },
+    });
+    debug(ctx, 'stack', `ward triggered: ${perm.name} (${describeManaCost(cost)})`);
+  }
 }
 
 /**
@@ -170,16 +117,25 @@ export function* applyPriorityAction(
     }
 
     case 'castSpell': {
-      const fromZone = payload.fromCommand ? player.commandZone : player.hand;
+      const fromZone =
+        payload.fromLibraryTop === true
+          ? player.library
+          : payload.fromCommand
+            ? player.commandZone
+            : player.hand;
       const obj = fromZone.find((o) => o.id === payload.objectId);
       if (obj === undefined) throw new Error('engine bug: spell to cast not found');
       const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
 
       const tax = payload.fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
-      const cost = addGeneric(def.manaCost ?? emptyCost(), tax);
+      const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
+      const cost = withX(
+        subtractGeneric(addGeneric(def.manaCost ?? emptyCost(), tax), reduction),
+        payload.x ?? 0,
+      );
       const targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
 
-      yield* payCost(ctx, player, cost);
+      yield* payManaCost(ctx, player, cost, { kind: 'castSpell', oracleId: obj.oracleId });
 
       if (payload.fromCommand) {
         player.commanderCastCount[obj.cardId] = (player.commanderCastCount[obj.cardId] ?? 0) + 1;
@@ -192,7 +148,15 @@ export function* applyPriorityAction(
         id: `o-${s.nextObjectNum++}` as ObjectId,
         zone: 'stack',
       };
-      s.stack.push({
+      // A permanent card can print "this spell can't be countered" too (Dragonlord Dromoka),
+      // where there is no `spellAbility` to carry the flag on — give such a cast a minimal
+      // zero-effect stack ability instead, purely so `protectedFromCounter` can see it.
+      const ability =
+        def.spellAbility ??
+        (def.spellCantBeCountered === true
+          ? { kind: 'spell' as const, targets: [], effects: [], cantBeCountered: true }
+          : null);
+      const spellEntry: EngineStackObject = {
         id: spellCard.id,
         sourceId: spellCard.id,
         controllerId: player.id,
@@ -200,11 +164,13 @@ export function* applyPriorityAction(
         description: `${obj.name}`,
         targets,
         card: spellCard,
-        ability: def.spellAbility,
+        ability,
         sourceOracleId: obj.oracleId,
         sourceCardId: obj.cardId,
         isCommanderCast: payload.fromCommand,
-      });
+        ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
+      };
+      s.stack.push(spellEntry);
       emit(
         ctx,
         'castSpell',
@@ -221,6 +187,10 @@ export function* applyPriorityAction(
       debug(ctx, 'stack', `${player.id} casts ${obj.name}${tax > 0 ? ` (tax {${tax}})` : ''}`, {
         targets,
       });
+      // "Whenever you cast a Dragon spell" fires now, with the spell already on the stack below
+      // it (CR 603.3b), so the trigger resolves first.
+      queueCastTriggers(ctx, spellEntry);
+      queueWardTriggers(ctx, player.id, spellCard.id, targets);
       return;
     }
 
@@ -263,6 +233,9 @@ export function* applyPriorityAction(
       };
 
       yield* payActivationCosts(ctx, player, perm, activated.costs);
+      // Recorded at ANNOUNCEMENT (CR 602.5f), not on resolution: the restriction is on
+      // activating, so countering the ability does not give the activation back.
+      if (activated.oncePerTurn === true) perm.activationsThisTurn.push(payload.index);
       resetOpponentYields(ctx, player.id);
       s.stack.push(stackEntry);
       emit(
@@ -272,6 +245,7 @@ export function* applyPriorityAction(
         player.id,
       );
       debug(ctx, 'stack', `${player.id} activates ${perm.name} — ${description}`);
+      queueWardTriggers(ctx, player.id, id, targets);
       return;
     }
 
@@ -280,7 +254,7 @@ export function* applyPriorityAction(
       if (companion === null || player.companionMovedToHand) {
         throw new Error('engine bug: companion action without a companion');
       }
-      yield* payCost(ctx, player, { ...emptyCost(), generic: 3 });
+      yield* payManaCost(ctx, player, { ...emptyCost(), generic: 3 });
       player.companionMovedToHand = true;
       const handObj: EngineCardObject = {
         ...companion,

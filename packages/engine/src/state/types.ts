@@ -25,7 +25,9 @@ import type {
   PlayerState,
   StackObject,
 } from '@mtg/shared';
+import type { ManaEntry } from '../cards/ability';
 import type { Ability, CardDefinition, KeywordAbility } from '../cards/definition';
+import type { TriggerScope } from '../cards/value';
 import type { Prng } from '../rng/prng';
 
 /** Stable physical-card identity, assigned once at game creation. */
@@ -54,6 +56,14 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   /** Timestamp assigned on entry (CR 613.7 ordering of continuous effects). */
   timestamp: number;
   /**
+   * Indices into this permanent's `activatedAbilities` used this turn, for "activate only once
+   * each turn" (CR 602.5f).
+   *
+   * Per PERMANENT, not per card definition: two copies of the same card each get their own
+   * activation, and a permanent that leaves and returns is a new object with a clean slate.
+   */
+  activationsThisTurn: number[];
+  /**
    * 903.9a: set when a commander arrives in graveyard/exile, cleared at the next SBA
    * check after its owner has been offered the command-zone move.
    */
@@ -79,6 +89,10 @@ export interface EngineStackObject extends StackObject {
   isCommanderCast: boolean;
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;
+  /** Numbers the firing event contributed (count, damage, spell mana value). */
+  triggerScope?: TriggerScope;
+  /** The X announced when this spell was cast (CR 601.2b), for its own effects to read. */
+  announcedX?: number;
 }
 
 export interface EnginePlayerState extends PlayerState {
@@ -87,6 +101,16 @@ export interface EnginePlayerState extends PlayerState {
   graveyard: EngineCardObject[];
   commandZone: EngineCardObject[];
   companion: EngineCardObject | null;
+  /**
+   * The authoritative mana pool (CR 106.4) — one entry per mana, because two mana of the same
+   * color stop being interchangeable once one carries a CR 106.6 restriction, a spend trigger,
+   * or an exemption from the end-of-step drain.
+   *
+   * The inherited `manaPool` is the per-symbol count SUMMARY of this, which is all the
+   * `PlayerView`, the spectator projection and the web app need. `mana/pool.ts` is the only
+   * module that writes either, so the two cannot drift.
+   */
+  manaEntries: ManaEntry[];
   /** Stable card ids of this player's commander(s). */
   commanderCardIds: CardId[];
   /** Set when a draw was attempted from an empty library (loss at next SBA check). */
@@ -136,8 +160,18 @@ export interface PendingTrigger {
    * The object whose event fired this trigger — the attacking Dragon, the creature that
    * entered. Absent for `self` and step triggers, where the source IS the object. Effects
    * reference it with `target: 'triggerObject'`.
+   *
+   * For an aggregate trigger this is the FIRST matching object. That is deliberate: aggregate
+   * text ("one or more Dragons … draw that many cards") never says "it", so a single referent is
+   * enough, and picking one keeps `EffectRef` from needing a set form.
    */
   triggerObjectCardId?: CardId;
+  /**
+   * Numbers only the event knows — how many objects matched, how much damage was dealt, the
+   * mana value of the spell cast. Captured here because the event is over by the time the
+   * trigger resolves, so these cannot be re-derived from the board.
+   */
+  scope?: TriggerScope;
 }
 
 export interface EngineState extends GameState {

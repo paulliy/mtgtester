@@ -12,8 +12,15 @@ import type { Color } from './mana';
 import type { OracleCard } from './cards';
 import type { DeckId, DeckSnapshotId, OracleId } from './ids';
 
-/** Where a decklist came from. A new source is added by implementing another adapter (§8.1). */
-export const DECK_SOURCE_TYPES = ['moxfield', 'archidekt', 'plaintext'] as const;
+/**
+ * Where a decklist came from. A new source is added by implementing another adapter (§8.1).
+ *
+ * `generated` is not an adapter: it is a deck the server built from the engine-supported pool
+ * (ADR 0009). It gets a source type of its own because it is snapshotted like any other deck —
+ * per-deck statistics key on `deck_snapshots`, so a generated deck that skipped the table would
+ * contribute nothing — and "plaintext" would misreport how it came to exist.
+ */
+export const DECK_SOURCE_TYPES = ['moxfield', 'archidekt', 'plaintext', 'generated'] as const;
 export type DeckSourceType = (typeof DECK_SOURCE_TYPES)[number];
 
 /** One `(quantity, cardName)` line from a decklist, before resolution (§8.2 step 1). */

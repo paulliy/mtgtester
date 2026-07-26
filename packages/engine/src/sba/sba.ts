@@ -386,6 +386,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     ...(trigger.triggerObjectCardId !== undefined
       ? { triggerObjectCardId: trigger.triggerObjectCardId }
       : {}),
+    ...(trigger.scope !== undefined ? { triggerScope: trigger.scope } : {}),
   });
   resetOpponentYields(ctx, trigger.controllerId);
   emit(ctx, 'triggerOnStack', { source: trigger.sourceName, description }, trigger.controllerId);

@@ -69,6 +69,37 @@ const MODELED = [
   'Three Visits',
   'Thunder Dragon',
   'Ureni of the Unwritten',
+  // Inc 7 — ward/menace/shroud/protection/changeling and equipment.
+  'Lightning Greaves',
+  // Inc 8 — dynamic `Value`s and {X} costs.
+  'Earthquake',
+  // Inc 10 — token creation, pay-life costs, once-per-turn activation.
+  // (Inc 9 — the new trigger events — deliberately closed no cards; it is a gate for these.)
+  'Beledros Witherbloom',
+  'Miirym, Sentinel Wyrm',
+  'Old Gnawbone',
+  // Inc 11 — zone-movement primitives and non-battlefield targets.
+  'Bladewing the Risen',
+  'Broodcaller Scourge',
+  'Last March of the Ents',
+  // Inc 12a — restricted mana (CR 106.6), mana spend triggers, alternatives on one permanent.
+  'Haven of the Spirit Dragon',
+  'Maelstrom of the Spirit Dragon',
+  'Path of Ancestry',
+  'Scaled Nurturer',
+  // Inc 12b — conditional-amount + linked mana; `addMana` from a resolving (non-activation)
+  // ability. Skycloud Expanse, Orb of Dragonkind, and Carnelian Orb of Dragonkind stay
+  // unmodeled — see the increment note in the plan for why.
+  'Ilysian Caryatid',
+  'Klauth, Unrivaled Ancient',
+  // Inc 13 — rule-modifying statics: cost reduction (fixed and dynamic, including from the
+  // command zone), "can't be countered" as a state-dependent rule (not just a fixed spell
+  // property), "opponents can't cast spells", casting from the top of the library.
+  'Dragonlord Dromoka',
+  'Korlessa, Scale Singer',
+  'Rhythm of the Wild',
+  'Temur Battlecrier',
+  'The Ur-Dragon',
 ].sort();
 
 describe('The Ur-Dragon deck — model coverage', () => {

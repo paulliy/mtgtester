@@ -8,9 +8,11 @@
  * depend on it without a cycle.
  */
 
+import type { Color } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { Condition } from './condition';
 import type { Selector } from './selector';
+import type { Value } from './value';
 
 /**
  * One component of an activation cost (CR 602.1b). A cost is a *list* of these, all paid
@@ -27,6 +29,8 @@ export type AbilityCost =
   | { kind: 'sacrificeSelf' }
   /** "Remove a gold counter from this artifact". */
   | { kind: 'removeCounters'; counter: string; count: number }
+  /** "Pay 10 life" (CR 118.8) — payable only if the controller's life is at least this much. */
+  | { kind: 'payLife'; amount: number }
   | { kind: 'mana'; cost: ParsedManaCost };
 
 /** The `{T}` cost every mana ability has unless it says otherwise. */
@@ -41,6 +45,11 @@ export interface ActivatedAbility {
   ability: Ability;
   /** "Activate only as a sorcery" — main phase, empty stack, your turn (CR 602.5d). */
   timing: 'any' | 'sorcery';
+  /**
+   * "Activate only once each turn" (CR 602.5f). Tracked per *permanent*, not per card: two
+   * copies of Beledros each get their own activation.
+   */
+  oncePerTurn?: boolean;
 }
 
 /**
@@ -53,6 +62,63 @@ export type DynamicManaKind =
   | 'commanderIdentity'
   /** "one mana of any color that a land an opponent controls could produce" (Fellwar Stone). */
   | 'opponentLandColors';
+
+/**
+ * What a payment is *for*, so restricted mana can decide whether it may pay (CR 106.6).
+ *
+ * A restriction is a property of the **payment as a whole**, never of an individual pip: "spend
+ * this mana only to cast a Dragon creature spell" is answered once, before any mana moves. That
+ * is what lets `planPayment` treat restricted mana as a plain filter — see `ManaRestriction`.
+ */
+export type PaymentPurpose =
+  /** Casting a spell. `card` is the spell's *printed* candidate — it is not on the battlefield. */
+  | { kind: 'castSpell'; oracleId: string }
+  /** Activating an ability of a permanent. */
+  | { kind: 'activateAbility'; sourceOracleId: string }
+  /**
+   * Anything else that charges mana — a ward tax, the companion {3}, an equip cost paid as part
+   * of an activation the engine did not model as one. NO restricted mana may pay for this: an
+   * unrecognized purpose must fail closed, or "spend only on X" silently becomes "spend on
+   * anything" (brief §6.3).
+   */
+  | { kind: 'other' };
+
+/**
+ * "Spend this mana only to cast a Dragon creature spell" (CR 106.6).
+ *
+ * Deliberately a predicate over the *purpose*, not over individual pips. Because a purpose is
+ * fixed for the whole payment, resolving a restriction yields one boolean per payment, and
+ * restricted mana is then either fully usable or entirely unusable. That is what keeps the
+ * payment solver's exactness argument intact: restrictions filter its inputs rather than adding
+ * a dimension to its search.
+ */
+export interface ManaRestriction {
+  /** Which kinds of payment this mana may be spent on. */
+  purposes: ('castSpell' | 'activateAbility')[];
+  /**
+   * A filter over the spell's / ability source's printed characteristics — "a Dragon creature
+   * spell". Absent means any object of the listed purposes ("spend this mana only to cast
+   * spells", Klauth).
+   */
+  filter?: Selector;
+  /** "…that shares a creature type with your commander" (Path of Ancestry). */
+  sharesCreatureTypeWithCommander?: boolean;
+  /** Printed text, for prompts and the event log. */
+  description: string;
+}
+
+/**
+ * "When you spend this mana to cast a Dragon creature spell, you gain 2 life" (Scaled Nurturer)
+ * — a *reflexive* trigger that fires as the mana is consumed, not as it is produced.
+ *
+ * `when` reuses `ManaRestriction` rather than defining a parallel predicate type: "spend only
+ * on X" and "when spent on X" ask exactly the same question, and the only difference is whether
+ * a false answer forbids the payment or merely declines to fire.
+ */
+export interface ManaSpendTrigger {
+  when: ManaRestriction;
+  ability: Ability;
+}
 
 /** A mana ability: "{T}: Add …". Never uses the stack (CR 605). */
 export interface ManaAbilitySpec {
@@ -75,9 +141,53 @@ export interface ManaAbilitySpec {
    * immediately as the mana is produced, which is exactly the printed behavior.
    */
   onActivate?: Effect[];
+  /** "Spend this mana only to cast a Dragon creature spell" — rides on the mana produced. */
+  restriction?: ManaRestriction;
+  /** "When you spend this mana to cast a Dragon creature spell, you gain 2 life." */
+  spendTrigger?: ManaSpendTrigger;
+  /** "Until end of turn, you don't lose this mana as steps and phases end" (Klauth). */
+  persistent?: boolean;
+  /**
+   * "…add two mana of any ONE color" — several units of `units` that must all resolve to the
+   * SAME symbol, unlike an ordinary multi-unit production where each unit is an independent
+   * choice. A separate flag rather than a new `ManaUnit` shape: it changes how the payment
+   * solver assigns symbols across units of one source, not what any single unit can produce.
+   */
+  linked?: true;
+  /**
+   * "If you control a creature with power 4 or greater, add two mana of any one color instead"
+   * (Ilysian Caryatid) — a conditional AMOUNT, not an activation gate like `condition`. When
+   * `condition` holds, `units` (and `linked`) are REPLACED by this, not added to it: the base
+   * production is not also on offer, matching "instead".
+   */
+  conditionalUnits?: { condition: Condition; units: ManaUnit[]; linked?: true };
 }
 
-/** CR 702 keywords with real engine implementations in Phase 2 (brief §6.1). */
+/**
+ * One mana in a player's pool (CR 106.4). The engine-side pool is a LIST of these rather than
+ * the shared `ManaPool`'s per-symbol counts, because two mana of the same color are no longer
+ * interchangeable once one of them is restricted, carries a spend trigger, or survives the step.
+ *
+ * `PlayerState.manaPool` remains the flat count summary, derived from this — see `mana/pool.ts`.
+ */
+export interface ManaEntry {
+  symbol: Color | 'C';
+  /** CR 106.6 spending restriction, if any. */
+  restriction?: ManaRestriction;
+  /** Fires when this specific mana is consumed (Scaled Nurturer, Path of Ancestry). */
+  spendTrigger?: ManaSpendTrigger;
+  /** Survives `emptyManaPools` at the end of a step/phase (CR 500.4 exception — Klauth). */
+  persistent?: boolean;
+}
+
+/**
+ * CR 702 keywords with real engine implementations (brief §6.1).
+ *
+ * Only the *unparameterized* ones live here. Ward and protection take an argument, so they are
+ * separate `Characteristics` fields rather than members of this list — squeezing them in would
+ * mean either stringly-typed keywords ("ward {2}") or a union that every `includes()` call site
+ * has to destructure.
+ */
 export const IMPLEMENTED_KEYWORDS = [
   'flying',
   'reach',
@@ -91,7 +201,11 @@ export const IMPLEMENTED_KEYWORDS = [
   'defender',
   'indestructible',
   'hexproof',
+  'shroud',
+  'menace',
   'flash',
+  'changeling',
+  'riot',
 ] as const;
 export type KeywordAbility = (typeof IMPLEMENTED_KEYWORDS)[number];
 
@@ -106,7 +220,14 @@ export type TargetKind =
   | 'artifactOrEnchantment'
   | 'player'
   | 'anyTarget' // creature or player (CR 115.4)
-  | 'spell';
+  | 'spell'
+  /**
+   * "target Dragon permanent card" — a card in a graveyard, not a permanent (CR 111.2). Always
+   * the ability's OWN controller's graveyard: every printed template this engine reads says
+   * "from your graveyard" (Bladewing the Risen); a future "target card in a graveyard" (any
+   * player's) needs its own kind rather than silently widening this one.
+   */
+  | 'cardInGraveyard';
 
 /** One declared target slot of an ability. Effects reference it by its index. */
 export interface TargetSpec {
@@ -117,6 +238,11 @@ export interface TargetSpec {
    * multiply combinatorially with every kind above.
    */
   controller?: 'you' | 'opponent';
+  /**
+   * Further restriction for a zone-qualified kind (`cardInGraveyard`) — "Dragon permanent
+   * card". Unused for battlefield kinds, which use `permanentMatchesKind` instead.
+   */
+  filter?: Selector;
 }
 
 /**
@@ -151,24 +277,63 @@ export type Effect =
   | { op: 'grantKeywordUntilEot'; target: EffectRef; keyword: KeywordAbility }
   | { op: 'pumpEachUntilEot'; selector: Selector; power: number; toughness: number }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
-  | { op: 'dealDamage'; target: EffectRef; amount: number } // to the slot's creature or player
+  | { op: 'dealDamage'; target: EffectRef; amount: Value } // to the slot's creature or player
   | { op: 'destroy'; target: EffectRef } // target creature
   | { op: 'exile'; target: EffectRef } // target creature
   | { op: 'counter'; target: number } // target spell — always a real target
   | { op: 'putCounters'; target: EffectRef; counter: string; count: number }
   | { op: 'putCountersEach'; selector: Selector; counter: string; count: number }
-  | { op: 'draw'; count: number } // controller draws
-  | { op: 'gainLife'; amount: number } // controller gains
+  | { op: 'draw'; count: Value } // controller draws
+  | { op: 'gainLife'; amount: Value } // controller gains
   | { op: 'eachOpponentLosesLife'; amount: number }
   | { op: 'eachOpponentDamage'; amount: number } // damage from source to each opponent
   /** "This land deals 1 damage to you" — damage from the source to its own controller. */
   | { op: 'damageController'; amount: number }
   /** "It deals 5 damage to each creature without flying" — the untargeted mass form. */
-  | { op: 'damageEach'; selector: Selector; amount: number }
+  | { op: 'damageEach'; selector: Selector; amount: Value }
+  /** "~ deals X damage to each creature without flying AND EACH PLAYER" (Earthquake). */
+  | { op: 'damageEachPlayer'; amount: Value }
   /** "Search your library for a Forest card, put it onto the battlefield" (CR 701.19). */
   | { op: 'searchLibrary'; filter: Selector; destinations: SearchDestination[] }
   | { op: 'shuffle' }
   | { op: 'scry'; count: number }
+  /**
+   * Ward's payoff (CR 702.21b): counter the spell or ability that triggered this, unless its
+   * controller pays. Not `counter`, which targets — this acts on the object below it on the
+   * stack, which ward's own trigger recorded.
+   */
+  | { op: 'counterUnlessPays'; cost: ParsedManaCost; stackObjectId: string }
+  /** Equip (CR 702.6): attach the ability's source to the target permanent. */
+  | { op: 'attachSelfTo'; target: EffectRef }
+  /** "Create a 1/1 black and green Pest creature token …" (CR 111.1). */
+  | { op: 'createToken'; spec: TokenSpec; count: Value }
+  /**
+   * "Create a token that's a copy of it, except the token isn't legendary" (Miirym).
+   *
+   * Copies the referent's **printed** characteristics (CR 707.2), not its current ones: a copy
+   * of a pumped Dragon is not pumped, and a copy of one wearing an Equipment is unequipped.
+   */
+  | { op: 'createTokenCopyOf'; ref: EffectRef; count: Value; exceptNonLegendary?: boolean }
+  /** "Untap all lands you control" (Beledros). */
+  | { op: 'untapEach'; selector: Selector }
+  /** "Return target Dragon permanent card from your graveyard to the battlefield" (Bladewing). */
+  | { op: 'graveyardToBattlefield'; target: EffectRef }
+  /** "Return target Dragon creature card from your graveyard to your hand" (Haven). */
+  | { op: 'graveyardToHand'; target: EffectRef }
+  /** "Return target creature to its owner's hand" — the general permanent-to-hand bounce. */
+  | { op: 'returnToHand'; target: EffectRef }
+  /**
+   * "Put a/any number of `<filter>` cards from your hand onto the battlefield" — Broodcaller
+   * Scourge's single bounded pick and Last March of the Ents' unbounded "any number" share one
+   * op because both are the same decision loop, asked once or repeated to a decline.
+   */
+  | {
+      op: 'handToBattlefield';
+      filter: Selector;
+      /** "with mana value less than or equal to that damage" (Broodcaller). Omitted ⇒ unbounded. */
+      maxManaValue?: Value;
+      count: 'one' | 'any';
+    }
   /**
    * "Look at the top eight cards of your library. You may put a Dragon creature card from among
    * them onto the battlefield. Put the rest on the bottom of your library in a random order."
@@ -183,7 +348,45 @@ export type Effect =
       mayPut: { filter: Selector; destination: SearchDestination };
       /** Where everything not taken ends up. */
       rest: 'bottomRandom';
+    }
+  /**
+   * "Add X mana in any combination of colors" (Klauth) — mana entering the pool from a
+   * RESOLVING ability rather than an activation (CR 605 vs the stack). One color decision per
+   * mana produced: a player choosing red, red, then blue for three mana ends up with exactly
+   * the pool a single "distribute" choice would give, so asking per-mana is not a rules
+   * deviation, only a different (and much simpler) decision shape.
+   */
+  | {
+      op: 'addMana';
+      amount: Value;
+      colors: 'any' | (Color | 'C')[];
+      /** "Spend this mana only to cast spells" — rides on the mana produced (CR 106.6). */
+      restriction?: ManaRestriction;
+      /** "Until end of turn, you don't lose this mana as steps and phases end." */
+      persistent?: boolean;
     };
+
+/**
+ * A token's printed face (CR 111.2) — everything a `CardDefinition` needs that a token has.
+ *
+ * Tokens carry their own abilities, which is why this is not just a name and a P/T: Beledros's
+ * Pest has a dies trigger and Old Gnawbone's Treasure has a mana ability. Modeling those as
+ * properties of the *creating* card instead would put the trigger on the wrong object.
+ */
+export interface TokenSpec {
+  name: string;
+  typeLine: string;
+  supertypes?: string[];
+  types: string[];
+  subtypes: string[];
+  colors: Color[];
+  power: number | null;
+  toughness: number | null;
+  keywords?: KeywordAbility[];
+  triggers?: Ability[];
+  manaAbilities?: ManaAbilitySpec[];
+  activatedAbilities?: ActivatedAbility[];
+}
 
 /**
  * Where one card found by a library search goes. A search has one destination per card it may
@@ -210,14 +413,48 @@ export type TriggerSubject =
   /** Any permanent matching the selector — "Whenever a Dragon you control attacks". */
   | { kind: 'permanent'; selector: Selector };
 
-/** The event a triggered ability listens for. `upkeep` is a step, so it has no subject object. */
-export type TriggerWhen = 'enters' | 'dies' | 'attacks' | 'upkeep';
+/**
+ * The event a triggered ability listens for.
+ *
+ * Three shapes, not one enum: object events have a subject permanent, step events have a player
+ * whose step counts, and `castsSpell` watches an object on the stack that is not a permanent at
+ * all. Collapsing them would give every consumer a subject field that is meaningless two-thirds
+ * of the time.
+ */
+export type TriggerWhen =
+  | 'enters'
+  | 'dies'
+  | 'attacks'
+  | 'dealsCombatDamageToPlayer'
+  | 'castsSpell'
+  | 'upkeep'
+  | 'endStep';
+
+/** The object-event half of `TriggerHead`. */
+export type ObjectTriggerWhen = 'enters' | 'dies' | 'attacks' | 'dealsCombatDamageToPlayer';
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
 export type TriggerHead =
-  | { when: 'enters' | 'dies' | 'attacks'; subject: TriggerSubject }
-  /** "At the beginning of your/each upkeep" — `player` says whose upkeep counts. */
-  | { when: 'upkeep'; player: 'you' | 'each' };
+  | {
+      when: ObjectTriggerWhen;
+      subject: TriggerSubject;
+      /**
+       * "Whenever **one or more** Dragons you control attack, draw **that many** cards" — ONE
+       * trigger carrying a count (CR 603.2c), not one trigger per matching object. Without this
+       * distinction the ability fires N times and each firing draws N, so a three-Dragon attack
+       * draws nine cards instead of three.
+       *
+       * The count reaches the effects as the `triggerCount` `Value`.
+       */
+      aggregate?: boolean;
+    }
+  /**
+   * "Whenever you cast a Dragon spell" — the subject is a spell on the stack, so it is matched
+   * by its *card* characteristics rather than as a permanent.
+   */
+  | { when: 'castsSpell'; caster: 'you' | 'opponent' | 'each'; filter?: Selector }
+  /** "At the beginning of your/each upkeep|end step" — `player` says whose step counts. */
+  | { when: 'upkeep' | 'endStep'; player: 'you' | 'each' };
 
 /**
  * When a triggered ability fires.
@@ -246,4 +483,11 @@ export interface Ability {
   targets: TargetSpec[];
   effects: Effect[];
   description?: string;
+  /**
+   * "This spell can't be countered" (Last March of the Ents, CR 601). A property of the spell
+   * object itself, not something it does at resolution — checked by the `counter` executor and
+   * `counterUnlessPays` before either actually removes it from the stack, the same DEBT-style
+   * "still a legal target, but the consequence is prevented" pattern as `indestructible`/`destroy`.
+   */
+  cantBeCountered?: boolean;
 }

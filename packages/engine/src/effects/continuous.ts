@@ -35,6 +35,7 @@ import type { ManaAbilitySpec } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches, selectorIsEventOnly } from '../cards/selector';
+import { CREATURE_TYPES } from '../cards/creature-types';
 import { evaluateValue, isDynamicValue } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
@@ -79,6 +80,12 @@ function groupOf(op: ContinuousOp): string {
   return op.layer === 7 ? `7${op.sublayer}` : String(op.layer);
 }
 
+/** The card id of whatever `perm` is attached to, for `attachedToSource`. */
+function attachedCardId(ctx: GameContext, perm: EnginePermanent): string | null {
+  if (perm.attachedTo === null) return null;
+  return ctx.state.battlefield.find((p) => p.id === perm.attachedTo)?.cardId ?? null;
+}
+
 /** Every continuous effect in play, from static abilities and until-end-of-turn effects. */
 function gatherEffects(ctx: GameContext): LayerEffect[] {
   const out: LayerEffect[] = [];
@@ -100,7 +107,12 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         applies: {
           kind: 'selector',
           selector: s.affects,
-          source: { cardId: source.cardId, controllerId: source.controllerId },
+          source: {
+            cardId: source.cardId,
+            controllerId: source.controllerId,
+            // Equipment/Auras: `attachedTo` is an ObjectId, and selectors work in card ids.
+            attachedToCardId: attachedCardId(ctx, source),
+          },
         },
         op: s.op,
         timestamp: source.timestamp,
@@ -148,6 +160,7 @@ function candidateOf(perm: EnginePermanent, chars: Characteristics): SelectorCan
     colors: chars.colors,
     power: chars.power,
     keywords: chars.keywords,
+    isToken: perm.isToken,
   };
 }
 
@@ -179,6 +192,11 @@ function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): 
     case 4:
       for (const t of op.addTypes ?? []) if (!chars.types.includes(t)) chars.types.push(t);
       for (const s of op.addSubtypes ?? []) if (!chars.subtypes.includes(s)) chars.subtypes.push(s);
+      // Changeling (CR 702.73): every creature type, always — a characteristic-defining ability
+      // that lives in layer 4 with the other type changes.
+      if (op.addAllCreatureTypes === true) {
+        for (const t of CREATURE_TYPES) if (!chars.subtypes.includes(t)) chars.subtypes.push(t);
+      }
       // CR 305.7: *setting* a land's subtype replaces its land types outright.
       if (op.setLandSubtype !== undefined) chars.subtypes = [op.setLandSubtype];
       if (op.loseAbilities === true) chars.loseAbilities = true;
@@ -190,9 +208,19 @@ function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): 
         chars.keywords = [];
         chars.triggers = [];
         chars.manaAbilities = [];
+        chars.ward = null;
+        chars.protectionFrom = [];
         chars.loseAbilities = true;
       } else if ('addManaAbility' in op) {
         chars.manaAbilities.push(op.addManaAbility);
+      } else if ('addWard' in op) {
+        chars.ward = op.addWard;
+      } else if ('addProtection' in op) {
+        for (const c of op.addProtection) if (!chars.protectionFrom.includes(c)) {
+          chars.protectionFrom.push(c);
+        }
+      } else if ('addTrigger' in op) {
+        chars.triggers.push(op.addTrigger);
       } else if (!chars.keywords.includes(op.addKeyword)) {
         chars.keywords.push(op.addKeyword);
       }
@@ -248,6 +276,8 @@ function cloneWork(work: WorkMap): WorkMap {
         subtypes: [...entry.chars.subtypes],
         colors: [...entry.chars.colors],
         keywords: [...entry.chars.keywords],
+        ward: entry.chars.ward,
+        protectionFrom: [...entry.chars.protectionFrom],
         triggers: [...entry.chars.triggers],
         manaAbilities: [...entry.chars.manaAbilities],
         power: entry.chars.power,
@@ -330,6 +360,8 @@ function finishLayer4(ctx: GameContext, work: WorkMap): void {
     if (chars.loseAbilities) {
       chars.keywords = [];
       chars.triggers = [];
+      chars.ward = null;
+      chars.protectionFrom = [];
     }
 
     const printedBasics = def.subtypes.filter((s) => BASIC_LAND_MANA[s] !== undefined);
@@ -388,6 +420,8 @@ function runLayers(
         // Layer 5 is not implemented — printed color, read from here so it has one home.
         colors: [...def.colors],
         keywords: [...def.keywords],
+        ward: def.ward ?? null,
+        protectionFrom: [...(def.protectionFrom ?? [])],
         triggers: [...def.triggers],
         manaAbilities: [...def.manaAbilities],
         // Base P/T comes from the permanent (a copy effect would set it there — layer 1).

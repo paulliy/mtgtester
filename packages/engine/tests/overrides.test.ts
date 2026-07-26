@@ -14,8 +14,17 @@ import { oracle } from './fixtures';
 
 const ORACLE_ID = 'oracle-test-override-card';
 
-/** A card with one line the text grammar cannot read. */
-const bespoke = (text = 'Whenever a Dragon you control attacks, untap all Dragons.') =>
+/**
+ * A card with one line the text grammar cannot read.
+ *
+ * The line has to be *chosen*, and re-chosen as the grammar grows: this fixture previously used
+ * "…, untap all Dragons", which Inc 10 taught the parser to read. A fixture that quietly starts
+ * parsing turns these tests green for the wrong reason, so the line below is deliberately one
+ * whose machinery (choosing which permanents an opponent sacrifices) no increment has built.
+ */
+const bespoke = (
+  text = 'Whenever a Dragon you control attacks, each opponent sacrifices a permanent of your choice.',
+) =>
   oracle({
     name: 'Test Bespoke',
     oracleId: ORACLE_ID,

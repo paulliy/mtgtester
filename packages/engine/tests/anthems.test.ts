@@ -176,6 +176,7 @@ describe('anthems and lords (ADR 0008)', () => {
           },
         },
       ],
+      ruleStatics: [],
       modeled: true,
       unmodeledReasons: [],
     } satisfies CardDefinition);
