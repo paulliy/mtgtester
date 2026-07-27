@@ -7,9 +7,29 @@
  *   action sets, zone changes — never part of `GameState`.
  */
 
-import type { PlayerId } from '@mtg/shared';
+import type { GameEvent, PlayerId } from '@mtg/shared';
 import type { DebugEntry, GameContext } from '../state/types';
-import { buildSpectatorState } from '../view/spectator';
+import { buildSpectatorState, formatSpectatorLine } from '../view/spectator';
+
+/**
+ * Settle the snapshot owed to the last loggable event: whatever the board looks like *now* is
+ * what that event produced.
+ *
+ * This is deferred on purpose. An event is appended at the moment it is *announced*, which is
+ * routinely before its effect lands — `applyPriorityAction` emits `playLand` and only then
+ * moves the card, and `Engine.submit` emits `decision` before the generator applies the chosen
+ * action at all. Snapshotting inside `emit` therefore stored the board as it was *before* the
+ * line the user clicks on, which is exactly one action stale on every seek.
+ *
+ * The runner calls this whenever it regains control, so the newest line always has a board.
+ */
+export function settleSpectatorSnapshot(ctx: GameContext): void {
+  const s = ctx.state;
+  const seq = s.pendingSnapshotSequence;
+  if (seq === null || seq === undefined) return;
+  s.pendingSnapshotSequence = null;
+  (s.sequenceSnapshots ??= new Map()).set(seq, buildSpectatorState(ctx));
+}
 
 export function emit(
   ctx: GameContext,
@@ -19,7 +39,7 @@ export function emit(
 ): void {
   const s = ctx.state;
   const seq = s.nextEventSequence++;
-  s.eventLog.push({
+  const event: GameEvent = {
     sequence: seq,
     turn: s.turnNumber,
     phase: s.phase,
@@ -27,9 +47,15 @@ export function emit(
     actorSeat,
     type,
     payload,
-  });
-  s.sequenceSnapshots ??= new Map();
-  s.sequenceSnapshots.set(seq, buildSpectatorState(ctx));
+  };
+  s.eventLog.push(event);
+
+  // The state as it stands right now is the outcome of the previous loggable event.
+  settleSpectatorSnapshot(ctx);
+
+  // Only events the spectator log actually renders are worth a snapshot: seeking is by log
+  // line, and a snapshot per raw event cost ~11 MB of retained state per 30 turns.
+  if (formatSpectatorLine(event) !== null) s.pendingSnapshotSequence = seq;
 }
 
 export function debug(

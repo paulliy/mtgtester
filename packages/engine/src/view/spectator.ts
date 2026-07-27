@@ -31,6 +31,7 @@ function cardView(ctx: GameContext, obj: EngineCardObject): SpectatorCard {
     manaCost: obj.manaCost,
     oracleText: obj.oracleText,
     scryfallId: ctx.defs.get(obj.oracleId)?.scryfallId ?? null,
+    owner: obj.ownerId,
   };
 }
 
@@ -57,10 +58,16 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
     blockedBy: [...perm.blockedByOrdered],
     keywords: [...chars.keywords],
     scryfallId: ctx.defs.get(perm.oracleId)?.scryfallId ?? null,
+    owner: perm.ownerId,
   };
 }
 
-/** Locate a commander by its stable card id, wherever it currently sits. */
+/**
+ * Locate a commander by its stable card id, wherever it currently sits.
+ *
+ * `gone` is a real answer, not a failure: when a player is eliminated their objects leave the
+ * game entirely (CR 800.4a), so their commander is in no zone at all.
+ */
 function commanderZone(ctx: GameContext, player: EnginePlayerState, cardId: string): string {
   if (ctx.state.battlefield.some((p) => p.cardId === cardId)) return 'battlefield';
   if (ctx.state.stack.some((s) => s.card?.cardId === cardId)) return 'stack';
@@ -69,10 +76,19 @@ function commanderZone(ctx: GameContext, player: EnginePlayerState, cardId: stri
   if (player.hand.some((o) => o.cardId === cardId)) return 'hand';
   if (player.library.some((o) => o.cardId === cardId)) return 'library';
   if (ctx.state.exile.some((o) => o.cardId === cardId)) return 'exile';
-  return 'unknown';
+  return player.hasLost ? 'gone' : 'unknown';
 }
 
+/**
+ * A commander's name must not depend on finding its card in a zone. Scanning zones returned
+ * "unknown" the moment the card was not in one — which is exactly what happens to an eliminated
+ * player's commander — and the seat panel is labelled from this, so a losing deck lost its name
+ * on the screen whose entire purpose is comparing decks. The game config is the durable source.
+ */
 function commanderName(ctx: GameContext, player: EnginePlayerState, cardId: string): string {
+  const declared = player.commanderNames?.[cardId];
+  if (declared !== undefined) return declared;
+
   const zones: EngineCardObject[][] = [
     player.commandZone,
     player.graveyard,
@@ -225,6 +241,11 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
       if (description === null) return null;
       // Passing priority is the overwhelming majority of decisions and says nothing.
       if (/^pass\b/i.test(description)) return null;
+      // A land play is announced twice — "Play Swamp" here and "plays Swamp" from the
+      // `playLand` event that follows. Keep the second: it reads as narration like the rest of
+      // the log, and it is emitted on the far side of the zone change, so seeking to it shows
+      // the land on the battlefield. `Play ` is `legal.ts`'s land-play action, and only that.
+      if (/^Play\s/.test(description)) return null;
       return { ...base, text: description };
     }
 

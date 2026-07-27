@@ -14,6 +14,7 @@ export { DECK_SOURCE_TYPES, VALIDATION_CODES } from './decks';
 export {
   SERVER_TO_CLIENT_TYPES,
   CLIENT_TO_SERVER_TYPES,
+  LOOKAHEAD_TURNS,
   isClientToServerMessage,
 } from './protocol';
 

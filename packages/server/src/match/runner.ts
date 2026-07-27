@@ -28,10 +28,17 @@ import type {
   SpectatorState,
   TargetChoice,
 } from '@mtg/shared';
+import { LOOKAHEAD_TURNS } from '@mtg/shared';
 import type { GameRecorder, GameSeatRecord, GameStatus } from '../db/games';
 
-/** Turns the engine may compute beyond the viewer's position (brief §10.1). */
-export const LOOKAHEAD_TURNS = 5;
+export { LOOKAHEAD_TURNS } from '@mtg/shared';
+
+/**
+ * How many per-action board states to keep for seeking. The client keeps the last 4 000 log
+ * lines, so anything older than that cannot be clicked anyway; a dropped sequence falls back to
+ * its turn snapshot rather than failing the seek.
+ */
+export const MAX_SEQUENCE_SNAPSHOTS = 4_000;
 
 /** How long the user gets to answer an escalated decision before the fallback (brief §7.7). */
 export const ESCALATION_TIMEOUT_MS = 5_000;
@@ -185,14 +192,21 @@ export class MatchRunner {
   }
 
   /**
-   * The board at an already-computed turn (or specific action sequence). Scrubbing backward is
-   * always allowed; scrubbing *forward* past the frontier is not.
+   * The board at an already-computed turn, or — when a log line's `sequence` is given — the
+   * board immediately *after* that action. Scrubbing backward is always allowed; scrubbing
+   * forward past the frontier is not.
+   *
+   * The returned `sequence` is what the caller must report to the client: it is `null` when the
+   * per-action state was not retained and the turn snapshot was served instead, and the client
+   * needs to know that so it does not highlight a log line the board does not match.
    */
-  stateAt(turn: number, sequence?: number): SpectatorState | null {
-    if (sequence !== undefined && this.sequenceSnapshots.has(sequence)) {
-      return this.sequenceSnapshots.get(sequence)!;
+  stateAt(turn: number, sequence?: number): { state: SpectatorState; sequence: number | null } | null {
+    if (sequence !== undefined) {
+      const exact = this.sequenceSnapshots.get(sequence);
+      if (exact !== undefined) return { state: exact, sequence };
     }
-    return this.snapshots.get(turn) ?? this.opts.recorder?.loadTurnSnapshot(turn) ?? null;
+    const state = this.snapshots.get(turn) ?? this.opts.recorder?.loadTurnSnapshot(turn) ?? null;
+    return state === null ? null : { state, sequence: null };
   }
 
   /**
@@ -379,9 +393,11 @@ export class MatchRunner {
     this.captureSnapshot();
   }
 
-  private captureSnapshot(): void {
+  /** `terminal` re-snapshots a turn already captured, for the end-of-game board. */
+  private captureSnapshot(terminal = false): void {
     const state = this.opts.engine.spectatorState();
     const turn = state.turnNumber;
+    if (!terminal && this.snapshots.has(turn)) return;
     this.lastSnapshotTurn = turn;
     this.frontierTurn = Math.max(this.frontierTurn, turn);
     this.snapshots.set(turn, state);
@@ -391,16 +407,12 @@ export class MatchRunner {
   }
 
   private flushEvents(): void {
+    // Drain first, and unconditionally: the newest line's board is only settled at the moment
+    // the engine hands control back, which is right now.
+    this.takeSequenceSnapshots();
+
     const events = this.opts.engine.eventsSince(this.eventCursor);
     if (events.length === 0) return;
-
-    const engineState = this.opts.engine.getEngineState();
-    for (const e of events) {
-      const snap = engineState.sequenceSnapshots?.get(e.sequence);
-      if (snap !== undefined) {
-        this.sequenceSnapshots.set(e.sequence, snap);
-      }
-    }
 
     this.eventCursor = (events[events.length - 1]?.sequence ?? this.eventCursor) + 1;
     this.opts.recorder?.appendEvents(events);
@@ -410,8 +422,28 @@ export class MatchRunner {
     }
   }
 
+  /**
+   * Move the engine's per-action boards into the runner and cap what is retained. `Map`
+   * iterates in insertion order and sequences only ever increase, so dropping from the front
+   * drops the oldest.
+   */
+  private takeSequenceSnapshots(): void {
+    for (const [sequence, state] of this.opts.engine.drainSpectatorSnapshots()) {
+      this.sequenceSnapshots.set(sequence, state);
+    }
+    while (this.sequenceSnapshots.size > MAX_SEQUENCE_SNAPSHOTS) {
+      const oldest = this.sequenceSnapshots.keys().next();
+      if (oldest.done === true) break;
+      this.sequenceSnapshots.delete(oldest.value);
+    }
+  }
+
   private finish(result: GameResult): void {
     this.result = result;
+    // Re-snapshot the final turn. Turn snapshots are taken at a turn's *start*, so without this
+    // the last board a viewer can scrub to predates everything that ended the game — the winner
+    // is announced over a board where nobody has died yet.
+    this.captureSnapshot(true);
 
     if (result.halted) {
       this.recordHalt({
@@ -440,6 +472,9 @@ export class MatchRunner {
 
   private recordHalt(info: HaltInfo): void {
     this.halt = info;
+    // Same reason as `finish`: the user is told to scrub to the halt point and resolve it
+    // (brief §10.1), so the board there must be the board as it actually stopped.
+    this.captureSnapshot(true);
     this.setStatus('halted');
     // A halt reached without a `GameResult` — an escalation during compute-ahead, an engine
     // throw — still has to close the row; otherwise it reads `running` forever.

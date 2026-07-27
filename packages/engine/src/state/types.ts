@@ -140,6 +140,11 @@ export interface EnginePlayerState extends PlayerState {
   manaEntries: ManaEntry[];
   /** Stable card ids of this player's commander(s). */
   commanderCardIds: CardId[];
+  /**
+   * Commander names by card id, fixed at game creation. A commander leaves the game with its
+   * eliminated owner (CR 800.4a), so it cannot be named by searching the zones.
+   */
+  commanderNames: Record<CardId, string>;
   /** Set when a draw was attempted from an empty library (loss at next SBA check). */
   attemptedDrawFromEmptyLibrary: boolean;
   mulligansTaken: number;
@@ -227,8 +232,14 @@ export interface EngineState extends GameState {
   /** Monotonic timestamp for continuous-effect ordering (CR 613.7). */
   nextTimestamp: number;
   combat: CombatState | null;
-  /** Per-event spectator snapshots for high-precision action-by-action replay. */
+  /**
+   * Board states for action-by-action replay, keyed by the `GameEvent.sequence` they are the
+   * *result* of. Populated only for events the spectator log renders, and drained by the
+   * server (`Engine.drainSpectatorSnapshots`) so a long game does not retain every board.
+   */
   sequenceSnapshots?: Map<number, import('@mtg/shared').SpectatorState>;
+  /** The loggable event still owed a snapshot — see `settleSpectatorSnapshot`. */
+  pendingSnapshotSequence?: number | null;
   /** Fixed seating (never mutated) — `turnOrder` shrinks as players are eliminated. */
   seating: PlayerId[];
   /** The player whose turn it is, tracked by id (survives turnOrder mutation). */

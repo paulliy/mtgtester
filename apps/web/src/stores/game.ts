@@ -25,6 +25,9 @@ import { GameSocket, type ConnectionState } from '../lib/socket';
 /** Log lines kept in memory. A long game emits thousands; the scroller only shows the tail. */
 const MAX_LOG_LINES = 4_000;
 
+/** Default live-mode pace, in ms per turn. Mirrors the server's `LIVE_PACE_MS`. */
+export const DEFAULT_PACE_MS = 1_200;
+
 export interface ApiCost {
   calls: number;
   skippedCalls: number;
@@ -47,6 +50,15 @@ export const useGameStore = defineStore('game', () => {
   const frontierTurn = ref(0);
   const snapshotTurns = ref<number[]>([]);
   const playbackMode = ref<PlaybackMode>('live');
+  /** Live-mode presentation speed, in ms per turn. 0 is "as fast as it computes". */
+  const paceMs = ref(DEFAULT_PACE_MS);
+
+  /**
+   * The action-log line the board on screen belongs to, as confirmed by the server. Never set
+   * optimistically: if the server served a turn snapshot instead of the exact per-action board
+   * it clears this, so the log highlight can never claim a position the board is not at.
+   */
+  const activeSequence = ref<number | null>(null);
 
   const halt = ref<ComputeHaltedPayload | null>(null);
   const heldDecision = ref<DecisionPendingPayload | null>(null);
@@ -76,12 +88,22 @@ export const useGameStore = defineStore('game', () => {
         viewTurn.value = 0;
         frontierTurn.value = 0;
         snapshotTurns.value = [];
+        // Everything below is per-game and was previously left standing. Sequence numbers
+        // restart at 0 in a new game, so a leftover `activeSequence` matched an unrelated
+        // action in the new log and threw the viewer to wherever that landed.
+        activeSequence.value = null;
+        heldDecision.value = null;
+        apiCost.value = null;
+        state.value = null;
         break;
 
       case 'stateSnapshot':
         state.value = message.payload.state;
         viewTurn.value = message.payload.turn;
         frontierTurn.value = Math.max(frontierTurn.value, message.payload.frontierTurn);
+        // `undefined` means a server that did not report one; `null` means "this is a turn
+        // snapshot, not a per-action board". Both clear the highlight.
+        activeSequence.value = message.payload.sequence ?? null;
         break;
 
       case 'eventBatch':
@@ -152,6 +174,12 @@ export const useGameStore = defineStore('game', () => {
         ...(requestedSeed !== undefined && requestedSeed !== '' && { seed: requestedSeed }),
       },
     });
+    // The pace is not part of `startGame`; send it alongside so the first turn is already
+    // presented at the speed the user chose.
+    socket?.send({
+      type: 'setPlaybackMode',
+      payload: { mode: playbackMode.value, paceMs: paceMs.value },
+    });
   }
 
   /**
@@ -166,71 +194,82 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function stepBack(): void {
-    if (viewTurn.value > 0) jumpToTurn(viewTurn.value - 1);
+    if (viewTurn.value > 0) seek(viewTurn.value - 1);
   }
 
   function stepForward(): void {
     if (viewTurn.value < frontierTurn.value || isRunning.value) {
-      jumpToTurn(viewTurn.value + 1);
+      seek(viewTurn.value + 1);
     }
   }
 
-  const activeSequence = ref<number | null>(null);
-
-  function getCurrentActionIndex(): number {
-    if (log.value.length === 0) return -1;
-
-    // 1. If user explicitly selected an action before, check if it exists in current log
+  /**
+   * Where the viewer sits in the action log.
+   *
+   * Two distinct positions, and conflating them is what broke stepping. Either the board is a
+   * specific action's board (`onLine`, at `index`), or it is a turn snapshot — the board at the
+   * *start* of a turn, which is a gap between two log lines, with `index` naming the line just
+   * after it. The old version answered by turn instead: it returned the *last* line of the
+   * current turn, so "back one action" from a turn boundary moved you forwards into that turn,
+   * and it fell back to index 0 whenever nothing matched, which is how one click threw the
+   * viewer to the first action of the game.
+   */
+  function position(): { index: number; onLine: boolean } {
     if (activeSequence.value !== null) {
-      const idx = log.value.findIndex((l) => l.sequence === activeSequence.value);
-      if (idx !== -1) return idx;
+      const exact = log.value.findIndex((line) => line.sequence === activeSequence.value);
+      if (exact !== -1) return { index: exact, onLine: true };
     }
+    const firstOfTurn = log.value.findIndex((line) => line.turn >= viewTurn.value);
+    return { index: firstOfTurn === -1 ? log.value.length : firstOfTurn, onLine: false };
+  }
 
-    // 2. Find log lines matching current viewTurn
-    const exactTurnIndices: number[] = [];
-    for (let i = 0; i < log.value.length; i++) {
-      if (log.value[i]!.turn === viewTurn.value) {
-        exactTurnIndices.push(i);
-      }
-    }
+  /** The log index one step away, or -1 when there is nothing there. */
+  function targetIndex(delta: number): number {
+    const { index, onLine } = position();
+    // From a gap, forward is the line the gap sits before and back is the one before that.
+    const target = onLine ? index + delta : delta > 0 ? index : index - 1;
+    return target >= 0 && target < log.value.length ? target : -1;
+  }
 
-    if (exactTurnIndices.length > 0) {
-      return exactTurnIndices[exactTurnIndices.length - 1]!;
-    }
-
-    // 3. Find the last log line at or before current viewTurn
-    for (let i = log.value.length - 1; i >= 0; i--) {
-      if (log.value[i]!.turn <= viewTurn.value) {
-        return i;
-      }
-    }
-
-    // 4. Fallback to 0
-    return 0;
+  /** True when there is a log line to step to in that direction. */
+  function canStepAction(delta: number): boolean {
+    return targetIndex(delta) !== -1;
   }
 
   function stepAction(delta: number): void {
-    if (log.value.length === 0) return;
-
-    const currentIndex = getCurrentActionIndex();
-    if (currentIndex === -1) return;
-
-    const targetIndex = Math.max(0, Math.min(log.value.length - 1, currentIndex + delta));
-    const targetLine = log.value[targetIndex];
-    if (targetLine) {
-      activeSequence.value = targetLine.sequence;
-      jumpToTurn(targetLine.turn, targetLine.sequence);
-    }
+    const line = log.value[targetIndex(delta)];
+    if (line === undefined) return;
+    jumpToSequence(line.sequence, line.turn);
   }
 
   function jumpToSequence(seq: number, turn?: number): void {
-    activeSequence.value = seq;
-    jumpToTurn(turn ?? viewTurn.value, seq);
+    // `activeSequence` is not set here — the server confirms it on the snapshot it sends back,
+    // so the highlighted line and the rendered board cannot drift apart.
+    seek(turn ?? viewTurn.value, seq);
+  }
+
+  /**
+   * Any deliberate move by the user. Live mode has a presentation clock that keeps walking the
+   * viewer forward, so seeking while live means fighting it — drop to manual first. This is
+   * what made scrubbing and log clicks appear to do nothing: the position was reclaimed a
+   * fraction of a second later.
+   */
+  function seek(turn: number, sequence?: number): void {
+    if (playbackMode.value === 'live') setPlaybackMode('manual');
+    jumpToTurn(turn, sequence);
   }
 
   function setPlaybackMode(mode: PlaybackMode): void {
     playbackMode.value = mode;
-    socket?.send({ type: 'setPlaybackMode', payload: { mode } });
+    socket?.send({ type: 'setPlaybackMode', payload: { mode, paceMs: paceMs.value } });
+  }
+
+  function setPace(ms: number): void {
+    paceMs.value = Math.max(0, ms);
+    socket?.send({
+      type: 'setPlaybackMode',
+      payload: { mode: playbackMode.value, paceMs: paceMs.value },
+    });
   }
 
   function resolveHeldDecision(actionId: number): void {
@@ -247,6 +286,8 @@ export const useGameStore = defineStore('game', () => {
     socket?.send({ type: 'abandonGame', payload: {} });
     gameId.value = null;
     state.value = null;
+    activeSequence.value = null;
+    heldDecision.value = null;
   }
 
   return {
@@ -261,6 +302,7 @@ export const useGameStore = defineStore('game', () => {
     frontierTurn,
     snapshotTurns,
     playbackMode,
+    paceMs,
     halt,
     heldDecision,
     gameOver,
@@ -272,11 +314,14 @@ export const useGameStore = defineStore('game', () => {
     connect,
     startGame,
     jumpToTurn,
+    seek,
     stepBack,
     stepForward,
     stepAction,
+    canStepAction,
     jumpToSequence,
     setPlaybackMode,
+    setPace,
     resolveHeldDecision,
     abandonGame,
   };

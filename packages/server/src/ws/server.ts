@@ -9,6 +9,7 @@
 import { isClientToServerMessage } from '@mtg/shared';
 import type {
   ClientToServerMessage,
+  PlaybackMode,
   ProviderKind,
   SeatSource,
   ServerToClientMessage,
@@ -121,10 +122,13 @@ export class GameServer {
     const message: ClientToServerMessage = parsed;
     switch (message.type) {
       case 'startGame':
-        await this.startGame(socket, message.payload.seats, message.payload.providerKind, message.payload.seed);
-        if (this.session !== null && message.payload.playbackMode !== undefined) {
-          this.session.setPlaybackMode(message.payload.playbackMode);
-        }
+        await this.startGame(
+          socket,
+          message.payload.seats,
+          message.payload.providerKind,
+          message.payload.seed,
+          message.payload.playbackMode,
+        );
         return;
 
       case 'jumpToTurn':
@@ -132,7 +136,10 @@ export class GameServer {
         return;
 
       case 'setPlaybackMode':
-        this.requireSession(socket)?.setPlaybackMode(message.payload.mode);
+        this.requireSession(socket)?.setPlaybackMode(
+          message.payload.mode,
+          message.payload.paceMs,
+        );
         return;
 
       case 'resolveHeldDecision':
@@ -187,6 +194,7 @@ export class GameServer {
     seats: readonly SeatSource[],
     providerKind: ProviderKind,
     requestedSeed?: string,
+    playbackMode?: PlaybackMode,
   ): Promise<void> {
     // Reruns use a fresh seed; the old one is still stored with its game (brief §4).
     const seed = requestedSeed ?? crypto.randomUUID().slice(0, 8);
@@ -226,6 +234,7 @@ export class GameServer {
       seats: setup.seats,
       providerKind,
       store: this.deps.store,
+      ...(playbackMode !== undefined && { playbackMode }),
       send: (message) => {
         this.broadcast(message);
       },

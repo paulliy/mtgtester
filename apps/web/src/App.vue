@@ -39,14 +39,32 @@ onUnmounted(() => {
       <RouterLink to="/game">Board</RouterLink>
       <span class="brand">MTG Commander AI Simulator</span>
     </nav>
-    <RouterView />
+    <main class="view">
+      <RouterView />
+    </main>
     <CardPreviewOverlay />
   </div>
 </template>
 
 <style scoped>
+/*
+ * A column, not just a min-height: the board view fills the space the nav leaves rather than
+ * claiming a viewport of its own. It used to be `min-height: 100vh` here over a `height: 100vh`
+ * child, which is one nav bar taller than the window — the playback controls sat below the fold
+ * and were sliced in half, with the whole page scrolling to compensate.
+ */
 .app {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+/* The routed view owns what is left. It scrolls itself — the board fills it exactly, the setup
+   form is free to be longer than the window. */
+.view {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 nav {
   display: flex;
@@ -55,6 +73,7 @@ nav {
   padding: 0.4rem 0.8rem;
   border-bottom: 1px solid var(--line);
   font-size: 0.8rem;
+  flex-shrink: 0;
 }
 nav a {
   color: var(--muted);

@@ -14,6 +14,7 @@ import type {
   PlayerId,
   ProviderKind,
   ServerToClientMessage,
+  SpectatorLogLine,
   TargetChoice,
 } from '@mtg/shared';
 import {
@@ -36,6 +37,13 @@ class AsyncAdapter implements AsyncDecisionProvider {
   }
 }
 
+/**
+ * Wall-clock time one live turn is shown for, at 1× speed. Live mode is otherwise unwatchable:
+ * a random-provider game computes 60+ turns in about two seconds, so without a pace the viewer
+ * sees the setup screen and then the final board.
+ */
+export const LIVE_PACE_MS = 1_200;
+
 export interface MatchSessionOptions {
   gameId: string;
   seed: string;
@@ -44,6 +52,8 @@ export interface MatchSessionOptions {
   store?: GameStore | undefined;
   playbackMode?: PlaybackMode;
   turnCap?: number;
+  /** Overrides `LIVE_PACE_MS`; 0 presents as fast as the engine computes. Tests pass 0. */
+  livePaceMs?: number;
   send(message: ServerToClientMessage): void;
 }
 
@@ -59,8 +69,24 @@ export class MatchSession {
   private aiClient: OpenAiCompatibleClient | null = null;
   private aiQueue: RequestQueue | null = null;
 
+  // ── Live presentation (brief §10.1) ───────────────────────────────────────────────────────
+  //
+  // Compute and presentation are separate clocks. The engine runs ahead as fast as its budget
+  // allows; the viewer is walked forward one turn per `livePaceMs`, and *that* position is what
+  // the runner's compute-ahead cap is measured against. Before this the session pushed each
+  // turn the instant it was computed and set the view turn to it, which made `frontierTurn <=
+  // viewTurn + 5` permanently true — the cap could never bind and there was nothing to watch.
+  private livePaceMs: number;
+  private presentedTurn = 0;
+  /** False until the opening board has gone out — turn 0 is a position, not "nothing yet". */
+  private hasPresented = false;
+  private presentTimer: ReturnType<typeof setInterval> | null = null;
+  /** Log lines computed but not yet reached by the presentation clock. */
+  private pendingLines: SpectatorLogLine[] = [];
+
   constructor(private readonly opts: MatchSessionOptions) {
     this.playbackMode = opts.playbackMode ?? 'live';
+    this.livePaceMs = opts.livePaceMs ?? LIVE_PACE_MS;
     this.engine = new Engine({
       gameId: opts.gameId,
       seed: opts.seed,
@@ -87,20 +113,24 @@ export class MatchSession {
       providerFor: (playerId) => this.providerFor(playerId),
       recorder: this.recorder,
       onEvents: (lines, frontierTurn, snapshotTurns) => {
+        // In live mode the log is released in step with the board. Sending every line the
+        // instant it is computed is how the action log ends up describing a turn the board has
+        // not reached — the same desync from the other side.
+        if (this.playbackMode === 'live' && this.livePaceMs > 0) {
+          this.pendingLines.push(...lines);
+          this.releaseLines();
+          return;
+        }
         opts.send({
           type: 'eventBatch',
           payload: { gameId: opts.gameId, lines, frontierTurn, snapshotTurns },
         });
       },
-      onSnapshot: (turn, state, atFrontier) => {
-        // In live mode the viewer follows the frontier, so a new turn is pushed as it lands.
-        // In manual mode the viewer's position is theirs to move, and pushing would yank them.
-        if (this.playbackMode !== 'live') return;
-        this.runner.setViewTurn(turn);
-        opts.send({
-          type: 'stateSnapshot',
-          payload: { turn, state, frontierTurn: this.runner.getFrontierTurn(), atFrontier },
-        });
+      onSnapshot: () => {
+        // A newly computed turn is not a newly *presented* turn. In live mode the presentation
+        // clock decides when the viewer moves; in manual mode the viewer's position is theirs
+        // and pushing anything would yank them.
+        if (this.playbackMode === 'live') this.startPresenting();
       },
       onDecisionPending: (request, invalidResponse, timeoutMs) => {
         opts.send({ type: 'decisionPending', payload: { request, invalidResponse, timeoutMs } });
@@ -134,12 +164,20 @@ export class MatchSession {
 
   start(): void {
     if (this.running !== null) return;
-    this.running = this.runner.run().catch((err: unknown) => {
-      this.opts.send({
-        type: 'error',
-        payload: { message: err instanceof Error ? err.message : String(err) },
+    this.running = this.runner
+      .run()
+      .catch((err: unknown) => {
+        this.opts.send({
+          type: 'error',
+          payload: { message: err instanceof Error ? err.message : String(err) },
+        });
+      })
+      .finally(() => {
+        // Compute is done; anything still queued behind the presentation clock is now all
+        // there will ever be, so let the clock drain it and stop.
+        this.startPresenting();
       });
-    });
+    if (this.playbackMode === 'live') this.startPresenting();
   }
 
   /** Wait for the match to stop computing — used by tests and by clean shutdown. */
@@ -147,23 +185,127 @@ export class MatchSession {
     await this.running;
   }
 
-  setPlaybackMode(mode: PlaybackMode): void {
+  /**
+   * `paceMs` rides on `setPlaybackMode` rather than adding a message type — the same rule ADR
+   * 0012 applied to the compute frontier. 0 means "as fast as it computes".
+   */
+  setPlaybackMode(mode: PlaybackMode, paceMs?: number): void {
+    const previous = this.playbackMode;
     this.playbackMode = mode;
-    if (mode === 'live') {
-      const turn = this.runner.getFrontierTurn();
-      this.runner.setViewTurn(turn);
-      const state = this.runner.stateAt(turn);
-      if (state !== null) {
-        this.opts.send({
-          type: 'stateSnapshot',
-          payload: { turn, state, frontierTurn: turn, atFrontier: true },
-        });
-      }
+    if (paceMs !== undefined) this.livePaceMs = Math.max(0, paceMs);
+
+    if (mode !== 'live') {
+      // Leaving live: the user is driving now, so hand them the whole log and stop presenting.
+      this.stopPresenting();
+      this.flushPendingLines();
+      return;
     }
+
+    // Entering live: resume from wherever the user was looking rather than teleporting them to
+    // the frontier — the presentation clock will catch up on its own.
+    if (previous !== 'live') this.presentedTurn = this.runner.getViewTurn();
+    this.present(this.presentedTurn);
+    this.startPresenting();
   }
 
   getPlaybackMode(): PlaybackMode {
     return this.playbackMode;
+  }
+
+  // ── The presentation clock ────────────────────────────────────────────────────────────────
+
+  private startPresenting(): void {
+    if (this.playbackMode !== 'live') return;
+
+    // The opening board is turn 0, and `presentedTurn` starts there, so "catch up to the
+    // frontier" alone would never send it.
+    if (!this.hasPresented) this.present(this.presentedTurn);
+
+    // Pace 0 is "present everything as it computes" — no timer, just keep up.
+    if (this.livePaceMs === 0) {
+      while (this.presentedTurn < this.runner.getFrontierTurn()) {
+        this.present(this.presentedTurn + 1);
+      }
+      return;
+    }
+
+    if (this.presentTimer !== null) return;
+    this.presentTimer = setInterval(() => {
+      this.tickPresentation();
+    }, this.livePaceMs);
+    this.presentTimer.unref?.();
+  }
+
+  private stopPresenting(): void {
+    if (this.presentTimer === null) return;
+    clearInterval(this.presentTimer);
+    this.presentTimer = null;
+  }
+
+  private tickPresentation(): void {
+    if (this.playbackMode !== 'live') {
+      this.stopPresenting();
+      return;
+    }
+    if (this.presentedTurn >= this.runner.getFrontierTurn()) {
+      // Caught up. Keep the timer only while there is more to come.
+      const status = this.runner.getStatus();
+      if (status === 'finished' || status === 'halted' || status === 'abandoned') {
+        this.flushPendingLines();
+        this.stopPresenting();
+      }
+      return;
+    }
+    this.present(this.presentedTurn + 1);
+  }
+
+  /** Show turn `turn` and move the viewer there — which is what un-parks compute. */
+  private present(turn: number): void {
+    const found = this.runner.stateAt(turn);
+    if (found === null) return;
+    this.presentedTurn = turn;
+    this.hasPresented = true;
+    this.runner.setViewTurn(turn);
+    const frontierTurn = this.runner.getFrontierTurn();
+    this.opts.send({
+      type: 'stateSnapshot',
+      payload: {
+        turn,
+        state: found.state,
+        frontierTurn,
+        atFrontier: turn >= frontierTurn,
+        sequence: null,
+      },
+    });
+    this.releaseLines();
+  }
+
+  /** Release the log lines the presented board has now reached. */
+  private releaseLines(): void {
+    if (this.pendingLines.length === 0) return;
+    const due = this.pendingLines.filter((line) => line.turn <= this.presentedTurn);
+    if (due.length === 0) return;
+    this.pendingLines = this.pendingLines.filter((line) => line.turn > this.presentedTurn);
+    this.sendLines(due);
+  }
+
+  private flushPendingLines(): void {
+    if (this.pendingLines.length === 0) return;
+    const lines = this.pendingLines;
+    this.pendingLines = [];
+    this.sendLines(lines);
+  }
+
+  private sendLines(lines: SpectatorLogLine[]): void {
+    this.opts.send({
+      type: 'eventBatch',
+      payload: {
+        gameId: this.opts.gameId,
+        lines,
+        frontierTurn: this.runner.getFrontierTurn(),
+        snapshotTurns: this.runner.getSnapshotTurns(),
+      },
+    });
   }
 
   /**
@@ -173,8 +315,14 @@ export class MatchSession {
   jumpToTurn(requestedTurn: number, requestedSequence?: number): void {
     const turn = Math.max(0, requestedTurn);
     this.runner.setViewTurn(turn);
-    const state = this.runner.stateAt(turn, requestedSequence);
-    if (state === null) {
+    // A seek during live playback rewinds the presentation rather than being overwritten by it
+    // on the next tick. (The client also drops to manual on a deliberate seek.)
+    if (this.playbackMode === 'live') {
+      this.presentedTurn = turn;
+      this.flushPendingLines();
+    }
+    const found = this.runner.stateAt(turn, requestedSequence);
+    if (found === null) {
       const status = this.runner.getStatus();
       if (status === 'finished' || status === 'halted' || status === 'abandoned') {
         this.opts.send({
@@ -188,9 +336,10 @@ export class MatchSession {
       type: 'stateSnapshot',
       payload: {
         turn,
-        state,
+        state: found.state,
         frontierTurn: this.runner.getFrontierTurn(),
         atFrontier: turn >= this.runner.getFrontierTurn(),
+        sequence: found.sequence,
       },
     });
   }
@@ -206,6 +355,7 @@ export class MatchSession {
   }
 
   abandon(): void {
+    this.stopPresenting();
     this.runner.abandon();
   }
 

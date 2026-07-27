@@ -7,7 +7,7 @@
  * the server compute further — it computes at most five turns beyond this position — so the
  * control is not merely a viewer, it is the throttle.
  */
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { PlaybackMode } from '@mtg/shared';
 
 const props = defineProps<{
@@ -16,6 +16,12 @@ const props = defineProps<{
   mode: PlaybackMode;
   waiting: boolean;
   isRunning?: boolean;
+  /** Seats in the game, for turns → rounds. Four in v1, but never assume it here. */
+  seatCount?: number;
+  paceMs?: number;
+  /** Whether an action step is available in each direction — asked of the log, not the turn. */
+  canStepBackAction?: boolean;
+  canStepForwardAction?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -24,6 +30,7 @@ const emit = defineEmits<{
   (event: 'forward'): void;
   (event: 'stepAction', delta: number): void;
   (event: 'mode', mode: PlaybackMode): void;
+  (event: 'pace', ms: number): void;
   (event: 'abandon'): void;
 }>();
 
@@ -34,8 +41,34 @@ const canForward = computed(
   () => props.viewTurn < props.frontierTurn || (props.isRunning ?? false),
 );
 
-function onScrub(event: Event): void {
-  emit('jump', Number((event.target as HTMLInputElement).value));
+/**
+ * The scrubber's own value while the user is dragging it.
+ *
+ * A range input fires `input` for every pixel of travel. Emitting a jump per event asked the
+ * server for a full board — 10–20 KB each — dozens of times per drag, and every reply reset the
+ * thumb under the user's finger. The thumb now follows the pointer locally and only the
+ * position it settles on is requested.
+ */
+const dragTurn = ref<number | null>(null);
+const scrubValue = computed(() => dragTurn.value ?? props.viewTurn);
+
+// A jump the user did not initiate (live presentation, a log click) must move the thumb.
+watch(
+  () => props.viewTurn,
+  () => {
+    if (dragTurn.value === null) return;
+    dragTurn.value = null;
+  },
+);
+
+function onScrubInput(event: Event): void {
+  dragTurn.value = Number((event.target as HTMLInputElement).value);
+}
+
+function onScrubCommit(event: Event): void {
+  const turn = Number((event.target as HTMLInputElement).value);
+  dragTurn.value = null;
+  if (turn !== props.viewTurn) emit('jump', turn);
 }
 
 function confirmAbandon(): void {
@@ -43,28 +76,54 @@ function confirmAbandon(): void {
   emit('abandon');
 }
 
-const currentRound = computed(() =>
-  props.viewTurn > 0 ? Math.floor((props.viewTurn - 1) / 4) + 1 : 0,
-);
+/** Turn → round. Uses the real seat count; a 4 hardcoded here disagreed with the board header. */
+const currentRound = computed(() => {
+  const seats = props.seatCount !== undefined && props.seatCount > 0 ? props.seatCount : 4;
+  return props.viewTurn > 0 ? Math.floor((props.viewTurn - 1) / seats) + 1 : 0;
+});
+
+const SPEEDS: Array<{ label: string; ms: number }> = [
+  { label: '1×', ms: 1_200 },
+  { label: '2×', ms: 600 },
+  { label: '4×', ms: 300 },
+  { label: 'Max', ms: 0 },
+];
 </script>
 
 <template>
   <div class="controls">
     <div class="row main-row">
       <button type="button" class="nav-btn" :disabled="!canBack" @click="emit('back')">◀ Turn</button>
-      <button type="button" class="nav-btn action-step-btn" :disabled="!canBack" @click="emit('stepAction', -1)" title="Step back 1 action">◀ Action</button>
+      <button
+        type="button"
+        class="nav-btn action-step-btn"
+        :disabled="canStepBackAction === false"
+        title="Step back 1 action"
+        @click="emit('stepAction', -1)"
+      >
+        ◀ Action
+      </button>
       <input
         class="scrubber"
         type="range"
         min="0"
-        :max="Math.max(frontierTurn + (isRunning ? 1 : 0), 1)"
-        :value="viewTurn"
-        @input="onScrub"
+        :max="Math.max(frontierTurn, 1)"
+        :value="scrubValue"
+        @input="onScrubInput"
+        @change="onScrubCommit"
       />
-      <button type="button" class="nav-btn action-step-btn" :disabled="!canForward" @click="emit('stepAction', 1)" title="Step forward 1 action">Action ▶</button>
+      <button
+        type="button"
+        class="nav-btn action-step-btn"
+        :disabled="canStepForwardAction === false"
+        title="Step forward 1 action"
+        @click="emit('stepAction', 1)"
+      >
+        Action ▶
+      </button>
       <button type="button" class="nav-btn" :disabled="!canForward" @click="emit('forward')">Turn ▶</button>
       <span class="position">
-        Round <strong>{{ currentRound }}</strong> (Turn {{ viewTurn }}/{{ frontierTurn }})
+        Round <strong>{{ currentRound }}</strong> (Turn {{ scrubValue }}/{{ frontierTurn }})
       </span>
     </div>
 
@@ -90,8 +149,21 @@ const currentRound = computed(() =>
         </label>
       </div>
 
+      <div class="mode-toggles speed-toggles" :class="{ dim: mode !== 'live' }">
+        <span class="speed-label">Speed</span>
+        <label v-for="speed in SPEEDS" :key="speed.label" :class="{ active: paceMs === speed.ms }">
+          <input
+            type="radio"
+            :value="speed.ms"
+            :checked="paceMs === speed.ms"
+            @change="emit('pace', speed.ms)"
+          />
+          {{ speed.label }}
+        </label>
+      </div>
+
       <span v-if="waiting" class="waiting">
-        ⏸ Paused — engine is 5 turns ahead; step forward to compute more
+        ⏸ Paused — the engine is as far ahead as it may compute; step forward for more
       </span>
 
       <button type="button" class="danger-btn" @click="showAbandonModal = true">
@@ -157,7 +229,7 @@ const currentRound = computed(() =>
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   font-size: 0.8rem;
-  background: rgb(0 0 0 / 0.25);
+  background: var(--surface-2);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
 }
@@ -184,8 +256,32 @@ const currentRound = computed(() =>
 }
 .mode-toggles label.active {
   background: var(--accent);
-  color: #101828;
+  color: var(--surface);
   font-weight: 700;
+}
+.speed-toggles {
+  gap: 0.2rem;
+}
+.speed-toggles.dim {
+  opacity: 0.5;
+}
+.speed-label {
+  align-self: center;
+  padding: 0 0.3rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+/* The radios themselves are redundant with the highlighted label; keep them for a11y only. */
+.mode-toggles input[type='radio'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.mode-toggles label {
+  position: relative;
 }
 .waiting {
   flex: 1;
