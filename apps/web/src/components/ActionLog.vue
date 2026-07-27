@@ -35,9 +35,10 @@ watch(
     if (seq === undefined || seq === null) return;
     await nextTick();
     const el = scroller.value?.querySelector('.line.active') as HTMLElement | null;
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    // `nearest` on a list this dense leaves the active line pinned to an edge, one step from
+    // scrolling out of view again; centring it keeps the surrounding context readable while
+    // stepping action by action.
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   },
 );
 </script>

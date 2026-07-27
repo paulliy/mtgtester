@@ -25,9 +25,9 @@ import type { DecisionOutcome, GameGen, PendingDecision } from './decisions';
 import { forcedOutcome, isForced } from './decisions';
 import { EngineUsageError, IllegalDecisionError, UnmodeledCardError } from './errors';
 import { playGame } from './flow/game';
-import { debug, emit } from './log/log';
+import { debug, emit, settleSpectatorSnapshot } from './log/log';
 import { createGame } from './state/game';
-import type { DebugEntry, EngineState, GameConfig, GameContext } from './state/types';
+import type { DebugEntry, GameConfig, GameContext } from './state/types';
 import { buildSpectatorState } from './view/spectator';
 import { buildPlayerView } from './view/view';
 
@@ -178,8 +178,20 @@ export class Engine implements EngineDriver {
     return this.ctx.state;
   }
 
-  getEngineState(): EngineState {
-    return this.ctx.state;
+  /**
+   * Hand over the board states recorded for each spectator log line since the last call, and
+   * clear them from the game state.
+   *
+   * Draining rather than exposing the map is deliberate: these exist for the playback UI, they
+   * are the largest thing the engine accumulates, and the server (which knows how far back the
+   * viewer may seek) is the right owner of that retention policy.
+   */
+  drainSpectatorSnapshots(): Map<number, SpectatorState> {
+    settleSpectatorSnapshot(this.ctx);
+    const snapshots = this.ctx.state.sequenceSnapshots;
+    if (snapshots === undefined || snapshots.size === 0) return new Map();
+    this.ctx.state.sequenceSnapshots = new Map();
+    return snapshots;
   }
 
   /** The hidden-information-safe projection for one player (brief §7.1). */

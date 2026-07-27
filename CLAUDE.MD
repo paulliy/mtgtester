@@ -9,9 +9,13 @@ until you've read it. (The brief and this file historically referenced
 **Current phase: Phase 4 — Spectator UI — implementation complete; awaiting phase-boundary
 approval.** The Phase 4 plan was adjusted against the state of the tree before implementing;
 the six adjustments are recorded in
-[docs/decisions/0012-spectator-ui.md](docs/decisions/0012-spectator-ui.md). The Phase 2 scope
-cuts in [docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md) are still
-outstanding for review.
+[docs/decisions/0012-spectator-ui.md](docs/decisions/0012-spectator-ui.md). Playback was then
+found to be broken in three structural ways — stale per-action boards, a compute-ahead cap that
+could never bind, and a log position tracked by turn rather than by position — and the fixes are
+recorded in
+[docs/decisions/0014-playback-correctness.md](docs/decisions/0014-playback-correctness.md). The
+Phase 2 scope cuts in [docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md)
+are still outstanding for review.
 
 **Card coverage is the live constraint, and the strategy for it changed — read
 [docs/decisions/0009-supported-pool-decks.md](docs/decisions/0009-supported-pool-decks.md)

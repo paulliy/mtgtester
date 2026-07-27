@@ -53,59 +53,42 @@ export interface GroupedPermanent {
   count: number;
 }
 
+/**
+ * Identity for stacking: two permanents collapse into one tile only when nothing a reader could
+ * act on differs. P/T is in the key because a pumped copy is not the same board object as an
+ * unpumped one — grouping on name alone hid that.
+ */
+function stackKey(p: SpectatorPermanent): string {
+  const counters = Object.keys(p.counters)
+    .sort()
+    .map((kind) => `${kind}:${p.counters[kind] ?? 0}`)
+    .join(',');
+  return [
+    p.name,
+    p.scryfallId ?? 'null',
+    p.tapped ? 'tapped' : 'untapped',
+    p.summoningSick ? 'sick' : 'ready',
+    p.attacking ?? 'none',
+    p.blocking ?? 'none',
+    p.damageMarked,
+    p.power ?? '-',
+    p.toughness ?? '-',
+    counters,
+    [...p.keywords].sort().join(','),
+  ].join('|');
+}
+
 function groupPermanents(perms: SpectatorPermanent[]): GroupedPermanent[] {
-  const groups: GroupedPermanent[] = [];
-
+  // A Map, not a linear scan that rebuilt every candidate's key on every comparison: a wide
+  // board made drawing one seat quadratic in its permanent count, on every state push.
+  const groups = new Map<string, GroupedPermanent>();
   for (const perm of perms) {
-    const countersKey = Object.entries(perm.counters)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => `${k}:${v}`)
-      .join(',');
-    const keywordsKey = [...perm.keywords].sort().join(',');
-
-    const key = [
-      perm.name,
-      perm.scryfallId ?? 'null',
-      perm.tapped ? 'tapped' : 'untapped',
-      perm.summoningSick ? 'sick' : 'ready',
-      perm.attacking ?? 'none',
-      perm.blocking ?? 'none',
-      perm.damageMarked,
-      countersKey,
-      keywordsKey,
-    ].join('|');
-
-    const existing = groups.find((g) => {
-      const p = g.permanent;
-      const pCountersKey = Object.entries(p.counters)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([k, v]) => `${k}:${v}`)
-        .join(',');
-      const pKeywordsKey = [...p.keywords].sort().join(',');
-
-      const pKey = [
-        p.name,
-        p.scryfallId ?? 'null',
-        p.tapped ? 'tapped' : 'untapped',
-        p.summoningSick ? 'sick' : 'ready',
-        p.attacking ?? 'none',
-        p.blocking ?? 'none',
-        p.damageMarked,
-        pCountersKey,
-        pKeywordsKey,
-      ].join('|');
-
-      return pKey === key;
-    });
-
-    if (existing) {
-      existing.count++;
-    } else {
-      groups.push({ permanent: perm, count: 1 });
-    }
+    const key = stackKey(perm);
+    const existing = groups.get(key);
+    if (existing === undefined) groups.set(key, { permanent: perm, count: 1 });
+    else existing.count++;
   }
-
-  return groups;
+  return [...groups.values()];
 }
 
 const groupedNonlands = computed(() => groupPermanents(nonlands.value));
@@ -163,7 +146,7 @@ const flexStyles = computed(() => {
       <li v-for="cmd in seat.commanders" :key="cmd.cardId">
         <span class="cmd-icon">👑</span>
         <span class="cmd-name">{{ cmd.name }}</span>
-        <span class="cmd-zone">({{ cmd.zone }})</span>
+        <span class="cmd-zone">({{ cmd.zone === 'gone' ? 'left the game' : cmd.zone }})</span>
         <span v-if="cmd.taxGeneric > 0" class="cmd-tax">tax +{{ cmd.taxGeneric }}</span>
       </li>
     </ul>
@@ -339,8 +322,8 @@ header {
   flex-wrap: wrap;
   gap: 0.6rem;
   font-size: 0.72rem;
-  color: var(--text-muted, #94a3b8);
-  background: rgb(0 0 0 / 0.2);
+  color: var(--text-muted);
+  background: var(--surface-2);
   padding: 0.25rem 0.4rem;
   border-radius: 3px;
 }

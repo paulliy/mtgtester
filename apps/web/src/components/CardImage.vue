@@ -108,7 +108,7 @@ const showImage = computed(() => src.value !== null && !failed.value);
   justify-content: center;
   text-align: center;
   padding: 0.3rem;
-  background: linear-gradient(135deg, #1e2430 0%, #0f131a 100%);
+  background: var(--surface-2);
   border: 1px solid var(--accent);
   border-radius: 6%;
   box-sizing: border-box;

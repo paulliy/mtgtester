@@ -30,6 +30,11 @@ export interface SpectatorCard {
   oracleText: string;
   /** A representative Scryfall printing id for image lookup; null for cards with none (tokens). */
   scryfallId: string | null;
+  /**
+   * Owning seat. Exile is one shared zone, so without this the UI cannot say whose cards are in
+   * it and every seat panel reports the table's total.
+   */
+  owner: PlayerId;
 }
 
 /** A permanent, with engine-computed effective characteristics. */

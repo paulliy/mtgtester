@@ -49,6 +49,13 @@ export type ProviderKind = 'random' | 'ai';
 /** Live-ish compute-ahead vs. the user stepping it forward (brief §10.1). */
 export type PlaybackMode = 'live' | 'manual';
 
+/**
+ * Turns the engine may compute beyond the viewer's position (brief §10.1). Shared because both
+ * ends need it: the server enforces it, and the UI explains the pause it causes. It lived only
+ * on the server with the web app carrying its own hardcoded 5.
+ */
+export const LOOKAHEAD_TURNS = 5;
+
 /** How the four seats get their decks. */
 export type SeatSource =
   | { kind: 'pool'; seed?: string }
@@ -92,6 +99,12 @@ export interface StateSnapshotPayload {
   frontierTurn: number;
   /** True when this snapshot is the live edge rather than a replayed past turn. */
   atFrontier: boolean;
+  /**
+   * The action-log `sequence` this board is the result of, when the client asked to seek to one
+   * and the server had that exact board. Null for a plain turn snapshot — the client uses it to
+   * decide which log line (if any) it may legitimately highlight as "you are here".
+   */
+  sequence?: number | null;
 }
 
 /** Newly computed log lines, plus the advancing frontier they came from. */
@@ -185,6 +198,11 @@ export interface JumpToTurnPayload {
 
 export interface SetPlaybackModePayload {
   mode: PlaybackMode;
+  /**
+   * Wall-clock ms one turn is shown for in live mode; 0 presents as fast as the engine
+   * computes. Rides here rather than adding a message type (ADR 0012).
+   */
+  paceMs?: number;
 }
 
 /** The human's answer to a `decisionPending` (brief §7.7 step 2). */

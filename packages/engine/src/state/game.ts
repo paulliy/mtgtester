@@ -43,13 +43,17 @@ export function createGame(config: GameConfig): GameContext {
 
   const players: EnginePlayerState[] = config.players.map((pc) => {
     const commanderCardIds: string[] = [];
+    const commanderNames: Record<string, string> = {};
     const makeObject = (
       card: OracleCard,
       zone: EngineCardObject['zone'],
       isCommander: boolean,
     ): EngineCardObject => {
       const cardId = `c-${nextCardNum++}`;
-      if (isCommander) commanderCardIds.push(cardId);
+      if (isCommander) {
+        commanderCardIds.push(cardId);
+        commanderNames[cardId] = card.name;
+      }
       return {
         id: `o-${nextObjectNum++}`,
         cardId,
@@ -89,6 +93,7 @@ export function createGame(config: GameConfig): GameContext {
       lossReason: null,
       companion,
       commanderCardIds,
+      commanderNames,
       attemptedDrawFromEmptyLibrary: false,
       mulligansTaken: 0,
       decklistOracleIds: [

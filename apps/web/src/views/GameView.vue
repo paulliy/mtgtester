@@ -6,7 +6,8 @@
  */
 import { computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import type { SpectatorPermanent } from '@mtg/shared';
+import { LOOKAHEAD_TURNS } from '@mtg/shared';
+import type { SpectatorCard, SpectatorPermanent } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import HeldDecision from '../components/HeldDecision.vue';
@@ -43,6 +44,15 @@ function permanentsFor(seat: string): SpectatorPermanent[] {
   return state.value?.battlefield.filter((p) => p.controller === seat) ?? [];
 }
 
+/**
+ * Exile is a single shared zone in the state, but a seat panel showing "exile 7" means *this
+ * player's* seven cards. Passing the whole zone to all four panels made every seat report the
+ * table's total and list the same cards.
+ */
+function exileFor(seat: string): SpectatorCard[] {
+  return state.value?.exile.filter((card) => card.owner === seat) ?? [];
+}
+
 function abandon(): void {
   store.abandonGame();
   void router.push('/');
@@ -54,9 +64,18 @@ const phaseLabel = computed(() => {
   return s.step === null ? s.phase : `${s.phase} · ${s.step}`;
 });
 
-/** Shown while the runner is parked at the compute-ahead cap (brief §10.1). */
+/**
+ * Shown while the runner is parked at the compute-ahead cap (brief §10.1) *and* only the user
+ * can un-park it. In live mode the cap is reached constantly and by design — the presentation
+ * clock is already walking forward — so telling the user to step forward there would be a
+ * permanent, meaningless warning. The cap itself lives on the server; `LOOKAHEAD_TURNS` is
+ * shared so this cannot quietly disagree with it.
+ */
 const waitingForView = computed(
-  () => store.isRunning && store.frontierTurn - store.viewTurn >= 5,
+  () =>
+    store.isRunning &&
+    store.playbackMode === 'manual' &&
+    store.frontierTurn - store.viewTurn >= LOOKAHEAD_TURNS,
 );
 const roundLabel = computed(() => {
   const s = state.value;
@@ -114,15 +133,16 @@ const roundLabel = computed(() => {
           :has-priority="seat.seat === state.priorityPlayer"
           :eliminated="state.eliminatedPlayers.includes(seat.seat)"
           :commander-damage="state.commanderDamage"
-          :exile="state.exile"
+          :exile="exileFor(seat.seat)"
         />
       </div>
 
       <aside class="side">
         <StackPanel :state="state" />
+        <CommanderDamageGrid :state="state" />
         <ActionLog
           :lines="store.log"
-          :follow="store.atFrontier"
+          :follow="store.playbackMode === 'live' || store.atFrontier"
           :active-sequence="store.activeSequence ?? undefined"
           @select-sequence="store.jumpToSequence"
         />
@@ -132,16 +152,22 @@ const roundLabel = computed(() => {
     <p v-else class="waiting-board">Waiting for the first board state…</p>
 
     <PlaybackControls
+      class="controls-slot"
       :view-turn="store.viewTurn"
       :frontier-turn="store.frontierTurn"
       :mode="store.playbackMode"
+      :pace-ms="store.paceMs"
       :waiting="waitingForView"
       :is-running="store.isRunning"
-      @jump="store.jumpToTurn"
+      :seat-count="state?.seats.length"
+      :can-step-back-action="store.canStepAction(-1)"
+      :can-step-forward-action="store.canStepAction(1)"
+      @jump="store.seek"
       @back="store.stepBack"
       @forward="store.stepForward"
       @step-action="store.stepAction"
       @mode="store.setPlaybackMode"
+      @pace="store.setPace"
       @abandon="abandon"
     />
   </div>
@@ -153,8 +179,15 @@ const roundLabel = computed(() => {
   flex-direction: column;
   gap: 0.6rem;
   padding: 0.6rem;
-  height: 100vh;
+  /* The app shell owns the viewport; taking 100vh here left the playback controls under the
+     fold by exactly the height of the nav bar. */
+  height: 100%;
+  min-height: 0;
   box-sizing: border-box;
+}
+/* The controls are the floor of the layout and never give up their height to the board. */
+.game > .controls-slot {
+  flex-shrink: 0;
 }
 .bar {
   display: flex;
@@ -249,6 +282,13 @@ const roundLabel = computed(() => {
   flex-direction: column;
   gap: 0.6rem;
   min-height: 0;
+}
+/* Stack and damage grid are sized by their content; the log takes the rest and scrolls. */
+.side > .stack,
+.side > .grid-wrap {
+  flex-shrink: 0;
+  max-height: 30%;
+  overflow-y: auto;
 }
 .banner {
   border-radius: 4px;
