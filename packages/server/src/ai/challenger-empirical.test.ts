@@ -438,22 +438,32 @@ describe('Adversarial Stress Tests — Task 4: parseJsonResponse & classifyError
     expect(response.note).toContain('Fallback');
   });
 
-  it('Task 4.3: Truncated JSON causes client to throw AiResponseValidationError, classified as FATAL by classifyError, bypassing network retry and Step 2 Corrective Retry', async () => {
+  it('Task 4.3: Truncated JSON is a retryable generation failure, and reaches the Step 2 Corrective Retry instead of dropping straight to a fallback', async () => {
     const truncatedContent = '{"requestId": "req-1", "actionId": 1, "note": "truncated text without closing brace';
-    
-    const mockFetch = async () => ({
-      ok: true,
-      json: async () => ({
-        choices: [{ message: { content: truncatedContent } }],
-      }),
-    });
+
+    let fetchCalls = 0;
+    const mockFetch = async () => {
+      fetchCalls++;
+      return {
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: truncatedContent } }],
+        }),
+      };
+    };
 
     const client = new OpenAiCompatibleClient(
-      { baseUrl: 'http://localhost', models: ['test-model'] } as unknown as AiConfig,
+      {
+        baseUrl: 'http://localhost',
+        models: ['test-model'],
+        maxRetries: 3,
+        baseBackoffMs: 1,
+        maxBackoffMs: 5,
+      } as unknown as AiConfig,
       mockFetch as unknown as typeof fetch,
     );
 
-    // 1. OpenAiCompatibleClient throws AiResponseValidationError
+    // 1. The client still surfaces AiResponseValidationError once it gives up...
     let thrownError: unknown;
     try {
       await client.requestDecision({ messages: [] } as unknown as Parameters<typeof client.requestDecision>[0], makeRequest());
@@ -463,11 +473,14 @@ describe('Adversarial Stress Tests — Task 4: parseJsonResponse & classifyError
 
     expect(thrownError).toBeInstanceOf(AiResponseValidationError);
 
-    // 2. EMPIRICAL VERIFICATION OF BUG: classifyError classifies AiResponseValidationError as 'fatal'!
-    const category = classifyError(thrownError);
-    expect(category).toBe('fatal'); // classified as fatal!
+    // 2. ...but not on the first sample: an unreadable answer is a stochastic failure, so it is
+    //    resampled on a budget of its own (1 primary + GENERATION_RETRY_CAP) rather than
+    //    spending the whole decision on one unlucky generation.
+    expect(classifyError(thrownError)).toBe('retryable_generation');
+    expect(fetchCalls).toBe(3);
 
-    // 3. Verify impact in provider:
+    // 3. At the provider, the unreadable response now feeds §7.7 step 1 — the model is shown
+    //    its own bad output and the menu again — instead of jumping to the safest legal action.
     const p1View = makePlayerView({ seat: 'P1' });
     const engine = makeMockEngine(p1View, p1View);
     const queue = makeMockQueue();
@@ -476,35 +489,43 @@ describe('Adversarial Stress Tests — Task 4: parseJsonResponse & classifyError
       models: ['test-model'],
       heuristicsEnabled: false,
       decisionCacheEnabled: false,
-      maxRetries: 3, // Set maxRetries = 3
+      maxRetries: 3,
       baseBackoffMs: 10,
       maxBackoffMs: 100,
     } as unknown as AiConfig;
 
     let networkAttempts = 0;
-    const mockClientWithTruncated = {
+    const mockClientRecovering = {
       activeModel: 'test-model',
-      requestDecision: async (_prompt: unknown, _request: DecisionRequest) => {
+      requestDecision: async (_prompt: unknown, request: DecisionRequest) => {
         networkAttempts++;
-        // Attempt throws AiResponseValidationError
-        throw new AiResponseValidationError('Invalid JSON format: ...', truncatedContent);
+        if (networkAttempts === 1) {
+          throw new AiResponseValidationError('Invalid JSON format: ...', truncatedContent);
+        }
+        return {
+          response: { requestId: request.requestId, actionId: 2 },
+          meta: {
+            model: 'test-model',
+            promptTokens: 10,
+            responseTokens: 10,
+            latencyMs: 5,
+            wasRetry: false,
+            wasFallback: false,
+            rawResponse: '{"actionId":2}',
+          },
+        };
       },
     } as unknown as OpenAiCompatibleClient;
 
-    const provider = new OpenAiDecisionProvider(mockClientWithTruncated, queue, engine, config);
-    const req = makeRequest({ requestId: 'req-trunc' });
+    const provider = new OpenAiDecisionProvider(mockClientRecovering, queue, engine, config);
+    const res = await provider.decide(makeRequest({ requestId: 'req-trunc' }));
 
-    const res = await provider.decide(req);
-
-    // EMPIRICAL VERIFICATION OF BUG:
-    // Network retry was NOT attempted (networkAttempts === 1 despite maxRetries === 3)
-    // Step 2 Corrective Retry was NOT attempted!
-    // Jumped directly to safestFallback!
-    expect(networkAttempts).toBe(1);
-    expect(res.note).toContain('Fallback');
+    expect(networkAttempts).toBe(2); // Corrective retry was attempted.
+    expect(res.actionId).toBe(2); // ...and the model's real answer was used, not a fallback.
+    expect(res.note ?? '').not.toContain('Fallback');
   });
 
-  it('Task 4.4: Markdown preamble with JSON-like braces before code fence breaks client parseJsonResponse, throwing AiResponseValidationError', async () => {
+  it('Task 4.4: Markdown preamble with JSON-like braces before a code fence still parses', async () => {
     const preambleWithBraces = `I considered choices {option A} and {option B}.
 \`\`\`json
 {
@@ -525,17 +546,13 @@ describe('Adversarial Stress Tests — Task 4: parseJsonResponse & classifyError
       mockFetch as unknown as typeof fetch,
     );
 
-    let thrownError: unknown;
-    try {
-      await client.requestDecision({ messages: [] } as unknown as Parameters<typeof client.requestDecision>[0], makeRequest());
-    } catch (e) {
-      thrownError = e;
-    }
+    // The greedy `/\{[\s\S]*\}/` this replaces ran from the first brace in the preamble to the
+    // last brace in the fence, so one chatty sentence made a perfectly good answer unreadable.
+    const { response } = await client.requestDecision(
+      { messages: [] } as unknown as Parameters<typeof client.requestDecision>[0],
+      makeRequest(),
+    );
 
-    // EMPIRICAL VERIFICATION OF BUG:
-    // Regex /\{[\s\S]*\}/ matches greedy from first '{' in preamble to last '}' in code block!
-    // JSON.parse throws SyntaxError on "{option A} and {option B}...\n{\n  \"requestId\": \"req-1\",\n  \"actionId\": 1\n}"!
-    expect(thrownError).toBeInstanceOf(AiResponseValidationError);
-    expect((thrownError as AiResponseValidationError).message).toContain('Invalid JSON format');
+    expect(response.actionId).toBe(1);
   });
 });

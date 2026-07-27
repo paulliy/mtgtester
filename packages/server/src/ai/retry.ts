@@ -3,7 +3,14 @@
  */
 
 import type { AiConfig } from './config';
-import { AuthenticationError, DailyQuotaExhaustedError, ModelUnavailableError, RpmLimitError } from './errors';
+import { DEFAULT_AI_CONFIG } from './config';
+import {
+  AiResponseValidationError,
+  AuthenticationError,
+  DailyQuotaExhaustedError,
+  ModelUnavailableError,
+  RpmLimitError,
+} from './errors';
 
 /** Flattens an unknown error into the status + text we classify against. */
 function errorFacts(err: unknown): { status: number | undefined; text: string } {
@@ -11,13 +18,50 @@ function errorFacts(err: unknown): { status: number | undefined; text: string } 
   let status: number | undefined;
 
   if (typeof err === 'object' && err !== null) {
-    const e = err as { status?: number; statusCode?: number; message?: unknown; body?: unknown };
+    const e = err as {
+      status?: number;
+      statusCode?: number;
+      name?: unknown;
+      code?: unknown;
+      message?: unknown;
+      body?: unknown;
+      cause?: unknown;
+    };
     status = e.status ?? e.statusCode;
+    // `name`, `code`, and `cause` are where a transport failure keeps its identity: a
+    // `TimeoutError` DOMException carries nothing else, and `fetch` buries the real reason
+    // for "TypeError: fetch failed" in `cause`.
+    if (e.name !== undefined) parts.push(String(e.name));
+    if (e.code !== undefined) parts.push(String(e.code));
     if (e.message !== undefined) parts.push(String(e.message));
     if (e.body !== undefined) parts.push(String(e.body));
+    if (e.cause !== undefined) parts.push(String(e.cause));
   }
 
   return { status, text: parts.join('\n').toLowerCase() };
+}
+
+/**
+ * A transport failure — the request timed out, the socket dropped, DNS blipped. These carry no
+ * HTTP status, so they fell through to the `fatal` default and retired the decision after a
+ * single attempt; every one of them is worth trying again.
+ */
+export function isTransportError(err: unknown): boolean {
+  const { status, text } = errorFacts(err);
+  if (status !== undefined) return false;
+  return (
+    text.includes('timeouterror') ||
+    text.includes('aborterror') ||
+    text.includes('the operation was aborted') ||
+    text.includes('timed out') ||
+    text.includes('fetch failed') ||
+    text.includes('network error') ||
+    text.includes('econnreset') ||
+    text.includes('econnrefused') ||
+    text.includes('etimedout') ||
+    text.includes('enotfound') ||
+    text.includes('socket hang up')
+  );
 }
 
 /**
@@ -68,11 +112,19 @@ export function isHardBarrierQuota(text: string): boolean {
 
 export function classifyError(
   err: unknown,
-): 'model_unavailable' | 'daily_quota' | 'rpm_quota' | 'retryable' | 'fatal' {
+): 'model_unavailable' | 'daily_quota' | 'rpm_quota' | 'retryable' | 'retryable_generation' | 'fatal' {
   if (err instanceof AuthenticationError) return 'fatal';
   if (err instanceof ModelUnavailableError) return 'model_unavailable';
   if (err instanceof DailyQuotaExhaustedError) return 'daily_quota';
   if (err instanceof RpmLimitError) return 'rpm_quota';
+
+  /**
+   * The call succeeded and the model answered — the answer was just not something we could
+   * read (truncated JSON, prose instead of an object, an empty completion). That is a
+   * stochastic generation failure, not a permanent one, and the same prompt usually works on
+   * the next attempt; as `fatal` it burned the whole decision on one unlucky sample.
+   */
+  if (err instanceof AiResponseValidationError) return 'retryable_generation';
 
   const { status, text } = errorFacts(err);
 
@@ -95,7 +147,7 @@ export function classifyError(
    * 400) killed a game at turn 22.
    */
   if (text.includes('json_validate_failed') || text.includes('failed to validate json')) {
-    return 'retryable';
+    return 'retryable_generation';
   }
 
   if (isQuotaError(err)) {
@@ -107,15 +159,32 @@ export function classifyError(
     return 'retryable';
   }
 
+  if (isTransportError(err)) return 'retryable';
+
   return 'fatal';
 }
+
+/**
+ * Generation failures get a tighter budget than transport failures. A model that cannot
+ * produce readable JSON twice usually cannot produce it on the sixth try either, every
+ * attempt is a full-price call, and the provider's corrective retry (§7.7 step 1) — which
+ * shows the model its own bad output — is the better next move anyway.
+ */
+const GENERATION_RETRY_CAP = 2;
 
 export async function withRetry<T>(
   fn: () => Promise<T>,
   config: Pick<AiConfig, 'maxRetries' | 'baseBackoffMs' | 'maxBackoffMs'>,
   sleepFn: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 ): Promise<T> {
+  // A missing or non-numeric budget must not read as "retry forever": every comparison
+  // against `undefined` is false, so the loop below would never find its exit.
+  const maxRetries = Number.isFinite(config.maxRetries)
+    ? Math.max(0, config.maxRetries)
+    : DEFAULT_AI_CONFIG.maxRetries;
+
   let attempt = 0;
+  let generationAttempt = 0;
   for (;;) {
     try {
       return await fn();
@@ -135,13 +204,23 @@ export async function withRetry<T>(
         throw new RpmLimitError(String(err));
       }
 
-      attempt++;
-      if (attempt > config.maxRetries || category === 'fatal') {
+      if (category === 'fatal') {
         throw err;
       }
 
-      // Exponential backoff + jitter: min(base * 2^(attempt-1) + jitter, maxBackoff)
-      const baseDelay = config.baseBackoffMs * Math.pow(2, attempt - 1);
+      let step: number;
+      if (category === 'retryable_generation') {
+        generationAttempt++;
+        if (generationAttempt > Math.min(maxRetries, GENERATION_RETRY_CAP)) throw err;
+        step = generationAttempt;
+      } else {
+        attempt++;
+        if (attempt > maxRetries) throw err;
+        step = attempt;
+      }
+
+      // Exponential backoff + jitter: min(base * 2^(step-1) + jitter, maxBackoff)
+      const baseDelay = config.baseBackoffMs * Math.pow(2, step - 1);
       const jitter = Math.floor(Math.random() * 500);
       const delay = Math.min(baseDelay + jitter, config.maxBackoffMs);
 

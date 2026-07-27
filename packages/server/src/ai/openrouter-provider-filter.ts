@@ -30,6 +30,11 @@ interface CacheEntry {
 
 const nonCachingCache = new Map<string, CacheEntry>();
 const DEFAULT_TTL_MS = 30 * 60 * 1000; // 30 minutes
+/**
+ * A failed lookup is cached too, briefly. Without it every decision in the game paid for
+ * another doomed round-trip (with a 5s timeout in front of it) to re-learn the same nothing.
+ */
+const FAILURE_TTL_MS = 5 * 60 * 1000;
 
 /**
  * Determines whether an endpoint supports prompt caching.
@@ -76,7 +81,14 @@ export async function getNonCachingProviders(
   const cleanBase = baseUrl
     .replace(/\/chat\/completions\/?$/, '')
     .replace(/\/+$/, '');
-  const url = `${cleanBase}/models/${encodeURIComponent(model)}/endpoints`;
+  /**
+   * The route is `/models/:author/:slug/endpoints` — two path segments. Encoding the model as
+   * a whole turned the separator into `%2F`, collapsing it to one segment that matches no
+   * route, so this lookup 404'd for every slash-bearing model (which is all of them on
+   * OpenRouter) and the caching filter silently did nothing.
+   */
+  const modelPath = model.split('/').map(encodeURIComponent).join('/');
+  const url = `${cleanBase}/models/${modelPath}/endpoints`;
 
   try {
     const res = await fetchImpl(url, {
@@ -86,12 +98,14 @@ export async function getNonCachingProviders(
     });
 
     if (!res.ok) {
+      nonCachingCache.set(model, { providers: [], expiresAt: Date.now() + FAILURE_TTL_MS });
       return [];
     }
 
     const data = (await res.json()) as OpenRouterEndpointsResponse;
     const endpoints = data.data?.endpoints;
     if (!Array.isArray(endpoints) || endpoints.length === 0) {
+      nonCachingCache.set(model, { providers: [], expiresAt: Date.now() + FAILURE_TTL_MS });
       return [];
     }
 
@@ -117,6 +131,7 @@ export async function getNonCachingProviders(
     return result;
   } catch {
     // Return empty array on network failure or timeout to degrade gracefully
+    nonCachingCache.set(model, { providers: [], expiresAt: Date.now() + FAILURE_TTL_MS });
     return [];
   }
 }

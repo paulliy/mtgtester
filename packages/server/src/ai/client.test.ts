@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { DecisionRequest } from '@mtg/shared';
 import { OpenAiCompatibleClient } from './client';
+import type { AiConfig } from './config';
 import { DEFAULT_AI_CONFIG } from './config';
 import { DailyQuotaExhaustedError, NoAvailableModelError } from './errors';
 import type { AiPrompt } from './context';
@@ -236,6 +237,130 @@ describe('OpenAiCompatibleClient', () => {
     expect(meta.model).toBe('model-a');
     expect(attempts).toBe(3);
     expect(mockSleep).toHaveBeenCalledWith(60000);
+  });
+
+  /**
+   * The regression this whole group exists for. OpenRouter folds a top-level
+   * `reasoning_effort` into `reasoning.effort`, so a body carrying `reasoning_effort` *and*
+   * `reasoning: { max_tokens: 0 }` contradicted itself and every request in every game came
+   * back `400 Only one of "reasoning.effort" and "reasoning.max_tokens" can be specified`.
+   */
+  describe('reasoning parameters', () => {
+    function bodyOf(mockFetch: ReturnType<typeof vi.fn>): Record<string, unknown> {
+      const chatCall = mockFetch.mock.calls.find((c) => (c[0] as string).includes('/chat/completions'));
+      return JSON.parse((chatCall![1] as RequestInit).body as string) as Record<string, unknown>;
+    }
+
+    function okFetch() {
+      return vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }] }),
+      });
+    }
+
+    async function send(overrides: Partial<AiConfig>): Promise<Record<string, unknown>> {
+      const mockFetch = okFetch();
+      const client = new OpenAiCompatibleClient(
+        { ...DEFAULT_AI_CONFIG, models: ['vendor/model'], filterNonCachingProviders: false, ...overrides },
+        mockFetch as unknown as typeof fetch,
+      );
+      await client.requestDecision(fixturePrompt(), fixtureRequest());
+      return bodyOf(mockFetch);
+    }
+
+    it('never sends both spellings of the reasoning control at once', async () => {
+      for (const reasoningEnabled of [false, true]) {
+        const body = await send({ reasoningEnabled });
+        const hasBoth = body['reasoning'] !== undefined && body['reasoning_effort'] !== undefined;
+        expect(hasBoth).toBe(false);
+      }
+    });
+
+    it('turns reasoning off with `enabled: false` — never a zero max_tokens', async () => {
+      const body = await send({ reasoningEnabled: false });
+      expect(body['reasoning']).toEqual({ enabled: false });
+      expect(body['reasoning_effort']).toBeUndefined();
+    });
+
+    it('sends effort alone when reasoning is on, since effort and max_tokens are exclusive', async () => {
+      const body = await send({ reasoningEnabled: true, reasoningEffort: 'medium' });
+      expect(body['reasoning']).toEqual({ effort: 'medium', exclude: true });
+      expect((body['reasoning'] as Record<string, unknown>)['max_tokens']).toBeUndefined();
+    });
+
+    it('treats effort "none" as reasoning off even when the flag is on', async () => {
+      const body = await send({ reasoningEnabled: true, reasoningEffort: 'none' });
+      expect(body['reasoning']).toEqual({ enabled: false });
+    });
+
+    it('maps our "max" effort onto the highest level the wire enum actually has', async () => {
+      const body = await send({ reasoningEnabled: true, reasoningEffort: 'max' });
+      expect(body['reasoning']).toEqual({ effort: 'high', exclude: true });
+    });
+
+    it('uses OpenAI\'s reasoning_effort — and omits it entirely when off — off OpenRouter', async () => {
+      const groq = { baseUrl: 'https://api.groq.com/openai/v1', models: ['openai/gpt-oss-120b'] };
+
+      const on = await send({ ...groq, reasoningEnabled: true, reasoningEffort: 'low' });
+      expect(on['reasoning_effort']).toBe('low');
+      expect(on['reasoning']).toBeUndefined();
+
+      // There is no portable "off" value, and these vendors reject unknown body fields.
+      const off = await send({ ...groq, reasoningEnabled: false });
+      expect(off['reasoning_effort']).toBeUndefined();
+      expect(off['reasoning']).toBeUndefined();
+    });
+
+    it('gives a reasoning run token headroom, because max_tokens caps thinking and answer together', async () => {
+      const off = await send({ reasoningEnabled: false, maxOutputTokens: 1000 });
+      expect(off['max_tokens']).toBe(1000);
+
+      const on = await send({ reasoningEnabled: true, maxOutputTokens: 1000 });
+      expect(on['max_tokens']).toBeGreaterThan(1000);
+    });
+  });
+
+  it('reads the answer out of `reasoning` when a thinking model leaves content empty', async () => {
+    // Budget spent mid-thought: `content` comes back empty with everything the model wrote in
+    // `reasoning`. The decision JSON is usually in there, and recovering it is free.
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            finish_reason: 'length',
+            message: {
+              content: '',
+              reasoning: 'Board is empty, nothing worth doing.\n{"actionId": 0, "note": "Pass"}',
+            },
+          },
+        ],
+      }),
+    });
+
+    const client = new OpenAiCompatibleClient(
+      { ...DEFAULT_AI_CONFIG, models: ['model-a'] },
+      mockFetch as unknown as typeof fetch,
+    );
+
+    const { response } = await client.requestDecision(fixturePrompt(), fixtureRequest());
+    expect(response.actionId).toBe(0);
+  });
+
+  it('names the finish_reason when there is genuinely nothing to read', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ finish_reason: 'length', message: { content: '' } }] }),
+    });
+
+    const client = new OpenAiCompatibleClient(
+      { ...DEFAULT_AI_CONFIG, models: ['model-a'], maxRetries: 0 },
+      mockFetch as unknown as typeof fetch,
+    );
+
+    await expect(client.requestDecision(fixturePrompt(), fixtureRequest())).rejects.toThrow(
+      /finish_reason: length/,
+    );
   });
 
   it('includes provider.ignore in POST body for non-caching providers when using OpenRouter', async () => {

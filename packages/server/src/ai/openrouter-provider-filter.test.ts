@@ -67,10 +67,22 @@ describe('openrouter-provider-filter', () => {
       );
 
       expect(nonCaching).toEqual(['Morph', 'DeepInfra']);
+      // `/models/:author/:slug/endpoints` is two path segments. Percent-encoding the model as
+      // one string collapsed them into a segment that matches no route, so this 404'd for
+      // every slash-bearing model and the filter silently never applied.
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://openrouter.ai/api/v1/models/deepseek%2Fdeepseek-v4-flash/endpoints',
+        'https://openrouter.ai/api/v1/models/deepseek/deepseek-v4-flash/endpoints',
         expect.objectContaining({ method: 'GET' }),
       );
+    });
+
+    it('caches a failed lookup so it is not re-attempted on every decision', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({ ok: false, status: 404 });
+
+      expect(await getNonCachingProviders('vendor/gone', mockFetch as unknown as typeof fetch)).toEqual([]);
+      expect(await getNonCachingProviders('vendor/gone', mockFetch as unknown as typeof fetch)).toEqual([]);
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
     it('uses in-memory cache on subsequent requests for the same model', async () => {

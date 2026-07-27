@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { classifyError, withRetry } from './retry';
-import { DailyQuotaExhaustedError, HttpError, ModelUnavailableError, RpmLimitError } from './errors';
+import {
+  AiResponseValidationError,
+  DailyQuotaExhaustedError,
+  HttpError,
+  ModelUnavailableError,
+  RpmLimitError,
+} from './errors';
 
 /** Verbatim shape of a Gemini free-tier RPD rejection. */
 const GEMINI_RPD_BODY = JSON.stringify([
@@ -80,7 +86,56 @@ describe('Error Classification & Retry', () => {
     const body =
       '{"error":{"message":"Failed to validate JSON. Please adjust your prompt.",' +
       '"type":"invalid_request_error","code":"json_validate_failed","failed_generation":""}}';
-    expect(classifyError(new HttpError(400, body))).toBe('retryable');
+    expect(classifyError(new HttpError(400, body))).toBe('retryable_generation');
+  });
+
+  // Same failure seen from the other side: the provider handed the content back and we could
+  // not read it. `fatal` spent the entire decision on one unlucky sample.
+  it('treats an unreadable completion as a retryable generation failure', () => {
+    expect(classifyError(new AiResponseValidationError('Invalid JSON format', '{"actionId":'))).toBe(
+      'retryable_generation',
+    );
+    expect(classifyError(new AiResponseValidationError('Empty content received'))).toBe(
+      'retryable_generation',
+    );
+  });
+
+  it('retries a generation failure, but on a tighter budget than a server error', async () => {
+    const fn = vi.fn().mockRejectedValue(new AiResponseValidationError('Invalid JSON format'));
+    const sleep = vi.fn().mockResolvedValue(undefined);
+
+    await expect(
+      withRetry(fn, { maxRetries: 6, baseBackoffMs: 10, maxBackoffMs: 100 }, sleep),
+    ).rejects.toThrow(AiResponseValidationError);
+
+    // The 6-retry budget belongs to transport failures; an unreadable answer gets 2.
+    expect(fn).toHaveBeenCalledTimes(3);
+  });
+
+  // A timeout from `AbortSignal.timeout` and a dropped socket carry no HTTP status, so they
+  // fell through to `fatal` and retired the decision on the first attempt.
+  it('classifies transport failures as retryable', () => {
+    const timeout = new DOMException('The operation was aborted', 'TimeoutError');
+    expect(classifyError(timeout)).toBe('retryable');
+    expect(classifyError(new TypeError('fetch failed'))).toBe('retryable');
+    expect(classifyError(Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }))).toBe(
+      'retryable',
+    );
+  });
+
+  it('never loops forever when the retry budget is missing from the config', async () => {
+    const fn = vi.fn().mockRejectedValue(new AiResponseValidationError('Invalid JSON format'));
+    const sleep = vi.fn().mockResolvedValue(undefined);
+
+    await expect(
+      withRetry(
+        fn,
+        { baseBackoffMs: 10, maxBackoffMs: 100 } as unknown as Parameters<typeof withRetry>[1],
+        sleep,
+      ),
+    ).rejects.toThrow(AiResponseValidationError);
+
+    expect(fn).toHaveBeenCalledTimes(3);
   });
 
   it('does not back off on an exhausted daily quota (hard barrier)', async () => {
