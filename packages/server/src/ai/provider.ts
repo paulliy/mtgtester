@@ -15,8 +15,9 @@ import type { AsyncDecisionProvider, Engine } from '@mtg/engine';
 import type { DecisionRequest, DecisionResponse, PlayerView } from '@mtg/shared';
 import type { AiConfig } from './config';
 import type { AiClient, CallMeta } from './client';
-import { assemblePrompt, type OpenAiMessage } from './context';
+import { assemblePrompt, type AiPrompt, type OpenAiMessage } from './context';
 import { DecisionCache } from './decision-cache';
+import { AiResponseValidationError } from './errors';
 import { safestFallback } from './fallback';
 import { tryHeuristic } from './heuristics';
 import { localCallMeta, type AiCallLogger, type DecisionSource } from './logger';
@@ -166,10 +167,16 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
       { requestId: request.requestId, decidingPlayer: request.decidingPlayer },
     );
 
-    // 2. Primary attempt
-    const result = await this.queue.enqueue(() =>
-      this.client.requestDecision(prompt, request),
-    );
+    // 2. Primary attempt. A response the client could not read at all (truncated JSON, prose,
+    //    an empty completion) is exactly what step 1 exists for, so it takes the corrective
+    //    retry rather than falling straight through to the safest legal action.
+    let result;
+    try {
+      result = await this.queue.enqueue(() => this.client.requestDecision(prompt, request));
+    } catch (err) {
+      if (!(err instanceof AiResponseValidationError)) throw err;
+      return await this.correctiveRetry(request, view, prompt, err.rawResponse ?? '', err.details);
+    }
 
     this.engine.addDebug?.(
       'decision',
@@ -191,19 +198,44 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     }
 
     // 3. Retry once with corrective message (§7.7 step 1)
+    return await this.correctiveRetry(request, view, prompt, result.meta.rawResponse, error1);
+  }
+
+  /**
+   * §7.7 step 1: show the model its own rejected answer and the menu again, once. Reached from
+   * two places — a response that parsed but chose something illegal, and a response that never
+   * parsed at all — because from the model's side they are the same mistake.
+   */
+  private async correctiveRetry(
+    request: DecisionRequest,
+    view: PlayerView,
+    prompt: AiPrompt,
+    rejected: string,
+    error: string,
+  ): Promise<ModelOutcome> {
     const correctiveMessages: OpenAiMessage[] = [
       ...prompt.messages,
-      { role: 'assistant', content: result.meta.rawResponse },
+      { role: 'assistant', content: rejected },
       {
         role: 'user',
-        content: `Validation error: ${error1}.\nPlease choose a valid actionId from this legal actions menu:\n${JSON.stringify(request.legalActions, null, 2)}\nReturn ONLY the JSON response object.`,
+        content: `Validation error: ${error}.\nPlease choose a valid actionId from this legal actions menu:\n${JSON.stringify(request.legalActions, null, 2)}\nReturn ONLY the JSON response object.`,
       },
     ];
 
     const retryPrompt = { ...prompt, messages: correctiveMessages };
-    const retryResult = await this.queue.enqueue(() =>
-      this.client.requestDecision(retryPrompt, request),
-    );
+    let retryResult;
+    try {
+      retryResult = await this.queue.enqueue(() =>
+        this.client.requestDecision(retryPrompt, request),
+      );
+    } catch (err) {
+      if (!(err instanceof AiResponseValidationError)) throw err;
+      return {
+        kind: 'failed',
+        detail: err.details,
+        meta: { ...localCallMeta(), wasRetry: true, rawResponse: err.rawResponse ?? '' },
+      };
+    }
 
     const error2 = validateResponse(retryResult.response, request);
     if (error2 === null) {

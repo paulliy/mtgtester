@@ -13,7 +13,11 @@ the six adjustments are recorded in
 found to be broken in three structural ways — stale per-action boards, a compute-ahead cap that
 could never bind, and a log position tracked by turn rather than by position — and the fixes are
 recorded in
-[docs/decisions/0014-playback-correctness.md](docs/decisions/0014-playback-correctness.md). The
+[docs/decisions/0014-playback-correctness.md](docs/decisions/0014-playback-correctness.md).
+The AI request itself was then found to 400 on every call (two conflicting spellings of the
+reasoning control), which had every game playing itself out on fallbacks; that fix and the four
+recoverable-failure defects it surfaced are in
+[docs/decisions/0015-ai-request-shape.md](docs/decisions/0015-ai-request-shape.md). The
 Phase 2 scope cuts in [docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md)
 are still outstanding for review.
 

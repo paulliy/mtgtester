@@ -24,6 +24,12 @@ export interface AiConfig {
   maxRetries: number;
   /** Request timeout in ms for AI calls. Default: 45000. */
   requestTimeoutMs: number;
+  /**
+   * Token budget for the decision JSON itself. Default: 1000. When reasoning is enabled the
+   * client adds headroom on top of this, because `max_tokens` caps thinking and answer
+   * together and a model that spends the lot mid-thought returns empty content.
+   */
+  maxOutputTokens: number;
   /** Base backoff in ms for exponential retry. Default: 1000. */
   baseBackoffMs: number;
   /** Max backoff cap in ms. Default: 32000. */
@@ -148,6 +154,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   rpmLimit: 10000,
   maxRetries: 6,
   requestTimeoutMs: 45000,
+  maxOutputTokens: 1000,
   baseBackoffMs: 1000,
   maxBackoffMs: 32000,
   concurrency: 1,
@@ -254,6 +261,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     requestTimeoutMs: parseNumber(
       env['AI_REQUEST_TIMEOUT_MS'] || env[`${preset.envPrefix}_REQUEST_TIMEOUT_MS`],
       DEFAULT_AI_CONFIG.requestTimeoutMs,
+    ),
+    maxOutputTokens: parseNumber(
+      env['AI_MAX_OUTPUT_TOKENS'] || env[`${preset.envPrefix}_MAX_OUTPUT_TOKENS`],
+      DEFAULT_AI_CONFIG.maxOutputTokens,
     ),
     heuristicsEnabled: parseBoolean(
       env['AI_HEURISTICS_ENABLED'],

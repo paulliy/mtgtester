@@ -29,6 +29,50 @@ export interface CallMeta {
   rawResponse: string;
 }
 
+/**
+ * Effort levels the wire accepts. `max` is this project's vocabulary, not the API's — the
+ * OpenAI-compatible enum stops at `high`, and sending `max` is a 400 on every provider.
+ */
+const WIRE_EFFORT: Record<Exclude<AiConfig['reasoningEffort'], 'none'>, string> = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+  max: 'high',
+};
+
+/**
+ * `max_tokens` bounds reasoning tokens and answer tokens TOGETHER. A thinking model given the
+ * answer budget alone can spend all of it mid-thought and return empty `content`, so a
+ * reasoning run gets headroom on top of the budget the answer itself needs.
+ */
+const REASONING_TOKEN_HEADROOM = 4000;
+
+/**
+ * The reasoning controls for one request. Vendors spell this two different ways and the two
+ * spellings must never both appear: OpenRouter folds a top-level `reasoning_effort` into
+ * `reasoning.effort`, so a body carrying `reasoning_effort` *and* `reasoning.max_tokens`
+ * collides with itself and every single request comes back
+ * `400 Only one of "reasoning.effort" and "reasoning.max_tokens" can be specified`.
+ */
+export function reasoningParams(
+  config: Pick<AiConfig, 'reasoningEnabled' | 'reasoningEffort'>,
+  isOpenRouter: boolean,
+): Record<string, unknown> {
+  const effort = config.reasoningEffort ?? 'low';
+  const on = config.reasoningEnabled === true && effort !== 'none';
+
+  if (isOpenRouter) {
+    // OpenRouter's unified object. `effort` and `max_tokens` are mutually exclusive here, so
+    // only ever one of them goes on the wire — and "off" is `enabled: false`, never
+    // `max_tokens: 0`, which is out of range and rejected on its own.
+    return { reasoning: on ? { effort: WIRE_EFFORT[effort], exclude: true } : { enabled: false } };
+  }
+
+  // Every other OpenAI-compatible vendor takes `reasoning_effort` and rejects body fields it
+  // does not recognise, so there is nothing portable to send when reasoning is off: omit it.
+  return on ? { reasoning_effort: WIRE_EFFORT[effort] } : {};
+}
+
 export interface AiClient {
   readonly activeModel: string;
   requestDecision(
@@ -121,19 +165,17 @@ export class OpenAiCompatibleClient implements AiClient {
 
       try {
         const metaResult = await withRetry(async () => {
-          const reasoningOn = this.config.reasoningEnabled ?? false;
-          const effort = reasoningOn ? (this.config.reasoningEffort ?? 'low') : 'none';
+          const reasoningOn =
+            this.config.reasoningEnabled === true && this.config.reasoningEffort !== 'none';
+          const answerTokens = this.config.maxOutputTokens ?? DEFAULT_AI_CONFIG.maxOutputTokens;
 
           const bodyPayload: Record<string, unknown> = {
             model: currentModel,
             messages: prompt.messages,
             temperature: 0.1,
-            max_tokens: 1000,
+            max_tokens: reasoningOn ? answerTokens + REASONING_TOKEN_HEADROOM : answerTokens,
             response_format: { type: 'json_object' },
-            reasoning_effort: effort,
-            reasoning: reasoningOn
-              ? { effort, exclude: true }
-              : { enabled: false, max_tokens: 0, exclude: true },
+            ...reasoningParams(this.config, isOpenRouter),
           };
           if (ignoreProviders.length > 0) {
             bodyPayload['provider'] = { ignore: ignoreProviders };
@@ -169,13 +211,32 @@ export class OpenAiCompatibleClient implements AiClient {
           }
 
           const data = (await res.json()) as {
-            choices?: Array<{ message?: { content?: string } }>;
+            choices?: Array<{
+              finish_reason?: string;
+              message?: { content?: string; reasoning?: string; reasoning_content?: string };
+            }>;
             usage?: { prompt_tokens?: number; completion_tokens?: number };
           };
 
-          const rawContent = data.choices?.[0]?.message?.content ?? '';
+          const choice = data.choices?.[0];
+          const message = choice?.message;
+          /**
+           * A thinking model that runs out of budget mid-thought returns empty `content` with
+           * everything it wrote in `reasoning` — and the decision JSON is usually in there.
+           * Reading it back is free and turns a dead call into an answered one.
+           */
+          const rawContent =
+            (message?.content ?? '').trim().length > 0
+              ? (message?.content as string)
+              : (message?.reasoning ?? message?.reasoning_content ?? '');
+
           if (!rawContent.trim()) {
-            throw new AiResponseValidationError('Empty content received from AI provider', rawContent);
+            const finish = choice?.finish_reason;
+            throw new AiResponseValidationError(
+              `Empty content received from AI provider` +
+                (finish !== undefined ? ` (finish_reason: ${finish})` : ''),
+              rawContent,
+            );
           }
 
           const latencyMs = Date.now() - startTime;
@@ -219,41 +280,101 @@ export class OpenAiCompatibleClient implements AiClient {
   }
 }
 
+/** Keys models have been observed to use for the chosen action, in order of preference. */
+const ACTION_ID_KEYS = [
+  'actionId',
+  'action_id',
+  'action',
+  'choice',
+  'id',
+  'selected_action',
+  'index',
+  'actionIndex',
+  'action_index',
+  'decision',
+] as const;
+
+/** Every balanced `{...}` slice in `text`, outermost first, string- and escape-aware. */
+function* balancedObjects(text: string): Generator<string> {
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== '{') continue;
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let j = i; j < text.length; j++) {
+      const ch = text[j];
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (ch === '\\') {
+        if (inString) escaped = true;
+        continue;
+      }
+      if (ch === '"') {
+        inString = !inString;
+        continue;
+      }
+      if (inString) continue;
+      if (ch === '{') depth++;
+      else if (ch === '}') {
+        depth--;
+        if (depth === 0) {
+          yield text.slice(i, j + 1);
+          break;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Pull the decision object out of whatever the model wrapped it in — markdown fences, a prose
+ * preamble, or reasoning text that itself contains braces.
+ *
+ * The greedy `/\{[\s\S]*\}/` this replaces spanned from the first brace anywhere in the reply
+ * to the last brace anywhere in it, so one sentence like "I considered {A} and {B}" made an
+ * otherwise perfect fenced response unparseable. Fenced blocks are tried first, then every
+ * balanced object in reading order, and an object that actually names an action wins over an
+ * earlier one that parses but says nothing (a model narrating its thinking in JSON).
+ */
+function extractJsonObject(raw: string): Record<string, unknown> | null {
+  const candidates: string[] = [];
+  const fence = /```(?:json)?\s*([\s\S]*?)```/gi;
+  for (let m = fence.exec(raw); m !== null; m = fence.exec(raw)) {
+    const body = m[1];
+    if (body !== undefined) candidates.push(body);
+  }
+  candidates.push(raw);
+
+  let firstParsed: Record<string, unknown> | null = null;
+  for (const candidate of candidates) {
+    for (const slice of balancedObjects(candidate)) {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(slice);
+      } catch {
+        continue; // Not the object — keep scanning.
+      }
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) continue;
+
+      const obj = parsed as Record<string, unknown>;
+      if (ACTION_ID_KEYS.some((k) => obj[k] !== undefined)) return obj;
+      firstParsed ??= obj;
+    }
+  }
+  return firstParsed;
+}
+
 /** Helper to strip markdown code blocks, extract JSON object, and parse JSON response. */
 function parseJsonResponse(raw: string, request: DecisionRequest): DecisionResponse {
-  let cleaned = raw.trim();
-
-  // Extract JSON object if surrounded by markdown code fences or conversational text
-  const match = cleaned.match(/\{[\s\S]*\}/);
-  if (match !== null) {
-    cleaned = match[0];
-  } else {
+  const obj = extractJsonObject(raw);
+  if (obj === null) {
     throw new AiResponseValidationError('No JSON object {...} found in AI response', raw);
   }
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch (err) {
-    throw new AiResponseValidationError(`Invalid JSON format: ${String(err)}`, raw);
-  }
-
-  if (typeof parsed !== 'object' || parsed === null) {
-    throw new AiResponseValidationError('Response JSON is not an object', raw);
-  }
-
-  const obj = parsed as Record<string, unknown>;
-  const rawActionId =
-    obj['actionId'] ??
-    obj['action_id'] ??
-    obj['action'] ??
-    obj['choice'] ??
-    obj['id'] ??
-    obj['selected_action'] ??
-    obj['index'] ??
-    obj['actionIndex'] ??
-    obj['action_index'] ??
-    obj['decision'];
+  const key = ACTION_ID_KEYS.find((k) => obj[k] !== undefined);
+  const rawActionId = key === undefined ? undefined : obj[key];
 
   let actionId =
     typeof rawActionId === 'number'
