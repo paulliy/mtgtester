@@ -55,11 +55,27 @@ import {
 } from '../state/queries';
 import type {
   EngineCardObject,
+  EngineObject,
   EnginePermanent,
   EnginePlayerState,
   EngineStackObject,
   GameContext,
 } from '../state/types';
+
+/** Any engine object with this stable object id, in whatever zone it currently occupies. */
+function findObjectById(ctx: GameContext, id: ObjectId): EngineObject | undefined {
+  const foundStack = ctx.state.stack.find((object) => object.id === id);
+  if (foundStack !== undefined) return foundStack as unknown as EngineObject;
+  const zones: EngineObject[][] = [ctx.state.battlefield, ctx.state.exile];
+  for (const player of ctx.state.players) {
+    zones.push(player.hand, player.library, player.graveyard, player.commandZone);
+  }
+  for (const zone of zones) {
+    const found = zone.find((object) => object.id === id);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
 
 /** Identity of whatever is dealing damage / causing an effect, for logging + rules. */
 export interface EffectSource {
@@ -738,7 +754,10 @@ export function* executeAbility(
         const t = ref(effect.target);
         if (t !== null) {
           const perm = findPermanent(ctx, t);
-          if (perm) emit(ctx, 'goad', { target: perm.name, source: source.name });
+          if (perm) {
+            perm.goadedThisTurn = true;
+            emit(ctx, 'goad', { target: perm.name, source: source.name });
+          }
         }
         break;
       }
@@ -827,7 +846,7 @@ export function* executeAbility(
       }
       case 'registerDelayedTrigger': {
         const t = effect.target !== undefined ? ref(effect.target) : null;
-        const targetId = t !== null ? (findPermanent(ctx, t)?.cardId ?? undefined) : undefined;
+        const targetId = t !== null ? (findObjectById(ctx, t)?.cardId ?? undefined) : undefined;
         ctx.state.delayedTriggers.push({
           id: `dt-${ctx.state.nextObjectNum++}`,
           sourceCardId: source.cardId,
@@ -874,6 +893,64 @@ export function* executeAbility(
         const spell = ctx.state.stack.find((s) => s.kind === 'spell');
         if (spell) {
           spell.grantHasteOnResolution = true;
+        }
+        break;
+      }
+      case 'bounceUpTo6MV': {
+        const eligible = ctx.state.battlefield.filter(
+          (p) => !computeCharacteristics(ctx, p).types.includes('Land'),
+        );
+        if (eligible.length > 0) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: 'Kairi: choose nonland permanents with total mana value 6 or less to return to hands',
+            options: [
+              ...eligible.map((p) => ({
+                type: 'returnToHand',
+                description: `Return ${p.name}`,
+                payload: p.id,
+              })),
+              { type: 'decline', description: 'Done returning permanents' },
+            ],
+          };
+          if (outcome.index < eligible.length) {
+            const chosen = eligible[outcome.index] as EnginePermanent;
+            emit(ctx, 'returnToHand', { target: chosen.name, source: source.name });
+            yield* moveObject(ctx, chosen, { zone: 'hand' });
+          }
+        }
+        break;
+      }
+      case 'millAndReturnSpells': {
+        const n = Math.min(6, controller.library.length);
+        for (let i = 0; i < n; i++) {
+          const topCard = controller.library[controller.library.length - 1] as EngineCardObject;
+          yield* moveObject(ctx, topCard, { zone: 'graveyard' });
+        }
+        for (let pass = 0; pass < 2; pass++) {
+          const spellsInGy = controller.graveyard.filter((c) => {
+            const def = getDefByOracleId(ctx, c.oracleId, c.name);
+            return def.types.includes('Instant') || def.types.includes('Sorcery');
+          });
+          if (spellsInGy.length === 0) break;
+          const outcome = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `Kairi: choose instant/sorcery card from graveyard to return to hand (${pass + 1}/2)`,
+            options: [
+              ...spellsInGy.map((c) => ({
+                type: 'returnToHand',
+                description: `Return ${c.name} from graveyard`,
+                payload: c.id,
+              })),
+              { type: 'decline', description: 'Done returning spells' },
+            ],
+          };
+          if (outcome.index >= spellsInGy.length) break;
+          const chosen = spellsInGy[outcome.index] as EngineCardObject;
+          emit(ctx, 'graveyardToHand', { target: chosen.name, source: source.name });
+          yield* moveObject(ctx, chosen, { zone: 'hand' });
         }
         break;
       }

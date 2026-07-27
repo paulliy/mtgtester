@@ -96,6 +96,7 @@ export class MatchSession {
         // In live mode the viewer follows the frontier, so a new turn is pushed as it lands.
         // In manual mode the viewer's position is theirs to move, and pushing would yank them.
         if (this.playbackMode !== 'live') return;
+        this.runner.setViewTurn(turn);
         opts.send({
           type: 'stateSnapshot',
           payload: { turn, state, frontierTurn: this.runner.getFrontierTurn(), atFrontier },
@@ -148,6 +149,17 @@ export class MatchSession {
 
   setPlaybackMode(mode: PlaybackMode): void {
     this.playbackMode = mode;
+    if (mode === 'live') {
+      const turn = this.runner.getFrontierTurn();
+      this.runner.setViewTurn(turn);
+      const state = this.runner.stateAt(turn);
+      if (state !== null) {
+        this.opts.send({
+          type: 'stateSnapshot',
+          payload: { turn, state, frontierTurn: turn, atFrontier: true },
+        });
+      }
+    }
   }
 
   getPlaybackMode(): PlaybackMode {
@@ -156,26 +168,29 @@ export class MatchSession {
 
   /**
    * Move the viewer and send them that board. Backward is always allowed; forward past the
-   * frontier is refused rather than computed on demand (brief §10.1).
+   * frontier unparks compute up to lookahead turns ahead (brief §10.1).
    */
-  jumpToTurn(turn: number): void {
-    const clamped = Math.max(0, Math.min(turn, this.runner.getFrontierTurn()));
-    this.runner.setViewTurn(clamped);
-    const state = this.runner.stateAt(clamped);
+  jumpToTurn(requestedTurn: number, requestedSequence?: number): void {
+    const turn = Math.max(0, requestedTurn);
+    this.runner.setViewTurn(turn);
+    const state = this.runner.stateAt(turn, requestedSequence);
     if (state === null) {
-      this.opts.send({
-        type: 'error',
-        payload: { message: `Turn ${clamped} has not been computed yet.` },
-      });
+      const status = this.runner.getStatus();
+      if (status === 'finished' || status === 'halted' || status === 'abandoned') {
+        this.opts.send({
+          type: 'error',
+          payload: { message: `Turn ${turn} has not been computed yet.` },
+        });
+      }
       return;
     }
     this.opts.send({
       type: 'stateSnapshot',
       payload: {
-        turn: clamped,
+        turn,
         state,
         frontierTurn: this.runner.getFrontierTurn(),
-        atFrontier: clamped >= this.runner.getFrontierTurn(),
+        atFrontier: turn >= this.runner.getFrontierTurn(),
       },
     });
   }

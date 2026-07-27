@@ -123,6 +123,24 @@ describe('state-derived mana production', () => {
     // payment it cannot make.
     expect(manaSourcesFor(ctx, 'P1').some((s) => s.cardId === stone.cardId)).toBe(false);
   });
+
+  it('does not infinitely recurse when multiple players control Exotic Orchard', () => {
+    const exoticOrchard = (): ReturnType<typeof oracle> =>
+      land(
+        'Exotic Orchard',
+        '{T}: Add one mana of any color that a land an opponent controls could produce.',
+      );
+
+    const ctx = ctxWithCommander(['G']);
+    spawn(ctx, 'P1', exoticOrchard());
+    spawn(ctx, 'P2', exoticOrchard());
+    spawn(ctx, 'P2', forest());
+
+    // P1's Exotic Orchard evaluates P2's Exotic Orchard and Forest.
+    // P2's Exotic Orchard evaluates P1's Exotic Orchard.
+    // Must return ['G'] without stack overflow.
+    expect(symbolsFor(ctx, 'Exotic Orchard')).toEqual([['G']]);
+  });
 });
 
 describe('conditional and granted mana abilities', () => {

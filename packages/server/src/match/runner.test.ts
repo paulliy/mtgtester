@@ -243,7 +243,7 @@ describe('MatchRunner — hold-and-wait (brief §7.7, §10.1)', () => {
 });
 
 describe('MatchRunner — §7.7 escalation', () => {
-  it('halts instead of falling back when the decision is ahead of the viewer', async () => {
+  it('returns null to allow safest fallback when the decision is ahead of the viewer', async () => {
     const engine = makeEngine();
     const runner = new MatchRunner({
       engine,
@@ -263,9 +263,7 @@ describe('MatchRunner — §7.7 escalation', () => {
     runner.setViewTurn(0);
     const request = { decidingPlayer: 'P1', requestId: 'r1' } as DecisionRequest;
 
-    await expect(runner.escalation().onModelFailed(request, 'bad json')).rejects.toBeInstanceOf(
-      ComputeHaltError,
-    );
+    await expect(runner.escalation().onModelFailed(request, 'bad json')).resolves.toBeNull();
 
     runner.abandon();
     await run;

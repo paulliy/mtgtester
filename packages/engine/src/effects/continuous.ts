@@ -178,6 +178,7 @@ export function candidateOf(
     keywords: chars.keywords,
     isToken: perm.isToken,
     enteredThisTurn: perm.enteredTurnNumber === ctx.state.turnNumber,
+    isCommander: perm.isCommander,
   };
 }
 

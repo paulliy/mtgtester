@@ -109,6 +109,21 @@ export function subtractGeneric(cost: ParsedManaCost, minus: number): ParsedMana
   };
 }
 
+/** Cost `minus` colored mana symbols, floored at zero (CR 601.2f). */
+export function subtractColored(cost: ParsedManaCost, reduction: ParsedManaCost): ParsedManaCost {
+  const newColored = { ...cost.colored };
+  for (const c of ALL_COLORS) {
+    const r = reduction.colored[c] ?? 0;
+    if (r > 0) {
+      newColored[c] = Math.max(0, newColored[c] - r);
+    }
+  }
+  return {
+    ...cost,
+    colored: newColored,
+  };
+}
+
 /** Render a parsed cost back as symbols — "{2}{G}{G}" — for prompts and option descriptions. */
 export function describeManaCost(cost: ParsedManaCost): string {
   const parts: string[] = [];

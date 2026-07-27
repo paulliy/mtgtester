@@ -159,6 +159,7 @@ export function cardZoneCandidate(
     isToken: false,
     // Not a permanent at all — "entered this turn" is meaningless here.
     enteredThisTurn: false,
+    isCommander: card.isCommander,
   };
 }
 
@@ -282,8 +283,12 @@ function resolveDynamicUnits(
   ctx: GameContext,
   spec: ManaAbilitySpec,
   perm: EnginePermanent,
+  visited: Set<ObjectId> = new Set(),
 ): ManaAbilitySpec {
   if (spec.dynamic === undefined) return spec;
+  if (visited.has(perm.id)) return { ...spec, units: [] };
+
+  visited.add(perm.id);
 
   const symbols: (Color | 'C')[] = [];
   const add = (sym: Color | 'C'): void => {
@@ -309,7 +314,7 @@ function resolveDynamicUnits(
         const chars = computeCharacteristics(ctx, land);
         if (!chars.types.includes('Land')) continue;
         for (const ability of chars.manaAbilities) {
-          for (const unit of resolveDynamicUnits(ctx, ability, land).units) {
+          for (const unit of resolveDynamicUnits(ctx, ability, land, visited).units) {
             for (const sym of unit) if (sym !== 'C') add(sym);
           }
         }

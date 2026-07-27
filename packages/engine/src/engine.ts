@@ -27,7 +27,7 @@ import { EngineUsageError, IllegalDecisionError, UnmodeledCardError } from './er
 import { playGame } from './flow/game';
 import { debug, emit } from './log/log';
 import { createGame } from './state/game';
-import type { DebugEntry, GameConfig, GameContext } from './state/types';
+import type { DebugEntry, EngineState, GameConfig, GameContext } from './state/types';
 import { buildSpectatorState } from './view/spectator';
 import { buildPlayerView } from './view/view';
 
@@ -175,6 +175,10 @@ export class Engine implements EngineDriver {
 
   /** The authoritative game state. NEVER hand this to an AI — use `view()` (brief §7.1). */
   getState(): GameState {
+    return this.ctx.state;
+  }
+
+  getEngineState(): EngineState {
     return this.ctx.state;
   }
 

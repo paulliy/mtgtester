@@ -10,7 +10,7 @@ import type { DecisionOutcome, GameGen } from '../decisions';
 import { payAbilityCosts, payManaCost } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import type { ParsedManaCost } from '../mana/cost';
-import { addGeneric, describeManaCost, emptyCost, subtractGeneric, totalPips, withX } from '../mana/cost';
+import { addGeneric, describeManaCost, emptyCost, subtractColored, subtractGeneric, totalPips, withX } from '../mana/cost';
 import {
   makePermanent,
   moveObject,
@@ -159,13 +159,21 @@ export function* applyPriorityAction(
 
       const tax = payload.fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
       const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
+      const applyRed = (c: ParsedManaCost): ParsedManaCost => {
+        let base = c;
+        if (reduction.colored !== undefined) {
+          base = subtractColored(base, reduction.colored);
+        }
+        return subtractGeneric(base, reduction.generic);
+      };
+
       let cost: ParsedManaCost;
       let ability: Ability;
       let targets: ObjectId[];
       if (payload.alternativeCast === 'overload') {
         const alt = def.alternativeCasts?.find((a) => a.kind === 'overload');
         if (!alt) throw new Error('missing overload cost');
-        cost = subtractGeneric(alt.manaCost, reduction);
+        cost = applyRed(alt.manaCost);
         ability = {
           kind: 'spell',
           targets: [],
@@ -177,12 +185,12 @@ export function* applyPriorityAction(
           def.alternativeCasts?.[payload.altIndex ?? 0] ??
           def.alternativeCasts?.find((a) => a.kind === payload.alternativeCast);
         if (!alt) throw new Error(`missing ${payload.alternativeCast} cost`);
-        cost = subtractGeneric(alt.manaCost, reduction);
+        cost = applyRed(alt.manaCost);
         ability = alt.ability ?? { kind: 'spell', targets: [], effects: [] };
         targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
       } else {
         cost = withX(
-          subtractGeneric(addGeneric(def.manaCost ?? emptyCost(), tax), reduction),
+          applyRed(addGeneric(def.manaCost ?? emptyCost(), tax)),
           payload.x ?? 0,
         );
         ability = resolveCastAbility(def, payload.mode, obj.name) ?? {

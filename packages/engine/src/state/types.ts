@@ -57,6 +57,8 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   timestamp: number;
   /** `state.turnNumber` when this object entered the battlefield — "entered this turn" (Neriv). */
   enteredTurnNumber: number;
+  /** True if this permanent has been goaded during the current turn. */
+  goadedThisTurn?: boolean;
   /**
    * Indices into this permanent's `activatedAbilities` used this turn, for "activate only once
    * each turn" (CR 602.5f).
@@ -225,6 +227,8 @@ export interface EngineState extends GameState {
   /** Monotonic timestamp for continuous-effect ordering (CR 613.7). */
   nextTimestamp: number;
   combat: CombatState | null;
+  /** Per-event spectator snapshots for high-precision action-by-action replay. */
+  sequenceSnapshots?: Map<number, import('@mtg/shared').SpectatorState>;
   /** Fixed seating (never mutated) — `turnOrder` shrinks as players are eliminated. */
   seating: PlayerId[];
   /** The player whose turn it is, tracked by id (survives turnOrder mutation). */

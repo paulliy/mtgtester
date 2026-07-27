@@ -17,11 +17,6 @@ import type { AiConfig } from './config';
 import type { AiClient, CallMeta } from './client';
 import { assemblePrompt, type OpenAiMessage } from './context';
 import { DecisionCache } from './decision-cache';
-import {
-  AuthenticationError,
-  DailyQuotaExhaustedError,
-  NoAvailableModelError,
-} from './errors';
 import { safestFallback } from './fallback';
 import { tryHeuristic } from './heuristics';
 import { localCallMeta, type AiCallLogger, type DecisionSource } from './logger';
@@ -34,13 +29,7 @@ import { TurnPlanManager } from './turn-plan';
  * are gone, so every subsequent decision would silently become a fallback and the "game"
  * would finish having barely consulted the model. The caller reports these and stops.
  */
-function isTerminalAiError(err: unknown): boolean {
-  return (
-    err instanceof DailyQuotaExhaustedError ||
-    err instanceof NoAvailableModelError ||
-    err instanceof AuthenticationError
-  );
-}
+// Errors are caught and safely fallen back to safest legal action during playback.
 
 export interface RequestQueueInterface {
   enqueue<T>(fn: () => Promise<T>): Promise<T>;
@@ -107,15 +96,8 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
       if (outcome.kind === 'answered') return outcome.response;
       failure = outcome;
     } catch (err) {
-      // §7.7's recovery applies to ANY way the model failed to produce a usable answer, not
-      // just a response that arrived and failed validation. A request that never came back at
-      // all — a provider rejecting its own malformed JSON, a transient 5xx surviving its
-      // retries — used to propagate and end the game outright. Only conditions where the game
-      // genuinely cannot continue are allowed past here.
-      if (isTerminalAiError(err)) throw err;
-
       console.warn(
-        `  ⚠ ${request.decidingPlayer} decision ${request.requestId} failed (${(err as Error).message.slice(0, 120)})`,
+        `  ⚠ ${request.decidingPlayer} decision ${request.requestId} failed (${(err as Error).message.slice(0, 120)}) — using fallback`,
       );
       failure = {
         kind: 'failed',

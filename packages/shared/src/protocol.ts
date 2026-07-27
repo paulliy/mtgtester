@@ -180,6 +180,7 @@ export interface StartGamePayload {
 
 export interface JumpToTurnPayload {
   turn: number;
+  sequence?: number;
 }
 
 export interface SetPlaybackModePayload {

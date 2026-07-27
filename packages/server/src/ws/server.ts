@@ -128,7 +128,7 @@ export class GameServer {
         return;
 
       case 'jumpToTurn':
-        this.requireSession(socket)?.jumpToTurn(message.payload.turn);
+        this.requireSession(socket)?.jumpToTurn(message.payload.turn, message.payload.sequence);
         return;
 
       case 'setPlaybackMode':

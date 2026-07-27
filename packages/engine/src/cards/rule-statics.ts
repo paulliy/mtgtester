@@ -10,6 +10,7 @@
  * permanent-shaped.
  */
 
+import type { ParsedManaCost } from '../mana/cost';
 import type { Selector } from './selector';
 import type { Value } from './value';
 
@@ -21,6 +22,8 @@ export type RuleStatic =
        * "for each creature you control with power 4 or greater") is expressed the same way a
        * fixed {1} (Eminence) is. */
       amount: Value;
+      /** Colored-mana reduction (CR 601.2f — Morophon's {W}{U}{B}{R}{G} reduction). */
+      coloredAmount?: ParsedManaCost;
       /** Restrict to spells matching this (printed) filter — "Dragon spells". Absent ⇒ any spell. */
       filter?: Selector;
       /** "OTHER Dragon spells" (Ur-Dragon) — excludes the source's own printed card. */

@@ -45,6 +45,16 @@ export interface AiConfig {
    * Default: true.
    */
   filterNonCachingProviders: boolean;
+  /**
+   * Enable/disable reasoning (thinking tokens) for AI requests.
+   * Default: false (disabled).
+   */
+  reasoningEnabled: boolean;
+  /**
+   * Reasoning effort level for thinking models ('none' | 'low' | 'medium' | 'high' | 'max').
+   * Default: 'low'.
+   */
+  reasoningEffort: 'none' | 'low' | 'medium' | 'high' | 'max';
 }
 
 /** A vendor: its endpoint, its default chain, and the env var holding its key. */
@@ -144,6 +154,8 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   heuristicsEnabled: true,
   decisionCacheEnabled: true,
   filterNonCachingProviders: true,
+  reasoningEnabled: false,
+  reasoningEffort: 'low',
 };
 
 /** Env booleans are opt-OUT: anything but an explicit falsey word leaves the default alone. */
@@ -219,6 +231,19 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     DEFAULT_AI_CONFIG.rpmLimit,
   );
 
+  const rawEffort = (
+    env['AI_REASONING_EFFORT'] ||
+    env[`${preset.envPrefix}_REASONING_EFFORT`] ||
+    DEFAULT_AI_CONFIG.reasoningEffort
+  )
+    .trim()
+    .toLowerCase();
+  const reasoningEffort = (
+    ['none', 'low', 'medium', 'high', 'max'].includes(rawEffort)
+      ? rawEffort
+      : DEFAULT_AI_CONFIG.reasoningEffort
+  ) as AiConfig['reasoningEffort'];
+
   return {
     ...DEFAULT_AI_CONFIG,
     baseUrl,
@@ -242,5 +267,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_FILTER_NON_CACHING_PROVIDERS'] || env['OPENROUTER_FILTER_NON_CACHING'],
       DEFAULT_AI_CONFIG.filterNonCachingProviders,
     ),
+    reasoningEnabled: parseBoolean(
+      env['AI_REASONING_ENABLED'] || env[`${preset.envPrefix}_REASONING_ENABLED`],
+      DEFAULT_AI_CONFIG.reasoningEnabled,
+    ),
+    reasoningEffort,
   };
 }

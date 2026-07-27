@@ -58,52 +58,40 @@ const phaseLabel = computed(() => {
 const waitingForView = computed(
   () => store.isRunning && store.frontierTurn - store.viewTurn >= 5,
 );
+const roundLabel = computed(() => {
+  const s = state.value;
+  if (!s) return '';
+  const numSeats = s.seats.length > 0 ? s.seats.length : 4;
+  const round = Math.floor((s.turnNumber - 1) / numSeats) + 1;
+  return `Round ${round} · Turn ${s.turnNumber} (${s.activePlayer}) · ${phaseLabel.value}`;
+});
 </script>
 
 <template>
   <div class="game">
     <header class="bar">
-      <span class="game-id">{{ store.gameId ?? 'no game' }}</span>
-      <span class="seed">seed <code>{{ store.seed }}</code></span>
-      <span v-if="state" class="phase">
-        turn {{ state.turnNumber }} · {{ state.activePlayer }} · {{ phaseLabel }}
+      <span class="app-title">MTG Commander Simulator</span>
+      <span v-if="state" class="phase-badge">
+        {{ roundLabel }}
       </span>
-      <span v-if="state?.priorityPlayer" class="priority">
-        priority {{ state.priorityPlayer }}
+      <span v-if="store.gameOver" class="game-over-badge" :title="store.gameOver.result.haltReason ?? ''">
+        🏆 Game Over: Winner {{ store.gameOver.result.winnerSeat ?? '(Draw)' }} ({{ store.gameOver.result.turnCount }} turns)
       </span>
-      <span class="provider">{{ store.providerKind }}</span>
+      <span v-else-if="store.halt" class="halt-badge" :title="store.halt.reason">
+        ⚠️ Halted: {{ store.halt.kind }} — {{ store.halt.reason }}
+      </span>
+      <span v-if="state?.priorityPlayer" class="priority-badge">
+        Priority: {{ state.priorityPlayer }}
+      </span>
+      <span class="provider-tag">{{ store.providerKind }}</span>
       <span v-if="store.apiCost" class="cost">
-        {{ store.apiCost.calls }} calls · {{ store.apiCost.skippedCalls }} local ·
-        {{ store.apiCost.promptTokens.toLocaleString() }}+{{
+        {{ store.apiCost.calls }} calls · {{ store.apiCost.promptTokens.toLocaleString() }}+{{
           store.apiCost.responseTokens.toLocaleString()
         }}
         tok
       </span>
       <span class="conn" :class="store.connection">{{ store.connection }}</span>
     </header>
-
-    <div v-if="store.halt" class="banner halt">
-      <strong>Compute halted — {{ store.halt.kind }}</strong>
-      <p>{{ store.halt.reason }}</p>
-      <p v-if="store.halt.cardName">Card: {{ store.halt.cardName }}</p>
-      <p class="note">
-        Nothing further is computed. This is a probable rules bug or an unmodeled card, and is
-        surfaced rather than guessed past.
-      </p>
-    </div>
-
-    <div v-if="store.gameOver" class="banner over">
-      <strong>
-        Game over — winner {{ store.gameOver.result.winnerSeat ?? '(none)' }} after
-        {{ store.gameOver.result.turnCount }} turns
-      </strong>
-      <ol>
-        <li v-for="row in [...store.gameOver.standings].sort((a, b) => a.position - b.position)" :key="row.seat">
-          {{ row.position }}. {{ row.seat }}
-          <span v-if="row.lossReason" class="reason">— {{ row.lossReason }}</span>
-        </li>
-      </ol>
-    </div>
 
     <HeldDecision
       v-if="store.heldDecision"
@@ -125,13 +113,19 @@ const waitingForView = computed(
           :is-active="seat.seat === state.activePlayer"
           :has-priority="seat.seat === state.priorityPlayer"
           :eliminated="state.eliminatedPlayers.includes(seat.seat)"
+          :commander-damage="state.commanderDamage"
+          :exile="state.exile"
         />
       </div>
 
       <aside class="side">
         <StackPanel :state="state" />
-        <CommanderDamageGrid :state="state" />
-        <ActionLog :lines="store.log" :follow="store.atFrontier" />
+        <ActionLog
+          :lines="store.log"
+          :follow="store.atFrontier"
+          :active-sequence="store.activeSequence ?? undefined"
+          @select-sequence="store.jumpToSequence"
+        />
       </aside>
     </main>
 
@@ -142,9 +136,11 @@ const waitingForView = computed(
       :frontier-turn="store.frontierTurn"
       :mode="store.playbackMode"
       :waiting="waitingForView"
+      :is-running="store.isRunning"
       @jump="store.jumpToTurn"
       @back="store.stepBack"
       @forward="store.stepForward"
+      @step-action="store.stepAction"
       @mode="store.setPlaybackMode"
       @abandon="abandon"
     />
@@ -162,29 +158,76 @@ const waitingForView = computed(
 }
 .bar {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 1rem;
-  flex-wrap: wrap;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--muted);
+  background: var(--surface);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
 }
-.game-id {
-  font-weight: 700;
+.app-title {
+  font-weight: 800;
   color: var(--text);
+  letter-spacing: -0.01em;
 }
-.phase,
-.priority {
+.phase-badge {
   color: var(--accent);
+  font-weight: 700;
+  background: rgb(96 165 250 / 0.12);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid rgb(96 165 250 / 0.25);
+}
+.game-over-badge {
+  color: var(--ok);
+  font-weight: 700;
+  background: rgb(74 222 128 / 0.12);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid rgb(74 222 128 / 0.3);
+  font-size: 0.8rem;
+}
+.halt-badge {
+  color: var(--danger);
+  font-weight: 700;
+  background: rgb(248 113 113 / 0.12);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid rgb(248 113 113 / 0.3);
+  font-size: 0.8rem;
+}
+.priority-badge {
+  color: var(--warn);
+  font-weight: 700;
+  background: rgb(251 191 36 / 0.12);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgb(251 191 36 / 0.25);
+}
+.provider-tag {
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  background: var(--surface-2);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
 }
 .cost {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 .conn.open {
   color: var(--ok);
+  font-weight: 700;
 }
 .conn.closed {
   color: var(--danger);
+  font-weight: 700;
 }
 .layout {
   display: grid;
@@ -196,10 +239,10 @@ const waitingForView = computed(
 .seats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-auto-rows: minmax(0, 1fr);
+  grid-template-rows: 1fr 1fr;
   gap: 0.6rem;
   min-height: 0;
-  overflow-y: auto;
+  height: 100%;
 }
 .side {
   display: flex;

@@ -121,11 +121,19 @@ export class OpenAiCompatibleClient implements AiClient {
 
       try {
         const metaResult = await withRetry(async () => {
+          const reasoningOn = this.config.reasoningEnabled ?? false;
+          const effort = reasoningOn ? (this.config.reasoningEffort ?? 'low') : 'none';
+
           const bodyPayload: Record<string, unknown> = {
             model: currentModel,
             messages: prompt.messages,
             temperature: 0.1,
+            max_tokens: 1000,
             response_format: { type: 'json_object' },
+            reasoning_effort: effort,
+            reasoning: reasoningOn
+              ? { effort, exclude: true }
+              : { enabled: false, max_tokens: 0, exclude: true },
           };
           if (ignoreProviders.length > 0) {
             bodyPayload['provider'] = { ignore: ignoreProviders };

@@ -4,7 +4,13 @@ import type { SpectatorPermanent } from '@mtg/shared';
 import CardImage from './CardImage.vue';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
-const props = defineProps<{ permanent: SpectatorPermanent }>();
+const props = withDefaults(
+  defineProps<{
+    permanent: SpectatorPermanent;
+    count?: number;
+  }>(),
+  { count: 1 },
+);
 
 const cardPreview = useCardPreviewStore();
 
@@ -41,11 +47,15 @@ function onLeave(): void {
 <template>
   <div
     class="tile"
-    :class="{ creature: isCreature }"
+    :class="{ creature: isCreature, tapped: permanent.tapped }"
     @mouseenter="onEnter"
     @mousemove="onMove"
     @mouseleave="onLeave"
   >
+    <div v-if="count && count > 1" class="stack-count-badge" :title="`${count} copies of ${permanent.name}`">
+      ×{{ count }}
+    </div>
+    <div v-if="permanent.tapped" class="tap-badge" title="Tapped">TAP</div>
     <CardImage
       :scryfall-id="permanent.scryfallId"
       :name="permanent.name"
@@ -70,10 +80,44 @@ function onLeave(): void {
 .tile {
   position: relative;
   width: 88px;
+  transition: transform 120ms ease;
 }
 .tile.creature {
   box-shadow: 0 0 0 2px var(--accent);
   border-radius: 6%;
+}
+.tile.tapped {
+  opacity: 0.85;
+}
+.stack-count-badge {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.08rem 0.35rem;
+  border-radius: 10px;
+  z-index: 10;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.tap-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--warn);
+  border: 1px solid var(--warn);
+  font-size: 0.52rem;
+  font-weight: 700;
+  padding: 0.05rem 0.2rem;
+  border-radius: 3px;
+  z-index: 2;
+  pointer-events: none;
 }
 .keywords {
   position: absolute;

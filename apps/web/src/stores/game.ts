@@ -158,8 +158,11 @@ export const useGameStore = defineStore('game', () => {
    * Move the viewer. This is also what un-parks compute: the server computes at most five turns
    * past this position (brief §10.1), so watching is what pays for the next turns.
    */
-  function jumpToTurn(turn: number): void {
-    socket?.send({ type: 'jumpToTurn', payload: { turn } });
+  function jumpToTurn(turn: number, sequence?: number): void {
+    socket?.send({
+      type: 'jumpToTurn',
+      payload: sequence !== undefined ? { turn, sequence } : { turn },
+    });
   }
 
   function stepBack(): void {
@@ -167,7 +170,62 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function stepForward(): void {
-    if (viewTurn.value < frontierTurn.value) jumpToTurn(viewTurn.value + 1);
+    if (viewTurn.value < frontierTurn.value || isRunning.value) {
+      jumpToTurn(viewTurn.value + 1);
+    }
+  }
+
+  const activeSequence = ref<number | null>(null);
+
+  function getCurrentActionIndex(): number {
+    if (log.value.length === 0) return -1;
+
+    // 1. If user explicitly selected an action before, check if it exists in current log
+    if (activeSequence.value !== null) {
+      const idx = log.value.findIndex((l) => l.sequence === activeSequence.value);
+      if (idx !== -1) return idx;
+    }
+
+    // 2. Find log lines matching current viewTurn
+    const exactTurnIndices: number[] = [];
+    for (let i = 0; i < log.value.length; i++) {
+      if (log.value[i]!.turn === viewTurn.value) {
+        exactTurnIndices.push(i);
+      }
+    }
+
+    if (exactTurnIndices.length > 0) {
+      return exactTurnIndices[exactTurnIndices.length - 1]!;
+    }
+
+    // 3. Find the last log line at or before current viewTurn
+    for (let i = log.value.length - 1; i >= 0; i--) {
+      if (log.value[i]!.turn <= viewTurn.value) {
+        return i;
+      }
+    }
+
+    // 4. Fallback to 0
+    return 0;
+  }
+
+  function stepAction(delta: number): void {
+    if (log.value.length === 0) return;
+
+    const currentIndex = getCurrentActionIndex();
+    if (currentIndex === -1) return;
+
+    const targetIndex = Math.max(0, Math.min(log.value.length - 1, currentIndex + delta));
+    const targetLine = log.value[targetIndex];
+    if (targetLine) {
+      activeSequence.value = targetLine.sequence;
+      jumpToTurn(targetLine.turn, targetLine.sequence);
+    }
+  }
+
+  function jumpToSequence(seq: number, turn?: number): void {
+    activeSequence.value = seq;
+    jumpToTurn(turn ?? viewTurn.value, seq);
   }
 
   function setPlaybackMode(mode: PlaybackMode): void {
@@ -208,6 +266,7 @@ export const useGameStore = defineStore('game', () => {
     gameOver,
     errors,
     apiCost,
+    activeSequence,
     atFrontier,
     isRunning,
     connect,
@@ -215,6 +274,8 @@ export const useGameStore = defineStore('game', () => {
     jumpToTurn,
     stepBack,
     stepForward,
+    stepAction,
+    jumpToSequence,
     setPlaybackMode,
     resolveHeldDecision,
     abandonGame,

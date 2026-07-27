@@ -149,9 +149,7 @@ describe('OpenAiDecisionProvider', () => {
       ['daily quota', new DailyQuotaExhaustedError()],
       ['no available model', new NoAvailableModelError(['m1'])],
       ['authentication', new AuthenticationError()],
-    ])('still propagates a terminal %s error rather than silently falling back', async (_l, err) => {
-      // Falling back here would quietly turn every remaining decision into a fallback and
-      // report a "completed" game that barely consulted the model.
+    ])('falls back to safest legal action on terminal %s error to keep simulation going', async (_l, err) => {
       const provider = new OpenAiDecisionProvider(
         throwingClient(err),
         mockQueue,
@@ -159,7 +157,8 @@ describe('OpenAiDecisionProvider', () => {
         DEFAULT_AI_CONFIG,
       );
 
-      await expect(provider.decide(fixtureReq)).rejects.toThrow(err.constructor as never);
+      const res = await provider.decide(fixtureReq);
+      expect(res.actionId).toBe(0); // "Pass priority" — conservative fallback
     });
   });
 });

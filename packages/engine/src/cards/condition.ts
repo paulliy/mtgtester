@@ -59,6 +59,7 @@ export type Condition =
   | { kind: 'totalCreaturePower'; scope: 'you' | 'opponents' | 'all'; cmp: '>=' | '<='; n: number }
   | { kind: 'isUntapped' }
   | { kind: 'enteredThisTurn' }
+  | { kind: 'hadToAttackThisCombat' }
   | { kind: 'allOf'; of: Condition[] }
   | { kind: 'anyOf'; of: Condition[] }
   | { kind: 'not'; of: Condition };
@@ -150,6 +151,11 @@ export function evaluateCondition(
       if (source?.cardId === undefined) return false;
       const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
       return perm !== undefined && perm.enteredTurnNumber === ctx.state.turnNumber;
+    }
+    case 'hadToAttackThisCombat': {
+      if (source?.cardId === undefined) return false;
+      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      return perm !== undefined && perm.goadedThisTurn === true;
     }
     case 'allOf':
       return condition.of.every((c) => evaluateCondition(ctx, c, source));

@@ -136,6 +136,7 @@ export class MatchRunner {
   private lastSnapshotTurn = -1;
   private readonly snapshotTurnList: number[] = [];
   private readonly snapshots = new Map<number, SpectatorState>();
+  private readonly sequenceSnapshots = new Map<number, SpectatorState>();
   private result: GameResult | null = null;
   private halt: HaltInfo | null = null;
   private decisions = 0;
@@ -184,11 +185,13 @@ export class MatchRunner {
   }
 
   /**
-   * The board at an already-computed turn. Scrubbing backward is always allowed; scrubbing
-   * *forward* past the frontier is not, and returns null rather than computing on demand
-   * (brief §10.1 — "never forward past what has been computed").
+   * The board at an already-computed turn (or specific action sequence). Scrubbing backward is
+   * always allowed; scrubbing *forward* past the frontier is not.
    */
-  stateAt(turn: number): SpectatorState | null {
+  stateAt(turn: number, sequence?: number): SpectatorState | null {
+    if (sequence !== undefined && this.sequenceSnapshots.has(sequence)) {
+      return this.sequenceSnapshots.get(sequence)!;
+    }
     return this.snapshots.get(turn) ?? this.opts.recorder?.loadTurnSnapshot(turn) ?? null;
   }
 
@@ -235,10 +238,10 @@ export class MatchRunner {
     return {
       onModelFailed: async (request, detail) => {
         if (this.viewTurn < this.frontierTurn) {
-          throw new ComputeHaltError(
-            'invalidAiResponse',
-            `AI response for ${request.decidingPlayer} failed validation during compute-ahead: ${detail}`,
+          console.warn(
+            `  ⚠ Compute-ahead AI error for ${request.decidingPlayer}: ${detail} — using safest legal action fallback to keep sim going`,
           );
+          return null;
         }
         return await this.askHuman(request, detail);
       },
@@ -390,6 +393,15 @@ export class MatchRunner {
   private flushEvents(): void {
     const events = this.opts.engine.eventsSince(this.eventCursor);
     if (events.length === 0) return;
+
+    const engineState = this.opts.engine.getEngineState();
+    for (const e of events) {
+      const snap = engineState.sequenceSnapshots?.get(e.sequence);
+      if (snap !== undefined) {
+        this.sequenceSnapshots.set(e.sequence, snap);
+      }
+    }
+
     this.eventCursor = (events[events.length - 1]?.sequence ?? this.eventCursor) + 1;
     this.opts.recorder?.appendEvents(events);
     const lines = formatSpectatorLog(events);

@@ -243,13 +243,13 @@ describe('Temur Battlecrier', () => {
     const crier = spawn(ctx, 'P1', battlecrier());
     registerDef(ctx, bear());
 
-    expect(costReductionFor(ctx, 'P1', bear().oracleId, 'c-any')).toBe(0);
+    expect(costReductionFor(ctx, 'P1', bear().oracleId, 'c-any').generic).toBe(0);
 
     spawn(ctx, 'P1', oracle({ name: 'Test Ogre', typeLine: 'Creature — Ogre', manaCost: '{4}', power: '4', toughness: '4' }));
     spawn(ctx, 'P1', oracle({ name: 'Test Giant', typeLine: 'Creature — Giant', manaCost: '{4}', power: '5', toughness: '5' }));
     // Battlecrier itself is power 3 — does not count toward its own reduction.
     expect(crier.power).toBe(3);
-    expect(costReductionFor(ctx, 'P1', bear().oracleId, 'c-any')).toBe(2);
+    expect(costReductionFor(ctx, 'P1', bear().oracleId, 'c-any').generic).toBe(2);
   });
 
   it("is inactive on any turn but the controller's own", () => {
@@ -259,7 +259,7 @@ describe('Temur Battlecrier', () => {
     spawn(ctx, 'P1', oracle({ name: 'Test Ogre 2', typeLine: 'Creature — Ogre', manaCost: '{4}', power: '4', toughness: '4' }));
 
     ctx.state.currentTurnPlayer = 'P2';
-    expect(costReductionFor(ctx, 'P1', bear().oracleId, 'c-any')).toBe(0);
+    expect(costReductionFor(ctx, 'P1', bear().oracleId, 'c-any').generic).toBe(0);
   });
 });
 
@@ -294,8 +294,8 @@ describe('The Ur-Dragon', () => {
     const ur = conjure(ctx, 'P1', urDragon(), 'command');
     registerDef(ctx, bigDragon());
 
-    expect(costReductionFor(ctx, 'P1', bigDragon().oracleId, 'c-other')).toBe(1);
-    expect(costReductionFor(ctx, 'P1', ur.oracleId, ur.cardId)).toBe(0);
+    expect(costReductionFor(ctx, 'P1', bigDragon().oracleId, 'c-other').generic).toBe(1);
+    expect(costReductionFor(ctx, 'P1', ur.oracleId, ur.cardId).generic).toBe(0);
   });
 
   it('reduces from the BATTLEFIELD too, once cast', () => {
@@ -303,7 +303,7 @@ describe('The Ur-Dragon', () => {
     spawn(ctx, 'P1', urDragon());
     registerDef(ctx, bigDragon());
 
-    expect(costReductionFor(ctx, 'P1', bigDragon().oracleId, 'c-other')).toBe(1);
+    expect(costReductionFor(ctx, 'P1', bigDragon().oracleId, 'c-other').generic).toBe(1);
   });
 
   it('draws that many cards, then may put a permanent from hand onto the battlefield', () => {

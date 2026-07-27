@@ -8,6 +8,7 @@
  * halts loudly (brief §6.3) rather than silently excluding it.
  */
 
+import { ALL_COLORS } from '@mtg/shared';
 import type { Color, ObjectId, OracleId, PlayerId } from '@mtg/shared';
 import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../cards/definition';
 import type { SelectorCandidate, SelectorSource } from '../cards/selector';
@@ -15,7 +16,7 @@ import { selectMatches } from '../cards/selector';
 import type { EngineActionOption } from '../decisions';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
-import { addGeneric, canPay, describeManaCost, emptyCost, subtractGeneric, withX } from '../mana/cost';
+import { addGeneric, canPay, describeManaCost, emptyCost, subtractColored, subtractGeneric, withX } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import {
   allowanceFor,
@@ -91,12 +92,17 @@ export function manaPortionOf(costs: readonly AbilityCost[]): ParsedManaCost {
  * (the charged cost) must call this identically, or the engine could offer a cast it then
  * charges a different price for — the same option-menu contract `allowanceFor` protects.
  */
+export interface CostReductionResult {
+  generic: number;
+  colored?: ParsedManaCost;
+}
+
 export function costReductionFor(
   ctx: GameContext,
   casterId: PlayerId,
   castOracleId: OracleId,
   castCardId: string,
-): number {
+): CostReductionResult {
   const def = getDefByOracleId(ctx, castOracleId, castOracleId);
   const candidate: SelectorCandidate = {
     cardId: castCardId,
@@ -112,11 +118,11 @@ export function costReductionFor(
   };
   const source: SelectorSource = { cardId: castCardId, controllerId: casterId };
 
-  let total = 0;
+  let generic = 0;
+  let colored: ParsedManaCost | undefined;
+
   for (const entry of gatherRuleStatics(ctx)) {
     if (entry.static.kind !== 'costReduction') continue;
-    // Every printed reduction in this pool is "spells YOU cast" — a reduction never applies to
-    // anyone but its own source's controller.
     if (entry.controllerId !== casterId) continue;
     if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== casterId) continue;
     if (entry.static.excludesSelf === true && entry.sourceCardId === castCardId) continue;
@@ -126,12 +132,25 @@ export function costReductionFor(
     ) {
       continue;
     }
-    total += evaluateValueIn(ctx, entry.static.amount, {
+    generic += evaluateValueIn(ctx, entry.static.amount, {
       controllerId: entry.controllerId,
       sourceCardId: entry.sourceCardId,
     });
+    if (entry.static.coloredAmount !== undefined) {
+      if (colored === undefined) {
+        colored = {
+          ...entry.static.coloredAmount,
+          colored: { ...entry.static.coloredAmount.colored },
+        };
+      } else {
+        for (const c of ALL_COLORS) {
+          colored.colored[c] =
+            (colored.colored[c] ?? 0) + (entry.static.coloredAmount.colored[c] ?? 0);
+        }
+      }
+    }
   }
-  return total;
+  return { generic, ...(colored !== undefined ? { colored } : {}) };
 }
 
 /**
@@ -335,7 +354,11 @@ export function computePriorityOptions(
 
     const tax = fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
     const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
-    const base = subtractGeneric(addGeneric(def.manaCost, tax), reduction);
+    let base = addGeneric(def.manaCost, tax);
+    if (reduction.colored !== undefined) {
+      base = subtractColored(base, reduction.colored);
+    }
+    base = subtractGeneric(base, reduction.generic);
 
     const key = `cast:${obj.name}:${fromCommand}:${fromLibraryTop}`;
     if (seen.has(key)) return; // duplicate copies are interchangeable
@@ -402,10 +425,18 @@ export function computePriorityOptions(
         offered = true;
       }
     }
+    const applyRed = (c: ParsedManaCost): ParsedManaCost => {
+      let b = c;
+      if (reduction.colored !== undefined) {
+        b = subtractColored(b, reduction.colored);
+      }
+      return subtractGeneric(b, reduction.generic);
+    };
+
     if (def.alternativeCasts && def.alternativeCasts.length > 0 && !fromExile) {
       for (const [index, alt] of def.alternativeCasts.entries()) {
         if (alt.kind === 'overload') {
-          const cost = subtractGeneric(alt.manaCost, reduction);
+          const cost = applyRed(alt.manaCost);
           if (canPay(cost, player.manaEntries, sources, allows)) {
             options.push({
               type: 'castSpell',
@@ -422,7 +453,7 @@ export function computePriorityOptions(
             offered = true;
           }
         } else if (alt.kind === 'adventure' || alt.kind === 'omen') {
-          const cost = subtractGeneric(alt.manaCost, reduction);
+          const cost = applyRed(alt.manaCost);
           if (canPay(cost, player.manaEntries, sources, allows)) {
             const altName = alt.name ?? alt.description;
             const note =

@@ -9,6 +9,7 @@
 
 import type { PlayerId } from '@mtg/shared';
 import type { DebugEntry, GameContext } from '../state/types';
+import { buildSpectatorState } from '../view/spectator';
 
 export function emit(
   ctx: GameContext,
@@ -17,8 +18,9 @@ export function emit(
   actorSeat: PlayerId | null = null,
 ): void {
   const s = ctx.state;
+  const seq = s.nextEventSequence++;
   s.eventLog.push({
-    sequence: s.nextEventSequence++,
+    sequence: seq,
     turn: s.turnNumber,
     phase: s.phase,
     step: s.step,
@@ -26,6 +28,8 @@ export function emit(
     type,
     payload,
   });
+  s.sequenceSnapshots ??= new Map();
+  s.sequenceSnapshots.set(seq, buildSpectatorState(ctx));
 }
 
 export function debug(

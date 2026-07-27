@@ -50,11 +50,10 @@ export interface SelectorCandidate {
   keywords: readonly string[];
   /** Token-ness (CR 111.1). NOT event-only: no layer can change it. */
   isToken: boolean;
-  /**
-   * Did this permanent enter the battlefield during the CURRENT turn (Neriv, Heart of the
-   * Storm)? NOT event-only: no CR 613 layer can change when an object entered.
-   */
+  /** Did this permanent enter the battlefield during the CURRENT turn (Neriv)? */
   enteredThisTurn: boolean;
+  /** Is this permanent/card a Commander (CR 903.3)? */
+  isCommander?: boolean;
 }
 
 /** The object a relative selector ("self", "you control") is resolved against. */
@@ -91,6 +90,7 @@ export type Selector =
   | { kind: 'isToken' }
   /** "a creature you control that entered this turn" (Neriv, Heart of the Storm). */
   | { kind: 'enteredThisTurn' }
+  | { kind: 'isCommander' }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -117,6 +117,7 @@ export const withKeyword = (keyword: string): Selector => ({ kind: 'hasKeyword',
 
 /** Miirym's subject leaf — see the  variant. */
 export const IS_TOKEN: Selector = { kind: 'isToken' };
+export const IS_COMMANDER: Selector = { kind: 'isCommander' };
 
 /** Neriv's subject leaf. */
 export const ENTERED_THIS_TURN: Selector = { kind: 'enteredThisTurn' };
@@ -178,6 +179,8 @@ export function selectMatches(
       return candidate.isToken;
     case 'enteredThisTurn':
       return candidate.enteredThisTurn;
+    case 'isCommander':
+      return candidate.isCommander === true;
     case 'allOf':
       return selector.of.every((s) => selectMatches(candidate, s, source));
     case 'anyOf':

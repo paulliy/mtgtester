@@ -40,6 +40,7 @@ import type { RuleStatic } from './rule-statics';
 import type { Selector } from './selector';
 import {
   ENTERED_THIS_TURN,
+  IS_COMMANDER,
   IS_TOKEN,
   NONBASIC_LANDS,
   OPPONENTS,
@@ -2332,8 +2333,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
           when: 'enters',
           subject: { kind: 'permanent', selector: allOf(ofType('Creature'), withKeyword('flying'), YOURS) },
         },
-        targets: [{ kind: 'creature' }],
-        effects: [{ op: 'grantKeywordUntilEot', keyword: 'haste', target: 0 }],
+        targets: [],
+        effects: [{ op: 'grantKeywordUntilEot', keyword: 'haste', target: 'triggerObject' }],
         description: 'Flying ETB haste',
       },
       {
@@ -2375,8 +2376,15 @@ export function interpretCard(card: OracleCard): CardDefinition {
         },
         targets: [],
         effects: [
-          { op: 'putCountersEach', selector: SELF, counter: '+1/+1', count: 1 },
-          { op: 'draw', count: constant(1) },
+          {
+            op: 'conditionalEffect',
+            condition: { kind: 'hadToAttackThisCombat' },
+            then: [
+              { op: 'putCountersEach', selector: SELF, counter: '+1/+1', count: 1 },
+              { op: 'draw', count: constant(1) },
+            ],
+            else: [],
+          },
         ],
         description: 'Combat damage draw & counter',
       },
@@ -2407,8 +2415,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
       modes: {
         choose: 1,
         options: [
-          { description: 'Return nonland permanents <= 6 total MV', effects: [{ op: 'noOp' }] },
-          { description: 'Mill 6 and return up to 2 spells from graveyard', effects: [{ op: 'noOp' }] },
+          { description: 'Return nonland permanents <= 6 total MV', effects: [{ op: 'bounceUpTo6MV' }] },
+          { description: 'Mill 6 and return up to 2 spells from graveyard', effects: [{ op: 'millAndReturnSpells' }] },
         ],
       },
       effects: [],
@@ -2422,7 +2430,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         caster: 'you',
         filter: anyOf(ofSubtype('Dragon'), ofSubtype('Adventure')),
       },
-      targets: [{ kind: 'anyTarget' }],
+      targets: [{ kind: 'anyTarget', filter: not(IS_COMMANDER) }],
       effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'spellManaValue' } }],
       description: 'Spell cast damage',
     });
@@ -2430,7 +2438,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
   } else if (card.name === 'Morophon, the Boundless') {
     ruleStatics.push({
       kind: 'costReduction',
-      amount: constant(5),
+      amount: constant(0),
+      coloredAmount: parseManaCost('{W}{U}{B}{R}{G}').cost!,
       filter: ofSubtype('Dragon'),
     });
     staticEffects.push({
@@ -2446,7 +2455,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   } else if (card.name === 'Orb of Dragonkind') {
     manaAbilities.push({
       units: [ALL_COLORS, ALL_COLORS],
-      costs: [{ kind: 'tap' }],
+      costs: [{ kind: 'mana', cost: parseManaCost('{1}').cost! }, { kind: 'tap' }],
       restriction: {
         purposes: ['castSpell', 'activateAbility'],
         filter: ofSubtype('Dragon'),

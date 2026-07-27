@@ -451,6 +451,8 @@ export type Effect =
   | { op: 'doublePower'; selector: Selector }
   | { op: 'drawUpTo'; count: number }
   | { op: 'untapTarget'; target: EffectRef }
+  | { op: 'bounceUpTo6MV' }
+  | { op: 'millAndReturnSpells' }
   | { op: 'hideawayExileTop4' }
   | { op: 'playExiledCardFree' }
   | { op: 'noOp' };

@@ -97,4 +97,21 @@ describe('AI Config', () => {
     expect(config.maxRetries).toBe(DEFAULT_AI_CONFIG.maxRetries);
     expect(config.requestTimeoutMs).toBe(DEFAULT_AI_CONFIG.requestTimeoutMs);
   });
+
+  it('configures reasoningEnabled and reasoningEffort from environment', () => {
+    const defaultConfig = loadAiConfig({});
+    expect(defaultConfig.reasoningEnabled).toBe(false);
+    expect(defaultConfig.reasoningEffort).toBe('low');
+
+    const customConfig = loadAiConfig({
+      AI_REASONING_ENABLED: 'true',
+      AI_REASONING_EFFORT: 'none',
+    });
+    expect(customConfig.reasoningEnabled).toBe(true);
+    expect(customConfig.reasoningEffort).toBe('none');
+
+    const invalidConfig = loadAiConfig({ AI_REASONING_EFFORT: 'invalid-effort' });
+    expect(invalidConfig.reasoningEnabled).toBe(false);
+    expect(invalidConfig.reasoningEffort).toBe('low');
+  });
 });

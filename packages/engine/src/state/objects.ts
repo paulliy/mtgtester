@@ -16,7 +16,7 @@ import type { SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
 import type { GameGen } from '../decisions';
-import { matchesSelector } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { debug, emit } from '../log/log';
 import { getDefByOracleId, triggersOf } from './queries';
 import type {
@@ -207,6 +207,34 @@ export function* moveObject(
     const perm = makePermanent(ctx, obj, controllerId, entersTappedOverride);
     ctx.state.battlefield.push(perm);
     next = perm;
+
+    const chars = computeCharacteristics(ctx, perm);
+    if (chars.types.includes('Creature') && chars.keywords.includes('riot')) {
+      const outcome = yield {
+        decisionType: 'general',
+        player: controllerId,
+        prompt: `Riot choice for ${perm.name}: choose a +1/+1 counter or haste`,
+        options: [
+          { type: 'riotCounter', description: `Put a +1/+1 counter on ${perm.name}`, payload: perm.id },
+          { type: 'riotHaste', description: `Give ${perm.name} haste until end of turn`, payload: perm.id },
+        ],
+      };
+      if (outcome.index === 1) {
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: perm.cardId,
+          description: `${perm.name} gains haste until end of turn (Riot)`,
+          targetCardIds: [perm.cardId],
+          kind: 'grantKeyword',
+          keyword: 'haste',
+          timestamp: ctx.state.nextTimestamp++,
+        });
+        emit(ctx, 'grantKeyword', { source: 'Riot', target: perm.name, keyword: 'haste' });
+      } else {
+        perm.counters['+1/+1'] = (perm.counters['+1/+1'] ?? 0) + 1;
+        emit(ctx, 'putCounter', { target: perm.name, counter: '+1/+1', count: 1 });
+      }
+    }
   } else {
     next = reincarnate(ctx, obj, target.zone);
     const owner = playerById(ctx, obj.ownerId);
