@@ -84,6 +84,12 @@ export interface PlayerView {
   commanders: CommanderView[];
   /** Mana currently available to the viewer, e.g. `{ W: 1, G: 2, C: 0 }`. */
   availableMana: Record<string, number>;
+  /**
+   * Per-permanent mana-production breakdown — what EACH source could make, not summed into
+   * `availableMana`'s flat per-symbol counts. Lets the AI reason "this land taps for any of
+   * WUBRG" instead of only seeing an aggregate. Purely descriptive.
+   */
+  manaSources: { name: string; symbols: string[]; count: number }[];
   opponents: OpponentView[];
   /** All battlefields, public state (brief §7.1). */
   battlefield: PermanentView[];

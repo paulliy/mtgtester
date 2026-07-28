@@ -105,6 +105,23 @@ describe('GameRecorder', () => {
     expect(calls.filter((c) => c.sql.includes('INSERT INTO game_players'))).toHaveLength(2);
   });
 
+  it('records single-player mode and each seat controller', () => {
+    const { db, calls } = fakeDb();
+    new GameRecorder(db, 'g1').start(
+      'seed-player',
+      [
+        { seat: 'P1', deckSnapshotId: 'snap-1', controllerKind: 'human' },
+        { seat: 'P2', deckSnapshotId: 'snap-2', controllerKind: 'ai' },
+      ],
+      'singlePlayer',
+    );
+
+    expect(calls[0]?.args.at(-1)).toBe('singlePlayer');
+    const players = calls.filter((call) => call.sql.includes('INSERT INTO game_players'));
+    expect(players[0]?.args.at(-1)).toBe('human');
+    expect(players[1]?.args.at(-1)).toBe('ai');
+  });
+
   it('appends events keyed by sequence, and ignores a replayed flush', () => {
     const { db, calls } = fakeDb();
     const events: GameEvent[] = [
@@ -130,6 +147,25 @@ describe('GameRecorder', () => {
     const { db, calls } = fakeDb();
     new GameRecorder(db, 'g1').appendEvents([]);
     expect(calls).toHaveLength(0);
+  });
+
+  it('persists the separate debug trace and raw mana inputs used by Phase 5', () => {
+    const { db, calls } = fakeDb();
+    const recorder = new GameRecorder(db, 'g1');
+    recorder.appendDebug([
+      { turn: 3, category: 'sba', message: 'SBA pass stable', data: { checks: 1 } },
+    ]);
+    recorder.saveManaMetrics([
+      {
+        seat: 'P1', turn: 3, landsInHand: 2, landsDrawnCumulative: 4,
+        cardsDrawnCumulative: 8, spellsCastable: 1, unspentMana: 3, onCurve: true,
+      },
+    ]);
+
+    expect(calls[0]?.sql).toContain('game_debug_events');
+    expect(calls[0]?.args).toContain('sba');
+    expect(calls[1]?.sql).toContain('mana_metrics');
+    expect(calls[1]?.args).toContain(8);
   });
 
   it('stores the spectator projection as the turn snapshot, and reads it back', () => {

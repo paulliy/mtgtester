@@ -27,7 +27,7 @@ describe('Rules Primer', () => {
       'JSON',
       'passAndYieldTurn',
       'yield',
-      'plannedActions',
+      'turn plan',
     ];
     for (const term of terms) {
       expect(RULES_PRIMER).toContain(term);

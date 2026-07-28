@@ -12,6 +12,7 @@
 import type {
   CommanderDamageEntry,
   GameEvent,
+  PlayerBoardState,
   SpectatorCard,
   SpectatorCommander,
   SpectatorLogLine,
@@ -108,14 +109,26 @@ function commanderName(ctx: GameContext, player: EnginePlayerState, cardId: stri
 function commanderViews(ctx: GameContext, player: EnginePlayerState): SpectatorCommander[] {
   return player.commanderCardIds.map((cardId) => {
     const castCount = player.commanderCastCount[cardId] ?? 0;
+    const zoneObject = [
+      ...player.commandZone,
+      ...player.graveyard,
+      ...player.hand,
+      ...player.library,
+      ...ctx.state.exile,
+    ].find((candidate) => candidate.cardId === cardId);
+    const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === cardId);
+    const stackObject = ctx.state.stack.find((candidate) => candidate.card?.cardId === cardId);
+    const visibleObject = zoneObject ?? permanent ?? stackObject?.card ?? null;
     return {
       cardId,
+      objectId: visibleObject?.id ?? null,
       name: commanderName(ctx, player, cardId),
       zone: commanderZone(ctx, player, cardId),
       castCount,
       // Commander tax: an additional {2} for each previous cast from the command zone
       // (brief §5.7). Mirrors `legal.ts`, which is what actually charges it.
       taxGeneric: 2 * castCount,
+      scryfallId: visibleObject === null ? null : (ctx.defs.get(visibleObject.oracleId)?.scryfallId ?? null),
     };
   });
 }
@@ -203,6 +216,53 @@ export function buildSpectatorState(ctx: GameContext): SpectatorState {
     seating: [...s.seating],
     eliminatedPlayers: [...s.eliminatedPlayers],
     commanderDamage: commanderDamage(ctx),
+  };
+}
+
+/**
+ * Active-player browser projection. Build it inside the engine so hidden cards never cross the
+ * server/browser boundary and face-down objects are redacted before serialization.
+ */
+export function buildPlayerBoardState(
+  ctx: GameContext,
+  playerId: string,
+): PlayerBoardState {
+  const spectator = buildSpectatorState(ctx);
+  return {
+    ...spectator,
+    viewerSeat: playerId,
+    seats: spectator.seats.map((seat) => ({
+      ...seat,
+      handSize: seat.hand.length,
+      hand: seat.seat === playerId ? seat.hand : null,
+    })),
+    battlefield: spectator.battlefield.map((permanent) => {
+      if (!permanent.statuses.includes('faceDown') || permanent.controller === playerId) {
+        return permanent;
+      }
+      return {
+        ...permanent,
+        name: 'Face-down permanent',
+        typeLine: 'Creature',
+        manaCost: null,
+        oracleText: '',
+        scryfallId: null,
+      };
+    }),
+    exile: spectator.exile.map((card) => {
+      const engineCard = ctx.state.exile.find((candidate) => candidate.id === card.id);
+      if (engineCard?.attachedToCardId === undefined || engineCard.ownerId === playerId) {
+        return card;
+      }
+      return {
+        ...card,
+        name: 'Face-down card',
+        typeLine: '',
+        manaCost: null,
+        oracleText: '',
+        scryfallId: null,
+      };
+    }),
   };
 }
 
@@ -360,4 +420,25 @@ export function formatSpectatorLog(events: readonly GameEvent[]): SpectatorLogLi
     if (line !== null) lines.push(line);
   }
   return lines;
+}
+
+/**
+ * Hidden-information-safe live log. Private bottoming and catch-all card choices made by
+ * another seat are omitted; their public consequences are still narrated by later events.
+ */
+export function formatPlayerLog(
+  events: readonly GameEvent[],
+  playerId: string,
+): SpectatorLogLine[] {
+  return formatSpectatorLog(
+    events.filter((event) => {
+      if (event.type !== 'decision' || event.actorSeat === playerId) return true;
+      const decisionType = event.payload['decisionType'];
+      return (
+        decisionType !== 'mulligan' &&
+        decisionType !== 'bottomCards' &&
+        decisionType !== 'general'
+      );
+    }),
+  );
 }

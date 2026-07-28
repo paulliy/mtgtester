@@ -1,11 +1,11 @@
 # MTG Commander AI Simulator
 
 A local application that plays complete, rules-accurate games of **Magic: The Gathering
-Commander** between **four AI-controlled players**, so a human spectator can evaluate how
-their decks actually perform. You supply four decklists, press start, and watch a legal
-four-player game play to a single winner — then review per-deck statistics across games.
+Commander** either between **four AI-controlled players** or with **one human against three
+bots**. Supply four decklists, choose spectator or single-player mode, and play or watch a
+legal four-player game through to one winner — then review per-deck statistics across games.
 
-**This is a deck-evaluation tool, not a game you play.** See the full specification in
+The deterministic engine remains authoritative in both modes. See the original specification in
 [docs/mtg-commander-ai-simulator-brief.md](docs/mtg-commander-ai-simulator-brief.md).
 
 ## Architecture (the one decision that matters)
@@ -25,9 +25,9 @@ auto-detected from whichever key is present. See
 packages/
   shared/   Types shared across engine, server, and web
   engine/   Pure TS rules engine — no I/O, no network, no framework
-  server/   Bun server: orchestration, Gemini, SQLite, WebSocket
+  server/   Bun server: orchestration, AI providers, SQLite, WebSocket
 apps/
-  web/      Vue 3 spectator UI
+  web/      Vue 3 spectator and player UI
 docs/
   rules/       Reference material (Comprehensive Rules, Commander rules, banned list)
   decisions/   ADRs for significant choices
@@ -64,7 +64,12 @@ bun run serve      # http://localhost:3001 — HTTP + /ws, holds the engine
 bun run dev:web    # http://localhost:5173 — Vue spectator UI (proxies /ws)
 ```
 
-Open the UI, pick four decks, and press start. Decks come from two places:
+Open the UI, pick four decks, choose spectator or single-player mode, and press start.
+Single-player supports one selected human seat against three AI (or seeded random) bots. The
+human decision provider has no timer; disconnecting pauses new bot work, and reconnecting to
+the running server restores the private board and pending choice.
+
+Decks come from two places:
 
 - **Generated from the engine-supported pool** (the default) — always playable.
 - **Imported** from a Moxfield/Archidekt URL or a pasted list. These are **pre-flighted**: any
@@ -91,7 +96,7 @@ for implementing the engine, not runtime context (brief §7.4).
 
 ## Status
 
-**Phase 4 — Spectator UI.** Complete pending phase-boundary approval. Phases 0–3
-(foundations, deck pipeline, engine core, AI integration) are in; see the phase log in
-[CLAUDE.md](CLAUDE.md) and the ADRs in [docs/decisions/](docs/decisions/). Development
-proceeds in the phases defined in the brief §14, stopping for approval at each boundary.
+**Phase 6 — Single-player Commander.** Implementation complete pending phase-boundary
+approval. Spectator playback, Phase 5 statistics/diagnostics, and the single-player mode are
+available; see the phase log in [CLAUDE.md](CLAUDE.md) and the ADRs in
+[docs/decisions/](docs/decisions/).

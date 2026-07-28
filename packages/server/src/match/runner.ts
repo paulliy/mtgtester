@@ -16,11 +16,13 @@
  *     further (brief §7.7, §10.1). Nothing ambiguous is ever resolved without the user present.
  */
 
-import type { AsyncDecisionProvider, Engine } from '@mtg/engine';
+import type { AsyncDecisionProvider, DebugEntry, Engine } from '@mtg/engine';
 import { formatSpectatorLog } from '@mtg/engine';
 import type {
   DecisionRequest,
   DecisionResponse,
+  GameEvent,
+  GameMode,
   GameResult,
   HaltKind,
   PlayerId,
@@ -29,7 +31,7 @@ import type {
   TargetChoice,
 } from '@mtg/shared';
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
-import type { GameRecorder, GameSeatRecord, GameStatus } from '../db/games';
+import type { GameRecorder, GameSeatRecord, GameStatus, ManaMetricRecord } from '../db/games';
 
 export { LOOKAHEAD_TURNS } from '@mtg/shared';
 
@@ -99,6 +101,10 @@ export interface MatchRunnerHooks {
   onStatusChange?(status: MatchStatus): void;
   /** Fires after every submitted decision — the hook the AI cost counters ride on. */
   onDecision?(request: DecisionRequest, response: DecisionResponse): void;
+  /** Newly-created internal diagnostics; persistence happens regardless of this live hook. */
+  onDebug?(entries: DebugEntry[]): void;
+  /** Fires whenever engine events were flushed, even if none produce a visible log line. */
+  onProgress?(frontierTurn: number): void;
 }
 
 export interface MatchRunnerOptions extends MatchRunnerHooks {
@@ -111,6 +117,8 @@ export interface MatchRunnerOptions extends MatchRunnerHooks {
   lookaheadTurns?: number;
   maxDecisions?: number;
   escalationTimeoutMs?: number;
+  gameMode?: GameMode;
+  formatEvents?: (events: readonly GameEvent[]) => SpectatorLogLine[];
 }
 
 /** Classify a halt reason string the engine produced into a protocol `HaltKind`. */
@@ -147,6 +155,10 @@ export class MatchRunner {
   private result: GameResult | null = null;
   private halt: HaltInfo | null = null;
   private decisions = 0;
+  private readonly landsDrawn = new Map<PlayerId, number>();
+  private readonly cardsDrawn = new Map<PlayerId, number>();
+  private readonly eliminators = new Map<PlayerId, PlayerId>();
+  private readonly indexedMetricEventSequences = new Set<number>();
 
   /** Resolves when something the compute gate cares about changes. */
   private wakeup: (() => void) | null = null;
@@ -266,9 +278,10 @@ export class MatchRunner {
   async run(): Promise<void> {
     if (this.status !== 'idle') return;
     this.setStatus('running');
-    this.opts.recorder?.start(this.opts.seed, this.opts.seats);
+    this.opts.recorder?.start(this.opts.seed, this.opts.seats, this.opts.gameMode ?? 'spectator');
     this.captureSnapshot();
     this.flushEvents();
+    this.flushDebug();
 
     try {
       await this.loop();
@@ -302,6 +315,7 @@ export class MatchRunner {
       if (step.kind === 'gameOver') {
         this.onTurnAdvanced();
         this.flushEvents();
+        this.flushDebug();
         this.finish(step.result);
         return;
       }
@@ -330,6 +344,7 @@ export class MatchRunner {
 
       this.onTurnAdvanced();
       this.flushEvents();
+      this.flushDebug();
 
       if (++stepsSinceYield >= YIELD_EVERY_STEPS) {
         stepsSinceYield = 0;
@@ -391,6 +406,7 @@ export class MatchRunner {
     if (turn <= this.lastSnapshotTurn) return;
     this.frontierTurn = turn;
     this.captureSnapshot();
+    this.captureManaMetrics(turn);
   }
 
   /** `terminal` re-snapshots a turn already captured, for the end-of-game board. */
@@ -416,10 +432,52 @@ export class MatchRunner {
 
     this.eventCursor = (events[events.length - 1]?.sequence ?? this.eventCursor) + 1;
     this.opts.recorder?.appendEvents(events);
-    const lines = formatSpectatorLog(events);
+    this.indexMetricEvents(events);
+    const lines = this.opts.formatEvents?.(events) ?? formatSpectatorLog(events);
     if (lines.length > 0) {
       this.opts.onEvents?.(lines, this.frontierTurn, this.getSnapshotTurns());
     }
+    this.opts.onProgress?.(this.frontierTurn);
+  }
+
+  /** Persist the engine's separate diagnostic stream with the same incremental cadence as events. */
+  private flushDebug(): void {
+    const entries = this.opts.engine.drainDebugLog();
+    this.opts.recorder?.appendDebug?.(entries);
+    if (entries.length > 0) this.opts.onDebug?.(entries);
+  }
+
+  private indexMetricEvents(events: readonly import('@mtg/shared').GameEvent[]): void {
+    for (const event of events) {
+      if (this.indexedMetricEventSequences.has(event.sequence)) continue;
+      this.indexedMetricEventSequences.add(event.sequence);
+      if (event.type === 'draw' && typeof event.payload['player'] === 'string') {
+        const seat = event.payload['player'];
+        this.cardsDrawn.set(seat, (this.cardsDrawn.get(seat) ?? 0) + 1);
+        if (event.payload['isLand'] !== true) continue;
+        this.landsDrawn.set(seat, (this.landsDrawn.get(seat) ?? 0) + 1);
+      }
+      if (event.type === 'damage' && typeof event.payload['target'] === 'string' && typeof event.payload['controller'] === 'string') {
+        this.eliminators.set(event.payload['target'], event.payload['controller']);
+      }
+    }
+  }
+
+  /** Raw, replay-independent inputs for the tunable flood/drought heuristic. */
+  private captureManaMetrics(turn: number): void {
+    // Turn advancement occurs just before the normal event flush; account for those new events
+    // now so the saved observation belongs to the state it describes, not the next decision.
+    this.indexMetricEvents(this.opts.engine.eventsSince(this.eventCursor));
+    const records: ManaMetricRecord[] = this.opts.engine.getState().players.map((player) => {
+      const view = this.opts.engine.view(player.id);
+      const landsInHand = view.hand.filter((card) => card.typeLine?.includes('Land') === true).length;
+      const spellsCastable = view.hand.filter((card) => card.typeLine?.includes('Land') !== true && card.manaCost !== undefined).length;
+      const unspentMana = Object.values(view.availableMana).reduce((total, amount) => total + amount, 0);
+      return { seat: player.id, turn, landsInHand, landsDrawnCumulative: this.landsDrawn.get(player.id) ?? 0,
+        cardsDrawnCumulative: this.cardsDrawn.get(player.id) ?? 0,
+        spellsCastable, unspentMana, onCurve: player.landsPlayedThisTurn > 0 };
+    });
+    this.opts.recorder?.saveManaMetrics?.(records);
   }
 
   /**
@@ -496,7 +554,7 @@ export class MatchRunner {
         eliminatedOnTurn: player.hasLost ? result.turnCount : null,
         // TODO(phase-5): attributing the killing blow needs the damage events walked back;
         // the stats screen is what consumes it, so it lands with the rest of §9.1.
-        eliminatedBySeat: null,
+        eliminatedBySeat: this.eliminators.get(player.id) ?? null,
         mulligansTaken: mulligansOf(player),
         openingHandSize: 7,
       })),

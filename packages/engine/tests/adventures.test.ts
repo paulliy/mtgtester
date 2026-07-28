@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, oracle, spawn } from './fixtures';
+import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 import { computePriorityOptions } from '../src/actions/legal';
 import { finishSpellCard } from '../src/stack/stack';
 
@@ -96,7 +96,7 @@ describe('Increment 18: Adventure & Omen Layouts', () => {
     expect(castOptions.some((o) => o.description.includes('Claim Territory'))).toBe(true);
   });
 
-  it('Omen spell resolution shuffles card back into owner library', function* () {
+  it('Omen spell resolution shuffles card back into owner library', () => {
     const ctx = pod();
     const p1 = ctx.state.players[0]!;
     const def = interpretCard(bloomvineRegent());
@@ -119,26 +119,28 @@ describe('Increment 18: Adventure & Omen Layouts', () => {
 
     const initialLibLength = p1.library.length;
 
-    yield* finishSpellCard(ctx, {
-      id: 'stack-1',
-      sourceId: 'src-1',
-      controllerId: 'P1',
-      kind: 'spell',
-      description: 'Claim Territory',
-      targets: [],
-      card: cardObj,
-      ability: def.alternativeCasts![0]!.ability!,
-      sourceOracleId: def.oracleId,
-      sourceCardId: 'c-omen-1',
-      isCommanderCast: false,
-      alternativeCastKind: 'omen',
-    });
+    pump(
+      finishSpellCard(ctx, {
+        id: 'stack-1',
+        sourceId: 'src-1',
+        controllerId: 'P1',
+        kind: 'spell',
+        description: 'Claim Territory',
+        targets: [],
+        card: cardObj,
+        ability: def.alternativeCasts![0]!.ability!,
+        sourceOracleId: def.oracleId,
+        sourceCardId: 'c-omen-1',
+        isCommanderCast: false,
+        alternativeCastKind: 'omen',
+      }),
+    );
 
     expect(p1.library.length).toBe(initialLibLength + 1);
     expect(p1.library.some((c) => c.cardId === 'c-omen-1')).toBe(true);
   });
 
-  it('Adventure spell resolution moves card to exile with onAdventure=true', function* () {
+  it('Adventure spell resolution moves card to exile with onAdventure=true', () => {
     const ctx = pod();
     const def = interpretCard(monsterManual());
     ctx.defs.set(def.oracleId, def);
@@ -158,20 +160,27 @@ describe('Increment 18: Adventure & Omen Layouts', () => {
       zone: 'stack' as const,
     };
 
-    yield* finishSpellCard(ctx, {
-      id: 'stack-2',
-      sourceId: 'src-2',
-      controllerId: 'P1',
-      kind: 'spell',
-      description: 'Zoological Study',
-      targets: [],
-      card: cardObj,
-      ability: def.alternativeCasts![0]!.ability!,
-      sourceOracleId: def.oracleId,
-      sourceCardId: 'c-adv-1',
-      isCommanderCast: false,
-      alternativeCastKind: 'adventure',
-    });
+    // `finishSpellCard`'s adventure-kind handling (exile + onAdventure) is exercised directly
+    // here rather than through `def.alternativeCasts` — the interpreter only ever produces
+    // 'omen' and 'overload' alternative casts (see the Bloomvine/Marang hardcodes above); no
+    // card currently models an actual Adventure spell, so there is nothing in `alternativeCasts`
+    // to pull an 'adventure'-kind ability from.
+    pump(
+      finishSpellCard(ctx, {
+        id: 'stack-2',
+        sourceId: 'src-2',
+        controllerId: 'P1',
+        kind: 'spell',
+        description: 'Zoological Study',
+        targets: [],
+        card: cardObj,
+        ability: { kind: 'spell', targets: [], effects: [] },
+        sourceOracleId: def.oracleId,
+        sourceCardId: 'c-adv-1',
+        isCommanderCast: false,
+        alternativeCastKind: 'adventure',
+      }),
+    );
 
     const inExile = ctx.state.exile.find((c) => c.cardId === 'c-adv-1');
     expect(inExile).toBeDefined();

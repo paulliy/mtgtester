@@ -11,6 +11,7 @@ function makeView(overrides: Partial<PlayerView> = {}): PlayerView {
     graveyard: [],
     commanders: [],
     availableMana: {},
+    manaSources: [],
     opponents: [],
     battlefield: [],
     stack: [],
@@ -215,12 +216,24 @@ describe('tryHeuristic — declining a powerless attack', () => {
     expect(tryHeuristic(req, makeView())).toBeNull();
   });
 
-  it('asks the model when an instant is held, since the attacker could be pumped', () => {
+  it('still declines when an instant is held but cannot be cast', () => {
     const view = makeView({
       hand: [{ id: 'c1', name: 'Brute Strength', typeLine: 'Instant' }],
     });
 
-    expect(tryHeuristic(attackRequest(0), view)).toBeNull();
+    expect(tryHeuristic(attackRequest(0), view)?.actionId).toBe(0);
+  });
+
+  it('asks the model when a castable instant could make the attack worthwhile', () => {
+    const req = attackRequest(0);
+    req.legalActions.push({
+      id: 2,
+      type: 'castSpell',
+      description: 'Cast Brute Strength ({R})',
+      data: { instantSpeed: true },
+    });
+
+    expect(tryHeuristic(req, makeView())).toBeNull();
   });
 
   it('still fires when the hand holds only sorcery-speed cards', () => {

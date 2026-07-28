@@ -3,7 +3,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, oracle, spawn } from './fixtures';
+import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 const cyclonicRift = () =>
   oracle({
@@ -38,7 +38,7 @@ describe('Increment 17: Alternative Casts (Overload)', () => {
     expect(def.alternativeCasts?.[0]?.kind).toBe('overload');
   });
 
-  it('resolves Overload mode returning all nonland opponent permanents to hand', function* () {
+  it('resolves Overload mode returning all nonland opponent permanents to hand', () => {
     const ctx = pod();
     const p1Perm = spawn(ctx, 'P1', oracle({ name: 'P1 Bear', typeLine: 'Creature' }));
     const p2Perm1 = spawn(ctx, 'P2', oracle({ name: 'P2 Bear 1', typeLine: 'Creature' }));
@@ -52,11 +52,13 @@ describe('Increment 17: Alternative Casts (Overload)', () => {
       effects: [{ op: 'overloadBounceAllNonlandOpponents' as const }],
     };
 
-    yield* executeAbility(
-      ctx,
-      { cardId: 'rift-1', name: 'Cyclonic Rift', oracleId: def.oracleId, controllerId: 'P1' },
-      overloadAbility,
-      [],
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'rift-1', name: 'Cyclonic Rift', oracleId: def.oracleId, controllerId: 'P1' },
+        overloadAbility,
+        [],
+      ),
     );
 
     // P1 permanent untouched

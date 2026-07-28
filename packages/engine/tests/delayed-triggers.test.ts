@@ -167,9 +167,10 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
     expect(onBattlefield).toBeDefined();
     expect(p1.commandZone.length).toBe(0);
 
-    // Delayed trigger registered for endStep
+    // Delayed trigger registered for endStep, tracking targetId across zone change (CR 608.2b)
     expect(ctx.state.delayedTriggers.length).toBe(1);
     expect(ctx.state.delayedTriggers[0]?.when).toBe('endStep');
+    expect(ctx.state.delayedTriggers[0]?.targetId).toBe(cmdObj.cardId);
 
     // Simulate end step
     const delayed = ctx.state.delayedTriggers.pop()!;

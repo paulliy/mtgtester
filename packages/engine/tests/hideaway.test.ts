@@ -3,7 +3,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, oracle, spawn } from './fixtures';
+import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 const spinerockKnoll = () =>
   oracle({
@@ -39,17 +39,19 @@ describe('Increment 17: Hideaway Lands', () => {
     expect(interpretCard(mosswortBridge()).modeled).toBe(true);
   });
 
-  it('exiles top card of library on Hideaway 4 ETB trigger', function* () {
+  it('exiles top card of library on Hideaway 4 ETB trigger', () => {
     const ctx = pod();
     const land = spawn(ctx, 'P1', spinerockKnoll());
 
     const etbAbility = interpretCard(spinerockKnoll()).triggers[0]!;
 
-    yield* executeAbility(
-      ctx,
-      { cardId: land.cardId, name: land.name, oracleId: land.oracleId, controllerId: 'P1' },
-      etbAbility,
-      [],
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: land.cardId, name: land.name, oracleId: land.oracleId, controllerId: 'P1' },
+        etbAbility,
+        [],
+      ),
     );
 
     // One card should be in exile tagged with attachedToCardId = land.cardId

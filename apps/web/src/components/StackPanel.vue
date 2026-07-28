@@ -4,11 +4,11 @@
  * pushed is the first to resolve, so it is shown at the top of the list.
  */
 import { computed } from 'vue';
-import type { SpectatorState } from '@mtg/shared';
+import type { PlayerBoardState, SpectatorState } from '@mtg/shared';
 import CardImage from './CardImage.vue';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
-const props = defineProps<{ state: SpectatorState }>();
+const props = defineProps<{ state: SpectatorState | PlayerBoardState }>();
 
 const cardPreview = useCardPreviewStore();
 

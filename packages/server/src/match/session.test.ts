@@ -10,6 +10,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { OracleCard, ServerToClientMessage, StateSnapshotPayload } from '@mtg/shared';
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
+import { RandomDecisionProvider } from '@mtg/engine';
 import { MatchSession } from './session';
 import type { SeatSetup } from './setup';
 
@@ -165,6 +166,136 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
     session.abandon();
     await session.settled();
   });
+});
+
+describe('MatchSession - Phase 6 single-player control', () => {
+  it('waits without a timeout for the human and advances only after submission', async () => {
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      gameId: 'g-player-test',
+      seed: 'player-test',
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      turnCap: 20,
+      livePaceMs: 0,
+      send: (message) => sent.push(message),
+    });
+    session.start();
+
+    await vi.waitFor(() => {
+      expect(sent.some((message) => message.type === 'playerActionRequired')).toBe(true);
+    });
+    const first = sent.find(
+      (message): message is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>
+        message.type === 'playerActionRequired',
+    );
+    expect(first).toBeDefined();
+    const countBefore = sent.filter((message) => message.type === 'playerActionRequired').length;
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(sent.filter((message) => message.type === 'playerActionRequired')).toHaveLength(
+      countBefore,
+    );
+
+    session.submitPlayerAction({
+      requestId: first!.payload.request.requestId,
+      actionId: first!.payload.request.legalActions[0]!.id,
+      revision: first!.payload.revision,
+    });
+    await vi.waitFor(() => {
+      expect(
+        sent.filter((message) => message.type === 'playerStateSnapshot').length,
+      ).toBeGreaterThan(1);
+    });
+
+    session.abandon();
+    await session.settled();
+    expect(sent.some((message) => message.type === 'stateSnapshot')).toBe(false);
+    expect(sent.some((message) => message.type === 'replayUnlocked')).toBe(false);
+  });
+
+  it('refuses timeline seeking before a player game has ended', () => {
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      gameId: 'g-player-seek',
+      seed: 'player-seek',
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      send: (message) => sent.push(message),
+    });
+    session.jumpToTurn(3);
+    expect(
+      sent.some(
+        (message) =>
+          message.type === 'error' && message.payload.message.includes('unlocks after'),
+      ),
+    ).toBe(true);
+  });
+
+  it('plays through with a human provider and restores the unlocked replay on resync', async () => {
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      gameId: 'g-player-complete',
+      seed: 'player-complete',
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      turnCap: 200,
+      livePaceMs: 0,
+      send: (message) => sent.push(message),
+    });
+    const chooser = new RandomDecisionProvider('browser-player');
+    let consumedRequests = 0;
+    session.start();
+
+    const deadline = Date.now() + 10_000;
+    while (
+      !sent.some((message) => message.type === 'gameOver') &&
+      Date.now() < deadline
+    ) {
+      const required = sent.filter(
+        (
+          message,
+        ): message is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>
+          message.type === 'playerActionRequired',
+      );
+      const next = required[consumedRequests];
+      if (next === undefined) {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        continue;
+      }
+      consumedRequests += 1;
+      const response = chooser.decide(next.payload.request);
+      session.submitPlayerAction({
+        requestId: response.requestId,
+        actionId: response.actionId,
+        revision: next.payload.revision,
+        ...(response.targets !== undefined ? { targets: response.targets } : {}),
+      });
+    }
+
+    await session.settled();
+    const gameOverIndex = sent.findIndex((message) => message.type === 'gameOver');
+    const replayIndex = sent.findIndex((message) => message.type === 'replayUnlocked');
+    expect(gameOverIndex).toBeGreaterThan(-1);
+    expect(replayIndex).toBeGreaterThan(-1);
+    expect(replayIndex).toBeLessThan(gameOverIndex);
+    expect(
+      sent.slice(0, gameOverIndex).some((message) => message.type === 'stateSnapshot'),
+    ).toBe(false);
+
+    const replayCount = sent.filter((message) => message.type === 'replayUnlocked').length;
+    const gameOverCount = sent.filter((message) => message.type === 'gameOver').length;
+    session.resyncPlayer();
+    expect(sent.filter((message) => message.type === 'replayUnlocked')).toHaveLength(
+      replayCount + 1,
+    );
+    expect(sent.filter((message) => message.type === 'gameOver')).toHaveLength(gameOverCount + 1);
+  }, 15_000);
 });
 
 describe('MatchSession — seeking (brief §10.1)', () => {

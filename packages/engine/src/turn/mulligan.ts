@@ -31,6 +31,7 @@ function* bottomCards(ctx: GameContext, player: EnginePlayerState, count: number
         type: 'bottomCard',
         description: `Bottom ${card.name}`,
         payload: card.id,
+        interaction: { kind: 'choice' as const, subjectId: card.id },
       })),
     };
     const card = player.hand[outcome.index] as EngineCardObject;

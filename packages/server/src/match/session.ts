@@ -5,28 +5,46 @@
  * broadcasts what comes back.
  */
 
-import { Engine, RandomDecisionProvider } from '@mtg/engine';
+import {
+  Engine,
+  formatPlayerLog,
+  formatSpectatorLog,
+  RandomDecisionProvider,
+} from '@mtg/engine';
 import type { AsyncDecisionProvider, DecisionProvider } from '@mtg/engine';
 import type {
   DecisionRequest,
   DecisionResponse,
+  DebugFlags,
+  GameMode,
+  IgnoredPlayerAbility,
   PlaybackMode,
   PlayerId,
   ProviderKind,
   ServerToClientMessage,
   SpectatorLogLine,
   TargetChoice,
+  SubmitPlayerActionPayload,
+  YieldPlayerAbilityPayload,
 } from '@mtg/shared';
 import {
   AiCallLogger,
+  configForRole,
   loadAiConfig,
   OpenAiCompatibleClient,
   OpenAiDecisionProvider,
   RequestQueue,
+  StrategyCoordinator,
+  type AiConfig,
 } from '../ai';
 import type { GameStore } from '../db';
 import { finishingPositions, type GameRecorder } from '../db/games';
 import { MatchRunner } from './runner';
+import {
+  HumanDecisionProvider,
+  PersistentAbilityYieldProvider,
+  PlayerConnectionGate,
+} from './human-provider';
 import type { SeatSetup } from './setup';
 
 /** The engine's `RandomDecisionProvider` is synchronous; the runner awaits every provider. */
@@ -44,11 +62,23 @@ class AsyncAdapter implements AsyncDecisionProvider {
  */
 export const LIVE_PACE_MS = 1_200;
 
+const DEFAULT_DEBUG_FLAGS: DebugFlags = {
+  showAIRequests: false,
+  showAIResponses: false,
+  showLegalActions: false,
+  showSBAChecks: false,
+  showPriorityPasses: false,
+  showTokenUsage: true,
+  verboseEngine: false,
+};
+
 export interface MatchSessionOptions {
   gameId: string;
   seed: string;
   seats: readonly SeatSetup[];
   providerKind: ProviderKind;
+  gameMode?: GameMode;
+  humanSeat?: PlayerId;
   store?: GameStore | undefined;
   playbackMode?: PlaybackMode;
   turnCap?: number;
@@ -66,8 +96,18 @@ export class MatchSession {
   private playbackMode: PlaybackMode;
   private running: Promise<void> | null = null;
   /** One client and one queue per session: the RPM ceiling is an account property, not a seat's. */
-  private aiClient: OpenAiCompatibleClient | null = null;
+  private aiConfig: AiConfig | null = null;
+  private aiStrategistClient: OpenAiCompatibleClient | null = null;
+  private aiTacticianClient: OpenAiCompatibleClient | null = null;
   private aiQueue: RequestQueue | null = null;
+  private aiCoordinator: StrategyCoordinator | null = null;
+  private debugFlags: DebugFlags = { ...DEFAULT_DEBUG_FLAGS };
+  private readonly gameMode: GameMode;
+  private readonly humanSeat: PlayerId | null;
+  private readonly humanProvider: HumanDecisionProvider | null;
+  private readonly connectionGate = new PlayerConnectionGate();
+  private readonly ignoredAbilities = new Map<string, IgnoredPlayerAbility>();
+  private playerRevision = 0;
 
   // ── Live presentation (brief §10.1) ───────────────────────────────────────────────────────
   //
@@ -85,6 +125,11 @@ export class MatchSession {
   private pendingLines: SpectatorLogLine[] = [];
 
   constructor(private readonly opts: MatchSessionOptions) {
+    this.gameMode = opts.gameMode ?? 'spectator';
+    this.humanSeat = this.gameMode === 'singlePlayer' ? (opts.humanSeat ?? null) : null;
+    if (this.gameMode === 'singlePlayer' && this.humanSeat === null) {
+      throw new Error('single-player session requires a human seat');
+    }
     this.playbackMode = opts.playbackMode ?? 'live';
     this.livePaceMs = opts.livePaceMs ?? LIVE_PACE_MS;
     this.engine = new Engine({
@@ -95,9 +140,16 @@ export class MatchSession {
     });
     this.recorder = opts.store?.recorderFor(opts.gameId) ?? null;
     this.logger =
-      opts.providerKind === 'ai'
-        ? new AiCallLogger(opts.store?.raw ?? null, opts.gameId)
-        : null;
+      opts.providerKind === 'ai' ? new AiCallLogger(opts.store?.raw ?? null, opts.gameId) : null;
+    this.humanProvider =
+      this.humanSeat === null
+        ? null
+        : new HumanDecisionProvider(
+            () => ++this.playerRevision,
+            ({ request, revision }) => {
+              this.sendPlayerActionRequired(request, revision);
+            },
+          );
 
     this.runner = new MatchRunner({
       engine: this.engine,
@@ -109,10 +161,25 @@ export class MatchSession {
         // Setup always writes one when a store exists — including for generated decks — and
         // when no store exists there is no recorder to insert the row at all.
         deckSnapshotId: s.deckSnapshotId ?? s.config.deckId,
+        controllerKind: s.seat === this.humanSeat ? 'human' : opts.providerKind,
       })),
       providerFor: (playerId) => this.providerFor(playerId),
       recorder: this.recorder,
+      gameMode: this.gameMode,
+      ...(this.humanSeat !== null
+        ? {
+            lookaheadTurns: 0,
+            formatEvents: (events) => formatPlayerLog(events, this.humanSeat as PlayerId),
+          }
+        : {}),
       onEvents: (lines, frontierTurn, snapshotTurns) => {
+        if (this.gameMode === 'singlePlayer') {
+          opts.send({
+            type: 'eventBatch',
+            payload: { gameId: opts.gameId, lines, frontierTurn, snapshotTurns: [] },
+          });
+          return;
+        }
         // In live mode the log is released in step with the board. Sending every line the
         // instant it is computed is how the action log ends up describing a turn the board has
         // not reached — the same desync from the other side.
@@ -130,10 +197,19 @@ export class MatchSession {
         // A newly computed turn is not a newly *presented* turn. In live mode the presentation
         // clock decides when the viewer moves; in manual mode the viewer's position is theirs
         // and pushing anything would yank them.
-        if (this.playbackMode === 'live') this.startPresenting();
+        if (this.gameMode === 'spectator' && this.playbackMode === 'live') this.startPresenting();
+      },
+      onProgress: (frontierTurn) => {
+        if (this.gameMode === 'singlePlayer') {
+          // Player mode has one clock: every authoritative advance is immediately presented.
+          this.runner.setViewTurn(frontierTurn);
+          this.publishPlayerState(true);
+        }
       },
       onDecisionPending: (request, invalidResponse, timeoutMs) => {
-        opts.send({ type: 'decisionPending', payload: { request, invalidResponse, timeoutMs } });
+        if (this.gameMode === 'spectator') {
+          opts.send({ type: 'decisionPending', payload: { request, invalidResponse, timeoutMs } });
+        }
       },
       onHalt: (info) => {
         opts.send({
@@ -141,23 +217,32 @@ export class MatchSession {
           payload: {
             gameId: opts.gameId,
             kind: info.kind,
-            reason: info.reason,
+            reason:
+              this.gameMode === 'singlePlayer'
+                ? 'The rules engine could not continue this game.'
+                : info.reason,
             turn: info.turn,
-            ...(info.cardName !== undefined && { cardName: info.cardName }),
+            ...(this.gameMode === 'spectator' && info.cardName !== undefined
+              ? { cardName: info.cardName }
+              : {}),
           },
         });
       },
       onGameOver: (result) => {
-        opts.send({
-          type: 'gameOver',
-          payload: {
-            result,
-            standings: this.standings(),
-          },
-        });
+        this.publishGameOver(result);
       },
-      onDecision: () => {
+      onDecision: (request, response) => {
+        if (request.decidingPlayer === this.humanSeat && this.opts.providerKind === 'ai') {
+          this.ensureAiCoordinator().recordDecision(request, response, 'human');
+        }
         this.reportAiCost();
+      },
+      onDebug: (entries) => {
+        if (this.gameMode === 'singlePlayer' || !this.debugFlags.verboseEngine) return;
+        opts.send({
+          type: 'debugEvents',
+          payload: { gameId: opts.gameId, entries },
+        });
       },
     });
   }
@@ -169,15 +254,23 @@ export class MatchSession {
       .catch((err: unknown) => {
         this.opts.send({
           type: 'error',
-          payload: { message: err instanceof Error ? err.message : String(err) },
+          payload: {
+            message:
+              this.gameMode === 'singlePlayer'
+                ? 'The game runner stopped unexpectedly.'
+                : err instanceof Error
+                  ? err.message
+                  : String(err),
+          },
         });
       })
       .finally(() => {
         // Compute is done; anything still queued behind the presentation clock is now all
         // there will ever be, so let the clock drain it and stop.
-        this.startPresenting();
+        if (this.gameMode === 'spectator') this.startPresenting();
       });
-    if (this.playbackMode === 'live') this.startPresenting();
+    if (this.gameMode === 'singlePlayer') this.publishPlayerState(true);
+    else if (this.playbackMode === 'live') this.startPresenting();
   }
 
   /** Wait for the match to stop computing — used by tests and by clean shutdown. */
@@ -190,6 +283,11 @@ export class MatchSession {
    * 0012 applied to the compute frontier. 0 means "as fast as it computes".
    */
   setPlaybackMode(mode: PlaybackMode, paceMs?: number): void {
+    if (this.gameMode === 'singlePlayer') {
+      this.playbackMode = 'live';
+      if (paceMs !== undefined) this.livePaceMs = Math.max(0, paceMs);
+      return;
+    }
     const previous = this.playbackMode;
     this.playbackMode = mode;
     if (paceMs !== undefined) this.livePaceMs = Math.max(0, paceMs);
@@ -210,6 +308,23 @@ export class MatchSession {
 
   getPlaybackMode(): PlaybackMode {
     return this.playbackMode;
+  }
+
+  getGameMode(): GameMode {
+    return this.gameMode;
+  }
+
+  getHumanSeat(): PlayerId | null {
+    return this.humanSeat;
+  }
+
+  getLivePaceMs(): number {
+    return this.livePaceMs;
+  }
+
+  setDebugFlags(flags: DebugFlags): void {
+    if (this.gameMode === 'singlePlayer') return;
+    this.debugFlags = { ...flags };
   }
 
   // ── The presentation clock ────────────────────────────────────────────────────────────────
@@ -313,6 +428,13 @@ export class MatchSession {
    * frontier unparks compute up to lookahead turns ahead (brief §10.1).
    */
   jumpToTurn(requestedTurn: number, requestedSequence?: number): void {
+    if (this.gameMode === 'singlePlayer' && this.runner.getStatus() !== 'finished') {
+      this.opts.send({
+        type: 'error',
+        payload: { message: 'Timeline seeking unlocks after a single-player game ends.' },
+      });
+      return;
+    }
     const turn = Math.max(0, requestedTurn);
     this.runner.setViewTurn(turn);
     // A seek during live playback rewinds the presentation rather than being overwritten by it
@@ -354,9 +476,154 @@ export class MatchSession {
     }
   }
 
+  submitPlayerAction(payload: SubmitPlayerActionPayload): void {
+    if (this.humanProvider === null) {
+      this.opts.send({ type: 'error', payload: { message: 'This is not a single-player game.' } });
+      return;
+    }
+    const error = this.humanProvider.submit(payload);
+    if (error !== null) this.opts.send({ type: 'error', payload: { message: error } });
+  }
+
+  yieldPlayerAbility(payload: YieldPlayerAbilityPayload): void {
+    const pending = this.humanProvider?.current();
+    if (pending === null || pending === undefined) {
+      this.opts.send({ type: 'error', payload: { message: 'No player action is currently required.' } });
+      return;
+    }
+    if (payload.requestId !== pending.request.requestId || payload.revision !== pending.revision) {
+      this.opts.send({ type: 'error', payload: { message: 'That ability choice is stale.' } });
+      return;
+    }
+    const action = pending.request.legalActions.find((candidate) => candidate.id === payload.actionId);
+    const interaction = action?.interaction;
+    if (
+      action?.type !== 'activateAbility' ||
+      interaction?.kind !== 'source' ||
+      interaction.sourceCardId === undefined ||
+      interaction.abilityIndex === undefined
+    ) {
+      this.opts.send({ type: 'error', payload: { message: 'Only an optional activated ability can be yielded.' } });
+      return;
+    }
+    const key = `${interaction.sourceCardId}:${interaction.abilityIndex}`;
+    this.ignoredAbilities.set(key, { key, label: action.description });
+    this.sendPlayerActionRequired(pending.request, pending.revision);
+  }
+
+  resumePlayerAbility(key: string): void {
+    if (!this.ignoredAbilities.delete(key)) {
+      this.opts.send({ type: 'error', payload: { message: 'That yielded ability is no longer available.' } });
+      return;
+    }
+    const pending = this.humanProvider?.current();
+    if (pending !== null && pending !== undefined) {
+      this.sendPlayerActionRequired(pending.request, pending.revision);
+    }
+    this.publishPlayerState(false);
+  }
+
+  setPlayerConnected(connected: boolean): void {
+    if (this.gameMode !== 'singlePlayer') return;
+    this.connectionGate.setConnected(connected);
+    if (connected) this.resyncPlayer();
+  }
+
+  resyncPlayer(): void {
+    if (this.humanSeat === null) return;
+    this.opts.send({
+      type: 'eventBatch',
+      payload: {
+        gameId: this.opts.gameId,
+        lines: formatPlayerLog(this.engine.eventsSince(0), this.humanSeat),
+        frontierTurn: this.engine.getState().turnNumber,
+        snapshotTurns: [],
+      },
+    });
+    this.publishPlayerState(false);
+    const result = this.runner.getResult();
+    if (result !== null) {
+      this.publishGameOver(result);
+      return;
+    }
+    const pending = this.humanProvider?.current();
+    if (pending !== null && pending !== undefined) {
+      this.sendPlayerActionRequired(pending.request, pending.revision);
+    }
+  }
+
   abandon(): void {
     this.stopPresenting();
     this.runner.abandon();
+    this.humanProvider?.releaseForAbandon();
+    this.connectionGate.release();
+  }
+
+  private publishPlayerState(bump: boolean): void {
+    if (this.humanSeat === null) return;
+    if (bump) this.playerRevision += 1;
+    this.opts.send({
+      type: 'playerStateSnapshot',
+      payload: {
+        gameId: this.opts.gameId,
+        state: this.engine.playerState(this.humanSeat),
+        revision: this.playerRevision,
+        connected: this.connectionGate.isConnected(),
+        ignoredAbilities: this.ignoredAbilityList(),
+      },
+    });
+  }
+
+  private sendPlayerActionRequired(request: DecisionRequest, revision: number): void {
+    if (this.humanSeat === null) return;
+    this.opts.send({
+      type: 'playerActionRequired',
+      payload: {
+        request: {
+          ...request,
+          legalActions: request.legalActions.filter((action) => !this.isIgnoredAbility(action)),
+        },
+        revision,
+        state: this.engine.playerState(this.humanSeat),
+        ignoredAbilities: this.ignoredAbilityList(),
+      },
+    });
+  }
+
+  private isIgnoredAbility(action: DecisionRequest['legalActions'][number]): boolean {
+    const interaction = action.interaction;
+    return (
+      action.type === 'activateAbility' &&
+      interaction?.kind === 'source' &&
+      interaction.sourceCardId !== undefined &&
+      interaction.abilityIndex !== undefined &&
+      this.ignoredAbilities.has(`${interaction.sourceCardId}:${interaction.abilityIndex}`)
+    );
+  }
+
+  private ignoredAbilityList(): IgnoredPlayerAbility[] {
+    return [...this.ignoredAbilities.values()];
+  }
+
+  private publishGameOver(result: NonNullable<ReturnType<Engine['getResult']>>): void {
+    if (this.gameMode === 'singlePlayer') {
+      this.opts.send({
+        type: 'replayUnlocked',
+        payload: {
+          state: this.engine.spectatorState(),
+          lines: formatSpectatorLog(this.engine.eventsSince(0)),
+          snapshotTurns: this.runner.getSnapshotTurns(),
+          frontierTurn: result.turnCount,
+        },
+      });
+    }
+    this.opts.send({
+      type: 'gameOver',
+      payload: {
+        result,
+        standings: this.standings(),
+      },
+    });
   }
 
   /**
@@ -402,28 +669,68 @@ export class MatchSession {
     const existing = this.providers.get(playerId);
     if (existing !== undefined) return existing;
 
-    const provider: AsyncDecisionProvider =
+    if (playerId === this.humanSeat && this.humanProvider !== null) {
+      this.providers.set(playerId, this.humanProvider);
+      return this.humanProvider;
+    }
+
+    const inner: AsyncDecisionProvider =
       this.opts.providerKind === 'ai'
         ? this.buildAiProvider()
         : new AsyncAdapter(new RandomDecisionProvider(`${this.opts.seed}-${playerId}`));
+    const pacedProvider: AsyncDecisionProvider =
+      this.gameMode === 'singlePlayer'
+        ? {
+            decide: async (request) => {
+              await this.connectionGate.wait();
+              const response = await inner.decide(request);
+              await this.connectionGate.wait();
+              const delayMs = Math.min(500, Math.floor(this.livePaceMs / 3));
+              if (delayMs > 0) {
+                await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+              }
+              return response;
+            },
+          }
+        : inner;
+
+    // Bots retain an explicit decline of a sacrifice-style optional activation across turns in
+    // both spectator and player games, avoiding a new model call for the same non-plan each turn.
+    const provider: AsyncDecisionProvider = new PersistentAbilityYieldProvider(pacedProvider);
 
     this.providers.set(playerId, provider);
     return provider;
   }
 
   private buildAiProvider(): AsyncDecisionProvider {
-    const config = loadAiConfig(process.env);
-    this.aiClient ??= new OpenAiCompatibleClient(config);
-    this.aiQueue ??= new RequestQueue(config);
+    const coordinator = this.ensureAiCoordinator();
+    const config = this.aiConfig as AiConfig;
+    const tactician = this.aiTacticianClient as OpenAiCompatibleClient;
+    const queue = this.aiQueue as RequestQueue;
     return new OpenAiDecisionProvider(
-      this.aiClient,
+      tactician,
+      queue,
+      this.engine,
+      config,
+      this.logger ?? undefined,
+      // Never surface an opponent's failed legal menu to the active player.
+      this.gameMode === 'singlePlayer' ? undefined : this.runner.escalation(),
+      coordinator,
+    );
+  }
+
+  private ensureAiCoordinator(): StrategyCoordinator {
+    const config = (this.aiConfig ??= loadAiConfig(process.env));
+    this.aiStrategistClient ??= new OpenAiCompatibleClient(configForRole(config, 'strategist'));
+    this.aiTacticianClient ??= new OpenAiCompatibleClient(configForRole(config, 'tactician'));
+    this.aiQueue ??= new RequestQueue(config);
+    this.aiCoordinator ??= new StrategyCoordinator(
+      this.aiStrategistClient,
       this.aiQueue,
       this.engine,
       config,
       this.logger ?? undefined,
-      // The §7.7 human-override seam. Only AI matches can escalate; a random provider never
-      // produces an invalid response, because it picks from the menu the engine handed it.
-      this.runner.escalation(),
     );
+    return this.aiCoordinator;
   }
 }

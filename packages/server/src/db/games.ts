@@ -11,7 +11,15 @@
  * runner, and this code is worth testing.
  */
 
-import type { GameEvent, GameResult, PlayerId, SpectatorState } from '@mtg/shared';
+import type {
+  GameEvent,
+  GameMode,
+  GameResult,
+  PlayerId,
+  SeatControllerKind,
+  SpectatorState,
+} from '@mtg/shared';
+import type { DebugEntry } from '@mtg/engine';
 
 /** The slice of `bun:sqlite`'s `Database` this module uses. */
 export interface SqliteLike {
@@ -29,6 +37,7 @@ export type GameStatus = 'running' | 'finished' | 'halted' | 'abandoned';
 export interface GameSeatRecord {
   seat: PlayerId;
   deckSnapshotId: string;
+  controllerKind?: SeatControllerKind;
 }
 
 export interface GameRow {
@@ -39,6 +48,19 @@ export interface GameRow {
   turnCount: number | null;
   winnerSeat: string | null;
   status: GameStatus | null;
+  gameMode?: GameMode | null;
+}
+
+/** Raw inputs retained so mana thresholds can be adjusted without replaying games. */
+export interface ManaMetricRecord {
+  seat: PlayerId;
+  turn: number;
+  landsInHand: number;
+  landsDrawnCumulative: number;
+  cardsDrawnCumulative: number;
+  spellsCastable: number;
+  unspentMana: number;
+  onCurve: boolean;
 }
 
 /**
@@ -51,28 +73,37 @@ export function seatIndex(seat: PlayerId): number {
 }
 
 export class GameRecorder {
+  private debugSequence = 0;
   constructor(
     private readonly db: SqliteLike,
     readonly gameId: string,
   ) {}
 
   /** Open a game row and its four seats. Called once, before the first turn. */
-  start(seed: string, seats: readonly GameSeatRecord[]): void {
+  start(seed: string, seats: readonly GameSeatRecord[], gameMode: GameMode = 'spectator'): void {
     this.db
       .query(
-        `INSERT INTO games (id, seed, started_at, status) VALUES (?, ?, ?, ?)
+        `INSERT INTO games (id, seed, started_at, status, game_mode) VALUES (?, ?, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET seed = excluded.seed, started_at = excluded.started_at,
-                                       status = excluded.status`,
+                                       status = excluded.status, game_mode = excluded.game_mode`,
       )
-      .run(this.gameId, seed, new Date().toISOString(), 'running' satisfies GameStatus);
+      .run(this.gameId, seed, new Date().toISOString(), 'running' satisfies GameStatus, gameMode);
 
     for (const seat of seats) {
       this.db
         .query(
-          `INSERT INTO game_players (game_id, seat, deck_snapshot_id) VALUES (?, ?, ?)
-           ON CONFLICT(game_id, seat) DO UPDATE SET deck_snapshot_id = excluded.deck_snapshot_id`,
+          `INSERT INTO game_players (game_id, seat, deck_snapshot_id, controller_kind)
+           VALUES (?, ?, ?, ?)
+           ON CONFLICT(game_id, seat) DO UPDATE SET
+             deck_snapshot_id = excluded.deck_snapshot_id,
+             controller_kind = excluded.controller_kind`,
         )
-        .run(this.gameId, seatIndex(seat.seat), seat.deckSnapshotId);
+        .run(
+          this.gameId,
+          seatIndex(seat.seat),
+          seat.deckSnapshotId,
+          seat.controllerKind ?? 'ai',
+        );
     }
   }
 
@@ -101,6 +132,43 @@ export class GameRecorder {
           event.type,
           JSON.stringify(event.payload),
         );
+      }
+    };
+    if (this.db.transaction !== undefined) this.db.transaction(write)();
+    else write();
+  }
+
+  appendDebug(entries: readonly DebugEntry[]): void {
+    if (entries.length === 0) return;
+    const stmt = this.db.query(
+      `INSERT INTO game_debug_events (game_id, sequence, turn, category, message, data_json)
+       VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(game_id, sequence) DO NOTHING`,
+    );
+    const write = (): void => {
+      for (const entry of entries) {
+        this.debugSequence += 1;
+        stmt.run(this.gameId, this.debugSequence, entry.turn, entry.category, entry.message,
+          entry.data === undefined ? null : JSON.stringify(entry.data));
+      }
+    };
+    if (this.db.transaction !== undefined) this.db.transaction(write)();
+    else write();
+  }
+
+  saveManaMetrics(records: readonly ManaMetricRecord[]): void {
+    if (records.length === 0) return;
+    const stmt = this.db.query(
+      `INSERT INTO mana_metrics (game_id, seat, turn, lands_in_hand, lands_drawn_cumulative,
+        cards_drawn_cumulative, spells_castable, unspent_mana, on_curve) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(game_id, seat, turn) DO UPDATE SET lands_in_hand = excluded.lands_in_hand,
+        lands_drawn_cumulative = excluded.lands_drawn_cumulative, cards_drawn_cumulative = excluded.cards_drawn_cumulative,
+        spells_castable = excluded.spells_castable, unspent_mana = excluded.unspent_mana, on_curve = excluded.on_curve`,
+    );
+    const write = (): void => {
+      for (const record of records) {
+        stmt.run(this.gameId, seatIndex(record.seat), record.turn, record.landsInHand,
+          record.landsDrawnCumulative, record.cardsDrawnCumulative, record.spellsCastable,
+          record.unspentMana, record.onCurve ? 1 : 0);
       }
     };
     if (this.db.transaction !== undefined) this.db.transaction(write)();

@@ -63,7 +63,9 @@ export type {
   DecisionRequest,
   DecisionResponse,
   PlannedAction,
+  TurnStrategy,
   LegalAction,
+  ActionInteraction,
   TargetSlot,
   TargetChoice,
 } from './engine';
@@ -77,6 +79,9 @@ export type {
   PermanentView,
   StackObjectView,
 } from './view';
+
+// --- Human-player browser projection (Phase 6 anti-cheat boundary) ---
+export type { PlayerBoardState, PlayerBoardSeat } from './player';
 
 // --- Spectator projection (brief §10.2) — the inverse of PlayerView: the human watches ---
 export type {
@@ -99,6 +104,8 @@ export type {
   ServerMessageOf,
   ClientMessageOf,
   ProviderKind,
+  GameMode,
+  SeatControllerKind,
   PlaybackMode,
   SeatSource,
   SeatSummary,
@@ -109,10 +116,22 @@ export type {
   DecisionPendingPayload,
   ComputeHaltedPayload,
   ApiWaitingPayload,
+  DebugFlags,
+  DebugEventsPayload,
+  IgnoredPlayerAbility,
+  PlayerStateSnapshotPayload,
+  PlayerActionRequiredPayload,
+  SessionPausedPayload,
+  ReplayUnlockedPayload,
   GameOverPayload,
   ErrorPayload,
   StartGamePayload,
   JumpToTurnPayload,
   SetPlaybackModePayload,
   ResolveHeldDecisionPayload,
+  SetDebugFlagsPayload,
+  SubmitPlayerActionPayload,
+  YieldPlayerAbilityPayload,
+  ResumePlayerAbilityPayload,
+  ResumeGamePayload,
 } from './protocol';

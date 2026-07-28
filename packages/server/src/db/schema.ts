@@ -10,7 +10,13 @@
  * NOT EXISTS` silently leaves an older table alone, so each of these runs separately and its
  * "duplicate column name" error is expected and ignored. Idempotent by construction.
  */
-export const MIGRATIONS_SQL: readonly string[] = [`ALTER TABLE ai_calls ADD COLUMN source TEXT`];
+export const MIGRATIONS_SQL: readonly string[] = [
+  `ALTER TABLE ai_calls ADD COLUMN source TEXT`,
+  `ALTER TABLE ai_calls ADD COLUMN cost_usd REAL`,
+  `ALTER TABLE mana_metrics ADD COLUMN cards_drawn_cumulative INTEGER`,
+  `ALTER TABLE games ADD COLUMN game_mode TEXT NOT NULL DEFAULT 'spectator'`,
+  `ALTER TABLE game_players ADD COLUMN controller_kind TEXT NOT NULL DEFAULT 'ai'`,
+];
 
 export const SCHEMA_SQL = `
 PRAGMA journal_mode = WAL;
@@ -54,7 +60,8 @@ CREATE TABLE IF NOT EXISTS games (
   ended_at    TEXT,
   turn_count  INTEGER,
   winner_seat INTEGER,
-  status      TEXT
+  status      TEXT,
+  game_mode   TEXT NOT NULL DEFAULT 'spectator'
 );
 
 -- TODO(phase-2): per-seat outcome of each game.
@@ -68,6 +75,7 @@ CREATE TABLE IF NOT EXISTS game_players (
   eliminated_by_seat INTEGER,
   mulligans_taken    INTEGER,
   opening_hand_size  INTEGER,
+  controller_kind    TEXT NOT NULL DEFAULT 'ai',
   PRIMARY KEY (game_id, seat)
 );
 
@@ -105,6 +113,7 @@ CREATE TABLE IF NOT EXISTS ai_calls (
   was_retry       INTEGER,
   was_fallback    INTEGER,
   latency_ms      INTEGER,
+  cost_usd        REAL,
   -- How the decision was answered: 'primary' | 'retry' | 'fallback' | 'heuristic' | 'cache'.
   -- The last two cost no network call; counting them is how the RPM savings are measured.
   source          TEXT,
@@ -118,9 +127,24 @@ CREATE TABLE IF NOT EXISTS mana_metrics (
   turn                    INTEGER NOT NULL,
   lands_in_hand           INTEGER,
   lands_drawn_cumulative  INTEGER,
+  cards_drawn_cumulative  INTEGER,
   spells_castable         INTEGER,
   unspent_mana            INTEGER,
   on_curve                INTEGER,
   PRIMARY KEY (game_id, seat, turn)
 );
+
+-- Phase 5: engine-internal diagnostics. Kept separate from the spectator action log because
+-- legal-action menus and AI diagnostics are not spectator-timeline content.
+CREATE TABLE IF NOT EXISTS game_debug_events (
+  game_id    TEXT NOT NULL REFERENCES games(id),
+  sequence   INTEGER NOT NULL,
+  turn       INTEGER NOT NULL,
+  category   TEXT NOT NULL,
+  message    TEXT NOT NULL,
+  data_json  TEXT,
+  PRIMARY KEY (game_id, sequence)
+);
+CREATE INDEX IF NOT EXISTS idx_game_debug_events_filters
+  ON game_debug_events(game_id, turn, category);
 `;

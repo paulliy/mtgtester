@@ -1,13 +1,24 @@
 # MTG Commander AI Simulator
 
+> Phase 7 (direct player controls) is in progress after explicit approval. See
+> `docs/decisions/0018-single-player-mode.md` and `docs/decisions/0019-direct-player-controls.md`.
+
+## Command Usage
+Always prioritize standard shell commands over internal tools so they can be processed by the RTK hook.
+- Use `rtk read <file>` instead of native `Read` (especially for files >10K lines).
+- Use `rtk grep <pattern>` instead of native `Grep`.
+- Use `rtk find <pattern>` instead of native `Glob`.
+- Use `rtk ls .` instead of native directory tools.
+
 Read [docs/mtg-commander-ai-simulator-brief.md](docs/mtg-commander-ai-simulator-brief.md)
 in full before writing any code. It is the authoritative spec — do not start implementing
 until you've read it. (The brief and this file historically referenced
 `docs/project-brief.md`; the real filename is the link above. See
 [docs/decisions/0001-foundations.md](docs/decisions/0001-foundations.md).)
 
-**Current phase: Phase 4 — Spectator UI — implementation complete; awaiting phase-boundary
-approval.** The Phase 4 plan was adjusted against the state of the tree before implementing;
+**Current phase: Phase 7 — Direct player controls — in progress.** Phase 6 was implemented
+before Phase 7 received explicit approval. Phase 5 was completed before Phase 6 began. The Phase 4 plan was
+adjusted against the state of the tree before implementing;
 the six adjustments are recorded in
 [docs/decisions/0012-spectator-ui.md](docs/decisions/0012-spectator-ui.md). Playback was then
 found to be broken in three structural ways — stale per-action boards, a compute-ahead cap that
@@ -54,18 +65,6 @@ You have access to the `antigravity_delegate` MCP tool. Follow these guidelines 
 - Every game is fully seeded; **no `Math.random()` in the engine** (§4, §5.9).
 - The AI must never see hidden state — it receives a `PlayerView`, never `GameState` (§7.1).
 - Work in the phases defined in §14; **stop at each phase boundary for approval.**
-
-## Repository layout
-
-| Path              | Package       | Role                                                    |
-| ----------------- | ------------- | ------------------------------------------------------- |
-| `packages/shared` | `@mtg/shared` | Types shared across engine/server/web (no logic)        |
-| `packages/engine` | `@mtg/engine` | Pure TS rules engine — no I/O, no network, no framework |
-| `packages/server` | `@mtg/server` | Bun server: AI provider, SQLite, WebSocket, deck import |
-| `apps/web`        | `@mtg/web`    | Vue 3 spectator UI                                      |
-| `docs/rules`      | —             | Reference material (CR, commander rules, banned list)   |
-| `docs/decisions`  | —             | ADRs for significant choices                            |
-| `data/`           | —             | Scryfall bulk data + card cache (gitignored)            |
 
 ## How to run
 

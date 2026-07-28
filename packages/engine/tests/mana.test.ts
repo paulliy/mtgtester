@@ -159,4 +159,29 @@ describe('payment plan produced mana', () => {
     expect(plan).not.toBeNull();
     expect(producedSymbols(plan!.produced)).toEqual(['G', 'U']);
   });
+
+  it('does not overtap lands: a {G}{U} spell with 3 lands available only taps 2 lands', () => {
+    const haven: ManaSource = { cardId: 'haven', units: [['W', 'U', 'B', 'R', 'G']], costs: TAP_COST };
+    const cemetery: ManaSource = { cardId: 'cemetery', units: [['B', 'G']], costs: TAP_COST };
+    const maelstrom: ManaSource = { cardId: 'maelstrom', units: [['W', 'U', 'B', 'R', 'G']], costs: TAP_COST };
+
+    const plan = planPayment(parseManaCost('{G}{U}').cost!, pool(), [haven, cemetery, maelstrom]);
+    expect(plan).not.toBeNull();
+    expect(plan!.tapCardIds).toHaveLength(2);
+  });
+
+  it('any-color land + single-color land paying {G}{U}: succeeds in both orderings', () => {
+    const anyColor: ManaSource = { cardId: 'anyColor', units: [['W', 'U', 'B', 'R', 'G']], costs: TAP_COST };
+    const forest: ManaSource = { cardId: 'forest', units: [['G']], costs: TAP_COST };
+
+    // Any-color land first
+    const plan1 = planPayment(parseManaCost('{G}{U}').cost!, pool(), [anyColor, forest]);
+    expect(plan1).not.toBeNull();
+    expect(producedSymbols(plan1!.produced).sort()).toEqual(['G', 'U']);
+
+    // Single-color land first
+    const plan2 = planPayment(parseManaCost('{G}{U}').cost!, pool(), [forest, anyColor]);
+    expect(plan2).not.toBeNull();
+    expect(producedSymbols(plan2!.produced).sort()).toEqual(['G', 'U']);
+  });
 });

@@ -19,6 +19,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import { moveObject } from '../src/state/objects';
 import { manaSourcesFor } from '../src/state/queries';
+import { parseManaCost, planPayment } from '../src/mana/cost';
 import type { EnginePlayerState, GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
 import { conjure, copies, forest, gameConfig, mountain, oracle, pump, spawn } from './fixtures';
@@ -114,6 +115,26 @@ describe('parsing costs', () => {
 });
 
 describe('cost availability', () => {
+  it('publishes structured activation costs for the direct player UI', () => {
+    const ctx = pod('activation-presentation');
+    const hoard = spawn(ctx, 'P1', dragonsHoard());
+    hoard.counters['gold'] = 1;
+
+    const option = computePriorityOptions(ctx, p1(ctx)).find(
+      (candidate) => candidate.type === 'activateAbility' && candidate.description.includes('Draw a card'),
+    );
+
+    expect(option?.data).toMatchObject({
+      sourceName: 'Test Hoard',
+      sourceZone: 'battlefield',
+      manaCost: '{0}',
+      abilityCosts: [
+        { kind: 'tap' },
+        { kind: 'removeCounters', counter: 'gold', count: 1 },
+      ],
+    });
+  });
+
   it('offers the ability only once its counter cost can be paid', () => {
     const ctx = pod();
     const hoard = spawn(ctx, 'P1', dragonsHoard());
@@ -242,5 +263,30 @@ describe('timing', () => {
     ctx.state.phase = 'ending';
     ctx.state.step = 'end';
     expect(optionsFor(ctx).some((d) => d.includes('gain 2 life'))).toBe(false);
+  });
+});
+
+describe('automatic mana payment preference', () => {
+  it('uses lands before creature mana sources even when the creature entered first', () => {
+    const ctx = pod();
+    const elf = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Mana Elf',
+        typeLine: 'Creature — Elf Druid',
+        manaCost: '{G}',
+        power: '1',
+        toughness: '1',
+        oracleText: '{T}: Add {G}.',
+      }),
+    );
+    const land = spawn(ctx, 'P1', forest());
+
+    const sources = manaSourcesFor(ctx, 'P1');
+    expect(sources.map((source) => source.cardId)).toEqual([land.cardId, elf.cardId]);
+    expect(planPayment(parseManaCost('{G}').cost!, [], sources)?.tapCardIds).toEqual([
+      land.cardId,
+    ]);
   });
 });

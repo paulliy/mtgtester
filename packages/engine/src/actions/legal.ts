@@ -16,8 +16,8 @@ import { selectMatches } from '../cards/selector';
 import type { EngineActionOption } from '../decisions';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
-import { addGeneric, canPay, describeManaCost, emptyCost, subtractColored, subtractGeneric, withX } from '../mana/cost';
-import type { ParsedManaCost } from '../mana/cost';
+import { addGeneric, canPay, describeManaCost, emptyCost, planPayment, subtractColored, subtractGeneric, withX } from '../mana/cost';
+import type { ManaSource, ParsedManaCost } from '../mana/cost';
 import {
   allowanceFor,
   canPayNonManaCosts,
@@ -31,6 +31,7 @@ import {
   hasKeyword,
   manaSourcesFor,
   playersInApnapOrder,
+  previewLandManaSymbols,
   requireModeled,
 } from '../state/queries';
 import { playerById } from '../state/objects';
@@ -80,6 +81,28 @@ export function manaPortionOf(costs: readonly AbilityCost[]): ParsedManaCost {
     for (const c of ['W', 'U', 'B', 'R', 'G'] as const) total.colored[c] += cost.cost.colored[c];
   }
   return total;
+}
+
+/**
+ * The engine's deterministic auto-pay plan, exposed as presentation data only. The browser may
+ * highlight these sources before confirmation but cannot alter payment or invent a plan.
+ */
+function paymentPreview(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  cost: ParsedManaCost,
+  sources: readonly ManaSource[],
+  allows: ReturnType<typeof allowanceFor>,
+): Record<string, unknown> {
+  const plan = planPayment(cost, player.manaEntries, sources, allows);
+  if (plan === null || plan.tapCardIds.length === 0) return {};
+  const permanents = plan.tapCardIds
+    .map((cardId) => ctx.state.battlefield.find((permanent) => permanent.cardId === cardId))
+    .filter((permanent): permanent is EnginePermanent => permanent !== undefined);
+  return {
+    paymentSourceIds: permanents.map((permanent) => permanent.id),
+    paymentSourceNames: permanents.map((permanent) => permanent.name),
+  };
 }
 
 /**
@@ -217,6 +240,11 @@ export function computeTargetOptions(
     return ctx.state.stack
       .filter((s) => s.kind === 'spell')
       .filter((s) => kind !== 'noncreatureSpell' || !isCreatureSpell(ctx, s))
+      .filter(
+        (s) =>
+          controller === undefined ||
+          (controller === 'you' ? s.controllerId === casterId : s.controllerId !== casterId),
+      )
       .map((s) => s.id);
   }
   if (kind === 'commanderInCommandZone') {
@@ -309,7 +337,6 @@ export function computePriorityOptions(
     (s.phase === 'precombatMain' || s.phase === 'postcombatMain');
 
   const sources = manaSourcesFor(ctx, player.id);
-  const seen = new Set<string>();
 
   // "Your opponents can't cast spells during your turn" (Dragonlord Dromoka) — computed once;
   // it blocks every nonland cast source uniformly and never blocks playing a land (CR 305 —
@@ -334,15 +361,27 @@ export function computePriorityOptions(
       if (fromLibraryTop) return;
       // Lands are played, not cast — one per turn, main phase, empty stack (CR 305).
       if (sorcerySpeed && player.landsPlayedThisTurn < 1) {
-        const key = `playLand:${obj.name}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          options.push({
-            type: 'playLand',
-            description: `Play ${obj.name}`,
-            payload: { kind: 'playLand', objectId: obj.id },
-          });
+        const producesMana = previewLandManaSymbols(ctx, def, player.id);
+        const data: Record<string, unknown> = {
+          producesMana,
+          sourceName: obj.name,
+          sourceZone: 'hand',
+        };
+        if (def.entersTappedUnless !== undefined) {
+          if (def.entersTappedUnless.kind === 'mayPayLife') {
+            data['payLifeToUntap'] = def.entersTappedUnless.n;
+          } else {
+            data['entersTappedConditional'] = true;
+          }
+        } else {
+          data['entersTapped'] = def.entersTapped;
         }
+        options.push({
+          type: 'playLand',
+          description: `Play ${obj.name}`,
+          payload: { kind: 'playLand', objectId: obj.id },
+          data,
+        });
       }
       return;
     }
@@ -359,9 +398,6 @@ export function computePriorityOptions(
       base = subtractColored(base, reduction.colored);
     }
     base = subtractGeneric(base, reduction.generic);
-
-    const key = `cast:${obj.name}:${fromCommand}:${fromLibraryTop}`;
-    if (seen.has(key)) return; // duplicate copies are interchangeable
 
     // {X} is announced as part of casting (CR 601.2b), so each affordable value of X is its own
     // option. Enumerated rather than asked as a follow-up decision because the option menu is
@@ -387,7 +423,6 @@ export function computePriorityOptions(
     // single iteration when `modes` is absent.
     const modeIndices = def.spellAbility?.modes?.options.map((_, i) => i) ?? [undefined];
 
-    let offered = false;
     for (const x of xChoices) {
       const cost = withX(base, x);
       if (!canPay(cost, player.manaEntries, sources, allows)) continue;
@@ -418,11 +453,25 @@ export function computePriorityOptions(
           },
           // Descriptive only (see `EngineActionOption.data`): lets a decision consumer tell a
           // hold-priority instant apart from a sorcery-speed play without parsing the description.
-          data: { instantSpeed, ...(xSymbols > 0 ? { x } : {}) },
+          data: {
+            instantSpeed,
+            sourceName: obj.name,
+            sourceZone: fromCommand
+              ? 'command'
+              : fromLibraryTop
+                ? 'library'
+                : fromExile
+                  ? 'exile'
+                  : 'hand',
+            manaCost: describeManaCost(cost),
+            ...paymentPreview(ctx, player, cost, sources, allows),
+            ...(tax > 0 ? { commanderTax: tax } : {}),
+            ...(xSymbols > 0 ? { x } : {}),
+            ...(modeLabel !== undefined ? { modeLabel } : {}),
+          },
         };
         if (targets.length > 0) option.targets = targets;
         options.push(option);
-        offered = true;
       }
     }
     const applyRed = (c: ParsedManaCost): ParsedManaCost => {
@@ -448,9 +497,15 @@ export function computePriorityOptions(
                 alternativeCast: 'overload',
                 altIndex: index,
               },
-              data: { instantSpeed },
+              data: {
+                instantSpeed,
+                sourceName: obj.name,
+                sourceZone: fromCommand ? 'command' : 'hand',
+                manaCost: describeManaCost(cost),
+                ...paymentPreview(ctx, player, cost, sources, allows),
+                castVariant: 'overload',
+              },
             });
-            offered = true;
           }
         } else if (alt.kind === 'adventure' || alt.kind === 'omen') {
           const cost = applyRed(alt.manaCost);
@@ -470,14 +525,19 @@ export function computePriorityOptions(
                 alternativeCast: alt.kind,
                 altIndex: index,
               },
-              data: { instantSpeed: alt.typeLine?.includes('Instant') ?? false },
+              data: {
+                instantSpeed: alt.typeLine?.includes('Instant') ?? false,
+                sourceName: obj.name,
+                sourceZone: 'hand',
+                manaCost: describeManaCost(cost),
+                ...paymentPreview(ctx, player, cost, sources, allows),
+                castVariant: alt.kind,
+              },
             });
-            offered = true;
           }
         }
       }
     }
-    if (offered) seen.add(key);
   };
 
   for (const obj of player.hand) considerCast(obj, false);
@@ -486,6 +546,50 @@ export function computePriorityOptions(
   for (const obj of ctx.state.exile) {
     if (obj.ownerId === player.id && obj.onAdventure === true) {
       considerCast(obj, false, false, true);
+    }
+  }
+
+  // Best-effort "unlocks" hint (Tier 1 extension of ADR 0010 decision 2): for each `playLand`
+  // option, list hand cards that are not currently castable but WOULD be if this land's mana
+  // were added. Computed independently of `considerCast` above (X and modes are ignored — a
+  // floor-cost check is still a useful hint) so a mistake here can never make an uncastable
+  // spell legal; it only ever annotates a `playLand` option that already exists.
+  if (!spellCastingBlocked) {
+    const affordableHandCardIds = new Set(
+      options
+        .filter((o) => o.type === 'castSpell')
+        .map((o) => (o.payload as { objectId: ObjectId }).objectId),
+    );
+    const candidates = player.hand.filter((obj) => {
+      if (affordableHandCardIds.has(obj.id)) return false;
+      const cdef = getDefByOracleId(ctx, obj.oracleId, obj.name);
+      if (!cdef.modeled || cdef.types.includes('Land') || cdef.manaCost === null) return false;
+      const instantSpeed = cdef.types.includes('Instant') || cdef.keywords.includes('flash');
+      return instantSpeed || sorcerySpeed;
+    });
+    for (const option of options) {
+      if (option.type !== 'playLand') continue;
+      const producesMana = option.data?.['producesMana'] as (Color | 'C')[] | undefined;
+      if (producesMana === undefined || producesMana.length === 0) continue;
+      const hypotheticalSource: ManaSource = {
+        cardId: 'hypothetical-land-preview',
+        units: [producesMana],
+        costs: [],
+      };
+      const augmentedSources = [...sources, hypotheticalSource];
+      const unlocks: string[] = [];
+      for (const cand of candidates) {
+        const cdef = getDefByOracleId(ctx, cand.oracleId, cand.name);
+        const baseManaCost = cdef.manaCost;
+        if (baseManaCost === null) continue;
+        const reduction = costReductionFor(ctx, player.id, cand.oracleId, cand.cardId);
+        let cost = addGeneric(baseManaCost, 0);
+        if (reduction.colored !== undefined) cost = subtractColored(cost, reduction.colored);
+        cost = subtractGeneric(cost, reduction.generic);
+        const allows = allowanceFor(ctx, player.id, { kind: 'castSpell', oracleId: cand.oracleId });
+        if (canPay(cost, player.manaEntries, augmentedSources, allows)) unlocks.push(cand.name);
+      }
+      if (unlocks.length > 0) option.data = { ...option.data, unlocks };
     }
   }
 
@@ -509,13 +613,24 @@ export function computePriorityOptions(
         kind: 'activateAbility',
         sourceOracleId: perm.oracleId,
       });
-      if (!canPay(manaPortionOf(activated.costs), player.manaEntries, usable, allows)) continue;
+      const manaCost = manaPortionOf(activated.costs);
+      if (!canPay(manaCost, player.manaEntries, usable, allows)) continue;
 
       const slots: { slot: number; options: ObjectId[] }[] = [];
       let slotNum = 0;
       let missingTarget = false;
+      // Equip (CR 702.6, `attachSelfTo`): re-attaching to the creature this is ALREADY
+      // attached to is a strict no-op — same state in, same state out — so it is not a
+      // meaningful target. Left in, the model can spam it forever for free once the
+      // decision cache starts answering it identically every time (ADR 0010).
+      const isAttachAbility = activated.ability.effects.some(
+        (e: import('../cards/ability').Effect) => e.op === 'attachSelfTo',
+      );
       for (const spec of activated.ability.targets) {
-        const targetOptions = computeTargetOptions(ctx, spec, player.id);
+        let targetOptions = computeTargetOptions(ctx, spec, player.id);
+        if (isAttachAbility && perm.attachedTo !== null) {
+          targetOptions = targetOptions.filter((id) => id !== perm.attachedTo);
+        }
         // CR 602.2b: an ability with no legal target for a slot cannot be activated at all.
         if (targetOptions.length === 0) {
           missingTarget = true;
@@ -529,6 +644,20 @@ export function computePriorityOptions(
         type: 'activateAbility',
         description: `${perm.name}: ${activated.ability.description ?? 'activate ability'}`,
         payload: { kind: 'activateAbility', objectId: perm.id, index },
+        data: {
+          sourceName: perm.name,
+          sourceZone: 'battlefield',
+          abilityDescription: activated.ability.description ?? 'activate ability',
+          manaCost: describeManaCost(manaCost),
+          ...paymentPreview(ctx, player, manaCost, usable, allows),
+          abilityCosts: activated.costs,
+        },
+        interaction: {
+          kind: 'source',
+          sourceId: perm.id,
+          sourceCardId: perm.cardId,
+          abilityIndex: index,
+        },
       };
       if (slots.length > 0) option.targets = slots;
       options.push(option);

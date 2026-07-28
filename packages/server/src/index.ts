@@ -16,6 +16,8 @@ export { parseBannedList, loadBannedList, type BannedList } from './decks/banned
 export { buildOracleIndex, loadOracleIndexFromFile, type OracleIndex } from './cards/oracle-index';
 export { toOracleCard, type RawScryfallCard } from './cards/scryfall';
 export { GameStore, type DeckRow } from './db';
+export { StatsRepository } from './db/stats';
+export { MANA_METRICS } from './config/mana-metrics';
 
 // --- Phase 3: AI agent integration ---
 export * from './ai';
@@ -48,4 +50,3 @@ export {
   type SetupResult,
 } from './match/setup';
 export { GameServer, type GameServerDeps } from './ws/server';
-

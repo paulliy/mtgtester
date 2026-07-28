@@ -61,4 +61,18 @@ describe('Response Validator', () => {
     );
     expect(err).toContain('is not in legal options');
   });
+
+  it('rejects malformed planned actions before they reach the local executor', () => {
+    const req = fixtureRequest();
+    expect(
+      validateResponse(
+        {
+          requestId: req.requestId,
+          actionId: 0,
+          plannedActions: [{ type: 42 as unknown as string }],
+        },
+        req,
+      ),
+    ).toMatch(/plannedActions/);
+  });
 });

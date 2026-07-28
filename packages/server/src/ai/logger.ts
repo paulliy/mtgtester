@@ -20,13 +20,7 @@ export interface CallResult {
  * picked. It is deliberately NOT counted as skipped — it cost two calls before the human saw it.
  */
 export type DecisionSource =
-  | 'primary'
-  | 'retry'
-  | 'fallback'
-  | 'heuristic'
-  | 'cache'
-  | 'plan'
-  | 'human';
+  'primary' | 'retry' | 'fallback' | 'heuristic' | 'cache' | 'plan' | 'strategist' | 'human';
 
 /** Sources answered locally: recorded, but never billed and never rate-limited. */
 const SKIPPED_SOURCES: ReadonlySet<DecisionSource> = new Set<DecisionSource>([
@@ -45,6 +39,7 @@ export function localCallMeta(): CallMeta {
     wasRetry: false,
     wasFallback: false,
     rawResponse: '',
+    costUsd: 0,
   };
 }
 
@@ -59,6 +54,15 @@ export class AiCallLogger {
   private sequence = 0;
   /** Decisions answered locally — tracked in memory so it works with `db === null` too. */
   private skipped = 0;
+  private retries = 0;
+  private fallbacks = 0;
+  private promptTokens = 0;
+  private responseTokens = 0;
+  private totalLatencyMs = 0;
+  private totalCostUsd = 0;
+  private readonly sourceCounts = new Map<DecisionSource, number>();
+  /** Latest resolution source by surfaced request, used by the CLI transcript. */
+  private readonly sourcesByRequestId = new Map<string, DecisionSource>();
 
   constructor(
     private readonly db: SqliteDb | null,
@@ -74,6 +78,14 @@ export class AiCallLogger {
   ): void {
     this.sequence++;
     if (SKIPPED_SOURCES.has(source)) this.skipped++;
+    if (wasRetry) this.retries++;
+    if (wasFallback) this.fallbacks++;
+    this.promptTokens += result.meta.promptTokens;
+    this.responseTokens += result.meta.responseTokens;
+    this.totalLatencyMs += result.meta.latencyMs;
+    this.totalCostUsd += result.meta.costUsd ?? 0;
+    this.sourceCounts.set(source, (this.sourceCounts.get(source) ?? 0) + 1);
+    this.sourcesByRequestId.set(request.requestId, source);
     if (this.db === null) return;
 
     // Seat index: parse numeric seat from "P1" -> 1 if possible
@@ -85,8 +97,8 @@ export class AiCallLogger {
         .query(
           `INSERT INTO ai_calls (
             game_id, sequence, seat, model, prompt_tokens, response_tokens,
-            request_json, response_json, was_retry, was_fallback, latency_ms, source
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            request_json, response_json, was_retry, was_fallback, latency_ms, cost_usd, source
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           this.gameId,
@@ -100,11 +112,17 @@ export class AiCallLogger {
           wasRetry ? 1 : 0,
           wasFallback ? 1 : 0,
           result.meta.latencyMs,
+          result.meta.costUsd ?? 0,
           source,
         );
     } catch {
       // Ignore database insert errors in loggers
     }
+  }
+
+  /** Resolution source for a surfaced decision, if it was recorded by this logger. */
+  sourceFor(requestId: string): DecisionSource | undefined {
+    return this.sourcesByRequestId.get(requestId);
   }
 
   summary(): {
@@ -117,17 +135,24 @@ export class AiCallLogger {
     totalPromptTokens: number;
     totalResponseTokens: number;
     avgLatencyMs: number;
+    totalCostUsd: number;
+    strategistCalls: number;
+    planExecutions: number;
   } {
     if (this.db === null) {
+      const totalCalls = this.sequence - this.skipped;
       return {
         totalDecisions: this.sequence,
-        totalCalls: this.sequence - this.skipped,
+        totalCalls,
         skippedCalls: this.skipped,
-        retries: 0,
-        fallbacks: 0,
-        totalPromptTokens: 0,
-        totalResponseTokens: 0,
-        avgLatencyMs: 0,
+        retries: this.retries,
+        fallbacks: this.fallbacks,
+        totalPromptTokens: this.promptTokens,
+        totalResponseTokens: this.responseTokens,
+        avgLatencyMs: totalCalls > 0 ? Math.round(this.totalLatencyMs / totalCalls) : 0,
+        totalCostUsd: this.totalCostUsd,
+        strategistCalls: this.sourceCounts.get('strategist') ?? 0,
+        planExecutions: this.sourceCounts.get('plan') ?? 0,
       };
     }
 
@@ -140,6 +165,9 @@ export class AiCallLogger {
           SUM(was_fallback) as fallbacks,
           SUM(prompt_tokens) as totalPromptTokens,
           SUM(response_tokens) as totalResponseTokens,
+          SUM(cost_usd) as totalCostUsd,
+          SUM(CASE WHEN source = 'strategist' THEN 1 ELSE 0 END) as strategistCalls,
+          SUM(CASE WHEN source = 'plan' THEN 1 ELSE 0 END) as planExecutions,
           AVG(latency_ms) as avgLatencyMs
         FROM ai_calls WHERE game_id = ?`,
       )
@@ -151,6 +179,9 @@ export class AiCallLogger {
       totalPromptTokens?: number;
       totalResponseTokens?: number;
       avgLatencyMs?: number;
+      totalCostUsd?: number;
+      strategistCalls?: number;
+      planExecutions?: number;
     }>;
 
     const row = rows[0];
@@ -165,6 +196,9 @@ export class AiCallLogger {
       totalPromptTokens: row?.totalPromptTokens ?? 0,
       totalResponseTokens: row?.totalResponseTokens ?? 0,
       avgLatencyMs: Math.round(row?.avgLatencyMs ?? 0),
+      totalCostUsd: row?.totalCostUsd ?? 0,
+      strategistCalls: row?.strategistCalls ?? 0,
+      planExecutions: row?.planExecutions ?? 0,
     };
   }
 }

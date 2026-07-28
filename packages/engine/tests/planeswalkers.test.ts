@@ -4,7 +4,7 @@ import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
 import { parseManaCost, planPayment } from '../src/mana/cost';
-import { copies, forest, gameConfig, oracle, spawn } from './fixtures';
+import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 import { queueTriggersForEvent } from '../src/state/objects';
 import { priorityCheckpoint } from '../src/sba/sba';
 
@@ -82,19 +82,19 @@ describe('Increment 17: Planeswalkers & Hybrid Mana', () => {
     expect(planU).not.toBeNull();
   });
 
-  it('spawns Planeswalker with printed loyalty counters and triggers 0-loyalty death SBA', function* () {
+  it('spawns Planeswalker with printed loyalty counters and triggers 0-loyalty death SBA', () => {
     const ctx = pod();
     const pw = spawn(ctx, 'P1', kiora());
     expect(pw.counters['loyalty']).toBe(7);
 
     // Reduce loyalty to 0
     pw.counters['loyalty'] = 0;
-    const ranSba = yield* priorityCheckpoint(ctx);
+    const { value: ranSba } = pump(priorityCheckpoint(ctx));
     expect(ranSba).toBe(true);
     expect(ctx.state.battlefield.find((p) => p.id === pw.id)).toBeUndefined();
   });
 
-  it('Kiora triggers draw on creature with power >= 4 entering', function* () {
+  it('Kiora triggers draw on creature with power >= 4 entering', () => {
     const ctx = pod();
     const p1 = ctx.state.players[0]!;
     const kioraPerm = spawn(ctx, 'P1', kiora());
@@ -111,11 +111,13 @@ describe('Increment 17: Planeswalkers & Hybrid Mana', () => {
     const initialHandCount = p1.hand.length;
 
     const pending = ctx.state.pendingTriggers.pop()!;
-    yield* executeAbility(
-      ctx,
-      { cardId: kioraPerm.cardId, name: kioraPerm.name, oracleId: kioraPerm.oracleId, controllerId: 'P1' },
-      pending.ability,
-      [],
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: kioraPerm.cardId, name: kioraPerm.name, oracleId: kioraPerm.oracleId, controllerId: 'P1' },
+        pending.ability,
+        [],
+      ),
     );
 
     expect(p1.hand.length).toBe(initialHandCount + 1);

@@ -116,8 +116,10 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
   if (card === null) return;
   const def = getDefByOracleId(ctx, card.oracleId, card.name);
   if (spell.alternativeCastKind === 'adventure') {
-    yield* moveObject(ctx, card, { zone: 'exile' });
-    card.onAdventure = true;
+    // `moveObject` returns a NEW object for the destination zone — `card` is stale afterward,
+    // so the flag has to land on `moved`, not the pre-move reference.
+    const moved = yield* moveObject(ctx, card, { zone: 'exile' });
+    if (moved !== null && moved.zone !== 'battlefield') moved.onAdventure = true;
     return;
   }
   if (spell.alternativeCastKind === 'omen') {

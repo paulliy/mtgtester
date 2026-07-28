@@ -5,7 +5,7 @@
  * one legal option with no real target choice (brief §5.1 — no AI call for forced moves).
  */
 
-import type { DecisionType, ObjectId, PlayerId } from '@mtg/shared';
+import type { ActionInteraction, DecisionType, ObjectId, PlayerId } from '@mtg/shared';
 
 /** One legal option, engine-internal. `payload` is interpreted by the yielding code. */
 export interface EngineActionOption {
@@ -22,6 +22,8 @@ export interface EngineActionOption {
    * (is this instant-speed? what is this attacker's power?) instead of parsing `description`.
    */
   data?: Record<string, unknown>;
+  /** Structured player-UI affordance. Never consulted for legality. */
+  interaction?: ActionInteraction;
 }
 
 export interface PendingDecision {

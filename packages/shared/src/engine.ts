@@ -20,6 +20,35 @@ export interface TargetSlot {
 }
 
 /**
+ * Stable UI affordance for a legal action. Descriptive only: the engine still validates the
+ * selected action and targets, while the player UI never has to parse `description`.
+ */
+export type ActionInteraction =
+  | { kind: 'immediate' }
+  | {
+      kind: 'source';
+      sourceId: ObjectId;
+      /** Present for activated abilities so player preferences survive object-id changes. */
+      sourceCardId?: ObjectId;
+      abilityIndex?: number;
+      targetSlots?: TargetSlot[];
+    }
+  | {
+      kind: 'attack';
+      attackerId: ObjectId;
+      defenderId?: PlayerId;
+      appliesToRemaining?: boolean;
+    }
+  | {
+      kind: 'block';
+      blockerId: ObjectId;
+      attackerId?: ObjectId;
+      appliesToRemaining?: boolean;
+    }
+  | { kind: 'order'; subjectIds: ObjectId[] }
+  | { kind: 'choice'; subjectId?: ObjectId; targetSlots?: TargetSlot[] };
+
+/**
  * A single legal option the engine offers at a decision point (brief §7.3). The engine
  * generates the COMPLETE set; the AI must pick one by `id`. `type` is a coarse discriminator
  * (`'pass'`, `'castSpell'`, `'playLand'`, `'activateAbility'`, …); `data` carries
@@ -31,6 +60,7 @@ export interface LegalAction {
   description: string;
   targets?: TargetSlot[];
   data?: Record<string, unknown>;
+  interaction?: ActionInteraction;
 }
 
 /**
@@ -63,6 +93,17 @@ export interface PlannedAction {
   name?: string;
   description?: string;
   targets?: TargetChoice[];
+  /** Turn window where this action is intended; prevents stale cross-phase execution. */
+  phase?: Phase;
+  step?: Step | null;
+}
+
+/** Non-authoritative, hidden-information-safe plan produced once for an active turn. */
+export interface TurnStrategy {
+  intent: string;
+  threatOrder?: PlayerId[];
+  manaPlan?: string;
+  plannedActions: PlannedAction[];
 }
 
 /**
@@ -82,6 +123,8 @@ export interface DecisionResponse {
   order?: number[];
   /** Optional sequence of planned future actions for turn pre-planning. */
   plannedActions?: PlannedAction[];
+  /** Strategist-only structured plan. Tactical decisions do not use this field. */
+  turnStrategy?: TurnStrategy;
   /** One-sentence rationale; stored in the debug log only. */
   note?: string;
 }

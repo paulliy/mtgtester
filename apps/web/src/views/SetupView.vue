@@ -10,7 +10,7 @@
  */
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { ProviderKind, SeatSource } from '@mtg/shared';
+import type { GameMode, ProviderKind, SeatSource } from '@mtg/shared';
 import { useGameStore } from '../stores/game';
 
 const store = useGameStore();
@@ -21,17 +21,33 @@ const SEATS = 4;
 type Mode = 'pool' | 'import';
 
 const mode = ref<Mode>('pool');
+const gameMode = ref<GameMode>('spectator');
+const humanSeat = ref('P1');
+const advancedPodSetup = ref(false);
 const providerKind = ref<ProviderKind>('random');
 const seed = ref('');
 const inputs = ref<string[]>(Array.from({ length: SEATS }, () => ''));
 const tags = ref<string[]>(Array.from({ length: SEATS }, () => ''));
 
 const canStart = computed(() =>
-  mode.value === 'pool' ? true : inputs.value.every((v) => v.trim().length > 0),
+  mode.value === 'pool'
+    ? true
+    : gameMode.value === 'singlePlayer' && !advancedPodSetup.value
+      ? (inputs.value[Number(humanSeat.value.slice(1)) - 1]?.trim().length ?? 0) > 0
+      : inputs.value.every((v) => v.trim().length > 0),
 );
 
 function sourceFor(index: number): SeatSource {
   if (mode.value === 'pool') return { kind: 'pool' };
+  // Player mode's normal path has one subject deck. The remaining seats are generated,
+  // supported opponents unless the player explicitly opts into configuring the whole pod.
+  if (
+    gameMode.value === 'singlePlayer' &&
+    !advancedPodSetup.value &&
+    index + 1 !== Number(humanSeat.value.slice(1))
+  ) {
+    return { kind: 'pool' };
+  }
   const raw = inputs.value[index]?.trim() ?? '';
   const tag = tags.value[index]?.trim() ?? '';
   const isUrl = /^https?:\/\//i.test(raw);
@@ -41,7 +57,13 @@ function sourceFor(index: number): SeatSource {
 
 function start(): void {
   const sources = Array.from({ length: SEATS }, (_, i) => sourceFor(i));
-  store.startGame(sources, providerKind.value, seed.value.trim());
+  store.startGame(
+    sources,
+    providerKind.value,
+    seed.value.trim(),
+    gameMode.value,
+    humanSeat.value,
+  );
   void router.push('/game');
 }
 </script>
@@ -49,9 +71,31 @@ function start(): void {
 <template>
   <div class="setup">
     <h2>New game</h2>
-    <p class="lede">
-      Four AI-controlled seats play a full Commander game to a single winner. You watch.
-    </p>
+    <p class="lede">Watch four bots simulate Commander, or play one seat against three bots.</p>
+
+    <fieldset>
+      <legend>Game mode</legend>
+      <label class="choice">
+        <input v-model="gameMode" type="radio" value="spectator" />
+        <span>
+          <strong>Spectator simulation</strong>
+          <em>Four bots play while you watch, scrub, and inspect every hand.</em>
+        </span>
+      </label>
+      <label class="choice">
+        <input v-model="gameMode" type="radio" value="singlePlayer" />
+        <span>
+          <strong>Play against three bots</strong>
+          <em>Your choices pause indefinitely; opponents' hidden cards stay hidden.</em>
+        </span>
+      </label>
+      <label v-if="gameMode === 'singlePlayer'" class="human-seat">
+        Your seat
+        <select v-model="humanSeat">
+          <option v-for="index in SEATS" :key="index" :value="`P${index}`">P{{ index }}</option>
+        </select>
+      </label>
+    </fieldset>
 
     <fieldset>
       <legend>Decks</legend>
@@ -78,7 +122,15 @@ function start(): void {
       </label>
 
       <div v-if="mode === 'import'" class="decks">
-        <div v-for="index in SEATS" :key="index" class="deck-row">
+        <p v-if="gameMode === 'singlePlayer' && !advancedPodSetup" class="hint">
+          Import your deck; the other three seats use generated, engine-supported opponents.
+        </p>
+        <div
+          v-for="index in SEATS"
+          v-show="gameMode !== 'singlePlayer' || advancedPodSetup || index === Number(humanSeat.slice(1))"
+          :key="index"
+          class="deck-row"
+        >
           <span class="seat">P{{ index }}</span>
           <textarea
             v-model="inputs[index - 1]"
@@ -91,33 +143,37 @@ function start(): void {
             placeholder="archetype tag (optional)"
           />
         </div>
+        <label v-if="gameMode === 'singlePlayer'" class="advanced-pod">
+          <input v-model="advancedPodSetup" type="checkbox" />
+          <span>Choose all four decks instead</span>
+        </label>
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Players</legend>
+      <legend>{{ gameMode === 'singlePlayer' ? 'Bot opponents' : 'Players' }}</legend>
       <label class="choice">
         <input v-model="providerKind" type="radio" value="random" />
         <span>
-          <strong>Random</strong>
-          <em>Free and fully seeded. Picks uniformly from the engine's legal action menu.</em>
+          <strong>Random bots</strong>
+          <em>Fast, free, and fully seeded. Best for learning the controls or a quick game.</em>
         </span>
       </label>
       <label class="choice">
         <input v-model="providerKind" type="radio" value="ai" />
         <span>
-          <strong>AI</strong>
-          <em>Spends real API budget on every decision that heuristics cannot answer locally.</em>
+          <strong>AI bots</strong>
+          <em>Uses strategic bot decisions and may spend API budget.</em>
         </span>
       </label>
     </fieldset>
 
     <fieldset>
-      <legend>Seed</legend>
+      <legend>Replay seed <span class="optional">(optional)</span></legend>
       <input v-model="seed" type="text" placeholder="leave blank for a fresh seed" />
       <p class="hint">
-        Every game is fully seeded. The same seed and decks replay the engine identically; AI
-        responses are not deterministic, so an AI game replays only its engine half.
+        Leave this blank for a fresh game. Use a seed when you want to repeat a known shuffle;
+        AI decisions may still vary.
       </p>
     </fieldset>
 
@@ -178,6 +234,19 @@ legend {
   font-size: 0.78rem;
   font-style: normal;
 }
+.human-seat {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+}
+.human-seat select {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.3rem;
+}
 .decks {
   display: flex;
   flex-direction: column;
@@ -221,4 +290,6 @@ button.primary {
   padding: 0.5rem 1.2rem;
   font-weight: 600;
 }
+.optional { text-transform:none; letter-spacing:0; }
+.advanced-pod { display:flex; align-items:center; gap:.45rem; font-size:.78rem; color:var(--muted); }
 </style>

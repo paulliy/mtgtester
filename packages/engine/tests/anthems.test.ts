@@ -58,6 +58,28 @@ const pt = (ctx: GameContext, perm: EnginePermanent): string => {
 };
 
 describe('anthems and lords (ADR 0008)', () => {
+  it('Kongming pumps other creatures but never itself', () => {
+    const kongming = oracle({
+      name: 'Kongming, "Sleeping Dragon"',
+      typeLine: 'Legendary Creature — Human Advisor',
+      manaCost: '{2}{W}{W}',
+      power: '2',
+      toughness: '2',
+      oracleText: 'Other creatures you control get +1/+1.\n{1}{W}: Creatures you control gain flying until end of turn.',
+    });
+    const def = interpretCard(kongming);
+    expect(def.modeled).toBe(true);
+
+    const ctx = ctx4();
+    const commander = spawn(ctx, 'P1', kongming);
+    const otherCreature = spawn(ctx, 'P1', bear());
+    const opponentCreature = spawn(ctx, 'P2', bear());
+
+    expect(pt(ctx, commander)).toBe('2/2');
+    expect(pt(ctx, otherCreature)).toBe('3/3');
+    expect(pt(ctx, opponentCreature)).toBe('2/2');
+  });
+
   it('"Creatures you control get +1/+1" buffs only its controller\'s creatures', () => {
     const anthem = oracle({
       name: 'Test Anthem',

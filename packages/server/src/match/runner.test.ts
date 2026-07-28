@@ -359,7 +359,7 @@ describe('MatchRunner — persistence hooks', () => {
       expect(snapshotted.length).toBeGreaterThan(1);
     });
 
-    expect(recorder.start).toHaveBeenCalledWith('runner-test', SEATS);
+    expect(recorder.start).toHaveBeenCalledWith('runner-test', SEATS, 'spectator');
     // Event sequences are flushed once each, in order — the cursor never re-sends or skips.
     expect(appended).toEqual([...appended].sort((a, b) => a - b));
     expect(new Set(appended).size).toBe(appended.length);

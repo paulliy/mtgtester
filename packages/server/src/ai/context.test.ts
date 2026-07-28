@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DecisionRequest, PlayerView } from '@mtg/shared';
-import { assemblePrompt } from './context';
+import { assemblePrompt, assembleStrategistPrompt } from './context';
 
 function fixtureView(): PlayerView {
   return {
@@ -19,6 +19,7 @@ function fixtureView(): PlayerView {
     graveyard: [{ id: 'g1', name: 'Giant Growth' }],
     commanders: [{ name: 'Llanowar Elves', zone: 'command', castCount: 0 }],
     availableMana: { G: 2 },
+    manaSources: [{ name: 'Forest', symbols: ['G'], count: 1 }],
     opponents: [
       {
         seat: 'P2',
@@ -113,10 +114,31 @@ describe('Context Assembler', () => {
     const view = fixtureView();
     view.battlefield = [
       // Two copies of the same token: the text is identical, so it is worth sending once.
-      { id: 'p2', controller: 'P2', name: 'Thopter', tapped: false, status: [], oracleText: 'Flying' },
-      { id: 'p3', controller: 'P2', name: 'Thopter', tapped: false, status: [], oracleText: 'Flying' },
+      {
+        id: 'p2',
+        controller: 'P2',
+        name: 'Thopter',
+        tapped: false,
+        status: [],
+        oracleText: 'Flying',
+      },
+      {
+        id: 'p3',
+        controller: 'P2',
+        name: 'Thopter',
+        tapped: false,
+        status: [],
+        oracleText: 'Flying',
+      },
       // A basic: its text is reminder text the model already knows.
-      { id: 'p4', controller: 'P1', name: 'Forest', tapped: false, status: [], oracleText: '({T}: Add {G}.)' },
+      {
+        id: 'p4',
+        controller: 'P1',
+        name: 'Forest',
+        tapped: false,
+        status: [],
+        oracleText: '({T}: Add {G}.)',
+      },
       // The case that motivated this: a name alone does not tell you what it does.
       {
         id: 'p5',
@@ -144,5 +166,27 @@ describe('Context Assembler', () => {
     const parsedUser = JSON.parse(assemblePrompt(fixtureRequest(), view).messages[1]!.content);
     expect(parsedUser.recentLog).toHaveLength(15);
     expect(parsedUser.recentLog[0]).toBe('T1 P1 event-0');
+  });
+
+  it('adds standing intent and seat-local history to tactical prompts', () => {
+    const prompt = assemblePrompt(fixtureRequest(), fixtureView(), {
+      strategy: {
+        intent: 'Develop, then hold interaction.',
+        plannedActions: [],
+      },
+      recentDecisions: [{ turn: 1, phase: 'precombatMain', action: 'Play Forest' }],
+    });
+    const payload = JSON.parse(prompt.messages[1]!.content);
+    expect(payload.turnStrategy.intent).toContain('hold interaction');
+    expect(payload.yourRecentDecisions).toHaveLength(1);
+    expect(prompt.messages[0]!.content).toContain('TACTICIAN ROLE');
+  });
+
+  it('builds strategist context from the same hidden-information-safe PlayerView', () => {
+    const prompt = assembleStrategistPrompt(fixtureRequest(), fixtureView(), []);
+    const payload = JSON.parse(prompt.messages[1]!.content);
+    expect(prompt.messages[0]!.content).toContain('STRATEGIST ROLE');
+    expect(payload.opponents[0]).not.toHaveProperty('handCards');
+    expect(payload).not.toHaveProperty('gameState');
   });
 });

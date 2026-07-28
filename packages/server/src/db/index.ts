@@ -7,6 +7,7 @@
 import { Database } from 'bun:sqlite';
 import type { DeckCardEntry, DeckSnapshot, DeckSourceType, OracleCard } from '@mtg/shared';
 import { GameRecorder, type SqliteLike } from './games';
+import { StatsRepository } from './stats';
 import { MIGRATIONS_SQL, SCHEMA_SQL } from './schema';
 
 export interface DeckRow {
@@ -125,6 +126,11 @@ export class GameStore {
    */
   recorderFor(gameId: string): GameRecorder {
     return new GameRecorder(this.db as unknown as SqliteLike, gameId);
+  }
+
+  /** Phase 5's read-only aggregate/debug query surface. */
+  stats(): StatsRepository {
+    return new StatsRepository(this.db as unknown as SqliteLike);
   }
 
   /** The raw `bun:sqlite` handle, for `AiCallLogger` (brief §9 `ai_calls`). */

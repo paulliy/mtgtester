@@ -150,13 +150,34 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
   const s = ctx.state;
   const viewer = playerById(ctx, playerId);
 
+  // Credits EVERY alternative symbol a unit could become, not just the first — a 5-color
+  // Command Tower must not be reported as producing only White. This deliberately over-reports
+  // total capacity summed across colors for a flexible source (one unit counts toward all of
+  // its alternatives at once): it describes *reachable* colors, not a literal simultaneous
+  // total. Nothing treats `availableMana` as ground truth for legality — `canPay`/`planPayment`
+  // remain authoritative; this is descriptive context for the AI only.
   const availableMana: Record<string, number> = { ...viewer.manaPool };
+  const manaSourcesByCard = new Map<string, { symbols: Set<string>; count: number }>();
   for (const source of manaSourcesFor(ctx, playerId)) {
+    let entry = manaSourcesByCard.get(source.cardId);
+    if (entry === undefined) {
+      entry = { symbols: new Set<string>(), count: 0 };
+      manaSourcesByCard.set(source.cardId, entry);
+    }
     for (const unit of source.units) {
-      const sym = unit[0];
-      if (sym !== undefined) availableMana[sym] = (availableMana[sym] ?? 0) + 1;
+      entry.count += 1;
+      for (const sym of unit) {
+        availableMana[sym] = (availableMana[sym] ?? 0) + 1;
+        entry.symbols.add(sym);
+      }
     }
   }
+  const manaSources: PlayerView['manaSources'] = [...manaSourcesByCard.entries()].map(
+    ([cardId, entry]) => {
+      const perm = ctx.state.battlefield.find((p) => p.cardId === cardId);
+      return { name: perm?.name ?? 'unknown', symbols: [...entry.symbols], count: entry.count };
+    },
+  );
 
   const opponents: OpponentView[] = playersInApnapOrder(ctx)
     .filter((p) => p.id !== playerId)
@@ -198,6 +219,7 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
     graveyard: viewer.graveyard.map((o) => nameOnlyView(o.id, o.name)),
     commanders: commanderViews(ctx, viewer),
     availableMana,
+    manaSources,
     opponents,
     battlefield: permanentViews(ctx),
     stack,

@@ -12,6 +12,7 @@ import ActionLog from '../components/ActionLog.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import HeldDecision from '../components/HeldDecision.vue';
 import PlaybackControls from '../components/PlaybackControls.vue';
+import PlayerGameView from './PlayerGameView.vue';
 import SeatPanel from '../components/SeatPanel.vue';
 import StackPanel from '../components/StackPanel.vue';
 import { useGameStore } from '../stores/game';
@@ -87,7 +88,8 @@ const roundLabel = computed(() => {
 </script>
 
 <template>
-  <div class="game">
+  <PlayerGameView v-if="store.gameMode === 'singlePlayer' && !store.gameOver" />
+  <div v-else class="game">
     <header class="bar">
       <span class="app-title">MTG Commander Simulator</span>
       <span v-if="state" class="phase-badge">

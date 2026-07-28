@@ -259,7 +259,7 @@ export function graveyardTargets(
 }
 
 /** Any object with this stable `cardId`, in whatever zone it currently occupies. */
-function findObjectByCardId(ctx: GameContext, cardId: string): EngineObject | undefined {
+export function findObjectByCardId(ctx: GameContext, cardId: string): EngineObject | undefined {
   const s = ctx.state;
   const zones: EngineObject[][] = [s.battlefield, s.exile];
   for (const player of s.players) {
@@ -273,16 +273,25 @@ function findObjectByCardId(ctx: GameContext, cardId: string): EngineObject | un
 }
 
 /**
+ * The only `EnginePermanent` fields `resolveDynamicUnits`/`resolveConditionalUnits` actually
+ * read. Widened from `EnginePermanent` so a card still in hand — which has no permanent yet —
+ * can be previewed with a lightweight stub (`previewLandManaSymbols`) instead of needing a
+ * fabricated battlefield object. Every real `EnginePermanent` already satisfies this shape, so
+ * existing call sites are unaffected.
+ */
+export type ManaAbilityContext = Pick<EnginePermanent, 'id' | 'cardId' | 'controllerId'>;
+
+/**
  * Derive the symbols of a state-dependent mana ability (`ManaAbilitySpec.dynamic`).
  *
  * Returned as a spec with concrete `units` so everything downstream — the payment solver's
  * per-unit backtracking most of all — sees an ordinary multi-choice source and needs no
  * knowledge that the symbols were computed.
  */
-function resolveDynamicUnits(
+export function resolveDynamicUnits(
   ctx: GameContext,
   spec: ManaAbilitySpec,
-  perm: EnginePermanent,
+  perm: ManaAbilityContext,
   visited: Set<ObjectId> = new Set(),
 ): ManaAbilitySpec {
   if (spec.dynamic === undefined) return spec;
@@ -331,10 +340,10 @@ function resolveDynamicUnits(
  * ability is offered at all). When the condition holds, `units`/`linked` are REPLACED, not
  * unioned: the base production is not also on offer, matching "instead".
  */
-function resolveConditionalUnits(
+export function resolveConditionalUnits(
   ctx: GameContext,
   spec: ManaAbilitySpec,
-  perm: EnginePermanent,
+  perm: ManaAbilityContext,
 ): ManaAbilitySpec {
   if (spec.conditionalUnits === undefined) return spec;
   const { condition, units, linked } = spec.conditionalUnits;
@@ -434,8 +443,16 @@ function interchangeableSignature(ability: ManaAbilitySpec): string {
  */
 export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource[] {
   const sources: ManaSource[] = [];
-  for (const perm of controlledPermanents(ctx, playerId)) {
-    const chars = computeCharacteristics(ctx, perm);
+  const permanents = controlledPermanents(ctx, playerId)
+    .map((perm, index) => ({ perm, index, chars: computeCharacteristics(ctx, perm) }))
+    .sort((a, b) => {
+      // Preserve creatures for combat whenever a land or noncreature source can do the job.
+      // Equal-priority permanents retain battlefield order, preserving determinism.
+      const priority = (types: readonly string[]): number =>
+        types.includes('Land') ? 0 : types.includes('Creature') ? 2 : 1;
+      return priority(a.chars.types) - priority(b.chars.types) || a.index - b.index;
+    });
+  for (const { perm, chars } of permanents) {
     // Mana abilities are computed, not printed: a layer-4 subtype change replaces them
     // (Blood Moon → a Mountain that taps for R), layer 6 can remove them outright, and layer 6
     // can also GRANT them (Chromatic Lantern).
@@ -495,6 +512,42 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
     }
   }
   return sources;
+}
+
+/**
+ * Best-effort preview of what a land card WOULD produce if played right now, without it
+ * actually being on the battlefield. Used only to populate descriptive `data` on a `playLand`
+ * option (never legality) — see ADR 0010 decision 2. Evaluates the card's OWN printed mana
+ * abilities against current game state (commander identity, opponents' lands, "control a
+ * Dragon"-style gates), which is sound because none of those depend on the land itself being
+ * in play. A gate that read the land's OWN future battlefield state would be approximated
+ * incorrectly; no modeled card's mana ability does this today.
+ */
+export function previewLandManaSymbols(
+  ctx: GameContext,
+  def: CardDefinition,
+  playerId: PlayerId,
+): (Color | 'C')[] {
+  const stub: ManaAbilityContext = {
+    id: `preview-${def.oracleId}` as ObjectId,
+    cardId: `preview-${def.oracleId}`,
+    controllerId: playerId,
+  };
+  const symbols: (Color | 'C')[] = [];
+  const add = (sym: Color | 'C'): void => {
+    if (!symbols.includes(sym)) symbols.push(sym);
+  };
+  for (const ability of def.manaAbilities) {
+    if (
+      ability.condition !== undefined &&
+      !evaluateCondition(ctx, ability.condition, { cardId: stub.cardId, controllerId: playerId })
+    ) {
+      continue;
+    }
+    const resolved = resolveDynamicUnits(ctx, resolveConditionalUnits(ctx, ability, stub), stub);
+    for (const unit of resolved.units) for (const sym of unit) add(sym);
+  }
+  return symbols;
 }
 
 /** One card's `RuleStatic` plus who contributes it, for `gatherRuleStatics`. */

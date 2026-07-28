@@ -12,6 +12,7 @@
 import type { DecisionRequest, TargetChoice } from './engine';
 import type { GameId, PlayerId } from './ids';
 import type { GameResult } from './state';
+import type { PlayerBoardState } from './player';
 import type { SpectatorLogLine, SpectatorState } from './spectator';
 import type { ValidationIssue } from './decks';
 
@@ -23,6 +24,11 @@ export const SERVER_TO_CLIENT_TYPES = [
   'decisionPending',
   'computeHalted',
   'apiWaiting',
+  'debugEvents',
+  'playerStateSnapshot',
+  'playerActionRequired',
+  'sessionPaused',
+  'replayUnlocked',
   'gameOver',
   'error',
 ] as const;
@@ -35,6 +41,11 @@ export const CLIENT_TO_SERVER_TYPES = [
   'setPlaybackMode',
   'resolveHeldDecision',
   'abandonGame',
+  'setDebugFlags',
+  'submitPlayerAction',
+  'yieldPlayerAbility',
+  'resumePlayerAbility',
+  'resumeGame',
 ] as const;
 export type ClientToServerType = (typeof CLIENT_TO_SERVER_TYPES)[number];
 
@@ -45,6 +56,8 @@ export type ClientToServerType = (typeof CLIENT_TO_SERVER_TYPES)[number];
  * budget on every non-local decision (ADR 0010, ADR 0011). See ADR 0012 §4.
  */
 export type ProviderKind = 'random' | 'ai';
+export type GameMode = 'spectator' | 'singlePlayer';
+export type SeatControllerKind = ProviderKind | 'human';
 
 /** Live-ish compute-ahead vs. the user stepping it forward (brief §10.1). */
 export type PlaybackMode = 'live' | 'manual';
@@ -88,6 +101,13 @@ export interface GameStartedPayload {
   seed: string;
   seats: SeatSummary[];
   providerKind: ProviderKind;
+  gameMode?: GameMode;
+  controllers?: Array<{ seat: PlayerId; kind: SeatControllerKind }>;
+  humanSeat?: PlayerId;
+  /** Opaque reconnect credential. Present only for single-player games. */
+  sessionToken?: string;
+  /** Current bot presentation pace, retained across a player-session reconnect. */
+  paceMs?: number;
   startedAt: string;
 }
 
@@ -150,6 +170,58 @@ export interface ApiWaitingPayload {
   responseTokens: number;
 }
 
+/** Runtime display controls for the Phase 5 debug suite. Persistence is never disabled. */
+export interface DebugFlags {
+  showAIRequests: boolean;
+  showAIResponses: boolean;
+  showLegalActions: boolean;
+  showSBAChecks: boolean;
+  showPriorityPasses: boolean;
+  showTokenUsage: boolean;
+  verboseEngine: boolean;
+}
+
+export interface DebugEventsPayload {
+  gameId: GameId;
+  entries: Array<{ turn: number; category: string; message: string; data?: Record<string, unknown> }>;
+}
+
+/** Current hidden-information-safe board for the active human player. */
+export interface PlayerStateSnapshotPayload {
+  gameId: GameId;
+  state: PlayerBoardState;
+  revision: number;
+  connected: boolean;
+  ignoredAbilities: IgnoredPlayerAbility[];
+}
+
+/** A non-rules UI preference: hide an optional activated ability until the player re-enables it. */
+export interface IgnoredPlayerAbility {
+  key: string;
+  label: string;
+}
+
+/** A real, untimed engine decision that only the selected human seat may answer. */
+export interface PlayerActionRequiredPayload {
+  request: DecisionRequest;
+  state: PlayerBoardState;
+  revision: number;
+  ignoredAbilities: IgnoredPlayerAbility[];
+}
+
+export interface SessionPausedPayload {
+  gameId: GameId;
+  reason: 'playerDisconnected' | 'waitingForPlayer';
+}
+
+/** Full-information replay becomes available only after a single-player game is over. */
+export interface ReplayUnlockedPayload {
+  state: SpectatorState;
+  lines: SpectatorLogLine[];
+  snapshotTurns: number[];
+  frontierTurn: number;
+}
+
 export interface GameOverPayload {
   result: GameResult;
   /** Finishing positions, 1st through 4th. */
@@ -171,6 +243,11 @@ export type ServerToClientMessage =
   | { type: 'decisionPending'; payload: DecisionPendingPayload }
   | { type: 'computeHalted'; payload: ComputeHaltedPayload }
   | { type: 'apiWaiting'; payload: ApiWaitingPayload }
+  | { type: 'debugEvents'; payload: DebugEventsPayload }
+  | { type: 'playerStateSnapshot'; payload: PlayerStateSnapshotPayload }
+  | { type: 'playerActionRequired'; payload: PlayerActionRequiredPayload }
+  | { type: 'sessionPaused'; payload: SessionPausedPayload }
+  | { type: 'replayUnlocked'; payload: ReplayUnlockedPayload }
   | { type: 'gameOver'; payload: GameOverPayload }
   | { type: 'error'; payload: ErrorPayload };
 
@@ -182,14 +259,22 @@ export type ServerMessageOf<T extends ServerToClientType> = Extract<
 
 // ── Client → server ─────────────────────────────────────────────────────────────────────────
 
-export interface StartGamePayload {
+interface StartGameCommon {
   /** Four seats in v1 (brief §15). */
   seats: SeatSource[];
   providerKind: ProviderKind;
   /** Omit to have the server generate a fresh one (brief §4 — reruns use a new seed). */
   seed?: string;
   playbackMode?: PlaybackMode;
+  paceMs?: number;
 }
+
+/** The selected human seat is part of the single-player discriminant, never ambient state. */
+export type StartGamePayload = StartGameCommon &
+  (
+    | { gameMode?: 'spectator'; humanSeat?: never }
+    | { gameMode: 'singlePlayer'; humanSeat: PlayerId }
+  );
 
 export interface JumpToTurnPayload {
   turn: number;
@@ -212,18 +297,107 @@ export interface ResolveHeldDecisionPayload {
   targets?: TargetChoice[];
 }
 
+export interface SetDebugFlagsPayload {
+  flags: DebugFlags;
+}
+
+export interface SubmitPlayerActionPayload {
+  requestId: string;
+  actionId: number;
+  revision: number;
+  targets?: TargetChoice[];
+}
+
+/** Hide one currently offered optional activated ability across future turns. */
+export interface YieldPlayerAbilityPayload {
+  requestId: string;
+  actionId: number;
+  revision: number;
+}
+
+/** Restore an ability previously hidden with `yieldPlayerAbility`. */
+export interface ResumePlayerAbilityPayload {
+  key: string;
+}
+
+export interface ResumeGamePayload {
+  sessionToken: string;
+}
+
 export type ClientToServerMessage =
   | { type: 'startGame'; payload: StartGamePayload }
   | { type: 'jumpToTurn'; payload: JumpToTurnPayload }
   | { type: 'setPlaybackMode'; payload: SetPlaybackModePayload }
   | { type: 'resolveHeldDecision'; payload: ResolveHeldDecisionPayload }
-  | { type: 'abandonGame'; payload: Record<string, never> };
+  | { type: 'abandonGame'; payload: Record<string, never> }
+  | { type: 'setDebugFlags'; payload: SetDebugFlagsPayload }
+  | { type: 'submitPlayerAction'; payload: SubmitPlayerActionPayload }
+  | { type: 'yieldPlayerAbility'; payload: YieldPlayerAbilityPayload }
+  | { type: 'resumePlayerAbility'; payload: ResumePlayerAbilityPayload }
+  | { type: 'resumeGame'; payload: ResumeGamePayload };
 
 /** Narrow a client message to one variant, e.g. `ClientMessageOf<'startGame'>`. */
 export type ClientMessageOf<T extends ClientToServerType> = Extract<
   ClientToServerMessage,
   { type: T }
 >;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isOptionalString(value: unknown): boolean {
+  return value === undefined || typeof value === 'string';
+}
+
+function isTargets(value: unknown): boolean {
+  return (
+    value === undefined ||
+    (Array.isArray(value) &&
+      value.every(
+        (target) =>
+          isRecord(target) &&
+          Number.isInteger(target['slot']) &&
+          (target['slot'] as number) >= 0 &&
+          typeof target['choice'] === 'string',
+      ))
+  );
+}
+
+function isSeatSource(value: unknown): value is SeatSource {
+  if (!isRecord(value)) return false;
+  switch (value['kind']) {
+    case 'pool':
+      return isOptionalString(value['seed']);
+    case 'url':
+      return typeof value['url'] === 'string' && isOptionalString(value['archetypeTag']);
+    case 'plaintext':
+      return (
+        typeof value['text'] === 'string' &&
+        isOptionalString(value['name']) &&
+        isOptionalString(value['archetypeTag'])
+      );
+    default:
+      return false;
+  }
+}
+
+function isDebugFlags(value: unknown): value is DebugFlags {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value['showAIRequests'] === 'boolean' &&
+    typeof value['showAIResponses'] === 'boolean' &&
+    typeof value['showLegalActions'] === 'boolean' &&
+    typeof value['showSBAChecks'] === 'boolean' &&
+    typeof value['showPriorityPasses'] === 'boolean' &&
+    typeof value['showTokenUsage'] === 'boolean' &&
+    typeof value['verboseEngine'] === 'boolean'
+  );
+}
 
 /**
  * Runtime guard for the client→server direction. The server must never trust a socket frame,
@@ -234,5 +408,72 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
   const candidate = value as { type?: unknown; payload?: unknown };
   if (typeof candidate.type !== 'string') return false;
   if (!(CLIENT_TO_SERVER_TYPES as readonly string[]).includes(candidate.type)) return false;
-  return typeof candidate.payload === 'object' && candidate.payload !== null;
+  if (typeof candidate.payload !== 'object' || candidate.payload === null) return false;
+  const payload = candidate.payload as Record<string, unknown>;
+  switch (candidate.type) {
+    case 'startGame':
+      return (
+        Array.isArray(payload['seats']) &&
+        payload['seats'].every(isSeatSource) &&
+        (payload['providerKind'] === 'random' || payload['providerKind'] === 'ai') &&
+        (payload['gameMode'] === undefined ||
+          payload['gameMode'] === 'spectator' ||
+          payload['gameMode'] === 'singlePlayer') &&
+        (payload['gameMode'] === 'singlePlayer'
+          ? ['P1', 'P2', 'P3', 'P4'].includes(String(payload['humanSeat']))
+          : payload['humanSeat'] === undefined) &&
+        isOptionalString(payload['seed']) &&
+        (payload['playbackMode'] === undefined ||
+          payload['playbackMode'] === 'live' ||
+          payload['playbackMode'] === 'manual') &&
+        (payload['paceMs'] === undefined ||
+          (isFiniteNumber(payload['paceMs']) && payload['paceMs'] >= 0))
+      );
+    case 'jumpToTurn':
+      return (
+        Number.isInteger(payload['turn']) &&
+        (payload['turn'] as number) >= 0 &&
+        (payload['sequence'] === undefined ||
+          (Number.isInteger(payload['sequence']) && (payload['sequence'] as number) >= 0))
+      );
+    case 'setPlaybackMode':
+      return (
+        (payload['mode'] === 'live' || payload['mode'] === 'manual') &&
+        (payload['paceMs'] === undefined ||
+          (isFiniteNumber(payload['paceMs']) && payload['paceMs'] >= 0))
+      );
+    case 'resolveHeldDecision':
+      return (
+        typeof payload['requestId'] === 'string' &&
+        Number.isInteger(payload['actionId']) &&
+        (payload['actionId'] as number) >= 0 &&
+        isTargets(payload['targets'])
+      );
+    case 'submitPlayerAction':
+      return (
+        typeof payload['requestId'] === 'string' &&
+        Number.isInteger(payload['actionId']) &&
+        (payload['actionId'] as number) >= 0 &&
+        Number.isInteger(payload['revision']) &&
+        (payload['revision'] as number) >= 0 &&
+        isTargets(payload['targets'])
+      );
+    case 'yieldPlayerAbility':
+      return (
+        typeof payload['requestId'] === 'string' &&
+        Number.isInteger(payload['actionId']) &&
+        (payload['actionId'] as number) >= 0 &&
+        Number.isInteger(payload['revision']) &&
+        (payload['revision'] as number) >= 0
+      );
+    case 'resumePlayerAbility':
+      return typeof payload['key'] === 'string' && payload['key'].length > 0;
+    case 'resumeGame':
+      return typeof payload['sessionToken'] === 'string' && payload['sessionToken'].length > 0;
+    case 'setDebugFlags':
+      return isDebugFlags(payload['flags']);
+    case 'abandonGame':
+      return Object.keys(payload).length === 0;
+  }
+  return false;
 }

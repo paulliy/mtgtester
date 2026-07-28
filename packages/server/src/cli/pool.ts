@@ -10,7 +10,7 @@
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import type { DecisionRequest, DecisionResponse, OracleCard } from '@mtg/shared';
 import {
   Engine,
@@ -30,13 +30,16 @@ import {
 import { generateCommanderDeck, toPlaintext, type GeneratedDeck } from '../decks/generate';
 import {
   AiCallLogger,
+  configForRole,
   DailyQuotaExhaustedError,
   loadAiConfig,
   NoAvailableModelError,
   OpenAiCompatibleClient,
   OpenAiDecisionProvider,
   RequestQueue,
+  StrategyCoordinator,
 } from '../ai';
+import type { DecisionSource } from '../ai/logger';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const FIXTURE_DIR = 'packages/server/fixtures/generated-decks';
@@ -49,12 +52,21 @@ interface Args {
   write: boolean;
   seed: string;
   verbose: boolean;
+  maxTurns?: number;
+  benchmarkJson?: string;
   providerUrl?: string;
   model?: string;
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { commanders: false, play: false, ai: false, write: false, seed: 'pool-demo', verbose: false };
+  const args: Args = {
+    commanders: false,
+    play: false,
+    ai: false,
+    write: false,
+    seed: 'pool-demo',
+    verbose: false,
+  };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--commanders') args.commanders = true;
@@ -63,8 +75,19 @@ function parseArgs(argv: string[]): Args {
     else if (arg === '--verbose' || arg === '-v') args.verbose = true;
     else if (arg === '--write') args.write = true;
     else if (arg === '--seed') args.seed = argv[++i] ?? args.seed;
-    else if (arg === '--provider-url') { const val = argv[++i]; if (val !== undefined) args.providerUrl = val; }
-    else if (arg === '--model') { const val = argv[++i]; if (val !== undefined) args.model = val; }
+    else if (arg === '--max-turns') {
+      const parsed = Number.parseInt(argv[++i] ?? '', 10);
+      if (Number.isFinite(parsed) && parsed > 0) args.maxTurns = parsed;
+    } else if (arg === '--benchmark-json') {
+      const val = argv[++i];
+      if (val !== undefined) args.benchmarkJson = val;
+    } else if (arg === '--provider-url') {
+      const val = argv[++i];
+      if (val !== undefined) args.providerUrl = val;
+    } else if (arg === '--model') {
+      const val = argv[++i];
+      if (val !== undefined) args.model = val;
+    }
   }
   return args;
 }
@@ -93,7 +116,9 @@ function reportPool(pool: SupportedPool): void {
   console.log(`    lands:               ${lands}`);
   console.log(`    nonlands:            ${pool.cards.length - lands}`);
   console.log(`  usable commanders:     ${commandersIn(pool).length}`);
-  console.log(`  basic lands available: ${[...basicLandsByColor(pool).keys()].sort().join('') || '(none)'}`);
+  console.log(
+    `  basic lands available: ${[...basicLandsByColor(pool).keys()].sort().join('') || '(none)'}`,
+  );
 }
 
 function buildDecks(pool: SupportedPool, seed: string): GeneratedDeck[] {
@@ -105,16 +130,13 @@ function buildDecks(pool: SupportedPool, seed: string): GeneratedDeck[] {
 function describeDeck(index: number, deck: GeneratedDeck): void {
   const identity = [...deck.commander.colorIdentity].sort().join('') || 'C';
   console.log(
-    `  P${index + 1}  {${identity}}  ${deck.commander.name}` +
-      `  (${deck.cards.length + 1} cards)`,
+    `  P${index + 1}  {${identity}}  ${deck.commander.name}` + `  (${deck.cards.length + 1} cards)`,
   );
 }
 
 function formatPlayerLives(engine: Engine): string {
   const state = engine.getState();
-  return state.players
-    .map((p) => `${p.id}:${p.hasLost ? 'DEAD' : p.life}`)
-    .join('  ');
+  return state.players.map((p) => `${p.id}:${p.hasLost ? 'DEAD' : p.life}`).join('  ');
 }
 
 function logDecisionProgress(
@@ -124,14 +146,20 @@ function logDecisionProgress(
   decisionNum: number,
   verbose: boolean,
   lastTurnReported: { turn: number },
+  source?: DecisionSource,
 ): void {
   const state = engine.getState();
   const chosenAction = req.legalActions.find((a) => a.id === res.actionId);
   const actionDesc = chosenAction?.description ?? `Action ${res.actionId}`;
 
   if (verbose) {
+    const nonPassCount = req.legalActions.filter(
+      (action) => !['pass', 'passAndYieldTurn', 'yieldToAbility'].includes(action.type),
+    ).length;
+    const menu = `menu=${req.legalActions.length}/${nonPassCount} non-pass`;
+    const resolution = source === undefined ? '' : ` source=${source}`;
     console.log(
-      `  [Turn ${req.turn}] [${req.decidingPlayer}] d#${decisionNum} (${req.phase}) → "${actionDesc}"${res.note ? ` (${res.note})` : ''}`,
+      `  [Turn ${req.turn}] [${req.decidingPlayer}] d#${decisionNum} (${req.phase}; ${menu}${resolution}) → "${actionDesc}"${res.note ? ` (${res.note})` : ''}`,
     );
   } else if (state.turnNumber > lastTurnReported.turn) {
     lastTurnReported.turn = state.turnNumber;
@@ -154,26 +182,32 @@ function playRandom(pool: SupportedPool, seed: string, verbose: boolean): void {
     cards: deck.cards,
   }));
 
-  console.log(`\nPlaying four-player game (Random Decision Providers) [${verbose ? 'VERBOSE' : 'LIVE PROGRESS'}]…`);
+  console.log(
+    `\nPlaying four-player game (Random Decision Providers) [${verbose ? 'VERBOSE' : 'LIVE PROGRESS'}]…`,
+  );
   const engine = new Engine({ gameId: 'pool-demo', seed, players, turnCap: 200 });
   const providers = new Map<string, RandomDecisionProvider>();
-  
+
   let surfacedDecisions = 0;
   const lastTurnReported = { turn: 0 };
 
-  const result = runToCompletion(engine, (playerId) => {
-    let provider = providers.get(playerId);
-    if (provider === undefined) {
-      provider = new RandomDecisionProvider(`${seed}-${playerId}`);
-      providers.set(playerId, provider);
-    }
-    return provider;
-  }, {
-    onDecision(req, res) {
-      surfacedDecisions++;
-      logDecisionProgress(engine, req, res, surfacedDecisions, verbose, lastTurnReported);
+  const result = runToCompletion(
+    engine,
+    (playerId) => {
+      let provider = providers.get(playerId);
+      if (provider === undefined) {
+        provider = new RandomDecisionProvider(`${seed}-${playerId}`);
+        providers.set(playerId, provider);
+      }
+      return provider;
     },
-  });
+    {
+      onDecision(req, res) {
+        surfacedDecisions++;
+        logDecisionProgress(engine, req, res, surfacedDecisions, verbose, lastTurnReported);
+      },
+    },
+  );
 
   console.log('\nGame Result Summary');
   console.log('─'.repeat(19));
@@ -217,21 +251,35 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
     cards: deck.cards,
   }));
 
-  console.log(`\nPlaying four-player game (AI Agents) [${args.verbose ? 'VERBOSE' : 'LIVE PROGRESS'}]…`);
+  console.log(
+    `\nPlaying four-player game (AI Agents) [${args.verbose ? 'VERBOSE' : 'LIVE PROGRESS'}]…`,
+  );
   console.log(`  Endpoint:     ${config.baseUrl}`);
-  console.log(`  Model chain:  ${config.models.join(' → ')}`);
+  console.log(`  Strategist:   ${config.strategist.models.join(' → ')}`);
+  console.log(`  Tactician:    ${config.tactician.models.join(' → ')}`);
   console.log(`  RPM ceiling:  ${config.rpmLimit}`);
 
-  const engine = new Engine({ gameId: 'pool-ai-demo', seed: args.seed, players, turnCap: 200 });
-  const client = new OpenAiCompatibleClient(config);
+  const turnCap = args.maxTurns ?? 200;
+  const engine = new Engine({ gameId: 'pool-ai-demo', seed: args.seed, players, turnCap });
+  const strategistClient = new OpenAiCompatibleClient(configForRole(config, 'strategist'));
+  const tacticianClient = new OpenAiCompatibleClient(configForRole(config, 'tactician'));
   const queue = new RequestQueue(config);
   const logger = new AiCallLogger(null, 'pool-ai-demo');
+  const coordinator = new StrategyCoordinator(strategistClient, queue, engine, config, logger);
 
   const providers = new Map<string, OpenAiDecisionProvider>();
   const providerFor = (playerId: string): OpenAiDecisionProvider => {
     let p = providers.get(playerId);
     if (p === undefined) {
-      p = new OpenAiDecisionProvider(client, queue, engine, config, logger);
+      p = new OpenAiDecisionProvider(
+        tacticianClient,
+        queue,
+        engine,
+        config,
+        logger,
+        undefined,
+        coordinator,
+      );
       providers.set(playerId, p);
     }
     return p;
@@ -239,13 +287,77 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
 
   let surfacedDecisions = 0;
   const lastTurnReported = { turn: 0 };
+  const landOpportunities = new Set<string>();
+  const landDrops = new Set<string>();
+  const repeatedNonPassStates = new Set<string>();
+  const seenNonPassStates = new Set<string>();
+  const lastUsableManaBySeat = new Map<string, number>();
+  let noOpRepeats = 0;
 
   let result;
   try {
     result = await runToCompletionAsync(engine, providerFor, {
       onDecision(req, res) {
         surfacedDecisions++;
-        logDecisionProgress(engine, req, res, surfacedDecisions, args.verbose, lastTurnReported);
+        const chosen = req.legalActions.find((action) => action.id === res.actionId);
+        const turnSeat = `${req.turn}:${req.activePlayer}`;
+        if (
+          req.decidingPlayer === req.activePlayer &&
+          (req.phase === 'precombatMain' || req.phase === 'postcombatMain') &&
+          req.legalActions.some((action) => action.type === 'playLand')
+        ) {
+          landOpportunities.add(turnSeat);
+        }
+        if (req.decidingPlayer === req.activePlayer && chosen?.type === 'playLand') {
+          landDrops.add(turnSeat);
+        }
+
+        const view = engine.view(req.decidingPlayer);
+        if (req.decidingPlayer === req.activePlayer) {
+          const usableSources = view.manaSources.reduce((sum, source) => sum + source.count, 0);
+          const floating = Object.values(view.availableMana).reduce(
+            (sum, amount) => sum + amount,
+            0,
+          );
+          lastUsableManaBySeat.set(req.decidingPlayer, Math.max(usableSources, floating));
+        }
+
+        if (
+          chosen !== undefined &&
+          !['pass', 'passAndYieldTurn', 'yieldToAbility'].includes(chosen.type)
+        ) {
+          const stateKey = JSON.stringify({
+            seat: req.decidingPlayer,
+            turn: req.turn,
+            phase: req.phase,
+            step: req.step,
+            hand: view.hand.map((card) => card.id),
+            battlefield: view.battlefield.map((perm) => [
+              perm.id,
+              perm.controller,
+              perm.tapped,
+              perm.status,
+            ]),
+            stack: view.stack,
+            action: chosen.type,
+            description: chosen.description,
+            targets: res.targets,
+          });
+          if (seenNonPassStates.has(stateKey) && !repeatedNonPassStates.has(stateKey)) {
+            repeatedNonPassStates.add(stateKey);
+            noOpRepeats++;
+          }
+          seenNonPassStates.add(stateKey);
+        }
+        logDecisionProgress(
+          engine,
+          req,
+          res,
+          surfacedDecisions,
+          args.verbose,
+          lastTurnReported,
+          logger.sourceFor(req.requestId),
+        );
       },
     });
   } catch (err) {
@@ -255,7 +367,9 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
       console.error(
         `  ${stats.totalCalls} AI calls made across ${surfacedDecisions} surfaced decisions before the budget ran out.`,
       );
-      console.error('  Retry tomorrow, add another key/provider (AI_BASE_URL + AI_API_KEY), or run without --ai.');
+      console.error(
+        '  Retry tomorrow, add another key/provider (AI_BASE_URL + AI_API_KEY), or run without --ai.',
+      );
       process.exitCode = 1;
       return;
     }
@@ -264,29 +378,88 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
 
   console.log('\nGame Result Summary');
   console.log('─'.repeat(19));
-  if (result.halted) {
+  const intentionalCutoff =
+    result.halted &&
+    args.maxTurns !== undefined &&
+    result.turnCount === args.maxTurns &&
+    /turn cap/i.test(result.haltReason ?? '');
+  if (result.halted && !intentionalCutoff) {
     console.log(`  ✗ HALTED — ${result.haltReason ?? 'unknown reason'}`);
     process.exitCode = 1;
     return;
   }
 
   const aiStats = logger.summary();
-  console.log(`  ✓ Winner:             ${result.winnerSeat ?? '(draw)'}`);
+  console.log(
+    intentionalCutoff
+      ? `  Benchmark cutoff:     turn ${result.turnCount}`
+      : `  ✓ Winner:             ${result.winnerSeat ?? '(draw)'}`,
+  );
   console.log(`    Total Turns:        ${result.turnCount}`);
   console.log(`    Surfaced Decisions: ${surfacedDecisions.toLocaleString()}`);
   console.log(`    Total Game Events:  ${engine.getState().eventLog.length.toLocaleString()}`);
   console.log(`    Elimination Order:  ${result.finishingOrder.join(' → ') || '(none)'}`);
   console.log(`    Final Life Totals:  ${formatPlayerLives(engine)}`);
-  console.log(`    Active Model:       ${client.activeModel}`);
+  console.log(`    Strategist Model:   ${strategistClient.activeModel}`);
+  console.log(`    Tactician Model:    ${tacticianClient.activeModel}`);
   if (aiStats.totalCalls > 0) {
-    console.log(`    AI Calls Total:     ${aiStats.totalCalls} (${aiStats.retries} retries, ${aiStats.fallbacks} fallbacks)`);
+    console.log(
+      `    AI Calls Total:     ${aiStats.totalCalls} (${aiStats.retries} retries, ${aiStats.fallbacks} fallbacks)`,
+    );
     const skipRate =
       aiStats.totalDecisions > 0
         ? Math.round((aiStats.skippedCalls / aiStats.totalDecisions) * 100)
         : 0;
-    console.log(`    Calls Skipped:      ${aiStats.skippedCalls} of ${aiStats.totalDecisions} decisions answered locally (${skipRate}%)`);
-    console.log(`    Tokens Used:        ${aiStats.totalPromptTokens.toLocaleString()} prompt / ${aiStats.totalResponseTokens.toLocaleString()} completion`);
+    console.log(
+      `    Calls Skipped:      ${aiStats.skippedCalls} of ${aiStats.totalDecisions} decisions answered locally (${skipRate}%)`,
+    );
+    console.log(
+      `    Tokens Used:        ${aiStats.totalPromptTokens.toLocaleString()} prompt / ${aiStats.totalResponseTokens.toLocaleString()} completion`,
+    );
     console.log(`    Avg Latency:        ${aiStats.avgLatencyMs}ms`);
+    console.log(
+      `    Strategy / Plans:   ${aiStats.strategistCalls} strategist calls / ${aiStats.planExecutions} local plan steps`,
+    );
+    if (aiStats.totalCostUsd > 0) {
+      console.log(`    Provider Cost:      $${aiStats.totalCostUsd.toFixed(4)}`);
+    }
+  }
+
+  const state = engine.getState();
+  const firstElimination = state.eventLog.find((event) => event.type === 'playerEliminated');
+  const missedLandDrops = [...landOpportunities].filter((key) => !landDrops.has(key)).length;
+  const benchmark = {
+    version: 1,
+    seed: args.seed,
+    maxTurns: turnCap,
+    cutoff: intentionalCutoff,
+    firstEliminationTurn: firstElimination?.turn ?? null,
+    missedLandDrops,
+    landDropOpportunities: landOpportunities.size,
+    repeatedNonPassNoOps: noOpRepeats,
+    unusedManaEstimate: Object.fromEntries(lastUsableManaBySeat),
+    boardAtCutoff: state.players.map((player) => ({
+      seat: player.id,
+      life: player.life,
+      lands: state.battlefield.filter(
+        (perm) => perm.controllerId === player.id && perm.typeLine.includes('Land'),
+      ).length,
+      permanents: state.battlefield.filter((perm) => perm.controllerId === player.id).length,
+      handSize: player.hand.length,
+      graveyardSize: player.graveyard.length,
+      eliminated: player.hasLost,
+    })),
+    ai: aiStats,
+  };
+  console.log(
+    `    Missed Land Drops:  ${missedLandDrops} / ${landOpportunities.size} opportunities`,
+  );
+  console.log(`    Repeated No-ops:    ${noOpRepeats}`);
+  if (args.benchmarkJson !== undefined) {
+    const outputPath = resolve(args.benchmarkJson);
+    mkdirSync(dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, `${JSON.stringify(benchmark, null, 2)}\n`, 'utf8');
+    console.log(`    Benchmark JSON:     ${outputPath}`);
   }
 }
 
@@ -310,7 +483,9 @@ async function main(): Promise<void> {
     for (const entry of commandersIn(pool)) {
       const identity = entry.identity || 'C';
       const usable = poolForIdentity(pool, entry.identity).filter((c) => !c.isLand).length;
-      console.log(`  {${identity.padEnd(5)}} ${entry.card.name.padEnd(34)} ${usable} nonland cards`);
+      console.log(
+        `  {${identity.padEnd(5)}} ${entry.card.name.padEnd(34)} ${usable} nonland cards`,
+      );
     }
   }
 

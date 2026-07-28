@@ -51,6 +51,7 @@ describe('AiCallLogger', () => {
       0,
       0,
       150,
+      0,
       'primary',
     );
   });
@@ -80,6 +81,75 @@ describe('AiCallLogger', () => {
       totalDecisions: 3,
       totalCalls: 1,
       skippedCalls: 2,
+    });
+    expect(logger.sourceFor('r1')).toBe('primary');
+  });
+
+  it('retains a local resolution source for transcript reporting', () => {
+    const logger = new AiCallLogger(null, 'g101');
+    const req: DecisionRequest = {
+      requestId: 'r-local',
+      gameId: 'g101',
+      turn: 1,
+      activePlayer: 'P1',
+      decidingPlayer: 'P1',
+      phase: 'beginning',
+      step: 'upkeep',
+      decisionType: 'priority',
+      prompt: 'Prompt',
+      legalActions: [],
+    };
+    logger.log(
+      req,
+      { response: { requestId: 'r-local', actionId: 0 }, meta: localCallMeta() },
+      false,
+      false,
+      'heuristic',
+    );
+
+    expect(logger.sourceFor('r-local')).toBe('heuristic');
+  });
+
+  it('retains token, latency, retry, and fallback metrics without SQLite', () => {
+    const logger = new AiCallLogger(null, 'g102');
+    const req: DecisionRequest = {
+      requestId: 'r1',
+      gameId: 'g102',
+      turn: 1,
+      activePlayer: 'P1',
+      decidingPlayer: 'P1',
+      phase: 'precombatMain',
+      step: null,
+      decisionType: 'priority',
+      prompt: 'Prompt',
+      legalActions: [],
+    };
+    logger.log(
+      req,
+      {
+        response: { requestId: 'r1', actionId: 0 },
+        meta: {
+          model: 'm1',
+          promptTokens: 120,
+          responseTokens: 12,
+          latencyMs: 90,
+          wasRetry: true,
+          wasFallback: true,
+          rawResponse: '{}',
+        },
+      },
+      true,
+      true,
+      'fallback',
+    );
+
+    expect(logger.summary()).toMatchObject({
+      totalCalls: 1,
+      retries: 1,
+      fallbacks: 1,
+      totalPromptTokens: 120,
+      totalResponseTokens: 12,
+      avgLatencyMs: 90,
     });
   });
 });

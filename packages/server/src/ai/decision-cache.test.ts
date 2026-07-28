@@ -11,6 +11,7 @@ function makeView(overrides: Partial<PlayerView> = {}): PlayerView {
     graveyard: [],
     commanders: [],
     availableMana: { G: 2 },
+    manaSources: [],
     opponents: [],
     battlefield: [],
     stack: [],
@@ -52,6 +53,10 @@ describe('digestDecision', () => {
     ['life total', () => makeView({ life: 39 })],
     ['hand contents', () => makeView({ hand: [{ id: 'c2', name: 'Brute Strength' }] })],
     ['available mana', () => makeView({ availableMana: { G: 3 } })],
+    [
+      'mana sources',
+      () => makeView({ manaSources: [{ name: 'Command Tower', symbols: ['W', 'U', 'B', 'R', 'G'], count: 1 }] }),
+    ],
     [
       'the battlefield',
       () =>

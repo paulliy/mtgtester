@@ -9,6 +9,8 @@
 import { isClientToServerMessage } from '@mtg/shared';
 import type {
   ClientToServerMessage,
+  GameMode,
+  GameStartedPayload,
   PlaybackMode,
   ProviderKind,
   SeatSource,
@@ -49,6 +51,9 @@ export class GameServer {
   private session: MatchSession | null = null;
   private nextGameNum = 1;
   private orphanTimer: ReturnType<typeof setTimeout> | null = null;
+  private playerSocket: ServerWebSocket<SocketData> | null = null;
+  private sessionToken: string | null = null;
+  private startedPayload: GameStartedPayload | null = null;
 
   constructor(private readonly deps: GameServerDeps) {}
 
@@ -66,7 +71,11 @@ export class GameServer {
   }
 
   private sendTo(socket: ServerWebSocket<SocketData>, message: ServerToClientMessage): void {
-    socket.send(JSON.stringify(message));
+    try {
+      socket.send(JSON.stringify(message));
+    } catch {
+      // The close callback owns connection state. A send racing with it must not fail a match.
+    }
   }
 
   listen(): ReturnType<typeof Bun.serve> {
@@ -82,6 +91,33 @@ export class GameServer {
         if (url.pathname === '/health') {
           return Response.json({ ok: true, poolSize: this.deps.pool.cards.length });
         }
+        if (url.pathname === '/api/stats') {
+          if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          return Response.json({ decks: this.deps.store.stats().deckStatistics() });
+        }
+        const debugMatch = /^\/api\/games\/([^/]+)\/(debug|export)$/.exec(url.pathname);
+        if (debugMatch !== null) {
+          if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          const gameId = decodeURIComponent(debugMatch[1] ?? '');
+          if (
+            this.startedPayload?.gameId === gameId &&
+            this.session?.getGameMode() === 'singlePlayer' &&
+            this.session.runner.getStatus() !== 'finished'
+          ) {
+            return Response.json(
+              { message: 'Full debug data unlocks after the player game ends.' },
+              { status: 403 },
+            );
+          }
+          const data = this.deps.store.stats().gameDebug(gameId);
+          if (data.game === null) return Response.json({ message: 'Game not found.' }, { status: 404 });
+          return new Response(JSON.stringify(data, null, debugMatch[2] === 'export' ? 2 : 0), {
+            headers: {
+              'content-type': 'application/json; charset=utf-8',
+              ...(debugMatch[2] === 'export' ? { 'content-disposition': `attachment; filename="${gameId}.json"` } : {}),
+            },
+          });
+        }
         return new Response('Not found', { status: 404 });
       },
       websocket: {
@@ -91,6 +127,11 @@ export class GameServer {
         },
         close: (socket) => {
           this.sockets.delete(socket);
+          if (socket === this.playerSocket) {
+            this.playerSocket = null;
+            this.session?.setPlayerConnected(false);
+          }
+          if (this.session?.getGameMode() === 'singlePlayer') return;
           if (this.sockets.size === 0) this.startOrphanTimer();
         },
         message: (socket, raw) => {
@@ -122,12 +163,25 @@ export class GameServer {
     const message: ClientToServerMessage = parsed;
     switch (message.type) {
       case 'startGame':
+        if (
+          this.session?.getGameMode() === 'singlePlayer' &&
+          socket !== this.playerSocket
+        ) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'Resume the active player session before replacing it.' },
+          });
+          return;
+        }
         await this.startGame(
           socket,
           message.payload.seats,
           message.payload.providerKind,
           message.payload.seed,
           message.payload.playbackMode,
+          message.payload.paceMs,
+          message.payload.gameMode,
+          message.payload.humanSeat,
         );
         return;
 
@@ -152,8 +206,78 @@ export class GameServer {
 
       case 'abandonGame':
         this.cancelOrphanTimer();
-        this.requireSession(socket)?.abandon();
+        {
+          const session = this.requireSession(socket);
+          if (session === null) return;
+          session.abandon();
+        }
         this.session = null;
+        this.playerSocket = null;
+        this.sessionToken = null;
+        this.startedPayload = null;
+        return;
+
+      case 'setDebugFlags':
+        this.requireSession(socket)?.setDebugFlags(message.payload.flags);
+        return;
+
+      case 'submitPlayerAction':
+        if (socket !== this.playerSocket) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'Only the active player connection may submit this action.' },
+          });
+          return;
+        }
+        this.requireSession(socket)?.submitPlayerAction(message.payload);
+        return;
+
+      case 'yieldPlayerAbility':
+        if (socket !== this.playerSocket) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'Only the active player connection may yield an ability.' },
+          });
+          return;
+        }
+        this.requireSession(socket)?.yieldPlayerAbility(message.payload);
+        return;
+
+      case 'resumePlayerAbility':
+        if (socket !== this.playerSocket) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'Only the active player connection may restore an ability.' },
+          });
+          return;
+        }
+        this.requireSession(socket)?.resumePlayerAbility(message.payload.key);
+        return;
+
+      case 'resumeGame':
+        if (
+          this.session === null ||
+          this.session.getGameMode() !== 'singlePlayer' ||
+          this.sessionToken === null ||
+          message.payload.sessionToken !== this.sessionToken
+        ) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'That single-player session is unavailable.' },
+          });
+          return;
+        }
+        this.playerSocket = socket;
+        if (this.startedPayload !== null) {
+          this.sendTo(socket, {
+            type: 'gameStarted',
+            payload: {
+              ...this.startedPayload,
+              paceMs: this.session.getLivePaceMs(),
+            },
+          });
+        }
+        this.session.setPlayerConnected(true);
         return;
     }
   }
@@ -185,6 +309,14 @@ export class GameServer {
   private requireSession(socket: ServerWebSocket<SocketData>): MatchSession | null {
     if (this.session === null) {
       this.sendTo(socket, { type: 'error', payload: { message: 'No game is running.' } });
+      return null;
+    }
+    if (this.session.getGameMode() === 'singlePlayer' && socket !== this.playerSocket) {
+      this.sendTo(socket, {
+        type: 'error',
+        payload: { message: 'Resume the player session before controlling this game.' },
+      });
+      return null;
     }
     return this.session;
   }
@@ -195,6 +327,9 @@ export class GameServer {
     providerKind: ProviderKind,
     requestedSeed?: string,
     playbackMode?: PlaybackMode,
+    paceMs?: number,
+    requestedMode?: GameMode,
+    requestedHumanSeat?: string,
   ): Promise<void> {
     // Reruns use a fresh seed; the old one is still stored with its game (brief §4).
     const seed = requestedSeed ?? crypto.randomUUID().slice(0, 8);
@@ -203,6 +338,18 @@ export class GameServer {
       this.sendTo(socket, {
         type: 'error',
         payload: { message: `Exactly ${SEAT_COUNT} seats are required; got ${seats.length}.` },
+      });
+      return;
+    }
+    const gameMode = requestedMode ?? 'spectator';
+    const humanSeat = gameMode === 'singlePlayer' ? (requestedHumanSeat ?? 'P1') : undefined;
+    if (
+      gameMode === 'singlePlayer' &&
+      !['P1', 'P2', 'P3', 'P4'].includes(humanSeat as string)
+    ) {
+      this.sendTo(socket, {
+        type: 'error',
+        payload: { message: `Human seat must be P1-P4; got ${String(humanSeat)}.` },
       });
       return;
     }
@@ -233,24 +380,42 @@ export class GameServer {
       seed,
       seats: setup.seats,
       providerKind,
+      gameMode,
+      ...(humanSeat !== undefined && { humanSeat }),
       store: this.deps.store,
       ...(playbackMode !== undefined && { playbackMode }),
+      ...(paceMs !== undefined && { livePaceMs: paceMs }),
       send: (message) => {
-        this.broadcast(message);
+        if (gameMode === 'singlePlayer') {
+          if (this.playerSocket !== null) this.sendTo(this.playerSocket, message);
+        } else {
+          this.broadcast(message);
+        }
       },
     });
     this.session = session;
+    this.sessionToken = gameMode === 'singlePlayer' ? crypto.randomUUID() : null;
+    this.playerSocket = gameMode === 'singlePlayer' ? socket : null;
 
-    this.broadcast({
-      type: 'gameStarted',
-      payload: {
-        gameId,
-        seed,
-        seats: setup.seats.map((s) => s.summary),
-        providerKind,
-        startedAt: new Date().toISOString(),
-      },
-    });
+    const startedPayload: GameStartedPayload = {
+      gameId,
+      seed,
+      seats: setup.seats.map((s) => s.summary),
+      providerKind,
+      gameMode,
+      controllers: setup.seats.map((seat) => ({
+        seat: seat.seat,
+        kind: seat.seat === humanSeat ? 'human' : providerKind,
+      })),
+      ...(humanSeat !== undefined && { humanSeat }),
+      ...(this.sessionToken !== null && { sessionToken: this.sessionToken }),
+      paceMs: session.getLivePaceMs(),
+      startedAt: new Date().toISOString(),
+    };
+    this.startedPayload = startedPayload;
+    const startedMessage: ServerToClientMessage = { type: 'gameStarted', payload: startedPayload };
+    if (gameMode === 'singlePlayer') this.sendTo(socket, startedMessage);
+    else this.broadcast(startedMessage);
 
     session.start();
   }

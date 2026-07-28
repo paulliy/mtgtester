@@ -306,6 +306,7 @@ function* placePendingTriggers(ctx: GameContext): GameGen<boolean> {
           options: mine.map((t) => ({
             type: 'placeTrigger',
             description: `${t.sourceName}: ${t.ability.description ?? ''}`,
+            interaction: { kind: 'order' as const, subjectIds: [t.sourceCardId] },
           })),
         };
         pick = outcome.index;

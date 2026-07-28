@@ -77,6 +77,21 @@ function findObjectById(ctx: GameContext, id: ObjectId): EngineObject | undefine
   return undefined;
 }
 
+/** Locate a physical card after a zone change, whose object id is deliberately no longer stable. */
+function findObjectByCardId(ctx: GameContext, cardId: string): EngineObject | undefined {
+  const foundStack = ctx.state.stack.find((object) => object.sourceCardId === cardId || object.card?.cardId === cardId);
+  if (foundStack !== undefined) return foundStack as unknown as EngineObject;
+  const zones: EngineObject[][] = [ctx.state.battlefield, ctx.state.exile];
+  for (const player of ctx.state.players) {
+    zones.push(player.hand, player.library, player.graveyard, player.commandZone);
+  }
+  for (const zone of zones) {
+    const found = zone.find((object) => object.cardId === cardId);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
+
 /** Identity of whatever is dealing damage / causing an effect, for logging + rules. */
 export interface EffectSource {
   cardId: string;
@@ -159,6 +174,7 @@ export function dealDamageToPlayer(
   emit(ctx, 'damage', {
     source: source.name,
     sourceCardId: source.cardId,
+    controller: source.controllerId,
     target: target.id,
     amount,
     combat: opts.combat,
@@ -222,7 +238,12 @@ export function* drawCards(
       continue;
     }
     yield* moveObject(ctx, top, { zone: 'hand' });
-    emit(ctx, 'draw', { player: player.id, cardId: top.cardId, name: top.name }, player.id);
+    emit(ctx, 'draw', {
+      player: player.id,
+      cardId: top.cardId,
+      name: top.name,
+      isLand: getDefByOracleId(ctx, top.oracleId, top.name).types.includes('Land'),
+    }, player.id);
   }
 }
 
@@ -368,6 +389,18 @@ export function* executeAbility(
   /** Evaluate an effect's `Value` amount in this ability's scope. */
   const amountOf = (value: Value): number => evaluateValueIn(ctx, value, scope);
 
+  // CR 608.2b: a target's legality is checked once per resolution, not re-derived from
+  // `ability.targets[r]`'s original zone/kind on every later reference to the same slot. Doing
+  // so would spuriously fail once an earlier effect of THIS SAME ability has itself moved the
+  // object — e.g. Hellkite Courser: `commandZoneToBattlefield` puts the chosen commander onto
+  // the battlefield, then `registerDelayedTrigger` refers to that same slot to remember which
+  // permanent to return. By then it is no longer a legal `commanderInCommandZone` target (even
+  // though nothing illegal happened), and the zone change minted it a new `ObjectId` — only
+  // `cardId` stays stable across that. So the referent is captured by `cardId` the first time a
+  // slot resolves, and re-located via `findObjectByCardId` on every later call, following it
+  // through zone changes the same way `triggerObjectCardId` does.
+  const refCardIdCache = new Map<number, string | null>();
+
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */
   const ref = (r: EffectRef): ObjectId | null => {
     if (r === 'triggerObject') {
@@ -382,13 +415,22 @@ export function* executeAbility(
       }
       return perm.id;
     }
+    const cachedCardId = refCardIdCache.get(r);
+    if (cachedCardId !== undefined) {
+      return cachedCardId === null ? null : (findObjectByCardId(ctx, cachedCardId)?.id ?? null);
+    }
     const id = targets[r];
     const spec = ability.targets[r];
-    if (id === undefined || spec === undefined) return null;
-    if (!isTargetStillLegal(ctx, id, spec, source.controllerId)) {
-      debug(ctx, 'effect', `${source.name}: target ${id} illegal — skipped`);
+    if (id === undefined || spec === undefined) {
+      refCardIdCache.set(r, null);
       return null;
     }
+    if (!isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+      debug(ctx, 'effect', `${source.name}: target ${id} illegal — skipped`);
+      refCardIdCache.set(r, null);
+      return null;
+    }
+    refCardIdCache.set(r, findObjectById(ctx, id)?.cardId ?? null);
     return id;
   };
 
@@ -979,8 +1021,10 @@ export function* executeAbility(
         const chosenCard =
           top4.find((c) => !getDefByOracleId(ctx, c.oracleId, c.name).types.includes('Land')) ??
           top4[0]!;
-        yield* moveObject(ctx, chosenCard, { zone: 'exile' });
-        chosenCard.attachedToCardId = source.cardId;
+        const moved = (yield* moveObject(ctx, chosenCard, { zone: 'exile' })) as EngineCardObject | null;
+        if (moved !== null) {
+          moved.attachedToCardId = source.cardId;
+        }
 
         const rest = top4.filter((c) => c.id !== chosenCard.id);
         ctx.rng.shuffle(rest);

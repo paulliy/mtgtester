@@ -73,6 +73,11 @@ export function digestDecision(request: DecisionRequest, view: PlayerView): numb
     h = hashString(h, color);
     h = hashNumber(h, amount);
   }
+  for (const source of view.manaSources) {
+    h = hashString(h, source.name);
+    h = mix(h, source.count);
+    for (const symbol of source.symbols) h = hashString(h, symbol);
+  }
   for (const commander of view.commanders) {
     h = hashString(h, commander.name);
     h = hashString(h, commander.zone);

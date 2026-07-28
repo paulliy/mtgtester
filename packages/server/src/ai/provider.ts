@@ -22,8 +22,7 @@ import { safestFallback } from './fallback';
 import { tryHeuristic } from './heuristics';
 import { localCallMeta, type AiCallLogger, type DecisionSource } from './logger';
 import { validateResponse } from './validate';
-
-import { TurnPlanManager } from './turn-plan';
+import { StrategyCoordinator } from './strategy-coordinator';
 
 /**
  * Errors where falling back per-decision would be dishonest: the budget or the credentials
@@ -63,7 +62,7 @@ type ModelOutcome = { kind: 'answered'; response: DecisionResponse } | ModelFail
 export class OpenAiDecisionProvider implements AsyncDecisionProvider {
   /** Per-provider (therefore per-seat, per-game) — never shared between games. */
   private readonly cache = new DecisionCache();
-  private readonly turnPlan = new TurnPlanManager();
+  private readonly strategy: StrategyCoordinator;
 
   constructor(
     private readonly client: AiClient,
@@ -72,7 +71,10 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     private readonly config: AiConfig,
     private readonly logger?: AiCallLogger,
     private readonly escalation?: DecisionEscalation,
-  ) {}
+    coordinator?: StrategyCoordinator,
+  ) {
+    this.strategy = coordinator ?? new StrategyCoordinator(null, queue, engine, config, logger);
+  }
 
   /** Record a decision answered without a network call, so the savings are measurable. */
   private logLocal(
@@ -84,6 +86,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
   }
 
   async decide(request: DecisionRequest): Promise<DecisionResponse> {
+    await this.strategy.prepare(request);
     // 1. Obtain hidden-information-safe view (brief §7.1 anti-cheat boundary). Local and
     //    cheap, and both short-circuits below read it, so it is built first either way.
     const view = this.engine.view(request.decidingPlayer);
@@ -131,7 +134,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
           false,
           'human',
         );
-        this.turnPlan.recordDecision(request, human, 'human', this.engine);
+        this.strategy.recordDecision(request, human, 'human');
         return human;
       }
     }
@@ -147,7 +150,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
       true,
       'fallback',
     );
-    this.turnPlan.recordDecision(request, fallback, 'fallback', this.engine);
+    this.strategy.recordDecision(request, fallback, 'fallback');
     return fallback;
   }
 
@@ -155,11 +158,8 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
    * The model half of the §7.7 chain: primary attempt → corrective retry. Reports failure by
    * returning it rather than throwing, so the caller decides between escalation and fallback.
    */
-  private async decideViaModel(
-    request: DecisionRequest,
-    view: PlayerView,
-  ): Promise<ModelOutcome> {
-    const prompt = assemblePrompt(request, view);
+  private async decideViaModel(request: DecisionRequest, view: PlayerView): Promise<ModelOutcome> {
+    const prompt = assemblePrompt(request, view, this.strategy.guidanceFor(request.decidingPlayer));
 
     this.engine.addDebug?.(
       'decision',
@@ -193,7 +193,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     if (error1 === null) {
       this.logger?.log(request, result, false, false, 'primary');
       this.rememberAnswer(request, view, result.response);
-      this.turnPlan.recordDecision(request, result.response, 'primary', this.engine);
+      this.strategy.recordDecision(request, result.response, 'primary');
       return { kind: 'answered', response: result.response };
     }
 
@@ -247,7 +247,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         'retry',
       );
       this.rememberAnswer(request, view, retryResult.response);
-      this.turnPlan.recordDecision(request, retryResult.response, 'retry', this.engine);
+      this.strategy.recordDecision(request, retryResult.response, 'retry');
       return { kind: 'answered', response: retryResult.response };
     }
 
@@ -266,15 +266,12 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
    * decisions, then a cache for a decision already made in this exact state.
    * Returns `null` when the decision is a real one and must be sent to the model.
    */
-  private tryLocalAnswer(
-    request: DecisionRequest,
-    view: PlayerView,
-  ): DecisionResponse | null {
+  private tryLocalAnswer(request: DecisionRequest, view: PlayerView): DecisionResponse | null {
     // Check pre-planned turn actions first
-    const planned = this.turnPlan.tryExecutePlan(request, this.engine);
+    const planned = this.strategy.tryExecutePlan(request);
     if (planned !== null) {
       this.logLocal(request, planned, 'plan');
-      this.turnPlan.recordDecision(request, planned, 'plan', this.engine);
+      this.strategy.recordDecision(request, planned, 'plan');
       return planned;
     }
 
@@ -287,7 +284,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
           { source: 'heuristic' },
         );
         this.logLocal(request, heuristic, 'heuristic');
-        this.turnPlan.recordDecision(request, heuristic, 'heuristic', this.engine);
+        this.strategy.recordDecision(request, heuristic, 'heuristic');
         return heuristic;
       }
     }
@@ -301,7 +298,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
           { source: 'cache' },
         );
         this.logLocal(request, cached, 'cache');
-        this.turnPlan.recordDecision(request, cached, 'cache', this.engine);
+        this.strategy.recordDecision(request, cached, 'cache');
         return cached;
       }
     }

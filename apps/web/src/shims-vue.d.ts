@@ -8,3 +8,12 @@ declare module '*.vue' {
   const component: DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>;
   export default component;
 }
+
+/** Optional endpoint override for isolated local UI runs and end-to-end environments. */
+interface ImportMetaEnv {
+  readonly VITE_GAME_WS_URL?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

@@ -8,6 +8,22 @@
  * confusing auth failure rather than a misconfiguration.
  */
 
+export interface AiModelProfile {
+  models: string[];
+  reasoningEnabled: boolean;
+  reasoningEffort: 'none' | 'low' | 'medium' | 'high' | 'max';
+  maxOutputTokens: number;
+  reasoningTokenHeadroom: number;
+  /** Per-call timeout for this role. */
+  requestTimeoutMs: number;
+  /** Retry budget for transient failures in this role. */
+  maxRetries: number;
+  /** OpenRouter preference, in seconds; zero disables the preference. */
+  preferredMaxLatencySeconds: number;
+  /** OpenRouter preference, in tokens/second; zero disables the preference. */
+  preferredMinThroughput: number;
+}
+
 export interface AiConfig {
   /** API Base URL (OpenAI-compatible). */
   baseUrl: string;
@@ -61,6 +77,22 @@ export interface AiConfig {
    * Default: 'low'.
    */
   reasoningEffort: 'none' | 'low' | 'medium' | 'high' | 'max';
+  /** Extra completion budget reserved for thinking before the JSON answer. */
+  reasoningTokenHeadroom: number;
+  /** OpenRouter routing preference; role profiles override this in configForRole. */
+  preferredMaxLatencySeconds: number;
+  /** OpenRouter routing preference; role profiles override this in configForRole. */
+  preferredMinThroughput: number;
+  /** Larger, reasoning-enabled call made once per active turn. */
+  strategist: AiModelProfile;
+  /** Small menu-pick call used for decisions the local plan cannot answer. */
+  tactician: AiModelProfile;
+  /** Master switch for the turn-start strategist tier. */
+  strategistEnabled: boolean;
+  /** Number of the seat's own recent decisions included in strategy/tactical context. */
+  strategyRecentDecisionLimit: number;
+  /** Reserved feature flag for exact engine-derived combat previews. */
+  combatRolloutsEnabled: boolean;
 }
 
 /** A vendor: its endpoint, its default chain, and the env var holding its key. */
@@ -163,6 +195,34 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   filterNonCachingProviders: true,
   reasoningEnabled: false,
   reasoningEffort: 'low',
+  reasoningTokenHeadroom: 4000,
+  preferredMaxLatencySeconds: 0,
+  preferredMinThroughput: 0,
+  strategist: {
+    models: ['deepseek/deepseek-v4-flash', 'tencent/hy3'],
+    reasoningEnabled: true,
+    reasoningEffort: 'medium',
+    maxOutputTokens: 1000,
+    reasoningTokenHeadroom: 4000,
+    requestTimeoutMs: 45000,
+    maxRetries: 2,
+    preferredMaxLatencySeconds: 30,
+    preferredMinThroughput: 5,
+  },
+  tactician: {
+    models: ['qwen/qwen3.7-flash','inclusionai/ling-2.6-flash', 'tencent/hy3-preview'],
+    reasoningEnabled: false,
+    reasoningEffort: 'none',
+    maxOutputTokens: 65,
+    reasoningTokenHeadroom: 0,
+    requestTimeoutMs: 10000,
+    maxRetries: 1,
+    preferredMaxLatencySeconds: 10,
+    preferredMinThroughput: 10,
+  },
+  strategistEnabled: true,
+  strategyRecentDecisionLimit: 8,
+  combatRolloutsEnabled: false,
 };
 
 /** Env booleans are opt-OUT: anything but an explicit falsey word leaves the default alone. */
@@ -187,6 +247,16 @@ function parseModels(raw: string | undefined): string[] | null {
     .map((m) => m.trim())
     .filter((m) => m.length > 0);
   return models.length > 0 ? models : null;
+}
+
+function parseEffort(
+  raw: string | undefined,
+  fallback: AiModelProfile['reasoningEffort'],
+): AiModelProfile['reasoningEffort'] {
+  const normalized = raw?.trim().toLowerCase();
+  return normalized !== undefined && ['none', 'low', 'medium', 'high', 'max'].includes(normalized)
+    ? (normalized as AiModelProfile['reasoningEffort'])
+    : fallback;
 }
 
 /**
@@ -224,7 +294,7 @@ export function resolveProvider(env: Record<string, string | undefined>): {
  * no preset at all.
  */
 export function loadAiConfig(env: Record<string, string | undefined> = process.env): AiConfig {
-  const { preset } = resolveProvider(env);
+  const { name: providerName, preset } = resolveProvider(env);
 
   const baseUrl = env['AI_BASE_URL'] || env[`${preset.envPrefix}_BASE_URL`] || preset.baseUrl;
   const apiKey = env['AI_API_KEY'] || env[preset.keyEnv] || '';
@@ -250,6 +320,79 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       ? rawEffort
       : DEFAULT_AI_CONFIG.reasoningEffort
   ) as AiConfig['reasoningEffort'];
+
+  const globalModelsExplicit =
+    parseModels(env['AI_MODELS']) ?? parseModels(env[`${preset.envPrefix}_MODELS`]);
+  const defaultStrategistModels =
+    providerName === 'openrouter' ? DEFAULT_AI_CONFIG.strategist.models : models;
+  const defaultTacticianModels =
+    providerName === 'openrouter' ? DEFAULT_AI_CONFIG.tactician.models : models;
+  const strategist: AiModelProfile = {
+    models:
+      parseModels(env['AI_STRATEGIST_MODELS']) ?? globalModelsExplicit ?? defaultStrategistModels,
+    reasoningEnabled: parseBoolean(
+      env['AI_STRATEGIST_REASONING_ENABLED'],
+      DEFAULT_AI_CONFIG.strategist.reasoningEnabled,
+    ),
+    reasoningEffort: parseEffort(
+      env['AI_STRATEGIST_REASONING_EFFORT'],
+      DEFAULT_AI_CONFIG.strategist.reasoningEffort,
+    ),
+    maxOutputTokens: parseNumber(
+      env['AI_STRATEGIST_MAX_OUTPUT_TOKENS'],
+      DEFAULT_AI_CONFIG.strategist.maxOutputTokens,
+    ),
+    reasoningTokenHeadroom: parseNumber(
+      env['AI_STRATEGIST_REASONING_TOKEN_HEADROOM'],
+      DEFAULT_AI_CONFIG.strategist.reasoningTokenHeadroom,
+    ),
+    requestTimeoutMs: parseNumber(
+      env['AI_STRATEGIST_REQUEST_TIMEOUT_MS'],
+      DEFAULT_AI_CONFIG.strategist.requestTimeoutMs,
+    ),
+    maxRetries: parseNumber(env['AI_STRATEGIST_MAX_RETRIES'], DEFAULT_AI_CONFIG.strategist.maxRetries),
+    preferredMaxLatencySeconds: parseNumber(
+      env['AI_STRATEGIST_PREFERRED_MAX_LATENCY_SECONDS'],
+      DEFAULT_AI_CONFIG.strategist.preferredMaxLatencySeconds,
+    ),
+    preferredMinThroughput: parseNumber(
+      env['AI_STRATEGIST_PREFERRED_MIN_THROUGHPUT'],
+      DEFAULT_AI_CONFIG.strategist.preferredMinThroughput,
+    ),
+  };
+  const tactician: AiModelProfile = {
+    models:
+      parseModels(env['AI_TACTICIAN_MODELS']) ?? globalModelsExplicit ?? defaultTacticianModels,
+    reasoningEnabled: parseBoolean(
+      env['AI_TACTICIAN_REASONING_ENABLED'],
+      DEFAULT_AI_CONFIG.tactician.reasoningEnabled,
+    ),
+    reasoningEffort: parseEffort(
+      env['AI_TACTICIAN_REASONING_EFFORT'],
+      DEFAULT_AI_CONFIG.tactician.reasoningEffort,
+    ),
+    maxOutputTokens: parseNumber(
+      env['AI_TACTICIAN_MAX_OUTPUT_TOKENS'],
+      DEFAULT_AI_CONFIG.tactician.maxOutputTokens,
+    ),
+    reasoningTokenHeadroom: parseNumber(
+      env['AI_TACTICIAN_REASONING_TOKEN_HEADROOM'],
+      DEFAULT_AI_CONFIG.tactician.reasoningTokenHeadroom,
+    ),
+    requestTimeoutMs: parseNumber(
+      env['AI_TACTICIAN_REQUEST_TIMEOUT_MS'],
+      DEFAULT_AI_CONFIG.tactician.requestTimeoutMs,
+    ),
+    maxRetries: parseNumber(env['AI_TACTICIAN_MAX_RETRIES'], DEFAULT_AI_CONFIG.tactician.maxRetries),
+    preferredMaxLatencySeconds: parseNumber(
+      env['AI_TACTICIAN_PREFERRED_MAX_LATENCY_SECONDS'],
+      DEFAULT_AI_CONFIG.tactician.preferredMaxLatencySeconds,
+    ),
+    preferredMinThroughput: parseNumber(
+      env['AI_TACTICIAN_PREFERRED_MIN_THROUGHPUT'],
+      DEFAULT_AI_CONFIG.tactician.preferredMinThroughput,
+    ),
+  };
 
   return {
     ...DEFAULT_AI_CONFIG,
@@ -283,5 +426,48 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       DEFAULT_AI_CONFIG.reasoningEnabled,
     ),
     reasoningEffort,
+    reasoningTokenHeadroom: parseNumber(
+      env['AI_REASONING_TOKEN_HEADROOM'],
+      DEFAULT_AI_CONFIG.reasoningTokenHeadroom,
+    ),
+    preferredMaxLatencySeconds: parseNumber(
+      env['AI_PREFERRED_MAX_LATENCY_SECONDS'],
+      DEFAULT_AI_CONFIG.preferredMaxLatencySeconds,
+    ),
+    preferredMinThroughput: parseNumber(
+      env['AI_PREFERRED_MIN_THROUGHPUT'],
+      DEFAULT_AI_CONFIG.preferredMinThroughput,
+    ),
+    strategist,
+    tactician,
+    strategistEnabled: parseBoolean(
+      env['AI_STRATEGIST_ENABLED'],
+      DEFAULT_AI_CONFIG.strategistEnabled,
+    ),
+    strategyRecentDecisionLimit: parseNumber(
+      env['AI_STRATEGY_RECENT_DECISIONS'],
+      DEFAULT_AI_CONFIG.strategyRecentDecisionLimit,
+    ),
+    combatRolloutsEnabled: parseBoolean(
+      env['AI_COMBAT_ROLLOUTS_ENABLED'],
+      DEFAULT_AI_CONFIG.combatRolloutsEnabled,
+    ),
+  };
+}
+
+/** Flatten one role's profile for the existing OpenAI-compatible client. */
+export function configForRole(config: AiConfig, role: 'strategist' | 'tactician'): AiConfig {
+  const profile = config[role];
+  return {
+    ...config,
+    models: [...profile.models],
+    reasoningEnabled: profile.reasoningEnabled,
+    reasoningEffort: profile.reasoningEffort,
+    maxOutputTokens: profile.maxOutputTokens,
+    reasoningTokenHeadroom: profile.reasoningTokenHeadroom,
+    requestTimeoutMs: profile.requestTimeoutMs,
+    maxRetries: profile.maxRetries,
+    preferredMaxLatencySeconds: profile.preferredMaxLatencySeconds,
+    preferredMinThroughput: profile.preferredMinThroughput,
   };
 }

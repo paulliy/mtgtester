@@ -190,10 +190,14 @@ export function* resolveCondition(
       const outcome = yield {
         decisionType: 'general',
         player: player.id,
-        prompt: `${sourceName} is entering. Pay ${condition.n} life?`,
+        prompt: `${sourceName} is entering. Pay ${condition.n} life to have it enter untapped?`,
         options: [
-          { type: 'payLife', description: `Pay ${condition.n} life`, data: { life: condition.n } },
-          { type: 'decline', description: `Don't pay ${condition.n} life` },
+          {
+            type: 'payLife',
+            description: `Pay ${condition.n} life (enters untapped)`,
+            data: { life: condition.n },
+          },
+          { type: 'decline', description: `Don't pay ${condition.n} life (enters tapped)` },
         ],
       };
       if (outcome.index !== 0) return false;

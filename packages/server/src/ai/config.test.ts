@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_AI_CONFIG, DEFAULT_MODEL_CHAIN, PROVIDERS, loadAiConfig } from './config';
+import {
+  configForRole,
+  DEFAULT_AI_CONFIG,
+  DEFAULT_MODEL_CHAIN,
+  PROVIDERS,
+  loadAiConfig,
+} from './config';
 
 describe('AI Config', () => {
   it('loads default config when env is empty', () => {
@@ -15,7 +21,7 @@ describe('AI Config', () => {
     expect(config.filterNonCachingProviders).toBe(true);
   });
 
-  it('never pairs one vendor\'s key with another vendor\'s endpoint or models', () => {
+  it("never pairs one vendor's key with another vendor's endpoint or models", () => {
     // The bug this shape prevents: resolving key/endpoint/models from independent env
     // chains produced a Groq key aimed at Google's endpoint with Gemini model names.
     const groq = loadAiConfig({ GROQ_API_KEY: 'gsk_123' });
@@ -113,5 +119,64 @@ describe('AI Config', () => {
     const invalidConfig = loadAiConfig({ AI_REASONING_EFFORT: 'invalid-effort' });
     expect(invalidConfig.reasoningEnabled).toBe(false);
     expect(invalidConfig.reasoningEffort).toBe('low');
+  });
+
+  it('configures independent strategist and tactician OpenRouter profiles', () => {
+    const config = loadAiConfig({
+      OPENROUTER_API_KEY: 'sk-or-123',
+      AI_STRATEGIST_MODELS: 'deepseek/deepseek-v4-flash',
+      AI_STRATEGIST_REASONING_ENABLED: 'true',
+      AI_STRATEGIST_REASONING_EFFORT: 'medium',
+      AI_TACTICIAN_MODELS: 'qwen/qwen3.7-flash',
+      AI_TACTICIAN_REASONING_ENABLED: 'false',
+      AI_TACTICIAN_MAX_OUTPUT_TOKENS: '65',
+    });
+
+    expect(configForRole(config, 'strategist')).toMatchObject({
+      models: ['deepseek/deepseek-v4-flash'],
+      reasoningEnabled: true,
+      reasoningEffort: 'medium',
+      requestTimeoutMs: 45000,
+      maxRetries: 2,
+    });
+    expect(configForRole(config, 'tactician')).toMatchObject({
+      models: ['qwen/qwen3.7-flash'],
+      reasoningEnabled: false,
+      reasoningEffort: 'none',
+      maxOutputTokens: 65,
+      requestTimeoutMs: 10000,
+      maxRetries: 1,
+    });
+  });
+
+  it('allows independent role timeout, retry, and OpenRouter routing preferences', () => {
+    const config = loadAiConfig({
+      AI_STRATEGIST_REQUEST_TIMEOUT_MS: '60000',
+      AI_STRATEGIST_MAX_RETRIES: '3',
+      AI_STRATEGIST_PREFERRED_MAX_LATENCY_SECONDS: '20',
+      AI_TACTICIAN_REQUEST_TIMEOUT_MS: '8000',
+      AI_TACTICIAN_MAX_RETRIES: '1',
+      AI_TACTICIAN_PREFERRED_MIN_THROUGHPUT: '20',
+    });
+    expect(config.strategist).toMatchObject({
+      requestTimeoutMs: 60000,
+      maxRetries: 3,
+      preferredMaxLatencySeconds: 20,
+    });
+    expect(config.tactician).toMatchObject({
+      requestTimeoutMs: 8000,
+      maxRetries: 1,
+      preferredMinThroughput: 20,
+    });
+  });
+
+  it('keeps role-specific capacity fallbacks in the default OpenRouter chains', () => {
+    const config = loadAiConfig({ OPENROUTER_API_KEY: 'sk-or-123' });
+    expect(config.strategist.models).toEqual(['deepseek/deepseek-v4-flash', 'tencent/hy3']);
+    expect(config.tactician.models).toEqual([
+      'qwen/qwen3.7-flash',
+      'inclusionai/ling-2.6-flash',
+      'tencent/hy3-preview',
+    ]);
   });
 });

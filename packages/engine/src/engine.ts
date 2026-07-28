@@ -10,6 +10,7 @@
  */
 
 import type {
+  ActionInteraction,
   DecisionRequest,
   DecisionResponse,
   EngineStep,
@@ -29,7 +30,67 @@ import { debug, emit, settleSpectatorSnapshot } from './log/log';
 import { createGame } from './state/game';
 import type { DebugEntry, GameConfig, GameContext } from './state/types';
 import { buildSpectatorState } from './view/spectator';
+import { buildPlayerBoardState } from './view/spectator';
 import { buildPlayerView } from './view/view';
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
+}
+
+/** Ensure every surfaced option has a typed affordance, even uncommon card-specific choices. */
+function interactionFor(option: PendingDecision['options'][number]): ActionInteraction {
+  if (option.interaction !== undefined) return option.interaction;
+  const payload = asRecord(option.payload);
+  const sourceId = payload?.['objectId'];
+  const targetSlots = option.targets;
+
+  if (
+    [
+      'pass',
+      'passAndYieldTurn',
+      'yieldToAbility',
+      'keep',
+      'mulligan',
+      'acceptTrigger',
+      'decline',
+      'declineTrigger',
+      'companionToHand',
+      'commanderToCommandZone',
+      'findNothing',
+      'keepMoving',
+      'payCost',
+      'payLife',
+      'scryBottom',
+      'scryKeep',
+      'noAttackRest',
+      'noBlockRest',
+    ].includes(option.type)
+  ) {
+    return { kind: 'immediate' };
+  }
+  if (
+    typeof sourceId === 'string' &&
+    ['playLand', 'castSpell', 'activateAbility'].includes(option.type)
+  ) {
+    const sourceCardId = payload?.['cardId'];
+    const abilityIndex = payload?.['index'];
+    return {
+      kind: 'source',
+      sourceId,
+      ...(typeof sourceCardId === 'string' ? { sourceCardId } : {}),
+      ...(typeof abilityIndex === 'number' ? { abilityIndex } : {}),
+      ...(targetSlots !== undefined && targetSlots.length > 0 ? { targetSlots } : {}),
+    };
+  }
+  if (option.type === 'damageOrder' && typeof option.payload === 'string') {
+    return { kind: 'order', subjectIds: [option.payload] };
+  }
+  return {
+    kind: 'choice',
+    ...(typeof option.payload === 'string' ? { subjectId: option.payload } : {}),
+    ...(targetSlots !== undefined && targetSlots.length > 0 ? { targetSlots } : {}),
+  };
+}
 
 export interface EngineDriver {
   advance(): EngineStep;
@@ -45,6 +106,7 @@ export class Engine implements EngineDriver {
   private pendingDecision: PendingDecision | null = null;
   private pendingRequest: DecisionRequest | null = null;
   private finished: GameResult | null = null;
+  private debugCursor = 0;
 
   constructor(config: GameConfig) {
     this.ctx = createGame(config);
@@ -208,6 +270,11 @@ export class Engine implements EngineDriver {
     return buildSpectatorState(this.ctx);
   }
 
+  /** Hidden-information-safe board projection for an interactive human seat. */
+  playerState(playerId: string): import('@mtg/shared').PlayerBoardState {
+    return buildPlayerBoardState(this.ctx, playerId);
+  }
+
   /**
    * Events appended since `sequence`, for incremental log streaming. `GameEvent.sequence` is
    * monotonic per game, so the caller tracks one number rather than a cursor object.
@@ -218,6 +285,13 @@ export class Engine implements EngineDriver {
 
   getDebugLog(): readonly DebugEntry[] {
     return this.ctx.debugLog;
+  }
+
+  /** Drain newly-added internal diagnostics without exposing the mutable engine context. */
+  drainDebugLog(): DebugEntry[] {
+    const entries = this.ctx.debugLog.slice(this.debugCursor);
+    this.debugCursor = this.ctx.debugLog.length;
+    return entries;
   }
 
   addDebug(category: DebugEntry['category'], message: string, data?: Record<string, unknown>): void {
@@ -231,7 +305,12 @@ export class Engine implements EngineDriver {
   private buildRequest(decision: PendingDecision): DecisionRequest {
     const s = this.ctx.state;
     const legalActions: LegalAction[] = decision.options.map((opt, i) => {
-      const action: LegalAction = { id: i, type: opt.type, description: opt.description };
+      const action: LegalAction = {
+        id: i,
+        type: opt.type,
+        description: opt.description,
+        interaction: interactionFor(opt),
+      };
       if (opt.targets !== undefined && opt.targets.length > 0) action.targets = opt.targets;
       if (opt.data !== undefined) action.data = opt.data;
       return action;

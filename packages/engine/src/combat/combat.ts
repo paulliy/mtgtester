@@ -140,15 +140,30 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
     // stack when it attacks is worth attacking with at any power. It counts *every* trigger on
     // the creature, not only attack triggers, so it over-reports — a hint, never a rule.
     const hasTriggers = triggersOf(ctx, creature).length > 0;
-    const attackData = { power: pt.power, toughness: pt.toughness, hasTriggers };
+    const attackData = {
+      power: pt.power,
+      toughness: pt.toughness,
+      hasTriggers,
+      subjectId: creature.id,
+    };
 
     const options: EngineActionOption[] = [
-      { type: 'noAttack', description: `${creature.name} does not attack`, data: attackData },
+      {
+        type: 'noAttack',
+        description: `${creature.name} does not attack`,
+        data: attackData,
+        interaction: { kind: 'attack', attackerId: creature.id },
+      },
       ...opponents.map((opp) => ({
         type: 'attack',
         description: `${creature.name} attacks ${opp.id} (${opp.life} life)`,
         payload: opp.id,
         data: attackData,
+        interaction: {
+          kind: 'attack' as const,
+          attackerId: creature.id,
+          defenderId: opp.id,
+        },
       })),
     ];
 
@@ -166,6 +181,11 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
         type: 'noAttackRest',
         description: `No further attacks: ${creature.name} and the ${rest.length} other undeclared creature(s) all stay home`,
         data: groupData,
+        interaction: {
+          kind: 'attack',
+          attackerId: creature.id,
+          appliesToRemaining: true,
+        },
       });
       options.push(
         ...opponents.map((opp) => ({
@@ -173,6 +193,12 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
           description: `All ${group.length} undeclared creatures (${creature.name} + ${rest.length} more) attack ${opp.id} (${opp.life} life)`,
           payload: opp.id,
           data: groupData,
+          interaction: {
+            kind: 'attack' as const,
+            attackerId: creature.id,
+            defenderId: opp.id,
+            appliesToRemaining: true,
+          },
         })),
       );
     }
@@ -249,13 +275,22 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
       const remaining = candidates.length - 1 - i;
       const pt = effectivePT(ctx, blocker);
       const options: EngineActionOption[] = [
-        { type: 'noBlock', description: `${blocker.name} does not block` },
+        {
+          type: 'noBlock',
+          description: `${blocker.name} does not block`,
+          interaction: { kind: 'block', blockerId: blocker.id },
+        },
         ...blockable.map((a) => {
           const apt = effectivePT(ctx, a);
           return {
             type: 'block',
             description: `${blocker.name} blocks ${a.name} (${apt.power}/${apt.toughness})`,
             payload: a.id,
+            interaction: {
+              kind: 'block' as const,
+              blockerId: blocker.id,
+              attackerId: a.id,
+            },
           };
         }),
       ];
@@ -269,6 +304,11 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
           type: 'noBlockRest',
           description: `No blocks at all: ${blocker.name} and the ${remaining} other potential blocker(s) all stay back`,
           data: { count: remaining + 1 },
+          interaction: {
+            kind: 'block',
+            blockerId: blocker.id,
+            appliesToRemaining: true,
+          },
         });
       }
 

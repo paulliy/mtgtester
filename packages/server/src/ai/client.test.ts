@@ -58,6 +58,29 @@ describe('OpenAiCompatibleClient', () => {
     expect(meta.responseTokens).toBe(15);
   });
 
+  it('sends configured OpenRouter routing preferences with the request', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }] }),
+    });
+    const client = new OpenAiCompatibleClient(
+      {
+        ...DEFAULT_AI_CONFIG,
+        preferredMaxLatencySeconds: 7,
+        preferredMinThroughput: 15,
+      },
+      mockFetch as unknown as typeof fetch,
+    );
+
+    await client.requestDecision(fixturePrompt(), fixtureRequest());
+    const call = mockFetch.mock.calls.find((entry) => (entry[0] as string).includes('/chat/completions'))!;
+    const body = JSON.parse((call[1] as RequestInit).body as string);
+    expect(body.provider).toMatchObject({
+      preferred_max_latency: 7,
+      preferred_min_throughput: 15,
+    });
+  });
+
   it('extracts JSON object from conversational text or markdown codeblocks', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,

@@ -139,10 +139,11 @@ function tryObviousLandDrop(request: DecisionRequest): DecisionResponse | null {
  * trigger on some *other* permanent — "whenever a creature you control attacks" — is a
  * different shape that no `TriggerEvent` expresses either; adding one means revisiting this.)
  *
- * A held instant — "attack with the 0/1, then pump it" is a real line, and pump instants are
- * modeled and common in the supported pool. Holding any instant is a deliberate
- * over-approximation of "holding a pump spell": it is a superset, so it errs toward asking the
- * model. Activated abilities, the other way to pump, are a Phase 2 scope cut and unmodeled.
+ * A currently castable instant — "attack with the 0/1, then pump it" is a real line, and pump
+ * instants are modeled and common in the supported pool. The legal menu is the authoritative
+ * affordability check: merely holding an instant is not enough to preserve that line. We still
+ * deliberately over-approximate a castable instant as combat-relevant until spell-effect data is
+ * exposed on legal actions; that is conservative and keeps a real trick with the tactician.
  *
  * When the engine offers its `noAttackRest` batch shortcut, the same test is applied to the
  * whole undeclared group (`maxPower`/`hasTriggers` aggregate every creature left), which
@@ -152,12 +153,18 @@ function tryObviousLandDrop(request: DecisionRequest): DecisionResponse | null {
  */
 function tryDeclineZeroPowerAttack(
   request: DecisionRequest,
-  view: PlayerView,
+  _view: PlayerView,
 ): DecisionResponse | null {
   if (request.decisionType !== 'declareAttackers') return null;
-  // "Attack with the 0/1, then pump it" is a real line, so a held instant sends the whole
-  // question to the model regardless of which form of decline is on offer.
-  if (view.hand.some((card) => card.typeLine?.includes('Instant') === true)) return null;
+  // "Attack with the 0/1, then pump it" is a real line only when that instant is actually
+  // castable now. `legalActions` has already applied timing, target, and mana checks.
+  if (
+    request.legalActions.some(
+      (action) => action.type === 'castSpell' && action.data?.['instantSpeed'] === true,
+    )
+  ) {
+    return null;
+  }
 
   // Prefer the batch decline: when *every* creature still to declare is powerless, one answer
   // settles the whole combat instead of repeating this rule once per creature.

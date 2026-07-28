@@ -63,11 +63,15 @@ export interface SpectatorPermanent extends SpectatorCard {
 export interface SpectatorCommander {
   /** Stable physical-card id — commander damage and tax are keyed by it. */
   cardId: string;
+  /** Current public object identity, when the commander is in a visible zone. */
+  objectId: ObjectId | null;
   name: string;
   zone: string;
   castCount: number;
   /** The additional generic cost the next cast from the command zone would carry: {2} each. */
   taxGeneric: number;
+  /** Representative printing for the player UI; null only when no printing is available. */
+  scryfallId: string | null;
 }
 
 export interface SpectatorSeat {

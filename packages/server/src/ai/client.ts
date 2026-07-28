@@ -27,6 +27,8 @@ export interface CallMeta {
   wasRetry: boolean;
   wasFallback: boolean;
   rawResponse: string;
+  /** Provider-reported request cost when the OpenAI-compatible endpoint supplies it. */
+  costUsd?: number;
 }
 
 /**
@@ -45,8 +47,6 @@ const WIRE_EFFORT: Record<Exclude<AiConfig['reasoningEffort'], 'none'>, string> 
  * answer budget alone can spend all of it mid-thought and return empty `content`, so a
  * reasoning run gets headroom on top of the budget the answer itself needs.
  */
-const REASONING_TOKEN_HEADROOM = 4000;
-
 /**
  * The reasoning controls for one request. Vendors spell this two different ways and the two
  * spellings must never both appear: OpenRouter folds a top-level `reasoning_effort` into
@@ -105,9 +105,7 @@ export class OpenAiCompatibleClient implements AiClient {
     const base = this.config.baseUrl.endsWith('/')
       ? this.config.baseUrl
       : `${this.config.baseUrl}/`;
-    return base.endsWith('chat/completions/')
-      ? base.slice(0, -1)
-      : `${base}chat/completions`;
+    return base.endsWith('chat/completions/') ? base.slice(0, -1) : `${base}chat/completions`;
   }
 
   async requestDecision(
@@ -173,12 +171,22 @@ export class OpenAiCompatibleClient implements AiClient {
             model: currentModel,
             messages: prompt.messages,
             temperature: 0.1,
-            max_tokens: reasoningOn ? answerTokens + REASONING_TOKEN_HEADROOM : answerTokens,
+            max_tokens: reasoningOn
+              ? answerTokens + (this.config.reasoningTokenHeadroom ?? 0)
+              : answerTokens,
             response_format: { type: 'json_object' },
             ...reasoningParams(this.config, isOpenRouter),
           };
-          if (ignoreProviders.length > 0) {
-            bodyPayload['provider'] = { ignore: ignoreProviders };
+          if (isOpenRouter) {
+            const provider: Record<string, unknown> = {};
+            if (ignoreProviders.length > 0) provider['ignore'] = ignoreProviders;
+            if (this.config.preferredMaxLatencySeconds > 0) {
+              provider['preferred_max_latency'] = this.config.preferredMaxLatencySeconds;
+            }
+            if (this.config.preferredMinThroughput > 0) {
+              provider['preferred_min_throughput'] = this.config.preferredMinThroughput;
+            }
+            if (Object.keys(provider).length > 0) bodyPayload['provider'] = provider;
           }
 
           const res = await this.fetchImpl(endpoint, {
@@ -202,9 +210,15 @@ export class OpenAiCompatibleClient implements AiClient {
               errorText.includes('UNAUTHENTICATED') ||
               errorText.includes('invalid_api_key')
             ) {
-              throw new AuthenticationError(`API authentication failed (HTTP ${res.status}): ${errorText}`);
+              throw new AuthenticationError(
+                `API authentication failed (HTTP ${res.status}): ${errorText}`,
+              );
             }
-            if (res.status === 404 || errorText.includes('model_not_found') || errorText.includes('NOT_FOUND')) {
+            if (
+              res.status === 404 ||
+              errorText.includes('model_not_found') ||
+              errorText.includes('NOT_FOUND')
+            ) {
               throw new ModelUnavailableError(currentModel, errorText);
             }
             throw new HttpError(res.status, errorText);
@@ -215,7 +229,7 @@ export class OpenAiCompatibleClient implements AiClient {
               finish_reason?: string;
               message?: { content?: string; reasoning?: string; reasoning_content?: string };
             }>;
-            usage?: { prompt_tokens?: number; completion_tokens?: number };
+            usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number };
           };
 
           const choice = data.choices?.[0];
@@ -250,6 +264,7 @@ export class OpenAiCompatibleClient implements AiClient {
             wasRetry: false,
             wasFallback: false,
             rawResponse: rawContent,
+            ...(typeof data.usage?.cost === 'number' ? { costUsd: data.usage.cost } : {}),
           };
 
           return { response: parsed, meta };
@@ -409,6 +424,13 @@ function parseJsonResponse(raw: string, request: DecisionRequest): DecisionRespo
   }
   if (Array.isArray(obj['plannedActions'])) {
     response.plannedActions = obj['plannedActions'];
+  }
+  if (
+    typeof obj['turnStrategy'] === 'object' &&
+    obj['turnStrategy'] !== null &&
+    !Array.isArray(obj['turnStrategy'])
+  ) {
+    response.turnStrategy = obj['turnStrategy'] as NonNullable<DecisionResponse['turnStrategy']>;
   }
   if (typeof obj['note'] === 'string') {
     response.note = obj['note'];

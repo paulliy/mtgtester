@@ -202,4 +202,33 @@ describe('spectator store — server-confirmed position', () => {
     expect(store.viewTurn).toBe(0);
     expect(store.canStepAction(1)).toBe(false);
   });
+
+  it('starts a player game at the next meaningful choice without racing a second frame', () => {
+    sent.length = 0;
+    store.startGame(
+      Array.from({ length: 4 }, (_, index) => ({ kind: 'pool' as const, seed: `seat-${index}` })),
+      'random',
+      'game-seed',
+      'singlePlayer',
+      'P1',
+    );
+
+    expect(sent.map((message) => message.type)).toEqual(['startGame']);
+    expect(sent[0]?.payload).toMatchObject({ paceMs: 0 });
+    inbound?.({
+      type: 'gameStarted',
+      payload: {
+        gameId: 'g-player',
+        seed: 'game-seed',
+        seats: [],
+        providerKind: 'random',
+        gameMode: 'singlePlayer',
+        humanSeat: 'P1',
+        sessionToken: 'resume-token',
+        controllers: [],
+        startedAt: new Date().toISOString(),
+      },
+    });
+    expect(sent.map((message) => message.type)).toEqual(['startGame']);
+  });
 });

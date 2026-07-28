@@ -21,6 +21,24 @@ export class TurnPlanManager {
     return this.queue;
   }
 
+  /** Install the validated result of the once-per-turn strategist call. */
+  recordPlan(
+    request: DecisionRequest,
+    plannedActions: readonly PlannedAction[],
+    engine?: Engine,
+  ): void {
+    this.activePlayer = request.activePlayer;
+    this.turnNumber = request.turn;
+    this.queue = plannedActions.map((planned) => ({
+      ...planned,
+      phase: planned.phase ?? request.phase,
+    }));
+    this.opponentIntervened = false;
+    engine?.addDebug('decision', `strategist plan recorded for ${request.activePlayer}`, {
+      plannedActions,
+    });
+  }
+
   /** Check if a queued plan action can answer the current decision request locally. */
   tryExecutePlan(request: DecisionRequest, engine?: Engine): DecisionResponse | null {
     // Only the active player on their own turn can execute turn plans
@@ -31,6 +49,22 @@ export class TurnPlanManager {
 
     const planned = this.queue[0];
     if (planned === undefined) return null;
+
+    if (planned.phase !== undefined && planned.phase !== request.phase) {
+      const phaseOrder = ['beginning', 'precombatMain', 'combat', 'postcombatMain', 'ending'];
+      const plannedIndex = phaseOrder.indexOf(planned.phase);
+      const currentIndex = phaseOrder.indexOf(request.phase);
+      if (plannedIndex >= 0 && currentIndex > plannedIndex) {
+        engine?.addDebug(
+          'decision',
+          `turn plan step expired for ${request.decidingPlayer}: ${planned.type} was scoped to ${planned.phase}`,
+          { planned, currentPhase: request.phase },
+        );
+        this.queue.shift();
+      }
+      return null;
+    }
+    if (planned.step !== undefined && planned.step !== request.step) return null;
 
     const matchedAction = this.findMatchingAction(planned, request.legalActions);
     if (matchedAction === null) {
@@ -69,7 +103,7 @@ export class TurnPlanManager {
   recordDecision(
     request: DecisionRequest,
     response: DecisionResponse,
-    source: DecisionSource,
+    _source: DecisionSource,
     engine?: Engine,
   ): void {
     // Track turn changes
@@ -87,9 +121,7 @@ export class TurnPlanManager {
         chosenAction !== undefined &&
         chosenAction.type !== 'pass' &&
         chosenAction.type !== 'passAndYieldTurn' &&
-        chosenAction.type !== 'yieldToAbility' &&
-        source !== 'heuristic' &&
-        source !== 'cache'
+        chosenAction.type !== 'yieldToAbility'
       ) {
         if (this.queue.length > 0) {
           engine?.addDebug(
@@ -109,7 +141,11 @@ export class TurnPlanManager {
       response.plannedActions !== undefined &&
       response.plannedActions.length > 0
     ) {
-      this.queue = [...response.plannedActions];
+      this.queue = response.plannedActions.map((planned) => ({
+        ...planned,
+        phase: planned.phase ?? request.phase,
+        step: planned.step ?? request.step,
+      }));
       this.opponentIntervened = false;
       const summary = response.plannedActions
         .map((p) => `${p.type}${p.name ? `: ${p.name}` : ''}`)
@@ -132,11 +168,20 @@ export class TurnPlanManager {
     planned: PlannedAction,
     legalActions: LegalAction[],
   ): LegalAction | null {
+    if (typeof planned.type !== 'string') return null;
     const isTargetValid = (action: LegalAction): boolean => {
       if (action.targets === undefined || action.targets.length === 0) return true;
       for (const slot of action.targets) {
         if (slot.options.length <= 1) continue;
-        const choiceObj = planned.targets?.find((t) => t.slot === slot.slot);
+        if (planned.targets !== undefined && !Array.isArray(planned.targets)) return false;
+        const choiceObj = planned.targets?.find(
+          (t) =>
+            typeof t === 'object' &&
+            t !== null &&
+            typeof t.slot === 'number' &&
+            typeof t.choice === 'string' &&
+            t.slot === slot.slot,
+        );
         if (choiceObj === undefined || !slot.options.includes(choiceObj.choice)) return false;
       }
       return true;
@@ -152,14 +197,18 @@ export class TurnPlanManager {
     // Match by exact action type and name (or description inclusion)
     for (const action of legalActions) {
       if (action.type !== planned.type) continue;
-      if (planned.name !== undefined && planned.name.length > 0) {
+      if (planned.name !== undefined) {
+        if (typeof planned.name !== 'string') return null;
+        if (planned.name.length === 0) continue;
         if (!action.description.toLowerCase().includes(planned.name.toLowerCase())) continue;
       }
       if (isTargetValid(action)) return action;
     }
 
     // Fallback: match by description if specified
-    if (planned.description !== undefined && planned.description.length > 0) {
+    if (planned.description !== undefined) {
+      if (typeof planned.description !== 'string') return null;
+      if (planned.description.length === 0) return null;
       const descMatch = legalActions.find((a) =>
         a.description.toLowerCase().includes(planned.description!.toLowerCase()),
       );

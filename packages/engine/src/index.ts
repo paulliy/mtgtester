@@ -50,7 +50,9 @@ export { buildPlayerView } from './view/view';
 
 // The spectator projection and action log (brief §10.2 — Phase 4).
 export {
+  buildPlayerBoardState,
   buildSpectatorState,
+  formatPlayerLog,
   formatSpectatorLine,
   formatSpectatorLog,
 } from './view/spectator';

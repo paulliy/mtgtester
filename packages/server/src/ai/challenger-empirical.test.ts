@@ -91,17 +91,29 @@ function makePlayerView(overrides: Partial<PlayerView> = {}): PlayerView {
     deck: [],
     graveyard: [],
     availableMana: { G: 1 },
+    manaSources: [],
     commanders: [],
     battlefield: [],
     stack: [],
     recentLog: [],
-    opponents: [{ seat: 'P2', life: 20, handSize: 5, librarySize: 40, graveyard: [], commanders: [], poisonCounters: 0, commanderDamageDealtToYou: 0 }],
+    opponents: [
+      {
+        seat: 'P2',
+        life: 20,
+        handSize: 5,
+        librarySize: 40,
+        graveyard: [],
+        commanders: [],
+        poisonCounters: 0,
+        commanderDamageDealtToYou: 0,
+      },
+    ],
     ...overrides,
   };
 }
 
 describe('Adversarial Stress Tests — Task 1: TurnPlanManager Stale Queue Behavior', () => {
-  it('Task 1.1: Multi-provider setups isolate TurnPlanManager instances, causing P1 to execute stale pre-planned actions after opponent P2 intervenes', async () => {
+  it('Task 1.1: tactical responses cannot install an isolated stale plan', async () => {
     const p1View = makePlayerView({ seat: 'P1' });
     const p2View = makePlayerView({ seat: 'P2' });
     const engine = makeMockEngine(p1View, p2View);
@@ -124,6 +136,10 @@ describe('Adversarial Stress Tests — Task 1: TurnPlanManager Stale Queue Behav
         { type: 'pass' }, // Pre-plan to pass priority after playing land
       ],
     });
+    responseMapP1.set('req-p1-2', {
+      requestId: 'req-p1-2',
+      actionId: 2,
+    });
 
     const responseMapP2 = new Map<string, DecisionResponse>();
     responseMapP2.set('req-p2-1', {
@@ -132,11 +148,25 @@ describe('Adversarial Stress Tests — Task 1: TurnPlanManager Stale Queue Behav
     });
 
     // In production, each seat has its OWN OpenAiDecisionProvider instance!
-    const providerP1 = new OpenAiDecisionProvider(makeMockClient(responseMapP1), queue, engine, config);
-    const providerP2 = new OpenAiDecisionProvider(makeMockClient(responseMapP2), queue, engine, config);
+    const providerP1 = new OpenAiDecisionProvider(
+      makeMockClient(responseMapP1),
+      queue,
+      engine,
+      config,
+    );
+    const providerP2 = new OpenAiDecisionProvider(
+      makeMockClient(responseMapP2),
+      queue,
+      engine,
+      config,
+    );
 
     // Step 1: P1 makes a decision and pre-plans `pass`
-    const reqP1_1 = makeRequest({ requestId: 'req-p1-1', decidingPlayer: 'P1', activePlayer: 'P1' });
+    const reqP1_1 = makeRequest({
+      requestId: 'req-p1-1',
+      decidingPlayer: 'P1',
+      activePlayer: 'P1',
+    });
     const resP1_1 = await providerP1.decide(reqP1_1);
     expect(resP1_1.actionId).toBe(1);
 
@@ -165,18 +195,17 @@ describe('Adversarial Stress Tests — Task 1: TurnPlanManager Stale Queue Behav
       ],
     });
 
-    const clientP1CallsBefore = (providerP1 as unknown as { client: { callCount: number } }).client.callCount;
+    const clientP1CallsBefore = (providerP1 as unknown as { client: { callCount: number } }).client
+      .callCount;
     const resP1_2 = await providerP1.decide(reqP1_2);
-    const clientP1CallsAfter = (providerP1 as unknown as { client: { callCount: number } }).client.callCount;
+    const clientP1CallsAfter = (providerP1 as unknown as { client: { callCount: number } }).client
+      .callCount;
 
-    // EMPIRICAL VERIFICATION OF BUG:
-    // P1 executed the pre-planned `pass` action from its local turnPlan queue WITHOUT consulting the model!
-    expect(clientP1CallsAfter).toBe(clientP1CallsBefore); // 0 network calls were made!
-    expect(resP1_2.note).toContain('TurnPlan: pre-planned action executed');
-    expect(resP1_2.actionId).toBe(0); // Passed priority blindly despite P2 casting Giant Growth!
+    expect(clientP1CallsAfter).toBeGreaterThan(clientP1CallsBefore);
+    expect(resP1_2.actionId).toBe(2);
   });
 
-  it('Task 1.2: TurnPlanManager fails to track phase/step transitions, executing planned actions across phase boundaries', () => {
+  it('Task 1.2: phase-scoped planned actions do not execute across phase boundaries', () => {
     const manager = new TurnPlanManager();
     const reqMain = makeRequest({
       requestId: 'req-1',
@@ -204,16 +233,13 @@ describe('Adversarial Stress Tests — Task 1: TurnPlanManager Stale Queue Behav
       legalActions: [{ id: 0, type: 'pass', description: 'Pass priority' }],
     });
 
-    // EMPIRICAL VERIFICATION OF BUG:
-    // tryExecutePlan STILL executes the planned action from Main Phase inside Combat declareAttackers!
     const planned = manager.tryExecutePlan(reqCombat);
-    expect(planned).not.toBeNull();
-    expect(planned?.actionId).toBe(0);
+    expect(planned).toBeNull();
   });
 });
 
 describe('Adversarial Stress Tests — Task 2: validateResponse with invalid plannedActions', () => {
-  it('Task 2.1: validateResponse ignores malformed plannedActions at creation time', () => {
+  it('Task 2.1: validateResponse rejects malformed plannedActions at creation time', () => {
     const request = makeRequest({ requestId: 'req-1' });
     const responseWithInvalidPlans: DecisionResponse = {
       requestId: 'req-1',
@@ -229,10 +255,10 @@ describe('Adversarial Stress Tests — Task 2: validateResponse with invalid pla
     // EMPIRICAL VERIFICATION OF BUG:
     // validateResponse returns null (valid!), ignoring the invalid plannedActions payload!
     const error = validateResponse(responseWithInvalidPlans, request);
-    expect(error).toBeNull();
+    expect(error).toMatch(/plannedActions/);
   });
 
-  it('Task 2.2: Numeric planned.name bypasses name filter in findMatchingAction because (number).length is undefined', () => {
+  it('Task 2.2: Numeric planned.name fails closed instead of matching another spell', () => {
     const manager = new TurnPlanManager();
     const req1 = makeRequest({ requestId: 'req-1' });
     const res1: DecisionResponse = {
@@ -257,11 +283,10 @@ describe('Adversarial Stress Tests — Task 2: validateResponse with invalid pla
     // `planned.name.length` is undefined. `undefined > 0` is false.
     // So findMatchingAction BYPASSES the name check and matches Counterspell!
     const planned = manager.tryExecutePlan(req2);
-    expect(planned).not.toBeNull();
-    expect(planned?.actionId).toBe(2);
+    expect(planned).toBeNull();
   });
 
-  it('Task 2.3: Non-string planned.name with length > 0 (e.g. array) causes runtime TypeError in findMatchingAction', () => {
+  it('Task 2.3: Non-string planned.name fails closed without throwing', () => {
     const manager = new TurnPlanManager();
     const req1 = makeRequest({ requestId: 'req-1' });
     const res1: DecisionResponse = {
@@ -281,17 +306,22 @@ describe('Adversarial Stress Tests — Task 2: validateResponse with invalid pla
 
     // EMPIRICAL VERIFICATION OF BUG:
     // tryExecutePlan calls planned.name.toLowerCase(), which throws uncaught TypeError!
-    expect(() => manager.tryExecutePlan(req2)).toThrow(TypeError);
+    expect(() => manager.tryExecutePlan(req2)).not.toThrow();
+    expect(manager.tryExecutePlan(req2)).toBeNull();
   });
 
-  it('Task 2.4: Malformed targets in plannedActions cause runtime TypeError in findMatchingAction', () => {
+  it('Task 2.4: Malformed targets fail closed without throwing', () => {
     const manager = new TurnPlanManager();
     const req1 = makeRequest({ requestId: 'req-1' });
     const res1: DecisionResponse = {
       requestId: 'req-1',
       actionId: 1,
       plannedActions: [
-        { type: 'castSpell', name: 'Grizzly Bears', targets: 'invalid-string' as unknown as TargetChoice[] },
+        {
+          type: 'castSpell',
+          name: 'Grizzly Bears',
+          targets: 'invalid-string' as unknown as TargetChoice[],
+        },
       ],
     };
 
@@ -309,9 +339,8 @@ describe('Adversarial Stress Tests — Task 2: validateResponse with invalid pla
       ],
     });
 
-    // EMPIRICAL VERIFICATION OF BUG:
-    // tryExecutePlan calls planned.targets.find(...), throwing uncaught TypeError because targets is a string!
-    expect(() => manager.tryExecutePlan(req2)).toThrow(TypeError);
+    expect(() => manager.tryExecutePlan(req2)).not.toThrow();
+    expect(manager.tryExecutePlan(req2)).toBeNull();
   });
 });
 
@@ -322,7 +351,12 @@ describe('Adversarial Stress Tests — Task 3: Non-empty Stack Resolution Scenar
       activePlayer: 'P1',
       legalActions: [
         { id: 0, type: 'pass', description: 'Pass priority' },
-        { id: 1, type: 'castSpell', description: 'Cast Giant Growth', data: { instantSpeed: true } },
+        {
+          id: 1,
+          type: 'castSpell',
+          description: 'Cast Giant Growth',
+          data: { instantSpeed: true },
+        },
       ],
     });
 
@@ -352,7 +386,12 @@ describe('Adversarial Stress Tests — Task 3: Non-empty Stack Resolution Scenar
       activePlayer: 'P1',
       legalActions: [
         { id: 0, type: 'pass', description: 'Pass priority' },
-        { id: 1, type: 'castSpell', description: 'Cast Giant Growth', data: { instantSpeed: true } },
+        {
+          id: 1,
+          type: 'castSpell',
+          description: 'Cast Giant Growth',
+          data: { instantSpeed: true },
+        },
       ],
     });
 
@@ -439,7 +478,8 @@ describe('Adversarial Stress Tests — Task 4: parseJsonResponse & classifyError
   });
 
   it('Task 4.3: Truncated JSON is a retryable generation failure, and reaches the Step 2 Corrective Retry instead of dropping straight to a fallback', async () => {
-    const truncatedContent = '{"requestId": "req-1", "actionId": 1, "note": "truncated text without closing brace';
+    const truncatedContent =
+      '{"requestId": "req-1", "actionId": 1, "note": "truncated text without closing brace';
 
     let fetchCalls = 0;
     const mockFetch = async () => {
@@ -466,7 +506,10 @@ describe('Adversarial Stress Tests — Task 4: parseJsonResponse & classifyError
     // 1. The client still surfaces AiResponseValidationError once it gives up...
     let thrownError: unknown;
     try {
-      await client.requestDecision({ messages: [] } as unknown as Parameters<typeof client.requestDecision>[0], makeRequest());
+      await client.requestDecision(
+        { messages: [] } as unknown as Parameters<typeof client.requestDecision>[0],
+        makeRequest(),
+      );
     } catch (e) {
       thrownError = e;
     }

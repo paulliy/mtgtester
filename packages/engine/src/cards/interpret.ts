@@ -547,7 +547,9 @@ function parseEffectSentence(
       return [{ op: 'eachOpponentDamage', amount }];
     }
   }
-  if (s === 'counter target spell') return [{ op: 'counter', target: alloc('spell') }];
+  if (s === 'counter target spell') {
+    return [{ op: 'counter', target: alloc('spell', undefined, 'opponent') }];
+  }
   // "destroy target creature" / "exile target artifact or enchantment" / …
   {
     const m = s.match(/^(destroy|exile) target (.+)$/);
@@ -897,7 +899,7 @@ function parseCounterUnlessFerociousBlock(
   if (condition === null) return null;
 
   return {
-    targets: [{ kind: 'noncreatureSpell' }],
+    targets: [{ kind: 'noncreatureSpell', controller: 'opponent' }],
     effects: [
       {
         op: 'conditionalEffect',
@@ -2839,8 +2841,12 @@ export function interpretCard(card: OracleCard): CardDefinition {
       const lineEffects: Effect[] = [];
       const lineTargets: TargetSpec[] = [];
       const base = spellTargets.length;
-      const lineAlloc: SlotAllocator = (kind, filter) => {
-        lineTargets.push(filter === undefined ? { kind } : { kind, filter });
+      const lineAlloc: SlotAllocator = (kind, filter, controller) => {
+        lineTargets.push({
+          kind,
+          ...(filter !== undefined ? { filter } : {}),
+          ...(controller !== undefined ? { controller } : {}),
+        });
         return base + lineTargets.length - 1;
       };
       let allParsed = sentences.length > 0;

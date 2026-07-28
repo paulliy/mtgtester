@@ -370,7 +370,9 @@ describe('Stubborn Denial — Ferocious checked at resolution', () => {
   it('parses to a conditional counter over one noncreature-spell target', () => {
     const def = interpretCard(stubbornDenial());
     expect(def.modeled).toBe(true);
-    expect(def.spellAbility?.targets).toEqual([{ kind: 'noncreatureSpell' }]);
+    expect(def.spellAbility?.targets).toEqual([
+      { kind: 'noncreatureSpell', controller: 'opponent' },
+    ]);
     const effect = def.spellAbility?.effects[0] as Extract<Effect, { op: 'conditionalEffect' }>;
     expect(effect.op).toBe('conditionalEffect');
     expect(effect.then).toEqual([{ op: 'counter', target: 0 }]);
@@ -379,10 +381,14 @@ describe('Stubborn Denial — Ferocious checked at resolution', () => {
     ]);
   });
 
-  function pushFakeNoncreatureSpell(ctx: GameContext, controllerId: string): void {
+  function pushFakeNoncreatureSpell(
+    ctx: GameContext,
+    controllerId: string,
+    id = 'o-fake-spell',
+  ): void {
     const def = registerDef(ctx, oracle({ name: 'Test Noncreature Spell', typeLine: 'Sorcery', manaCost: '{2}' }));
     ctx.state.stack.push({
-      id: 'o-fake-spell',
+      id,
       sourceId: 'c-fake-spell',
       controllerId,
       kind: 'spell',
@@ -395,6 +401,20 @@ describe('Stubborn Denial — Ferocious checked at resolution', () => {
       isCommanderCast: false,
     });
   }
+
+  it('never offers its controller\'s own spell as a counterspell target', () => {
+    const ctx = pod();
+    pushFakeNoncreatureSpell(ctx, 'P1', 'o-own-spell');
+    pushFakeNoncreatureSpell(ctx, 'P2', 'o-opponent-spell');
+    spawn(ctx, 'P1', island());
+    conjure(ctx, 'P1', stubbornDenial(), 'hand');
+
+    const action = computePriorityOptions(ctx, p1(ctx)).find(
+      (option) => option.type === 'castSpell' && option.description.startsWith('Cast Stubborn Denial'),
+    );
+
+    expect(action?.targets).toEqual([{ slot: 0, options: ['o-opponent-spell'] }]);
+  });
 
   it("without Ferocious, counters unless the spell's controller pays {1} — and they can and do", () => {
     const ctx = pod();

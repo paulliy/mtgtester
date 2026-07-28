@@ -90,6 +90,20 @@ describe('as-enters tapped conditions (CR 614.1c)', () => {
   });
 
   describe('shockland — the choice is the player\'s', () => {
+    it('states the tapped/untapped consequence in the option text, not just "pay life"', () => {
+      const ctx = ctxWithSeats(4);
+      const obj = conjure(ctx, 'P1', shockland(), 'hand');
+      const gen = moveObject(ctx, obj, { zone: 'battlefield' });
+      const step = gen.next();
+      if (step.done === true) throw new Error('expected a decision');
+      const descriptions = step.value.options.map((o) => o.description);
+      expect(descriptions).toEqual([
+        'Pay 2 life (enters untapped)',
+        "Don't pay 2 life (enters tapped)",
+      ]);
+      expect(step.value.prompt).toContain('enter untapped');
+    });
+
     it('enters untapped and costs 2 life when the controller pays', () => {
       const ctx = ctxWithSeats(4);
       const before = ctx.state.players[0]!.life;

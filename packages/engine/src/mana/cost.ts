@@ -357,6 +357,7 @@ export function planPayment(
       forced?: Color | 'C',
     ): boolean => {
       if (unitIdx >= src.units.length) {
+        if (totalPips(needNow) >= totalPips(need2)) return false;
         return solve(srcIdx + 1, needNow);
       }
       const unit = src.units[unitIdx] as ManaUnit;
