@@ -61,5 +61,10 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return scope.triggerCount ?? 1;
     case 'spellManaValue':
       return scope.spellManaValue ?? 0;
+    case 'manaValueOfTarget':
+      throw new Error(
+        "engine bug: manaValueOfTarget is resolved by executeAbility's amountOf, which has the " +
+          'target refs in scope — evaluateValueIn cannot answer it on its own',
+      );
   }
 }

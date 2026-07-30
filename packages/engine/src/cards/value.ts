@@ -69,7 +69,15 @@ export type Value =
   /** "that many" where the trigger aggregated several objects (CR 603.2c). */
   | { kind: 'triggerCount' }
   /** "equal to that spell's mana value" — the spell that fired a `castsSpell` trigger. */
-  | { kind: 'spellManaValue' };
+  | { kind: 'spellManaValue' }
+  /**
+   * "…where X is that artifact's mana value" (Hoard-Smelter Dragon) — the mana value of one of
+   * THIS ability's own targets, read at resolution. Resolved specially by
+   * `effects/resolve.ts::executeAbility`'s `amountOf`, which has the target refs in scope;
+   * `evaluateValueIn`/`evaluateValue` both throw if asked, the same as every other
+   * scope-dependent kind evaluated outside a resolving ability.
+   */
+  | { kind: 'manaValueOfTarget'; target: number };
 
 export const constant = (n: number): Value => ({ kind: 'const', n });
 

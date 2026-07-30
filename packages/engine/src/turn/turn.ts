@@ -36,6 +36,7 @@ function untapStep(ctx: GameContext): void {
   ap.landsPlayedThisTurn = 0;
   ctx.state.excessDamageControllerIds = [];
   ctx.state.damageDealtToPlayersThisTurn = {};
+  ctx.state.combatDamagePlayersBySource = {};
   for (const p of ctx.state.players) {
     p.yieldUntilEndOfTurn = false;
   }

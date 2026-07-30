@@ -262,6 +262,13 @@ export interface EngineState extends GameState {
   excessDamageControllerIds: PlayerId[];
   /** Total damage dealt to each player THIS TURN (Spinerock Knoll). Reset at untap step. */
   damageDealtToPlayersThisTurn: Record<PlayerId, number>;
+  /**
+   * Players dealt COMBAT damage by a given source permanent THIS TURN, keyed by the source's
+   * `cardId` (Steel Hellkite: "destroy each nonland permanent … whose controller was dealt
+   * combat damage by this creature this turn"). Reset at the next untap step, same as
+   * `damageDealtToPlayersThisTurn` — CR 514.2 doesn't clear it either.
+   */
+  combatDamagePlayersBySource: Record<CardId, PlayerId[]>;
   /** Safety cap: exceeding this halts the game as a probable bug (brief §4). */
   turnCap: number;
 }

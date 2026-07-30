@@ -69,6 +69,8 @@ export type PriorityActionPayload =
       index: number;
       /** CR 112.6a: the source is a graveyard card, not a battlefield permanent. */
       fromGraveyard?: boolean;
+      /** The {X} announced for this activation (CR 602.1b), if the cost has one. */
+      x?: number;
     }
   | { kind: 'companionToHand' };
 
@@ -85,6 +87,9 @@ export function manaPortionOf(costs: readonly AbilityCost[]): ParsedManaCost {
     total.generic += cost.cost.generic;
     total.colorless += cost.cost.colorless;
     for (const c of ['W', 'U', 'B', 'R', 'G'] as const) total.colored[c] += cost.cost.colored[c];
+    // {X} (Steel Hellkite) — dropped here previously, which silently made every {X}-costed
+    // activated ability price out as a flat {0} instead of offering one option per affordable X.
+    if (cost.cost.x !== undefined) total.x = (total.x ?? 0) + cost.cost.x;
   }
   return total;
 }
@@ -695,8 +700,23 @@ export function computePriorityOptions(
         kind: 'activateAbility',
         sourceOracleId: perm.oracleId,
       });
-      const manaCost = manaPortionOf(activated.costs);
-      if (!canPay(manaCost, player.manaEntries, usable, allows)) continue;
+      const baseManaCost = manaPortionOf(activated.costs);
+      // "{X}: …" (Steel Hellkite) — X is announced as part of activating (CR 602.1b, same
+      // timing rule {X} spells use at CR 601.2b), so each affordable X is its own option, not
+      // a follow-up decision — matching the "the option menu is the contract" treatment
+      // `considerCast` already gives {X} spells.
+      const xSymbols = baseManaCost.x ?? 0;
+      const xChoices: number[] = [];
+      if (xSymbols === 0) {
+        if (!canPay(baseManaCost, player.manaEntries, usable, allows)) continue;
+        xChoices.push(-1); // sentinel: this ability has no {X}
+      } else {
+        for (let x = 0; ; x++) {
+          if (!canPay(withX(baseManaCost, x), player.manaEntries, usable, allows)) break;
+          xChoices.push(x);
+        }
+        if (xChoices.length === 0) continue;
+      }
 
       const slots: { slot: number; options: ObjectId[] }[] = [];
       let slotNum = 0;
@@ -722,27 +742,38 @@ export function computePriorityOptions(
       }
       if (missingTarget) continue;
 
-      const option: EngineActionOption = {
-        type: 'activateAbility',
-        description: `${perm.name}: ${activated.ability.description ?? 'activate ability'}`,
-        payload: { kind: 'activateAbility', objectId: perm.id, index },
-        data: {
-          sourceName: perm.name,
-          sourceZone: 'battlefield',
-          abilityDescription: activated.ability.description ?? 'activate ability',
-          manaCost: describeManaCost(manaCost),
-          ...paymentPreview(ctx, player, manaCost, usable, allows),
-          abilityCosts: activated.costs,
-        },
-        interaction: {
-          kind: 'source',
-          sourceId: perm.id,
-          sourceCardId: perm.cardId,
-          abilityIndex: index,
-        },
-      };
-      if (slots.length > 0) option.targets = slots;
-      options.push(option);
+      for (const x of xChoices) {
+        const manaCost = x === -1 ? baseManaCost : withX(baseManaCost, x);
+        const option: EngineActionOption = {
+          type: 'activateAbility',
+          description:
+            `${perm.name}: ${activated.ability.description ?? 'activate ability'}` +
+            (x >= 0 ? ` with X=${x}` : ''),
+          payload: {
+            kind: 'activateAbility',
+            objectId: perm.id,
+            index,
+            ...(x >= 0 ? { x } : {}),
+          },
+          data: {
+            sourceName: perm.name,
+            sourceZone: 'battlefield',
+            abilityDescription: activated.ability.description ?? 'activate ability',
+            manaCost: describeManaCost(manaCost),
+            ...paymentPreview(ctx, player, manaCost, usable, allows),
+            abilityCosts: activated.costs,
+            ...(x >= 0 ? { x } : {}),
+          },
+          interaction: {
+            kind: 'source',
+            sourceId: perm.id,
+            sourceCardId: perm.cardId,
+            abilityIndex: index,
+          },
+        };
+        if (slots.length > 0) option.targets = slots;
+        options.push(option);
+      }
     }
   }
 

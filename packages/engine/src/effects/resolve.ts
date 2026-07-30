@@ -166,6 +166,14 @@ export function dealDamageToPlayer(
   target.life -= amount;
   ctx.state.damageDealtToPlayersThisTurn[target.id] =
     (ctx.state.damageDealtToPlayersThisTurn[target.id] ?? 0) + amount;
+  // "…whose controller was dealt combat damage by this creature this turn" (Steel Hellkite) —
+  // by SOURCE, unlike the total above, and combat damage only.
+  if (opts.combat) {
+    const byThisSource = ctx.state.combatDamagePlayersBySource[source.cardId] ?? [];
+    if (!byThisSource.includes(target.id)) {
+      ctx.state.combatDamagePlayersBySource[source.cardId] = [...byThisSource, target.id];
+    }
+  }
   // 21+ combat damage from the same commander eliminates — COMBAT damage only (§5.7).
   if (opts.combat && opts.sourceIsCommander) {
     target.commanderDamageTaken[source.cardId] =
@@ -415,8 +423,24 @@ export function* executeAbility(
     sourceCardId: source.cardId,
     ...(extraScope ?? {}),
   };
-  /** Evaluate an effect's `Value` amount in this ability's scope. */
-  const amountOf = (value: Value): number => evaluateValueIn(ctx, value, scope);
+  /**
+   * Evaluate an effect's `Value` amount in this ability's scope. `manaValueOfTarget` is
+   * intercepted here rather than in `evaluateValueIn`: it needs `ref`, which only exists
+   * inside a resolving ability that has targets — everywhere else it is a bug to ask.
+   */
+  const amountOf = (value: Value): number => {
+    if (value.kind === 'manaValueOfTarget') {
+      const t = ref(value.target);
+      if (t === null) return 0;
+      const obj = findObjectById(ctx, t);
+      if (obj === undefined) return 0;
+      // {X} on a permanent's OWN cost is never itself in play by the time it is a target
+      // (X is fixed at cast time and printed costs don't carry it on the battlefield), so
+      // `announcedX` is irrelevant here — every card this reads is a plain artifact.
+      return spellManaValue(getDefByOracleId(ctx, obj.oracleId, obj.name), undefined);
+    }
+    return evaluateValueIn(ctx, value, scope);
+  };
 
   // CR 608.2b: a target's legality is checked once per resolution, not re-derived from
   // `ability.targets[r]`'s original zone/kind on every later reference to the same slot. Doing
@@ -613,6 +637,25 @@ export function* executeAbility(
       case 'destroyEach': {
         // The affected set is fixed here (CR 611.2c), mirroring `damageEach`/`putCountersEach`.
         for (const perm of affectedBy(ctx, source, effect.selector)) {
+          if (hasKeyword(ctx, perm, 'indestructible')) {
+            debug(ctx, 'effect', `${perm.name} is indestructible — destroy has no effect`);
+            emit(ctx, 'destroyPrevented', { target: perm.name, source: source.name });
+            continue;
+          }
+          emit(ctx, 'destroy', { target: perm.name, source: source.name });
+          yield* moveObject(ctx, perm, { zone: 'graveyard' });
+        }
+        break;
+      }
+      case 'destroyEachNonlandMVFromDamagedControllers': {
+        const mv = amountOf(effect.mv);
+        const damagedControllers = new Set(ctx.state.combatDamagePlayersBySource[source.cardId] ?? []);
+        const toDestroy = ctx.state.battlefield.filter((perm) => {
+          if (!damagedControllers.has(perm.controllerId)) return false;
+          if (computeCharacteristics(ctx, perm).types.includes('Land')) return false;
+          return spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined) === mv;
+        });
+        for (const perm of toDestroy) {
           if (hasKeyword(ctx, perm, 'indestructible')) {
             debug(ctx, 'effect', `${perm.name} is indestructible — destroy has no effect`);
             emit(ctx, 'destroyPrevented', { target: perm.name, source: source.name });

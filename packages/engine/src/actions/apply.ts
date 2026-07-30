@@ -371,9 +371,18 @@ export function* applyPriorityAction(
         sourceOracleId: perm.oracleId,
         sourceCardId: perm.cardId,
         isCommanderCast: false,
+        ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
       };
 
-      yield* payActivationCosts(ctx, player, perm, activated.costs);
+      // {X} was announced as part of activating (CR 602.1b) — fold it into the mana
+      // component's generic amount before paying, the same way `withX` does for {X} spells.
+      const costsToPay =
+        payload.x === undefined
+          ? activated.costs
+          : activated.costs.map((c) =>
+              c.kind === 'mana' ? { kind: 'mana' as const, cost: withX(c.cost, payload.x as number) } : c,
+            );
+      yield* payActivationCosts(ctx, player, perm, costsToPay);
       // Recorded at ANNOUNCEMENT (CR 602.5f), not on resolution: the restriction is on
       // activating, so countering the ability does not give the activation back.
       if (activated.oncePerTurn === true) perm.activationsThisTurn.push(payload.index);

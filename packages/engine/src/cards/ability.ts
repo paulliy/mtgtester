@@ -499,6 +499,13 @@ export type Effect =
    * plain `EffectRef` (always exactly one slot) cannot express.
    */
   | { op: 'fightUpToOneChosen'; a: EffectRef; bSlot: number }
+  /**
+   * "Destroy each nonland permanent with mana value X whose controller was dealt combat damage
+   * by this creature this turn" (Steel Hellkite). Untargeted and unselectored on purpose:
+   * "whose controller was dealt combat damage by THIS" is a fact about `combatDamagePlayersBySource`
+   * keyed on the ability's own source, not a `Selector` (which has no notion of "by this source").
+   */
+  | { op: 'destroyEachNonlandMVFromDamagedControllers'; mv: Value }
   | { op: 'untapTarget'; target: EffectRef }
   | { op: 'bounceUpTo6MV' }
   | { op: 'millAndReturnSpells' }

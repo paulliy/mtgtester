@@ -15,6 +15,71 @@ import { constant } from '../value';
 import { registerOverride } from './index';
 
 registerOverride({
+  oracleId: 'oracle-steel-hellkite',
+  name: 'Steel Hellkite',
+  handledLines: [
+    '{2}: ~ gets +1/+0 until end of turn.',
+    '{X}: Destroy each nonland permanent with mana value X whose controller was dealt combat damage by this creature this turn. Activate only once each turn.',
+  ],
+  def: {
+    activatedAbilities: [
+      {
+        costs: [{ kind: 'mana', cost: parseManaCost('{2}').cost! }],
+        timing: 'any',
+        ability: {
+          kind: 'activated',
+          targets: [],
+          effects: [{ op: 'pumpUntilEot', target: 'self', power: constant(1), toughness: constant(0) }],
+          description: 'gets +1/+0 until end of turn',
+        },
+      },
+      {
+        costs: [{ kind: 'mana', cost: parseManaCost('{X}').cost! }],
+        timing: 'any',
+        oncePerTurn: true,
+        ability: {
+          kind: 'activated',
+          targets: [],
+          effects: [{ op: 'destroyEachNonlandMVFromDamagedControllers', mv: { kind: 'xValue' } }],
+          description:
+            'destroy each nonland permanent with mana value X whose controller was dealt combat damage by ~ this turn',
+        },
+      },
+    ],
+  },
+});
+
+registerOverride({
+  oracleId: 'oracle-hoard-smelter-dragon',
+  name: 'Hoard-Smelter Dragon',
+  handledLines: [
+    "{3}{R}: Destroy target artifact. ~ gets +X/+0 until end of turn, where X is that artifact's mana value.",
+  ],
+  def: {
+    activatedAbilities: [
+      {
+        costs: [{ kind: 'mana', cost: parseManaCost('{3}{R}').cost! }],
+        timing: 'any',
+        ability: {
+          kind: 'activated',
+          targets: [{ kind: 'artifact' }],
+          effects: [
+            { op: 'destroy', target: 0 },
+            {
+              op: 'pumpUntilEot',
+              target: 'self',
+              power: { kind: 'manaValueOfTarget', target: 0 },
+              toughness: constant(0),
+            },
+          ],
+          description: "destroy target artifact; ~ gets +X/+0, X = that artifact's mana value",
+        },
+      },
+    ],
+  },
+});
+
+registerOverride({
   oracleId: 'oracle-dragon-mage',
   name: 'Dragon Mage',
   handledLines: [

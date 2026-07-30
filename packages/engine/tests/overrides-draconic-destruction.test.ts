@@ -387,3 +387,104 @@ describe('Foe-Razer Regent', () => {
     expect(regent.counters['+1/+1']).toBe(2);
   });
 });
+
+describe('Hoard-Smelter Dragon', () => {
+  const hoardSmelterDragon = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Hoard-Smelter Dragon',
+      oracleId: 'oracle-hoard-smelter-dragon',
+      typeLine: 'Creature — Dragon',
+      manaCost: '{4}{R}{R}',
+      power: '5',
+      toughness: '5',
+      oracleText:
+        "Flying\n{3}{R}: Destroy target artifact. This creature gets +X/+0 until end of turn, where X is that artifact's mana value.",
+    });
+
+  it('destroys the artifact and pumps by its mana value', () => {
+    const ctx = pod();
+    for (let i = 0; i < 4; i++) spawn(ctx, 'P1', mountain());
+    const dragon = spawn(ctx, 'P1', hoardSmelterDragon());
+    const sol = spawn(ctx, 'P2', oracle({ name: 'Test Rock', typeLine: 'Artifact', manaCost: '{5}', power: null, toughness: null }));
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex((o) => o.description.includes('Hoard-Smelter Dragon'));
+      if (i < 0) return { index: 0, targets: new Map() };
+      const slot = d.options[i]?.targets?.[0];
+      const target = slot?.options.find((id) => id === sol.id);
+      return { index: i, targets: new Map(target === undefined ? [] : [[0, target]]) };
+    });
+
+    expect(ctx.state.battlefield.some((p) => p.cardId === sol.cardId)).toBe(false);
+    // +5/+0 until end of turn: 5/5 -> 10/5.
+    const pt = ctx.state.effects.filter((e) => e.targetCardIds.includes(dragon.cardId));
+    expect(pt.some((e) => e.kind === 'ptDelta' && e.power === 5 && e.toughness === 0)).toBe(true);
+  });
+});
+
+describe('Steel Hellkite', () => {
+  const steelHellkite = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Steel Hellkite',
+      oracleId: 'oracle-steel-hellkite',
+      typeLine: 'Artifact Creature — Dragon',
+      manaCost: '{6}',
+      power: '5',
+      toughness: '5',
+      oracleText:
+        'Flying\n{2}: This creature gets +1/+0 until end of turn.\n{X}: Destroy each nonland permanent with mana value X whose controller was dealt combat damage by this creature this turn. Activate only once each turn.',
+    });
+
+  it('{2} pumps itself +1/+0 until end of turn', () => {
+    // Executed directly (like the Kiora ability-resolution tests) rather than through the full
+    // priority menu: outside combat, `computePriorityOptions` deliberately hides pure pump/
+    // keyword-grant abilities as "combat tricks with no relevant window" (legal.ts), so driving
+    // this through `runPrioritySequence` would need to fake an actual attack in progress. What
+    // this test pins is simpler: does the ABILITY itself apply the right pump.
+    const ctx = pod();
+    const hellkite = spawn(ctx, 'P1', steelHellkite());
+    const ability = ctx.defs.get(hellkite.oracleId)!.activatedAbilities[0]!.ability;
+
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: hellkite.cardId, name: hellkite.name, oracleId: hellkite.oracleId, controllerId: 'P1' },
+        ability,
+        [],
+      ),
+    );
+
+    const pt = ctx.state.effects.filter((e) => e.targetCardIds.includes(hellkite.cardId));
+    expect(pt.some((e) => e.kind === 'ptDelta' && e.power === 1 && e.toughness === 0)).toBe(true);
+  });
+
+  it('{X} destroys only the damaged opponent\'s nonland permanents with mana value X', () => {
+    const ctx = pod();
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P1', mountain());
+    const hellkite = spawn(ctx, 'P1', steelHellkite());
+
+    const mv3Artifact = (name: string) =>
+      oracle({ name, typeLine: 'Artifact', manaCost: '{3}', power: null, toughness: null });
+    const p2Match1 = spawn(ctx, 'P2', mv3Artifact('P2 MV3 A'));
+    const p2Match2 = spawn(ctx, 'P2', mv3Artifact('P2 MV3 B'));
+    const p2Mismatch = spawn(ctx, 'P2', oracle({ name: 'P2 MV4', typeLine: 'Artifact', manaCost: '{4}', power: null, toughness: null }));
+    const p2Land = spawn(ctx, 'P2', mountain());
+    const p1Own = spawn(ctx, 'P1', mv3Artifact('P1 MV3, not damaged by Hellkite'));
+
+    attackAll(ctx); // Steel Hellkite (flying, unblocked) deals combat damage to P2.
+    expect(ctx.state.combatDamagePlayersBySource[hellkite.cardId]).toEqual(['P2']);
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex((o) => o.description.includes('X=3'));
+      return { index: i >= 0 ? i : 0, targets: new Map() };
+    });
+
+    const onBoard = (p: { cardId: string }): boolean =>
+      ctx.state.battlefield.some((perm) => perm.cardId === p.cardId);
+    expect(onBoard(p2Match1)).toBe(false);
+    expect(onBoard(p2Match2)).toBe(false);
+    expect(onBoard(p2Mismatch)).toBe(true); // wrong mana value
+    expect(onBoard(p2Land)).toBe(true); // land, excluded
+    expect(onBoard(p1Own)).toBe(true); // P1 was never dealt damage BY the Hellkite
+  });
+});

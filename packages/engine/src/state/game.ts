@@ -133,6 +133,7 @@ export function createGame(config: GameConfig): GameContext {
     delayedTriggers: [],
     excessDamageControllerIds: [],
     damageDealtToPlayersThisTurn: {},
+    combatDamagePlayersBySource: {},
     turnCap: config.turnCap ?? DEFAULT_TURN_CAP,
   };
 
