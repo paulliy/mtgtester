@@ -783,3 +783,102 @@ describe('Atarka Monument', () => {
     expect(after.types).not.toContain('Creature');
   });
 });
+
+describe('Clan Defiance', () => {
+  const clanDefiance = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Clan Defiance',
+      oracleId: 'oracle-clan-defiance',
+      typeLine: 'Sorcery',
+      manaCost: '{X}{R}{G}',
+      power: null,
+      toughness: null,
+      oracleText:
+        'Choose one or more —\n' +
+        '• Clan Defiance deals X damage to target creature with flying.\n' +
+        '• Clan Defiance deals X damage to target creature without flying.\n' +
+        '• Clan Defiance deals X damage to target player or planeswalker.',
+    });
+
+  it('choosing two modes at once deals X damage to both a flying creature and the opponent, sharing X', () => {
+    const ctx = pod();
+    for (let i = 0; i < 2; i++) spawn(ctx, 'P1', mountain());
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P1', forest());
+    const flyerCard = oracle({
+      name: 'Test Flyer',
+      typeLine: 'Creature — Bird',
+      power: '4',
+      toughness: '4',
+      oracleText: 'Flying',
+    });
+    const flyer = spawn(ctx, 'P2', flyerCard);
+    conjure(ctx, 'P1', clanDefiance(), 'hand');
+
+    const p2 = ctx.state.players.find((p) => p.id === 'P2')!;
+    const lifeBefore = p2.life;
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex(
+        (o) =>
+          o.description.includes('Cast Clan Defiance') &&
+          o.description.includes('X=3') &&
+          o.description.includes('with flying') &&
+          o.description.includes('player or planeswalker'),
+      );
+      if (i >= 0) {
+        const slots = d.options[i]?.targets ?? [];
+        const creatureSlot = slots[0];
+        const playerSlot = slots[1];
+        const targets = new Map<number, string>();
+        if (creatureSlot !== undefined) targets.set(creatureSlot.slot, flyer.id);
+        if (playerSlot !== undefined) targets.set(playerSlot.slot, 'P2');
+        return { index: i, targets };
+      }
+      return { index: 0, targets: new Map() };
+    });
+
+    expect(flyer.damageMarked).toBe(3);
+    expect(p2.life).toBe(lifeBefore - 3);
+  });
+
+  it('choosing only the non-flying mode leaves flying creatures and players untouched', () => {
+    const ctx = pod();
+    for (let i = 0; i < 2; i++) spawn(ctx, 'P1', mountain());
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P1', forest());
+    const groundCard = oracle({ name: 'Test Ogre', typeLine: 'Creature — Ogre', power: '4', toughness: '4' });
+    const flyerCard = oracle({
+      name: 'Test Flyer',
+      typeLine: 'Creature — Bird',
+      power: '2',
+      toughness: '2',
+      oracleText: 'Flying',
+    });
+    const ground = spawn(ctx, 'P2', groundCard);
+    const flyer = spawn(ctx, 'P2', flyerCard);
+    conjure(ctx, 'P1', clanDefiance(), 'hand');
+
+    const p2 = ctx.state.players.find((p) => p.id === 'P2')!;
+    const lifeBefore = p2.life;
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex(
+        (o) =>
+          o.description.includes('Cast Clan Defiance') &&
+          o.description.includes('X=2') &&
+          o.description.includes('without flying') &&
+          !o.description.includes('player or planeswalker'),
+      );
+      if (i >= 0) {
+        const slot = d.options[i]?.targets?.[0];
+        const targets = new Map<number, string>();
+        if (slot !== undefined) targets.set(slot.slot, ground.id);
+        return { index: i, targets };
+      }
+      return { index: 0, targets: new Map() };
+    });
+
+    expect(ground.damageMarked).toBe(2);
+    expect(flyer.damageMarked).toBe(0);
+    expect(p2.life).toBe(lifeBefore);
+  });
+});

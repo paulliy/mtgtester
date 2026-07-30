@@ -249,6 +249,7 @@ export type TargetKind =
   | 'artifactOrEnchantment'
   | 'player'
   | 'anyTarget' // creature or player (CR 115.4)
+  | 'playerOrPlaneswalker' // "target player or planeswalker" (Clan Defiance)
   | 'spell'
   /**
    * "target Dragon permanent card" — a card in a graveyard, not a permanent (CR 111.2). Always
@@ -716,6 +717,20 @@ export interface Ability {
    * something any closed-set card here needs, so it is not built.
    */
   modes?: { choose: number; options: { effects: Effect[]; description?: string }[] };
+  /**
+   * "Choose one or more — •… •…" (CR 700.2, Clan Defiance) — unlike `modes` (exactly one,
+   * shared target list across every option, because no card that reads that way needs
+   * per-mode targets), each `oneOrMore` entry has its OWN independent target list, since
+   * Clan Defiance's three modes target three genuinely different things ("target creature
+   * with flying" / "…without flying" / "target player or planeswalker") that could all be
+   * announced simultaneously.
+   *
+   * A cast option exists for every NON-EMPTY subset of entries — `legal.ts` enumerates them
+   * and concatenates the chosen subset's target specs and effects (re-indexing each mode's
+   * `EffectRef` numbers by the combined array's actual offset) into one ability at cast time;
+   * this field is never seen past that point, the same way `modes` never survives casting.
+   */
+  modesOneOrMore?: { targets: TargetSpec[]; effects: Effect[]; description?: string }[];
   /**
    * "Whenever a Dragon you control enters, you may pay {R}. If you do, return this card from
    * your graveyard to your hand" (Spit Flame, CR 603.6d) — a triggered ability that functions

@@ -10,7 +10,7 @@
 
 import { ALL_COLORS } from '@mtg/shared';
 import type { Color, ObjectId, OracleId, PlayerId } from '@mtg/shared';
-import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../cards/definition';
+import type { AbilityCost, CardDefinition, Effect, EffectRef, TargetKind, TargetSpec } from '../cards/definition';
 import type { SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EngineActionOption, GameGen } from '../decisions';
@@ -59,6 +59,8 @@ export type PriorityActionPayload =
       x?: number;
       /** Which modal option was chosen (CR 601.2b), when `spellAbility.modes` is present. */
       mode?: number;
+      /** Which mode INDICES were chosen, when `spellAbility.modesOneOrMore` is present. */
+      modesChosen?: number[];
       alternativeCast?: 'overload' | 'adventure' | 'omen';
       altIndex?: number;
     }
@@ -243,6 +245,8 @@ export function permanentMatchesKind(
       return true;
     case 'anyTarget':
       return types.includes('Creature');
+    case 'playerOrPlaneswalker':
+      return types.includes('Planeswalker');
     case 'player':
     case 'spell':
     case 'cardInGraveyard':
@@ -325,8 +329,50 @@ export function computeTargetOptions(
     .filter((p) => filter === undefined || matchesSelector(ctx, p, filter, { cardId: '', controllerId: casterId }))
     .map((p) => p.id);
 
-  // "Any target" is creature-or-player (CR 115.4). Players are never hexproof-filtered.
-  return kind === 'anyTarget' ? [...permanents, ...players] : permanents;
+  // "Any target" is creature-or-player (CR 115.4); "player or planeswalker" is analogous.
+  // Players are never hexproof-filtered.
+  return kind === 'anyTarget' || kind === 'playerOrPlaneswalker' ? [...permanents, ...players] : permanents;
+}
+
+/** Every non-empty subset of `0..n-1`, as arrays of indices (CR 700.2 "choose one or more"). */
+function nonEmptySubsets(n: number): number[][] {
+  const out: number[][] = [];
+  for (let mask = 1; mask < 1 << n; mask++) {
+    const subset: number[] = [];
+    for (let i = 0; i < n; i++) {
+      if ((mask & (1 << i)) !== 0) subset.push(i);
+    }
+    out.push(subset);
+  }
+  return out;
+}
+
+/**
+ * Shift a `modesOneOrMore` mode's `EffectRef` numbers by `offset` when it is combined with
+ * other modes into one ability (Clan Defiance) — each mode's effects are authored against ITS
+ * OWN target array (index 0 = its own first target), so folding several modes into one shared
+ * array means every later mode's numeric refs must move down by however many targets the
+ * earlier modes in the combination contributed.
+ *
+ * Deliberately closed over the op kinds actually used this way today, and throws for anything
+ * else — a silently un-shifted ref would point at the WRONG mode's target, not a missing one,
+ * which is exactly the wrong-answer failure brief §6.3 forbids.
+ */
+export function shiftModeEffectRefs(effects: readonly Effect[], offset: number): Effect[] {
+  const shift = (r: EffectRef): EffectRef => (typeof r === 'number' ? r + offset : r);
+  return effects.map((e) => {
+    switch (e.op) {
+      case 'dealDamage':
+        return { ...e, target: shift(e.target) };
+      case 'destroy':
+      case 'exile':
+        return { ...e, target: shift(e.target) };
+      default:
+        throw new Error(
+          `engine bug: modesOneOrMore effect op "${e.op}" has no EffectRef-shift case yet`,
+        );
+    }
+  });
 }
 
 /** Target slots for casting a card, or null when a required slot has zero options. */
@@ -532,6 +578,69 @@ export function computePriorityOptions(
         xChoices.push(x);
       }
       if (xChoices.length === 0) return;
+    }
+
+    // "Choose one or more" (CR 700.2, Clan Defiance) — every NON-EMPTY SUBSET of modes is its
+    // own cast option, each with the combined target set/effects of exactly the modes in that
+    // subset. Handled entirely separately from `modes` below: those modes share one target
+    // list and choose exactly one, which cannot express "any subset, each with its own target".
+    const oneOrMore = def.spellAbility?.modesOneOrMore;
+    if (oneOrMore !== undefined) {
+      for (const x of xChoices) {
+        const cost = withX(base, x);
+        if (!canPay(cost, player.manaEntries, sources, allows)) continue;
+
+        for (const subset of nonEmptySubsets(oneOrMore.length)) {
+          const slots: { slot: number; options: ObjectId[] }[] = [];
+          let missingTarget = false;
+          let slotNum = 0;
+          for (const modeIndex of subset) {
+            for (const spec of oneOrMore[modeIndex]!.targets) {
+              const targetOptions = computeTargetOptions(ctx, spec, player.id);
+              if (targetOptions.length === 0) {
+                missingTarget = true;
+                break;
+              }
+              slots.push({ slot: slotNum++, options: targetOptions });
+            }
+            if (missingTarget) break;
+          }
+          // CR 601.2c: a mode with no legal target for its own slot cannot be part of ANY
+          // subset that includes it — not just dropped from this one.
+          if (missingTarget) continue;
+
+          const description = subset
+            .map((i) => oneOrMore[i]!.description ?? `mode ${i + 1}`)
+            .join('; ');
+          options.push({
+            type: 'castSpell',
+            description:
+              `Cast ${obj.name} (${describeManaCost(cost)})` +
+              (xSymbols > 0 ? ` with X=${x}` : '') +
+              ` — ${description}` +
+              (fromCommand ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}` : ''),
+            payload: {
+              kind: 'castSpell',
+              objectId: obj.id,
+              fromCommand,
+              ...(xSymbols > 0 ? { x } : {}),
+              modesChosen: subset,
+            },
+            data: {
+              instantSpeed,
+              sourceName: obj.name,
+              sourceZone: fromCommand ? 'command' : fromLibraryTop ? 'library' : fromExile ? 'exile' : 'hand',
+              manaCost: describeManaCost(cost),
+              ...paymentPreview(ctx, player, cost, sources, allows),
+              ...(tax > 0 ? { commanderTax: tax } : {}),
+              ...(xSymbols > 0 ? { x } : {}),
+              modeLabel: description,
+            },
+            ...(slots.length > 0 ? { targets: slots } : {}),
+          });
+        }
+      }
+      return;
     }
 
     // A modal spell (CR 700.2) is announced with its mode chosen at cast time, before targets —
@@ -934,12 +1043,18 @@ export function computePriorityOptions(
   return options;
 }
 
-/** Re-validate a chosen target set at cast time (defensive; options came from us). */
+/**
+ * Re-validate a chosen target set at cast time (defensive; options came from us). Takes the
+ * target specs directly rather than a `CardDefinition` so a `modesOneOrMore` combined ability
+ * (Clan Defiance) — whose targets exist only after the chosen modes are known, not on
+ * `def.spellAbility.targets` — can validate against ITS OWN combined list.
+ */
 export function validateChosenTargets(
   ctx: GameContext,
-  def: CardDefinition,
+  targetSpecs: readonly TargetSpec[],
   casterId: PlayerId,
   chosen: ReadonlyMap<number, ObjectId>,
+  cardName: string,
 ): ObjectId[] {
   // By INDEX, not `.push`: a count slot (skipped below, picked separately via
   // `pickCountSlotTargets`) has no single id to place here, and leaving its position empty
@@ -947,18 +1062,18 @@ export function validateChosenTargets(
   // `ability.targets[r]` and this array aligned for `EffectRef` numbers past it.
   const targets: ObjectId[] = [];
   let slotNum = 0;
-  for (const spec of def.spellAbility?.targets ?? []) {
+  for (const spec of targetSpecs) {
     if (spec.count !== undefined) {
       slotNum++;
       continue;
     }
     const choice = chosen.get(slotNum);
     if (choice === undefined) {
-      throw new Error(`missing target for slot ${slotNum} of ${def.name}`);
+      throw new Error(`missing target for slot ${slotNum} of ${cardName}`);
     }
     const legal = computeTargetOptions(ctx, spec, casterId);
     if (!legal.includes(choice)) {
-      throw new Error(`illegal target ${choice} for slot ${slotNum} of ${def.name}`);
+      throw new Error(`illegal target ${choice} for slot ${slotNum} of ${cardName}`);
     }
     targets[slotNum] = choice;
     slotNum++;

@@ -10,7 +10,7 @@
 
 import { SELF_SUBJECT } from '../ability';
 import { parseManaCost } from '../../mana/cost';
-import { allOf, ofSubtype, YOURS } from '../selector';
+import { allOf, not, ofSubtype, withKeyword, YOURS } from '../selector';
 import { constant } from '../value';
 import { registerOverride } from './index';
 
@@ -341,6 +341,41 @@ registerOverride({
         ],
       },
     ],
+  },
+});
+
+registerOverride({
+  oracleId: 'oracle-clan-defiance',
+  name: 'Clan Defiance',
+  handledLines: [
+    'Choose one or more —',
+    '• ~ deals X damage to target creature with flying.',
+    '• ~ deals X damage to target creature without flying.',
+    '• ~ deals X damage to target player or planeswalker.',
+  ],
+  def: {
+    spellAbility: {
+      kind: 'spell',
+      targets: [],
+      effects: [],
+      modesOneOrMore: [
+        {
+          targets: [{ kind: 'creature', filter: withKeyword('flying') }],
+          effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'xValue' } }],
+          description: 'deals X damage to target creature with flying',
+        },
+        {
+          targets: [{ kind: 'creature', filter: not(withKeyword('flying')) }],
+          effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'xValue' } }],
+          description: 'deals X damage to target creature without flying',
+        },
+        {
+          targets: [{ kind: 'playerOrPlaneswalker' }],
+          effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'xValue' } }],
+          description: 'deals X damage to target player or planeswalker',
+        },
+      ],
+    },
   },
 });
 

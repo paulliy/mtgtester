@@ -209,6 +209,21 @@ function dealDamageToObject(
   }
   const perm = findPermanent(ctx, id);
   if (perm === undefined) return;
+  // CR 120.3c: damage to a planeswalker removes that many loyalty counters instead of marking
+  // damage — a planeswalker has no toughness to compare marked damage against.
+  if (computeCharacteristics(ctx, perm).types.includes('Planeswalker')) {
+    const have = perm.counters['loyalty'] ?? 0;
+    perm.counters['loyalty'] = Math.max(0, have - amount);
+    emit(ctx, 'damage', {
+      source: source.name,
+      sourceCardId: source.cardId,
+      target: perm.name,
+      targetCardId: perm.cardId,
+      amount,
+      combat: false,
+    });
+    return;
+  }
   dealDamageToCreature(ctx, source, perm, amount, {
     combat: false,
     sourceHasDeathtouch: false,
@@ -323,7 +338,7 @@ export function isTargetStillLegal(
   }
   const player = ctx.state.players.find((p) => p.id === targetId);
   if (player !== undefined) {
-    return (kind === 'anyTarget' || kind === 'player') && !player.hasLost;
+    return (kind === 'anyTarget' || kind === 'player' || kind === 'playerOrPlaneswalker') && !player.hasLost;
   }
   const perm = findPermanent(ctx, targetId);
   if (perm === undefined || !permanentMatchesKind(ctx, perm, kind)) return false;

@@ -33,6 +33,7 @@ import {
   costReductionFor,
   manaPortionOf,
   pickCountSlotTargets,
+  shiftModeEffectRefs,
   validateChosenTargets,
 } from './legal';
 import { resetOpponentYields } from '../turn/priority';
@@ -50,6 +51,7 @@ import { resetOpponentYields } from '../turn/priority';
 function resolveCastAbility(
   def: CardDefinition,
   mode: number | undefined,
+  modesChosen: number[] | undefined,
   cardName: string,
 ): Ability | null {
   if (def.spellAbility === null) {
@@ -57,11 +59,40 @@ function resolveCastAbility(
       ? { kind: 'spell', targets: [], effects: [], cantBeCountered: true }
       : null;
   }
+  const oneOrMore = def.spellAbility.modesOneOrMore;
+  if (oneOrMore !== undefined) {
+    if (modesChosen === undefined || modesChosen.length === 0) {
+      throw new Error(`engine bug: missing modesChosen for ${cardName}`);
+    }
+    return combineOneOrMoreModes(def.spellAbility, oneOrMore, modesChosen);
+  }
   const modes = def.spellAbility.modes;
   if (modes === undefined) return def.spellAbility;
   const chosen = modes.options[mode ?? 0];
   if (chosen === undefined) throw new Error(`engine bug: invalid mode ${mode} for ${cardName}`);
   return { ...def.spellAbility, effects: chosen.effects };
+}
+
+/**
+ * Rebuild the exact combined ability `legal.ts` offered for this `modesChosen` subset (CR
+ * 700.2 "choose one or more") — concatenated target specs, and each mode's effects with their
+ * `EffectRef`s shifted by how many targets the earlier modes in the SAME subset contributed.
+ */
+function combineOneOrMoreModes(
+  spellAbility: Ability,
+  oneOrMore: NonNullable<Ability['modesOneOrMore']>,
+  modesChosen: number[],
+): Ability {
+  const targets: Ability['targets'] = [];
+  const effects: Ability['effects'] = [];
+  for (const modeIndex of modesChosen) {
+    const mode = oneOrMore[modeIndex];
+    if (mode === undefined) throw new Error(`engine bug: invalid oneOrMore mode index ${modeIndex}`);
+    const offset = targets.length;
+    targets.push(...mode.targets);
+    effects.push(...shiftModeEffectRefs(mode.effects, offset));
+  }
+  return { ...spellAbility, targets, effects };
 }
 
 /**
@@ -195,18 +226,18 @@ export function* applyPriorityAction(
         if (!alt) throw new Error(`missing ${payload.alternativeCast} cost`);
         cost = applyRed(alt.manaCost);
         ability = alt.ability ?? { kind: 'spell', targets: [], effects: [] };
-        targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
+        targets = validateChosenTargets(ctx, ability.targets, player.id, outcome.targets, obj.name);
       } else {
         cost = withX(
           applyRed(addGeneric(def.manaCost ?? emptyCost(), tax)),
           payload.x ?? 0,
         );
-        ability = resolveCastAbility(def, payload.mode, obj.name) ?? {
+        ability = resolveCastAbility(def, payload.mode, payload.modesChosen, obj.name) ?? {
           kind: 'spell',
           targets: [],
           effects: [],
         };
-        targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
+        targets = validateChosenTargets(ctx, ability.targets, player.id, outcome.targets, obj.name);
       }
 
       // CR 601.2b: every target, ordinary AND variable-count, is chosen as part of
