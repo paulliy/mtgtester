@@ -181,11 +181,20 @@ export interface UntilEotEffect extends ContinuousEffect {
    * creature entering afterwards is not pumped and one that leaves and returns is not either.
    */
   targetCardIds: CardId[];
-  kind: 'ptDelta' | 'grantKeyword' | 'grantAbility';
+  kind: 'ptDelta' | 'grantKeyword' | 'grantAbility' | 'becomeCreature';
   power?: number;
   toughness?: number;
   keyword?: KeywordAbility;
   ability?: Ability;
+  /**
+   * "Becomes a 4/4 red and green Dragon artifact creature with flying until end of turn"
+   * (Atarka Monument, Sarkhan's +1) — a type-changing CDA-shaped grant, distinct from
+   * `ptDelta` (which is always sublayer 7d MODIFY, never a 7b SET) and from a single
+   * `grantKeyword` (this can add several at once). Color is deliberately absent: layer 5
+   * (color-changing) is not implemented anywhere in this engine (ADR 0007), so "red and green"
+   * is a disclosed simplification, not something this op newly cuts.
+   */
+  becomeCreature?: { addSubtypes: string[]; power: number; toughness: number; addKeywords: KeywordAbility[] };
   /** Timestamp assigned on creation (CR 613.7 within-layer ordering). */
   timestamp: number;
 }

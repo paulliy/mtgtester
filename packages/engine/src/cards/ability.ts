@@ -546,6 +546,21 @@ export type Effect =
    * targeted with nothing chosen from their graveyard still shuffles just their library).
    */
   | { op: 'shuffleChosenGraveyardCardsIntoLibrary'; playerSlot: number; cardsSlot: number }
+  /**
+   * "Becomes a 4/4 red and green Dragon artifact creature with flying until end of turn"
+   * (Atarka Monument) / "becomes a legendary 4/4 red Dragon creature with flying,
+   * indestructible, and haste" (Sarkhan) — CR 613's type-changing + P/T-setting + keyword-
+   * granting CDA, as an until-end-of-turn effect. See `UntilEotEffect.becomeCreature` for why
+   * color is not part of this (layer 5 is not implemented anywhere in this engine).
+   */
+  | {
+      op: 'becomeCreatureUntilEot';
+      target: EffectRef;
+      subtypes: string[];
+      power: number;
+      toughness: number;
+      keywords: KeywordAbility[];
+    }
   | { op: 'untapTarget'; target: EffectRef }
   | { op: 'bounceUpTo6MV' }
   | { op: 'millAndReturnSpells' }

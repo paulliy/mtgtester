@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import { computePriorityOptions } from '../src/actions/legal';
 import { runCombatPhase } from '../src/combat/combat';
+import { computeCharacteristics } from '../src/effects/continuous';
 import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -741,5 +742,44 @@ describe('Loaming Shaman', () => {
 
     const p2 = ctx.state.players.find((p) => p.id === 'P2')!;
     expect(p2.graveyard.length).toBe(1); // declined — nothing moved.
+  });
+});
+
+describe('Atarka Monument', () => {
+  const atarkaMonument = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Atarka Monument',
+      oracleId: 'oracle-atarka-monument',
+      typeLine: 'Artifact',
+      manaCost: '{3}',
+      power: null,
+      toughness: null,
+      oracleText:
+        '{T}: Add {R} or {G}.\n{4}{R}{G}: ~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn.',
+    });
+
+  it('becomes a 4/4 flying Dragon artifact creature until end of turn, then reverts', () => {
+    const ctx = pod();
+    for (let i = 0; i < 6; i++) spawn(ctx, 'P1', mountain());
+    const monument = spawn(ctx, 'P1', atarkaMonument());
+
+    expect(computeCharacteristics(ctx, monument).types).not.toContain('Creature');
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex((o) => o.description.includes('becomes a 4/4'));
+      return { index: i >= 0 ? i : 0, targets: new Map() };
+    });
+
+    const chars = computeCharacteristics(ctx, monument);
+    expect(chars.types).toContain('Artifact');
+    expect(chars.types).toContain('Creature');
+    expect(chars.subtypes).toContain('Dragon');
+    expect(chars.power).toBe(4);
+    expect(chars.toughness).toBe(4);
+    expect(chars.keywords).toContain('flying');
+
+    endUntilEotEffects(ctx);
+    const after = computeCharacteristics(ctx, monument);
+    expect(after.types).not.toContain('Creature');
   });
 });

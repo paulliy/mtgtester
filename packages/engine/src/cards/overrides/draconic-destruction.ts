@@ -15,6 +15,37 @@ import { constant } from '../value';
 import { registerOverride } from './index';
 
 registerOverride({
+  oracleId: 'oracle-atarka-monument',
+  name: 'Atarka Monument',
+  handledLines: [
+    '{4}{R}{G}: ~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn.',
+  ],
+  def: {
+    activatedAbilities: [
+      {
+        costs: [{ kind: 'mana', cost: parseManaCost('{4}{R}{G}').cost! }],
+        timing: 'any',
+        ability: {
+          kind: 'activated',
+          targets: [],
+          effects: [
+            {
+              op: 'becomeCreatureUntilEot',
+              target: 'self',
+              subtypes: ['Dragon'],
+              power: 4,
+              toughness: 4,
+              keywords: ['flying'],
+            },
+          ],
+          description: 'becomes a 4/4 red and green Dragon artifact creature with flying until end of turn',
+        },
+      },
+    ],
+  },
+});
+
+registerOverride({
   oracleId: 'oracle-loaming-shaman',
   name: 'Loaming Shaman',
   handledLines: [

@@ -142,6 +142,26 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       out.push({ applies, op: { layer: 6, addKeyword: eff.keyword }, timestamp: eff.timestamp });
     } else if (eff.kind === 'grantAbility' && eff.ability !== undefined) {
       out.push({ applies, op: { layer: 6, addTrigger: eff.ability }, timestamp: eff.timestamp });
+    } else if (eff.kind === 'becomeCreature' && eff.becomeCreature !== undefined) {
+      const bc = eff.becomeCreature;
+      out.push({
+        applies,
+        op: { layer: 4, addTypes: ['Creature'], addSubtypes: bc.addSubtypes },
+        timestamp: eff.timestamp,
+      });
+      out.push({
+        applies,
+        op: {
+          layer: 7,
+          sublayer: 'b',
+          power: { kind: 'const', n: bc.power },
+          toughness: { kind: 'const', n: bc.toughness },
+        },
+        timestamp: eff.timestamp,
+      });
+      for (const keyword of bc.addKeywords) {
+        out.push({ applies, op: { layer: 6, addKeyword: keyword }, timestamp: eff.timestamp });
+      }
     }
   }
 

@@ -1116,6 +1116,32 @@ export function* executeAbility(
         }
         break;
       }
+      case 'becomeCreatureUntilEot': {
+        const t = ref(effect.target);
+        if (t === null) break;
+        const perm = findPermanent(ctx, t) as EnginePermanent;
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${perm.name} becomes a ${effect.power}/${effect.toughness} ${effect.subtypes.join(' ')} creature until end of turn`,
+          targetCardIds: [perm.cardId],
+          kind: 'becomeCreature',
+          becomeCreature: {
+            addSubtypes: effect.subtypes,
+            power: effect.power,
+            toughness: effect.toughness,
+            addKeywords: effect.keywords,
+          },
+          timestamp: ctx.state.nextTimestamp++,
+        });
+        emit(ctx, 'becomeCreature', {
+          source: source.name,
+          target: perm.name,
+          power: effect.power,
+          toughness: effect.toughness,
+        });
+        break;
+      }
       case 'registerDelayedTrigger': {
         const t = effect.target !== undefined ? ref(effect.target) : null;
         const targetId = t !== null ? (findObjectById(ctx, t)?.cardId ?? undefined) : undefined;
