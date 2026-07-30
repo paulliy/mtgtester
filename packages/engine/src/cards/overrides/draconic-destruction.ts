@@ -59,6 +59,24 @@ registerOverride({
 });
 
 registerOverride({
+  oracleId: 'oracle-dream-pillager',
+  name: 'Dream Pillager',
+  handledLines: [
+    'Whenever ~ deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards.',
+  ],
+  def: {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: { when: 'dealsCombatDamageToPlayer', subject: SELF_SUBJECT },
+        targets: [],
+        effects: [{ op: 'exileTopNPlayableUntilEot', count: { kind: 'damageDealt' } }],
+      },
+    ],
+  },
+});
+
+registerOverride({
   oracleId: 'oracle-spit-flame',
   name: 'Spit Flame',
   handledLines: [

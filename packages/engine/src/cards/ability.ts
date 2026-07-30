@@ -471,6 +471,13 @@ export type Effect =
    * there is no target slot to reference it through.
    */
   | { op: 'returnSelfFromGraveyardToHand' }
+  /**
+   * "Exile that many cards from the top of your library. Until end of turn, you may cast
+   * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
+   * count, unlike Hideaway's fixed 4. `legal.ts` offers each exiled card back as a cast option
+   * for the rest of the turn; the cleanup step clears the grant (`endUntilEotEffects`).
+   */
+  | { op: 'exileTopNPlayableUntilEot'; count: Value }
   | { op: 'untapTarget'; target: EffectRef }
   | { op: 'bounceUpTo6MV' }
   | { op: 'millAndReturnSpells' }

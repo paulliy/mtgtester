@@ -82,6 +82,13 @@ export interface EngineCardObject extends EngineObject {
   attachedToCardId?: string;
   /** For Adventure cards in exile (CR 715.3d). */
   onAdventure?: boolean;
+  /**
+   * "Until end of turn, you may cast spells from among those exiled cards" (Dream Pillager) —
+   * the player who may cast this exiled card, until the next cleanup step clears it. Distinct
+   * from `onAdventure`: that grants casting for as long as the card stays in exile; this
+   * expires at end of turn while the card remains in exile permanently either way.
+   */
+  playableUntilEotBy?: PlayerId;
 }
 
 export interface EngineStackObject extends StackObject {

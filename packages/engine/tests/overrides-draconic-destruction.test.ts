@@ -8,6 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { runCombatPhase } from '../src/combat/combat';
+import { endUntilEotEffects } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import { runPrioritySequence } from '../src/turn/priority';
 import { moveObject } from '../src/state/objects';
@@ -81,6 +82,80 @@ describe('Dragon Mage', () => {
     // The three original hand cards were discarded, not drawn back into a fresh top-of-library.
     const p1 = ctx.state.players.find((p) => p.id === 'P1')!;
     expect(p1.graveyard.length).toBe(3);
+  });
+});
+
+describe('Dream Pillager', () => {
+  const dreamPillager = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Dream Pillager',
+      oracleId: 'oracle-dream-pillager',
+      typeLine: 'Creature — Dragon',
+      manaCost: '{5}{R}{R}',
+      power: '4',
+      toughness: '4',
+      oracleText:
+        'Flying\nWhenever Dream Pillager deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards.',
+    });
+
+  const testShock = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Test Shock',
+      typeLine: 'Instant',
+      manaCost: '{R}',
+      power: null,
+      toughness: null,
+      oracleText: 'Test Shock deals 2 damage to any target.',
+    });
+
+  it('exiles cards equal to the damage dealt and lets its controller cast one of them', () => {
+    const ctx = pod();
+    spawn(ctx, 'P1', dreamPillager());
+    spawn(ctx, 'P1', mountain());
+    // `conjure(..., 'library')` unshifts, so the LAST card conjured ends up on top.
+    for (let i = 0; i < 5; i++) conjure(ctx, 'P1', forest(), 'library');
+    const shock = conjure(ctx, 'P1', testShock(), 'library');
+
+    attackAll(ctx);
+
+    // Exactly 4 cards (Dream Pillager's power) came off the top of the library into exile,
+    // playable by P1 until end of turn — starting with the Shock that was on top.
+    expect(ctx.state.exile.filter((c) => c.playableUntilEotBy === 'P1')).toHaveLength(4);
+    expect(ctx.state.exile.some((c) => c.cardId === shock.cardId)).toBe(true);
+
+    const p2Before = ctx.state.players.find((p) => p.id === 'P2')?.life;
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex((o) => o.description.includes('Cast Test Shock'));
+      if (i < 0) return { index: 0, targets: new Map() };
+      const slot = d.options[i]?.targets?.[0];
+      const target = slot?.options.find((o) => o === 'P2');
+      return { index: i, targets: new Map(target === undefined ? [] : [[0, target]]) };
+    });
+
+    expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe((p2Before ?? 0) - 2);
+    // Cast from exile, then resolved to the graveyard like any other instant.
+    expect(ctx.state.exile.some((c) => c.cardId === shock.cardId)).toBe(false);
+    const p1 = ctx.state.players.find((p) => p.id === 'P1')!;
+    expect(p1.graveyard.some((c) => c.cardId === shock.cardId)).toBe(true);
+  });
+
+  it('the grant expires at cleanup, and the cards stay in exile unplayable', () => {
+    const ctx = pod();
+    spawn(ctx, 'P1', dreamPillager());
+    spawn(ctx, 'P1', mountain());
+    // `conjure(..., 'library')` unshifts, so the LAST card conjured ends up on top.
+    for (let i = 0; i < 5; i++) conjure(ctx, 'P1', forest(), 'library');
+    const shock = conjure(ctx, 'P1', testShock(), 'library');
+
+    attackAll(ctx);
+    expect(ctx.state.exile.find((c) => c.cardId === shock.cardId)?.playableUntilEotBy).toBe('P1');
+
+    // Simulate the cleanup sweep directly rather than driving a full extra turn.
+    endUntilEotEffects(ctx);
+
+    const stillExiled = ctx.state.exile.find((c) => c.cardId === shock.cardId);
+    expect(stillExiled).toBeDefined();
+    expect(stillExiled?.playableUntilEotBy).toBeUndefined();
   });
 });
 

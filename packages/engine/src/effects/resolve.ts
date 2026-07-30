@@ -835,6 +835,23 @@ export function* executeAbility(
         }
         break;
       }
+      case 'exileTopNPlayableUntilEot': {
+        const n = Math.min(amountOf(effect.count), controller.library.length);
+        const exiled: EngineCardObject[] = [];
+        for (let i = 0; i < n; i++) {
+          const top = controller.library[0];
+          if (top === undefined) break;
+          const moved = (yield* moveObject(ctx, top, { zone: 'exile' })) as EngineCardObject | null;
+          if (moved !== null) exiled.push(moved);
+        }
+        for (const card of exiled) card.playableUntilEotBy = controller.id;
+        emit(ctx, 'exile', {
+          source: source.name,
+          player: controller.id,
+          cards: exiled.map((c) => c.name),
+        });
+        break;
+      }
       case 'returnSelfFromGraveyardToHand': {
         const owner = playerById(ctx, source.controllerId);
         const cardObj = owner.graveyard.find((c) => c.cardId === source.cardId);
@@ -1437,6 +1454,11 @@ export function endUntilEotEffects(ctx: GameContext): void {
   if (ctx.state.effects.length > 0) {
     debug(ctx, 'effect', `ending ${ctx.state.effects.length} until-end-of-turn effect(s)`);
     ctx.state.effects = [];
+  }
+  // "Until end of turn, you may cast spells from among those exiled cards" (Dream Pillager) —
+  // the cards stay in exile forever; only the permission to cast them expires.
+  for (const card of ctx.state.exile) {
+    if (card.playableUntilEotBy !== undefined) delete card.playableUntilEotBy;
   }
 }
 

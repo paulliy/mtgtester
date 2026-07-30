@@ -454,6 +454,7 @@ export function computePriorityOptions(
             objectId: obj.id,
             fromCommand,
             ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
+            ...(fromExile ? { fromExile: true } : {}),
             ...(xSymbols > 0 ? { x } : {}),
             ...(mode !== undefined ? { mode } : {}),
           },
@@ -552,6 +553,13 @@ export function computePriorityOptions(
   for (const obj of ctx.state.exile) {
     if (obj.ownerId === player.id && obj.onAdventure === true) {
       considerCast(obj, false, false, true);
+    }
+    // "Until end of turn, you may cast SPELLS from among those exiled cards" (Dream Pillager)
+    // — lands are excluded (CR 305: they are played, not cast), unlike Adventure above where
+    // the underlying card is never a land in the first place.
+    if (obj.playableUntilEotBy === player.id) {
+      const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+      if (!def.types.includes('Land')) considerCast(obj, false, false, true);
     }
   }
 
