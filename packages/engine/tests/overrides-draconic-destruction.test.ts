@@ -15,6 +15,8 @@ import { createGame } from '../src/state/game';
 import { runPrioritySequence } from '../src/turn/priority';
 import { moveObject } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
+import { constant } from '../src/cards/value';
+import { runTurn } from '../src/turn/turn';
 import { conjure, forest, copies, gameConfig, mountain, oracle, pump, spawn } from './fixtures';
 
 function pod(seed = 'draconic-destruction-overrides'): GameContext {
@@ -880,5 +882,127 @@ describe('Clan Defiance', () => {
     expect(ground.damageMarked).toBe(2);
     expect(flyer.damageMarked).toBe(0);
     expect(p2.life).toBe(lifeBefore);
+  });
+});
+
+describe('Sarkhan, the Dragonspeaker', () => {
+  const sarkhan = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Sarkhan, the Dragonspeaker',
+      oracleId: 'oracle-sarkhan-the-dragonspeaker',
+      typeLine: 'Legendary Planeswalker — Sarkhan',
+      manaCost: '{3}{R}{R}',
+      power: null,
+      toughness: null,
+      loyalty: '4',
+      oracleText:
+        "+1: Until end of turn, Sarkhan, the Dragonspeaker becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste. (He doesn't lose loyalty while he's not a planeswalker.)\n" +
+        '−3: Sarkhan, the Dragonspeaker deals 4 damage to target creature.\n' +
+        '−6: You get an emblem with "At the beginning of your draw step, draw two additional cards" and "At the beginning of your end step, discard your hand."',
+    });
+
+  it('+1 replaces the whole type line with a hasty 4/4 flying indestructible Dragon until end of turn', () => {
+    const ctx = pod();
+    const sark = spawn(ctx, 'P1', sarkhan());
+    expect(sark.counters['loyalty']).toBe(4);
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex((o) => o.description.includes('becomes a legendary 4/4'));
+      return { index: i >= 0 ? i : 0, targets: new Map() };
+    });
+
+    expect(sark.counters['loyalty']).toBe(5);
+    const chars = computeCharacteristics(ctx, sark);
+    // No "in addition to its other types" on the printed card — becoming a creature REPLACES
+    // the type line, so Sarkhan genuinely stops being a planeswalker while this applies.
+    expect(chars.types).toContain('Creature');
+    expect(chars.types).not.toContain('Planeswalker');
+    expect(chars.subtypes).toEqual(['Dragon']);
+    expect(chars.power).toBe(4);
+    expect(chars.toughness).toBe(4);
+    expect(chars.keywords).toContain('flying');
+    expect(chars.keywords).toContain('indestructible');
+    expect(chars.keywords).toContain('haste');
+
+    endUntilEotEffects(ctx);
+    const after = computeCharacteristics(ctx, sark);
+    expect(after.types).toContain('Planeswalker');
+    expect(after.types).not.toContain('Creature');
+    // The loyalty gained from +1 survives the type reverting back (CR 606.3's "doesn't lose
+    // loyalty while not a planeswalker" reminder — damage to a non-planeswalker creature never
+    // touches loyalty counters in the first place).
+    expect(sark.counters['loyalty']).toBe(5);
+  });
+
+  it('-3 deals 4 damage to target creature and costs 3 loyalty', () => {
+    const ctx = pod();
+    const sark = spawn(ctx, 'P1', sarkhan());
+    const bigCreature = oracle({ name: 'Test Wall', typeLine: 'Creature — Wall', power: '0', toughness: '6' });
+    const wall = spawn(ctx, 'P2', bigCreature);
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex((o) => o.description.includes('deals 4 damage to target creature'));
+      if (i >= 0) {
+        const slot = d.options[i]?.targets?.[0];
+        const target = slot?.options.find((id) => id === wall.id);
+        return { index: i, targets: new Map(target === undefined ? [] : [[0, target]]) };
+      }
+      return { index: 0, targets: new Map() };
+    });
+
+    expect(wall.damageMarked).toBe(4);
+    expect(sark.counters['loyalty']).toBe(1);
+  });
+
+  it('-6 grants an emblem, and the emblem draws two extra cards each draw step and discards the hand each end step', () => {
+    const ctx = pod();
+    const sark = spawn(ctx, 'P1', sarkhan());
+    sark.counters['loyalty'] = 6;
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex((o) => o.description.includes('you get an emblem'));
+      return { index: i >= 0 ? i : 0, targets: new Map() };
+    });
+
+    expect(sark.counters['loyalty']).toBe(0);
+    const p1 = ctx.state.players.find((p) => p.id === 'P1')!;
+    expect(p1.emblems).toHaveLength(2);
+
+    // Run a fresh full turn to see the granted triggers actually fire on their steps.
+    const ctx2 = createGame(gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(3, forest) })), { seed: 'sarkhan-emblem' }));
+    ctx2.state.currentTurnPlayer = 'P1';
+    ctx2.state.activePlayerIndex = 0;
+    ctx2.state.turnNumber = 4;
+    for (const p of ctx2.state.players) {
+      for (let i = 0; i < 12; i++) conjure(ctx2, p.id, forest(), 'library');
+    }
+    const p1b = ctx2.state.players.find((p) => p.id === 'P1')!;
+    for (let i = 0; i < 3; i++) conjure(ctx2, 'P1', forest(), 'hand');
+    p1b.emblems = [
+      {
+        kind: 'triggered',
+        trigger: { when: 'drawStep', player: 'you' },
+        targets: [],
+        effects: [{ op: 'draw', count: constant(2) }],
+        description: 'draw two additional cards',
+      },
+      {
+        kind: 'triggered',
+        trigger: { when: 'endStep', player: 'you' },
+        targets: [],
+        effects: [{ op: 'discardHand' }],
+        description: 'discard your hand',
+      },
+    ];
+    const handBefore = p1b.hand.length;
+    const graveyardBefore = p1b.graveyard.length;
+
+    pump(runTurn(ctx2));
+
+    // 1 normal draw + 2 emblem draws land in hand mid-turn, then the end step discards
+    // everything — so by the time the turn hands off, the hand is empty and the graveyard
+    // grew by exactly what passed through it (the original 3 plus the 3 drawn).
+    expect(p1b.hand.length).toBe(0);
+    expect(p1b.graveyard.length).toBe(graveyardBefore + handBefore + 3);
   });
 });

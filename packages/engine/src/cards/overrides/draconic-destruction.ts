@@ -380,6 +380,88 @@ registerOverride({
 });
 
 registerOverride({
+  oracleId: 'oracle-sarkhan-the-dragonspeaker',
+  name: 'Sarkhan, the Dragonspeaker',
+  handledLines: [
+    '+1: Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.',
+    '−6: You get an emblem with "At the beginning of your draw step, draw two additional cards" and "At the beginning of your end step, discard your hand."',
+  ],
+  def: {
+    activatedAbilities: [
+      {
+        costs: [{ kind: 'loyalty', delta: 1 }],
+        timing: 'sorcery',
+        oncePerTurn: true,
+        ability: {
+          kind: 'activated',
+          targets: [],
+          effects: [
+            {
+              op: 'becomeCreatureUntilEot',
+              target: 'self',
+              subtypes: ['Dragon'],
+              power: 4,
+              toughness: 4,
+              keywords: ['flying', 'indestructible', 'haste'],
+              replaceTypes: ['Creature'],
+            },
+          ],
+          description:
+            'becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste until end of turn',
+        },
+      },
+      // Already generically parsed ("~ deals 4 damage to target creature"), but the whole
+      // `activatedAbilities` array is one field — an override merges by REPLACING it, not
+      // appending, so every loyalty ability has to be re-declared here or the other two
+      // would silently drop this one.
+      {
+        costs: [{ kind: 'loyalty', delta: -3 }],
+        timing: 'sorcery',
+        oncePerTurn: true,
+        ability: {
+          kind: 'activated',
+          targets: [{ kind: 'creature' }],
+          effects: [{ op: 'dealDamage', target: 0, amount: constant(4) }],
+          description: 'deals 4 damage to target creature',
+        },
+      },
+      {
+        costs: [{ kind: 'loyalty', delta: -6 }],
+        timing: 'sorcery',
+        oncePerTurn: true,
+        ability: {
+          kind: 'activated',
+          targets: [],
+          effects: [
+            {
+              op: 'getEmblem',
+              abilities: [
+                {
+                  kind: 'triggered',
+                  trigger: { when: 'drawStep', player: 'you' },
+                  targets: [],
+                  effects: [{ op: 'draw', count: constant(2) }],
+                  description: 'draw two additional cards',
+                },
+                {
+                  kind: 'triggered',
+                  trigger: { when: 'endStep', player: 'you' },
+                  targets: [],
+                  effects: [{ op: 'discardHand' }],
+                  description: 'discard your hand',
+                },
+              ],
+            },
+          ],
+          description:
+            'you get an emblem with "at the beginning of your draw step, draw two additional cards" and "at the beginning of your end step, discard your hand"',
+        },
+      },
+    ],
+  },
+});
+
+registerOverride({
   oracleId: 'oracle-spit-flame',
   name: 'Spit Flame',
   handledLines: [

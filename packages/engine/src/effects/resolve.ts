@@ -1073,6 +1073,19 @@ export function* executeAbility(
         }
         break;
       }
+      case 'discardHand': {
+        const hand = [...controller.hand];
+        for (const card of hand) {
+          emit(ctx, 'discard', { player: controller.id, name: card.name, cardId: card.cardId });
+          yield* moveObject(ctx, card, { zone: 'graveyard' });
+        }
+        break;
+      }
+      case 'getEmblem': {
+        controller.emblems = [...(controller.emblems ?? []), ...effect.abilities];
+        emit(ctx, 'getEmblem', { player: controller.id, source: source.name });
+        break;
+      }
       case 'conditionalEffect': {
         // "Ferocious — if you control a creature with power 4 or greater, counter that spell
         // instead" (Stubborn Denial) — checked at RESOLUTION, when the board is current, not at
@@ -1146,6 +1159,7 @@ export function* executeAbility(
             power: effect.power,
             toughness: effect.toughness,
             addKeywords: effect.keywords,
+            ...(effect.replaceTypes !== undefined ? { replaceTypes: effect.replaceTypes } : {}),
           },
           timestamp: ctx.state.nextTimestamp++,
         });

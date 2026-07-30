@@ -4,7 +4,7 @@
  * draw on their first turn (brief §5.3 — no two-player skip rule).
  */
 
-import type { Phase, Step } from '@mtg/shared';
+import type { OracleId, Phase, Step } from '@mtg/shared';
 import { evaluateCondition } from '../cards/condition';
 import { runCombatPhase } from '../combat/combat';
 import type { GameGen } from '../decisions';
@@ -68,7 +68,7 @@ function untapStep(ctx: GameContext): void {
  * `player === 'you'` filter, the intervening-if check and the queue entry are identical, and a
  * second copy is how the two drift apart.
  */
-function queueStepTriggers(ctx: GameContext, when: 'upkeep' | 'endStep'): void {
+function queueStepTriggers(ctx: GameContext, when: 'upkeep' | 'drawStep' | 'endStep'): void {
   const apId = ctx.state.currentTurnPlayer;
   for (const perm of [...ctx.state.battlefield]) {
     for (const ability of triggersOf(ctx, perm)) {
@@ -86,6 +86,26 @@ function queueStepTriggers(ctx: GameContext, when: 'upkeep' | 'endStep'): void {
         ability,
       });
       debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
+    }
+  }
+
+  // Emblems (CR 122.1a) have no card to scan via `triggersOf` — they live directly on the
+  // player their controller got them from, so this loop is the whole of their "battlefield".
+  for (const player of ctx.state.players) {
+    for (const ability of player.emblems ?? []) {
+      const spec = ability.trigger;
+      if (spec === undefined || spec.when !== when) continue;
+      if (spec.player === 'you' && player.id !== apId) continue;
+      const source = { cardId: `emblem-${player.id}`, controllerId: player.id };
+      if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
+      ctx.state.pendingTriggers.push({
+        controllerId: player.id,
+        sourceCardId: source.cardId,
+        sourceOracleId: 'emblem' as OracleId,
+        sourceName: 'Emblem',
+        ability,
+      });
+      debug(ctx, 'stack', `${when} emblem trigger queued: ${player.id}`);
     }
   }
 
@@ -171,6 +191,7 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   emptyManaPools(ctx);
 
   setStep(ctx, 'draw');
+  queueStepTriggers(ctx, 'drawStep');
   yield* drawCards(ctx, ap, 1); // multiplayer: first-turn draw included (brief §5.3)
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);

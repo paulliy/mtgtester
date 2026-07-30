@@ -170,6 +170,12 @@ export interface EnginePlayerState extends PlayerState {
   yieldUntilEndOfTurn?: boolean;
   /** Oracle IDs of triggered abilities the player has chosen to "Yield to this ability". */
   yieldedAbilities?: OracleId[];
+  /**
+   * Emblems this player owns (CR 122.1a) — a permanent, card-less object that grants its
+   * triggered abilities forever. Scanned by `queueStepTriggers` alongside battlefield
+   * permanents; there is no card to attach one to, so it lives directly on the player.
+   */
+  emblems?: Ability[];
 }
 
 /** An until-end-of-turn continuous effect (the Phase 2 subset of CR 613). */
@@ -194,7 +200,14 @@ export interface UntilEotEffect extends ContinuousEffect {
    * (color-changing) is not implemented anywhere in this engine (ADR 0007), so "red and green"
    * is a disclosed simplification, not something this op newly cuts.
    */
-  becomeCreature?: { addSubtypes: string[]; power: number; toughness: number; addKeywords: KeywordAbility[] };
+  becomeCreature?: {
+    addSubtypes: string[];
+    power: number;
+    toughness: number;
+    addKeywords: KeywordAbility[];
+    /** See `Effect.becomeCreatureUntilEot.replaceTypes` — full type-line replacement, not add. */
+    replaceTypes?: string[];
+  };
   /** Timestamp assigned on creation (CR 613.7 within-layer ordering). */
   timestamp: number;
 }

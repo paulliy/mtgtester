@@ -561,12 +561,28 @@ export type Effect =
       power: number;
       toughness: number;
       keywords: KeywordAbility[];
+      /**
+       * "Becomes a legendary 4/4 red Dragon CREATURE" (Sarkhan) — no "in addition to its other
+       * types", so unlike Atarka Monument's plain add, this REPLACES the whole type line (Sarkhan
+       * genuinely stops being a planeswalker, and so can't lose loyalty to damage, while this
+       * applies). Omitted keeps the additive behavior every other user of this op wants.
+       */
+      replaceTypes?: string[];
     }
   | { op: 'untapTarget'; target: EffectRef }
   | { op: 'bounceUpTo6MV' }
   | { op: 'millAndReturnSpells' }
   | { op: 'hideawayExileTop4' }
   | { op: 'playExiledCardFree' }
+  /** "Discard your hand" (Sarkhan's emblem) — the controller only, and no draw follows. */
+  | { op: 'discardHand' }
+  /**
+   * "You get an emblem with [abilities]" (Sarkhan's ultimate) — an emblem is a permanent,
+   * card-less object (CR 122.1a) that grants its controller the listed abilities forever. Each
+   * emblem ability's `trigger` is scanned the same way a permanent's is (`queueStepTriggers`),
+   * just sourced from `EnginePlayerState.emblems` instead of a battlefield card.
+   */
+  | { op: 'getEmblem'; abilities: Ability[] }
   | { op: 'noOp' };
 
 /**
@@ -633,6 +649,7 @@ export type TriggerWhen =
   | 'becomesTargeted'
   | 'castsSpell'
   | 'upkeep'
+  | 'drawStep'
   | 'endStep';
 
 /** The object-event half of `TriggerHead`. */
@@ -670,8 +687,8 @@ export type TriggerHead =
    * by its *card* characteristics rather than as a permanent.
    */
   | { when: 'castsSpell'; caster: 'you' | 'opponent' | 'each'; filter?: Selector }
-  /** "At the beginning of your/each upkeep|end step" — `player` says whose step counts. */
-  | { when: 'upkeep' | 'endStep'; player: 'you' | 'each' };
+  /** "At the beginning of your/each upkeep|draw step|end step" — `player` says whose step counts. */
+  | { when: 'upkeep' | 'drawStep' | 'endStep'; player: 'you' | 'each' };
 
 /**
  * When a triggered ability fires.
