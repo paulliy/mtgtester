@@ -39,6 +39,12 @@ export interface ValueScope {
   triggerCount?: number;
   /** Mana value of the spell that fired a `castsSpell` trigger (Lozhan). */
   spellManaValue?: number;
+  /**
+   * "Deals 3 damage to THAT PLAYER" (Thunderbreak Regent) — the controller of the spell or
+   * ability that caused a `becomesTargeted` trigger. Not a `Value` (it names a player, not a
+   * number); `EffectRef`'s `'targetingPlayer'` reads it directly.
+   */
+  targetingControllerId?: PlayerId;
 }
 
 /**
@@ -46,7 +52,10 @@ export interface ValueScope {
  * carried through the stack. Everything else in a `ValueScope` is re-derived at resolution;
  * these cannot be, because the event is over by then.
  */
-export type TriggerScope = Pick<ValueScope, 'damageDealt' | 'triggerCount' | 'spellManaValue'>;
+export type TriggerScope = Pick<
+  ValueScope,
+  'damageDealt' | 'triggerCount' | 'spellManaValue' | 'targetingControllerId'
+>;
 
 export type Value =
   | { kind: 'const'; n: number }

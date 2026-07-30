@@ -306,7 +306,13 @@ export interface TargetSpec {
  * that pair the source with a separate referent in one act — fight (CR 701.12), where "it" is
  * the ability's own source and there is no `Selector`-shaped "each" to fold it into.
  */
-export type EffectRef = number | 'triggerObject' | 'self';
+/**
+ * "Deals 3 damage to THAT PLAYER" (Thunderbreak Regent) — the controller of the spell or
+ * ability that caused a `becomesTargeted` trigger to fire. Reads `ValueScope.targetingControllerId`
+ * directly; like `'triggerObject'` it is not a target (nothing chooses it, nothing can protect
+ * against it as a targeting effect since it never targets at all).
+ */
+export type EffectRef = number | 'triggerObject' | 'self' | 'targetingPlayer';
 
 /**
  * One atomic mechanical primitive. Targeted primitives carry `target`: an `EffectRef` naming
@@ -574,6 +580,7 @@ export type TriggerWhen =
   | 'attacks'
   | 'dealsCombatDamageToPlayer'
   | 'fights'
+  | 'becomesTargeted'
   | 'castsSpell'
   | 'upkeep'
   | 'endStep';
@@ -584,7 +591,14 @@ export type ObjectTriggerWhen =
   | 'dies'
   | 'attacks'
   | 'dealsCombatDamageToPlayer'
-  | 'fights';
+  | 'fights'
+  /**
+   * "Whenever a Dragon you control becomes the target of a spell or ability an opponent
+   * controls" (Thunderbreak Regent). Always opponent-sourced — CR gives no printed template
+   * for "…a spell YOU control", so unlike `castsSpell`'s `caster` field this has no variants
+   * to pick between; `queueTriggersForEvent` enforces the opponent check itself.
+   */
+  | 'becomesTargeted';
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
 export type TriggerHead =

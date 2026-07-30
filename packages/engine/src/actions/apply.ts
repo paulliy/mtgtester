@@ -14,6 +14,7 @@ import { addGeneric, describeManaCost, emptyCost, subtractColored, subtractGener
 import {
   makePermanent,
   moveObject,
+  queueBecomesTargetedTriggers,
   queueCastTriggers,
   removeFromCurrentZone,
 } from '../state/objects';
@@ -232,6 +233,13 @@ export function* applyPriorityAction(
         countTargets[i] = picked;
       }
 
+      // "Becomes the target of a spell" (Thunderbreak Regent) fires at announcement (CR
+      // 601.2c), before costs are paid.
+      queueBecomesTargetedTriggers(ctx, player.id, [
+        ...targets.filter((t): t is ObjectId => t !== undefined),
+        ...Object.values(countTargets).flat(),
+      ]);
+
       yield* payManaCost(ctx, player, cost, { kind: 'castSpell', oracleId: obj.oracleId });
 
       if (payload.fromCommand) {
@@ -354,6 +362,7 @@ export function* applyPriorityAction(
         }
         targets.push(choice);
       }
+      queueBecomesTargetedTriggers(ctx, player.id, targets);
 
       const description = activated.ability.description ?? 'activated ability';
       const id = `o-${s.nextObjectNum++}` as ObjectId;

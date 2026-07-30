@@ -476,6 +476,14 @@ export function* executeAbility(
       }
       return perm.id;
     }
+    if (r === 'targetingPlayer') {
+      // Not a target (CR 115.10a, same footing as 'triggerObject'): the player who controlled
+      // the spell/ability that caused a `becomesTargeted` trigger. Absent for any other event.
+      if (scope.targetingControllerId === undefined) {
+        throw new Error(`engine bug: ${source.name} used 'targetingPlayer' with no such scope`);
+      }
+      return scope.targetingControllerId;
+    }
     const cachedCardId = refCardIdCache.get(r);
     if (cachedCardId !== undefined) {
       return cachedCardId === null ? null : (findObjectByCardId(ctx, cachedCardId)?.id ?? null);

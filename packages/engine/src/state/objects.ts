@@ -412,6 +412,13 @@ export interface TriggerEventSubject {
   permanent: EnginePermanent;
   /** Damage this object dealt in the event (`dealsCombatDamageToPlayer`). */
   amount?: number;
+  /**
+   * Who controls the spell/ability causing this event (`becomesTargeted`) — NOT the
+   * permanent's own controller. `queueTriggersForEvent` uses it to enforce "an opponent
+   * controls", which is a fact about the targeting spell/ability, unrelated to what selector
+   * the permanent itself matches.
+   */
+  sourceControllerId?: PlayerId;
 }
 
 /**
@@ -451,11 +458,16 @@ export function queueTriggersForEvent(
       if (spec === undefined || spec.when !== when) continue;
 
       const from: SelectorSource = { cardId: source.cardId, controllerId: source.controllerId };
-      const matched = subjects.filter((s) =>
-        spec.subject.kind === 'self'
+      const matched = subjects.filter((s) => {
+        if (when === 'becomesTargeted' && s.sourceControllerId === source.controllerId) {
+          // "an opponent controls" (Thunderbreak Regent) — the watcher's own targeting spells
+          // and abilities never qualify, regardless of what the subject selector matches.
+          return false;
+        }
+        return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
-          : matchesSelector(ctx, s.permanent, spec.subject.selector, from),
-      );
+          : matchesSelector(ctx, s.permanent, spec.subject.selector, from);
+      });
       if (matched.length === 0) continue;
 
       // Intervening-if, first check (CR 603.4): a trigger whose condition is false right now
@@ -476,6 +488,9 @@ export function queueTriggersForEvent(
           ...(spec.aggregate === true ? { triggerCount: group.length } : {}),
           ...(amounts.length > 0
             ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
+            : {}),
+          ...(first.sourceControllerId !== undefined
+            ? { targetingControllerId: first.sourceControllerId }
             : {}),
         };
         ctx.state.pendingTriggers.push({
@@ -576,6 +591,27 @@ export function queueTriggersForObject(
   permanent: EnginePermanent,
 ): void {
   queueTriggersForEvent(ctx, when, [{ permanent }]);
+}
+
+/**
+ * "Whenever a Dragon you control becomes the target of a spell or ability an opponent
+ * controls" (Thunderbreak Regent, CR 115) — called at ANNOUNCEMENT, from every place a spell
+ * or ability's targets are finalized (`applyPriorityAction`'s `castSpell`/`activateAbility`
+ * cases, `pushTriggerOnStack`), so it sees ordinary AND variable-count targets alike. Ids that
+ * are not battlefield permanents (player targets, spells on the stack) are silently skipped —
+ * "becomes the target" only ever matters to a permanent's own watchers.
+ */
+export function queueBecomesTargetedTriggers(
+  ctx: GameContext,
+  sourceControllerId: PlayerId,
+  targetedObjectIds: readonly ObjectId[],
+): void {
+  const subjects: TriggerEventSubject[] = [];
+  for (const id of targetedObjectIds) {
+    const perm = ctx.state.battlefield.find((p) => p.id === id);
+    if (perm !== undefined) subjects.push({ permanent: perm, sourceControllerId });
+  }
+  queueTriggersForEvent(ctx, 'becomesTargeted', subjects);
 }
 
 /**

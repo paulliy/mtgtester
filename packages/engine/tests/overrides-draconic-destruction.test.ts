@@ -488,3 +488,72 @@ describe('Steel Hellkite', () => {
     expect(onBoard(p1Own)).toBe(true); // P1 was never dealt damage BY the Hellkite
   });
 });
+
+describe('Thunderbreak Regent', () => {
+  const thunderbreakRegent = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Thunderbreak Regent',
+      oracleId: 'oracle-thunderbreak-regent',
+      typeLine: 'Creature — Dragon',
+      manaCost: '{2}{R}{R}',
+      power: '4',
+      toughness: '4',
+      oracleText:
+        'Flying\nWhenever a Dragon you control becomes the target of a spell or ability an opponent controls, ~ deals 3 damage to that player.',
+    });
+
+  const testShock = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Test Shock',
+      typeLine: 'Instant',
+      manaCost: '{R}',
+      power: null,
+      toughness: null,
+      oracleText: 'Test Shock deals 2 damage to any target.',
+    });
+
+  it('deals 3 damage to an opponent who targets the watched Dragon with a spell', () => {
+    const ctx = pod();
+    const regent = spawn(ctx, 'P1', thunderbreakRegent());
+    spawn(ctx, 'P2', mountain());
+    conjure(ctx, 'P2', testShock(), 'hand');
+
+    const p1LifeBefore = ctx.state.players.find((p) => p.id === 'P1')?.life ?? 0;
+    const p2LifeBefore = ctx.state.players.find((p) => p.id === 'P2')?.life ?? 0;
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex((o) => o.description.includes('Cast Test Shock'));
+      if (i < 0) return { index: 0, targets: new Map() };
+      const slot = d.options[i]?.targets?.[0];
+      const target = slot?.options.find((id) => id === regent.id);
+      return { index: i, targets: new Map(target === undefined ? [] : [[0, target]]) };
+    });
+
+    // The Shock still deals its 2 to the Regent, and the Regent's trigger hits the opponent
+    // (P2, the Shock's controller) for 3 — not P1, its own controller.
+    expect(regent.damageMarked).toBe(2);
+    expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(p2LifeBefore - 3);
+    expect(ctx.state.players.find((p) => p.id === 'P1')?.life).toBe(p1LifeBefore);
+  });
+
+  it("does not fire when its own controller targets it", () => {
+    const ctx = pod();
+    const regent = spawn(ctx, 'P1', thunderbreakRegent());
+    spawn(ctx, 'P1', mountain());
+    conjure(ctx, 'P1', testShock(), 'hand');
+
+    const p1LifeBefore = ctx.state.players.find((p) => p.id === 'P1')?.life ?? 0;
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex((o) => o.description.includes('Cast Test Shock'));
+      if (i < 0) return { index: 0, targets: new Map() };
+      const slot = d.options[i]?.targets?.[0];
+      const target = slot?.options.find((id) => id === regent.id);
+      return { index: i, targets: new Map(target === undefined ? [] : [[0, target]]) };
+    });
+
+    expect(regent.damageMarked).toBe(2);
+    // No self-inflicted trigger damage: P1 only lost life to nothing here.
+    expect(ctx.state.players.find((p) => p.id === 'P1')?.life).toBe(p1LifeBefore);
+  });
+});

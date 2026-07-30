@@ -16,7 +16,7 @@ import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
 import { resetOpponentYields } from '../turn/priority';
-import { moveObject } from '../state/objects';
+import { moveObject, queueBecomesTargetedTriggers } from '../state/objects';
 import {
   effectivePT,
   hasKeyword,
@@ -461,6 +461,13 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       }
     }
   }
+
+  // "Becomes the target of … an ability" (Thunderbreak Regent) — CR 603.3d: a triggered
+  // ability's targets are chosen (and so become targeted) as it goes on the stack.
+  queueBecomesTargetedTriggers(ctx, trigger.controllerId, [
+    ...chosen.filter((t): t is ObjectId => t !== undefined),
+    ...Object.values(countTargets).flat(),
+  ]);
 
   const id = `o-${s.nextObjectNum++}` as ObjectId;
   const description = trigger.ability.description ?? trigger.sourceName;

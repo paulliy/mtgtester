@@ -15,6 +15,27 @@ import { constant } from '../value';
 import { registerOverride } from './index';
 
 registerOverride({
+  oracleId: 'oracle-thunderbreak-regent',
+  name: 'Thunderbreak Regent',
+  handledLines: [
+    'Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, ~ deals 3 damage to that player.',
+  ],
+  def: {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: {
+          when: 'becomesTargeted',
+          subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
+        },
+        targets: [],
+        effects: [{ op: 'dealDamage', target: 'targetingPlayer', amount: constant(3) }],
+      },
+    ],
+  },
+});
+
+registerOverride({
   oracleId: 'oracle-steel-hellkite',
   name: 'Steel Hellkite',
   handledLines: [
