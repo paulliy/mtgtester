@@ -59,6 +59,8 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   enteredTurnNumber: number;
   /** True if this permanent has been goaded during the current turn. */
   goadedThisTurn?: boolean;
+  /** Boast (CR 702.146): "activate only if this creature attacked this turn". */
+  attackedThisTurn?: boolean;
   /**
    * Indices into this permanent's `activatedAbilities` used this turn, for "activate only once
    * each turn" (CR 602.5f).
@@ -98,6 +100,11 @@ export interface EngineCardObject extends EngineObject {
   attachedToCardId?: string;
   /** For Adventure cards in exile (CR 715.3d). */
   onAdventure?: boolean;
+  /**
+   * "Until end of turn, you may cast spells from among those exiled cards" (Dream Pillager) —
+   * which player may cast this exiled card, and only until the cleanup step clears the grant.
+   */
+  playableUntilEotBy?: PlayerId;
 }
 
 export interface EngineStackObject extends StackObject {
@@ -193,11 +200,25 @@ export interface UntilEotEffect extends ContinuousEffect {
    * creature entering afterwards is not pumped and one that leaves and returns is not either.
    */
   targetCardIds: CardId[];
-  kind: 'ptDelta' | 'grantKeyword' | 'grantAbility' | 'cantBeBlocked';
+  kind: 'ptDelta' | 'grantKeyword' | 'grantAbility' | 'cantBeBlocked' | 'becomeCreature';
   power?: number;
   toughness?: number;
   keyword?: KeywordAbility;
   ability?: Ability;
+  /**
+   * "Becomes a 4/4 red and green Dragon artifact creature with flying until end of turn"
+   * (Atarka Monument, Sarkhan's +1) — a type-changing CDA-shaped grant, distinct from
+   * `ptDelta` (always sublayer 7d MODIFY, never a 7b SET) and from a single `grantKeyword`
+   * (this can add several at once).
+   */
+  becomeCreature?: {
+    addSubtypes: string[];
+    power: number;
+    toughness: number;
+    addKeywords: KeywordAbility[];
+    /** See `Effect.becomeCreatureUntilEot.replaceTypes` — full type-line replacement, not add. */
+    replaceTypes?: string[];
+  };
   /** Timestamp assigned on creation (CR 613.7 within-layer ordering). */
   timestamp: number;
 }
@@ -281,6 +302,12 @@ export interface EngineState extends GameState {
   excessDamageControllerIds: PlayerId[];
   /** Total damage dealt to each player THIS TURN (Spinerock Knoll). Reset at untap step. */
   damageDealtToPlayersThisTurn: Record<PlayerId, number>;
+  /**
+   * Which players were dealt COMBAT damage by each source THIS TURN, keyed by source card id
+   * (Steel Hellkite's "whose controller was dealt combat damage by this creature this turn") —
+   * by SOURCE, unlike `damageDealtToPlayersThisTurn`, and combat damage only. Reset at untap.
+   */
+  combatDamagePlayersBySource: Record<CardId, PlayerId[]>;
   /** Safety cap: exceeding this halts the game as a probable bug (brief §4). */
   turnCap: number;
 }

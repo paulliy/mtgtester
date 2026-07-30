@@ -12,7 +12,8 @@ import { cardTypesInAllGraveyards } from '../cards/value';
 import type { Selector } from '../cards/selector';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { selectPermanents } from './continuous';
-import { effectivePT } from '../state/queries';
+import { effectivePT, getDefByOracleId } from '../state/queries';
+import { spellManaValue } from '../state/objects';
 
 function scopedPermanents(
   ctx: GameContext,
@@ -78,6 +79,18 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       if (!targetId) return 0;
       const perm = ctx.state.battlefield.find((p) => p.id === targetId || p.cardId === targetId);
       return perm ? (perm.counters[value.counter] ?? 0) : 0;
+    }
+    case 'manaValueOfTarget': {
+      const targetId =
+        value.target === 'triggerObject'
+          ? scope.triggerObjectCardId
+          : typeof value.target === 'number'
+            ? scope.targets?.[value.target]
+            : undefined;
+      if (!targetId) return 0;
+      const perm = ctx.state.battlefield.find((p) => p.id === targetId || p.cardId === targetId);
+      if (perm === undefined) return 0;
+      return spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined);
     }
   }
 }

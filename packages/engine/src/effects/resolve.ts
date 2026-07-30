@@ -17,7 +17,7 @@ import type {
   TargetSpec,
 } from '../cards/definition';
 import { TAP_COST } from '../cards/definition';
-import { evaluateCondition } from '../cards/condition';
+import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
 import { selectMatches } from '../cards/selector';
 import type { GameGen } from '../decisions';
 import { UnmodeledCardError } from '../errors';
@@ -25,7 +25,7 @@ import { candidateOf, computeCharacteristics, matchesSelector, selectPermanents 
 import { evaluateValueIn } from './values';
 import type { Value, ValueScope } from '../cards/value';
 import { evaluateValue } from '../cards/value';
-import { canPay, describeManaCost, entryIsUsable, planPayment } from '../mana/cost';
+import { canPay, describeManaCost, entryIsUsable, planPayment, withX } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import { addMana, removeMana, selectEntriesToSpend } from '../mana/pool';
 import type { ManaEntry, PaymentPurpose } from '../cards/ability';
@@ -173,6 +173,14 @@ export function dealDamageToPlayer(
   }
   ctx.state.damageDealtToPlayersThisTurn[target.id] =
     (ctx.state.damageDealtToPlayersThisTurn[target.id] ?? 0) + amount;
+  // "…whose controller was dealt combat damage by this creature this turn" (Steel Hellkite) —
+  // by SOURCE, unlike the total above, and combat damage only.
+  if (opts.combat) {
+    const bySource = ctx.state.combatDamagePlayersBySource[source.cardId] ?? [];
+    if (!bySource.includes(target.id)) {
+      ctx.state.combatDamagePlayersBySource[source.cardId] = [...bySource, target.id];
+    }
+  }
   // 21+ combat damage from the same commander eliminates — COMBAT damage only (§5.7).
   if (opts.combat && opts.sourceIsCommander) {
     target.commanderDamageTaken[source.cardId] =
@@ -213,6 +221,21 @@ function dealDamageToObject(
   }
   const perm = findPermanent(ctx, id);
   if (perm === undefined) return;
+  // CR 120.3c: damage to a planeswalker removes that many loyalty counters instead of marking
+  // damage — a planeswalker has no toughness to compare marked damage against.
+  if (computeCharacteristics(ctx, perm).types.includes('Planeswalker')) {
+    const have = perm.counters['loyalty'] ?? 0;
+    perm.counters['loyalty'] = Math.max(0, have - amount);
+    emit(ctx, 'damage', {
+      source: source.name,
+      sourceCardId: source.cardId,
+      target: perm.name,
+      targetCardId: perm.cardId,
+      amount,
+      combat: false,
+    });
+    return;
+  }
   dealDamageToCreature(ctx, source, perm, amount, {
     combat: false,
     sourceHasDeathtouch,
@@ -315,7 +338,7 @@ export function isTargetStillLegal(
   }
   const player = ctx.state.players.find((p) => p.id === targetId);
   if (player !== undefined) {
-    return (kind === 'anyTarget' || kind === 'player') && !player.hasLost;
+    return (kind === 'anyTarget' || kind === 'player' || kind === 'playerOrPlaneswalker') && !player.hasLost;
   }
   const perm = findPermanent(ctx, targetId);
   if (perm === undefined || !permanentMatchesKind(ctx, perm, kind)) return false;
@@ -446,6 +469,9 @@ export function* executeAbility(
     if (r === 'source') {
       return ctx.state.battlefield.find((p) => p.cardId === source.cardId)?.id ?? null;
     }
+    if (r === 'eventPlayer') {
+      return (scope.eventPlayerId as unknown as ObjectId | undefined) ?? null;
+    }
     if (r === 'attachedToSource') {
       const sourcePermanent = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
       if (sourcePermanent === undefined || sourcePermanent.attachedTo === null) return null;
@@ -522,6 +548,8 @@ export function* executeAbility(
           sourceColors: secondTraits.colors,
         });
         emit(ctx, 'fight', { source: source.name, first: first.name, second: second.name });
+        queueTriggersForObject(ctx, 'fights', first);
+        queueTriggersForObject(ctx, 'fights', second);
         break;
       }
       case 'pumpUntilEot': {
@@ -1140,13 +1168,19 @@ export function* executeAbility(
           checkTargetCardId !== null && checkTargetCardId !== undefined
             ? checkTargetCardId
             : triggerObjectCardId;
-        const holds = evaluateCondition(ctx, effect.condition, {
+        const conditionSource = {
           cardId: source.cardId,
           controllerId: source.controllerId,
           ...(effectiveTriggerObjectCardId !== undefined
             ? { triggerObjectCardId: effectiveTriggerObjectCardId }
             : {}),
-        });
+        };
+        // "You may pay {R}. If you do, …" (Spit Flame) — a choice condition needs the
+        // interactive `resolveCondition`, not the pure `evaluateCondition` every other
+        // `conditionalEffect` (Provoke the Trolls, Stubborn Denial) uses.
+        const holds = isChoiceCondition(effect.condition)
+          ? yield* resolveCondition(ctx, effect.condition, conditionSource, source.name)
+          : evaluateCondition(ctx, effect.condition, conditionSource);
         const chosen = holds ? effect.then : effect.else;
         if (chosen.length > 0) {
           yield* executeAbility(
@@ -1185,6 +1219,148 @@ export function* executeAbility(
             ability: effect.ability,
             timestamp: ctx.state.nextTimestamp++,
           });
+        }
+        break;
+      }
+      case 'becomeCreatureUntilEot': {
+        const t = ref(effect.target);
+        if (t === null) break;
+        const perm = findPermanent(ctx, t) as EnginePermanent | undefined;
+        if (perm === undefined) break;
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${perm.name} becomes a ${effect.power}/${effect.toughness} ${effect.subtypes.join(' ')} creature until end of turn`,
+          targetCardIds: [perm.cardId],
+          kind: 'becomeCreature',
+          becomeCreature: {
+            addSubtypes: effect.subtypes,
+            power: effect.power,
+            toughness: effect.toughness,
+            addKeywords: effect.keywords,
+            ...(effect.replaceTypes !== undefined ? { replaceTypes: effect.replaceTypes } : {}),
+          },
+          timestamp: ctx.state.nextTimestamp++,
+        });
+        emit(ctx, 'becomeCreature', { source: source.name, target: perm.name });
+        break;
+      }
+      case 'fightUpToOneChosen': {
+        const aId = ref(effect.a);
+        const bId = countTargets?.[effect.bSlot]?.[0];
+        if (aId === null || bId === undefined) break;
+        const a = findPermanent(ctx, aId);
+        const b = findPermanent(ctx, bId);
+        if (a === undefined || b === undefined || a.id === b.id) break;
+        const aPower = effectivePT(ctx, a).power;
+        const bPower = effectivePT(ctx, b).power;
+        const aTraits = combatDamageTraits(ctx, a);
+        const bTraits = combatDamageTraits(ctx, b);
+        dealDamageToCreature(ctx, permanentSource(a), b, aPower, {
+          combat: false,
+          sourceHasDeathtouch: aTraits.deathtouch,
+          sourceHasLifelink: aTraits.lifelink,
+          sourceHasInfect: aTraits.infect,
+          sourceColors: aTraits.colors,
+        });
+        dealDamageToCreature(ctx, permanentSource(b), a, bPower, {
+          combat: false,
+          sourceHasDeathtouch: bTraits.deathtouch,
+          sourceHasLifelink: bTraits.lifelink,
+          sourceHasInfect: bTraits.infect,
+          sourceColors: bTraits.colors,
+        });
+        emit(ctx, 'fight', { source: source.name, first: a.name, second: b.name });
+        queueTriggersForObject(ctx, 'fights', a);
+        queueTriggersForObject(ctx, 'fights', b);
+        break;
+      }
+      case 'discardHand': {
+        yield* discardCards(ctx, controller, controller.hand.length);
+        break;
+      }
+      case 'eachPlayerDiscardHandThenDraw': {
+        const n = amountOf(effect.count);
+        for (const player of ctx.state.players) {
+          if (player.hasLost) continue;
+          yield* discardCards(ctx, player, player.hand.length);
+          yield* drawCards(ctx, player, n);
+        }
+        break;
+      }
+      case 'returnSelfFromGraveyardToHand': {
+        const card = controller.graveyard.find((c) => c.cardId === source.cardId);
+        if (card === undefined) break;
+        yield* moveObject(ctx, card, { zone: 'hand' });
+        break;
+      }
+      case 'shuffleChosenGraveyardCardsIntoLibrary': {
+        const playerId = ref(effect.playerSlot);
+        const target = playerId === null ? undefined : ctx.state.players.find((p) => p.id === playerId);
+        if (target === undefined) break;
+        const chosenIds = countTargets?.[effect.cardsSlot] ?? [];
+        for (const cardId of chosenIds) {
+          const card = target.graveyard.find((c) => c.id === cardId || c.cardId === cardId);
+          if (card === undefined) continue;
+          yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'bottom' });
+        }
+        ctx.rng.shuffle(target.library);
+        emit(ctx, 'shuffle', { player: target.id }, target.id);
+        break;
+      }
+      case 'destroyEachNonlandMVFromDamagedControllers': {
+        const mv = amountOf(effect.mv);
+        const damagedControllers = new Set(ctx.state.combatDamagePlayersBySource[source.cardId] ?? []);
+        const toDestroy = ctx.state.battlefield.filter((p) => {
+          if (!damagedControllers.has(p.controllerId)) return false;
+          const chars = computeCharacteristics(ctx, p);
+          if (chars.types.includes('Land')) return false;
+          const def = getDefByOracleId(ctx, p.oracleId, p.name);
+          return spellManaValue(def, undefined) === mv;
+        });
+        for (const perm of toDestroy) {
+          if (hasKeyword(ctx, perm, 'indestructible')) continue;
+          yield* moveObject(ctx, perm, { zone: 'graveyard' });
+        }
+        break;
+      }
+      case 'mayPayXThenDealDamage': {
+        const t = ref(effect.target);
+        if (t === null) break;
+        const sources = manaSourcesFor(ctx, controller.id);
+        const allows = allowanceFor(ctx, controller.id, { kind: 'other' });
+        // Search upward for the largest affordable X; a hard cap guards against a templated
+        // cost with no `{X}` symbol ever growing, which would make every candidate identical
+        // and loop forever (see the op's doc comment).
+        const hardCap = controller.manaEntries.length + sources.length * 2 + 1;
+        const choices: number[] = [];
+        for (let x = 0; x <= hardCap; x++) {
+          if (!canPay(withX(effect.templatedCost, x), controller.manaEntries, sources, allows)) break;
+          choices.push(x);
+        }
+        if (choices.length === 0) break;
+        const outcome = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `${source.name}: pay ${describeManaCost(effect.templatedCost)} for X? (0 declines)`,
+          options: choices.map((x) => ({
+            type: 'payX',
+            description: x === 0 ? "Don't pay" : `Pay X=${x} (${describeManaCost(withX(effect.templatedCost, x))})`,
+          })),
+        };
+        const chosenX = choices[outcome.index] ?? 0;
+        if (chosenX <= 0) break;
+        yield* payManaCost(ctx, controller, withX(effect.templatedCost, chosenX));
+        dealDamageToObject(ctx, source, t, chosenX);
+        break;
+      }
+      case 'exileTopNPlayableUntilEot': {
+        const count = amountOf(effect.count);
+        for (let i = 0; i < count; i++) {
+          const top = controller.library[0];
+          if (top === undefined) break;
+          const moved = (yield* moveObject(ctx, top, { zone: 'exile' })) as EngineCardObject | null;
+          if (moved !== null) moved.playableUntilEotBy = controller.id;
         }
         break;
       }
@@ -1863,6 +2039,9 @@ export function endUntilEotEffects(ctx: GameContext): void {
     perm.timestamp = ctx.state.nextTimestamp++;
     delete perm.copyOriginal;
     delete perm.copyUntilEot;
+  }
+  for (const card of ctx.state.exile) {
+    if (card.playableUntilEotBy !== undefined) delete card.playableUntilEotBy;
   }
 }
 

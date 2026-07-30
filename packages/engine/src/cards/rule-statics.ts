@@ -34,6 +34,13 @@ export type RuleStatic =
       alsoFromCommandZone?: boolean;
       /** Affinity-style reduction printed on the spell itself, not granted from the battlefield. */
       selfOnly?: boolean;
+      /**
+       * "Boast abilities you activate cost {1} less to activate for each Dragon you control"
+       * (Dragonkin Berserker) — this reduction applies to ACTIVATING an ability, not casting a
+       * spell. Omitted defaults to `'cast'`, the overwhelmingly common case every other card
+       * here uses.
+       */
+      appliesTo?: 'cast' | 'activate';
     }
   /**
    * "Creature spells you control can't be countered" (Rhythm of the Wild) — a STATE-DEPENDENT

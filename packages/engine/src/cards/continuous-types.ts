@@ -25,6 +25,13 @@ export type ContinuousOp =
       /** Set the land subtype and drop other land subtypes (Blood Moon → Mountain). */
       setLandSubtype?: string;
       /**
+       * Replace the ENTIRE type line, dropping every existing type (Sarkhan, the Dragonspeaker's
+       * "becomes a … creature" — no "in addition to its other types", unlike Atarka Monument's
+       * plain `addTypes`, so he genuinely stops being a planeswalker while this applies).
+       */
+      setTypes?: string[];
+      setSubtypes?: string[];
+      /**
        * Remove the abilities the affected permanent generates from its rules text (CR 305.7,
        * the consequence of Blood Moon *setting* a land's subtype). This is what lets one
        * continuous effect extinguish another's — the core CR 613.8 dependency.

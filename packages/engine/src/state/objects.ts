@@ -443,6 +443,12 @@ export interface TriggerEventSubject {
   amount?: number;
   /** Player involved in this event (the defender for attacks/combat damage). */
   playerId?: PlayerId | undefined;
+  /**
+   * The controller of the spell/ability that caused this event — "becomes the target of a
+   * spell or ability AN OPPONENT controls" (Thunderbreak Regent) needs to compare this against
+   * the watching permanent's own controller, which nothing else in `TriggerEventSubject` names.
+   */
+  sourceControllerId?: PlayerId;
 }
 
 /**
@@ -489,11 +495,14 @@ export function queueTriggersForEvent(
             ? null
             : (ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId ?? null),
       };
-      const matched = subjects.filter((s) =>
-        spec.subject.kind === 'self'
+      const matched = subjects.filter((s) => {
+        // "an opponent controls" (Thunderbreak Regent) — the watcher's own targeting spells
+        // and abilities never qualify, regardless of what the subject selector matches.
+        if (when === 'becomesTargeted' && s.sourceControllerId === source.controllerId) return false;
+        return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
-          : matchesSelector(ctx, s.permanent, spec.subject.selector, from),
-      );
+          : matchesSelector(ctx, s.permanent, spec.subject.selector, from);
+      });
       if (matched.length === 0) continue;
 
       // Aggregate triggers can either combine the whole event or combine separately for each
@@ -542,6 +551,44 @@ export function queueTriggersForEvent(
     }
   }
 
+
+  // Graveyard-functioning triggers (CR 112.6a/603.6d, Spit Flame) — a card whose ability says
+  // it works from the graveyard is scanned here in addition to the battlefield; nothing else
+  // ever looks at a graveyard card's `def.triggers`.
+  for (const player of ctx.state.players) {
+    for (const card of player.graveyard) {
+      const def = ctx.defs.get(card.oracleId);
+      if (def === undefined) continue;
+      for (const ability of def.triggers) {
+        if (ability.functionsInGraveyard !== true) continue;
+        const spec = ability.trigger;
+        if (spec === undefined || spec.when !== when || !('subject' in spec)) continue;
+        const from: SelectorSource = { cardId: card.cardId, controllerId: card.ownerId };
+        const matched = subjects.filter((s) =>
+          spec.subject.kind === 'self'
+            ? false
+            : matchesSelector(ctx, s.permanent, spec.subject.selector, from),
+        );
+        for (const s of matched) {
+          if (
+            spec.condition !== undefined &&
+            !evaluateCondition(ctx, spec.condition, { ...from, triggerObjectCardId: s.permanent.cardId })
+          ) {
+            continue;
+          }
+          ctx.state.pendingTriggers.push({
+            controllerId: card.ownerId,
+            sourceCardId: card.cardId,
+            sourceOracleId: card.oracleId,
+            sourceName: card.name,
+            ability,
+            triggerObjectCardId: s.permanent.cardId,
+          });
+          debug(ctx, 'stack', `graveyard trigger queued: ${card.name}`);
+        }
+      }
+    }
+  }
 
   for (const player of ctx.state.players) {
     for (const emblem of player.emblems) {

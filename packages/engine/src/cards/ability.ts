@@ -44,7 +44,9 @@ export type AbilityCost =
   /** Pay energy counters (CR 122.8). */
   | { kind: 'payEnergy'; amount: number }
   | { kind: 'loyalty'; delta: number }
-  | { kind: 'mana'; cost: ParsedManaCost };
+  | { kind: 'mana'; cost: ParsedManaCost }
+  /** "Exile this card from your graveyard" (Runehorn Hellkite) — a graveyard-only cost. */
+  | { kind: 'exileSelfFromGraveyard' };
 
 export interface AlternativeCast {
   kind: 'overload' | 'adventure' | 'omen';
@@ -74,6 +76,8 @@ export interface ActivatedAbility {
   oncePerTurn?: boolean;
   /** Zone from which the ability is activated (default: battlefield). */
   zone?: 'hand' | 'battlefield' | 'graveyard';
+  /** Boast (CR 702.146): "Activate only if this creature attacked this turn." */
+  requiresAttackedThisTurn?: true;
 }
 
 /**
@@ -250,6 +254,7 @@ export type TargetKind =
   | 'artifactEnchantmentOrPlaneswalker'
   | 'player'
   | 'anyTarget' // creature or player (CR 115.4)
+  | 'playerOrPlaneswalker' // "target player or planeswalker" (Clan Defiance)
   | 'spell'
   /**
    * "target Dragon permanent card" — a card in a graveyard, not a permanent (CR 111.2). Always
@@ -294,6 +299,14 @@ export interface TargetSpec {
    * covering exactly the ordinary slots and never needs a placeholder for the rest.
    */
   count?: { min: number; max: number };
+  /**
+   * "Target cards from THEIR graveyard" (Loaming Shaman) — for a `cardInGraveyard` slot, the
+   * index of an EARLIER ordinary slot holding the player whose graveyard this searches, instead
+   * of the ability's own controller. By the same "count slots are allocated after ordinary
+   * slots" convention `count` relies on, that earlier slot is always already chosen by the time
+   * this one is computed.
+   */
+  graveyardOwnerSlot?: number;
 }
 
 /**
@@ -311,7 +324,17 @@ export interface TargetSpec {
  * referent at all: it is the one-element case of a `Selector`, and the `…Each` primitives
  * already express it as `{kind:'self'}`.
  */
-export type EffectRef = number | 'triggerObject' | 'attachedToSource' | 'source';
+export type EffectRef =
+  | number
+  | 'triggerObject'
+  | 'attachedToSource'
+  | 'source'
+  /**
+   * "deals 3 damage to THAT PLAYER" (Thunderbreak Regent) — the player involved in the firing
+   * event (`ValueScope.eventPlayerId`), referenced directly rather than through a target slot
+   * (CR text never says "target player" here — it is a reference, like `'triggerObject'`).
+   */
+  | 'eventPlayer';
 
 /**
  * One atomic mechanical primitive. Targeted primitives carry `target`: an `EffectRef` naming
@@ -531,6 +554,70 @@ export type Effect =
   | { op: 'millAndReturnSpells' }
   | { op: 'hideawayExileTop4' }
   | { op: 'playExiledCardFree' }
+  /**
+   * "Then it fights UP TO ONE target creature you don't control" (Primal Might) — the second
+   * fighter is a variable-count slot (0 or 1, `TargetSpec.count`), not an ordinary target: an
+   * unchosen "up to one" is legal to announce with nothing selected, which a plain `EffectRef`
+   * (always exactly one slot) cannot express.
+   */
+  | { op: 'fightUpToOneChosen'; a: EffectRef; bSlot: number }
+  /**
+   * "Becomes a 4/4 red and green Dragon artifact creature with flying until end of turn"
+   * (Atarka Monument) / "becomes a legendary 4/4 red Dragon creature with flying,
+   * indestructible, and haste" (Sarkhan) — a type-changing + P/T-setting + keyword-granting
+   * until-end-of-turn effect (CR 613's "becomes a creature" CDA shape).
+   */
+  | {
+      op: 'becomeCreatureUntilEot';
+      target: EffectRef;
+      subtypes: string[];
+      power: number;
+      toughness: number;
+      keywords: KeywordAbility[];
+      /**
+       * "Becomes a ... creature" with no "in addition to its other types" (Sarkhan) REPLACES
+       * the whole type line, unlike Atarka Monument's plain additive grant — Sarkhan genuinely
+       * stops being a planeswalker while this applies. Omitted keeps the additive behavior.
+       */
+      replaceTypes?: string[];
+    }
+  /** "Discard your hand" (Sarkhan's emblem) — the controller only, no draw follows. */
+  | { op: 'discardHand' }
+  /** "Each player discards their hand, then draws seven cards" (Dragon Mage, Runehorn Hellkite). */
+  | { op: 'eachPlayerDiscardHandThenDraw'; count: Value }
+  /**
+   * "Target player shuffles any number of target cards from their graveyard into their
+   * library" (Loaming Shaman) — always shuffles, even if zero cards were chosen.
+   */
+  | { op: 'shuffleChosenGraveyardCardsIntoLibrary'; playerSlot: number; cardsSlot: number }
+  /**
+   * "You may pay {X}{R}. If you do, it deals X damage to any target" (Flameblast Dragon) — X is
+   * chosen as part of the SAME decision as whether to pay at all, so this is one self-contained
+   * op rather than a `conditionalEffect` composed with a choice condition.
+   *
+   * `templatedCost` is the PRINTED cost, `{X}` symbol and all — a cost with no `x` set would make
+   * every candidate-X payability check identical, turning the affordable-X search into an
+   * infinite loop.
+   */
+  | { op: 'mayPayXThenDealDamage'; target: EffectRef; templatedCost: ParsedManaCost }
+  /**
+   * "Destroy each nonland permanent with mana value X whose controller was dealt combat damage
+   * by this creature this turn" (Steel Hellkite). Untargeted: "whose controller was dealt
+   * combat damage by THIS" is a fact about `combatDamagePlayersBySource` keyed on the ability's
+   * own source, not a `Selector`.
+   */
+  | { op: 'destroyEachNonlandMVFromDamagedControllers'; mv: Value }
+  /**
+   * "Return this card from your graveyard to your hand" (Spit Flame) — acts on the ability's
+   * OWN source, already in the graveyard (`functionsInGraveyard`).
+   */
+  | { op: 'returnSelfFromGraveyardToHand' }
+  /**
+   * "Exile that many cards from the top of your library. Until end of turn, you may cast
+   * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
+   * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.
+   */
+  | { op: 'exileTopNPlayableUntilEot'; count: Value }
   | { op: 'noOp' };
 
 /**
@@ -595,6 +682,13 @@ export type TriggerWhen =
   | 'attacks'
   | 'dealsCombatDamageToPlayer'
   | 'becomesTapped'
+  | 'fights'
+  /**
+   * "Becomes the target of a spell or ability an opponent controls" (Thunderbreak Regent).
+   * Always opponent-sourced — CR gives no printed template for "…a spell YOU control", so
+   * `queueTriggersForEvent` enforces the opponent check itself rather than a variant field.
+   */
+  | 'becomesTargeted'
   | 'untapStep'
   | 'drawStep'
   | 'castsSpell'
@@ -603,7 +697,14 @@ export type TriggerWhen =
   | 'mainPhase';
 
 /** The object-event half of `TriggerHead`. */
-export type ObjectTriggerWhen = 'enters' | 'dies' | 'attacks' | 'dealsCombatDamageToPlayer' | 'becomesTapped';
+export type ObjectTriggerWhen =
+  | 'enters'
+  | 'dies'
+  | 'attacks'
+  | 'dealsCombatDamageToPlayer'
+  | 'becomesTapped'
+  | 'fights'
+  | 'becomesTargeted';
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
 export type TriggerHead =
@@ -687,4 +788,10 @@ export interface Ability {
       targetSlots?: number[];
     }[];
   };
+  /**
+   * "Whenever a Dragon you control enters, you may pay {R}. If you do, return this card from
+   * your graveyard to your hand" (Spit Flame, CR 603.6d) — a triggered ability that functions
+   * while its source sits in the graveyard rather than the battlefield.
+   */
+  functionsInGraveyard?: true;
 }

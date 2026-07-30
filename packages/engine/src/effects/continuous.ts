@@ -163,6 +163,24 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       out.push({ applies, op: { layer: 6, addKeyword: eff.keyword }, timestamp: eff.timestamp });
     } else if (eff.kind === 'grantAbility' && eff.ability !== undefined) {
       out.push({ applies, op: { layer: 6, addTrigger: eff.ability }, timestamp: eff.timestamp });
+    } else if (eff.kind === 'becomeCreature' && eff.becomeCreature !== undefined) {
+      const bc = eff.becomeCreature;
+      out.push({
+        applies,
+        op:
+          bc.replaceTypes !== undefined
+            ? { layer: 4, setTypes: bc.replaceTypes, setSubtypes: bc.addSubtypes }
+            : { layer: 4, addTypes: ['Creature'], addSubtypes: bc.addSubtypes },
+        timestamp: eff.timestamp,
+      });
+      out.push({
+        applies,
+        op: { layer: 7, sublayer: 'b', power: { kind: 'const', n: bc.power }, toughness: { kind: 'const', n: bc.toughness } },
+        timestamp: eff.timestamp,
+      });
+      for (const keyword of bc.addKeywords) {
+        out.push({ applies, op: { layer: 6, addKeyword: keyword }, timestamp: eff.timestamp });
+      }
     }
   }
 
@@ -247,6 +265,8 @@ function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean
 function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): void {
   switch (op.layer) {
     case 4:
+      if (op.setTypes !== undefined) chars.types = [...op.setTypes];
+      if (op.setSubtypes !== undefined) chars.subtypes = [...op.setSubtypes];
       for (const t of op.addTypes ?? []) if (!chars.types.includes(t)) chars.types.push(t);
       for (const s of op.addSubtypes ?? []) if (!chars.subtypes.includes(s)) chars.subtypes.push(s);
       // Changeling (CR 702.73): every creature type, always — a characteristic-defining ability

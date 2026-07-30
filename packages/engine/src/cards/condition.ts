@@ -20,10 +20,12 @@
  */
 
 import type { GameGen } from '../decisions';
-import { loseLife } from '../effects/resolve';
+import { loseLife, payManaCost } from '../effects/resolve';
 import { emit } from '../log/log';
-import { opponentsOf } from '../state/queries';
+import { allowanceFor, manaSourcesFor, opponentsOf } from '../state/queries';
 import type { GameContext } from '../state/types';
+import { canPay, describeManaCost } from '../mana/cost';
+import type { ParsedManaCost } from '../mana/cost';
 import { computeCharacteristics, matchesSelector, selectPermanents } from '../effects/continuous';
 import type { Selector, SelectorSource } from './selector';
 import { ofType } from './selector';
@@ -47,6 +49,12 @@ export type Condition =
   | { kind: 'opponentCount'; cmp: '>=' | '<='; n: number }
   /** "you may pay 2 life" — a choice, not a fact. Only `resolveCondition` can answer it. */
   | { kind: 'mayPayLife'; n: number }
+  /**
+   * "you may pay {R}. If you do, ..." (Spit Flame) — a fixed-cost mana payment offered as a
+   * choice, distinct from `mayPayLife`: this pays through the normal mana system (taps sources,
+   * spends the pool), not straight from life total.
+   */
+  | { kind: 'mayPayMana'; cost: ParsedManaCost }
   /**
    * "you may reveal a Mountain or Forest card from your hand" (Game Trail and the other
    * "Snarl"/"slow land" cycles) — a choice, and only legal to offer at all when the hand
@@ -108,6 +116,7 @@ export function isChoiceCondition(condition: Condition): boolean {
   switch (condition.kind) {
     case 'mayPayLife':
     case 'mayRevealCardFromHand':
+    case 'mayPayMana':
       return true;
     case 'allOf':
     case 'anyOf':
@@ -245,6 +254,10 @@ export function evaluateCondition(
       throw new Error(
         'engine bug: mayRevealCardFromHand is a choice condition — use resolveCondition, not evaluateCondition',
       );
+    case 'mayPayMana':
+      throw new Error(
+        'engine bug: mayPayMana is a choice condition — use resolveCondition, not evaluateCondition',
+      );
   }
 }
 
@@ -305,6 +318,25 @@ export function* resolveCondition(
       };
       if (outcome.index !== 0) return false;
       emit(ctx, 'revealCard', { player: player.id, source: sourceName, reason: label });
+      return true;
+    }
+    case 'mayPayMana': {
+      const player = ctx.state.players.find((p) => p.id === source.controllerId);
+      if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
+      const sources = manaSourcesFor(ctx, player.id);
+      const allows = allowanceFor(ctx, player.id, { kind: 'other' });
+      if (!canPay(condition.cost, player.manaEntries, sources, allows)) return false;
+      const outcome = yield {
+        decisionType: 'general',
+        player: player.id,
+        prompt: `${sourceName}: may pay ${describeManaCost(condition.cost)}. Pay it?`,
+        options: [
+          { type: 'payMana', description: `Pay ${describeManaCost(condition.cost)}` },
+          { type: 'decline', description: "Don't pay" },
+        ],
+      };
+      if (outcome.index !== 0) return false;
+      yield* payManaCost(ctx, player, condition.cost);
       return true;
     }
     case 'allOf': {

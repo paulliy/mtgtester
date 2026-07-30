@@ -15,6 +15,7 @@ import {
   makePermanent,
   moveObject,
   queueCastTriggers,
+  queueTriggersForEvent,
   removeFromCurrentZone,
 } from '../state/objects';
 import { getDefByOracleId, wardCostOf } from '../state/queries';
@@ -26,7 +27,7 @@ import type {
   GameContext,
 } from '../state/types';
 import type { PriorityActionPayload } from './legal';
-import { computeTargetOptions, costReductionFor, manaPortionOf, selectedModeTargetSlots, validateChosenTargets } from './legal';
+import { activationCostReductionFor, computeTargetOptions, costReductionFor, manaPortionOf, selectedModeTargetSlots, validateChosenTargets } from './legal';
 import { resetOpponentYields } from '../turn/priority';
 
 /**
@@ -138,6 +139,23 @@ function queueWardTriggers(
     });
     debug(ctx, 'stack', `ward triggered: ${perm.name} (${describeManaCost(cost)})`);
   }
+}
+
+/**
+ * "Becomes the target of a spell or ability" (Thunderbreak Regent, CR 603.3d) — every
+ * permanent named in `targets` just became a target, regardless of whose. `queueTriggersForEvent`
+ * itself enforces "an opponent controls" against `sourceControllerId`.
+ */
+function queueBecomesTargetedTriggers(
+  ctx: GameContext,
+  sourceControllerId: PlayerId,
+  targets: readonly ObjectId[],
+): void {
+  const subjects = targets
+    .map((id) => ctx.state.battlefield.find((p) => p.id === id))
+    .filter((p): p is EnginePermanent => p !== undefined)
+    .map((permanent) => ({ permanent, sourceControllerId }));
+  queueTriggersForEvent(ctx, 'becomesTargeted', subjects);
 }
 
 /**
@@ -274,10 +292,56 @@ export function* applyPriorityAction(
       // it (CR 603.3b), so the trigger resolves first.
       queueCastTriggers(ctx, spellEntry);
       queueWardTriggers(ctx, player.id, spellCard.id, targets);
+      queueBecomesTargetedTriggers(ctx, player.id, targets);
       return;
     }
 
     case 'activateAbility': {
+      // Graveyard-zone activation (CR 112.6a/602.5c, Runehorn Hellkite) — the source has no
+      // `EnginePermanent` (tap/sacrifice/etc. machinery), so it takes its own short path: pay
+      // mana directly, pay `exileSelfFromGraveyard` by moving the card, and push a stack entry
+      // built from the card's own fields the same way `resolveTopOfStack` builds `source` for
+      // any activated ability — it never dereferences a battlefield permanent.
+      if (payload.fromGraveyard === true) {
+        const card = player.graveyard.find((c) => c.id === payload.objectId);
+        if (card === undefined) throw new Error('engine bug: graveyard ability source not in graveyard');
+        const def = getDefByOracleId(ctx, card.oracleId, card.name);
+        const activated = def.activatedAbilities[payload.index];
+        if (activated === undefined) throw new Error('engine bug: activated ability index invalid');
+
+        const manaCost = activated.costs.find((c): c is Extract<AbilityCost, { kind: 'mana' }> => c.kind === 'mana');
+        if (manaCost !== undefined) yield* payManaCost(ctx, player, manaCost.cost);
+        if (activated.costs.some((c) => c.kind === 'exileSelfFromGraveyard')) {
+          yield* moveObject(ctx, card, { zone: 'exile' });
+        }
+
+        const description = activated.ability.description ?? 'activated ability';
+        const id = `o-${s.nextObjectNum++}` as ObjectId;
+        const stackEntry: EngineStackObject = {
+          id,
+          sourceId: id,
+          controllerId: player.id,
+          kind: 'activatedAbility' as const,
+          description: `${card.name} — ${description}`,
+          targets: [],
+          card: null,
+          ability: activated.ability,
+          sourceOracleId: card.oracleId,
+          sourceCardId: card.cardId,
+          isCommanderCast: false,
+        };
+        resetOpponentYields(ctx, player.id);
+        s.stack.push(stackEntry);
+        emit(
+          ctx,
+          'activateAbility',
+          { player: player.id, source: card.name, cardId: card.cardId, description, targets: [] },
+          player.id,
+        );
+        debug(ctx, 'stack', `${player.id} activates ${card.name} (graveyard) — ${description}`);
+        return;
+      }
+
       const perm = ctx.state.battlefield.find((p) => p.id === payload.objectId);
       if (perm === undefined) throw new Error('engine bug: ability source not on the battlefield');
       const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
@@ -313,9 +377,19 @@ export function* applyPriorityAction(
         sourceOracleId: perm.oracleId,
         sourceCardId: perm.cardId,
         isCommanderCast: false,
+        ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
       };
 
-      const paymentScope = yield* payActivationCosts(ctx, player, perm, activated.costs);
+      // Boast's activation cost reduction, and {X} announced as part of this activation (CR
+      // 602.1b) — folded into the `mana` cost component before payment, the same treatment
+      // `costSpell`'s X gets.
+      const activationReduction = activationCostReductionFor(ctx, player.id, perm.oracleId, perm.cardId);
+      const costsToPay = activated.costs.map((c) =>
+        c.kind === 'mana'
+          ? { ...c, cost: withX(subtractGeneric(c.cost, activationReduction.generic), payload.x ?? 0) }
+          : c,
+      );
+      const paymentScope = yield* payActivationCosts(ctx, player, perm, costsToPay);
       if (paymentScope.stationPower !== undefined) stackEntry.triggerScope = { stationPower: paymentScope.stationPower };
       // Recorded at ANNOUNCEMENT (CR 602.5f), not on resolution: the restriction is on
       // activating, so countering the ability does not give the activation back.
@@ -330,6 +404,7 @@ export function* applyPriorityAction(
       );
       debug(ctx, 'stack', `${player.id} activates ${perm.name} — ${description}`);
       queueWardTriggers(ctx, player.id, id, targets);
+      queueBecomesTargetedTriggers(ctx, player.id, targets);
       return;
     }
 

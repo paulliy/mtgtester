@@ -81,7 +81,9 @@ export type Value =
   /** Power of the creature tapped to pay a Station activation cost, captured at announcement. */
   | { kind: 'stationPower' }
   | { kind: 'countersOnSelf'; counter: string }
-  | { kind: 'countersOnTarget'; target: EffectRef; counter: string };
+  | { kind: 'countersOnTarget'; target: EffectRef; counter: string }
+  /** "Where X is that artifact's mana value" (Hoard-Smelter Dragon) — the target's mana value. */
+  | { kind: 'manaValueOfTarget'; target: EffectRef };
 
 export const constant = (n: number): Value => ({ kind: 'const', n });
 

@@ -417,7 +417,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
 
     const picked: ObjectId[] = [];
     for (let k = 0; k < effectiveMax; k++) {
-      const candidates = computeTargetOptions(ctx, spec, trigger.controllerId, undefined, trigger.scope?.eventPlayerId).filter(
+      const candidates = computeTargetOptions(ctx, spec, trigger.controllerId, undefined, trigger.scope?.eventPlayerId, chosen).filter(
         (id) => !alreadyChosen.has(id) && !picked.includes(id),
       );
       if (candidates.length === 0) break;
