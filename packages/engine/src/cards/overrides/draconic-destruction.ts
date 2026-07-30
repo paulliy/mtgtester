@@ -6,6 +6,300 @@ import { registerOverride } from './index';
 import { parseManaCost } from '../../mana/cost';
 import { allOf, anyOf, not, OTHER, ofSubtype, ofType, SELF, withKeyword, YOURS } from '../selector';
 
+const DRAGONKIN_BERSERKER_DEF = {
+  ruleStatics: [{
+    kind: 'costReduction' as const,
+    appliesTo: 'activate' as const,
+    amount: { kind: 'countPermanents' as const, selector: ofSubtype('Dragon'), scope: 'you' as const },
+    filter: SELF,
+  }],
+  activatedAbilities: [{
+    // The generic interpreter already parses this line's token-creation on its own; carried
+    // over unchanged here so replacing `activatedAbilities` for the Boast restriction below
+    // does not silently drop it.
+    costs: [{ kind: 'mana' as const, cost: parseManaCost('{4}{R}').cost! }],
+    timing: 'any' as const,
+    requiresAttackedThisTurn: true as const,
+    oncePerTurn: true,
+    ability: {
+      kind: 'activated' as const,
+      targets: [],
+      effects: [{
+        op: 'createToken' as const,
+        count: { kind: 'const' as const, n: 1 },
+        spec: {
+          name: 'Dragon', typeLine: 'Creature — Dragon', types: ['Creature'], subtypes: ['Dragon'],
+          colors: ['R' as const], power: 5, toughness: 5, keywords: ['flying' as const],
+        },
+      }],
+      description: 'Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying',
+    },
+  }],
+};
+
+const HOARD_SMELTER_DRAGON_DEF = {
+  activatedAbilities: [{
+    costs: [{ kind: 'mana' as const, cost: parseManaCost('{3}{R}').cost! }],
+    timing: 'any' as const,
+    ability: {
+      kind: 'activated' as const,
+      targets: [{ kind: 'artifact' as const }],
+      // Pump BEFORE destroy: the mana-value read has to happen while the artifact is still
+      // on the battlefield, or `manaValueOfTarget` has nothing left to look up.
+      effects: [
+        { op: 'pumpUntilEot' as const, target: 'source' as const, power: { kind: 'manaValueOfTarget' as const, target: 0 }, toughness: 0 },
+        { op: 'destroy' as const, target: 0 },
+      ],
+      description: "Destroy target artifact; ~ gets +X/+0 until end of turn, X is that artifact's mana value",
+    },
+  }],
+};
+
+const LOAMING_SHAMAN_DEF = {
+  triggers: [{
+    kind: 'triggered' as const,
+    trigger: { when: 'enters' as const, subject: { kind: 'self' as const } },
+    targets: [
+      { kind: 'player' as const },
+      { kind: 'cardInGraveyard' as const, graveyardOwnerSlot: 0, count: { min: 0, max: Infinity } },
+    ],
+    effects: [{ op: 'shuffleChosenGraveyardCardsIntoLibrary' as const, playerSlot: 0, cardsSlot: 1 }],
+    description: 'Enters — target player shuffles any number of target cards from their graveyard into their library',
+  }],
+};
+
+const PRIMAL_MIGHT_DEF = {
+  spellAbility: {
+    kind: 'spell' as const,
+    targets: [
+      { kind: 'creature' as const, controller: 'you' as const },
+      { kind: 'creature' as const, controller: 'opponent' as const, count: { min: 0, max: 1 } },
+    ],
+    effects: [
+      { op: 'pumpUntilEot' as const, target: 0, power: { kind: 'xValue' as const }, toughness: { kind: 'xValue' as const } },
+      { op: 'fightUpToOneChosen' as const, a: 0, bSlot: 1 },
+    ],
+    description: "Target creature you control gets +X/+X until end of turn, then fights up to one target creature you don't control",
+  },
+};
+
+const RUNEHORN_HELLKITE_DEF = {
+  activatedAbilities: [{
+    costs: [
+      { kind: 'mana' as const, cost: parseManaCost('{5}{R}').cost! },
+      { kind: 'exileSelfFromGraveyard' as const },
+    ],
+    timing: 'any' as const,
+    zone: 'graveyard' as const,
+    ability: {
+      kind: 'activated' as const,
+      targets: [],
+      effects: [{ op: 'eachPlayerDiscardHandThenDraw' as const, count: { kind: 'const' as const, n: 7 } }],
+      description: 'Exile this card from your graveyard — each player discards their hand, then draws seven cards',
+    },
+  }],
+};
+
+const DRAGON_MAGE_DEF = {
+  triggers: [{
+    kind: 'triggered' as const,
+    trigger: { when: 'dealsCombatDamageToPlayer' as const, subject: { kind: 'self' as const } },
+    targets: [],
+    effects: [{ op: 'eachPlayerDiscardHandThenDraw' as const, count: { kind: 'const' as const, n: 7 } }],
+    description: 'Combat damage to a player — each player discards their hand, then draws seven cards',
+  }],
+};
+
+const DREAM_PILLAGER_DEF = {
+  triggers: [{
+    kind: 'triggered' as const,
+    trigger: { when: 'dealsCombatDamageToPlayer' as const, subject: { kind: 'self' as const } },
+    targets: [],
+    effects: [{ op: 'exileTopNPlayableUntilEot' as const, count: { kind: 'damageDealt' as const } }],
+    description: 'Combat damage to a player — exile that many cards from the top of your library; you may cast them until end of turn',
+  }],
+};
+
+const FOE_RAZER_REGENT_DEF = {
+  triggers: [
+    {
+      kind: 'triggered' as const,
+      trigger: { when: 'enters' as const, subject: { kind: 'self' as const } },
+      optional: true,
+      targets: [{ kind: 'creature' as const, controller: 'opponent' as const }],
+      effects: [{ op: 'fight' as const, first: 'source' as const, second: 0 }],
+      description: "Enters — you may have it fight target creature you don't control",
+    },
+    {
+      kind: 'triggered' as const,
+      trigger: { when: 'fights' as const, subject: { kind: 'permanent' as const, selector: allOf(ofType('Creature'), YOURS) } },
+      targets: [],
+      effects: [{
+        op: 'registerDelayedTrigger' as const,
+        when: 'endStep' as const,
+        expiry: 'endStep' as const,
+        target: 'triggerObject' as const,
+        ability: {
+          kind: 'triggered' as const,
+          targets: [],
+          effects: [{ op: 'putCounters' as const, target: 'triggerObject' as const, counter: '+1/+1', count: 2 }],
+          description: 'Put two +1/+1 counters on it',
+        },
+      }],
+      description: 'A creature you control fights — put two +1/+1 counters on it at the beginning of the next end step',
+    },
+  ],
+};
+
+const FLAMEBLAST_DRAGON_DEF = {
+  triggers: [{
+    kind: 'triggered' as const,
+    trigger: { when: 'attacks' as const, subject: { kind: 'self' as const } },
+    targets: [{ kind: 'anyTarget' as const }],
+    effects: [{ op: 'mayPayXThenDealDamage' as const, target: 0, templatedCost: parseManaCost('{X}{R}').cost! }],
+    description: 'Attacks — you may pay {X}{R}; if you do, it deals X damage to any target',
+  }],
+};
+
+const SARKHAN_THE_DRAGONSPEAKER_DEF = {
+  activatedAbilities: [
+    {
+      costs: [{ kind: 'loyalty' as const, delta: 1 }],
+      timing: 'sorcery' as const,
+      ability: {
+        kind: 'activated' as const,
+        targets: [],
+        effects: [{
+          op: 'becomeCreatureUntilEot' as const, target: 'source' as const,
+          subtypes: ['Dragon'], power: 4, toughness: 4, keywords: ['flying' as const, 'indestructible' as const, 'haste' as const],
+          replaceTypes: ['Creature'],
+        }],
+        description: 'Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste',
+      },
+    },
+    {
+      // "~ deals 4 damage to target creature. That creature deals 4 damage to him" — not one
+      // of the two claimed lines (the generic interpreter's loyalty-cost parsing does not
+      // recognize this line either), so it is authored here too rather than left unmodeled.
+      costs: [{ kind: 'loyalty' as const, delta: -3 }],
+      timing: 'sorcery' as const,
+      ability: {
+        kind: 'activated' as const,
+        targets: [{ kind: 'creature' as const }],
+        effects: [
+          { op: 'dealDamage' as const, target: 0, amount: { kind: 'const' as const, n: 4 } },
+          { op: 'dealDamage' as const, target: 'source' as const, amount: { kind: 'const' as const, n: 4 } },
+        ],
+        description: '~ deals 4 damage to target creature. That creature deals 4 damage to him',
+      },
+    },
+    {
+      costs: [{ kind: 'loyalty' as const, delta: -6 }],
+      timing: 'sorcery' as const,
+      ability: {
+        kind: 'activated' as const,
+        targets: [],
+        effects: [{
+          op: 'createEmblem' as const,
+          name: 'Sarkhan Emblem',
+          abilities: [
+            {
+              kind: 'triggered' as const,
+              trigger: { when: 'drawStep' as const, player: 'you' as const },
+              targets: [],
+              effects: [{ op: 'draw' as const, count: { kind: 'const' as const, n: 2 } }],
+              description: 'At the beginning of your draw step, draw two additional cards',
+            },
+            {
+              kind: 'triggered' as const,
+              trigger: { when: 'endStep' as const, player: 'you' as const },
+              targets: [],
+              effects: [{ op: 'discardHand' as const }],
+              description: 'At the beginning of your end step, discard your hand',
+            },
+          ],
+        }],
+        description: 'You get an emblem with "At the beginning of your draw step, draw two additional cards" and "At the beginning of your end step, discard your hand"',
+      },
+    },
+  ],
+};
+
+const SPIT_FLAME_DEF = {
+  triggers: [{
+    kind: 'triggered' as const,
+    trigger: { when: 'enters' as const, subject: { kind: 'permanent' as const, selector: allOf(ofSubtype('Dragon'), YOURS) } },
+    functionsInGraveyard: true as const,
+    targets: [],
+    effects: [{
+      op: 'conditionalEffect' as const,
+      condition: { kind: 'mayPayMana' as const, cost: parseManaCost('{R}').cost! },
+      then: [{ op: 'returnSelfFromGraveyardToHand' as const }],
+      else: [],
+    }],
+    description: 'A Dragon you control enters — you may pay {R}; if you do, return this card from your graveyard to your hand',
+  }],
+};
+
+const THUNDERBREAK_REGENT_DEF = {
+  triggers: [{
+    kind: 'triggered' as const,
+    trigger: { when: 'becomesTargeted' as const, subject: { kind: 'permanent' as const, selector: allOf(ofSubtype('Dragon'), YOURS) } },
+    targets: [],
+    effects: [{ op: 'dealDamage' as const, target: 'eventPlayer' as const, amount: { kind: 'const' as const, n: 3 } }],
+    description: 'A Dragon you control becomes the target of a spell or ability an opponent controls — deal 3 damage to that player',
+  }],
+};
+
+const CLAN_DEFIANCE_DEF = {
+  spellAbility: {
+    kind: 'spell' as const,
+    targets: [
+      { kind: 'creature' as const, filter: withKeyword('flying') },
+      { kind: 'creature' as const, filter: not(withKeyword('flying')) },
+      { kind: 'playerOrPlaneswalker' as const },
+    ],
+    effects: [],
+    modes: {
+      minChoices: 1,
+      maxChoices: 3,
+      options: [
+        { effects: [{ op: 'dealDamage' as const, target: 0, amount: { kind: 'xValue' as const } }], description: '~ deals X damage to target creature with flying', targetSlots: [0] },
+        { effects: [{ op: 'dealDamage' as const, target: 1, amount: { kind: 'xValue' as const } }], description: '~ deals X damage to target creature without flying', targetSlots: [1] },
+        { effects: [{ op: 'dealDamage' as const, target: 2, amount: { kind: 'xValue' as const } }], description: '~ deals X damage to target player or planeswalker', targetSlots: [2] },
+      ],
+    },
+    description: 'Choose one or more — deal X damage to a flying creature, a nonflying creature, and/or a player or planeswalker',
+  },
+};
+
+const STEEL_HELLKITE_DEF = {
+  activatedAbilities: [
+    {
+      // Also already generically parsed; carried over unchanged for the same reason as above.
+      costs: [{ kind: 'mana' as const, cost: parseManaCost('{2}').cost! }],
+      timing: 'any' as const,
+      ability: {
+        kind: 'activated' as const,
+        targets: [],
+        effects: [{ op: 'pumpEachUntilEot' as const, selector: SELF, power: 1, toughness: 0 }],
+        description: '{2}: ~ gets +1/+0 until end of turn.',
+      },
+    },
+    {
+      costs: [{ kind: 'mana' as const, cost: parseManaCost('{X}').cost! }],
+      timing: 'any' as const,
+      oncePerTurn: true,
+      ability: {
+        kind: 'activated' as const,
+        targets: [],
+        effects: [{ op: 'destroyEachNonlandMVFromDamagedControllers' as const, mv: { kind: 'xValue' as const } }],
+        description: 'Destroy each nonland permanent with mana value X whose controller was dealt combat damage by this creature this turn',
+      },
+    },
+  ],
+};
+
 const FRONTIER_SIEGE_DEF = {
   entersChoosingOption: {
     prompt: 'Choose Khans or Dragons',
@@ -143,18 +437,26 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     name: "Dragonkin Berserker",
     handledLines: [
           "Boast abilities you activate cost {1} less to activate for each Dragon you control.",
+          // Registering ANY non-empty override for this oracleId disables the interpreter's
+          // generic ability-word label stripping for its remaining lines (`interpret.ts`'s
+          // `genericLabelStripAllowed`) — so the "Boast — " prefix here, previously stripped
+          // and generically parsed, now needs its own claim too.
           "Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying."
     ],
-    def: {},
+    def: DRAGONKIN_BERSERKER_DEF,
   });
   registerOverride({
     oracleId: "oracle-dragonkin-berserker",
     name: "Dragonkin Berserker",
     handledLines: [
           "Boast abilities you activate cost {1} less to activate for each Dragon you control.",
+          // Registering ANY non-empty override for this oracleId disables the interpreter's
+          // generic ability-word label stripping for its remaining lines (`interpret.ts`'s
+          // `genericLabelStripAllowed`) — so the "Boast — " prefix here, previously stripped
+          // and generically parsed, now needs its own claim too.
           "Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying."
     ],
-    def: {},
+    def: DRAGONKIN_BERSERKER_DEF,
   });
 
   registerOverride({
@@ -280,7 +582,21 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "{4}{R}{G}: ~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn."
     ],
-    def: {},
+    def: {
+      activatedAbilities: [{
+        costs: [{ kind: 'mana', cost: parseManaCost('{4}{R}{G}').cost! }],
+        timing: 'any',
+        ability: {
+          kind: 'activated',
+          targets: [],
+          effects: [{
+            op: 'becomeCreatureUntilEot', target: 'source',
+            subtypes: ['Dragon'], power: 4, toughness: 4, keywords: ['flying'],
+          }],
+          description: '~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn',
+        },
+      }],
+    },
   });
   registerOverride({
     oracleId: "oracle-atarka-monument",
@@ -288,7 +604,21 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "{4}{R}{G}: ~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn."
     ],
-    def: {},
+    def: {
+      activatedAbilities: [{
+        costs: [{ kind: 'mana', cost: parseManaCost('{4}{R}{G}').cost! }],
+        timing: 'any',
+        ability: {
+          kind: 'activated',
+          targets: [],
+          effects: [{
+            op: 'becomeCreatureUntilEot', target: 'source',
+            subtypes: ['Dragon'], power: 4, toughness: 4, keywords: ['flying'],
+          }],
+          description: '~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn',
+        },
+      }],
+    },
   });
 
   registerOverride({
@@ -350,7 +680,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
           "• ~ deals X damage to target creature without flying.",
           "• ~ deals X damage to target player or planeswalker."
     ],
-    def: {},
+    def: CLAN_DEFIANCE_DEF,
   });
   registerOverride({
     oracleId: "oracle-clan-defiance",
@@ -361,7 +691,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
           "• ~ deals X damage to target creature without flying.",
           "• ~ deals X damage to target player or planeswalker."
     ],
-    def: {},
+    def: CLAN_DEFIANCE_DEF,
   });
 
   registerOverride({
@@ -484,7 +814,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards."
     ],
-    def: {},
+    def: DRAGON_MAGE_DEF,
   });
   registerOverride({
     oracleId: "oracle-dragon-mage",
@@ -492,7 +822,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards."
     ],
-    def: {},
+    def: DRAGON_MAGE_DEF,
   });
 
   registerOverride({
@@ -501,7 +831,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Whenever this creature deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards."
     ],
-    def: {},
+    def: DREAM_PILLAGER_DEF,
   });
   registerOverride({
     oracleId: "oracle-dream-pillager",
@@ -509,7 +839,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Whenever this creature deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards."
     ],
-    def: {},
+    def: DREAM_PILLAGER_DEF,
   });
 
   registerOverride({
@@ -519,7 +849,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
           "When this creature enters, you may have it fight target creature you don't control.",
           "Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step."
     ],
-    def: {},
+    def: FOE_RAZER_REGENT_DEF,
   });
   registerOverride({
     oracleId: "oracle-foe-razer-regent",
@@ -528,7 +858,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
           "When this creature enters, you may have it fight target creature you don't control.",
           "Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step."
     ],
-    def: {},
+    def: FOE_RAZER_REGENT_DEF,
   });
 
   registerOverride({
@@ -537,7 +867,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target."
     ],
-    def: {},
+    def: FLAMEBLAST_DRAGON_DEF,
   });
   registerOverride({
     oracleId: "oracle-flameblast-dragon",
@@ -545,7 +875,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target."
     ],
-    def: {},
+    def: FLAMEBLAST_DRAGON_DEF,
   });
 
   registerOverride({
@@ -609,7 +939,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "{3}{R}: Destroy target artifact. ~ gets +X/+0 until end of turn, where X is that artifact's mana value."
     ],
-    def: {},
+    def: HOARD_SMELTER_DRAGON_DEF,
   });
   registerOverride({
     oracleId: "oracle-hoard-smelter-dragon",
@@ -617,7 +947,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "{3}{R}: Destroy target artifact. ~ gets +X/+0 until end of turn, where X is that artifact's mana value."
     ],
-    def: {},
+    def: HOARD_SMELTER_DRAGON_DEF,
   });
 
   registerOverride({
@@ -643,7 +973,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "When this creature enters, target player shuffles any number of target cards from their graveyard into their library."
     ],
-    def: {},
+    def: LOAMING_SHAMAN_DEF,
   });
   registerOverride({
     oracleId: "oracle-loaming-shaman",
@@ -651,7 +981,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "When this creature enters, target player shuffles any number of target cards from their graveyard into their library."
     ],
-    def: {},
+    def: LOAMING_SHAMAN_DEF,
   });
 
   registerOverride({
@@ -694,7 +1024,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Target creature you control gets +X/+X until end of turn. Then it fights up to one target creature you don't control."
     ],
-    def: {},
+    def: PRIMAL_MIGHT_DEF,
   });
   registerOverride({
     oracleId: "oracle-primal-might",
@@ -702,7 +1032,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Target creature you control gets +X/+X until end of turn. Then it fights up to one target creature you don't control."
     ],
-    def: {},
+    def: PRIMAL_MIGHT_DEF,
   });
 
   registerOverride({
@@ -728,7 +1058,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "{5}{R}, Exile this card from your graveyard: Each player discards their hand, then draws seven cards."
     ],
-    def: {},
+    def: RUNEHORN_HELLKITE_DEF,
   });
   registerOverride({
     oracleId: "oracle-runehorn-hellkite",
@@ -736,7 +1066,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "{5}{R}, Exile this card from your graveyard: Each player discards their hand, then draws seven cards."
     ],
-    def: {},
+    def: RUNEHORN_HELLKITE_DEF,
   });
 
   registerOverride({
@@ -777,18 +1107,20 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     name: "Sarkhan, the Dragonspeaker",
     handledLines: [
           "+1: Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.",
+          "−3: ~ deals 4 damage to target creature. That creature deals 4 damage to him.",
           "−6: You get an emblem with \"At the beginning of your draw step, draw two additional cards\" and \"At the beginning of your end step, discard your hand.\""
     ],
-    def: {},
+    def: SARKHAN_THE_DRAGONSPEAKER_DEF,
   });
   registerOverride({
     oracleId: "oracle-sarkhan-the-dragonspeaker",
     name: "Sarkhan, the Dragonspeaker",
     handledLines: [
           "+1: Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.",
+          "−3: ~ deals 4 damage to target creature. That creature deals 4 damage to him.",
           "−6: You get an emblem with \"At the beginning of your draw step, draw two additional cards\" and \"At the beginning of your end step, discard your hand.\""
     ],
-    def: {},
+    def: SARKHAN_THE_DRAGONSPEAKER_DEF,
   });
 
   registerOverride({
@@ -842,7 +1174,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Whenever a Dragon you control enters, you may pay {R}. If you do, return this card from your graveyard to your hand."
     ],
-    def: {},
+    def: SPIT_FLAME_DEF,
   });
   registerOverride({
     oracleId: "oracle-spit-flame",
@@ -850,7 +1182,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Whenever a Dragon you control enters, you may pay {R}. If you do, return this card from your graveyard to your hand."
     ],
-    def: {},
+    def: SPIT_FLAME_DEF,
   });
 
   registerOverride({
@@ -859,7 +1191,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "{X}: Destroy each nonland permanent with mana value X whose controller was dealt combat damage by this creature this turn. Activate only once each turn."
     ],
-    def: {},
+    def: STEEL_HELLKITE_DEF,
   });
   registerOverride({
     oracleId: "oracle-steel-hellkite",
@@ -867,7 +1199,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "{X}: Destroy each nonland permanent with mana value X whose controller was dealt combat damage by this creature this turn. Activate only once each turn."
     ],
-    def: {},
+    def: STEEL_HELLKITE_DEF,
   });
 
   registerOverride({
@@ -876,7 +1208,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player."
     ],
-    def: {},
+    def: THUNDERBREAK_REGENT_DEF,
   });
   registerOverride({
     oracleId: "oracle-thunderbreak-regent",
@@ -884,7 +1216,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     handledLines: [
           "Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player."
     ],
-    def: {},
+    def: THUNDERBREAK_REGENT_DEF,
   });
 
   registerOverride({

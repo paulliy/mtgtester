@@ -234,6 +234,10 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   }
 
   const declared = attackers(ctx);
+  // Boast (CR 702.146a): "activate only if this creature attacked this turn" — tracked
+  // separately from `attacking` (which clears at end of combat) so the check still holds
+  // in a later main phase.
+  for (const perm of declared) perm.attackedThisTurn = true;
   const defendingPlayers = [...new Set(declared.map((a) => a.attacking as PlayerId))];
   for (const defId of defendingPlayers) {
     playerById(ctx, defId).yieldUntilEndOfTurn = false;

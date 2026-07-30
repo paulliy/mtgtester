@@ -65,7 +65,7 @@ export type PriorityActionPayload =
       altIndex?: number;
     }
   /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
-  | { kind: 'activateAbility'; objectId: ObjectId; index: number }
+  | { kind: 'activateAbility'; objectId: ObjectId; index: number; x?: number; fromGraveyard?: boolean }
   | { kind: 'companionToHand' };
 
 function addManaCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
@@ -120,6 +120,7 @@ export function manaPortionOf(costs: readonly AbilityCost[]): ParsedManaCost {
     total.generic += cost.cost.generic;
     total.colorless += cost.cost.colorless;
     for (const c of ['W', 'U', 'B', 'R', 'G'] as const) total.colored[c] += cost.cost.colored[c];
+    if (cost.cost.x !== undefined) total.x = (total.x ?? 0) + cost.cost.x;
   }
   return total;
 }
@@ -198,6 +199,7 @@ export function costReductionFor(
 
   for (const entry of [...gatherRuleStatics(ctx), ...ownReductions]) {
     if (entry.static.kind !== 'costReduction') continue;
+    if ((entry.static.appliesTo ?? 'cast') !== 'cast') continue;
     if (entry.controllerId !== casterId) continue;
     if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== casterId) continue;
     if (entry.static.excludesSelf === true && entry.sourceCardId === castCardId) continue;
@@ -234,6 +236,47 @@ export function costReductionFor(
 }
 
 /**
+ * Like `costReductionFor`, but for ACTIVATING an ability — "Boast abilities you activate cost
+ * {1} less to activate for each Dragon you control" (Dragonkin Berserker). Matched against the
+ * ACTIVATED ABILITY'S SOURCE permanent's characteristics, not a spell's.
+ */
+export function activationCostReductionFor(
+  ctx: GameContext,
+  controllerId: PlayerId,
+  sourceOracleId: OracleId,
+  sourceCardId: string,
+): CostReductionResult {
+  const def = getDefByOracleId(ctx, sourceOracleId, sourceOracleId);
+  const candidate: SelectorCandidate = {
+    cardId: sourceCardId,
+    controllerId,
+    types: def.types,
+    supertypes: def.supertypes,
+    subtypes: def.subtypes,
+    colors: def.colors,
+    power: def.power ?? 0,
+    keywords: def.keywords,
+    isToken: false,
+    enteredThisTurn: false,
+  };
+  const source: SelectorSource = { cardId: sourceCardId, controllerId };
+
+  let generic = 0;
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'costReduction' || entry.static.appliesTo !== 'activate') continue;
+    if (entry.controllerId !== controllerId) continue;
+    if (entry.static.filter !== undefined && !selectMatches(candidate, entry.static.filter, source)) {
+      continue;
+    }
+    generic += evaluateValueIn(ctx, entry.static.amount, {
+      controllerId: entry.controllerId,
+      sourceCardId: entry.sourceCardId,
+    });
+  }
+  return { generic };
+}
+
+/**
  * Does a permanent match a target kind, by its COMPUTED types (ADR 0007) — an animated
  * Mutavault is a legal "target creature" while a Blood-Mooned land is not a legal "target
  * artifact". Shared by option generation and the CR 608.2b re-check at resolution so the two
@@ -266,6 +309,8 @@ export function permanentMatchesKind(
       return true;
     case 'anyTarget':
       return types.includes('Creature');
+    case 'playerOrPlaneswalker':
+      return types.includes('Planeswalker');
     case 'player':
     case 'spell':
     case 'cardInGraveyard':
@@ -295,6 +340,13 @@ export function computeTargetOptions(
   sourceColors?: readonly Color[],
   /** The player associated with this trigger event, if target text refers to them. */
   eventPlayerId?: PlayerId,
+  /**
+   * Earlier ordinary slots' chosen ids, keyed by slot index — how `graveyardOwnerSlot`
+   * (Loaming Shaman: "target cards from THEIR graveyard") finds whose graveyard to search.
+   * Omitted when no such lookup is needed, or when this slot is only being previewed before
+   * the referenced slot has been chosen (falls back to the caster's own graveyard).
+   */
+  chosenTargets?: readonly ObjectId[],
 ): ObjectId[] {
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
@@ -314,9 +366,13 @@ export function computeTargetOptions(
     const player = playerById(ctx, casterId);
     return player.commandZone.filter((c) => c.isCommander).map((c) => c.id);
   }
-  // A card in a graveyard, not a permanent — always the caster's own (see `TargetKind`).
+  // A card in a graveyard — the caster's own, unless `graveyardOwnerSlot` names an earlier
+  // slot holding the actual owner (Loaming Shaman: "target cards from THEIR graveyard").
   if (kind === 'cardInGraveyard') {
-    return graveyardTargets(ctx, casterId, filter).map((c) => c.id);
+    const graveyardOwnerSlot = typeof spec === 'object' ? spec.graveyardOwnerSlot : undefined;
+    const ownerId =
+      graveyardOwnerSlot === undefined ? casterId : (chosenTargets?.[graveyardOwnerSlot] as PlayerId | undefined) ?? casterId;
+    return graveyardTargets(ctx, ownerId, filter).map((c) => c.id);
   }
   const players = playersInApnapOrder(ctx).map((p) => p.id);
   if (kind === 'player') return players;
@@ -338,8 +394,9 @@ export function computeTargetOptions(
     .filter((p) => filter === undefined || matchesSelector(ctx, p, filter, { cardId: '', controllerId: casterId }))
     .map((p) => p.id);
 
-  // "Any target" is creature-or-player (CR 115.4). Players are never hexproof-filtered.
-  return kind === 'anyTarget' ? [...permanents, ...players] : permanents;
+  // "Any target" is creature-or-player (CR 115.4); "player or planeswalker" is analogous.
+  // Players are never hexproof-filtered.
+  return kind === 'anyTarget' || kind === 'playerOrPlaneswalker' ? [...permanents, ...players] : permanents;
 }
 
 /** Target slots for casting a card, or null when a required slot has zero options. */
@@ -611,6 +668,9 @@ export function computePriorityOptions(
     if (obj.ownerId === player.id && obj.onAdventure === true) {
       considerCast(obj, false, false, true);
     }
+    if (obj.playableUntilEotBy === player.id) {
+      considerCast(obj, false, false, true);
+    }
   }
 
   // Best-effort "unlocks" hint (Tier 1 extension of ADR 0010 decision 2): for each `playLand`
@@ -665,6 +725,8 @@ export function computePriorityOptions(
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
       // CR 602.5f — "activate only once each turn", tracked on the permanent.
       if (activated.oncePerTurn === true && perm.activationsThisTurn.includes(index)) continue;
+      // Boast (CR 702.146a): "activate only if this creature attacked this turn."
+      if (activated.requiresAttackedThisTurn === true && perm.attackedThisTurn !== true) continue;
       if (!canPayNonManaCosts(ctx, perm, activated.costs)) continue;
       // A cost that taps or sacrifices the source spends the source, so it cannot ALSO be
       // tapped for mana toward the same cost. `payActivationCosts` enforces the same thing by
@@ -677,54 +739,108 @@ export function computePriorityOptions(
         kind: 'activateAbility',
         sourceOracleId: perm.oracleId,
       });
-      const manaCost = manaPortionOf(activated.costs);
-      if (!canPay(manaCost, player.manaEntries, usable, allows)) continue;
+      const reduction = activationCostReductionFor(ctx, player.id, perm.oracleId, perm.cardId);
+      const baseManaCost = subtractGeneric(manaPortionOf(activated.costs), reduction.generic);
 
-      const slots: { slot: number; options: ObjectId[] }[] = [];
-      let slotNum = 0;
-      let missingTarget = false;
-      // Equip (CR 702.6, `attachSelfTo`): re-attaching to the creature this is ALREADY
-      // attached to is a strict no-op — same state in, same state out — so it is not a
-      // meaningful target. Left in, the model can spam it forever for free once the
-      // decision cache starts answering it identically every time (ADR 0010).
-      const isAttachAbility = activated.ability.effects.some(
-        (e: import('../cards/ability').Effect) => e.op === 'attachSelfTo',
-      );
-      for (const spec of activated.ability.targets) {
-        let targetOptions = computeTargetOptions(ctx, spec, player.id);
-        if (isAttachAbility && perm.attachedTo !== null) {
-          targetOptions = targetOptions.filter((id) => id !== perm.attachedTo);
+      // {X} is announced as part of activating (CR 602.1b), same treatment casting gives it —
+      // every affordable value is its own option (Steel Hellkite).
+      const xSymbols = baseManaCost.x ?? 0;
+      const xChoices: number[] = [];
+      if (xSymbols === 0) xChoices.push(0);
+      else {
+        for (let x = 0; ; x++) {
+          if (!canPay(withX(baseManaCost, x), player.manaEntries, usable, allows)) break;
+          xChoices.push(x);
         }
-        // CR 602.2b: an ability with no legal target for a slot cannot be activated at all.
-        if (targetOptions.length === 0) {
-          missingTarget = true;
-          break;
-        }
-        slots.push({ slot: slotNum++, options: targetOptions });
+        if (xChoices.length === 0) continue;
       }
-      if (missingTarget) continue;
 
-      const option: EngineActionOption = {
+      for (const x of xChoices) {
+        const manaCost = withX(baseManaCost, x);
+        if (!canPay(manaCost, player.manaEntries, usable, allows)) continue;
+
+        const slots: { slot: number; options: ObjectId[] }[] = [];
+        let slotNum = 0;
+        let missingTarget = false;
+        // Equip (CR 702.6, `attachSelfTo`): re-attaching to the creature this is ALREADY
+        // attached to is a strict no-op — same state in, same state out — so it is not a
+        // meaningful target. Left in, the model can spam it forever for free once the
+        // decision cache starts answering it identically every time (ADR 0010).
+        const isAttachAbility = activated.ability.effects.some(
+          (e: import('../cards/ability').Effect) => e.op === 'attachSelfTo',
+        );
+        for (const spec of activated.ability.targets) {
+          let targetOptions = computeTargetOptions(ctx, spec, player.id);
+          if (isAttachAbility && perm.attachedTo !== null) {
+            targetOptions = targetOptions.filter((id) => id !== perm.attachedTo);
+          }
+          // CR 602.2b: an ability with no legal target for a slot cannot be activated at all.
+          if (targetOptions.length === 0) {
+            missingTarget = true;
+            break;
+          }
+          slots.push({ slot: slotNum++, options: targetOptions });
+        }
+        if (missingTarget) continue;
+
+        const option: EngineActionOption = {
+          type: 'activateAbility',
+          description:
+            `${perm.name}: ${activated.ability.description ?? 'activate ability'}` +
+            (xSymbols > 0 ? ` with X=${x}` : ''),
+          payload: { kind: 'activateAbility', objectId: perm.id, index, ...(xSymbols > 0 ? { x } : {}) },
+          data: {
+            sourceName: perm.name,
+            sourceZone: 'battlefield',
+            abilityDescription: activated.ability.description ?? 'activate ability',
+            manaCost: describeManaCost(manaCost),
+            ...paymentPreview(ctx, player, manaCost, usable, allows),
+            abilityCosts: activated.costs,
+            ...(xSymbols > 0 ? { x } : {}),
+          },
+          interaction: {
+            kind: 'source',
+            sourceId: perm.id,
+            sourceCardId: perm.cardId,
+            abilityIndex: index,
+          },
+        };
+        if (slots.length > 0) option.targets = slots;
+        options.push(option);
+      }
+    }
+  }
+
+  // Activated abilities that function from the graveyard (CR 112.6a/602.5c, Runehorn Hellkite)
+  // — the same enumeration, but the source is a graveyard card rather than a battlefield
+  // permanent, so it has no `activationsThisTurn`/tap/sacrifice machinery to reuse.
+  for (const card of player.graveyard) {
+    const def = getDefByOracleId(ctx, card.oracleId, card.name);
+    for (const [index, activated] of def.activatedAbilities.entries()) {
+      if (activated.zone !== 'graveyard') continue;
+      if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
+      const allows = allowanceFor(ctx, player.id, {
+        kind: 'activateAbility',
+        sourceOracleId: card.oracleId,
+      });
+      const manaCost = manaPortionOf(activated.costs);
+      if (!canPay(manaCost, player.manaEntries, sources, allows)) continue;
+      if (activated.ability.targets.length > 0) continue; // not needed by any card in this pool
+
+      options.push({
         type: 'activateAbility',
-        description: `${perm.name}: ${activated.ability.description ?? 'activate ability'}`,
-        payload: { kind: 'activateAbility', objectId: perm.id, index },
+        description: `${card.name} (graveyard): ${activated.ability.description ?? 'activate ability'}`,
+        payload: { kind: 'activateAbility', objectId: card.id, index, fromGraveyard: true },
         data: {
-          sourceName: perm.name,
-          sourceZone: 'battlefield',
+          sourceName: card.name,
+          sourceZone: 'graveyard',
           abilityDescription: activated.ability.description ?? 'activate ability',
           manaCost: describeManaCost(manaCost),
-          ...paymentPreview(ctx, player, manaCost, usable, allows),
+          ...paymentPreview(ctx, player, manaCost, sources, allows),
           abilityCosts: activated.costs,
         },
-        interaction: {
-          kind: 'source',
-          sourceId: perm.id,
-          sourceCardId: perm.cardId,
-          abilityIndex: index,
-        },
-      };
-      if (slots.length > 0) option.targets = slots;
-      options.push(option);
+        interaction: { kind: 'source', sourceId: card.id, sourceCardId: card.cardId, abilityIndex: index },
+      });
     }
   }
 
