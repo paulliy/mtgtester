@@ -60,6 +60,13 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   /** True if this permanent has been goaded during the current turn. */
   goadedThisTurn?: boolean;
   /**
+   * True if this permanent attacked THIS TURN — Boast (CR 702.146): "Activate only if this
+   * permanent attacked this turn and only once each turn." Unlike `attacking` (cleared at
+   * `endCombatCleanup`), this survives into the postcombat main phase, which is when a Boast
+   * ability is actually activated in practice.
+   */
+  attackedThisTurn?: boolean;
+  /**
    * Indices into this permanent's `activatedAbilities` used this turn, for "activate only once
    * each turn" (CR 602.5f).
    *

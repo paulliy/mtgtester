@@ -15,6 +15,57 @@ import { constant } from '../value';
 import { registerOverride } from './index';
 
 registerOverride({
+  oracleId: 'oracle-dragonkin-berserker',
+  name: 'Dragonkin Berserker',
+  handledLines: [
+    'Boast abilities you activate cost {1} less to activate for each Dragon you control.',
+    'Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying.',
+  ],
+  def: {
+    // No general "Boast" keyword grammar exists (this precon has exactly one Boast card), so
+    // the reduction is scoped by subtype instead of a real Boast-aware filter — safe here
+    // because "Berserker" is unique to this card in the whole pool this deck draws from.
+    ruleStatics: [
+      {
+        kind: 'costReduction',
+        appliesTo: 'activate',
+        amount: { kind: 'countPermanents', selector: allOf(ofSubtype('Dragon'), YOURS), scope: 'you' },
+        filter: ofSubtype('Berserker'),
+      },
+    ],
+    activatedAbilities: [
+      {
+        costs: [{ kind: 'mana', cost: parseManaCost('{4}{R}').cost! }],
+        timing: 'any',
+        oncePerTurn: true,
+        requiresAttackedThisTurn: true,
+        ability: {
+          kind: 'activated',
+          targets: [],
+          effects: [
+            {
+              op: 'createToken',
+              count: constant(1),
+              spec: {
+                name: 'Dragon',
+                typeLine: 'Creature — Dragon',
+                types: ['Creature'],
+                subtypes: ['Dragon'],
+                colors: ['R'],
+                power: 5,
+                toughness: 5,
+                keywords: ['flying'],
+              },
+            },
+          ],
+          description: 'create a 5/5 red Dragon creature token with flying',
+        },
+      },
+    ],
+  },
+});
+
+registerOverride({
   oracleId: 'oracle-thunderbreak-regent',
   name: 'Thunderbreak Regent',
   handledLines: [

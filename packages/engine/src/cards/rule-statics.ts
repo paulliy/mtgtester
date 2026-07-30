@@ -32,6 +32,14 @@ export type RuleStatic =
       yourTurnOnly?: boolean;
       /** Eminence (CR 702.114): active from the command zone too, not just the battlefield. */
       alsoFromCommandZone?: boolean;
+      /**
+       * "Boast abilities you activate cost {1} less to activate" (Dragonkin Berserker) — an
+       * ACTIVATION cost reduction, not a casting one. Absent (the default) means casting, matching
+       * every reduction this engine modeled before Boast existed; `filter` still narrows WHICH
+       * abilities (there is no general "Boast" keyword grammar, so the override's filter does the
+       * narrowing a real Boast-aware selector would).
+       */
+      appliesTo?: 'cast' | 'activate';
     }
   /**
    * "Creature spells you control can't be countered" (Rhythm of the Wild) — a STATE-DEPENDENT

@@ -7,6 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { computePriorityOptions } from '../src/actions/legal';
 import { runCombatPhase } from '../src/combat/combat';
 import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
@@ -555,5 +556,53 @@ describe('Thunderbreak Regent', () => {
     expect(regent.damageMarked).toBe(2);
     // No self-inflicted trigger damage: P1 only lost life to nothing here.
     expect(ctx.state.players.find((p) => p.id === 'P1')?.life).toBe(p1LifeBefore);
+  });
+});
+
+describe('Dragonkin Berserker', () => {
+  const dragonkinBerserker = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Dragonkin Berserker',
+      oracleId: 'oracle-dragonkin-berserker',
+      typeLine: 'Creature — Human Berserker',
+      manaCost: '{1}{R}',
+      power: '2',
+      toughness: '2',
+      oracleText:
+        'First strike\nBoast abilities you activate cost {1} less to activate for each Dragon you control.\nBoast — {4}{R}: Create a 5/5 red Dragon creature token with flying. (Activate only if this creature attacked this turn and only once each turn.)',
+    });
+
+  const otherDragon = (): ReturnType<typeof oracle> =>
+    oracle({ name: 'Test Whelp', typeLine: 'Creature — Dragon', power: '1', toughness: '1' });
+
+  it('cannot Boast before attacking, even with mana available', () => {
+    const ctx = pod();
+    for (let i = 0; i < 5; i++) spawn(ctx, 'P1', mountain());
+    spawn(ctx, 'P1', dragonkinBerserker());
+
+    const options = computePriorityOptions(ctx, ctx.state.players.find((p) => p.id === 'P1')!);
+    expect(options.some((o) => o.description.includes('create a 5/5'))).toBe(false);
+  });
+
+  it('Boasting after attacking costs {1} less per Dragon controlled and makes a 5/5 flying Dragon', () => {
+    const ctx = pod();
+    for (let i = 0; i < 4; i++) spawn(ctx, 'P1', mountain()); // exactly {3}{R} worth — no more.
+    const berserker = spawn(ctx, 'P1', dragonkinBerserker());
+    spawn(ctx, 'P1', otherDragon()); // one other Dragon controlled: -{1}.
+
+    attackAll(ctx); // Berserker attacks P2, satisfying "attacked this turn".
+    const tokensBefore = ctx.state.battlefield.filter((p) => p.name === 'Dragon').length;
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex((o) => o.description.includes('create a 5/5'));
+      return { index: i >= 0 ? i : 0, targets: new Map() };
+    });
+
+    const tokens = ctx.state.battlefield.filter((p) => p.name === 'Dragon' && p.cardId !== berserker.cardId);
+    expect(tokens.length).toBe(tokensBefore + 1);
+    const token = tokens[tokens.length - 1]!;
+    expect(token.power).toBe(5);
+    expect(token.toughness).toBe(5);
+    expect(token.isToken).toBe(true);
   });
 });

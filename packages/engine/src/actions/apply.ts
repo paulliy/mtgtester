@@ -28,6 +28,7 @@ import type {
 } from '../state/types';
 import type { PriorityActionPayload } from './legal';
 import {
+  activationCostReductionFor,
   computeTargetOptions,
   costReductionFor,
   manaPortionOf,
@@ -385,12 +386,18 @@ export function* applyPriorityAction(
 
       // {X} was announced as part of activating (CR 602.1b) — fold it into the mana
       // component's generic amount before paying, the same way `withX` does for {X} spells.
-      const costsToPay =
-        payload.x === undefined
-          ? activated.costs
-          : activated.costs.map((c) =>
-              c.kind === 'mana' ? { kind: 'mana' as const, cost: withX(c.cost, payload.x as number) } : c,
-            );
+      // The Boast-style activation reduction (Dragonkin Berserker) applies the same way
+      // `computePriorityOptions` already priced it, so what is charged matches what was shown.
+      const activationReduction = activationCostReductionFor(ctx, player.id, perm.oracleId, perm.cardId);
+      const costsToPay = activated.costs.map((c) => {
+        if (c.kind !== 'mana') return c;
+        let cost = payload.x === undefined ? c.cost : withX(c.cost, payload.x);
+        if (activationReduction.colored !== undefined) {
+          cost = subtractColored(cost, activationReduction.colored);
+        }
+        cost = subtractGeneric(cost, activationReduction.generic);
+        return { kind: 'mana' as const, cost };
+      });
       yield* payActivationCosts(ctx, player, perm, costsToPay);
       // Recorded at ANNOUNCEMENT (CR 602.5f), not on resolution: the restriction is on
       // activating, so countering the ability does not give the activation back.

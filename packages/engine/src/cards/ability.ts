@@ -73,6 +73,12 @@ export interface ActivatedAbility {
    * separate graveyard-activation loop).
    */
   functionsInGraveyard?: true;
+  /**
+   * Boast (CR 702.146, Dragonkin Berserker): "Activate only if this permanent attacked this
+   * turn." The "only once each turn" half of the keyword is just `oncePerTurn` — the two
+   * restrictions are independent, and Boast happens to always print both.
+   */
+  requiresAttackedThisTurn?: true;
 }
 
 /**

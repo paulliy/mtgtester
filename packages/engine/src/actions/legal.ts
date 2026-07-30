@@ -131,15 +131,22 @@ export interface CostReductionResult {
   colored?: ParsedManaCost;
 }
 
-export function costReductionFor(
+/**
+ * Shared accumulation for `costReductionFor` (casting) and `activationCostReductionFor`
+ * (activating) — identical logic, filtered to the reductions meant for that action. A
+ * `costReduction` static with no `appliesTo` means casting, matching every reduction this
+ * engine modeled before Boast's activation-cost reduction existed.
+ */
+function accumulateCostReduction(
   ctx: GameContext,
   casterId: PlayerId,
-  castOracleId: OracleId,
-  castCardId: string,
+  sourceOracleId: OracleId,
+  sourceCardId: string,
+  appliesTo: 'cast' | 'activate',
 ): CostReductionResult {
-  const def = getDefByOracleId(ctx, castOracleId, castOracleId);
+  const def = getDefByOracleId(ctx, sourceOracleId, sourceOracleId);
   const candidate: SelectorCandidate = {
-    cardId: castCardId,
+    cardId: sourceCardId,
     controllerId: casterId,
     types: def.types,
     supertypes: def.supertypes,
@@ -150,16 +157,17 @@ export function costReductionFor(
     isToken: false,
     enteredThisTurn: false,
   };
-  const source: SelectorSource = { cardId: castCardId, controllerId: casterId };
+  const source: SelectorSource = { cardId: sourceCardId, controllerId: casterId };
 
   let generic = 0;
   let colored: ParsedManaCost | undefined;
 
   for (const entry of gatherRuleStatics(ctx)) {
     if (entry.static.kind !== 'costReduction') continue;
+    if ((entry.static.appliesTo ?? 'cast') !== appliesTo) continue;
     if (entry.controllerId !== casterId) continue;
     if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== casterId) continue;
-    if (entry.static.excludesSelf === true && entry.sourceCardId === castCardId) continue;
+    if (entry.static.excludesSelf === true && entry.sourceCardId === sourceCardId) continue;
     if (
       entry.static.filter !== undefined &&
       !selectMatches(candidate, entry.static.filter, source)
@@ -185,6 +193,25 @@ export function costReductionFor(
     }
   }
   return { generic, ...(colored !== undefined ? { colored } : {}) };
+}
+
+export function costReductionFor(
+  ctx: GameContext,
+  casterId: PlayerId,
+  castOracleId: OracleId,
+  castCardId: string,
+): CostReductionResult {
+  return accumulateCostReduction(ctx, casterId, castOracleId, castCardId, 'cast');
+}
+
+/** Like `costReductionFor`, but for activated-ability costs (Dragonkin Berserker's Boast). */
+export function activationCostReductionFor(
+  ctx: GameContext,
+  controllerId: PlayerId,
+  sourceOracleId: OracleId,
+  sourceCardId: string,
+): CostReductionResult {
+  return accumulateCostReduction(ctx, controllerId, sourceOracleId, sourceCardId, 'activate');
 }
 
 /**
@@ -679,6 +706,8 @@ export function computePriorityOptions(
     const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
     for (const [index, activated] of def.activatedAbilities.entries()) {
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
+      // Boast (CR 702.146a).
+      if (activated.requiresAttackedThisTurn === true && perm.attackedThisTurn !== true) continue;
       // CR 602.5f — "activate only once each turn", tracked on the permanent. A loyalty-cost
       // ability is additionally CR 606.3: no more than ONE loyalty ability of a permanent may
       // be activated each turn, regardless of which one — not just this same ability again —
@@ -700,7 +729,15 @@ export function computePriorityOptions(
         kind: 'activateAbility',
         sourceOracleId: perm.oracleId,
       });
-      const baseManaCost = manaPortionOf(activated.costs);
+      // "Boast abilities you activate cost {1} less to activate for each Dragon you control"
+      // (Dragonkin Berserker) — applied the same way `considerCast` reduces a spell's cost,
+      // just against the activation-scoped reductions instead of the casting ones.
+      const activationReduction = activationCostReductionFor(ctx, player.id, perm.oracleId, perm.cardId);
+      let baseManaCost = manaPortionOf(activated.costs);
+      if (activationReduction.colored !== undefined) {
+        baseManaCost = subtractColored(baseManaCost, activationReduction.colored);
+      }
+      baseManaCost = subtractGeneric(baseManaCost, activationReduction.generic);
       // "{X}: …" (Steel Hellkite) — X is announced as part of activating (CR 602.1b, same
       // timing rule {X} spells use at CR 601.2b), so each affordable X is its own option, not
       // a follow-up decision — matching the "the option menu is the contract" treatment

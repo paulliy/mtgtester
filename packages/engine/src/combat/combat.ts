@@ -95,6 +95,7 @@ function commitAttacker(
   apId: PlayerId,
 ): void {
   creature.attacking = defenderId;
+  creature.attackedThisTurn = true;
   creature.statuses.push('attacking');
   if (!hasKeyword(ctx, creature, 'vigilance')) creature.tapped = true; // CR 508.1f
   emit(

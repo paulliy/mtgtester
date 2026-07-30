@@ -41,8 +41,12 @@ function untapStep(ctx: GameContext): void {
     p.yieldUntilEndOfTurn = false;
   }
   // "Activate only once each turn" (CR 602.5f) is measured in turns, not in *your* turns, so
-  // this clears for every permanent on the battlefield — not just the active player's.
-  for (const perm of ctx.state.battlefield) perm.activationsThisTurn = [];
+  // this clears for every permanent on the battlefield — not just the active player's. Boast's
+  // "attacked this turn" (CR 702.146a) is the same: cleared for everyone, every turn.
+  for (const perm of ctx.state.battlefield) {
+    perm.activationsThisTurn = [];
+    if (perm.attackedThisTurn === true) perm.attackedThisTurn = false;
+  }
 
   let untapped = 0;
   for (const perm of ctx.state.battlefield) {
