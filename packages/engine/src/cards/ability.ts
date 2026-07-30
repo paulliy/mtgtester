@@ -518,6 +518,19 @@ export type Effect =
    * keyed on the ability's own source, not a `Selector` (which has no notion of "by this source").
    */
   | { op: 'destroyEachNonlandMVFromDamagedControllers'; mv: Value }
+  /**
+   * "You may pay {X}{R}. If you do, it deals X damage to any target" (Flameblast Dragon) — X
+   * is chosen as part of the SAME decision as whether to pay at all (unlike `mayPayMana`'s
+   * fixed cost), so this is one self-contained op rather than a `conditionalEffect` composed
+   * with a choice condition. The target is an ordinary announced target (already re-checked by
+   * `ref` before this runs) — only whether/how much to pay is decided here, at resolution.
+   *
+   * `templatedCost` is the PRINTED cost, `{X}` symbol and all (i.e. `parseManaCost('{X}{R}')`,
+   * NOT `'{R}'`) — `withX(templatedCost, chosen)` is what actually folds a candidate X into
+   * generic mana; passing a cost with no `x` set makes every `withX(…, n)` a no-op, which is
+   * exactly the shape of bug that turns the affordable-X search into an infinite loop.
+   */
+  | { op: 'mayPayXThenDealDamage'; target: EffectRef; templatedCost: ParsedManaCost }
   | { op: 'untapTarget'; target: EffectRef }
   | { op: 'bounceUpTo6MV' }
   | { op: 'millAndReturnSpells' }

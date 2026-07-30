@@ -25,7 +25,7 @@ import { candidateOf, computeCharacteristics, matchesSelector, selectPermanents 
 import { evaluateValueIn } from './values';
 import type { Value, ValueScope } from '../cards/value';
 import { evaluateValue } from '../cards/value';
-import { canPay, describeManaCost, entryIsUsable, planPayment } from '../mana/cost';
+import { canPay, describeManaCost, entryIsUsable, planPayment, withX } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import { addMana, removeMana, selectEntriesToSpend } from '../mana/pool';
 import type { ManaEntry, PaymentPurpose } from '../cards/ability';
@@ -964,6 +964,52 @@ export function* executeAbility(
         const permB = findPermanent(ctx, bId);
         if (permB === undefined) break;
         doFight(ctx, permA, permB);
+        break;
+      }
+      case 'mayPayXThenDealDamage': {
+        const t = ref(effect.target);
+        if (t === null) break;
+        const manaSources = manaSourcesFor(ctx, controller.id);
+        const allows = allowanceFor(ctx, controller.id, { kind: 'other' });
+        // Hard upper bound on X: it can never exceed the mana this player could possibly ever
+        // produce. Without this cap, a `templatedCost` authored without its `{X}` symbol (so
+        // `withX` never actually grows the cost — see the op's doc comment) turns this search
+        // into an infinite loop instead of a wrong-but-bounded answer.
+        const hardCap = controller.manaEntries.length + manaSources.length * 2 + 1;
+        let maxX = 0;
+        while (
+          maxX < hardCap &&
+          canPay(withX(effect.templatedCost, maxX + 1), controller.manaEntries, manaSources, allows)
+        ) {
+          maxX++;
+        }
+        if (maxX >= hardCap) {
+          throw new Error(
+            `engine bug: ${source.name}'s mayPayXThenDealDamage found no affordability ceiling — ` +
+              "templatedCost is likely missing its {X} symbol, so withX() is a no-op",
+          );
+        }
+        const canPayAny = canPay(withX(effect.templatedCost, 0), controller.manaEntries, manaSources, allows);
+        if (canPayAny) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `${source.name}: pay {X}${describeManaCost(withX(effect.templatedCost, 0))} — choose X (0–${maxX}), or decline entirely?`,
+            options: [
+              ...Array.from({ length: maxX + 1 }, (_, x) => ({
+                type: 'payXCost',
+                description: `Pay ${describeManaCost(withX(effect.templatedCost, x))} (X=${x})`,
+                data: { x },
+              })),
+              { type: 'decline', description: "Don't pay" },
+            ],
+          };
+          if (outcome.index <= maxX) {
+            const chosenX = outcome.index;
+            yield* payManaCost(ctx, controller, withX(effect.templatedCost, chosenX));
+            dealDamageToObject(ctx, source, t, chosenX);
+          }
+        }
         break;
       }
       case 'returnSelfFromGraveyardToHand': {

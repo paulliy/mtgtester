@@ -15,6 +15,24 @@ import { constant } from '../value';
 import { registerOverride } from './index';
 
 registerOverride({
+  oracleId: 'oracle-flameblast-dragon',
+  name: 'Flameblast Dragon',
+  handledLines: [
+    'Whenever ~ attacks, you may pay {X}{R}. If you do, it deals X damage to any target.',
+  ],
+  def: {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: { when: 'attacks', subject: SELF_SUBJECT },
+        targets: [{ kind: 'anyTarget' }],
+        effects: [{ op: 'mayPayXThenDealDamage', target: 0, templatedCost: parseManaCost('{X}{R}').cost! }],
+      },
+    ],
+  },
+});
+
+registerOverride({
   oracleId: 'oracle-dragonkin-berserker',
   name: 'Dragonkin Berserker',
   handledLines: [

@@ -606,3 +606,72 @@ describe('Dragonkin Berserker', () => {
     expect(token.isToken).toBe(true);
   });
 });
+
+describe('Flameblast Dragon', () => {
+  const flameblastDragon = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Flameblast Dragon',
+      oracleId: 'oracle-flameblast-dragon',
+      typeLine: 'Creature — Dragon',
+      manaCost: '{4}{R}{R}',
+      power: '5',
+      toughness: '5',
+      oracleText: 'Flying\nWhenever ~ attacks, you may pay {X}{R}. If you do, it deals X damage to any target.',
+    });
+
+  it('paying {X}{R} on attack deals X damage to the chosen target', () => {
+    const ctx = pod();
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P1', mountain());
+    const dragon = spawn(ctx, 'P1', flameblastDragon());
+
+    const p2LifeBefore = ctx.state.players.find((p) => p.id === 'P2')?.life ?? 0;
+
+    ctx.state.phase = 'combat';
+    ctx.state.step = null;
+    pump(runCombatPhase(ctx), (d) => {
+      if (d.decisionType === 'chooseTargets') return { index: 0, targets: new Map([[0, 'P2']]) };
+      if (d.decisionType === 'general' && d.prompt.includes('choose X')) {
+        const i = d.options.findIndex((o) => o.description.includes('X=2'));
+        return { index: i >= 0 ? i : 0, targets: new Map() };
+      }
+      const all = d.options.findIndex((o) => o.description.includes('undeclared creatures'));
+      if (all >= 0 && d.options[all]?.description.includes('P2') === true) {
+        return { index: all, targets: new Map() };
+      }
+      const one = d.options.findIndex((o) => /attacks P2/.test(o.description));
+      if (one >= 0) return { index: one, targets: new Map() };
+      return { index: 0, targets: new Map() };
+    });
+
+    // Combat damage (5, unblocked) + the paid X=2 = 7 total life loss.
+    expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(p2LifeBefore - 5 - 2);
+    expect(dragon.tapped).toBe(true);
+  });
+
+  it('declining the payment deals no bonus damage', () => {
+    const ctx = pod();
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P1', mountain());
+    spawn(ctx, 'P1', flameblastDragon());
+    const p2LifeBefore = ctx.state.players.find((p) => p.id === 'P2')?.life ?? 0;
+
+    ctx.state.phase = 'combat';
+    ctx.state.step = null;
+    pump(runCombatPhase(ctx), (d) => {
+      if (d.decisionType === 'chooseTargets') return { index: 0, targets: new Map([[0, 'P2']]) };
+      if (d.decisionType === 'general' && d.prompt.includes('choose X')) {
+        const decline = d.options.findIndex((o) => o.type === 'decline');
+        return { index: decline, targets: new Map() };
+      }
+      const all = d.options.findIndex((o) => o.description.includes('undeclared creatures'));
+      if (all >= 0 && d.options[all]?.description.includes('P2') === true) {
+        return { index: all, targets: new Map() };
+      }
+      const one = d.options.findIndex((o) => /attacks P2/.test(o.description));
+      if (one >= 0) return { index: one, targets: new Map() };
+      return { index: 0, targets: new Map() };
+    });
+
+    // Only the 5 unblocked combat damage — no extra from the declined trigger.
+    expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(p2LifeBefore - 5);
+  });
+});
