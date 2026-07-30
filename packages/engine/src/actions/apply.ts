@@ -214,6 +214,7 @@ export function* applyPriorityAction(
       // the ordinary slots; a count slot ("up to one target creature", Primal Might) is picked
       // here the same way `pushTriggerOnStack` picks one for a triggered ability.
       const countTargets: Record<number, ObjectId[]> = {};
+      const chosenOrdinary = new Map(targets.map((t, i) => [i, t] as [number, ObjectId]));
       for (const [i, spec] of ability.targets.entries()) {
         if (spec.count === undefined) continue;
         const alreadyChosen = new Set<ObjectId>([
@@ -227,6 +228,7 @@ export function* applyPriorityAction(
           obj.name,
           alreadyChosen,
           spec.count.max,
+          chosenOrdinary,
         );
         if (picked.length < spec.count.min) {
           throw new Error(`engine bug: could not meet minimum targets for slot ${i} of ${obj.name}`);

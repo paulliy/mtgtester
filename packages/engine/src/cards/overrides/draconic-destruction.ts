@@ -15,6 +15,27 @@ import { constant } from '../value';
 import { registerOverride } from './index';
 
 registerOverride({
+  oracleId: 'oracle-loaming-shaman',
+  name: 'Loaming Shaman',
+  handledLines: [
+    'When ~ enters the battlefield, target player shuffles any number of target cards from their graveyard into their library.',
+  ],
+  def: {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: SELF_SUBJECT },
+        targets: [
+          { kind: 'player' },
+          { kind: 'cardInGraveyard', count: { min: 0, max: Infinity }, graveyardOwnerSlot: 0 },
+        ],
+        effects: [{ op: 'shuffleChosenGraveyardCardsIntoLibrary', playerSlot: 0, cardsSlot: 1 }],
+      },
+    ],
+  },
+});
+
+registerOverride({
   oracleId: 'oracle-flameblast-dragon',
   name: 'Flameblast Dragon',
   handledLines: [

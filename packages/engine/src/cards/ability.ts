@@ -293,6 +293,15 @@ export interface TargetSpec {
    * covering exactly the ordinary slots and never needs a placeholder for the rest.
    */
   count?: { min: number; max: number };
+  /**
+   * "Target cards from THEIR graveyard" (Loaming Shaman) — for a `cardInGraveyard` slot, the
+   * index of an EARLIER ordinary slot holding the player whose graveyard this searches, instead
+   * of the ability's own controller. By the same "count slots are allocated after ordinary
+   * slots" convention `count` relies on, that earlier slot is always already chosen by the time
+   * this one is computed — ordinary slots resolve as one combined decision before any count
+   * slot is asked (`pushTriggerOnStack`/`considerCast`).
+   */
+  graveyardOwnerSlot?: number;
 }
 
 /**
@@ -531,6 +540,12 @@ export type Effect =
    * exactly the shape of bug that turns the affordable-X search into an infinite loop.
    */
   | { op: 'mayPayXThenDealDamage'; target: EffectRef; templatedCost: ParsedManaCost }
+  /**
+   * "Target player shuffles any number of target cards from their graveyard into their
+   * library" (Loaming Shaman) — always shuffles, even if zero cards were chosen (a player
+   * targeted with nothing chosen from their graveyard still shuffles just their library).
+   */
+  | { op: 'shuffleChosenGraveyardCardsIntoLibrary'; playerSlot: number; cardsSlot: number }
   | { op: 'untapTarget'; target: EffectRef }
   | { op: 'bounceUpTo6MV' }
   | { op: 'millAndReturnSpells' }

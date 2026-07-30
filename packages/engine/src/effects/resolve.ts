@@ -298,9 +298,13 @@ export function isTargetStillLegal(
   spellControllerId: PlayerId,
   /** The targeting source's colors, for protection (CR 702.16). Omitted ⇒ colorless. */
   sourceColors?: readonly Color[],
+  /** See `computeTargetOptions` — only consulted for `graveyardOwnerSlot` (Loaming Shaman). */
+  chosenTargets?: ReadonlyMap<number, ObjectId>,
 ): boolean {
-  const { kind, controller, filter } =
-    typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
+  const { kind, controller, filter, graveyardOwnerSlot } =
+    typeof spec === 'string'
+      ? { kind: spec, controller: undefined, filter: undefined, graveyardOwnerSlot: undefined }
+      : spec;
 
   if (kind === 'spell' || kind === 'noncreatureSpell') {
     const entry = ctx.state.stack.find((s) => s.id === targetId && s.kind === 'spell');
@@ -312,7 +316,10 @@ export function isTargetStillLegal(
     return player.commandZone.some((c) => (c.cardId === targetId || c.id === targetId) && c.isCommander);
   }
   if (kind === 'cardInGraveyard') {
-    return graveyardTargets(ctx, spellControllerId, filter).some((c) => c.id === targetId);
+    const ownerId =
+      graveyardOwnerSlot === undefined ? spellControllerId : chosenTargets?.get(graveyardOwnerSlot);
+    if (ownerId === undefined) return false;
+    return graveyardTargets(ctx, ownerId, filter).some((c) => c.id === targetId);
   }
   const player = ctx.state.players.find((p) => p.id === targetId);
   if (player !== undefined) {
@@ -1010,6 +1017,22 @@ export function* executeAbility(
             dealDamageToObject(ctx, source, t, chosenX);
           }
         }
+        break;
+      }
+      case 'shuffleChosenGraveyardCardsIntoLibrary': {
+        const playerId = ref(effect.playerSlot);
+        if (playerId === null) break;
+        const targetPlayer = ctx.state.players.find((p) => p.id === playerId);
+        if (targetPlayer === undefined) break;
+        for (const id of countTargets?.[effect.cardsSlot] ?? []) {
+          // CR 608.2b: gone from that graveyard by resolution — simply skipped, no filter to
+          // re-check since the target kind (any card, no selector) never changes.
+          const cardObj = targetPlayer.graveyard.find((c) => c.id === id);
+          if (cardObj === undefined) continue;
+          yield* moveObject(ctx, cardObj, { zone: 'library' });
+        }
+        shuffleLibrary(ctx, targetPlayer);
+        emit(ctx, 'shuffle', { player: targetPlayer.id, source: source.name });
         break;
       }
       case 'returnSelfFromGraveyardToHand': {

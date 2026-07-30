@@ -270,9 +270,18 @@ export function computeTargetOptions(
   casterId: PlayerId,
   /** The targeting source's colors, for protection (CR 702.16). Omitted ⇒ colorless. */
   sourceColors?: readonly Color[],
+  /**
+   * Earlier ORDINARY slots' chosen ids, keyed by slot index — only consulted for a
+   * `cardInGraveyard` slot with `graveyardOwnerSlot` set (Loaming Shaman's "target cards from
+   * THEIR graveyard"). Absent for every other caller; ordinary-slot computation never needs it
+   * since it runs before any slot has been chosen.
+   */
+  chosenTargets?: ReadonlyMap<number, ObjectId>,
 ): ObjectId[] {
-  const { kind, controller, filter } =
-    typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
+  const { kind, controller, filter, graveyardOwnerSlot } =
+    typeof spec === 'string'
+      ? { kind: spec, controller: undefined, filter: undefined, graveyardOwnerSlot: undefined }
+      : spec;
 
   if (kind === 'spell' || kind === 'noncreatureSpell') {
     return ctx.state.stack
@@ -289,9 +298,12 @@ export function computeTargetOptions(
     const player = playerById(ctx, casterId);
     return player.commandZone.filter((c) => c.isCommander).map((c) => c.id);
   }
-  // A card in a graveyard, not a permanent — always the caster's own (see `TargetKind`).
+  // A card in a graveyard — the caster's own, unless `graveyardOwnerSlot` names an earlier
+  // slot that chose a different player's (Loaming Shaman).
   if (kind === 'cardInGraveyard') {
-    return graveyardTargets(ctx, casterId, filter).map((c) => c.id);
+    const ownerId = graveyardOwnerSlot === undefined ? casterId : chosenTargets?.get(graveyardOwnerSlot);
+    if (ownerId === undefined) return [];
+    return graveyardTargets(ctx, ownerId, filter).map((c) => c.id);
   }
   const players = playersInApnapOrder(ctx).map((p) => p.id);
   if (kind === 'player') return players;
@@ -365,13 +377,19 @@ export function* pickCountSlotTargets(
   sourceName: string,
   alreadyChosen: ReadonlySet<ObjectId>,
   effectiveMax: number,
+  /** Earlier ordinary slots' picks — see `computeTargetOptions` (Loaming Shaman). */
+  chosenOrdinaryTargets?: ReadonlyMap<number, ObjectId>,
 ): GameGen<ObjectId[]> {
   const min = spec.count?.min ?? 0;
   const picked: ObjectId[] = [];
   for (let k = 0; k < effectiveMax; k++) {
-    const candidates = computeTargetOptions(ctx, spec, controllerId).filter(
-      (id) => !alreadyChosen.has(id) && !picked.includes(id),
-    );
+    const candidates = computeTargetOptions(
+      ctx,
+      spec,
+      controllerId,
+      undefined,
+      chosenOrdinaryTargets,
+    ).filter((id) => !alreadyChosen.has(id) && !picked.includes(id));
     if (candidates.length === 0) break;
     const canStop = picked.length >= min;
     const outcome = yield {

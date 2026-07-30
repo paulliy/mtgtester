@@ -378,6 +378,11 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     }
   }
 
+  // For a count slot whose candidates depend on an earlier ORDINARY slot's pick (Loaming
+  // Shaman's "target cards from THEIR graveyard") — `.map` skips holes, so this only ever
+  // contains the ordinary slots, exactly the ones guaranteed chosen by this point.
+  const chosenOrdinary = new Map(chosen.map((id, i) => [i, id] as [number, ObjectId]));
+
   // Variable-count slots ("up to two OTHER targets" — Drakuseth; "any number of … target
   // creatures" — Ureni). CR 601.2b/603.3d: the COUNT itself is a choice, so it is asked as a
   // bounded sequence of decisions rather than a fixed slot with a fixed option list. Excluding
@@ -415,6 +420,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       trigger.sourceName,
       alreadyChosen,
       effectiveMax,
+      chosenOrdinary,
     );
 
     // CR 603.3d applies to a count slot too: if even the minimum could not be met, the whole

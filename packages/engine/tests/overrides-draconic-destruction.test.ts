@@ -675,3 +675,71 @@ describe('Flameblast Dragon', () => {
     expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(p2LifeBefore - 5);
   });
 });
+
+describe('Loaming Shaman', () => {
+  const loamingShaman = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Loaming Shaman',
+      oracleId: 'oracle-loaming-shaman',
+      typeLine: 'Creature — Centaur Shaman',
+      manaCost: '{2}{G}',
+      power: '3',
+      toughness: '2',
+      oracleText:
+        'When ~ enters the battlefield, target player shuffles any number of target cards from their graveyard into their library.',
+    });
+
+  it("shuffles all chosen cards from the TARGET player's graveyard into their library, leaving the caster's own alone", () => {
+    const ctx = pod();
+    const p2Card1 = conjure(ctx, 'P2', forest(), 'graveyard');
+    const p2Card2 = conjure(ctx, 'P2', mountain(), 'graveyard');
+    const p1Card = conjure(ctx, 'P1', forest(), 'graveyard'); // must be left untouched.
+    for (let i = 0; i < 3; i++) conjure(ctx, 'P2', forest(), 'library');
+
+    const shamanCard = conjure(ctx, 'P1', loamingShaman(), 'hand');
+    pump(moveObject(ctx, shamanCard, { zone: 'battlefield', controllerId: 'P1' }));
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.decisionType === 'chooseTargets') return { index: 0, targets: new Map([[0, 'P2']]) };
+      if (d.decisionType === 'general' && /choose (a|another) target/.test(d.prompt)) {
+        const pick = d.options.findIndex((o) => o.type === 'pickTarget');
+        return { index: pick >= 0 ? pick : 0, targets: new Map() };
+      }
+      return { index: 0, targets: new Map() };
+    });
+
+    const p1 = ctx.state.players.find((p) => p.id === 'P1')!;
+    const p2 = ctx.state.players.find((p) => p.id === 'P2')!;
+    expect(p2.graveyard.some((c) => c.cardId === p2Card1.cardId)).toBe(false);
+    expect(p2.graveyard.some((c) => c.cardId === p2Card2.cardId)).toBe(false);
+    expect(p2.library.some((c) => c.cardId === p2Card1.cardId)).toBe(true);
+    expect(p2.library.some((c) => c.cardId === p2Card2.cardId)).toBe(true);
+    // Never touched P1's own graveyard: graveyardOwnerSlot correctly followed the CHOSEN
+    // player (P2), not the ability's controller.
+    expect(p1.graveyard.some((c) => c.cardId === p1Card.cardId)).toBe(true);
+  });
+
+  it('choosing zero cards still shuffles the library', () => {
+    const ctx = pod();
+    conjure(ctx, 'P2', forest(), 'graveyard');
+    for (let i = 0; i < 3; i++) conjure(ctx, 'P2', forest(), 'library');
+    const shamanCard = conjure(ctx, 'P1', loamingShaman(), 'hand');
+    pump(moveObject(ctx, shamanCard, { zone: 'battlefield', controllerId: 'P1' }));
+
+    let sawShuffleEvent = false;
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.decisionType === 'chooseTargets') return { index: 0, targets: new Map([[0, 'P2']]) };
+      if (d.decisionType === 'general' && /choose (a|another) target/.test(d.prompt)) {
+        const decline = d.options.findIndex((o) => o.type === 'decline');
+        return { index: decline >= 0 ? decline : 0, targets: new Map() };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    sawShuffleEvent = ctx.state.eventLog.some((e) => e.type === 'shuffle' && e.payload['player'] === 'P2');
+    expect(sawShuffleEvent).toBe(true);
+
+    const p2 = ctx.state.players.find((p) => p.id === 'P2')!;
+    expect(p2.graveyard.length).toBe(1); // declined — nothing moved.
+  });
+});
