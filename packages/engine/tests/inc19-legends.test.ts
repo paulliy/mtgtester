@@ -191,8 +191,8 @@ const zurgoAndOjutai = () =>
     keywords: ['Flying', 'Haste'],
   });
 
-describe('Increment 19: Final 14 Cards for 100% Coverage', () => {
-  it('models all 14 final cards cleanly without unmodeled reasons', () => {
+describe('Ur-Dragon residual-card implementation', () => {
+  it('keeps every completed Ur-Dragon residual-card implementation executable', () => {
     const list = [
       dragonTempest(),
       firkraag(),
@@ -210,10 +210,27 @@ describe('Increment 19: Final 14 Cards for 100% Coverage', () => {
       zurgoAndOjutai(),
     ];
 
+    const executable = new Set([
+      'Dragon Tempest',
+      'Firkraag, Cunning Instigator',
+      'Iymrith, Desert Doom',
+      'Kairi, the Swirling Sky',
+      "Lozhan, Dragons' Legacy",
+      'Morophon, the Boundless',
+      'Orb of Dragonkind',
+      'Rivaz of the Claw',
+      'Sarkhan, Dragon Ascendant',
+      'Sarkhan, Soul Aflame',
+      'Skycloud Expanse',
+      'Thrakkus the Butcher',
+      'Vaevictis Asmadi, the Dire',
+      'Zurgo and Ojutai',
+    ]);
     for (const raw of list) {
       const def = interpretCard(raw);
-      expect(def.unmodeledReasons).toEqual([]);
-      expect(def.modeled).toBe(true);
+      expect(def.modeled).toBe(executable.has(raw.name));
+      if (def.modeled) expect(def.unmodeledReasons).toEqual([]);
+      else expect(def.unmodeledReasons.length).toBeGreaterThan(0);
     }
   });
 });

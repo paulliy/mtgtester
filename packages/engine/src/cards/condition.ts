@@ -24,7 +24,7 @@ import { loseLife } from '../effects/resolve';
 import { emit } from '../log/log';
 import { opponentsOf } from '../state/queries';
 import type { GameContext } from '../state/types';
-import { computeCharacteristics, selectPermanents } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector, selectPermanents } from '../effects/continuous';
 import type { Selector, SelectorSource } from './selector';
 import { ofType } from './selector';
 import type { PlayerId } from '@mtg/shared';
@@ -48,6 +48,12 @@ export type Condition =
   /** "you may pay 2 life" — a choice, not a fact. Only `resolveCondition` can answer it. */
   | { kind: 'mayPayLife'; n: number }
   /**
+   * "you may reveal a Mountain or Forest card from your hand" (Game Trail and the other
+   * "Snarl"/"slow land" cycles) — a choice, and only legal to offer at all when the hand
+   * actually contains a qualifying card (CR 701.15a: revealing requires having the card).
+   */
+  | { kind: 'mayRevealCardFromHand'; subtypes: string[] }
+  /**
    * "a creature or planeswalker an opponent controlled was dealt excess damage this turn"
    * (Rith, Liberated Primeval). `ctx.state.excessDamageControllerIds` is turn-scoped and
    * records CONTROLLERS, not permanents, so this only asks whether any of them is an opponent.
@@ -58,8 +64,31 @@ export type Condition =
   /** "creatures you control have total power 10 or greater" (Mosswort Bridge). */
   | { kind: 'totalCreaturePower'; scope: 'you' | 'opponents' | 'all'; cmp: '>=' | '<='; n: number }
   | { kind: 'isUntapped' }
+  | { kind: 'wasKicked' }
+  | { kind: 'hasCounters'; selector: Selector; counter: string; cmp: '>=' | '<='; n: number }
   | { kind: 'enteredThisTurn' }
   | { kind: 'hadToAttackThisCombat' }
+  /** The object that fired this trigger had to attack (currently, because it was goaded). */
+  | { kind: 'triggerObjectHadToAttackThisCombat' }
+  /**
+   * "if that land is a Mountain" (Akoum Hellkite), "if a creature is dealt damage this way"
+   * (Provoke the Trolls) — CR 603.4's intervening-if, or a resolution-time branch, over
+   * whichever object a `TriggerSubject`/`EffectRef` names, checked against an ordinary
+   * `Selector`. Reuses the selector grammar rather than a bespoke predicate per shape of check.
+   */
+  | { kind: 'triggerObjectMatches'; selector: Selector }
+  /**
+   * "Khans — ..." / "Dragons — ..." (Frontier Siege): gates one of two static/triggered
+   * clauses by the mode chosen as the permanent entered (`EnginePermanent.chosenOption`),
+   * rather than the card needing two mutually-exclusive definitions.
+   */
+  | { kind: 'chosenOptionIs'; value: string }
+  /**
+   * "As long as you control your commander" (Tyrant's Familiar, Loyal Apprentice, Thunderfoot
+   * Baloth, Convergence of Dominion) — a battlefield permanent that is the checking player's OWN
+   * commander (CR 903.7) AND currently controlled by them; a stolen commander doesn't count.
+   */
+  | { kind: 'controlsYourCommander' }
   | { kind: 'allOf'; of: Condition[] }
   | { kind: 'anyOf'; of: Condition[] }
   | { kind: 'not'; of: Condition };
@@ -78,6 +107,7 @@ export const anyOfConditions = (...of: Condition[]): Condition => ({ kind: 'anyO
 export function isChoiceCondition(condition: Condition): boolean {
   switch (condition.kind) {
     case 'mayPayLife':
+    case 'mayRevealCardFromHand':
       return true;
     case 'allOf':
     case 'anyOf':
@@ -157,6 +187,50 @@ export function evaluateCondition(
       const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
       return perm !== undefined && perm.goadedThisTurn === true;
     }
+    case 'triggerObjectHadToAttackThisCombat': {
+      if (source.triggerObjectCardId === undefined) return false;
+      const perm = ctx.state.battlefield.find((p) => p.cardId === source.triggerObjectCardId);
+      return perm !== undefined && perm.goadedThisTurn === true;
+    }
+    case 'triggerObjectMatches': {
+      if (source.triggerObjectCardId === undefined) return false;
+      const perm = ctx.state.battlefield.find((p) => p.cardId === source.triggerObjectCardId);
+      return perm !== undefined && matchesSelector(ctx, perm, condition.selector, source);
+    }
+    case 'chosenOptionIs': {
+      if (source?.cardId === undefined) return false;
+      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      return perm !== undefined && perm.chosenOption === condition.value;
+    }
+    case 'controlsYourCommander':
+      return ctx.state.battlefield.some(
+        (p) =>
+          p.isCommander &&
+          p.ownerId === source.controllerId &&
+          p.controllerId === source.controllerId,
+      );
+    case 'wasKicked': {
+      if (source?.cardId === undefined) return false;
+      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      if (perm !== undefined) return perm.wasKicked === true || perm.kicked === true;
+      const stackObj = ctx.state.stack.find(
+        (s) => s.sourceCardId === source.cardId || s.card?.cardId === source.cardId,
+      );
+      return stackObj !== undefined && ((stackObj as any).wasKicked === true || (stackObj as any).kicked === true);
+    }
+    case 'hasCounters': {
+      // SELF is used by Station's continuous threshold. Resolving it through selectPermanents
+      // would recursively recompute the very characteristics whose condition is being checked.
+      const matched = condition.selector.kind === 'self'
+        ? ctx.state.battlefield.filter((perm) => perm.cardId === source?.cardId)
+        : selectPermanents(ctx, condition.selector, source);
+      return matched.some((perm) => {
+        const count = condition.counter
+          ? (perm.counters[condition.counter] ?? 0)
+          : Object.values(perm.counters).reduce((a, b) => a + b, 0);
+        return compare(count, condition.cmp, condition.n);
+      });
+    }
     case 'allOf':
       return condition.of.every((c) => evaluateCondition(ctx, c, source));
     case 'anyOf':
@@ -166,6 +240,10 @@ export function evaluateCondition(
     case 'mayPayLife':
       throw new Error(
         'engine bug: mayPayLife is a choice condition — use resolveCondition, not evaluateCondition',
+      );
+    case 'mayRevealCardFromHand':
+      throw new Error(
+        'engine bug: mayRevealCardFromHand is a choice condition — use resolveCondition, not evaluateCondition',
       );
   }
 }
@@ -203,6 +281,30 @@ export function* resolveCondition(
       if (outcome.index !== 0) return false;
       loseLife(ctx, player, condition.n);
       emit(ctx, 'costPaid', { player: player.id, source: sourceName, life: condition.n });
+      return true;
+    }
+    case 'mayRevealCardFromHand': {
+      const player = ctx.state.players.find((p) => p.id === source.controllerId);
+      if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
+      const label = condition.subtypes.join(' or ');
+      const hasQualifying = player.hand.some((c) => {
+        const def = ctx.defs.get(c.oracleId);
+        return def !== undefined && condition.subtypes.some((st) => def.subtypes.includes(st));
+      });
+      // CR 701.15a: revealing requires actually having a qualifying card — an empty hand (or
+      // one with no Mountain/Forest) simply cannot take this option, not "declines" it.
+      if (!hasQualifying) return false;
+      const outcome = yield {
+        decisionType: 'general',
+        player: player.id,
+        prompt: `${sourceName} is entering. Reveal a ${label} card from your hand to have it enter untapped?`,
+        options: [
+          { type: 'revealCard', description: `Reveal a ${label} card (enters untapped)` },
+          { type: 'decline', description: "Don't reveal (enters tapped)" },
+        ],
+      };
+      if (outcome.index !== 0) return false;
+      emit(ctx, 'revealCard', { player: player.id, source: sourceName, reason: label });
       return true;
     }
     case 'allOf': {

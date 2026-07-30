@@ -12,6 +12,23 @@ import type { AsyncDecisionProvider } from '@mtg/engine';
 import type { DecisionRequest, OracleCard } from '@mtg/shared';
 import { ComputeHaltError, MatchRunner } from './runner';
 
+async function waitFor(
+  fn: () => void | Promise<void>,
+  options?: { timeout?: number } | number,
+): Promise<void> {
+  const timeoutMs = typeof options === 'number' ? options : (options?.timeout ?? 5000);
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      await fn();
+      return;
+    } catch {
+      await new Promise((r) => setTimeout(r, 10));
+    }
+  }
+  await fn();
+}
+
 /** A Forest, enough to make four seats that can legally take turns and do nothing else. */
 function forest(n: number): OracleCard {
   return {
@@ -100,7 +117,7 @@ describe('MatchRunner — compute-ahead cap (brief §10.1)', () => {
 
     const run = runner.run();
     // Give the pump time to reach the cap and park.
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(runner.getStatus()).toBe('waitingForView');
     });
 
@@ -124,13 +141,13 @@ describe('MatchRunner — compute-ahead cap (brief §10.1)', () => {
     });
 
     const run = runner.run();
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(runner.getStatus()).toBe('waitingForView');
     });
     const parkedAt = runner.getFrontierTurn();
 
     runner.setViewTurn(parkedAt);
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(runner.getFrontierTurn()).toBeGreaterThan(parkedAt);
     });
 
@@ -173,7 +190,7 @@ describe('MatchRunner — snapshots and the scrubber', () => {
     });
 
     const run = runner.run();
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(runner.getSnapshotTurns().length).toBeGreaterThan(1);
     });
 
@@ -255,7 +272,7 @@ describe('MatchRunner — §7.7 escalation', () => {
     });
 
     const run = runner.run();
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(runner.getFrontierTurn()).toBeGreaterThan(0);
     });
 
@@ -287,7 +304,7 @@ describe('MatchRunner — §7.7 escalation', () => {
     const request = { decidingPlayer: 'P1', requestId: 'r-held' } as DecisionRequest;
     const pending = runner.escalation().onModelFailed(request, 'bad json');
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(surfaced).toEqual(['r-held']);
     });
     expect(runner.resolveHeldDecision('r-held', 3)).toBe(true);
@@ -355,7 +372,7 @@ describe('MatchRunner — persistence hooks', () => {
     });
 
     const run = runner.run();
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(snapshotted.length).toBeGreaterThan(1);
     });
 

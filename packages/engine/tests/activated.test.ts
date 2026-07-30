@@ -18,7 +18,8 @@ import { computePriorityOptions } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import { moveObject } from '../src/state/objects';
-import { manaSourcesFor } from '../src/state/queries';
+import { executeAbility, payAbilityCosts } from '../src/effects/resolve';
+import { effectivePT, manaSourcesFor } from '../src/state/queries';
 import { parseManaCost, planPayment } from '../src/mana/cost';
 import type { EnginePlayerState, GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -87,6 +88,39 @@ describe('parsing costs', () => {
     expect(hoard.activatedAbilities[0]?.ability.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
   });
 
+  it('parses a controlled-creature tap as an additional activation cost', () => {
+    const def = interpretCard(oracle({
+      name: 'Test Drum', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null,
+      oracleText: '{T}, Tap an untapped creature you control: Add one mana of any color.',
+    }));
+    expect(def.modeled).toBe(true);
+    expect(def.manaAbilities[0]?.costs).toEqual([
+      { kind: 'tap' },
+      { kind: 'tapOther', selector: { kind: 'allOf', of: [{ kind: 'type', value: 'Creature' }, { kind: 'controller', who: 'you' }] } },
+    ]);
+  });
+  it('requires distinct controlled permanents for a fixed-count tap cost', () => {
+    const def = interpretCard(oracle({
+      name: 'Test Clock', typeLine: 'Artifact', manaCost: '{4}', power: null, toughness: null,
+      oracleText: 'Tap two untapped artifacts you control: Untap target artifact.',
+    }));
+    expect(def.modeled).toBe(true);
+    expect(def.activatedAbilities[0]?.costs).toEqual([{ kind: 'tapOthers', count: 2, selector: { kind: 'allOf', of: [{ kind: 'type', value: 'Artifact' }, { kind: 'controller', who: 'you' }] } }]);
+    expect(def.activatedAbilities[0]?.ability.targets).toEqual([{ kind: 'artifact' }]);
+    expect(def.activatedAbilities[0]?.ability.effects).toEqual([{ op: 'untapTarget', target: 0 }]);
+    expect(interpretCard(oracle({
+      name: 'Test Key', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null,
+      oracleText: '{1}, {T}: Untap another target artifact.\n{3}, {T}: Target creature can\'t be blocked this turn.',
+    })).modeled).toBe(true);
+
+    const ctx = pod('multi-tap-cost');
+    const clock = spawn(ctx, 'P1', oracle({ name: 'Test Clock Source', typeLine: 'Artifact', manaCost: '{4}', power: null, toughness: null }));
+    const first = spawn(ctx, 'P1', oracle({ name: 'Test Battery A', typeLine: 'Artifact', manaCost: '{0}', power: null, toughness: null }));
+    const second = spawn(ctx, 'P1', oracle({ name: 'Test Battery B', typeLine: 'Artifact', manaCost: '{0}', power: null, toughness: null }));
+    pump(payAbilityCosts(ctx, p1(ctx), clock, [{ kind: 'tapOthers', count: 2, selector: { kind: 'type', value: 'Artifact' } }], 'tap'));
+    expect(first.tapped).toBe(true);
+    expect(second.tapped).toBe(true);
+  });
   it('records a sacrifice cost on the mana ability rather than assuming {T}', () => {
     const def = interpretCard(recklessBarbarian());
 
@@ -114,6 +148,88 @@ describe('parsing costs', () => {
   });
 });
 
+describe('combat-restricted targets', () => {
+  it('allows exile only for an attacking or blocking creature', () => {
+    const light = oracle({ name: 'Test Light', typeLine: 'Instant', manaCost: '{1}{W}{W}', power: null, toughness: null, oracleText: 'Exile target attacking or blocking creature.' });
+    const def = interpretCard(light);
+    expect(def.modeled).toBe(true);
+    const ctx = pod('combat-target');
+    const source = spawn(ctx, 'P1', oracle({ name: 'Test Source', typeLine: 'Creature — Cleric', manaCost: '{1}', power: '1', toughness: '1' }));
+    const attacker = spawn(ctx, 'P2', oracle({ name: 'Test Attacker', typeLine: 'Creature — Human', manaCost: '{1}', power: '2', toughness: '2' }));
+    attacker.attacking = 'P1';
+    pump(executeAbility(ctx, source, def.spellAbility!, [attacker.id]));
+    expect(ctx.state.exile.some((card) => card.cardId === attacker.cardId)).toBe(true);
+  });
+});
+describe('graveyard-to-library activation', () => {
+  it('puts a targeted artifact card from its controller’s graveyard on top of the library', () => {
+    const ruins = oracle({ name: 'Test Ruins', typeLine: 'Land', manaCost: null, power: null, toughness: null, oracleText: '{1}{U}, {T}: Put target artifact card from your graveyard on top of your library.' });
+    const def = interpretCard(ruins);
+    expect(def.modeled).toBe(true);
+    const ctx = pod('academy-ruins');
+    const source = spawn(ctx, 'P1', ruins);
+    const artifact = conjure(ctx, 'P1', oracle({ name: 'Test Relic', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null }), 'graveyard');
+    pump(executeAbility(ctx, source, def.activatedAbilities[0]!.ability, [artifact.id]));
+    expect(p1(ctx).library[0]?.cardId).toBe(artifact.cardId);
+    expect(p1(ctx).graveyard.some((card) => card.cardId === artifact.cardId)).toBe(false);
+  });
+});
+describe('temporary combat restrictions', () => {
+  it("models a target creature that can't be blocked this turn", () => {
+    const card = oracle({
+      name: 'Test Grid', typeLine: 'Artifact', manaCost: '{2}', power: null, toughness: null,
+      oracleText: '{3}: Target creature can\'t be blocked this turn.',
+    });
+    const def = interpretCard(card);
+    expect(def.modeled).toBe(true);
+    expect(def.activatedAbilities[0]?.ability.effects).toEqual([{ op: 'cantBeBlockedUntilEot', target: 0 }]);
+
+    const ctx = pod('unblockable');
+    const source = spawn(ctx, 'P1', card);
+    const target = spawn(ctx, 'P1', oracle({ name: 'Test Attacker', typeLine: 'Creature — Human', manaCost: '{1}', power: '2', toughness: '2' }));
+    pump(executeAbility(ctx, source, def.activatedAbilities[0]!.ability, [target.id]));
+    expect(ctx.state.effects).toContainEqual(expect.objectContaining({ kind: 'cantBeBlocked', targetCardIds: [target.cardId] }));
+  });
+});
+describe('attachment-aware activated effects', () => {
+  const pemminsAura = () => oracle({
+    name: "Pemmin's Aura",
+    typeLine: 'Enchantment — Aura',
+    manaCost: '{2}{U}',
+    power: null,
+    toughness: null,
+    oracleText: 'Enchant creature\n{U}: Untap enchanted creature.\n{U}: Enchanted creature gains flying until end of turn.\n{U}: Enchanted creature gains shroud until end of turn.\n{1}: Enchanted creature gets +1/-1 or -1/+1 until end of turn.',
+  });
+
+  it('resolves Aura effects against the current attached creature and asks for its stat mode', () => {
+    const ctx = pod('pemmins-aura');
+    const aura = spawn(ctx, 'P1', pemminsAura());
+    const creature = spawn(ctx, 'P1', oracle({ name: 'Test Host', typeLine: 'Creature — Human', manaCost: '{1}', power: '2', toughness: '2' }), { tapped: true });
+    aura.attachedTo = creature.id;
+    const def = interpretCard(pemminsAura());
+
+    expect(def.modeled).toBe(true);
+    expect(def.activatedAbilities).toHaveLength(4);
+    expect(def.activatedAbilities[0]?.ability.effects).toEqual([{ op: 'untapTarget', target: 'attachedToSource' }]);
+    expect(interpretCard(oracle({
+      name: 'Freed from the Real', typeLine: 'Enchantment — Aura', manaCost: '{2}{U}', power: null, toughness: null,
+      oracleText: 'Enchant creature\n{U}: Tap enchanted creature.\n{U}: Untap enchanted creature.',
+    })).modeled).toBe(true);
+
+    pump(executeAbility(ctx, aura, def.activatedAbilities[3]!.ability, []), (decision) => {
+      expect(decision.decisionType).toBe('general');
+      expect(decision.options.map((option) => option.description)).toEqual([
+        'Enchanted creature gets +1/-1 until end of turn',
+        'Enchanted creature gets -1/+1 until end of turn',
+      ]);
+      return { index: 1, targets: new Map() };
+    });
+    expect(effectivePT(ctx, creature)).toEqual({ power: 1, toughness: 3 });
+
+    pump(executeAbility(ctx, aura, def.activatedAbilities[0]!.ability, []));
+    expect(creature.tapped).toBe(false);
+  });
+});
 describe('cost availability', () => {
   it('publishes structured activation costs for the direct player UI', () => {
     const ctx = pod('activation-presentation');

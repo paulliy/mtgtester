@@ -15,6 +15,7 @@ import type { CardDefinition } from '../cards/definition';
 import type { SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
+import { evaluateValue } from '../cards/value';
 import type { GameGen } from '../decisions';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { debug, emit } from '../log/log';
@@ -88,15 +89,16 @@ export function removeFromCurrentZone(ctx: GameContext, obj: EngineObject): void
 
 /** Clone `obj` as a brand-new object (new `ObjectId`) in `zone` (CR 400.7). */
 function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCardObject {
+  const original = obj.zone === 'battlefield' ? (obj as EnginePermanent).copyOriginal : undefined;
   return {
     id: newObjectId(ctx),
     cardId: obj.cardId,
-    oracleId: obj.oracleId,
+    oracleId: original?.oracleId ?? obj.oracleId,
     ownerId: obj.ownerId,
-    name: obj.name,
-    typeLine: obj.typeLine,
-    oracleText: obj.oracleText,
-    manaCost: obj.manaCost,
+    name: original?.name ?? obj.name,
+    typeLine: original?.typeLine ?? obj.typeLine,
+    oracleText: original?.oracleText ?? obj.oracleText,
+    manaCost: original?.manaCost ?? obj.manaCost,
     isToken: obj.isToken,
     isCommander: obj.isCommander,
     zone,
@@ -235,6 +237,21 @@ export function* moveObject(
         emit(ctx, 'putCounter', { target: perm.name, counter: '+1/+1', count: 1 });
       }
     }
+
+    // As-enters modal choice (CR 614.1c), e.g. Caged Sun's color or Frontier Siege's mode.
+    // Resolved here, before anything else can observe the permanent, so nothing built on
+    // `chosenOption` can ever run before it exists.
+    if (def.entersChoosingOption !== undefined) {
+      const { prompt, options } = def.entersChoosingOption;
+      const outcome = yield {
+        decisionType: 'general',
+        player: controllerId,
+        prompt: `${perm.name}: ${prompt}`,
+        options: options.map((o) => ({ type: 'chooseOption', description: o.label, payload: o.key })),
+      };
+      const chosen = options[outcome.index]?.key;
+      if (chosen !== undefined) perm.chosenOption = chosen;
+    }
   } else {
     next = reincarnate(ctx, obj, target.zone);
     const owner = playerById(ctx, obj.ownerId);
@@ -302,6 +319,18 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
   const oracleId =
     `token:${spec.name}:${spec.typeLine}:${(spec.supertypes ?? []).join('+')}:${spec.power ?? ''}/${spec.toughness ?? ''}` as OracleId;
   if (!ctx.defs.has(oracleId)) {
+    const evalPower =
+      spec.power === null || spec.power === undefined
+        ? null
+        : typeof spec.power === 'number'
+          ? spec.power
+          : evaluateValue(ctx, spec.power);
+    const evalToughness =
+      spec.toughness === null || spec.toughness === undefined
+        ? null
+        : typeof spec.toughness === 'number'
+          ? spec.toughness
+          : evaluateValue(ctx, spec.toughness);
     ctx.defs.set(oracleId, {
       oracleId,
       name: spec.name,
@@ -313,8 +342,8 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
       colorIdentity: spec.colors,
       manaCost: null,
       hasUnsupportedCost: false,
-      power: spec.power,
-      toughness: spec.toughness,
+      power: evalPower,
+      toughness: evalToughness,
       loyalty: null,
       defense: null,
       keywords: spec.keywords ?? [],
@@ -412,6 +441,8 @@ export interface TriggerEventSubject {
   permanent: EnginePermanent;
   /** Damage this object dealt in the event (`dealsCombatDamageToPlayer`). */
   amount?: number;
+  /** Player involved in this event (the defender for attacks/combat damage). */
+  playerId?: PlayerId | undefined;
 }
 
 /**
@@ -450,7 +481,14 @@ export function queueTriggersForEvent(
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
 
-      const from: SelectorSource = { cardId: source.cardId, controllerId: source.controllerId };
+      const from: SelectorSource = {
+        cardId: source.cardId,
+        controllerId: source.controllerId,
+        attachedToCardId:
+          source.attachedTo === null
+            ? null
+            : (ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId ?? null),
+      };
       const matched = subjects.filter((s) =>
         spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
@@ -458,22 +496,33 @@ export function queueTriggersForEvent(
       );
       if (matched.length === 0) continue;
 
-      // Intervening-if, first check (CR 603.4): a trigger whose condition is false right now
-      // never goes on the stack at all.
-      if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) {
-        debug(ctx, 'stack', `trigger not queued: ${source.name} — intervening-if false`);
-        continue;
-      }
-
-      // Aggregate: one firing carrying the count and the total. Otherwise one firing each.
+      // Aggregate triggers can either combine the whole event or combine separately for each
+      // player involved in it ("one or more ... attack an opponent").
       const firings: TriggerEventSubject[][] =
-        spec.aggregate === true ? [matched] : matched.map((s) => [s]);
+        spec.aggregate === true
+          ? [matched]
+          : spec.aggregate === 'byEventPlayer'
+            ? [...new Map(matched.map((s) => [s.playerId, matched.filter((other) => other.playerId === s.playerId)])).values()]
+            : matched.map((s) => [s]);
 
       for (const group of firings) {
         const first = group[0] as TriggerEventSubject;
+        // Intervening-if, first check (CR 603.4), with the event object available for
+        // conditions such as "if that creature had to attack".
+        if (
+          spec.condition !== undefined &&
+          !evaluateCondition(ctx, spec.condition, {
+            ...from,
+            ...(spec.subject.kind === 'self' ? {} : { triggerObjectCardId: first.permanent.cardId }),
+          })
+        ) {
+          debug(ctx, 'stack', `trigger not queued: ${source.name} � intervening-if false`);
+          continue;
+        }
         const amounts = group.filter((s) => s.amount !== undefined);
         const scope: TriggerScope = {
-          ...(spec.aggregate === true ? { triggerCount: group.length } : {}),
+          ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
+            ...(first.playerId !== undefined ? { eventPlayerId: first.playerId } : {}),
           ...(amounts.length > 0
             ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
             : {}),
@@ -493,6 +542,32 @@ export function queueTriggersForEvent(
     }
   }
 
+
+  for (const player of ctx.state.players) {
+    for (const emblem of player.emblems) {
+      for (const ability of emblem.abilities) {
+        const spec = ability.trigger;
+        if (spec === undefined || spec.when !== when || !('subject' in spec)) continue;
+        const from: SelectorSource = { cardId: emblem.id, controllerId: emblem.controllerId };
+        const matched = subjects.filter((subject) =>
+          spec.subject.kind === 'self'
+            ? false
+            : matchesSelector(ctx, subject.permanent, spec.subject.selector, from),
+        );
+        for (const subject of matched) {
+          ctx.state.pendingTriggers.push({
+            controllerId: emblem.controllerId,
+            sourceCardId: emblem.id,
+            sourceOracleId: '' as never,
+            sourceName: emblem.name,
+            ability,
+            triggerObjectCardId: subject.permanent.cardId,
+          });
+          debug(ctx, 'stack', `emblem trigger queued: ${emblem.name}`);
+        }
+      }
+    }
+  }
   for (const delayed of ctx.state.delayedTriggers) {
     if (delayed.when !== when) continue;
     const matchingSubject = delayed.targetId !== undefined
@@ -569,7 +644,14 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       if (spec.caster === 'you' && !isController) continue;
       if (spec.caster === 'opponent' && isController) continue;
 
-      const from: SelectorSource = { cardId: source.cardId, controllerId: source.controllerId };
+      const from: SelectorSource = {
+        cardId: source.cardId,
+        controllerId: source.controllerId,
+        attachedToCardId:
+          source.attachedTo === null
+            ? null
+            : (ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId ?? null),
+      };
       // `selectMatches`, not `matchesSelector`: the spell is not a permanent, so there are no
       // layered characteristics to compute — the candidate above is already the whole answer.
       if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;

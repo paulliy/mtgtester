@@ -61,5 +61,23 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return scope.triggerCount ?? 1;
     case 'spellManaValue':
       return scope.spellManaValue ?? 0;
+    case 'stationPower':
+      return scope.stationPower ?? 0;
+    case 'countersOnSelf': {
+      if (!scope.sourceCardId) return 0;
+      const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
+      return perm ? (perm.counters[value.counter] ?? 0) : 0;
+    }
+    case 'countersOnTarget': {
+      if (value.target === 'triggerObject') {
+        if (!scope.triggerObjectCardId) return 0;
+        const perm = ctx.state.battlefield.find((p) => p.cardId === scope.triggerObjectCardId);
+        return perm ? (perm.counters[value.counter] ?? 0) : 0;
+      }
+      const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
+      if (!targetId) return 0;
+      const perm = ctx.state.battlefield.find((p) => p.id === targetId || p.cardId === targetId);
+      return perm ? (perm.counters[value.counter] ?? 0) : 0;
+    }
   }
 }

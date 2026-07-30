@@ -59,6 +59,8 @@ export type PriorityActionPayload =
       x?: number;
       /** Which modal option was chosen (CR 601.2b), when `spellAbility.modes` is present. */
       mode?: number;
+      /** Chosen modal subset; supersedes mode for ranged modal spells. */
+      modes?: number[];
       alternativeCast?: 'overload' | 'adventure' | 'omen';
       altIndex?: number;
     }
@@ -66,6 +68,45 @@ export type PriorityActionPayload =
   | { kind: 'activateAbility'; objectId: ObjectId; index: number }
   | { kind: 'companionToHand' };
 
+function addManaCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
+  return {
+    generic: a.generic + b.generic,
+    colorless: a.colorless + b.colorless,
+    colored: {
+      W: a.colored.W + b.colored.W,
+      U: a.colored.U + b.colored.U,
+      B: a.colored.B + b.colored.B,
+      R: a.colored.R + b.colored.R,
+      G: a.colored.G + b.colored.G,
+    },
+    ...((a.x ?? 0) + (b.x ?? 0) > 0 ? { x: (a.x ?? 0) + (b.x ?? 0) } : {}),
+  };
+}
+export function selectedModeTargetSlots(def: CardDefinition, selectedModes: number[] | undefined): number[] | undefined {
+  const modes = def.spellAbility?.modes;
+  if (modes === undefined || selectedModes === undefined) return undefined;
+  const chosen = selectedModes.map((index) => modes.options[index]);
+  // Hand-authored legacy modes without ownership metadata retain their historical all-targets behavior.
+  if (chosen.some((option) => option?.targetSlots === undefined)) return undefined;
+  return [...new Set(chosen.flatMap((option) => option?.targetSlots ?? []))].sort((a, b) => a - b);
+}
+
+function modalSelections(def: CardDefinition): (number[] | undefined)[] {
+  const modes = def.spellAbility?.modes;
+  if (modes === undefined) return [undefined];
+  const out: number[][] = [];
+  const visit = (next: number, chosen: number[]): void => {
+    if (chosen.length >= modes.minChoices && chosen.length <= modes.maxChoices) out.push([...chosen]);
+    if (chosen.length === modes.maxChoices) return;
+    for (let i = next; i < modes.options.length; i++) {
+      chosen.push(i);
+      visit(i + 1, chosen);
+      chosen.pop();
+    }
+  };
+  visit(0, []);
+  return out;
+}
 const COMPANION_COST: ParsedManaCost = { ...emptyCost(), generic: 3 };
 
 /**
@@ -144,16 +185,32 @@ export function costReductionFor(
   let generic = 0;
   let colored: ParsedManaCost | undefined;
 
-  for (const entry of gatherRuleStatics(ctx)) {
+  const ownReductions = def.ruleStatics
+    .filter((rule): rule is Extract<(typeof def.ruleStatics)[number], { kind: 'costReduction' }> =>
+      rule.kind === 'costReduction' && rule.selfOnly === true,
+    )
+    .map((rule) => ({
+      static: rule,
+      sourceCardId: castCardId,
+      sourceOracleId: castOracleId,
+      controllerId: casterId,
+    }));
+
+  for (const entry of [...gatherRuleStatics(ctx), ...ownReductions]) {
     if (entry.static.kind !== 'costReduction') continue;
     if (entry.controllerId !== casterId) continue;
     if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== casterId) continue;
     if (entry.static.excludesSelf === true && entry.sourceCardId === castCardId) continue;
-    if (
-      entry.static.filter !== undefined &&
-      !selectMatches(candidate, entry.static.filter, source)
-    ) {
-      continue;
+    if (entry.static.filter !== undefined) {
+      // "Spells you cast of the CHOSEN type cost {1} less" (Cloud Key): the filter reads
+      // the reduction's own SOURCE's chosen option, not the spell being cast — so `source`
+      // (which stands in for the spell here) needs that source's choice threaded in per entry.
+      const ruleSourcePerm = ctx.state.battlefield.find((p) => p.cardId === entry.sourceCardId);
+      const entrySource: SelectorSource =
+        ruleSourcePerm?.chosenOption !== undefined
+          ? { ...source, chosenOption: ruleSourcePerm.chosenOption }
+          : source;
+      if (!selectMatches(candidate, entry.static.filter, entrySource)) continue;
     }
     generic += evaluateValueIn(ctx, entry.static.amount, {
       controllerId: entry.controllerId,
@@ -197,8 +254,12 @@ export function permanentMatchesKind(
       return types.includes('Enchantment');
     case 'land':
       return types.includes('Land');
+    case 'planeswalker':
+      return types.includes('Planeswalker');
     case 'artifactOrEnchantment':
       return types.includes('Artifact') || types.includes('Enchantment');
+    case 'artifactEnchantmentOrPlaneswalker':
+      return types.includes('Artifact') || types.includes('Enchantment') || types.includes('Planeswalker');
     case 'nonlandPermanent':
       return !types.includes('Land');
     case 'permanent':
@@ -232,6 +293,8 @@ export function computeTargetOptions(
   casterId: PlayerId,
   /** The targeting source's colors, for protection (CR 702.16). Omitted ⇒ colorless. */
   sourceColors?: readonly Color[],
+  /** The player associated with this trigger event, if target text refers to them. */
+  eventPlayerId?: PlayerId,
 ): ObjectId[] {
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
@@ -243,7 +306,7 @@ export function computeTargetOptions(
       .filter(
         (s) =>
           controller === undefined ||
-          (controller === 'you' ? s.controllerId === casterId : s.controllerId !== casterId),
+          (controller === 'you' ? s.controllerId === casterId : controller === 'opponent' ? s.controllerId !== casterId : s.controllerId === eventPlayerId),
       )
       .map((s) => s.id);
   }
@@ -270,7 +333,7 @@ export function computeTargetOptions(
     .filter(
       (p) =>
         controller === undefined ||
-        (controller === 'you' ? p.controllerId === casterId : p.controllerId !== casterId),
+        (controller === 'you' ? p.controllerId === casterId : controller === 'opponent' ? p.controllerId !== casterId : p.controllerId === eventPlayerId),
     )
     .filter((p) => filter === undefined || matchesSelector(ctx, p, filter, { cardId: '', controllerId: casterId }))
     .map((p) => p.id);
@@ -284,13 +347,14 @@ function computeCastTargets(
   ctx: GameContext,
   def: CardDefinition,
   casterId: PlayerId,
+  activeSlots?: readonly number[],
 ): { slot: number; options: ObjectId[] }[] | null {
   const slots: { slot: number; options: ObjectId[] }[] = [];
-  let slotNum = 0;
-  for (const spec of def.spellAbility?.targets ?? []) {
+  for (const [slotNum, spec] of (def.spellAbility?.targets ?? []).entries()) {
+    if (activeSlots !== undefined && !activeSlots.includes(slotNum)) continue;
     const options = computeTargetOptions(ctx, spec, casterId);
     if (options.length === 0) return null; // can't cast without a legal target (CR 601.2c)
-    slots.push({ slot: slotNum++, options });
+    slots.push({ slot: slotNum, options });
   }
   return slots;
 }
@@ -421,23 +485,25 @@ export function computePriorityOptions(
     // so each mode is its own cast option, the same "the option menu is the contract" treatment
     // {X} gets above. A non-modal spell has exactly one "mode" (undefined), so this loop is a
     // single iteration when `modes` is absent.
-    const modeIndices = def.spellAbility?.modes?.options.map((_, i) => i) ?? [undefined];
+    const selections = modalSelections(def);
 
     for (const x of xChoices) {
       const cost = withX(base, x);
       if (!canPay(cost, player.manaEntries, sources, allows)) continue;
 
-      const targets = computeCastTargets(ctx, def, player.id);
-      if (targets === null) return;
-
-      for (const mode of modeIndices) {
-        const modeLabel =
-          mode === undefined ? undefined : (def.spellAbility?.modes?.options[mode]?.description ??
-            `mode ${mode + 1}`);
+      for (const selectedModes of selections) {
+        const targets = computeCastTargets(ctx, def, player.id, selectedModeTargetSlots(def, selectedModes));
+        if (targets === null) continue;
+        const additional = selectedModes?.flatMap((mode) => def.spellAbility?.modes?.options[mode]?.additionalCost ?? []) ?? [];
+        const selectionCost = addManaCosts(cost, manaPortionOf(additional));
+        if (!canPay(selectionCost, player.manaEntries, sources, allows)) continue;
+        const modeLabel = selectedModes === undefined
+          ? undefined
+          : selectedModes.map((mode) => def.spellAbility?.modes?.options[mode]?.description ?? `mode ${mode + 1}`).join('; ');
         const option: EngineActionOption = {
           type: 'castSpell',
           description:
-            `Cast ${obj.name} (${describeManaCost(cost)})` +
+            `Cast ${obj.name} (${describeManaCost(selectionCost)})` +
             (xSymbols > 0 ? ` with X=${x}` : '') +
             (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
             (fromCommand ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}` : '') +
@@ -449,10 +515,8 @@ export function computePriorityOptions(
             fromCommand,
             ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
             ...(xSymbols > 0 ? { x } : {}),
-            ...(mode !== undefined ? { mode } : {}),
+            ...(selectedModes !== undefined ? { modes: selectedModes, ...(selectedModes.length === 1 ? { mode: selectedModes[0] } : {}) } : {}),
           },
-          // Descriptive only (see `EngineActionOption.data`): lets a decision consumer tell a
-          // hold-priority instant apart from a sorcery-speed play without parsing the description.
           data: {
             instantSpeed,
             sourceName: obj.name,
@@ -463,8 +527,8 @@ export function computePriorityOptions(
                 : fromExile
                   ? 'exile'
                   : 'hand',
-            manaCost: describeManaCost(cost),
-            ...paymentPreview(ctx, player, cost, sources, allows),
+            manaCost: describeManaCost(selectionCost),
+            ...paymentPreview(ctx, player, selectionCost, sources, allows),
             ...(tax > 0 ? { commanderTax: tax } : {}),
             ...(xSymbols > 0 ? { x } : {}),
             ...(modeLabel !== undefined ? { modeLabel } : {}),
@@ -737,10 +801,11 @@ export function validateChosenTargets(
   def: CardDefinition,
   casterId: PlayerId,
   chosen: ReadonlyMap<number, ObjectId>,
+  activeSlots?: readonly number[],
 ): ObjectId[] {
   const targets: ObjectId[] = [];
-  let slotNum = 0;
-  for (const spec of def.spellAbility?.targets ?? []) {
+  for (const [slotNum, spec] of (def.spellAbility?.targets ?? []).entries()) {
+    if (activeSlots !== undefined && !activeSlots.includes(slotNum)) continue;
     const choice = chosen.get(slotNum);
     if (choice === undefined) {
       throw new Error(`missing target for slot ${slotNum} of ${def.name}`);
@@ -749,8 +814,7 @@ export function validateChosenTargets(
     if (!legal.includes(choice)) {
       throw new Error(`illegal target ${choice} for slot ${slotNum} of ${def.name}`);
     }
-    targets.push(choice);
-    slotNum++;
+    targets[slotNum] = choice;
   }
   return targets;
 }

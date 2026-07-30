@@ -273,6 +273,108 @@ describe('scry', () => {
       expect(p1(ctx).library.map((c) => c.name)).toEqual(expected);
     }
   });
+
+  it('can reorder multiple cards kept on top', () => {
+    const ctx = pod();
+    p1(ctx).library.length = 0;
+    conjure(ctx, 'P1', mountain(), 'library');
+    conjure(ctx, 'P1', island(), 'library');
+    const ability = interpretCard(
+      oracle({
+        name: 'Test Scry Two',
+        typeLine: 'Sorcery',
+        manaCost: '{U}',
+        power: null,
+        toughness: null,
+        oracleText: 'Scry 2.',
+      }),
+    ).spellAbility!;
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'c-scry-two', name: 'Test Scry Two', oracleId: 'oracle-test-scry-two', controllerId: 'P1' },
+        ability,
+        [],
+      ),
+      (decision) => {
+        if (decision.prompt.includes('reorder the cards')) return { index: 1, targets: new Map() };
+        if (decision.prompt.includes('choose the next card')) {
+          return { index: decision.options.findIndex((option) => option.description.includes('Mountain')), targets: new Map() };
+        }
+        return { index: 0, targets: new Map() };
+      },
+    );
+    expect(p1(ctx).library.map((card) => card.name)).toEqual(['Mountain', 'Island']);
+  });
+});
+
+describe('draw, discard, mill, and surveil', () => {
+  it('parses variable draw and mill, then resolves a chosen discard and surveil', () => {
+    const drawDiscard = interpretCard(
+      oracle({
+        name: 'Test Pull',
+        typeLine: 'Instant',
+        manaCost: '{X}{U}',
+        power: null,
+        toughness: null,
+        oracleText: 'Draw X cards, then discard a card.',
+      }),
+    );
+    const mill = interpretCard(
+      oracle({
+        name: 'Test Mill',
+        typeLine: 'Sorcery',
+        manaCost: '{U}',
+        power: null,
+        toughness: null,
+        oracleText: 'Mill two cards.',
+      }),
+    );
+    const surveil = interpretCard(
+      oracle({
+        name: 'Test Surveil',
+        typeLine: 'Sorcery',
+        manaCost: '{U}',
+        power: null,
+        toughness: null,
+        oracleText: 'Surveil 1.',
+      }),
+    );
+    expect(drawDiscard.spellAbility?.effects).toEqual([
+      { op: 'draw', count: { kind: 'xValue' } },
+      { op: 'discard', count: 1 },
+    ]);
+    expect(mill.spellAbility?.effects).toEqual([{ op: 'mill', count: { kind: 'const', n: 2 } }]);
+
+    const ctx = pod();
+    p1(ctx).library.length = 0;
+    conjure(ctx, 'P1', mountain(), 'library');
+    conjure(ctx, 'P1', island(), 'library');
+    conjure(ctx, 'P1', forest(), 'hand');
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'c-pull', name: drawDiscard.name, oracleId: drawDiscard.oracleId, controllerId: 'P1' },
+        drawDiscard.spellAbility as never,
+        [],
+        undefined,
+        { x: 1 },
+      ),
+      choose(/Forest/),
+    );
+    expect(p1(ctx).graveyard.map((card) => card.name)).toContain('Forest');
+
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'c-surveil', name: surveil.name, oracleId: surveil.oracleId, controllerId: 'P1' },
+        surveil.spellAbility as never,
+        [],
+      ),
+      choose(/graveyard/),
+    );
+    expect(p1(ctx).graveyard.map((card) => card.name)).toContain('Mountain');
+  });
 });
 
 describe('mass damage and event-only keyword selectors', () => {

@@ -15,6 +15,7 @@ import type {
 import { TAP_COST } from '../cards/definition';
 import type { RuleStatic } from '../cards/rule-statics';
 import { evaluateCondition } from '../cards/condition';
+import { evaluateValue } from '../cards/value';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
@@ -384,13 +385,44 @@ export function canPayNonManaCosts(
         break;
       case 'sacrificeSelf':
         break;
-      case 'removeCounters':
-        if ((perm.counters[cost.counter] ?? 0) < cost.count) return false;
+      case 'sacrificeOther': {
+        const count = cost.count ?? 1;
+        const payable = ctx.state.battlefield.filter((candidate) =>
+          candidate.id !== perm.id && candidate.controllerId === perm.controllerId &&
+          matchesSelector(ctx, candidate, cost.selector, { cardId: perm.cardId, controllerId: perm.controllerId }),
+        );
+        if (payable.length < count) return false;
         break;
+      }
+      case 'tapOther': {
+        const payable = ctx.state.battlefield.some((candidate) =>
+          candidate.id !== perm.id && candidate.controllerId === perm.controllerId && !candidate.tapped &&
+          matchesSelector(ctx, candidate, cost.selector, { cardId: perm.cardId, controllerId: perm.controllerId }),
+        );
+        if (!payable) return false;
+        break;
+      }
+      case 'tapOthers': {
+        const payable = ctx.state.battlefield.filter((candidate) =>
+          candidate.id !== perm.id && candidate.controllerId === perm.controllerId && !candidate.tapped &&
+          matchesSelector(ctx, candidate, cost.selector, { cardId: perm.cardId, controllerId: perm.controllerId }),
+        );
+        if (payable.length < cost.count) return false;
+        break;
+      }      case 'removeCounters': {
+        const count = typeof cost.count === 'number' ? cost.count : evaluateValue(ctx, cost.count);
+        if ((perm.counters[cost.counter] ?? 0) < count) return false;
+        break;
+      }
       case 'payLife': {
         // CR 118.8: a player may pay life only down to 0, never into a negative total.
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
         if (controller === undefined || controller.life < cost.amount) return false;
+        break;
+      }
+      case 'payEnergy': {
+        const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
+        if (controller === undefined || controller.energy < cost.amount) return false;
         break;
       }
       case 'loyalty':
@@ -573,6 +605,7 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
     const def = ctx.defs.get(perm.oracleId);
     if (def === undefined) continue;
     for (const rs of def.ruleStatics) {
+      if (rs.kind === 'costReduction' && rs.selfOnly === true) continue;
       out.push({
         static: rs,
         sourceCardId: perm.cardId,
@@ -600,6 +633,12 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
   return out;
 }
 
+/** Does this player currently have no maximum hand size? */
+export function hasNoMaximumHandSize(ctx: GameContext, playerId: PlayerId): boolean {
+  return gatherRuleStatics(ctx).some(
+    (entry) => entry.static.kind === 'noMaximumHandSize' && entry.controllerId === playerId,
+  );
+}
 /** Does an active `cantCastSpells` rule static currently forbid `playerId` from casting? */
 export function castingSpellsBlockedFor(ctx: GameContext, playerId: PlayerId): boolean {
   return gatherRuleStatics(ctx).some((entry) => {

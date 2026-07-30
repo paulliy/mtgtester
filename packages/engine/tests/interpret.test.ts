@@ -33,6 +33,14 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(def.keywords).toContain('flying');
   });
 
+  it('models no-maximum-hand-size as a rule static', () => {
+    const def = interpretCard(oracle({
+      name: 'Test Tower', typeLine: 'Land', manaCost: null, power: null, toughness: null,
+      oracleText: 'You have no maximum hand size.\n{T}: Add {C}.',
+    }));
+    expect(def.modeled).toBe(true);
+    expect(def.ruleStatics).toContainEqual({ kind: 'noMaximumHandSize' });
+  });
   it('gives basic lands their intrinsic mana ability', () => {
     const def = interpretCard(forest());
     expect(def.modeled).toBe(true);
@@ -248,7 +256,7 @@ describe('oracle-text interpreter (brief §6)', () => {
 
   it('marks unrecognized rules text, weird layouts, and * P/T as unmodeled', () => {
     const weird = interpretCard(
-      oracle({ name: 'Weirdo', oracleText: 'Whenever you cast a spell, proliferate.' }),
+      oracle({ name: 'Weirdo', oracleText: 'Whenever you cast a spell, investigate.' }),
     );
     expect(weird.modeled).toBe(false);
 
@@ -341,5 +349,79 @@ describe('oracle-text interpreter (brief §6)', () => {
       }),
     );
     expect(def.modeled).toBe(false);
+  });
+
+  it('models targeted destruction and exile with target filters (Vandalblast & Vanishing Verse patterns)', () => {
+    const vandalblast = interpretCard(
+      oracle({
+        name: 'Vandalblast Test',
+        typeLine: 'Sorcery',
+        manaCost: '{R}',
+        power: null,
+        toughness: null,
+        oracleText: "Destroy target artifact you don't control.",
+      }),
+    );
+    expect(vandalblast.modeled).toBe(true);
+    expect(vandalblast.spellAbility?.effects).toEqual([
+      { op: 'destroy', target: 0 },
+    ]);
+    expect(vandalblast.spellAbility?.targets[0]).toEqual({
+      kind: 'artifact',
+      controller: 'opponent',
+    });
+
+    const vanishingVerse = interpretCard(
+      oracle({
+        name: 'Vanishing Verse Test',
+        typeLine: 'Instant',
+        manaCost: '{W}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Exile target monocolored permanent.',
+      }),
+    );
+    expect(vanishingVerse.modeled).toBe(true);
+    expect(vanishingVerse.spellAbility?.effects).toEqual([
+      { op: 'exile', target: 0 },
+    ]);
+    expect(vanishingVerse.spellAbility?.targets[0]).toEqual({
+      kind: 'permanent',
+      filter: { kind: 'isMonocolored' },
+    });
+
+    const fracture = interpretCard(
+      oracle({
+        name: 'Fracture Test',
+        typeLine: 'Instant',
+        manaCost: '{W}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy target artifact, enchantment, or planeswalker.',
+      }),
+    );
+    expect(fracture.modeled).toBe(true);
+    expect(fracture.spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }]);
+    expect(fracture.spellAbility?.targets).toEqual([
+      { kind: 'artifactEnchantmentOrPlaneswalker' },
+    ]);
+  });
+
+  it('models self-pump activated abilities (~ gets +1/+0 until end of turn)', () => {
+    const firebreather = interpretCard(
+      oracle({
+        name: 'Fire Dragon',
+        typeLine: 'Creature — Dragon',
+        manaCost: '{2}{R}',
+        power: '2',
+        toughness: '2',
+        oracleText: '{R}: ~ gets +1/+0 until end of turn.',
+      }),
+    );
+    expect(firebreather.modeled).toBe(true);
+    expect(firebreather.activatedAbilities?.length).toBe(1);
+    expect(firebreather.activatedAbilities?.[0]?.ability.effects).toEqual([
+      { op: 'pumpEachUntilEot', selector: { kind: 'self' }, power: 1, toughness: 0 },
+    ]);
   });
 });

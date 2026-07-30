@@ -88,6 +88,14 @@ export interface CardDefinition {
    */
   entersTappedUnless?: Condition;
   /**
+   * "As this enters, choose a color/type/mode" (CR 614.1c-style replacement, not a trigger) —
+   * Caged Sun's color, Cloud Key's card type, Frontier Siege's mode. The chosen `key` is stored
+   * on the permanent (`EnginePermanent.chosenOption`) for later statics/triggers to read back
+   * via the `chosenColor` selector or a `chosenOptionIs` condition, rather than each card
+   * inventing its own memory field.
+   */
+  entersChoosingOption?: { prompt: string; options: { key: string; label: string }[] };
+  /**
    * Counters the permanent enters the battlefield with (CR 614.1c) — a replacement effect,
    * NOT a triggered ability. The distinction is load-bearing: as a trigger, a 0/0 that
    * "enters with three +1/+1 counters" would briefly exist at 0 toughness and die to a

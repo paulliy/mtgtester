@@ -31,6 +31,13 @@
 
 import type { OracleId } from '@mtg/shared';
 import type { CardDefinition } from '../definition';
+import { registerURDRAGONOverrides } from './urdragon';
+import { registerDRACONIC_DESTRUCTIONOverrides } from './draconic-destruction';
+import { registerTOKEN_TRIUMPHOverrides } from './token-triumph';
+import { registerLIVING_ENERGYOverrides } from './living-energy';
+import { registerSILVERQUILL_INFLUENCEOverrides } from './silverquill-influence';
+import { registerCOUNTER_INTELLIGENCEOverrides } from './counter-intelligence';
+import { registerNECRON_DYNASTIESOverrides } from './necron-dynasties';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -47,11 +54,17 @@ export interface CardOverride {
 
 /**
  * Every authored override, keyed by oracle id.
- *
- * Empty by design at introduction: a registry with no primitives underneath it is the wrong
- * tool, so the increment that adds this mechanism deliberately closes zero cards.
  */
 const OVERRIDES = new Map<OracleId, CardOverride>();
+
+// Register all deck overrides
+registerURDRAGONOverrides();
+registerDRACONIC_DESTRUCTIONOverrides();
+registerTOKEN_TRIUMPHOverrides();
+registerLIVING_ENERGYOverrides();
+registerSILVERQUILL_INFLUENCEOverrides();
+registerCOUNTER_INTELLIGENCEOverrides();
+registerNECRON_DYNASTIESOverrides();
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {
@@ -73,6 +86,13 @@ function quotedBody(reason: string): string | null {
   return m === null ? null : (m[1] as string);
 }
 
+function normalizeLine(line: string): string {
+  return line.replace(
+    /\bthis (?:creature|artifact|enchantment|land|permanent|token|Vehicle|Equipment|Saga|planeswalker)\b/gi,
+    '~',
+  );
+}
+
 /**
  * Apply an override to a freshly interpreted definition.
  *
@@ -83,12 +103,33 @@ export function applyOverride(def: CardDefinition): CardDefinition {
   const override = getOverride(def.oracleId);
   if (override === undefined) return def;
 
+  // A registration must add executable card behavior. An empty patch is ignored so it cannot
+  // clear an unsupported-rule reason and turn missing rules into a silent no-op.
+  if (Object.keys(override.def).length === 0) {
+    // A previously-needed override may become obsolete after a parser/engine primitive lands.
+    // It must not turn an otherwise complete definition back into an unmodeled card; there is
+    // no behavior to merge and the interpreted definition is already the executable source.
+    if (def.modeled) return def;
+    return {
+      ...def,
+      modeled: false,
+      unmodeledReasons: [
+        ...def.unmodeledReasons,
+        `override for "${override.name}" has no executable behavior`,
+      ],
+    };
+  }
   // Clear one reason per handled line. One-for-one rather than a filter, so a card printing the
   // same unparsed line twice needs the override to claim it twice.
   const remaining = [...def.unmodeledReasons];
   const unmatched: string[] = [];
   for (const line of override.handledLines) {
-    const index = remaining.findIndex((r) => r === line || quotedBody(r) === line);
+    const index = remaining.findIndex((r) => {
+      if (r === line || quotedBody(r) === line) return true;
+      const q = quotedBody(r);
+      const rBody = q ?? r;
+      return normalizeLine(rBody) === normalizeLine(line);
+    });
     if (index === -1) unmatched.push(line);
     else remaining.splice(index, 1);
   }

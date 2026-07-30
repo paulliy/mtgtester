@@ -140,6 +140,43 @@ describe('anthems and lords (ADR 0008)', () => {
     expect(hasKeyword(ctx, theirElf, 'flying')).toBe(false);
   });
 
+  it('treats artifact creatures as intersecting card types for a lord', () => {
+    const lord = oracle({
+      name: 'Test Artifact Lord',
+      typeLine: 'Artifact Creature — Construct',
+      manaCost: '{3}',
+      power: '2',
+      toughness: '2',
+      oracleText: 'Other artifact creatures you control have haste.',
+    });
+    const def = interpretCard(lord);
+    expect(def.modeled).toBe(true);
+    expect(def.staticEffects).toEqual([
+      {
+        affects: allOf(OTHER, YOURS, ofType('Artifact'), ofType('Creature')),
+        op: { layer: 6, addKeyword: 'haste' },
+      },
+    ]);
+
+    const ctx = ctx4();
+    const source = spawn(ctx, 'P1', lord);
+    const artifactCreature = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Servo',
+        typeLine: 'Artifact Creature — Servo',
+        manaCost: '{1}',
+        power: '1',
+        toughness: '1',
+      }),
+    );
+    const ordinaryCreature = spawn(ctx, 'P1', bear());
+    expect(hasKeyword(ctx, source, 'haste')).toBe(false);
+    expect(hasKeyword(ctx, artifactCreature, 'haste')).toBe(true);
+    expect(hasKeyword(ctx, ordinaryCreature, 'haste')).toBe(false);
+  });
+
   it('"Creatures your opponents control get -1/-1" inverts the controller clause', () => {
     const curse = oracle({
       name: 'Test Curse',

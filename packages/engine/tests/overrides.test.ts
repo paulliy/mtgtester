@@ -43,6 +43,24 @@ describe('authored-override registry', () => {
     expect(def.unmodeledReasons).toHaveLength(1);
   });
 
+  it('does not let a no-op override hide unsupported text', () => {
+    const def = interpretCard(bespoke());
+    const line = /^unrecognized rules text: "([\s\S]*)"$/.exec(
+      def.unmodeledReasons[0] as string,
+    )?.[1] as string;
+
+    registerOverride({
+      oracleId: ORACLE_ID,
+      name: 'Test Bespoke',
+      handledLines: [line],
+      def: {},
+    });
+
+    const overridden = interpretCard(bespoke());
+    expect(overridden.modeled).toBe(false);
+    expect(overridden.unmodeledReasons).toContain(def.unmodeledReasons[0]);
+
+  });
   it('clears exactly the reasons an override names, and merges its authored behavior', () => {
     const def = interpretCard(bespoke());
     const line = /^unrecognized rules text: "([\s\S]*)"$/.exec(def.unmodeledReasons[0] as string);
@@ -87,7 +105,7 @@ describe('authored-override registry', () => {
       expect(after.unmodeledReasons.some((r) => r.includes('no longer has'))).toBe(true);
     });
 
-    it('reports an override that claims a line the card never had', () => {
+    it('ignores a no-op override even when it claims a line the card never had', () => {
       registerOverride({
         oracleId: ORACLE_ID,
         name: 'Test Bespoke',
@@ -97,10 +115,10 @@ describe('authored-override registry', () => {
 
       const def = interpretCard(bespoke());
       expect(def.modeled).toBe(false);
-      expect(def.unmodeledReasons.some((r) => r.includes('no longer has'))).toBe(true);
+      expect(def.unmodeledReasons).toHaveLength(2);
     });
 
-    it('claiming a duplicated line once leaves the second occurrence unmodeled', () => {
+    it('ignores a no-op override that claims a duplicated line', () => {
       const text = 'Untap all Dragons.\nUntap all Dragons.';
       const def = interpretCard(bespoke(text));
       expect(def.unmodeledReasons).toHaveLength(2);
@@ -115,7 +133,7 @@ describe('authored-override registry', () => {
       });
 
       // One claim clears one reason — not both.
-      expect(interpretCard(bespoke(text)).unmodeledReasons).toHaveLength(1);
+      expect(interpretCard(bespoke(text)).unmodeledReasons).toHaveLength(3);
     });
   });
 });

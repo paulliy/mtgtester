@@ -347,7 +347,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   const ordinarySlots: { slot: number; options: ObjectId[] }[] = [];
   for (const [i, spec] of specs.entries()) {
     if (spec.count !== undefined) continue;
-    const options = computeTargetOptions(ctx, spec, trigger.controllerId);
+    const options = computeTargetOptions(ctx, spec, trigger.controllerId, undefined, trigger.scope?.eventPlayerId);
     if (options.length === 0) {
       emit(
         ctx,
@@ -417,7 +417,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
 
     const picked: ObjectId[] = [];
     for (let k = 0; k < effectiveMax; k++) {
-      const candidates = computeTargetOptions(ctx, spec, trigger.controllerId).filter(
+      const candidates = computeTargetOptions(ctx, spec, trigger.controllerId, undefined, trigger.scope?.eventPlayerId).filter(
         (id) => !alreadyChosen.has(id) && !picked.includes(id),
       );
       if (candidates.length === 0) break;

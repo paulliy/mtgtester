@@ -175,8 +175,8 @@ describe('AI Config', () => {
     expect(config.strategist.models).toEqual(['deepseek/deepseek-v4-flash', 'tencent/hy3']);
     expect(config.tactician.models).toEqual([
       'qwen/qwen3.7-flash',
-      'inclusionai/ling-2.6-flash',
-      'tencent/hy3-preview',
+      'sao10k/l3-lunaris-8b:nitro',
+      'poolside/laguna-s-2.1',
     ]);
   });
 });

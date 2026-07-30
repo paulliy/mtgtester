@@ -23,7 +23,7 @@ import {
   permanentSource,
 } from '../effects/resolve';
 import { emit, debug } from '../log/log';
-import { playerById, queueTriggersForEvent } from '../state/objects';
+import { playerById, queueTriggersForEvent, queueTriggersForObject } from '../state/objects';
 import {
   colorsOf,
   controlledPermanents,
@@ -58,6 +58,7 @@ function canAttack(ctx: GameContext, perm: EnginePermanent): boolean {
 /** Evasion check: may `blocker` block `attacker`? (flying/reach, protection — CR 509.1b.) */
 function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePermanent): boolean {
   if (blocker.tapped) return false;
+  if (ctx.state.effects.some((effect) => effect.kind === 'cantBeBlocked' && effect.targetCardIds.includes(attacker.cardId))) return false;
   // Protection (CR 702.16), the B in DEBT: an attacker with protection from the blocker's
   // colors cannot be blocked by it.
   if (hasProtectionFrom(ctx, attacker, colorsOf(ctx, blocker))) return false;
@@ -96,7 +97,10 @@ function commitAttacker(
 ): void {
   creature.attacking = defenderId;
   creature.statuses.push('attacking');
-  if (!hasKeyword(ctx, creature, 'vigilance')) creature.tapped = true; // CR 508.1f
+  if (!hasKeyword(ctx, creature, 'vigilance')) {
+    creature.tapped = true; // CR 508.1f
+    queueTriggersForObject(ctx, 'becomesTapped', creature);
+  }
   emit(
     ctx,
     'attack',
@@ -246,7 +250,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   queueTriggersForEvent(
     ctx,
     'attacks',
-    declared.map((permanent) => ({ permanent })),
+    declared.map((permanent) => ({ permanent, playerId: permanent.attacking ?? undefined })),
   );
   emit(ctx, 'attackersDeclared', { count: declared.length }, ap.id);
 }
@@ -494,6 +498,7 @@ function dealCombatDamage(ctx: GameContext, step: 'first' | 'regular'): void {
         combat: true,
         sourceHasDeathtouch: traits.deathtouch,
         sourceHasLifelink: traits.lifelink,
+        sourceHasInfect: traits.infect,
         sourceColors: traits.colors,
       });
     } else if (a.targetPlayer !== null) {
@@ -506,6 +511,7 @@ function dealCombatDamage(ctx: GameContext, step: 'first' | 'regular'): void {
           combat: true,
           sourceIsCommander: a.source.isCommander,
           sourceHasLifelink: traits.lifelink,
+          sourceHasInfect: traits.infect,
         },
       );
       damageToPlayers.set(a.source, (damageToPlayers.get(a.source) ?? 0) + a.amount);
@@ -516,7 +522,7 @@ function dealCombatDamage(ctx: GameContext, step: 'first' | 'regular'): void {
   queueTriggersForEvent(
     ctx,
     'dealsCombatDamageToPlayer',
-    [...damageToPlayers].map(([permanent, amount]) => ({ permanent, amount })),
+    [...damageToPlayers].map(([permanent, amount]) => ({ permanent, amount, playerId: permanent.attacking ?? undefined })),
   );
 }
 

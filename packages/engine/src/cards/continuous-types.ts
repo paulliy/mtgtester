@@ -6,7 +6,7 @@
 
 import type { Color } from '@mtg/shared';
 import type { ParsedManaCost } from '../mana/cost';
-import type { Ability, KeywordAbility, ManaAbilitySpec } from './ability';
+import type { Ability, ActivatedAbility, KeywordAbility, ManaAbilitySpec } from './ability';
 import type { Condition } from './condition';
 import type { Selector } from './selector';
 import type { Value } from './value';
@@ -37,8 +37,16 @@ export type ContinuousOp =
   | { layer: 6; addWard: ParsedManaCost }
   /** "Protection from white and from black" (CR 702.16). */
   | { layer: 6; addProtection: Color[] }
+  /**
+   * "Protection from the chosen color" (Flickering Ward) — the color is per-permanent state
+   * (`EnginePermanent.chosenOption`), not fixed, so `gatherEffects` resolves this into a
+   * concrete `addProtection` per application rather than `applyOpTo` reading it directly.
+   */
+  | { layer: 6; addProtectionFromChosenColor: true }
   /** Grant a triggered ability — "Equipped creature has 'Whenever …'". */
   | { layer: 6; addTrigger: Ability }
+  /** Grant an activated ability — "Equipped creature has '{T}: Deal 1 damage...'". */
+  | { layer: 6; addActivatedAbility: ActivatedAbility }
   /** Grant a mana ability — Chromatic Lantern's "Lands you control have '{T}: Add …'". */
   | { layer: 6; addManaAbility: ManaAbilitySpec }
   /** "Loses all abilities" as an effect in its own right (Humility), distinct from the
@@ -49,7 +57,7 @@ export type ContinuousOp =
   // Layer 7b — set P/T to a specific value (Mutavault becomes 2/2).
   | { layer: 7; sublayer: 'b'; power: Value; toughness: Value }
   // Layer 7d — modify (but not set) P/T (Giant Growth pump). 7c is counters, applied inline.
-  | { layer: 7; sublayer: 'd'; power: number; toughness: number };
+  | { layer: 7; sublayer: 'd'; power: number | Value; toughness: number | Value };
 
 /** A continuous effect a card contributes while it is a permanent (static ability or CDA). */
 export interface StaticEffect {
@@ -93,6 +101,8 @@ export interface Characteristics {
   triggers: Ability[];
   /** Mana abilities the permanent currently has — printed, or replaced by a subtype change. */
   manaAbilities: ManaAbilitySpec[];
+  /** Activated abilities granted to the permanent. */
+  activatedAbilities?: ActivatedAbility[];
   power: number;
   toughness: number;
   /**

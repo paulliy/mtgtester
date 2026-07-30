@@ -12,6 +12,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import { queueTriggersForObject } from '../src/state/objects';
 import { effectivePT } from '../src/state/queries';
+import { executeAbility } from '../src/effects/resolve';
 import type { GameContext } from '../src/state/types';
 import { runTurn } from '../src/turn/turn';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
@@ -50,6 +51,24 @@ describe('counter placement', () => {
     expect(def.triggers[0]?.targets).toEqual([{ kind: 'creature' }]);
     expect(def.triggers[0]?.effects).toEqual([
       { op: 'putCounters', target: 0, counter: '+1/+1', count: 2 },
+    ]);
+  });
+
+  it('parses named counters on a target artifact', () => {
+    const def = interpretCard(
+      oracle({
+        name: 'Test Charger',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+        oracleText: 'When Test Charger enters the battlefield, put two charge counters on target artifact.',
+      }),
+    );
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.targets).toEqual([{ kind: 'artifact' }]);
+    expect(def.triggers[0]?.effects).toEqual([
+      { op: 'putCounters', target: 0, counter: 'charge', count: 2 },
     ]);
   });
 
@@ -119,6 +138,40 @@ describe('counter placement', () => {
   });
 });
 
+describe('proliferate', () => {
+  it('parses the keyword and independently adds every existing counter kind the controller selects', () => {
+    const card = oracle({
+      name: 'Test Progress',
+      typeLine: 'Sorcery',
+      manaCost: '{1}{U}',
+      power: null,
+      toughness: null,
+      oracleText: 'Proliferate.',
+    });
+    const def = interpretCard(card);
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.effects).toEqual([{ op: 'proliferate' }]);
+
+    const ctx = ctx4();
+    const artifact = spawn(ctx, 'P2', oracle({
+      name: 'Test Battery', typeLine: 'Artifact', manaCost: '{2}', power: null, toughness: null,
+    }));
+    artifact.counters['charge'] = 2;
+    ctx.state.players[0]!.energy = 2;
+    ctx.state.players[1]!.poisonCounters = 3;
+
+    pump(executeAbility(
+      ctx,
+      { cardId: 'progress-card', name: card.name, oracleId: card.oracleId, controllerId: 'P1' },
+      def.spellAbility!,
+      [],
+    ));
+
+    expect(artifact.counters['charge']).toBe(3);
+    expect(ctx.state.players[0]!.energy).toBe(3);
+    expect(ctx.state.players[1]!.poisonCounters).toBe(4);
+  });
+});
 describe('enters with counters (CR 614.1c replacement)', () => {
   const hydra = (): ReturnType<typeof oracle> =>
     oracle({

@@ -20,6 +20,7 @@
 import type { PlayerId } from '@mtg/shared';
 import type { GameContext } from '../state/types';
 import type { Selector } from './selector';
+import type { EffectRef } from './ability';
 
 /** What a resolving ability knows that the board alone does not. */
 export interface ValueScope {
@@ -39,6 +40,13 @@ export interface ValueScope {
   triggerCount?: number;
   /** Mana value of the spell that fired a `castsSpell` trigger (Lozhan). */
   spellManaValue?: number;
+  stationPower?: number;
+  /** Player involved in the firing event (for that-player-controlled targets). */
+  eventPlayerId?: PlayerId;
+  /** Targets resolved for this ability, indexed by slot. */
+  targets?: readonly string[];
+  /** Card id of the object that fired the trigger. */
+  triggerObjectCardId?: string;
 }
 
 /**
@@ -46,7 +54,7 @@ export interface ValueScope {
  * carried through the stack. Everything else in a `ValueScope` is re-derived at resolution;
  * these cannot be, because the event is over by then.
  */
-export type TriggerScope = Pick<ValueScope, 'damageDealt' | 'triggerCount' | 'spellManaValue'>;
+export type TriggerScope = Pick<ValueScope, 'damageDealt' | 'triggerCount' | 'spellManaValue' | 'eventPlayerId' | 'stationPower'>;
 
 export type Value =
   | { kind: 'const'; n: number }
@@ -69,7 +77,11 @@ export type Value =
   /** "that many" where the trigger aggregated several objects (CR 603.2c). */
   | { kind: 'triggerCount' }
   /** "equal to that spell's mana value" — the spell that fired a `castsSpell` trigger. */
-  | { kind: 'spellManaValue' };
+  | { kind: 'spellManaValue' }
+  /** Power of the creature tapped to pay a Station activation cost, captured at announcement. */
+  | { kind: 'stationPower' }
+  | { kind: 'countersOnSelf'; counter: string }
+  | { kind: 'countersOnTarget'; target: EffectRef; counter: string };
 
 export const constant = (n: number): Value => ({ kind: 'const', n });
 

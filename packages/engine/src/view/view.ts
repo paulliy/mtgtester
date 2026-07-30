@@ -219,6 +219,7 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
     graveyard: viewer.graveyard.map((o) => nameOnlyView(o.id, o.name)),
     commanders: commanderViews(ctx, viewer),
     availableMana,
+    energy: viewer.energy,
     manaSources,
     opponents,
     battlefield: permanentViews(ctx),

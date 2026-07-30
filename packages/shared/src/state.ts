@@ -26,6 +26,8 @@ export interface PlayerState {
   /** Combat damage taken keyed by the SOURCE commander's object id; 21 eliminates (brief §5.7). */
   commanderDamageTaken: Record<ObjectId, number>;
   manaPool: ManaPool;
+  /** Energy counters are public player counters (CR 122.8). */
+  energy: number;
   landsPlayedThisTurn: number;
   /** Poison counters; 10+ loses (brief §5.6). Added to the brief's struct to support the SBA. */
   poisonCounters: number;

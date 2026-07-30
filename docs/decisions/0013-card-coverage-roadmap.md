@@ -14,45 +14,45 @@ Analysis of `bun run coverage --json` executed against the 7 target deck fixture
 
 | Deck Name | Deck Type | Unique Cards | Modeled | Unmodeled | Current Coverage | Playability Status |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| `urdragon.txt` | Custom User Deck | 93 | 64 | **29** | 68.8% | ❌ HALTED |
-| `draconic-destruction.txt` | Starter Precon | 72 | 28 | **44** | 38.9% | ❌ HALTED |
-| `token-triumph.txt` | Starter Precon | 73 | 27 | **46** | 37.0% | ❌ HALTED |
-| `living-energy.txt` | Science! Precon | 87 | 27 | **60** | 31.0% | ❌ HALTED |
-| `necron-dynasties.txt` | Warhammer 40k Precon | 71 | 9 | **62** | 12.7% | ❌ HALTED |
-| `silverquill-influence.txt` | Strixhaven Precon | 86 | 17 | **69** | 19.8% | ❌ HALTED |
-| `counter-intelligence.txt` | Universes Beyond Precon | 117 | 25 | **92** | 21.4% | ❌ HALTED |
-| **AGGREGATE (Union)** | **All 7 Decks** | **538** | **143** | **395** | **26.6%** | **0/7 Playable** |
+| `urdragon.txt` | Custom User Deck | 93 | **93** | **0** | **100.0%** | **✅ PLAYABLE** |
+| `draconic-destruction.txt` | Starter Precon | 72 | **31** | **41** | **43.1%** | ❌ HALTED |
+| `token-triumph.txt` | Starter Precon | 73 | **29** | **44** | **39.7%** | ❌ HALTED |
+| `living-energy.txt` | Science! Precon | 87 | **27** | **60** | **31.0%** | ❌ HALTED |
+| `silverquill-influence.txt` | Strixhaven Precon | 86 | **19** | **67** | **22.1%** | ❌ HALTED |
+| `counter-intelligence.txt` | Universes Beyond Precon | 117 | **26** | **91** | **22.2%** | ❌ HALTED |
+| `necron-dynasties.txt` | Warhammer 40k Precon | 71 | **9** | **62** | **12.7%** | ❌ HALTED |
+| **AGGREGATE (Union)** | **All 7 Decks** | **538** | **177** | **361** | **32.9%** | **1/7 Playable** |
 
 > [!IMPORTANT]
 > **Key Metric Reality Check**:
 > - **Aggregate Unique Cards**: 538
-> - **Currently Modeled**: 143 (26.6%)
-> - **Currently Unmodeled**: 395 (73.4%)
-> - **Playable Real Decks**: 0 of 7.
+> - **Currently Modeled**: 177 (32.9%)
+> - **Currently Unmodeled**: 361 (67.1%)
+> - **Playable Real Decks**: **1 of 7** (`urdragon.txt` is 100% modeled and runnable).
 > - **Average Blocking Mechanics per Card**: ~2.25. (Fixing a single mechanic unblocks only a subset of cards, because many unmodeled cards contain multiple unparsed lines).
 
 ---
 
 ### Top Blocking Mechanic Families
 
-From `packages/server/src/cards/coverage.ts`, mechanics are categorized into non-exclusive families. Ranking by frequency across all 395 unmodeled cards:
+From `packages/server/src/cards/coverage.ts`, mechanics are categorized into non-exclusive families. Ranking by frequency across all 361 unmodeled cards:
 
 | Rank | Mechanic Family | Blocking Count | Description / Key Examples |
 | :---: | :--- | :---: | :--- |
-| **1** | `activated ability (non-mana)` | **111** | `{T}: ...`, `{1}{B}, {T}: ...`, planeswalker `+1`/`-3` loyalty costs |
-| **2** | `targeted spell effect` | **111** | "Destroy target permanent", "Exile target monocolored permanent" |
-| **3** | `other` | **91** | Bespoke effects, overload, hideaway, replacement damage, modal spells |
-| **4** | `draw/discard` | **74** | "Draw N cards", "Discards a card", "Mills 6 cards" |
-| **5** | `token creation` | **60** | "Create two 1/1 Thopter tokens", "Create a 4/4 Dragon token" |
-| **6** | `counter manipulation` | **57** | "+1/+1 counter on each creature", "Proliferate", energy `{E}` costs |
-| **7** | `anthem / static buff` | **48** | "Other Dragon creatures get +1/+1", "Spells of chosen type cost less" |
-| **8** | `graveyard recursion` | **41** | "Return target card from graveyard to battlefield/hand", "Unearth" |
-| **9** | `combat trigger` | **38** | "Whenever one or more Dragons attack", "Whenever deals combat damage" |
-| **10** | `phase/step trigger` | **35** | "At the beginning of your end step", "At beginning of upkeep" |
-| **11** | `ability word prefix` | **35** | `Landfall —`, `Magecraft —`, `Metalcraft —`, `Eminence —` |
-| **12** | `sacrifice outlet` | **31** | `{T}, Sacrifice this permanent: ...` |
+| **1** | `activated ability (non-mana)` | **102** | `{T}: ...`, `{1}{B}, {T}: ...`, planeswalker `+1`/`-3` loyalty costs |
+| **2** | `targeted spell effect` | **100** | "Destroy target permanent", "Exile target monocolored permanent" |
+| **3** | `other` | **79** | Bespoke effects, overload, hideaway, replacement damage, modal spells |
+| **4** | `draw/discard` | **69** | "Draw N cards", "Discards a card", "Mills 6 cards" |
+| **5** | `counter manipulation` | **55** | "+1/+1 counter on each creature", "Proliferate", energy `{E}` costs |
+| **6** | `token creation` | **54** | "Create two 1/1 Thopter tokens", "Create a 4/4 Dragon token" |
+| **7** | `anthem / static buff` | **45** | "Other Dragon creatures get +1/+1", "Spells of chosen type cost less" |
+| **8** | `graveyard recursion` | **39** | "Return target card from graveyard to battlefield/hand", "Unearth" |
+| **9** | `ability word prefix` | **35** | `Landfall —`, `Magecraft —`, `Metalcraft —`, `Eminence —` |
+| **10** | `phase/step trigger` | **33** | "At the beginning of your end step", "At beginning of upkeep" |
+| **11** | `combat trigger` | **32** | "Whenever one or more Dragons attack", "Whenever deals combat damage" |
+| **12** | `sacrifice outlet` | **28** | `{T}, Sacrifice this permanent: ...` |
 | **13** | `aura statics` | **27** | "Enchant creature", "Enchanted creature gets +2/+2" |
-| **14** | `keyword with cost` | **22** | `Equip {N}`, `Cycling {N}`, `Kicker {cost}`, `Crew N`, `Hideaway 4` |
+| **14** | `keyword with cost` | **20** | `Equip {N}`, `Cycling {N}`, `Kicker {cost}`, `Crew N`, `Hideaway 4` |
 
 ---
 
@@ -190,24 +190,23 @@ The plan is divided into **Phase 1: High-Yield Core Mechanics** (building parser
 
 ---
 
-### Step 5: 100% Playability Milestone 1 — `urdragon.txt` (The Ur-Dragon)
-*Focus specifically on closing the remaining 12 unmodeled cards in `urdragon.txt` to achieve the simulator's first 100% real deck playability.*
+### Step 5: 100% Playability Milestone 1 — `urdragon.txt` (The Ur-Dragon) [ACHIEVED]
+*Focus specifically on closing all unmodeled cards in `urdragon.txt` to achieve the simulator's first 100% real deck playability.*
 
-* **Focus Cards & Mechanics**:
+* **Status**: **COMPLETE (93/93 - 100.0%)**
+* **Focus Cards & Mechanics Implemented**:
   * Bespoke Dragon Legendaries: Morophon (type choice & mana reduction), Sivitri (+1 attack cost penalty, -3 dragon tutor), Zurgo and Ojutai (hexproof turn entered, combat damage look top 3).
   * Adventure Layouts: *Monster Manual // Zoological Study*, *Marang River Regent // Coil and Catch*.
   * Dragon Mana Restrictions: *Orb of Dragonkind*, *Rivaz of the Claw* (restricted mana usage).
-* **Methodology**: Parser extensions for shared rules + Authored Overrides in `packages/engine/src/cards/overrides/urdragon.ts`.
-* **Dependencies**: Steps 1–4.
-* **Complexity & Effort**: **Low-Medium** (1.5 weeks).
-* **Projected Coverage Milestone**:
+* **Methodology**: Core parser extensions (`interpret.ts`) + Authored Overrides in `packages/engine/src/cards/overrides/urdragon.ts`.
+* **Coverage Milestone Reached**:
   * **`urdragon.txt` Coverage**: **93 / 93 (100.0%) — FIRST PLAYABLE REAL DECK! 🎉**
-  * Aggregate Modeled: **353 / 538 (65.6%)**
+  * Aggregate Modeled: **177 / 538 (32.9%)**
   * Runnable Decks: **1 of 7**
 * **Testing & Validation**:
-  * Run `bun run coverage` confirming `urdragon.txt` reaches 100%.
-  * Run `bun run decks packages/server/fixtures/coverage-decks/urdragon.txt` verifying deck validation pass.
-  * Execute a 4-player game with `urdragon.txt` in the pod using seeded `RandomDecisionProvider`, asserting complete game execution to a winner without engine halts.
+  * `bun run coverage` confirms `urdragon.txt` is 93/93 (100.0%).
+  * `packages/engine/tests/urdragon-coverage.test.ts` unit tests pass.
+  * Verified end-to-end full game execution with `urdragon.txt` without engine halts.
 
 ---
 
@@ -273,12 +272,12 @@ The plan is divided into **Phase 1: High-Yield Core Mechanics** (building parser
 
 | Step | Focus Area / Mechanics | Dev Effort | Dependencies | Target Decks Unblocked | Aggregate Modeled Cards | Projected Deck Playability |
 | :---: | :--- | :---: | :---: | :--- | :---: | :---: |
-| **Baseline** | *Current State* | — | — | *None (Pool Decks Only)* | 143 / 538 (26.6%) | 0 / 7 Decks |
-| **Step 1** | Non-Mana Activated Abilities & Cost Keywords | 3.0 wks | Engine Mana | All Decks (Broad) | 178 / 538 (33.1%) | 0 / 7 Decks |
-| **Step 2** | Token Creation Engine & ETB/Phase Triggers | 3.0 wks | Step 1 | Token Triumph, Ur-Dragon | 223 / 538 (41.4%) | 0 / 7 Decks |
-| **Step 3** | Counters (+1/+1, Energy, Charge) & Proliferate | 3.5 wks | Step 1, 2 | Counter Intel, Living Energy | 275 / 538 (51.1%) | 0 / 7 Decks |
-| **Step 4** | Targeted Removal, Mass Removal & Modals | 3.5 wks | Steps 1–3 | All Decks (Interaction) | 330 / 538 (61.3%) | 0 / 7 Decks |
-| **Step 5** | **100% Deck 1: Ur-Dragon** | 1.5 wks | Steps 1–4 | `urdragon.txt` | 353 / 538 (65.6%) | **1 / 7 Decks (Ur-Dragon)** |
+| **Current Baseline** | *Current Repo State* | — | — | `urdragon.txt` | **177 / 538 (32.9%)** | **1 / 7 Decks (`urdragon.txt`)** |
+| **Step 1** | Non-Mana Activated Abilities & Cost Keywords | 3.0 wks | Engine Mana | All Decks (Broad) | 178 / 538 (33.1%) | 1 / 7 Decks |
+| **Step 2** | Token Creation Engine & ETB/Phase Triggers | 3.0 wks | Step 1 | Token Triumph, Ur-Dragon | 223 / 538 (41.4%) | 1 / 7 Decks |
+| **Step 3** | Counters (+1/+1, Energy, Charge) & Proliferate | 3.5 wks | Step 1, 2 | Counter Intel, Living Energy | 275 / 538 (51.1%) | 1 / 7 Decks |
+| **Step 4** | Targeted Removal, Mass Removal & Modals | 3.5 wks | Steps 1–3 | All Decks (Interaction) | 330 / 538 (61.3%) | 1 / 7 Decks |
+| **Step 5** | **100% Deck 1: Ur-Dragon** | **COMPLETE** | Steps 1–4 | `urdragon.txt` | **177 / 538 (32.9%)** | **1 / 7 Decks (Ur-Dragon) ✅** |
 | **Step 6** | **100% Decks 2 & 3: Draconic & Token** | 2.5 wks | Step 5 | `draconic`, `token-triumph` | 410 / 538 (76.2%) | **3 / 7 Decks** |
 | **Step 7** | **100% Decks 4 & 5: Energy & Silverquill** | 3.0 wks | Step 6 | `living-energy`, `silverquill` | 467 / 538 (86.8%) | **5 / 7 Decks** |
 | **Step 8** | **100% Decks 6 & 7: Necron & Counter Intel** | 3.5 wks | Step 7 | `necron`, `counter-intel` | **538 / 538 (100.0%)** | **7 / 7 Decks (100% Complete!)** |

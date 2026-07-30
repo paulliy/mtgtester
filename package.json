@@ -26,6 +26,8 @@
     "serve": "bun run packages/server/src/cli/serve.ts",
     "decks": "bun run packages/server/src/cli/import-decks.ts",
     "pool": "bun run packages/server/src/cli/pool.ts",
+    "modelled-cards": "bun run packages/server/src/cli/modelled-cards.ts",
+    "play-decks": "bun run packages/server/src/cli/play-decks.ts",
     "coverage": "bun run packages/server/src/cli/coverage.ts",
     "coverage:snapshot": "bun run packages/server/src/cli/snapshot-coverage-decks.ts",
     "snapshot:oracle": "bun run packages/server/src/cli/snapshot-deck-oracle.ts"

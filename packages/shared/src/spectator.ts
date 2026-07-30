@@ -86,6 +86,7 @@ export interface SpectatorSeat {
   graveyard: SpectatorCard[];
   commanders: SpectatorCommander[];
   manaPool: ManaPool;
+  energy: number;
   poisonCounters: number;
   landsPlayedThisTurn: number;
   mulligansTaken: number;

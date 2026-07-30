@@ -173,6 +173,7 @@ function seatView(ctx: GameContext, player: EnginePlayerState): SpectatorSeat {
     graveyard: player.graveyard.map((c) => cardView(ctx, c)),
     commanders,
     manaPool: { ...player.manaPool },
+    energy: player.energy,
     poisonCounters: player.poisonCounters,
     landsPlayedThisTurn: player.landsPlayedThisTurn,
     mulligansTaken: player.mulligansTaken,
@@ -351,6 +352,20 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
     case 'lifeGain':
       return { ...base, text: `gains ${num(p, 'amount') ?? 0} life` };
 
+    case 'draw':
+      return { ...base, text: `draws ${str(p, 'name') ?? 'a card'}` };
+
+    case 'discard':
+      return { ...base, text: `discards ${str(p, 'name') ?? 'a card'}` };
+
+    case 'mill':
+      return { ...base, text: `mills ${str(p, 'name') ?? 'a card'}` };
+
+    case 'scry':
+      return { ...base, text: `scries ${num(p, 'looked') ?? 0}` };
+
+    case 'surveil':
+      return { ...base, text: `surveils ${num(p, 'looked') ?? 0}` };
     case 'lifeLoss':
       return { ...base, text: `loses ${num(p, 'amount') ?? 0} life` };
 
@@ -432,7 +447,11 @@ export function formatPlayerLog(
 ): SpectatorLogLine[] {
   return formatSpectatorLog(
     events.filter((event) => {
-      if (event.type !== 'decision' || event.actorSeat === playerId) return true;
+      if (event.actorSeat === playerId) return true;
+      // Opponents' draws and library manipulation reveal hidden information only to the
+      // spectator projection. Their public zone changes (discard and mill) remain narrated.
+      if (['draw', 'scry', 'surveil'].includes(event.type)) return false;
+      if (event.type !== 'decision') return true;
       const decisionType = event.payload['decisionType'];
       return (
         decisionType !== 'mulligan' &&

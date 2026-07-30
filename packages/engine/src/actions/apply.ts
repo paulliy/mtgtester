@@ -26,7 +26,7 @@ import type {
   GameContext,
 } from '../state/types';
 import type { PriorityActionPayload } from './legal';
-import { computeTargetOptions, costReductionFor, manaPortionOf, validateChosenTargets } from './legal';
+import { computeTargetOptions, costReductionFor, manaPortionOf, selectedModeTargetSlots, validateChosenTargets } from './legal';
 import { resetOpponentYields } from '../turn/priority';
 
 /**
@@ -39,9 +39,23 @@ import { resetOpponentYields } from '../turn/priority';
  * so the executor and every downstream consumer (fizzle check, description) never has to know
  * `modes` exists at all.
  */
+function addManaCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
+  return {
+    generic: a.generic + b.generic,
+    colorless: a.colorless + b.colorless,
+    colored: {
+      W: a.colored.W + b.colored.W,
+      U: a.colored.U + b.colored.U,
+      B: a.colored.B + b.colored.B,
+      R: a.colored.R + b.colored.R,
+      G: a.colored.G + b.colored.G,
+    },
+    ...((a.x ?? 0) + (b.x ?? 0) > 0 ? { x: (a.x ?? 0) + (b.x ?? 0) } : {}),
+  };
+}
 function resolveCastAbility(
   def: CardDefinition,
-  mode: number | undefined,
+  selectedModes: number[] | undefined,
   cardName: string,
 ): Ability | null {
   if (def.spellAbility === null) {
@@ -51,9 +65,15 @@ function resolveCastAbility(
   }
   const modes = def.spellAbility.modes;
   if (modes === undefined) return def.spellAbility;
-  const chosen = modes.options[mode ?? 0];
-  if (chosen === undefined) throw new Error(`engine bug: invalid mode ${mode} for ${cardName}`);
-  return { ...def.spellAbility, effects: chosen.effects };
+  const indices = selectedModes ?? [0];
+  if (indices.length < modes.minChoices || indices.length > modes.maxChoices) {
+    throw new Error(`engine bug: invalid mode count ${indices.length} for ${cardName}`);
+  }
+  const chosen = indices.map((index) => modes.options[index]);
+  if (chosen.some((option) => option === undefined)) {
+    throw new Error(`engine bug: invalid modes ${indices.join(',')} for ${cardName}`);
+  }
+  return { ...def.spellAbility, effects: chosen.flatMap((option) => option?.effects ?? []) };
 }
 
 /**
@@ -66,8 +86,8 @@ function* payActivationCosts(
   player: EnginePlayerState,
   perm: EnginePermanent,
   costs: readonly AbilityCost[],
-): GameGen<void> {
-  yield* payAbilityCosts(ctx, player, perm, costs, 'tap');
+): GameGen<{ stationPower?: number }> {
+  const paymentScope = yield* payAbilityCosts(ctx, player, perm, costs, 'tap');
   const mana = manaPortionOf(costs);
   if (totalPips(mana) > 0) {
     // The purpose must match the one `computePriorityOptions` used to decide affordability, or
@@ -77,6 +97,7 @@ function* payActivationCosts(
       sourceOracleId: perm.oracleId,
     });
   }
+  return paymentScope;
 }
 
 /**
@@ -193,12 +214,15 @@ export function* applyPriorityAction(
           applyRed(addGeneric(def.manaCost ?? emptyCost(), tax)),
           payload.x ?? 0,
         );
-        ability = resolveCastAbility(def, payload.mode, obj.name) ?? {
+        const selectedModes = payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
+        const additional = selectedModes?.flatMap((mode) => def.spellAbility?.modes?.options[mode]?.additionalCost ?? []) ?? [];
+        cost = addManaCosts(cost, manaPortionOf(additional));
+        ability = resolveCastAbility(def, payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined), obj.name) ?? {
           kind: 'spell',
           targets: [],
           effects: [],
         };
-        targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
+        targets = validateChosenTargets(ctx, def, player.id, outcome.targets, selectedModeTargetSlots(def, selectedModes));
       }
 
       yield* payManaCost(ctx, player, cost, { kind: 'castSpell', oracleId: obj.oracleId });
@@ -277,7 +301,7 @@ export function* applyPriorityAction(
       const id = `o-${s.nextObjectNum++}` as ObjectId;
       // Snapshot before paying: a sacrifice cost removes the permanent, and the stack entry
       // must still name its source (CR 608.2f — the ability resolves regardless).
-      const stackEntry = {
+      const stackEntry: EngineStackObject = {
         id,
         sourceId: perm.id,
         controllerId: player.id,
@@ -291,7 +315,8 @@ export function* applyPriorityAction(
         isCommanderCast: false,
       };
 
-      yield* payActivationCosts(ctx, player, perm, activated.costs);
+      const paymentScope = yield* payActivationCosts(ctx, player, perm, activated.costs);
+      if (paymentScope.stationPower !== undefined) stackEntry.triggerScope = { stationPower: paymentScope.stationPower };
       // Recorded at ANNOUNCEMENT (CR 602.5f), not on resolution: the restriction is on
       // activating, so countering the ability does not give the activation back.
       if (activated.oncePerTurn === true) perm.activationsThisTurn.push(payload.index);

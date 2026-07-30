@@ -69,6 +69,17 @@ function hashString(s: string): number {
 }
 
 /**
+ * Like `hashString`, but uncached — for values with effectively unbounded cardinality
+ * (`attachedTo`'s `ObjectId`s grow with every object a long game creates), where memoizing
+ * every distinct value in the module-level `STRING_HASH` map would leak across games.
+ */
+function hashStringUncached(s: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) h = mix(h, s.charCodeAt(i));
+  return h;
+}
+
+/**
  * Fold every counter generically rather than the two the layer engine reads today, so an op
  * that starts reading a new counter kind cannot silently get a stale answer. String key order
  * is insertion order, which is deterministic.
@@ -105,6 +116,11 @@ export function digestOf(
     h = mix(h, (perm.power ?? 0) + 0x10000);
     h = mix(h, (perm.toughness ?? 0) + 0x10000);
     h = foldCounters(h, perm);
+    // `attachedToSource`/`isEnchanted`/`isEquipped` read this; attaching/detaching changes
+    // none of the fields above, so it must be folded in explicitly (ADR 0007).
+    h = mix(h, perm.attachedTo === null ? 0 : hashStringUncached(perm.attachedTo));
+    // `chosenColor`/`chosenType` selectors read this (Caged Sun, Cloud Key, Flickering Ward).
+    h = mix(h, perm.chosenOption === undefined ? 0 : hashString(perm.chosenOption));
   }
 
   h = mix(h, s.effects.length);

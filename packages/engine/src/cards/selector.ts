@@ -46,6 +46,8 @@ export interface SelectorCandidate {
   colors: readonly Color[];
   /** Current power. Only `powerAtLeast` reads it — see the module comment. */
   power: number;
+  /** Current toughness. Only `toughnessAtLeast` reads it — see the module comment. */
+  toughness?: number;
   /** Current keywords. Only `hasKeyword` reads them — see the module comment. */
   keywords: readonly string[];
   /** Token-ness (CR 111.1). NOT event-only: no layer can change it. */
@@ -54,6 +56,12 @@ export interface SelectorCandidate {
   enteredThisTurn: boolean;
   /** Is this permanent/card a Commander (CR 903.3)? */
   isCommander?: boolean;
+  /** Is this permanent enchanted by an Aura? */
+  isEnchanted?: boolean;
+  /** Is this permanent equipped by an Equipment? */
+  isEquipped?: boolean;
+  /** EVENT-ONLY: currently attacking or blocking. */
+  inCombat?: boolean;
 }
 
 /** The object a relative selector ("self", "you control") is resolved against. */
@@ -62,6 +70,10 @@ export interface SelectorSource {
   controllerId: string;
   /** For an Aura/Equipment: the card id of the permanent it is attached to, if any. */
   attachedToCardId?: string | null;
+  /** Object whose event fired a trigger, when a condition refers to that object. */
+  triggerObjectCardId?: string;
+  /** The source's `chosenOption` (Caged Sun's color, …), for the `chosenColor` selector. */
+  chosenOption?: string;
 }
 
 export type Selector =
@@ -75,10 +87,19 @@ export type Selector =
   | { kind: 'subtype'; value: string }
   | { kind: 'supertype'; value: string }
   | { kind: 'color'; value: Color }
+  /**
+   * "of the chosen color" (Caged Sun) — the color is per-permanent state
+   * (`EnginePermanent.chosenOption`, via `CardDefinition.entersChoosingOption`), not a fixed
+   * `Color` the override can write in, so it reads `source.chosenOption` instead of `value`.
+   */
+  | { kind: 'chosenColor' }
+  /** "of the chosen type" (Cloud Key) — same idea as `chosenColor`, over card types. */
+  | { kind: 'chosenType' }
   /** Controlled by the source's controller, or by any of their opponents. */
   | { kind: 'controller'; who: 'you' | 'opponents' }
   /** EVENT-ONLY (see the module comment): "with power 4 or greater". */
   | { kind: 'powerAtLeast'; n: number }
+  | { kind: 'toughnessAtLeast'; n: number }
   /** EVENT-ONLY (see the module comment): "with flying" / (negated) "without flying". */
   | { kind: 'hasKeyword'; keyword: string }
   /**
@@ -91,6 +112,10 @@ export type Selector =
   /** "a creature you control that entered this turn" (Neriv, Heart of the Storm). */
   | { kind: 'enteredThisTurn' }
   | { kind: 'isCommander' }
+  | { kind: 'isMonocolored' }
+  | { kind: 'isEnchanted' }
+  | { kind: 'isEquipped' }
+  | { kind: 'inCombat' }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -104,6 +129,8 @@ export const ofType = (value: string): Selector => ({ kind: 'type', value });
 export const ofSubtype = (value: string): Selector => ({ kind: 'subtype', value });
 export const ofSupertype = (value: string): Selector => ({ kind: 'supertype', value });
 export const ofColor = (value: Color): Selector => ({ kind: 'color', value });
+export const CHOSEN_COLOR: Selector = { kind: 'chosenColor' };
+export const CHOSEN_TYPE: Selector = { kind: 'chosenType' };
 
 export const allOf = (...of: Selector[]): Selector => ({ kind: 'allOf', of });
 export const anyOf = (...of: Selector[]): Selector => ({ kind: 'anyOf', of });
@@ -113,11 +140,17 @@ export const not = (of: Selector): Selector => ({ kind: 'not', of });
 export const NONBASIC_LANDS: Selector = allOf(ofType('Land'), not(ofSupertype('Basic')));
 
 export const powerAtLeast = (n: number): Selector => ({ kind: 'powerAtLeast', n });
+export const toughnessAtLeast = (n: number): Selector => ({ kind: 'toughnessAtLeast', n });
 export const withKeyword = (keyword: string): Selector => ({ kind: 'hasKeyword', keyword });
 
 /** Miirym's subject leaf — see the  variant. */
 export const IS_TOKEN: Selector = { kind: 'isToken' };
 export const IS_COMMANDER: Selector = { kind: 'isCommander' };
+export const IS_MONOCOLORED: Selector = { kind: 'isMonocolored' };
+export const IS_ENCHANTED: Selector = { kind: 'isEnchanted' };
+export const IS_EQUIPPED: Selector = { kind: 'isEquipped' };
+export const IN_COMBAT: Selector = { kind: 'inCombat' };
+export const NONLAND: Selector = not(ofType('Land'));
 
 /** Neriv's subject leaf. */
 export const ENTERED_THIS_TURN: Selector = { kind: 'enteredThisTurn' };
@@ -132,7 +165,9 @@ export const ENTERED_THIS_TURN: Selector = { kind: 'enteredThisTurn' };
 export function selectorIsEventOnly(selector: Selector): boolean {
   switch (selector.kind) {
     case 'powerAtLeast':
+    case 'toughnessAtLeast':
     case 'hasKeyword':
+    case 'inCombat':
       return true;
     case 'allOf':
     case 'anyOf':
@@ -167,12 +202,18 @@ export function selectMatches(
       return candidate.supertypes.includes(selector.value);
     case 'color':
       return candidate.colors.includes(selector.value);
+    case 'chosenColor':
+      return source.chosenOption !== undefined && candidate.colors.includes(source.chosenOption as Color);
+    case 'chosenType':
+      return source.chosenOption !== undefined && candidate.types.includes(source.chosenOption);
     case 'controller':
       return selector.who === 'you'
         ? candidate.controllerId === source.controllerId
         : candidate.controllerId !== source.controllerId;
     case 'powerAtLeast':
       return candidate.power >= selector.n;
+    case 'toughnessAtLeast':
+      return candidate.toughness !== undefined && candidate.toughness >= selector.n;
     case 'hasKeyword':
       return candidate.keywords.includes(selector.keyword);
     case 'isToken':
@@ -181,6 +222,14 @@ export function selectMatches(
       return candidate.enteredThisTurn;
     case 'isCommander':
       return candidate.isCommander === true;
+    case 'isMonocolored':
+      return candidate.colors.length === 1;
+    case 'isEnchanted':
+      return candidate.isEnchanted === true;
+    case 'isEquipped':
+      return candidate.isEquipped === true;
+    case 'inCombat':
+      return candidate.inCombat === true;
     case 'allOf':
       return selector.of.every((s) => selectMatches(candidate, s, source));
     case 'anyOf':

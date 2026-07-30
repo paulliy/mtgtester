@@ -64,13 +64,13 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   top.targets.forEach((t, i) => {
     anyChosen = true;
     const kind = specs[i]?.kind;
-    if (kind !== undefined && isTargetStillLegal(ctx, t, kind, top.controllerId)) anyLegal = true;
+    if (kind !== undefined && isTargetStillLegal(ctx, t, specs[i] ?? kind, top.controllerId, undefined, top.triggerScope?.eventPlayerId)) anyLegal = true;
   });
   for (const [slotKey, ids] of Object.entries(top.countTargets ?? {})) {
     const spec = specs[Number(slotKey)];
     for (const id of ids) {
       anyChosen = true;
-      if (spec !== undefined && isTargetStillLegal(ctx, id, spec, top.controllerId)) anyLegal = true;
+      if (spec !== undefined && isTargetStillLegal(ctx, id, spec, top.controllerId, undefined, top.triggerScope?.eventPlayerId)) anyLegal = true;
     }
   }
   if (anyChosen && !anyLegal) {

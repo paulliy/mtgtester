@@ -25,12 +25,24 @@ import type { Value } from './value';
 export type AbilityCost =
   /** `{T}` — requires untapped, and (for creatures) not summoning-sick without haste. */
   | { kind: 'tap' }
+  /** Tap an untapped controlled permanent, selected while paying the cost. */
+  | { kind: 'tapOther'; selector: Selector; capturePowerForStation?: boolean }
+  /** Tap several distinct untapped controlled permanents selected while paying the cost. */
+  | { kind: 'tapOthers'; selector: Selector; count: number }
   /** "Sacrifice this creature" — available even while tapped or summoning-sick. */
   | { kind: 'sacrificeSelf' }
+  /** Sacrifice one or more other controlled permanents matching the filter. */
+  | { kind: 'sacrificeOther'; selector: Selector; count?: number }
+  /** "Discard this card". */
+  | { kind: 'discardSelf' }
+  /** "Tap any number of untapped creatures you control with total power N or greater". */
+  | { kind: 'tapCreaturesTotalPower'; minPower: number }
   /** "Remove a gold counter from this artifact". */
-  | { kind: 'removeCounters'; counter: string; count: number }
+  | { kind: 'removeCounters'; counter: string; count: Value | number }
   /** "Pay 10 life" (CR 118.8) — payable only if the controller's life is at least this much. */
   | { kind: 'payLife'; amount: number }
+  /** Pay energy counters (CR 122.8). */
+  | { kind: 'payEnergy'; amount: number }
   | { kind: 'loyalty'; delta: number }
   | { kind: 'mana'; cost: ParsedManaCost };
 
@@ -60,6 +72,8 @@ export interface ActivatedAbility {
    * copies of Beledros each get their own activation.
    */
   oncePerTurn?: boolean;
+  /** Zone from which the ability is activated (default: battlefield). */
+  zone?: 'hand' | 'battlefield' | 'graveyard';
 }
 
 /**
@@ -216,6 +230,9 @@ export const IMPLEMENTED_KEYWORDS = [
   'flash',
   'changeling',
   'riot',
+  'convoke',
+  'improvise',
+  'infect',
 ] as const;
 export type KeywordAbility = (typeof IMPLEMENTED_KEYWORDS)[number];
 
@@ -225,9 +242,12 @@ export type TargetKind =
   | 'artifact'
   | 'enchantment'
   | 'land'
+  | 'planeswalker'
   | 'permanent'
   | 'nonlandPermanent'
   | 'artifactOrEnchantment'
+  /** "target artifact, enchantment, or planeswalker" (Fracture). */
+  | 'artifactEnchantmentOrPlaneswalker'
   | 'player'
   | 'anyTarget' // creature or player (CR 115.4)
   | 'spell'
@@ -256,7 +276,7 @@ export interface TargetSpec {
    * unrestricted slot. Kept as a field rather than more `TargetKind` literals, which would
    * multiply combinatorially with every kind above.
    */
-  controller?: 'you' | 'opponent';
+  controller?: 'you' | 'opponent' | 'eventPlayer';
   /**
    * Further restriction for a zone-qualified kind (`cardInGraveyard`) — "Dragon permanent
    * card". Unused for battlefield kinds, which use `permanentMatchesKind` instead.
@@ -291,7 +311,7 @@ export interface TargetSpec {
  * referent at all: it is the one-element case of a `Selector`, and the `…Each` primitives
  * already express it as `{kind:'self'}`.
  */
-export type EffectRef = number | 'triggerObject';
+export type EffectRef = number | 'triggerObject' | 'attachedToSource' | 'source';
 
 /**
  * One atomic mechanical primitive. Targeted primitives carry `target`: an `EffectRef` naming
@@ -304,18 +324,51 @@ export type EffectRef = number | 'triggerObject';
  * (CR 611.2c).
  */
 export type Effect =
-  | { op: 'pumpUntilEot'; target: EffectRef; power: number; toughness: number }
+  | { op: 'pumpUntilEot'; target: EffectRef; power: Value | number; toughness: Value | number }
   | { op: 'grantKeywordUntilEot'; target: EffectRef; keyword: KeywordAbility }
-  | { op: 'pumpEachUntilEot'; selector: Selector; power: number; toughness: number }
+  /** Target creature cannot be blocked this turn. */
+  | { op: 'cantBeBlockedUntilEot'; target: EffectRef }
+  /** A resolution-time choice between effects (for example Pemmin's Aura's two stat modes). */
+  | { op: 'chooseOne'; options: { effects: Effect[]; description: string }[] }
+  /** Two creatures deal damage equal to their power to each other simultaneously (CR 701.12). */
+  | { op: 'fight'; first: EffectRef; second: EffectRef }
+  | { op: 'pumpEachUntilEot'; selector: Selector; power: Value | number; toughness: Value | number }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
   | { op: 'dealDamage'; target: EffectRef; amount: Value } // to the slot's creature or player
+  /**
+   * "deals N damage to target opponent unless that player sacrifices a creature of their
+   * choice" (Demanding Dragon, Tomb Blade) — the choice belongs to the TARGET, not the
+   * controller, unlike every other "unless" effect in this file (`counterUnlessPays` etc.),
+   * which is why it needs its own op rather than composing with an existing one.
+   */
+  | { op: 'dealDamageUnlessSacrifice'; target: EffectRef; amount: Value }
   | { op: 'destroy'; target: EffectRef } // target creature
+  | { op: 'destroyAndCreateTokenForController'; target: EffectRef; spec: TokenSpec; count: Value }
+  | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
   | { op: 'exile'; target: EffectRef } // target creature
   | { op: 'counter'; target: number } // target spell — always a real target
-  | { op: 'putCounters'; target: EffectRef; counter: string; count: number }
-  | { op: 'putCountersEach'; selector: Selector; counter: string; count: number }
+  | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
+  | { op: 'putCountersEach'; selector: Selector; counter: string; count: Value | number }
+  | { op: 'doubleCountersTarget'; target: EffectRef }
+  | { op: 'doubleCountersEach'; selector: Selector }
+  | { op: 'giveTargetPoisonCounters'; target: EffectRef | 'eachOpponent'; count: Value | number }
+  | { op: 'removeCounters'; target: EffectRef; counter: string; count: Value | number }
+  | { op: 'removeCountersEach'; selector: Selector; counter: string; count: Value | number }
+  | { op: 'crewVehicle'; minPower: number }
+  | { op: 'exileEach'; selector: Selector }
+  | { op: 'exileTargetPlayerGraveyard'; target: EffectRef }
+  | { op: 'returnToHandEach'; selector: Selector }
+  | { op: 'graveyardToBattlefieldEach'; filter: Selector; scope?: 'you' | 'all' }
+  | { op: 'graveyardToHandEach'; filter: Selector; scope?: 'you' | 'all' }
+  | { op: 'unearth' }
   | { op: 'draw'; count: Value } // controller draws
+  | { op: 'discard'; count: number } // controller chooses cards to discard
+  | { op: 'mill'; count: Value } // controller mills
+  | { op: 'gainEnergy'; amount: Value }
+  /** Create a player-owned emblem containing abilities but no targetable characteristics. */
+  | { op: 'createEmblem'; name: string; abilities: Ability[] } // controller gets energy counters
   | { op: 'gainLife'; amount: Value } // controller gains
+  | { op: 'loseLife'; amount: Value } // controller loses life (not damage)
   | { op: 'eachOpponentLosesLife'; amount: number }
   | { op: 'eachOpponentDamage'; amount: number } // damage from source to each opponent
   /** "This land deals 1 damage to you" — damage from the source to its own controller. */
@@ -328,6 +381,9 @@ export type Effect =
   | { op: 'searchLibrary'; filter: Selector; destinations: SearchDestination[] }
   | { op: 'shuffle' }
   | { op: 'scry'; count: number }
+  | { op: 'surveil'; count: number }
+  /** Choose any number of eligible players and permanents, then add one of each counter they have. */
+  | { op: 'proliferate' }
   /**
    * Ward's payoff (CR 702.21b): counter the spell or ability that triggered this, unless its
    * controller pays. Not `counter`, which targets — this acts on the object below it on the
@@ -345,6 +401,8 @@ export type Effect =
    * of a pumped Dragon is not pumped, and a copy of one wearing an Equipment is unequipped.
    */
   | { op: 'createTokenCopyOf'; ref: EffectRef; count: Value; exceptNonLegendary?: boolean }
+  /** Source permanent becomes a copy of the referent's copiable values (CR 707.2). */
+  | { op: 'becomeCopyOf'; ref: EffectRef; untilEot?: boolean }
   /** "Untap all lands you control" (Beledros). */
   | { op: 'untapEach'; selector: Selector }
   /**
@@ -358,6 +416,8 @@ export type Effect =
   | { op: 'graveyardToBattlefield'; target: EffectRef }
   /** "Return target Dragon creature card from your graveyard to your hand" (Haven). */
   | { op: 'graveyardToHand'; target: EffectRef }
+  /** Put target card from your graveyard on top of your library. */
+  | { op: 'graveyardToLibraryTop'; target: EffectRef }
   /** "Return target creature to its owner's hand" — the general permanent-to-hand bounce. */
   | { op: 'returnToHand'; target: EffectRef }
   /**
@@ -410,7 +470,18 @@ export type Effect =
    * lists, rather than a card-specific op. `condition` is read at RESOLUTION (its board state
    * must be current then, not at announcement).
    */
-  | { op: 'conditionalEffect'; condition: Condition; then: Effect[]; else: Effect[] }
+  | {
+      op: 'conditionalEffect';
+      condition: Condition;
+      then: Effect[];
+      else: Effect[];
+      /**
+       * "If a creature is dealt damage this way" (Provoke the Trolls) — check `condition`
+       * (typically `triggerObjectMatches`) against this resolved target instead of the ambient
+       * trigger object, for a spell/ability whose own announced target is what needs checking.
+       */
+      checkTarget?: EffectRef;
+    }
   /**
    * "Counter target spell unless its controller pays `<cost>`" (Stubborn Denial's base mode).
    * Unlike ward's `counterUnlessPays`, which acts on the object below it on the stack (recorded
@@ -429,6 +500,8 @@ export type Effect =
       op: 'addMana';
       amount: Value;
       colors: 'any' | (Color | 'C')[];
+      /** Fixed symbols, e.g. Savage Ventmaw's {R}{R}{R}{G}{G}{G}; no color choice. */
+      fixedSymbols?: (Color | 'C')[];
       /** "Spend this mana only to cast spells" — rides on the mana produced (CR 106.6). */
       restriction?: ManaRestriction;
       /** "Until end of turn, you don't lose this mana as steps and phases end." */
@@ -449,8 +522,11 @@ export type Effect =
   | { op: 'overloadBounceAllNonlandOpponents' }
   | { op: 'goad'; target: EffectRef }
   | { op: 'doublePower'; selector: Selector }
+  | { op: 'doublePowerTarget'; target: EffectRef }
   | { op: 'drawUpTo'; count: number }
   | { op: 'untapTarget'; target: EffectRef }
+  | { op: 'tapTarget'; target: EffectRef }
+  | { op: 'tapEach'; selector: Selector }
   | { op: 'bounceUpTo6MV' }
   | { op: 'millAndReturnSpells' }
   | { op: 'hideawayExileTop4' }
@@ -471,12 +547,13 @@ export interface TokenSpec {
   types: string[];
   subtypes: string[];
   colors: Color[];
-  power: number | null;
-  toughness: number | null;
+  power: number | Value | null;
+  toughness: number | Value | null;
   keywords?: KeywordAbility[];
   triggers?: Ability[];
   manaAbilities?: ManaAbilitySpec[];
   activatedAbilities?: ActivatedAbility[];
+  legendary?: boolean;
 }
 
 /**
@@ -517,12 +594,16 @@ export type TriggerWhen =
   | 'dies'
   | 'attacks'
   | 'dealsCombatDamageToPlayer'
+  | 'becomesTapped'
+  | 'untapStep'
+  | 'drawStep'
   | 'castsSpell'
   | 'upkeep'
-  | 'endStep';
+  | 'endStep'
+  | 'mainPhase';
 
 /** The object-event half of `TriggerHead`. */
-export type ObjectTriggerWhen = 'enters' | 'dies' | 'attacks' | 'dealsCombatDamageToPlayer';
+export type ObjectTriggerWhen = 'enters' | 'dies' | 'attacks' | 'dealsCombatDamageToPlayer' | 'becomesTapped';
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
 export type TriggerHead =
@@ -537,7 +618,7 @@ export type TriggerHead =
        *
        * The count reaches the effects as the `triggerCount` `Value`.
        */
-      aggregate?: boolean;
+      aggregate?: boolean | 'byEventPlayer';
     }
   /**
    * "Whenever you cast a Dragon spell" — the subject is a spell on the stack, so it is matched
@@ -545,7 +626,12 @@ export type TriggerHead =
    */
   | { when: 'castsSpell'; caster: 'you' | 'opponent' | 'each'; filter?: Selector }
   /** "At the beginning of your/each upkeep|end step" — `player` says whose step counts. */
-  | { when: 'upkeep' | 'endStep'; player: 'you' | 'each' };
+  | { when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep'; player: 'you' | 'each' }
+  /**
+   * "At the beginning of each of your main phases" (Frontier Siege's Khans mode) — fires at
+   * BOTH precombat and postcombat main, unlike the single-step triggers above.
+   */
+  | { when: 'mainPhase'; player: 'you' | 'each' };
 
 /**
  * When a triggered ability fires.
@@ -590,5 +676,15 @@ export interface Ability {
    * `choose` is always 1 for every mode this engine reads today — a "choose two" grammar is not
    * something any closed-set card here needs, so it is not built.
    */
-  modes?: { choose: number; options: { effects: Effect[]; description?: string }[] };
+  modes?: {
+    minChoices: number;
+    maxChoices: number;
+    options: {
+      effects: Effect[];
+      description?: string;
+      additionalCost?: AbilityCost[];
+      /** Global target-slot indexes announced only when this mode is chosen. */
+      targetSlots?: number[];
+    }[];
+  };
 }

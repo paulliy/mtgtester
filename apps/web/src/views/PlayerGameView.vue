@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import type { LegalAction, ObjectId, TargetChoice } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
+import EffectDecisionPanel from '../components/EffectDecisionPanel.vue';
 import PermanentChip from '../components/PermanentChip.vue';
 import StackPanel from '../components/StackPanel.vue';
 import { useCardPreviewStore } from '../stores/cardPreview';
@@ -40,6 +41,15 @@ const hasOnlyImmediateActions = computed(
     immediateActions.value.length === request.value.legalActions.length,
 );
 
+const isEffectDecision = computed(() => {
+  const actions = request.value?.legalActions ?? [];
+  const effectActions = new Set([
+    'discard', 'scryKeep', 'scryBottom', 'surveilKeep', 'surveilGraveyard',
+    'keepOrder', 'reorder', 'orderLibrary', 'proliferate', 'skipProliferate',
+  ]);
+  return request.value?.decisionType === 'general' && actions.length > 0 &&
+    actions.every((action) => effectActions.has(action.type));
+});
 watch(
   () => request.value?.requestId,
   () => {
@@ -562,7 +572,12 @@ function abandon(): void {
 
       <aside class="rail">
         <section class="decision">
-          <template v-if="request">
+          <EffectDecisionPanel
+            v-if="request && isEffectDecision"
+            :request="request"
+            @choose="store.submitPlayerAction"
+          />
+          <template v-else-if="request">
             <h3>Your action</h3>
             <p>{{ request.prompt }}</p>
             <div v-if="immediateActions.length > 0" class="quick-actions">

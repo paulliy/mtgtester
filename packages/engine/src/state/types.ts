@@ -67,11 +67,27 @@ export interface EnginePermanent extends PermanentState, EngineObject {
    * activation, and a permanent that leaves and returns is a new object with a clean slate.
    */
   activationsThisTurn: number[];
-  /**
-   * 903.9a: set when a commander arrives in graveyard/exile, cleared at the next SBA
+  /** 903.9a: set when a commander arrives in graveyard/exile, cleared at the next SBA
    * check after its owner has been offered the command-zone move.
    */
   commanderSbaPending?: boolean;
+  /** True if this spell/permanent was cast kicked (CR 702.33). */
+  wasKicked?: boolean;
+  kicked?: boolean;
+  /** The `key` chosen for `CardDefinition.entersChoosingOption`, e.g. a color or mode. */
+  chosenOption?: string;
+  /** Printed identity saved while a layer-1 copy effect is active. */
+  copyOriginal?: {
+    oracleId: OracleId;
+    name: string;
+    typeLine: string;
+    oracleText: string;
+    manaCost: string | null;
+    power: number | null;
+    toughness: number | null;
+  };
+  /** Cleanup restores temporary copy effects; permanent copies omit this flag. */
+  copyUntilEot?: boolean;
 }
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
@@ -122,12 +138,20 @@ export interface EngineStackObject extends StackObject {
   grantHasteOnResolution?: boolean;
 }
 
+export interface EngineEmblem {
+  id: string;
+  name: string;
+  controllerId: PlayerId;
+  abilities: Ability[];
+}
 export interface EnginePlayerState extends PlayerState {
   hand: EngineCardObject[];
   library: EngineCardObject[];
   graveyard: EngineCardObject[];
   commandZone: EngineCardObject[];
   companion: EngineCardObject | null;
+  /** Player-owned emblems are neither permanents nor cards and cannot change zones. */
+  emblems: EngineEmblem[];
   /**
    * The authoritative mana pool (CR 106.4) — one entry per mana, because two mana of the same
    * color stop being interchangeable once one carries a CR 106.6 restriction, a spend trigger,
@@ -138,6 +162,8 @@ export interface EnginePlayerState extends PlayerState {
    * module that writes either, so the two cannot drift.
    */
   manaEntries: ManaEntry[];
+  /** Energy counters a player has (CR 122.8). */
+  energy: number;
   /** Stable card ids of this player's commander(s). */
   commanderCardIds: CardId[];
   /**
@@ -167,7 +193,7 @@ export interface UntilEotEffect extends ContinuousEffect {
    * creature entering afterwards is not pumped and one that leaves and returns is not either.
    */
   targetCardIds: CardId[];
-  kind: 'ptDelta' | 'grantKeyword' | 'grantAbility';
+  kind: 'ptDelta' | 'grantKeyword' | 'grantAbility' | 'cantBeBlocked';
   power?: number;
   toughness?: number;
   keyword?: KeywordAbility;

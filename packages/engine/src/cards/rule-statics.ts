@@ -32,6 +32,8 @@ export type RuleStatic =
       yourTurnOnly?: boolean;
       /** Eminence (CR 702.114): active from the command zone too, not just the battlefield. */
       alsoFromCommandZone?: boolean;
+      /** Affinity-style reduction printed on the spell itself, not granted from the battlefield. */
+      selfOnly?: boolean;
     }
   /**
    * "Creature spells you control can't be countered" (Rhythm of the Wild) — a STATE-DEPENDENT
@@ -44,13 +46,10 @@ export type RuleStatic =
   | { kind: 'cantCastSpells'; who: 'opponents'; yourTurnOnly: boolean }
   /** "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer). */
   | { kind: 'castFromZone'; zone: 'libraryTop'; filter?: Selector }
-  /**
-   * "If a creature you control that entered this turn would deal damage, it deals twice that
-   * much damage instead" (Neriv, Heart of the Storm) — a damage REPLACEMENT effect (CR 616),
-   * not a layer op: it changes an amount at the moment damage would be dealt, which `StaticEffect`
-   * has no op for (that machinery only ever touches a permanent's own characteristics).
-   *
-   * `sourceFilter` is matched against the permanent DEALING damage, not the static's own source —
-   * unlike every other `RuleStatic`, whose filter narrows the spell/ability being cast/countered.
-   */
-  | { kind: 'damageDoubled'; sourceFilter: Selector };
+  /** "If a creature you control that entered this turn would deal damage, it deals twice that
+   * much damage instead" (Neriv, Heart of the Storm) — a damage REPLACEMENT effect (CR 616). */
+  | { kind: 'damageDoubled'; sourceFilter: Selector }
+  | { kind: 'convoke' }
+  | { kind: 'improvise' }
+  | { kind: 'kicker'; cost?: ParsedManaCost }
+  | { kind: 'noMaximumHandSize' };

@@ -7,8 +7,25 @@
  * sent actually belongs to.
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { OracleCard, ServerToClientMessage, StateSnapshotPayload } from '@mtg/shared';
+
+async function waitFor(
+  fn: () => void | Promise<void>,
+  options?: { timeout?: number } | number,
+): Promise<void> {
+  const timeoutMs = typeof options === 'number' ? options : (options?.timeout ?? 5000);
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      await fn();
+      return;
+    } catch {
+      await new Promise((r) => setTimeout(r, 10));
+    }
+  }
+  await fn();
+}
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
 import { RandomDecisionProvider } from '@mtg/engine';
 import { MatchSession } from './session';
@@ -116,7 +133,7 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
     const { session } = harness({ livePaceMs: 10_000 });
     session.start();
 
-    await vi.waitFor(
+    await waitFor(
       () => {
         expect(session.runner.getStatus()).toBe('waitingForView');
       },
@@ -148,7 +165,7 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
     const { session, sent } = harness({ livePaceMs: 10_000 });
     session.start();
 
-    await vi.waitFor(
+    await waitFor(
       () => {
         expect(session.runner.getFrontierTurn()).toBeGreaterThan(1);
       },
@@ -184,7 +201,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
     });
     session.start();
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(sent.some((message) => message.type === 'playerActionRequired')).toBe(true);
     });
     const first = sent.find(
@@ -203,7 +220,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
       actionId: first!.payload.request.legalActions[0]!.id,
       revision: first!.payload.revision,
     });
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(
         sent.filter((message) => message.type === 'playerStateSnapshot').length,
       ).toBeGreaterThan(1);

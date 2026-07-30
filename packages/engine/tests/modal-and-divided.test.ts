@@ -131,7 +131,7 @@ describe('Crux of Fate — modal spell', () => {
     expect(def.modeled).toBe(true);
     expect(def.spellAbility?.effects).toEqual([]); // effects live on the modes, not here
     const modes = def.spellAbility?.modes;
-    expect(modes?.choose).toBe(1);
+    expect(modes).toMatchObject({ minChoices: 1, maxChoices: 1 });
     expect(modes?.options).toHaveLength(2);
     expect(modes?.options[0]?.effects).toEqual([
       { op: 'destroyEach', selector: expect.anything() },

@@ -31,6 +31,7 @@
  * previous layer produced, not the printed ones.
  */
 
+import type { Color } from '@mtg/shared';
 import { evaluateCondition } from '../cards/condition';
 import type { ManaAbilitySpec } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
@@ -113,6 +114,25 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       ) {
         continue;
       }
+      // "Protection from the chosen color" (Flickering Ward): the concrete color lives on the
+      // permanent, not the static op, so resolve it here — the one place both are in scope.
+      if ('addProtectionFromChosenColor' in s.op) {
+        if (source.chosenOption === undefined) continue;
+        out.push({
+          applies: {
+            kind: 'selector',
+            selector: s.affects,
+            source: {
+              cardId: source.cardId,
+              controllerId: source.controllerId,
+              attachedToCardId: attachedCardId(ctx, source),
+            },
+          },
+          op: { layer: 6, addProtection: [source.chosenOption as Color] },
+          timestamp: source.timestamp,
+        });
+        continue;
+      }
       out.push({
         applies: {
           kind: 'selector',
@@ -122,6 +142,7 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
             controllerId: source.controllerId,
             // Equipment/Auras: `attachedTo` is an ObjectId, and selectors work in card ids.
             attachedToCardId: attachedCardId(ctx, source),
+            ...(source.chosenOption !== undefined ? { chosenOption: source.chosenOption } : {}),
           },
         },
         op: s.op,
@@ -167,6 +188,21 @@ export function candidateOf(
   perm: EnginePermanent,
   chars: Characteristics,
 ): SelectorCandidate {
+  let isEnchanted = false;
+  let isEquipped = false;
+  for (const other of ctx.state.battlefield) {
+    if (other.attachedTo === perm.id) {
+      const def = ctx.defs.get(other.oracleId);
+      if (def !== undefined) {
+        if (def.subtypes.includes('Aura') || def.types.includes('Enchantment')) {
+          isEnchanted = true;
+        }
+        if (def.subtypes.includes('Equipment') || def.types.includes('Artifact')) {
+          isEquipped = true;
+        }
+      }
+    }
+  }
   return {
     cardId: perm.cardId,
     controllerId: perm.controllerId,
@@ -179,6 +215,9 @@ export function candidateOf(
     isToken: perm.isToken,
     enteredThisTurn: perm.enteredTurnNumber === ctx.state.turnNumber,
     isCommander: perm.isCommander,
+    isEnchanted,
+    isEquipped,
+    inCombat: perm.attacking !== null || perm.blocking !== null,
   };
 }
 
@@ -226,11 +265,15 @@ function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): 
         chars.keywords = [];
         chars.triggers = [];
         chars.manaAbilities = [];
+        if (chars.activatedAbilities) chars.activatedAbilities = [];
         chars.ward = null;
         chars.protectionFrom = [];
         chars.loseAbilities = true;
       } else if ('addManaAbility' in op) {
         chars.manaAbilities.push(op.addManaAbility);
+      } else if ('addActivatedAbility' in op) {
+        if (!chars.activatedAbilities) chars.activatedAbilities = [];
+        chars.activatedAbilities.push(op.addActivatedAbility);
       } else if ('addWard' in op) {
         chars.ward = op.addWard;
       } else if ('addProtection' in op) {
@@ -239,14 +282,18 @@ function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): 
         }
       } else if ('addTrigger' in op) {
         chars.triggers.push(op.addTrigger);
-      } else if (!chars.keywords.includes(op.addKeyword)) {
-        chars.keywords.push(op.addKeyword);
+      } else if ('addKeyword' in op) {
+        if (!chars.keywords.includes(op.addKeyword)) {
+          chars.keywords.push(op.addKeyword);
+        }
       }
       break;
     case 7:
       if (op.sublayer === 'd') {
-        chars.power += op.power;
-        chars.toughness += op.toughness;
+        const pDelta = typeof op.power === 'number' ? op.power : evaluateValue(ctx, op.power);
+        const tDelta = typeof op.toughness === 'number' ? op.toughness : evaluateValue(ctx, op.toughness);
+        chars.power += pDelta;
+        chars.toughness += tDelta;
       } else {
         // 7a (characteristic-defining) and 7b (set) both replace the running value.
         chars.power = evaluateValue(ctx, op.power);

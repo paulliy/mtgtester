@@ -12,7 +12,7 @@ import { drawCards, endUntilEotEffects } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import { priorityCheckpoint } from '../sba/sba';
 import { moveObject, playerById } from '../state/objects';
-import { triggersOf } from '../state/queries';
+import { hasNoMaximumHandSize, triggersOf } from '../state/queries';
 import type { EngineCardObject, GameContext } from '../state/types';
 import { emptyManaPools, runPrioritySequence } from './priority';
 
@@ -63,7 +63,10 @@ function untapStep(ctx: GameContext): void {
  * `player === 'you'` filter, the intervening-if check and the queue entry are identical, and a
  * second copy is how the two drift apart.
  */
-function queueStepTriggers(ctx: GameContext, when: 'upkeep' | 'endStep'): void {
+export function queueStepTriggers(
+  ctx: GameContext,
+  when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'mainPhase',
+): void {
   const apId = ctx.state.currentTurnPlayer;
   for (const perm of [...ctx.state.battlefield]) {
     for (const ability of triggersOf(ctx, perm)) {
@@ -84,6 +87,23 @@ function queueStepTriggers(ctx: GameContext, when: 'upkeep' | 'endStep'): void {
     }
   }
 
+  for (const player of ctx.state.players) {
+    for (const emblem of player.emblems) {
+      for (const ability of emblem.abilities) {
+        const spec = ability.trigger;
+        if (spec === undefined || spec.when !== when || !('player' in spec)) continue;
+        if (spec.player === 'you' && emblem.controllerId !== apId) continue;
+        ctx.state.pendingTriggers.push({
+          controllerId: emblem.controllerId,
+          sourceCardId: emblem.id,
+          sourceOracleId: '' as never,
+          sourceName: emblem.name,
+          ability,
+        });
+        debug(ctx, 'stack', `${when} emblem trigger queued: ${emblem.name}`);
+      }
+    }
+  }
   const remainingDelayed = [];
   for (const delayed of ctx.state.delayedTriggers) {
     if (delayed.when === when) {
@@ -112,7 +132,7 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
     setStep(ctx, 'cleanup');
 
     // Discard to maximum hand size (CR 514.1) — which card is an AI decision.
-    while (!ap.hasLost && ap.hand.length > 7) {
+    while (!ap.hasLost && !hasNoMaximumHandSize(ctx, ap.id) && ap.hand.length > 7) {
       const outcome = yield {
         decisionType: 'general',
         player: ap.id,
@@ -158,6 +178,7 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   debug(ctx, 'turn', `--- turn ${s.turnNumber}: ${ap.id} ---`);
 
   // Beginning phase.
+  queueStepTriggers(ctx, 'untapStep');
   untapStep(ctx);
 
   setStep(ctx, 'upkeep');
@@ -166,12 +187,14 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   emptyManaPools(ctx);
 
   setStep(ctx, 'draw');
+  queueStepTriggers(ctx, 'drawStep');
   yield* drawCards(ctx, ap, 1); // multiplayer: first-turn draw included (brief §5.3)
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
   // Precombat main.
   setPhase(ctx, 'precombatMain', null);
+  queueStepTriggers(ctx, 'mainPhase');
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
@@ -181,6 +204,7 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
 
   // Postcombat main.
   setPhase(ctx, 'postcombatMain', null);
+  queueStepTriggers(ctx, 'mainPhase');
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 

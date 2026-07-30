@@ -111,7 +111,7 @@ describe('measureCoverage', () => {
   // engine reads simple activated abilities as of ADR 0010 increment 5.)
   const complex = card({
     name: 'Busy Wizard',
-    oracleText: '{2}{U}, {T}: Target player mills four cards.\nCycling {2}',
+    oracleText: '{2}{U}, {T}: Target player mills four cards.\nEcho {2}',
   });
 
   it('counts unique cards and modeled cards across decks', () => {

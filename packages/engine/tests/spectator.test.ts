@@ -150,6 +150,13 @@ describe('formatSpectatorLine', () => {
     expect(line?.text).toBe('Krenko, Mob Boss deals 6 to P2 (commander damage)');
   });
 
+  it('narrates library and hand changes that the visualizer can seek to', () => {
+    expect(formatSpectatorLine(event({ type: 'draw', payload: { name: 'Opt' } }))?.text).toBe('draws Opt');
+    expect(formatSpectatorLine(event({ type: 'discard', payload: { name: 'Island' } }))?.text).toBe('discards Island');
+    expect(formatSpectatorLine(event({ type: 'mill', payload: { name: 'Forest' } }))?.text).toBe('mills Forest');
+    expect(formatSpectatorLine(event({ type: 'scry', payload: { looked: 2 } }))?.text).toBe('scries 2');
+    expect(formatSpectatorLine(event({ type: 'surveil', payload: { looked: 1 } }))?.text).toBe('surveils 1');
+  });
   it('drops events with no spectator meaning rather than rendering them generically', () => {
     expect(formatSpectatorLine(event({ type: 'phaseBegin' }))).toBeNull();
     expect(formatSpectatorLine(event({ type: 'stepBegin' }))).toBeNull();

@@ -6,8 +6,8 @@
  * committed projection of The Ur-Dragon deck's 93 unique cards.
  *
  * It asserts the *names* of the modeled cards, not just the count. That is the load-bearing
- * part: a grammar change that accidentally models a card it should not — over-permissive
- * modeling, the brief §6.3 failure mode — shows up here as a diff rather than as a silently
+ * part: a grammar change that accidentally models a card it should not â€” over-permissive
+ * modeling, the brief Â§6.3 failure mode â€” shows up here as a diff rather than as a silently
  * improved number. Raising the count is only correct when the added names are ones you meant.
  */
 
@@ -28,7 +28,7 @@ const MODELED = [
   'Mountain',
   'Sol Ring',
   'Swamp',
-  // Inc 1 — as-enters replacement conditions (`entersTappedUnless`).
+  // Inc 1 â€” as-enters replacement conditions (`entersTappedUnless`).
   'Blood Crypt',
   'Dreamroot Cascade',
   'Overgrown Tomb',
@@ -44,7 +44,7 @@ const MODELED = [
   'Turbulent Springs',
   'Watery Grave',
   'Woodland Cemetery',
-  // Inc 2 — state-derived, granted, conditional, and rider mana abilities.
+  // Inc 2 â€” state-derived, granted, conditional, and rider mana abilities.
   'Arcane Signet',
   'Battlefield Forge',
   'Chromatic Lantern',
@@ -53,14 +53,14 @@ const MODELED = [
   'Fellwar Stone',
   'Mox Jasper',
   'Yavimaya Coast',
-  // Inc 4 — structured trigger specs: selector subjects, `attacks`, intervening-if.
+  // Inc 4 â€” structured trigger specs: selector subjects, `attacks`, intervening-if.
   'Atarka, World Render',
   "Garruk's Uprising",
   'Temur Ascendancy',
-  // Inc 5 — activated abilities with non-mana costs.
+  // Inc 5 â€” activated abilities with non-mana costs.
   "Dragon's Hoard",
   'Reckless Barbarian',
-  // Inc 6 — library primitives, mass damage, and event-only keyword selectors.
+  // Inc 6 â€” library primitives, mass damage, and event-only keyword selectors.
   'Farseek',
   "Kodama's Reach",
   "Nature's Lore",
@@ -69,30 +69,30 @@ const MODELED = [
   'Three Visits',
   'Thunder Dragon',
   'Ureni of the Unwritten',
-  // Inc 7 — ward/menace/shroud/protection/changeling and equipment.
+  // Inc 7 â€” ward/menace/shroud/protection/changeling and equipment.
   'Lightning Greaves',
-  // Inc 8 — dynamic `Value`s and {X} costs.
+  // Inc 8 â€” dynamic `Value`s and {X} costs.
   'Earthquake',
-  // Inc 10 — token creation, pay-life costs, once-per-turn activation.
-  // (Inc 9 — the new trigger events — deliberately closed no cards; it is a gate for these.)
+  // Inc 10 â€” token creation, pay-life costs, once-per-turn activation.
+  // (Inc 9 â€” the new trigger events â€” deliberately closed no cards; it is a gate for these.)
   'Beledros Witherbloom',
   'Miirym, Sentinel Wyrm',
   'Old Gnawbone',
-  // Inc 11 — zone-movement primitives and non-battlefield targets.
+  // Inc 11 â€” zone-movement primitives and non-battlefield targets.
   'Bladewing the Risen',
   'Broodcaller Scourge',
   'Last March of the Ents',
-  // Inc 12a — restricted mana (CR 106.6), mana spend triggers, alternatives on one permanent.
+  // Inc 12a â€” restricted mana (CR 106.6), mana spend triggers, alternatives on one permanent.
   'Haven of the Spirit Dragon',
   'Maelstrom of the Spirit Dragon',
   'Path of Ancestry',
   'Scaled Nurturer',
-  // Inc 12b — conditional-amount + linked mana; `addMana` from a resolving (non-activation)
+  // Inc 12b â€” conditional-amount + linked mana; `addMana` from a resolving (non-activation)
   // ability. Skycloud Expanse, Orb of Dragonkind, and Carnelian Orb of Dragonkind stay
-  // unmodeled — see the increment note in the plan for why.
+  // unmodeled â€” see the increment note in the plan for why.
   'Ilysian Caryatid',
   'Klauth, Unrivaled Ancient',
-  // Inc 13 — rule-modifying statics: cost reduction (fixed and dynamic, including from the
+  // Inc 13 â€” rule-modifying statics: cost reduction (fixed and dynamic, including from the
   // command zone), "can't be countered" as a state-dependent rule (not just a fixed spell
   // property), "opponents can't cast spells", casting from the top of the library.
   'Dragonlord Dromoka',
@@ -100,40 +100,37 @@ const MODELED = [
   'Rhythm of the Wild',
   'Temur Battlecrier',
   'The Ur-Dragon',
-  // Inc 14 — modal spells, a fixed-plus-variable-count damage split, divided damage among a
+  // Inc 14 â€” modal spells, a fixed-plus-variable-count damage split, divided damage among a
   // variable-count target group, and a resolution-time conditional effect. Kairi stays
-  // deferred (modes + variable count + a mana-value bound + mill + graveyard→hand is four
-  // subsystems for one card) — see the increment note in the plan.
+  // deferred (modes + variable count + a mana-value bound + mill + graveyardâ†’hand is four
+  // subsystems for one card) â€” see the increment note in the plan.
   'Crux of Fate',
   'Drakuseth, Maw of Flames',
   'Stubborn Denial',
   'Ureni, the Song Unending',
-  // Inc 15 — damage-doubling replacement (CR 616), gain-control-of-a-set + a control-change
-  // timestamp, and turn-scoped excess-damage tracking feeding an intervening-if. Firkraag,
-  // Cunning Instigator stays deferred — its two abilities need per-defending-player trigger
-  // aggregation and "target creature THAT PLAYER controls" targeting, both bigger than the rest
-  // of this increment combined — see the increment note in the plan.
+  // Inc 15 â€” damage-doubling replacement (CR 616), gain-control-of-a-set + a control-change
+  // timestamp, and turn-scoped excess-damage tracking feeding an intervening-if.
+  'Firkraag, Cunning Instigator',
   'Karrthus, Tyrant of Jund',
   'Neriv, Heart of the Storm',
   'Rith, Liberated Primeval',
-  // Inc 16 — delayed triggers, granted abilities/triggers until end of turn, and spell-resolution delayed haste grants.
+  // Inc 16 â€” delayed triggers, granted abilities/triggers until end of turn, and spell-resolution delayed haste grants.
   'Carnelian Orb of Dragonkind',
   'Hellkite Courser',
   'Herd Heirloom',
   "Hunter's Insight",
-  // Inc 17 — Alternate costs (Overload), hybrid mana, planeswalker loyalty, hideaway.
+  // Inc 17 â€” Alternate costs (Overload), hybrid mana, planeswalker loyalty, hideaway.
   'Cyclonic Rift',
   'Kiora, Behemoth Beckoner',
   'Mosswort Bridge',
   'Sivitri, Dragon Master',
   'Spinerock Knoll',
-  // Inc 18 — Adventure / Omen layouts (dual-face support).
+  // Inc 18 â€” Adventure / Omen layouts (dual-face support).
   'Bloomvine Regent // Claim Territory',
   'Marang River Regent // Coil and Catch',
   'Monster Manual // Zoological Study',
-  // Inc 19 — Final 14 cards (100% coverage milestone).
+  // Inc 19 â€” remaining bespoke Dragon cards (100% coverage milestone).
   'Dragon Tempest',
-  'Firkraag, Cunning Instigator',
   'Iymrith, Desert Doom',
   'Kairi, the Swirling Sky',
   "Lozhan, Dragons' Legacy",
@@ -148,7 +145,7 @@ const MODELED = [
   'Zurgo and Ojutai',
 ].sort();
 
-describe('The Ur-Dragon deck — model coverage', () => {
+describe('The Ur-Dragon deck â€” model coverage', () => {
   it('has the expected 93 unique cards', () => {
     expect(cards).toHaveLength(93);
   });

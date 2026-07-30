@@ -1,5 +1,5 @@
 /**
- * `bun run dev` — the server and the web dev server together, one command instead of two
+ * `bun run dev` - the server and the web dev server together, one command instead of two
  * terminals. Any args after `--` are forwarded to the server only (e.g. `--port 3005 --no-db`),
  * matching what `bun run serve` already accepts.
  *
@@ -9,8 +9,20 @@
 
 const serverArgs = process.argv.slice(2);
 
-function spawnTagged(name: string, cmd: string[]): ReturnType<typeof Bun.spawn> {
-  const proc = Bun.spawn(cmd, { stdout: 'pipe', stderr: 'pipe' });
+function parseServerPort(args: string[]): number {
+  const portIndex = args.indexOf('--port');
+  if (portIndex === -1) return 3001;
+
+  const port = Number.parseInt(args[portIndex + 1] ?? '', 10);
+  return Number.isFinite(port) ? port : 3001;
+}
+
+function spawnTagged(
+  name: string,
+  cmd: string[],
+  env: Record<string, string | undefined> = process.env,
+): ReturnType<typeof Bun.spawn> {
+  const proc = Bun.spawn(cmd, { stdout: 'pipe', stderr: 'pipe', env });
   void pipeTagged(proc.stdout, name, false);
   void pipeTagged(proc.stderr, name, true);
   return proc;
@@ -34,22 +46,61 @@ async function pipeTagged(
   if (buffer.length > 0) (isError ? console.error : console.log)(`[${name}] ${buffer}`);
 }
 
+async function waitForServer(port: number, timeoutMs = 30_000): Promise<void> {
+  const startedAt = Date.now();
+  const healthUrl = `http://localhost:${port}/health`;
+
+  for (;;) {
+    try {
+      const response = await fetch(healthUrl);
+      if (response.ok) return;
+    } catch {
+      // The server is still loading oracle data or has not bound the port yet.
+    }
+
+    if (Date.now() - startedAt > timeoutMs) {
+      throw new Error(`Timed out waiting for server health at ${healthUrl}`);
+    }
+
+    await Bun.sleep(250);
+  }
+}
+
+const serverPort = parseServerPort(serverArgs);
 const server = spawnTagged('server', ['bun', 'run', 'packages/server/src/cli/serve.ts', ...serverArgs]);
-const web = spawnTagged('web', ['bun', 'run', '--cwd', 'apps/web', 'dev']);
+let web: ReturnType<typeof Bun.spawn> | undefined;
 
 let shuttingDown = false;
 function shutdown(exitCode: number): void {
   if (shuttingDown) return;
   shuttingDown = true;
   server.kill();
-  web.kill();
+  web?.kill();
   process.exit(exitCode);
 }
 
 process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 
+void (async () => {
+  await Promise.race([
+    waitForServer(serverPort),
+    server.exited.then((code) => {
+      throw new Error(`Server exited before becoming healthy with code ${code ?? 1}`);
+    }),
+  ]);
+
+  web = spawnTagged('web', ['bun', 'run', '--cwd', 'apps/web', 'dev'], {
+    ...process.env,
+    GAME_SERVER_PORT: String(serverPort),
+  });
+
+  void web.exited.then((code) => shutdown(code ?? 1));
+})().catch((error: unknown) => {
+  console.error(`[dev] ${error instanceof Error ? error.message : String(error)}`);
+  shutdown(1);
+});
+
 // If either side dies on its own (crash, port in use), take the other down with it rather than
 // leaving one half running silently.
 void server.exited.then((code) => shutdown(code ?? 1));
-void web.exited.then((code) => shutdown(code ?? 1));
