@@ -60,6 +60,11 @@ import {
 import type { Value } from './value';
 import { constant } from './value';
 import { applyOverride } from './overrides';
+// Side-effect import: registers per-deck authored overrides (ADR 0009/0010) against the
+// registry above. Loaded here, not from `overrides/index.ts` itself, because these modules
+// import `registerOverride` FROM that file — importing them back from there would be a
+// circular import that runs before `OVERRIDES` finishes initializing.
+import './overrides/draconic-destruction';
 import type { CardDefinition, ManaAbilitySpec } from './definition';
 import { PERMANENT_CARD_TYPES } from './definition';
 

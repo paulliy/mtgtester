@@ -254,6 +254,56 @@ export function* applyPriorityAction(
     }
 
     case 'activateAbility': {
+      if (payload.fromGraveyard === true) {
+        // CR 112.6a: the source is a graveyard card (Runehorn Hellkite), not a permanent — no
+        // tap/summoning-sickness/`activationsThisTurn` bookkeeping applies, and paying the
+        // `exileSelfFromGraveyard` cost removes it from the zone it is activating from, exactly
+        // like a battlefield sacrifice cost removes a permanent (CR 601.2h: paying is one
+        // indivisible act and happens even though the source is now gone).
+        const card = player.graveyard.find((c) => c.id === payload.objectId);
+        if (card === undefined) throw new Error('engine bug: ability source not in the graveyard');
+        const def = getDefByOracleId(ctx, card.oracleId, card.name);
+        const activated = def.activatedAbilities[payload.index];
+        if (activated === undefined) throw new Error('engine bug: activated ability index invalid');
+
+        const description = activated.ability.description ?? 'activated ability';
+        const id = `o-${s.nextObjectNum++}` as ObjectId;
+        const stackEntry = {
+          id,
+          sourceId: card.id,
+          controllerId: player.id,
+          kind: 'activatedAbility' as const,
+          description: `${card.name} — ${description}`,
+          targets: [],
+          card: null,
+          ability: activated.ability,
+          sourceOracleId: card.oracleId,
+          sourceCardId: card.cardId,
+          isCommanderCast: false,
+        };
+
+        const mana = manaPortionOf(activated.costs);
+        if (totalPips(mana) > 0) {
+          yield* payManaCost(ctx, player, mana, {
+            kind: 'activateAbility',
+            sourceOracleId: card.oracleId,
+          });
+        }
+        if (activated.costs.some((c) => c.kind === 'exileSelfFromGraveyard')) {
+          yield* moveObject(ctx, card, { zone: 'exile' });
+        }
+        resetOpponentYields(ctx, player.id);
+        s.stack.push(stackEntry);
+        emit(
+          ctx,
+          'activateAbility',
+          { player: player.id, source: card.name, cardId: card.cardId, description, targets: [] },
+          player.id,
+        );
+        debug(ctx, 'stack', `${player.id} activates ${card.name} (graveyard) — ${description}`);
+        return;
+      }
+
       const perm = ctx.state.battlefield.find((p) => p.id === payload.objectId);
       if (perm === undefined) throw new Error('engine bug: ability source not on the battlefield');
       const def = getDefByOracleId(ctx, perm.oracleId, perm.name);

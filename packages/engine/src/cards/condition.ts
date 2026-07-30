@@ -20,9 +20,10 @@
  */
 
 import type { GameGen } from '../decisions';
-import { loseLife } from '../effects/resolve';
+import { loseLife, payManaCost } from '../effects/resolve';
 import { emit } from '../log/log';
-import { opponentsOf } from '../state/queries';
+import { canPay, describeManaCost, type ParsedManaCost } from '../mana/cost';
+import { allowanceFor, manaSourcesFor, opponentsOf } from '../state/queries';
 import type { GameContext } from '../state/types';
 import { computeCharacteristics, selectPermanents } from '../effects/continuous';
 import type { Selector, SelectorSource } from './selector';
@@ -47,6 +48,12 @@ export type Condition =
   | { kind: 'opponentCount'; cmp: '>=' | '<='; n: number }
   /** "you may pay 2 life" — a choice, not a fact. Only `resolveCondition` can answer it. */
   | { kind: 'mayPayLife'; n: number }
+  /**
+   * "you may pay {R}. If you do, …" — a choice, not a fact, and unlike `mayPayLife` an
+   * unaffordable one is never even offered (CR 118.4 lets life go negative; mana has no
+   * equivalent — you cannot pay what is not in the pool or producible for it).
+   */
+  | { kind: 'mayPayMana'; cost: ParsedManaCost }
   /**
    * "a creature or planeswalker an opponent controlled was dealt excess damage this turn"
    * (Rith, Liberated Primeval). `ctx.state.excessDamageControllerIds` is turn-scoped and
@@ -78,6 +85,7 @@ export const anyOfConditions = (...of: Condition[]): Condition => ({ kind: 'anyO
 export function isChoiceCondition(condition: Condition): boolean {
   switch (condition.kind) {
     case 'mayPayLife':
+    case 'mayPayMana':
       return true;
     case 'allOf':
     case 'anyOf':
@@ -167,6 +175,10 @@ export function evaluateCondition(
       throw new Error(
         'engine bug: mayPayLife is a choice condition — use resolveCondition, not evaluateCondition',
       );
+    case 'mayPayMana':
+      throw new Error(
+        'engine bug: mayPayMana is a choice condition — use resolveCondition, not evaluateCondition',
+      );
   }
 }
 
@@ -203,6 +215,29 @@ export function* resolveCondition(
       if (outcome.index !== 0) return false;
       loseLife(ctx, player, condition.n);
       emit(ctx, 'costPaid', { player: player.id, source: sourceName, life: condition.n });
+      return true;
+    }
+    case 'mayPayMana': {
+      const player = ctx.state.players.find((p) => p.id === source.controllerId);
+      if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
+      const sources = manaSourcesFor(ctx, player.id);
+      const allows = allowanceFor(ctx, player.id, { kind: 'other' });
+      // CR 118.4 has no "pay what you can't afford" exception for mana — an unpayable cost is
+      // simply never offered, unlike `mayPayLife` above.
+      if (!canPay(condition.cost, player.manaEntries, sources, allows)) return false;
+      const costLabel = describeManaCost(condition.cost);
+      const outcome = yield {
+        decisionType: 'general',
+        player: player.id,
+        prompt: `${sourceName}: pay ${costLabel}?`,
+        options: [
+          { type: 'payMana', description: `Pay ${costLabel}`, data: { manaCost: costLabel } },
+          { type: 'decline', description: `Don't pay ${costLabel}` },
+        ],
+      };
+      if (outcome.index !== 0) return false;
+      yield* payManaCost(ctx, player, condition.cost);
+      emit(ctx, 'costPaid', { player: player.id, source: sourceName, mana: costLabel });
       return true;
     }
     case 'allOf': {

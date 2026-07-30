@@ -63,7 +63,13 @@ export type PriorityActionPayload =
       altIndex?: number;
     }
   /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
-  | { kind: 'activateAbility'; objectId: ObjectId; index: number }
+  | {
+      kind: 'activateAbility';
+      objectId: ObjectId;
+      index: number;
+      /** CR 112.6a: the source is a graveyard card, not a battlefield permanent. */
+      fromGraveyard?: boolean;
+    }
   | { kind: 'companionToHand' };
 
 const COMPANION_COST: ParsedManaCost = { ...emptyCost(), generic: 3 };
@@ -599,8 +605,15 @@ export function computePriorityOptions(
     const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
     for (const [index, activated] of def.activatedAbilities.entries()) {
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
-      // CR 602.5f — "activate only once each turn", tracked on the permanent.
-      if (activated.oncePerTurn === true && perm.activationsThisTurn.includes(index)) continue;
+      // CR 602.5f — "activate only once each turn", tracked on the permanent. A loyalty-cost
+      // ability is additionally CR 606.3: no more than ONE loyalty ability of a permanent may
+      // be activated each turn, regardless of which one — not just this same ability again —
+      // so it blocks on any prior activation this turn, not just this index.
+      const isLoyaltyAbility = activated.costs.some((c) => c.kind === 'loyalty');
+      if (activated.oncePerTurn === true) {
+        if (isLoyaltyAbility && perm.activationsThisTurn.length > 0) continue;
+        if (!isLoyaltyAbility && perm.activationsThisTurn.includes(index)) continue;
+      }
       if (!canPayNonManaCosts(ctx, perm, activated.costs)) continue;
       // A cost that taps or sacrifices the source spends the source, so it cannot ALSO be
       // tapped for mana toward the same cost. `payActivationCosts` enforces the same thing by
@@ -661,6 +674,41 @@ export function computePriorityOptions(
       };
       if (slots.length > 0) option.targets = slots;
       options.push(option);
+    }
+  }
+
+  // Activated abilities that function from the graveyard (CR 112.6a — Runehorn Hellkite's
+  // "Exile this card from your graveyard: …"). Separate from the battlefield loop above: the
+  // source is a graveyard `EngineCardObject`, not a permanent, so there is no `perm.tapped`,
+  // no summoning sickness, and `activationsThisTurn` does not apply (a card leaving and
+  // returning to the graveyard is a new object, same as everywhere else in the zone model).
+  for (const card of player.graveyard) {
+    const def = getDefByOracleId(ctx, card.oracleId, card.name);
+    for (const [index, activated] of def.activatedAbilities.entries()) {
+      if (activated.functionsInGraveyard !== true) continue;
+      if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
+      const manaCost = manaPortionOf(activated.costs);
+      const allows = allowanceFor(ctx, player.id, {
+        kind: 'activateAbility',
+        sourceOracleId: card.oracleId,
+      });
+      if (!canPay(manaCost, player.manaEntries, sources, allows)) continue;
+      if (activated.ability.targets.length > 0) continue; // none of this shape need targets yet
+
+      options.push({
+        type: 'activateAbility',
+        description: `${card.name} (graveyard): ${activated.ability.description ?? 'activate ability'}`,
+        payload: { kind: 'activateAbility', objectId: card.id, index, fromGraveyard: true },
+        data: {
+          sourceName: card.name,
+          sourceZone: 'graveyard',
+          abilityDescription: activated.ability.description ?? 'activate ability',
+          manaCost: describeManaCost(manaCost),
+          ...paymentPreview(ctx, player, manaCost, sources, allows),
+          abilityCosts: activated.costs,
+        },
+        interaction: { kind: 'source', sourceId: card.id, sourceCardId: card.cardId, abilityIndex: index },
+      });
     }
   }
 

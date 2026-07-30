@@ -17,7 +17,7 @@ import type {
   TargetSpec,
 } from '../cards/definition';
 import { TAP_COST } from '../cards/definition';
-import { evaluateCondition } from '../cards/condition';
+import { resolveCondition } from '../cards/condition';
 import { selectMatches } from '../cards/selector';
 import type { GameGen } from '../decisions';
 import { UnmodeledCardError } from '../errors';
@@ -835,16 +835,46 @@ export function* executeAbility(
         }
         break;
       }
+      case 'returnSelfFromGraveyardToHand': {
+        const owner = playerById(ctx, source.controllerId);
+        const cardObj = owner.graveyard.find((c) => c.cardId === source.cardId);
+        // Gone from the graveyard by resolution (exiled, milled elsewhere in response) — no
+        // referent left, same "gone ⇒ no effect" treatment as a legal target that left.
+        if (cardObj === undefined) break;
+        emit(ctx, 'graveyardToHand', { target: cardObj.name, source: source.name });
+        yield* moveObject(ctx, cardObj, { zone: 'hand' });
+        break;
+      }
+      case 'eachPlayerDiscardHandThenDraw': {
+        const n = amountOf(effect.count);
+        for (const player of ctx.state.players) {
+          if (player.hasLost) continue;
+          const hand = [...player.hand];
+          for (const card of hand) {
+            emit(ctx, 'discard', { player: player.id, name: card.name, cardId: card.cardId });
+            yield* moveObject(ctx, card, { zone: 'graveyard' });
+          }
+          yield* drawCards(ctx, player, n);
+        }
+        break;
+      }
       case 'conditionalEffect': {
         // "Ferocious — if you control a creature with power 4 or greater, counter that spell
         // instead" (Stubborn Denial) — checked at RESOLUTION, when the board is current, not at
         // announcement. Recurses into `executeAbility` with the chosen branch substituted for
         // `effects`, so it reuses every existing op (and `ref`'s legality re-check) unchanged
         // rather than duplicating the dispatch.
-        const holds = evaluateCondition(ctx, effect.condition, {
-          cardId: source.cardId,
-          controllerId: source.controllerId,
-        });
+        //
+        // `resolveCondition`, not `evaluateCondition`: a CHOICE condition ("you may pay {R}. If
+        // you do, …" — Spit Flame) needs to ask the player, and `resolveCondition` falls back to
+        // `evaluateCondition` for every plain state condition, so this is a strict superset of
+        // the old behavior.
+        const holds = yield* resolveCondition(
+          ctx,
+          effect.condition,
+          { cardId: source.cardId, controllerId: source.controllerId },
+          source.name,
+        );
         const chosen = holds ? effect.then : effect.else;
         if (chosen.length > 0) {
           yield* executeAbility(

@@ -519,6 +519,54 @@ export function queueTriggersForEvent(
     });
     debug(ctx, 'stack', `delayed trigger queued: ${delayed.id}`);
   }
+
+  // CR 603.6d — some triggered abilities function from a zone other than the battlefield
+  // (Spit Flame: "Whenever a Dragon you control enters, you may pay {R}. If you do, return
+  // this card from your graveyard to your hand"). A graveyard card has no continuous effects
+  // layered on it, so its PRINTED triggers ARE its current ones — there is no layer pass to
+  // run, unlike `triggersOf` above. `{kind:'self'}` is deliberately excluded: nothing here
+  // fires on the graveyard card's OWN event (it isn't entering/dying/attacking), only on
+  // events of OTHER objects it watches.
+  for (const player of ctx.state.players) {
+    for (const card of player.graveyard) {
+      const def = ctx.defs.get(card.oracleId);
+      if (def === undefined) continue;
+      for (const ability of def.triggers) {
+        if (ability.functionsInGraveyard !== true) continue;
+        const spec = ability.trigger;
+        if (spec === undefined || spec.when !== when || spec.subject.kind === 'self') continue;
+        const selector = spec.subject.selector;
+
+        const from: SelectorSource = { cardId: card.cardId, controllerId: player.id };
+        const matched = subjects.filter((s) => matchesSelector(ctx, s.permanent, selector, from));
+        if (matched.length === 0) continue;
+        if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;
+
+        const firings: TriggerEventSubject[][] =
+          spec.aggregate === true ? [matched] : matched.map((s) => [s]);
+        for (const group of firings) {
+          const first = group[0] as TriggerEventSubject;
+          const amounts = group.filter((s) => s.amount !== undefined);
+          const scope: TriggerScope = {
+            ...(spec.aggregate === true ? { triggerCount: group.length } : {}),
+            ...(amounts.length > 0
+              ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
+              : {}),
+          };
+          ctx.state.pendingTriggers.push({
+            controllerId: player.id,
+            sourceCardId: card.cardId,
+            sourceOracleId: card.oracleId,
+            sourceName: card.name,
+            ability,
+            triggerObjectCardId: first.permanent.cardId,
+            ...(Object.keys(scope).length > 0 ? { scope } : {}),
+          });
+          debug(ctx, 'stack', `graveyard trigger queued: ${card.name} — ${ability.description ?? ''}`);
+        }
+      }
+    }
+  }
 }
 
 /** The one-subject case, which is every event except attacks and combat damage. */

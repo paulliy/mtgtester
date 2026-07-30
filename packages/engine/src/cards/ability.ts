@@ -32,7 +32,13 @@ export type AbilityCost =
   /** "Pay 10 life" (CR 118.8) — payable only if the controller's life is at least this much. */
   | { kind: 'payLife'; amount: number }
   | { kind: 'loyalty'; delta: number }
-  | { kind: 'mana'; cost: ParsedManaCost };
+  | { kind: 'mana'; cost: ParsedManaCost }
+  /**
+   * "Exile this card from your graveyard" (Runehorn Hellkite) — the cost half of an ability
+   * that `functionsInGraveyard` (CR 112.6a). Distinct from `sacrificeSelf`: the source is
+   * never on the battlefield to begin with, and the destination is exile, not the graveyard.
+   */
+  | { kind: 'exileSelfFromGraveyard' };
 
 export interface AlternativeCast {
   kind: 'overload' | 'adventure' | 'omen';
@@ -60,6 +66,13 @@ export interface ActivatedAbility {
    * copies of Beledros each get their own activation.
    */
   oncePerTurn?: boolean;
+  /**
+   * "Exile this card from your graveyard: …" (Runehorn Hellkite, CR 112.6a) — this ability can
+   * be activated from the graveyard rather than the battlefield. The source has no permanent
+   * object, so its cost list is paid against the graveyard card directly (see `legal.ts`'s
+   * separate graveyard-activation loop).
+   */
+  functionsInGraveyard?: true;
 }
 
 /**
@@ -450,6 +463,14 @@ export type Effect =
   | { op: 'goad'; target: EffectRef }
   | { op: 'doublePower'; selector: Selector }
   | { op: 'drawUpTo'; count: number }
+  /** "Each player discards their hand, then draws seven cards" (Dragon Mage, Wheel of Fortune-style). */
+  | { op: 'eachPlayerDiscardHandThenDraw'; count: Value }
+  /**
+   * "Return this card from your graveyard to your hand" (Spit Flame) — acts on the ability's
+   * OWN source, which is already in the graveyard when this runs (`functionsInGraveyard`), so
+   * there is no target slot to reference it through.
+   */
+  | { op: 'returnSelfFromGraveyardToHand' }
   | { op: 'untapTarget'; target: EffectRef }
   | { op: 'bounceUpTo6MV' }
   | { op: 'millAndReturnSpells' }
@@ -591,4 +612,11 @@ export interface Ability {
    * something any closed-set card here needs, so it is not built.
    */
   modes?: { choose: number; options: { effects: Effect[]; description?: string }[] };
+  /**
+   * "Whenever a Dragon you control enters, you may pay {R}. If you do, return this card from
+   * your graveyard to your hand" (Spit Flame, CR 603.6d) — a triggered ability that functions
+   * while its source sits in the graveyard rather than the battlefield. `queueTriggersForEvent`
+   * scans each graveyard for abilities marked this way in addition to the battlefield.
+   */
+  functionsInGraveyard?: true;
 }
