@@ -300,11 +300,13 @@ export interface TargetSpec {
  * it is never chosen, hexproof does not stop it, and the ability cannot fizzle on it. It simply
  * does nothing if that object has left the battlefield by resolution.
  *
- * A card's reference to its own source ("put a counter on this artifact") does not need a
- * referent at all: it is the one-element case of a `Selector`, and the `…Each` primitives
- * already express it as `{kind:'self'}`.
+ * A card's reference to its own source ("put a counter on this artifact") usually does not
+ * need a referent at all: it is the one-element case of a `Selector`, and the `…Each`
+ * primitives already express it as `{kind:'self'}`. `'self'` exists here for the primitives
+ * that pair the source with a separate referent in one act — fight (CR 701.12), where "it" is
+ * the ability's own source and there is no `Selector`-shaped "each" to fold it into.
  */
-export type EffectRef = number | 'triggerObject';
+export type EffectRef = number | 'triggerObject' | 'self';
 
 /**
  * One atomic mechanical primitive. Targeted primitives carry `target`: an `EffectRef` naming
@@ -317,7 +319,13 @@ export type EffectRef = number | 'triggerObject';
  * (CR 611.2c).
  */
 export type Effect =
-  | { op: 'pumpUntilEot'; target: EffectRef; power: number; toughness: number }
+  /**
+   * `power`/`toughness` are `Value`s, not raw numbers, so "gets +X/+X" (Primal Might) can share
+   * this op with the literal "+3/+3" case — evaluated once at resolution and then stored as a
+   * fixed delta (`UntilEotEffect`), same as every other until-EOT pump: X is fixed at the
+   * moment the spell resolves, not re-evaluated on every later layer pass.
+   */
+  | { op: 'pumpUntilEot'; target: EffectRef; power: Value; toughness: Value }
   | { op: 'grantKeywordUntilEot'; target: EffectRef; keyword: KeywordAbility }
   | { op: 'pumpEachUntilEot'; selector: Selector; power: number; toughness: number }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
@@ -478,6 +486,19 @@ export type Effect =
    * for the rest of the turn; the cleanup step clears the grant (`endUntilEotEffects`).
    */
   | { op: 'exileTopNPlayableUntilEot'; count: Value }
+  /**
+   * "It fights target creature you don't control" (CR 701.12: each deals damage equal to its
+   * power to the other, simultaneously). `a`/`b` are ordinary referents — both re-checked for
+   * legality at resolution the same as any other targeted effect.
+   */
+  | { op: 'fight'; a: EffectRef; b: EffectRef }
+  /**
+   * "Then it fights UP TO ONE target creature you don't control" (Primal Might) — the second
+   * fighter is a variable-count slot (0 or 1, `TargetSpec.count`), not an ordinary target: CR
+   * 601.2c means an unchosen "up to one" is legal to announce with nothing selected, which a
+   * plain `EffectRef` (always exactly one slot) cannot express.
+   */
+  | { op: 'fightUpToOneChosen'; a: EffectRef; bSlot: number }
   | { op: 'untapTarget'; target: EffectRef }
   | { op: 'bounceUpTo6MV' }
   | { op: 'millAndReturnSpells' }
@@ -545,12 +566,18 @@ export type TriggerWhen =
   | 'dies'
   | 'attacks'
   | 'dealsCombatDamageToPlayer'
+  | 'fights'
   | 'castsSpell'
   | 'upkeep'
   | 'endStep';
 
 /** The object-event half of `TriggerHead`. */
-export type ObjectTriggerWhen = 'enters' | 'dies' | 'attacks' | 'dealsCombatDamageToPlayer';
+export type ObjectTriggerWhen =
+  | 'enters'
+  | 'dies'
+  | 'attacks'
+  | 'dealsCombatDamageToPlayer'
+  | 'fights';
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
 export type TriggerHead =

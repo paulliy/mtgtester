@@ -209,7 +209,7 @@ describe('oracle-text interpreter (brief §6)', () => {
   it('parses the Phase 2 spell-effect patterns into the ability IR', () => {
     const gg = interpretCard(giantGrowth());
     expect(gg.spellAbility?.effects).toEqual([
-      { op: 'pumpUntilEot', target: 0, power: 3, toughness: 3 },
+      { op: 'pumpUntilEot', target: 0, power: { kind: 'const', n: 3 }, toughness: { kind: 'const', n: 3 } },
     ]);
     expect(gg.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
 

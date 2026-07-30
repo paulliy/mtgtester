@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { runCombatPhase } from '../src/combat/combat';
-import { endUntilEotEffects } from '../src/effects/resolve';
+import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import { runPrioritySequence } from '../src/turn/priority';
 import { moveObject } from '../src/state/objects';
@@ -247,5 +247,143 @@ describe('Spit Flame', () => {
 
     const p1 = ctx.state.players.find((p) => p.id === 'P1')!;
     expect(p1.graveyard.some((c) => c.cardId === inGrave.cardId)).toBe(true);
+  });
+});
+
+describe('Primal Might', () => {
+  const primalMight = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Primal Might',
+      oracleId: 'oracle-primal-might',
+      typeLine: 'Sorcery',
+      manaCost: '{X}{G}',
+      power: null,
+      toughness: null,
+      oracleText:
+        "Target creature you control gets +X/+X until end of turn. Then it fights up to one target creature you don't control.",
+    });
+
+  it('pumps the target by X and fights the chosen opposing creature', () => {
+    const ctx = pod();
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P1', forest());
+    const bearCard = oracle({ name: 'Test Bear', typeLine: 'Creature — Bear', power: '2', toughness: '2' });
+    const ogreCard = oracle({ name: 'Test Ogre', typeLine: 'Creature — Ogre', power: '3', toughness: '3' });
+    const bear = spawn(ctx, 'P1', bearCard);
+    const ogre = spawn(ctx, 'P2', ogreCard);
+    conjure(ctx, 'P1', primalMight(), 'hand');
+
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.decisionType === 'general' && /choose (a|another) target/.test(d.prompt)) {
+        const idx = d.options.findIndex((o) => o.description.includes('Test Ogre'));
+        return { index: idx >= 0 ? idx : d.options.length - 1, targets: new Map() };
+      }
+      const i = d.options.findIndex(
+        (o) => o.description.includes('Cast Primal Might') && o.description.includes('X=2'),
+      );
+      if (i >= 0) {
+        const slot = d.options[i]?.targets?.[0];
+        const target = slot?.options.find((id) => id === bear.id);
+        return { index: i, targets: new Map(target === undefined ? [] : [[0, target]]) };
+      }
+      return { index: 0, targets: new Map() };
+    });
+
+    // +2/+2 until end of turn: 2/2 -> 4/4, then it fights the Ogre — 4 damage out, 3 back.
+    expect(bear.damageMarked).toBe(3);
+    expect(ogre.damageMarked).toBe(4);
+    expect(ctx.state.battlefield.some((p) => p.cardId === ogre.cardId)).toBe(false);
+    expect(ctx.state.battlefield.some((p) => p.cardId === bear.cardId)).toBe(true);
+  });
+
+  it('with no legal opposing creature, still offers the cast and just pumps', () => {
+    const ctx = pod();
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P1', forest());
+    const bearCard = oracle({ name: 'Test Bear', typeLine: 'Creature — Bear', power: '2', toughness: '2' });
+    const bear = spawn(ctx, 'P1', bearCard);
+    conjure(ctx, 'P1', primalMight(), 'hand');
+
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = d.options.findIndex(
+        (o) => o.description.includes('Cast Primal Might') && o.description.includes('X=2'),
+      );
+      if (i >= 0) {
+        const slot = d.options[i]?.targets?.[0];
+        const target = slot?.options.find((id) => id === bear.id);
+        return { index: i, targets: new Map(target === undefined ? [] : [[0, target]]) };
+      }
+      return { index: 0, targets: new Map() };
+    });
+
+    expect(ctx.state.battlefield.some((p) => p.cardId === bear.cardId)).toBe(true);
+    expect(bear.damageMarked).toBe(0);
+  });
+});
+
+describe('Foe-Razer Regent', () => {
+  const foeRazerRegent = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Foe-Razer Regent',
+      oracleId: 'oracle-foe-razer-regent',
+      typeLine: 'Creature — Dragon',
+      manaCost: '{5}{G}{G}',
+      power: '4',
+      toughness: '5',
+      oracleText:
+        "Flying\nWhen ~ enters, you may have it fight target creature you don't control.\nWhenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step.",
+    });
+
+  it('fights an opposing creature on ETB and gets two +1/+1 counters at the next end step', () => {
+    const ctx = pod();
+    const ogreCard = oracle({ name: 'Test Ogre', typeLine: 'Creature — Ogre', power: '3', toughness: '4' });
+    const ogre = spawn(ctx, 'P2', ogreCard);
+    const regent = spawn(ctx, 'P1', foeRazerRegent());
+
+    // Queue and resolve the ETB trigger by hand (mirrors the Kiora/Drakuseth harness pattern):
+    // accept the "you may", then choose the Ogre as the fight target.
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: regent.cardId,
+      sourceOracleId: regent.oracleId,
+      sourceName: regent.name,
+      ability: ctx.defs.get(regent.oracleId)!.triggers.find((t) => t.trigger?.when === 'enters')!,
+    });
+
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.decisionType === 'optionalTrigger') {
+        const yes = d.options.findIndex((o) => o.type === 'acceptTrigger');
+        return { index: yes, targets: new Map() };
+      }
+      if (d.decisionType === 'chooseTargets') {
+        return { index: 0, targets: new Map([[0, ogre.id]]) };
+      }
+      return { index: 0, targets: new Map() };
+    });
+
+    // Fight: Regent (4 power) deals 4 to the 4-toughness Ogre — dead. Ogre (3 power) deals 3
+    // to Regent, who survives at 5 toughness.
+    expect(ctx.state.battlefield.some((p) => p.cardId === ogre.cardId)).toBe(false);
+    expect(regent.damageMarked).toBe(3);
+    expect(regent.counters['+1/+1'] ?? 0).toBe(0);
+
+    // The fights-trigger should already have registered a delayed "at the next end step" —
+    // simulate that end step the same way delayed-triggers.test.ts does, by firing it directly.
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    expect(ctx.state.delayedTriggers[0]?.when).toBe('endStep');
+    const delayed = ctx.state.delayedTriggers.pop()!;
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: delayed.sourceCardId,
+          name: 'Delayed Trigger',
+          oracleId: delayed.sourceOracleId,
+          controllerId: delayed.controllerId,
+        },
+        delayed.ability,
+        [],
+        delayed.targetId,
+      ),
+    );
+    expect(regent.counters['+1/+1']).toBe(2);
   });
 });

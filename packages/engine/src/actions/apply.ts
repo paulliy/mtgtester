@@ -26,7 +26,13 @@ import type {
   GameContext,
 } from '../state/types';
 import type { PriorityActionPayload } from './legal';
-import { computeTargetOptions, costReductionFor, manaPortionOf, validateChosenTargets } from './legal';
+import {
+  computeTargetOptions,
+  costReductionFor,
+  manaPortionOf,
+  pickCountSlotTargets,
+  validateChosenTargets,
+} from './legal';
 import { resetOpponentYields } from '../turn/priority';
 
 /**
@@ -201,6 +207,31 @@ export function* applyPriorityAction(
         targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
       }
 
+      // CR 601.2b: every target, ordinary AND variable-count, is chosen as part of
+      // announcement — before costs are paid. `validateChosenTargets` above already handled
+      // the ordinary slots; a count slot ("up to one target creature", Primal Might) is picked
+      // here the same way `pushTriggerOnStack` picks one for a triggered ability.
+      const countTargets: Record<number, ObjectId[]> = {};
+      for (const [i, spec] of ability.targets.entries()) {
+        if (spec.count === undefined) continue;
+        const alreadyChosen = new Set<ObjectId>([
+          ...targets.filter((t): t is ObjectId => t !== undefined),
+          ...Object.values(countTargets).flat(),
+        ]);
+        const picked = yield* pickCountSlotTargets(
+          ctx,
+          spec,
+          player.id,
+          obj.name,
+          alreadyChosen,
+          spec.count.max,
+        );
+        if (picked.length < spec.count.min) {
+          throw new Error(`engine bug: could not meet minimum targets for slot ${i} of ${obj.name}`);
+        }
+        countTargets[i] = picked;
+      }
+
       yield* payManaCost(ctx, player, cost, { kind: 'castSpell', oracleId: obj.oracleId });
 
       if (payload.fromCommand) {
@@ -228,6 +259,7 @@ export function* applyPriorityAction(
         isCommanderCast: payload.fromCommand,
         ...(payload.alternativeCast ? { alternativeCastKind: payload.alternativeCast } : {}),
         ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
+        ...(Object.keys(countTargets).length > 0 ? { countTargets } : {}),
       };
       s.stack.push(spellEntry);
       emit(

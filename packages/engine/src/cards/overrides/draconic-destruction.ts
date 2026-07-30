@@ -77,6 +77,67 @@ registerOverride({
 });
 
 registerOverride({
+  oracleId: 'oracle-primal-might',
+  name: 'Primal Might',
+  handledLines: [
+    "Target creature you control gets +X/+X until end of turn. Then it fights up to one target creature you don't control.",
+  ],
+  def: {
+    spellAbility: {
+      kind: 'spell',
+      targets: [
+        { kind: 'creature', controller: 'you' },
+        { kind: 'creature', controller: 'opponent', count: { min: 0, max: 1 } },
+      ],
+      effects: [
+        { op: 'pumpUntilEot', target: 0, power: { kind: 'xValue' }, toughness: { kind: 'xValue' } },
+        { op: 'fightUpToOneChosen', a: 0, bSlot: 1 },
+      ],
+    },
+  },
+});
+
+registerOverride({
+  oracleId: 'oracle-foe-razer-regent',
+  name: 'Foe-Razer Regent',
+  handledLines: [
+    "When ~ enters, you may have it fight target creature you don't control.",
+    'Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step.',
+  ],
+  def: {
+    triggers: [
+      {
+        kind: 'triggered',
+        optional: true,
+        trigger: { when: 'enters', subject: SELF_SUBJECT },
+        targets: [{ kind: 'creature', controller: 'opponent' }],
+        effects: [{ op: 'fight', a: 'self', b: 0 }],
+        description: 'you may have it fight target creature you don\'t control',
+      },
+      {
+        kind: 'triggered',
+        trigger: { when: 'fights', subject: { kind: 'permanent', selector: YOURS } },
+        targets: [],
+        effects: [
+          {
+            op: 'registerDelayedTrigger',
+            when: 'endStep',
+            expiry: 'endStep',
+            target: 'triggerObject',
+            ability: {
+              kind: 'triggered',
+              targets: [],
+              effects: [{ op: 'putCounters', target: 'triggerObject', counter: '+1/+1', count: 2 }],
+              description: 'put two +1/+1 counters on it',
+            },
+          },
+        ],
+      },
+    ],
+  },
+});
+
+registerOverride({
   oracleId: 'oracle-spit-flame',
   name: 'Spit Flame',
   handledLines: [

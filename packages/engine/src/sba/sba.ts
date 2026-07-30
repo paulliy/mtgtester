@@ -8,7 +8,7 @@
  */
 
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
-import { computeTargetOptions } from '../actions/legal';
+import { computeTargetOptions, describeTargetForLog, pickCountSlotTargets } from '../actions/legal';
 import type { Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { computeCharacteristics } from '../effects/continuous';
@@ -327,13 +327,6 @@ function* placePendingTriggers(ctx: GameContext): GameGen<boolean> {
  * the stack. So a slot with zero legal options means the trigger never arrives at all —
  * distinct from fizzling, which happens later if the chosen targets stop being legal.
  */
-/** A permanent's or player's name, for a variable-target decision's prompt/description. */
-function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
-  const perm = ctx.state.battlefield.find((p) => p.id === id);
-  if (perm !== undefined) return perm.name;
-  return ctx.state.players.find((p) => p.id === id)?.id ?? id;
-}
-
 function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen<void> {
   const s = ctx.state;
   const specs = trigger.ability.targets;
@@ -415,30 +408,14 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
           });
     const effectiveMax = total === undefined ? count.max : Math.min(count.max, total);
 
-    const picked: ObjectId[] = [];
-    for (let k = 0; k < effectiveMax; k++) {
-      const candidates = computeTargetOptions(ctx, spec, trigger.controllerId).filter(
-        (id) => !alreadyChosen.has(id) && !picked.includes(id),
-      );
-      if (candidates.length === 0) break;
-      const canStop = picked.length >= count.min;
-      const outcome = yield {
-        decisionType: 'general',
-        player: trigger.controllerId,
-        prompt:
-          `${trigger.sourceName}: choose ${picked.length > 0 ? 'another' : 'a'} target ` +
-          `(${picked.length}/${effectiveMax} chosen)${canStop ? ', or stop choosing' : ''}.`,
-        options: [
-          ...candidates.map((id) => ({
-            type: 'pickTarget',
-            description: `Target ${describeTargetForLog(ctx, id)}`,
-          })),
-          ...(canStop ? [{ type: 'decline', description: 'Choose no more targets' }] : []),
-        ],
-      };
-      if (outcome.index >= candidates.length) break;
-      picked.push(candidates[outcome.index] as ObjectId);
-    }
+    const picked = yield* pickCountSlotTargets(
+      ctx,
+      spec,
+      trigger.controllerId,
+      trigger.sourceName,
+      alreadyChosen,
+      effectiveMax,
+    );
 
     // CR 603.3d applies to a count slot too: if even the minimum could not be met, the whole
     // ability never arrives (our fixtures always have min 0, so this never fires today).

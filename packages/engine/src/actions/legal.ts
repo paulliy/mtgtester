@@ -13,7 +13,7 @@ import type { Color, ObjectId, OracleId, PlayerId } from '@mtg/shared';
 import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../cards/definition';
 import type { SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
-import type { EngineActionOption } from '../decisions';
+import type { EngineActionOption, GameGen } from '../decisions';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import { addGeneric, canPay, describeManaCost, emptyCost, planPayment, subtractColored, subtractGeneric, withX } from '../mana/cost';
@@ -294,11 +294,72 @@ function computeCastTargets(
   const slots: { slot: number; options: ObjectId[] }[] = [];
   let slotNum = 0;
   for (const spec of def.spellAbility?.targets ?? []) {
+    // Variable-count slots ("up to one target creature you don't control" — Primal Might) are
+    // NOT required here: CR 601.2c only demands a legal target for an ORDINARY slot. A count
+    // slot with `min: 0` is legal to announce with nothing chosen, and the actual picking
+    // happens via `pickCountSlotTargets` when the spell is cast (`apply.ts`), the same way
+    // `pushTriggerOnStack` already does it for triggered abilities.
+    if (spec.count !== undefined) {
+      slotNum++;
+      continue;
+    }
     const options = computeTargetOptions(ctx, spec, casterId);
     if (options.length === 0) return null; // can't cast without a legal target (CR 601.2c)
     slots.push({ slot: slotNum++, options });
   }
   return slots;
+}
+
+/** A permanent's or player's name, for a variable-target decision's prompt/description. */
+export function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
+  const perm = ctx.state.battlefield.find((p) => p.id === id);
+  if (perm !== undefined) return perm.name;
+  return ctx.state.players.find((p) => p.id === id)?.id ?? id;
+}
+
+/**
+ * Pick a variable-count target slot's targets one at a time (CR 601.2b/603.3d): the count
+ * itself is a choice, asked as a bounded sequence of decisions rather than a fixed option
+ * list, because the number of legal candidates shrinks as each one is picked.
+ *
+ * Shared between `pushTriggerOnStack` (triggered abilities) and `applyPriorityAction`'s
+ * `castSpell` case (spells) — the announcement-time rule is identical for both (CR 601.2b vs
+ * 603.3d), so one generator covers both call sites instead of two copies drifting apart.
+ */
+export function* pickCountSlotTargets(
+  ctx: GameContext,
+  spec: TargetSpec,
+  controllerId: PlayerId,
+  sourceName: string,
+  alreadyChosen: ReadonlySet<ObjectId>,
+  effectiveMax: number,
+): GameGen<ObjectId[]> {
+  const min = spec.count?.min ?? 0;
+  const picked: ObjectId[] = [];
+  for (let k = 0; k < effectiveMax; k++) {
+    const candidates = computeTargetOptions(ctx, spec, controllerId).filter(
+      (id) => !alreadyChosen.has(id) && !picked.includes(id),
+    );
+    if (candidates.length === 0) break;
+    const canStop = picked.length >= min;
+    const outcome = yield {
+      decisionType: 'general',
+      player: controllerId,
+      prompt:
+        `${sourceName}: choose ${picked.length > 0 ? 'another' : 'a'} target ` +
+        `(${picked.length}/${effectiveMax} chosen)${canStop ? ', or stop choosing' : ''}.`,
+      options: [
+        ...candidates.map((id) => ({
+          type: 'pickTarget',
+          description: `Target ${describeTargetForLog(ctx, id)}`,
+        })),
+        ...(canStop ? [{ type: 'decline', description: 'Choose no more targets' }] : []),
+      ],
+    };
+    if (outcome.index >= candidates.length) break;
+    picked.push(candidates[outcome.index] as ObjectId);
+  }
+  return picked;
 }
 
 /**
@@ -794,9 +855,17 @@ export function validateChosenTargets(
   casterId: PlayerId,
   chosen: ReadonlyMap<number, ObjectId>,
 ): ObjectId[] {
+  // By INDEX, not `.push`: a count slot (skipped below, picked separately via
+  // `pickCountSlotTargets`) has no single id to place here, and leaving its position empty
+  // — rather than letting every later ordinary slot shift down to fill the gap — is what keeps
+  // `ability.targets[r]` and this array aligned for `EffectRef` numbers past it.
   const targets: ObjectId[] = [];
   let slotNum = 0;
   for (const spec of def.spellAbility?.targets ?? []) {
+    if (spec.count !== undefined) {
+      slotNum++;
+      continue;
+    }
     const choice = chosen.get(slotNum);
     if (choice === undefined) {
       throw new Error(`missing target for slot ${slotNum} of ${def.name}`);
@@ -805,7 +874,7 @@ export function validateChosenTargets(
     if (!legal.includes(choice)) {
       throw new Error(`illegal target ${choice} for slot ${slotNum} of ${def.name}`);
     }
-    targets.push(choice);
+    targets[slotNum] = choice;
     slotNum++;
   }
   return targets;

@@ -34,6 +34,7 @@ import {
   createToken,
   moveObject,
   playerById,
+  queueTriggersForEvent,
   spellManaValue,
   tokenSpecCopying,
 } from '../state/objects';
@@ -205,6 +206,34 @@ function dealDamageToObject(
     sourceHasDeathtouch: false,
     sourceHasLifelink: false,
   });
+}
+
+/**
+ * "Fight" (CR 701.12): each creature deals damage equal to its power to the other, at the
+ * same time — neither is combat damage, and each hit uses ITS OWN deathtouch/lifelink/color,
+ * not the ability's. Sequential `dealDamageToCreature` calls are still "simultaneous" for
+ * rules purposes: nothing here checks state-based actions mid-way, so a creature that would
+ * die to its share still deals its own damage back first (matching `damageEach`'s reasoning).
+ */
+function doFight(ctx: GameContext, permA: EnginePermanent, permB: EnginePermanent): void {
+  const aPT = effectivePT(ctx, permA);
+  const bPT = effectivePT(ctx, permB);
+  dealDamageToCreature(ctx, permanentSource(permA), permB, aPT.power, {
+    combat: false,
+    sourceHasDeathtouch: hasKeyword(ctx, permA, 'deathtouch'),
+    sourceHasLifelink: hasKeyword(ctx, permA, 'lifelink'),
+    sourceColors: colorsOf(ctx, permA),
+  });
+  dealDamageToCreature(ctx, permanentSource(permB), permA, bPT.power, {
+    combat: false,
+    sourceHasDeathtouch: hasKeyword(ctx, permB, 'deathtouch'),
+    sourceHasLifelink: hasKeyword(ctx, permB, 'lifelink'),
+    sourceColors: colorsOf(ctx, permB),
+  });
+  emit(ctx, 'fight', { a: permA.name, b: permB.name });
+  // "Whenever a creature you control fights" (Foe-Razer Regent) — both participants are
+  // subjects of the SAME event, exactly like simultaneous attackers/combat damage above.
+  queueTriggersForEvent(ctx, 'fights', [{ permanent: permA }, { permanent: permB }]);
 }
 
 export function gainLife(ctx: GameContext, player: EnginePlayerState, amount: number): void {
@@ -415,6 +444,14 @@ export function* executeAbility(
       }
       return perm.id;
     }
+    if (r === 'self') {
+      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      if (perm === undefined) {
+        debug(ctx, 'effect', `${source.name}: self has left the battlefield — skipped`);
+        return null;
+      }
+      return perm.id;
+    }
     const cachedCardId = refCardIdCache.get(r);
     if (cachedCardId !== undefined) {
       return cachedCardId === null ? null : (findObjectByCardId(ctx, cachedCardId)?.id ?? null);
@@ -440,22 +477,24 @@ export function* executeAbility(
         const t = ref(effect.target);
         if (t === null) break;
         const perm = findPermanent(ctx, t) as EnginePermanent;
+        const power = amountOf(effect.power);
+        const toughness = amountOf(effect.toughness);
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
-          description: `${perm.name} gets ${signed(effect.power)}/${signed(effect.toughness)} until end of turn`,
+          description: `${perm.name} gets ${signed(power)}/${signed(toughness)} until end of turn`,
           targetCardIds: [perm.cardId],
           kind: 'ptDelta',
-          power: effect.power,
-          toughness: effect.toughness,
+          power,
+          toughness,
           timestamp: ctx.state.nextTimestamp++,
         });
         const pt = effectivePT(ctx, perm);
         emit(ctx, 'pump', {
           source: source.name,
           target: perm.name,
-          power: effect.power,
-          toughness: effect.toughness,
+          power,
+          toughness,
           nowPower: pt.power,
           nowToughness: pt.toughness,
         });
@@ -850,6 +889,30 @@ export function* executeAbility(
           player: controller.id,
           cards: exiled.map((c) => c.name),
         });
+        break;
+      }
+      case 'fight': {
+        const aId = ref(effect.a);
+        const bId = ref(effect.b);
+        if (aId === null || bId === null) break;
+        const permA = findPermanent(ctx, aId);
+        const permB = findPermanent(ctx, bId);
+        if (permA === undefined || permB === undefined) break;
+        doFight(ctx, permA, permB);
+        break;
+      }
+      case 'fightUpToOneChosen': {
+        const aId = ref(effect.a);
+        if (aId === null) break;
+        const permA = findPermanent(ctx, aId);
+        if (permA === undefined) break;
+        const bId = (countTargets?.[effect.bSlot] ?? [])[0];
+        if (bId === undefined) break;
+        const spec = ability.targets[effect.bSlot];
+        if (spec === undefined || !isTargetStillLegal(ctx, bId, spec, source.controllerId)) break;
+        const permB = findPermanent(ctx, bId);
+        if (permB === undefined) break;
+        doFight(ctx, permA, permB);
         break;
       }
       case 'returnSelfFromGraveyardToHand': {

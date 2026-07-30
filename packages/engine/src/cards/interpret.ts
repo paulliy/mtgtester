@@ -481,8 +481,8 @@ function parseEffectSentence(
         {
           op: 'pumpUntilEot',
           target: alloc('creature'),
-          power: Number(m[1]),
-          toughness: Number(m[2]),
+          power: constant(Number(m[1])),
+          toughness: constant(Number(m[2])),
         },
       ];
       if (m[3] !== undefined) {
