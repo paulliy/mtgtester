@@ -61,6 +61,27 @@ function fixtureRequest(): DecisionRequest {
       { id: 0, type: 'pass', description: 'Pass priority' },
       { id: 1, type: 'castSpell', description: 'Cast Grizzly Bears ({1}{G})' },
     ],
+    presentation: {
+      layout: 'cards',
+      source: { cardId: 'c1', name: 'Grizzly Bears', scryfallId: 'scry-1' },
+      actions: {
+        1: {
+          verb: 'Cast',
+          subjects: [
+            {
+              kind: 'card',
+              card: {
+                objectId: 'c1',
+                name: 'Grizzly Bears',
+                scryfallId: 'scry-1',
+                typeLine: 'Creature — Bear',
+                zone: 'hand',
+              },
+            },
+          ],
+        },
+      },
+    },
   };
 }
 
@@ -78,6 +99,20 @@ describe('Context Assembler', () => {
     expect(parsedUser.ctx.reqId).toBe('g1-t1-d1');
     expect(parsedUser.you.seat).toBe('P1');
     expect(parsedUser.legalActions).toHaveLength(2);
+  });
+
+  it('never sends presentation/scryfallId data to the model (browser-only, Workstream 3)', () => {
+    const prompt = assemblePrompt(fixtureRequest(), fixtureView());
+    const userJson = prompt.messages[1]!.content;
+    expect(userJson).not.toContain('presentation');
+    expect(userJson).not.toContain('scryfallId');
+    expect(userJson).not.toContain('scry-1');
+
+    const strategistPrompt = assembleStrategistPrompt(fixtureRequest(), fixtureView(), []);
+    const strategistJson = strategistPrompt.messages[1]!.content;
+    expect(strategistJson).not.toContain('presentation');
+    expect(strategistJson).not.toContain('scryfallId');
+    expect(strategistJson).not.toContain('scry-1');
   });
 
   it('includes hand oracle text in you section when text is present', () => {

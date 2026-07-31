@@ -11,6 +11,8 @@
 
 import type {
   ActionInteraction,
+  ActionPresentation,
+  DecisionPresentation,
   DecisionRequest,
   DecisionResponse,
   EngineStep,
@@ -241,6 +243,19 @@ export class Engine implements EngineDriver {
   }
 
   /**
+   * Cancel an active "pass and yield until end of turn" out-of-band — the player wants a
+   * priority window back without waiting for a stop-list event to trigger it (brief —
+   * player-experience overhaul, Workstream 2). Returns whether anything changed, so the caller
+   * knows whether the yield banner and board need republishing.
+   */
+  cancelYield(playerId: string): boolean {
+    const player = this.ctx.state.players.find((p) => p.id === playerId);
+    if (player === undefined || player.yieldUntilEndOfTurn !== true) return false;
+    player.yieldUntilEndOfTurn = false;
+    return true;
+  }
+
+  /**
    * Hand over the board states recorded for each spectator log line since the last call, and
    * clear them from the game state.
    *
@@ -304,6 +319,7 @@ export class Engine implements EngineDriver {
 
   private buildRequest(decision: PendingDecision): DecisionRequest {
     const s = this.ctx.state;
+    const presentedActions: Record<number, ActionPresentation> = {};
     const legalActions: LegalAction[] = decision.options.map((opt, i) => {
       const action: LegalAction = {
         id: i,
@@ -313,8 +329,32 @@ export class Engine implements EngineDriver {
       };
       if (opt.targets !== undefined && opt.targets.length > 0) action.targets = opt.targets;
       if (opt.data !== undefined) action.data = opt.data;
+      if (opt.presentation !== undefined) presentedActions[i] = opt.presentation;
       return action;
     });
+
+    const hasPresentation =
+      decision.presentationSource !== undefined ||
+      decision.presentationCombat !== undefined ||
+      Object.keys(presentedActions).length > 0;
+    const presentation: DecisionPresentation | undefined = hasPresentation
+      ? {
+          layout:
+            decision.presentationCombat !== undefined
+              ? 'combat'
+              : Object.values(presentedActions).some((a) => a.subjects[0]?.kind === 'card')
+                ? 'cards'
+                : 'choices',
+          ...(decision.presentationSource !== undefined
+            ? { source: decision.presentationSource }
+            : {}),
+          ...(Object.keys(presentedActions).length > 0 ? { actions: presentedActions } : {}),
+          ...(decision.presentationCombat !== undefined
+            ? { combat: decision.presentationCombat }
+            : {}),
+        }
+      : undefined;
+
     return {
       requestId: `${s.gameId}-t${s.turnNumber}-d${s.nextDecisionNum++}`,
       gameId: s.gameId,
@@ -326,6 +366,7 @@ export class Engine implements EngineDriver {
       decisionType: decision.decisionType,
       prompt: decision.prompt,
       legalActions,
+      ...(presentation !== undefined ? { presentation } : {}),
     };
   }
 }

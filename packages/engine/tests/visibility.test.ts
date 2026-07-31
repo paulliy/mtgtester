@@ -191,4 +191,32 @@ describe('PlayerView visibility (brief §7.1)', () => {
     expect(spellInHand?.power).toBeUndefined();
     expect(spellInHand?.toughness).toBeUndefined();
   });
+
+  it('shows exile publicly, except a face-down card stays hidden from everyone but its owner', () => {
+    const ctx = createGame(secretPod());
+    const ordinary = conjure(
+      ctx,
+      'P2',
+      oracle({ name: 'Public Exile Card', typeLine: 'Instant', power: null, toughness: null }),
+      'exile',
+    );
+    const hidden = conjure(
+      ctx,
+      'P2',
+      oracle({ name: 'Hidden Away Card', typeLine: 'Instant', power: null, toughness: null }),
+      'exile',
+    );
+    hidden.attachedToCardId = 'some-hideaway-source';
+    void ordinary;
+
+    const ownerView = buildPlayerView(ctx, 'P2');
+    const viewerView = buildPlayerView(ctx, 'P1');
+
+    expect(ownerView.exile.find((c) => c.id === hidden.id)?.name).toBe('Hidden Away Card');
+    expect(viewerView.exile.find((c) => c.id === hidden.id)?.name).toBe('Face-down card');
+
+    // The ordinary (not face-down) exiled card is visible to everyone.
+    expect(viewerView.exile.some((c) => c.name === 'Public Exile Card')).toBe(true);
+    expect(JSON.stringify(viewerView)).not.toContain('Hidden Away Card');
+  });
 });

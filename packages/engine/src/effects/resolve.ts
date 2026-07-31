@@ -30,6 +30,8 @@ import type { ParsedManaCost } from '../mana/cost';
 import { addMana, removeMana, selectEntriesToSpend } from '../mana/pool';
 import type { ManaEntry, PaymentPurpose } from '../cards/ability';
 import { debug, emit } from '../log/log';
+import { cardOption, plainOption, playerOption, presentedSource } from '../present';
+import { chooseCard } from './choose';
 import {
   createToken,
   moveObject,
@@ -287,18 +289,15 @@ export function* drawCards(
 /** Discard N cards, one controller choice at a time (CR 701.8a). */
 function* discardCards(ctx: GameContext, player: EnginePlayerState, count: number): GameGen<void> {
   for (let i = 0; i < count && player.hand.length > 0; i++) {
-    const outcome = yield {
-      decisionType: 'general',
+    const chosen = yield* chooseCard(ctx, {
       player: player.id,
       prompt: `Discard a card (${i + 1} of ${count}).`,
-      options: player.hand.map((card) => ({
-        type: 'discard',
-        description: `Discard ${card.name}`,
-        payload: card.id,
-      })),
-    };
-    const card = player.hand[outcome.index] as EngineCardObject | undefined;
-    if (card === undefined) throw new Error('engine bug: discard choice was not in hand');
+      cards: player.hand,
+      type: 'discard',
+      verb: 'Discard',
+    });
+    if (chosen === null) throw new Error('engine bug: discard choice was not in hand');
+    const card = chosen as EngineCardObject;
     emit(ctx, 'discard', { player: player.id, name: card.name, cardId: card.cardId }, player.id);
     yield* moveObject(ctx, card, { zone: 'graveyard' });
   }
@@ -1245,6 +1244,28 @@ export function* executeAbility(
         emit(ctx, 'becomeCreature', { source: source.name, target: perm.name });
         break;
       }
+      case 'crewVehicle': {
+        const t = ref('source');
+        if (t === null) break;
+        const perm = findPermanent(ctx, t) as EnginePermanent | undefined;
+        if (perm === undefined) break;
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${perm.name} becomes an artifact creature until end of turn`,
+          targetCardIds: [perm.cardId],
+          kind: 'becomeCreature',
+          becomeCreature: {
+            addSubtypes: [],
+            power: perm.power ?? 0,
+            toughness: perm.toughness ?? 0,
+            addKeywords: [],
+          },
+          timestamp: ctx.state.nextTimestamp++,
+        });
+        emit(ctx, 'becomeCreature', { source: source.name, target: perm.name });
+        break;
+      }
       case 'fightUpToOneChosen': {
         const aId = ref(effect.a);
         const bId = countTargets?.[effect.bSlot]?.[0];
@@ -1443,9 +1464,12 @@ export function* executeAbility(
         break;
       }
       case 'millAndReturnSpells': {
+        // `library[0]` is the top of the library everywhere else in the engine (`drawCards`,
+        // `moveObject`'s `libraryPosition: 'top'` via `unshift`) — this read the OTHER end,
+        // milling from the bottom instead of the top.
         const n = Math.min(6, controller.library.length);
         for (let i = 0; i < n; i++) {
-          const topCard = controller.library[controller.library.length - 1] as EngineCardObject;
+          const topCard = controller.library[0] as EngineCardObject;
           yield* moveObject(ctx, topCard, { zone: 'graveyard' });
         }
         for (let pass = 0; pass < 2; pass++) {
@@ -1515,8 +1539,15 @@ export function* executeAbility(
         const top4 = player.library.slice(0, 4);
         if (top4.length === 0) break;
         const chosenCard =
-          top4.find((c) => !getDefByOracleId(ctx, c.oracleId, c.name).types.includes('Land')) ??
-          top4[0]!;
+          top4.length === 1
+            ? top4[0]!
+            : ((yield* chooseCard(ctx, {
+                player: source.controllerId,
+                prompt: 'Look at the top four cards of your library. Exile one of them face down.',
+                cards: top4,
+                type: 'hideawayExile',
+                verb: 'Exile face down',
+              })) ?? top4[0]!);
         const moved = (yield* moveObject(ctx, chosenCard, { zone: 'exile' })) as EngineCardObject | null;
         if (moved !== null) {
           moved.attachedToCardId = source.cardId;
@@ -1844,14 +1875,17 @@ function* searchLibrary(
       decisionType: 'general',
       player: player.id,
       prompt: `${source.name}: search your library for a card to put ${where}.`,
+      presentationSource: presentedSource(ctx, source),
       options: [
-        ...matches.map((card) => ({
-          type: 'findCard',
-          description: `Put ${card.name} ${where}`,
-          payload: card.id,
-        })),
+        ...matches.map((card) =>
+          cardOption(ctx, card, {
+            type: 'findCard',
+            description: `Put ${card.name} ${where}`,
+            verb: `Put ${where}`,
+          }),
+        ),
         // CR 701.19c: searching never obliges you to find.
-        { type: 'findNothing', description: 'Find nothing' },
+        plainOption({ type: 'findNothing', description: 'Find nothing', verb: 'Find nothing', role: 'decline' }),
       ],
     };
     if (outcome.index >= matches.length) break;
@@ -1879,6 +1913,7 @@ function* searchLibrary(
  * always an explicit option, so callers can decline the extra decision work.
  */
 function* orderForLibrary(
+  ctx: GameContext,
   source: EffectSource,
   player: EnginePlayerState,
   cards: EngineCardObject[],
@@ -1889,9 +1924,20 @@ function* orderForLibrary(
     decisionType: 'general',
     player: player.id,
     prompt: `${source.name}: reorder the cards on the ${destination}, or keep their current order?`,
+    presentationSource: presentedSource(ctx, source),
     options: [
-      { type: 'keepOrder', description: `Keep the current ${destination} order` },
-      { type: 'reorder', description: `Choose a new ${destination} order` },
+      plainOption({
+        type: 'keepOrder',
+        description: `Keep the current ${destination} order`,
+        verb: 'Keep current order',
+        role: 'decline',
+      }),
+      plainOption({
+        type: 'reorder',
+        description: `Choose a new ${destination} order`,
+        verb: 'Choose a new order',
+        role: 'affirm',
+      }),
     ],
   };
   if (initial.index === 0) return cards;
@@ -1899,19 +1945,18 @@ function* orderForLibrary(
   const remaining = [...cards];
   const ordered: EngineCardObject[] = [];
   while (remaining.length > 0) {
-    const outcome = yield {
-      decisionType: 'general',
+    const chosen = yield* chooseCard(ctx, {
       player: player.id,
       prompt: `${source.name}: choose the next card on the ${destination}.`,
-      options: remaining.map((card) => ({
-        type: 'orderLibrary',
-        description: `Put ${card.name} next on the ${destination}`,
-        payload: card.id,
-      })),
-    };
-    const card = remaining.splice(outcome.index, 1)[0];
-    if (card === undefined) throw new Error('engine bug: library ordering choice was invalid');
-    ordered.push(card);
+      cards: remaining,
+      type: 'orderLibrary',
+      verb: `Put next on the ${destination}`,
+      describe: (card) => `Put ${card.name} next on the ${destination}`,
+    });
+    if (chosen === null) throw new Error('engine bug: library ordering choice was invalid');
+    const idx = remaining.findIndex((c) => c.id === chosen.id);
+    remaining.splice(idx, 1);
+    ordered.push(chosen as EngineCardObject);
   }
   return ordered;
 }
@@ -1931,15 +1976,26 @@ function* scry(
       decisionType: 'general',
       player: player.id,
       prompt: `${source.name}: scry — keep ${card.name} on top, or put it on the bottom?`,
+      presentationSource: presentedSource(ctx, source),
       options: [
-        { type: 'scryKeep', description: `Keep ${card.name} on top` },
-        { type: 'scryBottom', description: `Put ${card.name} on the bottom` },
+        cardOption(ctx, card, {
+          type: 'scryKeep',
+          description: `Keep ${card.name} on top`,
+          verb: 'Keep on top',
+          role: 'affirm',
+        }),
+        cardOption(ctx, card, {
+          type: 'scryBottom',
+          description: `Put ${card.name} on the bottom`,
+          verb: 'Put on the bottom',
+          role: 'decline',
+        }),
       ],
     };
     (outcome.index === 0 ? keep : bottom).push(card);
   }
-  player.library.unshift(...(yield* orderForLibrary(source, player, keep, 'top')));
-  player.library.push(...(yield* orderForLibrary(source, player, bottom, 'bottom')));
+  player.library.unshift(...(yield* orderForLibrary(ctx, source, player, keep, 'top')));
+  player.library.push(...(yield* orderForLibrary(ctx, source, player, bottom, 'bottom')));
   emit(ctx, 'scry', { player: player.id, looked: looked.length, bottomed: bottom.length }, player.id);
 }
 
@@ -1957,9 +2013,20 @@ function* surveil(
       decisionType: 'general',
       player: player.id,
       prompt: `${source.name}: surveil — keep ${card.name} on top, or put it into your graveyard?`,
+      presentationSource: presentedSource(ctx, source),
       options: [
-        { type: 'surveilKeep', description: `Keep ${card.name} on top` },
-        { type: 'surveilGraveyard', description: `Put ${card.name} into your graveyard` },
+        cardOption(ctx, card, {
+          type: 'surveilKeep',
+          description: `Keep ${card.name} on top`,
+          verb: 'Keep on top',
+          role: 'affirm',
+        }),
+        cardOption(ctx, card, {
+          type: 'surveilGraveyard',
+          description: `Put ${card.name} into your graveyard`,
+          verb: 'Put into graveyard',
+          role: 'decline',
+        }),
       ],
     };
     if (outcome.index === 0) {
@@ -1972,7 +2039,7 @@ function* surveil(
       emit(ctx, 'mill', { player: player.id, cardId: card.cardId, name: card.name }, player.id);
     }
   }
-  player.library.unshift(...(yield* orderForLibrary(source, player, keep, 'top')));
+  player.library.unshift(...(yield* orderForLibrary(ctx, source, player, keep, 'top')));
   emit(ctx, 'surveil', { player: player.id, looked: looked.length }, player.id);
 }
 
@@ -1989,9 +2056,24 @@ function* proliferate(
       decisionType: 'general',
       player: controller.id,
       prompt: `${source.name}: proliferate ${perm.name}?`,
+      presentationSource: presentedSource(ctx, source),
       options: [
-        { type: 'proliferate', description: `Proliferate ${perm.name}`, payload: perm.id },
-        { type: 'skipProliferate', description: `Do not proliferate ${perm.name}`, payload: perm.id },
+        cardOption(ctx, perm, {
+          type: 'proliferate',
+          description: `Proliferate ${perm.name}`,
+          payload: perm.id,
+          verb: 'Proliferate',
+          role: 'affirm',
+          controller: perm.controllerId,
+        }),
+        cardOption(ctx, perm, {
+          type: 'skipProliferate',
+          description: `Do not proliferate ${perm.name}`,
+          payload: perm.id,
+          verb: 'Skip',
+          role: 'decline',
+          controller: perm.controllerId,
+        }),
       ],
     };
     if (outcome.index === 0) {
@@ -2004,9 +2086,22 @@ function* proliferate(
       decisionType: 'general',
       player: controller.id,
       prompt: `${source.name}: proliferate counters on ${player.id}?`,
+      presentationSource: presentedSource(ctx, source),
       options: [
-        { type: 'proliferate', description: `Proliferate ${player.id}`, payload: player.id },
-        { type: 'skipProliferate', description: `Do not proliferate ${player.id}`, payload: player.id },
+        playerOption(player.id, player.id, {
+          type: 'proliferate',
+          description: `Proliferate ${player.id}`,
+          payload: player.id,
+          verb: 'Proliferate',
+          role: 'affirm',
+        }),
+        playerOption(player.id, player.id, {
+          type: 'skipProliferate',
+          description: `Do not proliferate ${player.id}`,
+          payload: player.id,
+          verb: 'Skip',
+          role: 'decline',
+        }),
       ],
     };
     if (outcome.index !== 0) continue;
@@ -2260,6 +2355,42 @@ export function* payAbilityCosts(
         break; // paid separately — see `payActivationCosts`
       case 'sacrificeSelf':
         break; // applied below
+      case 'tapCreaturesTotalPower': {
+        let tappedPower = 0;
+        for (;;) {
+          const options = ctx.state.battlefield.filter((candidate) =>
+            candidate.id !== perm.id && candidate.controllerId === player.id && !candidate.tapped &&
+            computeCharacteristics(ctx, candidate).types.includes('Creature'),
+          );
+          const canStop = tappedPower >= cost.minPower;
+          if (!canStop && options.length === 0) {
+            throw new Error('engine bug: crew cost became unpayable');
+          }
+          const outcome = yield {
+            decisionType: 'general',
+            player: player.id,
+            prompt: canStop
+              ? `${perm.name}: tap another creature to crew (${tappedPower}/${cost.minPower} power), or stop.`
+              : `${perm.name}: choose a creature to tap to crew (need ${cost.minPower - tappedPower} more power).`,
+            options: [
+              ...options.map((candidate) => ({
+                type: 'tapCost',
+                description: `Tap ${candidate.name} (${effectivePT(ctx, candidate).power} power)`,
+                payload: candidate.id,
+              })),
+              ...(canStop ? [{ type: 'decline', description: 'Stop tapping creatures' }] : []),
+            ],
+          };
+          if (outcome.index >= options.length) break;
+          const chosen = options[outcome.index];
+          if (chosen === undefined) throw new Error('engine bug: crew tap choice was invalid');
+          tappedPower += effectivePT(ctx, chosen).power;
+          chosen.tapped = true;
+          queueTriggersForObject(ctx, 'becomesTapped', chosen);
+          emit(ctx, tapEvent, { name: chosen.name, cardId: chosen.cardId }, player.id);
+        }
+        break;
+      }
     }
   }
   if (costs.some((c) => c.kind === 'sacrificeSelf')) {

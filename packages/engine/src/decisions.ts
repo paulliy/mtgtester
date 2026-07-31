@@ -5,7 +5,15 @@
  * one legal option with no real target choice (brief §5.1 — no AI call for forced moves).
  */
 
-import type { ActionInteraction, DecisionType, ObjectId, PlayerId } from '@mtg/shared';
+import type {
+  ActionInteraction,
+  ActionPresentation,
+  CombatDeclaration,
+  DecisionType,
+  ObjectId,
+  PlayerId,
+  PresentedSource,
+} from '@mtg/shared';
 
 /** One legal option, engine-internal. `payload` is interpreted by the yielding code. */
 export interface EngineActionOption {
@@ -24,6 +32,13 @@ export interface EngineActionOption {
   data?: Record<string, unknown>;
   /** Structured player-UI affordance. Never consulted for legality. */
   interaction?: ActionInteraction;
+  /**
+   * Player-facing verb + subject for this option, hoisted into `DecisionRequest.presentation`
+   * (never `LegalAction` — see `PresentedCard`'s doc comment for why). Built with the helpers
+   * in `present.ts`. Absence is a UI gap, not a rules gap: the generic panel falls back to
+   * `description` when it's missing.
+   */
+  presentation?: ActionPresentation;
 }
 
 export interface PendingDecision {
@@ -31,6 +46,10 @@ export interface PendingDecision {
   player: PlayerId;
   prompt: string;
   options: EngineActionOption[];
+  /** The card/permanent this whole decision concerns, e.g. what triggered it. */
+  presentationSource?: PresentedSource;
+  /** Batch hint for a declare-attackers/blockers decision (`present.ts` docs the contract). */
+  presentationCombat?: CombatDeclaration;
 }
 
 /** The resolved choice fed back into the generator. */

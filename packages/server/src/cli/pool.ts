@@ -418,6 +418,9 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
     );
     console.log(`    Avg Latency:        ${aiStats.avgLatencyMs}ms`);
     console.log(
+      `      Strategist:       ${aiStats.avgStrategistLatencyMs}ms   Tactician: ${aiStats.avgTacticianLatencyMs}ms`,
+    );
+    console.log(
       `    Strategy / Plans:   ${aiStats.strategistCalls} strategist calls / ${aiStats.planExecutions} local plan steps`,
     );
     if (aiStats.totalCostUsd > 0) {

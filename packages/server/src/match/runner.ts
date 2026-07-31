@@ -105,6 +105,13 @@ export interface MatchRunnerHooks {
   onDebug?(entries: DebugEntry[]): void;
   /** Fires whenever engine events were flushed, even if none produce a visible log line. */
   onProgress?(frontierTurn: number): void;
+  /**
+   * Fires once per turn boundary, with the seat about to become active. The seam for an
+   * ahead-of-time strategist prefetch: everything between here and that seat's first real
+   * decision (end step, untap, upkeep, draw, every other seat's tactical calls) is overlap the
+   * synchronous decision path never had before.
+   */
+  onTurnBoundary?(turn: number, activePlayer: PlayerId): void;
 }
 
 export interface MatchRunnerOptions extends MatchRunnerHooks {
@@ -402,11 +409,14 @@ export class MatchRunner {
 
   /** Snapshot on every turn boundary — the scrubber's seekable positions (brief §10.1). */
   private onTurnAdvanced(): void {
-    const turn = this.opts.engine.getState().turnNumber;
+    const state = this.opts.engine.getState();
+    const turn = state.turnNumber;
     if (turn <= this.lastSnapshotTurn) return;
     this.frontierTurn = turn;
     this.captureSnapshot();
     this.captureManaMetrics(turn);
+    const activePlayer = state.turnOrder[state.activePlayerIndex];
+    if (activePlayer !== undefined) this.opts.onTurnBoundary?.(turn, activePlayer);
   }
 
   /** `terminal` re-snapshots a turn already captured, for the end-of-game board. */

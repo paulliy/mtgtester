@@ -254,6 +254,17 @@ export class GameServer {
         this.requireSession(socket)?.resumePlayerAbility(message.payload.key);
         return;
 
+      case 'cancelYield':
+        if (socket !== this.playerSocket) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'Only the active player connection may cancel a yield.' },
+          });
+          return;
+        }
+        this.requireSession(socket)?.cancelYield();
+        return;
+
       case 'resumeGame':
         if (
           this.session === null ||

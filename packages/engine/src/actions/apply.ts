@@ -28,7 +28,7 @@ import type {
 } from '../state/types';
 import type { PriorityActionPayload } from './legal';
 import { activationCostReductionFor, computeTargetOptions, costReductionFor, manaPortionOf, selectedModeTargetSlots, validateChosenTargets } from './legal';
-import { resetOpponentYields } from '../turn/priority';
+import { breakYieldsForStop } from '../turn/stops';
 
 /**
  * The `Ability` a cast actually puts on the stack. A permanent card can print "this spell can't
@@ -249,7 +249,6 @@ export function* applyPriorityAction(
         player.commanderCastCount[obj.cardId] = (player.commanderCastCount[obj.cardId] ?? 0) + 1;
       }
 
-      resetOpponentYields(ctx, player.id);
       removeFromCurrentZone(ctx, obj);
       const spellCard: EngineCardObject = {
         ...obj,
@@ -272,6 +271,7 @@ export function* applyPriorityAction(
         ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
       };
       s.stack.push(spellEntry);
+      breakYieldsForStop(ctx, spellEntry);
       emit(
         ctx,
         'castSpell',
@@ -330,8 +330,8 @@ export function* applyPriorityAction(
           sourceCardId: card.cardId,
           isCommanderCast: false,
         };
-        resetOpponentYields(ctx, player.id);
         s.stack.push(stackEntry);
+        breakYieldsForStop(ctx, stackEntry);
         emit(
           ctx,
           'activateAbility',
@@ -394,8 +394,8 @@ export function* applyPriorityAction(
       // Recorded at ANNOUNCEMENT (CR 602.5f), not on resolution: the restriction is on
       // activating, so countering the ability does not give the activation back.
       if (activated.oncePerTurn === true) perm.activationsThisTurn.push(payload.index);
-      resetOpponentYields(ctx, player.id);
       s.stack.push(stackEntry);
+      breakYieldsForStop(ctx, stackEntry);
       emit(
         ctx,
         'activateAbility',

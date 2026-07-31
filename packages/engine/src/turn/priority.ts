@@ -67,15 +67,6 @@ function shouldAutoPassPriority(ctx: GameContext, player: EnginePlayerState): bo
   return false;
 }
 
-/** Reset yield until end of turn for all opponents of a specified player. */
-export function resetOpponentYields(ctx: GameContext, controllerId: PlayerId): void {
-  for (const p of ctx.state.players) {
-    if (p.id !== controllerId) {
-      p.yieldUntilEndOfTurn = false;
-    }
-  }
-}
-
 /**
  * Empty every player's mana pool (end of each step and phase, CR 500.4).
  *

@@ -45,6 +45,7 @@ export const CLIENT_TO_SERVER_TYPES = [
   'submitPlayerAction',
   'yieldPlayerAbility',
   'resumePlayerAbility',
+  'cancelYield',
   'resumeGame',
 ] as const;
 export type ClientToServerType = (typeof CLIENT_TO_SERVER_TYPES)[number];
@@ -334,6 +335,7 @@ export type ClientToServerMessage =
   | { type: 'submitPlayerAction'; payload: SubmitPlayerActionPayload }
   | { type: 'yieldPlayerAbility'; payload: YieldPlayerAbilityPayload }
   | { type: 'resumePlayerAbility'; payload: ResumePlayerAbilityPayload }
+  | { type: 'cancelYield'; payload: Record<string, never> }
   | { type: 'resumeGame'; payload: ResumeGamePayload };
 
 /** Narrow a client message to one variant, e.g. `ClientMessageOf<'startGame'>`. */
@@ -468,6 +470,8 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
       );
     case 'resumePlayerAbility':
       return typeof payload['key'] === 'string' && payload['key'].length > 0;
+    case 'cancelYield':
+      return Object.keys(payload).length === 0;
     case 'resumeGame':
       return typeof payload['sessionToken'] === 'string' && payload['sessionToken'].length > 0;
     case 'setDebugFlags':

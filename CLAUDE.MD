@@ -1,45 +1,11 @@
 # MTG Commander AI Simulator
 
-> Phase 7 (direct player controls) is in progress after explicit approval. See
-> `docs/decisions/0018-single-player-mode.md` and `docs/decisions/0019-direct-player-controls.md`.
-
-## Command Usage
-Always prioritize standard shell commands over internal tools so they can be processed by the RTK hook.
-- Use `rtk read <file>` instead of native `Read` (especially for files >10K lines).
-- Use `rtk grep <pattern>` instead of native `Grep`.
-- Use `rtk find <pattern>` instead of native `Glob`.
-- Use `rtk ls .` instead of native directory tools.
-
 Read [docs/mtg-commander-ai-simulator-brief.md](docs/mtg-commander-ai-simulator-brief.md)
 in full before writing any code. It is the authoritative spec — do not start implementing
 until you've read it. (The brief and this file historically referenced
 `docs/project-brief.md`; the real filename is the link above. See
 [docs/decisions/0001-foundations.md](docs/decisions/0001-foundations.md).)
 
-**Current phase: Phase 7 — Direct player controls — in progress.** Phase 6 was implemented
-before Phase 7 received explicit approval. Phase 5 was completed before Phase 6 began. The Phase 4 plan was
-adjusted against the state of the tree before implementing;
-the six adjustments are recorded in
-[docs/decisions/0012-spectator-ui.md](docs/decisions/0012-spectator-ui.md). Playback was then
-found to be broken in three structural ways — stale per-action boards, a compute-ahead cap that
-could never bind, and a log position tracked by turn rather than by position — and the fixes are
-recorded in
-[docs/decisions/0014-playback-correctness.md](docs/decisions/0014-playback-correctness.md).
-The AI request itself was then found to 400 on every call (two conflicting spellings of the
-reasoning control), which had every game playing itself out on fallbacks; that fix and the four
-recoverable-failure defects it surfaced are in
-[docs/decisions/0015-ai-request-shape.md](docs/decisions/0015-ai-request-shape.md). The
-Phase 2 scope cuts in [docs/decisions/0003-engine-core.md](docs/decisions/0003-engine-core.md)
-are still outstanding for review.
-
-**Card coverage is the live constraint, and the strategy for it changed — read
-[docs/decisions/0009-supported-pool-decks.md](docs/decisions/0009-supported-pool-decks.md)
-before doing coverage work.** Because the engine halts on any unmodeled card, deck playability
-is all-or-nothing, and incremental coverage does not converge (94% of unparsed rules lines
-occur on exactly one card). Playable decks are therefore generated from the engine-supported
-pool (`bun run pool --play`); simulating a *specific* real decklist is a per-deck effort, not a
-coverage threshold. `bun run coverage` remains the instrument that ranks which mechanics to
-build next.
 
 ### Task Offloading Rules (`agy`)
 

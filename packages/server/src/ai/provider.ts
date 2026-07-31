@@ -86,7 +86,9 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
   }
 
   async decide(request: DecisionRequest): Promise<DecisionResponse> {
-    await this.strategy.prepare(request);
+    // Fire-and-forget: the strategist call is off the critical path (20-60s vs. this
+    // decision's 3-4s). `guidanceFor`/`tryExecutePlan` read whatever has landed so far.
+    this.strategy.prepare(request);
     // 1. Obtain hidden-information-safe view (brief §7.1 anti-cheat boundary). Local and
     //    cheap, and both short-circuits below read it, so it is built first either way.
     const view = this.engine.view(request.decidingPlayer);

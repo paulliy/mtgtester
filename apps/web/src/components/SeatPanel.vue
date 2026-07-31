@@ -5,10 +5,9 @@
  */
 import { computed, ref } from 'vue';
 import type { CommanderDamageEntry, SpectatorCard, SpectatorPermanent, SpectatorSeat } from '@mtg/shared';
-import CardImage from './CardImage.vue';
 import HandStrip from './HandStrip.vue';
 import PermanentChip from './PermanentChip.vue';
-import { useCardPreviewStore } from '../stores/cardPreview';
+import ZoneStrip from './ZoneStrip.vue';
 
 const props = defineProps<{
   seat: SpectatorSeat;
@@ -18,20 +17,9 @@ const props = defineProps<{
   eliminated: boolean;
   commanderDamage?: CommanderDamageEntry[];
   exile?: SpectatorCard[];
+  /** Object id -> permanent name, table-wide, for naming an attacker's/blocker's target. */
+  nameById?: Map<string, string>;
 }>();
-
-const cardPreview = useCardPreviewStore();
-
-function onCardEnter(card: SpectatorCard, event: MouseEvent): void {
-  cardPreview.show({ scryfallId: card.scryfallId, name: card.name });
-  cardPreview.updateCursor(event.clientX, event.clientY);
-}
-function onCardMove(event: MouseEvent): void {
-  cardPreview.updateCursor(event.clientX, event.clientY);
-}
-function onCardLeave(): void {
-  cardPreview.hide();
-}
 
 const expanded = ref(false);
 
@@ -165,6 +153,7 @@ const flexStyles = computed(() => {
             :key="g.permanent.id"
             :permanent="g.permanent"
             :count="g.count"
+            :name-by-id="nameById"
           />
         </div>
       </div>
@@ -180,6 +169,7 @@ const flexStyles = computed(() => {
             :key="g.permanent.id"
             :permanent="g.permanent"
             :count="g.count"
+            :name-by-id="nameById"
           />
         </div>
       </div>
@@ -196,36 +186,8 @@ const flexStyles = computed(() => {
 
     <!-- Visual Graveyard & Exile card picture thumbnails with hover preview -->
     <div v-if="expanded" class="detail">
-      <div v-if="seat.graveyard.length > 0" class="zone">
-        <h4>Graveyard ({{ seat.graveyard.length }})</h4>
-        <div class="cards-strip">
-          <div
-            v-for="card in seat.graveyard"
-            :key="card.id"
-            class="zone-card-thumb"
-            @mouseenter="onCardEnter(card, $event)"
-            @mousemove="onCardMove"
-            @mouseleave="onCardLeave"
-          >
-            <CardImage :scryfall-id="card.scryfallId" :name="card.name" size="small" />
-          </div>
-        </div>
-      </div>
-      <div v-if="exileCards.length > 0" class="zone">
-        <h4>Exile ({{ exileCards.length }})</h4>
-        <div class="cards-strip">
-          <div
-            v-for="card in exileCards"
-            :key="card.id"
-            class="zone-card-thumb"
-            @mouseenter="onCardEnter(card, $event)"
-            @mousemove="onCardMove"
-            @mouseleave="onCardLeave"
-          >
-            <CardImage :scryfall-id="card.scryfallId" :name="card.name" size="small" />
-          </div>
-        </div>
-      </div>
+      <ZoneStrip label="Graveyard" :cards="seat.graveyard" />
+      <ZoneStrip label="Exile" :cards="exileCards" />
     </div>
   </section>
 </template>
@@ -433,17 +395,6 @@ header {
   border-top: 1px solid var(--line);
   padding-top: 0.4rem;
   flex-shrink: 0;
-}
-.cards-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  max-height: 9rem;
-  overflow-y: auto;
-  padding: 0.2rem 0;
-}
-.zone-card-thumb {
-  width: 52px;
 }
 .empty {
   color: var(--muted);

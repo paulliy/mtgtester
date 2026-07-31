@@ -68,6 +68,13 @@ export type {
   ActionInteraction,
   TargetSlot,
   TargetChoice,
+  DecisionPresentation,
+  ActionPresentation,
+  ActionSubject,
+  PresentedCard,
+  PresentedSource,
+  CombatDeclaration,
+  CombatSubject,
 } from './engine';
 
 // --- Player-visible projection (anti-cheat boundary) ---

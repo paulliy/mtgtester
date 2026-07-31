@@ -274,7 +274,7 @@ describe('Sarkhan, the Dragonspeaker', () => {
     expect(chars.keywords).toEqual(expect.arrayContaining(['flying', 'indestructible', 'haste']));
   });
 
-  it('-3 deals 4 damage to a creature and 4 damage back to itself', () => {
+  it('-3 deals 4 damage to target creature', () => {
     const ctx = pod('sarkhan-minus3');
     const sarkhan = spawn(ctx, 'P1', oracle({
       oracleId: '80c26f58-04b0-4db0-b84e-9b136609abe0',
@@ -288,7 +288,7 @@ describe('Sarkhan, the Dragonspeaker', () => {
     pump(priorityCheckpoint(ctx));
 
     expect(ctx.state.battlefield.some((p) => p.cardId === foe.cardId)).toBe(false);
-    expect(sarkhan.counters['loyalty']).toBe(0);
+    expect(sarkhan.counters['loyalty']).toBe(4); // executeAbility runs the ability's effects only; loyalty cost payment is a separate step
   });
 
   it('-6 grants an emblem that draws two extra cards and discards the hand', () => {

@@ -41,6 +41,16 @@ export function getDefByOracleId(
   return def;
 }
 
+/**
+ * A representative Scryfall printing id for image lookup; null for cards with none (tokens).
+ * The one lookup every image-carrying projection (`view/spectator.ts`, `present.ts`) must share
+ * — a second copy of this line is how the board and a decision panel would end up disagreeing
+ * on what a card looks like.
+ */
+export function scryfallIdOf(ctx: GameContext, oracleId: OracleId): string | null {
+  return ctx.defs.get(oracleId)?.scryfallId ?? null;
+}
+
 /** Halt loudly when a card whose behavior is needed is not modeled (brief §6.3). */
 export function requireModeled(def: CardDefinition, situation: string): void {
   if (!def.modeled) {
@@ -428,6 +438,15 @@ export function canPayNonManaCosts(
       case 'loyalty':
         if (cost.delta < 0 && (perm.counters['loyalty'] ?? 0) < Math.abs(cost.delta)) return false;
         break;
+      case 'tapCreaturesTotalPower': {
+        const available = ctx.state.battlefield.filter((candidate) =>
+          candidate.id !== perm.id && candidate.controllerId === perm.controllerId && !candidate.tapped &&
+          isCreaturePermanent(ctx, candidate),
+        );
+        const totalPower = available.reduce((sum, candidate) => sum + effectivePT(ctx, candidate).power, 0);
+        if (totalPower < cost.minPower) return false;
+        break;
+      }
       case 'mana':
         break;
     }

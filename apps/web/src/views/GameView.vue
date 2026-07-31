@@ -54,6 +54,13 @@ function exileFor(seat: string): SpectatorCard[] {
   return state.value?.exile.filter((card) => card.owner === seat) ?? [];
 }
 
+/** Object id -> name, table-wide — lets a chip name the actual attacker/blocker it's tied to. */
+const permanentNameById = computed(() => {
+  const map = new Map<string, string>();
+  for (const p of state.value?.battlefield ?? []) map.set(p.id, p.name);
+  return map;
+});
+
 function abandon(): void {
   store.abandonGame();
   void router.push('/');
@@ -136,6 +143,7 @@ const roundLabel = computed(() => {
           :eliminated="state.eliminatedPlayers.includes(seat.seat)"
           :commander-damage="state.commanderDamage"
           :exile="exileFor(seat.seat)"
+          :name-by-id="permanentNameById"
         />
       </div>
 

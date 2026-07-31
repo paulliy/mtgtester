@@ -33,6 +33,7 @@ describe('protocol message names', () => {
       'submitPlayerAction',
       'yieldPlayerAbility',
       'resumePlayerAbility',
+      'cancelYield',
       'resumeGame',
     ]);
   });
@@ -69,6 +70,7 @@ describe('isClientToServerMessage', () => {
         payload: { requestId: 'r2', actionId: 1, revision: 3 },
       },
       { type: 'resumePlayerAbility', payload: { key: 'card-1:0' } },
+      { type: 'cancelYield', payload: {} },
       { type: 'resumeGame', payload: { sessionToken: 'opaque-token' } },
     ];
     expect(messages.map(isClientToServerMessage)).toEqual(

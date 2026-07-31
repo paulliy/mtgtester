@@ -178,9 +178,9 @@ const SARKHAN_THE_DRAGONSPEAKER_DEF = {
       },
     },
     {
-      // "~ deals 4 damage to target creature. That creature deals 4 damage to him" — not one
-      // of the two claimed lines (the generic interpreter's loyalty-cost parsing does not
-      // recognize this line either), so it is authored here too rather than left unmodeled.
+      // Oracle text no longer includes "That creature deals 4 damage to him" — Wizards errata'd
+      // that clause away. The generic interpreter's loyalty-cost parsing still doesn't recognize
+      // this line, so it stays authored here rather than left unmodeled.
       costs: [{ kind: 'loyalty' as const, delta: -3 }],
       timing: 'sorcery' as const,
       ability: {
@@ -188,9 +188,8 @@ const SARKHAN_THE_DRAGONSPEAKER_DEF = {
         targets: [{ kind: 'creature' as const }],
         effects: [
           { op: 'dealDamage' as const, target: 0, amount: { kind: 'const' as const, n: 4 } },
-          { op: 'dealDamage' as const, target: 'source' as const, amount: { kind: 'const' as const, n: 4 } },
         ],
-        description: '~ deals 4 damage to target creature. That creature deals 4 damage to him',
+        description: '~ deals 4 damage to target creature',
       },
     },
     {
@@ -1107,7 +1106,12 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     name: "Sarkhan, the Dragonspeaker",
     handledLines: [
           "+1: Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.",
-          "−3: ~ deals 4 damage to target creature. That creature deals 4 damage to him.",
+          // The −3 line ("~ deals 4 damage to target creature.") is no longer claimed here: since
+          // Wizards errata'd away its "that creature deals 4 damage to him" clause, the generic
+          // interpreter's own damage-effect grammar parses it unaided, so it never appears in
+          // unmodeledReasons for this override to consume. The custom loyalty ability below still
+          // implements it (this override's `def` fully replaces `activatedAbilities`) — it's just
+          // no longer the thing filling an interpreter gap.
           "−6: You get an emblem with \"At the beginning of your draw step, draw two additional cards\" and \"At the beginning of your end step, discard your hand.\""
     ],
     def: SARKHAN_THE_DRAGONSPEAKER_DEF,
@@ -1117,7 +1121,12 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     name: "Sarkhan, the Dragonspeaker",
     handledLines: [
           "+1: Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.",
-          "−3: ~ deals 4 damage to target creature. That creature deals 4 damage to him.",
+          // The −3 line ("~ deals 4 damage to target creature.") is no longer claimed here: since
+          // Wizards errata'd away its "that creature deals 4 damage to him" clause, the generic
+          // interpreter's own damage-effect grammar parses it unaided, so it never appears in
+          // unmodeledReasons for this override to consume. The custom loyalty ability below still
+          // implements it (this override's `def` fully replaces `activatedAbilities`) — it's just
+          // no longer the thing filling an interpreter gap.
           "−6: You get an emblem with \"At the beginning of your draw step, draw two additional cards\" and \"At the beginning of your end step, discard your hand.\""
     ],
     def: SARKHAN_THE_DRAGONSPEAKER_DEF,

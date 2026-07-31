@@ -19,7 +19,8 @@ import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import { moveObject } from '../src/state/objects';
 import { executeAbility, payAbilityCosts } from '../src/effects/resolve';
-import { effectivePT, manaSourcesFor } from '../src/state/queries';
+import { computeCharacteristics } from '../src/effects/continuous';
+import { effectivePT, isCreaturePermanent, manaSourcesFor } from '../src/state/queries';
 import { parseManaCost, planPayment } from '../src/mana/cost';
 import type { EnginePlayerState, GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -72,6 +73,13 @@ const dragon = (): ReturnType<typeof oracle> =>
 
 const optionsFor = (ctx: GameContext): string[] =>
   computePriorityOptions(ctx, p1(ctx)).map((o) => o.description);
+
+const sourceOf = (perm: ReturnType<typeof spawn>) => ({
+  cardId: perm.cardId,
+  name: perm.name,
+  oracleId: perm.oracleId,
+  controllerId: perm.controllerId,
+});
 
 describe('parsing costs', () => {
   it("reads Dragon's Hoard as a trigger, a counter-costed ability, and a mana ability", () => {
@@ -293,6 +301,56 @@ describe('cost availability', () => {
     const perm = spawn(ctx, 'P1', tapper, { summoningSick: true });
 
     expect(manaSourcesFor(ctx, 'P1').some((s) => s.cardId === perm.cardId)).toBe(false);
+  });
+});
+
+describe('crewing a vehicle', () => {
+  const vehicle = (): ReturnType<typeof oracle> =>
+    oracle({
+      name: 'Test Chariot',
+      typeLine: 'Artifact — Vehicle',
+      manaCost: '{4}',
+      power: '5',
+      toughness: '5',
+      oracleText: 'Crew 1',
+    });
+
+  it('is unpayable, and stays unpayable, with no untapped creature power available', () => {
+    const ctx = pod('crew-unpayable');
+    const chariot = spawn(ctx, 'P1', vehicle());
+    const def = interpretCard(vehicle());
+    const ability = def.activatedAbilities[0]!;
+
+    expect(optionsFor(ctx).some((d) => d.includes('Crew 1'))).toBe(false);
+    // Activating it anyway (bypassing the legality gate) must not silently succeed for free —
+    // this is the exact shape of the infinite-crew bug: an uncosted, no-op activation that a
+    // player or bot can select forever without ever changing game state.
+    expect(() =>
+      pump(payAbilityCosts(ctx, p1(ctx), chariot, ability.costs, 'tap')),
+    ).toThrow(/unpayable/);
+  });
+
+  it('taps enough creature power and turns the vehicle into a creature until end of turn', () => {
+    const ctx = pod('crew-payable');
+    const chariot = spawn(ctx, 'P1', vehicle());
+    const crewer = spawn(ctx, 'P1', oracle({
+      name: 'Test Crewman', typeLine: 'Creature — Human', manaCost: '{1}', power: '1', toughness: '1',
+    }));
+    const def = interpretCard(vehicle());
+    const ability = def.activatedAbilities[0]!;
+
+    expect(isCreaturePermanent(ctx, chariot)).toBe(false);
+    expect(optionsFor(ctx).some((d) => d.includes('Crew 1'))).toBe(true);
+
+    pump(payAbilityCosts(ctx, p1(ctx), chariot, ability.costs, 'tap'));
+    expect(crewer.tapped).toBe(true);
+
+    pump(executeAbility(ctx, sourceOf(chariot), ability.ability, []));
+    expect(isCreaturePermanent(ctx, chariot)).toBe(true);
+    expect(computeCharacteristics(ctx, chariot)).toMatchObject({ power: 5, toughness: 5 });
+
+    // Paid for and resolved — the ability is no longer on offer for free, closing the loop.
+    expect(optionsFor(ctx).some((d) => d.includes('Crew 1'))).toBe(false);
   });
 });
 

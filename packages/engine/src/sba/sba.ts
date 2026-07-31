@@ -15,7 +15,7 @@ import { computeCharacteristics } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
-import { resetOpponentYields } from '../turn/priority';
+import { breakYieldsForStop } from '../turn/stops';
 import { moveObject } from '../state/objects';
 import {
   effectivePT,
@@ -27,6 +27,7 @@ import type {
   EngineCardObject,
   EnginePermanent,
   EnginePlayerState,
+  EngineStackObject,
   GameContext,
   PendingTrigger,
 } from '../state/types';
@@ -377,6 +378,11 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
           type: 'chooseTargets',
           description: `Targets for ${trigger.sourceName}`,
           targets: ordinarySlots,
+          // Route through the same "click the permanent, then its targets" UI a cast spell or
+          // activated ability uses (`sourceId` = the trigger's source, already on the
+          // battlefield). Without this, the option falls back to the generic decision panel,
+          // which has no per-slot picker and would submit with no targets chosen at all.
+          interaction: { kind: 'source', sourceId: trigger.sourceCardId, targetSlots: ordinarySlots },
         },
       ],
     };
@@ -487,7 +493,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
 
   const id = `o-${s.nextObjectNum++}` as ObjectId;
   const description = trigger.ability.description ?? trigger.sourceName;
-  s.stack.push({
+  const stackEntry: EngineStackObject = {
     id,
     sourceId: trigger.sourceCardId,
     controllerId: trigger.controllerId,
@@ -505,8 +511,9 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     ...(trigger.scope !== undefined ? { triggerScope: trigger.scope } : {}),
     ...(Object.keys(countTargets).length > 0 ? { countTargets } : {}),
     ...(Object.keys(divisionAmounts).length > 0 ? { divisionAmounts } : {}),
-  });
-  resetOpponentYields(ctx, trigger.controllerId);
+  };
+  s.stack.push(stackEntry);
+  breakYieldsForStop(ctx, stackEntry);
   emit(ctx, 'triggerOnStack', { source: trigger.sourceName, description }, trigger.controllerId);
   debug(ctx, 'stack', `trigger on stack: ${trigger.sourceName} — ${description}`);
 }

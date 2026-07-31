@@ -9,7 +9,19 @@ import type { PlayerId } from '@mtg/shared';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
-import { bolt, conjure, copies, forest, gameConfig, mountain, pick, pump, spawn } from './fixtures';
+import {
+  bear,
+  bolt,
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  mountain,
+  oracle,
+  pick,
+  pump,
+  spawn,
+} from './fixtures';
 
 /** A 4-player context in P1's precombat main with everyone holding a castable bolt. */
 function boltContext(): GameContext {
@@ -128,24 +140,20 @@ describe('MTGO-style yield actions (F6)', () => {
     expect(sequence).toEqual(['P1', 'P2', 'P3', 'P4']);
   });
 
-  it('breaks "Pass and yield until end of turn" when an opponent casts a spell', () => {
+  /**
+   * F6-style yield is a STOP LIST, not "any opponent action" (brief — player-experience
+   * overhaul, Workstream 2): it survives an opponent's action unless that action targets the
+   * yielding player, threatens their board, or threatens their life/hand. Otherwise a
+   * developed four-player board — full of triggers — breaks every yield within a step.
+   */
+  it('survives an opponent spell that targets someone else', () => {
     const ctx = boltContext();
-    const sequence: { player: PlayerId; stackLen: number }[] = [];
     let p2Yielded = false;
-    let p1CastFirst = false;
-
-    // P2 has a second bolt + mountain so P2 has legal actions
-    const p2 = ctx.state.players.find((p) => p.id === 'P2');
-    if (!p2) throw new Error('no P2');
-    spawn(ctx, 'P2', mountain());
-    conjure(ctx, 'P2', bolt(), 'hand');
 
     pump(runPrioritySequence(ctx), (d) => {
-      sequence.push({ player: d.player, stackLen: ctx.state.stack.length });
-      if (d.player === 'P1' && !p1CastFirst) {
-        p1CastFirst = true;
+      if (d.player === 'P1') {
         const opt = d.options.findIndex((o) => o.description.includes('Cast Test Bolt'));
-        return { index: opt, targets: new Map([[0, 'P4']]) };
+        if (opt >= 0) return { index: opt, targets: new Map([[0, 'P4']]) };
       }
       if (d.player === 'P2' && !p2Yielded) {
         p2Yielded = true;
@@ -156,31 +164,147 @@ describe('MTGO-style yield actions (F6)', () => {
       return { index: passOpt >= 0 ? passOpt : 0, targets: new Map() };
     });
 
+    const p2 = ctx.state.players.find((p) => p.id === 'P2');
     expect(p2Yielded).toBe(true);
-    // P2 yielded turn on the first stack (Bolt 1).
+    // P1's bolt at P4 is not a stop for P2 — it neither targets P2 nor touches P2's board.
+    expect(p2?.yieldUntilEndOfTurn).toBe(true);
+  });
+
+  it('breaks when a spell targets the yielding player', () => {
+    const ctx = boltContext();
+
+    // Phase 1: P2 yields on an uneventful priority sequence.
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.player === 'P2') return pick(d, 'yield until end of turn');
+      return pick(d, 'Pass priority');
+    });
+    const p2 = ctx.state.players.find((p) => p.id === 'P2');
+    if (!p2) throw new Error('no P2');
     expect(p2.yieldUntilEndOfTurn).toBe(true);
 
-    // Now P1 casts a SECOND spell on a new priority sequence in the same turn
+    // Phase 2: P1 casts a fresh bolt, this time targeting P2.
     conjure(ctx, 'P1', bolt(), 'hand');
     spawn(ctx, 'P1', mountain());
-    let p2SurfacedOnSecondSpell = false;
-
     pump(runPrioritySequence(ctx), (d) => {
       if (d.player === 'P1') {
         const opt = d.options.findIndex((o) => o.description.includes('Cast Test Bolt'));
-        if (opt >= 0) {
-          return { index: opt, targets: new Map([[0, 'P4']]) };
-        }
+        if (opt >= 0) return { index: opt, targets: new Map([[0, 'P2']]) };
       }
-      if (d.player === 'P2') {
-        p2SurfacedOnSecondSpell = true;
-      }
-      const passOpt = d.options.findIndex((o) => o.type === 'pass');
-      return { index: passOpt >= 0 ? passOpt : 0, targets: new Map() };
+      return pick(d, 'Pass priority');
     });
 
-    expect(p2SurfacedOnSecondSpell).toBe(true);
     expect(p2.yieldUntilEndOfTurn).toBe(false);
+  });
+
+  it('breaks when a spell targets a permanent the yielding player controls', () => {
+    const ctx = boltContext();
+
+    // Phase 1: P2 yields on an uneventful priority sequence.
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.player === 'P2') return pick(d, 'yield until end of turn');
+      return pick(d, 'Pass priority');
+    });
+    const p2 = ctx.state.players.find((p) => p.id === 'P2');
+    if (!p2) throw new Error('no P2');
+    expect(p2.yieldUntilEndOfTurn).toBe(true);
+
+    // Phase 2: P1 bolts P2's creature, not P2 directly.
+    const p2Bear = spawn(ctx, 'P2', bear());
+    conjure(ctx, 'P1', bolt(), 'hand');
+    spawn(ctx, 'P1', mountain());
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.player === 'P1') {
+        const opt = d.options.findIndex((o) => o.description.includes('Cast Test Bolt'));
+        if (opt >= 0) return { index: opt, targets: new Map([[0, p2Bear.id]]) };
+      }
+      return pick(d, 'Pass priority');
+    });
+
+    expect(p2.yieldUntilEndOfTurn).toBe(false);
+  });
+
+  it('breaks when a mass effect would hit the yielding player\'s board', () => {
+    const ctx = boltContext();
+
+    // Phase 1: P2 yields on an uneventful priority sequence.
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.player === 'P2') return pick(d, 'yield until end of turn');
+      return pick(d, 'Pass priority');
+    });
+    const p2 = ctx.state.players.find((p) => p.id === 'P2');
+    if (!p2) throw new Error('no P2');
+    expect(p2.yieldUntilEndOfTurn).toBe(true);
+
+    // Phase 2: P2 develops a board, then P1 wraths. Generic-only cost — the fixture's mana
+    // base is red (`mountain`), so a colored cost here would leave the cast illegal to offer.
+    spawn(ctx, 'P2', bear());
+    conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Wrath',
+        typeLine: 'Sorcery',
+        manaCost: '{3}',
+        oracleText: 'Destroy all creatures.',
+      }),
+      'hand',
+    );
+    spawn(ctx, 'P1', mountain());
+    spawn(ctx, 'P1', mountain());
+    spawn(ctx, 'P1', mountain());
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.player === 'P1') {
+        const opt = d.options.findIndex((o) => o.description.includes('Cast Test Wrath'));
+        if (opt >= 0) return { index: opt, targets: new Map() };
+      }
+      return pick(d, 'Pass priority');
+    });
+
+    expect(p2.yieldUntilEndOfTurn).toBe(false);
+  });
+
+  it('survives an opponent spell that only threatens their own board', () => {
+    const ctx = boltContext();
+
+    // Phase 1: P2 yields on an uneventful priority sequence.
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.player === 'P2') return pick(d, 'yield until end of turn');
+      return pick(d, 'Pass priority');
+    });
+    const p2 = ctx.state.players.find((p) => p.id === 'P2');
+    if (!p2) throw new Error('no P2');
+    expect(p2.yieldUntilEndOfTurn).toBe(true);
+
+    // Phase 2: P1 wraths their OWN board only — not a stop for P2. Generic-only cost, same
+    // reason as the mass-wrath test above.
+    spawn(ctx, 'P1', bear());
+    conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Self Wrath',
+        typeLine: 'Sorcery',
+        manaCost: '{2}',
+        oracleText: 'Destroy all creatures you control.',
+      }),
+      'hand',
+    );
+    spawn(ctx, 'P1', mountain());
+    spawn(ctx, 'P1', mountain());
+    let p1Cast = false;
+    pump(runPrioritySequence(ctx), (d) => {
+      if (d.player === 'P1') {
+        const opt = d.options.findIndex((o) => o.description.includes('Cast Test Self Wrath'));
+        if (opt >= 0) {
+          p1Cast = true;
+          return { index: opt, targets: new Map() };
+        }
+      }
+      return pick(d, 'Pass priority');
+    });
+
+    expect(p1Cast).toBe(true);
+    expect(p2.yieldUntilEndOfTurn).toBe(true);
   });
 
   it('offers and applies "Yield to this ability" for triggered abilities', () => {

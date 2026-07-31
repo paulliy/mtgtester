@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import type { LegalAction, ObjectId, TargetChoice } from '@mtg/shared';
+import type { DecisionRequest, LegalAction, ObjectId, TargetChoice } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
-import EffectDecisionPanel from '../components/EffectDecisionPanel.vue';
+import DecisionPanel from '../components/DecisionPanel.vue';
 import PermanentChip from '../components/PermanentChip.vue';
 import StackPanel from '../components/StackPanel.vue';
+import ZoneStrip from '../components/ZoneStrip.vue';
 import { useCardPreviewStore } from '../stores/cardPreview';
+import { useCombatPlanStore } from '../stores/combatPlan';
 import { useGameStore } from '../stores/game';
 
 const store = useGameStore();
 const cardPreview = useCardPreviewStore();
+const combatPlan = useCombatPlanStore();
 const router = useRouter();
 const selectedActionId = ref<number | null>(null);
 const focusedSourceId = ref<ObjectId | null>(null);
@@ -27,6 +30,10 @@ const human = computed(
 const opponents = computed(
   () => state.value?.seats.filter((seat) => seat.seat !== state.value?.viewerSeat) ?? [],
 );
+const humanExile = computed(
+  () => state.value?.exile.filter((card) => card.owner === state.value?.viewerSeat) ?? [],
+);
+const isYourTurn = computed(() => state.value?.activePlayer === state.value?.viewerSeat);
 const selectedAction = computed(
   () =>
     request.value?.legalActions.find((action) => action.id === selectedActionId.value) ?? null,
@@ -41,15 +48,6 @@ const hasOnlyImmediateActions = computed(
     immediateActions.value.length === request.value.legalActions.length,
 );
 
-const isEffectDecision = computed(() => {
-  const actions = request.value?.legalActions ?? [];
-  const effectActions = new Set([
-    'discard', 'scryKeep', 'scryBottom', 'surveilKeep', 'surveilGraveyard',
-    'keepOrder', 'reorder', 'orderLibrary', 'proliferate', 'skipProliferate',
-  ]);
-  return request.value?.decisionType === 'general' && actions.length > 0 &&
-    actions.every((action) => effectActions.has(action.type));
-});
 watch(
   () => request.value?.requestId,
   () => {
@@ -57,6 +55,29 @@ watch(
     focusedSourceId.value = null;
     chosenTargets.value = {};
   },
+);
+
+/**
+ * Drives the batched combat declaration (brief — Workstream 5). Fires on every freshly pushed
+ * request: `onRequest` starts or continues a plan (a no-op unless it's a `declareAttackers`/
+ * `declareBlockers` decision), and while `replaying`, `answerCurrent` returns the exact action
+ * id to submit for THIS request — never a batch, never a guess. `combatPlan` itself decides
+ * `null` vs. a real id; this watcher only forwards whatever it says.
+ */
+watch(
+  request,
+  (req) => {
+    if (req === null) {
+      if (combatPlan.mode !== 'idle') combatPlan.reset();
+      return;
+    }
+    combatPlan.onRequest(req);
+    if (combatPlan.mode === 'replaying') {
+      const actionId = combatPlan.answerCurrent(req);
+      if (actionId !== null) store.submitPlayerAction(actionId);
+    }
+  },
+  { immediate: true },
 );
 
 function permanentsFor(seat: string) {
@@ -102,6 +123,11 @@ const fallbackActions = computed(() =>
     (action) => !isImmediate(action) && sourceId(action) === null,
   ),
 );
+/** Everything not already handled by the quick-actions row or the card-first source flow. */
+const fallbackRequest = computed<DecisionRequest | null>(() => {
+  if (request.value === null || fallbackActions.value.length === 0) return null;
+  return { ...request.value, legalActions: fallbackActions.value };
+});
 const actionableSourceIds = computed(() => new Set(sourceActions.value.map(sourceId).filter(Boolean)));
 const selectedSourceName = computed(() =>
   focusedSourceId.value === null ? null : nameById.value.get(focusedSourceId.value) ?? null,
@@ -134,17 +160,27 @@ function isImmediate(action: LegalAction): boolean {
   return action.interaction?.kind === 'immediate';
 }
 
+/**
+ * An "immediate" (per the engine's own `interactionFor`) action never has anything to target
+ * or confirm — pass, yield variants, mulligan keep/decline, and the like. Routing these through
+ * the composed-action tray added an unnecessary click that a stray click elsewhere could
+ * silently discard (`selectSource` clears `selectedActionId`), which is why "pass and yield
+ * until end of turn" looked broken: the yield never actually got submitted. Only `pass` and
+ * `playLand` — genuine resource commitments — still honour the "Confirm passes & lands"
+ * preference; every other immediate action is always one-click.
+ */
 function isRoutineAction(action: LegalAction): boolean {
-  return (action.type === 'pass' || action.type === 'playLand') && targetSlots(action).length === 0;
+  if (!isImmediate(action)) return false;
+  if (store.confirmRoutineActions && (action.type === 'pass' || action.type === 'playLand')) {
+    return false;
+  }
+  return true;
 }
 
 function chooseAction(action: LegalAction): void {
   selectedActionId.value = action.id;
   chosenTargets.value = {};
-  // A normal land play or pass should feel immediate. The safer, all-confirm workflow remains
-  // available as a persisted preference; anything with targets or a non-routine consequence
-  // always opens the composed-action review.
-  if (!store.confirmRoutineActions && isRoutineAction(action)) {
+  if (isRoutineAction(action)) {
     store.submitPlayerAction(action.id);
   }
 }
@@ -163,7 +199,23 @@ function chooseTarget(id: ObjectId | string): boolean {
   return false;
 }
 
+/** During composing, a click assigns to the plan instead of selecting a real engine action. */
+function tryPlanAssign(target: ObjectId | string): boolean {
+  if (combatPlan.mode !== 'composing' || focusedSourceId.value === null) return false;
+  if (!combatPlan.isLegalTarget(focusedSourceId.value, target)) return false;
+  combatPlan.assign(focusedSourceId.value, target);
+  focusedSourceId.value = null;
+  return true;
+}
+
 function selectSource(id: ObjectId): void {
+  if (combatPlan.mode === 'composing') {
+    if (tryPlanAssign(id)) return;
+    if (combatPlan.order.some((entry) => entry.subjectId === id)) {
+      focusedSourceId.value = focusedSourceId.value === id ? null : id;
+    }
+    return;
+  }
   if (chooseTarget(id)) return;
   const nextSource = focusedSourceId.value === id ? null : id;
   focusedSourceId.value = nextSource;
@@ -179,6 +231,10 @@ function selectSource(id: ObjectId): void {
 }
 
 function chooseOpponent(seat: string): void {
+  if (combatPlan.mode === 'composing') {
+    tryPlanAssign(seat);
+    return;
+  }
   if (chooseTarget(seat)) return;
   const attack = (request.value?.legalActions ?? []).find(
     (action) =>
@@ -204,6 +260,56 @@ function cancel(): void {
   selectedActionId.value = null;
   chosenTargets.value = {};
 }
+
+const confirmButtonRef = ref<HTMLButtonElement | null>(null);
+
+watch(selectedAction, (action) => {
+  if (action !== null) {
+    void nextTick(() => confirmButtonRef.value?.focus());
+  }
+});
+
+/**
+ * Enter/Escape/Space, scoped to this view (brief — Workstream 6). Ignored while a real text
+ * input has focus, though none currently exists in this view; the guard is defensive.
+ */
+function onKeyDown(event: KeyboardEvent): void {
+  const target = event.target;
+  if (target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(target.tagName)) return;
+
+  if (event.key === 'Enter') {
+    if (selectedAction.value !== null && canConfirm.value) {
+      event.preventDefault();
+      confirm();
+    } else if (combatPlan.mode === 'composing') {
+      event.preventDefault();
+      combatPlan.confirm();
+    }
+    return;
+  }
+  if (event.key === 'Escape') {
+    if (selectedAction.value !== null) {
+      event.preventDefault();
+      cancel();
+    } else if (combatPlan.mode === 'composing' || combatPlan.mode === 'interrupted') {
+      event.preventDefault();
+      combatPlan.cancel();
+    }
+    return;
+  }
+  if (event.key === ' ' || event.code === 'Space') {
+    // Don't steal Space from an in-progress target choice or a combat declaration in composing.
+    if (selectedAction.value !== null || combatPlan.mode !== 'idle') return;
+    const pass = immediateActions.value.find((action) => action.type === 'pass');
+    if (pass !== undefined) {
+      event.preventDefault();
+      chooseAction(pass);
+    }
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', onKeyDown));
+onUnmounted(() => window.removeEventListener('keydown', onKeyDown));
 
 function dragStart(id: ObjectId): void {
   draggedId.value = id;
@@ -246,7 +352,11 @@ function actionLabel(action: LegalAction): string {
   if (typeof ability === 'string') return ability;
   if (action.type === 'playLand') return 'Play land';
   if (action.type === 'castSpell') return 'Cast';
-  return action.type;
+  // Combat actions (attack/block) land here: falling back to `action.type` renders every
+  // option in a source's button list as the same bare word ("attack", "block", …), which is
+  // indistinguishable when a creature can attack three different opponents. `description` is
+  // already the full sentence the engine generated ("Grizzly Bears attacks P2 (40 life)").
+  return action.description;
 }
 
 function pendingSummary(action: LegalAction): string {
@@ -280,6 +390,10 @@ function resourceSummary(pool: Record<string, number>): string {
 }
 
 function isLegalTarget(target: ObjectId | string): boolean {
+  if (combatPlan.mode === 'composing') {
+    const source = draggedId.value ?? focusedSourceId.value;
+    return source !== null && combatPlan.isLegalTarget(source, target as string);
+  }
   if (selectedAction.value !== null) {
     const nextSlot = targetSlots(selectedAction.value).find(
       (slot) => chosenTargets.value[slot.slot] === undefined,
@@ -305,6 +419,9 @@ function isLegalTarget(target: ObjectId | string): boolean {
 }
 
 function isChosenTarget(target: ObjectId | string): boolean {
+  if (combatPlan.mode === 'composing') {
+    return [...combatPlan.assignment.values()].includes(target as string);
+  }
   return Object.values(chosenTargets.value).includes(target as ObjectId);
 }
 
@@ -341,6 +458,10 @@ function dropOn(target: ObjectId | string): void {
   const source = draggedId.value;
   draggedId.value = null;
   if (source === null) return;
+  if (combatPlan.mode === 'composing') {
+    if (combatPlan.isLegalTarget(source, target as string)) combatPlan.assign(source, target as string);
+    return;
+  }
   const action = (request.value?.legalActions ?? []).find((candidate) => {
     const interaction = candidate.interaction ?? { kind: 'choice' as const };
     if (
@@ -377,8 +498,11 @@ function abandon(): void {
   <div class="player-game">
     <header class="player-bar">
       <strong>Player mode · {{ state?.viewerSeat ?? store.humanSeat }}</strong>
+      <span v-if="state" class="turn-badge" :class="{ 'your-turn': isYourTurn }">
+        Turn {{ state.turnNumber }} · {{ isYourTurn ? 'Your turn' : state.activePlayer }}
+      </span>
       <span v-if="state">{{ state.phase }}<template v-if="state.step"> · {{ state.step }}</template></span>
-      <span v-if="state?.priorityPlayer">Priority: {{ state.priorityPlayer }}</span>
+      <span v-if="state?.priorityPlayer">Priority: {{ state.priorityPlayer === state.viewerSeat ? 'You' : state.priorityPlayer }}</span>
       <span :class="['connection', store.connection]">{{ store.connection }}</span>
       <div class="pace">
         Bot turns
@@ -395,6 +519,11 @@ function abandon(): void {
 
     <div v-if="store.connection !== 'open'" class="paused">
       Reconnecting… the engine will not begin another bot decision while you are away.
+    </div>
+
+    <div v-if="human?.yieldingUntilEndOfTurn" class="yield-banner">
+      <span>Yielding until end of turn — you'll only be asked again if something targets you, threatens your board, or threatens your life or hand.</span>
+      <button type="button" @click="store.cancelYield()">Take priority back</button>
     </div>
 
     <main v-if="state" class="player-layout">
@@ -430,17 +559,18 @@ function abandon(): void {
                 }"
                 draggable="true"
                 @dragstart="dragStart(permanent.id)"
+                @dragend="draggedId = null"
                 @dragover.prevent
                 @drop.stop="dropOn(permanent.id)"
                 @click.stop="selectSource(permanent.id)"
               >
-                <PermanentChip :permanent="permanent" :count="1" />
+                <PermanentChip :permanent="permanent" :count="1" :name-by-id="nameById" />
               </div>
             </div>
           </article>
         </div>
 
-        <section v-if="human" class="human-zone">
+        <section v-if="human" class="human-zone" :class="{ 'your-turn': isYourTurn }">
           <header>
             <strong>You · {{ human.seat }} · {{ human.label }}</strong>
             <span>{{ human.life }} life · {{ human.librarySize }} library</span>
@@ -462,11 +592,12 @@ function abandon(): void {
               }"
               draggable="true"
               @dragstart="dragStart(permanent.id)"
+              @dragend="draggedId = null"
               @dragover.prevent
               @drop.stop="dropOn(permanent.id)"
               @click="selectSource(permanent.id)"
             >
-              <PermanentChip :permanent="permanent" :count="1" />
+              <PermanentChip :permanent="permanent" :count="1" :name-by-id="nameById" />
             </div>
           </div>
           <div class="hand">
@@ -482,6 +613,7 @@ function abandon(): void {
               }"
               draggable="true"
               @dragstart="dragStart(card.id)"
+              @dragend="draggedId = null"
               @click="selectSource(card.id)"
               @mouseenter="showCardPreview(card, $event)"
               @mousemove="moveCardPreview"
@@ -513,6 +645,11 @@ function abandon(): void {
             </button>
           </div>
 
+          <div v-if="human.graveyard.length > 0 || humanExile.length > 0" class="zones-strip">
+            <ZoneStrip label="Graveyard" :cards="human.graveyard" />
+            <ZoneStrip label="Exile" :cards="humanExile" />
+          </div>
+
           <section v-if="request" class="interaction-tray" :class="{ targeting: selectedAction !== null }">
             <template v-if="selectedAction">
               <div class="tray-heading">
@@ -540,11 +677,61 @@ function abandon(): void {
               </div>
               <div class="tray-actions">
                 <button type="button" @click="cancel">Cancel</button>
-                <button type="button" class="primary" :disabled="!canConfirm" @click="confirm">
+                <button
+                  ref="confirmButtonRef"
+                  type="button"
+                  class="primary"
+                  :disabled="!canConfirm"
+                  @click="confirm"
+                >
                   {{ selectedAction.type === 'playLand' ? 'Play land' : 'Confirm' }}
                 </button>
               </div>
             </template>
+            <template v-else-if="combatPlan.mode === 'composing' || combatPlan.mode === 'interrupted'">
+              <div class="tray-heading">
+                <strong>{{ combatPlan.kind === 'attackers' ? 'Declare attackers' : 'Declare blockers' }}</strong>
+                <span>{{ combatPlan.order.length }} creature{{ combatPlan.order.length === 1 ? '' : 's' }}</span>
+              </div>
+              <p v-if="combatPlan.mode === 'interrupted'" class="target-instruction combat-interrupted">
+                {{ combatPlan.interruptedMessage }}
+              </p>
+              <p v-else class="target-instruction">
+                Click a creature, then {{ combatPlan.kind === 'attackers' ? 'an opponent' : 'an attacker' }} to
+                assign it. Unassigned creatures {{ combatPlan.kind === 'attackers' ? 'stay home' : 'do not block' }}.
+              </p>
+              <div class="combat-assignments">
+                <div
+                  v-for="entry in combatPlan.order"
+                  :key="entry.subjectId"
+                  class="combat-assignment-row"
+                  :class="{ focused: focusedSourceId === entry.subjectId }"
+                >
+                  <span>{{ nameById.get(entry.subjectId) ?? entry.subjectId }}</span>
+                  <span class="assignment-target">
+                    {{
+                      combatPlan.assignment.has(entry.subjectId)
+                        ? `→ ${nameById.get(combatPlan.assignment.get(entry.subjectId) as string) ?? combatPlan.assignment.get(entry.subjectId)}`
+                        : combatPlan.kind === 'attackers' ? 'stays home' : 'no block'
+                    }}
+                  </span>
+                </div>
+              </div>
+              <div class="tray-actions">
+                <button type="button" @click="combatPlan.cancel()">Cancel</button>
+                <button
+                  type="button"
+                  class="primary"
+                  :disabled="combatPlan.mode === 'interrupted'"
+                  @click="combatPlan.confirm()"
+                >
+                  Confirm {{ combatPlan.kind === 'attackers' ? 'attacks' : 'blocks' }}
+                </button>
+              </div>
+            </template>
+            <p v-else-if="combatPlan.mode === 'replaying'" class="tray-hint">
+              Submitting your {{ combatPlan.kind === 'attackers' ? 'attacks' : 'blocks' }}…
+            </p>
             <template v-else-if="focusedSourceId !== null && selectedSourceActions.length > 0">
               <div class="tray-heading"><strong>{{ selectedSourceName ?? 'Selected card' }}</strong><span>Choose an action</span></div>
               <div class="source-actions">
@@ -572,40 +759,36 @@ function abandon(): void {
 
       <aside class="rail">
         <section class="decision">
-          <EffectDecisionPanel
-            v-if="request && isEffectDecision"
-            :request="request"
-            @choose="store.submitPlayerAction"
-          />
-          <template v-else-if="request">
-            <h3>Your action</h3>
-            <p>{{ request.prompt }}</p>
-            <div v-if="immediateActions.length > 0" class="quick-actions">
-              <button
-                v-for="action in immediateActions"
-                :key="action.id"
-                type="button"
-                class="primary"
-                @click="chooseAction(action)"
-              >
-                {{ action.description }}
-              </button>
-            </div>
-            <p v-if="hasOnlyImmediateActions && store.ignoredAbilities.length > 0" class="yield-explanation">
-              All other optional actions are currently yielded. Pass priority to continue, or resume an
-              ability below to make it available again.
-            </p>
-            <details v-if="fallbackActions.length > 0" class="fallback-actions">
-              <summary>More choices ({{ fallbackActions.length }})</summary>
-              <button
-                v-for="action in fallbackActions"
-                :key="action.id"
-                type="button"
-                @click="chooseAction(action)"
-              >
-                {{ action.description }}
-              </button>
-            </details>
+          <template v-if="request">
+            <DecisionPanel
+              v-if="fallbackRequest && immediateActions.length === 0"
+              :request="fallbackRequest"
+              @choose="store.submitPlayerAction"
+            />
+            <template v-else>
+              <h3>Your action</h3>
+              <p>{{ request.prompt }}</p>
+              <div v-if="immediateActions.length > 0" class="quick-actions">
+                <button
+                  v-for="action in immediateActions"
+                  :key="action.id"
+                  type="button"
+                  class="primary"
+                  @click="chooseAction(action)"
+                >
+                  {{ action.description }}
+                </button>
+              </div>
+              <p v-if="hasOnlyImmediateActions && store.ignoredAbilities.length > 0" class="yield-explanation">
+                All other optional actions are currently yielded. Pass priority to continue, or resume an
+                ability below to make it available again.
+              </p>
+              <DecisionPanel
+                v-if="fallbackRequest"
+                :request="fallbackRequest"
+                @choose="store.submitPlayerAction"
+              />
+            </template>
           </template>
           <p v-else class="thinking">Bots are deciding…</p>
           <div v-if="recentBotActions.length > 0" class="bot-summary">
@@ -632,6 +815,8 @@ function abandon(): void {
 <style scoped>
 .player-game { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: .6rem; padding: .6rem; }
 .player-bar { display: flex; align-items: center; gap: .7rem; padding: .45rem .7rem; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; font-size: .78rem; }
+.turn-badge { color: var(--muted); font-weight: 600; }
+.turn-badge.your-turn { color: var(--accent); }
 .pace { margin-left: auto; display: flex; align-items: center; gap: .25rem; color: var(--muted); }
 button.active, button.selected, .focused { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .targetable { border-color: var(--ok) !important; box-shadow: 0 0 0 1px var(--ok); }
@@ -640,6 +825,8 @@ button.active, button.selected, .focused { border-color: var(--accent); box-shad
 .opponent.chosen-target { background: rgb(96 165 250 / .1); }
 .connection.open { color: var(--ok); }.connection.closed { color: var(--danger); }
 .paused { border: 1px solid var(--warn); color: var(--warn); padding: .5rem; border-radius: 4px; }
+.yield-banner { display: flex; align-items: center; gap: .6rem; border: 1px solid var(--accent); color: var(--text); background: var(--surface); padding: .5rem .7rem; border-radius: 4px; font-size: .78rem; }
+.yield-banner > span { flex: 1; }
 .player-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0,1fr) 22rem; gap: .6rem; }
 .table { min-height: 0; display: grid; grid-template-rows: minmax(0,1fr) minmax(15rem, .85fr); gap: .6rem; }
 .opponents { min-height: 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; }
@@ -648,10 +835,12 @@ button.active, button.selected, .focused { border-color: var(--accent); box-shad
 .opponent > header, .human-zone > header { display:flex; justify-content:space-between; gap:.4rem; font-size:.75rem; }
 .opponent p { margin:.25rem 0; color:var(--muted); font-size:.7rem; }
 .permanents { display:flex; flex-wrap:wrap; align-content:flex-start; gap:.3rem; }
+.zones-strip { display: flex; flex-direction: column; gap: .3rem; flex-shrink: 0; }
 .object { border:1px solid transparent; border-radius:4px; cursor:pointer; }
 .actionable { border-color:rgb(96 165 250 / .75) !important; box-shadow:0 0 0 1px rgb(96 165 250 / .28); }
 .actionable:hover { transform:translateY(-2px); }
 .human-zone { display:flex; flex-direction:column; gap:.45rem; border-color:rgb(96 165 250 / .45); }
+.human-zone.your-turn { border-color: var(--accent); box-shadow: 0 0 10px rgb(110 168 254 / .25); }
 .resource-strip { display:inline-flex; align-self:flex-start; padding:.16rem .38rem; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:.68rem; }
 .human-zone .permanents { flex:1; overflow:auto; }
 .hand { display:flex; gap:.35rem; overflow-x:auto; padding-top:.4rem; border-top:1px solid var(--line); }
@@ -676,6 +865,11 @@ button.active, button.selected, .focused { border-color: var(--accent); box-shad
 .source-action-row { display:flex; gap:.25rem; }
 .source-action-row > button:first-child { display:flex; align-items:center; gap:.35rem; text-align:left; }
 .source-action-row small { color:var(--muted); }
+.combat-assignments { display:flex; flex-direction:column; gap:.2rem; margin-top:.4rem; max-height:8rem; overflow:auto; }
+.combat-assignment-row { display:flex; justify-content:space-between; gap:.4rem; padding:.2rem .35rem; border:1px solid var(--line); border-radius:4px; font-size:.72rem; }
+.combat-assignment-row.focused { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+.combat-assignment-row .assignment-target { color:var(--ok); }
+.combat-interrupted { color:var(--warn) !important; }
 .tray-actions { display:flex; justify-content:flex-end; gap:.35rem; margin-top:.45rem; }
 .rail { min-height:0; display:flex; flex-direction:column; gap:.5rem; }
 .decision { max-height:46%; overflow:auto; border:2px solid var(--accent); background:var(--surface); border-radius:6px; padding:.55rem; }
@@ -687,10 +881,8 @@ button.active, button.selected, .focused { border-color: var(--accent); box-shad
 .yield-ability { flex:0 0 auto; color:var(--warn); font-size:.67rem !important; }
 .ignored-abilities { margin-top:.7rem; padding-top:.55rem; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:.35rem; font-size:.7rem; }
 .ignored-abilities span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.fallback-actions { margin-top:.6rem; font-size:.7rem; color:var(--muted); }
-.fallback-actions summary { cursor:pointer; }
-.fallback-actions button { display:block; width:100%; margin-top:.3rem; text-align:left; font-size:.7rem; }
 button.primary { background:var(--accent); color:#08111f; font-weight:700; }
+.decision :deep(.decision-panel) { margin-top: .5rem; }
 .thinking,.waiting { color:var(--muted); font-style:italic; }
 .routine-confirm { display:flex; align-items:center; gap:.25rem; color:var(--muted); white-space:nowrap; }
 .bot-summary { margin-top:.65rem; padding-top:.55rem; border-top:1px solid var(--line); font-size:.72rem; }.bot-summary p { margin:.2rem 0 0; color:var(--muted); }

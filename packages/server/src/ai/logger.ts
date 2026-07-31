@@ -61,6 +61,8 @@ export class AiCallLogger {
   private totalLatencyMs = 0;
   private totalCostUsd = 0;
   private readonly sourceCounts = new Map<DecisionSource, number>();
+  /** Per-source latency, so the strategist and tactician tiers can be measured separately. */
+  private readonly latencyBySource = new Map<DecisionSource, { sum: number; count: number }>();
   /** Latest resolution source by surfaced request, used by the CLI transcript. */
   private readonly sourcesByRequestId = new Map<string, DecisionSource>();
 
@@ -86,6 +88,10 @@ export class AiCallLogger {
     this.totalCostUsd += result.meta.costUsd ?? 0;
     this.sourceCounts.set(source, (this.sourceCounts.get(source) ?? 0) + 1);
     this.sourcesByRequestId.set(request.requestId, source);
+    const bucket = this.latencyBySource.get(source) ?? { sum: 0, count: 0 };
+    bucket.sum += result.meta.latencyMs;
+    bucket.count += 1;
+    this.latencyBySource.set(source, bucket);
     if (this.db === null) return;
 
     // Seat index: parse numeric seat from "P1" -> 1 if possible
@@ -135,12 +141,26 @@ export class AiCallLogger {
     totalPromptTokens: number;
     totalResponseTokens: number;
     avgLatencyMs: number;
+    /** Strategist-tier latency only — the once-per-turn reasoning call. */
+    avgStrategistLatencyMs: number;
+    /** Tactician-tier latency only (`primary`/`retry`/`fallback`); excludes the strategist. */
+    avgTacticianLatencyMs: number;
     totalCostUsd: number;
     strategistCalls: number;
     planExecutions: number;
   } {
     if (this.db === null) {
       const totalCalls = this.sequence - this.skipped;
+      const strategistLatency = this.latencyBySource.get('strategist');
+      const tacticianSources: DecisionSource[] = ['primary', 'retry', 'fallback'];
+      let tacticianSum = 0;
+      let tacticianCount = 0;
+      for (const source of tacticianSources) {
+        const bucket = this.latencyBySource.get(source);
+        if (bucket === undefined) continue;
+        tacticianSum += bucket.sum;
+        tacticianCount += bucket.count;
+      }
       return {
         totalDecisions: this.sequence,
         totalCalls,
@@ -150,6 +170,11 @@ export class AiCallLogger {
         totalPromptTokens: this.promptTokens,
         totalResponseTokens: this.responseTokens,
         avgLatencyMs: totalCalls > 0 ? Math.round(this.totalLatencyMs / totalCalls) : 0,
+        avgStrategistLatencyMs:
+          strategistLatency !== undefined && strategistLatency.count > 0
+            ? Math.round(strategistLatency.sum / strategistLatency.count)
+            : 0,
+        avgTacticianLatencyMs: tacticianCount > 0 ? Math.round(tacticianSum / tacticianCount) : 0,
         totalCostUsd: this.totalCostUsd,
         strategistCalls: this.sourceCounts.get('strategist') ?? 0,
         planExecutions: this.sourceCounts.get('plan') ?? 0,
@@ -168,7 +193,9 @@ export class AiCallLogger {
           SUM(cost_usd) as totalCostUsd,
           SUM(CASE WHEN source = 'strategist' THEN 1 ELSE 0 END) as strategistCalls,
           SUM(CASE WHEN source = 'plan' THEN 1 ELSE 0 END) as planExecutions,
-          AVG(latency_ms) as avgLatencyMs
+          AVG(latency_ms) as avgLatencyMs,
+          AVG(CASE WHEN source = 'strategist' THEN latency_ms END) as avgStrategistLatencyMs,
+          AVG(CASE WHEN source IN ('primary', 'retry', 'fallback') THEN latency_ms END) as avgTacticianLatencyMs
         FROM ai_calls WHERE game_id = ?`,
       )
       .all(this.gameId) as Array<{
@@ -179,6 +206,8 @@ export class AiCallLogger {
       totalPromptTokens?: number;
       totalResponseTokens?: number;
       avgLatencyMs?: number;
+      avgStrategistLatencyMs?: number;
+      avgTacticianLatencyMs?: number;
       totalCostUsd?: number;
       strategistCalls?: number;
       planExecutions?: number;
@@ -196,6 +225,8 @@ export class AiCallLogger {
       totalPromptTokens: row?.totalPromptTokens ?? 0,
       totalResponseTokens: row?.totalResponseTokens ?? 0,
       avgLatencyMs: Math.round(row?.avgLatencyMs ?? 0),
+      avgStrategistLatencyMs: Math.round(row?.avgStrategistLatencyMs ?? 0),
+      avgTacticianLatencyMs: Math.round(row?.avgTacticianLatencyMs ?? 0),
       totalCostUsd: row?.totalCostUsd ?? 0,
       strategistCalls: row?.strategistCalls ?? 0,
       planExecutions: row?.planExecutions ?? 0,

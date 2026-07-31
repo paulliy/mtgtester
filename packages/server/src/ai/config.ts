@@ -53,6 +53,14 @@ export interface AiConfig {
   /** Request concurrency (sequential decisions → 1). Default: 1. */
   concurrency: number;
   /**
+   * Concurrency of the strategist's OWN request queue lane, separate from `concurrency` (the
+   * tactician's). A strategist call must never block a tactical decision behind it; keeping it
+   * on its own queue instance (rather than raising global concurrency) means tactical calls stay
+   * strictly serial, which the decision cache and turn plan assume. Default: 1 — only one active
+   * turn is ever being planned at a time.
+   */
+  strategistConcurrency: number;
+  /**
    * Answer dominated decisions locally instead of calling the model (see `heuristics.ts`).
    * Default: true. Disable to measure the savings, or if a rule is suspected of misfiring.
    */
@@ -190,6 +198,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   baseBackoffMs: 1000,
   maxBackoffMs: 32000,
   concurrency: 1,
+  strategistConcurrency: 1,
   heuristicsEnabled: true,
   decisionCacheEnabled: true,
   filterNonCachingProviders: true,
@@ -408,6 +417,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     maxOutputTokens: parseNumber(
       env['AI_MAX_OUTPUT_TOKENS'] || env[`${preset.envPrefix}_MAX_OUTPUT_TOKENS`],
       DEFAULT_AI_CONFIG.maxOutputTokens,
+    ),
+    strategistConcurrency: parseNumber(
+      env['AI_STRATEGIST_CONCURRENCY'],
+      DEFAULT_AI_CONFIG.strategistConcurrency,
     ),
     heuristicsEnabled: parseBoolean(
       env['AI_HEURISTICS_ENABLED'],

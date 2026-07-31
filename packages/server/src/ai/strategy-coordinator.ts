@@ -2,6 +2,8 @@ import type { Engine } from '@mtg/engine';
 import type {
   DecisionRequest,
   DecisionResponse,
+  GameId,
+  PlayerId,
   Phase,
   PlannedAction,
   Step,
@@ -88,6 +90,13 @@ function cleanPlan(raw: TurnStrategy | undefined): TurnStrategy | null {
 /**
  * Match-scoped strategy state shared by every seat provider. This is the observation point the
  * old per-provider TurnPlanManager lacked: every opponent action reaches the same plan queue.
+ *
+ * The strategist call is deliberately OFF the decision critical path (ADR 0016 predates this;
+ * see the player-experience overhaul plan). `prepare()`/`prefetch()` start the call and return
+ * immediately; `guidanceFor()` and `tryExecutePlan()` read whatever has landed so far, which is
+ * `null`/no-plan until the promise settles — exactly the "no strategy yet" path the tactician
+ * already handles. This is why the strategist call, at 20-60s, no longer gates a 3-4s tactical
+ * decision.
  */
 export class StrategyCoordinator {
   private readonly turnPlan = new TurnPlanManager();
@@ -96,6 +105,10 @@ export class StrategyCoordinator {
   private plannedPlayer: string | null = null;
   private strategy: TurnStrategy | null = null;
   private strategyAttempted = false;
+  /** One re-plan is allowed per turn after an opponent intervention invalidates the strategy. */
+  private replanned = false;
+  /** The in-flight (or last-settled) strategist call, for tests and turn-boundary bookkeeping. */
+  private inFlight: Promise<void> | null = null;
 
   constructor(
     private readonly strategistClient: AiClient | null,
@@ -103,38 +116,86 @@ export class StrategyCoordinator {
     private readonly engine: Engine,
     private readonly config: AiConfig,
     private readonly logger?: AiCallLogger,
+    /** Never plan this seat's own turn — no tactician ever consumes it (see `guidanceFor`). */
+    private readonly humanSeat?: PlayerId | null,
   ) {}
 
-  async prepare(request: DecisionRequest): Promise<void> {
-    if (this.plannedTurn !== request.turn || this.plannedPlayer !== request.activePlayer) {
-      this.plannedTurn = request.turn;
-      this.plannedPlayer = request.activePlayer;
+  /**
+   * Ahead-of-time trigger, fired once per turn boundary (the previous turn's last decision) for
+   * the seat about to become active. Overlaps the strategist call with the end step, untap,
+   * upkeep, and draw of the incoming turn, plus every other seat's tactical calls.
+   */
+  prefetch(gameId: GameId, turn: number, activePlayer: PlayerId): void {
+    this.resetIfNewTurn(turn, activePlayer);
+    this.startStrategist(gameId, turn, activePlayer, 'precombatMain', null);
+  }
+
+  /** Called on every decision; starts the strategist at most once per (turn, activePlayer). */
+  prepare(request: DecisionRequest): void {
+    this.resetIfNewTurn(request.turn, request.activePlayer);
+    if (request.phase === 'beginning') return;
+    this.startStrategist(
+      request.gameId,
+      request.turn,
+      request.activePlayer,
+      request.phase,
+      request.step,
+    );
+  }
+
+  /** Diagnostic/test-only: resolves once the most recently started strategist call has settled. */
+  async settled(): Promise<void> {
+    await this.inFlight;
+  }
+
+  private resetIfNewTurn(turn: number, activePlayer: PlayerId): void {
+    if (this.plannedTurn !== turn || this.plannedPlayer !== activePlayer) {
+      this.plannedTurn = turn;
+      this.plannedPlayer = activePlayer;
       this.strategy = null;
       this.strategyAttempted = false;
+      this.replanned = false;
       this.turnPlan.clear();
     }
+  }
 
+  private startStrategist(
+    gameId: GameId,
+    turn: number,
+    activePlayer: PlayerId,
+    phase: Phase,
+    step: Step | null,
+  ): void {
     if (
       !this.config.strategistEnabled ||
       this.strategistClient === null ||
       this.strategyAttempted ||
-      request.turn <= 0 ||
-      request.phase === 'beginning'
+      turn <= 0 ||
+      activePlayer === this.humanSeat
     ) {
       return;
     }
 
     this.strategyAttempted = true;
     const strategyRequest: DecisionRequest = {
-      ...request,
-      requestId: `${request.gameId}-t${request.turn}-${request.activePlayer}-strategy`,
-      decidingPlayer: request.activePlayer,
+      requestId: `${gameId}-t${turn}-${activePlayer}-strategy`,
+      gameId,
+      turn,
+      activePlayer,
+      decidingPlayer: activePlayer,
+      phase,
+      step,
       decisionType: 'general',
       prompt: 'Create the active player turn strategy.',
       legalActions: [{ id: 0, type: 'planTurn', description: 'Return the turn strategy' }],
     };
-    const view = this.engine.view(request.activePlayer);
-    const recent = this.recentFor(request.activePlayer);
+    this.inFlight = this.runStrategist(strategyRequest);
+  }
+
+  private async runStrategist(strategyRequest: DecisionRequest): Promise<void> {
+    const activePlayer = strategyRequest.activePlayer;
+    const view = this.engine.view(activePlayer);
+    const recent = this.recentFor(activePlayer);
     const prompt = assembleStrategistPrompt(strategyRequest, view, recent);
 
     try {
@@ -143,19 +204,34 @@ export class StrategyCoordinator {
       );
       const strategy = cleanPlan(result.response.turnStrategy);
       if (result.response.actionId !== 0 || strategy === null) {
-        this.engine.addDebug(
-          'decision',
-          `strategist returned no usable plan for ${request.activePlayer}`,
-        );
+        this.engine.addDebug('decision', `strategist returned no usable plan for ${activePlayer}`);
+        return;
+      }
+      // A turn/player change (or a fresh re-plan) may have superseded this call while it was
+      // in flight; don't install a stale plan over what the board now needs.
+      if (
+        this.plannedTurn !== strategyRequest.turn ||
+        this.plannedPlayer !== activePlayer
+      ) {
         return;
       }
       this.strategy = strategy;
       this.turnPlan.recordPlan(strategyRequest, strategy.plannedActions, this.engine);
       this.logger?.log(strategyRequest, result, false, false, 'strategist');
+      this.engine.addDebug(
+        'decision',
+        `strategist call completed for ${activePlayer} [model: ${result.meta.model}, latency: ${result.meta.latencyMs}ms, tokens: ${result.meta.promptTokens}+${result.meta.responseTokens}]`,
+        {
+          requestId: strategyRequest.requestId,
+          model: result.meta.model,
+          latencyMs: result.meta.latencyMs,
+          tokens: { prompt: result.meta.promptTokens, response: result.meta.responseTokens },
+        },
+      );
     } catch (error) {
       this.engine.addDebug(
         'decision',
-        `strategist call failed for ${request.activePlayer}: ${(error as Error).message}`,
+        `strategist call failed for ${activePlayer}: ${(error as Error).message}`,
       );
     }
   }
@@ -186,9 +262,23 @@ export class StrategyCoordinator {
 
       if (
         request.decidingPlayer !== request.activePlayer &&
+        request.turn === this.plannedTurn &&
         !['pass', 'passAndYieldTurn', 'yieldToAbility'].includes(chosen.type)
       ) {
         this.strategy = null;
+        // Off the critical path, a re-plan is affordable — but only once per turn, so a
+        // contested board can't turn into a strategist call on every single intervention.
+        if (!this.replanned) {
+          this.replanned = true;
+          this.strategyAttempted = false;
+          this.startStrategist(
+            request.gameId,
+            request.turn,
+            request.activePlayer,
+            request.phase,
+            request.step,
+          );
+        }
       }
     }
 

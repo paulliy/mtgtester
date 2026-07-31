@@ -8,6 +8,8 @@ const props = withDefaults(
   defineProps<{
     permanent: SpectatorPermanent;
     count?: number;
+    /** Object/card id → display name, for naming a blocked attacker. Optional; falls back to id. */
+    nameById?: Map<string, string>;
   }>(),
   { count: 1 },
 );
@@ -26,8 +28,12 @@ const counterText = computed(() =>
 
 const marks = computed(() => {
   const out: string[] = [];
-  if (props.permanent.attacking !== null) out.push('⚔');
-  if (props.permanent.blocking !== null) out.push('🛡');
+  if (props.permanent.attacking !== null) {
+    out.push(`⚔ ${props.nameById?.get(props.permanent.attacking) ?? props.permanent.attacking}`);
+  }
+  if (props.permanent.blocking !== null) {
+    out.push(`🛡 ${props.nameById?.get(props.permanent.blocking) ?? props.permanent.blocking}`);
+  }
   if (props.permanent.summoningSick) out.push('zzz');
   return out;
 });

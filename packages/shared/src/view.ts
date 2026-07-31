@@ -95,6 +95,12 @@ export interface PlayerView {
   opponents: OpponentView[];
   /** All battlefields, public state (brief §7.1). */
   battlefield: PermanentView[];
+  /**
+   * All players' exile zones — public, like a graveyard, EXCEPT cards exiled face down
+   * (hideaway and similar): those report as `"Face-down card"` for every viewer but their
+   * owner, mirroring the same redaction the human browser view applies.
+   */
+  exile: CardView[];
   stack: StackObjectView[];
   /** Trimmed recent public action log — last ~15 entries (brief §7.4). */
   recentLog: string[];

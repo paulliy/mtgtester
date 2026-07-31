@@ -92,6 +92,8 @@ export interface SpectatorSeat {
   mulligansTaken: number;
   hasLost: boolean;
   lossReason: LossReason | null;
+  /** "Pass and yield until end of turn" is active (brief — Workstream 2's stop-list yield). */
+  yieldingUntilEndOfTurn: boolean;
 }
 
 export interface SpectatorStackObject {

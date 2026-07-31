@@ -100,6 +100,8 @@ export class MatchSession {
   private aiStrategistClient: OpenAiCompatibleClient | null = null;
   private aiTacticianClient: OpenAiCompatibleClient | null = null;
   private aiQueue: RequestQueue | null = null;
+  /** The strategist's own queue lane — see `AiConfig.strategistConcurrency`. */
+  private aiStrategistQueue: RequestQueue | null = null;
   private aiCoordinator: StrategyCoordinator | null = null;
   private debugFlags: DebugFlags = { ...DEFAULT_DEBUG_FLAGS };
   private readonly gameMode: GameMode;
@@ -236,6 +238,11 @@ export class MatchSession {
           this.ensureAiCoordinator().recordDecision(request, response, 'human');
         }
         this.reportAiCost();
+      },
+      onTurnBoundary: (turn, activePlayer) => {
+        if (this.opts.providerKind === 'ai') {
+          this.ensureAiCoordinator().prefetch(this.opts.gameId, turn, activePlayer);
+        }
       },
       onDebug: (entries) => {
         if (this.gameMode === 'singlePlayer' || !this.debugFlags.verboseEngine) return;
@@ -523,6 +530,20 @@ export class MatchSession {
     this.publishPlayerState(false);
   }
 
+  /**
+   * Out-of-band cancel of an active "pass and yield until end of turn" (Workstream 2). While
+   * yielding, the engine auto-passes and never surfaces a decision, so this cannot ride on the
+   * usual request/revision submission path — it mutates engine state directly and republishes
+   * the board so the yield banner clears.
+   */
+  cancelYield(): void {
+    if (this.humanSeat === null) {
+      this.opts.send({ type: 'error', payload: { message: 'This is not a single-player game.' } });
+      return;
+    }
+    if (this.engine.cancelYield(this.humanSeat)) this.publishPlayerState(false);
+  }
+
   setPlayerConnected(connected: boolean): void {
     if (this.gameMode !== 'singlePlayer') return;
     this.connectionGate.setConnected(connected);
@@ -724,12 +745,20 @@ export class MatchSession {
     this.aiStrategistClient ??= new OpenAiCompatibleClient(configForRole(config, 'strategist'));
     this.aiTacticianClient ??= new OpenAiCompatibleClient(configForRole(config, 'tactician'));
     this.aiQueue ??= new RequestQueue(config);
+    // A separate queue instance, not just a separate call: a strategist call must never queue
+    // behind a tactical one (or vice versa), which sharing `aiQueue` would force under its
+    // concurrency-1 default.
+    this.aiStrategistQueue ??= new RequestQueue({
+      rpmLimit: config.rpmLimit,
+      concurrency: config.strategistConcurrency,
+    });
     this.aiCoordinator ??= new StrategyCoordinator(
       this.aiStrategistClient,
-      this.aiQueue,
+      this.aiStrategistQueue,
       this.engine,
       config,
       this.logger ?? undefined,
+      this.humanSeat,
     );
     return this.aiCoordinator;
   }

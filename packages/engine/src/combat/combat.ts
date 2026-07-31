@@ -214,6 +214,18 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
         `Declare attackers: does ${creature.name} (${pt.power}/${pt.toughness}) attack?` +
         (rest.length > 0 ? ` (${rest.length} more creature(s) still to declare)` : ''),
       options,
+      // Client-batching hint (brief — Workstream 5): every creature still to be asked about,
+      // and who it may legally attack. Not consulted for legality — the browser composes the
+      // whole assignment on the board, then replays it one already-validated engine decision
+      // at a time.
+      presentationCombat: {
+        kind: 'attackers',
+        subjectId: creature.id,
+        remaining: rest.map((c) => ({
+          subjectId: c.id,
+          optionIds: opponents.map((opp) => opp.id),
+        })),
+      },
     };
 
     if (outcome.index === 0) continue;
@@ -327,6 +339,14 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
           `Declare blockers: does ${blocker.name} (${pt.power}/${pt.toughness}) block?` +
           (remaining > 0 ? ` (${remaining} more potential blocker(s) to declare)` : ''),
         options,
+        presentationCombat: {
+          kind: 'blockers',
+          subjectId: blocker.id,
+          remaining: candidates.slice(i + 1).map((c) => ({
+            subjectId: c.blocker.id,
+            optionIds: c.blockable.map((a) => a.id),
+          })),
+        },
       };
       if (outcome.index === 0) continue;
       if (outcome.index > blockable.length) break; // noBlockRest

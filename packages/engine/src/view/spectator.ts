@@ -22,6 +22,7 @@ import type {
   SpectatorState,
 } from '@mtg/shared';
 import { computeCharacteristics } from '../effects/continuous';
+import { scryfallIdOf } from '../state/queries';
 import type { EngineCardObject, EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
 
 function cardView(ctx: GameContext, obj: EngineCardObject): SpectatorCard {
@@ -31,7 +32,7 @@ function cardView(ctx: GameContext, obj: EngineCardObject): SpectatorCard {
     typeLine: obj.typeLine,
     manaCost: obj.manaCost,
     oracleText: obj.oracleText,
-    scryfallId: ctx.defs.get(obj.oracleId)?.scryfallId ?? null,
+    scryfallId: scryfallIdOf(ctx, obj.oracleId),
     owner: obj.ownerId,
   };
 }
@@ -58,7 +59,7 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
     blocking: perm.blocking,
     blockedBy: [...perm.blockedByOrdered],
     keywords: [...chars.keywords],
-    scryfallId: ctx.defs.get(perm.oracleId)?.scryfallId ?? null,
+    scryfallId: scryfallIdOf(ctx, perm.oracleId),
     owner: perm.ownerId,
   };
 }
@@ -128,7 +129,7 @@ function commanderViews(ctx: GameContext, player: EnginePlayerState): SpectatorC
       // Commander tax: an additional {2} for each previous cast from the command zone
       // (brief §5.7). Mirrors `legal.ts`, which is what actually charges it.
       taxGeneric: 2 * castCount,
-      scryfallId: visibleObject === null ? null : (ctx.defs.get(visibleObject.oracleId)?.scryfallId ?? null),
+      scryfallId: visibleObject === null ? null : scryfallIdOf(ctx, visibleObject.oracleId),
     };
   });
 }
@@ -179,6 +180,7 @@ function seatView(ctx: GameContext, player: EnginePlayerState): SpectatorSeat {
     mulligansTaken: player.mulligansTaken,
     hasLost: player.hasLost,
     lossReason: player.lossReason,
+    yieldingUntilEndOfTurn: player.yieldUntilEndOfTurn === true,
   };
 }
 
@@ -194,7 +196,7 @@ export function buildSpectatorState(ctx: GameContext): SpectatorState {
     kind: so.kind,
     description: so.description,
     targets: [...so.targets],
-    scryfallId: ctx.defs.get(so.sourceOracleId)?.scryfallId ?? null,
+    scryfallId: scryfallIdOf(ctx, so.sourceOracleId),
   }));
 
   return {

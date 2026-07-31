@@ -3,7 +3,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 const spinerockKnoll = () =>
   oracle({
@@ -57,5 +57,41 @@ describe('Increment 17: Hideaway Lands', () => {
     // One card should be in exile tagged with attachedToCardId = land.cardId
     const exiledCard = ctx.state.exile.find((c) => c.attachedToCardId === land.cardId);
     expect(exiledCard).toBeDefined();
+  });
+
+  it('yields a real decision over the four cards, and the chosen one is what gets exiled', () => {
+    const ctx = pod();
+    const land = spawn(ctx, 'P1', spinerockKnoll());
+    const etbAbility = interpretCard(spinerockKnoll()).triggers[0]!;
+
+    // Distinct top-4 names so the choice is observable. `conjure` unshifts onto the library,
+    // so conjuring in reverse order leaves Alpha on top.
+    const names = ['Alpha Pick', 'Beta Pick', 'Gamma Pick', 'Delta Pick'];
+    const named = [...names]
+      .reverse()
+      .map((name) => conjure(ctx, 'P1', oracle({ name, typeLine: 'Instant' }), 'library'));
+
+    const { decisions } = pump(
+      executeAbility(
+        ctx,
+        { cardId: land.cardId, name: land.name, oracleId: land.oracleId, controllerId: 'P1' },
+        etbAbility,
+        [],
+      ),
+      (decision) => {
+        expect(decision.decisionType).toBe('general');
+        const presentedNames = decision.options.map((o) => {
+          const subject = o.presentation?.subjects[0];
+          return subject?.kind === 'card' ? subject.card.name : undefined;
+        });
+        expect(presentedNames).toEqual(expect.arrayContaining(named.map((c) => c.name)));
+        const betaIndex = decision.options.findIndex((o) => o.description.includes('Beta Pick'));
+        return { index: betaIndex, targets: new Map() };
+      },
+    );
+
+    expect(decisions).toHaveLength(1);
+    const exiledCard = ctx.state.exile.find((c) => c.attachedToCardId === land.cardId);
+    expect(exiledCard?.name).toBe('Beta Pick');
   });
 });

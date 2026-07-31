@@ -427,6 +427,11 @@ export const useGameStore = defineStore('game', () => {
     socket?.send({ type: 'resumePlayerAbility', payload: { key } });
   }
 
+  /** Out-of-band: cancel an active "pass and yield until end of turn" before it lapses on its own. */
+  function cancelYield(): void {
+    socket?.send({ type: 'cancelYield', payload: {} });
+  }
+
   function setDebugFlags(next: DebugFlags): void {
     debugFlags.value = { ...next };
     socket?.send({ type: 'setDebugFlags', payload: { flags: debugFlags.value } });
@@ -491,6 +496,7 @@ export const useGameStore = defineStore('game', () => {
     submitPlayerAction,
     yieldPlayerAbility,
     resumePlayerAbility,
+    cancelYield,
     setDebugFlags,
     abandonGame,
   };

@@ -152,4 +152,38 @@ describe('AiCallLogger', () => {
       avgLatencyMs: 90,
     });
   });
+
+  it('reports strategist and tactician latency separately', () => {
+    const logger = new AiCallLogger(null, 'g103');
+    const req: DecisionRequest = {
+      requestId: 'r1',
+      gameId: 'g103',
+      turn: 1,
+      activePlayer: 'P1',
+      decidingPlayer: 'P1',
+      phase: 'precombatMain',
+      step: null,
+      decisionType: 'general',
+      prompt: 'Prompt',
+      legalActions: [],
+    };
+    const meta = (latencyMs: number): CallMeta => ({
+      model: 'm1',
+      promptTokens: 10,
+      responseTokens: 10,
+      latencyMs,
+      wasRetry: false,
+      wasFallback: false,
+      rawResponse: '{}',
+    });
+
+    logger.log(req, { response: { requestId: 'r1', actionId: 0 }, meta: meta(20000) }, false, false, 'strategist');
+    logger.log(req, { response: { requestId: 'r2', actionId: 0 }, meta: meta(3000) }, false, false, 'primary');
+    logger.log(req, { response: { requestId: 'r3', actionId: 0 }, meta: meta(5000) }, false, false, 'primary');
+
+    expect(logger.summary()).toMatchObject({
+      avgStrategistLatencyMs: 20000,
+      avgTacticianLatencyMs: 4000,
+    });
+  });
 });
