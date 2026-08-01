@@ -480,6 +480,12 @@ export type Effect =
    */
   | { op: 'dealDamageEachChosen'; targetSlot: number; amount: Value }
   /**
+   * "Return up to two other target nonland permanents to their owners' hands" (Marang River
+   * Regent) — the return-to-hand analog of `dealDamageEachChosen`: every object chosen in a
+   * variable-count slot is returned independently, no shared total to divide.
+   */
+  | { op: 'returnToHandEachChosen'; targetSlot: number }
+  /**
    * "X damage divided as you choose among any number of target creatures…" (Ureni, the Song
    * Unending) — CR 601.2d: the division is chosen at announcement, alongside the targets
    * themselves (every target must receive at least 1), and replayed unchanged at resolution —

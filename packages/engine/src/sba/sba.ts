@@ -9,7 +9,7 @@
 
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
 import { computeTargetOptions } from '../actions/legal';
-import type { Effect } from '../cards/ability';
+import type { Ability, Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { computeCharacteristics } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
@@ -337,7 +337,34 @@ function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
 
 function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen<void> {
   const s = ctx.state;
-  const specs = trigger.ability.targets;
+  // `Ability.modes` is a SPELL-casting-time mechanism by design (its own doc comment: "the
+  // executor never sees `modes` at all" — a spell's mode is folded into `effects` by
+  // `resolveCastAbility` before the ability ever reaches here). A handful of triggered
+  // abilities (Kairi, the Swirling Sky's dies trigger) were modeled reusing the same field, but
+  // nothing on the trigger path ever read it — `effects` stayed `[]` and the ability was a
+  // silent no-op every time it fired. Folding the modes into a `chooseOne` effect (which
+  // `executeAbility` already knows how to run) gets the player the same choice, just resolved
+  // as the ability resolves rather than as it's placed on the stack (CR 603.3c would ask a beat
+  // earlier); every mode this engine models is targetless, so that timing difference is not
+  // observable.
+  const ability: Ability =
+    trigger.ability.modes !== undefined
+      ? {
+          kind: trigger.ability.kind,
+          targets: trigger.ability.targets,
+          effects: [
+            {
+              op: 'chooseOne',
+              options: trigger.ability.modes.options.map((o) => ({
+                effects: o.effects,
+                description: o.description ?? 'Mode',
+              })),
+            },
+          ],
+          ...(trigger.ability.description !== undefined ? { description: trigger.ability.description } : {}),
+        }
+      : trigger.ability;
+  const specs = ability.targets;
   const chosen: ObjectId[] = [];
   const countTargets: Record<number, ObjectId[]> = {};
   const divisionAmounts: Record<ObjectId, number> = {};
@@ -367,22 +394,33 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   }
 
   if (ordinarySlots.length > 0) {
+    // `trigger.sourceCardId` is the STABLE card identity (`EnginePermanent.cardId`), which
+    // survives zone changes — it is NOT the battlefield object id the web UI keys permanents by
+    // (`EnginePermanent.id`, freshly minted every zone change, incl. entering the battlefield;
+    // see `reincarnate`). Look the permanent up by its stable id to get the live board id a
+    // click can actually match; `undefined` when the source already left the battlefield (e.g.
+    // a "dies" trigger), in which case there is nothing to click and the option falls back to
+    // the generic decision panel instead of a dangling, never-matching source id.
+    const sourcePermanent = ctx.state.battlefield.find((p) => p.cardId === trigger.sourceCardId);
+
     // One decision carrying every ordinary slot. `isForced` auto-resolves it when each slot has
     // a single candidate, so the common "ETB, destroy the only creature" costs no AI call.
     const outcome = yield {
       decisionType: 'chooseTargets',
       player: trigger.controllerId,
-      prompt: `Choose targets for ${trigger.sourceName} — ${trigger.ability.description ?? ''}`,
+      prompt: `Choose targets for ${trigger.sourceName} — ${ability.description ?? ''}`,
       options: [
         {
           type: 'chooseTargets',
           description: `Targets for ${trigger.sourceName}`,
           targets: ordinarySlots,
           // Route through the same "click the permanent, then its targets" UI a cast spell or
-          // activated ability uses (`sourceId` = the trigger's source, already on the
-          // battlefield). Without this, the option falls back to the generic decision panel,
-          // which has no per-slot picker and would submit with no targets chosen at all.
-          interaction: { kind: 'source', sourceId: trigger.sourceCardId, targetSlots: ordinarySlots },
+          // activated ability uses. Without this, the option falls back to the generic decision
+          // panel, which has no per-slot picker and would submit with no targets chosen at all.
+          interaction:
+            sourcePermanent !== undefined
+              ? { kind: 'source', sourceId: sourcePermanent.id, targetSlots: ordinarySlots }
+              : { kind: 'choice', targetSlots: ordinarySlots },
         },
       ],
     };
@@ -408,7 +446,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     // 601.2d requires every target to receive at least 1, so choosing more targets than the
     // total supports is not a legal announcement. The total is knowable now: it never depends
     // on which targets get chosen, only on the board.
-    const dividedEffect = trigger.ability.effects.find(
+    const dividedEffect = ability.effects.find(
       (e): e is Extract<Effect, { op: 'dealDamageDivided' }> =>
         e.op === 'dealDamageDivided' && e.targetSlot === i,
     );
@@ -492,7 +530,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   }
 
   const id = `o-${s.nextObjectNum++}` as ObjectId;
-  const description = trigger.ability.description ?? trigger.sourceName;
+  const description = ability.description ?? trigger.sourceName;
   const stackEntry: EngineStackObject = {
     id,
     sourceId: trigger.sourceCardId,
@@ -501,7 +539,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     description: `${trigger.sourceName} — ${description}`,
     targets: chosen,
     card: null,
-    ability: trigger.ability,
+    ability,
     sourceOracleId: trigger.sourceOracleId,
     sourceCardId: trigger.sourceCardId,
     isCommanderCast: false,

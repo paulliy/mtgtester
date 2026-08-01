@@ -707,6 +707,22 @@ export function* executeAbility(
         }
         break;
       }
+      case 'returnToHandEachChosen': {
+        // "Return up to two other target nonland permanents to their owners' hands" (Marang
+        // River Regent) — the `returnToHand` analog of `dealDamageEachChosen` above: every
+        // object chosen in the variable-count slot is returned independently.
+        const spec = ability.targets[effect.targetSlot];
+        for (const id of countTargets?.[effect.targetSlot] ?? []) {
+          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+            continue;
+          }
+          const perm = findPermanent(ctx, id);
+          if (perm === undefined) continue;
+          emit(ctx, 'returnToHand', { target: perm.name, source: source.name });
+          yield* moveObject(ctx, perm, { zone: 'hand' });
+        }
+        break;
+      }
       case 'dealDamageDivided': {
         // Ureni: the split was decided at announcement (CR 601.2d) and rides on
         // `divisionAmounts`; a target that left before resolution is simply skipped, same as
@@ -1483,12 +1499,17 @@ export function* executeAbility(
             player: controller.id,
             prompt: `Kairi: choose instant/sorcery card from graveyard to return to hand (${pass + 1}/2)`,
             options: [
-              ...spellsInGy.map((c) => ({
-                type: 'returnToHand',
-                description: `Return ${c.name} from graveyard`,
-                payload: c.id,
-              })),
-              { type: 'decline', description: 'Done returning spells' },
+              // No raw `payload` — graveyard cards render in `ZoneStrip` for preview only, with
+              // no click handler, so a payload-derived `subjectId` would strand the option
+              // behind an unreachable "click the board object" affordance.
+              ...spellsInGy.map((c) =>
+                cardOption(ctx, c, {
+                  type: 'returnToHand',
+                  description: `Return ${c.name} from graveyard`,
+                  verb: 'Return to hand',
+                }),
+              ),
+              plainOption({ type: 'decline', description: 'Done returning spells', verb: 'Done', role: 'decline' }),
             ],
           };
           if (outcome.index >= spellsInGy.length) break;
@@ -1734,12 +1755,17 @@ function* lookAtTopN(
       player: player.id,
       prompt: `${source.name}: you may put a card from among the top ${looked.length} ${where}.`,
       options: [
-        ...eligible.map((card) => ({
-          type: 'putFromTop',
-          description: `Put ${card.name} ${where}`,
-          payload: card.id,
-        })),
-        { type: 'decline', description: 'Put none of them' },
+        // No raw `payload` — these are cards off the top of the library, never rendered
+        // on-screen, so a payload-derived `subjectId` would strand the option behind an
+        // unreachable "click the board object" affordance (see `chooseCard`'s doc comment).
+        ...eligible.map((card) =>
+          cardOption(ctx, card, {
+            type: 'putFromTop',
+            description: `Put ${card.name} ${where}`,
+            verb: `Put ${where}`,
+          }),
+        ),
+        plainOption({ type: 'decline', description: 'Put none of them', verb: 'Put none of them', role: 'decline' }),
       ],
     };
     if (outcome.index < eligible.length) taken = eligible[outcome.index];
@@ -2088,17 +2114,19 @@ function* proliferate(
       prompt: `${source.name}: proliferate counters on ${player.id}?`,
       presentationSource: presentedSource(ctx, source),
       options: [
+        // No `payload` (resolved by `outcome.index` below): a player isn't an on-screen
+        // "source" the way a permanent is — the web UI never lets a human focus an opponent (or
+        // themselves) as a click target the way it does a battlefield permanent, so a
+        // payload-derived `subjectId` here would strand the option unreachable.
         playerOption(player.id, player.id, {
           type: 'proliferate',
           description: `Proliferate ${player.id}`,
-          payload: player.id,
           verb: 'Proliferate',
           role: 'affirm',
         }),
         playerOption(player.id, player.id, {
           type: 'skipProliferate',
           description: `Do not proliferate ${player.id}`,
-          payload: player.id,
           verb: 'Skip',
           role: 'decline',
         }),

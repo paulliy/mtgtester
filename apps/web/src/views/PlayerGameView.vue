@@ -261,6 +261,19 @@ function cancel(): void {
   chosenTargets.value = {};
 }
 
+/**
+ * Flipping `combatPlan.mode` to 'replaying' alone submits nothing: the engine is still parked on
+ * the same pending request it was composing over, so the `watch(request, ...)` that drives
+ * replay never fires (it only reacts to `request` changing, which it won't until a submit
+ * happens). Answer the current request immediately to kick the replay loop off.
+ */
+function confirmCombatPlan(): void {
+  combatPlan.confirm();
+  if (request.value === null) return;
+  const actionId = combatPlan.answerCurrent(request.value);
+  if (actionId !== null) store.submitPlayerAction(actionId);
+}
+
 const confirmButtonRef = ref<HTMLButtonElement | null>(null);
 
 watch(selectedAction, (action) => {
@@ -723,7 +736,7 @@ function abandon(): void {
                   type="button"
                   class="primary"
                   :disabled="combatPlan.mode === 'interrupted'"
-                  @click="combatPlan.confirm()"
+                  @click="confirmCombatPlan"
                 >
                   Confirm {{ combatPlan.kind === 'attackers' ? 'attacks' : 'blocks' }}
                 </button>
@@ -844,7 +857,7 @@ button.active, button.selected, .focused { border-color: var(--accent); box-shad
 .resource-strip { display:inline-flex; align-self:flex-start; padding:.16rem .38rem; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:.68rem; }
 .human-zone .permanents { flex:1; overflow:auto; }
 .hand { display:flex; gap:.35rem; overflow-x:auto; padding-top:.4rem; border-top:1px solid var(--line); }
-.hand-card { width:78px; flex:0 0 78px; padding:.2rem; display:flex; flex-direction:column; gap:.2rem; font-size:.65rem; overflow:hidden; }
+.hand-card { width:96px; flex:0 0 96px; padding:.2rem; display:flex; flex-direction:column; gap:.2rem; font-size:.65rem; overflow:hidden; }
 .command-zone { display:flex; align-items:center; gap:.35rem; padding-top:.3rem; border-top:1px solid var(--line); color:var(--muted); font-size:.68rem; }
 .commander-card { display:flex; align-items:center; gap:.25rem; max-width:11rem; padding:.15rem; font-size:.65rem; text-align:left; }
 .commander-card :deep(.card-image) { width:26px; }

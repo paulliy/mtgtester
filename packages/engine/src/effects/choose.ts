@@ -31,11 +31,15 @@ export function* chooseCard(
 ): GameGen<EngineCardObject | EnginePermanent | null> {
   if (spec.cards.length === 0) return null;
 
+  // No `payload` here deliberately: the outcome is read back by index (`spec.cards[outcome.index]`
+  // below), never by payload. A raw card id as payload would make `interactionFor` (`engine.ts`)
+  // treat this option as "click the on-screen object with this id" — true for a hand or
+  // battlefield card, but library/graveyard/exile cards picked by `chooseCard` have no such
+  // on-screen element, which stranded the option behind an unreachable click target.
   const options = spec.cards.map((card) =>
     cardOption(ctx, card, {
       type: spec.type,
       description: spec.describe?.(card) ?? `${spec.verb} ${card.name}`,
-      payload: card.id,
       verb: spec.verb,
       role: 'select',
     }),

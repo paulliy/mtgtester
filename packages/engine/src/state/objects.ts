@@ -247,7 +247,12 @@ export function* moveObject(
         decisionType: 'general',
         player: controllerId,
         prompt: `${perm.name}: ${prompt}`,
-        options: options.map((o) => ({ type: 'chooseOption', description: o.label, payload: o.key })),
+        // No `payload` — resolved by `outcome.index` below, and `o.key` (e.g. "Khans", "red")
+        // is not an on-screen object id. Setting it as payload would make `interactionFor`
+        // treat this as "click the board object with this id," which nothing on the board has,
+        // stranding the choice unreachable for a human player (the same bug class as
+        // `searchLibrary`'s raw card-id payloads).
+        options: options.map((o) => ({ type: 'chooseOption', description: o.label })),
       };
       const chosen = options[outcome.index]?.key;
       if (chosen !== undefined) perm.chosenOption = chosen;

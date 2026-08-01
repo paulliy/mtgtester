@@ -39,8 +39,13 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
 }
 
-/** Ensure every surfaced option has a typed affordance, even uncommon card-specific choices. */
-function interactionFor(option: PendingDecision['options'][number]): ActionInteraction {
+/**
+ * Ensure every surfaced option has a typed affordance, even uncommon card-specific choices.
+ * Exported for tests: it is the single source of truth for whether the web UI can actually
+ * reach an option (see `human-ui-reachability.test.ts`), so a reachability check that
+ * re-implemented this logic instead of calling it could drift from what ships.
+ */
+export function interactionFor(option: PendingDecision['options'][number]): ActionInteraction {
   if (option.interaction !== undefined) return option.interaction;
   const payload = asRecord(option.payload);
   const sourceId = payload?.['objectId'];

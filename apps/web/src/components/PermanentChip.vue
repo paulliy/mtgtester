@@ -85,7 +85,7 @@ function onLeave(): void {
 <style scoped>
 .tile {
   position: relative;
-  width: 88px;
+  width: 108px;
   transition: transform 120ms ease;
 }
 .tile.creature {

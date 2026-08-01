@@ -96,7 +96,7 @@ Engine State & Execution
    - `applyOverride` permits hand-crafted `CardDefinition` structures for specific cards, requiring a **byte-exact match** on `handledLines`. If oracle text changes or is errata'd, the drift guard rejects the override and halts safely.
 
 3. **Engine Primitive Execution**:
-   - Spells, triggers, and activated abilities decompose into `Effect` primitives (`dealDamage`, `draw`, `putCounters`, `graveyardToBattlefield`, etc.) executed deterministically by the rules engine (`packages/engine/src/game/`).
+   - Spells, triggers, and activated abilities decompose into `Effect` primitives (`dealDamage`, `draw`, `putCounters`, `graveyardToBattlefield`, etc.) exec2uted deterministically by the rules engine (`packages/engine/src/game/`).
 
 ---
 

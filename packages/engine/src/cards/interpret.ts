@@ -88,6 +88,7 @@ type CountSlotAllocator = (
   kind: TargetKind,
   count: { min: number; max: number },
   controller?: 'you' | 'opponent',
+  filter?: Selector,
 ) => number;
 
 /** Basic land subtypes â†’ intrinsic mana ability (CR 305.6). */
@@ -520,15 +521,18 @@ function parseEffectSentence(
       const noun = m[3] as string;
       const kind = parseTargetNoun(noun);
       if (kind !== null) {
-        return [
-          {
-            op: 'returnToHand',
-            target: alloc(
-              kind,
-              m[2] !== undefined ? OTHER : undefined,
-            ),
-          },
-        ];
+        const filter = m[2] !== undefined ? OTHER : undefined;
+        // "up to N" (Marang River Regent) is a variable-count announcement (CR 601.2b/603.3d),
+        // not N separate ordinary slots and not one mandatory slot — the count itself used to be
+        // silently dropped here, which turned "up to two, never obliges you" into "return
+        // exactly one, mandatory."
+        if (m[1] !== undefined) {
+          const max = parseAmount(m[1] as string);
+          if (max === null || opts.allocCount === undefined) return null;
+          const slot = opts.allocCount(kind, { min: 0, max }, undefined, filter);
+          return [{ op: 'returnToHandEachChosen', targetSlot: slot }];
+        }
+        return [{ op: 'returnToHand', target: alloc(kind, filter) }];
       }
     }
   }
@@ -1861,8 +1865,13 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // A variable-count slot ("up to two other targets", "any number of target creatures") â€” see
   // `CountSlotAllocator`. Always allocated after every ordinary slot the same trigger declares,
   // which is what lets `pushTriggerOnStack` keep the ordinary `targets` array dense.
-  const allocCount: CountSlotAllocator = (kind, count, controller) => {
-    targets.push({ kind, count, ...(controller !== undefined ? { controller } : {}) });
+  const allocCount: CountSlotAllocator = (kind, count, controller, filter) => {
+    targets.push({
+      kind,
+      count,
+      ...(controller !== undefined ? { controller } : {}),
+      ...(filter !== undefined ? { filter } : {}),
+    });
     return targets.length - 1;
   };
 
