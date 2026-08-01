@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import type { DecisionRequest, LegalAction, ObjectId, TargetChoice } from '@mtg/shared';
+import type { DecisionRequest, LegalAction, ObjectId, PlayerBoardSeat, TargetChoice } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
 import PermanentChip from '../components/PermanentChip.vue';
 import StackPanel from '../components/StackPanel.vue';
 import ZoneStrip from '../components/ZoneStrip.vue';
+import { useLifeFlash, useLifeFlashBySeat } from '../composables/useLifeFlash';
+import { isTokenTypeLine } from '../lib/card';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useCombatPlanStore } from '../stores/combatPlan';
 import { useGameStore } from '../stores/game';
@@ -82,6 +84,37 @@ watch(
 
 function permanentsFor(seat: string) {
   return state.value?.battlefield.filter((permanent) => permanent.controller === seat) ?? [];
+}
+
+const humanLifeFlash = useLifeFlash(() => human.value?.life ?? 0);
+const opponentLifeFlash = useLifeFlashBySeat(() =>
+  opponents.value.map((opp) => ({ seat: opp.seat, life: opp.life })),
+);
+
+/**
+ * Card size scales inversely with how crowded its zone is (design handoff: "adaptive card
+ * sizing"), so a packed board still fits and a sparse one still reads clearly. `refN` is the
+ * "comfortable" reference count for that zone; own and opponent zones carry separate base
+ * sizes/scales so opponents render smaller by default without shrinking the human's board.
+ */
+function adaptiveWidth(baseW: number, count: number, refN: number, scale: number, capH?: number): number {
+  const factor = Math.min(1.35, Math.max(0.6, Math.sqrt(refN / Math.max(count, 1))));
+  const width = baseW * factor * scale;
+  if (capH === undefined) return Math.round(width);
+  // 63:88 card ratio — convert the height cap to the equivalent width cap.
+  return Math.round(Math.min(width, (capH * 63) / 88));
+}
+
+const humanPermWidth = computed(() => adaptiveWidth(108, permanentsFor(human.value?.seat ?? '').length, 4, 1));
+const handCardWidth = computed(() => adaptiveWidth(96, human.value?.hand?.length ?? 0, 5, 1, 150));
+const commanderWidth = 78;
+
+function opponentPermWidth(seat: string): number {
+  return adaptiveWidth(70, permanentsFor(seat).length, 3, 0.7);
+}
+
+function primaryCommander(opponent: PlayerBoardSeat) {
+  return opponent.commanders[0] ?? null;
 }
 
 const nameById = computed(() => {
@@ -556,15 +589,29 @@ function abandon(): void {
             @drop="dropOn(opponent.seat)"
           >
             <header>
-              <strong>{{ opponent.seat }} · {{ opponent.label }}</strong>
-              <span>{{ opponent.life }} life</span>
+              <span class="id-badge">{{ opponent.seat }}</span>
+              <strong>{{ opponent.label }}</strong>
+              <span
+                class="life-badge"
+                :class="{ low: opponent.life <= 10, 'flash-damage': opponentLifeFlash[opponent.seat] === 'damage', 'flash-heal': opponentLifeFlash[opponent.seat] === 'heal' }"
+              >{{ opponent.life }}</span>
             </header>
-            <p>{{ opponent.handSize }} cards · {{ opponent.librarySize }} library</p>
+            <div class="opp-meta">
+              <div v-if="primaryCommander(opponent)" class="opp-cmdr-thumb">
+                <CardImage
+                  :scryfall-id="primaryCommander(opponent)!.scryfallId"
+                  :name="primaryCommander(opponent)!.name"
+                  size="small"
+                />
+              </div>
+              <span>{{ opponent.handSize }} cards · {{ opponent.librarySize }} lib</span>
+            </div>
             <div class="permanents">
               <div
                 v-for="permanent in permanentsFor(opponent.seat)"
                 :key="permanent.id"
                 class="object"
+                :style="{ '--chip-w': opponentPermWidth(opponent.seat) + 'px' }"
                 :class="{
                   targetable: isLegalTarget(permanent.id),
                   'chosen-target': isChosenTarget(permanent.id),
@@ -586,39 +633,70 @@ function abandon(): void {
         <section v-if="human" class="human-zone" :class="{ 'your-turn': isYourTurn }">
           <header>
             <strong>You · {{ human.seat }} · {{ human.label }}</strong>
-            <span>{{ human.life }} life · {{ human.librarySize }} library</span>
+            <span
+              class="life-badge"
+              :class="{ low: human.life <= 10, 'flash-damage': humanLifeFlash === 'damage', 'flash-heal': humanLifeFlash === 'heal' }"
+            >{{ human.life }}</span>
+            <span class="lib-note">{{ human.librarySize }} library</span>
           </header>
           <div class="resource-strip">
             {{ human.landsPlayedThisTurn === 0 ? 'Land available' : 'Land played' }}<template v-if="resourceSummary(human.manaPool)"> ? Pool {{ resourceSummary(human.manaPool) }}</template>
           </div>
-          <div class="permanents" @dragover.prevent @drop="dropToBattlefield">
-            <div
-              v-for="permanent in permanentsFor(human.seat)"
-              :key="permanent.id"
-              class="object"
+          <div class="battle-row">
+            <div class="permanents" @dragover.prevent @drop="dropToBattlefield">
+              <div
+                v-for="permanent in permanentsFor(human.seat)"
+                :key="permanent.id"
+                class="object"
+                :style="{ '--chip-w': humanPermWidth + 'px' }"
+                  :class="{
+                    focused: focusedSourceId === permanent.id,
+                    targetable: isLegalTarget(permanent.id),
+                    'chosen-target': isChosenTarget(permanent.id),
+                    'payment-source': isPaymentSource(permanent.id),
+                    actionable: actionableSourceIds.has(permanent.id),
+                }"
+                draggable="true"
+                @dragstart="dragStart(permanent.id)"
+                @dragend="draggedId = null"
+                @dragover.prevent
+                @drop.stop="dropOn(permanent.id)"
+                @click="selectSource(permanent.id)"
+              >
+                <PermanentChip :permanent="permanent" :count="1" :name-by-id="nameById" />
+              </div>
+            </div>
+            <div v-if="human.commanders.some((commander) => commander.zone === 'command')" class="command-zone">
+              <span class="command-zone-label">Command</span>
+              <button
+                v-for="commander in human.commanders.filter((entry) => entry.zone === 'command' && entry.objectId !== null)"
+                :key="commander.cardId"
+                type="button"
+                class="commander-card"
+                :style="{ width: commanderWidth + 'px' }"
                 :class="{
-                  focused: focusedSourceId === permanent.id,
-                  targetable: isLegalTarget(permanent.id),
-                  'chosen-target': isChosenTarget(permanent.id),
-                  'payment-source': isPaymentSource(permanent.id),
-                  actionable: actionableSourceIds.has(permanent.id),
-              }"
-              draggable="true"
-              @dragstart="dragStart(permanent.id)"
-              @dragend="draggedId = null"
-              @dragover.prevent
-              @drop.stop="dropOn(permanent.id)"
-              @click="selectSource(permanent.id)"
+                  focused: focusedSourceId === commander.objectId,
+                  actionable: commander.objectId !== null && actionableSourceIds.has(commander.objectId),
+                  'chosen-target': commander.objectId !== null && isChosenTarget(commander.objectId),
+                }"
+                @click="commander.objectId !== null && selectSource(commander.objectId)"
+                @mouseenter="showCardPreview(commander, $event)"
+                @mousemove="moveCardPreview"
+                @mouseleave="hideCardPreview"
             >
-              <PermanentChip :permanent="permanent" :count="1" :name-by-id="nameById" />
+              <CardImage :scryfall-id="commander.scryfallId" :name="commander.name" size="small" />
+              <span>{{ commander.name }}<small v-if="commander.taxGeneric > 0"> +{{ commander.taxGeneric }}</small></span>
+            </button>
             </div>
           </div>
+
           <div class="hand">
             <button
               v-for="card in human.hand ?? []"
               :key="card.id"
               type="button"
               class="hand-card"
+              :style="{ width: handCardWidth + 'px' }"
               :class="{
                 focused: focusedSourceId === card.id,
                 actionable: actionableSourceIds.has(card.id),
@@ -632,29 +710,8 @@ function abandon(): void {
               @mousemove="moveCardPreview"
               @mouseleave="hideCardPreview"
             >
-              <CardImage :scryfall-id="card.scryfallId" :name="card.name" size="small" />
+              <CardImage :scryfall-id="card.scryfallId" :name="card.name" :is-token="isTokenTypeLine(card.typeLine)" size="small" />
               <span>{{ card.name }}</span>
-            </button>
-          </div>
-          <div v-if="human.commanders.some((commander) => commander.zone === 'command')" class="command-zone">
-            <span>Command zone</span>
-            <button
-              v-for="commander in human.commanders.filter((entry) => entry.zone === 'command' && entry.objectId !== null)"
-              :key="commander.cardId"
-              type="button"
-              class="commander-card"
-              :class="{
-                focused: focusedSourceId === commander.objectId,
-                actionable: commander.objectId !== null && actionableSourceIds.has(commander.objectId),
-                'chosen-target': commander.objectId !== null && isChosenTarget(commander.objectId),
-              }"
-              @click="commander.objectId !== null && selectSource(commander.objectId)"
-              @mouseenter="showCardPreview(commander, $event)"
-              @mousemove="moveCardPreview"
-              @mouseleave="hideCardPreview"
-            >
-              <CardImage :scryfall-id="commander.scryfallId" :name="commander.name" size="small" />
-              <span>{{ commander.name }}<small v-if="commander.taxGeneric > 0"> +{{ commander.taxGeneric }}</small></span>
             </button>
           </div>
 
@@ -841,26 +898,39 @@ button.active, button.selected, .focused { border-color: var(--accent); box-shad
 .yield-banner { display: flex; align-items: center; gap: .6rem; border: 1px solid var(--accent); color: var(--text); background: var(--surface); padding: .5rem .7rem; border-radius: 4px; font-size: .78rem; }
 .yield-banner > span { flex: 1; }
 .player-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0,1fr) 22rem; gap: .6rem; }
-.table { min-height: 0; display: grid; grid-template-rows: minmax(0,1fr) minmax(15rem, .85fr); gap: .6rem; }
+.table { min-height: 0; display: grid; grid-template-rows: minmax(0,.6fr) minmax(0,1.9fr); gap: .6rem; }
 .opponents { min-height: 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; }
-.opponent, .human-zone { min-width: 0; min-height: 0; overflow: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: .5rem; }
-.opponent.active { border-color: var(--accent); }
-.opponent > header, .human-zone > header { display:flex; justify-content:space-between; gap:.4rem; font-size:.75rem; }
-.opponent p { margin:.25rem 0; color:var(--muted); font-size:.7rem; }
-.permanents { display:flex; flex-wrap:wrap; align-content:flex-start; gap:.3rem; }
+.opponent, .human-zone { min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: .4rem .5rem; transition: border-color .2s, box-shadow .2s; }
+.opponent { cursor: pointer; gap: .25rem; }
+.opponent.active { border-color: var(--accent); box-shadow: 0 0 12px rgb(96 165 250 / .2); }
+.opponent.targetable { animation: targetPulse 1.4s ease-in-out infinite; }
+.opponent.chosen-target { animation: none; box-shadow: 0 0 0 2px var(--ok); }
+.opponent > header { display:flex; align-items:center; gap:.35rem; font-size:.72rem; flex-shrink: 0; }
+.opponent > header strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.opp-meta { display: flex; align-items: center; gap: .3rem; color: var(--muted); font-size: .65rem; flex-shrink: 0; }
+.opp-cmdr-thumb { width: 20px; flex-shrink: 0; border-radius: 3px; overflow: hidden; border: 1px solid rgb(96 165 250 / .4); }
+.id-badge { font-weight: 800; font-size: .68rem; color: var(--accent); background: rgb(96 165 250 / .15); padding: .02rem .3rem; border-radius: 3px; flex-shrink: 0; }
+.life-badge { font-weight: 800; font-size: .78rem; font-variant-numeric: tabular-nums; color: var(--ok); background: rgb(74 222 128 / .12); border: 1px solid rgb(74 222 128 / .3); padding: .04rem .4rem; border-radius: 4px; flex-shrink: 0; }
+.life-badge.low { color: var(--danger); background: rgb(248 113 113 / .12); border-color: rgb(248 113 113 / .35); }
+.life-badge.flash-damage { animation: flash .8s ease-out; }
+.life-badge.flash-heal { animation: flashOk .9s ease-out; }
+.lib-note { color: var(--muted); font-size: .68rem; }
+.permanents { flex: 1; min-height: 0; display:flex; flex-wrap:nowrap; align-items: flex-start; align-content:flex-start; gap:.3rem; overflow-x: auto; overflow-y: hidden; }
 .zones-strip { display: flex; flex-direction: column; gap: .3rem; flex-shrink: 0; }
-.object { border:1px solid transparent; border-radius:4px; cursor:pointer; }
+.object { border:1px solid transparent; border-radius:4px; cursor:pointer; flex-shrink: 0; }
 .actionable { border-color:rgb(96 165 250 / .75) !important; box-shadow:0 0 0 1px rgb(96 165 250 / .28); }
 .actionable:hover { transform:translateY(-2px); }
-.human-zone { display:flex; flex-direction:column; gap:.45rem; border-color:rgb(96 165 250 / .45); }
+.human-zone { gap:.4rem; border-color:rgb(96 165 250 / .45); }
 .human-zone.your-turn { border-color: var(--accent); box-shadow: 0 0 10px rgb(110 168 254 / .25); }
 .resource-strip { display:inline-flex; align-self:flex-start; padding:.16rem .38rem; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:.68rem; }
-.human-zone .permanents { flex:1; overflow:auto; }
-.hand { display:flex; gap:.35rem; overflow-x:auto; padding-top:.4rem; border-top:1px solid var(--line); }
-.hand-card { width:96px; flex:0 0 96px; padding:.2rem; display:flex; flex-direction:column; gap:.2rem; font-size:.65rem; overflow:hidden; }
-.command-zone { display:flex; align-items:center; gap:.35rem; padding-top:.3rem; border-top:1px solid var(--line); color:var(--muted); font-size:.68rem; }
-.commander-card { display:flex; align-items:center; gap:.25rem; max-width:11rem; padding:.15rem; font-size:.65rem; text-align:left; }
-.commander-card :deep(.card-image) { width:26px; }
+.battle-row { flex: 1; min-height: 150px; display: flex; gap: .5rem; overflow: hidden; }
+.battle-row .permanents { flex: 1; min-width: 0; }
+.hand { flex-shrink: 0; display:flex; gap:.35rem; overflow-x:auto; overflow-y: hidden; padding-top:.35rem; border-top:1px solid var(--line); }
+.hand-card { flex: 0 0 auto; padding:.2rem; display:flex; flex-direction:column; gap:.2rem; font-size:.65rem; overflow:hidden; }
+.command-zone { flex-shrink: 0; display:flex; flex-direction: column; gap:.3rem; border-left:1px dashed var(--line); padding-left:.45rem; }
+.command-zone-label { font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); flex-shrink: 0; }
+.commander-card { flex: 1; min-height: 0; display:flex; flex-direction: column; align-items: center; gap:.2rem; padding:.1rem; font-size:.6rem; text-align:center; }
+.commander-card :deep(.card-image) { width: 100%; flex: 1; min-height: 0; }
 .commander-card small { color:var(--warn); }
 .interaction-tray { margin-top:.1rem; min-height:4.2rem; border:1px solid var(--line); background:var(--surface-2); border-radius:5px; padding:.45rem .55rem; }
 .interaction-tray.targeting { border-color:var(--ok); box-shadow:0 0 0 1px rgb(74 222 128 / .25); }

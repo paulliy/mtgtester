@@ -1,13 +1,23 @@
 <script setup lang="ts">
 /** A titled row of card thumbnails with hover preview — graveyard, exile, and similar zones. */
+import { computed } from 'vue';
 import type { SpectatorCard } from '@mtg/shared';
 import CardImage from './CardImage.vue';
+import { isTokenTypeLine } from '../lib/card';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
-const props = defineProps<{
-  label: string;
-  cards: SpectatorCard[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    label: string;
+    cards: SpectatorCard[];
+    /** Cap the visible thumbnails, showing a "+N" overflow chip for the rest. Uncapped by default. */
+    max?: number;
+  }>(),
+  { max: Infinity },
+);
+
+const visibleCards = computed(() => props.cards.slice(0, props.max));
+const overflowCount = computed(() => Math.max(0, props.cards.length - props.max));
 
 const cardPreview = useCardPreviewStore();
 
@@ -28,15 +38,21 @@ function onCardLeave(): void {
     <h4>{{ props.label }} ({{ props.cards.length }})</h4>
     <div class="cards-strip">
       <div
-        v-for="card in props.cards"
+        v-for="card in visibleCards"
         :key="card.id"
         class="zone-card-thumb"
         @mouseenter="onCardEnter(card, $event)"
         @mousemove="onCardMove"
         @mouseleave="onCardLeave"
       >
-        <CardImage :scryfall-id="card.scryfallId" :name="card.name" size="small" />
+        <CardImage
+          :scryfall-id="card.scryfallId"
+          :name="card.name"
+          :is-token="isTokenTypeLine(card.typeLine)"
+          size="small"
+        />
       </div>
+      <div v-if="overflowCount > 0" class="zone-overflow">+{{ overflowCount }}</div>
     </div>
   </div>
 </template>
@@ -62,5 +78,19 @@ function onCardLeave(): void {
 }
 .zone-card-thumb {
   width: 52px;
+  flex-shrink: 0;
+}
+.zone-overflow {
+  flex-shrink: 0;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
 }
 </style>

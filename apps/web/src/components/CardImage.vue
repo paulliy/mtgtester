@@ -12,8 +12,10 @@ const props = withDefaults(
     name: string;
     size: 'small' | 'normal' | 'large';
     tapped?: boolean;
+    /** True token/emblem with no real printing — always shows the striped placeholder. */
+    isToken?: boolean;
   }>(),
-  { tapped: false },
+  { tapped: false, isToken: false },
 );
 
 const failed = ref(false);
@@ -45,7 +47,12 @@ const src = computed(() => {
   return `https://cards.scryfall.io/${props.size}/front/${id[0]}/${id[1]}/${id}.jpg`;
 });
 
-const showImage = computed(() => src.value !== null && !failed.value);
+const showImage = computed(() => !props.isToken && src.value !== null && !failed.value);
+
+/** True tokens get "TOKEN"; a real card whose art failed/hasn't resolved gets its initials. */
+const placeholderLabel = computed(() =>
+  props.isToken ? 'TOKEN' : props.name.slice(0, 3).toUpperCase(),
+);
 </script>
 
 <template>
@@ -59,10 +66,7 @@ const showImage = computed(() => src.value !== null && !failed.value);
       @error="failed = true"
     />
     <div v-else class="fallback">
-      <div class="fallback-frame">
-        <span class="token-badge" v-if="!scryfallId">TOKEN</span>
-        <span class="fallback-name">{{ name }}</span>
-      </div>
+      <span class="fallback-label">{{ placeholderLabel }}</span>
     </div>
   </div>
 </template>
@@ -78,7 +82,7 @@ const showImage = computed(() => src.value !== null && !failed.value);
  */
 .card-image {
   position: relative;
-  aspect-ratio: 5 / 7;
+  aspect-ratio: 63 / 88;
   border-radius: 6%;
   overflow: hidden;
   background: var(--surface-2);
@@ -107,35 +111,22 @@ const showImage = computed(() => src.value !== null && !failed.value);
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0.3rem;
-  background: var(--surface-2);
-  border: 1px solid var(--accent);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--surface-2),
+    var(--surface-2) 4px,
+    var(--line) 4px,
+    var(--line) 8px
+  );
   border-radius: 6%;
   box-sizing: border-box;
 }
-.fallback-frame {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
-  width: 100%;
-}
-.token-badge {
-  font-size: 0.55rem;
+.fallback-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.62rem;
   font-weight: 700;
-  color: var(--warn);
-  letter-spacing: 0.08em;
-  background: rgb(224 179 65 / 0.15);
-  padding: 0.1rem 0.3rem;
-  border-radius: 3px;
-  border: 1px solid rgb(224 179 65 / 0.4);
-}
-.fallback-name {
-  font-size: 0.68rem;
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--text);
-  word-break: break-word;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
 }
 </style>

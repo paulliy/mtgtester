@@ -6,6 +6,7 @@
  */
 import type { SpectatorCard } from '@mtg/shared';
 import CardImage from './CardImage.vue';
+import { isTokenTypeLine } from '../lib/card';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
 defineProps<{ cards: SpectatorCard[] }>();
@@ -34,7 +35,12 @@ function onLeave(): void {
       @mousemove="onMove"
       @mouseleave="onLeave"
     >
-      <CardImage :scryfall-id="card.scryfallId" :name="card.name" size="small" />
+      <CardImage
+        :scryfall-id="card.scryfallId"
+        :name="card.name"
+        :is-token="isTokenTypeLine(card.typeLine)"
+        size="small"
+      />
     </div>
     <p v-if="cards.length === 0" class="empty">empty</p>
   </div>
@@ -44,22 +50,15 @@ function onLeave(): void {
 .hand-strip {
   display: flex;
   align-items: flex-end;
+  gap: 0.25rem;
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0.2rem 0.1rem;
 }
 .thumb {
-  width: 56px;
+  width: 40px;
   flex-shrink: 0;
-  transition: margin-left 100ms ease, z-index 0s;
-}
-.thumb:not(:first-child) {
-  margin-left: -2.2rem;
-}
-.thumb:hover {
-  margin-left: 0;
-  z-index: 1;
 }
 .empty {
   margin: 0;

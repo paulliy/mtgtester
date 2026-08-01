@@ -109,6 +109,7 @@ const roundLabel = computed(() => {
         ⚠️ Halted: {{ store.halt.kind }} — {{ store.halt.reason }}
       </span>
       <span v-if="state?.priorityPlayer" class="priority-badge">
+        <span class="priority-dot"><span class="dot" /><span class="ping" /></span>
         Priority: {{ state.priorityPlayer }}
       </span>
       <span class="provider-tag">{{ store.providerKind }}</span>
@@ -242,12 +243,27 @@ const roundLabel = computed(() => {
   font-size: 0.8rem;
 }
 .priority-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--warn);
   font-weight: 700;
-  background: rgb(251 191 36 / 0.12);
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid rgb(251 191 36 / 0.25);
+  font-size: 0.8rem;
+}
+.priority-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+}
+.priority-dot .dot,
+.priority-dot .ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--warn);
+}
+.priority-dot .ping {
+  animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 .provider-tag {
   color: var(--muted);
