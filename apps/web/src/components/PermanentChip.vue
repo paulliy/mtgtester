@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import type { SpectatorPermanent } from '@mtg/shared';
 import CardImage from './CardImage.vue';
+import { isTokenTypeLine } from '../lib/card';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
 const props = withDefaults(
@@ -17,6 +18,8 @@ const props = withDefaults(
 const cardPreview = useCardPreviewStore();
 
 const isCreature = computed(() => props.permanent.power !== null);
+const isToken = computed(() => isTokenTypeLine(props.permanent.typeLine));
+const isAttacking = computed(() => props.permanent.attacking !== null);
 
 /** Counters render as `+1/+1×2`, which is denser than one chip per kind. */
 const counterText = computed(() =>
@@ -53,7 +56,7 @@ function onLeave(): void {
 <template>
   <div
     class="tile"
-    :class="{ creature: isCreature, tapped: permanent.tapped }"
+    :class="{ creature: isCreature, tapped: permanent.tapped, attacking: isAttacking }"
     @mouseenter="onEnter"
     @mousemove="onMove"
     @mouseleave="onLeave"
@@ -65,6 +68,7 @@ function onLeave(): void {
     <CardImage
       :scryfall-id="permanent.scryfallId"
       :name="permanent.name"
+      :is-token="isToken"
       size="small"
       :tapped="permanent.tapped"
     />
@@ -85,8 +89,8 @@ function onLeave(): void {
 <style scoped>
 .tile {
   position: relative;
-  width: 108px;
-  transition: transform 120ms ease;
+  width: var(--chip-w, 108px);
+  transition: transform 120ms ease, width 150ms ease;
 }
 .tile.creature {
   box-shadow: 0 0 0 2px var(--accent);
@@ -94,6 +98,14 @@ function onLeave(): void {
 }
 .tile.tapped {
   opacity: 0.85;
+}
+.tile.attacking {
+  border-radius: 6%;
+  box-shadow: 0 0 0 2px rgb(248 113 113 / 0.55);
+  animation: attackPulse 1s ease-in-out infinite;
+}
+.tile.attacking :deep(.card-image) {
+  outline: 1px solid var(--danger);
 }
 .stack-count-badge {
   position: absolute;

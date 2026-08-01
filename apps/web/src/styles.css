@@ -37,6 +37,73 @@
   box-sizing: border-box;
 }
 
+/* Shared reactivity keyframes (design handoff: board/player view overhaul). */
+@keyframes ping {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  75%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+@keyframes flash {
+  0% {
+    background: rgb(248 113 113 / 0.55);
+  }
+  100% {
+    background: transparent;
+  }
+}
+@keyframes flashOk {
+  0% {
+    background: rgb(74 222 128 / 0.5);
+  }
+  100% {
+    background: transparent;
+  }
+}
+@keyframes attackPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgb(248 113 113 / 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgb(248 113 113 / 0.15);
+  }
+}
+@keyframes targetPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgb(74 222 128 / 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgb(74 222 128 / 0.18);
+  }
+}
+@keyframes slideIn {
+  0% {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes traySlide {
+  0% {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 body {
   margin: 0;
   background: var(--bg);
