@@ -75,6 +75,7 @@ export type Condition =
   | { kind: 'wasKicked' }
   | { kind: 'hasCounters'; selector: Selector; counter: string; cmp: '>=' | '<='; n: number }
   | { kind: 'enteredThisTurn' }
+  | { kind: 'createdTokenThisTurn' }
   | { kind: 'hadToAttackThisCombat' }
   /** The object that fired this trigger had to attack (currently, because it was goaded). */
   | { kind: 'triggerObjectHadToAttackThisCombat' }
@@ -97,6 +98,10 @@ export type Condition =
    * commander (CR 903.7) AND currently controlled by them; a stolen commander doesn't count.
    */
   | { kind: 'controlsYourCommander' }
+  /** "if an opponent is the monarch" (Queen Marchesa). */
+  | { kind: 'opponentIsMonarch' }
+  /** Attack trigger condition: the defending player has more life than the attacker’s controller. */
+  | { kind: 'attackingPlayerHasMoreLife' }
   | { kind: 'allOf'; of: Condition[] }
   | { kind: 'anyOf'; of: Condition[] }
   | { kind: 'not'; of: Condition };
@@ -216,8 +221,24 @@ export function evaluateCondition(
         (p) =>
           p.isCommander &&
           p.ownerId === source.controllerId &&
-          p.controllerId === source.controllerId,
+        p.controllerId === source.controllerId,
       );
+    case 'opponentIsMonarch':
+      return (
+        ctx.state.monarchPlayerId !== null &&
+        opponentsOf(ctx, source.controllerId).some((p) => p.id === ctx.state.monarchPlayerId)
+      );
+    case 'attackingPlayerHasMoreLife': {
+      const attacker = source.triggerObjectCardId === undefined
+        ? ctx.state.battlefield.find((p) => p.cardId === source.cardId)
+        : ctx.state.battlefield.find((p) => p.cardId === source.triggerObjectCardId);
+      if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
+      const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
+      const attackerController = ctx.state.players.find((p) => p.id === attacker.controllerId);
+      return defender !== undefined && attackerController !== undefined && defender.life > attackerController.life;
+    }
+    case 'createdTokenThisTurn':
+      return ctx.state.createdTokenThisTurn?.[source.controllerId] === true;
     case 'wasKicked': {
       if (source?.cardId === undefined) return false;
       const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);

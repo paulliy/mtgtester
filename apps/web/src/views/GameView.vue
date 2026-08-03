@@ -141,6 +141,7 @@ const roundLabel = computed(() => {
           :permanents="permanentsFor(seat.seat)"
           :is-active="seat.seat === state.activePlayer"
           :has-priority="seat.seat === state.priorityPlayer"
+          :is-monarch="seat.seat === state.monarchSeat"
           :eliminated="state.eliminatedPlayers.includes(seat.seat)"
           :commander-damage="state.commanderDamage"
           :exile="exileFor(seat.seat)"

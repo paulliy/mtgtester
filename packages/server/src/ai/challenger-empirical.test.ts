@@ -90,6 +90,7 @@ function makePlayerView(overrides: Partial<PlayerView> = {}): PlayerView {
     hand: [{ id: 'c1', name: 'Giant Growth', typeLine: 'Instant' }],
     deck: [],
     graveyard: [],
+    exile: [],
     availableMana: { G: 1 },
     manaSources: [],
     commanders: [],

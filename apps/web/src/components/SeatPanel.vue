@@ -7,16 +7,19 @@
 import { computed, ref } from 'vue';
 import type { CommanderDamageEntry, SpectatorCard, SpectatorPermanent, SpectatorSeat } from '@mtg/shared';
 import CardImage from './CardImage.vue';
+import GlobalCounters from './GlobalCounters.vue';
 import HandStrip from './HandStrip.vue';
 import PermanentChip from './PermanentChip.vue';
 import ZoneStrip from './ZoneStrip.vue';
 import { useLifeFlash } from '../composables/useLifeFlash';
+import { groupPermanents, type GroupedPermanent } from '../lib/stackPermanents';
 
 const props = defineProps<{
   seat: SpectatorSeat;
   permanents: SpectatorPermanent[];
   isActive: boolean;
   hasPriority: boolean;
+  isMonarch: boolean;
   eliminated: boolean;
   commanderDamage?: CommanderDamageEntry[];
   exile?: SpectatorCard[];
@@ -42,48 +45,7 @@ const cmdDamageTaken = computed(() => {
 
 const exileCards = computed(() => props.exile ?? []);
 
-export interface GroupedPermanent {
-  permanent: SpectatorPermanent;
-  count: number;
-}
-
-/**
- * Identity for stacking: two permanents collapse into one tile only when nothing a reader could
- * act on differs. P/T is in the key because a pumped copy is not the same board object as an
- * unpumped one — grouping on name alone hid that.
- */
-function stackKey(p: SpectatorPermanent): string {
-  const counters = Object.keys(p.counters)
-    .sort()
-    .map((kind) => `${kind}:${p.counters[kind] ?? 0}`)
-    .join(',');
-  return [
-    p.name,
-    p.scryfallId ?? 'null',
-    p.tapped ? 'tapped' : 'untapped',
-    p.summoningSick ? 'sick' : 'ready',
-    p.attacking ?? 'none',
-    p.blocking ?? 'none',
-    p.damageMarked,
-    p.power ?? '-',
-    p.toughness ?? '-',
-    counters,
-    [...p.keywords].sort().join(','),
-  ].join('|');
-}
-
-function groupPermanents(perms: SpectatorPermanent[]): GroupedPermanent[] {
-  // A Map, not a linear scan that rebuilt every candidate's key on every comparison: a wide
-  // board made drawing one seat quadratic in its permanent count, on every state push.
-  const groups = new Map<string, GroupedPermanent>();
-  for (const perm of perms) {
-    const key = stackKey(perm);
-    const existing = groups.get(key);
-    if (existing === undefined) groups.set(key, { permanent: perm, count: 1 });
-    else existing.count++;
-  }
-  return [...groups.values()];
-}
+export type { GroupedPermanent };
 
 const groupedNonlands = computed(() => groupPermanents(nonlands.value));
 const groupedLands = computed(() => groupPermanents(lands.value));
@@ -108,6 +70,7 @@ const flexStyles = computed(() => {
     <header>
       <span class="id-badge">{{ seat.seat }}</span>
       <span class="label">{{ seat.label }}</span>
+      <span v-if="isMonarch" class="monarch-badge" title="This player is the monarch" aria-label="Monarch">MONARCH</span>
       <span v-if="hasPriority" class="priority-dot" title="Has priority">
         <span class="dot" />
         <span class="ping" />
@@ -119,12 +82,18 @@ const flexStyles = computed(() => {
       <span v-if="eliminated" class="dead">DEAD</span>
     </header>
 
+    <GlobalCounters
+      :energy="seat.energy"
+      :poison-counters="seat.poisonCounters"
+      :counters="seat.counters"
+      compact
+    />
+
     <div class="meta">
       <span class="meta-item"><strong>lib</strong> {{ seat.librarySize }}</span>
       <span class="meta-item"><strong>gy</strong> {{ seat.graveyard.length }}</span>
       <span class="meta-item"><strong>exile</strong> {{ exileCards.length }}</span>
       <span class="meta-item"><strong>lands</strong> {{ untappedLands }}/{{ lands.length }}</span>
-      <span v-if="seat.poisonCounters > 0" class="meta-item warn"><strong>poison</strong> {{ seat.poisonCounters }}</span>
       <span v-if="seat.mulligansTaken > 0" class="meta-item"><strong>mull</strong> {{ seat.mulligansTaken }}</span>
     </div>
 
@@ -245,6 +214,17 @@ header {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.monarch-badge {
+  flex-shrink: 0;
+  color: #fbbf24;
+  background: rgb(251 191 36 / 0.14);
+  border: 1px solid rgb(251 191 36 / 0.45);
+  border-radius: 999px;
+  padding: 0.08rem 0.32rem;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
 }
 .priority-dot {
   position: relative;

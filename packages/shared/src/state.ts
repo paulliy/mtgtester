@@ -31,6 +31,8 @@ export interface PlayerState {
   landsPlayedThisTurn: number;
   /** Poison counters; 10+ loses (brief §5.6). Added to the brief's struct to support the SBA. */
   poisonCounters: number;
+  /** Named global counters such as experience or other card-defined resources. */
+  counters?: Record<string, number>;
   hasLost: boolean;
   lossReason: LossReason | null;
   /** The chosen companion, still outside the game until moved to hand for {3} (brief §5.7). */

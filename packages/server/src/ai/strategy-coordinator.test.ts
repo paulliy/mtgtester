@@ -11,6 +11,7 @@ const view: PlayerView = {
   hand: [],
   deck: [],
   graveyard: [],
+  exile: [],
   commanders: [],
   availableMana: {},
   manaSources: [],
@@ -188,4 +189,332 @@ describe('StrategyCoordinator', () => {
     await coordinator.settled();
     expect(client.requestDecision).toHaveBeenCalledTimes(2);
   });
+
+  it('rejects late-resolving strategist calls after opponent intervention', async () => {
+    let resolveFirst!: (val: any) => void;
+    const promise1 = new Promise<any>((resolve) => {
+      resolveFirst = resolve;
+    });
+
+    let callCount = 0;
+    const client: AiClient = {
+      activeModel: 'test-model',
+      requestDecision: vi.fn().mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return promise1;
+        return Promise.resolve({
+          response: {
+            requestId: 'strategy-replan',
+            actionId: 0,
+            turnStrategy: {
+              intent: 'Replanned strategy intent',
+              plannedActions: [],
+            },
+          },
+          meta: {
+            model: 'test',
+            promptTokens: 10,
+            responseTokens: 10,
+            latencyMs: 5,
+            wasRetry: false,
+            wasFallback: false,
+            rawResponse: '{}',
+          },
+        });
+      }),
+    };
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+
+    const coordinator = new StrategyCoordinator(
+      client,
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      engine,
+      DEFAULT_AI_CONFIG,
+    );
+
+    const req = request();
+    coordinator.prepare(req);
+
+    // Opponent intervenes while strategist call 1 is still in flight (triggers re-plan call 2)
+    const opponent = request({
+      requestId: 'opp',
+      decidingPlayer: 'P2',
+      legalActions: [
+        { id: 0, type: 'pass', description: 'Pass priority' },
+        { id: 2, type: 'castSpell', description: 'Cast Giant Growth' },
+      ],
+    });
+    coordinator.recordDecision(opponent, { requestId: opponent.requestId, actionId: 2 }, 'primary');
+
+    // Re-plan call 2 settles with 'Replanned strategy intent'
+    await coordinator.settled();
+    expect(coordinator.guidanceFor('P1').strategy?.intent).toBe('Replanned strategy intent');
+
+    // Now resolve the first (stale) strategist call
+    resolveFirst({
+      response: {
+        requestId: 'strategy-stale',
+        actionId: 0,
+        turnStrategy: {
+          intent: 'Stale strategy intent',
+          plannedActions: [{ type: 'playLand', name: 'Forest', phase: 'precombatMain' }],
+        },
+      },
+      meta: { model: 'test', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+    });
+
+    await coordinator.settled();
+
+    // The stale response must NOT overwrite the replanned strategy
+    expect(coordinator.guidanceFor('P1').strategy?.intent).toBe('Replanned strategy intent');
+  });
+
+  it('prevents out-of-order re-plans from overwriting fresh strategies', async () => {
+    let resolveFirst!: (val: any) => void;
+    let resolveSecond!: (val: any) => void;
+
+    const promise1 = new Promise<any>((resolve) => { resolveFirst = resolve; });
+    const promise2 = new Promise<any>((resolve) => { resolveSecond = resolve; });
+
+    let callCount = 0;
+    const client: AiClient = {
+      activeModel: 'test-model',
+      requestDecision: vi.fn().mockImplementation(() => {
+        callCount++;
+        return callCount === 1 ? promise1 : promise2;
+      }),
+    };
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+
+    const coordinator = new StrategyCoordinator(
+      client,
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      engine,
+      DEFAULT_AI_CONFIG,
+    );
+
+    // Call 1 started
+    const req = request();
+    coordinator.prepare(req);
+
+    // Opponent intervention triggers re-plan (Call 2 started)
+    const opponent = request({
+      requestId: 'opp',
+      decidingPlayer: 'P2',
+      legalActions: [
+        { id: 0, type: 'pass', description: 'Pass priority' },
+        { id: 2, type: 'castSpell', description: 'Cast Instant' },
+      ],
+    });
+    coordinator.recordDecision(opponent, { requestId: opponent.requestId, actionId: 2 }, 'primary');
+
+    // Call 2 resolves FIRST (fresh)
+    resolveSecond({
+      response: {
+        requestId: 'strategy-fresh',
+        actionId: 0,
+        turnStrategy: {
+          intent: 'Fresh strategy intent',
+          plannedActions: [],
+        },
+      },
+      meta: { model: 'test', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+    });
+
+    await coordinator.settled();
+    expect(coordinator.guidanceFor('P1').strategy?.intent).toBe('Fresh strategy intent');
+
+    // Call 1 resolves SECOND (stale)
+    resolveFirst({
+      response: {
+        requestId: 'strategy-stale',
+        actionId: 0,
+        turnStrategy: {
+          intent: 'Stale strategy intent',
+          plannedActions: [],
+        },
+      },
+      meta: { model: 'test', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+    });
+
+    // The fresh strategy intent should NOT be overwritten by stale intent
+    expect(coordinator.guidanceFor('P1').strategy?.intent).toBe('Fresh strategy intent');
+  });
+
+  it('clears strategy when plan is invalidated via turnPlan onInvalidated', async () => {
+    const client = strategist();
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+    const coordinator = new StrategyCoordinator(
+      client,
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      engine,
+      DEFAULT_AI_CONFIG,
+    );
+
+    const req = request();
+    coordinator.prepare(req);
+    await coordinator.settled();
+
+    expect(coordinator.guidanceFor('P1').strategy).not.toBeNull();
+
+    // Now send a request where the pre-planned action is NOT in legal actions, causing turn plan invalidation
+    const illegalReq = request({
+      requestId: 'req-illegal',
+      decidingPlayer: 'P1',
+      legalActions: [{ id: 0, type: 'pass', description: 'Pass priority' }], // Forest play is missing!
+    });
+
+    const plannedResponse = coordinator.tryExecutePlan(illegalReq);
+    expect(plannedResponse).toBeNull();
+    // Verification: strategy should be atomically cleared to null via onInvalidated callback
+    expect(coordinator.guidanceFor('P1').strategy).toBeNull();
+  });
+
+  it('invalidates strategy and turn plan queue when active player executes a non-planned manual action', async () => {
+    const client = strategist();
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+    const coordinator = new StrategyCoordinator(
+      client,
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      engine,
+      DEFAULT_AI_CONFIG,
+    );
+
+    const req = request();
+    coordinator.prepare(req);
+    await coordinator.settled();
+
+    expect(coordinator.guidanceFor('P1').strategy).not.toBeNull();
+
+    // Active player P1 executes manual non-planned decision
+    const manualReq = request({ requestId: 'req-manual', decidingPlayer: 'P1' });
+    coordinator.recordDecision(manualReq, { requestId: 'req-manual', actionId: 2 }, 'primary');
+
+    // Strategy and turn plan queue must both be cleared to null
+    expect(coordinator.guidanceFor('P1').strategy).toBeNull();
+    expect(coordinator.tryExecutePlan(request({ requestId: 'req-2' }))).toBeNull();
+  });
+
+  it('handles async prefetch promise rejection gracefully without crashing', async () => {
+    const client: AiClient = {
+      activeModel: 'test-model',
+      requestDecision: vi.fn().mockRejectedValue(new Error('API failure')),
+    };
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+    const coordinator = new StrategyCoordinator(
+      client,
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      engine,
+      DEFAULT_AI_CONFIG,
+    );
+
+    coordinator.prefetch('g1', 1, 'P1');
+    await coordinator.settled();
+
+    expect(engine.addDebug).toHaveBeenCalledWith(
+      'decision',
+      'strategist call failed for P1: API failure',
+    );
+    expect(coordinator.guidanceFor('P1').strategy).toBeNull();
+  });
+
+  it('does nothing when strategist is disabled or strategistClient is null', async () => {
+    const client = strategist();
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+
+    // Case 1: Disabled in config
+    const disabledCoordinator = new StrategyCoordinator(
+      client,
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      engine,
+      { ...DEFAULT_AI_CONFIG, strategistEnabled: false },
+    );
+    disabledCoordinator.prepare(request());
+    await disabledCoordinator.settled();
+
+    expect(client.requestDecision).not.toHaveBeenCalled();
+    expect(disabledCoordinator.guidanceFor('P1').strategy).toBeNull();
+
+    // Case 2: Null client
+    const nullCoordinator = new StrategyCoordinator(
+      null,
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      engine,
+      DEFAULT_AI_CONFIG,
+    );
+    nullCoordinator.prepare(request());
+    await nullCoordinator.settled();
+
+    expect(nullCoordinator.guidanceFor('P1').strategy).toBeNull();
+  });
+
+  it('isolates strategy guidance to the planned player and returns strategy null for non-planned opponent seat', async () => {
+    const client = strategist();
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+    const coordinator = new StrategyCoordinator(
+      client,
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      engine,
+      DEFAULT_AI_CONFIG,
+    );
+
+    coordinator.prepare(request({ activePlayer: 'P1' }));
+    await coordinator.settled();
+
+    // Planned player P1 gets strategy guidance
+    expect(coordinator.guidanceFor('P1').strategy).not.toBeNull();
+    expect(coordinator.guidanceFor('P1').strategy?.intent).toContain('Develop mana');
+
+    // Non-planned opponent player P2 gets strategy: null
+    expect(coordinator.guidanceFor('P2').strategy).toBeNull();
+  });
+
+  it('truncates past decision history at maximum limit configured by strategyRecentDecisionLimit', () => {
+    const client = strategist();
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+    const coordinator = new StrategyCoordinator(
+      client,
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      engine,
+      { ...DEFAULT_AI_CONFIG, strategyRecentDecisionLimit: 2 },
+    );
+
+    const r1 = request({ turn: 1, legalActions: [{ id: 10, type: 'pass', description: 'Action 1' }] });
+    const r2 = request({ turn: 1, legalActions: [{ id: 20, type: 'pass', description: 'Action 2' }] });
+    const r3 = request({ turn: 1, legalActions: [{ id: 30, type: 'pass', description: 'Action 3' }] });
+
+    coordinator.recordDecision(r1, { requestId: r1.requestId, actionId: 10 }, 'primary');
+    coordinator.recordDecision(r2, { requestId: r2.requestId, actionId: 20 }, 'primary');
+    coordinator.recordDecision(r3, { requestId: r3.requestId, actionId: 30 }, 'primary');
+
+    const history = coordinator.guidanceFor('P1').recentDecisions;
+    expect(history.length).toBe(2);
+    expect(history[0]?.action).toBe('Action 2');
+    expect(history[1]?.action).toBe('Action 3');
+  });
 });
+

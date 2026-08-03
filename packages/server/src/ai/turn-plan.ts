@@ -5,16 +5,54 @@
  * If an opponent takes a non-pass action or a planned action is no longer legal, the plan is invalidated.
  */
 
-import type { DecisionRequest, DecisionResponse, LegalAction, PlannedAction } from '@mtg/shared';
+import type { DecisionRequest, DecisionResponse, LegalAction, Phase, PlannedAction, Step } from '@mtg/shared';
 import type { DecisionSource } from './logger';
 
 import type { Engine } from '@mtg/engine';
+
+const PHASE_ORDER: Phase[] = ['beginning', 'precombatMain', 'combat', 'postcombatMain', 'ending'];
+const STEP_ORDER: Step[] = [
+  'untap',
+  'upkeep',
+  'draw',
+  'beginCombat',
+  'declareAttackers',
+  'declareBlockers',
+  'firstStrikeCombatDamage',
+  'combatDamage',
+  'endCombat',
+  'end',
+  'cleanup',
+];
+
+function isStepOrPhaseExpired(planned: PlannedAction, request: DecisionRequest): boolean {
+  if (planned.phase !== undefined) {
+    const plannedPhaseIdx = PHASE_ORDER.indexOf(planned.phase);
+    const currentPhaseIdx = PHASE_ORDER.indexOf(request.phase);
+    if (plannedPhaseIdx >= 0 && currentPhaseIdx >= 0) {
+      if (currentPhaseIdx > plannedPhaseIdx) return true;
+      if (currentPhaseIdx < plannedPhaseIdx) return false;
+    }
+  }
+
+  if (planned.step !== undefined && planned.step !== null && request.step !== null) {
+    const plannedStepIdx = STEP_ORDER.indexOf(planned.step);
+    const currentStepIdx = STEP_ORDER.indexOf(request.step);
+    if (plannedStepIdx >= 0 && currentStepIdx >= 0) {
+      if (currentStepIdx > plannedStepIdx) return true;
+      if (currentStepIdx < plannedStepIdx) return false;
+    }
+  }
+
+  return false;
+}
 
 export class TurnPlanManager {
   private activePlayer: string | null = null;
   private turnNumber = -1;
   private queue: PlannedAction[] = [];
   private opponentIntervened = false;
+  public onInvalidated?: () => void;
 
   /** Get current queue of planned actions for inspection. */
   getQueue(): readonly PlannedAction[] {
@@ -45,65 +83,74 @@ export class TurnPlanManager {
     if (request.decidingPlayer !== request.activePlayer) return null;
     if (this.opponentIntervened) return null;
     if (this.turnNumber !== request.turn || this.activePlayer !== request.activePlayer) return null;
-    if (this.queue.length === 0) return null;
 
-    const planned = this.queue[0];
-    if (planned === undefined) return null;
+    while (this.queue.length > 0) {
+      const planned = this.queue[0];
+      if (planned === undefined) break;
 
-    if (planned.phase !== undefined && planned.phase !== request.phase) {
-      const phaseOrder = ['beginning', 'precombatMain', 'combat', 'postcombatMain', 'ending'];
-      const plannedIndex = phaseOrder.indexOf(planned.phase);
-      const currentIndex = phaseOrder.indexOf(request.phase);
-      if (plannedIndex >= 0 && currentIndex > plannedIndex) {
+      if (isStepOrPhaseExpired(planned, request)) {
         engine?.addDebug(
           'decision',
-          `turn plan step expired for ${request.decidingPlayer}: ${planned.type} was scoped to ${planned.phase}`,
-          { planned, currentPhase: request.phase },
+          `turn plan step expired for ${request.decidingPlayer}: ${planned.type} was scoped to ${planned.phase ?? 'phase'}/${planned.step ?? 'step'}`,
+          { planned, currentPhase: request.phase, currentStep: request.step },
         );
         this.queue.shift();
+        continue;
       }
-      return null;
-    }
-    if (planned.step !== undefined && planned.step !== request.step) return null;
 
-    const matchedAction = this.findMatchingAction(planned, request.legalActions);
-    if (matchedAction === null) {
-      // Planned action is no longer legal or available — invalidate the rest of the plan
+      if (planned.phase !== undefined && planned.phase !== request.phase) {
+        return null;
+      }
+      if (
+        planned.step !== undefined &&
+        planned.step !== null &&
+        request.step !== null &&
+        planned.step !== request.step
+      ) {
+        return null;
+      }
+
+      const matchedAction = this.findMatchingAction(planned, request.legalActions);
+      if (matchedAction === null) {
+        // Planned action is no longer legal or available — invalidate the rest of the plan
+        engine?.addDebug(
+          'decision',
+          `turn plan for ${request.decidingPlayer} invalidated: planned action (${planned.type}${planned.name ? `: ${planned.name}` : ''}) not in legal options`,
+          { planned, legalActions: request.legalActions.map((a) => a.description) },
+        );
+        this.clear();
+        return null;
+      }
+
+      // Successfully matched: consume from queue
+      this.queue.shift();
+
+      const response: DecisionResponse = {
+        requestId: request.requestId,
+        actionId: matchedAction.id,
+        note: `TurnPlan: pre-planned action executed (${planned.type}${planned.name ? `: ${planned.name}` : ''})`,
+      };
+      if (planned.targets !== undefined) {
+        response.targets = planned.targets;
+      }
+
       engine?.addDebug(
         'decision',
-        `turn plan for ${request.decidingPlayer} invalidated: planned action (${planned.type}${planned.name ? `: ${planned.name}` : ''}) not in legal options`,
-        { planned, legalActions: request.legalActions.map((a) => a.description) },
+        `decision executed from turn plan for ${request.decidingPlayer}: ${response.note}`,
+        { source: 'plan', plannedAction: planned, actionId: matchedAction.id },
       );
-      this.clear();
-      return null;
+
+      return response;
     }
 
-    // Successfully matched: consume from queue
-    this.queue.shift();
-
-    const response: DecisionResponse = {
-      requestId: request.requestId,
-      actionId: matchedAction.id,
-      note: `TurnPlan: pre-planned action executed (${planned.type}${planned.name ? `: ${planned.name}` : ''})`,
-    };
-    if (planned.targets !== undefined) {
-      response.targets = planned.targets;
-    }
-
-    engine?.addDebug(
-      'decision',
-      `decision executed from turn plan for ${request.decidingPlayer}: ${response.note}`,
-      { source: 'plan', plannedAction: planned, actionId: matchedAction.id },
-    );
-
-    return response;
+    return null;
   }
 
   /** Update plan state and store any new planned actions returned in a decision. */
   recordDecision(
     request: DecisionRequest,
     response: DecisionResponse,
-    _source: DecisionSource,
+    source: DecisionSource,
     engine?: Engine,
   ): void {
     // Track turn changes
@@ -112,6 +159,18 @@ export class TurnPlanManager {
       this.turnNumber = request.turn;
       this.queue = [];
       this.opponentIntervened = false;
+    }
+
+    // Active player deviation check: if active player executes a decision manually outside tryExecutePlan
+    if (request.decidingPlayer === request.activePlayer && this.queue.length > 0) {
+      if (source !== 'plan') {
+        engine?.addDebug(
+          'decision',
+          `turn plan for ${this.activePlayer} invalidated: active player took non-planned/manual action (${response.actionId})`,
+          { source, actionId: response.actionId },
+        );
+        this.clear();
+      }
     }
 
     // Opponent intervention check: if an opponent makes a real non-heuristic/non-pass action
@@ -132,6 +191,7 @@ export class TurnPlanManager {
         }
         this.opponentIntervened = true;
         this.queue = [];
+        this.onInvalidated?.();
       }
     }
 
@@ -162,6 +222,7 @@ export class TurnPlanManager {
   clear(): void {
     this.queue = [];
     this.opponentIntervened = false;
+    this.onInvalidated?.();
   }
 
   private findMatchingAction(

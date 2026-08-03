@@ -21,6 +21,7 @@ import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { debug, emit } from '../log/log';
 import { getDefByOracleId, triggersOf } from './queries';
 import type {
+  CardId,
   EngineCardObject,
   EngineObject,
   EnginePermanent,
@@ -144,6 +145,8 @@ export function makePermanent(
     blockedByOrdered: [],
     damagedByDeathtouch: false,
     dealtFirstStrikeDamage: false,
+    ...(def.cantBlock === true ? { cantBlock: true } : {}),
+    ...(def.cantBeBlocked === true ? { cantBeBlocked: true } : {}),
     timestamp: ctx.state.nextTimestamp++,
     activationsThisTurn: [],
     enteredTurnNumber: ctx.state.turnNumber,
@@ -179,12 +182,17 @@ export function* moveObject(
 
   removeFromCurrentZone(ctx, obj);
 
+  if (from === 'battlefield' && target.zone === 'graveyard') {
+    (obj as unknown as EngineCardObject).rememberedCounters = { ...(obj as EnginePermanent).counters };
+  }
+
   // Tokens cease to exist when they leave the battlefield (CR 704.5d; applied directly
   // on the move rather than at the next SBA check — indistinguishable in Phase 2).
   if (obj.isToken && from === 'battlefield' && target.zone !== 'battlefield') {
     emit(ctx, 'tokenCeased', { name: obj.name, cardId: obj.cardId });
     debug(ctx, 'zoneChange', `token ${obj.name} ceased to exist`);
     queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    yield* returnExiledUntilLeaves(ctx, obj.cardId);
     return null;
   }
 
@@ -208,6 +216,7 @@ export function* moveObject(
     if (target.entersTapped === true) entersTappedOverride = true;
     const perm = makePermanent(ctx, obj, controllerId, entersTappedOverride);
     ctx.state.battlefield.push(perm);
+  if (ctx.state.createdTokenThisTurn) ctx.state.createdTokenThisTurn[controllerId] = true;
     next = perm;
 
     const chars = computeCharacteristics(ctx, perm);
@@ -304,6 +313,7 @@ export function* moveObject(
   }
   if (from === 'battlefield') {
     queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    yield* returnExiledUntilLeaves(ctx, obj.cardId);
   }
 
   return next;
@@ -341,8 +351,8 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
       name: spec.name,
       typeLine: spec.typeLine,
       supertypes: spec.supertypes ?? [],
-      types: spec.types,
-      subtypes: spec.subtypes,
+      types: spec.types ?? (spec.typeLine.includes('Creature') ? ['Creature'] : spec.typeLine.includes('Land') ? ['Land'] : spec.typeLine.includes('Artifact') ? ['Artifact'] : ['Creature']),
+      subtypes: spec.subtypes ?? [],
       colors: spec.colors,
       colorIdentity: spec.colors,
       manaCost: null,
@@ -377,6 +387,7 @@ export function createToken(
   ctx: GameContext,
   spec: TokenSpec,
   controllerId: PlayerId,
+  applyTokenReplacements = true,
 ): EnginePermanent {
   const oracleId = registerTokenDef(ctx, spec);
   const stub: EngineObject = {
@@ -396,9 +407,40 @@ export function createToken(
   };
   const perm = makePermanent(ctx, stub, controllerId);
   ctx.state.battlefield.push(perm);
+  if (spec.grantHasteUntilEot === true) {
+    ctx.state.effects.push({
+      id: `eff-${ctx.state.nextObjectNum++}`,
+      sourceId: perm.cardId,
+      description: `${spec.name} has haste until end of turn`,
+      targetCardIds: [perm.cardId],
+      kind: 'grantKeyword',
+      keyword: 'haste',
+      timestamp: ctx.state.nextTimestamp++,
+    });
+  }
   emit(ctx, 'tokenCreated', { name: spec.name, controller: controllerId, cardId: perm.cardId });
   debug(ctx, 'zoneChange', `token created: ${spec.name} under ${controllerId}`);
   queueTriggersForObject(ctx, 'enters', perm);
+  if (
+    applyTokenReplacements &&
+    spec.types.includes('Artifact') &&
+    ctx.state.battlefield.some((candidate) => {
+      if (candidate.controllerId !== controllerId) return false;
+      const def = ctx.defs.get(candidate.oracleId);
+      return def?.ruleStatics.some((rs) => rs.kind === 'artifactTokenCreatesThopter') ?? false;
+    })
+  ) {
+    createToken(ctx, {
+      name: 'Thopter',
+      typeLine: 'Artifact Creature — Thopter',
+      types: ['Artifact', 'Creature'],
+      subtypes: ['Thopter'],
+      colors: [],
+      power: 1,
+      toughness: 1,
+      keywords: ['flying'],
+    }, controllerId, false);
+  }
   return perm;
 }
 
@@ -511,15 +553,36 @@ export function queueTriggersForEvent(
       if (matched.length === 0) continue;
 
       // Aggregate triggers can either combine the whole event or combine separately for each
-      // player involved in it ("one or more ... attack an opponent").
+      // player involved in it ("one or more ... attack an opponent"). For `attacks`, `playerId`
+      // on each subject is the ATTACKER (Breena, Combat Calligrapher: "that attacking player" —
+      // non-aggregate, one firing per creature, so this is unambiguous). `byEventPlayer` grouping
+      // is a different vantage point: "one or more Dragons you control attack an opponent" reads
+      // per DEFENDER — one shared firing per opponent attacked, targeting/eventPlayer bound to
+      // that opponent (Firkraag, Cunning Instigator) — so only this branch swaps in the
+      // defender (`permanent.attacking`) instead of the attacker.
+      const byEventPlayerKey = (s: TriggerEventSubject): PlayerId | undefined =>
+        when === 'attacks' ? (s.permanent.attacking ?? undefined) : s.playerId;
       const firings: TriggerEventSubject[][] =
         spec.aggregate === true
           ? [matched]
           : spec.aggregate === 'byEventPlayer'
-            ? [...new Map(matched.map((s) => [s.playerId, matched.filter((other) => other.playerId === s.playerId)])).values()]
+            ? [...new Map(matched.map((s) => [byEventPlayerKey(s), matched.filter((other) => byEventPlayerKey(other) === byEventPlayerKey(s))])).values()]
             : matched.map((s) => [s]);
 
-      for (const group of firings) {
+      const enteringArtifactOrCreature =
+        when === 'enters' && matched.some((s) => {
+          const chars = computeCharacteristics(ctx, s.permanent);
+          return chars.types.includes('Artifact') || chars.types.includes('Creature');
+        });
+      const additionalCopies = enteringArtifactOrCreature
+        ? ctx.state.battlefield.filter((perm) => {
+            if (perm.controllerId !== source.controllerId) return false;
+            const def = ctx.defs.get(perm.oracleId);
+            return def?.ruleStatics.some((rs) => rs.kind === 'triggerAdditionalOnArtifactOrCreatureEntry') ?? false;
+          }).length
+        : 0;
+      for (let copy = 0; copy <= additionalCopies; copy++) {
+        for (const group of firings) {
         const first = group[0] as TriggerEventSubject;
         // Intervening-if, first check (CR 603.4), with the event object available for
         // conditions such as "if that creature had to attack".
@@ -534,9 +597,10 @@ export function queueTriggersForEvent(
           continue;
         }
         const amounts = group.filter((s) => s.amount !== undefined);
+        const eventPlayerId = spec.aggregate === 'byEventPlayer' ? byEventPlayerKey(first) : first.playerId;
         const scope: TriggerScope = {
           ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
-            ...(first.playerId !== undefined ? { eventPlayerId: first.playerId } : {}),
+            ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
           ...(amounts.length > 0
             ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
             : {}),
@@ -552,6 +616,7 @@ export function queueTriggersForEvent(
           ...(Object.keys(scope).length > 0 ? { scope } : {}),
         });
         debug(ctx, 'stack', `trigger queued: ${source.name} — ${ability.description ?? ''}`);
+        }
       }
     }
   }
@@ -628,11 +693,8 @@ export function queueTriggersForEvent(
 
     if (matchingSubject === undefined) continue;
 
-    const amounts = subjects.filter((s) => s.amount !== undefined);
     const scope: TriggerScope = {
-      ...(amounts.length > 0
-        ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
-        : {}),
+      ...(matchingSubject.amount !== undefined ? { damageDealt: matchingSubject.amount } : {}),
     };
 
     ctx.state.pendingTriggers.push({
@@ -715,7 +777,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
         sourceOracleId: source.oracleId,
         sourceName: source.name,
         ability,
-        scope: { spellManaValue: manaValue },
+        scope: { spellManaValue: manaValue, ...(spell.triggerScope?.manaSpent !== undefined ? { manaSpent: spell.triggerScope.manaSpent } : {}) },
       });
       debug(ctx, 'stack', `cast trigger queued: ${source.name} — ${spell.description}`);
     }
@@ -741,5 +803,51 @@ function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: 
   if (to !== 'graveyard') return;
   const perm = obj as EnginePermanent;
   if (perm.controllerId === undefined) return;
+  if (computeCharacteristics(ctx, perm).types.includes('Creature')) {
+    ctx.state.creaturesDiedThisTurn += 1;
+  }
   queueTriggersForObject(ctx, 'dies', perm);
+}
+
+/**
+ * "Until SOURCE leaves the battlefield" (Conclave Tribunal, CR 610.2b): when the source itself
+ * leaves — regardless of where it goes — every card it exiled this way comes back, under the
+ * control it had when exiled. Each return is a normal zone change (a NEW object, "enters"
+ * triggers included), just like any other return from exile.
+ */
+function* returnExiledUntilLeaves(ctx: GameContext, sourceCardId: CardId): GameGen<void> {
+  const entries = ctx.state.exiledUntilLeaves[sourceCardId];
+  if (entries === undefined) return;
+  delete ctx.state.exiledUntilLeaves[sourceCardId];
+  for (const entry of entries) {
+    const exiled = ctx.state.exile.find((c) => c.cardId === entry.cardId);
+    if (exiled === undefined) continue;
+    yield* moveObject(ctx, exiled, { zone: 'battlefield', controllerId: entry.controllerId });
+  }
+}
+
+export function queuePlayerTriggersForEvent(
+  ctx: GameContext,
+  when: 'gainsLife',
+  playerId: PlayerId,
+  amount?: number,
+): void {
+  for (const perm of ctx.state.battlefield) {
+    for (const ability of triggersOf(ctx, perm)) {
+      const spec = ability.trigger;
+      if (spec === undefined || spec.when !== when) continue;
+      if (spec.player === 'you' && perm.controllerId !== playerId) continue;
+      const source = { cardId: perm.cardId, controllerId: perm.controllerId };
+      if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
+      ctx.state.pendingTriggers.push({
+        controllerId: perm.controllerId,
+        sourceCardId: perm.cardId,
+        sourceOracleId: perm.oracleId,
+        sourceName: perm.name,
+        ability,
+        ...(amount !== undefined ? { scope: { damageDealt: amount } } : {}),
+      });
+      debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
+    }
+  }
 }

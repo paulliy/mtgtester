@@ -102,6 +102,12 @@ export interface CardDefinition {
    * state-based action before its own trigger could resolve.
    */
   entersWithCounters?: Record<string, number>;
+  /** Static characteristic behavior for a Duplicant-style last-exiled creature copy. */
+  copyLastExiledCreature?: boolean;
+  /** Grants an energy alternative cost to permanent spells while this permanent is controlled. */
+  energyAlternativeCost?: number;
+  /** Triggered ability fired when a named counter crosses a threshold on this permanent. */
+  counterThresholdTriggers?: { counter: string; threshold: number; ability: Ability }[];
   /** For instants/sorceries: the spell's ability (kind 'spell'), or null. */
   spellAbility: Ability | null;
   /**
@@ -113,6 +119,20 @@ export interface CardDefinition {
   spellCantBeCountered?: boolean;
   /** Alternative casting costs/modes (e.g. Overload). */
   alternativeCasts?: import('./ability').AlternativeCast[];
+  /** "You may cast this spell without paying its mana cost if you control a commander." */
+  commanderFreeCast?: boolean;
+  /** A card that asks whether it should copy a permanent as it enters. */
+  entersAsCopy?: { target: import('./ability').TargetKind; addKeywords?: import('./ability').KeywordAbility[]; addCounters?: Record<string, number>; nonLegendary?: boolean };
+  /** Morph is represented as a face-down cast/activation marker in the authored model. */
+  morphCost?: ParsedManaCost;
+  /** The printed "can't block" characteristic. */
+  cantBlock?: boolean;
+  /** The printed "can't be blocked" characteristic. */
+  cantBeBlocked?: boolean;
+  /** Trazyn-style dynamic abilities copied from artifact cards in the controller’s graveyard. */
+  artifactGraveyardAbilities?: boolean;
+  /** Replaces an empty-library draw with a creature return, as on Out of the Tombs. */
+  emptyLibraryCreatureReplacement?: boolean;
   /** Triggered abilities (kind 'triggered'). */
   triggers: Ability[];
   /** Continuous effects this card contributes while a permanent (static abilities / CDAs). */

@@ -9,6 +9,7 @@ function makeView(overrides: Partial<PlayerView> = {}): PlayerView {
     hand: [{ id: 'c1', name: "Predator's Strike" }],
     deck: [],
     graveyard: [],
+    exile: [],
     commanders: [],
     availableMana: { G: 2 },
     manaSources: [],

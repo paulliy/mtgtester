@@ -37,6 +37,9 @@ function untapStep(ctx: GameContext): void {
   ctx.state.excessDamageControllerIds = [];
   ctx.state.damageDealtToPlayersThisTurn = {};
   ctx.state.combatDamagePlayersBySource = {};
+  ctx.state.creaturesDiedThisTurn = 0;
+  ctx.state.combatDamagePrevention = { all: false, players: {} };
+  ctx.state.lifeFloorPlayers = {};
   for (const p of ctx.state.players) {
     p.yieldUntilEndOfTurn = false;
   }
@@ -45,6 +48,7 @@ function untapStep(ctx: GameContext): void {
   for (const perm of ctx.state.battlefield) {
     perm.activationsThisTurn = [];
     if (perm.attackedThisTurn === true) perm.attackedThisTurn = false;
+    perm.mustBlockThisTurn = false;
   }
 
   let untapped = 0;
@@ -69,7 +73,7 @@ function untapStep(ctx: GameContext): void {
  */
 export function queueStepTriggers(
   ctx: GameContext,
-  when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'mainPhase',
+  when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'mainPhase' | 'beginningOfCombat',
 ): void {
   const apId = ctx.state.currentTurnPlayer;
   for (const perm of [...ctx.state.battlefield]) {
@@ -185,6 +189,9 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   queueStepTriggers(ctx, 'untapStep');
   untapStep(ctx);
 
+  if (ctx.state.createdTokenThisTurn) {
+    for (const p of Object.keys(ctx.state.createdTokenThisTurn)) ctx.state.createdTokenThisTurn[p as any] = false;
+  }
   setStep(ctx, 'upkeep');
   queueStepTriggers(ctx, 'upkeep');
   yield* runPrioritySequence(ctx);
@@ -193,6 +200,10 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   setStep(ctx, 'draw');
   queueStepTriggers(ctx, 'drawStep');
   yield* drawCards(ctx, ap, 1); // multiplayer: first-turn draw included (brief §5.3)
+  if (ctx.state.monarchPlayerId === ap.id) {
+    yield* drawCards(ctx, ap, 1);
+    emit(ctx, 'draw', { name: 'a card (monarch)' }, ap.id);
+  }
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
@@ -204,7 +215,13 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
 
   // Combat.
   setPhase(ctx, 'combat', null);
+  queueStepTriggers(ctx, 'beginningOfCombat');
   yield* runCombatPhase(ctx);
+  while (ctx.state.extraCombatPhases > 0) {
+    ctx.state.extraCombatPhases -= 1;
+    queueStepTriggers(ctx, 'beginningOfCombat');
+    yield* runCombatPhase(ctx);
+  }
 
   // Postcombat main.
   setPhase(ctx, 'postcombatMain', null);

@@ -9,6 +9,7 @@ function makeView(overrides: Partial<PlayerView> = {}): PlayerView {
     hand: [],
     deck: [],
     graveyard: [],
+    exile: [],
     commanders: [],
     availableMana: {},
     manaSources: [],

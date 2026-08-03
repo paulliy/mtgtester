@@ -9,7 +9,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
 import { toOracleCard, type RawScryfallCard } from '../cards/scryfall';
-import { buildSupportedPool } from '../cards/pool';
+import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const OUTPUT_PATH = 'docs/modelled-cards.md';
@@ -27,7 +27,7 @@ function loadPool() {
   return buildSupportedPool(cards);
 }
 
-function generateMarkdown(pool): string {
+function generateMarkdown(pool: SupportedPool): string {
   const nonLands = pool.cards.filter((c) => !c.isLand).sort((a, b) => a.card.name.localeCompare(b.card.name));
 
   const lines = [
@@ -46,7 +46,7 @@ function generateMarkdown(pool): string {
   return lines.join('\n') + '\n';
 }
 
-function generateJson(pool) {
+function generateJson(pool: SupportedPool) {
   const nonLands = pool.cards.filter((c) => !c.isLand).sort((a, b) => a.card.name.localeCompare(b.card.name));
   return JSON.stringify(
     {

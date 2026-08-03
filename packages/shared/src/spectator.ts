@@ -88,6 +88,7 @@ export interface SpectatorSeat {
   manaPool: ManaPool;
   energy: number;
   poisonCounters: number;
+  counters?: Record<string, number>;
   landsPlayedThisTurn: number;
   mulligansTaken: number;
   hasLost: boolean;
@@ -125,6 +126,8 @@ export interface SpectatorState {
   seed: string;
   turnNumber: number;
   activePlayer: PlayerId;
+  /** The current monarch, or null when no monarch has been established. */
+  monarchSeat: PlayerId | null;
   /** Null when no one holds priority (untap, and cleanup with nothing to do). */
   priorityPlayer: PlayerId | null;
   phase: Phase;

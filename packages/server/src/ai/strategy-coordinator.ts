@@ -107,6 +107,9 @@ export class StrategyCoordinator {
   private strategyAttempted = false;
   /** One re-plan is allowed per turn after an opponent intervention invalidates the strategy. */
   private replanned = false;
+  /** Generation tracking for strategist calls to reject stale/invalidated in-flight plans. */
+  private strategistGeneration = 0;
+  private activeGeneration = 0;
   /** The in-flight (or last-settled) strategist call, for tests and turn-boundary bookkeeping. */
   private inFlight: Promise<void> | null = null;
 
@@ -118,7 +121,11 @@ export class StrategyCoordinator {
     private readonly logger?: AiCallLogger,
     /** Never plan this seat's own turn — no tactician ever consumes it (see `guidanceFor`). */
     private readonly humanSeat?: PlayerId | null,
-  ) {}
+  ) {
+    this.turnPlan.onInvalidated = () => {
+      this.strategy = null;
+    };
+  }
 
   /**
    * Ahead-of-time trigger, fired once per turn boundary (the previous turn's last decision) for
@@ -153,6 +160,7 @@ export class StrategyCoordinator {
       this.plannedTurn = turn;
       this.plannedPlayer = activePlayer;
       this.strategy = null;
+      this.activeGeneration = 0;
       this.strategyAttempted = false;
       this.replanned = false;
       this.turnPlan.clear();
@@ -177,6 +185,9 @@ export class StrategyCoordinator {
     }
 
     this.strategyAttempted = true;
+    this.strategistGeneration++;
+    const generation = this.strategistGeneration;
+    this.activeGeneration = generation;
     const strategyRequest: DecisionRequest = {
       requestId: `${gameId}-t${turn}-${activePlayer}-strategy`,
       gameId,
@@ -189,10 +200,13 @@ export class StrategyCoordinator {
       prompt: 'Create the active player turn strategy.',
       legalActions: [{ id: 0, type: 'planTurn', description: 'Return the turn strategy' }],
     };
-    this.inFlight = this.runStrategist(strategyRequest);
+    this.inFlight = this.runStrategist(strategyRequest, generation);
   }
 
-  private async runStrategist(strategyRequest: DecisionRequest): Promise<void> {
+  private async runStrategist(
+    strategyRequest: DecisionRequest,
+    generation: number,
+  ): Promise<void> {
     const activePlayer = strategyRequest.activePlayer;
     const view = this.engine.view(activePlayer);
     const recent = this.recentFor(activePlayer);
@@ -210,6 +224,7 @@ export class StrategyCoordinator {
       // A turn/player change (or a fresh re-plan) may have superseded this call while it was
       // in flight; don't install a stale plan over what the board now needs.
       if (
+        this.activeGeneration !== generation ||
         this.plannedTurn !== strategyRequest.turn ||
         this.plannedPlayer !== activePlayer
       ) {
@@ -266,6 +281,7 @@ export class StrategyCoordinator {
         !['pass', 'passAndYieldTurn', 'yieldToAbility'].includes(chosen.type)
       ) {
         this.strategy = null;
+        this.activeGeneration = 0;
         // Off the critical path, a re-plan is affordable — but only once per turn, so a
         // contested board can't turn into a strategist call on every single intervention.
         if (!this.replanned) {

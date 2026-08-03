@@ -22,6 +22,9 @@ import {
   dealDamageToPlayer,
   permanentSource,
 } from '../effects/resolve';
+import { computeCharacteristics } from '../effects/continuous';
+import { payManaCost } from '../effects/resolve';
+import { canPay, emptyCost } from '../mana/cost';
 import { emit, debug } from '../log/log';
 import { playerById, queueTriggersForEvent, queueTriggersForObject } from '../state/objects';
 import {
@@ -33,6 +36,9 @@ import {
   hasProtectionFrom,
   isCreaturePermanent,
   playersInApnapOrder,
+  allowanceFor,
+  gatherRuleStatics,
+  manaSourcesFor,
   triggersOf,
 } from '../state/queries';
 import type { EnginePermanent, GameContext } from '../state/types';
@@ -55,9 +61,45 @@ function canAttack(ctx: GameContext, perm: EnginePermanent): boolean {
   return true;
 }
 
+function attackTax(ctx: GameContext, defendingPlayerId: PlayerId): number {
+  return gatherRuleStatics(ctx).reduce((total, entry) => {
+    if (entry.controllerId !== defendingPlayerId || entry.static.kind !== 'attackTax') return total;
+    return total + entry.static.amount;
+  }, 0);
+}
+
+function canPayAttackTax(ctx: GameContext, attackingPlayerId: PlayerId, defendingPlayerId: PlayerId, count: number): boolean {
+  const amount = attackTax(ctx, defendingPlayerId) * count;
+  if (amount === 0) return true;
+  const player = playerById(ctx, attackingPlayerId);
+  return canPay(
+    { ...emptyCost(), generic: amount },
+    player.manaEntries,
+    manaSourcesFor(ctx, attackingPlayerId),
+    allowanceFor(ctx, attackingPlayerId, { kind: 'other' }),
+  );
+}
+
+function* payAttackTax(ctx: GameContext, attackingPlayerId: PlayerId, defendingPlayerId: PlayerId, count: number): GameGen<void> {
+  const amount = attackTax(ctx, defendingPlayerId) * count;
+  if (amount === 0) return;
+  yield* payManaCost(ctx, playerById(ctx, attackingPlayerId), { ...emptyCost(), generic: amount }, { kind: 'other' });
+}
+
 /** Evasion check: may `blocker` block `attacker`? (flying/reach, protection — CR 509.1b.) */
 function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePermanent): boolean {
-  if (blocker.tapped) return false;
+  if (blocker.tapped || blocker.cantBlock === true || attacker.cantBeBlocked === true) return false;
+  if (computeCharacteristics(ctx, attacker).cantBeBlocked) return false;
+  for (const champion of ctx.state.battlefield) {
+    if (champion.controllerId === attacker.controllerId) {
+      const def = ctx.defs.get(champion.oracleId);
+      if (def?.name === 'Champion of Lambholt' || def?.oracleId === 'c549b0fd-1e08-4873-952e-a14dc45a0fd2') {
+        const champPower = effectivePT(ctx, champion).power;
+        const blockerPower = effectivePT(ctx, blocker).power;
+        if (blockerPower < champPower) return false;
+      }
+    }
+  }
   if (ctx.state.effects.some((effect) => effect.kind === 'cantBeBlocked' && effect.targetCardIds.includes(attacker.cardId))) return false;
   // Protection (CR 702.16), the B in DEBT: an attacker with protection from the blocker's
   // colors cannot be blocked by it.
@@ -138,6 +180,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   for (let i = 0; i < eligible.length; i++) {
     const creature = eligible[i] as EnginePermanent;
     const rest = eligible.slice(i + 1);
+    const attackableOpponents = opponents.filter((opp) => canPayAttackTax(ctx, ap.id, opp.id, 1));
     const pt = effectivePT(ctx, creature);
     // Descriptive only (see `EngineActionOption.data`). `hasTriggers` matters to a consumer
     // judging whether attacking could ever be worth it: a creature that puts something on the
@@ -158,9 +201,9 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
         data: attackData,
         interaction: { kind: 'attack', attackerId: creature.id },
       },
-      ...opponents.map((opp) => ({
+      ...attackableOpponents.map((opp) => ({
         type: 'attack',
-        description: `${creature.name} attacks ${opp.id} (${opp.life} life)`,
+        description: `${creature.name} attacks ${opp.id} (${opp.life} life)${attackTax(ctx, opp.id) > 0 ? ` — pay {${attackTax(ctx, opp.id)}}` : ''}`,
         payload: opp.id,
         data: attackData,
         interaction: {
@@ -174,6 +217,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
     // Batch shortcuts, appended so the per-creature option indices never move.
     if (rest.length > 0) {
       const group = [creature, ...rest];
+      const batchAttackableOpponents = attackableOpponents.filter((opp) => canPayAttackTax(ctx, ap.id, opp.id, group.length));
       // Aggregates over the whole undeclared group, for a consumer deciding whether the batch
       // could matter at all (same reasoning as `attackData`, widened from one creature to all).
       const groupData = {
@@ -192,9 +236,9 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
         },
       });
       options.push(
-        ...opponents.map((opp) => ({
+        ...batchAttackableOpponents.map((opp) => ({
           type: 'attackRest',
-          description: `All ${group.length} undeclared creatures (${creature.name} + ${rest.length} more) attack ${opp.id} (${opp.life} life)`,
+          description: `All ${group.length} undeclared creatures (${creature.name} + ${rest.length} more) attack ${opp.id} (${opp.life} life)${attackTax(ctx, opp.id) > 0 ? ` — pay {${attackTax(ctx, opp.id) * group.length}}` : ''}`,
           payload: opp.id,
           data: groupData,
           interaction: {
@@ -223,24 +267,27 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
         subjectId: creature.id,
         remaining: rest.map((c) => ({
           subjectId: c.id,
-          optionIds: opponents.map((opp) => opp.id),
+          optionIds: attackableOpponents.map((opp) => opp.id),
         })),
       },
     };
 
     if (outcome.index === 0) continue;
-    if (outcome.index <= opponents.length) {
-      const target = opponents[outcome.index - 1];
+    if (outcome.index <= attackableOpponents.length) {
+      const target = attackableOpponents[outcome.index - 1];
       if (target === undefined) throw new Error('engine bug: attack target out of range');
+      yield* payAttackTax(ctx, ap.id, target.id, 1);
       commitAttacker(ctx, creature, target.id, ap.id);
       continue;
     }
 
     // A batch shortcut: either way, nothing undeclared is asked about again.
-    const batchIndex = outcome.index - (opponents.length + 1);
+    const batchIndex = outcome.index - (attackableOpponents.length + 1);
     if (batchIndex === 0) break; // noAttackRest
-    const batchTarget = opponents[batchIndex - 1];
+    const batchTargets = attackableOpponents.filter((opp) => canPayAttackTax(ctx, ap.id, opp.id, [creature, ...rest].length));
+    const batchTarget = batchTargets[batchIndex - 1];
     if (batchTarget === undefined) throw new Error('engine bug: attack target out of range');
+    yield* payAttackTax(ctx, ap.id, batchTarget.id, [creature, ...rest].length);
     for (const c of [creature, ...rest]) commitAttacker(ctx, c, batchTarget.id, ap.id);
     break;
   }
@@ -253,6 +300,12 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   const defendingPlayers = [...new Set(declared.map((a) => a.attacking as PlayerId))];
   for (const defId of defendingPlayers) {
     playerById(ctx, defId).yieldUntilEndOfTurn = false;
+    const auras = ctx.state.battlefield.filter(
+      (p) => p.attachedTo === defId || (p as any).attachedToPlayerId === defId,
+    );
+    for (const aura of auras) {
+      queueTriggersForEvent(ctx, 'enchantedPlayerAttacked', [{ permanent: aura, playerId: ap.id }]);
+    }
   }
   ctx.state.combat = {
     defendingPlayers,
@@ -266,7 +319,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   queueTriggersForEvent(
     ctx,
     'attacks',
-    declared.map((permanent) => ({ permanent, playerId: permanent.attacking ?? undefined })),
+    declared.map((permanent) => ({ permanent, playerId: permanent.controllerId })),
   );
   emit(ctx, 'attackersDeclared', { count: declared.length }, ap.id);
 }
@@ -293,6 +346,7 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
     for (let i = 0; i < candidates.length; i++) {
       const { blocker, blockable } = candidates[i] as (typeof candidates)[number];
       const remaining = candidates.length - 1 - i;
+      const mustBlock = blocker.mustBlockThisTurn === true && blockable.length > 0;
       const pt = effectivePT(ctx, blocker);
       const options: EngineActionOption[] = [
         {
@@ -331,6 +385,10 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
           },
         });
       }
+      if (mustBlock) {
+        options.shift();
+        if (remaining > 0) options.pop();
+      }
 
       const outcome = yield {
         decisionType: 'declareBlockers',
@@ -348,9 +406,9 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
           })),
         },
       };
-      if (outcome.index === 0) continue;
-      if (outcome.index > blockable.length) break; // noBlockRest
-      const attacker = blockable[outcome.index - 1];
+      if (!mustBlock && outcome.index === 0) continue;
+      if (!mustBlock && outcome.index > blockable.length) break; // noBlockRest
+      const attacker = blockable[mustBlock ? outcome.index : outcome.index - 1];
       if (attacker === undefined) throw new Error('engine bug: block target out of range');
       blocker.blocking = attacker.id;
       blocker.statuses.push('blocking');
@@ -362,6 +420,7 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
         defenderId,
       );
       debug(ctx, 'combat', `${blocker.name} blocks ${attacker.name}`);
+      queueTriggersForObject(ctx, 'blocks', blocker);
     }
   }
 
@@ -539,6 +598,13 @@ function dealCombatDamage(ctx: GameContext, step: 'first' | 'regular'): void {
         },
       );
       damageToPlayers.set(a.source, (damageToPlayers.get(a.source) ?? 0) + a.amount);
+      if (
+        ctx.state.monarchPlayerId === a.targetPlayer &&
+        a.source.controllerId !== a.targetPlayer
+      ) {
+        ctx.state.monarchPlayerId = a.source.controllerId;
+        emit(ctx, 'monarch', { player: a.source.controllerId }, a.source.controllerId);
+      }
     }
     if (step === 'first') a.source.dealtFirstStrikeDamage = true;
   }

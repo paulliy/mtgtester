@@ -19,6 +19,8 @@ const SRC = join(import.meta.dirname, '..', 'src');
 const ALLOWED: Record<string, string> = {
   'cards/definition.ts': 'declares the CardDefinition model and its type predicates',
   'effects/continuous.ts': 'the layer engine itself: printed values seed the layer pass',
+  'actions/apply.ts':
+    'reads the printed type of a card being announced from hand or the command zone, before it is a permanent',
   'actions/legal.ts':
     'reads cards in hand / the command zone, which no continuous effect reaches — ' +
     'a permanent read here would be a bug',

@@ -29,7 +29,55 @@ const creature = (name: string, power: string, text = '') => oracle({
   oracleText: text,
 });
 
+const trazyn = () => oracle({
+  oracleId: '1ef3b48a-55ef-4221-a0bc-e1c1057eec2c',
+  name: 'Trazyn the Infinite',
+  typeLine: 'Legendary Artifact Creature — Necron',
+  supertypes: ['Legendary'],
+  manaCost: '{4}{U}{B}',
+  power: '4',
+  toughness: '6',
+  oracleText: 'As long as Trazyn the Infinite is on the battlefield, it has all activated abilities of all artifact cards in your graveyard.',
+});
+
 describe('ADR 0020 Phase 1 primitives', () => {
+  it('Trazyn copies activated abilities from artifact cards and invalidates when the graveyard changes', () => {
+    const ctx = pod();
+    const artifact = oracle({
+      name: 'Graveyard Relic',
+      typeLine: 'Artifact',
+      manaCost: '{2}',
+      oracleText: '{T}: Draw a card.',
+      power: null,
+      toughness: null,
+    });
+    conjure(ctx, 'P1', artifact, 'graveyard');
+    const source = spawn(ctx, 'P1', trazyn());
+
+    expect(computeCharacteristics(ctx, source).activatedAbilities?.map((ability) => ability.ability.description)).toContain('{T}: Draw a card.');
+    ctx.state.players[0]!.graveyard.length = 0;
+    expect(computeCharacteristics(ctx, source).activatedAbilities).toEqual([]);
+  });
+
+  it('Necron Overlord exposes one X choice and one grouped artifact-tap cost', () => {
+    const raw = oracle({
+      oracleId: '2c0de95f-4269-439c-a1bc-faa11348b185',
+      name: 'Necron Overlord',
+      typeLine: 'Creature — Necron',
+      manaCost: '{3}{B}',
+      power: '3',
+      toughness: '3',
+      oracleText: 'Relentless March — {X}, {T}, Tap X untapped artifacts you control: Target opponent loses X life.',
+    });
+    const ability = interpretCard(raw).activatedAbilities[0];
+    expect(ability?.costs).toEqual(expect.arrayContaining([
+      { kind: 'tap' },
+      { kind: 'tapXOthers', selector: expect.anything() },
+    ]));
+    expect(ability?.costs.some((cost) => cost.kind === 'mana' && cost.cost.x === 1)).toBe(true);
+    expect(ability?.ability.effects).toContainEqual({ op: 'loseLifeTarget', target: 0, amount: { kind: 'xValue' } });
+  });
+
   it('fight uses simultaneous printed/current power damage and waits for SBAs', () => {
     const ctx = pod();
     const first = spawn(ctx, 'P1', creature('First Fighter', '3'));

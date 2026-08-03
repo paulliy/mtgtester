@@ -120,9 +120,17 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
 
     const initialHandCount = p1.hand.length;
 
-    // Simulate combat damage dealt by attacker (3 damage)
+    const otherAttacker = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Other Bear', typeLine: 'Creature — Bear', power: '5', toughness: '5' }),
+    );
+
+    // Simulate combat damage dealt simultaneously by the targeted attacker (3) and another
+    // untargeted attacker (5) — only the targeted creature's damage should count.
     queueTriggersForEvent(ctx, 'dealsCombatDamageToPlayer', [
       { permanent: attacker, amount: 3 },
+      { permanent: otherAttacker, amount: 5 },
     ]);
 
     expect(ctx.state.pendingTriggers.length).toBe(1);

@@ -149,6 +149,24 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         timestamp: source.timestamp,
       });
     }
+    if (def.artifactGraveyardAbilities === true) {
+      const controller = ctx.state.players.find((p) => p.id === source.controllerId);
+      for (const card of controller?.graveyard ?? []) {
+        const graveyardDef = ctx.defs.get(card.oracleId);
+        if (graveyardDef === undefined || !graveyardDef.types.includes('Artifact')) continue;
+        for (const ability of graveyardDef.activatedAbilities) {
+          out.push({
+            applies: {
+              kind: 'selector',
+              selector: { kind: 'self' },
+              source: { cardId: source.cardId, controllerId: source.controllerId },
+            },
+            op: { layer: 6, addActivatedAbility: ability },
+            timestamp: source.timestamp,
+          });
+        }
+      }
+    }
   }
 
   for (const eff of ctx.state.effects) {
@@ -229,6 +247,7 @@ export function candidateOf(
     subtypes: chars.subtypes,
     colors: chars.colors,
     power: chars.power,
+    toughness: chars.toughness,
     keywords: chars.keywords,
     isToken: perm.isToken,
     enteredThisTurn: perm.enteredTurnNumber === ctx.state.turnNumber,
@@ -236,6 +255,7 @@ export function candidateOf(
     isEnchanted,
     isEquipped,
     inCombat: perm.attacking !== null || perm.blocking !== null,
+    hasAnyCounter: Object.values(perm.counters).some((c) => c > 0),
   };
 }
 
@@ -306,6 +326,8 @@ function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): 
         if (!chars.keywords.includes(op.addKeyword)) {
           chars.keywords.push(op.addKeyword);
         }
+      } else if ('setCantBeBlocked' in op) {
+        chars.cantBeBlocked = true;
       }
       break;
     case 7:
@@ -363,6 +385,10 @@ function cloneWork(work: WorkMap): WorkMap {
         keywords: [...entry.chars.keywords],
         ward: entry.chars.ward,
         protectionFrom: [...entry.chars.protectionFrom],
+        cantBeBlocked: entry.chars.cantBeBlocked,
+        ...(entry.chars.activatedAbilities === undefined
+          ? {}
+          : { activatedAbilities: [...entry.chars.activatedAbilities] }),
         triggers: [...entry.chars.triggers],
         manaAbilities: [...entry.chars.manaAbilities],
         power: entry.chars.power,
@@ -496,29 +522,66 @@ function runLayers(
   for (const perm of perms) {
     const def = ctx.defs.get(perm.oracleId);
     if (def === undefined) throw new Error(`engine bug: no def for ${perm.name}`);
+    let types = [...def.types];
+    let subtypes = [...def.subtypes];
+    let colors = [...def.colors];
+    let power = perm.power ?? 0;
+    let toughness = perm.toughness ?? 0;
+    let keywords = [...def.keywords];
+    let triggers = [...def.triggers];
+    let manaAbilities = [...def.manaAbilities];
+    if (perm.faceDown === true) {
+      types = ['Creature'];
+      subtypes = [];
+      colors = [];
+      power = 2;
+      toughness = 2;
+      keywords = [];
+      triggers = [];
+      manaAbilities = [];
+    } else {
+      for (const type of perm.copyAddTypes ?? []) if (!types.includes(type)) types.push(type);
+      if (def.copyLastExiledCreature === true && (perm.exiledCardIds?.length ?? 0) > 0) {
+        const lastId = perm.exiledCardIds?.[perm.exiledCardIds.length - 1];
+        const exiled = ctx.state.exile.find((card) => card.cardId === lastId);
+        const exiledDef = exiled === undefined ? undefined : ctx.defs.get(exiled.oracleId);
+        if (exiledDef?.types.includes('Creature')) {
+          subtypes = [...exiledDef.subtypes, 'Shapeshifter'];
+          power = exiledDef.power ?? 0;
+          toughness = exiledDef.toughness ?? 0;
+        }
+      }
+    }
     work.set(perm.cardId, {
       perm,
       chars: {
         supertypes: [...def.supertypes],
-        types: [...def.types],
-        subtypes: [...def.subtypes],
+        types,
+        subtypes,
         // Layer 5 is not implemented — printed color, read from here so it has one home.
-        colors: [...def.colors],
-        keywords: [...def.keywords],
+        colors,
+        keywords,
         ward: def.ward ?? null,
         protectionFrom: [...(def.protectionFrom ?? [])],
-        triggers: [...def.triggers],
-        manaAbilities: [...def.manaAbilities],
+        cantBeBlocked: def.cantBeBlocked === true,
+        activatedAbilities: [...def.activatedAbilities],
+        triggers,
+        manaAbilities,
         // Base P/T comes from the permanent (a copy effect would set it there — layer 1).
-        power: perm.power ?? 0,
-        toughness: perm.toughness ?? 0,
+        power,
+        toughness,
         loseAbilities: false,
       },
     });
   }
 
   const effects = gatherEffects(ctx);
-  const usedGraveyards = readsGameState(effects);
+  // Trazyn-style abilities are sourced from graveyard contents even though their layer op
+  // itself is static. Keep those card identities in the layer-cache digest so an artifact
+  // entering or leaving the graveyard immediately changes the computed ability list.
+  const usedGraveyards =
+    readsGameState(effects) ||
+    ctx.state.battlefield.some((perm) => ctx.defs.get(perm.oracleId)?.artifactGraveyardAbilities === true);
   const group = (key: string): LayerEffect[] => effects.filter((e) => groupOf(e.op) === key);
 
   applyGroup(ctx, work, group('4'));

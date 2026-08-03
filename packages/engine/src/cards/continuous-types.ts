@@ -40,6 +40,8 @@ export type ContinuousOp =
     }
   // Layer 6 — ability adding and removing.
   | { layer: 6; addKeyword: KeywordAbility }
+  /** "Creatures with counters on them can't be blocked" (Herald of Secret Streams). */
+  | { layer: 6; setCantBeBlocked: true }
   /** "Other Dragons you control have ward {2}" — parameterized, so not an `addKeyword`. */
   | { layer: 6; addWard: ParsedManaCost }
   /** "Protection from white and from black" (CR 702.16). */
@@ -104,6 +106,8 @@ export interface Characteristics {
   ward: ParsedManaCost | null;
   /** Colors this permanent has protection from (CR 702.16). */
   protectionFrom: Color[];
+  /** Computed evasion from a layer-6 effect, separate from printed characteristics. */
+  cantBeBlocked: boolean;
   /** Triggered abilities the permanent currently has (CR 603). */
   triggers: Ability[];
   /** Mana abilities the permanent currently has — printed, or replaced by a subtype change. */

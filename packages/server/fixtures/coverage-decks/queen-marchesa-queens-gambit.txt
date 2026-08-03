@@ -1,0 +1,99 @@
+# 👑-Marchesa d'Amati, First of her Name: Queens Gambit (duplicated from Breezykiwi)
+# snapshot of https://moxfield.com/decks/oxA20-lLBECpKM7q4I7uKg
+
+Commander
+1 Queen Marchesa
+
+Deck
+3 Mountain
+4 Plains
+3 Swamp
+1 Temple of Malice
+1 Arcane Signet
+1 Command Tower
+1 Fabled Passage
+1 Wishclaw Talisman
+1 Chaos Warp
+1 Orzhov Basilica
+1 Path to Exile
+1 Rogue's Passage
+1 Sol Ring
+1 Swords to Plowshares
+1 Brash Taunter
+1 Mangara, the Diplomat
+1 Temple of Silence
+1 Temple of Triumph
+1 Fellwar Stone
+1 Scheming Symmetry
+1 Blasphemous Act
+1 Boros Garrison
+1 Boros Signet
+1 Exotic Orchard
+1 Duelist's Heritage
+1 Gisela, Blade of Goldnight
+1 Orzhov Signet
+1 Path of Ancestry
+1 Selfless Squire
+1 Vampire Nighthawk
+1 Weathered Wayfarer
+1 Ghostly Prison
+1 Rakdos Carnarium
+1 Sulfurous Springs
+1 Backlash
+1 Boros Charm
+1 Smoldering Marsh
+1 Nomad Outpost
+1 Anguished Unmaking
+1 Fetid Heath
+1 Rugged Prairie
+1 Battlefield Forge
+1 Caves of Koilos
+1 Angel's Grace
+1 Vault of the Archangel
+1 Reverberate
+1 Generous Gift
+1 Talisman of Conviction
+1 Talisman of Hierarchy
+1 Crackling Doom
+1 Humble Defector
+1 Talisman of Indulgence
+1 Sunforger
+1 Arcbond
+1 Mob Rule
+1 Rakdos Signet
+1 Smothering Tithe
+1 Mistveil Plains
+1 Kambal, Consul of Allocation
+1 Shadowblood Ridge
+1 Graven Cairns
+1 Rakdos Charm
+1 Delirium
+1 Wear // Tear
+1 Michiko Konda, Truth Seeker
+1 Deflecting Palm
+1 Comeuppance
+1 Brightclimb Pathway // Grimclimb Pathway
+1 Needleverge Pathway // Pillarverge Pathway
+1 Valakut Awakening // Valakut Stoneforge
+1 Nighthawk Scavenger
+1 Blightstep Pathway // Searstep Pathway
+1 Kardur, Doomscourge
+1 Tibalt's Trickery
+1 Dream Devourer
+1 Shadrix Silverquill
+1 Breena, the Demagogue
+1 Wandering Archaic // Explore the Vastlands
+1 Secret Rendezvous
+1 Malakir Rebirth // Malakir Mire
+1 Inkshield
+1 Nils, Discipline Enforcer
+1 Combat Calligrapher
+1 Flumph
+1 Master of Ceremonies
+1 Cut a Deal
+1 Verrak, Warped Sengir
+1 Loran of the Third Path
+1 Display of Power
+1 Teyo, Geometric Tactician
+1 Stroke of Midnight
+1 Olórin's Searing Light

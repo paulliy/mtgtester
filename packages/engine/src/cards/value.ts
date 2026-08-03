@@ -40,6 +40,10 @@ export interface ValueScope {
   triggerCount?: number;
   /** Mana value of the spell that fired a `castsSpell` trigger (Lozhan). */
   spellManaValue?: number;
+  /** Mana actually spent to cast the spell that fired a trigger (Aetherflux Conduit). */
+  manaSpent?: number;
+  /** Energy paid by a preceding variable-payment effect in this same resolution. */
+  energyPaid?: number;
   stationPower?: number;
   /** Player involved in the firing event (for that-player-controlled targets). */
   eventPlayerId?: PlayerId;
@@ -54,7 +58,7 @@ export interface ValueScope {
  * carried through the stack. Everything else in a `ValueScope` is re-derived at resolution;
  * these cannot be, because the event is over by then.
  */
-export type TriggerScope = Pick<ValueScope, 'damageDealt' | 'triggerCount' | 'spellManaValue' | 'eventPlayerId' | 'stationPower'>;
+export type TriggerScope = Pick<ValueScope, 'damageDealt' | 'triggerCount' | 'spellManaValue' | 'manaSpent' | 'eventPlayerId' | 'stationPower'>;
 
 export type Value =
   | { kind: 'const'; n: number }
@@ -68,6 +72,10 @@ export type Value =
   | { kind: 'countPermanents'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
   /** "the greatest toughness among creatures you control" (Last March of the Ents). */
   | { kind: 'greatestToughnessAmong'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
+  /** "the greatest power among creatures you control". */
+  | { kind: 'greatestPowerAmong'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
+  /** Greatest mana value among permanents matching a selector. */
+  | { kind: 'greatestManaValueAmong'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
   /** "the total power of attacking creatures" (Klauth). */
   | { kind: 'totalPowerOfAttackers' }
   /** The X announced for this spell (CR 601.2b). */
@@ -78,12 +86,22 @@ export type Value =
   | { kind: 'triggerCount' }
   /** "equal to that spell's mana value" — the spell that fired a `castsSpell` trigger. */
   | { kind: 'spellManaValue' }
+  | { kind: 'manaSpent' }
+  | { kind: 'energyPaid' }
+  | { kind: 'energyAvailable' }
   /** Power of the creature tapped to pay a Station activation cost, captured at announcement. */
   | { kind: 'stationPower' }
   | { kind: 'countersOnSelf'; counter: string }
   | { kind: 'countersOnTarget'; target: EffectRef; counter: string }
   /** "Where X is that artifact's mana value" (Hoard-Smelter Dragon) — the target's mana value. */
-  | { kind: 'manaValueOfTarget'; target: EffectRef };
+  | { kind: 'manaValueOfTarget'; target: EffectRef }
+  | { kind: 'commanderCastCount'; player?: 'you' }
+  | { kind: 'lifeTotal'; scope?: 'you' | 'eventPlayer' }
+  | { kind: 'countOpponentsWithFewerCreatures' }
+  | { kind: 'creaturesDiedThisTurn' }
+  | { kind: 'powerOfSource' }
+  | { kind: 'powerOfTriggerObject' }
+  | { kind: 'countersOnTriggerObject'; counter: string };
 
 export const constant = (n: number): Value => ({ kind: 'const', n });
 

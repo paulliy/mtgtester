@@ -61,7 +61,7 @@ export type PriorityActionPayload =
       mode?: number;
       /** Chosen modal subset; supersedes mode for ranged modal spells. */
       modes?: number[];
-      alternativeCast?: 'overload' | 'adventure' | 'omen';
+      alternativeCast?: 'overload' | 'adventure' | 'omen' | 'energy' | 'commanderFree';
       altIndex?: number;
     }
   /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
@@ -313,6 +313,7 @@ export function permanentMatchesKind(
       return types.includes('Planeswalker');
     case 'player':
     case 'spell':
+    case 'stackObject':
     case 'cardInGraveyard':
     case 'noncreatureSpell':
     case 'commanderInCommandZone':
@@ -351,6 +352,9 @@ export function computeTargetOptions(
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
 
+  if (kind === 'stackObject') {
+    return ctx.state.stack.map((entry) => entry.id);
+  }
   if (kind === 'spell' || kind === 'noncreatureSpell') {
     return ctx.state.stack
       .filter((s) => s.kind === 'spell')
@@ -370,12 +374,21 @@ export function computeTargetOptions(
   // slot holding the actual owner (Loaming Shaman: "target cards from THEIR graveyard").
   if (kind === 'cardInGraveyard') {
     const graveyardOwnerSlot = typeof spec === 'object' ? spec.graveyardOwnerSlot : undefined;
+    const graveyardOwnerScope = typeof spec === 'object' ? spec.graveyardOwnerScope : undefined;
+    if (graveyardOwnerScope === 'any') {
+      return ctx.state.players.flatMap((player) => graveyardTargets(ctx, player.id, filter).map((c) => c.id));
+    }
     const ownerId =
       graveyardOwnerSlot === undefined ? casterId : (chosenTargets?.[graveyardOwnerSlot] as PlayerId | undefined) ?? casterId;
     return graveyardTargets(ctx, ownerId, filter).map((c) => c.id);
   }
   const players = playersInApnapOrder(ctx).map((p) => p.id);
-  if (kind === 'player') return players;
+  if (kind === 'player') {
+    return players.filter((id) =>
+      controller === undefined ||
+      (controller === 'you' ? id === casterId : controller === 'opponent' ? id !== casterId : id === eventPlayerId),
+    );
+  }
 
   const permanents = ctx.state.battlefield
     .filter((p) => permanentMatchesKind(ctx, p, kind))
@@ -595,6 +608,55 @@ export function computePriorityOptions(
         options.push(option);
       }
     }
+    const energyAlternativeCost = ctx.state.battlefield
+      .filter((perm) => perm.controllerId === player.id)
+      .map((perm) => getDefByOracleId(ctx, perm.oracleId, perm.name).energyAlternativeCost)
+      .find((amount): amount is number => amount !== undefined);
+    // Lands are permanents, but they are played rather than cast as permanent spells, so Nissa's
+    // alternate energy cost must never be offered for a land card.
+    const isPermanentSpell = def.types.some((type) => ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Planeswalker'].includes(type));
+    if (isPermanentSpell && energyAlternativeCost !== undefined && player.energy >= energyAlternativeCost && !fromExile) {
+      const targets = computeCastTargets(ctx, def, player.id);
+      if (targets !== null) {
+        const option: EngineActionOption = {
+          type: 'castSpell',
+          description: `Cast ${obj.name} by paying ${energyAlternativeCost} energy` + (fromCommand ? ' from the command zone' : ''),
+          payload: { kind: 'castSpell', objectId: obj.id, fromCommand, alternativeCast: 'energy' },
+          data: {
+            instantSpeed,
+            sourceName: obj.name,
+            sourceZone: fromCommand ? 'command' : 'hand',
+            manaCost: `{${energyAlternativeCost}} energy`,
+            energyCost: energyAlternativeCost,
+            castVariant: 'energy',
+          },
+        };
+        if (targets.length > 0) option.targets = targets;
+        options.push(option);
+      }
+    }
+    if (
+      def.commanderFreeCast === true &&
+      !fromCommand &&
+      ctx.state.battlefield.some((perm) => perm.controllerId === player.id && perm.isCommander)
+    ) {
+      const targets = computeCastTargets(ctx, def, player.id);
+      if (targets !== null) {
+        options.push({
+          type: 'castSpell',
+          description: `Cast ${obj.name} without paying its mana cost (you control a commander)`,
+          payload: { kind: 'castSpell', objectId: obj.id, fromCommand, alternativeCast: 'commanderFree' },
+          data: {
+            instantSpeed,
+            sourceName: obj.name,
+            sourceZone: 'hand',
+            manaCost: 'free',
+            castVariant: 'commanderFree',
+          },
+          ...(targets.length > 0 ? { targets } : {}),
+        });
+      }
+    }
     const applyRed = (c: ParsedManaCost): ParsedManaCost => {
       let b = c;
       if (reduction.colored !== undefined) {
@@ -721,7 +783,8 @@ export function computePriorityOptions(
   for (const perm of ctx.state.battlefield) {
     if (perm.controllerId !== player.id) continue;
     const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-    for (const [index, activated] of def.activatedAbilities.entries()) {
+    const activatedAbilities = computeCharacteristics(ctx, perm).activatedAbilities ?? def.activatedAbilities;
+    for (const [index, activated] of activatedAbilities.entries()) {
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
       // CR 602.5f — "activate only once each turn", tracked on the permanent.
       if (activated.oncePerTurn === true && perm.activationsThisTurn.includes(index)) continue;
@@ -732,7 +795,7 @@ export function computePriorityOptions(
       // tapped for mana toward the same cost. `payActivationCosts` enforces the same thing by
       // paying the non-mana half first; excluding it here keeps the two in agreement.
       const spendsSelf = activated.costs.some(
-        (c) => c.kind === 'tap' || c.kind === 'sacrificeSelf',
+        (c) => c.kind === 'tap' || c.kind === 'sacrificeSelf' || c.kind === 'exileSelf',
       );
       const usable = spendsSelf ? sources.filter((s) => s.cardId !== perm.cardId) : sources;
       const allows = allowanceFor(ctx, player.id, {
@@ -758,6 +821,7 @@ export function computePriorityOptions(
       for (const x of xChoices) {
         const manaCost = withX(baseManaCost, x);
         if (!canPay(manaCost, player.manaEntries, usable, allows)) continue;
+        if (!canPayNonManaCosts(ctx, perm, activated.costs, x)) continue;
 
         const slots: { slot: number; options: ObjectId[] }[] = [];
         let slotNum = 0;
@@ -816,7 +880,11 @@ export function computePriorityOptions(
   // permanent, so it has no `activationsThisTurn`/tap/sacrifice machinery to reuse.
   for (const card of player.graveyard) {
     const def = getDefByOracleId(ctx, card.oracleId, card.name);
-    for (const [index, activated] of def.activatedAbilities.entries()) {
+    const activatedAbilities = [
+      ...def.activatedAbilities,
+      ...(ctx.state.temporaryGraveyardAbilities[card.cardId] ?? []),
+    ];
+    for (const [index, activated] of activatedAbilities.entries()) {
       if (activated.zone !== 'graveyard') continue;
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
       const allows = allowanceFor(ctx, player.id, {

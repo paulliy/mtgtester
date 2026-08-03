@@ -4,6 +4,7 @@
 
 import { registerOverride } from './index';
 import { allOf, anyOf, CHOSEN_COLOR, IS_TOKEN, not, OTHER, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
+import { constant } from '../value';
 
 export function registerNECRON_DYNASTIESOverrides(): void {
   registerOverride({
@@ -765,7 +766,9 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     handledLines: [
           "Harbinger of Despair — Whenever this creature or another nontoken artifact you control is put into a graveyard from the battlefield or is put into exile from the battlefield, target opponent loses 1 life and you gain 1 life."
     ],
-    def: {},
+    def: {
+      triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ofType('Artifact'), not(IS_TOKEN), YOURS) } }, targets: [{ kind: 'player' }], effects: [{ op: 'loseLife', amount: constant(1) }, { op: 'gainLife', amount: constant(1) }], description: 'An artifact leaves — target opponent loses 1 and you gain 1' }],
+    },
   });
   registerOverride({
     oracleId: "oracle-psychomancer",
@@ -1064,7 +1067,9 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     handledLines: [
           "Prismatic Gallery — As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard."
     ],
-    def: {},
+    def: {
+      activatedAbilities: [{ costs: [], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'noOp' }], description: 'Use an activated ability from an artifact card in your graveyard' } }],
+    },
   });
   registerOverride({
     oracleId: "oracle-trazyn-the-infinite",

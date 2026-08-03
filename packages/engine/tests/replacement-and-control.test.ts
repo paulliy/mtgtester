@@ -90,6 +90,22 @@ const rith = (): ReturnType<typeof oracle> =>
       'turn, create a 4/4 red Dragon creature token with flying.',
   });
 
+const gisela = (): ReturnType<typeof oracle> =>
+  oracle({
+    oracleId: '66f9f325-5e8e-4ebf-b5b3-c6410d80f2c5',
+    name: 'Gisela, Blade of Goldnight',
+    typeLine: 'Legendary Creature — Angel',
+    supertypes: ['Legendary'],
+    manaCost: '{4}{R}{W}{W}',
+    colors: ['R', 'W'],
+    colorIdentity: ['R', 'W'],
+    power: '5',
+    toughness: '5',
+    oracleText:
+      'If a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead.\n' +
+      'If a source would deal damage to you or a permanent you control, prevent half that damage, rounded up.',
+  });
+
 const testDragon = (name: string, controller = ''): ReturnType<typeof oracle> =>
   oracle({
     name: `${controller}${name}`,
@@ -155,6 +171,30 @@ describe('Neriv, Heart of the Storm — damage-doubling replacement (CR 616)', (
     });
 
     expect(target.damageMarked).toBe(3);
+  });
+});
+
+describe('Gisela, Blade of Goldnight — target-aware damage replacements', () => {
+  it('halves damage to her controller and doubles damage to opponents', () => {
+    const ctx = pod();
+    spawn(ctx, 'P1', gisela());
+    const source = spawn(ctx, 'P2', bear('3', '3', 'Damage Source'));
+    const ownTarget = spawn(ctx, 'P1', bear('9', '9', 'Own Target'));
+    const opposingTarget = spawn(ctx, 'P2', bear('9', '9', 'Opposing Target'));
+
+    dealDamageToCreature(ctx, permanentSource(source), ownTarget, 3, {
+      combat: false,
+      sourceHasDeathtouch: false,
+      sourceHasLifelink: false,
+    });
+    dealDamageToCreature(ctx, permanentSource(source), opposingTarget, 3, {
+      combat: false,
+      sourceHasDeathtouch: false,
+      sourceHasLifelink: false,
+    });
+
+    expect(ownTarget.damageMarked).toBe(1);
+    expect(opposingTarget.damageMarked).toBe(6);
   });
 });
 

@@ -16,6 +16,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { ParsedDeck } from '@mtg/shared';
 import { importDeck } from '../decks/source';
+import { loadOracleIndexFromFile } from '../cards/oracle-index';
+import { resolveDeck } from '../decks/resolve';
+import { validateDeck } from '../decks/validate';
+import { loadBannedList } from '../decks/banned';
 
 const OUT_DIR = 'packages/server/fixtures/coverage-decks';
 
@@ -77,18 +81,29 @@ async function main(): Promise<void> {
     args.length > 0 ? args.map((url) => ({ slug: null, url })) : DEFAULT_DECKS;
 
   mkdirSync(resolve(OUT_DIR), { recursive: true });
+  const index = loadOracleIndexFromFile(resolve('data/scryfall-oracle-cards.json'));
+  const banned = loadBannedList(resolve('docs/rules/commander-banned-list.md'));
   let failures = 0;
 
   for (const { slug, url } of targets) {
     try {
-      const deck = await importDeck(url);
-      const name = slug ?? slugFor(deck.name, url);
+      const parsed = await importDeck(url);
+      const { resolved } = resolveDeck(parsed, index);
+      if (resolved === null) {
+        throw new Error('unresolved card names');
+      }
+      const validation = validateDeck(resolved, banned);
+      if (!validation.valid) {
+        const issues = validation.issues.map((i) => `[${i.code}] ${i.message}`).join('; ');
+        throw new Error(`deck invalid: ${issues}`);
+      }
+      const name = slug ?? slugFor(parsed.name, url);
       const total =
-        deck.commanderNames.length +
-        (deck.companionName === null ? 0 : 1) +
-        deck.cards.reduce((sum, entry) => sum + entry.quantity, 0);
-      writeFileSync(resolve(OUT_DIR, `${name}.txt`), toPlaintext(deck, url), 'utf8');
-      console.log(`✓ ${name}.txt — ${total} cards (${deck.name ?? 'untitled'})`);
+        parsed.commanderNames.length +
+        (parsed.companionName === null ? 0 : 1) +
+        parsed.cards.reduce((sum, entry) => sum + entry.quantity, 0);
+      writeFileSync(resolve(OUT_DIR, `${name}.txt`), toPlaintext(parsed, url), 'utf8');
+      console.log(`✓ ${name}.txt — ${total} cards (${parsed.name ?? 'untitled'})`);
     } catch (err) {
       failures++;
       console.error(`✗ ${url}: ${(err as Error).message}`);

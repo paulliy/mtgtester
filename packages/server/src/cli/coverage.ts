@@ -15,6 +15,8 @@ import { loadOracleIndexFromFile } from '../cards/oracle-index';
 import { measureCoverage, type DeckCards } from '../cards/coverage';
 import { importDeck } from '../decks/source';
 import { resolveDeck } from '../decks/resolve';
+import { validateDeck } from '../decks/validate';
+import { loadBannedList } from '../decks/banned';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const FIXTURE_DIR = 'packages/server/fixtures/coverage-decks';
@@ -60,6 +62,8 @@ async function main(): Promise<void> {
   const index = loadOracleIndexFromFile(resolve(BULK_PATH));
   if (!json) console.error(`  indexed ${index.size.toLocaleString()} cards.`);
 
+  const banned = loadBannedList(resolve('docs/rules/commander-banned-list.md'));
+
   const decks: DeckCards[] = [];
   for (const arg of inputs) {
     let raw: string;
@@ -81,6 +85,15 @@ async function main(): Promise<void> {
     const { resolved, unresolvedNames } = resolveDeck(parsed, index);
     if (resolved === null) {
       console.error(`  ✗ unresolved names in "${arg}": ${unresolvedNames.join(', ')}`);
+      continue;
+    }
+
+    const validation = validateDeck(resolved, banned);
+    if (!validation.valid) {
+      const issues = validation.issues
+        .map((i) => `[${i.code}] ${i.message}`)
+        .join('; ');
+      console.error(`  ✗ invalid deck in "${arg}": ${issues}`);
       continue;
     }
 

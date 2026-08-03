@@ -8,7 +8,13 @@ import type { PlayerBoardState, SpectatorState } from '@mtg/shared';
 import CardImage from './CardImage.vue';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
-const props = defineProps<{ state: SpectatorState | PlayerBoardState }>();
+const props = defineProps<{
+  state: SpectatorState | PlayerBoardState;
+  /** Spectator views omit these — stack objects are then inert, display-only. */
+  isLegalTarget?: (id: string) => boolean;
+  isChosenTarget?: (id: string) => boolean;
+}>();
+const emit = defineEmits<{ select: [id: string] }>();
 
 const cardPreview = useCardPreviewStore();
 
@@ -42,9 +48,11 @@ const nameOf = computed(() => {
       <li
         v-for="(obj, index) in topFirst"
         :key="obj.id"
+        :class="{ targetable: isLegalTarget?.(obj.id), 'chosen-target': isChosenTarget?.(obj.id) }"
         @mouseenter="onEnter(obj.scryfallId, obj.description, $event)"
         @mousemove="onMove"
         @mouseleave="onLeave"
+        @click="emit('select', obj.id)"
       >
         <CardImage :scryfall-id="obj.scryfallId" :name="obj.description" size="small" class="thumb" />
         <span class="pos">{{ index === 0 ? 'top' : index + 1 }}</span>
@@ -86,6 +94,16 @@ li {
   display: flex;
   gap: 0.35rem;
   align-items: center;
+  border-radius: 3px;
+}
+li.targetable {
+  cursor: pointer;
+  outline: 1px solid var(--ok);
+  box-shadow: 0 0 0 1px var(--ok);
+}
+li.chosen-target {
+  outline: 2px solid var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
 }
 .thumb {
   width: 22px;

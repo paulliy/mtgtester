@@ -77,8 +77,8 @@ export function drainPool(holder: ManaPoolHolder, includePersistent: boolean): v
  * Choose which specific entries pay `cost`, given a pool already known to be able to.
  *
  * Deliberately mirrors the deduction order `payManaCost` used before entries existed — exact
- * colored pips, then {C}, then generic (colorless first, then WUBRG) — so the mana actually
- * spent is unchanged for every card that has no restrictions.
+ * colored pips, then hybrid pips, then {C}, then generic (colorless first, then WUBRG) — so the
+ * mana actually spent is unchanged for every card that has no restrictions.
  *
  * Within each of those buckets, **restricted mana is spent first**. Restricted mana is strictly
  * less useful than unrestricted mana of the same symbol, so spending it first can never lose a
@@ -88,7 +88,7 @@ export function drainPool(holder: ManaPoolHolder, includePersistent: boolean): v
  */
 export function selectEntriesToSpend(
   entries: readonly ManaEntry[],
-  cost: { generic: number; colored: Record<Color, number>; colorless: number },
+  cost: { generic: number; colored: Record<Color, number>; colorless: number; hybrid?: (Color[])[] },
 ): ManaEntry[] | null {
   const available = [...entries].sort(sortRestrictedFirst);
   const taken: ManaEntry[] = [];
@@ -106,6 +106,11 @@ export function selectEntriesToSpend(
 
   for (const c of ALL_COLORS) {
     if (!take(cost.colored[c], (e) => e.symbol === c)) return null;
+  }
+  // Each hybrid pip ({U/B}) is covered by one entry of ANY symbol in its tuple — every entry
+  // is still spent exactly once (`taken.includes` above/below excludes it from later buckets).
+  for (const h of cost.hybrid ?? []) {
+    if (!take(1, (e) => (h as string[]).includes(e.symbol))) return null;
   }
   if (!take(cost.colorless, (e) => e.symbol === 'C')) return null;
   // Generic prefers colorless, then WUBRG — the same order the pre-entry code deducted in.

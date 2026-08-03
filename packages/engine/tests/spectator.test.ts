@@ -50,6 +50,30 @@ describe('buildSpectatorState', () => {
     expect(serialized).not.toContain('"library"');
   });
 
+  it('projects energy, poison, and named player counters for the UI', () => {
+    const engine = makeEngine(forestsPod(12));
+    engine.advance();
+
+    const authoritative = engine.getState();
+    authoritative.players[0]!.energy = 3;
+    authoritative.players[1]!.poisonCounters = 2;
+    authoritative.players[2]!.counters = { experience: 4, rad: 1 };
+
+    const state = engine.spectatorState();
+
+    expect(state.seats[0]?.energy).toBe(3);
+    expect(state.seats[1]?.poisonCounters).toBe(2);
+    expect(state.seats[2]?.counters).toEqual({ experience: 4, rad: 1 });
+  });
+
+  it('projects the monarch seat alongside global counters', () => {
+    const engine = makeEngine(forestsPod(12));
+    engine.advance();
+    (engine.getState() as unknown as { monarchPlayerId: 'P3' | null }).monarchPlayerId = 'P3';
+
+    expect(engine.spectatorState().monarchSeat).toBe('P3');
+  });
+
   it('is JSON-serializable, so it can be pushed over a socket and stored as a snapshot', () => {
     const engine = makeEngine(forestsPod(12));
     engine.advance();

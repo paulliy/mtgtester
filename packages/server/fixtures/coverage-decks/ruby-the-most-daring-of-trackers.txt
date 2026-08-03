@@ -1,0 +1,80 @@
+# Ruby, the Most Daring of Trackers
+# snapshot of https://archidekt.com/decks/23406741
+
+Commander
+1 Ruby, Daring Tracker
+
+Deck
+1 Savage Ventmaw
+1 Lurking Predators
+1 Bloodbraid Challenger
+1 Annoyed Altisaur
+1 Apex Devastator
+1 Aurora Phoenix
+1 Beast Whisperer
+1 Boarding Party
+1 Cactusfolk Sureshot
+1 Call Forth the Tempest
+17 Forest
+1 Cinder Glade
+1 Circuitous Route
+1 Combustible Gearhulk
+1 Command Tower
+1 Drakuseth, Maw of Flames
+1 Encroaching Dragonstorm
+1 Etali, Primal Conqueror // Etali, Primal Sickness
+1 Explosive Vegetation
+1 Garruk's Packleader
+1 Garruk's Uprising
+1 Ghalta, Primal Hunger
+1 Goreclaw, Terror of Qal Sisma
+1 Hunting Wilds
+1 Karplusan Forest
+1 Kessig Wolf Run
+1 Kogla and Yidaro
+1 Kogla, the Titan Ape
+1 Map the Frontier
+1 Migration Path
+1 Monstrous Vortex
+1 Mosswort Bridge
+11 Mountain
+1 Natural Reclamation
+1 Noise Marine
+1 Rampaging Baloths
+1 Ranger's Path
+1 Reach the Horizon
+1 Return of the Wildspeaker
+1 Rhythm of the Wild
+1 Rishkar's Expertise
+1 Screamer-Killer
+1 Skyshroud Claim
+1 Sol Ring
+1 Soul of the Harvest
+1 Spire Garden
+1 Stomping Ground
+1 Sunbird's Invocation
+1 Sweet-Gum Recluse
+1 Terramorph
+1 Thornspire Verge
+1 Thunderfoot Baloth
+1 Trumpeting Carnosaur
+1 Tyrant's Familiar
+1 Up the Beanstalk
+1 Vastwood Surge
+1 Rootbound Crag
+1 Xenagos, God of Revels
+1 Chimil, the Inner Sun
+1 Maelstrom Colossus
+1 New Generation's Technique
+1 Improvisation Capstone
+1 Zopandrel, Hunger Dominus
+1 Moraug, Fury of Akoum
+1 Ghalta, Stampede Tyrant
+1 Terror of the Peaks
+1 Surrak and Goreclaw
+1 Twinflame Tyrant
+1 Keeper of Secrets
+1 Cosmic Cube
+1 Old Gnawbone
+1 Aggravated Assault
+1 Warstorm Surge

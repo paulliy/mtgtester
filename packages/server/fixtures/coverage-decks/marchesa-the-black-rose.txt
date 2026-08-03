@@ -1,0 +1,86 @@
+# Marchesa, the Black Rose 
+# snapshot of https://moxfield.com/decks/wqCfATAPQnicdUUKsmIt3w
+
+Commander
+1 Marchesa, the Black Rose
+
+Deck
+5 Mountain
+1 Blasphemous Act
+1 Grim Haruspex
+1 Watery Grave
+1 Carrion Feeder
+1 Tribute Mage
+1 Nightscape Familiar
+1 Vigean Graftmage
+1 Dack's Duplicate
+1 Anathemancer
+1 Exotic Orchard
+1 Goblin Bombardment
+1 Kalain, Reclusive Painter
+1 Rakdos Charm
+1 Iron Apprentice
+1 Body Launderer
+1 Mahadi, Emporium Master
+1 Aether Channeler
+1 Thran Vigil
+1 Chain Reaction
+1 Ashnod's Altar
+1 Deflecting Swat
+1 Grave Pact
+1 Deadly Rollick
+1 Vindictive Lich
+1 Fierce Guardianship
+1 Glen Elendra Archmage
+1 Bojuka Bog
+1 Puppeteer Clique
+1 Herald of Secret Streams
+1 Sage of Fables
+1 Spark Double
+1 Satoru, the Infiltrator
+1 Flare of Denial
+1 Flare of Duplication
+1 Toxic Deluge
+1 Command Tower
+1 Gev, Scaled Scorch
+1 Shivan Reef
+1 Spawning Pit
+1 Smokestack
+1 Faerie Seer
+1 Siren Stormtamer
+1 Unspeakable Symbol
+1 Watcher for Tomorrow
+1 Gleeful Arsonist
+1 Kardur, Doomscourge
+1 Midnight Reaper
+1 Bolt Bend
+1 Blasphemous Edict
+1 Skullclamp
+1 River Kelpie
+1 Disciple of Bolas
+1 Dark Confidant
+1 Flayer of the Hatebound
+1 Baleful Strix
+1 Arcane Signet
+1 Forge of Heroes
+1 High Market
+1 Sulfurous Springs
+1 Underground River
+1 Steam Vents
+1 Blood Crypt
+1 Twilight Diviner
+1 The Ooze
+1 Cytoplast Manipulator
+1 Pensive Professor
+1 Stormcarved Coast
+1 Harmonic Prodigy
+1 Viscera Seer
+1 Pawn of Ulamog
+1 Mana Sculpt
+1 Talisman of Indulgence
+1 Talisman of Dominance
+7 Island
+1 Reliquary Tower
+1 Flare of Malice
+1 Madame Null, Power Broker
+11 Swamp

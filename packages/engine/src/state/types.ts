@@ -26,7 +26,7 @@ import type {
   StackObject,
 } from '@mtg/shared';
 import type { ManaEntry, TriggerWhen } from '../cards/ability';
-import type { Ability, CardDefinition, KeywordAbility } from '../cards/definition';
+import type { Ability, ActivatedAbility, CardDefinition, KeywordAbility } from '../cards/definition';
 import type { TriggerScope } from '../cards/value';
 import type { Prng } from '../rng/prng';
 
@@ -59,6 +59,12 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   enteredTurnNumber: number;
   /** True if this permanent has been goaded during the current turn. */
   goadedThisTurn?: boolean;
+  /** A temporary requirement for this creature to block if able. */
+  mustBlockThisTurn?: boolean;
+  /** Printed/static restriction: this creature cannot block. */
+  cantBlock?: boolean;
+  /** Printed/static evasion: this creature cannot be blocked. */
+  cantBeBlocked?: boolean;
   /** Boast (CR 702.146): "activate only if this creature attacked this turn". */
   attackedThisTurn?: boolean;
   /**
@@ -90,10 +96,17 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   };
   /** Cleanup restores temporary copy effects; permanent copies omit this flag. */
   copyUntilEot?: boolean;
+  copyAddTypes?: string[];
+  /** Cards exiled by a Duplicant-style ability, newest card last. */
+  exiledCardIds?: CardId[];
+  /** A face-down manifested card is a 2/2 colorless creature. */
+  faceDown?: boolean;
 }
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
 export interface EngineCardObject extends EngineObject {
+  /** Counters last held while this card was a permanent, for death-triggered effects. */
+  rememberedCounters?: Record<string, number>;
   /** 903.9a flag — see `EnginePermanent.commanderSbaPending`. */
   commanderSbaPending?: boolean;
   /** For cards exiled by Hideaway (Spinerock Knoll, Mosswort Bridge). */
@@ -119,7 +132,7 @@ export interface EngineStackObject extends StackObject {
   /** True when the "spell" is a commander cast from the command zone. */
   isCommanderCast: boolean;
   /** Kind of alternative cast used, if any (overload, adventure, omen). */
-  alternativeCastKind?: 'overload' | 'adventure' | 'omen';
+  alternativeCastKind?: 'overload' | 'adventure' | 'omen' | 'energy' | 'commanderFree';
   altIndex?: number;
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;
@@ -171,6 +184,8 @@ export interface EnginePlayerState extends PlayerState {
   manaEntries: ManaEntry[];
   /** Energy counters a player has (CR 122.8). */
   energy: number;
+  /** Named global counters tracked by cards and exposed to player-facing views. */
+  counters: Record<string, number>;
   /** Stable card ids of this player's commander(s). */
   commanderCardIds: CardId[];
   /**
@@ -302,6 +317,25 @@ export interface EngineState extends GameState {
   excessDamageControllerIds: PlayerId[];
   /** Total damage dealt to each player THIS TURN (Spinerock Knoll). Reset at untap step. */
   damageDealtToPlayersThisTurn: Record<PlayerId, number>;
+  /** Whether each player has created a token THIS TURN (Idol of Oblivion). Reset at untap step. */
+  createdTokenThisTurn: Record<PlayerId, boolean>;
+  /** Number of creatures put into graveyards this turn. */
+  creaturesDiedThisTurn: number;
+  /** Combat-damage replacement shields used by Darkness-style effects this turn. */
+  combatDamagePrevention: {
+    all: boolean;
+    players: Record<PlayerId, boolean>;
+    tokenSpecs?: Record<PlayerId, import('../cards/ability').TokenSpec>;
+  };
+  /** Players protected from dropping below 1 life until the end of the turn (Angel's Grace). */
+  lifeFloorPlayers: Record<PlayerId, boolean>;
+  /**
+   * Cards exiled "until SOURCE leaves the battlefield" (Conclave Tribunal), keyed by the
+   * source's card id, so `moveObject` can find and return them all when the source itself
+   * leaves (CR 610.2b — they return under the control they had when exiled). The exiled
+   * object itself lives in `exile`; this only records which one to look for and who gets it.
+   */
+  exiledUntilLeaves: Record<CardId, { cardId: CardId; controllerId: PlayerId }[]>;
   /**
    * Which players were dealt COMBAT damage by each source THIS TURN, keyed by source card id
    * (Steel Hellkite's "whose controller was dealt combat damage by this creature this turn") —
@@ -310,6 +344,12 @@ export interface EngineState extends GameState {
   combatDamagePlayersBySource: Record<CardId, PlayerId[]>;
   /** Safety cap: exceeding this halts the game as a probable bug (brief §4). */
   turnCap: number;
+  /** Number of additional combat phases to run after the current combat. */
+  extraCombatPhases: number;
+  /** The player who is currently the monarch, or null before the mechanic appears. */
+  monarchPlayerId: PlayerId | null;
+  /** Until-end-of-turn activated abilities temporarily granted to cards in graveyards. */
+  temporaryGraveyardAbilities: Record<CardId, ActivatedAbility[]>;
 }
 
 /** Everything the engine's flow code operates on. `defs` is immutable per game. */

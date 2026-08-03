@@ -56,7 +56,15 @@ export type RuleStatic =
   /** "If a creature you control that entered this turn would deal damage, it deals twice that
    * much damage instead" (Neriv, Heart of the Storm) — a damage REPLACEMENT effect (CR 616). */
   | { kind: 'damageDoubled'; sourceFilter: Selector }
+  /** "Sources would deal damage to an opponent or their permanents" (Gisela). */
+  | { kind: 'damageDoubledToOpponents' }
+  /** "Sources would deal damage to you or your permanents" (Gisela). */
+  | { kind: 'damageHalvedToYou' }
+  /** "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison). */
+  | { kind: 'attackTax'; amount: number }
   | { kind: 'convoke' }
   | { kind: 'improvise' }
   | { kind: 'kicker'; cost?: ParsedManaCost }
-  | { kind: 'noMaximumHandSize' };
+  | { kind: 'noMaximumHandSize' }
+  | { kind: 'triggerAdditionalOnArtifactOrCreatureEntry' }
+  | { kind: 'artifactTokenCreatesThopter' };

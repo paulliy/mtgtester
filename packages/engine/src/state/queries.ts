@@ -28,6 +28,7 @@ import type {
   EnginePlayerState,
   GameContext,
 } from './types';
+import { spellManaValue } from './objects';
 
 export function getDefByOracleId(
   ctx: GameContext,
@@ -165,6 +166,7 @@ export function cardZoneCandidate(
     colors: def.colors,
     power: def.power ?? 0,
     keywords: def.keywords,
+    manaValue: spellManaValue(def, undefined),
     // A card off the battlefield is never a token: tokens cease to exist on leaving it
     // (CR 704.5d), so nothing this function is handed can be one.
     isToken: false,
@@ -379,6 +381,7 @@ export function canPayNonManaCosts(
   ctx: GameContext,
   perm: EnginePermanent,
   costs: readonly AbilityCost[],
+  announcedX?: number,
 ): boolean {
   for (const cost of costs) {
     switch (cost.kind) {
@@ -394,6 +397,11 @@ export function canPayNonManaCosts(
         }
         break;
       case 'sacrificeSelf':
+        break;
+      case 'exileSelf':
+        break;
+      case 'unattachSelf':
+        if (perm.attachedTo === null) return false;
         break;
       case 'sacrificeOther': {
         const count = cost.count ?? 1;
@@ -419,7 +427,18 @@ export function canPayNonManaCosts(
         );
         if (payable.length < cost.count) return false;
         break;
-      }      case 'removeCounters': {
+      }
+      case 'tapXOthers': {
+        // The first pass happens before X is announced; the per-X pass below supplies it.
+        if (announcedX === undefined) break;
+        const payable = ctx.state.battlefield.filter((candidate) =>
+          candidate.id !== perm.id && candidate.controllerId === perm.controllerId && !candidate.tapped &&
+          matchesSelector(ctx, candidate, cost.selector, { cardId: perm.cardId, controllerId: perm.controllerId }),
+        );
+        if (payable.length < announcedX) return false;
+        break;
+      }
+      case 'removeCounters': {
         const count = typeof cost.count === 'number' ? cost.count : evaluateValue(ctx, cost.count);
         if ((perm.counters[cost.counter] ?? 0) < count) return false;
         break;
@@ -749,4 +768,26 @@ export function damageMultiplierFor(ctx: GameContext, sourceCardId: string): num
     if (matchesSelector(ctx, sourcePerm, entry.static.sourceFilter, from)) multiplier *= 2;
   }
   return multiplier;
+}
+
+/** Apply every active target-aware damage replacement to one damage event. */
+export function damageAmountAfterReplacements(
+  ctx: GameContext,
+  sourceCardId: string,
+  targetControllerId: PlayerId,
+  amount: number,
+): number {
+  const sourcePerm = ctx.state.battlefield.find((p) => p.cardId === sourceCardId);
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind === 'damageDoubled') {
+      if (sourcePerm === undefined) continue;
+      const from: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
+      if (matchesSelector(ctx, sourcePerm, entry.static.sourceFilter, from)) amount *= 2;
+    } else if (entry.static.kind === 'damageDoubledToOpponents') {
+      if (targetControllerId !== entry.controllerId) amount *= 2;
+    } else if (entry.static.kind === 'damageHalvedToYou') {
+      if (targetControllerId === entry.controllerId) amount = Math.floor(amount / 2);
+    }
+  }
+  return amount;
 }

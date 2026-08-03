@@ -63,7 +63,9 @@ import {
 } from './selector';
 import type { Value } from './value';
 import { constant } from './value';
-import { applyOverride, getOverride } from './overrides';
+// Use the explicit module path so the registry imported by authored override modules and the
+// interpreter share one module instance under Bun/TypeScript path resolution.
+import { applyOverride, getOverride } from './overrides/index';
 import type { CardDefinition, ManaAbilitySpec } from './definition';
 import { PERMANENT_CARD_TYPES } from './definition';
 
@@ -199,7 +201,7 @@ function stripGenericAbilityLabel(line: string): string {
  * where it is not a permanent, which `~` (a battlefield self-reference) would misrepresent.
  */
 const SELF_REFERENCE_RE =
-  /\bThis (?:creature|artifact|enchantment|land|permanent|token|Vehicle|Equipment|Saga|planeswalker)\b/g;
+  /\bThis (?:creature|artifact|enchantment|land|permanent|token|Vehicle|Equipment|Saga|planeswalker|Aura)\b/g;
 
 /**
  * Replace the card's own name â€” and the short name its rules text actually uses â€” with `~`.
@@ -755,11 +757,15 @@ function parseEffectSentence(
   // "return target Dragon permanent card from your graveyard to the battlefield" (Bladewing) /
   // "â€¦to your hand" (Haven of the Spirit Dragon) / "return all artifact cards from your graveyard to the battlefield"
   {
-    const m = s.match(/^return (?:up to (\w+) )?(other )?target (.+?) (?:card|cards) from (your|a) graveyard to (the battlefield|your hand)$/);
+    // "return target card from your graveyard to your hand" (Eternal Witness) has no type word
+    // between "target" and "card" at all — the filter group is optional, and its absence means
+    // an unrestricted `cardInGraveyard` slot (any card, CR 608.2b), not "any permanent card".
+    const m = s.match(/^return (?:up to (\w+) )?(other )?target(?: (.+?))? (?:card|cards) from (your|a) graveyard to (the battlefield|your hand)$/);
     if (m) {
-      const filter = parseCardFilterPhrase(m[3] as string, card);
-      if (filter !== null) {
-        const target = alloc('cardInGraveyard', filter);
+      const typePhrase = m[3];
+      const filter = typePhrase === undefined ? null : parseCardFilterPhrase(typePhrase, card);
+      if (typePhrase === undefined || filter !== null) {
+        const target = alloc('cardInGraveyard', filter ?? undefined);
         return [
           m[5] === 'the battlefield'
             ? { op: 'graveyardToBattlefield', target }
@@ -1462,7 +1468,7 @@ const INTERVENING_IF_RE = /^if (.+?), (.+)$/;
  * subject for "this" to refer back to.
  */
 const SELF_TRIGGER_SUBJECT_RE =
-  /^(?:~|this (?:creature|artifact|enchantment|land|permanent|token|vehicle|equipment|saga|planeswalker))$/;
+  /^(?:~|this (?:creature|artifact|enchantment|land|permanent|token|vehicle|equipment|saga|planeswalker|aura))$/;
 
 /** Singular card types that can head a trigger subject ("a creature you control"). */
 const CARD_TYPE_SINGULARS: Record<string, string> = {
@@ -2979,6 +2985,10 @@ export function interpretCard(card: OracleCard): CardDefinition {
     reasons.length = 0;
   } else if (card.name === 'Sarkhan, Dragon Ascendant') {
     triggers.push(
+      // TODO(phase-N): "behold a Dragon" (CR 701.4a) is simplified to a bare yes/no — the
+      // engine has no primitive yet for "reveal a card from hand or choose a permanent you
+      // control" (behold's actual choice), so this never asks which Dragon, and offers the
+      // Treasure even with none to behold.
       {
         kind: 'triggered',
         trigger: { when: 'enters', subject: SELF_SUBJECT },

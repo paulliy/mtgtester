@@ -76,7 +76,7 @@ export function isForced(decision: PendingDecision): boolean {
   if (decision.decisionType === 'priority' && decision.options.every(isPassOption)) {
     return true;
   }
-  if (decision.options.length !== 1) return false;
+  if (!decision.options || decision.options.length !== 1) return false;
   const only = decision.options[0] as EngineActionOption;
   return (only.targets ?? []).every((t) => t.options.length <= 1);
 }

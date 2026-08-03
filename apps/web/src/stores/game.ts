@@ -82,6 +82,10 @@ export const useGameStore = defineStore('game', () => {
   const confirmRoutineActions = ref(
     typeof localStorage !== 'undefined' && localStorage.getItem('mtg-player-confirm-routine') === 'true',
   );
+  /** Opt-in: skip the manual "Confirm" click on the tray once every target slot is filled. */
+  const autoConfirmActions = ref(
+    typeof localStorage !== 'undefined' && localStorage.getItem('mtg-player-auto-confirm') === 'true',
+  );
 
   /**
    * The action-log line the board on screen belongs to, as confirmed by the server. Never set
@@ -386,6 +390,11 @@ export const useGameStore = defineStore('game', () => {
     if (typeof localStorage !== 'undefined') localStorage.setItem('mtg-player-confirm-routine', String(value));
   }
 
+  function setAutoConfirmActions(value: boolean): void {
+    autoConfirmActions.value = value;
+    if (typeof localStorage !== 'undefined') localStorage.setItem('mtg-player-auto-confirm', String(value));
+  }
+
   function resolveHeldDecision(actionId: number): void {
     const held = heldDecision.value;
     if (held === null) return;
@@ -470,6 +479,7 @@ export const useGameStore = defineStore('game', () => {
     playbackMode,
     paceMs,
     confirmRoutineActions,
+    autoConfirmActions,
     halt,
     heldDecision,
     gameOver,
@@ -492,6 +502,7 @@ export const useGameStore = defineStore('game', () => {
     setPlaybackMode,
     setPace,
     setConfirmRoutineActions,
+    setAutoConfirmActions,
     resolveHeldDecision,
     submitPlayerAction,
     yieldPlayerAbility,

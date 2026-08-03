@@ -3,6 +3,23 @@
 **Audience:** Claude Code
 **Status:** v1 specification — read this document in full before writing any code.
 
+> **This document is the original v1 spec and is frozen as history.** v1 (Phases 0-5
+> below) shipped. The project has since continued through Phases 6-10 — single-player
+> mode, direct player controls, action-and-presentation polish, and a planned deck-testing
+> lab — which are **not** described in this document; they exist only as ADRs under
+> `docs/decisions/` (see `0018` through `0021`) and plans under `docs/plans/`. Two specific
+> claims below are now **out of date** and superseded by ADRs rather than by an edit here:
+> - §1's "the human never controls a seat in v1" — single-player mode
+>   (`docs/decisions/0018-single-player-mode.md`, `0019-direct-player-controls.md`) added a
+>   human-controlled seat.
+> - §2/§7.2's Gemini-only (`@google/genai`) AI stack — replaced by a multi-provider
+>   OpenAI-compatible client defaulting to OpenRouter, plus a two-tier strategist/tactician
+>   split (`docs/decisions/0011-openai-compatible-provider.md`,
+>   `0016-two-tier-ai-planning.md`, `0021-player-experience-overhaul.md`).
+>
+> Where anything else in this document conflicts with a numbered ADR, the ADR wins. See
+> `CLAUDE.md` for a current-state summary.
+
 ---
 
 ## 1. What we are building
@@ -53,9 +70,9 @@ MTG's rules are enormous. There are two naive approaches, and both fail:
 | Language | TypeScript, strict mode | One language across the whole stack |
 | Monorepo | Bun workspaces | Bun is the package manager and runtime |
 | Engine | Pure TypeScript, zero framework deps | Must be importable and testable in isolation |
-| Server | Bun HTTP + WebSocket | Holds the Gemini API key; never expose it client-side |
-| AI SDK | `@google/genai` | **Not** `@google/generative-ai` — that package is legacy/deprecated |
-| Model | Gemini Flash / Flash-Lite (configurable) | See §7.2 — do **not** default to a Pro model |
+| Server | Bun HTTP + WebSocket | Holds the AI provider API key; never expose it client-side |
+| AI SDK | Hand-rolled OpenAI-compatible client (`packages/server/src/ai/client.ts`) | **As shipped** — not `@google/genai`. Works against OpenRouter, Groq, Gemini, DeepSeek, or OpenAI's `chat/completions` endpoint via a preset registry. See §7.2 (updated) and `docs/decisions/0011-openai-compatible-provider.md` |
+| Model | OpenRouter free/cheap-tier models by default (configurable, per-role) | Two role profiles — **strategist** and **tactician** — each with their own model fallback chain. See §7.2 (updated) |
 | Database | SQLite via `bun:sqlite` | File-based, zero setup |
 | Frontend | Vue 3 (`<script setup>`) + Vite | |
 | State | Pinia, setup-store style | |
@@ -67,6 +84,8 @@ MTG's rules are enormous. There are two naive approaches, and both fail:
 | E2E tests | Playwright | Minimal in v1 — see §12 |
 
 ### 2.1 Repository structure
+
+**As originally planned (this section is otherwise unchanged from the v1 spec):**
 
 ```
 mtg-commander-sim/
@@ -101,6 +120,16 @@ mtg-commander-sim/
 ├── data/                       # Card cache, gitignored
 └── CLAUDE.md                   # Implementation guide you maintain as you go
 ```
+
+**As it actually stands today:** `packages/shared` is its own workspace member (not just
+a prose-only mention), `packages/engine` also grew `cards/` (the card-DSL ability
+interpreter and per-card overrides), `mana/`, `effects/`, `flow/`, `view/`, and
+`providers/` beyond the original list. `packages/server/src/ai/` holds the
+OpenAI-compatible client and the strategist/tactician split (not a Gemini client — see
+§7.2). `packages/server/src/cli/` holds every CLI entry point (`serve`, `import-decks`,
+`pool`, `play-decks`, `coverage`, `snapshot-coverage-decks`, `snapshot-deck-oracle`,
+`modelled-cards`). `apps/web` is now a spectator **and** player UI (single-player mode,
+§15), not spectator-only.
 
 ---
 
@@ -318,12 +347,36 @@ The AI knows *what its own deck contains* but not *what order it is in* — exac
 
 Opponents' strategies must be **inferred** from their commanders and their visible plays. That inference is the interesting part of the simulation — do not shortcut it by leaking decklists.
 
-### 7.2 Gemini configuration
+### 7.2 AI provider configuration (updated — supersedes the original Gemini-only plan)
 
-- SDK: `@google/genai`. Instantiate as `new GoogleGenAI({})` and let it read `GEMINI_API_KEY` from the environment.
-- **Model selection must be configurable in one place** (`config/ai.ts`), defaulting to a Flash-tier model. Do not default to a Pro model — on Google's free tier Pro models are either unavailable or capped at a level that cannot support this workload.
-- **Do not hardcode rate-limit numbers.** Free-tier RPM/RPD have changed repeatedly and vary by model and account. Put them in config with conservative defaults and a comment pointing at Google AI Studio for current values.
-- Free-tier requests may be used by Google for model improvement. Decklists are not sensitive, so this is acceptable — but note it in the README.
+The original plan below (Gemini via `@google/genai`) was **not** what got built. What
+shipped instead, and is current:
+
+- **A hand-rolled OpenAI-compatible client**, not a vendor SDK — `packages/server/src/ai/client.ts`'s
+  `OpenAiCompatibleClient` hits any provider's `chat/completions` endpoint. Rationale in
+  `docs/decisions/0011-openai-compatible-provider.md`.
+- **Multiple providers, OpenRouter by default.** `packages/server/src/ai/config.ts` has a
+  `PROVIDERS` preset registry — `openrouter` (default), `groq`, `gemini`, `deepseek`,
+  `openai`. `resolveProvider()` auto-detects from whichever `*_API_KEY` env var is set,
+  or honors an explicit `AI_PROVIDER` override. See `.env.example` for the full list of
+  env vars and every provider's key.
+- **Two role profiles, not one model.** `AiConfig` carries a `strategist` and a
+  `tactician` `AiModelProfile`, each with its own model fallback chain, reasoning
+  settings, token budget, and request timeout — `configForRole(config, role)` flattens
+  one into a usable client config. OpenRouter's defaults: strategist =
+  `deepseek/deepseek-v4-flash`, `tencent/hy3` (reasoning on, effort `medium`, since it
+  plans once per turn); tactician = `qwen/qwen3.7-flash`,
+  `sao10k/l3-lunaris-8b:nitro`, `poolside/laguna-s-2.1` (reasoning off, ~85 max output
+  tokens, since it is a fast menu pick). See §7.6 (updated) for what strategist and
+  tactician actually mean.
+- **Model selection is configurable in one place**, per role: `AI_STRATEGIST_MODELS` /
+  `AI_TACTICIAN_MODELS` (or the provider preset's defaults if unset). Reasoning is off by
+  default for the tactician (a decision is a menu pick; thinking tokens are billed) and on
+  by default for the strategist.
+- **Rate limits are not hardcoded.** `AI_RPM_LIMIT`, `AI_MAX_RETRIES`, and per-role
+  request timeouts are all config, with conservative defaults — see `.env.example`.
+- Whether a given provider uses free-tier requests for model training is a per-provider
+  policy question, not something this client controls; check the active provider's terms.
 
 ### 7.3 The decision contract
 
@@ -435,9 +488,19 @@ Required from day one, not as a later optimization. A single combat step in a fo
 - Distinguish RPM/TPM exhaustion (recoverable in seconds) from RPD exhaustion (not recoverable today) using the error body, and surface a clear message to the user in the latter case rather than retrying forever.
 - Surface queue depth and current wait state in the UI so the user understands why playback paused.
 
-### 7.6 Deciding-player turn timing
+### 7.6 Deciding-player turn timing (updated — one deliberate exception)
 
-Decisions are strictly sequential in APNAP order. Never fire parallel requests for multiple players at the same priority window.
+Tactical decisions (menu picks) are strictly sequential in APNAP order, each on the
+tactician's own request queue. Never fire parallel tactical requests for multiple
+players at the same priority window.
+
+**The one exception, added post-v1:** the active player's **strategist** call is
+prefetched asynchronously ahead of that player's turn — fired at the previous turn's
+boundary so it overlaps untap/upkeep/draw — and runs on its own separate request queue so
+it can never queue behind, or block, a tactical decision. It is fire-and-forget: the
+tactician reads whatever plan has landed (or `null` if the strategist hasn't finished
+yet) rather than waiting on it. See `packages/server/src/ai/strategy-coordinator.ts` and
+`docs/decisions/0021-player-experience-overhaul.md` §1.
 
 ### 7.7 Invalid AI response handling
 
@@ -646,6 +709,31 @@ Work in phases. **Stop at every phase boundary and get explicit approval before 
 
 **Phase 5 — Stats and debug suite.** Aggregate statistics, mana metrics, the stats screen, and the full debug panel. (Build the *internal debug logging* in Phase 2 as you go — only the panel and stats UI wait until here.)
 
+**v1 ends here.** Everything below was planned and executed after v1 shipped, is not
+covered by the rest of this document, and is recorded in ADRs/plans rather than as an
+edit to this brief:
+
+**Phase 6 — Single-player Commander.** A human-controlled seat became supported —
+directly superseding §15's "human-controlled seats" exclusion below. See
+`docs/decisions/0018-single-player-mode.md`.
+
+**Phase 7 — Direct player controls.** A faithful UI adapter over the same legal-action
+contract the AI uses — the human never gets capabilities the engine didn't already expose
+as legal actions. See `docs/decisions/0019-direct-player-controls.md`.
+
+**Phase 8 — Action animations.** Plan in `docs/plans/phase-8-action-animations.md`,
+largely executed via ADR 0021 with explicit scope cuts (no SVG arrow overlay, no board
+change-feedback flashing, limited drag polish — see that ADR's "Scope cuts" section).
+
+**Phase 9 — Single-player experience.** Plan in
+`docs/plans/phase-9-single-player-experience.md`; substantially executed by
+`docs/decisions/0021-player-experience-overhaul.md` (async strategist prefetch, §7.6;
+yield-until-end-of-turn fix; combat batching; keyboard/turn legibility; a presentation
+contract for the UI).
+
+**Phase 10 — Deck testing lab and simulation engine.** Planned in
+`docs/plans/phase-10-deck-testing-lab.md`. **Not started** — no implementation exists yet.
+
 ### 14.2 Within-phase working agreement
 
 Between phase boundaries, do **not** run ahead silently. For each meaningful unit of work:
@@ -664,7 +752,7 @@ Go slowly. This is a rules-fidelity project — a fast wrong engine is worth not
 
 Do not build these. They are noted so you can leave clean seams where they will eventually attach.
 
-- **Human-controlled seats.** v1 is AI-vs-AI only. (The human *does* get the invalid-response override in §7.7 — that is not a playable seat.)
+- **Human-controlled seats.** v1 is AI-vs-AI only. (The human *does* get the invalid-response override in §7.7 — that is not a playable seat.) **Superseded post-v1:** Phase 6 (§14.1) added single-player mode with one human-controlled seat plus three AI; see `docs/decisions/0018-single-player-mode.md` and `0019-direct-player-controls.md`. Spectator (four AI seats, no playable seat) remains the other supported mode.
 - **Post-game AI self-reflection commentary.** Cut from v1.
 - **Automatic archetype tagging.** Manual field only; leave the schema ready for inference later.
 - **AI reasoning in the spectator log.** Reasoning notes go to the debug log only.
@@ -673,12 +761,3 @@ Do not build these. They are noted so you can leave clean seams where they will 
 - **Deck editing in-app.** Import only.
 - **More or fewer than four players.** Four seats. Structure the code so the count is a parameter rather than hardcoded, but only four is supported and tested in v1.
 
----
-
-## 16. Open items to confirm before Phase 2
-
-Raise these when you reach them rather than assuming:
-
-1. Whether any Phase-2 rules edge case needs a scope cut to keep the phase tractable — propose the cut, do not make it unilaterally.
-2. Which specific Gemini model string to use at build time, once you have checked current free-tier availability.
-3. Whether the compact rules primer (§7.4) is accurate and complete enough — draft it and have it reviewed before Phase 3.

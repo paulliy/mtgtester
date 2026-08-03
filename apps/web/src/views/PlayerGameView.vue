@@ -5,11 +5,13 @@ import type { DecisionRequest, LegalAction, ObjectId, PlayerBoardSeat, TargetCho
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
+import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
 import StackPanel from '../components/StackPanel.vue';
 import ZoneStrip from '../components/ZoneStrip.vue';
 import { useLifeFlash, useLifeFlashBySeat } from '../composables/useLifeFlash';
 import { isTokenTypeLine } from '../lib/card';
+import { groupPermanents } from '../lib/stackPermanents';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useCombatPlanStore } from '../stores/combatPlan';
 import { useGameStore } from '../stores/game';
@@ -50,12 +52,23 @@ const hasOnlyImmediateActions = computed(
     immediateActions.value.length === request.value.legalActions.length,
 );
 
+/**
+ * A `chooseTargets` request is a triggered ability already committed to the stack — there is
+ * nothing to decide except which targets, so making the player click the source permanent
+ * first (the way choosing whether to cast a spell or activate an ability does) is an extra,
+ * pointless step. Auto-opening the tray for these skips straight to targeting.
+ */
 watch(
   () => request.value?.requestId,
   () => {
     selectedActionId.value = null;
     focusedSourceId.value = null;
     chosenTargets.value = {};
+    const req = request.value;
+    if (req?.decisionType === 'chooseTargets' && req.legalActions.length === 1) {
+      const [only] = req.legalActions;
+      if (only !== undefined) chooseAction(only);
+    }
   },
 );
 
@@ -86,6 +99,17 @@ function permanentsFor(seat: string) {
   return state.value?.battlefield.filter((permanent) => permanent.controller === seat) ?? [];
 }
 
+/**
+ * Groups identical tokens/creatures (same name, state, P/T, counters — see `stackPermanents.ts`)
+ * into one tile with a count badge, so a wide go-wide board doesn't clog the screen with a dozen
+ * duplicate chips. Combat declaration never clicks these tiles directly (the assignment tray
+ * below lists every subject individually with its own buttons), so grouping never hides a
+ * creature that still needs its own attack/block decision.
+ */
+function groupedPermanentsFor(seat: string) {
+  return groupPermanents(permanentsFor(seat));
+}
+
 const humanLifeFlash = useLifeFlash(() => human.value?.life ?? 0);
 const opponentLifeFlash = useLifeFlashBySeat(() =>
   opponents.value.map((opp) => ({ seat: opp.seat, life: opp.life })),
@@ -105,16 +129,27 @@ function adaptiveWidth(baseW: number, count: number, refN: number, scale: number
   return Math.round(Math.min(width, (capH * 63) / 88));
 }
 
-const humanPermWidth = computed(() => adaptiveWidth(108, permanentsFor(human.value?.seat ?? '').length, 4, 1));
+/**
+ * Battlefield chips no longer scale off card *count* — that shrank a sparse board just because
+ * a few more permanents came down, well before the row ran out of room. `--chip-w`/`--chip-min`
+ * (below, in `.object`) hand sizing to the browser instead: a flex basis it shrinks from only
+ * once the actual row width can't fit everything at full size.
+ */
+const humanPermWidth = 108;
+const humanPermMinWidth = 54;
 const handCardWidth = computed(() => adaptiveWidth(96, human.value?.hand?.length ?? 0, 5, 1, 150));
 const commanderWidth = 78;
-
-function opponentPermWidth(seat: string): number {
-  return adaptiveWidth(70, permanentsFor(seat).length, 3, 0.7);
-}
+const opponentPermWidth = 70;
+const opponentPermMinWidth = 40;
 
 function primaryCommander(opponent: PlayerBoardSeat) {
   return opponent.commanders[0] ?? null;
+}
+
+/** "P2" -> "P2 (Krenko, Mob Boss)" for combat-tray option labels; falls back to the raw id. */
+function seatLabel(seatId: string): string {
+  const seat = state.value?.seats.find((s) => s.seat === seatId);
+  return seat === undefined ? seatId : seat.label;
 }
 
 const nameById = computed(() => {
@@ -151,6 +186,93 @@ const selectedSourceActions = computed(() =>
     ? []
     : sourceActions.value.filter((action) => sourceId(action) === focusedSourceId.value),
 );
+interface XActionGroup {
+  key: string;
+  actions: LegalAction[];
+  /** Same as `actions[0]`/`actions[actions.length - 1]` — stored so callers never index an
+   * array TS can't prove is non-empty. */
+  first: LegalAction;
+  min: number;
+  max: number;
+}
+
+/**
+ * A {X} spell/ability offers one whole `LegalAction` per affordable X (brief: "the option menu
+ * is the contract" — `legal.ts` enumerates every value up front so nothing needs a second
+ * legality check). Rendered flat that's one button per value — up to however much mana the
+ * player has, sometimes dozens. Collapsed here into a single numeric-input row per X-family
+ * (same source, same mode); picking a number just looks up the matching pre-enumerated action,
+ * so legality is still exactly what the engine offered, nothing computed client-side.
+ */
+const selectedSourceGrouped = computed(() => {
+  const plain: LegalAction[] = [];
+  const byKey = new Map<string, LegalAction[]>();
+  for (const action of selectedSourceActions.value) {
+    const x = actionData(action, 'x');
+    if (typeof x !== 'number') {
+      plain.push(action);
+      continue;
+    }
+    const modeLabel = actionData(action, 'modeLabel');
+    const key = `${action.type}|${typeof modeLabel === 'string' ? modeLabel : ''}`;
+    const list = byKey.get(key);
+    if (list === undefined) byKey.set(key, [action]);
+    else list.push(action);
+  }
+  const xGroups: XActionGroup[] = [];
+  for (const [key, actions] of byKey) {
+    // Only one affordable X value: no real choice to make, render it like any other button.
+    if (actions.length < 2) {
+      plain.push(...actions);
+      continue;
+    }
+    const sorted = [...actions].sort(
+      (a, b) => (actionData(a, 'x') as number) - (actionData(b, 'x') as number),
+    );
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    if (first === undefined || last === undefined) continue; // unreachable: length >= 2
+    xGroups.push({
+      key,
+      actions: sorted,
+      first,
+      min: actionData(first, 'x') as number,
+      max: actionData(last, 'x') as number,
+    });
+  }
+  return { plain, xGroups };
+});
+
+/** One typed X value per open group, defaulting to the largest affordable amount. */
+const xInputs = ref<Record<string, number>>({});
+watch(
+  () => selectedSourceGrouped.value.xGroups,
+  (groups) => {
+    const next: Record<string, number> = {};
+    for (const group of groups) next[group.key] = xInputs.value[group.key] ?? group.max;
+    xInputs.value = next;
+  },
+  { immediate: true },
+);
+
+/** The exact pre-enumerated action for the typed X, or `undefined` if the input is out of range
+ * (a stray value the `min`/`max` on the `<input>` don't strictly enforce). */
+function xGroupAction(group: XActionGroup): LegalAction | undefined {
+  const x = xInputs.value[group.key] ?? group.max;
+  return group.actions.find((action) => actionData(action, 'x') === x);
+}
+
+/** Same, but always returns something to preview a label/cost — falls back to `first` while the
+ * typed value is out of range, since the Cast/Activate button is disabled in that state anyway. */
+function xGroupPreviewAction(group: XActionGroup): LegalAction {
+  return xGroupAction(group) ?? group.first;
+}
+
+function chooseXGroupAction(group: XActionGroup): void {
+  const action = xGroupAction(group);
+  if (action !== undefined) chooseAction(action);
+}
+
 const fallbackActions = computed(() =>
   (request.value?.legalActions ?? []).filter(
     (action) => !isImmediate(action) && sourceId(action) === null,
@@ -293,6 +415,16 @@ function cancel(): void {
   selectedActionId.value = null;
   chosenTargets.value = {};
 }
+
+/**
+ * Opt-in ("Skip confirm step"): once every target slot on the open tray is filled, submit right
+ * away instead of waiting for the explicit Confirm click. Watches `canConfirm` rather than calling
+ * from `chooseTarget`/`chooseAction` directly so it also fires for zero-target actions, whose tray
+ * opens already "confirmable".
+ */
+watch(canConfirm, (ready) => {
+  if (ready && store.autoConfirmActions && selectedAction.value !== null) confirm();
+});
 
 /**
  * Flipping `combatPlan.mode` to 'replaying' alone submits nothing: the engine is still parked on
@@ -560,6 +692,10 @@ function abandon(): void {
         <input :checked="store.confirmRoutineActions" type="checkbox" @change="store.setConfirmRoutineActions(($event.target as HTMLInputElement).checked)" />
         Confirm passes & lands
       </label>
+      <label class="routine-confirm">
+        <input :checked="store.autoConfirmActions" type="checkbox" @change="store.setAutoConfirmActions(($event.target as HTMLInputElement).checked)" />
+        Skip confirm step
+      </label>
       <button type="button" @click="abandon">Abandon</button>
     </header>
 
@@ -591,11 +727,18 @@ function abandon(): void {
             <header>
               <span class="id-badge">{{ opponent.seat }}</span>
               <strong>{{ opponent.label }}</strong>
+              <span v-if="state.monarchSeat === opponent.seat" class="monarch-badge" title="This player is the monarch">MONARCH</span>
               <span
                 class="life-badge"
                 :class="{ low: opponent.life <= 10, 'flash-damage': opponentLifeFlash[opponent.seat] === 'damage', 'flash-heal': opponentLifeFlash[opponent.seat] === 'heal' }"
               >{{ opponent.life }}</span>
             </header>
+            <GlobalCounters
+              :energy="opponent.energy"
+              :poison-counters="opponent.poisonCounters"
+              :counters="opponent.counters"
+              compact
+            />
             <div class="opp-meta">
               <div v-if="primaryCommander(opponent)" class="opp-cmdr-thumb">
                 <CardImage
@@ -608,62 +751,71 @@ function abandon(): void {
             </div>
             <div class="permanents">
               <div
-                v-for="permanent in permanentsFor(opponent.seat)"
-                :key="permanent.id"
+                v-for="group in groupedPermanentsFor(opponent.seat)"
+                :key="group.permanent.id"
                 class="object"
-                :style="{ '--chip-w': opponentPermWidth(opponent.seat) + 'px' }"
+                :style="{ '--chip-w': opponentPermWidth + 'px', '--chip-min': opponentPermMinWidth + 'px' }"
                 :class="{
-                  targetable: isLegalTarget(permanent.id),
-                  'chosen-target': isChosenTarget(permanent.id),
-                  actionable: actionableSourceIds.has(permanent.id),
+                  targetable: isLegalTarget(group.permanent.id),
+                  'chosen-target': isChosenTarget(group.permanent.id),
+                  actionable: actionableSourceIds.has(group.permanent.id),
                 }"
                 draggable="true"
-                @dragstart="dragStart(permanent.id)"
+                @dragstart="dragStart(group.permanent.id)"
                 @dragend="draggedId = null"
                 @dragover.prevent
-                @drop.stop="dropOn(permanent.id)"
-                @click.stop="selectSource(permanent.id)"
+                @drop.stop="dropOn(group.permanent.id)"
+                @click.stop="selectSource(group.permanent.id)"
               >
-                <PermanentChip :permanent="permanent" :count="1" :name-by-id="nameById" />
+                <PermanentChip :permanent="group.permanent" :count="group.count" :name-by-id="nameById" />
               </div>
             </div>
           </article>
         </div>
 
         <section v-if="human" class="human-zone" :class="{ 'your-turn': isYourTurn }">
-          <header>
+          <header
+            :class="{ targetable: isLegalTarget(human.seat), 'chosen-target': isChosenTarget(human.seat) }"
+            @click="chooseOpponent(human.seat)"
+          >
             <strong>You · {{ human.seat }} · {{ human.label }}</strong>
             <span
               class="life-badge"
               :class="{ low: human.life <= 10, 'flash-damage': humanLifeFlash === 'damage', 'flash-heal': humanLifeFlash === 'heal' }"
             >{{ human.life }}</span>
+            <span v-if="state.monarchSeat === human.seat" class="monarch-badge" title="You are the monarch">MONARCH</span>
             <span class="lib-note">{{ human.librarySize }} library</span>
           </header>
+          <GlobalCounters
+            :energy="human.energy"
+            :poison-counters="human.poisonCounters"
+            :counters="human.counters"
+          />
           <div class="resource-strip">
             {{ human.landsPlayedThisTurn === 0 ? 'Land available' : 'Land played' }}<template v-if="resourceSummary(human.manaPool)"> ? Pool {{ resourceSummary(human.manaPool) }}</template>
           </div>
           <div class="battle-row">
             <div class="permanents" @dragover.prevent @drop="dropToBattlefield">
               <div
-                v-for="permanent in permanentsFor(human.seat)"
-                :key="permanent.id"
+                v-for="group in groupedPermanentsFor(human.seat)"
+                :key="group.permanent.id"
                 class="object"
-                :style="{ '--chip-w': humanPermWidth + 'px' }"
+                :style="{ '--chip-w': humanPermWidth + 'px', '--chip-min': humanPermMinWidth + 'px' }"
                   :class="{
-                    focused: focusedSourceId === permanent.id,
-                    targetable: isLegalTarget(permanent.id),
-                    'chosen-target': isChosenTarget(permanent.id),
-                    'payment-source': isPaymentSource(permanent.id),
-                    actionable: actionableSourceIds.has(permanent.id),
+                    focused: focusedSourceId === group.permanent.id,
+                    targetable: isLegalTarget(group.permanent.id),
+                    'chosen-target': isChosenTarget(group.permanent.id),
+                    'payment-source': isPaymentSource(group.permanent.id),
+                    actionable: actionableSourceIds.has(group.permanent.id),
                 }"
                 draggable="true"
-                @dragstart="dragStart(permanent.id)"
+                @dragstart="dragStart(group.permanent.id)"
                 @dragend="draggedId = null"
                 @dragover.prevent
-                @drop.stop="dropOn(permanent.id)"
-                @click="selectSource(permanent.id)"
+                @drop.stop="dropOn(group.permanent.id)"
+                @click="selectSource(group.permanent.id)"
               >
-                <PermanentChip :permanent="permanent" :count="1" :name-by-id="nameById" />
+                <PermanentChip :permanent="group.permanent" :count="group.count" :name-by-id="nameById" />
               </div>
             </div>
             <div v-if="human.commanders.some((commander) => commander.zone === 'command')" class="command-zone">
@@ -767,8 +919,8 @@ function abandon(): void {
                 {{ combatPlan.interruptedMessage }}
               </p>
               <p v-else class="target-instruction">
-                Click a creature, then {{ combatPlan.kind === 'attackers' ? 'an opponent' : 'an attacker' }} to
-                assign it. Unassigned creatures {{ combatPlan.kind === 'attackers' ? 'stay home' : 'do not block' }}.
+                Click an option below for every creature. Unassigned creatures
+                {{ combatPlan.kind === 'attackers' ? 'stay home' : 'do not block' }}.
               </p>
               <div class="combat-assignments">
                 <div
@@ -777,14 +929,26 @@ function abandon(): void {
                   class="combat-assignment-row"
                   :class="{ focused: focusedSourceId === entry.subjectId }"
                 >
-                  <span>{{ nameById.get(entry.subjectId) ?? entry.subjectId }}</span>
-                  <span class="assignment-target">
-                    {{
-                      combatPlan.assignment.has(entry.subjectId)
-                        ? `→ ${nameById.get(combatPlan.assignment.get(entry.subjectId) as string) ?? combatPlan.assignment.get(entry.subjectId)}`
-                        : combatPlan.kind === 'attackers' ? 'stays home' : 'no block'
-                    }}
-                  </span>
+                  <span class="assignment-name">{{ nameById.get(entry.subjectId) ?? entry.subjectId }}</span>
+                  <div class="assignment-options">
+                    <button
+                      v-for="optionId in entry.optionIds"
+                      :key="optionId"
+                      type="button"
+                      :class="{ primary: combatPlan.assignment.get(entry.subjectId) === optionId }"
+                      @click="combatPlan.assign(entry.subjectId, optionId)"
+                    >
+                      {{ combatPlan.kind === 'attackers' ? seatLabel(optionId) : (nameById.get(optionId) ?? optionId) }}
+                    </button>
+                    <button
+                      type="button"
+                      class="muted"
+                      :class="{ primary: !combatPlan.assignment.has(entry.subjectId) }"
+                      @click="combatPlan.clear(entry.subjectId)"
+                    >
+                      {{ combatPlan.kind === 'attackers' ? 'Stay home' : 'No block' }}
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="tray-actions">
@@ -805,7 +969,30 @@ function abandon(): void {
             <template v-else-if="focusedSourceId !== null && selectedSourceActions.length > 0">
               <div class="tray-heading"><strong>{{ selectedSourceName ?? 'Selected card' }}</strong><span>Choose an action</span></div>
               <div class="source-actions">
-                <div v-for="action in selectedSourceActions" :key="action.id" class="source-action-row">
+                <div
+                  v-for="group in selectedSourceGrouped.xGroups"
+                  :key="group.key"
+                  class="source-action-row x-group"
+                >
+                  <label>
+                    Choose X ({{ group.min }}–{{ group.max }})
+                    <input
+                      type="number"
+                      :min="group.min"
+                      :max="group.max"
+                      v-model.number="xInputs[group.key]"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    :disabled="xGroupAction(group) === undefined"
+                    @click="chooseXGroupAction(group)"
+                  >
+                    <span>{{ actionLabel(xGroupPreviewAction(group)) }}</span>
+                    <small>{{ actionCost(xGroupPreviewAction(group)).join(' · ') }}</small>
+                  </button>
+                </div>
+                <div v-for="action in selectedSourceGrouped.plain" :key="action.id" class="source-action-row">
                   <button type="button" @click="chooseAction(action)">
                     <span>{{ actionLabel(action) }}</span>
                     <small>{{ actionCost(action).join(' · ') }}</small>
@@ -874,7 +1061,12 @@ function abandon(): void {
           </div>
         </section>
 
-        <StackPanel :state="state" />
+        <StackPanel
+          :state="state"
+          :is-legal-target="isLegalTarget"
+          :is-chosen-target="isChosenTarget"
+          @select="selectSource"
+        />
         <ActionLog :lines="store.log" :follow="true" />
       </aside>
     </main>
@@ -907,17 +1099,24 @@ button.active, button.selected, .focused { border-color: var(--accent); box-shad
 .opponent.chosen-target { animation: none; box-shadow: 0 0 0 2px var(--ok); }
 .opponent > header { display:flex; align-items:center; gap:.35rem; font-size:.72rem; flex-shrink: 0; }
 .opponent > header strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.human-zone > header { display:flex; align-items:center; gap:.35rem; flex-shrink: 0; cursor: pointer; border: 1px solid transparent; border-radius: 4px; padding: .1rem .2rem; transition: border-color .2s, box-shadow .2s; }
+.human-zone > header.targetable { animation: targetPulse 1.4s ease-in-out infinite; }
+.human-zone > header.chosen-target { animation: none; box-shadow: 0 0 0 2px var(--ok); }
 .opp-meta { display: flex; align-items: center; gap: .3rem; color: var(--muted); font-size: .65rem; flex-shrink: 0; }
 .opp-cmdr-thumb { width: 20px; flex-shrink: 0; border-radius: 3px; overflow: hidden; border: 1px solid rgb(96 165 250 / .4); }
 .id-badge { font-weight: 800; font-size: .68rem; color: var(--accent); background: rgb(96 165 250 / .15); padding: .02rem .3rem; border-radius: 3px; flex-shrink: 0; }
+.monarch-badge { flex-shrink: 0; color: #fbbf24; background: rgb(251 191 36 / .14); border: 1px solid rgb(251 191 36 / .45); border-radius: 999px; padding: .06rem .3rem; font-size: .5rem; font-weight: 800; letter-spacing: .05em; }
 .life-badge { font-weight: 800; font-size: .78rem; font-variant-numeric: tabular-nums; color: var(--ok); background: rgb(74 222 128 / .12); border: 1px solid rgb(74 222 128 / .3); padding: .04rem .4rem; border-radius: 4px; flex-shrink: 0; }
 .life-badge.low { color: var(--danger); background: rgb(248 113 113 / .12); border-color: rgb(248 113 113 / .35); }
 .life-badge.flash-damage { animation: flash .8s ease-out; }
 .life-badge.flash-heal { animation: flashOk .9s ease-out; }
 .lib-note { color: var(--muted); font-size: .68rem; }
-.permanents { flex: 1; min-height: 0; display:flex; flex-wrap:nowrap; align-items: flex-start; align-content:flex-start; gap:.3rem; overflow-x: auto; overflow-y: hidden; }
+.permanents { flex: 1; min-height: 0; display:flex; flex-wrap:wrap; align-items: flex-start; align-content:flex-start; gap:.3rem; overflow-x: hidden; overflow-y: auto; }
 .zones-strip { display: flex; flex-direction: column; gap: .3rem; flex-shrink: 0; }
-.object { border:1px solid transparent; border-radius:4px; cursor:pointer; flex-shrink: 0; }
+.object { border:1px solid transparent; border-radius:4px; cursor:pointer; flex: 0 1 var(--chip-w, 108px); min-width: var(--chip-min, 54px); }
+/* PermanentChip's own `.tile` sets a fixed pixel width; make it fill this flexed wrapper instead
+   so the browser's own shrink-to-fit (not the chip's internal default) governs actual size. */
+.object :deep(.tile) { width: 100%; }
 .actionable { border-color:rgb(96 165 250 / .75) !important; box-shadow:0 0 0 1px rgb(96 165 250 / .28); }
 .actionable:hover { transform:translateY(-2px); }
 .human-zone { gap:.4rem; border-color:rgb(96 165 250 / .45); }
@@ -948,10 +1147,17 @@ button.active, button.selected, .focused { border-color: var(--accent); box-shad
 .source-action-row { display:flex; gap:.25rem; }
 .source-action-row > button:first-child { display:flex; align-items:center; gap:.35rem; text-align:left; }
 .source-action-row small { color:var(--muted); }
-.combat-assignments { display:flex; flex-direction:column; gap:.2rem; margin-top:.4rem; max-height:8rem; overflow:auto; }
-.combat-assignment-row { display:flex; justify-content:space-between; gap:.4rem; padding:.2rem .35rem; border:1px solid var(--line); border-radius:4px; font-size:.72rem; }
+.source-action-row.x-group { align-items:center; }
+.source-action-row.x-group label { display:flex; align-items:center; gap:.35rem; font-size:.68rem; color:var(--muted); }
+.source-action-row.x-group input[type='number'] { width:4.2rem; background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:4px; padding:.1rem .3rem; font-size:.72rem; }
+.combat-assignments { display:flex; flex-direction:column; gap:.3rem; margin-top:.4rem; max-height:14rem; overflow:auto; }
+.combat-assignment-row { display:flex; flex-direction:column; gap:.25rem; padding:.3rem .4rem; border:1px solid var(--line); border-radius:4px; font-size:.72rem; }
 .combat-assignment-row.focused { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-.combat-assignment-row .assignment-target { color:var(--ok); }
+.combat-assignment-row .assignment-name { font-weight:700; }
+.assignment-options { display:flex; flex-wrap:wrap; gap:.25rem; }
+.assignment-options button { font-size:.68rem; padding:.15rem .4rem; }
+.assignment-options button.primary { background:var(--accent); color:#08111f; font-weight:700; border-color:var(--accent); }
+.assignment-options button.muted { color:var(--muted); }
 .combat-interrupted { color:var(--warn) !important; }
 .tray-actions { display:flex; justify-content:flex-end; gap:.35rem; margin-top:.45rem; }
 .rail { min-height:0; display:flex; flex-direction:column; gap:.5rem; }

@@ -18,6 +18,7 @@ import type {
 } from '@mtg/shared';
 import type { ServerWebSocket } from 'bun';
 import type { OracleIndex } from '../cards/oracle-index';
+import { listKnownDecks } from '../cards/known-decks';
 import type { SupportedPool } from '../cards/pool';
 import type { GameStore } from '../db';
 import type { BannedList } from '../decks/banned';
@@ -82,7 +83,7 @@ export class GameServer {
     const port = this.deps.port ?? 3001;
     const server = Bun.serve<SocketData, never>({
       port,
-      fetch: (request, srv) => {
+      fetch: async (request, srv) => {
         const url = new URL(request.url);
         if (url.pathname === '/ws') {
           const upgraded = srv.upgrade(request, { data: { clientId: crypto.randomUUID() } });
@@ -90,6 +91,9 @@ export class GameServer {
         }
         if (url.pathname === '/health') {
           return Response.json({ ok: true, poolSize: this.deps.pool.cards.length });
+        }
+        if (url.pathname === '/api/known-decks') {
+          return Response.json({ decks: await listKnownDecks(this.deps.index) });
         }
         if (url.pathname === '/api/stats') {
           if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });

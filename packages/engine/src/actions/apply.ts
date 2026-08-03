@@ -8,6 +8,7 @@ import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { Ability, AbilityCost, CardDefinition } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
 import { payAbilityCosts, payManaCost } from '../effects/resolve';
+import { computeCharacteristics } from '../effects/continuous';
 import { emit, debug } from '../log/log';
 import type { ParsedManaCost } from '../mana/cost';
 import { addGeneric, describeManaCost, emptyCost, subtractColored, subtractGeneric, totalPips, withX } from '../mana/cost';
@@ -78,25 +79,35 @@ function resolveCastAbility(
 }
 
 /**
- * Pay a whole activation cost. Non-mana components go first: they take the source out of play
- * (or tap it), so it cannot then also be tapped for mana to pay the same cost's mana half.
- * `computePriorityOptions` excludes the source for the same reason, so the two agree.
+ * Pay a whole activation cost. A source that is itself tapped as a cost must be excluded from
+ * the mana plan, so those non-mana costs are paid first. Sacrifice-another costs are different:
+ * the player may use the permanent for mana before sacrificing it, and the sacrifice choice is
+ * interactive. Paying mana first keeps a legal action from becoming unpayable when the player
+ * chooses a mana-producing artifact as the sacrifice.
  */
 function* payActivationCosts(
   ctx: GameContext,
   player: EnginePlayerState,
   perm: EnginePermanent,
   costs: readonly AbilityCost[],
+  announcedX = 0,
 ): GameGen<{ stationPower?: number }> {
-  const paymentScope = yield* payAbilityCosts(ctx, player, perm, costs, 'tap');
   const mana = manaPortionOf(costs);
-  if (totalPips(mana) > 0) {
-    // The purpose must match the one `computePriorityOptions` used to decide affordability, or
-    // restricted mana that made the ability appear payable would not be spendable here.
-    yield* payManaCost(ctx, player, mana, {
-      kind: 'activateAbility',
-      sourceOracleId: perm.oracleId,
-    });
+  const paysManaBeforeSacrifice = costs.some((cost) => cost.kind === 'sacrificeOther');
+  const payMana = function* (): GameGen<void> {
+    if (totalPips(mana) > 0) {
+      // The purpose must match the one `computePriorityOptions` used to decide affordability, or
+      // restricted mana that made the ability appear payable would not be spendable here.
+      yield* payManaCost(ctx, player, mana, {
+        kind: 'activateAbility',
+        sourceOracleId: perm.oracleId,
+      });
+    }
+  };
+  if (paysManaBeforeSacrifice) yield* payMana();
+  const paymentScope = yield* payAbilityCosts(ctx, player, perm, costs, 'tap', announcedX);
+  if (!paysManaBeforeSacrifice) {
+    yield* payMana();
   }
   return paymentScope;
 }
@@ -209,7 +220,31 @@ export function* applyPriorityAction(
       let cost: ParsedManaCost;
       let ability: Ability;
       let targets: ObjectId[];
-      if (payload.alternativeCast === 'overload') {
+      if (payload.alternativeCast === 'energy') {
+        const energyAlternativeCost = s.battlefield
+          .filter((perm) => perm.controllerId === player.id)
+          .map((perm) => getDefByOracleId(ctx, perm.oracleId, perm.name).energyAlternativeCost)
+          .find((amount): amount is number => amount !== undefined);
+        if (!def.types.some((type) => ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Planeswalker'].includes(type)) || energyAlternativeCost === undefined || player.energy < energyAlternativeCost) {
+          throw new Error('energy alternative cost is not legal');
+        }
+        player.energy -= energyAlternativeCost;
+        emit(ctx, 'energy', { amount: -energyAlternativeCost, total: player.energy }, player.id);
+        cost = emptyCost();
+        ability = resolveCastAbility(def, undefined, obj.name) ?? { kind: 'spell', targets: [], effects: [] };
+        targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
+      } else if (payload.alternativeCast === 'commanderFree') {
+        if (
+          def.commanderFreeCast !== true ||
+          payload.fromCommand ||
+          !s.battlefield.some((perm) => perm.controllerId === player.id && perm.isCommander)
+        ) {
+          throw new Error('commander-free alternate cost is not legal');
+        }
+        cost = emptyCost();
+        ability = resolveCastAbility(def, undefined, obj.name) ?? { kind: 'spell', targets: [], effects: [] };
+        targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
+      } else if (payload.alternativeCast === 'overload') {
         const alt = def.alternativeCasts?.find((a) => a.kind === 'overload');
         if (!alt) throw new Error('missing overload cost');
         cost = applyRed(alt.manaCost);
@@ -269,6 +304,7 @@ export function* applyPriorityAction(
         isCommanderCast: payload.fromCommand,
         ...(payload.alternativeCast ? { alternativeCastKind: payload.alternativeCast } : {}),
         ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
+        triggerScope: { manaSpent: totalPips(cost) },
       };
       s.stack.push(spellEntry);
       breakYieldsForStop(ctx, spellEntry);
@@ -306,7 +342,10 @@ export function* applyPriorityAction(
         const card = player.graveyard.find((c) => c.id === payload.objectId);
         if (card === undefined) throw new Error('engine bug: graveyard ability source not in graveyard');
         const def = getDefByOracleId(ctx, card.oracleId, card.name);
-        const activated = def.activatedAbilities[payload.index];
+        const activated = [
+          ...def.activatedAbilities,
+          ...(ctx.state.temporaryGraveyardAbilities[card.cardId] ?? []),
+        ][payload.index];
         if (activated === undefined) throw new Error('engine bug: activated ability index invalid');
 
         const manaCost = activated.costs.find((c): c is Extract<AbilityCost, { kind: 'mana' }> => c.kind === 'mana');
@@ -345,7 +384,7 @@ export function* applyPriorityAction(
       const perm = ctx.state.battlefield.find((p) => p.id === payload.objectId);
       if (perm === undefined) throw new Error('engine bug: ability source not on the battlefield');
       const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-      const activated = def.activatedAbilities[payload.index];
+      const activated = (computeCharacteristics(ctx, perm).activatedAbilities ?? def.activatedAbilities)[payload.index];
       if (activated === undefined) throw new Error('engine bug: activated ability index invalid');
 
       // CR 601.2c/601.2h: targets are chosen, then costs are paid, then the ability is on the
@@ -389,7 +428,7 @@ export function* applyPriorityAction(
           ? { ...c, cost: withX(subtractGeneric(c.cost, activationReduction.generic), payload.x ?? 0) }
           : c,
       );
-      const paymentScope = yield* payActivationCosts(ctx, player, perm, costsToPay);
+      const paymentScope = yield* payActivationCosts(ctx, player, perm, costsToPay, payload.x ?? 0);
       if (paymentScope.stationPower !== undefined) stackEntry.triggerScope = { stationPower: paymentScope.stationPower };
       // Recorded at ANNOUNCEMENT (CR 602.5f), not on resolution: the restriction is on
       // activating, so countering the ability does not give the activation back.

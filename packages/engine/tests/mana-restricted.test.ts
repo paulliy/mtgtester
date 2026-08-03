@@ -165,6 +165,24 @@ describe('the restriction is a property of the payment, not the pip', () => {
     expect(spent).toHaveLength(1);
     expect(spent?.[0]?.restriction).toBe(dragonsOnly);
   });
+
+  it('a hybrid pip actually consumes one matching pool entry, not zero', () => {
+    // Regression: selectEntriesToSpend's cost parameter didn't carry `hybrid` at all, so a
+    // pure-hybrid cost like {U/B} returned an EMPTY spend list — payManaCost then removed
+    // nothing from the pool, making every hybrid-costed activation free and repeatable forever.
+    const pool: ManaEntry[] = [{ symbol: 'U' }];
+    const spent = selectEntriesToSpend(pool, parseManaCost('{U/B}').cost!);
+
+    expect(spent).toHaveLength(1);
+    expect(spent?.[0]?.symbol).toBe('U');
+  });
+
+  it('a hybrid pip fails when the pool has neither named color', () => {
+    const pool: ManaEntry[] = [{ symbol: 'G' }];
+    const spent = selectEntriesToSpend(pool, parseManaCost('{U/B}').cost!);
+
+    expect(spent).toBeNull();
+  });
 });
 
 describe('Haven of the Spirit Dragon — alternatives on one permanent', () => {

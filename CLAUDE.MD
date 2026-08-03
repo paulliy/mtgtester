@@ -1,10 +1,42 @@
 # MTG Commander AI Simulator
 
 Read [docs/mtg-commander-ai-simulator-brief.md](docs/mtg-commander-ai-simulator-brief.md)
-in full before writing any code. It is the authoritative spec — do not start implementing
+in full before writing any code. It is the original v1 spec — do not start implementing
 until you've read it. (The brief and this file historically referenced
 `docs/project-brief.md`; the real filename is the link above. See
 [docs/decisions/0001-foundations.md](docs/decisions/0001-foundations.md).)
+
+**v1 shipped and the project has moved past it.** The brief's Phase 0-5 plan is done;
+phases 6-10 (single-player mode, direct player controls, action animations, the
+player-experience overhaul, and a planned deck-testing lab) exist only as ADRs and plan
+docs under `docs/decisions/` and `docs/plans/` — read `docs/decisions/0021-player-experience-overhaul.md`
+(most recent) for where things currently stand. Where this file or the brief conflicts
+with a numbered ADR, the ADR wins.
+
+## Current architecture at a glance
+
+- **Packages:** `packages/shared` (types shared by engine/server/web) →
+  `packages/engine` (pure rules engine, no I/O) → `packages/server` (Bun HTTP+WS server:
+  AI orchestration in `src/ai/`, deck import in `src/decks/`, card pool/coverage in
+  `src/cards/`, SQLite in `src/db/`, match orchestration in `src/match/`, CLI entry
+  points in `src/cli/`) → `apps/web` (Vue 3 spectator **and** player UI).
+- **AI provider:** OpenAI-compatible client (`packages/server/src/ai/client.ts`), not
+  `@google/genai`. **OpenRouter is the default provider**, auto-detected from whichever
+  `*_API_KEY` is set (Groq, Gemini, DeepSeek, and OpenAI are also supported presets) — see
+  `packages/server/src/ai/config.ts` and `.env.example`, and
+  `docs/decisions/0011-openai-compatible-provider.md`.
+- **Two-tier AI: strategist + tactician.** `packages/server/src/ai/strategy-coordinator.ts`
+  runs a **strategist** call once per active turn, on its own request queue, prefetched
+  asynchronously at the previous turn boundary so it overlaps untap/upkeep/draw and never
+  blocks a tactical decision. Each **tactician** decision (the per-menu-pick call) consults
+  the strategist's latest plan if one has landed, and re-plans once if an opponent
+  intervenes. See `docs/decisions/0016-two-tier-ai-planning.md` and
+  `docs/decisions/0021-player-experience-overhaul.md` §1.
+- **Game modes:** spectator (four AI seats) and single-player (one human seat + three AI,
+  `docs/decisions/0018-single-player-mode.md`) are both live, chosen from the web UI's
+  `SetupView.vue`. Decks per seat are either generated from the engine-supported pool
+  (`bun run pool`, default and always-playable) or imported from Moxfield/Archidekt/plaintext
+  (`bun run decks`) — see `packages/shared/src/protocol.ts`'s `SeatSource`/`GameMode` types.
 
 
 ### Task Offloading Rules (`agy`)
@@ -36,30 +68,44 @@ You have access to the `antigravity_delegate` MCP tool. Follow these guidelines 
 
 ```bash
 bun install
-bun run typecheck   # tsc --build across all packages (full strict)
-bun run lint        # eslint (flat config)
-bun run test        # vitest
+cp .env.example .env   # then set exactly one provider key, e.g. OPENROUTER_API_KEY
+bun run typecheck       # tsc --build across all packages (full strict)
+bun run typecheck:clean # tsc --build --clean
+bun run lint             # eslint (flat config)
+bun run lint:fix
+bun run format           # prettier --write .
+bun run format:check
+bun run test             # vitest run
+bun run test:watch       # vitest (watch mode)
+bun run build            # tsc --build
 
-# Watch a game — server owns the engine and the API key, web app is a view; one command starts both:
-bun run dev                          # server on :3001 + Vue spectator UI on :5173
+# Watch a game — server owns the engine and the AI provider key, web app is a view; one command starts both:
+bun run dev                          # server on :3001 + Vue spectator/player UI on :5173
 # ...or separately, e.g. to restart just one:
 bun run serve [--port N] [--no-db]   # HTTP + /ws on :3001; GET /health for a liveness check
-bun run dev:web                      # Vue spectator UI on :5173, proxying /ws to the server
+bun run dev:web                      # Vue UI on :5173, proxying /ws to the server
+# Game mode (spectator vs. single-player) and deck source (pool vs. import) are chosen
+# in the web UI's setup screen, not via CLI flags — see SetupView.vue.
 
-# Phase 1 deck pipeline (import → resolve → validate → snapshot):
+# Deck pipeline (import → resolve → validate → snapshot):
 bun run decks <deckUrlOrFile> [more...]   # Moxfield/Archidekt URL or plaintext file
 bun run decks --no-save <...>             # validate only, skip SQLite
 
 # Playable decks from the engine-supported card pool (ADR 0009):
 bun run pool                              # what the engine can currently play with
 bun run pool --commanders                 # every commander the pool supports
-bun run pool --play [--seed S]            # build 4 decks and play a full game
+bun run pool --play [--seed S] [--ai]     # build 4 decks and play a full game (random or AI-driven)
 bun run pool --write [--seed S]           # commit the 4 decks as fixtures
+
+# Play specific curated decklists against each other (fixtures or URLs):
+bun run play-decks <deckA> <deckB> ...
 
 # Real-deck model coverage — the mechanics backlog:
 bun run coverage                          # per-deck + aggregate, ranked blocking mechanics
 bun run coverage --json                   # machine-diffable
 bun run coverage:snapshot [url...]        # refresh/add deck fixtures from live URLs
+bun run snapshot:oracle                   # per-deck OracleCard JSON fixtures for CI-safe engine coverage tests
+bun run modelled-cards                    # list cards the engine currently models
 ```
 
 ## Reference data
@@ -68,8 +114,8 @@ bun run coverage:snapshot [url...]        # refresh/add deck fixtures from live 
 - `docs/rules/commander-rules.md` — mtgcommander.net construction & play rules.
 - `docs/rules/commander-banned-list.md` — mtgcommander.net banned list (44 individual cards + category bans).
 - `data/scryfall-oracle-cards.json` — Scryfall `oracle-cards` bulk (~180 MB, gitignored; see `data/README.md`).
-- **Never send the Comprehensive Rules to Gemini** — it is a reference for implementing the
-  engine, not runtime context (§7.4). The compact rules primer (Phase 3) is separate.
+- **Never send the Comprehensive Rules to the AI provider** — it is a reference for
+  implementing the engine, not runtime context (§7.4). The compact rules primer is separate.
 
 ## Conventions
 

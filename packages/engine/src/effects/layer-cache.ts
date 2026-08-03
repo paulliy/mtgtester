@@ -115,6 +115,9 @@ export function digestOf(
     h = mix(h, hashString(perm.controllerId));
     h = mix(h, (perm.power ?? 0) + 0x10000);
     h = mix(h, (perm.toughness ?? 0) + 0x10000);
+    h = mix(h, perm.faceDown === true ? 1 : 0);
+    for (const type of perm.copyAddTypes ?? []) h = mix(h, hashString(type));
+    for (const cardId of perm.exiledCardIds ?? []) h = mix(h, hashString(cardId));
     h = foldCounters(h, perm);
     // `attachedToSource`/`isEnchanted`/`isEquipped` read this; attaching/detaching changes
     // none of the fields above, so it must be folded in explicitly (ADR 0007).

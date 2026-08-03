@@ -17,6 +17,7 @@ function fixtureView(): PlayerView {
     ],
     deck: [{ id: 'd1', name: 'Forest' }], // decklist contents, name only
     graveyard: [{ id: 'g1', name: 'Giant Growth' }],
+    exile: [],
     commanders: [{ name: 'Llanowar Elves', zone: 'command', castCount: 0 }],
     availableMana: { G: 2 },
     manaSources: [{ name: 'Forest', symbols: ['G'], count: 1 }],

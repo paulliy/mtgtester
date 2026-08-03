@@ -36,8 +36,13 @@ import { registerDRACONIC_DESTRUCTIONOverrides } from './draconic-destruction';
 import { registerTOKEN_TRIUMPHOverrides } from './token-triumph';
 import { registerLIVING_ENERGYOverrides } from './living-energy';
 import { registerSILVERQUILL_INFLUENCEOverrides } from './silverquill-influence';
+import { registerSILVERQUILL_INFLUENCE_REMAININGOverrides } from './silverquill-influence-remaining';
 import { registerCOUNTER_INTELLIGENCEOverrides } from './counter-intelligence';
 import { registerNECRON_DYNASTIESOverrides } from './necron-dynasties';
+import { registerNECRON_DYNASTIES_REMAININGOverrides } from './necron-dynasties-remaining';
+import { registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides } from './queen-marchesa-queens-gambit';
+import { registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides } from './queen-marchesa-queens-gambit-remaining';
+import { registerMARCHESA_THE_BLACK_ROSEOverrides } from './marchesa-the-black-rose';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -63,11 +68,22 @@ registerDRACONIC_DESTRUCTIONOverrides();
 registerTOKEN_TRIUMPHOverrides();
 registerLIVING_ENERGYOverrides();
 registerSILVERQUILL_INFLUENCEOverrides();
+registerSILVERQUILL_INFLUENCE_REMAININGOverrides();
 registerCOUNTER_INTELLIGENCEOverrides();
 registerNECRON_DYNASTIESOverrides();
+registerNECRON_DYNASTIES_REMAININGOverrides();
+registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides();
+registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides();
+registerMARCHESA_THE_BLACK_ROSEOverrides();
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {
+  const existing = OVERRIDES.get(override.oracleId);
+  // A legacy fixture registration may still exist for a card whose authored implementation was
+  // moved into a later increment. Never let that empty placeholder erase executable behavior.
+  if (existing !== undefined && Object.keys(existing.def).length > 0 && Object.keys(override.def).length === 0) {
+    return;
+  }
   OVERRIDES.set(override.oracleId, override);
 }
 
@@ -88,7 +104,7 @@ function quotedBody(reason: string): string | null {
 
 function normalizeLine(line: string): string {
   return line.replace(
-    /\bthis (?:creature|artifact|enchantment|land|permanent|token|Vehicle|Equipment|Saga|planeswalker)\b/gi,
+    /\bthis (?:creature|artifact|enchantment|land|permanent|token|Vehicle|Equipment|Saga|planeswalker|Aura)\b/gi,
     '~',
   );
 }
