@@ -125,7 +125,7 @@ const flexStyles = computed(() => {
     <div class="battlefield-grid">
       <div class="battlefield-col nonlands-col" :style="{ flex: flexStyles.nonlandsFlex }">
         <div class="row-header">Board ({{ nonlands.length }})</div>
-        <div class="chips-grid">
+        <TransitionGroup tag="div" name="chip" class="chips-grid">
           <PermanentChip
             v-for="g in groupedNonlands"
             :key="g.permanent.id"
@@ -133,11 +133,11 @@ const flexStyles = computed(() => {
             :count="g.count"
             :name-by-id="nameById"
           />
-        </div>
+        </TransitionGroup>
       </div>
       <div class="battlefield-col lands-col" :style="{ flex: flexStyles.landsFlex }">
         <div class="row-header">Lands ({{ lands.length }})</div>
-        <div class="chips-grid">
+        <TransitionGroup tag="div" name="chip" class="chips-grid">
           <PermanentChip
             v-for="g in groupedLands"
             :key="g.permanent.id"
@@ -145,7 +145,7 @@ const flexStyles = computed(() => {
             :count="g.count"
             :name-by-id="nameById"
           />
-        </div>
+        </TransitionGroup>
       </div>
       <p v-if="permanents.length === 0" class="empty">no permanents on battlefield</p>
     </div>
@@ -372,10 +372,25 @@ header {
   flex-shrink: 0;
 }
 .chips-grid {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
   gap: 0.3rem;
+}
+/* Token creation / death-and-zone-change feedback (§9.8.2): brief scale-in/fade-out rather than
+   an instant appear/disappear. The reduced-motion global override collapses these to ~0s. */
+.chip-enter-active,
+.chip-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.chip-enter-from,
+.chip-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
+}
+.chip-leave-active {
+  position: absolute;
 }
 .hand-section {
   flex-shrink: 0;

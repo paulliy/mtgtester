@@ -17,6 +17,7 @@ import type { OracleIndex } from './oracle-index';
 import { measureCoverage } from './coverage';
 import { importDeck } from '../decks/source';
 import { resolveDeck } from '../decks/resolve';
+import { inferArchetype } from '../decks/archetype';
 
 const FIXTURE_DIR = 'packages/server/fixtures/coverage-decks';
 
@@ -27,6 +28,8 @@ export interface KnownDeckSummary {
   colorIdentity: Color[];
   uniqueCards: number;
   modeledCards: number;
+  /** Inferred archetype (ADR 0022 §5) — what this deck is, not just who its commander is. */
+  archetypeTag: string;
   /** Plaintext deck list, verbatim — hand this back as a `{kind:'plaintext'}` seat source. */
   text: string;
 }
@@ -60,14 +63,23 @@ export async function listKnownDecks(index: OracleIndex): Promise<KnownDeckSumma
     const name = resolved.name ?? parsed.name ?? slug;
     const report = measureCoverage([{ name, cards }]);
     const summary = report.decks[0];
+    const colorIdentity = [...new Set(resolved.commanders.flatMap((c) => c.colorIdentity))];
 
     out.push({
       slug,
       name,
       commanderNames: resolved.commanders.map((c) => c.name),
-      colorIdentity: [...new Set(resolved.commanders.flatMap((c) => c.colorIdentity))],
+      colorIdentity,
       uniqueCards: summary?.uniqueCards ?? cards.length,
       modeledCards: summary?.modeled ?? 0,
+      archetypeTag:
+        resolved.archetypeTag ??
+        inferArchetype({
+          commanders: resolved.commanders,
+          companion: resolved.companion,
+          cards: resolved.cards.map((entry) => ({ card: entry.card, quantity: entry.quantity })),
+          colorIdentity,
+        }).tag,
       text,
     });
   }

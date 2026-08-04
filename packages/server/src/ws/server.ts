@@ -9,12 +9,9 @@
 import { isClientToServerMessage } from '@mtg/shared';
 import type {
   ClientToServerMessage,
-  GameMode,
   GameStartedPayload,
-  PlaybackMode,
-  ProviderKind,
-  SeatSource,
   ServerToClientMessage,
+  StartGamePayload,
 } from '@mtg/shared';
 import type { ServerWebSocket } from 'bun';
 import type { OracleIndex } from '../cards/oracle-index';
@@ -99,6 +96,32 @@ export class GameServer {
           if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           return Response.json({ decks: this.deps.store.stats().deckStatistics() });
         }
+        const annotationMatch = /^\/api\/games\/([^/]+)\/annotations$/.exec(url.pathname);
+        if (annotationMatch !== null) {
+          if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          const gameId = decodeURIComponent(annotationMatch[1] ?? '');
+          // Same lock as the debug route: in an unfinished player game this would hand the human
+          // exactly the opponent reasoning the live stream is withholding (ADR 0022 §3).
+          if (
+            this.startedPayload?.gameId === gameId &&
+            this.session?.getGameMode() === 'singlePlayer' &&
+            this.session.runner.getStatus() !== 'finished'
+          ) {
+            return Response.json(
+              { message: 'AI reasoning unlocks after the player game ends.' },
+              { status: 403 },
+            );
+          }
+          return Response.json({ annotations: this.deps.store.stats().gameAnnotations(gameId) });
+        }
+        const reflectionMatch = /^\/api\/games\/([^/]+)\/reflections$/.exec(url.pathname);
+        if (reflectionMatch !== null) {
+          if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          const gameId = decodeURIComponent(reflectionMatch[1] ?? '');
+          // No single-player lock here, unlike the two routes above: a reflection is only ever
+          // written after the game has ended, so an unfinished game has nothing to leak.
+          return Response.json({ reflections: this.deps.store.stats().gameReflections(gameId) });
+        }
         const debugMatch = /^\/api\/games\/([^/]+)\/(debug|export)$/.exec(url.pathname);
         if (debugMatch !== null) {
           if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
@@ -177,16 +200,7 @@ export class GameServer {
           });
           return;
         }
-        await this.startGame(
-          socket,
-          message.payload.seats,
-          message.payload.providerKind,
-          message.payload.seed,
-          message.payload.playbackMode,
-          message.payload.paceMs,
-          message.payload.gameMode,
-          message.payload.humanSeat,
-        );
+        await this.startGame(socket, message.payload);
         return;
 
       case 'jumpToTurn':
@@ -336,18 +350,20 @@ export class GameServer {
     return this.session;
   }
 
+  /**
+   * Takes the whole `startGame` payload rather than a positional parameter per field: the list
+   * had already reached eight, and every new option (game mode, pace, reflection) added another
+   * indistinguishable string or boolean to the call site.
+   */
   private async startGame(
     socket: ServerWebSocket<SocketData>,
-    seats: readonly SeatSource[],
-    providerKind: ProviderKind,
-    requestedSeed?: string,
-    playbackMode?: PlaybackMode,
-    paceMs?: number,
-    requestedMode?: GameMode,
-    requestedHumanSeat?: string,
+    payload: StartGamePayload,
   ): Promise<void> {
+    const { seats, providerKind, playbackMode, paceMs } = payload;
+    const requestedMode = payload.gameMode;
+    const requestedHumanSeat = payload.humanSeat;
     // Reruns use a fresh seed; the old one is still stored with its game (brief §4).
-    const seed = requestedSeed ?? crypto.randomUUID().slice(0, 8);
+    const seed = payload.seed ?? crypto.randomUUID().slice(0, 8);
 
     if (seats.length !== SEAT_COUNT) {
       this.sendTo(socket, {
@@ -400,6 +416,9 @@ export class GameServer {
       store: this.deps.store,
       ...(playbackMode !== undefined && { playbackMode }),
       ...(paceMs !== undefined && { livePaceMs: paceMs }),
+      ...(payload.reflectionEnabled !== undefined && {
+        reflectionEnabled: payload.reflectionEnabled,
+      }),
       send: (message) => {
         if (gameMode === 'singlePlayer') {
           if (this.playerSocket !== null) this.sendTo(this.playerSocket, message);

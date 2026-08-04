@@ -99,6 +99,9 @@ export type {
   SpectatorCommander,
   SpectatorStackObject,
   SpectatorLogLine,
+  AiAnnotation,
+  AiReflection,
+  ReflectionMoment,
   CommanderDamageEntry,
 } from './spectator';
 
@@ -131,6 +134,7 @@ export type {
   SessionPausedPayload,
   ReplayUnlockedPayload,
   GameOverPayload,
+  GameReflectionsPayload,
   ErrorPayload,
   StartGamePayload,
   JumpToTurnPayload,

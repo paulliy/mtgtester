@@ -8,6 +8,8 @@ import { CLIENT_TO_SERVER_TYPES, SERVER_TO_CLIENT_TYPES, isClientToServerMessage
 
 describe('protocol message names', () => {
   it('includes the Phase 5 debug-stream extension alongside the brief §11 messages', () => {
+    // `gameReflections` is the one addition ADR 0012's "ride on an existing payload" rule does not
+    // cover: commentary arrives *after* `gameOver` by design, so it cannot be a field on it.
     expect([...SERVER_TO_CLIENT_TYPES]).toEqual([
       'gameStarted',
       'stateSnapshot',
@@ -21,6 +23,7 @@ describe('protocol message names', () => {
       'sessionPaused',
       'replayUnlocked',
       'gameOver',
+      'gameReflections',
       'error',
     ]);
     expect([...CLIENT_TO_SERVER_TYPES]).toEqual([
@@ -139,6 +142,27 @@ describe('isClientToServerMessage', () => {
         },
       }),
     ).toBe(false);
+    // `reflectionEnabled` turns on billed calls, so a frame must not smuggle in a truthy string.
+    expect(
+      isClientToServerMessage({
+        type: 'startGame',
+        payload: {
+          seats: [{ kind: 'pool' }],
+          providerKind: 'ai',
+          reflectionEnabled: 'yes',
+        },
+      }),
+    ).toBe(false);
+    expect(
+      isClientToServerMessage({
+        type: 'startGame',
+        payload: {
+          seats: [{ kind: 'pool' }],
+          providerKind: 'ai',
+          reflectionEnabled: true,
+        },
+      }),
+    ).toBe(true);
     expect(
       isClientToServerMessage({
         type: 'setPlaybackMode',

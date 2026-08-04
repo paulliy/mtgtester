@@ -10,12 +10,16 @@ import { GameRecorder, type SqliteLike } from './games';
 import { StatsRepository } from './stats';
 import { MIGRATIONS_SQL, SCHEMA_SQL } from './schema';
 
+/** Where a deck's archetype tag came from (ADR 0022 §6). Only `manual` is safe from a backfill. */
+export type ArchetypeSource = 'manual' | 'default' | 'heuristic' | 'inferred';
+
 export interface DeckRow {
   id: string;
   name: string | null;
   sourceUrl: string | null;
   sourceType: DeckSourceType;
   archetypeTag: string;
+  archetypeSource: ArchetypeSource;
   createdAt: string;
 }
 
@@ -69,16 +73,40 @@ export class GameStore {
     sourceUrl: string | null;
     sourceType: DeckSourceType;
     archetypeTag: string;
+    /** Defaults to `manual` — the safest assumption, since it is the one a backfill won't touch. */
+    archetypeSource?: ArchetypeSource;
+    /** The feature vector behind a computed tag; null for a manually-entered one. */
+    archetypeFeatures?: unknown;
   }): DeckRow {
     const id = crypto.randomUUID();
     const createdAt = new Date().toISOString();
+    const archetypeSource = deck.archetypeSource ?? 'manual';
     this.db
       .query(
-        `INSERT INTO decks (id, name, source_url, source_type, archetype_tag, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO decks
+           (id, name, source_url, source_type, archetype_tag, created_at,
+            archetype_source, archetype_features_json)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(id, deck.name, deck.sourceUrl, deck.sourceType, deck.archetypeTag, createdAt);
-    return { id, createdAt, ...deck };
+      .run(
+        id,
+        deck.name,
+        deck.sourceUrl,
+        deck.sourceType,
+        deck.archetypeTag,
+        createdAt,
+        archetypeSource,
+        deck.archetypeFeatures === undefined ? null : JSON.stringify(deck.archetypeFeatures),
+      );
+    return {
+      id,
+      createdAt,
+      name: deck.name,
+      sourceUrl: deck.sourceUrl,
+      sourceType: deck.sourceType,
+      archetypeTag: deck.archetypeTag,
+      archetypeSource,
+    };
   }
 
   /**

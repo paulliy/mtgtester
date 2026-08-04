@@ -1,5 +1,6 @@
 /** Phase 5 read models: aggregate deck statistics and one-game debug/export payloads. */
 
+import type { AiAnnotation, AiReflection, ReflectionMoment } from '@mtg/shared';
 import { MANA_METRICS } from '../config/mana-metrics';
 import type { SqliteLike } from './games';
 
@@ -48,6 +49,17 @@ function jsonArray(value: unknown): string[] {
 
 function rows(db: SqliteLike, sql: string, ...args: unknown[]): Row[] {
   return db.query(sql).all(...args) as Row[];
+}
+
+/** A stored `DecisionResponse`, narrowed to the two fields annotations are built from. */
+function parseResponse(value: unknown): { note?: unknown; turnStrategy?: { intent?: unknown } } | null {
+  if (typeof value !== 'string') return null;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return typeof parsed === 'object' && parsed !== null ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 function first(db: SqliteLike, sql: string, ...args: unknown[]): Row | null {
@@ -165,4 +177,105 @@ export class StatsRepository {
       manaMetrics: rows(this.db, `SELECT * FROM mana_metrics WHERE game_id = ? ORDER BY seat, turn`, gameId),
     };
   }
+
+  /**
+   * Reasoning annotations for a finished game (ADR 0022), rebuilt from the AI calls that reached
+   * a submitted decision. This is what makes reasoning survive a page reload — the live stream
+   * delivers each note once, and nothing else persists it.
+   */
+  gameAnnotations(gameId: string): AiAnnotation[] {
+    const calls = rows(
+      this.db,
+      `SELECT seat, model, source, turn, anchor_sequence, response_json
+         FROM ai_calls
+        WHERE game_id = ? AND anchor_sequence IS NOT NULL
+        ORDER BY anchor_sequence`,
+      gameId,
+    );
+
+    const annotations: AiAnnotation[] = [];
+    for (const call of calls) {
+      const parsed = parseResponse(call['response_json']);
+      if (parsed === null) continue;
+      const strategy = parsed.turnStrategy;
+      // A strategist row carries its reasoning as the plan's standing intent; every other row
+      // carries the per-decision note.
+      const text =
+        typeof strategy?.intent === 'string' && strategy.intent.length > 0
+          ? strategy.intent
+          : typeof parsed.note === 'string'
+            ? parsed.note
+            : '';
+      if (text.trim().length === 0) continue;
+      const model = call['model'];
+      annotations.push({
+        sequence: number(call['anchor_sequence']),
+        turn: number(call['turn']),
+        seat: `P${number(call['seat'])}`,
+        kind: call['source'] === 'strategist' ? 'strategy' : 'decision',
+        text,
+        source: typeof call['source'] === 'string' ? call['source'] : 'primary',
+        ...(typeof model === 'string' ? { model } : {}),
+      });
+    }
+    return annotations;
+  }
+
+  /**
+   * Post-game reviews for a finished game (ADR 0022 §7), so commentary survives a page reload and
+   * a historical game can be read back. Ordered by seat, not by when the model happened to answer.
+   */
+  gameReflections(gameId: string): AiReflection[] {
+    const stored = rows(
+      this.db,
+      `SELECT seat, model, position, summary, detail_json
+         FROM game_reflections WHERE game_id = ? ORDER BY seat`,
+      gameId,
+    );
+
+    return stored.map((row) => {
+      const detail = parseDetail(row['detail_json']);
+      const model = row['model'];
+      return {
+        seat: `P${number(row['seat'])}`,
+        position: number(row['position']),
+        summary: String(row['summary'] ?? ''),
+        keyMistakes: moments(detail.keyMistakes),
+        keyPlays: moments(detail.keyPlays),
+        threatRead: typeof detail.threatRead === 'string' ? detail.threatRead : '',
+        model: typeof model === 'string' ? model : '',
+      };
+    });
+  }
+}
+
+/** The JSON blob behind a stored reflection. Shape is not trusted — the row may predate a change. */
+function parseDetail(value: unknown): {
+  keyMistakes?: unknown;
+  keyPlays?: unknown;
+  threatRead?: unknown;
+} {
+  if (typeof value !== 'string') return {};
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function moments(value: unknown): ReflectionMoment[] {
+  if (!Array.isArray(value)) return [];
+  const result: ReflectionMoment[] = [];
+  for (const entry of value) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const item = entry as { turn?: unknown; what?: unknown; better?: unknown };
+    if (typeof item.what !== 'string' || item.what.length === 0) continue;
+    result.push({
+      turn: number(item.turn),
+      what: item.what,
+      ...(typeof item.better === 'string' && item.better.length > 0 ? { better: item.better } : {}),
+    });
+  }
+  return result;
 }

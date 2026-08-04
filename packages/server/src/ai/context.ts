@@ -3,7 +3,7 @@
  * Optimized to produce minified, token-compact OpenAI-compatible messages.
  */
 
-import type { DecisionRequest, PlayerView, TurnStrategy } from '@mtg/shared';
+import type { DecisionRequest, PlayerId, PlayerView, TurnStrategy } from '@mtg/shared';
 import { RULES_PRIMER } from './primer';
 
 export interface OpenAiMessage {
@@ -136,18 +136,32 @@ export function assemblePrompt(
   };
 }
 
-/** Build the once-per-turn strategist prompt while preserving the PlayerView anti-cheat boundary. */
+/**
+ * Build the once-per-turn strategist prompt while preserving the PlayerView anti-cheat boundary.
+ *
+ * `deckArchetype` is the deciding seat's **own** inferred archetype (ADR 0022 §5) — what its deck
+ * is trying to do. Only its own: an archetype is derived from a full 99-card list, which is hidden
+ * information for every other seat (brief §7.1). Passing an opponent's tag here would leak their
+ * decklist just as surely as showing their hand.
+ */
 export function assembleStrategistPrompt(
   request: DecisionRequest,
   view: PlayerView,
   recentDecisions: readonly RecentSeatDecision[],
+  deckArchetype?: string,
 ): AiPrompt {
   const base = assemblePrompt(request, view);
   const payload = JSON.parse(base.messages[1]!.content) as Record<string, unknown>;
   payload['yourRecentDecisions'] = recentDecisions;
+  if (deckArchetype !== undefined && deckArchetype.length > 0) {
+    payload['yourDeckArchetype'] = deckArchetype;
+  }
   payload['strategyTask'] = {
     horizon: 'the active player full turn, from precombat main through ending',
     requirements: [
+      ...(deckArchetype !== undefined && deckArchetype.length > 0
+        ? ['play to yourDeckArchetype — it is what this deck is built to do']
+        : []),
       'think ahead about land and spell sequencing',
       'rank public threats and choose attack targets',
       'decide what mana or interaction to hold up',
@@ -160,7 +174,92 @@ export function assembleStrategistPrompt(
 
 STRATEGIST ROLE: Think carefully across the whole active turn before answering. You are not choosing an engine action. Return exactly:
 {"actionId":0,"turnStrategy":{"intent":"one concise standing intent","threatOrder":["P2"],"manaPlan":"concise sequencing and held-mana plan","plannedActions":[{"type":"playLand","name":"Card name","phase":"precombatMain","step":null}]}}
-Use only information in this PlayerView. Other players' hidden cards and reasoning are unknown. plannedActions are non-authoritative intentions and will execute only if an exact engine-generated legal option exists.`;
+Use only information in this PlayerView. Other players' hidden cards, decklists, and reasoning are unknown — yourDeckArchetype describes YOUR deck only, never theirs. plannedActions are non-authoritative intentions and will execute only if an exact engine-generated legal option exists.`;
+  return {
+    messages: [
+      { role: 'system', content: instruction },
+      { role: 'user', content: userJson },
+    ],
+    estimatedTokens: Math.ceil((instruction.length + userJson.length) / 4),
+  };
+}
+
+/** Everything one seat is allowed to know about the game it just played. */
+export interface ReflectionContext {
+  seat: PlayerId;
+  /** The seat's own archetype — its own only, for the reason `assembleStrategistPrompt` gives. */
+  archetypeTag?: string;
+  /** 1-based finishing position; 0 when the game did not finish. */
+  position: number;
+  seatCount: number;
+  lossReason: string | null;
+  turnCount: number;
+  winnerSeat: PlayerId | null;
+  /**
+   * The final board **as this seat saw it** — `Engine.view(seat)`, not `spectatorState()`. The
+   * anti-cheat boundary is not relaxed just because the game is over: a reflection written with
+   * knowledge the seat never had produces "I should have known about the counterspell", which is
+   * hindsight, not a lesson (ADR 0022 §7).
+   */
+  view: PlayerView;
+  /** The seat's own sampled decision history, oldest first. */
+  decisions: readonly RecentSeatDecision[];
+  /** Pre-condensed public log lines, already filtered to what this seat could legally see. */
+  publicLog: readonly string[];
+}
+
+/**
+ * Build the once-per-game, once-per-seat retrospective prompt.
+ *
+ * Note what is *not* here: no `legalActions` (there is nothing left to choose), no other seat's
+ * hand or library, and no omniscient final state. The seat reviews its own game from its own
+ * evidence.
+ */
+export function assembleReflectionPrompt(context: ReflectionContext): AiPrompt {
+  const { view } = context;
+  const payload = {
+    outcome: {
+      yourSeat: context.seat,
+      finishedPosition: context.position === 0 ? 'did not finish' : context.position,
+      seatCount: context.seatCount,
+      winner: context.winnerSeat,
+      turnCount: context.turnCount,
+      lossReason: context.lossReason,
+    },
+    ...(context.archetypeTag !== undefined && context.archetypeTag.length > 0
+      ? { yourDeckArchetype: context.archetypeTag }
+      : {}),
+    yourFinalPosition: {
+      life: view.life,
+      commanders: view.commanders,
+      handSize: view.hand.length,
+      battlefield: view.battlefield
+        .filter((permanent) => permanent.controller === context.seat)
+        .map((permanent) => permanent.name),
+    },
+    opponentsAsYouSawThem: view.opponents.map((opponent) => ({
+      seat: opponent.seat,
+      life: opponent.life,
+      hand: opponent.handSize,
+      commanders: opponent.commanders,
+      commanderDamageToYou: opponent.commanderDamageDealtToYou,
+    })),
+    yourDecisions: context.decisions,
+    whatYouSaw: context.publicLog,
+  };
+  const userJson = JSON.stringify(payload);
+
+  // Deliberately NOT `RULES_PRIMER`. That primer exists to make a model pick an `actionId` from a
+  // legal menu — it opens with "choose the best actionId" and closes with a decision-shaped
+  // required output format, both of which directly contradict the instruction below. There is no
+  // menu here and no rules question to adjudicate, only a record to comment on, so a review gets a
+  // review brief instead. It also saves the primer's tokens on every seat, every game.
+  const instruction = `You are reviewing a completed 4-player Commander (EDH) game of Magic: The Gathering. Standard Commander rules applied: 40 starting life, 21 commander damage, commander tax of {2} per recast.
+
+REVIEW ROLE: The game is over and nothing you say changes it. You piloted seat ${context.seat}. Review your own play honestly and specifically, citing turns. Return exactly:
+{"summary":"2-4 sentences on how your game went and why","keyMistakes":[{"turn":7,"what":"what you did","better":"what you should have done"}],"keyPlays":[{"turn":9,"what":"what worked and why"}],"threatRead":"who the real threat was and when you should have known"}
+Use only the evidence given: it is what YOUR seat could see, and you still do not know any other player's hidden cards or decklist. Do not invent cards or turns that are not in the record. At most 5 keyMistakes and 3 keyPlays; if you played well, return fewer or none rather than manufacturing them.`;
+
   return {
     messages: [
       { role: 'system', content: instruction },

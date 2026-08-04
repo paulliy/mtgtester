@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { SpectatorPermanent } from '@mtg/shared';
 import CardImage from './CardImage.vue';
+import { useBoardAnchors } from '../composables/useBoardAnchors';
+import { useBoardFlash } from '../composables/useBoardFlash';
+import { STRIKE_MS, useCombatStrikes } from '../composables/useCombatStrikes';
 import { isTokenTypeLine } from '../lib/card';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
@@ -16,10 +19,56 @@ const props = withDefaults(
 );
 
 const cardPreview = useCardPreviewStore();
+const { registerAnchor, unregisterAnchor } = useBoardAnchors();
 
 const isCreature = computed(() => props.permanent.power !== null);
 const isToken = computed(() => isTokenTypeLine(props.permanent.typeLine));
 const isAttacking = computed(() => props.permanent.attacking !== null);
+
+/** Board-change feedback (§9.8): a brief flash when this permanent takes or sheds damage. */
+const damageFlash = useBoardFlash(
+  () => props.permanent.damageMarked,
+  (prev, next) => (next > prev ? 'damage' : null),
+);
+
+/**
+ * MTGA-style attack animation: when this permanent is the striking side of a combat damage event
+ * (`useCombatStrikes`), lunge toward its target and back. The `striking` class is toggled off and
+ * on across a tick rather than keyed/remounted, so a retrigger (e.g. first strike then regular
+ * damage) restarts the CSS animation without tearing down the card image mid-hover.
+ */
+const { strikeFor } = useCombatStrikes();
+const strike = computed(() => strikeFor(props.permanent.id));
+const striking = ref(false);
+watch(
+  () => strike.value?.key,
+  async (key) => {
+    if (key === undefined) return;
+    striking.value = false;
+    await nextTick();
+    striking.value = true;
+    setTimeout(() => {
+      striking.value = false;
+    }, STRIKE_MS);
+  },
+);
+
+const tileEl = ref<HTMLElement | null>(null);
+function setTileEl(el: Element | null): void {
+  tileEl.value = el instanceof HTMLElement ? el : null;
+}
+/** Anchor id is the permanent's object id, so the combat overlay can draw a line to it. */
+watch(
+  () => props.permanent.id,
+  (next, prev) => {
+    if (prev !== undefined && prev !== next) unregisterAnchor(prev);
+    if (tileEl.value !== null) registerAnchor(next, tileEl.value);
+  },
+);
+watch(tileEl, (el) => {
+  if (el !== null) registerAnchor(props.permanent.id, el);
+});
+onBeforeUnmount(() => unregisterAnchor(props.permanent.id));
 
 /** Counters render as `+1/+1×2`, which is denser than one chip per kind. */
 const counterText = computed(() =>
@@ -55,8 +104,10 @@ function onLeave(): void {
 
 <template>
   <div
+    :ref="setTileEl"
     class="tile"
-    :class="{ creature: isCreature, tapped: permanent.tapped, attacking: isAttacking }"
+    :class="{ creature: isCreature, tapped: permanent.tapped, attacking: isAttacking, striking }"
+    :style="strike ? { '--strike-dx': strike.dx + 'px', '--strike-dy': strike.dy + 'px', '--strike-ms': `${STRIKE_MS}ms` } : undefined"
     @mouseenter="onEnter"
     @mousemove="onMove"
     @mouseleave="onLeave"
@@ -76,7 +127,7 @@ function onLeave(): void {
       {{ permanent.keywords.join(' · ') }}
     </div>
     <div class="overlay">
-      <span v-if="isCreature" class="pt">
+      <span v-if="isCreature" class="pt" :class="{ 'flash-damage': damageFlash === 'damage' }">
         {{ permanent.power }}/{{ permanent.toughness }}
         <span v-if="permanent.damageMarked > 0" class="dmg">−{{ permanent.damageMarked }}</span>
       </span>
@@ -90,7 +141,7 @@ function onLeave(): void {
 .tile {
   position: relative;
   width: var(--chip-w, 108px);
-  transition: transform 120ms ease, width 150ms ease;
+  transition: transform 120ms ease, width 150ms ease, opacity 200ms ease;
 }
 .tile.creature {
   box-shadow: 0 0 0 2px var(--accent);
@@ -106,6 +157,28 @@ function onLeave(): void {
 }
 .tile.attacking :deep(.card-image) {
   outline: 1px solid var(--danger);
+}
+.tile.striking {
+  animation-name: strike;
+  animation-duration: var(--strike-ms, 520ms);
+  animation-timing-function: cubic-bezier(0.22, 0.68, 0.32, 1.15);
+  animation-fill-mode: both;
+  z-index: 6;
+}
+@keyframes strike {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  18% {
+    transform: translate(0, -8px) scale(1.06);
+  }
+  48%,
+  62% {
+    transform: translate(var(--strike-dx, 0px), var(--strike-dy, 0px)) scale(1.14);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
 }
 .stack-count-badge {
   position: absolute;
@@ -170,6 +243,10 @@ function onLeave(): void {
   color: #fff;
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
   white-space: nowrap;
+  border-radius: 3px;
+}
+.pt.flash-damage {
+  animation: flash 0.8s ease-out;
 }
 .dmg {
   color: #ff8a80;

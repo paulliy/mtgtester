@@ -25,6 +25,7 @@
     "dev:web": "bun run --cwd apps/web dev",
     "serve": "bun run packages/server/src/cli/serve.ts",
     "decks": "bun run packages/server/src/cli/import-decks.ts",
+    "retag": "bun run packages/server/src/cli/retag.ts",
     "pool": "bun run packages/server/src/cli/pool.ts",
     "modelled-cards": "bun run packages/server/src/cli/modelled-cards.ts",
     "play-decks": "bun run packages/server/src/cli/play-decks.ts",

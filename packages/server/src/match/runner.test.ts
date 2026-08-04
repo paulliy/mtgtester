@@ -386,3 +386,58 @@ describe('MatchRunner — persistence hooks', () => {
     expect(recorder.markStatus).toHaveBeenCalledWith('abandoned');
   });
 });
+
+describe('MatchRunner — decision anchor sequences (ADR 0022)', () => {
+  it('anchors each decision to the first event that decision produced', async () => {
+    const engine = makeEngine();
+    const anchors: number[] = [];
+    /** `[claimed anchor, sequence the decision's events actually started at]` pairs. */
+    const firstOfEachRun: Array<[number, number]> = [];
+    let previous: number | null = null;
+
+    const runner = new MatchRunner({
+      engine,
+      gameId: 'g-test',
+      seed: 'runner-test',
+      seats: SEATS,
+      providerFor: randomProviders(),
+      // High enough that the compute-ahead cap never parks the pump — this test is about the
+      // anchor, and a parked runner simply stops producing decisions to check.
+      lookaheadTurns: 60,
+      // Assertions are collected, never thrown from inside the callback: the runner catches
+      // everything its pump raises and turns it into a halt, which would swallow the failure
+      // and surface as an unexplained timeout instead.
+      onDecision: (_request, _response, anchorSequence) => {
+        // Consecutive anchors partition the event stream: everything in [previous, current) is
+        // what the *previous* decision produced, so that run must begin exactly at `previous`.
+        // An off-by-one here would hang every note on the wrong log line.
+        if (previous !== null) {
+          const produced = engine
+            .eventsSince(previous)
+            .filter((event) => event.sequence < anchorSequence);
+          if (produced.length > 0) firstOfEachRun.push([previous, produced[0]?.sequence ?? -1]);
+        }
+        previous = anchorSequence;
+        anchors.push(anchorSequence);
+      },
+    });
+
+    const run = runner.run();
+    await waitFor(() => {
+      expect(anchors.length).toBeGreaterThan(3);
+    });
+    runner.abandon();
+    await run;
+
+    expect(firstOfEachRun.length).toBeGreaterThan(0);
+    // The anchor must never point *past* the decision's own events — that would attach the
+    // reasoning to a later play than the one it explains.
+    expect(firstOfEachRun.filter(([anchor, first]) => first < anchor)).toEqual([]);
+    // And it is exact for every decision after the opening one, where the cursor still sits at
+    // its initial 0 while engine sequences start at 1. Annotations snap forward to the first
+    // visible line, so that one-off lower bound resolves to the same place.
+    expect(firstOfEachRun.slice(1).filter(([anchor, first]) => first !== anchor)).toEqual([]);
+    // A repeated or decreasing anchor would silently stack every seat's reasoning onto one line.
+    expect(anchors).toEqual([...anchors].sort((a, b) => a - b));
+  });
+});

@@ -39,6 +39,34 @@ const STEPS = new Set<Step>([
   'cleanup',
 ]);
 
+/**
+ * Ceiling on a seat's whole-game decision digest (ADR 0022 §7). `recentBySeat` is capped at
+ * `strategyRecentDecisionLimit` (8) because a tactician only needs the last few moves; a post-game
+ * review needs the arc of the game, which 8 cannot carry.
+ */
+const DIGEST_LIMIT = 80;
+
+/** Combat is where games are decided, so it keeps more per turn than a main phase does. */
+const DIGEST_COMBAT_PER_TURN = 3;
+
+/** A pass is the absence of a decision. Keeping them would fill the digest with nothing. */
+const DIGEST_SKIP_TYPES: ReadonlySet<string> = new Set([
+  'pass',
+  'passAndYieldTurn',
+  'yieldToAbility',
+]);
+
+/**
+ * Halve the resolution of the older half rather than dropping the front of the list. Truncating
+ * the front is the obvious move and the wrong one: a review that cannot see the early game can
+ * only ever comment on the endgame, and "what did I do wrong" is usually a turn-3 question.
+ */
+function thinDigest(list: RecentSeatDecision[]): RecentSeatDecision[] {
+  if (list.length <= DIGEST_LIMIT) return list;
+  const half = Math.floor(list.length / 2);
+  return list.filter((_, index) => index >= half || index % 2 === 0);
+}
+
 function cleanPlan(raw: TurnStrategy | undefined): TurnStrategy | null {
   if (raw === undefined || typeof raw.intent !== 'string' || !Array.isArray(raw.plannedActions)) {
     return null;
@@ -101,6 +129,10 @@ function cleanPlan(raw: TurnStrategy | undefined): TurnStrategy | null {
 export class StrategyCoordinator {
   private readonly turnPlan = new TurnPlanManager();
   private readonly recentBySeat = new Map<string, RecentSeatDecision[]>();
+  /** Whole-game sampled decision history per seat, for the post-game review (ADR 0022 §7). */
+  private readonly digestBySeat = new Map<string, RecentSeatDecision[]>();
+  /** How many digest entries a `seat:turn:phase` has already contributed. */
+  private readonly digestCounts = new Map<string, number>();
   private plannedTurn = -1;
   private plannedPlayer: string | null = null;
   private strategy: TurnStrategy | null = null;
@@ -112,6 +144,11 @@ export class StrategyCoordinator {
   private activeGeneration = 0;
   /** The in-flight (or last-settled) strategist call, for tests and turn-boundary bookkeeping. */
   private inFlight: Promise<void> | null = null;
+  /**
+   * Fires when a strategist plan installs, carrying its standing intent (ADR 0022). The session
+   * turns this into a log annotation; nothing here depends on it being set.
+   */
+  onStrategy?: (turn: number, activePlayer: PlayerId, intent: string, model: string) => void;
 
   constructor(
     private readonly strategistClient: AiClient | null,
@@ -121,6 +158,12 @@ export class StrategyCoordinator {
     private readonly logger?: AiCallLogger,
     /** Never plan this seat's own turn — no tactician ever consumes it (see `guidanceFor`). */
     private readonly humanSeat?: PlayerId | null,
+    /**
+     * Each seat's own inferred archetype (ADR 0022 §5), so the strategist knows what the deck it
+     * is piloting is built to do. Read only for the seat being planned — an archetype comes from
+     * a full decklist, so handing one seat another's would leak hidden information (brief §7.1).
+     */
+    private readonly deckArchetypes?: ReadonlyMap<PlayerId, string>,
   ) {
     this.turnPlan.onInvalidated = () => {
       this.strategy = null;
@@ -210,7 +253,12 @@ export class StrategyCoordinator {
     const activePlayer = strategyRequest.activePlayer;
     const view = this.engine.view(activePlayer);
     const recent = this.recentFor(activePlayer);
-    const prompt = assembleStrategistPrompt(strategyRequest, view, recent);
+    const prompt = assembleStrategistPrompt(
+      strategyRequest,
+      view,
+      recent,
+      this.deckArchetypes?.get(activePlayer),
+    );
 
     try {
       const result = await this.queue.enqueue(() =>
@@ -233,6 +281,7 @@ export class StrategyCoordinator {
       this.strategy = strategy;
       this.turnPlan.recordPlan(strategyRequest, strategy.plannedActions, this.engine);
       this.logger?.log(strategyRequest, result, false, false, 'strategist');
+      this.onStrategy?.(strategyRequest.turn, activePlayer, strategy.intent, result.meta.model);
       this.engine.addDebug(
         'decision',
         `strategist call completed for ${activePlayer} [model: ${result.meta.model}, latency: ${result.meta.latencyMs}ms, tokens: ${result.meta.promptTokens}+${result.meta.responseTokens}]`,
@@ -269,6 +318,7 @@ export class StrategyCoordinator {
   ): void {
     const chosen = request.legalActions.find((action) => action.id === response.actionId);
     if (chosen !== undefined) {
+      this.recordDigest(request, chosen.type, chosen.description);
       const recent = this.recentBySeat.get(request.decidingPlayer) ?? [];
       recent.push({ turn: request.turn, phase: request.phase, action: chosen.description });
       const limit = this.config.strategyRecentDecisionLimit;
@@ -309,5 +359,29 @@ export class StrategyCoordinator {
 
   private recentFor(playerId: string): readonly RecentSeatDecision[] {
     return this.recentBySeat.get(playerId) ?? [];
+  }
+
+  /**
+   * Sample one decision into the seat's whole-game digest: the first real action of each main
+   * phase, and up to three combat decisions per turn. Passes are dropped. A full game runs to
+   * thousands of decisions, most of them "pass"; the sampling is what makes the arc of a game fit
+   * in a prompt at all.
+   */
+  private recordDigest(request: DecisionRequest, type: string, description: string): void {
+    if (DIGEST_SKIP_TYPES.has(type)) return;
+    const key = `${request.decidingPlayer}:${request.turn}:${request.phase}`;
+    const limit = request.phase === 'combat' ? DIGEST_COMBAT_PER_TURN : 1;
+    const seen = this.digestCounts.get(key) ?? 0;
+    if (seen >= limit) return;
+    this.digestCounts.set(key, seen + 1);
+
+    const digest = this.digestBySeat.get(request.decidingPlayer) ?? [];
+    digest.push({ turn: request.turn, phase: request.phase, action: description });
+    this.digestBySeat.set(request.decidingPlayer, thinDigest(digest));
+  }
+
+  /** The seat's sampled decision history for the whole game, oldest first (ADR 0022 §7). */
+  digestFor(playerId: string): readonly RecentSeatDecision[] {
+    return this.digestBySeat.get(playerId) ?? [];
   }
 }

@@ -6,9 +6,16 @@
  */
 
 import { ALL_COLORS } from '@mtg/shared';
-import type { Color, DeckSnapshot, DeckSourceType, ValidationIssue } from '@mtg/shared';
+import type {
+  Color,
+  DeckSnapshot,
+  DeckSourceType,
+  ResolvedDeck,
+  ValidationIssue,
+} from '@mtg/shared';
 import type { OracleIndex } from '../cards/oracle-index';
-import type { GameStore } from '../db';
+import type { ArchetypeSource, GameStore } from '../db';
+import { inferArchetype, type ArchetypeResult } from './archetype';
 import type { BannedList } from './banned';
 import { importDeck } from './source';
 import { DeckImportError } from './errors';
@@ -24,6 +31,8 @@ export interface DeckPipelineResult {
   commanderNames: string[];
   colorIdentity: Color[];
   archetypeTag: string | null;
+  /** Where `archetypeTag` came from (ADR 0022 §6) — the UI shows an `auto` chip for computed ones. */
+  archetypeSource: ArchetypeSource;
   /** Total cards counted toward the 100/101 rule (commanders + companion + main). */
   cardCount: number;
   status: DeckPipelineStatus;
@@ -39,6 +48,12 @@ export interface PipelineDeps {
   banned: BannedList;
   /** When provided and the deck is valid, the deck + snapshot are persisted. */
   store?: GameStore;
+  /**
+   * Optional AI polish for a heuristic tag (ADR 0022 §5, Stage 2). Returning `null` — which it
+   * does whenever it is disabled or anything goes wrong — leaves the heuristic tag standing, so
+   * a deck import never depends on it.
+   */
+  refineArchetype?: (result: ArchetypeResult, deck: ResolvedDeck) => Promise<string | null>;
 }
 
 /** WUBRG-ordered color identity of the commanders, e.g. `["W","U","B"]`. */
@@ -66,6 +81,7 @@ export async function runDeckPipeline(
     commanderNames: [],
     colorIdentity: [],
     archetypeTag: null,
+    archetypeSource: 'default',
     cardCount: 0,
     status: 'importError',
     unresolvedNames: [],
@@ -101,8 +117,36 @@ export async function runDeckPipeline(
   }
 
   const identity = deckColorIdentity(resolved.commanders);
+  // §8.4's contract is that the field is the user's: an explicit tag short-circuits inference
+  // entirely rather than being "improved". Precedence is user > heuristic > default.
+  const inferred =
+    resolved.archetypeTag === null
+      ? inferArchetype({
+          commanders: resolved.commanders,
+          companion: resolved.companion,
+          cards: resolved.cards.map((entry) => ({ card: entry.card, quantity: entry.quantity })),
+          colorIdentity: identity,
+        })
+      : null;
+  // Stage 2 polish, when configured. It can only replace a computed tag, never a typed one:
+  // `inferred` is null the moment the user supplied their own.
+  const refined =
+    inferred !== null && deps.refineArchetype !== undefined
+      ? await deps.refineArchetype(inferred, resolved)
+      : null;
   const archetypeTag =
-    resolved.archetypeTag ?? defaultArchetypeTag(identity, parsed.commanderNames);
+    resolved.archetypeTag ??
+    refined ??
+    inferred?.tag ??
+    defaultArchetypeTag(identity, parsed.commanderNames);
+  const archetypeSource: ArchetypeSource =
+    resolved.archetypeTag !== null
+      ? 'manual'
+      : refined !== null
+        ? 'inferred'
+        : inferred !== null
+          ? 'heuristic'
+          : 'default';
   const cardCount =
     resolved.cards.reduce((sum, e) => sum + e.quantity, 0) +
     resolved.commanders.length +
@@ -114,6 +158,7 @@ export async function runDeckPipeline(
     ...partial,
     colorIdentity: identity,
     archetypeTag,
+    archetypeSource,
     cardCount,
     status: validation.valid ? 'valid' : 'invalid',
     issues: validation.issues,
@@ -136,6 +181,8 @@ export async function runDeckPipeline(
       sourceUrl: resolved.sourceUrl,
       sourceType: resolved.sourceType,
       archetypeTag,
+      archetypeSource,
+      ...(inferred !== null ? { archetypeFeatures: inferred.features } : {}),
     });
     const snapshot: Omit<DeckSnapshot, 'id' | 'importedAt'> = {
       deckId: deck.id,

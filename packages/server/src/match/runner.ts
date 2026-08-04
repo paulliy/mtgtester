@@ -99,8 +99,17 @@ export interface MatchRunnerHooks {
   onGameOver?(result: GameResult): void;
   onDecisionPending?(request: DecisionRequest, invalidResponse: string, timeoutMs: number): void;
   onStatusChange?(status: MatchStatus): void;
-  /** Fires after every submitted decision — the hook the AI cost counters ride on. */
-  onDecision?(request: DecisionRequest, response: DecisionResponse): void;
+  /**
+   * Fires after every submitted decision — the hook the AI cost counters ride on.
+   *
+   * `anchorSequence` is where this decision's events begin: it fires after `engine.submit()` but
+   * before `flushEvents()`, so the cursor has not yet moved past what the submit just produced.
+   * Nothing before it belongs to this decision, and it is the exact first sequence for every
+   * decision after the opening one — at the very start the cursor still sits at its initial 0
+   * while engine sequences begin at 1. ADR 0022's annotations snap forward to the first visible
+   * log line at or after it, which resolves that one-off gap to the same place.
+   */
+  onDecision?(request: DecisionRequest, response: DecisionResponse, anchorSequence: number): void;
   /** Newly-created internal diagnostics; persistence happens regardless of this live hook. */
   onDebug?(entries: DebugEntry[]): void;
   /** Fires whenever engine events were flushed, even if none produce a visible log line. */
@@ -208,6 +217,15 @@ export class MatchRunner {
 
   getSnapshotTurns(): number[] {
     return [...this.snapshotTurnList];
+  }
+
+  /**
+   * The sequence the next flushed event will carry. An ADR 0022 annotation with no decision of
+   * its own — the strategist's turn intent, which lands asynchronously — anchors here, so it
+   * appears at the point in the log where it actually started steering play.
+   */
+  nextSequence(): number {
+    return this.eventCursor;
   }
 
   /**
@@ -347,7 +365,9 @@ export class MatchRunner {
       if (this.isAbandoned()) return;
 
       this.opts.engine.submit(response);
-      this.opts.onDecision?.(request, response);
+      // `eventCursor` still points at the first event the submit above produced — `flushEvents()`
+      // below is what advances it. That makes this the decision's exact anchor sequence.
+      this.opts.onDecision?.(request, response, this.eventCursor);
 
       this.onTurnAdvanced();
       this.flushEvents();

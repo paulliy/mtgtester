@@ -104,6 +104,22 @@
   }
 }
 
+/*
+ * Reduced-motion contract (§9.8.4): one blanket override rather than a per-component branch.
+ * Every CSS `animation`/`transition` in the app — life/damage flash, tap fade, attack pulse,
+ * target pulse, and the `<TransitionGroup>` enter/leave used for token/death and stack feedback —
+ * collapses to an imperceptible duration, so the underlying state change (a number, a class, a
+ * DOM node appearing/disappearing) still lands instantly and is still fully readable. The combat
+ * overlay and drag ghost/cursor line are JS-gated separately (`game.reducedMotion` in
+ * `CombatOverlay.vue`), since they aren't pure CSS animations.
+ */
+.reduced-motion,
+.reduced-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);

@@ -12,6 +12,7 @@
  */
 
 import type {
+  AiReflection,
   GameEvent,
   GameMode,
   GameResult,
@@ -228,6 +229,37 @@ export class GameRecorder {
       type: r.event_type,
       payload: JSON.parse(r.payload_json) as Record<string, unknown>,
     }));
+  }
+
+  /**
+   * Persist one seat's post-game review (ADR 0022 §7). Upserts, so a seat that somehow reflects
+   * twice leaves one row rather than a constraint failure — this runs after the game is over and
+   * must never throw into a results screen.
+   */
+  saveReflection(reflection: AiReflection): void {
+    this.db
+      .query(
+        `INSERT INTO game_reflections
+           (game_id, seat, model, position, summary, detail_json, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(game_id, seat) DO UPDATE SET
+           model = excluded.model, position = excluded.position,
+           summary = excluded.summary, detail_json = excluded.detail_json,
+           created_at = excluded.created_at`,
+      )
+      .run(
+        this.gameId,
+        seatIndex(reflection.seat),
+        reflection.model,
+        reflection.position,
+        reflection.summary,
+        JSON.stringify({
+          keyMistakes: reflection.keyMistakes,
+          keyPlays: reflection.keyPlays,
+          threatRead: reflection.threatRead,
+        }),
+        new Date().toISOString(),
+      );
   }
 
   /**

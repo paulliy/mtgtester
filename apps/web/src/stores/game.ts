@@ -9,6 +9,8 @@
 import { computed, ref, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
 import type {
+  AiAnnotation,
+  AiReflection,
   ComputeHaltedPayload,
   DebugFlags,
   DecisionPendingPayload,
@@ -28,6 +30,8 @@ import type {
   TargetChoice,
 } from '@mtg/shared';
 import { GameSocket, type ConnectionState } from '../lib/socket';
+import { resetBoardAnchors } from '../composables/useBoardAnchors';
+import { resetCombatStrikes } from '../composables/useCombatStrikes';
 
 /** Log lines kept in memory. A long game emits thousands; the scroller only shows the tail. */
 const MAX_LOG_LINES = 4_000;
@@ -86,6 +90,19 @@ export const useGameStore = defineStore('game', () => {
   const autoConfirmActions = ref(
     typeof localStorage !== 'undefined' && localStorage.getItem('mtg-player-auto-confirm') === 'true',
   );
+  /**
+   * Suppresses combat-overlay lines, drag ghost/cursor line, and (via a global CSS override)
+   * every CSS animation/transition — defaulted from the OS setting, player-overridable. `null`
+   * stored means "never explicitly set"; an explicit choice always wins over the OS query.
+   */
+  const storedReducedMotion =
+    typeof localStorage !== 'undefined' ? localStorage.getItem('mtg-player-reduced-motion') : null;
+  const reducedMotion = ref(
+    storedReducedMotion !== null
+      ? storedReducedMotion === 'true'
+      : typeof window !== 'undefined' &&
+          window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true,
+  );
 
   /**
    * The action-log line the board on screen belongs to, as confirmed by the server. Never set
@@ -101,6 +118,66 @@ export const useGameStore = defineStore('game', () => {
   const apiCost = ref<ApiCost | null>(null);
   const debugFlags = ref<DebugFlags>({ ...DEFAULT_DEBUG_FLAGS });
   const liveDebug = ref<Array<{ turn: number; category: string; message: string }>>([]);
+
+  /**
+   * AI reasoning grouped by the log line it explains (ADR 0022). A line can carry more than one:
+   * the turn's strategist intent and a tactical note can land on the same sequence.
+   */
+  const annotations = ref<Map<number, AiAnnotation[]>>(new Map());
+
+  function addAnnotations(incoming: AiAnnotation[] | undefined): void {
+    if (incoming === undefined || incoming.length === 0) return;
+    const next = new Map(annotations.value);
+    for (const annotation of incoming) {
+      const existing = next.get(annotation.sequence) ?? [];
+      // The same note can arrive twice — live, then again from the history endpoint after a
+      // reload — and duplicating it in the log would read as the model repeating itself.
+      if (existing.some((item) => item.kind === annotation.kind && item.text === annotation.text)) {
+        continue;
+      }
+      next.set(annotation.sequence, [...existing, annotation]);
+    }
+    annotations.value = next;
+  }
+
+  /**
+   * Post-game commentary (ADR 0022 §7). `reflectingSeats` arrives on `gameOver` and says which
+   * seats are *going* to review; `reflections` fills in as each one lands. Two refs rather than
+   * one because "waiting on P3" and "P3 had nothing to say" must look different on screen.
+   */
+  const reflections = ref<AiReflection[]>([]);
+  const reflectingSeats = ref<PlayerId[]>([]);
+  /** True once every seat has answered or failed — a seat with no review is done, not thinking. */
+  const reflectionsComplete = ref(false);
+
+  /** Backfill commentary for a finished game (a reload loses the live `gameReflections`). */
+  async function loadReflections(): Promise<void> {
+    if (gameId.value === null) return;
+    try {
+      const response = await fetch(`/api/games/${encodeURIComponent(gameId.value)}/reflections`);
+      if (!response.ok) return;
+      const loaded = (await response.json()).reflections as AiReflection[];
+      if (loaded.length > 0) {
+        reflections.value = loaded;
+        // Anything stored is finished by definition — reflections are only written after a game.
+        reflectionsComplete.value = true;
+      }
+    } catch {
+      // Commentary is a nicety; the result itself is already on screen.
+    }
+  }
+
+  /** Backfill reasoning for a game already in progress or finished (survives a page reload). */
+  async function loadAnnotations(): Promise<void> {
+    if (gameId.value === null) return;
+    try {
+      const response = await fetch(`/api/games/${encodeURIComponent(gameId.value)}/annotations`);
+      if (!response.ok) return;
+      addAnnotations((await response.json()).annotations as AiAnnotation[]);
+    } catch {
+      // History is a nicety; the live stream is the source of truth.
+    }
+  }
 
   /** Scrubbing backward is free; forward past the frontier is not offered (brief §10.1). */
   const atFrontier = computed(() => viewTurn.value >= frontierTurn.value);
@@ -145,7 +222,16 @@ export const useGameStore = defineStore('game', () => {
         // action in the new log and threw the viewer to wherever that landed.
         activeSequence.value = null;
         heldDecision.value = null;
+        annotations.value = new Map();
+        reflections.value = [];
+        reflectingSeats.value = [];
+        reflectionsComplete.value = false;
         apiCost.value = null;
+        // These two live outside Pinia (module-level registries shared by every board component
+        // — see their own doc comments), so they need an explicit reset here rather than picking
+        // it up for free the way everything above does.
+        resetBoardAnchors();
+        resetCombatStrikes();
         state.value = null;
         playerState.value = null;
         playerAction.value = null;
@@ -173,6 +259,7 @@ export const useGameStore = defineStore('game', () => {
           .slice(-MAX_LOG_LINES);
         frontierTurn.value = Math.max(frontierTurn.value, message.payload.frontierTurn);
         snapshotTurns.value = message.payload.snapshotTurns;
+        addAnnotations(message.payload.annotations);
         break;
 
       case 'decisionPending':
@@ -230,12 +317,22 @@ export const useGameStore = defineStore('game', () => {
         frontierTurn.value = message.payload.frontierTurn;
         viewTurn.value = message.payload.state.turnNumber;
         activeSequence.value = null;
+        // The whole game's AI reasoning arrives at once here — a player game withholds it until
+        // the result is settled, so this is the first moment any of it is legal to show.
+        addAnnotations(message.payload.annotations);
         break;
 
       case 'gameOver':
         gameOver.value = message.payload;
+        reflectingSeats.value = message.payload.reflectingSeats ?? [];
         heldDecision.value = null;
         playerAction.value = null;
+        break;
+
+      case 'gameReflections':
+        // The server re-sends everything it has each time, so this is a replace, not an append.
+        reflections.value = message.payload.reflections;
+        reflectionsComplete.value = message.payload.complete;
         break;
 
       case 'error': {
@@ -273,6 +370,7 @@ export const useGameStore = defineStore('game', () => {
     requestedSeed?: string,
     mode: GameMode = 'spectator',
     selectedHumanSeat?: PlayerId,
+    reflectionEnabled = false,
   ): void {
     connect();
     errors.value = [];
@@ -284,6 +382,9 @@ export const useGameStore = defineStore('game', () => {
       providerKind: kind,
       playbackMode: playbackMode.value,
       paceMs: paceMs.value,
+      // Only sent when asked for, so a game that does not want commentary leaves the server's own
+      // `AI_REFLECTION_ENABLED` default in charge.
+      ...(reflectionEnabled && kind === 'ai' && { reflectionEnabled: true }),
       ...(requestedSeed !== undefined && requestedSeed !== '' && { seed: requestedSeed }),
     };
     socket?.send({
@@ -395,6 +496,11 @@ export const useGameStore = defineStore('game', () => {
     if (typeof localStorage !== 'undefined') localStorage.setItem('mtg-player-auto-confirm', String(value));
   }
 
+  function setReducedMotion(value: boolean): void {
+    reducedMotion.value = value;
+    if (typeof localStorage !== 'undefined') localStorage.setItem('mtg-player-reduced-motion', String(value));
+  }
+
   function resolveHeldDecision(actionId: number): void {
     const held = heldDecision.value;
     if (held === null) return;
@@ -442,8 +548,12 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function setDebugFlags(next: DebugFlags): void {
+    const wasShowingReasoning = debugFlags.value.showAIResponses;
     debugFlags.value = { ...next };
     socket?.send({ type: 'setDebugFlags', payload: { flags: debugFlags.value } });
+    // The live stream only carries notes recorded while the flag was on, so switching it on
+    // mid-game would otherwise show reasoning starting from now with no history behind it.
+    if (!wasShowingReasoning && next.showAIResponses) void loadAnnotations();
   }
 
   function abandonGame(): void {
@@ -480,6 +590,7 @@ export const useGameStore = defineStore('game', () => {
     paceMs,
     confirmRoutineActions,
     autoConfirmActions,
+    reducedMotion,
     halt,
     heldDecision,
     gameOver,
@@ -487,6 +598,12 @@ export const useGameStore = defineStore('game', () => {
     apiCost,
     debugFlags,
     liveDebug,
+    annotations,
+    loadAnnotations,
+    reflections,
+    reflectingSeats,
+    reflectionsComplete,
+    loadReflections,
     activeSequence,
     atFrontier,
     isRunning,
@@ -503,6 +620,7 @@ export const useGameStore = defineStore('game', () => {
     setPace,
     setConfirmRoutineActions,
     setAutoConfirmActions,
+    setReducedMotion,
     resolveHeldDecision,
     submitPlayerAction,
     yieldPlayerAbility,

@@ -146,7 +146,8 @@ export interface SpectatorState {
 
 /**
  * One line of the spectator action log (brief §10.2). Minimal by design: **never** carries AI
- * reasoning, which is debug-log-only (brief §7.3, §15).
+ * reasoning. Reasoning travels beside the log as `AiAnnotation`, never inside this shape — see
+ * that type for why (ADR 0022, superseding brief §15's debug-log-only rule).
  */
 export interface SpectatorLogLine {
   /** Matches `GameEvent.sequence`, so the timeline can seek to an exact point. */
@@ -157,4 +158,57 @@ export interface SpectatorLogLine {
   text: string;
   /** Marks fallbacks and halts for the "prominent, unmissable" markers of brief §13. */
   emphasis?: 'warning' | 'elimination' | 'turn';
+}
+
+/**
+ * One AI reasoning note, attached to the log line it explains (ADR 0022). Deliberately a separate
+ * stream rather than a field on `SpectatorLogLine`, for two reasons:
+ *
+ *   1. The engine formats log lines from `GameEvent`s and knows nothing about the AI. Baking model
+ *      text into a line would make `formatSpectatorLog` AI-aware.
+ *   2. `game_events` must stay a complete replay on its own. Annotations are commentary about a
+ *      replay, not part of one — a game replayed without them is not missing anything.
+ *
+ * Opt-in: the server sends these only while `DebugFlags.showAIResponses` is on, and in
+ * single-player never sends another seat's until the game is over (ADR 0022 §3).
+ */
+export interface AiAnnotation {
+  /** The first `GameEvent.sequence` this decision produced — the line it attaches under. */
+  sequence: number;
+  turn: number;
+  seat: PlayerId;
+  /** A per-decision note, or the once-per-turn strategist's standing intent. */
+  kind: 'decision' | 'strategy';
+  text: string;
+  /** The `DecisionSource` that produced it: `primary` | `fallback` | `strategist` | … */
+  source: string;
+  model?: string;
+}
+
+/** One turn a seat calls out in its own post-game review. */
+export interface ReflectionMoment {
+  /** The turn it happened on, so the UI can offer a jump into the timeline. */
+  turn: number;
+  what: string;
+  /** What the seat says it should have done instead. Only meaningful on a mistake. */
+  better?: string;
+}
+
+/**
+ * One AI seat's review of the game it just played (ADR 0022 §7, reversing brief §15's cut).
+ *
+ * Produced strictly after `Engine.getResult()`, from that seat's **own** `PlayerView` and its own
+ * decision history — never from omniscient end-state data. A reflection built on everything the
+ * table knew produces "I should have known about the counterspell", which is not a lesson.
+ */
+export interface AiReflection {
+  seat: PlayerId;
+  /** Finishing position, 1-based. 0 when the game did not finish (a halt). */
+  position: number;
+  summary: string;
+  keyMistakes: ReflectionMoment[];
+  keyPlays: ReflectionMoment[];
+  /** How the seat read the table's threats in hindsight. */
+  threatRead: string;
+  model: string;
 }

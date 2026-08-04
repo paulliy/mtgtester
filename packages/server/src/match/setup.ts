@@ -29,6 +29,7 @@ import type { OracleIndex } from '../cards/oracle-index';
 import type { SupportedPool } from '../cards/pool';
 import type { GameStore } from '../db';
 import type { BannedList } from '../decks/banned';
+import { inferArchetype } from '../decks/archetype';
 import { generateCommanderDeck } from '../decks/generate';
 import { runDeckPipeline } from '../decks/pipeline';
 
@@ -113,7 +114,15 @@ function setupPoolSeat(
 
   const identity = [...deck.commander.colorIdentity] as Color[];
   const commanderNames = [deck.commander.name];
-  const archetypeTag = defaultTag(identity, commanderNames);
+  // Classify generated decks too (ADR 0022 §5). Pool mode is the default and always-playable
+  // path, so it is where a strategist most needs to be told what its deck is built to do —
+  // `defaultTag` would only hand it back the commander name it can already see.
+  const archetype = inferArchetype({
+    commanders: [deck.commander],
+    cards: deck.cards.map((card) => ({ card, quantity: 1 })),
+    colorIdentity: identity,
+  });
+  const archetypeTag = archetype.tag;
   const label = `${deck.commander.name} (generated)`;
 
   let deckSnapshotId: string | null = null;
@@ -126,6 +135,8 @@ function setupPoolSeat(
       sourceUrl: null,
       sourceType: 'generated',
       archetypeTag,
+      archetypeSource: 'heuristic',
+      archetypeFeatures: archetype.features,
     });
     // Quantities are collapsed by oracle id: the generated list is already expanded, and a
     // snapshot is a card list, not a shuffled deck.

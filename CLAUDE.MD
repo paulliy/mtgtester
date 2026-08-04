@@ -91,6 +91,12 @@ bun run dev:web                      # Vue UI on :5173, proxying /ws to the serv
 bun run decks <deckUrlOrFile> [more...]   # Moxfield/Archidekt URL or plaintext file
 bun run decks --no-save <...>             # validate only, skip SQLite
 
+# Archetype tags are inferred at import (ADR 0022); backfill older decks with:
+bun run retag                             # dry run — prints changes, writes nothing
+bun run retag --write [--force]           # apply; --force also re-scores heuristic tags.
+                                          # A 'manual' tag is never touched. Note this regroups
+                                          # the stats "who beats me" view, which keys on the tag.
+
 # Playable decks from the engine-supported card pool (ADR 0009):
 bun run pool                              # what the engine can currently play with
 bun run pool --commanders                 # every commander the pool supports

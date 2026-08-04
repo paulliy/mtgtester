@@ -18,9 +18,21 @@ export interface CallResult {
  * appears in the table would make the game look like it made fewer decisions rather than fewer
  * calls. `human` is the §7.7 step-2 override: the model failed twice and the watching user
  * picked. It is deliberately NOT counted as skipped — it cost two calls before the human saw it.
+ *
+ * `reflection` is the post-game review (ADR 0022 §7). It is a real billed call, so it is not
+ * skipped either — but it decides nothing, so it is excluded from `avgLatencyMs`, which otherwise
+ * stops meaning "how long a decision took".
  */
 export type DecisionSource =
-  'primary' | 'retry' | 'fallback' | 'heuristic' | 'cache' | 'plan' | 'strategist' | 'human';
+  | 'primary'
+  | 'retry'
+  | 'fallback'
+  | 'heuristic'
+  | 'cache'
+  | 'plan'
+  | 'strategist'
+  | 'human'
+  | 'reflection';
 
 /** Sources answered locally: recorded, but never billed and never rate-limited. */
 const SKIPPED_SOURCES: ReadonlySet<DecisionSource> = new Set<DecisionSource>([
@@ -65,6 +77,8 @@ export class AiCallLogger {
   private readonly latencyBySource = new Map<DecisionSource, { sum: number; count: number }>();
   /** Latest resolution source by surfaced request, used by the CLI transcript. */
   private readonly sourcesByRequestId = new Map<string, DecisionSource>();
+  /** Row `sequence` by request, so a later anchor can find the row it belongs to. */
+  private readonly rowByRequestId = new Map<string, number>();
 
   constructor(
     private readonly db: SqliteDb | null,
@@ -88,6 +102,7 @@ export class AiCallLogger {
     this.totalCostUsd += result.meta.costUsd ?? 0;
     this.sourceCounts.set(source, (this.sourceCounts.get(source) ?? 0) + 1);
     this.sourcesByRequestId.set(request.requestId, source);
+    this.rowByRequestId.set(request.requestId, this.sequence);
     const bucket = this.latencyBySource.get(source) ?? { sum: 0, count: 0 };
     bucket.sum += result.meta.latencyMs;
     bucket.count += 1;
@@ -103,8 +118,8 @@ export class AiCallLogger {
         .query(
           `INSERT INTO ai_calls (
             game_id, sequence, seat, model, prompt_tokens, response_tokens,
-            request_json, response_json, was_retry, was_fallback, latency_ms, cost_usd, source
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            request_json, response_json, was_retry, was_fallback, latency_ms, cost_usd, source, turn
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           this.gameId,
@@ -120,6 +135,7 @@ export class AiCallLogger {
           result.meta.latencyMs,
           result.meta.costUsd ?? 0,
           source,
+          request.turn,
         );
     } catch {
       // Ignore database insert errors in loggers
@@ -129,6 +145,23 @@ export class AiCallLogger {
   /** Resolution source for a surfaced decision, if it was recorded by this logger. */
   sourceFor(requestId: string): DecisionSource | undefined {
     return this.sourcesByRequestId.get(requestId);
+  }
+
+  /**
+   * Attach the `game_events.sequence` this call's decision produced (ADR 0022). Separate from
+   * `log()` because the anchor is only knowable after `Engine.submit()`, which happens well
+   * after the call itself was recorded.
+   */
+  recordAnchor(requestId: string, anchorSequence: number): void {
+    const row = this.rowByRequestId.get(requestId);
+    if (row === undefined || this.db === null) return;
+    try {
+      this.db
+        .query(`UPDATE ai_calls SET anchor_sequence = ? WHERE game_id = ? AND sequence = ?`)
+        .run(anchorSequence, this.gameId, row);
+    } catch {
+      // Ignore database update errors in loggers
+    }
   }
 
   summary(): {
@@ -152,6 +185,11 @@ export class AiCallLogger {
     if (this.db === null) {
       const totalCalls = this.sequence - this.skipped;
       const strategistLatency = this.latencyBySource.get('strategist');
+      // A post-game review is not a decision, and a 20s one would otherwise drag the headline
+      // "average decision latency" upward after every game.
+      const reflectionLatency = this.latencyBySource.get('reflection');
+      const decidingCalls = totalCalls - (reflectionLatency?.count ?? 0);
+      const decidingLatencyMs = this.totalLatencyMs - (reflectionLatency?.sum ?? 0);
       const tacticianSources: DecisionSource[] = ['primary', 'retry', 'fallback'];
       let tacticianSum = 0;
       let tacticianCount = 0;
@@ -169,7 +207,7 @@ export class AiCallLogger {
         fallbacks: this.fallbacks,
         totalPromptTokens: this.promptTokens,
         totalResponseTokens: this.responseTokens,
-        avgLatencyMs: totalCalls > 0 ? Math.round(this.totalLatencyMs / totalCalls) : 0,
+        avgLatencyMs: decidingCalls > 0 ? Math.round(decidingLatencyMs / decidingCalls) : 0,
         avgStrategistLatencyMs:
           strategistLatency !== undefined && strategistLatency.count > 0
             ? Math.round(strategistLatency.sum / strategistLatency.count)
@@ -193,7 +231,7 @@ export class AiCallLogger {
           SUM(cost_usd) as totalCostUsd,
           SUM(CASE WHEN source = 'strategist' THEN 1 ELSE 0 END) as strategistCalls,
           SUM(CASE WHEN source = 'plan' THEN 1 ELSE 0 END) as planExecutions,
-          AVG(latency_ms) as avgLatencyMs,
+          AVG(CASE WHEN source IS NULL OR source <> 'reflection' THEN latency_ms END) as avgLatencyMs,
           AVG(CASE WHEN source = 'strategist' THEN latency_ms END) as avgStrategistLatencyMs,
           AVG(CASE WHEN source IN ('primary', 'retry', 'fallback') THEN latency_ms END) as avgTacticianLatencyMs
         FROM ai_calls WHERE game_id = ?`,

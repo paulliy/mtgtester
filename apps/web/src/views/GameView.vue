@@ -4,7 +4,7 @@
  * command zones with tax, the commander damage grid, the stack, the action log, and the
  * timeline scrubber.
  */
-import { computed, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
 import type { SpectatorCard, SpectatorPermanent } from '@mtg/shared';
@@ -12,6 +12,7 @@ import ActionLog from '../components/ActionLog.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import HeldDecision from '../components/HeldDecision.vue';
 import PlaybackControls from '../components/PlaybackControls.vue';
+import PostGameCommentary from '../components/PostGameCommentary.vue';
 import PlayerGameView from './PlayerGameView.vue';
 import SeatPanel from '../components/SeatPanel.vue';
 import StackPanel from '../components/StackPanel.vue';
@@ -85,6 +86,25 @@ const waitingForView = computed(
     store.playbackMode === 'manual' &&
     store.frontierTurn - store.viewTurn >= LOOKAHEAD_TURNS,
 );
+/**
+ * Post-game commentary (ADR 0022 §7). Opens itself when a game ends with reviews coming, and can
+ * be reopened from the header afterwards — it covers the final board, and the board is worth
+ * looking at too.
+ */
+const commentaryOpen = ref(false);
+const hasCommentary = computed(() => store.reflectingSeats.length > 0);
+
+watch(
+  () => store.gameOver !== null,
+  (over) => {
+    if (!over) return;
+    // The live `gameReflections` stream is the normal path; this covers a game whose reviews were
+    // already written before this client had the socket (a reload on the results screen).
+    void store.loadReflections();
+    if (store.reflectingSeats.length > 0) commentaryOpen.value = true;
+  },
+);
+
 const roundLabel = computed(() => {
   const s = state.value;
   if (!s) return '';
@@ -105,6 +125,14 @@ const roundLabel = computed(() => {
       <span v-if="store.gameOver" class="game-over-badge" :title="store.gameOver.result.haltReason ?? ''">
         🏆 Game Over: Winner {{ store.gameOver.result.winnerSeat ?? '(Draw)' }} ({{ store.gameOver.result.turnCount }} turns)
       </span>
+      <button
+        v-if="hasCommentary && !commentaryOpen"
+        type="button"
+        class="commentary-button"
+        @click="commentaryOpen = true"
+      >
+        Commentary
+      </button>
       <span v-else-if="store.halt" class="halt-badge" :title="store.halt.reason">
         ⚠️ Halted: {{ store.halt.kind }} — {{ store.halt.reason }}
       </span>
@@ -156,7 +184,13 @@ const roundLabel = computed(() => {
           :lines="store.log"
           :follow="store.playbackMode === 'live' || store.atFrontier"
           :active-sequence="store.activeSequence ?? undefined"
+          :annotations="store.annotations"
+          :can-show-reasoning="store.providerKind === 'ai'"
+          :show-reasoning="store.debugFlags.showAIResponses"
           @select-sequence="store.jumpToSequence"
+          @update:show-reasoning="
+            store.setDebugFlags({ ...store.debugFlags, showAIResponses: $event })
+          "
         />
       </aside>
     </main>
@@ -181,6 +215,17 @@ const roundLabel = computed(() => {
       @mode="store.setPlaybackMode"
       @pace="store.setPace"
       @abandon="abandon"
+    />
+
+    <PostGameCommentary
+      v-if="store.gameOver && hasCommentary && commentaryOpen"
+      :seats="store.seats"
+      :reflections="store.reflections"
+      :expected-seats="store.reflectingSeats"
+      :complete="store.reflectionsComplete"
+      :standings="store.gameOver.standings"
+      @jump="store.seek($event)"
+      @close="commentaryOpen = false"
     />
   </div>
 </template>
@@ -233,6 +278,17 @@ const roundLabel = computed(() => {
   border-radius: 4px;
   border: 1px solid rgb(74 222 128 / 0.3);
   font-size: 0.8rem;
+}
+.commentary-button {
+  padding: 0.2rem 0.55rem;
+  border-color: rgb(96 165 250 / 0.4);
+  border-radius: 4px;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.commentary-button:hover {
+  background: rgb(96 165 250 / 0.12);
 }
 .halt-badge {
   color: var(--danger);

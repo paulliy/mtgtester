@@ -3,8 +3,10 @@ import { onMounted, onUnmounted } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
 import CardPreviewOverlay from './components/CardPreviewOverlay.vue';
 import { useCardPreviewStore } from './stores/cardPreview';
+import { useGameStore } from './stores/game';
 
 const cardPreview = useCardPreviewStore();
+const game = useGameStore();
 
 /**
  * Alt held while hovering a card = the "look closer" zoom. `window.blur` covers Alt-tabbing
@@ -33,7 +35,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" :class="{ 'reduced-motion': game.reducedMotion }">
     <nav>
       <RouterLink to="/">Setup</RouterLink>
       <RouterLink to="/game">Board</RouterLink>

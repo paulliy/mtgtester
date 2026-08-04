@@ -16,6 +16,12 @@ export const MIGRATIONS_SQL: readonly string[] = [
   `ALTER TABLE mana_metrics ADD COLUMN cards_drawn_cumulative INTEGER`,
   `ALTER TABLE games ADD COLUMN game_mode TEXT NOT NULL DEFAULT 'spectator'`,
   `ALTER TABLE game_players ADD COLUMN controller_kind TEXT NOT NULL DEFAULT 'ai'`,
+  `ALTER TABLE ai_calls ADD COLUMN anchor_sequence INTEGER`,
+  `ALTER TABLE ai_calls ADD COLUMN turn INTEGER`,
+  // Existing rows all predate inference, so 'manual' is the right default: a `retag` backfill
+  // must never overwrite a tag a person may have typed, and it cannot tell them apart later.
+  `ALTER TABLE decks ADD COLUMN archetype_source TEXT NOT NULL DEFAULT 'manual'`,
+  `ALTER TABLE decks ADD COLUMN archetype_features_json TEXT`,
 ];
 
 export const SCHEMA_SQL = `
@@ -36,7 +42,13 @@ CREATE TABLE IF NOT EXISTS decks (
   source_url    TEXT,
   source_type   TEXT NOT NULL,       -- 'moxfield' | 'archidekt' | 'plaintext'
   archetype_tag TEXT NOT NULL,
-  created_at    TEXT NOT NULL
+  created_at    TEXT NOT NULL,
+  -- Where the tag came from (ADR 0022 §6): 'manual' | 'default' | 'heuristic' | 'inferred'.
+  -- A backfill may rewrite anything except 'manual'.
+  archetype_source        TEXT NOT NULL DEFAULT 'manual',
+  -- The measured decklist shape behind a computed tag, so the classifier can be retuned and old
+  -- decks re-scored without re-resolving their lists (the §9.2 raw-inputs principle).
+  archetype_features_json TEXT
 );
 
 -- Immutable resolved snapshot; historical stats key on this and must never change (§8.2, §9).
@@ -117,7 +129,25 @@ CREATE TABLE IF NOT EXISTS ai_calls (
   -- How the decision was answered: 'primary' | 'retry' | 'fallback' | 'heuristic' | 'cache'.
   -- The last two cost no network call; counting them is how the RPM savings are measured.
   source          TEXT,
+  -- The game_events.sequence this call's reasoning annotates (ADR 0022). Null for calls made
+  -- before the column existed, and for any that never reached a submitted decision.
+  anchor_sequence INTEGER,
+  turn            INTEGER,
   PRIMARY KEY (game_id, sequence)
+);
+
+-- One AI seat's post-game review of the game it played (ADR 0022 §7). Keyed by (game, seat)
+-- because a seat reviews once; a re-run replaces rather than accumulates. Separate from
+-- ai_calls, which records that the call happened and what it cost — this records the artifact.
+CREATE TABLE IF NOT EXISTS game_reflections (
+  game_id     TEXT NOT NULL REFERENCES games(id),
+  seat        INTEGER NOT NULL,
+  model       TEXT,
+  position    INTEGER,
+  summary     TEXT NOT NULL,
+  detail_json TEXT,               -- { keyMistakes, keyPlays, threatRead }
+  created_at  TEXT NOT NULL,
+  PRIMARY KEY (game_id, seat)
 );
 
 -- TODO(phase-2/5): per-turn mana efficiency metrics.

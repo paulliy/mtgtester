@@ -192,8 +192,87 @@ pass only when there is nothing else to do.
   contrast, textual target labels, and `prefers-reduced-motion`; a card preview must not obscure
   the selected source or confirmation controls.
 
+### 9.8 Animation, reactivity, and board clarity
+
+`docs/decisions/0021-player-experience-overhaul.md` shipped most of this plan's other asks but
+logged three gaps under "Scope cuts made without a further check-in": no combat overlay, no
+board-change feedback beyond life totals, and no drag polish beyond `dragend` cleanup. This
+section closes exactly those three gaps. It deliberately does not resurrect Phase 8's full typed
+`ActionCue`/`CueGroup`/`CueAnchor` protocol contract — that plan was sized to animate every action
+type off a `GameEvent.sequence`-keyed replay feed, which is more generality than three concrete,
+already-identified gaps need, and is the scope that made Phase 8 stall in the first place.
+Instead, generalize the existing `useLifeFlash` watch-diff-timeout pattern into one reusable
+composable, and add exactly one new geometry primitive — a `ResizeObserver`-backed anchor
+registry — because it is the one thing neither composables nor CSS classes can already provide: a
+permanent's on-screen rect, needed to draw a line to it. Everything here is local to `apps/web`;
+no protocol change, no engine change, no cue store.
+
+- **Combat overlay.** Add a small anchor registry (`registerAnchor(id, el)` /
+  `unregisterAnchor(id)`, kept current by `ResizeObserver` plus a window-resize listener) and an
+  absolutely positioned SVG overlay that reads the existing combat-plan store's order,
+  assignment, current entry, and mode alongside that registry — no new store. Draw a dashed,
+  lower-opacity line per pending assignment while composing; a solid line matching the existing
+  `attacking` indicator once committed; and a highlighted line for the entry currently being
+  placed. Register anchors from each permanent tile and each seat panel; the existing attack/block
+  badges and pulse remain the non-overlay fallback so combat stays legible with the overlay off.
+- **Attack/hit animation.** MTGA-style: the striking permanent's tile lifts and lunges toward its
+  target's anchor, then returns, timed to the combat damage that actually landed rather than to
+  declaration. A new composable diffs each freshly pushed board's `damageMarked`/life totals
+  against the previous one and, for each increase it can attribute to a still-visible
+  `attacking`/`blocking`/`blockedBy` pairing, hands the striking permanent's tile a travel vector
+  computed from the same anchor registry the overlay lines use; no new store, no protocol change.
+  This is presentation inferred from state deltas, not a dedicated engine damage event, so a
+  non-combat damage source landing on a permanent that happens to be mid-combat, or trample
+  discounted through a blocker, can misattribute the animation — acceptable for board juice, not
+  something anything else depends on. The existing per-permanent damage flash and per-seat life
+  flash already provide the target-side "impact" feedback, so this only adds the source-side
+  motion. Symmetric by construction: an opponent's creature attacking the human player animates
+  exactly the same way as the reverse, since both directions read the same board.
+- **Generalized board-change feedback.** Generalize the life-flash composable's shape (watch a
+  piece of reactive state, derive a transient class from the delta, clear it on a timeout) into
+  one reusable primitive, and reimplement the life-flash helpers as thin wrappers over it so the
+  generalization is proven before it is extended. Apply it to damage marks and to a tap/untap
+  transition on permanent tiles. Use Vue's built-in `<TransitionGroup>` — unused anywhere in the
+  app today — scoped strictly to enter/leave, for token creation and zone changes (death, exile,
+  return) on each seat's battlefield, and for stack items appearing, resolving, or being
+  countered.
+- **Drag polish.** Build on the existing drag-start/drag-end handling. Add a custom drag-ghost
+  image (the dragged card's own image, via `dataTransfer.setDragImage`) in place of the browser's
+  default full-tile ghost, and a cursor-following line while dragging, sharing the combat
+  overlay's anchor lookups. A drop still resolves to at most one matching legal action exactly as
+  it does today — auto-filling that action's only target where one exists — but does not gain a
+  new silent-submit path: this plan's own guardrail 4 ("consequential Magic is deliberate")
+  reserves one-click submission for land plays and passes, so a dropped cast or activation still
+  surfaces the pending-action preview for an explicit Confirm. The existing opt-in "skip confirm
+  step" preference already covers a player who wants that submission automatic, without changing
+  the default for everyone else.
+- **Reduced-motion and Off contract.** Add a `reducedMotion` preference alongside the existing
+  pace/confirmation player preferences, defaulted from the OS `prefers-reduced-motion` media query
+  and player-overridable. Every addition above must have a fully-informative non-animated
+  equivalent when motion is off: the overlay absent (existing badges stand alone), the flash
+  primitive short-circuiting to an instant state update with no transition class, transition-group
+  enter/leave collapsing to an instant insert/remove, and drag falling back to the browser default
+  ghost with no cursor line. This directly fulfills this plan's existing guardrail on motion
+  (§ "Playing Magic" guardrails, point 6) rather than introducing a new one.
+
 ## Verification and acceptance
 
+- Combat-overlay, board-flash, and drag-polish component tests: the anchor registry
+  registers/unregisters and updates rects on a simulated resize; the flash primitive classifies
+  increase/decrease/appear/disappear correctly and clears on timeout, including the life-flash
+  call sites behaving identically to today.
+- Playwright coverage for 9.8: composing an attack draws a dashed preview line between the correct
+  anchors; confirming swaps it to a solid line matching the committed attack; an unblocked attacker
+  animates a lunge toward the defending player and a blocked one toward its blocker (and back) at
+  the moment damage actually lands, in both directions (human attacking and human defending); a
+  death or token-entry during a scripted turn shows the transition and settles on correct state;
+  dragging shows a custom ghost and cursor line; dropping on a single legal target auto-fills it
+  and still opens the pending-action preview for Confirm, matching guardrail 4, unless "skip
+  confirm step" is enabled.
+- Reduced-motion check, under both the OS setting and an explicit in-app override: no
+  animation/transition exceeds an effectively-zero duration, the combat overlay and attack/hit
+  animation are both absent, and every fact they would have shown (attacker/blocker pairing,
+  damage delta, tapped state, zone presence) remains readable from static badges/state alone.
 - Unit/contract tests prove every direct gesture resolves to an offered action id, target slot,
   or engine-generated payment plan; stale, duplicate, wrong-seat, and modified submissions are
   rejected.

@@ -53,6 +53,9 @@ describe('AiCallLogger', () => {
       150,
       0,
       'primary',
+      // The request's turn, denormalised onto the row so rebuilding ADR 0022 annotations does
+      // not have to parse every stored request payload.
+      1,
     );
   });
 
@@ -185,5 +188,60 @@ describe('AiCallLogger', () => {
       avgStrategistLatencyMs: 20000,
       avgTacticianLatencyMs: 4000,
     });
+  });
+});
+
+/**
+ * Post-game reflection is a real billed call, but it is not a decision (ADR 0022 §8). Both halves
+ * matter: counting it as skipped would understate spend, and counting it in `avgLatencyMs` would
+ * make the headline "average decision latency" jump after every game for a call that happened
+ * once the game was already over.
+ */
+describe('AiCallLogger — the reflection source', () => {
+  const request: DecisionRequest = {
+    requestId: 'reflect-1',
+    gameId: 'g200',
+    turn: 12,
+    activePlayer: 'P1',
+    decidingPlayer: 'P1',
+    phase: 'ending',
+    step: null,
+    decisionType: 'general',
+    prompt: 'Review the game you just played.',
+    legalActions: [],
+  };
+
+  function call(latencyMs: number): { response: DecisionResponse; meta: CallMeta } {
+    return {
+      response: { requestId: request.requestId, actionId: 0 },
+      meta: {
+        model: 'test/model',
+        promptTokens: 100,
+        responseTokens: 50,
+        latencyMs,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
+    };
+  }
+
+  it('counts as a billed call rather than a skipped one', () => {
+    const logger = new AiCallLogger(null, 'g200');
+    logger.log(request, call(20_000), false, false, 'reflection');
+
+    const summary = logger.summary();
+    expect(summary.totalCalls).toBe(1);
+    expect(summary.skippedCalls).toBe(0);
+  });
+
+  it('is excluded from average decision latency', () => {
+    const logger = new AiCallLogger(null, 'g200');
+    logger.log({ ...request, requestId: 'd1' }, call(100), false, false, 'primary');
+    logger.log({ ...request, requestId: 'd2' }, call(300), false, false, 'primary');
+    // A 20s retrospective would drag a 200ms average to nearly 7 seconds if it counted.
+    logger.log(request, call(20_000), false, false, 'reflection');
+
+    expect(logger.summary().avgLatencyMs).toBe(200);
   });
 });

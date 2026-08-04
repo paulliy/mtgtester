@@ -25,6 +25,12 @@ const gameMode = ref<GameMode>('spectator');
 const humanSeat = ref('P1');
 const advancedPodSetup = ref(false);
 const providerKind = ref<ProviderKind>('random');
+/**
+ * Post-game AI commentary (ADR 0022 §7). Off by default and only meaningful with AI bots — it is
+ * the one option on this screen that spends budget *after* the game is already over, so it is an
+ * explicit per-game choice rather than a server setting someone has to remember they left on.
+ */
+const reflectionEnabled = ref(false);
 const seed = ref('');
 const inputs = ref<string[]>(Array.from({ length: SEATS }, () => ''));
 const tags = ref<string[]>(Array.from({ length: SEATS }, () => ''));
@@ -41,6 +47,8 @@ interface KnownDeck {
   colorIdentity: Color[];
   uniqueCards: number;
   modeledCards: number;
+  /** Inferred archetype (ADR 0022 §5) — what the deck does, which the name rarely says. */
+  archetypeTag: string;
   text: string;
 }
 
@@ -103,7 +111,14 @@ function sourceFor(index: number): SeatSource {
 
 function start(): void {
   const sources = Array.from({ length: SEATS }, (_, i) => sourceFor(i));
-  store.startGame(sources, providerKind.value, seed.value.trim(), gameMode.value, humanSeat.value);
+  store.startGame(
+    sources,
+    providerKind.value,
+    seed.value.trim(),
+    gameMode.value,
+    humanSeat.value,
+    reflectionEnabled.value,
+  );
   void router.push('/game');
 }
 </script>
@@ -216,6 +231,7 @@ function start(): void {
                 <span class="deck-chip-copy">
                   <span class="deck-chip-name">{{ deck.name }}</span>
                   <span class="deck-chip-meta">
+                    <span class="deck-chip-archetype">{{ deck.archetypeTag }}</span>
                     {{ deck.modeledCards }}/{{ deck.uniqueCards }} modeled
                   </span>
                 </span>
@@ -260,6 +276,7 @@ function start(): void {
                 <span class="deck-chip-copy">
                   <span class="deck-chip-name">{{ deck.name }}</span>
                   <span class="deck-chip-meta">
+                    <span class="deck-chip-archetype">{{ deck.archetypeTag }}</span>
                     {{ deck.modeledCards }}/{{ deck.uniqueCards }} modeled
                   </span>
                 </span>
@@ -275,7 +292,14 @@ function start(): void {
           </div>
           <label class="tag-field">
             <span>Archetype tag</span>
-            <input v-model="tags[index - 1]" type="text" placeholder="optional" />
+            <!-- Leaving this blank is the normal path: the server classifies the resolved list
+                 (ADR 0022 §5). Anything typed here wins outright and is never overwritten. -->
+            <input
+              v-model="tags[index - 1]"
+              type="text"
+              placeholder="auto-detected if blank"
+              title="Leave blank to have the archetype inferred from the decklist."
+            />
           </label>
         </div>
 
@@ -307,6 +331,18 @@ function start(): void {
             <em>Uses strategic bot decisions and may spend API budget.</em>
           </span>
         </label>
+      </div>
+
+      <div v-if="providerKind === 'ai'" class="extra-option">
+        <label class="advanced-pod">
+          <input v-model="reflectionEnabled" type="checkbox" />
+          <span>Post-game commentary</span>
+        </label>
+        <p class="hint">
+          After the game ends, each bot reviews its own play — what it was trying to do, the turns
+          it got wrong, and who it should have treated as the threat. Costs one extra call per bot,
+          spent only once the game is already over.
+        </p>
       </div>
     </section>
 
@@ -598,6 +634,16 @@ p {
   color: var(--muted);
   font-size: 10px;
 }
+/* The archetype answers "what does this deck do", which a commander name rarely does — so it
+   leads the meta line and the modeled count trails it. */
+.deck-chip-archetype {
+  color: var(--accent);
+  text-transform: capitalize;
+}
+.deck-chip-archetype::after {
+  content: ' · ';
+  color: var(--muted);
+}
 .deck-textarea,
 .seed-input,
 .tag-field input {
@@ -619,6 +665,17 @@ p {
 .tag-field span {
   font-size: 9px;
   letter-spacing: 0.08em;
+}
+.extra-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line);
+}
+.extra-option .hint {
+  padding-left: 1.45rem;
 }
 .advanced-pod {
   display: flex;

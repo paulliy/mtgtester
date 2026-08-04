@@ -4,11 +4,14 @@ import { useRouter } from 'vue-router';
 import type { DecisionRequest, LegalAction, ObjectId, PlayerBoardSeat, TargetChoice } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
+import CombatOverlay from '../components/CombatOverlay.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
 import StackPanel from '../components/StackPanel.vue';
 import ZoneStrip from '../components/ZoneStrip.vue';
+import { useBoardAnchors } from '../composables/useBoardAnchors';
+import { useCombatStrikes } from '../composables/useCombatStrikes';
 import { useLifeFlash, useLifeFlashBySeat } from '../composables/useLifeFlash';
 import { isTokenTypeLine } from '../lib/card';
 import { groupPermanents } from '../lib/stackPermanents';
@@ -25,7 +28,47 @@ const focusedSourceId = ref<ObjectId | null>(null);
 const chosenTargets = ref<Record<number, ObjectId>>({});
 const draggedId = ref<ObjectId | null>(null);
 
+/** Board anchor root + drag pointer tracking for the combat overlay and drag-cursor line (§9.8). */
+const { registerAnchor, setRoot, disposeRoot } = useBoardAnchors();
+const tableRef = ref<HTMLElement | null>(null);
+const dragPointer = ref<{ x: number; y: number } | null>(null);
+onMounted(() => setRoot(tableRef.value));
+onUnmounted(() => disposeRoot());
+
+function onBoardDragOver(event: DragEvent): void {
+  if (tableRef.value === null || draggedId.value === null) return;
+  const rect = tableRef.value.getBoundingClientRect();
+  dragPointer.value = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
+
+/**
+ * A fresh arrow function on every render would make Vue treat each `:ref` as a new callback and
+ * spuriously unregister/re-register the anchor on every unrelated re-render (a seat id never
+ * changes once the game starts). Caching one stable function per seat avoids that churn.
+ */
+const seatAnchorRefs = new Map<string, (el: Element | null) => void>();
+function seatAnchorRef(seatId: string): (el: Element | null) => void {
+  let fn = seatAnchorRefs.get(seatId);
+  if (fn === undefined) {
+    fn = (el) => registerAnchor(seatId, el);
+    seatAnchorRefs.set(seatId, fn);
+  }
+  return fn;
+}
+
 const state = computed(() => store.playerState);
+
+/**
+ * MTGA-style attack animation (extends §9.8.1): every freshly pushed board is diffed for combat
+ * damage and translated into a lunge vector for the striking permanent, via anchors already
+ * registered for the combat overlay. Skipped entirely under reduced motion, matching how
+ * `CombatOverlay.vue` and the drag-cursor line are gated.
+ */
+const combatStrikes = useCombatStrikes();
+watch(state, (next) => {
+  if (next !== null && !store.reducedMotion) combatStrikes.observe(next);
+});
+
 const pending = computed(() => store.playerAction);
 const request = computed(() => pending.value?.request ?? null);
 const human = computed(
@@ -489,12 +532,26 @@ function onKeyDown(event: KeyboardEvent): void {
 onMounted(() => window.addEventListener('keydown', onKeyDown));
 onUnmounted(() => window.removeEventListener('keydown', onKeyDown));
 
-function dragStart(id: ObjectId): void {
+/**
+ * A custom, card-sized drag ghost (§9.8.3) instead of the browser's default full-tile image: the
+ * dragged element's own `<img>` (found via the event's current target) is what actually renders,
+ * offset to sit under the cursor rather than anchored at its top-left corner.
+ */
+function dragStart(id: ObjectId, event: DragEvent): void {
   draggedId.value = id;
   if (selectedAction.value === null) {
     focusedSourceId.value = id;
     chosenTargets.value = {};
   }
+  const img = event.currentTarget instanceof HTMLElement ? event.currentTarget.querySelector('img') : null;
+  if (img instanceof HTMLImageElement) {
+    event.dataTransfer?.setDragImage(img, img.clientWidth / 2, img.clientHeight / 2);
+  }
+}
+
+function dragEnd(): void {
+  draggedId.value = null;
+  dragPointer.value = null;
 }
 
 function actionData(action: LegalAction, key: string): unknown {
@@ -622,6 +679,7 @@ function selectedTargetLabel(slot: string, choice: ObjectId): string {
 function dropToBattlefield(): void {
   const source = draggedId.value;
   draggedId.value = null;
+  dragPointer.value = null;
   if (source === null) return;
   const action = (request.value?.legalActions ?? []).find(
     (candidate) =>
@@ -635,6 +693,7 @@ function dropToBattlefield(): void {
 function dropOn(target: ObjectId | string): void {
   const source = draggedId.value;
   draggedId.value = null;
+  dragPointer.value = null;
   if (source === null) return;
   if (combatPlan.mode === 'composing') {
     if (combatPlan.isLegalTarget(source, target as string)) combatPlan.assign(source, target as string);
@@ -696,6 +755,10 @@ function abandon(): void {
         <input :checked="store.autoConfirmActions" type="checkbox" @change="store.setAutoConfirmActions(($event.target as HTMLInputElement).checked)" />
         Skip confirm step
       </label>
+      <label class="routine-confirm">
+        <input :checked="store.reducedMotion" type="checkbox" @change="store.setReducedMotion(($event.target as HTMLInputElement).checked)" />
+        Reduce motion
+      </label>
       <button type="button" @click="abandon">Abandon</button>
     </header>
 
@@ -709,11 +772,13 @@ function abandon(): void {
     </div>
 
     <main v-if="state" class="player-layout">
-      <section class="table">
+      <section ref="tableRef" class="table" @dragover="onBoardDragOver">
+        <CombatOverlay :drag-source-id="draggedId" :pointer="dragPointer" />
         <div class="opponents">
           <article
             v-for="opponent in opponents"
             :key="opponent.seat"
+            :ref="seatAnchorRef(opponent.seat)"
             class="opponent"
             :class="{
               active: opponent.seat === state.activePlayer,
@@ -761,8 +826,8 @@ function abandon(): void {
                   actionable: actionableSourceIds.has(group.permanent.id),
                 }"
                 draggable="true"
-                @dragstart="dragStart(group.permanent.id)"
-                @dragend="draggedId = null"
+                @dragstart="dragStart(group.permanent.id, $event)"
+                @dragend="dragEnd"
                 @dragover.prevent
                 @drop.stop="dropOn(group.permanent.id)"
                 @click.stop="selectSource(group.permanent.id)"
@@ -773,7 +838,12 @@ function abandon(): void {
           </article>
         </div>
 
-        <section v-if="human" class="human-zone" :class="{ 'your-turn': isYourTurn }">
+        <section
+          v-if="human"
+          :ref="seatAnchorRef(human.seat)"
+          class="human-zone"
+          :class="{ 'your-turn': isYourTurn }"
+        >
           <header
             :class="{ targetable: isLegalTarget(human.seat), 'chosen-target': isChosenTarget(human.seat) }"
             @click="chooseOpponent(human.seat)"
@@ -809,8 +879,8 @@ function abandon(): void {
                     actionable: actionableSourceIds.has(group.permanent.id),
                 }"
                 draggable="true"
-                @dragstart="dragStart(group.permanent.id)"
-                @dragend="draggedId = null"
+                @dragstart="dragStart(group.permanent.id, $event)"
+                @dragend="dragEnd"
                 @dragover.prevent
                 @drop.stop="dropOn(group.permanent.id)"
                 @click="selectSource(group.permanent.id)"
@@ -855,8 +925,8 @@ function abandon(): void {
                 'chosen-target': isChosenTarget(card.id),
               }"
               draggable="true"
-              @dragstart="dragStart(card.id)"
-              @dragend="draggedId = null"
+              @dragstart="dragStart(card.id, $event)"
+              @dragend="dragEnd"
               @click="selectSource(card.id)"
               @mouseenter="showCardPreview(card, $event)"
               @mousemove="moveCardPreview"
@@ -1067,7 +1137,19 @@ function abandon(): void {
           :is-chosen-target="isChosenTarget"
           @select="selectSource"
         />
-        <ActionLog :lines="store.log" :follow="true" />
+        <!-- The reasoning toggle appears only once the game is over: until then the server
+             withholds every opponent's reasoning, so offering the control would promise
+             something it must not deliver (ADR 0022 §3). -->
+        <ActionLog
+          :lines="store.log"
+          :follow="true"
+          :annotations="store.annotations"
+          :can-show-reasoning="store.providerKind === 'ai' && store.gameOver !== null"
+          :show-reasoning="store.debugFlags.showAIResponses"
+          @update:show-reasoning="
+            store.setDebugFlags({ ...store.debugFlags, showAIResponses: $event })
+          "
+        />
       </aside>
     </main>
     <p v-else class="waiting">Waiting for the player-safe board…</p>
@@ -1090,7 +1172,7 @@ button.active, button.selected, .focused { border-color: var(--accent); box-shad
 .yield-banner { display: flex; align-items: center; gap: .6rem; border: 1px solid var(--accent); color: var(--text); background: var(--surface); padding: .5rem .7rem; border-radius: 4px; font-size: .78rem; }
 .yield-banner > span { flex: 1; }
 .player-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0,1fr) 22rem; gap: .6rem; }
-.table { min-height: 0; display: grid; grid-template-rows: minmax(0,.6fr) minmax(0,1.9fr); gap: .6rem; }
+.table { position: relative; min-height: 0; display: grid; grid-template-rows: minmax(0,.6fr) minmax(0,1.9fr); gap: .6rem; }
 .opponents { min-height: 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; }
 .opponent, .human-zone { min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: .4rem .5rem; transition: border-color .2s, box-shadow .2s; }
 .opponent { cursor: pointer; gap: .25rem; }

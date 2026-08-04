@@ -1,21 +1,37 @@
 <script setup lang="ts">
 /**
- * The spectator action log (brief §10.2): chronological, minimal format, **no AI reasoning** —
- * reasoning notes are debug-log-only (brief §7.3, §15). Lines arrive pre-formatted from the
- * engine so the UI never interprets an event.
+ * The spectator action log (brief §10.2): chronological, minimal format. Lines arrive
+ * pre-formatted from the engine so the UI never interprets an event.
+ *
+ * AI reasoning is off by default and opt-in via the header toggle (ADR 0022, superseding brief
+ * §15's debug-log-only rule). It renders *beside* each line, never inside `SpectatorLogLine` —
+ * the engine emits the log and knows nothing about the AI.
  */
-import { nextTick, ref, watch } from 'vue';
-import type { SpectatorLogLine } from '@mtg/shared';
+import { computed, nextTick, ref, watch } from 'vue';
+import type { AiAnnotation, SpectatorLogLine } from '@mtg/shared';
 
 const props = defineProps<{
   lines: SpectatorLogLine[];
   follow: boolean;
   activeSequence?: number;
+  /** Reasoning keyed by the line sequence it explains; empty when the toggle is off. */
+  annotations?: Map<number, AiAnnotation[]>;
+  /** Hidden entirely when reasoning cannot exist — a random-provider game has none. */
+  canShowReasoning?: boolean;
+  showReasoning?: boolean;
 }>();
 
 const emit = defineEmits<{
   (event: 'selectSequence', sequence: number, turn: number): void;
+  (event: 'update:showReasoning', value: boolean): void;
 }>();
+
+function notesFor(sequence: number): AiAnnotation[] {
+  if (props.showReasoning !== true) return [];
+  return props.annotations?.get(sequence) ?? [];
+}
+
+const hasAnyReasoning = computed(() => (props.annotations?.size ?? 0) > 0);
 
 const scroller = ref<HTMLElement | null>(null);
 
@@ -47,21 +63,41 @@ watch(
   <div class="log">
     <div class="log-header">
       <h3>Action log</h3>
+      <label v-if="canShowReasoning" class="reasoning-toggle">
+        <input
+          :checked="showReasoning === true"
+          type="checkbox"
+          @change="emit('update:showReasoning', ($event.target as HTMLInputElement).checked)"
+        />
+        AI reasoning
+      </label>
       <span class="hint">Click line to jump</span>
     </div>
     <div ref="scroller" class="scroller">
-      <p
-        v-for="line in lines"
-        :key="line.sequence"
-        class="line"
-        :class="[line.emphasis, { active: activeSequence === line.sequence }]"
-        @click="emit('selectSequence', line.sequence, line.turn)"
-      >
-        <span class="turn">T{{ line.turn }}</span>
-        <span class="actor">{{ line.actorSeat ?? '--' }}</span>
-        <span class="text">{{ line.text }}</span>
-      </p>
+      <template v-for="line in lines" :key="line.sequence">
+        <p
+          class="line"
+          :class="[line.emphasis, { active: activeSequence === line.sequence }]"
+          @click="emit('selectSequence', line.sequence, line.turn)"
+        >
+          <span class="turn">T{{ line.turn }}</span>
+          <span class="actor">{{ line.actorSeat ?? '--' }}</span>
+          <span class="text">{{ line.text }}</span>
+        </p>
+        <p
+          v-for="(note, index) in notesFor(line.sequence)"
+          :key="`${line.sequence}-${index}`"
+          class="note"
+          :class="{ fallback: note.source === 'fallback', strategy: note.kind === 'strategy' }"
+        >
+          <span class="note-source">{{ note.kind === 'strategy' ? 'plan' : note.source }}</span>
+          <span class="note-text">{{ note.text }}</span>
+        </p>
+      </template>
       <p v-if="lines.length === 0" class="empty">nothing yet</p>
+      <p v-else-if="showReasoning === true && !hasAnyReasoning" class="empty">
+        no AI reasoning recorded yet
+      </p>
     </div>
   </div>
 </template>
@@ -94,6 +130,21 @@ h3 {
   font-size: 0.6rem;
   color: var(--muted);
   font-style: italic;
+}
+.reasoning-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  margin-right: 0.6rem;
+  font-size: 0.62rem;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.reasoning-toggle input {
+  margin: 0;
+  cursor: pointer;
 }
 .scroller {
   overflow-y: auto;
@@ -135,6 +186,37 @@ h3 {
 }
 .line.warning .text {
   color: var(--danger);
+  font-weight: 700;
+}
+/* Reasoning is commentary on the line above it: indented, dimmed, and never mistakable for an
+   action the engine actually took. */
+.note {
+  margin: 0 0 0.15rem;
+  padding: 0.05rem 0.2rem 0.05rem 2.1rem;
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.66rem;
+  font-style: italic;
+  color: var(--muted);
+  border-left: 2px solid var(--line);
+  margin-left: 0.5rem;
+}
+.note-source {
+  color: var(--accent);
+  opacity: 0.7;
+  white-space: nowrap;
+}
+.note.strategy {
+  border-left-color: var(--accent);
+}
+/* Brief §13 wants fallbacks unmissable — a fallback's reasoning is where you look to find out
+   why the model lost the plot, so it keeps the same red the log line uses. */
+.note.fallback {
+  border-left-color: var(--danger);
+}
+.note.fallback .note-source {
+  color: var(--danger);
+  opacity: 1;
   font-weight: 700;
 }
 .empty {

@@ -518,3 +518,95 @@ describe('StrategyCoordinator', () => {
   });
 });
 
+
+/**
+ * The whole-game decision digest (ADR 0022 §7). Distinct from `recentDecisions`, which is capped
+ * at 8 because a tactician only needs the last few moves. A post-game review needs the *arc* of
+ * the game, and a full game runs to thousands of decisions, most of them passes — so this is a
+ * sampled history, and what it samples is the point.
+ */
+describe('StrategyCoordinator — whole-game decision digest', () => {
+  function coordinatorForDigest(): StrategyCoordinator {
+    const engine = { view: () => view, addDebug: () => {} } as unknown as Engine;
+    return new StrategyCoordinator(
+      null,
+      { enqueue: <T,>(fn: () => Promise<T>) => fn() },
+      engine,
+      DEFAULT_AI_CONFIG,
+    );
+  }
+
+  function record(
+    coordinator: StrategyCoordinator,
+    options: { turn: number; phase: DecisionRequest['phase']; type: string; description: string },
+  ): void {
+    const req = request({
+      turn: options.turn,
+      phase: options.phase,
+      legalActions: [{ id: 1, type: options.type, description: options.description }],
+    });
+    coordinator.recordDecision(req, { requestId: req.requestId, actionId: 1 }, 'primary');
+  }
+
+  it('drops passes — the absence of a decision is not worth reviewing', () => {
+    const coordinator = coordinatorForDigest();
+
+    record(coordinator, { turn: 1, phase: 'precombatMain', type: 'pass', description: 'Pass' });
+    record(coordinator, {
+      turn: 1, phase: 'precombatMain', type: 'passAndYieldTurn', description: 'Yield',
+    });
+
+    expect(coordinator.digestFor('P1')).toHaveLength(0);
+  });
+
+  it('keeps one action per main phase but several per combat', () => {
+    const coordinator = coordinatorForDigest();
+
+    for (const n of [1, 2, 3]) {
+      record(coordinator, {
+        turn: 1, phase: 'precombatMain', type: 'castSpell', description: `main ${n}`,
+      });
+    }
+    for (const n of [1, 2, 3, 4, 5]) {
+      record(coordinator, {
+        turn: 1, phase: 'combat', type: 'declareAttackers', description: `attack ${n}`,
+      });
+    }
+
+    const actions = coordinator.digestFor('P1').map((entry) => entry.action);
+    expect(actions).toEqual(['main 1', 'attack 1', 'attack 2', 'attack 3']);
+  });
+
+  it('keeps seats separate', () => {
+    const coordinator = coordinatorForDigest();
+    const p2 = request({
+      decidingPlayer: 'P2',
+      legalActions: [{ id: 1, type: 'castSpell', description: 'P2 casts' }],
+    });
+
+    record(coordinator, {
+      turn: 1, phase: 'precombatMain', type: 'castSpell', description: 'P1 casts',
+    });
+    coordinator.recordDecision(p2, { requestId: p2.requestId, actionId: 1 }, 'primary');
+
+    expect(coordinator.digestFor('P1').map((e) => e.action)).toEqual(['P1 casts']);
+    expect(coordinator.digestFor('P2').map((e) => e.action)).toEqual(['P2 casts']);
+  });
+
+  it('thins the older half rather than dropping the early game', () => {
+    // A review that cannot see the opening cannot answer "what did I do wrong", which is usually
+    // a turn-3 question. Truncating the front is the obvious cap and the wrong one.
+    const coordinator = coordinatorForDigest();
+    for (let turn = 1; turn <= 200; turn++) {
+      record(coordinator, {
+        turn, phase: 'precombatMain', type: 'castSpell', description: `turn ${turn}`,
+      });
+    }
+
+    const digest = coordinator.digestFor('P1');
+    expect(digest.length).toBeLessThanOrEqual(80);
+    // Turn 1 survives 200 turns of pressure on the cap.
+    expect(digest[0]?.action).toBe('turn 1');
+    expect(digest.at(-1)?.action).toBe('turn 200');
+  });
+});

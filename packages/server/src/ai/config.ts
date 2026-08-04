@@ -95,8 +95,23 @@ export interface AiConfig {
   strategist: AiModelProfile;
   /** Small menu-pick call used for decisions the local plan cannot answer. */
   tactician: AiModelProfile;
+  /** One tiny import-time call that refines the heuristic archetype tag (ADR 0022 §5). */
+  archetype: AiModelProfile;
+  /** One post-game call per AI seat, reviewing the game it just played (ADR 0022 §7). */
+  reflection: AiModelProfile;
   /** Master switch for the turn-start strategist tier. */
   strategistEnabled: boolean;
+  /**
+   * Master switch for AI archetype refinement. Off by default: the deterministic classifier is
+   * the product, and this only polishes its wording. Never gates the heuristic itself.
+   */
+  archetypeInferenceEnabled: boolean;
+  /**
+   * Default for post-game reflection. Off, because it is the only recurring per-game cost in this
+   * file that buys nothing during play. The setup screen sends an explicit per-game choice which
+   * overrides this; the env var governs anything that does not (tests, CLIs).
+   */
+  reflectionEnabled: boolean;
   /** Number of the seat's own recent decisions included in strategy/tactical context. */
   strategyRecentDecisionLimit: number;
   /** Reserved feature flag for exact engine-derived combat previews. */
@@ -229,7 +244,36 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     preferredMaxLatencySeconds: 10,
     preferredMinThroughput: 10,
   },
+  archetype: {
+    // Import-time only, one call per deck, and a heuristic tag already exists to fall back on —
+    // so this is the cheapest, fastest profile in the file rather than the smartest.
+    models: ['qwen/qwen3.7-flash', 'poolside/laguna-s-2.1'],
+    reasoningEnabled: false,
+    reasoningEffort: 'none',
+    maxOutputTokens: 60,
+    reasoningTokenHeadroom: 0,
+    requestTimeoutMs: 8000,
+    maxRetries: 1,
+    preferredMaxLatencySeconds: 10,
+    preferredMinThroughput: 10,
+  },
+  reflection: {
+    // Prose, not a menu pick, so the output budget is the largest here — but reasoning stays off:
+    // the game is over, nothing downstream depends on the answer, and thinking tokens on a
+    // once-per-seat retrospective are the easiest cost in the file to not spend.
+    models: ['deepseek/deepseek-v4-flash', 'tencent/hy3'],
+    reasoningEnabled: false,
+    reasoningEffort: 'none',
+    maxOutputTokens: 700,
+    reasoningTokenHeadroom: 0,
+    requestTimeoutMs: 30000,
+    maxRetries: 1,
+    preferredMaxLatencySeconds: 0,
+    preferredMinThroughput: 0,
+  },
   strategistEnabled: true,
+  archetypeInferenceEnabled: false,
+  reflectionEnabled: false,
   strategyRecentDecisionLimit: 8,
   combatRolloutsEnabled: false,
 };
@@ -402,6 +446,32 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       DEFAULT_AI_CONFIG.tactician.preferredMinThroughput,
     ),
   };
+  const archetype: AiModelProfile = {
+    ...DEFAULT_AI_CONFIG.archetype,
+    models:
+      parseModels(env['AI_ARCHETYPE_MODELS']) ??
+      globalModelsExplicit ??
+      (providerName === 'openrouter' ? DEFAULT_AI_CONFIG.archetype.models : models),
+    requestTimeoutMs: parseNumber(
+      env['AI_ARCHETYPE_REQUEST_TIMEOUT_MS'],
+      DEFAULT_AI_CONFIG.archetype.requestTimeoutMs,
+    ),
+  };
+  const reflection: AiModelProfile = {
+    ...DEFAULT_AI_CONFIG.reflection,
+    models:
+      parseModels(env['AI_REFLECTION_MODELS']) ??
+      globalModelsExplicit ??
+      (providerName === 'openrouter' ? DEFAULT_AI_CONFIG.reflection.models : models),
+    maxOutputTokens: parseNumber(
+      env['AI_REFLECTION_MAX_OUTPUT_TOKENS'],
+      DEFAULT_AI_CONFIG.reflection.maxOutputTokens,
+    ),
+    requestTimeoutMs: parseNumber(
+      env['AI_REFLECTION_REQUEST_TIMEOUT_MS'],
+      DEFAULT_AI_CONFIG.reflection.requestTimeoutMs,
+    ),
+  };
 
   return {
     ...DEFAULT_AI_CONFIG,
@@ -453,6 +523,16 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     ),
     strategist,
     tactician,
+    archetype,
+    reflection,
+    archetypeInferenceEnabled: parseBoolean(
+      env['AI_ARCHETYPE_INFERENCE'],
+      DEFAULT_AI_CONFIG.archetypeInferenceEnabled,
+    ),
+    reflectionEnabled: parseBoolean(
+      env['AI_REFLECTION_ENABLED'],
+      DEFAULT_AI_CONFIG.reflectionEnabled,
+    ),
     strategistEnabled: parseBoolean(
       env['AI_STRATEGIST_ENABLED'],
       DEFAULT_AI_CONFIG.strategistEnabled,
@@ -469,7 +549,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
 }
 
 /** Flatten one role's profile for the existing OpenAI-compatible client. */
-export function configForRole(config: AiConfig, role: 'strategist' | 'tactician'): AiConfig {
+export function configForRole(
+  config: AiConfig,
+  role: 'strategist' | 'tactician' | 'archetype' | 'reflection',
+): AiConfig {
   const profile = config[role];
   return {
     ...config,

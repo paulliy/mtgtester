@@ -13,7 +13,7 @@ import type { DecisionRequest, TargetChoice } from './engine';
 import type { GameId, PlayerId } from './ids';
 import type { GameResult } from './state';
 import type { PlayerBoardState } from './player';
-import type { SpectatorLogLine, SpectatorState } from './spectator';
+import type { AiAnnotation, AiReflection, SpectatorLogLine, SpectatorState } from './spectator';
 import type { ValidationIssue } from './decks';
 
 /** Server → client message types (brief §11). */
@@ -30,6 +30,7 @@ export const SERVER_TO_CLIENT_TYPES = [
   'sessionPaused',
   'replayUnlocked',
   'gameOver',
+  'gameReflections',
   'error',
 ] as const;
 export type ServerToClientType = (typeof SERVER_TO_CLIENT_TYPES)[number];
@@ -135,6 +136,12 @@ export interface EventBatchPayload {
   frontierTurn: number;
   /** Turns for which a snapshot exists, so the scrubber knows where it may seek. */
   snapshotTurns: number[];
+  /**
+   * AI reasoning for the decisions behind these lines (ADR 0022). Absent unless
+   * `DebugFlags.showAIResponses` is on, so the default payload does not grow. In single-player
+   * this never carries another seat's reasoning — see `MatchSession` for that gate.
+   */
+  annotations?: AiAnnotation[];
 }
 
 /**
@@ -221,12 +228,39 @@ export interface ReplayUnlockedPayload {
   lines: SpectatorLogLine[];
   snapshotTurns: number[];
   frontierTurn: number;
+  /**
+   * Every seat's reasoning for the whole game, released here because the game is over and there
+   * is no longer anything to protect (ADR 0022 §3). Absent unless `showAIResponses` is on.
+   */
+  annotations?: AiAnnotation[];
 }
 
 export interface GameOverPayload {
   result: GameResult;
   /** Finishing positions, 1st through 4th. */
   standings: Array<{ seat: PlayerId; position: number; lossReason: string | null }>;
+  /**
+   * Seats whose post-game reflection has been started (ADR 0022 §7). Absent when the feature is
+   * off. This ships with `gameOver` — which never waits on a model — so the results screen can
+   * show a placeholder per seat instead of guessing whether commentary is coming.
+   */
+  reflectingSeats?: PlayerId[];
+}
+
+/**
+ * Post-game commentary, arriving after `gameOver` rather than on it: a reflection is a model call
+ * and the results screen must not wait for one. Sent again as each further seat lands, carrying
+ * every reflection produced so far, so a client that missed a frame is still whole.
+ */
+export interface GameReflectionsPayload {
+  gameId: GameId;
+  reflections: AiReflection[];
+  /**
+   * True on the final message, once every seat has either answered or failed. Without it a seat
+   * whose call failed is indistinguishable from one still thinking, and a misconfigured provider
+   * leaves the results screen showing "writing…" forever.
+   */
+  complete: boolean;
 }
 
 export interface ErrorPayload {
@@ -250,6 +284,7 @@ export type ServerToClientMessage =
   | { type: 'sessionPaused'; payload: SessionPausedPayload }
   | { type: 'replayUnlocked'; payload: ReplayUnlockedPayload }
   | { type: 'gameOver'; payload: GameOverPayload }
+  | { type: 'gameReflections'; payload: GameReflectionsPayload }
   | { type: 'error'; payload: ErrorPayload };
 
 /** Narrow a server message to one variant, e.g. `ServerMessageOf<'eventBatch'>`. */
@@ -268,6 +303,13 @@ interface StartGameCommon {
   seed?: string;
   playbackMode?: PlaybackMode;
   paceMs?: number;
+  /**
+   * Turn on post-game AI commentary for this game (ADR 0022 §7). Chosen on the setup screen, so
+   * it is a per-game decision rather than a server-wide one; omit to fall back to
+   * `AI_REFLECTION_ENABLED`, which is off. Costs one extra model call per AI seat, once, after
+   * the game has already ended.
+   */
+  reflectionEnabled?: boolean;
 }
 
 /** The selected human seat is part of the single-player discriminant, never ambient state. */
@@ -429,7 +471,9 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
           payload['playbackMode'] === 'live' ||
           payload['playbackMode'] === 'manual') &&
         (payload['paceMs'] === undefined ||
-          (isFiniteNumber(payload['paceMs']) && payload['paceMs'] >= 0))
+          (isFiniteNumber(payload['paceMs']) && payload['paceMs'] >= 0)) &&
+        (payload['reflectionEnabled'] === undefined ||
+          typeof payload['reflectionEnabled'] === 'boolean')
       );
     case 'jumpToTurn':
       return (

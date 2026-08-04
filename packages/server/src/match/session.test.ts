@@ -370,3 +370,127 @@ describe('MatchSession — seeking (brief §10.1)', () => {
     }
   });
 });
+
+/**
+ * Post-game commentary (ADR 0022 §7, §9). The default game must cost exactly what it costs today,
+ * so the off path is what most users will actually run — and `gameOver` must be identical to
+ * before whether commentary is coming or not.
+ */
+describe('MatchSession — post-game reflection stays out of the way when off', () => {
+  /** `turnCap` high enough that the game genuinely ends rather than halting on the cap. */
+  function finishedGame(options: { reflectionEnabled?: boolean } = {}): {
+    session: MatchSession;
+    sent: ServerToClientMessage[];
+  } {
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      gameId: 'g-reflection-off',
+      seed: 'reflection-off',
+      seats: seats(),
+      providerKind: 'random',
+      ...(options.reflectionEnabled !== undefined
+        ? { reflectionEnabled: options.reflectionEnabled }
+        : {}),
+      turnCap: 200,
+      // Pace 0 presents synchronously. This fixture's 20-card test decks (`seats()` above) run
+      // out well before turn 200, and a player decking out on an uneventful draw step aborts
+      // their turn without ever surfacing a decision — which used to leave a gap in the turn
+      // numbering the presentation clock couldn't step over (`nextPresentableTurn` in session.ts
+      // is the fix; see the regression test below).
+      livePaceMs: 0,
+      send: (message) => sent.push(message),
+    });
+    return { session, sent };
+  }
+
+  function gameOverPayload(sent: ServerToClientMessage[]) {
+    const message = sent.find(
+      (candidate): candidate is Extract<ServerToClientMessage, { type: 'gameOver' }> =>
+        candidate.type === 'gameOver',
+    );
+    return message?.payload;
+  }
+
+  function stateSnapshots(sent: ServerToClientMessage[]) {
+    return sent.filter(
+      (candidate): candidate is Extract<ServerToClientMessage, { type: 'stateSnapshot' }> =>
+        candidate.type === 'stateSnapshot',
+    );
+  }
+
+  it('promises no commentary and sends none for a random-provider game', async () => {
+    const { session, sent } = finishedGame();
+    session.start();
+    await session.settled();
+    await session.reflectionsSettled();
+
+    const payload = gameOverPayload(sent);
+    expect(payload).toBeDefined();
+    // Absent, not empty: a payload that grew would defeat the point of defaulting to off.
+    expect(payload?.reflectingSeats).toBeUndefined();
+    expect(sent.some((message) => message.type === 'gameReflections')).toBe(false);
+  });
+
+  it('leaves the rest of the gameOver payload untouched', async () => {
+    const { session, sent } = finishedGame();
+    session.start();
+    await session.settled();
+
+    const payload = gameOverPayload(sent);
+    expect(payload?.standings).toHaveLength(4);
+    expect(payload?.result).toBeDefined();
+  });
+
+  it('never reviews a seat with no AI behind it, even when asked to', async () => {
+    // `reflectionEnabled` is a per-game opt-in, but a random bot has no reasoning to review — the
+    // provider kind is the real gate.
+    const { session, sent } = finishedGame({ reflectionEnabled: true });
+    session.start();
+    await session.settled();
+    await session.reflectionsSettled();
+
+    expect(gameOverPayload(sent)?.reflectingSeats).toBeUndefined();
+    expect(sent.some((message) => message.type === 'gameReflections')).toBe(false);
+  });
+});
+
+/**
+ * Regression coverage for the turn-numbering gap discovered while building 11.3: a turn that
+ * aborts with zero surfaced decisions (a player decking out on an uneventful draw step) never
+ * gets a snapshot of its own, and the live presentation clock used to assume `presentedTurn + 1`
+ * always exists — hanging forever, either as a tight synchronous loop (`livePaceMs: 0`) or a
+ * `setInterval` that never clears (any other pace), well after the game had actually finished
+ * computing.
+ */
+describe('MatchSession — presentation survives a gap in turn numbering', () => {
+  it('presents through to the final turn at pace 0 without hanging, even with a deck-out gap', async () => {
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      gameId: 'g-presentation-gap',
+      seed: 'reflection-off', // same fixture as above — its 20-card decks run out well before turn 200
+      seats: seats(),
+      providerKind: 'random',
+      turnCap: 200,
+      livePaceMs: 0,
+      send: (message) => sent.push(message),
+    });
+    session.start();
+    await session.settled();
+
+    const gameOver = sent.find(
+      (candidate): candidate is Extract<ServerToClientMessage, { type: 'gameOver' }> =>
+        candidate.type === 'gameOver',
+    );
+    expect(gameOver).toBeDefined();
+
+    const snapshots = sent.filter(
+      (candidate): candidate is Extract<ServerToClientMessage, { type: 'stateSnapshot' }> =>
+        candidate.type === 'stateSnapshot',
+    );
+    const lastPresented = snapshots[snapshots.length - 1]?.payload;
+    // Presentation must have actually reached the end of the game, not stalled behind a turn
+    // that was never snapshotted.
+    expect(lastPresented?.turn).toBe(gameOver?.payload.result.turnCount);
+    expect(lastPresented?.atFrontier).toBe(true);
+  });
+});

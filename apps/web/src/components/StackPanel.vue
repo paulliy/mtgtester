@@ -44,7 +44,7 @@ const nameOf = computed(() => {
 <template>
   <div class="stack">
     <h3>Stack</h3>
-    <ol v-if="topFirst.length > 0">
+    <TransitionGroup v-if="topFirst.length > 0" tag="ol" name="stack-item">
       <li
         v-for="(obj, index) in topFirst"
         :key="obj.id"
@@ -62,13 +62,14 @@ const nameOf = computed(() => {
           → {{ obj.targets.map((t) => nameOf.get(t) ?? t).join(', ') }}
         </span>
       </li>
-    </ol>
+    </TransitionGroup>
     <p v-else class="empty">empty</p>
   </div>
 </template>
 
 <style scoped>
 .stack {
+  position: relative;
   border: 1px solid var(--line);
   border-radius: 4px;
   background: var(--surface);
@@ -127,5 +128,18 @@ li.chosen-target {
   color: var(--muted);
   font-style: italic;
   font-size: 0.72rem;
+}
+/* Stack push/resolve feedback (§9.8.2). Reduced-motion global override collapses this to ~0s. */
+.stack-item-enter-active,
+.stack-item-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.stack-item-enter-from,
+.stack-item-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.stack-item-leave-active {
+  position: absolute;
 }
 </style>

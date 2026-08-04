@@ -11,4 +11,5 @@ export * from './heuristics';
 export * from './decision-cache';
 export * from './provider';
 export * from './logger';
+export * from './reflection';
 export * from './strategy-coordinator';

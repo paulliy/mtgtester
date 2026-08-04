@@ -13,9 +13,12 @@ import {
 } from '@mtg/engine';
 import type { AsyncDecisionProvider, DecisionProvider } from '@mtg/engine';
 import type {
+  AiAnnotation,
+  AiReflection,
   DecisionRequest,
   DecisionResponse,
   DebugFlags,
+  GameEvent,
   GameMode,
   IgnoredPlayerAbility,
   PlaybackMode,
@@ -29,16 +32,22 @@ import type {
 } from '@mtg/shared';
 import {
   AiCallLogger,
+  condenseSeatLog,
   configForRole,
   loadAiConfig,
   OpenAiCompatibleClient,
   OpenAiDecisionProvider,
+  publishReflections,
   RequestQueue,
+  runReflection,
   StrategyCoordinator,
+  type AiClient,
   type AiConfig,
+  type ReflectionContext,
 } from '../ai';
 import type { GameStore } from '../db';
 import { finishingPositions, type GameRecorder } from '../db/games';
+import { releaseAnnotations } from './annotations';
 import { MatchRunner } from './runner';
 import {
   HumanDecisionProvider,
@@ -84,6 +93,11 @@ export interface MatchSessionOptions {
   turnCap?: number;
   /** Overrides `LIVE_PACE_MS`; 0 presents as fast as the engine computes. Tests pass 0. */
   livePaceMs?: number;
+  /**
+   * Per-game override for post-game AI commentary (ADR 0022 §7), chosen on the setup screen.
+   * Omit to fall back to `AI_REFLECTION_ENABLED`, which is off.
+   */
+  reflectionEnabled?: boolean;
   send(message: ServerToClientMessage): void;
 }
 
@@ -103,6 +117,7 @@ export class MatchSession {
   /** The strategist's own queue lane — see `AiConfig.strategistConcurrency`. */
   private aiStrategistQueue: RequestQueue | null = null;
   private aiCoordinator: StrategyCoordinator | null = null;
+  private aiReflectionClient: AiClient | null = null;
   private debugFlags: DebugFlags = { ...DEFAULT_DEBUG_FLAGS };
   private readonly gameMode: GameMode;
   private readonly humanSeat: PlayerId | null;
@@ -125,6 +140,18 @@ export class MatchSession {
   private presentTimer: ReturnType<typeof setInterval> | null = null;
   /** Log lines computed but not yet reached by the presentation clock. */
   private pendingLines: SpectatorLogLine[] = [];
+  /** ADR 0022 reasoning notes awaiting a log line to attach to. */
+  private pendingAnnotations: AiAnnotation[] = [];
+  /** Every note produced this game — the single-player end-of-game release reads this. */
+  private readonly allAnnotations: AiAnnotation[] = [];
+  /** Post-game reviews that have landed so far (ADR 0022 §7). */
+  private readonly reflections: AiReflection[] = [];
+  /** Seats already written to `game_reflections`; progress fires repeatedly with a growing list. */
+  private readonly persistedReflections = new Set<PlayerId>();
+  /** Reflection is fired once per game; `publishGameOver` can run twice (a player resync). */
+  private reflectionsStarted = false;
+  private reflectionsComplete = false;
+  private reflectionRun: Promise<void> | null = null;
 
   constructor(private readonly opts: MatchSessionOptions) {
     this.gameMode = opts.gameMode ?? 'spectator';
@@ -192,7 +219,13 @@ export class MatchSession {
         }
         opts.send({
           type: 'eventBatch',
-          payload: { gameId: opts.gameId, lines, frontierTurn, snapshotTurns },
+          payload: {
+            gameId: opts.gameId,
+            lines,
+            frontierTurn,
+            snapshotTurns,
+            ...this.annotationField(lines),
+          },
         });
       },
       onSnapshot: () => {
@@ -233,9 +266,22 @@ export class MatchSession {
       onGameOver: (result) => {
         this.publishGameOver(result);
       },
-      onDecision: (request, response) => {
+      onDecision: (request, response, anchorSequence) => {
         if (request.decidingPlayer === this.humanSeat && this.opts.providerKind === 'ai') {
           this.ensureAiCoordinator().recordDecision(request, response, 'human');
+        }
+        this.logger?.recordAnchor(request.requestId, anchorSequence);
+        // The note is the gate, not the provider kind: a random provider never writes one, and
+        // the human seat's own choices are theirs rather than reasoning to be explained back.
+        if (request.decidingPlayer !== this.humanSeat && response.note !== undefined) {
+          this.recordAnnotation({
+            sequence: anchorSequence,
+            turn: request.turn,
+            seat: request.decidingPlayer,
+            kind: 'decision',
+            text: response.note,
+            source: this.logger?.sourceFor(request.requestId) ?? 'primary',
+          });
         }
         this.reportAiCost();
       },
@@ -345,10 +391,11 @@ export class MatchSession {
 
     // Pace 0 is "present everything as it computes" — no timer, just keep up.
     if (this.livePaceMs === 0) {
-      while (this.presentedTurn < this.runner.getFrontierTurn()) {
-        this.present(this.presentedTurn + 1);
+      for (;;) {
+        const next = this.nextPresentableTurn();
+        if (next === null) return;
+        this.present(next);
       }
-      return;
     }
 
     if (this.presentTimer !== null) return;
@@ -364,13 +411,32 @@ export class MatchSession {
     this.presentTimer = null;
   }
 
+  /**
+   * The next turn actually worth showing after `presentedTurn`, or `null` if nothing beyond it
+   * has been computed yet. Turn numbers are not guaranteed contiguous: a turn that surfaces no
+   * decision at all — e.g. its active player decks out on an uneventful draw step, aborting the
+   * turn before any priority window needs a real choice — never gets a snapshot of its own from
+   * `MatchRunner`. Stepping by `presentedTurn + 1` and stopping cold when that exact turn is
+   * missing is what used to hang the presentation clock forever (an infinite loop at
+   * `livePaceMs: 0`, a `setInterval` that never clears otherwise) even though the game had
+   * already finished computing. Walking the runner's own snapshot list instead skips straight to
+   * whatever turn actually exists next.
+   */
+  private nextPresentableTurn(): number | null {
+    for (const turn of this.runner.getSnapshotTurns()) {
+      if (turn > this.presentedTurn) return turn;
+    }
+    return null;
+  }
+
   private tickPresentation(): void {
     if (this.playbackMode !== 'live') {
       this.stopPresenting();
       return;
     }
-    if (this.presentedTurn >= this.runner.getFrontierTurn()) {
-      // Caught up. Keep the timer only while there is more to come.
+    const next = this.nextPresentableTurn();
+    if (next === null) {
+      // Caught up to everything computed so far. Keep the timer only while there is more to come.
       const status = this.runner.getStatus();
       if (status === 'finished' || status === 'halted' || status === 'abandoned') {
         this.flushPendingLines();
@@ -378,7 +444,7 @@ export class MatchSession {
       }
       return;
     }
-    this.present(this.presentedTurn + 1);
+    this.present(next);
   }
 
   /** Show turn `turn` and move the viewer there — which is what un-parks compute. */
@@ -426,8 +492,47 @@ export class MatchSession {
         lines,
         frontierTurn: this.runner.getFrontierTurn(),
         snapshotTurns: this.runner.getSnapshotTurns(),
+        ...this.annotationField(lines),
       },
     });
+  }
+
+  // ── AI reasoning annotations (ADR 0022) ───────────────────────────────────────────────────
+
+  /**
+   * Record one reasoning note against the sequence its decision will produce. Always collected —
+   * the list is short and the single-player release and the REST history both need it — but only
+   * queued for live delivery when the viewer has actually asked to see reasoning.
+   */
+  private recordAnnotation(annotation: AiAnnotation): void {
+    if (annotation.text.trim().length === 0) return;
+    this.allAnnotations.push(annotation);
+    if (this.debugFlags.showAIResponses) this.pendingAnnotations.push(annotation);
+  }
+
+  /**
+   * Annotations to ship with a batch of log lines, spread as `...this.annotationField(lines)` so
+   * the field is *absent* rather than empty when there is nothing to say — the flag being off
+   * must not grow the payload at all.
+   *
+   * Riding on the same batch as the lines is what keeps reasoning in step with the board: the
+   * live presentation clock paces `sendLines`, so annotations inherit that pacing for free
+   * instead of racing ahead of the turn the viewer is watching.
+   */
+  private annotationField(lines: readonly SpectatorLogLine[]): { annotations?: AiAnnotation[] } {
+    const due = this.takeAnnotationsFor(lines);
+    return due === undefined ? {} : { annotations: due };
+  }
+
+  private takeAnnotationsFor(lines: readonly SpectatorLogLine[]): AiAnnotation[] | undefined {
+    const { due, held } = releaseAnnotations({
+      gameMode: this.gameMode,
+      showReasoning: this.debugFlags.showAIResponses,
+      pending: this.pendingAnnotations,
+      lines,
+    });
+    this.pendingAnnotations = held;
+    return due.length > 0 ? due : undefined;
   }
 
   /**
@@ -635,16 +740,127 @@ export class MatchSession {
           lines: formatSpectatorLog(this.engine.eventsSince(0)),
           snapshotTurns: this.runner.getSnapshotTurns(),
           frontierTurn: result.turnCount,
+          // The game is over, so the reasoning withheld all game is safe to release in full
+          // (ADR 0022 §3) — this is the only path by which a player ever sees it.
+          ...(this.debugFlags.showAIResponses && this.allAnnotations.length > 0
+            ? { annotations: [...this.allAnnotations] }
+            : {}),
         },
       });
     }
+    const reflectingSeats = this.reflectionSeats();
     this.opts.send({
       type: 'gameOver',
       payload: {
         result,
         standings: this.standings(),
+        ...(reflectingSeats.length > 0 ? { reflectingSeats } : {}),
       },
     });
+
+    // Deliberately not awaited, and deliberately after the send above: a reflection is a model
+    // call, and the results screen is the one thing in this system that must never wait on one
+    // (ADR 0022 §7). On a resync the game is long over and the reviews already exist, so they are
+    // simply re-sent.
+    if (this.reflections.length > 0) this.sendReflections(this.reflections, this.reflectionsComplete);
+    this.reflectionRun = this.startReflections(result);
+  }
+
+  /** Test/shutdown hook: resolves once every post-game review has settled. */
+  async reflectionsSettled(): Promise<void> {
+    await this.reflectionRun;
+  }
+
+  // ── Post-game reflection (ADR 0022 §7) ────────────────────────────────────────────────────
+
+  /**
+   * Seats that will review this game: every AI seat, never the human's own. The per-game setup
+   * choice wins over the env default so the toggle on the new-game screen actually decides it.
+   */
+  private reflectionSeats(): PlayerId[] {
+    if (this.opts.providerKind !== 'ai') return [];
+    const config = (this.aiConfig ??= loadAiConfig(process.env));
+    if (!(this.opts.reflectionEnabled ?? config.reflectionEnabled)) return [];
+    return this.opts.seats
+      .map((seat) => seat.seat)
+      .filter((seat) => seat !== this.humanSeat);
+  }
+
+  private sendReflections(reflections: readonly AiReflection[], complete: boolean): void {
+    this.opts.send({
+      type: 'gameReflections',
+      payload: { gameId: this.opts.gameId, reflections: [...reflections], complete },
+    });
+  }
+
+  /** Everything one seat is allowed to know about the game, assembled from its own projections. */
+  private reflectionContextFor(
+    seat: PlayerId,
+    result: NonNullable<ReturnType<Engine['getResult']>>,
+    standings: ReadonlyMap<PlayerId, { position: number; lossReason: string | null }>,
+    events: readonly GameEvent[],
+  ): ReflectionContext {
+    const outcome = standings.get(seat);
+    const archetype = this.opts.seats.find((s) => s.seat === seat)?.summary.archetypeTag;
+    return {
+      seat,
+      position: outcome?.position ?? 0,
+      seatCount: this.opts.seats.length,
+      lossReason: outcome?.lossReason ?? null,
+      turnCount: result.turnCount,
+      winnerSeat: result.winnerSeat,
+      // `view(seat)` and `formatPlayerLog(events, seat)` are the same two anti-cheat boundaries
+      // the seat played behind. The game ending does not widen them.
+      view: this.engine.view(seat),
+      decisions: this.aiCoordinator?.digestFor(seat) ?? [],
+      publicLog: condenseSeatLog(formatPlayerLog([...events], seat), seat),
+      ...(archetype !== undefined && archetype.length > 0 ? { archetypeTag: archetype } : {}),
+    };
+  }
+
+  private async startReflections(
+    result: NonNullable<ReturnType<Engine['getResult']>>,
+  ): Promise<void> {
+    if (this.reflectionsStarted) return;
+    const seats = this.reflectionSeats();
+    if (seats.length === 0) return;
+    this.reflectionsStarted = true;
+
+    const config = this.aiConfig as AiConfig;
+    this.aiReflectionClient ??= new OpenAiCompatibleClient(configForRole(config, 'reflection'));
+    // The strategist lane, reused: no tactical decision can exist any more, so there is nothing
+    // left for these to block.
+    const queue = (this.aiStrategistQueue ??= new RequestQueue({
+      rpmLimit: config.rpmLimit,
+      concurrency: config.strategistConcurrency,
+    }));
+
+    const standings = new Map(this.standings().map((entry) => [entry.seat, entry]));
+    const events = this.engine.eventsSince(0);
+
+    await publishReflections(
+      seats.map((seat) => this.reflectionContextFor(seat, result, standings, events)),
+      (context) =>
+        runReflection(this.aiReflectionClient, queue, context, {
+          gameId: this.opts.gameId,
+          logger: this.logger ?? undefined,
+        }),
+      (reflections, complete) => {
+        this.reflections.length = 0;
+        this.reflections.push(...reflections);
+        this.reflectionsComplete = complete;
+        for (const reflection of reflections) {
+          if (this.persistedReflections.has(reflection.seat)) continue;
+          this.persistedReflections.add(reflection.seat);
+          try {
+            this.recorder?.saveReflection(reflection);
+          } catch {
+            // Commentary that failed to persist is still worth showing to the person watching.
+          }
+        }
+        this.sendReflections(reflections, complete);
+      },
+    );
   }
 
   /**
@@ -752,14 +968,32 @@ export class MatchSession {
       rpmLimit: config.rpmLimit,
       concurrency: config.strategistConcurrency,
     });
-    this.aiCoordinator ??= new StrategyCoordinator(
-      this.aiStrategistClient,
-      this.aiStrategistQueue,
-      this.engine,
-      config,
-      this.logger ?? undefined,
-      this.humanSeat,
-    );
+    if (this.aiCoordinator === null) {
+      this.aiCoordinator = new StrategyCoordinator(
+        this.aiStrategistClient,
+        this.aiStrategistQueue,
+        this.engine,
+        config,
+        this.logger ?? undefined,
+        this.humanSeat,
+        // Each bot is told what its *own* deck is built to do (ADR 0022 §5). The map is keyed by
+        // seat and read only for the seat being planned, so no seat ever sees another's.
+        new Map(this.opts.seats.map((seat) => [seat.seat, seat.summary.archetypeTag])),
+      );
+      // A strategist plan has no decision of its own and lands asynchronously, so it anchors to
+      // wherever the log has reached — which is the point it actually started steering play.
+      this.aiCoordinator.onStrategy = (turn, activePlayer, intent, model) => {
+        this.recordAnnotation({
+          sequence: this.runner.nextSequence(),
+          turn,
+          seat: activePlayer,
+          kind: 'strategy',
+          text: intent,
+          source: 'strategist',
+          model,
+        });
+      };
+    }
     return this.aiCoordinator;
   }
 }

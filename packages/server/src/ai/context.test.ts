@@ -226,3 +226,51 @@ describe('Context Assembler', () => {
     expect(payload).not.toHaveProperty('gameState');
   });
 });
+
+/**
+ * ADR 0022 §5 gave the strategist its own deck's archetype. The boundary matters more than the
+ * feature: an archetype is derived from a full 99-card list, so it is exactly as private as a
+ * decklist. One seat's tag must never reach another seat's prompt.
+ */
+describe('strategist deck archetype', () => {
+  it("tells the strategist what its own deck is built to do", () => {
+    const prompt = assembleStrategistPrompt(
+      fixtureRequest(),
+      fixtureView(),
+      [],
+      'Gruul dragon tribal aggro',
+    );
+    const payload = JSON.parse(prompt.messages[1]!.content);
+
+    expect(payload.yourDeckArchetype).toBe('Gruul dragon tribal aggro');
+    expect(payload.strategyTask.requirements[0]).toContain('yourDeckArchetype');
+  });
+
+  it('omits the field entirely when no archetype is known, rather than sending a placeholder', () => {
+    const payload = JSON.parse(
+      assembleStrategistPrompt(fixtureRequest(), fixtureView(), []).messages[1]!.content,
+    );
+
+    expect(payload).not.toHaveProperty('yourDeckArchetype');
+    expect(payload.strategyTask.requirements[0]).not.toContain('yourDeckArchetype');
+  });
+
+  it('never carries another seat\'s archetype anywhere in the prompt', () => {
+    const prompt = assembleStrategistPrompt(
+      fixtureRequest(),
+      fixtureView(),
+      [],
+      'Gruul dragon tribal aggro',
+    );
+    const whole = prompt.messages.map((message) => message.content).join('\n');
+
+    // The caller passes one seat's tag; nothing in the assembler may invent or echo others.
+    expect(whole).not.toContain('Azorius');
+    const payload = JSON.parse(prompt.messages[1]!.content) as { opponents: unknown[] };
+    for (const opponent of payload.opponents) {
+      expect(opponent).not.toHaveProperty('archetype');
+      expect(opponent).not.toHaveProperty('deckArchetype');
+    }
+    expect(prompt.messages[0]!.content).toContain('yourDeckArchetype describes YOUR deck only');
+  });
+});
