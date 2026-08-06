@@ -1,7 +1,7 @@
 /** Authored overrides for marchesa-the-black-rose.txt. */
 
 import type { CardDefinition } from '../definition';
-import type { TokenSpec } from '../ability';
+import type { Ability, TokenSpec } from '../ability';
 import { parseManaCost } from '../../mana/cost';
 import { constant } from '../value';
 import { allOf, anyOf, HAS_ANY_COUNTER, IS_TOKEN, OTHER, not, ofColor, ofSubtype, ofType, YOURS } from '../selector';
@@ -15,6 +15,15 @@ const BIRD: TokenSpec = { name: 'Bird', typeLine: 'Creature — Bird', types: ['
 const SPAWN: TokenSpec = { name: 'Eldrazi Spawn', typeLine: 'Creature — Eldrazi', types: ['Creature'], subtypes: ['Eldrazi'], colors: [], power: 0, toughness: 1, manaAbilities: [{ costs: [{ kind: 'sacrificeSelf' }], units: [['C']] }] };
 const TREASURE: TokenSpec = { name: 'Treasure', typeLine: 'Artifact — Treasure', types: ['Artifact'], subtypes: ['Treasure'], colors: [], power: null, toughness: null, manaAbilities: [{ costs: [{ kind: 'sacrificeSelf' }], units: [['W', 'U', 'B', 'R', 'G']] }] };
 const MUTAGEN: TokenSpec = { name: 'Mutagen', typeLine: 'Artifact — Mutagen', types: ['Artifact'], subtypes: ['Mutagen'], colors: [], power: null, toughness: null };
+
+// Dethrone (CR 702.103) has no generic keyword representation in this engine — every carrier
+// (Marchesa's own trigger, the static ability she grants other creatures) is this same
+// bespoke trigger. Dack's Duplicate needs it as an "enters as a copy, except it also has
+// dethrone" addition, which is why it is exported here rather than inlined in MARCHESA.
+const DETHRONE_TRIGGER: Ability = {
+  kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'self' }, condition: { kind: 'attackingPlayerHasMoreLife' } }, targets: [],
+  effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }], description: 'Dethrone — put a +1/+1 counter on this creature',
+};
 
 const SP = (targets: CardDefinition['spellAbility'] extends infer _T ? any[] : never, effects: any[], description: string): Partial<CardDefinition> => ({
   spellAbility: { kind: 'spell', targets, effects, description },
@@ -61,7 +70,7 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   registerRemainingOverride('6cf50e21-0f60-4e9a-b910-ebe1bad2a29e', 'Blasphemous Edict', [
     'You may pay {B} rather than pay this spell\'s mana cost if there are thirteen or more creatures on the battlefield.',
     'Each player sacrifices thirteen creatures of their choice.',
-  ], { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'sacrificeEachPlayer', count: 13 }], description: 'Each player sacrifices thirteen creatures' } });
+  ], { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'sacrificeEachPlayer', count: 13, filter: 'creature' }], description: 'Each player sacrifices thirteen creatures' } });
   registerRemainingOverride('eaca2576-020b-4af4-b348-6d1b56116c41', 'Body Launderer', [
     'Whenever another nontoken creature you control dies, this creature connives.',
     'When this creature dies, return another target non-Rogue creature card with equal or lesser power from your graveyard to the battlefield.',
@@ -80,7 +89,7 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   ], { activatedAbilities: [{ costs: [M('{U}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature', filter: HAS_ANY_COUNTER }], effects: [{ op: 'gainControlTarget', target: 0 }], description: '{U}, {T} — gain control of a countered creature' } }] });
   registerRemainingOverride('724767ca-bd84-4137-9133-4ad2e96b8428', "Dack's Duplicate", [
     'You may have this creature enter as a copy of any creature on the battlefield, except it has haste and dethrone.',
-  ], { entersAsCopy: { target: 'creature', addKeywords: ['haste'], nonLegendary: false } });
+  ], { entersAsCopy: { selector: ofType('Creature'), addKeywords: ['haste'], addTriggers: [DETHRONE_TRIGGER] } });
   registerRemainingOverride('2068185c-1b50-47d0-aa3f-bf505d199428', 'Dark Confidant', [
     'At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'you' }, targets: [], effects: [{ op: 'drawRevealTopLoseManaValue' }], description: 'Reveal the top card, draw it, and lose life equal to its mana value' }] });
@@ -104,13 +113,13 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   ], { spellAbility: { kind: 'spell', targets: [{ kind: 'spell' }], effects: [{ op: 'copyTargetSpell', target: 0 }], description: 'Copy target instant or sorcery spell' } });
   registerRemainingOverride('4ce156f8-6b0b-41ce-9e8f-b2735c757406', 'Flare of Malice', [
     'You may sacrifice a nontoken black creature rather than pay this spell\'s mana cost.', 'Each opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control.',
-  ], { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'sacrificeGreatestEachOpponent' }], description: 'Each opponent sacrifices their greatest-mana-value creature or planeswalker' } });
+  ], { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'sacrificeGreatestEachOpponent', selector: 'creatureOrPlaneswalker', metric: 'manaValue', action: 'sacrifice' }], description: 'Each opponent sacrifices their greatest-mana-value creature or planeswalker' } });
   registerRemainingOverride('ba9f3c5d-556f-48d1-8d87-723f7893cfcd', 'Flayer of the Hatebound', [
     'Undying', 'Whenever this creature or another creature enters from your graveyard, that creature deals damage equal to its power to any target.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) } }, targets: [{ kind: 'anyTarget' }], effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'powerOfTriggerObject' } }], description: 'A creature enters from your graveyard — it deals damage equal to its power' }] });
   registerRemainingOverride('77807103-bcd5-479f-bedd-f5d97aa6d3d2', 'Forge of Heroes', [
     '{T}: Choose target commander that entered this turn. Put a +1/+1 counter on it if it\'s a creature and a loyalty counter on it if it\'s a planeswalker.',
-  ], { activatedAbilities: [{ costs: [TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'permanent', filter: allOf({ kind: 'isCommander' }, { kind: 'enteredThisTurn' }) }], effects: [{ op: 'putCounters', target: 0, counter: '+1/+1', count: 1 }], description: 'Put a counter on a commander that entered this turn' } }] });
+  ], { activatedAbilities: [{ costs: [TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'permanent', filter: allOf({ kind: 'isCommander' }, { kind: 'enteredThisTurn' }) }], effects: [{ op: 'putCounterByPermanentType', target: 0, creatureCounter: '+1/+1', planeswalkerCounter: 'loyalty', count: 1 }], description: 'Put a counter on a commander that entered this turn' } }] });
   registerRemainingOverride('9025b3ce-f6ae-431d-9eb5-02d713b8c9b8', 'Gleeful Arsonist', [
     'Whenever an opponent casts a noncreature spell, this creature deals damage equal to its power to that player.', 'Undying',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'opponent', filter: { kind: 'not', of: ofType('Creature') } }, targets: [], effects: [{ op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'powerOfSource' } }], description: 'An opponent casts a noncreature spell — deal damage equal to this creature’s power' }] });
@@ -119,7 +128,7 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   ], { activatedAbilities: [{ costs: [M('{U}'), SAC], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'noncreatureSpell' }], effects: [{ op: 'counter', target: 0 }], description: '{U}, sacrifice Glen Elendra — counter target noncreature spell' } }] });
   registerRemainingOverride('6f4ac4a4-53ec-4bc9-8f5c-d4b801d867b2', 'Grave Pact', [
     'Whenever a creature you control dies, each other player sacrifices a creature of their choice.',
-  ], { triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) } }, targets: [], effects: [{ op: 'sacrificeOneEachOpponent' }], description: 'Each other player sacrifices a creature' }] });
+  ], { triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) } }, targets: [], effects: [{ op: 'sacrificeOneEachOpponent', filter: 'creature' }], description: 'Each other player sacrifices a creature' }] });
   registerRemainingOverride('72aef1d8-11df-4bc2-af83-907b05df73a8', 'Grim Haruspex', [
     'Morph {B}',
   ], { morphCost: parseManaCost('{B}').cost! });
@@ -185,10 +194,10 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   ], { activatedAbilities: [{ costs: [M('{U}'), SAC], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'stackObject' }], effects: [{ op: 'counter', target: 0 }], description: '{U}, sacrifice — counter a spell or ability targeting you or your creature' } }] });
   registerRemainingOverride('fda61506-ed79-47fd-badd-639185297913', 'Smokestack', [
     'At the beginning of each player\'s upkeep, that player sacrifices a permanent of their choice for each soot counter on this artifact.',
-  ], { entersWithCounters: { soot: 1 }, triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'each' }, targets: [], effects: [{ op: 'sacrificeEachPlayer', count: 1 }], description: 'Each player sacrifices a permanent for each soot counter' }] });
+  ], { entersWithCounters: { soot: 1 }, triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'each' }, targets: [], effects: [{ op: 'sacrificeEachPlayer', count: 1, filter: 'any' }], description: 'Each player sacrifices a permanent for each soot counter' }] });
   registerRemainingOverride('8dcb35e5-ae44-455f-86e3-4a77d496ff34', 'Spark Double', [
     'You may have this creature enter as a copy of a creature or planeswalker you control, except it enters with an additional +1/+1 counter on it if it\'s a creature, it enters with an additional loyalty counter on it if it\'s a planeswalker, and it isn\'t legendary.',
-  ], { entersAsCopy: { target: 'permanent', addCounters: { '+1/+1': 1 }, nonLegendary: true } });
+  ], { entersAsCopy: { selector: allOf(YOURS, anyOf(ofType('Creature'), ofType('Planeswalker'))), addCounterByType: { creatureCounter: '+1/+1', planeswalkerCounter: 'loyalty', count: 1 }, removeSupertypes: ['Legendary'] } });
   registerRemainingOverride('82a6fa6f-13c2-4ea3-bec2-c51b56b2783b', 'The Ooze', [
     'Whenever a creature you control with a +1/+1 counter on it leaves the battlefield, create a Mutagen token for each +1/+1 counter on it.', '{T}: Exile target card from a graveyard. Create a Mutagen token.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS, HAS_ANY_COUNTER) } }, targets: [], effects: [{ op: 'createToken', spec: MUTAGEN, count: { kind: 'countersOnTriggerObject', counter: '+1/+1' } }], description: 'A countered creature leaves — create Mutagen tokens' }], activatedAbilities: [{ costs: [TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'cardInGraveyard' }], effects: [{ op: 'exileCard', target: 0 }, { op: 'createToken', spec: MUTAGEN, count: constant(1) }], description: 'Exile a card from a graveyard — create a Mutagen' } }] });

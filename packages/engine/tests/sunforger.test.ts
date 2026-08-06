@@ -114,12 +114,12 @@ describe('Sunforger', () => {
       (decision) => {
         if (decision.decisionType === 'general') {
           const found = decision.options.findIndex((o) => o.description.includes('Test Red Bolt'));
-          if (found >= 0) return { index: found };
+          if (found >= 0) return { index: found, targets: new Map() };
         }
         if (decision.decisionType === 'chooseTargets') {
           return { index: 0, targets: new Map([[0, opponent.id]]) };
         }
-        return { index: 0 };
+        return { index: 0, targets: new Map() };
       },
     );
 

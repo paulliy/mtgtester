@@ -121,8 +121,27 @@ export interface CardDefinition {
   alternativeCasts?: import('./ability').AlternativeCast[];
   /** "You may cast this spell without paying its mana cost if you control a commander." */
   commanderFreeCast?: boolean;
-  /** A card that asks whether it should copy a permanent as it enters. */
-  entersAsCopy?: { target: import('./ability').TargetKind; addKeywords?: import('./ability').KeywordAbility[]; addCounters?: Record<string, number>; nonLegendary?: boolean };
+  /**
+   * "You may have this enter the battlefield as a copy of …" (CR 707.2, as-enters
+   * replacement — Dack's Duplicate, Spark Double, Sculpting Steel). `selector` is a
+   * `Selector`, not a `TargetKind`: this is a replacement-effect choice resolved as the
+   * permanent enters, not an announced stack target.
+   */
+  entersAsCopy?: {
+    /** Eligible copy candidates, e.g. `ofType('Creature')` or `allOf(YOURS, anyOf(ofType('Creature'), ofType('Planeswalker')))`. */
+    selector: import('./selector').Selector;
+    /** "…except it's also an artifact" (Phyrexian Metamorph)-style additions. */
+    addTypes?: string[];
+    /** Keywords granted beyond what the copy itself has (Dack's Duplicate's "and has haste"). */
+    addKeywords?: import('./ability').KeywordAbility[];
+    /** Triggered abilities granted beyond what the copy itself has, for mechanics with no
+     * generic keyword representation (Dack's Duplicate's "and has dethrone"). */
+    addTriggers?: import('./ability').Ability[];
+    /** Supertypes stripped from the copy ("except it isn't legendary" — Spark Double). */
+    removeSupertypes?: string[];
+    /** A counter added on entry, chosen by the copy's own resulting type (Spark Double). */
+    addCounterByType?: { creatureCounter: string; planeswalkerCounter: string; count: number };
+  };
   /** Morph is represented as a face-down cast/activation marker in the authored model. */
   morphCost?: ParsedManaCost;
   /** The printed "can't block" characteristic. */

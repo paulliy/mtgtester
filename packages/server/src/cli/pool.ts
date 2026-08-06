@@ -14,11 +14,11 @@ import { dirname, resolve } from 'node:path';
 import type { DecisionRequest, DecisionResponse, OracleCard } from '@mtg/shared';
 import {
   Engine,
-  RandomDecisionProvider,
   runToCompletion,
   runToCompletionAsync,
   type EnginePlayerConfig,
 } from '@mtg/engine';
+import { HeuristicDecisionProvider } from '@mtg/bot';
 import { toOracleCard, type RawScryfallCard } from '../cards/scryfall';
 import {
   basicLandsByColor,
@@ -169,7 +169,7 @@ function logDecisionProgress(
   }
 }
 
-function playRandom(pool: SupportedPool, seed: string, verbose: boolean): void {
+function playHeuristic(pool: SupportedPool, seed: string, verbose: boolean): void {
   const decks = buildDecks(pool, seed);
   console.log('\nGenerated decks');
   console.log('─'.repeat(15));
@@ -183,10 +183,10 @@ function playRandom(pool: SupportedPool, seed: string, verbose: boolean): void {
   }));
 
   console.log(
-    `\nPlaying four-player game (Random Decision Providers) [${verbose ? 'VERBOSE' : 'LIVE PROGRESS'}]…`,
+    `\nPlaying four-player game (Heuristic Bot Providers) [${verbose ? 'VERBOSE' : 'LIVE PROGRESS'}]…`,
   );
   const engine = new Engine({ gameId: 'pool-demo', seed, players, turnCap: 200 });
-  const providers = new Map<string, RandomDecisionProvider>();
+  const providers = new Map<string, HeuristicDecisionProvider>();
 
   let surfacedDecisions = 0;
   const lastTurnReported = { turn: 0 };
@@ -196,7 +196,9 @@ function playRandom(pool: SupportedPool, seed: string, verbose: boolean): void {
     (playerId) => {
       let provider = providers.get(playerId);
       if (provider === undefined) {
-        provider = new RandomDecisionProvider(`${seed}-${playerId}`);
+        provider = new HeuristicDecisionProvider(`${seed}-${playerId}`, () =>
+          engine.view(playerId),
+        );
         providers.set(playerId, provider);
       }
       return provider;
@@ -497,7 +499,7 @@ async function main(): Promise<void> {
     if (args.ai) {
       await playAi(pool, args);
     } else {
-      playRandom(pool, args.seed, args.verbose);
+      playHeuristic(pool, args.seed, args.verbose);
     }
   }
 }

@@ -490,6 +490,41 @@ describe('StrategyCoordinator', () => {
     expect(coordinator.guidanceFor('P2').strategy).toBeNull();
   });
 
+  it('cancel() aborts the in-flight call and blocks every future strategist attempt', async () => {
+    let capturedSignal: AbortSignal | undefined;
+    const client: AiClient = {
+      activeModel: 'test-model',
+      requestDecision: vi.fn().mockImplementation((_prompt, _request, signal?: AbortSignal) => {
+        capturedSignal = signal;
+        return new Promise(() => {}); // never settles on its own — only `cancel()` ends it
+      }),
+    };
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+    let enqueueSignal: AbortSignal | undefined;
+    const queue = {
+      enqueue: <T>(fn: () => Promise<T>, signal?: AbortSignal) => {
+        enqueueSignal = signal;
+        return fn();
+      },
+    };
+    const coordinator = new StrategyCoordinator(client, queue, engine, DEFAULT_AI_CONFIG);
+
+    coordinator.prefetch('g1', 1, 'P1');
+    expect(capturedSignal?.aborted).toBe(false);
+    expect(enqueueSignal).toBe(capturedSignal);
+
+    coordinator.cancel();
+    expect(capturedSignal?.aborted).toBe(true);
+
+    // A halted/abandoned match must never resume prefetching — not this turn, not the next one.
+    coordinator.prepare(request());
+    coordinator.prefetch('g1', 2, 'P1');
+    expect(client.requestDecision).toHaveBeenCalledTimes(1);
+  });
+
   it('truncates past decision history at maximum limit configured by strategyRecentDecisionLimit', () => {
     const client = strategist();
     const engine = {

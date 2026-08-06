@@ -472,10 +472,14 @@ describe('Adversarial Stress Tests — Task 4: parseJsonResponse & classifyError
     const req = makeRequest({ requestId: 'req-http-fail' });
 
     // EMPIRICAL VERIFICATION OF BUG:
-    // Provider catches HttpError and returns safestFallback WITHOUT invoking Step 2 (Corrective Retry prompt)!
+    // Provider catches HttpError and jumps straight to the heuristic-bot fallback WITHOUT
+    // invoking Step 2 (Corrective Retry prompt)!
+    // The fallback is the heuristic bot (ADR 0023 item 9), not a reflex to `pass`: with a free
+    // land drop on the menu, playing it outscores passing, so that's what comes back — the
+    // fallback chain no longer defaults to `pass` just because it is always legal.
     const response = await provider.decide(req);
-    expect(response.actionId).toBe(0); // Pass (safest fallback)
-    expect(response.note).toContain('Fallback');
+    expect(response.actionId).toBe(1); // Play Forest — outscores pass, which scores exactly 0
+    expect(response.note).toContain('Heuristic bot');
   });
 
   it('Task 4.3: Truncated JSON is a retryable generation failure, and reaches the Step 2 Corrective Retry instead of dropping straight to a fallback', async () => {

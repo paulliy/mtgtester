@@ -107,13 +107,13 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   ], { manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G'], ['W', 'U', 'B', 'R', 'G'], ['W', 'U', 'B', 'R', 'G']], linked: true }] });
   registerRemainingOverride('6c85271c-c711-49b0-a72e-9e576c33714d', 'Sculpting Steel', [
     'You may have this artifact enter as a copy of any artifact on the battlefield.',
-  ], { entersAsCopy: { target: 'artifact' } });
+  ], { entersAsCopy: { selector: ofType('Artifact') } });
   registerRemainingOverride('eedd5a17-d0fe-4a13-8f2c-f343bfa43f92', 'Shard of the Nightbringer', [
     'Drain Life — When this creature enters, if you cast it, target opponent loses half their life, rounded up. You gain life equal to the life lost this way.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'halfLifeDrainTargetOpponent' }], description: 'An opponent loses half their life and you gain that much' }] });
   registerRemainingOverride('d04d2434-121e-4420-abfc-fa21ad5577c3', 'Shard of the Void Dragon', [
     'Spear of the Void Dragon — Whenever this creature attacks, each opponent sacrifices a nonland permanent of their choice.', 'Matter Absorption — Whenever an artifact is put into a graveyard from the battlefield or is put into exile from the battlefield, put two +1/+1 counters on this creature.',
-  ], { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'sacrificeOneEachOpponent' }], description: 'Each opponent sacrifices a nonland permanent' }, { kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: ofType('Artifact') } }, targets: [], effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 2 }], description: 'An artifact leaves — put two counters on Shard' }] });
+  ], { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'sacrificeOneEachOpponent', filter: 'nonland' }], description: 'Each opponent sacrifices a nonland permanent' }, { kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: ofType('Artifact') } }, targets: [], effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 2 }], description: 'An artifact leaves — put two counters on Shard' }] });
   registerRemainingOverride('f96fcb37-5f17-4231-b1a2-64f5fe45730b', 'Skorpekh Destroyer', [
     'Hyperphase Threshers — Whenever an artifact you control enters, this creature gains first strike until end of turn.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(ofType('Artifact'), YOURS) } }, targets: [], effects: [{ op: 'grantKeywordUntilEot', target: 'source', keyword: 'first strike' }], description: 'An artifact enters — gain first strike' }] });

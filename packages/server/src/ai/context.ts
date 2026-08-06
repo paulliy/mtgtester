@@ -61,6 +61,18 @@ export function assemblePrompt(
       ap: request.activePlayer,
       dp: request.decidingPlayer,
       prompt: request.prompt,
+      ...(request.manaSplit !== undefined
+        ? {
+            manaSplit: request.manaSplit,
+            responseFormat: 'include manaSplit counts summing to amount',
+          }
+        : {}),
+      ...(request.combatDamageSplit !== undefined
+        ? {
+            combatDamageSplit: request.combatDamageSplit,
+            responseFormat: 'include combatDamageSplit counts (by target id) summing to amount',
+          }
+        : {}),
     },
     you: {
       seat: view.seat,

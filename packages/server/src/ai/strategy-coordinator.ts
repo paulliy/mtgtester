@@ -16,11 +16,12 @@ import {
   type RecentSeatDecision,
   type TacticalGuidance,
 } from './context';
+import { RequestCancelledError } from './errors';
 import type { AiCallLogger, DecisionSource } from './logger';
 import { TurnPlanManager } from './turn-plan';
 
 interface QueueLike {
-  enqueue<T>(fn: () => Promise<T>): Promise<T>;
+  enqueue<T>(fn: () => Promise<T>, signal?: AbortSignal): Promise<T>;
 }
 
 const PHASES = new Set<Phase>(['beginning', 'precombatMain', 'combat', 'postcombatMain', 'ending']);
@@ -144,6 +145,10 @@ export class StrategyCoordinator {
   private activeGeneration = 0;
   /** The in-flight (or last-settled) strategist call, for tests and turn-boundary bookkeeping. */
   private inFlight: Promise<void> | null = null;
+  /** Aborts whatever strategist call is currently in flight (or queued, unstarted). */
+  private abortController: AbortController | null = null;
+  /** Set by `cancel()` when the match halts/is abandoned — no further strategist call starts. */
+  private cancelled = false;
   /**
    * Fires when a strategist plan installs, carrying its standing intent (ADR 0022). The session
    * turns this into a log annotation; nothing here depends on it being set.
@@ -221,6 +226,7 @@ export class StrategyCoordinator {
       !this.config.strategistEnabled ||
       this.strategistClient === null ||
       this.strategyAttempted ||
+      this.cancelled ||
       turn <= 0 ||
       activePlayer === this.humanSeat
     ) {
@@ -243,12 +249,28 @@ export class StrategyCoordinator {
       prompt: 'Create the active player turn strategy.',
       legalActions: [{ id: 0, type: 'planTurn', description: 'Return the turn strategy' }],
     };
-    this.inFlight = this.runStrategist(strategyRequest, generation);
+    const controller = new AbortController();
+    this.abortController = controller;
+    this.inFlight = this.runStrategist(strategyRequest, generation, controller.signal);
+  }
+
+  /**
+   * Stops chasing a strategist plan the match no longer needs — a halt or an abandon. Aborts
+   * whatever call is currently queued or in flight (see `RequestQueue`/`AiClient`, which honor
+   * the signal all the way down to the underlying HTTP request) and blocks every future one:
+   * without this, a strategist call fired ahead-of-time for a turn boundary the engine reached
+   * during compute-ahead keeps running — and keeps getting billed — after the game has already
+   * stopped.
+   */
+  cancel(): void {
+    this.cancelled = true;
+    this.abortController?.abort();
   }
 
   private async runStrategist(
     strategyRequest: DecisionRequest,
     generation: number,
+    signal: AbortSignal,
   ): Promise<void> {
     const activePlayer = strategyRequest.activePlayer;
     const view = this.engine.view(activePlayer);
@@ -261,8 +283,9 @@ export class StrategyCoordinator {
     );
 
     try {
-      const result = await this.queue.enqueue(() =>
-        this.strategistClient!.requestDecision(prompt, strategyRequest),
+      const result = await this.queue.enqueue(
+        () => this.strategistClient!.requestDecision(prompt, strategyRequest, signal),
+        signal,
       );
       const strategy = cleanPlan(result.response.turnStrategy);
       if (result.response.actionId !== 0 || strategy === null) {
@@ -293,6 +316,8 @@ export class StrategyCoordinator {
         },
       );
     } catch (error) {
+      // A deliberate `cancel()` (halt/abandon), not a call gone wrong — nothing to warn about.
+      if (error instanceof RequestCancelledError) return;
       this.engine.addDebug(
         'decision',
         `strategist call failed for ${activePlayer}: ${(error as Error).message}`,

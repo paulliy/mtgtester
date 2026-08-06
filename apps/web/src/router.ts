@@ -3,6 +3,8 @@ import GameView from './views/GameView.vue';
 import SetupView from './views/SetupView.vue';
 import StatsView from './views/StatsView.vue';
 import DebugView from './views/DebugView.vue';
+import BatchSetupView from './views/BatchSetupView.vue';
+import BatchResultsView from './views/BatchResultsView.vue';
 
 /**
  * Two routes in Phase 4. The stats screen and the debug panel (brief §10.2, §13) are Phase 5
@@ -13,6 +15,8 @@ const routes: RouteRecordRaw[] = [
   { path: '/game', name: 'game', component: GameView },
   { path: '/stats', name: 'stats', component: StatsView },
   { path: '/debug', name: 'debug', component: DebugView },
+  { path: '/batch', name: 'batch', component: BatchSetupView },
+  { path: '/batch/:id', name: 'batch-results', component: BatchResultsView },
 ];
 
 export const router = createRouter({

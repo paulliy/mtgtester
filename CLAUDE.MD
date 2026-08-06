@@ -70,6 +70,7 @@ You have access to the `antigravity_delegate` MCP tool. Follow these guidelines 
 bun install
 cp .env.example .env   # then set exactly one provider key, e.g. OPENROUTER_API_KEY
 bun run typecheck       # tsc --build across all packages (full strict)
+bun run typecheck:tests # typecheck engine source + tests separately from the production build
 bun run typecheck:clean # tsc --build --clean
 bun run lint             # eslint (flat config)
 bun run lint:fix
@@ -130,3 +131,8 @@ bun run modelled-cards                    # list cards the engine currently mode
 - Packages resolve each other **by source** (`exports` → `./src/index.ts`); no build step to run
   code. `dist/` is a typecheck byproduct only and is gitignored.
 - `TODO(phase-N)` markers flag stubs to be fleshed out in a later phase.
+
+
+## TypeScript build and test separation
+
+`packages/engine/tsconfig.json` includes production source only. Engine tests are included by `packages/engine/tsconfig.test.json` and checked with `bun run typecheck:tests`; Vitest execution remains `bun run test`. Keeping tests out of the root project build reduces peak TypeScript memory usage. See `docs/guides/testing-and-typechecking.md` for the workflow.

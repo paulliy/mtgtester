@@ -53,6 +53,10 @@ function playRandomGame(seed: string): {
 }
 
 describe('full four-player game (brief §14.1 Phase 2 done-criterion)', () => {
+  // A full random-fuzzed game; see determinism.test.ts's note on why these need headroom past
+  // vitest's 5s default under full-suite parallel load (ADR 0023 items 13/14/18's added
+  // decision points — batched attack declarations occasionally add a rejection/retry cycle on
+  // top of the per-step damage-division ask).
   it('plays to a single surviving winner with random decisions', () => {
     const { engine, result } = playRandomGame('full-game-1');
 
@@ -76,13 +80,15 @@ describe('full four-player game (brief §14.1 Phase 2 done-criterion)', () => {
     // Something actually happened: spells were cast and combat damage was dealt.
     expect(log.some((e) => e.type === 'castSpell')).toBe(true);
     expect(log.some((e) => e.type === 'damage' && e.payload['combat'] === true)).toBe(true);
-  });
+  }, 30_000);
 
   it('reaches a winner across several different seeds', () => {
+    // Three full random-fuzzed games; see determinism.test.ts's note on why this needs
+    // headroom past vitest's 5s default (ADR 0023 items 13/14/18's added decision points).
     for (const seed of ['pod-A', 'pod-B', 'pod-C']) {
       const { result } = playRandomGame(seed);
       expect(result.halted).toBe(false);
       expect(result.winnerSeat).not.toBeNull();
     }
-  });
+  }, 30_000);
 });

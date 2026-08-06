@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import type { DecisionRequest, LegalAction, ObjectId, PlayerBoardSeat, TargetChoice } from '@mtg/shared';
+import type {
+  DecisionRequest,
+  LegalAction,
+  ObjectId,
+  PlayerBoardSeat,
+  TargetChoice,
+} from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
@@ -82,8 +88,7 @@ const humanExile = computed(
 );
 const isYourTurn = computed(() => state.value?.activePlayer === state.value?.viewerSeat);
 const selectedAction = computed(
-  () =>
-    request.value?.legalActions.find((action) => action.id === selectedActionId.value) ?? null,
+  () => request.value?.legalActions.find((action) => action.id === selectedActionId.value) ?? null,
 );
 const immediateActions = computed(
   () => request.value?.legalActions.filter((action) => isImmediate(action)) ?? [],
@@ -118,9 +123,11 @@ watch(
 /**
  * Drives the batched combat declaration (brief — Workstream 5). Fires on every freshly pushed
  * request: `onRequest` starts or continues a plan (a no-op unless it's a `declareAttackers`/
- * `declareBlockers` decision), and while `replaying`, `answerCurrent` returns the exact action
- * id to submit for THIS request — never a batch, never a guess. `combatPlan` itself decides
- * `null` vs. a real id; this watcher only forwards whatever it says.
+ * `declareBlockers` decision). Both sides submit their whole confirmed plan in one call
+ * (`confirmCombatPlan`, below) now that ADR 0023's batched contract covers blockers too (Phase
+ * 4) — there is nothing left here for a NEW request to replay one piece at a time; the only
+ * thing `onRequest` alone needs to catch is a rejected retry, dropping the store back into
+ * `composing` (see `combatPlan`'s doc comment).
  */
 watch(
   request,
@@ -130,10 +137,6 @@ watch(
       return;
     }
     combatPlan.onRequest(req);
-    if (combatPlan.mode === 'replaying') {
-      const actionId = combatPlan.answerCurrent(req);
-      if (actionId !== null) store.submitPlayerAction(actionId);
-    }
   },
   { immediate: true },
 );
@@ -164,7 +167,13 @@ const opponentLifeFlash = useLifeFlashBySeat(() =>
  * "comfortable" reference count for that zone; own and opponent zones carry separate base
  * sizes/scales so opponents render smaller by default without shrinking the human's board.
  */
-function adaptiveWidth(baseW: number, count: number, refN: number, scale: number, capH?: number): number {
+function adaptiveWidth(
+  baseW: number,
+  count: number,
+  refN: number,
+  scale: number,
+  capH?: number,
+): number {
   const factor = Math.min(1.35, Math.max(0.6, Math.sqrt(refN / Math.max(count, 1))));
   const width = baseW * factor * scale;
   if (capH === undefined) return Math.round(width);
@@ -326,18 +335,17 @@ const fallbackRequest = computed<DecisionRequest | null>(() => {
   if (request.value === null || fallbackActions.value.length === 0) return null;
   return { ...request.value, legalActions: fallbackActions.value };
 });
-const actionableSourceIds = computed(() => new Set(sourceActions.value.map(sourceId).filter(Boolean)));
+const actionableSourceIds = computed(
+  () => new Set(sourceActions.value.map(sourceId).filter(Boolean)),
+);
 const selectedSourceName = computed(() =>
-  focusedSourceId.value === null ? null : nameById.value.get(focusedSourceId.value) ?? null,
+  focusedSourceId.value === null ? null : (nameById.value.get(focusedSourceId.value) ?? null),
 );
 
 function targetSlots(action: LegalAction | null) {
   if (action === null) return [];
   const interaction = action.interaction ?? { kind: 'choice' as const };
-  if (
-    interaction.kind === 'source' ||
-    interaction.kind === 'choice'
-  ) {
+  if (interaction.kind === 'source' || interaction.kind === 'choice') {
     return interaction.targetSlots ?? action.targets ?? [];
   }
   return action.targets ?? [];
@@ -438,8 +446,7 @@ function chooseOpponent(seat: string): void {
     (action) =>
       action.interaction?.kind === 'attack' &&
       action.interaction.defenderId === seat &&
-      (focusedSourceId.value === null ||
-        action.interaction.attackerId === focusedSourceId.value),
+      (focusedSourceId.value === null || action.interaction.attackerId === focusedSourceId.value),
   );
   if (attack !== undefined) chooseAction(attack);
 }
@@ -471,15 +478,15 @@ watch(canConfirm, (ready) => {
 
 /**
  * Flipping `combatPlan.mode` to 'replaying' alone submits nothing: the engine is still parked on
- * the same pending request it was composing over, so the `watch(request, ...)` that drives
- * replay never fires (it only reacts to `request` changing, which it won't until a submit
- * happens). Answer the current request immediately to kick the replay loop off.
+ * the same pending request it was composing over, so nothing else reacts on its own until a
+ * submit happens. Kick the one whole-plan submit off immediately instead (ADR 0023 items 13/14,
+ * Phase 4 — both attackers and blockers submit this way now).
  */
 function confirmCombatPlan(): void {
   combatPlan.confirm();
   if (request.value === null) return;
-  const actionId = combatPlan.answerCurrent(request.value);
-  if (actionId !== null) store.submitPlayerAction(actionId);
+  const submission = combatPlan.pendingSubmission(request.value);
+  if (submission !== null) store.submitPlayerAction(submission.actionId, submission.targets);
 }
 
 const confirmButtonRef = ref<HTMLButtonElement | null>(null);
@@ -512,7 +519,7 @@ function onKeyDown(event: KeyboardEvent): void {
     if (selectedAction.value !== null) {
       event.preventDefault();
       cancel();
-    } else if (combatPlan.mode === 'composing' || combatPlan.mode === 'interrupted') {
+    } else if (combatPlan.mode === 'composing') {
       event.preventDefault();
       combatPlan.cancel();
     }
@@ -543,7 +550,8 @@ function dragStart(id: ObjectId, event: DragEvent): void {
     focusedSourceId.value = id;
     chosenTargets.value = {};
   }
-  const img = event.currentTarget instanceof HTMLElement ? event.currentTarget.querySelector('img') : null;
+  const img =
+    event.currentTarget instanceof HTMLElement ? event.currentTarget.querySelector('img') : null;
   if (img instanceof HTMLImageElement) {
     event.dataTransfer?.setDragImage(img, img.clientWidth / 2, img.clientHeight / 2);
   }
@@ -566,12 +574,24 @@ function actionCost(action: LegalAction): string[] {
   if (Array.isArray(costs)) {
     for (const cost of costs) {
       if (typeof cost !== 'object' || cost === null) continue;
-      const value = cost as { kind?: unknown; amount?: unknown; counter?: unknown; count?: unknown };
+      const value = cost as {
+        kind?: unknown;
+        amount?: unknown;
+        counter?: unknown;
+        count?: unknown;
+      };
       if (value.kind === 'tap') labels.push('Tap this');
       if (value.kind === 'sacrificeSelf') labels.push('Sacrifice this');
-      if (value.kind === 'payLife' && typeof value.amount === 'number') labels.push(`Pay ${value.amount} life`);
-      if (value.kind === 'removeCounters' && typeof value.counter === 'string' && typeof value.count === 'number') {
-        labels.push(`Remove ${value.count} ${value.counter} counter${value.count === 1 ? '' : 's'}`);
+      if (value.kind === 'payLife' && typeof value.amount === 'number')
+        labels.push(`Pay ${value.amount} life`);
+      if (
+        value.kind === 'removeCounters' &&
+        typeof value.counter === 'string' &&
+        typeof value.count === 'number'
+      ) {
+        labels.push(
+          `Remove ${value.count} ${value.counter} counter${value.count === 1 ? '' : 's'}`,
+        );
       }
     }
   }
@@ -621,7 +641,9 @@ function hideCardPreview(): void {
 
 function resourceSummary(pool: Record<string, number>): string {
   const entries = Object.entries(pool).filter(([, amount]) => amount > 0);
-  return entries.length === 0 ? '' : entries.map(([color, amount]) => `${amount}${color}`).join(' ');
+  return entries.length === 0
+    ? ''
+    : entries.map(([color, amount]) => `${amount}${color}`).join(' ');
 }
 
 function isLegalTarget(target: ObjectId | string): boolean {
@@ -661,14 +683,17 @@ function isChosenTarget(target: ObjectId | string): boolean {
 }
 
 function isPaymentSource(id: ObjectId): boolean {
-  const sources = selectedAction.value === null ? undefined : actionData(selectedAction.value, 'paymentSourceIds');
+  const sources =
+    selectedAction.value === null
+      ? undefined
+      : actionData(selectedAction.value, 'paymentSourceIds');
   return Array.isArray(sources) && sources.includes(id);
 }
 
 function paymentSourceNames(action: LegalAction): string[] {
   const names = actionData(action, 'paymentSourceNames');
   return Array.isArray(names) && names.every((name) => typeof name === 'string')
-    ? names as string[]
+    ? (names as string[])
     : [];
 }
 
@@ -696,7 +721,8 @@ function dropOn(target: ObjectId | string): void {
   dragPointer.value = null;
   if (source === null) return;
   if (combatPlan.mode === 'composing') {
-    if (combatPlan.isLegalTarget(source, target as string)) combatPlan.assign(source, target as string);
+    if (combatPlan.isLegalTarget(source, target as string))
+      combatPlan.assign(source, target as string);
     return;
   }
   const action = (request.value?.legalActions ?? []).find((candidate) => {
@@ -705,12 +731,14 @@ function dropOn(target: ObjectId | string): void {
       interaction.kind === 'attack' &&
       interaction.attackerId === source &&
       interaction.defenderId === target
-    ) return true;
+    )
+      return true;
     if (
       interaction.kind === 'block' &&
       interaction.blockerId === source &&
       interaction.attackerId === target
-    ) return true;
+    )
+      return true;
     return (
       interaction.kind === 'source' &&
       interaction.sourceId === source &&
@@ -738,25 +766,52 @@ function abandon(): void {
       <span v-if="state" class="turn-badge" :class="{ 'your-turn': isYourTurn }">
         Turn {{ state.turnNumber }} · {{ isYourTurn ? 'Your turn' : state.activePlayer }}
       </span>
-      <span v-if="state">{{ state.phase }}<template v-if="state.step"> · {{ state.step }}</template></span>
-      <span v-if="state?.priorityPlayer">Priority: {{ state.priorityPlayer === state.viewerSeat ? 'You' : state.priorityPlayer }}</span>
+      <span v-if="state"
+        >{{ state.phase }}<template v-if="state.step"> · {{ state.step }}</template></span
+      >
+      <span v-if="state?.priorityPlayer"
+        >Priority:
+        {{ state.priorityPlayer === state.viewerSeat ? 'You' : state.priorityPlayer }}</span
+      >
       <span :class="['connection', store.connection]">{{ store.connection }}</span>
       <div class="pace">
         Bot turns
-        <button type="button" :class="{ active: store.paceMs === 0 }" @click="store.setPace(0)">Next choice</button>
-        <button type="button" :class="{ active: store.paceMs === 400 }" @click="store.setPace(400)">Watch</button>
-        <button type="button" :class="{ active: store.paceMs === 1200 }" @click="store.setPace(1200)">Slow</button>
+        <button type="button" :class="{ active: store.paceMs === 0 }" @click="store.setPace(0)">
+          Next choice
+        </button>
+        <button type="button" :class="{ active: store.paceMs === 400 }" @click="store.setPace(400)">
+          Watch
+        </button>
+        <button
+          type="button"
+          :class="{ active: store.paceMs === 1200 }"
+          @click="store.setPace(1200)"
+        >
+          Slow
+        </button>
       </div>
       <label class="routine-confirm">
-        <input :checked="store.confirmRoutineActions" type="checkbox" @change="store.setConfirmRoutineActions(($event.target as HTMLInputElement).checked)" />
+        <input
+          :checked="store.confirmRoutineActions"
+          type="checkbox"
+          @change="store.setConfirmRoutineActions(($event.target as HTMLInputElement).checked)"
+        />
         Confirm passes & lands
       </label>
       <label class="routine-confirm">
-        <input :checked="store.autoConfirmActions" type="checkbox" @change="store.setAutoConfirmActions(($event.target as HTMLInputElement).checked)" />
+        <input
+          :checked="store.autoConfirmActions"
+          type="checkbox"
+          @change="store.setAutoConfirmActions(($event.target as HTMLInputElement).checked)"
+        />
         Skip confirm step
       </label>
       <label class="routine-confirm">
-        <input :checked="store.reducedMotion" type="checkbox" @change="store.setReducedMotion(($event.target as HTMLInputElement).checked)" />
+        <input
+          :checked="store.reducedMotion"
+          type="checkbox"
+          @change="store.setReducedMotion(($event.target as HTMLInputElement).checked)"
+        />
         Reduce motion
       </label>
       <button type="button" @click="abandon">Abandon</button>
@@ -767,7 +822,10 @@ function abandon(): void {
     </div>
 
     <div v-if="human?.yieldingUntilEndOfTurn" class="yield-banner">
-      <span>Yielding until end of turn — you'll only be asked again if something targets you, threatens your board, or threatens your life or hand.</span>
+      <span
+        >Yielding until end of turn — you'll only be asked again if something targets you, threatens
+        your board, or threatens your life or hand.</span
+      >
       <button type="button" @click="store.cancelYield()">Take priority back</button>
     </div>
 
@@ -792,11 +850,21 @@ function abandon(): void {
             <header>
               <span class="id-badge">{{ opponent.seat }}</span>
               <strong>{{ opponent.label }}</strong>
-              <span v-if="state.monarchSeat === opponent.seat" class="monarch-badge" title="This player is the monarch">MONARCH</span>
+              <span
+                v-if="state.monarchSeat === opponent.seat"
+                class="monarch-badge"
+                title="This player is the monarch"
+                >MONARCH</span
+              >
               <span
                 class="life-badge"
-                :class="{ low: opponent.life <= 10, 'flash-damage': opponentLifeFlash[opponent.seat] === 'damage', 'flash-heal': opponentLifeFlash[opponent.seat] === 'heal' }"
-              >{{ opponent.life }}</span>
+                :class="{
+                  low: opponent.life <= 10,
+                  'flash-damage': opponentLifeFlash[opponent.seat] === 'damage',
+                  'flash-heal': opponentLifeFlash[opponent.seat] === 'heal',
+                }"
+                >{{ opponent.life }}</span
+              >
             </header>
             <GlobalCounters
               :energy="opponent.energy"
@@ -819,7 +887,10 @@ function abandon(): void {
                 v-for="group in groupedPermanentsFor(opponent.seat)"
                 :key="group.permanent.id"
                 class="object"
-                :style="{ '--chip-w': opponentPermWidth + 'px', '--chip-min': opponentPermMinWidth + 'px' }"
+                :style="{
+                  '--chip-w': opponentPermWidth + 'px',
+                  '--chip-min': opponentPermMinWidth + 'px',
+                }"
                 :class="{
                   targetable: isLegalTarget(group.permanent.id),
                   'chosen-target': isChosenTarget(group.permanent.id),
@@ -832,7 +903,11 @@ function abandon(): void {
                 @drop.stop="dropOn(group.permanent.id)"
                 @click.stop="selectSource(group.permanent.id)"
               >
-                <PermanentChip :permanent="group.permanent" :count="group.count" :name-by-id="nameById" />
+                <PermanentChip
+                  :permanent="group.permanent"
+                  :count="group.count"
+                  :name-by-id="nameById"
+                />
               </div>
             </div>
           </article>
@@ -845,15 +920,28 @@ function abandon(): void {
           :class="{ 'your-turn': isYourTurn }"
         >
           <header
-            :class="{ targetable: isLegalTarget(human.seat), 'chosen-target': isChosenTarget(human.seat) }"
+            :class="{
+              targetable: isLegalTarget(human.seat),
+              'chosen-target': isChosenTarget(human.seat),
+            }"
             @click="chooseOpponent(human.seat)"
           >
             <strong>You · {{ human.seat }} · {{ human.label }}</strong>
             <span
               class="life-badge"
-              :class="{ low: human.life <= 10, 'flash-damage': humanLifeFlash === 'damage', 'flash-heal': humanLifeFlash === 'heal' }"
-            >{{ human.life }}</span>
-            <span v-if="state.monarchSeat === human.seat" class="monarch-badge" title="You are the monarch">MONARCH</span>
+              :class="{
+                low: human.life <= 10,
+                'flash-damage': humanLifeFlash === 'damage',
+                'flash-heal': humanLifeFlash === 'heal',
+              }"
+              >{{ human.life }}</span
+            >
+            <span
+              v-if="state.monarchSeat === human.seat"
+              class="monarch-badge"
+              title="You are the monarch"
+              >MONARCH</span
+            >
             <span class="lib-note">{{ human.librarySize }} library</span>
           </header>
           <GlobalCounters
@@ -862,7 +950,10 @@ function abandon(): void {
             :counters="human.counters"
           />
           <div class="resource-strip">
-            {{ human.landsPlayedThisTurn === 0 ? 'Land available' : 'Land played' }}<template v-if="resourceSummary(human.manaPool)"> ? Pool {{ resourceSummary(human.manaPool) }}</template>
+            {{ human.landsPlayedThisTurn === 0 ? 'Land available' : 'Land played'
+            }}<template v-if="resourceSummary(human.manaPool)">
+              ? Pool {{ resourceSummary(human.manaPool) }}</template
+            >
           </div>
           <div class="battle-row">
             <div class="permanents" @dragover.prevent @drop="dropToBattlefield">
@@ -870,13 +961,16 @@ function abandon(): void {
                 v-for="group in groupedPermanentsFor(human.seat)"
                 :key="group.permanent.id"
                 class="object"
-                :style="{ '--chip-w': humanPermWidth + 'px', '--chip-min': humanPermMinWidth + 'px' }"
-                  :class="{
-                    focused: focusedSourceId === group.permanent.id,
-                    targetable: isLegalTarget(group.permanent.id),
-                    'chosen-target': isChosenTarget(group.permanent.id),
-                    'payment-source': isPaymentSource(group.permanent.id),
-                    actionable: actionableSourceIds.has(group.permanent.id),
+                :style="{
+                  '--chip-w': humanPermWidth + 'px',
+                  '--chip-min': humanPermMinWidth + 'px',
+                }"
+                :class="{
+                  focused: focusedSourceId === group.permanent.id,
+                  targetable: isLegalTarget(group.permanent.id),
+                  'chosen-target': isChosenTarget(group.permanent.id),
+                  'payment-source': isPaymentSource(group.permanent.id),
+                  actionable: actionableSourceIds.has(group.permanent.id),
                 }"
                 draggable="true"
                 @dragstart="dragStart(group.permanent.id, $event)"
@@ -885,30 +979,50 @@ function abandon(): void {
                 @drop.stop="dropOn(group.permanent.id)"
                 @click="selectSource(group.permanent.id)"
               >
-                <PermanentChip :permanent="group.permanent" :count="group.count" :name-by-id="nameById" />
+                <PermanentChip
+                  :permanent="group.permanent"
+                  :count="group.count"
+                  :name-by-id="nameById"
+                />
               </div>
             </div>
-            <div v-if="human.commanders.some((commander) => commander.zone === 'command')" class="command-zone">
+            <div
+              v-if="human.commanders.some((commander) => commander.zone === 'command')"
+              class="command-zone"
+            >
               <span class="command-zone-label">Command</span>
               <button
-                v-for="commander in human.commanders.filter((entry) => entry.zone === 'command' && entry.objectId !== null)"
+                v-for="commander in human.commanders.filter(
+                  (entry) => entry.zone === 'command' && entry.objectId !== null,
+                )"
                 :key="commander.cardId"
                 type="button"
                 class="commander-card"
                 :style="{ width: commanderWidth + 'px' }"
                 :class="{
                   focused: focusedSourceId === commander.objectId,
-                  actionable: commander.objectId !== null && actionableSourceIds.has(commander.objectId),
-                  'chosen-target': commander.objectId !== null && isChosenTarget(commander.objectId),
+                  actionable:
+                    commander.objectId !== null && actionableSourceIds.has(commander.objectId),
+                  'chosen-target':
+                    commander.objectId !== null && isChosenTarget(commander.objectId),
                 }"
                 @click="commander.objectId !== null && selectSource(commander.objectId)"
                 @mouseenter="showCardPreview(commander, $event)"
                 @mousemove="moveCardPreview"
                 @mouseleave="hideCardPreview"
-            >
-              <CardImage :scryfall-id="commander.scryfallId" :name="commander.name" size="small" />
-              <span>{{ commander.name }}<small v-if="commander.taxGeneric > 0"> +{{ commander.taxGeneric }}</small></span>
-            </button>
+              >
+                <CardImage
+                  :scryfall-id="commander.scryfallId"
+                  :name="commander.name"
+                  size="small"
+                />
+                <span
+                  >{{ commander.name
+                  }}<small v-if="commander.taxGeneric > 0">
+                    +{{ commander.taxGeneric }}</small
+                  ></span
+                >
+              </button>
             </div>
           </div>
 
@@ -932,7 +1046,12 @@ function abandon(): void {
               @mousemove="moveCardPreview"
               @mouseleave="hideCardPreview"
             >
-              <CardImage :scryfall-id="card.scryfallId" :name="card.name" :is-token="isTokenTypeLine(card.typeLine)" size="small" />
+              <CardImage
+                :scryfall-id="card.scryfallId"
+                :name="card.name"
+                :is-token="isTokenTypeLine(card.typeLine)"
+                size="small"
+              />
               <span>{{ card.name }}</span>
             </button>
           </div>
@@ -942,11 +1061,21 @@ function abandon(): void {
             <ZoneStrip label="Exile" :cards="humanExile" />
           </div>
 
-          <section v-if="request" class="interaction-tray" :class="{ targeting: selectedAction !== null }">
+          <section
+            v-if="request"
+            class="interaction-tray"
+            :class="{ targeting: selectedAction !== null }"
+          >
             <template v-if="selectedAction">
               <div class="tray-heading">
-                <strong>{{ actionData(selectedAction, 'sourceName') ?? selectedSourceName ?? selectedAction.description }}</strong>
-                <span v-for="cost in actionCost(selectedAction)" :key="cost" class="cost-chip">{{ cost }}</span>
+                <strong>{{
+                  actionData(selectedAction, 'sourceName') ??
+                  selectedSourceName ??
+                  selectedAction.description
+                }}</strong>
+                <span v-for="cost in actionCost(selectedAction)" :key="cost" class="cost-chip">{{
+                  cost
+                }}</span>
               </div>
               <div class="pending-stack" aria-live="polite">
                 <span>Pending</span>
@@ -980,13 +1109,23 @@ function abandon(): void {
                 </button>
               </div>
             </template>
-            <template v-else-if="combatPlan.mode === 'composing' || combatPlan.mode === 'interrupted'">
+            <template v-else-if="combatPlan.mode === 'composing'">
               <div class="tray-heading">
-                <strong>{{ combatPlan.kind === 'attackers' ? 'Declare attackers' : 'Declare blockers' }}</strong>
-                <span>{{ combatPlan.order.length }} creature{{ combatPlan.order.length === 1 ? '' : 's' }}</span>
+                <strong>{{
+                  combatPlan.kind === 'attackers' ? 'Declare attackers' : 'Declare blockers'
+                }}</strong>
+                <span
+                  >{{ combatPlan.order.length }} creature{{
+                    combatPlan.order.length === 1 ? '' : 's'
+                  }}</span
+                >
               </div>
-              <p v-if="combatPlan.mode === 'interrupted'" class="target-instruction combat-interrupted">
-                {{ combatPlan.interruptedMessage }}
+              <p
+                v-if="combatPlan.rejectionMessage !== null"
+                class="target-instruction combat-interrupted"
+              >
+                The engine rejected that declaration: {{ combatPlan.rejectionMessage }} Fix the
+                flagged creature(s) and confirm again.
               </p>
               <p v-else class="target-instruction">
                 Click an option below for every creature. Unassigned creatures
@@ -999,7 +1138,9 @@ function abandon(): void {
                   class="combat-assignment-row"
                   :class="{ focused: focusedSourceId === entry.subjectId }"
                 >
-                  <span class="assignment-name">{{ nameById.get(entry.subjectId) ?? entry.subjectId }}</span>
+                  <span class="assignment-name">{{
+                    nameById.get(entry.subjectId) ?? entry.subjectId
+                  }}</span>
                   <div class="assignment-options">
                     <button
                       v-for="optionId in entry.optionIds"
@@ -1008,9 +1149,14 @@ function abandon(): void {
                       :class="{ primary: combatPlan.assignment.get(entry.subjectId) === optionId }"
                       @click="combatPlan.assign(entry.subjectId, optionId)"
                     >
-                      {{ combatPlan.kind === 'attackers' ? seatLabel(optionId) : (nameById.get(optionId) ?? optionId) }}
+                      {{
+                        combatPlan.kind === 'attackers'
+                          ? seatLabel(optionId)
+                          : (nameById.get(optionId) ?? optionId)
+                      }}
                     </button>
                     <button
+                      v-if="!entry.mustAct"
                       type="button"
                       class="muted"
                       :class="{ primary: !combatPlan.assignment.has(entry.subjectId) }"
@@ -1023,12 +1169,7 @@ function abandon(): void {
               </div>
               <div class="tray-actions">
                 <button type="button" @click="combatPlan.cancel()">Cancel</button>
-                <button
-                  type="button"
-                  class="primary"
-                  :disabled="combatPlan.mode === 'interrupted'"
-                  @click="confirmCombatPlan"
-                >
+                <button type="button" class="primary" @click="confirmCombatPlan">
                   Confirm {{ combatPlan.kind === 'attackers' ? 'attacks' : 'blocks' }}
                 </button>
               </div>
@@ -1037,7 +1178,10 @@ function abandon(): void {
               Submitting your {{ combatPlan.kind === 'attackers' ? 'attacks' : 'blocks' }}…
             </p>
             <template v-else-if="focusedSourceId !== null && selectedSourceActions.length > 0">
-              <div class="tray-heading"><strong>{{ selectedSourceName ?? 'Selected card' }}</strong><span>Choose an action</span></div>
+              <div class="tray-heading">
+                <strong>{{ selectedSourceName ?? 'Selected card' }}</strong
+                ><span>Choose an action</span>
+              </div>
               <div class="source-actions">
                 <div
                   v-for="group in selectedSourceGrouped.xGroups"
@@ -1062,7 +1206,11 @@ function abandon(): void {
                     <small>{{ actionCost(xGroupPreviewAction(group)).join(' · ') }}</small>
                   </button>
                 </div>
-                <div v-for="action in selectedSourceGrouped.plain" :key="action.id" class="source-action-row">
+                <div
+                  v-for="action in selectedSourceGrouped.plain"
+                  :key="action.id"
+                  class="source-action-row"
+                >
                   <button type="button" @click="chooseAction(action)">
                     <span>{{ actionLabel(action) }}</span>
                     <small>{{ actionCost(action).join(' · ') }}</small>
@@ -1079,7 +1227,9 @@ function abandon(): void {
                 </div>
               </div>
             </template>
-            <p v-else class="tray-hint">Click a highlighted card or permanent to play, cast, or activate it.</p>
+            <p v-else class="tray-hint">
+              Click a highlighted card or permanent to play, cast, or activate it.
+            </p>
           </section>
         </section>
       </section>
@@ -1106,9 +1256,12 @@ function abandon(): void {
                   {{ action.description }}
                 </button>
               </div>
-              <p v-if="hasOnlyImmediateActions && store.ignoredAbilities.length > 0" class="yield-explanation">
-                All other optional actions are currently yielded. Pass priority to continue, or resume an
-                ability below to make it available again.
+              <p
+                v-if="hasOnlyImmediateActions && store.ignoredAbilities.length > 0"
+                class="yield-explanation"
+              >
+                All other optional actions are currently yielded. Pass priority to continue, or
+                resume an ability below to make it available again.
               </p>
               <DecisionPanel
                 v-if="fallbackRequest"
@@ -1157,111 +1310,615 @@ function abandon(): void {
 </template>
 
 <style scoped>
-.player-game { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: .6rem; padding: .6rem; }
-.player-bar { display: flex; align-items: center; gap: .7rem; padding: .45rem .7rem; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; font-size: .78rem; }
-.turn-badge { color: var(--muted); font-weight: 600; }
-.turn-badge.your-turn { color: var(--accent); }
-.pace { margin-left: auto; display: flex; align-items: center; gap: .25rem; color: var(--muted); }
-button.active, button.selected, .focused { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.targetable { border-color: var(--ok) !important; box-shadow: 0 0 0 1px var(--ok); }
-.chosen-target { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent), inset 0 0 0 2px rgb(96 165 250 / .35); }
-.payment-source { border-color:var(--warn) !important; box-shadow:0 0 0 2px var(--warn), inset 0 0 0 2px rgb(250 204 21 / .18); }
-.opponent.chosen-target { background: rgb(96 165 250 / .1); }
-.connection.open { color: var(--ok); }.connection.closed { color: var(--danger); }
-.paused { border: 1px solid var(--warn); color: var(--warn); padding: .5rem; border-radius: 4px; }
-.yield-banner { display: flex; align-items: center; gap: .6rem; border: 1px solid var(--accent); color: var(--text); background: var(--surface); padding: .5rem .7rem; border-radius: 4px; font-size: .78rem; }
-.yield-banner > span { flex: 1; }
-.player-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0,1fr) 22rem; gap: .6rem; }
-.table { position: relative; min-height: 0; display: grid; grid-template-rows: minmax(0,.6fr) minmax(0,1.9fr); gap: .6rem; }
-.opponents { min-height: 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; }
-.opponent, .human-zone { min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: .4rem .5rem; transition: border-color .2s, box-shadow .2s; }
-.opponent { cursor: pointer; gap: .25rem; }
-.opponent.active { border-color: var(--accent); box-shadow: 0 0 12px rgb(96 165 250 / .2); }
-.opponent.targetable { animation: targetPulse 1.4s ease-in-out infinite; }
-.opponent.chosen-target { animation: none; box-shadow: 0 0 0 2px var(--ok); }
-.opponent > header { display:flex; align-items:center; gap:.35rem; font-size:.72rem; flex-shrink: 0; }
-.opponent > header strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.human-zone > header { display:flex; align-items:center; gap:.35rem; flex-shrink: 0; cursor: pointer; border: 1px solid transparent; border-radius: 4px; padding: .1rem .2rem; transition: border-color .2s, box-shadow .2s; }
-.human-zone > header.targetable { animation: targetPulse 1.4s ease-in-out infinite; }
-.human-zone > header.chosen-target { animation: none; box-shadow: 0 0 0 2px var(--ok); }
-.opp-meta { display: flex; align-items: center; gap: .3rem; color: var(--muted); font-size: .65rem; flex-shrink: 0; }
-.opp-cmdr-thumb { width: 20px; flex-shrink: 0; border-radius: 3px; overflow: hidden; border: 1px solid rgb(96 165 250 / .4); }
-.id-badge { font-weight: 800; font-size: .68rem; color: var(--accent); background: rgb(96 165 250 / .15); padding: .02rem .3rem; border-radius: 3px; flex-shrink: 0; }
-.monarch-badge { flex-shrink: 0; color: #fbbf24; background: rgb(251 191 36 / .14); border: 1px solid rgb(251 191 36 / .45); border-radius: 999px; padding: .06rem .3rem; font-size: .5rem; font-weight: 800; letter-spacing: .05em; }
-.life-badge { font-weight: 800; font-size: .78rem; font-variant-numeric: tabular-nums; color: var(--ok); background: rgb(74 222 128 / .12); border: 1px solid rgb(74 222 128 / .3); padding: .04rem .4rem; border-radius: 4px; flex-shrink: 0; }
-.life-badge.low { color: var(--danger); background: rgb(248 113 113 / .12); border-color: rgb(248 113 113 / .35); }
-.life-badge.flash-damage { animation: flash .8s ease-out; }
-.life-badge.flash-heal { animation: flashOk .9s ease-out; }
-.lib-note { color: var(--muted); font-size: .68rem; }
-.permanents { flex: 1; min-height: 0; display:flex; flex-wrap:wrap; align-items: flex-start; align-content:flex-start; gap:.3rem; overflow-x: hidden; overflow-y: auto; }
-.zones-strip { display: flex; flex-direction: column; gap: .3rem; flex-shrink: 0; }
-.object { border:1px solid transparent; border-radius:4px; cursor:pointer; flex: 0 1 var(--chip-w, 108px); min-width: var(--chip-min, 54px); }
+.player-game {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.6rem;
+}
+.player-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+.turn-badge {
+  color: var(--muted);
+  font-weight: 600;
+}
+.turn-badge.your-turn {
+  color: var(--accent);
+}
+.pace {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--muted);
+}
+button.active,
+button.selected,
+.focused {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.targetable {
+  border-color: var(--ok) !important;
+  box-shadow: 0 0 0 1px var(--ok);
+}
+.chosen-target {
+  border-color: var(--accent) !important;
+  box-shadow:
+    0 0 0 2px var(--accent),
+    inset 0 0 0 2px rgb(96 165 250 / 0.35);
+}
+.payment-source {
+  border-color: var(--warn) !important;
+  box-shadow:
+    0 0 0 2px var(--warn),
+    inset 0 0 0 2px rgb(250 204 21 / 0.18);
+}
+.opponent.chosen-target {
+  background: rgb(96 165 250 / 0.1);
+}
+.connection.open {
+  color: var(--ok);
+}
+.connection.closed {
+  color: var(--danger);
+}
+.paused {
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+.yield-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px solid var(--accent);
+  color: var(--text);
+  background: var(--surface);
+  padding: 0.5rem 0.7rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+.yield-banner > span {
+  flex: 1;
+}
+.player-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: 0.6rem;
+}
+.table {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 0.6fr) minmax(0, 1.9fr);
+  gap: 0.6rem;
+}
+.opponents {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.opponent,
+.human-zone {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 0.4rem 0.5rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.opponent {
+  cursor: pointer;
+  gap: 0.25rem;
+}
+.opponent.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgb(96 165 250 / 0.2);
+}
+.opponent.targetable {
+  animation: targetPulse 1.4s ease-in-out infinite;
+}
+.opponent.chosen-target {
+  animation: none;
+  box-shadow: 0 0 0 2px var(--ok);
+}
+.opponent > header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+.opponent > header strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.human-zone > header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.1rem 0.2rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.human-zone > header.targetable {
+  animation: targetPulse 1.4s ease-in-out infinite;
+}
+.human-zone > header.chosen-target {
+  animation: none;
+  box-shadow: 0 0 0 2px var(--ok);
+}
+.opp-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+.opp-cmdr-thumb {
+  width: 20px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgb(96 165 250 / 0.4);
+}
+.id-badge {
+  font-weight: 800;
+  font-size: 0.68rem;
+  color: var(--accent);
+  background: rgb(96 165 250 / 0.15);
+  padding: 0.02rem 0.3rem;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.monarch-badge {
+  flex-shrink: 0;
+  color: #fbbf24;
+  background: rgb(251 191 36 / 0.14);
+  border: 1px solid rgb(251 191 36 / 0.45);
+  border-radius: 999px;
+  padding: 0.06rem 0.3rem;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+.life-badge {
+  font-weight: 800;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ok);
+  background: rgb(74 222 128 / 0.12);
+  border: 1px solid rgb(74 222 128 / 0.3);
+  padding: 0.04rem 0.4rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.life-badge.low {
+  color: var(--danger);
+  background: rgb(248 113 113 / 0.12);
+  border-color: rgb(248 113 113 / 0.35);
+}
+.life-badge.flash-damage {
+  animation: flash 0.8s ease-out;
+}
+.life-badge.flash-heal {
+  animation: flashOk 0.9s ease-out;
+}
+.lib-note {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+.permanents {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 0.3rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.zones-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+.object {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 0 1 var(--chip-w, 108px);
+  min-width: var(--chip-min, 54px);
+}
 /* PermanentChip's own `.tile` sets a fixed pixel width; make it fill this flexed wrapper instead
    so the browser's own shrink-to-fit (not the chip's internal default) governs actual size. */
-.object :deep(.tile) { width: 100%; }
-.actionable { border-color:rgb(96 165 250 / .75) !important; box-shadow:0 0 0 1px rgb(96 165 250 / .28); }
-.actionable:hover { transform:translateY(-2px); }
-.human-zone { gap:.4rem; border-color:rgb(96 165 250 / .45); }
-.human-zone.your-turn { border-color: var(--accent); box-shadow: 0 0 10px rgb(110 168 254 / .25); }
-.resource-strip { display:inline-flex; align-self:flex-start; padding:.16rem .38rem; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:.68rem; }
-.battle-row { flex: 1; min-height: 150px; display: flex; gap: .5rem; overflow: hidden; }
-.battle-row .permanents { flex: 1; min-width: 0; }
-.hand { flex-shrink: 0; display:flex; gap:.35rem; overflow-x:auto; overflow-y: hidden; padding-top:.35rem; border-top:1px solid var(--line); }
-.hand-card { flex: 0 0 auto; padding:.2rem; display:flex; flex-direction:column; gap:.2rem; font-size:.65rem; overflow:hidden; }
-.command-zone { flex-shrink: 0; display:flex; flex-direction: column; gap:.3rem; border-left:1px dashed var(--line); padding-left:.45rem; }
-.command-zone-label { font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); flex-shrink: 0; }
-.commander-card { flex: 1; min-height: 0; display:flex; flex-direction: column; align-items: center; gap:.2rem; padding:.1rem; font-size:.6rem; text-align:center; }
-.commander-card :deep(.card-image) { width: 100%; flex: 1; min-height: 0; }
-.commander-card small { color:var(--warn); }
-.interaction-tray { margin-top:.1rem; min-height:4.2rem; border:1px solid var(--line); background:var(--surface-2); border-radius:5px; padding:.45rem .55rem; }
-.interaction-tray.targeting { border-color:var(--ok); box-shadow:0 0 0 1px rgb(74 222 128 / .25); }
-.tray-heading { display:flex; align-items:center; flex-wrap:wrap; gap:.35rem; font-size:.72rem; }
-.tray-heading > span:not(.cost-chip) { color:var(--muted); }
-.tray-hint,.target-instruction { margin:.2rem 0; color:var(--muted); font-size:.72rem; }
-.target-instruction { color:var(--ok); }
-.pending-stack { display:flex; align-items:center; gap:.35rem; margin-top:.35rem; padding:.25rem .4rem; border-left:3px solid var(--accent); background:rgb(96 165 250 / .1); font-size:.72rem; }
-.pending-stack > span { color:var(--muted); text-transform:uppercase; font-size:.61rem; letter-spacing:.04em; }
-.payment-preview { margin:.3rem 0; color:var(--warn); font-size:.7rem; }
-.cost-chip,.target-chip { display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:.08rem .35rem; font-size:.66rem; color:var(--muted); }
-.chosen-targets { display:flex; gap:.25rem; flex-wrap:wrap; margin-top:.35rem; }
-.target-chip { color:var(--ok); border-color:rgb(74 222 128 / .55); }
-.source-actions { display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.4rem; }
-.source-action-row { display:flex; gap:.25rem; }
-.source-action-row > button:first-child { display:flex; align-items:center; gap:.35rem; text-align:left; }
-.source-action-row small { color:var(--muted); }
-.source-action-row.x-group { align-items:center; }
-.source-action-row.x-group label { display:flex; align-items:center; gap:.35rem; font-size:.68rem; color:var(--muted); }
-.source-action-row.x-group input[type='number'] { width:4.2rem; background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:4px; padding:.1rem .3rem; font-size:.72rem; }
-.combat-assignments { display:flex; flex-direction:column; gap:.3rem; margin-top:.4rem; max-height:14rem; overflow:auto; }
-.combat-assignment-row { display:flex; flex-direction:column; gap:.25rem; padding:.3rem .4rem; border:1px solid var(--line); border-radius:4px; font-size:.72rem; }
-.combat-assignment-row.focused { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-.combat-assignment-row .assignment-name { font-weight:700; }
-.assignment-options { display:flex; flex-wrap:wrap; gap:.25rem; }
-.assignment-options button { font-size:.68rem; padding:.15rem .4rem; }
-.assignment-options button.primary { background:var(--accent); color:#08111f; font-weight:700; border-color:var(--accent); }
-.assignment-options button.muted { color:var(--muted); }
-.combat-interrupted { color:var(--warn) !important; }
-.tray-actions { display:flex; justify-content:flex-end; gap:.35rem; margin-top:.45rem; }
-.rail { min-height:0; display:flex; flex-direction:column; gap:.5rem; }
-.decision { max-height:46%; overflow:auto; border:2px solid var(--accent); background:var(--surface); border-radius:6px; padding:.55rem; }
-.decision h3,.decision p { margin:.15rem 0 .45rem; }
-.quick-actions { display:flex; gap:.3rem; margin:.45rem 0; }
-.yield-explanation { color:var(--muted); font-size:.72rem; line-height:1.35; }
-.action-row { display:flex; align-items:center; gap:.3rem; }
-.action-row > :first-child { min-width:0; flex:1; }
-.yield-ability { flex:0 0 auto; color:var(--warn); font-size:.67rem !important; }
-.ignored-abilities { margin-top:.7rem; padding-top:.55rem; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:.35rem; font-size:.7rem; }
-.ignored-abilities span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-button.primary { background:var(--accent); color:#08111f; font-weight:700; }
-.decision :deep(.decision-panel) { margin-top: .5rem; }
-.thinking,.waiting { color:var(--muted); font-style:italic; }
-.routine-confirm { display:flex; align-items:center; gap:.25rem; color:var(--muted); white-space:nowrap; }
-.bot-summary { margin-top:.65rem; padding-top:.55rem; border-top:1px solid var(--line); font-size:.72rem; }.bot-summary p { margin:.2rem 0 0; color:var(--muted); }
-.rail :deep(.log) { flex:1; min-height:0; }
+.object :deep(.tile) {
+  width: 100%;
+}
+.actionable {
+  border-color: rgb(96 165 250 / 0.75) !important;
+  box-shadow: 0 0 0 1px rgb(96 165 250 / 0.28);
+}
+.actionable:hover {
+  transform: translateY(-2px);
+}
+.human-zone {
+  gap: 0.4rem;
+  border-color: rgb(96 165 250 / 0.45);
+}
+.human-zone.your-turn {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgb(110 168 254 / 0.25);
+}
+.resource-strip {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.16rem 0.38rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+.battle-row {
+  flex: 1;
+  min-height: 150px;
+  display: flex;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+.battle-row .permanents {
+  flex: 1;
+  min-width: 0;
+}
+.hand {
+  flex-shrink: 0;
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--line);
+}
+.hand-card {
+  flex: 0 0 auto;
+  padding: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.65rem;
+  overflow: hidden;
+}
+.command-zone {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border-left: 1px dashed var(--line);
+  padding-left: 0.45rem;
+}
+.command-zone-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.commander-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem;
+  font-size: 0.6rem;
+  text-align: center;
+}
+.commander-card :deep(.card-image) {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+.commander-card small {
+  color: var(--warn);
+}
+.interaction-tray {
+  margin-top: 0.1rem;
+  min-height: 4.2rem;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 5px;
+  padding: 0.45rem 0.55rem;
+}
+.interaction-tray.targeting {
+  border-color: var(--ok);
+  box-shadow: 0 0 0 1px rgb(74 222 128 / 0.25);
+}
+.tray-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+}
+.tray-heading > span:not(.cost-chip) {
+  color: var(--muted);
+}
+.tray-hint,
+.target-instruction {
+  margin: 0.2rem 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+.target-instruction {
+  color: var(--ok);
+}
+.pending-stack {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  padding: 0.25rem 0.4rem;
+  border-left: 3px solid var(--accent);
+  background: rgb(96 165 250 / 0.1);
+  font-size: 0.72rem;
+}
+.pending-stack > span {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.61rem;
+  letter-spacing: 0.04em;
+}
+.payment-preview {
+  margin: 0.3rem 0;
+  color: var(--warn);
+  font-size: 0.7rem;
+}
+.cost-chip,
+.target-chip {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.08rem 0.35rem;
+  font-size: 0.66rem;
+  color: var(--muted);
+}
+.chosen-targets {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+}
+.target-chip {
+  color: var(--ok);
+  border-color: rgb(74 222 128 / 0.55);
+}
+.source-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+.source-action-row {
+  display: flex;
+  gap: 0.25rem;
+}
+.source-action-row > button:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: left;
+}
+.source-action-row small {
+  color: var(--muted);
+}
+.source-action-row.x-group {
+  align-items: center;
+}
+.source-action-row.x-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.source-action-row.x-group input[type='number'] {
+  width: 4.2rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.72rem;
+}
+.combat-assignments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  max-height: 14rem;
+  overflow: auto;
+}
+.combat-assignment-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 0.72rem;
+}
+.combat-assignment-row.focused {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.combat-assignment-row .assignment-name {
+  font-weight: 700;
+}
+.assignment-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.assignment-options button {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.4rem;
+}
+.assignment-options button.primary {
+  background: var(--accent);
+  color: #08111f;
+  font-weight: 700;
+  border-color: var(--accent);
+}
+.assignment-options button.muted {
+  color: var(--muted);
+}
+.combat-interrupted {
+  color: var(--warn) !important;
+}
+.tray-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+.rail {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.decision {
+  max-height: 46%;
+  overflow: auto;
+  border: 2px solid var(--accent);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 0.55rem;
+}
+.decision h3,
+.decision p {
+  margin: 0.15rem 0 0.45rem;
+}
+.quick-actions {
+  display: flex;
+  gap: 0.3rem;
+  margin: 0.45rem 0;
+}
+.yield-explanation {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.action-row > :first-child {
+  min-width: 0;
+  flex: 1;
+}
+.yield-ability {
+  flex: 0 0 auto;
+  color: var(--warn);
+  font-size: 0.67rem !important;
+}
+.ignored-abilities {
+  margin-top: 0.7rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+}
+.ignored-abilities span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+button.primary {
+  background: var(--accent);
+  color: #08111f;
+  font-weight: 700;
+}
+.decision :deep(.decision-panel) {
+  margin-top: 0.5rem;
+}
+.thinking,
+.waiting {
+  color: var(--muted);
+  font-style: italic;
+}
+.routine-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.bot-summary {
+  margin-top: 0.65rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.72rem;
+}
+.bot-summary p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+}
+.rail :deep(.log) {
+  flex: 1;
+  min-height: 0;
+}
 @media (max-width: 900px) {
-  .player-layout { grid-template-columns:1fr; overflow:auto; }
-  .opponents { grid-template-columns:1fr; }
-  .table { grid-template-rows:auto auto; }
-  .rail { min-height:30rem; }
+  .player-layout {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+  .opponents {
+    grid-template-columns: 1fr;
+  }
+  .table {
+    grid-template-rows: auto auto;
+  }
+  .rail {
+    min-height: 30rem;
+  }
 }
 </style>

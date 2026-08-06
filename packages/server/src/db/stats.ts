@@ -70,7 +70,8 @@ function first(db: SqliteLike, sql: string, ...args: unknown[]): Row | null {
 export class StatsRepository {
   constructor(private readonly db: SqliteLike) {}
 
-  deckStatistics(): DeckStatistic[] {
+  deckStatistics(batchId?: string): DeckStatistic[] {
+    if (batchId !== undefined) return this.batchDeckStatistics(batchId);
     const base = rows(
       this.db,
       `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag,
@@ -88,6 +89,32 @@ export class StatsRepository {
     return base.map((row) => this.deckStatistic(row));
   }
 
+  private batchDeckStatistics(batchId: string): DeckStatistic[] {
+    const base = rows(this.db, `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag,
+              ds.commander_names, ds.color_identity, COUNT(g.id) AS games_played,
+              SUM(CASE WHEN gp.finished_position = 1 THEN 1 ELSE 0 END) AS wins,
+              AVG(gp.finished_position) AS average_finish, AVG(g.turn_count) AS average_game_length,
+              AVG(gp.mulligans_taken) AS average_mulligans
+         FROM deck_snapshots ds JOIN decks d ON d.id = ds.deck_id
+         JOIN game_players gp ON gp.deck_snapshot_id = ds.id
+         JOIN games g ON g.id = gp.game_id AND g.status = 'finished'
+         JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ?
+        GROUP BY ds.id ORDER BY games_played DESC, name ASC`, batchId);
+    return base.map((row) => {
+      const snapshotId = String(row['snapshot_id']); const gamesPlayed = number(row['games_played']); const mana = this.manaRates(snapshotId, batchId);
+      return {
+        deckSnapshotId: snapshotId, name: String(row['name'] ?? snapshotId), commanders: jsonArray(row['commander_names']),
+        colorIdentity: jsonArray(row['color_identity']), archetypeTag: String(row['archetype_tag'] ?? ''), gamesPlayed,
+        wins: number(row['wins']), winRate: gamesPlayed === 0 ? 0 : number(row['wins']) / gamesPlayed,
+        averageFinish: gamesPlayed === 0 ? null : number(row['average_finish']), averageGameLength: gamesPlayed === 0 ? null : number(row['average_game_length']),
+        averageMulligans: gamesPlayed === 0 ? 0 : number(row['average_mulligans']),
+        mulliganDistribution: rows(this.db, `SELECT gp.mulligans_taken AS mulligans, COUNT(*) AS games FROM game_players gp JOIN games g ON g.id = gp.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' GROUP BY gp.mulligans_taken ORDER BY gp.mulligans_taken`, batchId, snapshotId).map((item) => ({ mulligans: number(item['mulligans']), games: number(item['games']) })),
+        eliminationCauses: rows(this.db, `SELECT gp.loss_reason AS reason, COUNT(*) AS count FROM game_players gp JOIN games g ON g.id = gp.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND gp.loss_reason IS NOT NULL GROUP BY gp.loss_reason`, batchId, snapshotId).map((item) => ({ reason: String(item['reason']), count: number(item['count']) })),
+        lossesTo: rows(this.db, `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count FROM game_players victim JOIN games g ON g.id = victim.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id JOIN decks killer_d ON killer_d.id = killer_ds.deck_id WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND victim.eliminated_by_seat IS NOT NULL GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`, batchId, snapshotId).map((item) => ({ commanders: jsonArray(item['commander_names']), colorIdentity: jsonArray(item['color_identity']), archetypeTag: String(item['archetype_tag'] ?? ''), count: number(item['count']) })),
+        manaFloodRate: mana.floodRate, manaDroughtRate: mana.droughtRate,
+      };
+    });
+  }
   private deckStatistic(row: Row): DeckStatistic {
     const snapshotId = String(row['snapshot_id']);
     const gamesPlayed = number(row['games_played']);
@@ -128,14 +155,19 @@ export class StatsRepository {
     };
   }
 
-  private manaRates(snapshotId: string): { floodRate: number; droughtRate: number } {
-    const metrics = rows(this.db,
-      `SELECT mm.game_id, mm.seat, mm.turn, mm.lands_in_hand, mm.lands_drawn_cumulative,
+  private manaRates(snapshotId: string, batchId?: string): { floodRate: number; droughtRate: number } {
+    const metrics = batchId === undefined
+      ? rows(this.db, `SELECT mm.game_id, mm.seat, mm.turn, mm.lands_in_hand, mm.lands_drawn_cumulative,
               mm.cards_drawn_cumulative, mm.spells_castable, mm.unspent_mana, mm.on_curve
          FROM mana_metrics mm JOIN game_players gp ON gp.game_id = mm.game_id AND gp.seat = mm.seat
          JOIN games g ON g.id = mm.game_id WHERE gp.deck_snapshot_id = ? AND g.status = 'finished'
-         ORDER BY mm.game_id, mm.seat, mm.turn`, snapshotId);
-    const games = new Map<string, Row[]>();
+         ORDER BY mm.game_id, mm.seat, mm.turn`, snapshotId)
+      : rows(this.db, `SELECT mm.game_id, mm.seat, mm.turn, mm.lands_in_hand, mm.lands_drawn_cumulative,
+              mm.cards_drawn_cumulative, mm.spells_castable, mm.unspent_mana, mm.on_curve
+         FROM mana_metrics mm JOIN game_players gp ON gp.game_id = mm.game_id AND gp.seat = mm.seat
+         JOIN games g ON g.id = mm.game_id JOIN batch_games bg ON bg.game_id = mm.game_id
+        WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND bg.batch_id = ?
+        ORDER BY mm.game_id, mm.seat, mm.turn`, snapshotId, batchId);    const games = new Map<string, Row[]>();
     for (const metric of metrics) {
       const key = `${metric['game_id']}:${metric['seat']}`;
       const list = games.get(key) ?? [];
@@ -180,7 +212,7 @@ export class StatsRepository {
 
   /**
    * Reasoning annotations for a finished game (ADR 0022), rebuilt from the AI calls that reached
-   * a submitted decision. This is what makes reasoning survive a page reload — the live stream
+   * a submitted decision. This is what makes reasoning survive a page reload â€” the live stream
    * delivers each note once, and nothing else persists it.
    */
   gameAnnotations(gameId: string): AiAnnotation[] {
@@ -222,7 +254,7 @@ export class StatsRepository {
   }
 
   /**
-   * Post-game reviews for a finished game (ADR 0022 §7), so commentary survives a page reload and
+   * Post-game reviews for a finished game (ADR 0022 Â§7), so commentary survives a page reload and
    * a historical game can be read back. Ordered by seat, not by when the model happened to answer.
    */
   gameReflections(gameId: string): AiReflection[] {
@@ -249,7 +281,7 @@ export class StatsRepository {
   }
 }
 
-/** The JSON blob behind a stored reflection. Shape is not trusted — the row may predate a change. */
+/** The JSON blob behind a stored reflection. Shape is not trusted â€” the row may predate a change. */
 function parseDetail(value: unknown): {
   keyMistakes?: unknown;
   keyPlays?: unknown;

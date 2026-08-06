@@ -3023,7 +3023,15 @@ export function interpretCard(card: OracleCard): CardDefinition {
       },
       optional: true,
       targets: [],
-      effects: [{ op: 'noOp' }],
+      effects: [
+        {
+          op: 'becomeCopyOf',
+          ref: 'triggerObject',
+          untilEot: true,
+          addSupertypes: ['Legendary'],
+          nameOverride: 'Sarkhan, Soul Aflame',
+        },
+      ],
       description: 'Dragon ETB copy',
     });
     reasons.length = 0;

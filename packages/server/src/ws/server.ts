@@ -20,6 +20,7 @@ import type { SupportedPool } from '../cards/pool';
 import type { GameStore } from '../db';
 import type { BannedList } from '../decks/banned';
 import { MatchSession } from '../match/session';
+import { BatchManager, validateBatch } from '../batch/manager';
 import { setupSeats } from '../match/setup';
 
 export interface GameServerDeps {
@@ -52,8 +53,11 @@ export class GameServer {
   private playerSocket: ServerWebSocket<SocketData> | null = null;
   private sessionToken: string | null = null;
   private startedPayload: GameStartedPayload | null = null;
+  private readonly batchManager: BatchManager | null;
 
-  constructor(private readonly deps: GameServerDeps) {}
+  constructor(private readonly deps: GameServerDeps) {
+    this.batchManager = deps.store === undefined ? null : new BatchManager({ pool: deps.pool, index: deps.index, banned: deps.banned, store: deps.store });
+  }
 
   /** Broadcast to every connected spectator. One game at a time (brief §15). */
   private broadcast(message: ServerToClientMessage): void {
@@ -94,7 +98,37 @@ export class GameServer {
         }
         if (url.pathname === '/api/stats') {
           if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
-          return Response.json({ decks: this.deps.store.stats().deckStatistics() });
+          const batchId = url.searchParams.get('batchId') ?? undefined;
+          return Response.json({ decks: this.deps.store.stats().deckStatistics(batchId) });
+        }
+        if (url.pathname === '/api/batches' && request.method === 'POST') {
+          if (this.batchManager === null) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          if (this.session !== null && !['finished', 'halted', 'abandoned'].includes(this.session.runner.getStatus())) return Response.json({ message: 'Finish or abandon the interactive game before starting a batch.' }, { status: 409 });
+          if (this.batchManager.isActive()) return Response.json({ message: 'A batch is already running.' }, { status: 409 });
+          let body: unknown;
+          try { body = await request.json(); } catch { return Response.json({ message: 'Malformed JSON body.' }, { status: 400 }); }
+          const validation = validateBatch(body);
+          if (!validation.ok) return Response.json({ message: validation.message }, { status: 400 });
+          try { const batchId = this.batchManager.start(validation.spec); return Response.json({ batchId }, { status: 202 }); }
+          catch (error) { return Response.json({ message: error instanceof Error ? error.message : String(error) }, { status: 409 }); }
+        }
+        const batchMatch = /^\/api\/batches\/([^/]+)$/.exec(url.pathname);
+        if (batchMatch !== null && request.method === 'GET') {
+          if (this.batchManager === null) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          const progress = this.batchManager.progress(decodeURIComponent(batchMatch[1] ?? ''));
+          return progress === null ? Response.json({ message: 'Batch not found.' }, { status: 404 }) : Response.json(progress);
+        }
+        const batchResultsMatch = /^\/api\/batches\/([^/]+)\/results$/.exec(url.pathname);
+        if (batchResultsMatch !== null && request.method === 'GET') {
+          if (this.batchManager === null) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          const results = this.batchManager.results(decodeURIComponent(batchResultsMatch[1] ?? ''));
+          return results === null ? Response.json({ message: 'Batch not found.' }, { status: 404 }) : Response.json(results);
+        }
+        const batchCancelMatch = /^\/api\/batches\/([^/]+)\/cancel$/.exec(url.pathname);
+        if (batchCancelMatch !== null && request.method === 'POST') {
+          if (this.batchManager === null) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          const cancelled = this.batchManager.cancel(decodeURIComponent(batchCancelMatch[1] ?? ''));
+          return cancelled ? Response.json({ ok: true }) : Response.json({ message: 'Batch is not running or was not found.' }, { status: 409 });
         }
         const annotationMatch = /^\/api\/games\/([^/]+)\/annotations$/.exec(url.pathname);
         if (annotationMatch !== null) {

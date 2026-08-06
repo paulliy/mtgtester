@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "typecheck": "tsc --build",
+    "typecheck:tests": "tsc -p packages/engine/tsconfig.test.json --noEmit",
     "typecheck:clean": "tsc --build --clean",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

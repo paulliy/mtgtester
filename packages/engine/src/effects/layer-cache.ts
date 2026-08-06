@@ -116,8 +116,15 @@ export function digestOf(
     h = mix(h, (perm.power ?? 0) + 0x10000);
     h = mix(h, (perm.toughness ?? 0) + 0x10000);
     h = mix(h, perm.faceDown === true ? 1 : 0);
-    for (const type of perm.copyAddTypes ?? []) h = mix(h, hashString(type));
-    for (const cardId of perm.exiledCardIds ?? []) h = mix(h, hashString(cardId));
+    // `?? []` would allocate a throwaway array on every digest call for the overwhelming
+    // majority of permanents, which never set any of these — an `undefined` guard keeps the
+    // fast path (this function runs on every characteristics query) allocation-free.
+    if (perm.copyAddTypes !== undefined) for (const type of perm.copyAddTypes) h = mix(h, hashString(type));
+    if (perm.copyAddKeywords !== undefined) for (const kw of perm.copyAddKeywords) h = mix(h, hashString(kw));
+    if (perm.copyRemoveSupertypes !== undefined) for (const st of perm.copyRemoveSupertypes) h = mix(h, hashString(st));
+    if (perm.copyAddSupertypes !== undefined) for (const st of perm.copyAddSupertypes) h = mix(h, hashString(st));
+    if (perm.copyAddTriggers !== undefined) for (const tr of perm.copyAddTriggers) h = mix(h, hashString(tr.description ?? ''));
+    if (perm.exiledCardIds !== undefined) for (const cardId of perm.exiledCardIds) h = mix(h, hashString(cardId));
     h = foldCounters(h, perm);
     // `attachedToSource`/`isEnchanted`/`isEquipped` read this; attaching/detaching changes
     // none of the fields above, so it must be folded in explicitly (ADR 0007).
@@ -128,6 +135,18 @@ export function digestOf(
 
   h = mix(h, s.effects.length);
   for (const eff of s.effects) h = mix(h, eff.timestamp);
+
+  // Commander's Insignia and similar static P/T ops read this (`commanderCastCount`, a
+  // resolving-scope Value the layer engine now answers from the source's controller). It is
+  // bounded by commander count per player — one or two, with partners — so unlike graveyards
+  // it costs nothing to fold in unconditionally rather than gating it behind a "did a pass
+  // actually use it" flag.
+  for (const player of s.players) {
+    for (const cardId in player.commanderCastCount) {
+      h = mix(h, hashStringUncached(cardId));
+      h = mix(h, (player.commanderCastCount[cardId] ?? 0) + 0x10000);
+    }
+  }
 
   h = mix(h, extra === undefined ? 0 : extra.timestamp + 1);
 

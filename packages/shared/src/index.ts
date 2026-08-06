@@ -17,6 +17,7 @@ export {
   LOOKAHEAD_TURNS,
   isClientToServerMessage,
 } from './protocol';
+export { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from './engine';
 
 // --- Identifier types ---
 export type { PlayerId, ObjectId, OracleId, DeckId, DeckSnapshotId, GameId } from './ids';
@@ -73,8 +74,12 @@ export type {
   ActionSubject,
   PresentedCard,
   PresentedSource,
-  CombatDeclaration,
-  CombatSubject,
+  AttackDeclarationSubject,
+  AttackDeclarationPresentation,
+  BlockDeclarationSubject,
+  BlockDeclarationPresentation,
+  CombatViolation,
+  CombatRejection,
 } from './engine';
 
 // --- Player-visible projection (anti-cheat boundary) ---
@@ -146,3 +151,18 @@ export type {
   ResumePlayerAbilityPayload,
   ResumeGamePayload,
 } from './protocol';
+
+export { BATCH_GAME_STATUSES, BATCH_STATUSES } from './batch';
+export type {
+  BatchAggregate,
+  BatchFailure,
+  BatchGameStatus,
+  BatchGameSummary,
+  BatchProgress,
+  BatchResults,
+  BatchScenarioProgress,
+  BatchScenarioSpec,
+  BatchSeatResult,
+  BatchSpec,
+  BatchStatus,
+} from './batch';

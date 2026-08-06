@@ -5,6 +5,7 @@ import {
   DailyQuotaExhaustedError,
   HttpError,
   ModelUnavailableError,
+  RequestCancelledError,
   RpmLimitError,
 } from './errors';
 
@@ -188,5 +189,35 @@ describe('Error Classification & Retry', () => {
     await expect(withRetry(fn, { maxRetries: 3, baseBackoffMs: 10, maxBackoffMs: 100 })).rejects.toThrow(
       ModelUnavailableError,
     );
+  });
+
+  it('throws RequestCancelledError immediately when signal is already aborted, without calling fn', async () => {
+    const fn = vi.fn().mockResolvedValue('should never happen');
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      withRetry(fn, { maxRetries: 3, baseBackoffMs: 10, maxBackoffMs: 100 }, undefined, controller.signal),
+    ).rejects.toThrow(RequestCancelledError);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('stops retrying a transport error the moment signal aborts, instead of exhausting maxRetries', async () => {
+    const controller = new AbortController();
+    let attempts = 0;
+    const fn = vi.fn().mockImplementation(async () => {
+      attempts++;
+      if (attempts === 1) controller.abort();
+      throw { name: 'AbortError', message: 'the operation was aborted' };
+    });
+    const sleep = vi.fn().mockResolvedValue(undefined);
+
+    await expect(
+      withRetry(fn, { maxRetries: 5, baseBackoffMs: 10, maxBackoffMs: 100 }, sleep, controller.signal),
+    ).rejects.toThrow(RequestCancelledError);
+    // One real attempt, then the abort check short-circuits before a second — no backoff sleep,
+    // no retries burned chasing a call nobody wants any more.
+    expect(attempts).toBe(1);
+    expect(sleep).not.toHaveBeenCalled();
   });
 });

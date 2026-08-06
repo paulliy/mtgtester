@@ -19,6 +19,7 @@
  */
 
 import type { DecisionRequest, DecisionResponse, LegalAction, PlayerView, Step } from '@mtg/shared';
+import { NO_ATTACK_TARGET } from '@mtg/shared';
 
 /**
  * Combat steps where holding an instant is still obviously safe. The steps left out —
@@ -27,12 +28,6 @@ import type { DecisionRequest, DecisionResponse, LegalAction, PlayerView, Step }
  * always go to the model.
  */
 const HARMLESS_COMBAT_STEPS: ReadonlySet<Step> = new Set<Step>(['beginCombat', 'endCombat']);
-
-/** Read a numeric field out of an option's descriptive `data` bag (engine-populated). */
-function numericData(action: LegalAction | undefined, key: string): number | null {
-  const value = action?.data?.[key];
-  return typeof value === 'number' ? value : null;
-}
 
 /**
  * Rule A — defer an instant when there is nothing to respond to.
@@ -52,16 +47,11 @@ function numericData(action: LegalAction | undefined, key: string): number | nul
  */
 function isPassAction(action: LegalAction): boolean {
   return (
-    action.type === 'pass' ||
-    action.type === 'passAndYieldTurn' ||
-    action.type === 'yieldToAbility'
+    action.type === 'pass' || action.type === 'passAndYieldTurn' || action.type === 'yieldToAbility'
   );
 }
 
-function tryDeferInstant(
-  request: DecisionRequest,
-  view: PlayerView,
-): DecisionResponse | null {
+function tryDeferInstant(request: DecisionRequest, view: PlayerView): DecisionResponse | null {
   if (request.decisionType !== 'priority') return null;
   // Combat tricks are a genuine judgment call — but only in the steps where they can change
   // anything. The bookend steps are as inert as an upkeep.
@@ -124,12 +114,34 @@ function tryObviousLandDrop(request: DecisionRequest): DecisionResponse | null {
   };
 }
 
+interface AttackSubjectData {
+  subjectId: string;
+  power: number;
+  toughness: number;
+  hasTriggers: boolean;
+  mustAttack: boolean;
+}
+
+function isAttackSubjectData(value: unknown): value is AttackSubjectData {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v['subjectId'] === 'string' &&
+    typeof v['power'] === 'number' &&
+    typeof v['hasTriggers'] === 'boolean' &&
+    typeof v['mustAttack'] === 'boolean'
+  );
+}
+
 /**
- * Rule B — a creature with no power does not attack, when nothing could make it matter.
+ * Rule B — decline the WHOLE attack when not one creature in it could matter.
  *
  * Attacking with 0 power deals no damage and taps the creature (CR 508.1f), removing it as a
  * blocker for a full turn cycle. That is strictly worse than staying home *only* if the attack
- * itself cannot produce value, so two things have to be ruled out first.
+ * itself cannot produce value, so several things have to be ruled out first — and since ADR 0023
+ * items 13/14 batched the whole declaration into one decision, this rule can only fire on the
+ * WHOLE decision now, not creature by creature: a mixed board (one real attacker among several
+ * powerless ones) always goes to the model, which decides every subject in the same call anyway.
  *
  * `hasTriggers` — a creature that puts an ability on the stack when it attacks is worth
  * attacking with at any power. No `TriggerEvent` keys on attacking today, so this is always
@@ -139,17 +151,16 @@ function tryObviousLandDrop(request: DecisionRequest): DecisionResponse | null {
  * trigger on some *other* permanent — "whenever a creature you control attacks" — is a
  * different shape that no `TriggerEvent` expresses either; adding one means revisiting this.)
  *
+ * `mustAttack` — a goaded creature can be forced to attack regardless of power (CR 508.1d cares
+ * about cost, never about power), so `NO_ATTACK_TARGET` isn't even a legal choice for that
+ * subject's slot; the whole-decision decline this rule proposes would be illegal if any subject
+ * is `mustAttack`, so that also routes to the model.
+ *
  * A currently castable instant — "attack with the 0/1, then pump it" is a real line, and pump
  * instants are modeled and common in the supported pool. The legal menu is the authoritative
  * affordability check: merely holding an instant is not enough to preserve that line. We still
  * deliberately over-approximate a castable instant as combat-relevant until spell-effect data is
  * exposed on legal actions; that is conservative and keeps a real trick with the tactician.
- *
- * When the engine offers its `noAttackRest` batch shortcut, the same test is applied to the
- * whole undeclared group (`maxPower`/`hasTriggers` aggregate every creature left), which
- * collapses a powerless board's entire declare-attackers step into a single answer rather than
- * one per creature. The individual `noAttack` remains for the mixed board, where this creature
- * is powerless but a later one is not.
  */
 function tryDeclineZeroPowerAttack(
   request: DecisionRequest,
@@ -166,37 +177,26 @@ function tryDeclineZeroPowerAttack(
     return null;
   }
 
-  // Prefer the batch decline: when *every* creature still to declare is powerless, one answer
-  // settles the whole combat instead of repeating this rule once per creature.
-  const noAttackRest = request.legalActions.find((a) => a.type === 'noAttackRest');
-  if (noAttackRest !== undefined) {
-    const maxPower = numericData(noAttackRest, 'maxPower');
-    const count = numericData(noAttackRest, 'count');
-    if (
-      maxPower !== null &&
-      maxPower <= 0 &&
-      noAttackRest.data?.['hasTriggers'] === false &&
-      count !== null
-    ) {
-      return {
-        requestId: request.requestId,
-        actionId: noAttackRest.id,
-        note: `Heuristic: all ${count} undeclared creatures have no power and would deal no combat damage`,
-      };
-    }
-  }
+  const action = request.legalActions.find((a) => a.type === 'attackDeclaration');
+  if (action === undefined) return null;
+  const raw = action.data?.['subjects'];
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const subjects = raw.filter(isAttackSubjectData);
+  if (subjects.length !== raw.length) return null; // malformed data — let the model see it
 
-  const noAttack = request.legalActions.find((a) => a.type === 'noAttack');
-  if (noAttack === undefined) return null;
+  const allHarmless = subjects.every((s) => s.power <= 0 && !s.hasTriggers && !s.mustAttack);
+  if (!allHarmless) return null;
 
-  const power = numericData(noAttack, 'power');
-  if (power === null || power > 0) return null;
-  if (noAttack.data?.['hasTriggers'] !== false) return null;
+  const targets = (action.targets ?? []).map((slot) => ({
+    slot: slot.slot,
+    choice: NO_ATTACK_TARGET,
+  }));
 
   return {
     requestId: request.requestId,
-    actionId: noAttack.id,
-    note: `Heuristic: ${power}-power creature would deal no combat damage`,
+    actionId: action.id,
+    targets,
+    note: `Heuristic: all ${subjects.length} eligible creature(s) have no power and would deal no combat damage`,
   };
 }
 
@@ -204,10 +204,7 @@ function tryDeclineZeroPowerAttack(
  * The safe local answer for a decision the AI could not meaningfully improve on, or `null`
  * when the decision is a real one and must go to the model.
  */
-export function tryHeuristic(
-  request: DecisionRequest,
-  view: PlayerView,
-): DecisionResponse | null {
+export function tryHeuristic(request: DecisionRequest, view: PlayerView): DecisionResponse | null {
   return (
     tryDeferInstant(request, view) ??
     tryObviousLandDrop(request) ??

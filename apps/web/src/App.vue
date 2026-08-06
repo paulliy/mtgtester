@@ -41,6 +41,7 @@ onUnmounted(() => {
       <RouterLink to="/game">Board</RouterLink>
       <RouterLink to="/stats">Stats</RouterLink>
       <RouterLink to="/debug">Debug</RouterLink>
+      <RouterLink to="/batch">Batch</RouterLink>
       <span class="brand">MTG Commander AI Simulator</span>
     </nav>
     <main class="view">

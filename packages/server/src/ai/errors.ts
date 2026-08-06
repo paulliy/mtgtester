@@ -54,3 +54,16 @@ export class AiResponseValidationError extends Error {
     this.name = 'AiResponseValidationError';
   }
 }
+
+/**
+ * Thrown when a call is torn down by its own caller (match halted/abandoned) rather than by any
+ * transport failure. Distinct from a plain `AbortError` so `classifyError` can tell "the network
+ * timed out, try again" from "nobody wants this answer any more, stop" — the former is retryable,
+ * the latter must never be retried into more billed calls for a game that already stopped.
+ */
+export class RequestCancelledError extends Error {
+  constructor(message = 'request cancelled') {
+    super(message);
+    this.name = 'RequestCancelledError';
+  }
+}

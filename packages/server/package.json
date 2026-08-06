@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "@mtg/shared": "workspace:*",
-    "@mtg/engine": "workspace:*"
+    "@mtg/engine": "workspace:*",
+    "@mtg/bot": "workspace:*"
   },
   "scripts": {
     "typecheck": "tsc --build"

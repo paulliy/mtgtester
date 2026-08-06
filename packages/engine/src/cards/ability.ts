@@ -381,7 +381,7 @@ export type Effect =
   | { op: 'exileAndGainLifeTargetController'; target: EffectRef }
   | { op: 'damageEachCreatureController'; amount: Value }
   | { op: 'sacrificeAndDrawForPower' }
-  | { op: 'sacrificeGreatestEachOpponent' }
+  | { op: 'sacrificeGreatestEachOpponent'; selector: 'creature' | 'creatureOrPlaneswalker'; metric: 'power' | 'manaValue'; action: 'sacrifice' | 'exile' }
   | { op: 'transferCountersFromTriggerObject'; target: EffectRef }
   | { op: 'mayPayLifeForTriggerPowerAndCounter' }
   | { op: 'vindictiveLichModes' }
@@ -399,8 +399,9 @@ export type Effect =
   | { op: 'millTargetPlayer'; target: EffectRef; count: number }
   | { op: 'millAndChooseArtifact' }
   | { op: 'dealDamageNonbasicLands'; target: EffectRef }
-  | { op: 'sacrificeOneEachOpponent' }
-  | { op: 'sacrificeEachPlayer'; count: number }
+  | { op: 'sacrificeOneEachOpponent'; filter: 'creature' | 'nonland' }
+  | { op: 'sacrificeEachPlayer'; count: number; filter: 'creature' | 'any' }
+  | { op: 'putCounterByPermanentType'; target: EffectRef; creatureCounter: string; planeswalkerCounter: string; count: Value | number }
   | { op: 'drawRevealTopLoseManaValue' }
   | { op: 'goadEachOpponent' }
   | { op: 'createTreasureForDeaths' }
@@ -516,8 +517,8 @@ export type Effect =
       sacrificeAt?: 'endStep';
     }
   /** Source permanent becomes a copy of the referent's copiable values (CR 707.2). */
-  | { op: 'becomeCopyOf'; ref: EffectRef; untilEot?: boolean; addTypes?: string[] }
-  | { op: 'becomeCopyOfTarget'; target: EffectRef; ref: EffectRef; untilEot?: boolean; addTypes?: string[] }
+  | { op: 'becomeCopyOf'; ref: EffectRef; untilEot?: boolean; addTypes?: string[]; addSupertypes?: string[]; nameOverride?: string }
+  | { op: 'becomeCopyOfTarget'; target: EffectRef; ref: EffectRef; untilEot?: boolean; addTypes?: string[]; addSupertypes?: string[]; nameOverride?: string }
   /** "Untap all lands you control" (Beledros). */
   | { op: 'untapEach'; selector: Selector }
   /**

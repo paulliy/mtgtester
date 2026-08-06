@@ -162,17 +162,39 @@ export function cardTypesInAllGraveyards(ctx: GameContext): number {
   return present.size;
 }
 
-/** Board-only evaluation, for the layer engine. See the module comment for what it refuses. */
-export function evaluateValue(ctx: GameContext, value: Value): number {
+/**
+ * Board-only evaluation, for the layer engine. See the module comment for what it refuses.
+ *
+ * `scope` is deliberately narrower than a resolving ability's full `ValueScope` — just the
+ * static effect's source controller, which the layer engine always has on hand (CR 613's
+ * "you" for a static ability is its controller) and which costs nothing to read: unlike `x`,
+ * `damageDealt`, or `targets`, it is not tied to one resolution and does not go stale between
+ * layer passes.
+ */
+export function evaluateValue(
+  ctx: GameContext,
+  value: Value,
+  scope?: Pick<ValueScope, 'controllerId'>,
+): number {
   switch (value.kind) {
     case 'const':
       return value.n;
     case 'plus':
-      return evaluateValue(ctx, value.of) + value.n;
+      return evaluateValue(ctx, value.of, scope) + value.n;
     case 'times':
-      return evaluateValue(ctx, value.of) * value.n;
+      return evaluateValue(ctx, value.of, scope) * value.n;
     case 'cardTypesInAllGraveyards':
       return cardTypesInAllGraveyards(ctx);
+    case 'commanderCastCount': {
+      if (scope?.controllerId === undefined) {
+        throw new Error(
+          `engine bug: value "commanderCastCount" needs a static effect's source controller`,
+        );
+      }
+      const player = ctx.state.players.find((p) => p.id === scope.controllerId);
+      if (!player) return 0;
+      return Object.values(player.commanderCastCount).reduce((sum, n) => sum + n, 0);
+    }
     default:
       throw new Error(
         `engine bug: value "${value.kind}" needs a resolving ability's scope — use evaluateValueIn`,

@@ -13,12 +13,12 @@
 
 import type { AsyncDecisionProvider, Engine } from '@mtg/engine';
 import type { DecisionRequest, DecisionResponse, PlayerView } from '@mtg/shared';
+import { decide as heuristicDecide, Rng as HeuristicRng } from '@mtg/bot';
 import type { AiConfig } from './config';
 import type { AiClient, CallMeta } from './client';
 import { assemblePrompt, type AiPrompt, type OpenAiMessage } from './context';
 import { DecisionCache } from './decision-cache';
 import { AiResponseValidationError } from './errors';
-import { safestFallback } from './fallback';
 import { tryHeuristic } from './heuristics';
 import { localCallMeta, type AiCallLogger, type DecisionSource } from './logger';
 import { validateResponse } from './validate';
@@ -32,7 +32,7 @@ import { StrategyCoordinator } from './strategy-coordinator';
 // Errors are caught and safely fallen back to safest legal action during playback.
 
 export interface RequestQueueInterface {
-  enqueue<T>(fn: () => Promise<T>): Promise<T>;
+  enqueue<T>(fn: () => Promise<T>, signal?: AbortSignal): Promise<T>;
 }
 
 /**
@@ -115,15 +115,19 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     // Escalation is invoked here, OUTSIDE the try, on purpose: the runner signals "this is
     // compute-ahead, halt the match" by throwing, and that throw must reach the caller rather
     // than be caught above and quietly downgraded into the fallback it exists to prevent.
-    return await this.escalateOrFallback(request, failure);
+    return await this.escalateOrFallback(request, view, failure);
   }
 
   /**
-   * §7.7 step 2 when a human is watching, step 3 otherwise. Without an escalation hook this is
-   * exactly the Phase 3 behaviour: safest legal action, logged prominently as a fallback.
+   * §7.7 step 2 when a human is watching, step 3 otherwise. The step 3 fallback is the
+   * heuristic bot (ADR 0023 item 9), not a reflex to pass: it scores every legal action for
+   * `view` and takes whichever one actually comes out ahead, which is `pass` only when passing
+   * genuinely is the best option at this decision. Ties break through a seeded `Rng` keyed on
+   * the request id, so the same failed decision always resolves the same way.
    */
   private async escalateOrFallback(
     request: DecisionRequest,
+    view: PlayerView,
     failure: ModelFailure,
   ): Promise<DecisionResponse> {
     if (this.escalation !== undefined) {
@@ -141,9 +145,9 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
       }
     }
 
-    const fallback = safestFallback(request);
+    const fallback = heuristicDecide(request, view, new HeuristicRng(request.requestId));
     console.warn(
-      `  ⚠ ${request.decidingPlayer} decision ${request.requestId} — using safest legal action`,
+      `  ⚠ ${request.decidingPlayer} decision ${request.requestId} — using heuristic bot fallback`,
     );
     this.logger?.log(
       request,

@@ -21,6 +21,7 @@ interface DeckStatistic {
 }
 
 const decks = ref<DeckStatistic[]>([]);
+const batchId = new URLSearchParams(window.location.search).get('batchId');
 const error = ref<string | null>(null);
 const loading = ref(true);
 
@@ -32,7 +33,7 @@ async function load(): Promise<void> {
   loading.value = true;
   error.value = null;
   try {
-    const response = await fetch('/api/stats');
+    const response = await fetch(batchId === null ? '/api/stats' : `/api/stats?batchId=${encodeURIComponent(batchId)}`);
     if (!response.ok) throw new Error((await response.json() as { message?: string }).message ?? 'Could not load stats.');
     decks.value = (await response.json() as { decks: DeckStatistic[] }).decks;
   } catch (reason) {
@@ -49,7 +50,7 @@ onMounted(() => void load());
   <section class="stats">
     <header>
       <div>
-        <h1>Deck statistics</h1>
+        <h1>{{ batchId === null ? 'Deck statistics' : 'Batch deck statistics' }}</h1>
         <p>Finished games only. Mana rates use the configurable heuristic below.</p>
       </div>
       <button @click="load">Refresh</button>

@@ -199,12 +199,12 @@ export function evaluateCondition(
     case 'hadToAttackThisCombat': {
       if (source?.cardId === undefined) return false;
       const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
-      return perm !== undefined && perm.goadedThisTurn === true;
+      return perm?.hadToAttackThisCombat === true;
     }
     case 'triggerObjectHadToAttackThisCombat': {
       if (source.triggerObjectCardId === undefined) return false;
       const perm = ctx.state.battlefield.find((p) => p.cardId === source.triggerObjectCardId);
-      return perm !== undefined && perm.goadedThisTurn === true;
+      return perm?.hadToAttackThisCombat === true;
     }
     case 'triggerObjectMatches': {
       if (source.triggerObjectCardId === undefined) return false;

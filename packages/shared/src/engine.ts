@@ -102,26 +102,95 @@ export interface ActionPresentation {
 }
 
 /**
- * One creature the current declare-attackers/blockers step will still ask about after the
- * current decision. A HINT for client-side batching (brief — Workstream 5): every assignment
- * is still submitted one engine decision at a time and re-validated: nothing here is consulted
- * for legality. `optionIds` (not just ids) matters for blockers — the legal attacker set
- * differs per blocker (evasion, protection), so a bare id list would let the browser compose an
- * assignment the engine will never offer.
+ * Sentinel `TargetChoice.choice` value meaning "this creature does not attack" — one of a slot's
+ * legal `options` in an `attackDeclaration` `LegalAction`, exactly like any other target choice
+ * (ADR 0023 items 13/14). Never a real `ObjectId`/`PlayerId`, so it can't collide with one; absent
+ * from a slot entirely when the creature has a mandatory requirement (CR 508.1d — see `mustAttack`
+ * below), which is what makes "does not attack" illegal for that creature without a separate check.
  */
-export interface CombatSubject {
+export const NO_ATTACK_TARGET = '__no_attack__';
+
+/**
+ * Sentinel `TargetChoice.choice` value meaning "this creature does not block" — the blocker-side
+ * mirror of `NO_ATTACK_TARGET` (ADR 0023 Phase 4). Absent from a slot entirely when the creature
+ * is under a "must block" requirement, for the same reason `NO_ATTACK_TARGET` is.
+ */
+export const NO_BLOCK_TARGET = '__no_block__';
+
+/**
+ * One eligible attacker in a batched attack declaration, and the legal defenders for IT ALONE
+ * (restrictions/costs, CR 508.1c — item 15). `mustAttack` is whether a requirement (goad) makes
+ * declining illegal (CR 508.1d — item 19); when true, `NO_ATTACK_TARGET` is not among that
+ * creature's slot options, so a compliant proposal can't decline it. What is NOT checked per-slot
+ * is the *joint* cost across every creature attacking the same taxed defender at once (attack tax
+ * scales with attacker count) — that can only be validated once the whole declaration is known,
+ * which is exactly why this is a propose-and-validate decision (item 14) rather than a menu.
+ */
+export interface AttackDeclarationSubject {
   subjectId: ObjectId;
-  /** Attackers: the defending players it may attack. Blockers: the attackers it may block. */
-  optionIds: string[];
+  name: string;
+  power: number;
+  toughness: number;
+  /** Legal defenders for this creature alone. `attackTax` is per-attacker; the total for a
+   * defender receiving several attackers is `attackTax * count`, checked jointly on submission. */
+  defenders: Array<{ playerId: PlayerId; life: number; attackTax: number }>;
+  mustAttack: boolean;
+  /** A creature that puts something on the stack when it attacks is worth attacking with at
+   * any power — counts *every* trigger on the creature, not only attack triggers, so it
+   * over-reports (a hint, never a rule). Mirrors the old per-creature `EngineActionOption.data`. */
+  hasTriggers: boolean;
 }
 
-/** Batch context for one declare-attackers/blockers step (CR 508.1 / 509.1). */
-export interface CombatDeclaration {
-  kind: 'attackers' | 'blockers';
-  /** The creature THIS decision is about. */
+/**
+ * One eligible blocker in a batched block declaration, and the legal attackers for IT ALONE
+ * (evasion/protection, CR 509.1b) — the blocker-side mirror of `AttackDeclarationSubject`
+ * (ADR 0023 Phase 4). `mustBlock` is whether a "must block" requirement makes declining illegal
+ * for this creature; when true, `NO_BLOCK_TARGET` is not among its slot options. Unlike attacking,
+ * blocking has no joint per-defender cost to validate after the fact — the one thing that can't
+ * be checked per-slot is menace (CR 702.111b: an attacker with menace can't be blocked by fewer
+ * than two creatures), which is a property of how many blockers land on the SAME attacker, so it
+ * is validated the same way attack tax is (`CombatViolation`'s `'menace'` kind).
+ */
+export interface BlockDeclarationSubject {
   subjectId: ObjectId;
-  /** Subjects this step will still ask about after this one, in engine order. */
-  remaining: CombatSubject[];
+  name: string;
+  power: number;
+  toughness: number;
+  /** Legal attackers for this creature alone. */
+  attackers: Array<{ attackerId: ObjectId; name: string; power: number; toughness: number }>;
+  mustBlock: boolean;
+}
+
+/** Why a proposed declaration was rejected — a constraint packet, not a claimed legal set (item 16):
+ * the full legal option space for a batched declaration is combinatorial and the engine never
+ * claims to enumerate it, only to say what was wrong with what was tried. */
+export interface CombatViolation {
+  subjectId: ObjectId;
+  kind: 'attackTax' | 'menace';
+  message: string;
+}
+export interface CombatRejection {
+  violations: CombatViolation[];
+}
+
+/**
+ * Presentation for the one-shot batched attack declaration (ADR 0023 items 13-17). Wire
+ * submission still rides the existing `LegalAction.targets`/`TargetChoice[]` machinery — one slot
+ * per `subjects[i]`, in the same order — this is the descriptive layer a UI renders from instead
+ * of reverse-engineering raw target-slot ids.
+ */
+export interface AttackDeclarationPresentation {
+  subjects: AttackDeclarationSubject[];
+  /** Present only on the one informed retry (item 17), after a first proposal was rejected. */
+  rejection?: CombatRejection;
+}
+
+/** Presentation for the one-shot batched block declaration (ADR 0023 Phase 4) — the blocker-side
+ * mirror of `AttackDeclarationPresentation`. */
+export interface BlockDeclarationPresentation {
+  subjects: BlockDeclarationSubject[];
+  /** Present only on the one informed retry, after a first proposal was rejected (menace). */
+  rejection?: CombatRejection;
 }
 
 /**
@@ -130,13 +199,15 @@ export interface CombatDeclaration {
  * `PresentedCard` above.
  */
 export interface DecisionPresentation {
-  layout: 'choices' | 'cards' | 'order' | 'value' | 'combat';
+  layout: 'choices' | 'cards' | 'order' | 'value' | 'attackDeclaration' | 'blockDeclaration';
   /** The card/permanent the whole decision concerns, e.g. what triggered it. */
   source?: PresentedSource;
   /** Per-option presentation, keyed by `LegalAction.id`. */
   actions?: Record<number, ActionPresentation>;
-  /** Present only when `layout === 'combat'`. */
-  combat?: CombatDeclaration;
+  /** Present only when `layout === 'attackDeclaration'` (ADR 0023 items 13/14). */
+  attackDeclaration?: AttackDeclarationPresentation;
+  /** Present only when `layout === 'blockDeclaration'` (ADR 0023 Phase 4). */
+  blockDeclaration?: BlockDeclarationPresentation;
 }
 
 /**
@@ -155,6 +226,15 @@ export interface DecisionRequest {
   decisionType: DecisionType;
   prompt: string;
   legalActions: LegalAction[];
+  /** One-call distribution request, currently used by Klauth's mana trigger. */
+  manaSplit?: { amount: number; colors: string[] };
+  /** One-call combat-damage-division request (CR 510.1c-d, 702.19b — ADR 0023 Phase 4): a source
+   * blocked/blocking by 2+ creatures divides its damage among `targets` however its controller
+   * chooses, rather than picking an order (the pre-2018 mechanic; see the ADR's Context section).
+   * `targets` is blocker ids, plus the defending player's id appended last when the source has
+   * trample — CR 702.19b only allows assigning to the player once every blocker already has
+   * lethal, which `DecisionResponse.combatDamageSplit` is validated against. */
+  combatDamageSplit?: { amount: number; targets: ObjectId[] };
   /** UI-only; see `DecisionPresentation`. Never sent to the AI (brief — Workstream 3). */
   presentation?: DecisionPresentation;
 }
@@ -197,7 +277,12 @@ export interface DecisionResponse {
   modes?: number[];
   /** Chosen value of X. */
   xValue?: number;
-  /** An ordering the decision asked for (e.g. trigger order, damage assignment). */
+  /** Counts by color for a batched mana distribution decision. */
+  manaSplit?: Record<string, number>;
+  /** Amounts by target id for a batched combat-damage-division decision (`combatDamageSplit`
+   * on `DecisionRequest` — ADR 0023 Phase 4). Sum must equal the request's `amount` exactly. */
+  combatDamageSplit?: Record<ObjectId, number>;
+  /** An ordering the decision asked for (e.g. trigger order). */
   order?: number[];
   /** Optional sequence of planned future actions for turn pre-planning. */
   plannedActions?: PlannedAction[];

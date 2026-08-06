@@ -50,3 +50,7 @@ export {
   type SetupResult,
 } from './match/setup';
 export { GameServer, type GameServerDeps } from './ws/server';
+
+export { BatchRepository } from './db/batches';
+
+export { BatchManager, validateBatch, MAX_BATCH_GAMES, MAX_BATCH_SCENARIOS, type BatchManagerDeps } from './batch/manager';

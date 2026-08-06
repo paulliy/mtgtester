@@ -13,6 +13,7 @@ import {
   HttpError,
   ModelUnavailableError,
   NoAvailableModelError,
+  RequestCancelledError,
   RpmLimitError,
 } from './errors';
 import { DEFAULT_AI_CONFIG } from './config';
@@ -78,6 +79,8 @@ export interface AiClient {
   requestDecision(
     prompt: AiPrompt,
     request: DecisionRequest,
+    /** Aborts the call (and skips further retries/model fallback) once the caller stops waiting. */
+    signal?: AbortSignal,
   ): Promise<{ response: DecisionResponse; meta: CallMeta }>;
 }
 
@@ -111,6 +114,7 @@ export class OpenAiCompatibleClient implements AiClient {
   async requestDecision(
     prompt: AiPrompt,
     request: DecisionRequest,
+    signal?: AbortSignal,
   ): Promise<{ response: DecisionResponse; meta: CallMeta }> {
     const endpoint = this.resolveEndpoint();
     const rpmModelsThisAttempt = new Set<string>();
@@ -118,6 +122,7 @@ export class OpenAiCompatibleClient implements AiClient {
     let lastHardError: Error | null = null;
 
     for (;;) {
+      if (signal?.aborted === true) throw new RequestCancelledError();
       const availableModels = this.config.models.filter((m) => !this.hardBarrierModels.has(m));
 
       if (availableModels.length === 0) {
@@ -162,113 +167,123 @@ export class OpenAiCompatibleClient implements AiClient {
           : [];
 
       try {
-        const metaResult = await withRetry(async () => {
-          const reasoningOn =
-            this.config.reasoningEnabled === true && this.config.reasoningEffort !== 'none';
-          const answerTokens = this.config.maxOutputTokens ?? DEFAULT_AI_CONFIG.maxOutputTokens;
+        const metaResult = await withRetry(
+          async () => {
+            const reasoningOn =
+              this.config.reasoningEnabled === true && this.config.reasoningEffort !== 'none';
+            const answerTokens = this.config.maxOutputTokens ?? DEFAULT_AI_CONFIG.maxOutputTokens;
 
-          const bodyPayload: Record<string, unknown> = {
-            model: currentModel,
-            messages: prompt.messages,
-            temperature: 0.1,
-            max_tokens: reasoningOn
-              ? answerTokens + (this.config.reasoningTokenHeadroom ?? 0)
-              : answerTokens,
-            response_format: { type: 'json_object' },
-            ...reasoningParams(this.config, isOpenRouter),
-          };
-          if (isOpenRouter) {
-            const provider: Record<string, unknown> = {};
-            if (ignoreProviders.length > 0) provider['ignore'] = ignoreProviders;
-            if (this.config.preferredMaxLatencySeconds > 0) {
-              provider['preferred_max_latency'] = this.config.preferredMaxLatencySeconds;
+            const bodyPayload: Record<string, unknown> = {
+              model: currentModel,
+              messages: prompt.messages,
+              temperature: 0.1,
+              max_tokens: reasoningOn
+                ? answerTokens + (this.config.reasoningTokenHeadroom ?? 0)
+                : answerTokens,
+              response_format: { type: 'json_object' },
+              ...reasoningParams(this.config, isOpenRouter),
+            };
+            if (isOpenRouter) {
+              const provider: Record<string, unknown> = {};
+              if (ignoreProviders.length > 0) provider['ignore'] = ignoreProviders;
+              if (this.config.preferredMaxLatencySeconds > 0) {
+                provider['preferred_max_latency'] = this.config.preferredMaxLatencySeconds;
+              }
+              if (this.config.preferredMinThroughput > 0) {
+                provider['preferred_min_throughput'] = this.config.preferredMinThroughput;
+              }
+              if (Object.keys(provider).length > 0) bodyPayload['provider'] = provider;
             }
-            if (this.config.preferredMinThroughput > 0) {
-              provider['preferred_min_throughput'] = this.config.preferredMinThroughput;
-            }
-            if (Object.keys(provider).length > 0) bodyPayload['provider'] = provider;
-          }
 
-          const res = await this.fetchImpl(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(this.config.apiKey ? { Authorization: `Bearer ${this.config.apiKey}` } : {}),
-            },
-            body: JSON.stringify(bodyPayload),
-            signal: AbortSignal.timeout(
+            const timeoutSignal = AbortSignal.timeout(
               this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
-            ),
-          });
+            );
+            const res = await this.fetchImpl(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(this.config.apiKey ? { Authorization: `Bearer ${this.config.apiKey}` } : {}),
+              },
+              body: JSON.stringify(bodyPayload),
+              // A caller-supplied signal aborts the in-flight HTTP call itself, not just the wait
+              // that precedes it — the whole reason this exists (a halted match's strategist call
+              // was otherwise unstoppable once it started; see queue.ts).
+              signal:
+                signal !== undefined ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal,
+            });
 
-          if (!res.ok) {
-            const errorText = await res.text();
-            if (
-              res.status === 401 ||
-              res.status === 403 ||
-              errorText.includes('API_KEY_INVALID') ||
-              errorText.includes('UNAUTHENTICATED') ||
-              errorText.includes('invalid_api_key')
-            ) {
-              throw new AuthenticationError(
-                `API authentication failed (HTTP ${res.status}): ${errorText}`,
+            if (!res.ok) {
+              const errorText = await res.text();
+              if (
+                res.status === 401 ||
+                res.status === 403 ||
+                errorText.includes('API_KEY_INVALID') ||
+                errorText.includes('UNAUTHENTICATED') ||
+                errorText.includes('invalid_api_key')
+              ) {
+                throw new AuthenticationError(
+                  `API authentication failed (HTTP ${res.status}): ${errorText}`,
+                );
+              }
+              if (
+                res.status === 404 ||
+                errorText.includes('model_not_found') ||
+                errorText.includes('NOT_FOUND')
+              ) {
+                throw new ModelUnavailableError(currentModel, errorText);
+              }
+              throw new HttpError(res.status, errorText);
+            }
+
+            const data = (await res.json()) as {
+              choices?: Array<{
+                finish_reason?: string;
+                message?: { content?: string; reasoning?: string; reasoning_content?: string };
+              }>;
+              usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number };
+            };
+
+            const choice = data.choices?.[0];
+            const message = choice?.message;
+            /**
+             * A thinking model that runs out of budget mid-thought returns empty `content` with
+             * everything it wrote in `reasoning` — and the decision JSON is usually in there.
+             * Reading it back is free and turns a dead call into an answered one.
+             */
+            const rawContent =
+              (message?.content ?? '').trim().length > 0
+                ? (message?.content as string)
+                : (message?.reasoning ?? message?.reasoning_content ?? '');
+
+            if (!rawContent.trim()) {
+              const finish = choice?.finish_reason;
+              throw new AiResponseValidationError(
+                `Empty content received from AI provider` +
+                  (finish !== undefined ? ` (finish_reason: ${finish})` : ''),
+                rawContent,
               );
             }
-            if (
-              res.status === 404 ||
-              errorText.includes('model_not_found') ||
-              errorText.includes('NOT_FOUND')
-            ) {
-              throw new ModelUnavailableError(currentModel, errorText);
-            }
-            throw new HttpError(res.status, errorText);
-          }
 
-          const data = (await res.json()) as {
-            choices?: Array<{
-              finish_reason?: string;
-              message?: { content?: string; reasoning?: string; reasoning_content?: string };
-            }>;
-            usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number };
-          };
+            const latencyMs = Date.now() - startTime;
+            const parsed = parseJsonResponse(rawContent, request);
 
-          const choice = data.choices?.[0];
-          const message = choice?.message;
-          /**
-           * A thinking model that runs out of budget mid-thought returns empty `content` with
-           * everything it wrote in `reasoning` — and the decision JSON is usually in there.
-           * Reading it back is free and turns a dead call into an answered one.
-           */
-          const rawContent =
-            (message?.content ?? '').trim().length > 0
-              ? (message?.content as string)
-              : (message?.reasoning ?? message?.reasoning_content ?? '');
+            const meta: CallMeta = {
+              model: currentModel,
+              promptTokens: data.usage?.prompt_tokens ?? prompt.estimatedTokens,
+              responseTokens: data.usage?.completion_tokens ?? Math.ceil(rawContent.length / 4),
+              latencyMs,
+              wasRetry: false,
+              wasFallback: false,
+              rawResponse: rawContent,
+              ...(typeof data.usage?.cost === 'number' ? { costUsd: data.usage.cost } : {}),
+            };
 
-          if (!rawContent.trim()) {
-            const finish = choice?.finish_reason;
-            throw new AiResponseValidationError(
-              `Empty content received from AI provider` +
-                (finish !== undefined ? ` (finish_reason: ${finish})` : ''),
-              rawContent,
-            );
-          }
-
-          const latencyMs = Date.now() - startTime;
-          const parsed = parseJsonResponse(rawContent, request);
-
-          const meta: CallMeta = {
-            model: currentModel,
-            promptTokens: data.usage?.prompt_tokens ?? prompt.estimatedTokens,
-            responseTokens: data.usage?.completion_tokens ?? Math.ceil(rawContent.length / 4),
-            latencyMs,
-            wasRetry: false,
-            wasFallback: false,
-            rawResponse: rawContent,
-            ...(typeof data.usage?.cost === 'number' ? { costUsd: data.usage.cost } : {}),
-          };
-
-          return { response: parsed, meta };
-        }, this.config);
+            return { response: parsed, meta };
+          },
+          this.config,
+          undefined,
+          signal,
+        );
 
         return metaResult;
       } catch (err) {
@@ -424,6 +439,20 @@ function parseJsonResponse(raw: string, request: DecisionRequest): DecisionRespo
   }
   if (Array.isArray(obj['plannedActions'])) {
     response.plannedActions = obj['plannedActions'];
+  }
+  if (
+    typeof obj['manaSplit'] === 'object' &&
+    obj['manaSplit'] !== null &&
+    !Array.isArray(obj['manaSplit'])
+  ) {
+    response.manaSplit = obj['manaSplit'] as Record<string, number>;
+  }
+  if (
+    typeof obj['combatDamageSplit'] === 'object' &&
+    obj['combatDamageSplit'] !== null &&
+    !Array.isArray(obj['combatDamageSplit'])
+  ) {
+    response.combatDamageSplit = obj['combatDamageSplit'] as Record<string, number>;
   }
   if (
     typeof obj['turnStrategy'] === 'object' &&

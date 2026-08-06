@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { computePriorityOptions } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
-import type { GameContext } from '../src/state/types';
+import type { EnginePlayerState, GameContext } from '../src/state/types';
 import { parseManaCost, planPayment } from '../src/mana/cost';
 import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 import { queueTriggersForEvent } from '../src/state/objects';
 import { priorityCheckpoint } from '../src/sba/sba';
+import { runPrioritySequence } from '../src/turn/priority';
 
 const kiora = () =>
   oracle({
@@ -121,5 +123,77 @@ describe('Increment 17: Planeswalkers & Hybrid Mana', () => {
     );
 
     expect(p1.hand.length).toBe(initialHandCount + 1);
+  });
+});
+
+const p1Of = (ctx: GameContext): EnginePlayerState =>
+  ctx.state.players.find((p) => p.id === 'P1') as EnginePlayerState;
+
+describe('CR 606.3: loyalty ability activation is once per PERMANENT per turn', () => {
+  it('activating one loyalty ability takes every other loyalty ability of that planeswalker off the table too', () => {
+    const ctx = pod();
+    spawn(ctx, 'P1', sivitri());
+
+    const before = computePriorityOptions(ctx, p1Of(ctx));
+    expect(before.some((o) => o.description.startsWith('Sivitri, Dragon Master: +1:'))).toBe(true);
+    expect(before.some((o) => o.description.startsWith('Sivitri, Dragon Master: −3:'))).toBe(true);
+
+    let activated = false;
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = !activated ? d.options.findIndex((o) => o.description.includes('+1:')) : -1;
+      if (i >= 0) {
+        activated = true;
+        return { index: i, targets: new Map() };
+      }
+      return { index: 0, targets: new Map() }; // Pass priority
+    });
+
+    const after = computePriorityOptions(ctx, p1Of(ctx));
+    expect(after.some((o) => o.description.startsWith('Sivitri, Dragon Master: +1:'))).toBe(false);
+    // Not just the ability that was used — CR 606.3 blocks the *permanent's* other loyalty
+    // abilities too, since only one loyalty ability activation is allowed per planeswalker
+    // per turn, regardless of which ability.
+    expect(after.some((o) => o.description.startsWith('Sivitri, Dragon Master: −3:'))).toBe(false);
+  });
+
+  // Real card, real oracleId — hits the hand-authored override registered in
+  // overrides/token-triumph.ts, whose activated abilities omitted `oncePerTurn: true`. The
+  // once-per-turn restriction on loyalty abilities comes from CR 606.3 itself (any ability
+  // costing loyalty), not from that flag, so legality no longer depends on every override
+  // remembering to set it.
+  it("Ajani, Caller of the Pride's +1 can only be activated once per turn even though the override never set oncePerTurn", () => {
+    const ctx = pod();
+    const ajaniPerm = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Ajani, Caller of the Pride',
+        oracleId: '1d5ff280-7f4d-4801-aefd-9b6e6b1f2818',
+        manaCost: '{2}{W}{W}',
+        cmc: 4,
+        colors: ['W'],
+        colorIdentity: ['W'],
+        typeLine: 'Legendary Planeswalker — Ajani',
+        loyalty: '3',
+      }),
+    );
+    const creature = spawn(ctx, 'P1', oracle({ name: 'Bear', typeLine: 'Creature — Bear', power: '2', toughness: '2' }));
+
+    const before = computePriorityOptions(ctx, p1Of(ctx));
+    expect(before.some((o) => o.description.includes('+1/+1 counter'))).toBe(true);
+
+    let activated = false;
+    pump(runPrioritySequence(ctx), (d) => {
+      const i = !activated ? d.options.findIndex((o) => o.description.includes('+1/+1 counter')) : -1;
+      if (i >= 0) {
+        activated = true;
+        return { index: i, targets: new Map([[0, creature.id]]) };
+      }
+      return { index: 0, targets: new Map() };
+    });
+
+    expect(ajaniPerm.counters['loyalty']).toBe(4);
+    const after = computePriorityOptions(ctx, p1Of(ctx));
+    expect(after.some((o) => o.description.includes('+1/+1 counter'))).toBe(false);
   });
 });

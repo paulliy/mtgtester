@@ -8,7 +8,8 @@
 import type {
   ActionInteraction,
   ActionPresentation,
-  CombatDeclaration,
+  AttackDeclarationPresentation,
+  BlockDeclarationPresentation,
   DecisionType,
   ObjectId,
   PlayerId,
@@ -48,8 +49,14 @@ export interface PendingDecision {
   options: EngineActionOption[];
   /** The card/permanent this whole decision concerns, e.g. what triggered it. */
   presentationSource?: PresentedSource;
-  /** Batch hint for a declare-attackers/blockers decision (`present.ts` docs the contract). */
-  presentationCombat?: CombatDeclaration;
+  /** Presentation for a batched attack declaration (ADR 0023 items 13/14). */
+  presentationAttackDeclaration?: AttackDeclarationPresentation;
+  /** Presentation for a batched block declaration (ADR 0023 Phase 4). */
+  presentationBlockDeclaration?: BlockDeclarationPresentation;
+  /** Optional one-call mana distribution metadata. */
+  manaSplit?: { amount: number; colors: string[] };
+  /** Optional one-call combat-damage-division metadata (ADR 0023 Phase 4). */
+  combatDamageSplit?: { amount: number; targets: ObjectId[] };
 }
 
 /** The resolved choice fed back into the generator. */
@@ -58,6 +65,8 @@ export interface DecisionOutcome {
   index: number;
   /** Chosen target per slot. */
   targets: ReadonlyMap<number, ObjectId>;
+  manaSplit?: Readonly<Record<string, number>>;
+  combatDamageSplit?: Readonly<Record<string, number>>;
 }
 
 /** Generator type for all engine flow code. */

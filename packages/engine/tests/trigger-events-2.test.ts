@@ -29,7 +29,18 @@ import { moveObject, queueCastTriggers } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { runTurn } from '../src/turn/turn';
 import { runPrioritySequence } from '../src/turn/priority';
-import { conjure, copies, forest, gameConfig, keywordCreature, oracle, pump, spawn } from './fixtures';
+import {
+  conjure,
+  copies,
+  declareAttacks,
+  declareBlocks,
+  forest,
+  gameConfig,
+  keywordCreature,
+  oracle,
+  pump,
+  spawn,
+} from './fixtures';
 
 function pod(seed = 'trigger-events-2'): GameContext {
   const ctx = createGame(
@@ -122,12 +133,7 @@ function attackAll(ctx: GameContext): void {
   ctx.state.phase = 'combat';
   ctx.state.step = null;
   pump(runCombatPhase(ctx), (d) => {
-    const all = d.options.findIndex((o) => o.description.includes('undeclared creatures'));
-    if (all >= 0 && d.options[all]?.description.includes('P2') === true) {
-      return { index: all, targets: new Map() };
-    }
-    const one = d.options.findIndex((o) => /attacks P2/.test(o.description));
-    if (one >= 0) return { index: one, targets: new Map() };
+    if (d.decisionType === 'declareAttackers') return declareAttacks(d, () => 'P2');
     return { index: 0, targets: new Map() };
   });
 }
@@ -203,10 +209,7 @@ describe('the aggregate form (CR 603.2c)', () => {
     perObject.state.phase = 'combat';
     for (const ctx of [aggregate, perObject]) {
       pump(runCombatPhase(ctx), (d) => {
-        const all = d.options.findIndex((o) => o.description.includes('undeclared creatures'));
-        if (all >= 0 && d.options[all]?.description.includes('P2') === true) {
-          return { index: all, targets: new Map() };
-        }
+        if (d.decisionType === 'declareAttackers') return declareAttacks(d, () => 'P2');
         return { index: 0, targets: new Map() };
       });
     }
@@ -228,16 +231,18 @@ describe('dealsCombatDamageToPlayer', () => {
     // Same board, but a fat blocker eats the whole attack: no damage reaches the player.
     const blocked = pod();
     spawn(blocked, 'P1', combatDamageDraw());
-    spawn(blocked, 'P1', dragon('Test Dragon'));
+    const blockedDragon = spawn(blocked, 'P1', dragon('Test Dragon'));
     spawn(blocked, 'P2', keywordCreature('Test Wall', '', '{4}{G}', '1/9'));
     const beforeBlock = handSize(blocked, 'P1');
     blocked.state.phase = 'combat';
     blocked.state.step = null;
     pump(runCombatPhase(blocked), (d) => {
-      const attack = d.options.findIndex((o) => /attacks P2/.test(o.description));
-      if (attack >= 0) return { index: attack, targets: new Map() };
-      const block = d.options.findIndex((o) => /blocks/.test(o.description));
-      if (block >= 0) return { index: block, targets: new Map() };
+      if (d.decisionType === 'declareAttackers') return declareAttacks(d, () => 'P2');
+      if (d.decisionType === 'declareBlockers') {
+        return declareBlocks(d, (_id, subject) =>
+          subject.name === 'Test Wall' ? blockedDragon.id : null,
+        );
+      }
       return { index: 0, targets: new Map() };
     });
     expect(handSize(blocked, 'P1') - beforeBlock).toBe(0);
@@ -246,17 +251,19 @@ describe('dealsCombatDamageToPlayer', () => {
   it('a trampling attacker that hits a blocker AND the player triggers once, not twice', () => {
     const ctx = pod();
     spawn(ctx, 'P1', combatDamageDraw());
-    spawn(ctx, 'P1', dragon('Test Trampler', '5/5', 'Trample'));
+    const trampler = spawn(ctx, 'P1', dragon('Test Trampler', '5/5', 'Trample'));
     spawn(ctx, 'P2', keywordCreature('Test Chump', '', '{G}', '1/1'));
     const before = handSize(ctx, 'P1');
 
     ctx.state.phase = 'combat';
     ctx.state.step = null;
     pump(runCombatPhase(ctx), (d) => {
-      const attack = d.options.findIndex((o) => /attacks P2/.test(o.description));
-      if (attack >= 0) return { index: attack, targets: new Map() };
-      const block = d.options.findIndex((o) => /blocks/.test(o.description));
-      if (block >= 0) return { index: block, targets: new Map() };
+      if (d.decisionType === 'declareAttackers') return declareAttacks(d, () => 'P2');
+      if (d.decisionType === 'declareBlockers') {
+        return declareBlocks(d, (_id, subject) =>
+          subject.name === 'Test Chump' ? trampler.id : null,
+        );
+      }
       return { index: 0, targets: new Map() };
     });
 
@@ -312,7 +319,12 @@ describe('castsSpell', () => {
     // Cast by an opponent: does not fire.
     ctx.state.pendingTriggers = [];
     const theirs = conjure(ctx, 'P2', dragon('Test Rival'), 'hand');
-    queueCastTriggers(ctx, { ...stack, controllerId: 'P2', card: theirs, sourceCardId: theirs.cardId });
+    queueCastTriggers(ctx, {
+      ...stack,
+      controllerId: 'P2',
+      card: theirs,
+      sourceCardId: theirs.cardId,
+    });
     expect(ctx.state.pendingTriggers).toHaveLength(0);
   });
 

@@ -71,7 +71,12 @@ describe('OpenAiDecisionProvider', () => {
       }),
     };
 
-    const provider = new OpenAiDecisionProvider(mockClient, mockQueue, mockEngine, DEFAULT_AI_CONFIG);
+    const provider = new OpenAiDecisionProvider(
+      mockClient,
+      mockQueue,
+      mockEngine,
+      DEFAULT_AI_CONFIG,
+    );
     const res = await provider.decide(fixtureReq);
 
     expect(res.actionId).toBe(0);
@@ -99,14 +104,19 @@ describe('OpenAiDecisionProvider', () => {
       }),
     };
 
-    const provider = new OpenAiDecisionProvider(mockClient, mockQueue, mockEngine, DEFAULT_AI_CONFIG);
+    const provider = new OpenAiDecisionProvider(
+      mockClient,
+      mockQueue,
+      mockEngine,
+      DEFAULT_AI_CONFIG,
+    );
     const res = await provider.decide(fixtureReq);
 
     expect(res.actionId).toBe(0);
     expect(calls).toBe(2);
   });
 
-  it('falls back to safest conservative action when retries also fail', async () => {
+  it('falls back to the heuristic bot when retries also fail', async () => {
     const mockClient: AiClient = {
       activeModel: 'm1',
       requestDecision: vi.fn().mockResolvedValue({
@@ -115,12 +125,18 @@ describe('OpenAiDecisionProvider', () => {
       }),
     };
 
-    const provider = new OpenAiDecisionProvider(mockClient, mockQueue, mockEngine, DEFAULT_AI_CONFIG);
+    const provider = new OpenAiDecisionProvider(
+      mockClient,
+      mockQueue,
+      mockEngine,
+      DEFAULT_AI_CONFIG,
+    );
     const res = await provider.decide(fixtureReq);
 
-    // Menu has action 0 as 'pass'
-    expect(res.actionId).toBe(0);
-    expect(res.note).toContain('Fallback');
+    // The fallback is scored, not a reflex to `pass` (ADR 0023 item 9): casting a free spell
+    // outscores passing, so that's what comes back even though `pass` (id 0) is on the menu.
+    expect(res.actionId).toBe(1);
+    expect(res.note).toContain('Heuristic bot');
   });
 
   describe('a request that never returns a response at all (§7.7 step 3)', () => {
@@ -134,7 +150,7 @@ describe('OpenAiDecisionProvider', () => {
       requestDecision: vi.fn().mockRejectedValue(err),
     });
 
-    it('falls back to the safest legal action instead of ending the game', async () => {
+    it('falls back to the heuristic bot instead of ending the game', async () => {
       const provider = new OpenAiDecisionProvider(
         throwingClient(new HttpError(400, '{"code":"json_validate_failed"}')),
         mockQueue,
@@ -143,24 +159,27 @@ describe('OpenAiDecisionProvider', () => {
       );
 
       const res = await provider.decide(fixtureReq);
-      expect(res.actionId).toBe(0); // "Pass priority" — the conservative option
+      expect(res.actionId).toBe(1); // "Cast Spell" — scores above `pass` (id 0)
     });
 
     it.each([
       ['daily quota', new DailyQuotaExhaustedError()],
       ['no available model', new NoAvailableModelError(['m1'])],
       ['authentication', new AuthenticationError()],
-    ])('falls back to safest legal action on terminal %s error to keep simulation going', async (_l, err) => {
-      const provider = new OpenAiDecisionProvider(
-        throwingClient(err),
-        mockQueue,
-        mockEngine,
-        DEFAULT_AI_CONFIG,
-      );
+    ])(
+      'falls back to the heuristic bot on terminal %s error to keep simulation going',
+      async (_l, err) => {
+        const provider = new OpenAiDecisionProvider(
+          throwingClient(err),
+          mockQueue,
+          mockEngine,
+          DEFAULT_AI_CONFIG,
+        );
 
-      const res = await provider.decide(fixtureReq);
-      expect(res.actionId).toBe(0); // "Pass priority" — conservative fallback
-    });
+        const res = await provider.decide(fixtureReq);
+        expect(res.actionId).toBe(1); // "Cast Spell" — scores above `pass` (id 0)
+      },
+    );
   });
 });
 
@@ -322,5 +341,4 @@ describe('OpenAiDecisionProvider — local short-circuits', () => {
 
     expect(queue.enqueue).toHaveBeenCalledTimes(2);
   });
-
 });

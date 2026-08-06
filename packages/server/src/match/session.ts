@@ -5,13 +5,9 @@
  * broadcasts what comes back.
  */
 
-import {
-  Engine,
-  formatPlayerLog,
-  formatSpectatorLog,
-  RandomDecisionProvider,
-} from '@mtg/engine';
+import { Engine, formatPlayerLog, formatSpectatorLog } from '@mtg/engine';
 import type { AsyncDecisionProvider, DecisionProvider } from '@mtg/engine';
+import { HeuristicDecisionProvider } from '@mtg/bot';
 import type {
   AiAnnotation,
   AiReflection,
@@ -56,7 +52,8 @@ import {
 } from './human-provider';
 import type { SeatSetup } from './setup';
 
-/** The engine's `RandomDecisionProvider` is synchronous; the runner awaits every provider. */
+/** `HeuristicDecisionProvider` (like the engine's `RandomDecisionProvider` before it) is
+ * synchronous; the runner awaits every provider. */
 class AsyncAdapter implements AsyncDecisionProvider {
   constructor(private readonly inner: DecisionProvider) {}
   decide(request: DecisionRequest): Promise<DecisionResponse> {
@@ -247,6 +244,12 @@ export class MatchSession {
         }
       },
       onHalt: (info) => {
+        // A strategist call fired ahead-of-time for a turn boundary reached during compute-ahead
+        // is otherwise unstoppable once started — it would keep running (and billing) against a
+        // game that just stopped. Reflections deliberately reuse this lane after game-over, so
+        // this must only stop the coordinator's own in-flight/queued calls, not the queue itself.
+        this.aiCoordinator?.cancel();
+        this.publishFinalState();
         opts.send({
           type: 'computeHalted',
           payload: {
@@ -600,14 +603,19 @@ export class MatchSession {
   yieldPlayerAbility(payload: YieldPlayerAbilityPayload): void {
     const pending = this.humanProvider?.current();
     if (pending === null || pending === undefined) {
-      this.opts.send({ type: 'error', payload: { message: 'No player action is currently required.' } });
+      this.opts.send({
+        type: 'error',
+        payload: { message: 'No player action is currently required.' },
+      });
       return;
     }
     if (payload.requestId !== pending.request.requestId || payload.revision !== pending.revision) {
       this.opts.send({ type: 'error', payload: { message: 'That ability choice is stale.' } });
       return;
     }
-    const action = pending.request.legalActions.find((candidate) => candidate.id === payload.actionId);
+    const action = pending.request.legalActions.find(
+      (candidate) => candidate.id === payload.actionId,
+    );
     const interaction = action?.interaction;
     if (
       action?.type !== 'activateAbility' ||
@@ -615,7 +623,10 @@ export class MatchSession {
       interaction.sourceCardId === undefined ||
       interaction.abilityIndex === undefined
     ) {
-      this.opts.send({ type: 'error', payload: { message: 'Only an optional activated ability can be yielded.' } });
+      this.opts.send({
+        type: 'error',
+        payload: { message: 'Only an optional activated ability can be yielded.' },
+      });
       return;
     }
     const key = `${interaction.sourceCardId}:${interaction.abilityIndex}`;
@@ -625,7 +636,10 @@ export class MatchSession {
 
   resumePlayerAbility(key: string): void {
     if (!this.ignoredAbilities.delete(key)) {
-      this.opts.send({ type: 'error', payload: { message: 'That yielded ability is no longer available.' } });
+      this.opts.send({
+        type: 'error',
+        payload: { message: 'That yielded ability is no longer available.' },
+      });
       return;
     }
     const pending = this.humanProvider?.current();
@@ -680,6 +694,7 @@ export class MatchSession {
 
   abandon(): void {
     this.stopPresenting();
+    this.aiCoordinator?.cancel();
     this.runner.abandon();
     this.humanProvider?.releaseForAbandon();
     this.connectionGate.release();
@@ -731,7 +746,38 @@ export class MatchSession {
     return [...this.ignoredAbilities.values()];
   }
 
+  /**
+   * Push the true final board to spectators before announcing the result.
+   *
+   * Turn snapshots are taken at a turn's *start* (`MatchRunner.onTurnAdvanced`); the terminal
+   * re-snapshot the runner takes in `finish()`/`recordHalt()` corrects that same turn number in
+   * place. The presentation clock only ever re-presents a turn it hasn't shown yet
+   * (`nextPresentableTurn`), so that correction otherwise never reaches the client — a spectator's
+   * board freezes on the board as it stood *before* the game-ending elimination, with the loser
+   * still sitting at their old life total under a "Game Over" banner. Single-player mode is
+   * unaffected: it gets a full `replayUnlocked` state separately.
+   */
+  private publishFinalState(): void {
+    if (this.gameMode !== 'spectator') return;
+    this.stopPresenting();
+    this.flushPendingLines();
+    const turn = this.engine.getState().turnNumber;
+    this.presentedTurn = turn;
+    this.runner.setViewTurn(turn);
+    this.opts.send({
+      type: 'stateSnapshot',
+      payload: {
+        turn,
+        state: this.engine.spectatorState(),
+        frontierTurn: turn,
+        atFrontier: true,
+        sequence: null,
+      },
+    });
+  }
+
   private publishGameOver(result: NonNullable<ReturnType<Engine['getResult']>>): void {
+    this.publishFinalState();
     if (this.gameMode === 'singlePlayer') {
       this.opts.send({
         type: 'replayUnlocked',
@@ -762,7 +808,8 @@ export class MatchSession {
     // call, and the results screen is the one thing in this system that must never wait on one
     // (ADR 0022 §7). On a resync the game is long over and the reviews already exist, so they are
     // simply re-sent.
-    if (this.reflections.length > 0) this.sendReflections(this.reflections, this.reflectionsComplete);
+    if (this.reflections.length > 0)
+      this.sendReflections(this.reflections, this.reflectionsComplete);
     this.reflectionRun = this.startReflections(result);
   }
 
@@ -781,9 +828,7 @@ export class MatchSession {
     if (this.opts.providerKind !== 'ai') return [];
     const config = (this.aiConfig ??= loadAiConfig(process.env));
     if (!(this.opts.reflectionEnabled ?? config.reflectionEnabled)) return [];
-    return this.opts.seats
-      .map((seat) => seat.seat)
-      .filter((seat) => seat !== this.humanSeat);
+    return this.opts.seats.map((seat) => seat.seat).filter((seat) => seat !== this.humanSeat);
   }
 
   private sendReflections(reflections: readonly AiReflection[], complete: boolean): void {
@@ -914,7 +959,11 @@ export class MatchSession {
     const inner: AsyncDecisionProvider =
       this.opts.providerKind === 'ai'
         ? this.buildAiProvider()
-        : new AsyncAdapter(new RandomDecisionProvider(`${this.opts.seed}-${playerId}`));
+        : new AsyncAdapter(
+            new HeuristicDecisionProvider(`${this.opts.seed}-${playerId}`, () =>
+              this.engine.view(playerId),
+            ),
+          );
     const pacedProvider: AsyncDecisionProvider =
       this.gameMode === 'singlePlayer'
         ? {

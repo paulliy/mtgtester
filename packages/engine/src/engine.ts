@@ -89,9 +89,6 @@ export function interactionFor(option: PendingDecision['options'][number]): Acti
       ...(targetSlots !== undefined && targetSlots.length > 0 ? { targetSlots } : {}),
     };
   }
-  if (option.type === 'damageOrder' && typeof option.payload === 'string') {
-    return { kind: 'order', subjectIds: [option.payload] };
-  }
   return {
     kind: 'choice',
     ...(typeof option.payload === 'string' ? { subjectId: option.payload } : {}),
@@ -237,7 +234,14 @@ export class Engine implements EngineDriver {
       request.decidingPlayer,
     );
 
-    this.nextOutcome = { index: action.id, targets };
+    this.nextOutcome = {
+      index: action.id,
+      targets,
+      ...(response.manaSplit !== undefined ? { manaSplit: response.manaSplit } : {}),
+      ...(response.combatDamageSplit !== undefined
+        ? { combatDamageSplit: response.combatDamageSplit }
+        : {}),
+    };
     this.pendingDecision = null;
     this.pendingRequest = null;
   }
@@ -314,7 +318,11 @@ export class Engine implements EngineDriver {
     return entries;
   }
 
-  addDebug(category: DebugEntry['category'], message: string, data?: Record<string, unknown>): void {
+  addDebug(
+    category: DebugEntry['category'],
+    message: string,
+    data?: Record<string, unknown>,
+  ): void {
     debug(this.ctx, category, message, data);
   }
 
@@ -340,22 +348,28 @@ export class Engine implements EngineDriver {
 
     const hasPresentation =
       decision.presentationSource !== undefined ||
-      decision.presentationCombat !== undefined ||
+      decision.presentationAttackDeclaration !== undefined ||
+      decision.presentationBlockDeclaration !== undefined ||
       Object.keys(presentedActions).length > 0;
     const presentation: DecisionPresentation | undefined = hasPresentation
       ? {
           layout:
-            decision.presentationCombat !== undefined
-              ? 'combat'
-              : Object.values(presentedActions).some((a) => a.subjects[0]?.kind === 'card')
-                ? 'cards'
-                : 'choices',
+            decision.presentationAttackDeclaration !== undefined
+              ? 'attackDeclaration'
+              : decision.presentationBlockDeclaration !== undefined
+                ? 'blockDeclaration'
+                : Object.values(presentedActions).some((a) => a.subjects[0]?.kind === 'card')
+                  ? 'cards'
+                  : 'choices',
           ...(decision.presentationSource !== undefined
             ? { source: decision.presentationSource }
             : {}),
           ...(Object.keys(presentedActions).length > 0 ? { actions: presentedActions } : {}),
-          ...(decision.presentationCombat !== undefined
-            ? { combat: decision.presentationCombat }
+          ...(decision.presentationAttackDeclaration !== undefined
+            ? { attackDeclaration: decision.presentationAttackDeclaration }
+            : {}),
+          ...(decision.presentationBlockDeclaration !== undefined
+            ? { blockDeclaration: decision.presentationBlockDeclaration }
             : {}),
         }
       : undefined;
@@ -371,6 +385,10 @@ export class Engine implements EngineDriver {
       decisionType: decision.decisionType,
       prompt: decision.prompt,
       legalActions,
+      ...(decision.manaSplit !== undefined ? { manaSplit: decision.manaSplit } : {}),
+      ...(decision.combatDamageSplit !== undefined
+        ? { combatDamageSplit: decision.combatDamageSplit }
+        : {}),
       ...(presentation !== undefined ? { presentation } : {}),
     };
   }

@@ -119,8 +119,9 @@ function harness(options: { livePaceMs?: number; playbackMode?: 'live' | 'manual
     sent,
     snapshots: () =>
       sent
-        .filter((m): m is Extract<ServerToClientMessage, { type: 'stateSnapshot' }> =>
-          m.type === 'stateSnapshot',
+        .filter(
+          (m): m is Extract<ServerToClientMessage, { type: 'stateSnapshot' }> =>
+            m.type === 'stateSnapshot',
         )
         .map((m) => m.payload),
   };
@@ -148,7 +149,7 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
     await session.settled();
   });
 
-  it('presents every turn once, in order, starting from the opening board', async () => {
+  it('presents every turn once, in order, ending on the corrected final board', async () => {
     const { session, snapshots } = harness({ livePaceMs: 0 });
     session.start();
     await session.settled();
@@ -156,7 +157,11 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
     const turns = snapshots().map((s) => s.turn);
     expect(turns[0]).toBe(0);
     for (let i = 1; i < turns.length; i++) {
-      expect(turns[i]).toBe(turns[i - 1]! + 1);
+      // The very last snapshot may repeat the previous turn number: a turn boundary is never
+      // reached mid-turn, so `publishFinalState` re-presents the terminal turn once more with
+      // the corrected post-elimination board once the game actually ends.
+      const isTerminalCorrection = i === turns.length - 1 && turns[i] === turns[i - 1];
+      expect(turns[i]).toBe(isTerminalCorrection ? turns[i - 1] : turns[i - 1]! + 1);
     }
     expect(turns.at(-1)).toBe(session.runner.getFrontierTurn());
   });
@@ -246,8 +251,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
     session.jumpToTurn(3);
     expect(
       sent.some(
-        (message) =>
-          message.type === 'error' && message.payload.message.includes('unlocks after'),
+        (message) => message.type === 'error' && message.payload.message.includes('unlocks after'),
       ),
     ).toBe(true);
   });
@@ -270,14 +274,9 @@ describe('MatchSession - Phase 6 single-player control', () => {
     session.start();
 
     const deadline = Date.now() + 10_000;
-    while (
-      !sent.some((message) => message.type === 'gameOver') &&
-      Date.now() < deadline
-    ) {
+    while (!sent.some((message) => message.type === 'gameOver') && Date.now() < deadline) {
       const required = sent.filter(
-        (
-          message,
-        ): message is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>
+        (message): message is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>
           message.type === 'playerActionRequired',
       );
       const next = required[consumedRequests];
@@ -301,9 +300,9 @@ describe('MatchSession - Phase 6 single-player control', () => {
     expect(gameOverIndex).toBeGreaterThan(-1);
     expect(replayIndex).toBeGreaterThan(-1);
     expect(replayIndex).toBeLessThan(gameOverIndex);
-    expect(
-      sent.slice(0, gameOverIndex).some((message) => message.type === 'stateSnapshot'),
-    ).toBe(false);
+    expect(sent.slice(0, gameOverIndex).some((message) => message.type === 'stateSnapshot')).toBe(
+      false,
+    );
 
     const replayCount = sent.filter((message) => message.type === 'replayUnlocked').length;
     const gameOverCount = sent.filter((message) => message.type === 'gameOver').length;
@@ -418,6 +417,12 @@ describe('MatchSession — post-game reflection stays out of the way when off', 
     );
   }
 
+  // `finishedGame()` plays a full random-fuzzed 4-player game (`providerKind: 'random'`, brief
+  // §5.9's fuzzer, not the live bot/AI opponent). Batched combat declarations (ADR 0023 items
+  // 13/14) occasionally add an extra decision — a rejected proposal's one informed retry — which
+  // random attack proposals hit often enough to push these over vitest's 5s default under
+  // full-suite parallel load. Not a hang — see determinism.test.ts's note on the same pattern.
+
   it('promises no commentary and sends none for a random-provider game', async () => {
     const { session, sent } = finishedGame();
     session.start();
@@ -429,7 +434,7 @@ describe('MatchSession — post-game reflection stays out of the way when off', 
     // Absent, not empty: a payload that grew would defeat the point of defaulting to off.
     expect(payload?.reflectingSeats).toBeUndefined();
     expect(sent.some((message) => message.type === 'gameReflections')).toBe(false);
-  });
+  }, 30_000);
 
   it('leaves the rest of the gameOver payload untouched', async () => {
     const { session, sent } = finishedGame();
@@ -439,7 +444,7 @@ describe('MatchSession — post-game reflection stays out of the way when off', 
     const payload = gameOverPayload(sent);
     expect(payload?.standings).toHaveLength(4);
     expect(payload?.result).toBeDefined();
-  });
+  }, 30_000);
 
   it('never reviews a seat with no AI behind it, even when asked to', async () => {
     // `reflectionEnabled` is a per-game opt-in, but a random bot has no reasoning to review — the
@@ -451,7 +456,7 @@ describe('MatchSession — post-game reflection stays out of the way when off', 
 
     expect(gameOverPayload(sent)?.reflectingSeats).toBeUndefined();
     expect(sent.some((message) => message.type === 'gameReflections')).toBe(false);
-  });
+  }, 30_000);
 });
 
 /**

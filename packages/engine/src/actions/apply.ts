@@ -430,9 +430,14 @@ export function* applyPriorityAction(
       );
       const paymentScope = yield* payActivationCosts(ctx, player, perm, costsToPay, payload.x ?? 0);
       if (paymentScope.stationPower !== undefined) stackEntry.triggerScope = { stationPower: paymentScope.stationPower };
-      // Recorded at ANNOUNCEMENT (CR 602.5f), not on resolution: the restriction is on
-      // activating, so countering the ability does not give the activation back.
-      if (activated.oncePerTurn === true) perm.activationsThisTurn.push(payload.index);
+      // Recorded at ANNOUNCEMENT (CR 602.5f/606.3), not on resolution: the restriction is on
+      // activating, so countering the ability does not give the activation back. A loyalty
+      // ability is recorded even when `oncePerTurn` was left unset on its definition (e.g. a
+      // hand-authored override) — CR 606.3's once-per-turn restriction comes from the loyalty
+      // cost itself, not from that flag, so legal.ts's loyalty check must see it either way.
+      if (activated.oncePerTurn === true || activated.costs.some((c) => c.kind === 'loyalty')) {
+        perm.activationsThisTurn.push(payload.index);
+      }
       s.stack.push(stackEntry);
       breakYieldsForStop(ctx, stackEntry);
       emit(

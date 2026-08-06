@@ -9,7 +9,7 @@
  */
 
 import type { ObjectId, OracleId, PlayerId, Zone } from '@mtg/shared';
-import type { ObjectTriggerWhen, TokenSpec } from '../cards/ability';
+import type { Ability, KeywordAbility, ObjectTriggerWhen, TokenSpec } from '../cards/ability';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
 import type { CardDefinition } from '../cards/definition';
 import type { SelectorCandidate, SelectorSource } from '../cards/selector';
@@ -17,7 +17,8 @@ import { selectMatches } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
 import { evaluateValue } from '../cards/value';
 import type { GameGen } from '../decisions';
-import { computeCharacteristics, matchesSelector } from '../effects/continuous';
+import { chooseCard } from '../effects/choose';
+import { computeCharacteristics, matchesSelector, selectPermanents } from '../effects/continuous';
 import { debug, emit } from '../log/log';
 import { getDefByOracleId, triggersOf } from './queries';
 import type {
@@ -153,6 +154,64 @@ export function makePermanent(
   };
 }
 
+export interface ApplyCopyOptions {
+  /** Reverted at cleanup instead of persisting (Living Energy's temporary clone). */
+  untilEot?: boolean | undefined;
+  /** "…except it's also an artifact" (Phyrexian Metamorph)-style additions. */
+  addTypes?: string[] | undefined;
+  /** Keywords the copy has that the copied object doesn't (Dack's Duplicate's "and has haste"). */
+  addKeywords?: KeywordAbility[] | undefined;
+  /** Triggered abilities the copy has that the copied object doesn't, for mechanics with no
+   * generic keyword representation (Dack's Duplicate's "and has dethrone"). */
+  addTriggers?: Ability[] | undefined;
+  /** Supertypes stripped from the copy ("except it isn't legendary" — Spark Double). */
+  removeSupertypes?: string[] | undefined;
+  /** Supertypes the copy has that the copied object doesn't ("it's legendary in addition to
+   * its other types" — Sarkhan, Soul Aflame). */
+  addSupertypes?: string[] | undefined;
+  /** Name kept instead of the copied object's ("except its name is Sarkhan, Soul Aflame" —
+   * Sarkhan, Soul Aflame). */
+  nameOverride?: string | undefined;
+}
+
+/**
+ * Rewrite `perm`'s copiable values (CR 707.2) to `target`'s. Snapshots `perm`'s own printed
+ * identity the first time (`copyOriginal`) so a later zone change — or, for `untilEot`,
+ * cleanup — can restore it; a copy never survives past the object it copied onto.
+ */
+export function applyCopy(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  target: EnginePermanent,
+  opts: ApplyCopyOptions = {},
+): void {
+  perm.copyOriginal ??= {
+    oracleId: perm.oracleId,
+    name: perm.name,
+    typeLine: perm.typeLine,
+    oracleText: perm.oracleText,
+    manaCost: perm.manaCost,
+    power: perm.power,
+    toughness: perm.toughness,
+  };
+  perm.oracleId = target.oracleId;
+  perm.name = opts.nameOverride ?? target.name;
+  perm.typeLine = target.typeLine;
+  perm.oracleText = target.oracleText;
+  perm.manaCost = target.manaCost;
+  perm.power = target.power;
+  perm.toughness = target.toughness;
+  perm.copyAddTypes = opts.addTypes === undefined ? [] : [...opts.addTypes];
+  perm.copyAddKeywords = opts.addKeywords === undefined ? [] : [...opts.addKeywords];
+  perm.copyAddTriggers = opts.addTriggers === undefined ? [] : [...opts.addTriggers];
+  perm.copyRemoveSupertypes = opts.removeSupertypes === undefined ? [] : [...opts.removeSupertypes];
+  perm.copyAddSupertypes = opts.addSupertypes === undefined ? [] : [...opts.addSupertypes];
+  if (opts.nameOverride !== undefined) perm.copyNameOverride = opts.nameOverride;
+  else delete perm.copyNameOverride;
+  perm.timestamp = ctx.state.nextTimestamp++;
+  perm.copyUntilEot = opts.untilEot === true;
+}
+
 /**
  * Move an object to a new zone, yielding the new object (or null when a token ceases to
  * exist). Emits the zone-change event, applies the CR 903.9b commander replacement, sets
@@ -265,6 +324,43 @@ export function* moveObject(
       };
       const chosen = options[outcome.index]?.key;
       if (chosen !== undefined) perm.chosenOption = chosen;
+    }
+
+    // "You may have this enter the battlefield as a copy of …" (CR 707.2, as-enters
+    // replacement — Dack's Duplicate, Spark Double, Sculpting Steel). Resolved after the
+    // permanent exists (so it can be excluded from its own candidate list) but before
+    // `queueTriggersForObject(ctx, 'enters', …)` below, so ETB triggers reflect the copied
+    // identity rather than the entering card's own.
+    if (def.entersAsCopy !== undefined) {
+      const config = def.entersAsCopy;
+      const candidates = selectPermanents(ctx, config.selector, { cardId: perm.cardId, controllerId })
+        .filter((p) => p.cardId !== perm.cardId);
+      const originalName = perm.name;
+      const copyTarget = yield* chooseCard(ctx, {
+        player: controllerId,
+        prompt: `${originalName}: you may have it enter as a copy of another permanent`,
+        cards: candidates,
+        type: 'entersAsCopy',
+        verb: 'Copy',
+        decline: { type: 'decline', description: 'Enter normally', verb: 'Decline' },
+      });
+      if (copyTarget !== null) {
+        const copyTargetPerm = copyTarget as EnginePermanent;
+        applyCopy(ctx, perm, copyTargetPerm, {
+          addTypes: config.addTypes,
+          addKeywords: config.addKeywords,
+          addTriggers: config.addTriggers,
+          removeSupertypes: config.removeSupertypes,
+        });
+        if (config.addCounterByType !== undefined) {
+          const copiedTypes = computeCharacteristics(ctx, perm).types;
+          const counter = copiedTypes.includes('Planeswalker')
+            ? config.addCounterByType.planeswalkerCounter
+            : config.addCounterByType.creatureCounter;
+          perm.counters[counter] = (perm.counters[counter] ?? 0) + config.addCounterByType.count;
+        }
+        emit(ctx, 'becomeCopy', { source: originalName, target: copyTargetPerm.name, untilEot: false });
+      }
     }
   } else {
     next = reincarnate(ctx, obj, target.zone);

@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { RequestQueue } from './queue';
+import { RequestCancelledError } from './errors';
 
 describe('RequestQueue', () => {
   it('executes tasks within RPM and concurrency limits', async () => {
@@ -37,5 +38,44 @@ describe('RequestQueue', () => {
 
     expect(res2).toBe('second');
     expect(queue.depth).toBe(0);
+  });
+
+  it('rejects immediately without calling fn when the signal is already aborted', async () => {
+    const queue = new RequestQueue({ rpmLimit: 60, concurrency: 1 });
+    const fn = vi.fn().mockResolvedValue('should never happen');
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(queue.enqueue(fn, controller.signal)).rejects.toThrow(RequestCancelledError);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('pulls a queued (not-yet-started) call back out when its signal aborts, without ever calling fn', async () => {
+    const queue = new RequestQueue({ rpmLimit: 60, concurrency: 1 });
+    let releaseFirst: () => void = () => {};
+    const first = queue.enqueue(
+      () => new Promise((resolve) => { releaseFirst = resolve as () => void; }),
+    );
+
+    const controller = new AbortController();
+    const second = queue.enqueue(vi.fn().mockResolvedValue('should never happen'), controller.signal);
+
+    expect(queue.depth).toBe(1);
+    controller.abort();
+    await expect(second).rejects.toThrow(RequestCancelledError);
+    expect(queue.depth).toBe(0);
+
+    releaseFirst();
+    await first;
+  });
+
+  it('aborting a settled call is a no-op — the result already returned', async () => {
+    const queue = new RequestQueue({ rpmLimit: 60, concurrency: 1 });
+    const controller = new AbortController();
+
+    const result = await queue.enqueue(async () => 'done', controller.signal);
+    expect(result).toBe('done');
+
+    expect(() => controller.abort()).not.toThrow();
   });
 });

@@ -28,6 +28,7 @@ import { runPrioritySequence } from '../src/turn/priority';
 import {
   conjure,
   copies,
+  declareAttacks,
   forest,
   gameConfig,
   keywordCreature,
@@ -165,12 +166,7 @@ describe('attack triggers and the trigger-object referent', () => {
     ctx.state.phase = 'combat';
     ctx.state.step = null;
     pump(runCombatPhase(ctx), (d) => {
-      const all = d.options.findIndex((o) => o.description.includes('undeclared creatures'));
-      if (all >= 0 && d.options[all]?.description.includes('P2') === true) {
-        return { index: all, targets: new Map() };
-      }
-      const one = d.options.findIndex((o) => /attacks P2/.test(o.description));
-      if (one >= 0) return { index: one, targets: new Map() };
+      if (d.decisionType === 'declareAttackers') return declareAttacks(d, () => 'P2');
       return { index: 0, targets: new Map() };
     });
   }

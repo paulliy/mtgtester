@@ -73,16 +73,18 @@ describe('tryHeuristic — deferring instants', () => {
     expect(tryHeuristic(req, makeView())?.actionId).toBe(0);
   });
 
-  it.each(['beginCombat', 'endCombat'] as const)(
-    'applies at the inert combat step %s',
-    (step) => {
-      const req = makeRequest({ phase: 'combat', step, legalActions: [PASS, INSTANT] });
+  it.each(['beginCombat', 'endCombat'] as const)('applies at the inert combat step %s', (step) => {
+    const req = makeRequest({ phase: 'combat', step, legalActions: [PASS, INSTANT] });
 
-      expect(tryHeuristic(req, makeView())?.actionId).toBe(0);
-    },
-  );
+    expect(tryHeuristic(req, makeView())?.actionId).toBe(0);
+  });
 
-  it.each(['declareAttackers', 'declareBlockers', 'combatDamage', 'firstStrikeCombatDamage'] as const)(
+  it.each([
+    'declareAttackers',
+    'declareBlockers',
+    'combatDamage',
+    'firstStrikeCombatDamage',
+  ] as const)(
     'defers to the model at combat step %s, where a trick changes the outcome',
     (step) => {
       const req = makeRequest({ phase: 'combat', step, legalActions: [PASS, INSTANT] });
@@ -155,8 +157,12 @@ describe('tryHeuristic — taking the land drop', () => {
   });
 });
 
-describe('tryHeuristic — declining a powerless attack', () => {
-  const attackRequest = (power: number, hasTriggers = false): DecisionRequest =>
+describe('tryHeuristic — declining a powerless attack (ADR 0023 items 13/14 batched shape)', () => {
+  /** One `attackDeclaration` action naming however many subjects `powers` describes. */
+  const attackRequest = (
+    powers: number[],
+    opts: { hasTriggers?: boolean[]; mustAttack?: boolean[] } = {},
+  ): DecisionRequest =>
     makeRequest({
       decisionType: 'declareAttackers',
       phase: 'combat',
@@ -165,56 +171,64 @@ describe('tryHeuristic — declining a powerless attack', () => {
       legalActions: [
         {
           id: 0,
-          type: 'noAttack',
-          description: 'Kobolds of Kher Keep does not attack',
-          data: { power, toughness: 1, hasTriggers },
-        },
-        {
-          id: 1,
-          type: 'attack',
-          description: 'Kobolds of Kher Keep attacks P2 (40 life)',
-          data: { power, toughness: 1, hasTriggers },
+          type: 'attackDeclaration',
+          description: `Declare attackers (${powers.length} eligible creature(s))`,
+          data: {
+            subjects: powers.map((power, i) => ({
+              subjectId: `c${i}`,
+              power,
+              toughness: 1,
+              hasTriggers: opts.hasTriggers?.[i] ?? false,
+              mustAttack: opts.mustAttack?.[i] ?? false,
+            })),
+          },
+          targets: powers.map((_, i) => ({ slot: i, options: ['P2', '__no_attack__'] })),
         },
       ],
     });
 
-  it('declines the attack for a 0-power creature', () => {
-    const res = tryHeuristic(attackRequest(0), makeView());
+  it('declines the whole attack when the only eligible creature has 0 power', () => {
+    const res = tryHeuristic(attackRequest([0]), makeView());
 
     expect(res?.actionId).toBe(0);
+    expect(res?.targets).toEqual([{ slot: 0, choice: '__no_attack__' }]);
     expect(res?.note).toContain('no combat damage');
   });
 
-  it('declines the attack for a negative-power creature', () => {
-    expect(tryHeuristic(attackRequest(-1), makeView())?.actionId).toBe(0);
+  it('declines for a negative-power creature too', () => {
+    expect(tryHeuristic(attackRequest([-1]), makeView())?.actionId).toBe(0);
   });
 
   it('asks the model about a creature that can actually deal damage', () => {
-    expect(tryHeuristic(attackRequest(3), makeView())).toBeNull();
+    expect(tryHeuristic(attackRequest([3]), makeView())).toBeNull();
   });
 
-  it('asks the model when power is unknown', () => {
-    const req = makeRequest({
-      decisionType: 'declareAttackers',
-      legalActions: [{ id: 0, type: 'noAttack', description: 'X does not attack' }],
-    });
+  it('declines for the whole group at once when every eligible creature is powerless', () => {
+    const res = tryHeuristic(attackRequest([0, 0, 0]), makeView());
 
-    expect(tryHeuristic(req, makeView())).toBeNull();
+    expect(res?.actionId).toBe(0);
+    expect(res?.targets).toEqual([
+      { slot: 0, choice: '__no_attack__' },
+      { slot: 1, choice: '__no_attack__' },
+      { slot: 2, choice: '__no_attack__' },
+    ]);
+    expect(res?.note).toContain('all 3 eligible creature');
   });
 
-  it('asks the model when the attacker has a triggered ability', () => {
-    expect(tryHeuristic(attackRequest(0, true), makeView())).toBeNull();
+  it('asks the model when the board is mixed — one real attacker among powerless ones', () => {
+    expect(tryHeuristic(attackRequest([0, 4, 0]), makeView())).toBeNull();
   });
 
-  it('asks the model when hasTriggers is absent, rather than assuming none', () => {
-    const req = makeRequest({
-      decisionType: 'declareAttackers',
-      legalActions: [
-        { id: 0, type: 'noAttack', description: 'X does not attack', data: { power: 0 } },
-      ],
-    });
+  it('asks the model when any creature in the group has a triggered ability', () => {
+    expect(
+      tryHeuristic(attackRequest([0, 0], { hasTriggers: [false, true] }), makeView()),
+    ).toBeNull();
+  });
 
-    expect(tryHeuristic(req, makeView())).toBeNull();
+  it('asks the model when any creature is goad-mandatory (CR 508.1d — NO_ATTACK_TARGET would be illegal for it)', () => {
+    expect(
+      tryHeuristic(attackRequest([0, 0], { mustAttack: [false, true] }), makeView()),
+    ).toBeNull();
   });
 
   it('still declines when an instant is held but cannot be cast', () => {
@@ -222,13 +236,13 @@ describe('tryHeuristic — declining a powerless attack', () => {
       hand: [{ id: 'c1', name: 'Brute Strength', typeLine: 'Instant' }],
     });
 
-    expect(tryHeuristic(attackRequest(0), view)?.actionId).toBe(0);
+    expect(tryHeuristic(attackRequest([0]), view)?.actionId).toBe(0);
   });
 
   it('asks the model when a castable instant could make the attack worthwhile', () => {
-    const req = attackRequest(0);
+    const req = attackRequest([0]);
     req.legalActions.push({
-      id: 2,
+      id: 1,
       type: 'castSpell',
       description: 'Cast Brute Strength ({R})',
       data: { instantSpeed: true },
@@ -242,83 +256,20 @@ describe('tryHeuristic — declining a powerless attack', () => {
       hand: [{ id: 'c1', name: 'Tor Giant', typeLine: 'Creature — Giant Warrior' }],
     });
 
-    expect(tryHeuristic(attackRequest(0), view)?.actionId).toBe(0);
+    expect(tryHeuristic(attackRequest([0]), view)?.actionId).toBe(0);
   });
 
-  it('declines for the whole group at once when every undeclared creature is powerless', () => {
-    const req = makeRequest({
-      decisionType: 'declareAttackers',
-      legalActions: [
-        { id: 0, type: 'noAttack', description: 'X does not attack', data: { power: 0, hasTriggers: false } },
-        { id: 1, type: 'attack', description: 'X attacks P2', data: { power: 0, hasTriggers: false } },
-        {
-          id: 2,
-          type: 'noAttackRest',
-          description: 'No further attacks: X and the 2 other undeclared creature(s) all stay home',
-          data: { count: 3, maxPower: 0, hasTriggers: false },
-        },
-      ],
-    });
-    const res = tryHeuristic(req, makeView());
-
-    // The batch answer, not the single-creature one — this ends the step in one call.
-    expect(res?.actionId).toBe(2);
-    expect(res?.note).toContain('all 3 undeclared creatures');
-  });
-
-  it('falls back to declining just this creature when a later one can deal damage', () => {
-    const req = makeRequest({
-      decisionType: 'declareAttackers',
-      legalActions: [
-        { id: 0, type: 'noAttack', description: 'X does not attack', data: { power: 0, hasTriggers: false } },
-        {
-          id: 2,
-          type: 'noAttackRest',
-          description: 'No further attacks',
-          data: { count: 3, maxPower: 4, hasTriggers: false },
-        },
-      ],
-    });
-
-    expect(tryHeuristic(req, makeView())?.actionId).toBe(0);
-  });
-
-  it('asks the model when any creature in the group has a triggered ability', () => {
-    const req = makeRequest({
-      decisionType: 'declareAttackers',
-      legalActions: [
-        { id: 0, type: 'noAttack', description: 'X does not attack', data: { power: 0, hasTriggers: true } },
-        {
-          id: 2,
-          type: 'noAttackRest',
-          description: 'No further attacks',
-          data: { count: 3, maxPower: 0, hasTriggers: true },
-        },
-      ],
-    });
-
-    expect(tryHeuristic(req, makeView())).toBeNull();
-  });
-
-  it('leaves the no-blocks-at-all shortcut to the model', () => {
+  it('leaves block declarations alone (ADR 0023 Phase 4 batched shape) — a judgment call, no heuristic exists', () => {
     const req = makeRequest({
       decisionType: 'declareBlockers',
       legalActions: [
-        { id: 0, type: 'noBlock', description: 'X does not block' },
-        { id: 1, type: 'block', description: 'X blocks Y' },
-        { id: 2, type: 'noBlockRest', description: 'No blocks at all' },
-      ],
-    });
-
-    expect(tryHeuristic(req, makeView())).toBeNull();
-  });
-
-  it('leaves block declarations alone', () => {
-    const req = makeRequest({
-      decisionType: 'declareBlockers',
-      legalActions: [
-        { id: 0, type: 'noBlock', description: 'X does not block', data: { power: 0 } },
-        { id: 1, type: 'block', description: 'X blocks Y', data: { power: 0 } },
+        {
+          id: 0,
+          type: 'blockDeclaration',
+          description: 'Declare blockers (1 eligible creature(s))',
+          data: { subjects: [{ subjectId: 'c0', power: 0, toughness: 4, mustBlock: false }] },
+          targets: [{ slot: 0, options: ['a0', '__no_block__'] }],
+        },
       ],
     });
 

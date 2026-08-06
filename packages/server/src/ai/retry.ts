@@ -9,6 +9,7 @@ import {
   AuthenticationError,
   DailyQuotaExhaustedError,
   ModelUnavailableError,
+  RequestCancelledError,
   RpmLimitError,
 } from './errors';
 
@@ -117,6 +118,9 @@ export function classifyError(
   if (err instanceof ModelUnavailableError) return 'model_unavailable';
   if (err instanceof DailyQuotaExhaustedError) return 'daily_quota';
   if (err instanceof RpmLimitError) return 'rpm_quota';
+  // A deliberate cancellation (match halted/abandoned), not a transport hiccup — retrying it
+  // would just place more billed calls for a game nobody is waiting on any more.
+  if (err instanceof RequestCancelledError) return 'fatal';
 
   /**
    * The call succeeded and the model answered — the answer was just not something we could
@@ -172,10 +176,21 @@ export function classifyError(
  */
 const GENERATION_RETRY_CAP = 2;
 
+/**
+ * A plain function call, not inlined at each call site: TS's control-flow narrowing otherwise
+ * treats `signal.aborted` as permanently `false` after the first exclusionary check in a
+ * function, even across an `await` where the signal legitimately flips to `true` in between.
+ */
+function isAborted(signal: AbortSignal | undefined): boolean {
+  return signal !== undefined && signal.aborted;
+}
+
 export async function withRetry<T>(
   fn: () => Promise<T>,
   config: Pick<AiConfig, 'maxRetries' | 'baseBackoffMs' | 'maxBackoffMs'>,
   sleepFn: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  /** When aborted, stop immediately rather than spend a backoff cycle discovering it via `fn()`. */
+  signal?: AbortSignal,
 ): Promise<T> {
   // A missing or non-numeric budget must not read as "retry forever": every comparison
   // against `undefined` is false, so the loop below would never find its exit.
@@ -186,9 +201,11 @@ export async function withRetry<T>(
   let attempt = 0;
   let generationAttempt = 0;
   for (;;) {
+    if (isAborted(signal)) throw new RequestCancelledError();
     try {
       return await fn();
     } catch (err) {
+      if (isAborted(signal)) throw new RequestCancelledError();
       const category = classifyError(err);
 
       if (category === 'model_unavailable') {

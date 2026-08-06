@@ -4,7 +4,13 @@
  * scenarios are the bulk of engine coverage).
  */
 
-import type { OracleCard, PlayerId } from '@mtg/shared';
+import type {
+  AttackDeclarationSubject,
+  BlockDeclarationSubject,
+  OracleCard,
+  PlayerId,
+} from '@mtg/shared';
+import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import type { CardDefinition } from '../src/cards/definition';
 import { interpretCard } from '../src/cards/interpret';
 import type { DecisionOutcome, GameGen, PendingDecision } from '../src/decisions';
@@ -445,6 +451,89 @@ export function drive(
     engine.submit(provider.decide(step.request));
   }
   throw new Error('drive(): game did not finish within the decision budget');
+}
+
+/**
+ * Outcome helper for the batched `declareAttackers` decision (ADR 0023 items 13/14): call
+ * `chooseDefender(subjectId, subject)` for every eligible creature and build the resulting
+ * per-slot targets in one outcome, the way a real proposer would. Returning `null` declines that
+ * creature — which throws instead of silently no-op'ing if the creature can't legally decline
+ * (`subject.mustAttack`), since a test that gets this wrong should fail loudly, not produce a
+ * declaration the engine would have rejected.
+ */
+export function declareAttacks(
+  decision: PendingDecision,
+  chooseDefender: (subjectId: string, subject: AttackDeclarationSubject) => string | null,
+): DecisionOutcome {
+  const subjects = decision.presentationAttackDeclaration?.subjects;
+  if (subjects === undefined) {
+    throw new Error(
+      `declareAttacks called on a decision with no attack declaration: ${decision.prompt}`,
+    );
+  }
+  const targets = new Map<number, string>();
+  subjects.forEach((subject, i) => {
+    const choice = chooseDefender(subject.subjectId, subject);
+    if (choice === null) {
+      if (subject.mustAttack) {
+        throw new Error(
+          `${subject.subjectId} must attack (goaded) but chooseDefender returned null`,
+        );
+      }
+      targets.set(i, NO_ATTACK_TARGET);
+    } else {
+      targets.set(i, choice);
+    }
+  });
+  return { index: 0, targets };
+}
+
+/** `declareAttacks` shorthand: nobody attacks. */
+export function declareNoAttacks(decision: PendingDecision): DecisionOutcome {
+  return declareAttacks(decision, () => null);
+}
+
+/**
+ * Outcome helper for the batched `declareBlockers` decision (ADR 0023 Phase 4) — the
+ * blocker-side mirror of `declareAttacks`: call `chooseAttacker(subjectId, subject)` for every
+ * eligible blocker and build the resulting per-slot targets in one outcome. Returning `null`
+ * declines that blocker — throws instead of silently no-op'ing if it can't legally decline
+ * (`subject.mustBlock`).
+ */
+export function declareBlocks(
+  decision: PendingDecision,
+  chooseAttacker: (subjectId: string, subject: BlockDeclarationSubject) => string | null,
+): DecisionOutcome {
+  const subjects = decision.presentationBlockDeclaration?.subjects;
+  if (subjects === undefined) {
+    throw new Error(
+      `declareBlocks called on a decision with no block declaration: ${decision.prompt}`,
+    );
+  }
+  const targets = new Map<number, string>();
+  subjects.forEach((subject, i) => {
+    const choice = chooseAttacker(subject.subjectId, subject);
+    if (choice === null) {
+      if (subject.mustBlock) {
+        throw new Error(`${subject.subjectId} must block but chooseAttacker returned null`);
+      }
+      targets.set(i, NO_BLOCK_TARGET);
+    } else {
+      targets.set(i, choice);
+    }
+  });
+  return { index: 0, targets };
+}
+
+/** `declareBlocks` shorthand: nobody blocks. */
+export function declareNoBlocks(decision: PendingDecision): DecisionOutcome {
+  return declareBlocks(decision, () => null);
+}
+
+/** Outcome helper for the batched `assignCombatDamage` decision (ADR 0023 Phase 4, CR 510.1c-d):
+ * supply the exact division as `{ targetId: amount }`. */
+export function splitDamage(split: Record<string, number>): DecisionOutcome {
+  return { index: 0, targets: new Map(), combatDamageSplit: split };
 }
 
 /** Outcome helper: pick the option whose description matches. */

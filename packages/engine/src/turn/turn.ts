@@ -49,6 +49,16 @@ function untapStep(ctx: GameContext): void {
     perm.activationsThisTurn = [];
     if (perm.attackedThisTurn === true) perm.attackedThisTurn = false;
     perm.mustBlockThisTurn = false;
+    // CR 701.15a: a goad requirement lasts until the next turn of the player who caused it.
+    // Requirements created during that player's current turn remain active until that turn ends.
+    if (perm.goadedBy !== undefined) {
+      const remainingGoads = perm.goadedBy.filter(
+        (requirement) =>
+          requirement.goaderId !== ap.id || requirement.appliedTurn >= ctx.state.turnNumber,
+      );
+      if (remainingGoads.length > 0) perm.goadedBy = remainingGoads;
+      else delete perm.goadedBy;
+    }
   }
 
   let untapped = 0;

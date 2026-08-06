@@ -48,6 +48,7 @@ const state = (turn: number): SpectatorState =>
     turnNumber: turn,
     activePlayer: 'P1',
     priorityPlayer: null,
+    monarchSeat: null,
     phase: 'precombatMain',
     step: null,
     seats: [],

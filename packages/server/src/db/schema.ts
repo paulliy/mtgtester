@@ -177,4 +177,20 @@ CREATE TABLE IF NOT EXISTS game_debug_events (
 );
 CREATE INDEX IF NOT EXISTS idx_game_debug_events_filters
   ON game_debug_events(game_id, turn, category);
-`;
+CREATE TABLE IF NOT EXISTS batches (
+  id TEXT PRIMARY KEY, seed TEXT NOT NULL, status TEXT NOT NULL,
+  created_at TEXT NOT NULL, started_at TEXT, ended_at TEXT, failure_json TEXT
+);
+CREATE TABLE IF NOT EXISTS batch_scenarios (
+  batch_id TEXT NOT NULL REFERENCES batches(id), scenario_id TEXT NOT NULL,
+  scenario_index INTEGER NOT NULL, name TEXT NOT NULL, games INTEGER NOT NULL,
+  spec_json TEXT NOT NULL, PRIMARY KEY (batch_id, scenario_id)
+);
+CREATE TABLE IF NOT EXISTS batch_games (
+  batch_id TEXT NOT NULL REFERENCES batches(id), scenario_id TEXT NOT NULL,
+  game_index INTEGER NOT NULL, game_id TEXT NOT NULL UNIQUE,
+  seed TEXT NOT NULL, status TEXT NOT NULL, failure_reason TEXT,
+  started_at TEXT, ended_at TEXT, PRIMARY KEY (batch_id, scenario_id, game_index),
+  FOREIGN KEY (batch_id, scenario_id) REFERENCES batch_scenarios(batch_id, scenario_id)
+);
+CREATE INDEX IF NOT EXISTS idx_batch_games_batch ON batch_games(batch_id, scenario_id, game_index)`;

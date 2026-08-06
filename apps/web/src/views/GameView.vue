@@ -10,9 +10,9 @@ import { LOOKAHEAD_TURNS } from '@mtg/shared';
 import type { SpectatorCard, SpectatorPermanent } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
+import GameOverPanel from '../components/GameOverPanel.vue';
 import HeldDecision from '../components/HeldDecision.vue';
 import PlaybackControls from '../components/PlaybackControls.vue';
-import PostGameCommentary from '../components/PostGameCommentary.vue';
 import PlayerGameView from './PlayerGameView.vue';
 import SeatPanel from '../components/SeatPanel.vue';
 import StackPanel from '../components/StackPanel.vue';
@@ -87,21 +87,20 @@ const waitingForView = computed(
     store.frontierTurn - store.viewTurn >= LOOKAHEAD_TURNS,
 );
 /**
- * Post-game commentary (ADR 0022 §7). Opens itself when a game ends with reviews coming, and can
- * be reopened from the header afterwards — it covers the final board, and the board is worth
- * looking at too.
+ * The game-over screen (final standings/stats, plus AI self-review when there is any — ADR 0022
+ * §7). Opens itself the moment a game ends, for every provider, and can be reopened from the
+ * header afterwards — it covers the final board, and the board is worth looking at too.
  */
-const commentaryOpen = ref(false);
-const hasCommentary = computed(() => store.reflectingSeats.length > 0);
+const resultsOpen = ref(false);
 
 watch(
   () => store.gameOver !== null,
   (over) => {
     if (!over) return;
+    resultsOpen.value = true;
     // The live `gameReflections` stream is the normal path; this covers a game whose reviews were
     // already written before this client had the socket (a reload on the results screen).
     void store.loadReflections();
-    if (store.reflectingSeats.length > 0) commentaryOpen.value = true;
   },
 );
 
@@ -126,12 +125,12 @@ const roundLabel = computed(() => {
         🏆 Game Over: Winner {{ store.gameOver.result.winnerSeat ?? '(Draw)' }} ({{ store.gameOver.result.turnCount }} turns)
       </span>
       <button
-        v-if="hasCommentary && !commentaryOpen"
+        v-if="store.gameOver && !resultsOpen"
         type="button"
-        class="commentary-button"
-        @click="commentaryOpen = true"
+        class="results-button"
+        @click="resultsOpen = true"
       >
-        Commentary
+        Results
       </button>
       <span v-else-if="store.halt" class="halt-badge" :title="store.halt.reason">
         ⚠️ Halted: {{ store.halt.kind }} — {{ store.halt.reason }}
@@ -217,15 +216,16 @@ const roundLabel = computed(() => {
       @abandon="abandon"
     />
 
-    <PostGameCommentary
-      v-if="store.gameOver && hasCommentary && commentaryOpen"
+    <GameOverPanel
+      v-if="store.gameOver && resultsOpen"
       :seats="store.seats"
+      :result="store.gameOver.result"
       :reflections="store.reflections"
       :expected-seats="store.reflectingSeats"
       :complete="store.reflectionsComplete"
       :standings="store.gameOver.standings"
       @jump="store.seek($event)"
-      @close="commentaryOpen = false"
+      @close="resultsOpen = false"
     />
   </div>
 </template>
@@ -279,7 +279,7 @@ const roundLabel = computed(() => {
   border: 1px solid rgb(74 222 128 / 0.3);
   font-size: 0.8rem;
 }
-.commentary-button {
+.results-button {
   padding: 0.2rem 0.55rem;
   border-color: rgb(96 165 250 / 0.4);
   border-radius: 4px;
@@ -287,7 +287,7 @@ const roundLabel = computed(() => {
   font-size: 0.72rem;
   font-weight: 600;
 }
-.commentary-button:hover {
+.results-button:hover {
   background: rgb(96 165 250 / 0.12);
 }
 .halt-badge {

@@ -788,6 +788,12 @@ export function computePriorityOptions(
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
       // CR 602.5f — "activate only once each turn", tracked on the permanent.
       if (activated.oncePerTurn === true && perm.activationsThisTurn.includes(index)) continue;
+      // CR 606.3 — a loyalty ability (one with a loyalty cost) may be activated only if no
+      // loyalty ability of this permanent has already been activated this turn. The restriction
+      // is on the *permanent*, not the specific ability, so any prior activation this turn
+      // (including a different loyalty ability) blocks all of them — unlike the oncePerTurn
+      // check above, which only blocks that ability from repeating.
+      if (activated.costs.some((c) => c.kind === 'loyalty') && perm.activationsThisTurn.length > 0) continue;
       // Boast (CR 702.146a): "activate only if this creature attacked this turn."
       if (activated.requiresAttackedThisTurn === true && perm.attackedThisTurn !== true) continue;
       if (!canPayNonManaCosts(ctx, perm, activated.costs)) continue;

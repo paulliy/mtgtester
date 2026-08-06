@@ -39,6 +39,7 @@ import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selec
 import { selectMatches, selectorIsEventOnly } from '../cards/selector';
 import { CREATURE_TYPES } from '../cards/creature-types';
 import { evaluateValue, isDynamicValue } from '../cards/value';
+import type { ValueScope } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { digestOf, getCached, setCached } from './layer-cache';
@@ -282,7 +283,19 @@ function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean
   );
 }
 
-function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): void {
+/** The static effect source's controller — the only scope the layer engine can offer a `Value`. */
+function scopeOf(effect: LayerEffect): Pick<ValueScope, 'controllerId'> | undefined {
+  return effect.applies.kind === 'selector'
+    ? { controllerId: effect.applies.source.controllerId }
+    : undefined;
+}
+
+function applyOpTo(
+  ctx: GameContext,
+  chars: Characteristics,
+  op: ContinuousOp,
+  scope: Pick<ValueScope, 'controllerId'> | undefined,
+): void {
   switch (op.layer) {
     case 4:
       if (op.setTypes !== undefined) chars.types = [...op.setTypes];
@@ -332,14 +345,14 @@ function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): 
       break;
     case 7:
       if (op.sublayer === 'd') {
-        const pDelta = typeof op.power === 'number' ? op.power : evaluateValue(ctx, op.power);
-        const tDelta = typeof op.toughness === 'number' ? op.toughness : evaluateValue(ctx, op.toughness);
+        const pDelta = typeof op.power === 'number' ? op.power : evaluateValue(ctx, op.power, scope);
+        const tDelta = typeof op.toughness === 'number' ? op.toughness : evaluateValue(ctx, op.toughness, scope);
         chars.power += pDelta;
         chars.toughness += tDelta;
       } else {
         // 7a (characteristic-defining) and 7b (set) both replace the running value.
-        chars.power = evaluateValue(ctx, op.power);
-        chars.toughness = evaluateValue(ctx, op.toughness);
+        chars.power = evaluateValue(ctx, op.power, scope);
+        chars.toughness = evaluateValue(ctx, op.toughness, scope);
       }
       break;
   }
@@ -347,8 +360,9 @@ function applyOpTo(ctx: GameContext, chars: Characteristics, op: ContinuousOp): 
 
 function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
   if (!effectExists(work, effect)) return;
+  const scope = scopeOf(effect);
   for (const entry of work.values()) {
-    if (affects(ctx, effect, entry)) applyOpTo(ctx, entry.chars, effect.op);
+    if (affects(ctx, effect, entry)) applyOpTo(ctx, entry.chars, effect.op, scope);
   }
 }
 
@@ -367,7 +381,7 @@ function fingerprint(ctx: GameContext, work: WorkMap, effect: LayerEffect): stri
   // Resolve any `Value`s, so an effect whose *magnitude* changes counts as changed too.
   const action =
     op.layer === 7 && op.sublayer !== 'd'
-      ? `7${op.sublayer}:${evaluateValue(ctx, op.power)}/${evaluateValue(ctx, op.toughness)}`
+      ? `7${op.sublayer}:${evaluateValue(ctx, op.power, scopeOf(effect))}/${evaluateValue(ctx, op.toughness, scopeOf(effect))}`
       : JSON.stringify(op);
   return `${targets.sort().join(',')}|${action}`;
 }
@@ -524,6 +538,7 @@ function runLayers(
     if (def === undefined) throw new Error(`engine bug: no def for ${perm.name}`);
     let types = [...def.types];
     let subtypes = [...def.subtypes];
+    let supertypes = [...def.supertypes];
     let colors = [...def.colors];
     let power = perm.power ?? 0;
     let toughness = perm.toughness ?? 0;
@@ -540,7 +555,14 @@ function runLayers(
       triggers = [];
       manaAbilities = [];
     } else {
-      for (const type of perm.copyAddTypes ?? []) if (!types.includes(type)) types.push(type);
+      if (perm.copyAddTypes !== undefined) for (const type of perm.copyAddTypes) if (!types.includes(type)) types.push(type);
+      if (perm.copyAddKeywords !== undefined) for (const kw of perm.copyAddKeywords) if (!keywords.includes(kw)) keywords.push(kw);
+      if (perm.copyRemoveSupertypes !== undefined && perm.copyRemoveSupertypes.length > 0) {
+        const removed = perm.copyRemoveSupertypes;
+        supertypes = supertypes.filter((st) => !removed.includes(st));
+      }
+      if (perm.copyAddSupertypes !== undefined) for (const st of perm.copyAddSupertypes) if (!supertypes.includes(st)) supertypes.push(st);
+      if (perm.copyAddTriggers !== undefined) triggers = [...triggers, ...perm.copyAddTriggers];
       if (def.copyLastExiledCreature === true && (perm.exiledCardIds?.length ?? 0) > 0) {
         const lastId = perm.exiledCardIds?.[perm.exiledCardIds.length - 1];
         const exiled = ctx.state.exile.find((card) => card.cardId === lastId);
@@ -555,7 +577,7 @@ function runLayers(
     work.set(perm.cardId, {
       perm,
       chars: {
-        supertypes: [...def.supertypes],
+        supertypes,
         types,
         subtypes,
         // Layer 5 is not implemented — printed color, read from here so it has one home.
@@ -598,7 +620,7 @@ function runLayers(
 }
 
 /** Set `MTG_VERIFY_LAYER_CACHE=1` to recompute on every cache hit and assert they agree. */
-const VERIFY_CACHE = process.env['MTG_VERIFY_LAYER_CACHE'] === '1';
+const VERIFY_CACHE = ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.['MTG_VERIFY_LAYER_CACHE']) === '1';
 
 /**
  * Compute current characteristics for every permanent on the battlefield in one layered pass,

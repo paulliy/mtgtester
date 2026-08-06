@@ -7,6 +7,7 @@
 import { Database } from 'bun:sqlite';
 import type { DeckCardEntry, DeckSnapshot, DeckSourceType, OracleCard } from '@mtg/shared';
 import { GameRecorder, type SqliteLike } from './games';
+import { BatchRepository } from './batches';
 import { StatsRepository } from './stats';
 import { MIGRATIONS_SQL, SCHEMA_SQL } from './schema';
 
@@ -159,6 +160,10 @@ export class GameStore {
   /** Phase 5's read-only aggregate/debug query surface. */
   stats(): StatsRepository {
     return new StatsRepository(this.db as unknown as SqliteLike);
+  }
+
+  batches(): BatchRepository {
+    return new BatchRepository(this.db as unknown as SqliteLike);
   }
 
   /** The raw `bun:sqlite` handle, for `AiCallLogger` (brief §9 `ai_calls`). */

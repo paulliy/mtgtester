@@ -14,7 +14,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
-import { Engine, RandomDecisionProvider, runToCompletion, type EnginePlayerConfig } from '@mtg/engine';
+import { Engine, runToCompletion, type EnginePlayerConfig } from '@mtg/engine';
+import { HeuristicDecisionProvider } from '@mtg/bot';
 import { loadOracleIndexFromFile } from '../cards/oracle-index';
 import { importDeck } from '../decks/source';
 import { resolveDeck } from '../decks/resolve';
@@ -49,7 +50,10 @@ interface LoadedDeck {
   cards: OracleCard[];
 }
 
-async function loadDeck(index: ReturnType<typeof loadOracleIndexFromFile>, input: string): Promise<LoadedDeck> {
+async function loadDeck(
+  index: ReturnType<typeof loadOracleIndexFromFile>,
+  input: string,
+): Promise<LoadedDeck> {
   const raw = readInput(input);
   const parsed = await importDeck(raw);
   const { resolved, unresolvedNames } = resolveDeck(parsed, index);
@@ -94,7 +98,9 @@ async function main(): Promise<void> {
   console.log('\nDecks in play');
   console.log('─'.repeat(13));
   decks.forEach((deck, i) => {
-    console.log(`  P${i + 1}  ${deck.commander.name}  (${deck.label}, ${deck.cards.length + 1} cards)`);
+    console.log(
+      `  P${i + 1}  ${deck.commander.name}  (${deck.label}, ${deck.cards.length + 1} cards)`,
+    );
   });
 
   const players: EnginePlayerConfig[] = decks.map((deck, i) => ({
@@ -104,9 +110,9 @@ async function main(): Promise<void> {
     cards: deck.cards,
   }));
 
-  console.log(`\nPlaying ${players.length}-player game (Random Decision Providers)…`);
+  console.log(`\nPlaying ${players.length}-player game (Heuristic Bot Providers)…`);
   const engine = new Engine({ gameId: 'play-decks-demo', seed: args.seed, players, turnCap: 200 });
-  const providers = new Map<string, RandomDecisionProvider>();
+  const providers = new Map<string, HeuristicDecisionProvider>();
   let surfacedDecisions = 0;
 
   const result = runToCompletion(
@@ -114,7 +120,9 @@ async function main(): Promise<void> {
     (playerId) => {
       let provider = providers.get(playerId);
       if (provider === undefined) {
-        provider = new RandomDecisionProvider(`${args.seed}-${playerId}`);
+        provider = new HeuristicDecisionProvider(`${args.seed}-${playerId}`, () =>
+          engine.view(playerId),
+        );
         providers.set(playerId, provider);
       }
       return provider;

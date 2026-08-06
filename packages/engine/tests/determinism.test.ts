@@ -47,16 +47,22 @@ function playOnce(gameSeed: string, providerSeed: string): string {
 }
 
 describe('determinism (brief §5.9)', () => {
+  // Two full random-fuzzed 4-player games per test; batched combat declarations (ADR 0023 items
+  // 13/14/18) add real decision points — a fresh damage-division ask per combat-damage step
+  // rather than once for the whole combat, plus an occasional rejection/retry cycle when a
+  // random attack proposal hits a joint attack-tax violation — which push this well over
+  // vitest's 5s default under full-suite parallel load. Not a hang — see the ADR's landed-fixes
+  // note.
   it('same seed + same decisions ⇒ byte-identical event logs', () => {
     const a = playOnce('seed-A', 'prov-A');
     const b = playOnce('seed-A', 'prov-A');
     expect(a).toBe(b);
     expect(a.length).toBeGreaterThan(1000); // a real game happened
-  });
+  }, 30_000);
 
   it('a different game seed produces a different game', () => {
     const a = playOnce('seed-A', 'prov-A');
     const c = playOnce('seed-B', 'prov-A');
     expect(a).not.toBe(c);
-  });
+  }, 30_000);
 });

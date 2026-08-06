@@ -33,6 +33,13 @@ import type { Prng } from '../rng/prng';
 /** Stable physical-card identity, assigned once at game creation. */
 export type CardId = string;
 
+/** One CR 701.15 goad requirement, lasting until the goader's next turn. */
+export interface GoadRequirement {
+  goaderId: PlayerId;
+  /** Global turn number on which this requirement was created. */
+  appliedTurn: number;
+}
+
 export interface EngineObject extends GameObject {
   cardId: CardId;
   /** Tokens cease to exist when they leave the battlefield (CR 704.5d). */
@@ -57,8 +64,10 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   timestamp: number;
   /** `state.turnNumber` when this object entered the battlefield — "entered this turn" (Neriv). */
   enteredTurnNumber: number;
-  /** True if this permanent has been goaded during the current turn. */
-  goadedThisTurn?: boolean;
+  /** Independent goad requirements, one for each player that has goaded this permanent. */
+  goadedBy?: GoadRequirement[];
+  /** Latched during declare attackers for "had to attack this combat" triggers. */
+  hadToAttackThisCombat?: boolean;
   /** A temporary requirement for this creature to block if able. */
   mustBlockThisTurn?: boolean;
   /** Printed/static restriction: this creature cannot block. */
@@ -97,6 +106,20 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   /** Cleanup restores temporary copy effects; permanent copies omit this flag. */
   copyUntilEot?: boolean;
   copyAddTypes?: string[];
+  /** Keywords granted alongside a copy that the copied object doesn't itself have (Dack's
+   * Duplicate's "and it has haste"). */
+  copyAddKeywords?: KeywordAbility[];
+  /** Triggered abilities granted alongside a copy for mechanics with no generic keyword
+   * representation (Dack's Duplicate's "and it has dethrone"). */
+  copyAddTriggers?: Ability[];
+  /** Supertypes stripped from a copy ("except it isn't legendary" — Spark Double). */
+  copyRemoveSupertypes?: string[];
+  /** Supertypes granted alongside a copy that the copied object doesn't itself have
+   * ("it's legendary in addition to its other types" — Sarkhan, Soul Aflame). */
+  copyAddSupertypes?: string[];
+  /** Name kept instead of the copied object's ("except its name is Sarkhan, Soul Aflame" —
+   * Sarkhan, Soul Aflame). */
+  copyNameOverride?: string;
   /** Cards exiled by a Duplicant-style ability, newest card last. */
   exiledCardIds?: CardId[];
   /** A face-down manifested card is a 2/2 colorless creature. */

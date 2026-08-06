@@ -1,59 +1,66 @@
 /**
  * Batched attacker/blocker declaration (brief — player-experience overhaul, Workstream 5).
  *
- * The engine still asks one decision per creature (`combat.ts`'s `declareAttackers`/
- * `declareBlockers`) — that never changes, and this store never batch-submits. It reacts to
- * each freshly pushed `playerActionRequired`, because `requestId`/`revision` change per
- * decision and `game.submitPlayerAction` reads whatever was just installed. What changes is
- * *when* the player is asked to confirm: they assign the whole board first (`composing`,
- * nothing submitted), then `confirm()` starts a replay that answers each subsequent engine
- * decision from that assignment — one call per subject, compressed to one submit when the
- * `*Rest` shortcuts apply.
+ * Attackers and blockers are BOTH real batched decisions on the engine side now (ADR 0023 items
+ * 13/14, landed for attackers in Phase 3b and for blockers in Phase 4): the player composes the
+ * whole assignment here exactly as before, but `confirm()` submits it in ONE call
+ * (`pendingSubmission`) instead of replaying it one already-validated engine decision at a time —
+ * there is no per-creature decision to replay for either side any more. If the engine rejects the
+ * proposal (a combined attack tax several creatures share not fitting the attacking player's mana
+ * for attackers, item 16; a menace attacker ending up with only one blocker for blockers), it
+ * re-asks once; `onRequest` detects that retry (`rejection` present on the matching presentation
+ * field) and drops the store straight back into `composing`, seeded with whatever of the prior
+ * assignment is still legal, with `rejectionMessage` explaining what to fix. A second failure is
+ * repaired by the engine itself (item 17) without asking again — the store just sees combat move
+ * on to whatever's next.
  *
- * It never guesses. `answerCurrent` matches by `interaction` fields alone, never by index or
- * description. If the expected option is missing — an attack cost, a "can't attack alone"
- * restriction, anything this store does not model — it aborts to `interrupted` and hands the
- * decision back to the normal single-decision UI. The store models no restriction, so it
- * cannot be wrong about one; it can only fail to find its option and stop.
- *
- * A non-combat decision interleaved mid-declaration (a triggered ability's own choice, a cost)
- * is simply not this store's concern: `onRequest`/`answerCurrent` both no-op when
- * `request.presentation?.combat` is absent, so `PlayerGameView`'s ordinary decision flow
- * handles it, and the next `declareAttackers`/`declareBlockers` request for a subject still in
- * `order` resumes the plan.
+ * Because both sides are now one-shot proposals, there is nothing left here that can go stale
+ * mid-declaration (the old blocker path's `interrupted` mode existed only for its sequential
+ * per-creature replay, where an earlier submit in the same step could change what a later one
+ * could legally do) — composing is always against a live, complete menu, and confirming always
+ * submits the whole thing in a single call the engine either accepts, rejects-and-reasks, or
+ * repairs. A non-combat decision interleaved mid-declaration (a triggered ability's own choice, a
+ * cost) is simply not this store's concern: `onRequest` no-ops whenever neither declaration shape
+ * is present, so `PlayerGameView`'s ordinary decision flow handles it — and resets the store if a
+ * plan had been left active, since the combat step it belonged to is over.
  */
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
-import type { ActionInteraction, DecisionRequest, LegalAction, ObjectId } from '@mtg/shared';
+import type { CombatRejection, DecisionRequest, ObjectId, TargetChoice } from '@mtg/shared';
+import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 
-export type CombatPlanMode = 'idle' | 'composing' | 'replaying' | 'interrupted';
+export type CombatPlanMode = 'idle' | 'composing' | 'replaying';
+export type CombatPlanKind = 'attackers' | 'blockers';
 
 export interface CombatPlanEntry {
   subjectId: ObjectId;
-  /** Attackers: legal defending players. Blockers: legal attackers. A hint, never authoritative. */
+  /** Attackers: legal defending players. Blockers: legal attackers. A hint, never authoritative
+   * — the engine's own per-slot `targets` on the submitted `LegalAction` is what's actually
+   * validated; this only drives what the composing UI offers to click. */
   optionIds: string[];
+  /** True when this creature has no legal "decline" choice at all (CR 508.1d for attackers; a
+   * "must block" requirement for blockers) — ADR 0023 item 19. `optionIds` never includes a
+   * synthetic decline value either way; this is what the composing UI checks before offering a
+   * "stay home"/"no block" control for that creature. */
+  mustAct: boolean;
 }
 
-function attackInteraction(action: LegalAction): Extract<ActionInteraction, { kind: 'attack' }> | null {
-  return action.interaction?.kind === 'attack' ? action.interaction : null;
-}
-function blockInteraction(action: LegalAction): Extract<ActionInteraction, { kind: 'block' }> | null {
-  return action.interaction?.kind === 'block' ? action.interaction : null;
+/** What `confirm()` hands back to submit for the batched declaration. */
+export interface CombatSubmission {
+  actionId: number;
+  targets: TargetChoice[];
 }
 
 export const useCombatPlanStore = defineStore('combatPlan', () => {
   const mode = ref<CombatPlanMode>('idle');
-  const kind = ref<'attackers' | 'blockers' | null>(null);
+  const kind = ref<CombatPlanKind | null>(null);
   const order = ref<CombatPlanEntry[]>([]);
   /** subjectId -> chosen defender/attacker id; absent entry means "decline" for that subject. */
   const assignment = ref<Map<ObjectId, string>>(new Map());
-  const answered = ref<Set<ObjectId>>(new Set());
-  const interruptedMessage = ref<string | null>(null);
+  /** Why the last proposal was rejected, shown alongside the still-editable tray. */
+  const rejectionMessage = ref<string | null>(null);
   let lastRequestId: string | null = null;
 
-  const currentEntry = computed<CombatPlanEntry | null>(
-    () => order.value.find((entry) => !answered.value.has(entry.subjectId)) ?? null,
-  );
   const isActive = computed(() => mode.value === 'composing' || mode.value === 'replaying');
 
   function reset(): void {
@@ -61,27 +68,39 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
     kind.value = null;
     order.value = [];
     assignment.value = new Map();
-    answered.value = new Set();
-    interruptedMessage.value = null;
+    rejectionMessage.value = null;
     lastRequestId = null;
   }
 
-  function optionIdsFor(request: DecisionRequest, subjectId: ObjectId, declKind: 'attackers' | 'blockers'): string[] {
-    const ids = new Set<string>();
-    for (const action of request.legalActions) {
-      if (declKind === 'attackers') {
-        const interaction = attackInteraction(action);
-        if (interaction?.attackerId === subjectId && interaction.defenderId !== undefined) {
-          ids.add(interaction.defenderId);
-        }
-      } else {
-        const interaction = blockInteraction(action);
-        if (interaction?.blockerId === subjectId && interaction.attackerId !== undefined) {
-          ids.add(interaction.attackerId);
-        }
-      }
+  /** Preserve whatever of a prior assignment is still a legal choice for the new subject list —
+   * used only when re-entering `composing` after a rejected proposal, so the player only has to
+   * fix what was flagged rather than redo the whole board. */
+  function carryOverAssignment(nextOrder: CombatPlanEntry[]): Map<ObjectId, string> {
+    const prior = assignment.value;
+    const next = new Map<ObjectId, string>();
+    for (const entry of nextOrder) {
+      const chosen = prior.get(entry.subjectId);
+      if (chosen !== undefined && entry.optionIds.includes(chosen))
+        next.set(entry.subjectId, chosen);
     }
-    return [...ids];
+    return next;
+  }
+
+  /** Shared by both declaration shapes below: start composing a fresh plan, or — if this is the
+   * engine's one informed retry after a rejection — drop back into composing with whatever of
+   * the prior assignment is still legal. */
+  function startOrRetry(
+    newKind: CombatPlanKind,
+    nextOrder: CombatPlanEntry[],
+    rejection: CombatRejection | undefined,
+  ): void {
+    const isRetry = rejection !== undefined && mode.value !== 'idle' && kind.value === newKind;
+    kind.value = newKind;
+    assignment.value = isRetry ? carryOverAssignment(nextOrder) : new Map();
+    order.value = nextOrder;
+    mode.value = 'composing';
+    rejectionMessage.value =
+      rejection !== undefined ? rejection.violations.map((v) => v.message).join(' ') : null;
   }
 
   /** Call once per freshly received `playerActionRequired`. Builds a plan; never submits. */
@@ -89,20 +108,38 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
     if (lastRequestId === request.requestId) return;
     lastRequestId = request.requestId;
 
-    const combat = request.presentation?.combat;
-    if (combat === undefined) return; // not a combat decision — not this store's concern
-
-    if (mode.value === 'idle' || kind.value !== combat.kind) {
-      kind.value = combat.kind;
-      order.value = [
-        { subjectId: combat.subjectId, optionIds: optionIdsFor(request, combat.subjectId, combat.kind) },
-        ...combat.remaining,
-      ];
-      assignment.value = new Map();
-      answered.value = new Set();
-      mode.value = 'composing';
-      interruptedMessage.value = null;
+    const attackDeclaration = request.presentation?.attackDeclaration;
+    if (attackDeclaration !== undefined) {
+      startOrRetry(
+        'attackers',
+        attackDeclaration.subjects.map((s) => ({
+          subjectId: s.subjectId,
+          optionIds: s.defenders.map((d) => d.playerId),
+          mustAct: s.mustAttack,
+        })),
+        attackDeclaration.rejection,
+      );
+      return;
     }
+
+    const blockDeclaration = request.presentation?.blockDeclaration;
+    if (blockDeclaration !== undefined) {
+      startOrRetry(
+        'blockers',
+        blockDeclaration.subjects.map((s) => ({
+          subjectId: s.subjectId,
+          optionIds: s.attackers.map((a) => a.attackerId),
+          mustAct: s.mustBlock,
+        })),
+        blockDeclaration.rejection,
+      );
+      return;
+    }
+
+    // Neither combat shape: this request isn't a combat decision. If a plan was still active,
+    // the combat step it belonged to is over (the engine accepted the last submission) — don't
+    // leave the tray parked on a stale mode for whatever comes next.
+    if (mode.value !== 'idle') reset();
   }
 
   function assign(subjectId: ObjectId, targetId: string): void {
@@ -116,92 +153,54 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
     assignment.value = next;
   }
   function isLegalTarget(subjectId: ObjectId, targetId: string): boolean {
-    return order.value.find((e) => e.subjectId === subjectId)?.optionIds.includes(targetId) ?? false;
-  }
-
-  function unansweredEntries(): CombatPlanEntry[] {
-    return order.value.filter((e) => !answered.value.has(e.subjectId));
-  }
-  function markAnswered(...ids: ObjectId[]): void {
-    const next = new Set(answered.value);
-    for (const id of ids) next.add(id);
-    answered.value = next;
+    return (
+      order.value.find((e) => e.subjectId === subjectId)?.optionIds.includes(targetId) ?? false
+    );
   }
 
   /**
-   * The one entry point PlayerGameView calls for every `declareAttackers`/`declareBlockers`
-   * request while a plan is active. Returns the `LegalAction.id` to submit, or `null` if this
-   * request isn't part of the plan (caller falls back to the normal single-decision UI).
+   * The one entry point PlayerGameView calls to submit a composed plan, for either kind. `null`
+   * unless a confirmed (`mode === 'replaying'`) plan matches the request currently pending, so a
+   * caller that invokes this before `confirm()`, or for a stale/mismatched request, gets nothing
+   * to submit rather than a guess. A subject left unassigned submits as declining, UNLESS it's
+   * `mustAct`, in which case declining isn't one of its legal slot options at all — it defaults
+   * to its first legal option instead of producing a submission the engine would refuse outright.
    */
-  function answerCurrent(request: DecisionRequest): number | null {
-    // Composing means "not yet confirmed" — nothing may be submitted regardless of what's
-    // asked, even if the caller mistakenly invokes this before `confirm()`.
+  function pendingSubmission(request: DecisionRequest): CombatSubmission | null {
     if (mode.value !== 'replaying') return null;
-    const combat = request.presentation?.combat;
-    if (combat === undefined) return null;
-    if (currentEntry.value === null || combat.subjectId !== currentEntry.value.subjectId) return null;
 
-    const subject = combat.subjectId;
-    const rest = unansweredEntries();
-    const declKind = combat.kind;
-
-    // Tail compression #1: nothing left is assigned to anything → the engine's "no further
-    // attacks/blocks" shortcut answers the whole remaining plan in one submit.
-    if (rest.every((e) => !assignment.value.has(e.subjectId))) {
-      const restOption = request.legalActions.find((action) => {
-        if (declKind === 'attackers') {
-          const i = attackInteraction(action);
-          return i?.attackerId === subject && i.appliesToRemaining === true && i.defenderId === undefined;
-        }
-        const i = blockInteraction(action);
-        return i?.blockerId === subject && i.appliesToRemaining === true;
+    if (kind.value === 'attackers') {
+      const decl = request.presentation?.attackDeclaration;
+      const action = request.legalActions.find((a) => a.type === 'attackDeclaration');
+      if (decl === undefined || action === undefined) return null;
+      const targets: TargetChoice[] = decl.subjects.map((subject, slot) => {
+        const chosen = assignment.value.get(subject.subjectId);
+        const fallback = subject.mustAttack
+          ? (subject.defenders[0]?.playerId ?? NO_ATTACK_TARGET)
+          : NO_ATTACK_TARGET;
+        return { slot, choice: chosen ?? fallback };
       });
-      if (restOption !== undefined) {
-        markAnswered(...rest.map((e) => e.subjectId));
-        return restOption.id;
-      }
+      return { actionId: action.id, targets };
     }
 
-    // Tail compression #2 (attackers only): everything left is assigned to the SAME defender →
-    // the "all undeclared attack X" shortcut.
-    if (declKind === 'attackers') {
-      const desired = assignment.value.get(subject);
-      if (desired !== undefined && rest.every((e) => assignment.value.get(e.subjectId) === desired)) {
-        const restOption = request.legalActions.find((action) => {
-          const i = attackInteraction(action);
-          return i?.attackerId === subject && i.appliesToRemaining === true && i.defenderId === desired;
-        });
-        if (restOption !== undefined) {
-          markAnswered(...rest.map((e) => e.subjectId));
-          return restOption.id;
-        }
-      }
+    if (kind.value === 'blockers') {
+      const decl = request.presentation?.blockDeclaration;
+      const action = request.legalActions.find((a) => a.type === 'blockDeclaration');
+      if (decl === undefined || action === undefined) return null;
+      const targets: TargetChoice[] = decl.subjects.map((subject, slot) => {
+        const chosen = assignment.value.get(subject.subjectId);
+        const fallback = subject.mustBlock
+          ? (subject.attackers[0]?.attackerId ?? NO_BLOCK_TARGET)
+          : NO_BLOCK_TARGET;
+        return { slot, choice: chosen ?? fallback };
+      });
+      return { actionId: action.id, targets };
     }
 
-    // The exact single-subject option — matched by interaction fields only, never by index.
-    const desired = assignment.value.get(subject);
-    const exact = request.legalActions.find((action) => {
-      if (declKind === 'attackers') {
-        const i = attackInteraction(action);
-        if (i === null || i.attackerId !== subject || i.appliesToRemaining === true) return false;
-        return desired === undefined ? i.defenderId === undefined : i.defenderId === desired;
-      }
-      const i = blockInteraction(action);
-      if (i === null || i.blockerId !== subject || i.appliesToRemaining === true) return false;
-      return desired === undefined ? i.attackerId === undefined : i.attackerId === desired;
-    });
-
-    if (exact === undefined) {
-      mode.value = 'interrupted';
-      interruptedMessage.value =
-        'The board changed and that assignment is no longer available — choose again.';
-      return null;
-    }
-    markAnswered(subject);
-    return exact.id;
+    return null;
   }
 
-  /** Player pressed Confirm on the composed board — start answering the live decision. */
+  /** Player pressed Confirm on the composed board — the caller submits `pendingSubmission` next. */
   function confirm(): void {
     if (mode.value === 'composing') mode.value = 'replaying';
   }
@@ -215,15 +214,13 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
     kind,
     order,
     assignment,
-    answered,
-    interruptedMessage,
-    currentEntry,
+    rejectionMessage,
     isActive,
     onRequest,
     assign,
     clear,
     isLegalTarget,
-    answerCurrent,
+    pendingSubmission,
     confirm,
     cancel,
     reset,

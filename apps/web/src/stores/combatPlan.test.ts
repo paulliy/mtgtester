@@ -1,47 +1,39 @@
 /**
- * `combatPlan` composition and replay (brief — player-experience overhaul, Workstream 5).
- * Pure TS, no DOM — mirrors `game.test.ts`'s conventions. Requests are built to match exactly
- * what `combat.ts`'s `declareAttackers` actually generates (id = index, `noAttack` first, one
- * `attack` per opponent, then the `*Rest` batch shortcuts), so a change to the store's matching
- * logic that would desync from the real engine shape fails here too.
+ * `combatPlan` composition and submission (brief — player-experience overhaul, Workstream 5).
+ * Pure TS, no DOM — mirrors `game.test.ts`'s conventions.
+ *
+ * Both attackers and blockers are batched now (ADR 0023 items 13/14, landed for attackers in
+ * Phase 3b and for blockers in Phase 4): requests are built to match exactly what `combat.ts`'s
+ * `declareAttackers`/`declareBlockers` actually generate — one `attackDeclaration`/
+ * `blockDeclaration` `LegalAction` with a target slot per eligible creature, and
+ * `presentation.attackDeclaration`/`presentation.blockDeclaration` describing each one.
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import type { DecisionRequest, LegalAction } from '@mtg/shared';
+import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import { useCombatPlanStore } from './combatPlan';
 
 const OPPONENTS = ['P2', 'P3'];
 
-/** One `declareAttackers` request for `subjectId`, with `rest` creatures still to come. */
-function attackRequest(subjectId: string, rest: string[]): DecisionRequest {
+/** One batched `declareAttackers` request for `subjectIds`, each with `OPPONENTS` as legal
+ * defenders unless `mustAttack` names it. */
+function attackRequest(
+  subjectIds: string[],
+  opts: { requestId?: string; rejection?: { subjectId: string; message: string }[] } = {},
+): DecisionRequest {
   const legalActions: LegalAction[] = [
-    { id: 0, type: 'noAttack', description: `${subjectId} does not attack`, interaction: { kind: 'attack', attackerId: subjectId } },
-    ...OPPONENTS.map((opp, i): LegalAction => ({
-      id: i + 1,
-      type: 'attack',
-      description: `${subjectId} attacks ${opp}`,
-      interaction: { kind: 'attack', attackerId: subjectId, defenderId: opp },
-    })),
+    {
+      id: 0,
+      type: 'attackDeclaration',
+      description: `Declare attackers (${subjectIds.length} eligible creature(s))`,
+      data: { subjectIds },
+      targets: subjectIds.map((_, i) => ({ slot: i, options: [...OPPONENTS, NO_ATTACK_TARGET] })),
+    },
   ];
-  if (rest.length > 0) {
-    legalActions.push({
-      id: legalActions.length,
-      type: 'noAttackRest',
-      description: 'No further attacks',
-      interaction: { kind: 'attack', attackerId: subjectId, appliesToRemaining: true },
-    });
-    for (const opp of OPPONENTS) {
-      legalActions.push({
-        id: legalActions.length,
-        type: 'attackRest',
-        description: `All undeclared creatures attack ${opp}`,
-        interaction: { kind: 'attack', attackerId: subjectId, defenderId: opp, appliesToRemaining: true },
-      });
-    }
-  }
   return {
-    requestId: `req-${subjectId}`,
+    requestId: opts.requestId ?? `req-${subjectIds.join('-')}`,
     gameId: 'g1',
     turn: 3,
     activePlayer: 'P1',
@@ -49,32 +41,95 @@ function attackRequest(subjectId: string, rest: string[]): DecisionRequest {
     phase: 'combat',
     step: 'declareAttackers',
     decisionType: 'declareAttackers',
-    prompt: `Declare attackers: does ${subjectId} attack?`,
+    prompt: 'Declare attackers',
     legalActions,
     presentation: {
-      layout: 'combat',
-      combat: {
-        kind: 'attackers',
-        subjectId,
-        remaining: rest.map((id) => ({ subjectId: id, optionIds: OPPONENTS })),
+      layout: 'attackDeclaration',
+      attackDeclaration: {
+        subjects: subjectIds.map((id) => ({
+          subjectId: id,
+          name: id,
+          power: 2,
+          toughness: 2,
+          defenders: OPPONENTS.map((p) => ({ playerId: p, life: 40, attackTax: 0 })),
+          mustAttack: false,
+          hasTriggers: false,
+        })),
+        ...(opts.rejection !== undefined
+          ? {
+              rejection: {
+                violations: opts.rejection.map((v) => ({ ...v, kind: 'attackTax' as const })),
+              },
+            }
+          : {}),
       },
     },
   };
 }
 
-describe('combatPlan', () => {
+const ATTACKERS = ['A1', 'A2'];
+
+/** One batched `declareBlockers` request for `subjectIds`, each with `ATTACKERS` as legal
+ * attackers unless `mustBlock` names it. */
+function blockRequest(
+  subjectIds: string[],
+  opts: { requestId?: string; rejection?: { subjectId: string; message: string }[] } = {},
+): DecisionRequest {
+  const legalActions: LegalAction[] = [
+    {
+      id: 0,
+      type: 'blockDeclaration',
+      description: `Declare blockers (${subjectIds.length} eligible creature(s))`,
+      data: { subjectIds },
+      targets: subjectIds.map((_, i) => ({ slot: i, options: [...ATTACKERS, NO_BLOCK_TARGET] })),
+    },
+  ];
+  return {
+    requestId: opts.requestId ?? `req-${subjectIds.join('-')}`,
+    gameId: 'g1',
+    turn: 3,
+    activePlayer: 'P1',
+    decidingPlayer: 'P2',
+    phase: 'combat',
+    step: 'declareBlockers',
+    decisionType: 'declareBlockers',
+    prompt: 'Declare blockers',
+    legalActions,
+    presentation: {
+      layout: 'blockDeclaration',
+      blockDeclaration: {
+        subjects: subjectIds.map((id) => ({
+          subjectId: id,
+          name: id,
+          power: 2,
+          toughness: 2,
+          attackers: ATTACKERS.map((a) => ({ attackerId: a, name: a, power: 3, toughness: 3 })),
+          mustBlock: false,
+        })),
+        ...(opts.rejection !== undefined
+          ? {
+              rejection: {
+                violations: opts.rejection.map((v) => ({ ...v, kind: 'menace' as const })),
+              },
+            }
+          : {}),
+      },
+    },
+  };
+}
+
+describe('combatPlan — attackers', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  it('composes without submitting, then replays one submit per subject', () => {
+  it('composes without submitting, then submits the whole declaration in one call on confirm', () => {
     const store = useCombatPlanStore();
-    const req = attackRequest('A', ['B', 'C']);
+    const req = attackRequest(['A', 'B', 'C']);
     store.onRequest(req);
     expect(store.mode).toBe('composing');
-
-    // Nothing submitted while composing.
-    expect(store.answerCurrent(req)).toBeNull();
+    expect(store.kind).toBe('attackers');
+    expect(store.pendingSubmission(req)).toBeNull(); // not confirmed yet
 
     store.assign('A', 'P2');
     store.assign('B', 'P3');
@@ -82,83 +137,212 @@ describe('combatPlan', () => {
     store.confirm();
     expect(store.mode).toBe('replaying');
 
-    const submittedA = store.answerCurrent(req);
-    expect(submittedA).toBe(1); // attacks P2
-    expect(store.answered.has('A')).toBe(true);
-
-    const reqB = attackRequest('B', ['C']);
-    store.onRequest(reqB);
-    const submittedB = store.answerCurrent(reqB);
-    expect(submittedB).toBe(2); // attacks P3
-
-    const reqC = attackRequest('C', []);
-    store.onRequest(reqC);
-    const submittedC = store.answerCurrent(reqC);
-    expect(submittedC).toBe(0); // noAttack (declined)
+    const submission = store.pendingSubmission(req);
+    expect(submission?.actionId).toBe(0);
+    expect(submission?.targets).toEqual([
+      { slot: 0, choice: 'P2' },
+      { slot: 1, choice: 'P3' },
+      { slot: 2, choice: NO_ATTACK_TARGET },
+    ]);
   });
 
-  it('collapses an alpha strike (everyone assigned the same defender) into one submit', () => {
+  it('leaving everything unassigned submits an all-decline declaration', () => {
     const store = useCombatPlanStore();
-    const req = attackRequest('A', ['B', 'C']);
+    const req = attackRequest(['A', 'B']);
+    store.onRequest(req);
+    store.confirm();
+
+    expect(store.pendingSubmission(req)?.targets).toEqual([
+      { slot: 0, choice: NO_ATTACK_TARGET },
+      { slot: 1, choice: NO_ATTACK_TARGET },
+    ]);
+  });
+
+  it('a mustAct subject left unassigned defaults to its first legal defender, never a decline', () => {
+    const store = useCombatPlanStore();
+    const req = attackRequest(['A']);
+    // Hand-craft a mustAttack subject (no NO_ATTACK_TARGET among its slot options).
+    req.presentation!.attackDeclaration!.subjects[0]!.mustAttack = true;
+    req.legalActions[0]!.targets![0]!.options = ['P2', 'P3'];
+    store.onRequest(req);
+    expect(store.order[0]?.mustAct).toBe(true);
+    store.confirm();
+
+    expect(store.pendingSubmission(req)?.targets).toEqual([{ slot: 0, choice: 'P2' }]);
+  });
+
+  it('never submits while composing, even if pendingSubmission is called', () => {
+    const store = useCombatPlanStore();
+    const req = attackRequest(['A']);
+    store.onRequest(req);
+    expect(store.pendingSubmission(req)).toBeNull();
+    store.assign('A', 'P2');
+    expect(store.pendingSubmission(req)).toBeNull();
+    expect(store.mode).toBe('composing');
+  });
+
+  it('a rejected retry drops back into composing, seeded from the prior assignment, with rejectionMessage set', () => {
+    const store = useCombatPlanStore();
+    const req = attackRequest(['A', 'B']);
     store.onRequest(req);
     store.assign('A', 'P2');
     store.assign('B', 'P2');
-    store.assign('C', 'P2');
     store.confirm();
+    expect(store.pendingSubmission(req)).not.toBeNull();
 
-    const submitted = store.answerCurrent(req);
-    // attackRest targeting P2: id 3 (noAttack=0, attack P2=1, attack P3=2, noAttackRest=3, attackRest P2=4)
-    const attackRestP2 = req.legalActions.find(
-      (a) => a.type === 'attackRest' && a.description.includes('P2'),
-    );
-    expect(submitted).toBe(attackRestP2!.id);
-    expect(store.answered.has('A')).toBe(true);
-    expect(store.answered.has('B')).toBe(true);
-    expect(store.answered.has('C')).toBe(true);
+    // Engine rejects: the combined attack tax for A+B on P2 isn't payable. New requestId, same
+    // subjects, `rejection` populated.
+    const retry = attackRequest(['A', 'B'], {
+      requestId: 'req-retry',
+      rejection: [
+        { subjectId: 'A', message: "Not enough mana to pay P2's combined attack tax." },
+        { subjectId: 'B', message: "Not enough mana to pay P2's combined attack tax." },
+      ],
+    });
+    store.onRequest(retry);
+
+    expect(store.mode).toBe('composing');
+    expect(store.rejectionMessage).toContain('combined attack tax');
+    // The prior assignment survived the retry — the player only needs to fix what was flagged.
+    expect(store.assignment.get('A')).toBe('P2');
+    expect(store.assignment.get('B')).toBe('P2');
   });
 
-  it('collapses "no attacks" into one submit via noAttackRest', () => {
+  it('a fresh (non-retry) attackDeclaration request resets any prior assignment', () => {
     const store = useCombatPlanStore();
-    const req = attackRequest('A', ['B', 'C']);
-    store.onRequest(req);
-    // No assignments at all.
-    store.confirm();
-
-    const submitted = store.answerCurrent(req);
-    const noAttackRest = req.legalActions.find((a) => a.type === 'noAttackRest');
-    expect(submitted).toBe(noAttackRest!.id);
-    expect(store.answered.size).toBe(3);
-  });
-
-  it('aborts to interrupted, with zero further submits, when the expected option is gone', () => {
-    const store = useCombatPlanStore();
-    const req = attackRequest('A', ['B']);
+    const req = attackRequest(['A']);
     store.onRequest(req);
     store.assign('A', 'P2');
-    store.assign('B', 'P3');
     store.confirm();
-    expect(store.answerCurrent(req)).toBe(1); // A attacks P2, fine
 
-    // B's real menu no longer offers attacking P3 at all (board changed).
-    const reqB: DecisionRequest = {
-      ...attackRequest('B', []),
-      legalActions: [
-        { id: 0, type: 'noAttack', description: 'B does not attack', interaction: { kind: 'attack', attackerId: 'B' } },
-        { id: 1, type: 'attack', description: 'B attacks P2', interaction: { kind: 'attack', attackerId: 'B', defenderId: 'P2' } },
-      ],
-    };
-    store.onRequest(reqB);
-    expect(store.answerCurrent(reqB)).toBeNull();
-    expect(store.mode).toBe('interrupted');
-    expect(store.interruptedMessage).not.toBeNull();
+    // Next combat's declareAttackers — a brand new request, no rejection.
+    const next = attackRequest(['C'], { requestId: 'req-next' });
+    store.onRequest(next);
+
+    expect(store.mode).toBe('composing');
+    expect(store.rejectionMessage).toBeNull();
+    expect(store.assignment.size).toBe(0);
   });
 
-  it('never submits during composing, even if answerCurrent is called repeatedly', () => {
+  it('a non-combat request after a confirmed attacker plan resets the store instead of staying stuck', () => {
     const store = useCombatPlanStore();
-    const req = attackRequest('A', []);
+    const req = attackRequest(['A']);
     store.onRequest(req);
-    expect(store.answerCurrent(req)).toBeNull();
-    expect(store.answerCurrent(req)).toBeNull();
+    store.confirm();
+    expect(store.mode).toBe('replaying');
+
+    const nonCombat: DecisionRequest = {
+      requestId: 'req-priority',
+      gameId: 'g1',
+      turn: 3,
+      activePlayer: 'P1',
+      decidingPlayer: 'P1',
+      phase: 'combat',
+      step: 'declareBlockers',
+      decisionType: 'priority',
+      prompt: 'You have priority.',
+      legalActions: [{ id: 0, type: 'pass', description: 'Pass' }],
+    };
+    store.onRequest(nonCombat);
+
+    expect(store.mode).toBe('idle');
+    expect(store.kind).toBeNull();
+  });
+});
+
+describe('combatPlan — blockers (batched, ADR 0023 Phase 4)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
+  it('composes without submitting, then submits the whole declaration in one call on confirm', () => {
+    const store = useCombatPlanStore();
+    const req = blockRequest(['X', 'Y', 'Z']);
+    store.onRequest(req);
     expect(store.mode).toBe('composing');
+    expect(store.kind).toBe('blockers');
+    expect(store.pendingSubmission(req)).toBeNull();
+
+    store.assign('X', 'A1');
+    store.assign('Y', 'A2');
+    // 'Z' left unassigned — does not block.
+    store.confirm();
+    expect(store.mode).toBe('replaying');
+
+    const submission = store.pendingSubmission(req);
+    expect(submission?.actionId).toBe(0);
+    expect(submission?.targets).toEqual([
+      { slot: 0, choice: 'A1' },
+      { slot: 1, choice: 'A2' },
+      { slot: 2, choice: NO_BLOCK_TARGET },
+    ]);
+  });
+
+  it('leaving everything unassigned submits an all-decline declaration', () => {
+    const store = useCombatPlanStore();
+    const req = blockRequest(['X', 'Y']);
+    store.onRequest(req);
+    store.confirm();
+
+    expect(store.pendingSubmission(req)?.targets).toEqual([
+      { slot: 0, choice: NO_BLOCK_TARGET },
+      { slot: 1, choice: NO_BLOCK_TARGET },
+    ]);
+  });
+
+  it('a mustAct subject left unassigned defaults to its first legal attacker, never a decline', () => {
+    const store = useCombatPlanStore();
+    const req = blockRequest(['X']);
+    req.presentation!.blockDeclaration!.subjects[0]!.mustBlock = true;
+    req.legalActions[0]!.targets![0]!.options = ['A1', 'A2'];
+    store.onRequest(req);
+    expect(store.order[0]?.mustAct).toBe(true);
+    store.confirm();
+
+    expect(store.pendingSubmission(req)?.targets).toEqual([{ slot: 0, choice: 'A1' }]);
+  });
+
+  it('a rejected retry (menace) drops back into composing, seeded from the prior assignment', () => {
+    const store = useCombatPlanStore();
+    const req = blockRequest(['X']);
+    store.onRequest(req);
+    store.assign('X', 'A1');
+    store.confirm();
+    expect(store.pendingSubmission(req)).not.toBeNull();
+
+    const retry = blockRequest(['X'], {
+      requestId: 'req-retry',
+      rejection: [{ subjectId: 'X', message: 'A1 has menace and needs at least two blockers.' }],
+    });
+    store.onRequest(retry);
+
+    expect(store.mode).toBe('composing');
+    expect(store.rejectionMessage).toContain('menace');
+    expect(store.assignment.get('X')).toBe('A1');
+  });
+
+  it('a non-combat request after a confirmed blocker plan resets the store instead of staying stuck', () => {
+    const store = useCombatPlanStore();
+    const req = blockRequest(['X']);
+    store.onRequest(req);
+    store.confirm();
+    expect(store.mode).toBe('replaying');
+
+    const nonCombat: DecisionRequest = {
+      requestId: 'req-priority',
+      gameId: 'g1',
+      turn: 3,
+      activePlayer: 'P1',
+      decidingPlayer: 'P2',
+      phase: 'combat',
+      step: 'declareBlockers',
+      decisionType: 'priority',
+      prompt: 'You have priority.',
+      legalActions: [{ id: 0, type: 'pass', description: 'Pass' }],
+    };
+    store.onRequest(nonCombat);
+
+    expect(store.mode).toBe('idle');
+    expect(store.kind).toBeNull();
   });
 });

@@ -33,6 +33,7 @@ import { debug, emit } from '../log/log';
 import { cardOption, plainOption, playerOption, presentedSource, valueOption } from '../present';
 import { chooseCard } from './choose';
 import {
+  applyCopy,
   createToken,
   makePermanent,
   moveObject,
@@ -85,10 +86,39 @@ function findObjectById(ctx: GameContext, id: ObjectId): EngineObject | undefine
   return undefined;
 }
 
+/** Apply CR 701.15a/d: one player contributes at most one active goad requirement. */
+function addGoadRequirement(ctx: GameContext, perm: EnginePermanent, goaderId: PlayerId): void {
+  const existing = perm.goadedBy ?? [];
+  if (existing.some((requirement) => requirement.goaderId === goaderId)) return;
+  perm.goadedBy = [
+    ...existing,
+    { goaderId, appliedTurn: ctx.state.turnNumber },
+  ];
+}
+
 /** Locate a physical card after a zone change, whose object id is deliberately no longer stable. */
 function findObjectByCardId(ctx: GameContext, cardId: string): EngineObject | undefined {
   const foundStack = ctx.state.stack.find((object) => object.sourceCardId === cardId || object.card?.cardId === cardId);
   if (foundStack !== undefined) return foundStack as unknown as EngineObject;
+  const zones: EngineObject[][] = [ctx.state.battlefield, ctx.state.exile];
+  for (const player of ctx.state.players) {
+    zones.push(player.hand, player.library, player.graveyard, player.commandZone);
+  }
+  for (const zone of zones) {
+    const found = zone.find((object) => object.cardId === cardId);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
+
+/**
+ * Locate a physical card by `cardId`, in whatever non-stack zone it currently occupies.
+ * Unlike `findObjectByCardId`, this never matches a stack entry — it exists for referents that
+ * are themselves permanents/cards (a delayed trigger's remembered `'triggerObject'`), where a
+ * same-source triggered ability that happens to *also* be sitting on the stack (sharing that
+ * `sourceCardId`) would otherwise be mistaken for the object itself.
+ */
+function findPhysicalObjectByCardId(ctx: GameContext, cardId: string): EngineObject | undefined {
   const zones: EngineObject[][] = [ctx.state.battlefield, ctx.state.exile];
   for (const player of ctx.state.players) {
     zones.push(player.hand, player.library, player.graveyard, player.commandZone);
@@ -1197,6 +1227,14 @@ export function* executeAbility(
         addCounters(ctx, source, perm, effect.counter, amountOf(effect.count));
         break;
       }
+      case 'putCounterByPermanentType': {
+        const t = ref(effect.target);
+        if (t === null) break;
+        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const isPlaneswalker = computeCharacteristics(ctx, perm).types.includes('Planeswalker');
+        addCounters(ctx, source, perm, isPlaneswalker ? effect.planeswalkerCounter : effect.creatureCounter, amountOf(effect.count));
+        break;
+      }
       case 'putCountersEach': {
         // Like the `…EachUntilEot` primitives, the affected set is fixed here at resolution
         // (CR 611.2c) — but counters are a permanent change, so nothing is recorded to undo.
@@ -1499,10 +1537,14 @@ export function* executeAbility(
       }
       case 'sacrificeOneEachOpponent':
         for (const opponent of opponentsOf(ctx, controller.id)) {
-          const permanents = ctx.state.battlefield.filter((perm) => perm.controllerId === opponent.id);
+          const permanents = ctx.state.battlefield.filter((perm) => {
+            if (perm.controllerId !== opponent.id) return false;
+            if (effect.filter === 'creature') return computeCharacteristics(ctx, perm).types.includes('Creature');
+            return !computeCharacteristics(ctx, perm).types.includes('Land');
+          });
           const chosen = yield* chooseCard(ctx, {
             player: opponent.id,
-            prompt: `${source.name}: choose a permanent to sacrifice`,
+            prompt: `${source.name}: choose a ${effect.filter === 'creature' ? 'creature' : 'nonland permanent'} to sacrifice`,
             cards: permanents,
             type: 'sacrifice',
             verb: 'Sacrifice',
@@ -1513,12 +1555,12 @@ export function* executeAbility(
       case 'sacrificeEachPlayer':
         for (const player of ctx.state.players.filter((p) => !p.hasLost)) {
           for (let i = 0; i < effect.count; i++) {
-            const permanents = ctx.state.battlefield.filter((perm) => perm.controllerId === player.id);
-            if (permanents.length === 0) break;
+            const candidates = ctx.state.battlefield.filter((perm) => perm.controllerId === player.id && (effect.filter === 'any' || computeCharacteristics(ctx, perm).types.includes('Creature')));
+            if (candidates.length === 0) break;
             const chosen = yield* chooseCard(ctx, {
               player: player.id,
-              prompt: `${source.name}: choose a permanent to sacrifice (${i + 1} of ${effect.count})`,
-              cards: permanents,
+              prompt: `${source.name}: choose a ${effect.filter === 'any' ? 'permanent' : 'creature'} to sacrifice (${i + 1} of ${effect.count})`,
+              cards: candidates,
               type: 'sacrifice',
               verb: 'Sacrifice',
             });
@@ -1544,18 +1586,23 @@ export function* executeAbility(
         }
         break;
       }
-      case 'sacrificeGreatestEachOpponent':
+      case 'sacrificeGreatestEachOpponent': {
+        const metricOf = (perm: EnginePermanent): number =>
+          effect.metric === 'power' ? effectivePT(ctx, perm).power : spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined);
         for (const opponent of opponentsOf(ctx, controller.id)) {
           const candidates = ctx.state.battlefield.filter((perm) => perm.controllerId === opponent.id && (() => {
             const chars = computeCharacteristics(ctx, perm);
-            return chars.types.includes('Creature') || chars.types.includes('Planeswalker');
+            return chars.types.includes('Creature') || (effect.selector === 'creatureOrPlaneswalker' && chars.types.includes('Planeswalker'));
           })());
-          const greatest = Math.max(0, ...candidates.map((perm) => spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined)));
-          const choices = candidates.filter((perm) => spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined) === greatest);
-          const chosen = yield* chooseCard(ctx, { player: opponent.id, prompt: `${source.name}: sacrifice a permanent with the greatest mana value`, cards: choices, type: 'sacrifice', verb: 'Sacrifice' });
-          if (chosen !== null) yield* moveObject(ctx, chosen, { zone: 'graveyard' });
+          const greatest = Math.max(0, ...candidates.map((perm) => metricOf(perm)));
+          const choices = candidates.filter((perm) => metricOf(perm) === greatest);
+          const metricLabel = effect.metric === 'power' ? 'power' : 'mana value';
+          const verb = effect.action === 'exile' ? 'Exile' : 'Sacrifice';
+          const chosen = yield* chooseCard(ctx, { player: opponent.id, prompt: `${source.name}: ${verb.toLowerCase()} a permanent with the greatest ${metricLabel}`, cards: choices, type: 'sacrifice', verb });
+          if (chosen !== null) yield* moveObject(ctx, chosen, { zone: effect.action === 'exile' ? 'exile' : 'graveyard' });
         }
         break;
+      }
       case 'transferCountersFromTriggerObject': {
         const targetId = ref(effect.target);
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);
@@ -1826,7 +1873,7 @@ export function* executeAbility(
       case 'goadEachOpponent':
         for (const perm of ctx.state.battlefield) {
           if (perm.controllerId !== controller.id && computeCharacteristics(ctx, perm).types.includes('Creature')) {
-            perm.goadedThisTurn = true;
+            addGoadRequirement(ctx, perm, controller.id);
           }
         }
         break;
@@ -2009,25 +2056,12 @@ export function* executeAbility(
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);
         const self = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
         if (target === undefined || self === undefined || target.cardId === self.cardId) break;
-        self.copyOriginal ??= {
-          oracleId: self.oracleId,
-          name: self.name,
-          typeLine: self.typeLine,
-          oracleText: self.oracleText,
-          manaCost: self.manaCost,
-          power: self.power,
-          toughness: self.toughness,
-        };
-        self.oracleId = target.oracleId;
-        self.name = target.name;
-        self.typeLine = target.typeLine;
-        self.oracleText = target.oracleText;
-        self.manaCost = target.manaCost;
-        self.power = target.power;
-        self.toughness = target.toughness;
-        self.copyAddTypes = effect.addTypes === undefined ? [] : [...effect.addTypes];
-        self.timestamp = ctx.state.nextTimestamp++;
-        self.copyUntilEot = effect.untilEot === true;
+        applyCopy(ctx, self, target as EnginePermanent, {
+          untilEot: effect.untilEot,
+          addTypes: effect.addTypes,
+          addSupertypes: effect.addSupertypes,
+          nameOverride: effect.nameOverride,
+        });
         emit(ctx, 'becomeCopy', { source: source.name, target: target.name, untilEot: effect.untilEot === true });
         break;
       }
@@ -2037,25 +2071,12 @@ export function* executeAbility(
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);
         const copy = copyId === null ? undefined : findPermanent(ctx, copyId);
         if (target === undefined || copy === undefined || target.cardId === copy.cardId) break;
-        target.copyOriginal ??= {
-          oracleId: target.oracleId,
-          name: target.name,
-          typeLine: target.typeLine,
-          oracleText: target.oracleText,
-          manaCost: target.manaCost,
-          power: target.power,
-          toughness: target.toughness,
-        };
-        target.oracleId = copy.oracleId;
-        target.name = copy.name;
-        target.typeLine = copy.typeLine;
-        target.oracleText = copy.oracleText;
-        target.manaCost = copy.manaCost;
-        target.power = copy.power;
-        target.toughness = copy.toughness;
-        target.copyAddTypes = effect.addTypes === undefined ? [] : [...effect.addTypes];
-        target.timestamp = ctx.state.nextTimestamp++;
-        target.copyUntilEot = effect.untilEot === true;
+        applyCopy(ctx, target as EnginePermanent, copy as EnginePermanent, {
+          untilEot: effect.untilEot,
+          addTypes: effect.addTypes,
+          addSupertypes: effect.addSupertypes,
+          nameOverride: effect.nameOverride,
+        });
         emit(ctx, 'becomeCopy', { source: source.name, target: copy.name, untilEot: effect.untilEot === true });
         break;
       }
@@ -2080,10 +2101,20 @@ export function* executeAbility(
         }
         break;
       case 'graveyardToBattlefield': {
-        const t = ref(effect.target);
-        if (t === null) break;
         const owner = playerById(ctx, source.controllerId);
-        const cardObj = owner.graveyard.find((c) => c.id === t);
+        // `ref()` restricts `'triggerObject'` to the battlefield — right for effects that act
+        // on a still-live permanent, but this op exists specifically to revive something that
+        // has already left it (a "dies" trigger's object, by definition, always has). Look
+        // that referent up directly by `triggerObjectCardId` instead of through `ref()`.
+        const cardObj =
+          effect.target === 'triggerObject'
+            ? triggerObjectCardId === undefined
+              ? undefined
+              : owner.graveyard.find((c) => c.cardId === triggerObjectCardId)
+            : (() => {
+                const t = ref(effect.target);
+                return t === null ? undefined : owner.graveyard.find((c) => c.id === t);
+              })();
         // Left the graveyard between announcement and resolution (CR 608.2b) — `ref` already
         // re-checked legality via `graveyardTargets`, so this is the "gone" case, not a bug.
         if (cardObj === undefined) break;
@@ -2152,7 +2183,7 @@ export function* executeAbility(
         if (t !== null) {
           const perm = findPermanent(ctx, t);
           if (perm) {
-            perm.goadedThisTurn = true;
+            addGoadRequirement(ctx, perm, controller.id);
             emit(ctx, 'goad', { target: perm.name, source: source.name });
           }
         }
@@ -2758,7 +2789,19 @@ export function* executeAbility(
         break;
       }
       case 'registerDelayedTrigger': {
-        const t = effect.target !== undefined ? ref(effect.target) : null;
+        // `'triggerObject'` here is deliberately NOT resolved through `ref()`: `ref` restricts
+        // 'triggerObject' to the battlefield (right, for effects that act on a still-live
+        // permanent), but a delayed trigger registered from a 'dies' ability fires with its
+        // triggerObject already in the graveyard — that's the whole premise of "dies". This
+        // effect's job is to remember the object regardless of zone (same rationale as the
+        // Hellkite Courser cardId-tracking note above), so it looks the card up directly by
+        // `triggerObjectCardId` across every zone instead.
+        const t =
+          effect.target === 'triggerObject'
+            ? (triggerObjectCardId === undefined ? null : (findPhysicalObjectByCardId(ctx, triggerObjectCardId)?.id ?? null))
+            : effect.target !== undefined
+              ? ref(effect.target)
+              : null;
         const targetPlayer = t === null ? undefined : ctx.state.players.find((player) => player.id === t);
         const targetStack = t === null ? undefined : ctx.state.stack.find((entry) => entry.id === t);
         const targetObject = t === null ? undefined : findObjectById(ctx, t);
@@ -2987,10 +3030,8 @@ export function* executeAbility(
 
 /**
  * "Add X mana in any combination of colors" (Klauth) — mana entering the pool from a
- * RESOLVING ability rather than an activation (CR 605 vs the stack). One decision per mana
- * produced: choosing red, then red, then blue for three mana ends up with the same pool a
- * single "distribute" decision would, so this is not a rules deviation, only a simpler shape
- * than a combinatorial one-shot distribution decision would be.
+ * RESOLVING ability rather than an activation (CR 605 vs the stack). The whole distribution is
+ * one decision so an AI provider makes one call rather than one call per mana.
  */
 function* addManaFromAbility(
   ctx: GameContext,
@@ -3013,20 +3054,34 @@ function* addManaFromAbility(
     return;
   }
 
+  const outcome = yield {
+    decisionType: 'general',
+    player: controller.id,
+    prompt: `${source.name}: distribute all ${amount} mana among the allowed colors. Return manaSplit counts whose sum is exactly ${amount}.`,
+    options: palette.map((sym) => ({
+      type: 'addMana',
+      description: `Distribute ${amount} mana (allowed: {${sym}} and the other listed colors)`,
+    })),
+    manaSplit: { amount, colors: [...palette] },
+  };
+  const split = outcome.manaSplit ?? {};
+  const validSplit =
+    palette.every((sym) => Number.isInteger(split[sym]) && (split[sym] ?? 0) >= 0) &&
+    Object.entries(split).every(
+      ([sym, count]) =>
+        palette.some((allowed) => allowed === sym) && Number.isInteger(count) && count >= 0,
+    ) &&
+    palette.reduce((total, sym) => total + (split[sym] ?? 0), 0) === amount;
+  const counts = validSplit ? split : { [palette[outcome.index] ?? palette[0]]: amount };
   const produced: ManaEntry[] = [];
-  for (let i = 0; i < amount; i++) {
-    const outcome = yield {
-      decisionType: 'general',
-      player: controller.id,
-      prompt: `${source.name}: choose a color for mana ${i + 1} of ${amount}.`,
-      options: palette.map((sym) => ({ type: 'addMana', description: `Add {${sym}}` })),
-    };
-    const sym = (palette[outcome.index] ?? palette[0]) as Color | 'C';
-    produced.push({
-      symbol: sym,
-      ...(effect.restriction !== undefined ? { restriction: effect.restriction } : {}),
-      ...(effect.persistent === true ? { persistent: true } : {}),
-    });
+  for (const sym of palette) {
+    for (let i = 0; i < (counts[sym] ?? 0); i++) {
+      produced.push({
+        symbol: sym,
+        ...(effect.restriction !== undefined ? { restriction: effect.restriction } : {}),
+        ...(effect.persistent === true ? { persistent: true } : {}),
+      });
+    }
   }
   addMana(controller, produced);
   emit(ctx, 'manaAdded', {
@@ -3569,6 +3624,11 @@ export function endUntilEotEffects(ctx: GameContext): void {
     delete perm.copyOriginal;
     delete perm.copyUntilEot;
     delete perm.copyAddTypes;
+    delete perm.copyAddKeywords;
+    delete perm.copyAddTriggers;
+    delete perm.copyRemoveSupertypes;
+    delete perm.copyAddSupertypes;
+    delete perm.copyNameOverride;
   }
   for (const card of ctx.state.exile) {
     if (card.playableUntilEotBy !== undefined) delete card.playableUntilEotBy;
