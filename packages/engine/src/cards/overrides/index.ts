@@ -91,6 +91,62 @@ export function getOverride(oracleId: OracleId): CardOverride | undefined {
   return OVERRIDES.get(oracleId);
 }
 
+/**
+ * The fixture oracle id a card is ALSO registered under.
+ *
+ * `tests/fixtures.ts::oracle()` derives an oracle id from the card name by this exact rule, so a
+ * unit test can build a card by name alone and still pick up its override. Both registrations are
+ * required and they must agree — writing them out separately is how a card ended up with real
+ * behavior under its Scryfall id and an empty patch under its slug.
+ */
+export function fixtureOracleId(name: string): string {
+  return `oracle-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+}
+
+/**
+ * Register one card's authored behavior — the single entry point for an override.
+ *
+ * Registers under both the real Scryfall id and the derived fixture id, so a card is written once
+ * instead of twice.
+ *
+ * `handledLines` must be copied verbatim from the card's `unmodeledReasons` output, not typed from
+ * the card face: the interpreter strips reminder text and replaces the card's own name with `~`
+ * before reporting a line, and the drift guard matches byte-exactly.
+ */
+export function defineCard(
+  oracleId: string,
+  name: string,
+  handledLines: string[],
+  def: Partial<CardDefinition>,
+): void {
+  registerOverride({ oracleId, name, handledLines, def });
+  registerOverride({ oracleId: fixtureOracleId(name), name, handledLines, def });
+}
+
+/**
+ * A card whose unparsed lines are catalogued but whose behavior is not authored yet.
+ *
+ * This registers an empty patch, which `applyOverride` deliberately refuses to honor: the card
+ * stays `modeled: false` and gains an "override has no executable behavior" reason. So it is a
+ * visible backlog marker, not a way to make a card count as handled — the engine still halts
+ * loudly if such a card's behavior is ever needed.
+ */
+export function unimplemented(oracleId: string, name: string, handledLines: string[]): void {
+  defineCard(oracleId, name, handledLines, {});
+}
+
+/**
+ * Every registration currently in the registry, sorted by oracle id.
+ *
+ * This exists for the golden snapshot (`scripts/snapshot-override-defs.ts`), which serializes the
+ * whole registry so a refactor of the *authoring* layer can be proven to leave the authored DATA
+ * byte-identical. Reads the post-load state, so it reflects the last-write-wins resolution of the
+ * cards registered from more than one deck file.
+ */
+export function listOverrides(): CardOverride[] {
+  return [...OVERRIDES.values()].sort((a, b) => a.oracleId.localeCompare(b.oracleId));
+}
+
 /** Test seam: drop a registration so a fixture override cannot leak between tests. */
 export function unregisterOverride(oracleId: OracleId): void {
   OVERRIDES.delete(oracleId);
