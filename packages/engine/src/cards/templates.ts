@@ -51,7 +51,6 @@ import type {
   TriggerSpec,
 } from './ability';
 import type { Condition } from './condition';
-import type { CardDefinition } from './definition';
 import type { StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
 import type { Selector } from './selector';

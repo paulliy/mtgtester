@@ -2,13 +2,13 @@
  * Authored card overrides for living-energy.txt.
  */
 
+import { constant } from '../value';
+import { ATTACHED, SAC_SELF, TAP, mana, manaCost } from '../templates';
 import { defineCard, registerOverride, unimplemented } from './index';
 import { allOf, anyOf, not, ofSupertype, ofSubtype, ofType, IS_TOKEN, OTHER, SELF, YOURS, withKeyword } from '../selector';
-import { parseManaCost } from '../../mana/cost';
 import type { CardDefinition } from '../definition';
 import type { TokenSpec } from '../ability';
 
-const constant = (n: number) => ({ kind: 'const' as const, n });
 const ARTIFACT_OR_ARTIFICER = anyOf(ofType('Artifact'), ofSubtype('Artificer'));
 const ARTIFACT_CREATURES_YOU_CONTROL = allOf(ofType('Artifact'), ofType('Creature'), YOURS);
 
@@ -51,7 +51,7 @@ const TREASURE_TOKEN: TokenSpec = {
   colors: [],
   power: null,
   toughness: null,
-  manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }] }],
+  manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, SAC_SELF] }],
 };
 
 const GREEN_BEAST_TOKEN: TokenSpec = {
@@ -84,7 +84,7 @@ const NON_TOKEN_CREATURE: import('../selector').Selector = allOf(ofType('Creatur
 
 const ADAPTIVE_OMNITOOL_DEF: Partial<CardDefinition> = {
   staticEffects: [{
-    affects: { kind: 'attachedToSource' },
+    affects: ATTACHED,
     op: {
       layer: 7,
       sublayer: 'd',
@@ -94,7 +94,7 @@ const ADAPTIVE_OMNITOOL_DEF: Partial<CardDefinition> = {
   }],
   triggers: [{
     kind: 'triggered',
-    trigger: { when: 'attacks', subject: { kind: 'permanent', selector: { kind: 'attachedToSource' } } },
+    trigger: { when: 'attacks', subject: { kind: 'permanent', selector: ATTACHED } },
     targets: [],
     effects: [{
       op: 'lookAtTopN',
@@ -158,9 +158,9 @@ const ARCHITECT_OF_THE_UNTAMED_DEF: Partial<CardDefinition> = {
 
 const BESPOKE_BATTLEWAGON_DEF: Partial<CardDefinition> = {
   activatedAbilities: [
-    { costs: [{ kind: 'tap' }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'gainEnergy', amount: constant(2) }], description: 'Tap — gain two energy' } },
-    { costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 2 }], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature' }], effects: [{ op: 'tapTarget', target: 0 }], description: 'Tap and pay two energy — tap target creature' } },
-    { costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 3 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Tap and pay three energy — draw a card' } },
+    { costs: [TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'gainEnergy', amount: constant(2) }], description: 'Tap — gain two energy' } },
+    { costs: [TAP, { kind: 'payEnergy', amount: 2 }], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature' }], effects: [{ op: 'tapTarget', target: 0 }], description: 'Tap and pay two energy — tap target creature' } },
+    { costs: [TAP, { kind: 'payEnergy', amount: 3 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Tap and pay three energy — draw a card' } },
     { costs: [{ kind: 'payEnergy', amount: 4 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'crewVehicle', minPower: 0 }], description: 'Pay four energy — this Vehicle becomes an artifact creature until end of turn' } },
   ],
 };
@@ -172,7 +172,7 @@ const BLASPHEMOUS_ACT_DEF: Partial<CardDefinition> = {
 const BOOTLEGGERS_STASH_DEF: Partial<CardDefinition> = {
   staticEffects: [{
     affects: allOf(ofType('Land'), YOURS),
-    op: { layer: 6, addActivatedAbility: { costs: [{ kind: 'tap' }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: TREASURE_TOKEN }], description: 'Tap — create a Treasure token' } } },
+    op: { layer: 6, addActivatedAbility: { costs: [TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: TREASURE_TOKEN }], description: 'Tap — create a Treasure token' } } },
   }],
 };
 
@@ -182,7 +182,7 @@ const DECOCTION_MODULE_DEF: Partial<CardDefinition> = {
     effects: [{ op: 'gainEnergy', amount: constant(1) }], description: 'A creature enters under your control — gain one energy',
   }],
   activatedAbilities: [{
-    costs: [{ kind: 'mana', cost: parseManaCost('{4}').cost! }, { kind: 'tap' }], timing: 'any',
+    costs: [mana('{4}'), TAP], timing: 'any',
     ability: { kind: 'activated', targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'returnToHand', target: 0 }], description: 'Pay {4} and tap — return target creature you control to its owner’s hand' },
   }],
 };
@@ -190,11 +190,11 @@ const DECOCTION_MODULE_DEF: Partial<CardDefinition> = {
 const ERA_OF_INNOVATION_DEF: Partial<CardDefinition> = {
   triggers: [{
     kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(ARTIFACT_OR_ARTIFICER, YOURS) } }, targets: [],
-    effects: [{ op: 'conditionalEffect', condition: { kind: 'mayPayMana', cost: parseManaCost('{1}').cost! }, then: [{ op: 'gainEnergy', amount: constant(2) }], else: [] }],
+    effects: [{ op: 'conditionalEffect', condition: { kind: 'mayPayMana', cost: manaCost('{1}') }, then: [{ op: 'gainEnergy', amount: constant(2) }], else: [] }],
     description: 'An artifact or Artificer enters — you may pay {1} to gain two energy',
   }],
   activatedAbilities: [{
-    costs: [{ kind: 'payEnergy', amount: 6 }, { kind: 'sacrificeSelf' }], timing: 'any',
+    costs: [{ kind: 'payEnergy', amount: 6 }, SAC_SELF], timing: 'any',
     ability: { kind: 'activated', targets: [], effects: [{ op: 'draw', count: constant(3) }], description: 'Pay six energy and sacrifice — draw three cards' },
   }],
 };
@@ -212,7 +212,7 @@ const LOYAL_APPRENTICE_DEF: Partial<CardDefinition> = {
 
 const OVERFLOWING_BASIN_DEF: Partial<CardDefinition> = {
   activatedAbilities: [{
-    costs: [{ kind: 'mana', cost: parseManaCost('{1}').cost! }, { kind: 'tap' }], timing: 'any',
+    costs: [mana('{1}'), TAP], timing: 'any',
     ability: { kind: 'activated', targets: [], effects: [{ op: 'addMana', amount: constant(2), colors: [], fixedSymbols: ['G', 'U'] }], description: 'Pay {1} and tap — add {G}{U}' },
   }],
 };
@@ -226,9 +226,9 @@ const RECKLESS_FIREWEAVER_DEF: Partial<CardDefinition> = {
 
 const RETROFITTER_FOUNDRY_DEF: Partial<CardDefinition> = {
   activatedAbilities: [
-    { costs: [{ kind: 'mana', cost: parseManaCost('{3}').cost! }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'untapTarget', target: 'source' }], description: 'Pay {3} — untap this artifact' } },
-    { costs: [{ kind: 'mana', cost: parseManaCost('{1}').cost! }, { kind: 'tap' }, { kind: 'sacrificeOther', selector: allOf(ofSubtype('Servo'), YOURS), count: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: THOPTER_TOKEN }], description: 'Pay {1}, tap, and sacrifice a Servo — create a Thopter' } },
-    { costs: [{ kind: 'tap' }, { kind: 'sacrificeOther', selector: allOf(ofSubtype('Thopter'), YOURS), count: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: { name: 'Construct', typeLine: 'Artifact Creature — Construct', types: ['Artifact', 'Creature'], subtypes: ['Construct'], colors: [], power: 4, toughness: 4 } }], description: 'Tap and sacrifice a Thopter — create a Construct' } },
+    { costs: [mana('{3}')], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'untapTarget', target: 'source' }], description: 'Pay {3} — untap this artifact' } },
+    { costs: [mana('{1}'), TAP, { kind: 'sacrificeOther', selector: allOf(ofSubtype('Servo'), YOURS), count: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: THOPTER_TOKEN }], description: 'Pay {1}, tap, and sacrifice a Servo — create a Thopter' } },
+    { costs: [TAP, { kind: 'sacrificeOther', selector: allOf(ofSubtype('Thopter'), YOURS), count: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: { name: 'Construct', typeLine: 'Artifact Creature — Construct', types: ['Artifact', 'Creature'], subtypes: ['Construct'], colors: [], power: 4, toughness: 4 } }], description: 'Tap and sacrifice a Thopter — create a Construct' } },
   ],
 };
 
@@ -285,8 +285,8 @@ const NISSA_WORLDSOUL_SPEAKER_DEF: Partial<CardDefinition> = {
 
 const AETHERIC_AMPLIFIER_DEF: Partial<CardDefinition> = {
   activatedAbilities: [
-    { costs: [{ kind: 'mana', cost: parseManaCost('{4}').cost! }, { kind: 'tap' }], timing: 'sorcery', ability: { kind: 'activated', targets: [{ kind: 'permanent' }], effects: [{ op: 'doubleCountersTarget', target: 0 }], description: 'Double all counters on target permanent' } },
-    { costs: [{ kind: 'mana', cost: parseManaCost('{4}').cost! }, { kind: 'tap' }], timing: 'sorcery', ability: { kind: 'activated', targets: [], effects: [{ op: 'doublePlayerCounters' }], description: 'Double all counters you have' } },
+    { costs: [mana('{4}'), TAP], timing: 'sorcery', ability: { kind: 'activated', targets: [{ kind: 'permanent' }], effects: [{ op: 'doubleCountersTarget', target: 0 }], description: 'Double all counters on target permanent' } },
+    { costs: [mana('{4}'), TAP], timing: 'sorcery', ability: { kind: 'activated', targets: [], effects: [{ op: 'doublePlayerCounters' }], description: 'Double all counters you have' } },
   ],
 };
 
@@ -300,7 +300,7 @@ const AETHERFLUX_CONDUIT_DEF: Partial<CardDefinition> = {
     effects: [{ op: 'gainEnergy', amount: { kind: 'manaSpent' } }], description: 'Cast a spell — gain energy equal to mana spent',
   }],
   activatedAbilities: [{
-    costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 50 }], timing: 'any',
+    costs: [TAP, { kind: 'payEnergy', amount: 50 }], timing: 'any',
     ability: { kind: 'activated', targets: [], effects: [{ op: 'draw', count: constant(7) }, { op: 'castAnyFromHandFree' }], description: 'Pay fifty energy — draw seven cards and cast any number of cards from your hand for free' },
   }],
 };
@@ -319,7 +319,7 @@ const PEEMA_TRAILBLAZER_DEF: Partial<CardDefinition> = {
     effects: [{ op: 'gainEnergy', amount: { kind: 'damageDealt' } }], description: 'Combat damage to a player — gain that much energy',
   }],
   activatedAbilities: [{
-    costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 6 }], timing: 'any',
+    costs: [TAP, { kind: 'payEnergy', amount: 6 }], timing: 'any',
     ability: { kind: 'activated', targets: [], effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 2 }, { op: 'draw', count: { kind: 'greatestPowerAmong', selector: ofType('Creature'), scope: 'you' } }], description: 'Tap and pay six energy — put two +1/+1 counters on this creature, then draw cards equal to the greatest power among creatures you control' },
   }],
 };
@@ -349,7 +349,7 @@ const ELDER_GARGAROTH_DEF: Partial<CardDefinition> = {
 
 const AETHERWORKS_MARVEL_DEF: Partial<CardDefinition> = {
   triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: YOURS } }, targets: [], effects: [{ op: 'gainEnergy', amount: constant(1) }], description: 'A permanent you control goes to a graveyard — gain one energy' }],
-  activatedAbilities: [{ costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 6 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'lookAtTopNCastOneFree', count: 6 }], description: 'Pay six energy — look at the top six cards and cast one for free' } }],
+  activatedAbilities: [{ costs: [TAP, { kind: 'payEnergy', amount: 6 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'lookAtTopNCastOneFree', count: 6 }], description: 'Pay six energy — look at the top six cards and cast one for free' } }],
 };
 
 const PEEMA_AETHER_SEER_DEF: Partial<CardDefinition> = {
@@ -405,7 +405,7 @@ const PANHARMONICON_DEF: Partial<CardDefinition> = {
 
 const SOUL_GUIDE_LANTERN_DEF: Partial<CardDefinition> = {
   triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [{ kind: 'cardInGraveyard', graveyardOwnerScope: 'any' }], effects: [{ op: 'exileCard', target: 0 }], description: 'Exile target card from a graveyard' }],
-  activatedAbilities: [{ costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'exileEachOpponentGraveyard' }, { op: 'draw', count: constant(1) }], description: 'Sacrifice — exile all cards from opponents’ graveyards, then draw a card' } }],
+  activatedAbilities: [{ costs: [TAP, SAC_SELF], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'exileEachOpponentGraveyard' }, { op: 'draw', count: constant(1) }], description: 'Sacrifice — exile all cards from opponents’ graveyards, then draw a card' } }],
 };
 
 const ONE_WITH_THE_MACHINE_DEF: Partial<CardDefinition> = {
@@ -469,7 +469,7 @@ export function registerLIVING_ENERGYOverrides(): void {
   defineCard("b9c58cfb-b7d5-4e86-a5d3-efb07192aa22", "Glimmer of Genius", [
           "Scry 2, then draw two cards. You get {E}{E} ."
     ], {
-      spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'scry', count: 2 }, { op: 'draw', count: { kind: 'const', n: 2 } }, { op: 'gainEnergy', amount: { kind: 'const', n: 2 } }], description: 'Scry two, draw two, gain two energy' },
+      spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'scry', count: 2 }, { op: 'draw', count: constant(2) }, { op: 'gainEnergy', amount: constant(2) }], description: 'Scry two, draw two, gain two energy' },
     });
 
   defineCard("c246cdb4-2fd8-487e-944e-3e52fbd1bbaa", "Confiscation Coup", [
@@ -563,28 +563,28 @@ export function registerLIVING_ENERGYOverrides(): void {
           "When this land enters, you get {E} .",
           "{T}, Pay {E}: Add one mana of any color."
     ], {
-      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'gainEnergy', amount: { kind: 'const', n: 1 } }], description: 'Enters — gain one energy' }],
-      manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 1 }] }]
+      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'gainEnergy', amount: constant(1) }], description: 'Enters — gain one energy' }],
+      manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, { kind: 'payEnergy', amount: 1 }] }]
     });
 
   defineCard("b2f09e41-0a91-4fb6-8804-874b3a5166b0", "Rogue Refiner", [
           "When this creature enters, draw a card and you get {E}{E} ."
     ], {
-      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }, { op: 'gainEnergy', amount: { kind: 'const', n: 2 } }], description: 'Enters — draw and gain two energy' }],
+      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'draw', count: constant(1) }, { op: 'gainEnergy', amount: constant(2) }], description: 'Enters — draw and gain two energy' }],
     });
 
   defineCard("b337c241-f2c4-48e3-a303-371b172fcd18", "Attune with Aether", [
           "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} ."
     ], {
-      spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'searchLibrary', filter: allOf(ofType('Land'), ofSupertype('Basic')), destinations: [{ zone: 'hand' }] }, { op: 'shuffle' }, { op: 'gainEnergy', amount: { kind: 'const', n: 2 } }], description: 'Search for a basic land, then gain two energy' }
+      spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'searchLibrary', filter: allOf(ofType('Land'), ofSupertype('Basic')), destinations: [{ zone: 'hand' }] }, { op: 'shuffle' }, { op: 'gainEnergy', amount: constant(2) }], description: 'Search for a basic land, then gain two energy' }
     });
 
   defineCard("cb377c27-39a6-42b4-8c89-80a9a2350e81", "Solar Transformer", [
           "When this artifact enters, you get {E}{E}{E} .",
           "{T}, Pay {E}: Add one mana of any color."
     ], {
-      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'gainEnergy', amount: { kind: 'const', n: 3 } }], description: 'Enters — gain three energy' }],
-      manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 1 }] }]
+      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'gainEnergy', amount: constant(3) }], description: 'Enters — gain three energy' }],
+      manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, { kind: 'payEnergy', amount: 1 }] }]
     });
 
   defineCard("d9ec9a4f-0644-47c5-bc09-1201d5251bde", "Aetherwind Basker", [
@@ -596,16 +596,16 @@ export function registerLIVING_ENERGYOverrides(): void {
           "When this creature enters, you get {E}{E} .",
           "{T}, Pay {E}: Add one mana of any color."
     ], {
-      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'gainEnergy', amount: { kind: 'const', n: 2 } }], description: 'Enters — gain two energy' }],
-      manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 1 }] }]
+      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'gainEnergy', amount: constant(2) }], description: 'Enters — gain two energy' }],
+      manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, { kind: 'payEnergy', amount: 1 }] }]
     });
 
   defineCard("f82da236-e567-4221-a0bc-439a0c7e2b03", "Whirler Virtuoso", [
           "When this creature enters, you get {E}{E}{E} .",
           "Pay {E}{E}{E}: Create a 1/1 colorless Thopter artifact creature token with flying."
     ], {
-      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'gainEnergy', amount: { kind: 'const', n: 3 } }], description: 'Enters — gain three energy' }],
-      activatedAbilities: [{ costs: [{ kind: 'payEnergy', amount: 3 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: { kind: 'const', n: 1 }, spec: { name: 'Thopter', typeLine: 'Artifact Creature — Thopter', types: ['Artifact', 'Creature'], subtypes: ['Thopter'], colors: [], power: 1, toughness: 1, keywords: ['flying'] } }], description: 'Pay three energy — create a Thopter' } }],
+      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'gainEnergy', amount: constant(3) }], description: 'Enters — gain three energy' }],
+      activatedAbilities: [{ costs: [{ kind: 'payEnergy', amount: 3 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: { name: 'Thopter', typeLine: 'Artifact Creature — Thopter', types: ['Artifact', 'Creature'], subtypes: ['Thopter'], colors: [], power: 1, toughness: 1, keywords: ['flying'] } }], description: 'Pay three energy — create a Thopter' } }],
     });
 
   defineCard("07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8", "Chaos Warp", [

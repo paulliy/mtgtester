@@ -51,7 +51,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
   defineCard("bcad5b83-5513-4455-a9c9-716281505eaa", "Canoptek Spyder", [
           "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card."
     ], {
-      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(OTHER, not(IS_TOKEN), ofType('Artifact'), anyOf(ofType('Creature'), ofType('Vehicle')), YOURS) } }, targets: [], effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }], description: 'Another nontoken artifact creature or Vehicle enters � draw' }],
+      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(OTHER, not(IS_TOKEN), ofType('Artifact'), anyOf(ofType('Creature'), ofType('Vehicle')), YOURS) } }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Another nontoken artifact creature or Vehicle enters � draw' }],
     });
 
   unimplemented("678b3fb5-aa9f-4268-9433-2a89dd37b927", "Canoptek Tomb Sentinel", [
@@ -114,7 +114,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     ], {
       triggers: [{
         kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [],
-        effects: [{ op: 'mill', count: { kind: 'const', n: 3 } }], description: 'Enters � mill three cards',
+        effects: [{ op: 'mill', count: constant(3) }], description: 'Enters � mill three cards',
       }],
     });
 
@@ -195,7 +195,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     ], {
       triggers: [{
         kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [],
-        effects: [{ op: 'createToken', count: { kind: 'const', n: 1 }, spec: { name: 'Necron Warrior', typeLine: 'Artifact Creature � Necron Warrior', types: ['Artifact', 'Creature'], subtypes: ['Necron', 'Warrior'], colors: [], power: 2, toughness: 2 } }],
+        effects: [{ op: 'createToken', count: constant(1), spec: { name: 'Necron Warrior', typeLine: 'Artifact Creature � Necron Warrior', types: ['Artifact', 'Creature'], subtypes: ['Necron', 'Warrior'], colors: [], power: 2, toughness: 2 } }],
         description: 'Enters � create a Necron Warrior token',
       }],
     });

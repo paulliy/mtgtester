@@ -1,5 +1,5 @@
 import { defineCard } from './index';
-import { parseManaCost } from '../../mana/cost';
+import { ATTACHED, DISCARD_SELF, SAC_SELF, TAP, mana, manaCost } from '../templates';
 import { constant } from '../value';
 import {
   YOURS,
@@ -63,7 +63,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       ],
       staticEffects: [
         {
-          affects: { kind: 'attachedToSource' },
+          affects: ATTACHED,
           op: {
             layer: 6,
             addManaAbility: { units: [['W'], ['U'], ['B'], ['R'], ['G']] },
@@ -78,7 +78,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       manaAbilities: [
         {
           units: [['G']],
-          costs: [{ kind: 'tap' }],
+          costs: [TAP],
           conditionalUnits: {
             condition: {
               kind: 'countPermanents',
@@ -179,7 +179,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
           affects: allOf(ofType('Creature'), YOURS, HAS_ANY_COUNTER),
           op: {
             layer: 6,
-            addManaAbility: { units: [['G']], costs: [{ kind: 'tap' }] },
+            addManaAbility: { units: [['G']], costs: [TAP] },
           },
         },
       ],
@@ -244,7 +244,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       },
       activatedAbilities: [
         {
-          costs: [{ kind: 'mana', cost: parseManaCost('{2}').cost! }, { kind: 'discardSelf' }],
+          costs: [mana('{2}'), DISCARD_SELF],
           timing: 'any',
           zone: 'hand',
           ability: {
@@ -277,7 +277,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
           effects: [
             {
               op: 'conditionalEffect',
-              condition: { kind: 'mayPayMana', cost: parseManaCost('{1}').cost! },
+              condition: { kind: 'mayPayMana', cost: manaCost('{1}') },
               then: [{ op: 'draw', count: constant(1) }],
               else: [],
             },
@@ -354,7 +354,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
           effects: [
             {
               op: 'conditionalEffect',
-              condition: { kind: 'mayPayMana', cost: parseManaCost('{2}').cost! },
+              condition: { kind: 'mayPayMana', cost: manaCost('{2}') },
               then: [{ op: 'draw', count: constant(1) }],
               else: [],
             },
@@ -364,7 +364,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       ],
       activatedAbilities: [
         {
-          costs: [{ kind: 'mana', cost: parseManaCost('{3}{W}').cost! }],
+          costs: [mana('{3}{W}')],
           timing: 'any',
           ability: {
             kind: 'activated',
@@ -407,7 +407,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
 ], {
       activatedAbilities: [
         {
-          costs: [{ kind: 'tap' }],
+          costs: [TAP],
           timing: 'any',
           ability: {
             kind: 'activated',
@@ -424,7 +424,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
           },
         },
         {
-          costs: [{ kind: 'mana', cost: parseManaCost('{8}').cost! }, { kind: 'tap' }, { kind: 'sacrificeSelf' }],
+          costs: [mana('{8}'), TAP, SAC_SELF],
           timing: 'any',
           ability: {
             kind: 'activated',
@@ -497,7 +497,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
 ], {
       activatedAbilities: [
         {
-          costs: [{ kind: 'mana', cost: parseManaCost('{4}').cost! }, { kind: 'tap' }, { kind: 'discardHand' }],
+          costs: [mana('{4}'), TAP, { kind: 'discardHand' }],
           timing: 'any',
           ability: {
             kind: 'activated',
@@ -519,7 +519,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
 ], {
       activatedAbilities: [
         {
-          costs: [{ kind: 'mana', cost: parseManaCost('{G}').cost! }],
+          costs: [mana('{G}')],
           timing: 'any',
           ability: {
             kind: 'activated',

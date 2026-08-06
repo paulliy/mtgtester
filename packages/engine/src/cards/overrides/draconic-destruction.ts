@@ -2,8 +2,9 @@
  * Authored card overrides for draconic-destruction.txt.
  */
 
+import { constant } from '../value';
+import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost } from '../templates';
 import { defineCard } from './index';
-import { parseManaCost } from '../../mana/cost';
 import { allOf, anyOf, not, OTHER, ofSubtype, ofType, SELF, withKeyword, YOURS } from '../selector';
 
 const DRAGONKIN_BERSERKER_DEF = {
@@ -17,7 +18,7 @@ const DRAGONKIN_BERSERKER_DEF = {
     // The generic interpreter already parses this line's token-creation on its own; carried
     // over unchanged here so replacing `activatedAbilities` for the Boast restriction below
     // does not silently drop it.
-    costs: [{ kind: 'mana' as const, cost: parseManaCost('{4}{R}').cost! }],
+    costs: [mana('{4}{R}')],
     timing: 'any' as const,
     requiresAttackedThisTurn: true as const,
     oncePerTurn: true,
@@ -26,7 +27,7 @@ const DRAGONKIN_BERSERKER_DEF = {
       targets: [],
       effects: [{
         op: 'createToken' as const,
-        count: { kind: 'const' as const, n: 1 },
+        count: constant(1),
         spec: {
           name: 'Dragon', typeLine: 'Creature — Dragon', types: ['Creature'], subtypes: ['Dragon'],
           colors: ['R' as const], power: 5, toughness: 5, keywords: ['flying' as const],
@@ -39,7 +40,7 @@ const DRAGONKIN_BERSERKER_DEF = {
 
 const HOARD_SMELTER_DRAGON_DEF = {
   activatedAbilities: [{
-    costs: [{ kind: 'mana' as const, cost: parseManaCost('{3}{R}').cost! }],
+    costs: [mana('{3}{R}')],
     timing: 'any' as const,
     ability: {
       kind: 'activated' as const,
@@ -86,15 +87,15 @@ const PRIMAL_MIGHT_DEF = {
 const RUNEHORN_HELLKITE_DEF = {
   activatedAbilities: [{
     costs: [
-      { kind: 'mana' as const, cost: parseManaCost('{5}{R}').cost! },
-      { kind: 'exileSelfFromGraveyard' as const },
+      mana('{5}{R}'),
+      EXILE_SELF_FROM_GRAVEYARD,
     ],
     timing: 'any' as const,
     zone: 'graveyard' as const,
     ability: {
       kind: 'activated' as const,
       targets: [],
-      effects: [{ op: 'eachPlayerDiscardHandThenDraw' as const, count: { kind: 'const' as const, n: 7 } }],
+      effects: [{ op: 'eachPlayerDiscardHandThenDraw' as const, count: constant(7) }],
       description: 'Exile this card from your graveyard — each player discards their hand, then draws seven cards',
     },
   }],
@@ -105,7 +106,7 @@ const DRAGON_MAGE_DEF = {
     kind: 'triggered' as const,
     trigger: { when: 'dealsCombatDamageToPlayer' as const, subject: { kind: 'self' as const } },
     targets: [],
-    effects: [{ op: 'eachPlayerDiscardHandThenDraw' as const, count: { kind: 'const' as const, n: 7 } }],
+    effects: [{ op: 'eachPlayerDiscardHandThenDraw' as const, count: constant(7) }],
     description: 'Combat damage to a player — each player discards their hand, then draws seven cards',
   }],
 };
@@ -156,7 +157,7 @@ const FLAMEBLAST_DRAGON_DEF = {
     kind: 'triggered' as const,
     trigger: { when: 'attacks' as const, subject: { kind: 'self' as const } },
     targets: [{ kind: 'anyTarget' as const }],
-    effects: [{ op: 'mayPayXThenDealDamage' as const, target: 0, templatedCost: parseManaCost('{X}{R}').cost! }],
+    effects: [{ op: 'mayPayXThenDealDamage' as const, target: 0, templatedCost: manaCost('{X}{R}') }],
     description: 'Attacks — you may pay {X}{R}; if you do, it deals X damage to any target',
   }],
 };
@@ -187,7 +188,7 @@ const SARKHAN_THE_DRAGONSPEAKER_DEF = {
         kind: 'activated' as const,
         targets: [{ kind: 'creature' as const }],
         effects: [
-          { op: 'dealDamage' as const, target: 0, amount: { kind: 'const' as const, n: 4 } },
+          { op: 'dealDamage' as const, target: 0, amount: constant(4) },
         ],
         description: '~ deals 4 damage to target creature',
       },
@@ -206,7 +207,7 @@ const SARKHAN_THE_DRAGONSPEAKER_DEF = {
               kind: 'triggered' as const,
               trigger: { when: 'drawStep' as const, player: 'you' as const },
               targets: [],
-              effects: [{ op: 'draw' as const, count: { kind: 'const' as const, n: 2 } }],
+              effects: [{ op: 'draw' as const, count: constant(2) }],
               description: 'At the beginning of your draw step, draw two additional cards',
             },
             {
@@ -232,7 +233,7 @@ const SPIT_FLAME_DEF = {
     targets: [],
     effects: [{
       op: 'conditionalEffect' as const,
-      condition: { kind: 'mayPayMana' as const, cost: parseManaCost('{R}').cost! },
+      condition: { kind: 'mayPayMana' as const, cost: manaCost('{R}') },
       then: [{ op: 'returnSelfFromGraveyardToHand' as const }],
       else: [],
     }],
@@ -245,7 +246,7 @@ const THUNDERBREAK_REGENT_DEF = {
     kind: 'triggered' as const,
     trigger: { when: 'becomesTargeted' as const, subject: { kind: 'permanent' as const, selector: allOf(ofSubtype('Dragon'), YOURS) } },
     targets: [],
-    effects: [{ op: 'dealDamage' as const, target: 'eventPlayer' as const, amount: { kind: 'const' as const, n: 3 } }],
+    effects: [{ op: 'dealDamage' as const, target: 'eventPlayer' as const, amount: constant(3) }],
     description: 'A Dragon you control becomes the target of a spell or ability an opponent controls — deal 3 damage to that player',
   }],
 };
@@ -276,7 +277,7 @@ const STEEL_HELLKITE_DEF = {
   activatedAbilities: [
     {
       // Also already generically parsed; carried over unchanged for the same reason as above.
-      costs: [{ kind: 'mana' as const, cost: parseManaCost('{2}').cost! }],
+      costs: [mana('{2}')],
       timing: 'any' as const,
       ability: {
         kind: 'activated' as const,
@@ -286,7 +287,7 @@ const STEEL_HELLKITE_DEF = {
       },
     },
     {
-      costs: [{ kind: 'mana' as const, cost: parseManaCost('{X}').cost! }],
+      costs: [mana('{X}')],
       timing: 'any' as const,
       oncePerTurn: true,
       ability: {
@@ -316,7 +317,7 @@ const FRONTIER_SIEGE_DEF = {
         condition: { kind: 'chosenOptionIs' as const, value: 'Khans' },
       },
       targets: [],
-      effects: [{ op: 'addMana' as const, amount: { kind: 'const' as const, n: 2 }, colors: ['G' as const], fixedSymbols: ['G' as const, 'G' as const] }],
+      effects: [{ op: 'addMana' as const, amount: constant(2), colors: ['G' as const], fixedSymbols: ['G' as const, 'G' as const] }],
       description: 'Khans — beginning of each main phase, add {G}{G}',
     },
     {
@@ -349,7 +350,7 @@ const TYRANTS_FAMILIAR_DEF = {
           kind: 'triggered' as const,
           trigger: { when: 'attacks' as const, subject: { kind: 'self' as const } },
           targets: [{ kind: 'creature' as const, controller: 'eventPlayer' as const }],
-          effects: [{ op: 'dealDamage' as const, target: 0, amount: { kind: 'const' as const, n: 7 } }],
+          effects: [{ op: 'dealDamage' as const, target: 0, amount: constant(7) }],
           description: 'Attacks — deal 7 damage to target creature defending player controls',
         },
       },
@@ -386,7 +387,7 @@ const PROVOKE_THE_TROLLS_DEF = {
     kind: 'spell' as const,
     targets: [{ kind: 'anyTarget' as const }],
     effects: [
-      { op: 'dealDamage' as const, target: 0, amount: { kind: 'const' as const, n: 3 } },
+      { op: 'dealDamage' as const, target: 0, amount: constant(3) },
       {
         op: 'conditionalEffect' as const,
         checkTarget: 0,
@@ -404,7 +405,7 @@ const DEMANDING_DRAGON_DEF = {
     kind: 'triggered' as const,
     trigger: { when: 'enters' as const, subject: { kind: 'self' as const } },
     targets: [{ kind: 'player' as const, controller: 'opponent' as const }],
-    effects: [{ op: 'dealDamageUnlessSacrifice' as const, target: 0, amount: { kind: 'const' as const, n: 5 } }],
+    effects: [{ op: 'dealDamageUnlessSacrifice' as const, target: 0, amount: constant(5) }],
     description: "Enters — deal 5 damage to target opponent unless they sacrifice a creature",
   }],
 };
@@ -413,7 +414,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
   defineCard("7735eeba-693b-47e2-bd51-414379cf1016", "Beast Within", [
           "Destroy target permanent. Its controller creates a 3/3 green Beast creature token."
     ], {
-      spellAbility: { kind: 'spell', targets: [{ kind: 'permanent' }], effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: { kind: 'const', n: 1 }, spec: { name: 'Beast', typeLine: 'Creature � Beast', types: ['Creature'], subtypes: ['Beast'], colors: ['G'], power: 3, toughness: 3 } }], description: 'Destroy target permanent; its controller creates a 3/3 Beast' },
+      spellAbility: { kind: 'spell', targets: [{ kind: 'permanent' }], effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: { name: 'Beast', typeLine: 'Creature � Beast', types: ['Creature'], subtypes: ['Beast'], colors: ['G'], power: 3, toughness: 3 } }], description: 'Destroy target permanent; its controller creates a 3/3 Beast' },
     });
 
   defineCard("06b77a80-4968-4385-960a-fb66bb4faa94", "Dragonkin Berserker", [
@@ -438,7 +439,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
         targets: [],
         effects: [{
           op: 'createToken',
-          count: { kind: 'const', n: 1 },
+          count: constant(1),
           spec: {
             name: 'Dragon', typeLine: 'Creature � Dragon', types: ['Creature'], subtypes: ['Dragon'],
             colors: ['R'], power: 5, toughness: 5, keywords: ['flying'],
@@ -463,8 +464,8 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
         effects: [{
           op: 'conditionalEffect',
           condition: { kind: 'triggerObjectMatches', selector: ofSubtype('Mountain') },
-          then: [{ op: 'dealDamage', target: 0, amount: { kind: 'const', n: 2 } }],
-          else: [{ op: 'dealDamage', target: 0, amount: { kind: 'const', n: 1 } }],
+          then: [{ op: 'dealDamage', target: 0, amount: constant(2) }],
+          else: [{ op: 'dealDamage', target: 0, amount: constant(1) }],
         }],
         description: 'Land enters — deal 1 damage to any target, or 2 if it was a Mountain',
       }],
@@ -474,7 +475,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
           "{4}{R}{G}: ~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn."
     ], {
       activatedAbilities: [{
-        costs: [{ kind: 'mana', cost: parseManaCost('{4}{R}{G}').cost! }],
+        costs: [mana('{4}{R}{G}')],
         timing: 'any',
         ability: {
           kind: 'activated',
@@ -518,7 +519,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
   defineCard("faf81ae0-0b35-45ef-a50d-6cecf0c0eeeb", "Dragonlord's Servant", [
           "Dragon spells you cast cost {1} less to cast."
     ], {
-      ruleStatics: [{ kind: 'costReduction', amount: { kind: 'const', n: 1 }, filter: ofSubtype('Dragon') }],
+      ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofSubtype('Dragon') }],
     });
 
   defineCard("777b8ec4-a783-4297-96b7-4f200d0eb734", "Return to Nature", [
@@ -547,7 +548,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
   defineCard("6a29f36b-7911-4d84-a3ae-546b131d5159", "Dragonspeaker Shaman", [
           "Dragon spells you cast cost {2} less to cast."
     ], {
-      ruleStatics: [{ kind: 'costReduction', amount: { kind: 'const', n: 2 }, filter: ofSubtype('Dragon') }],
+      ruleStatics: [{ kind: 'costReduction', amount: constant(2), filter: ofSubtype('Dragon') }],
     });
 
   defineCard("eab71e4e-27c3-4c41-b95f-259c1d14b97a", "Dragon Mage", [
@@ -579,7 +580,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
 
   defineCard("3256029f-6558-4fcc-9fa1-74ceba3e5c92", "Harbinger of the Hunt", [
           "{2}{G}: ~ deals 1 damage to each other creature with flying."
-    ], { activatedAbilities: [{ costs: [{ kind: 'mana', cost: parseManaCost('{2}{G}').cost! }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'damageEach', selector: allOf(OTHER, ofType('Creature'), withKeyword('flying')), amount: { kind: 'const', n: 1 } }], description: 'Deal one damage to each other flying creature' } }] });
+    ], { activatedAbilities: [{ costs: [mana('{2}{G}')], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'damageEach', selector: allOf(OTHER, ofType('Creature'), withKeyword('flying')), amount: constant(1) }], description: 'Deal one damage to each other flying creature' } }] });
 
   defineCard("cf9db2be-3c95-45a2-ab85-694e3bd3bf1d", "Hoard-Smelter Dragon", [
           "{3}{R}: Destroy target artifact. ~ gets +X/+0 until end of turn, where X is that artifact's mana value."
@@ -620,7 +621,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
         kind: 'triggered',
         trigger: { when: 'attacks', subject: { kind: 'self' } },
         targets: [],
-        effects: [{ op: 'addMana', amount: { kind: 'const', n: 6 }, colors: ['R', 'G'], fixedSymbols: ['R', 'R', 'R', 'G', 'G', 'G'], persistent: true }],
+        effects: [{ op: 'addMana', amount: constant(6), colors: ['R', 'G'], fixedSymbols: ['R', 'R', 'R', 'G', 'G', 'G'], persistent: true }],
         description: 'Attack � add {R}{R}{R}{G}{G}{G} until end of turn',
       }],
     });
@@ -668,7 +669,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
 
   defineCard("e958144e-01bc-46ff-8f56-ddf2eb098630", "Thundermaw Hellkite", [
           "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures."
-    ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'damageEach', selector: allOf(ofType('Creature'), withKeyword('flying'), { kind: 'controller', who: 'opponents' }), amount: { kind: 'const', n: 1 } }, { op: 'tapEach', selector: allOf(ofType('Creature'), withKeyword('flying'), { kind: 'controller', who: 'opponents' }) }], description: 'Enters � deal one damage to and tap opposing fliers' }] });
+    ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'damageEach', selector: allOf(ofType('Creature'), withKeyword('flying'), { kind: 'controller', who: 'opponents' }), amount: constant(1) }, { op: 'tapEach', selector: allOf(ofType('Creature'), withKeyword('flying'), { kind: 'controller', who: 'opponents' }) }], description: 'Enters � deal one damage to and tap opposing fliers' }] });
 
   defineCard("63394e24-a456-4cc6-9885-8c62447b050a", "Tyrant's Familiar", [
           "As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\""

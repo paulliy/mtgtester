@@ -1,6 +1,8 @@
 /** Executable authored overrides for the Ur-Dragon fixture. */
 
-import { registerOverride } from './index';
+import { defineCard } from './index';
+import { constant } from '../value';
+import { manaCost } from '../templates';
 import {
   allOf,
   anyOf,
@@ -13,7 +15,6 @@ import {
   withKeyword,
   YOURS,
 } from '../selector';
-import { parseManaCost } from '../../mana/cost';
 
 export function registerURDRAGONOverrides(): void {
   const dragonTempestDef = {
@@ -47,22 +48,15 @@ export function registerURDRAGONOverrides(): void {
       },
     ],
   };
-  for (const oracleId of ['b9bacb46-fd1d-459b-81c2-d7d08fe73848', 'oracle-dragon-tempest']) {
-    registerOverride({
-      oracleId,
-      name: 'Dragon Tempest',
-      handledLines: [
-        'Whenever a creature you control with flying enters, it gains haste until end of turn.',
-        'Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.',
-      ],
-      def: dragonTempestDef,
-    });
-  }
+  defineCard('b9bacb46-fd1d-459b-81c2-d7d08fe73848', 'Dragon Tempest', [
+      'Whenever a creature you control with flying enters, it gains haste until end of turn.',
+      'Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.',
+    ], dragonTempestDef);
 
   const iymrithDef = {
     staticEffects: [{
       affects: SELF,
-      op: { layer: 6 as const, addWard: parseManaCost('{4}').cost! },
+      op: { layer: 6 as const, addWard: manaCost('{4}') },
       condition: { kind: 'isUntapped' as const },
     }],
     triggers: [{
@@ -70,23 +64,16 @@ export function registerURDRAGONOverrides(): void {
       trigger: { when: 'dealsCombatDamageToPlayer' as const, subject: { kind: 'self' as const } },
       targets: [],
       effects: [
-        { op: 'draw' as const, count: { kind: 'const' as const, n: 1 } },
+        { op: 'draw' as const, count: constant(1) },
         { op: 'drawUpTo' as const, count: 3 },
       ],
       description: 'Combat damage — draw, then draw to three cards in hand',
     }],
   };
-  for (const oracleId of ['d5efba91-8400-41a3-91c6-cb5e81f07976', 'oracle-iymrith-desert-doom']) {
-    registerOverride({
-      oracleId,
-      name: 'Iymrith, Desert Doom',
-      handledLines: [
-        "~ has ward {4} as long as it's untapped.",
-        'Whenever ~ deals combat damage to a player, draw a card. Then if you have fewer than three cards in hand, draw cards equal to the difference.',
-      ],
-      def: iymrithDef,
-    });
-  }
+  defineCard('d5efba91-8400-41a3-91c6-cb5e81f07976', 'Iymrith, Desert Doom', [
+      "~ has ward {4} as long as it's untapped.",
+      'Whenever ~ deals combat damage to a player, draw a card. Then if you have fewer than three cards in hand, draw cards equal to the difference.',
+    ], iymrithDef);
 
   const kairiDef = {
     triggers: [{
@@ -105,18 +92,11 @@ export function registerURDRAGONOverrides(): void {
       description: 'Dies — choose Kairi mode',
     }],
   };
-  for (const oracleId of ['85aa53e8-f062-4d02-bc69-1413f7f0dcf1', 'oracle-kairi-the-swirling-sky']) {
-    registerOverride({
-      oracleId,
-      name: 'Kairi, the Swirling Sky',
-      handledLines: [
-        'When ~ dies, choose one \u2014',
-        '\u2022 Return any number of target nonland permanents with total mana value 6 or less to their owners\' hands.',
-        '\u2022 Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.',
-      ],
-      def: kairiDef,
-    });
-  }
+  defineCard('85aa53e8-f062-4d02-bc69-1413f7f0dcf1', 'Kairi, the Swirling Sky', [
+      'When ~ dies, choose one \u2014',
+      '\u2022 Return any number of target nonland permanents with total mana value 6 or less to their owners\' hands.',
+      '\u2022 Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.',
+    ], kairiDef);
 
   const lozhanDef = {
     triggers: [{
@@ -131,14 +111,9 @@ export function registerURDRAGONOverrides(): void {
       description: 'Cast Adventure or Dragon — deal its mana value to a noncommander target',
     }],
   };
-  for (const oracleId of ['be2075af-1cd8-42fe-a29b-a0fd2b047a44', 'oracle-lozhan-dragons-legacy']) {
-    registerOverride({
-      oracleId,
-      name: "Lozhan, Dragons' Legacy",
-      handledLines: ['Whenever you cast an Adventure or Dragon spell, ~ deals damage equal to that spell\'s mana value to any target that isn\'t a commander.'],
-      def: lozhanDef,
-    });
-  }
+  defineCard('be2075af-1cd8-42fe-a29b-a0fd2b047a44', "Lozhan, Dragons' Legacy", [
+    'Whenever you cast an Adventure or Dragon spell, ~ deals damage equal to that spell\'s mana value to any target that isn\'t a commander.',
+  ], lozhanDef);
 
   const firkraagDef = {
     triggers: [
@@ -166,7 +141,7 @@ export function registerURDRAGONOverrides(): void {
             condition: { kind: 'hadToAttackThisCombat' as const },
             then: [
               { op: 'putCountersEach' as const, selector: SELF, counter: '+1/+1', count: 1 },
-              { op: 'draw' as const, count: { kind: 'const' as const, n: 1 } },
+              { op: 'draw' as const, count: constant(1) },
             ],
             else: [],
           },
@@ -175,17 +150,10 @@ export function registerURDRAGONOverrides(): void {
       },
     ],
   };
-  for (const oracleId of ['81dad7c5-5950-4c45-adb0-cf1a15a74250', 'oracle-firkraag-cunning-instigator']) {
-    registerOverride({
-      oracleId,
-      name: 'Firkraag, Cunning Instigator',
-      handledLines: [
-        'Whenever one or more Dragons you control attack an opponent, goad target creature that player controls.',
-        'Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on ~ and you draw a card.',
-      ],
-      def: firkraagDef,
-    });
-  }
+  defineCard('81dad7c5-5950-4c45-adb0-cf1a15a74250', 'Firkraag, Cunning Instigator', [
+      'Whenever one or more Dragons you control attack an opponent, goad target creature that player controls.',
+      'Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on ~ and you draw a card.',
+    ], firkraagDef);
   const thrakkusDef = {
     triggers: [{
       kind: 'triggered' as const,
@@ -195,12 +163,7 @@ export function registerURDRAGONOverrides(): void {
       description: 'Attack — double each Dragon’s power until end of turn',
     }],
   };
-  for (const oracleId of ['f7cd7ede-51c1-4117-99b5-484d0d80c95f', 'oracle-thrakkus-the-butcher']) {
-    registerOverride({
-      oracleId,
-      name: 'Thrakkus the Butcher',
-      handledLines: ['Whenever ~ attacks, double the power of each Dragon you control until end of turn.'],
-      def: thrakkusDef,
-    });
-  }
+  defineCard('f7cd7ede-51c1-4117-99b5-484d0d80c95f', 'Thrakkus the Butcher', [
+    'Whenever ~ attacks, double the power of each Dragon you control until end of turn.',
+  ], thrakkusDef);
 }

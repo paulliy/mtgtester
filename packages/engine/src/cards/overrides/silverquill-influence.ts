@@ -2,9 +2,10 @@
  * Authored card overrides for silverquill-influence.txt.
  */
 
+import { constant } from '../value';
+import { ATTACHED, mana } from '../templates';
 import { defineCard, unimplemented } from './index';
 import { ofSubtype } from '../selector';
-import { parseManaCost } from '../../mana/cost';
 
 const FLICKERING_WARD_DEF = {
   entersChoosingOption: {
@@ -18,11 +19,11 @@ const FLICKERING_WARD_DEF = {
     ],
   },
   staticEffects: [{
-    affects: { kind: 'attachedToSource' as const },
+    affects: ATTACHED,
     op: { layer: 6 as const, addProtectionFromChosenColor: true as const },
   }],
   activatedAbilities: [{
-    costs: [{ kind: 'mana' as const, cost: parseManaCost('{W}').cost! }],
+    costs: [mana('{W}')],
     timing: 'any' as const,
     ability: {
       kind: 'activated' as const,
@@ -188,7 +189,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   defineCard("f08f7814-4585-41dd-b82e-ed2ef5e24242", "Transcendent Envoy", [
           "Aura spells you cast cost {1} less to cast."
-    ], { ruleStatics: [{ kind: 'costReduction', amount: { kind: 'const', n: 1 }, filter: ofSubtype('Aura') }] });
+    ], { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofSubtype('Aura') }] });
 
   unimplemented("f43f5855-f297-4433-984b-18263b734cfc", "Eriette of the Charmed Apple", [
           "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control.",
@@ -279,7 +280,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
   defineCard("ad09b3c3-c8e7-481c-8c45-e7f234935117", "Anguished Unmaking", [
           "Exile target nonland permanent. You lose 3 life."
     ], {
-      spellAbility: { kind: 'spell', targets: [{ kind: 'nonlandPermanent' }], effects: [{ op: 'exile', target: 0 }, { op: 'loseLife', amount: { kind: 'const', n: 3 } }], description: 'Exile target nonland permanent; lose three life' },
+      spellAbility: { kind: 'spell', targets: [{ kind: 'nonlandPermanent' }], effects: [{ op: 'exile', target: 0 }, { op: 'loseLife', amount: constant(3) }], description: 'Exile target nonland permanent; lose three life' },
     });
 
   unimplemented("34b90d3e-f48c-41ff-b3e4-5cab7a9cd597", "Secret Rendezvous", [

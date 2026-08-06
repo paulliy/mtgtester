@@ -2,6 +2,8 @@
  * Authored card overrides for counter-intelligence.txt.
  */
 
+import { constant } from '../value';
+import { SAC_SELF, TAP } from '../templates';
 import { defineCard, unimplemented } from './index';
 import { allOf, CHOSEN_TYPE, not, ofType } from '../selector';
 
@@ -65,7 +67,7 @@ export function registerCOUNTER_INTELLIGENCEOverrides(): void {
           { key: 'Sorcery', label: 'Sorcery' },
         ],
       },
-      ruleStatics: [{ kind: 'costReduction', amount: { kind: 'const', n: 1 }, filter: CHOSEN_TYPE }],
+      ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: CHOSEN_TYPE }],
     });
 
   defineCard("66e37011-f3d2-41ed-8e09-7bba9464e8c3", "Coretapper", [
@@ -73,8 +75,8 @@ export function registerCOUNTER_INTELLIGENCEOverrides(): void {
           "Sacrifice this creature: Put two charge counters on target artifact."
     ], {
       activatedAbilities: [
-        { costs: [{ kind: 'tap' }], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'artifact' }], effects: [{ op: 'putCounters', target: 0, counter: 'charge', count: 1 }], description: 'Put a charge counter on target artifact' } },
-        { costs: [{ kind: 'sacrificeSelf' }], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'artifact' }], effects: [{ op: 'putCounters', target: 0, counter: 'charge', count: 2 }], description: 'Put two charge counters on target artifact' } },
+        { costs: [TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'artifact' }], effects: [{ op: 'putCounters', target: 0, counter: 'charge', count: 1 }], description: 'Put a charge counter on target artifact' } },
+        { costs: [SAC_SELF], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'artifact' }], effects: [{ op: 'putCounters', target: 0, counter: 'charge', count: 2 }], description: 'Put two charge counters on target artifact' } },
       ],
     });
 
@@ -122,7 +124,7 @@ export function registerCOUNTER_INTELLIGENCEOverrides(): void {
 
   defineCard("c9722086-23e8-43dc-8a8c-541ff6962318", "Enthusiastic Mechanaut", [
           "Artifact spells you cast cost {1} less to cast."
-    ], { ruleStatics: [{ kind: 'costReduction', amount: { kind: 'const', n: 1 }, filter: ofType('Artifact') }] });
+    ], { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofType('Artifact') }] });
 
   unimplemented("7ecfa47e-1165-46a6-884c-290b1c14d020", "Etched Oracle", [
           "Sunburst",
@@ -131,7 +133,7 @@ export function registerCOUNTER_INTELLIGENCEOverrides(): void {
 
   defineCard("96b87445-6362-4a17-91b2-cbf203fd03fd", "Etherium Sculptor", [
           "Artifact spells you cast cost {1} less to cast."
-    ], { ruleStatics: [{ kind: 'costReduction', amount: { kind: 'const', n: 1 }, filter: ofType('Artifact') }] });
+    ], { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofType('Artifact') }] });
 
   unimplemented("0a79237e-0811-4a8a-bd4d-db3ca91bff22", "Everflowing Chalice", [
           "~ enters with a charge counter on it for each time it was kicked.",
