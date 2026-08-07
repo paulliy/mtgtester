@@ -425,6 +425,11 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
     if (subtype === null) return null;
     parts.push(not(ofSubtype(subtype)));
     parts.push(ofType(CARD_TYPE_PLURALS[negatedTribe[2] as string] as string));
+  } else if (noun === 'nonland permanents') {
+    // "destroy all nonland permanents your opponents control" (Ruinous Ultimatum) â€” the plural
+    // counterpart to `TARGET_NOUNS`'s singular `nonlandPermanent`. Not a tribe or a card type, so
+    // it needs its own bare-noun case rather than falling through to `resolveSubtype`.
+    parts.push(NONLAND);
   } else {
     const bareType = CARD_TYPE_PLURALS[noun];
     if (bareType !== undefined) {
@@ -479,7 +484,15 @@ function parseEffectSentence(
   if (s === 'they gain haste until end of turn' || s === 'those creatures gain haste until end of turn') {
     return [{ op: 'grantKeywordEachUntilEot', selector: YOURS, keyword: 'haste' }];
   }
-  if (s === "they can't be regenerated" || s === "it can't be regenerated" || s === "they cannot be regenerated") {
+  if (
+    s === "they can't be regenerated" ||
+    s === "it can't be regenerated" ||
+    s === "they cannot be regenerated" ||
+    // "Destroy target creature. A creature destroyed this way can't be regenerated." (Damn) —
+    // the same no-op rider on the same effect, worded to read naturally after a fresh "destroy"
+    // sentence rather than a bare pronoun.
+    s === "a creature destroyed this way can't be regenerated"
+  ) {
     return [{ op: 'noOp' }];
   }
   if (s === "shuffle ~ into its owner's library" || s === "shuffle ~ into your library") {
@@ -2152,6 +2165,17 @@ function parseTargetClause(text: string): { kind: TargetKind; filter?: Selector;
     cleaned = cleaned.replace(/^monocolored\s+/, '').trim();
   }
 
+  // "target permanent with mana value 4 or greater" (Despark) / "target nonland permanent with
+  // mana value 3 or less" (Abrupt Decay) â€” the targeted counterpart to `parseMassSubject`'s
+  // identical clause for the untargeted "destroy all â€¦" form.
+  const manaValueClause = cleaned.match(/^(.+) with mana value (\d+) or (less|greater)$/i);
+  if (manaValueClause !== null) {
+    const n = Number(manaValueClause[2]);
+    const bound = manaValueClause[3]?.toLowerCase() === 'less' ? manaValueAtMost(n) : manaValueAtLeast(n);
+    filter = filter === undefined ? bound : allOf(filter, bound);
+    cleaned = manaValueClause[1] as string;
+  }
+
   const kind = parseTargetNoun(cleaned);
   if (kind !== null) {
     return { kind, ...(filter !== undefined ? { filter } : {}), ...(controller !== undefined ? { controller } : {}) };
@@ -2908,6 +2932,20 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
           ...(filter !== ANY_SPELL ? { filter } : {}),
         },
       ];
+    }
+  }
+  // "Creatures can't attack you unless their controller pays {2} for each creature they control
+  // that's attacking you." (Ghostly Prison, Propaganda) â€” one fixed per-attacker tax.
+  {
+    const m = lower.match(
+      /^creatures can't attack you unless their controller pays (\{[^}]+\}) for each creature they control that's attacking you$/,
+    );
+    if (m) {
+      const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+      if (cost.cost !== null && cost.cost.generic > 0 && cost.cost.colorless === 0 && Object.values(cost.cost.colored).every((n) => n === 0)) {
+        return [{ kind: 'attackTax', amount: cost.cost.generic }];
+      }
+      return null;
     }
   }
   return null;

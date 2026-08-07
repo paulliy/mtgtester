@@ -705,6 +705,85 @@ describe('oracle-text interpreter (brief §6)', () => {
     });
   });
 
+  it('reads a mass-destroy/exile subject qualified by mana value or a controller suffix', () => {
+    const despark = interpretCard(
+      oracle({
+        name: 'Despark Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{W}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Exile target permanent with mana value 4 or greater.',
+      }),
+    );
+    expect(despark.modeled).toBe(true);
+    expect(despark.spellAbility?.targets).toEqual([{ kind: 'permanent', filter: { kind: 'manaValueAtLeast', n: 4 } }]);
+    expect(despark.spellAbility?.effects).toEqual([{ op: 'exile', target: 0 }]);
+
+    const abruptDecay = interpretCard(
+      oracle({
+        name: 'Abrupt Decay Test',
+        typeLine: 'Instant',
+        manaCost: '{B}{G}',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy target nonland permanent with mana value 3 or less.',
+      }),
+    );
+    expect(abruptDecay.modeled).toBe(true);
+    expect(abruptDecay.spellAbility?.targets).toEqual([
+      { kind: 'nonlandPermanent', filter: { kind: 'manaValueAtMost', n: 3 } },
+    ]);
+
+    const ruinous = interpretCard(
+      oracle({
+        name: 'Ruinous Ultimatum Test',
+        typeLine: 'Sorcery',
+        manaCost: '{3}{B}{B}{R}{R}',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy all nonland permanents your opponents control.',
+      }),
+    );
+    expect(ruinous.modeled).toBe(true);
+    expect(ruinous.spellAbility?.effects).toEqual([
+      {
+        op: 'destroyEach',
+        selector: { kind: 'allOf', of: [{ kind: 'controller', who: 'opponents' }, { kind: 'not', of: { kind: 'type', value: 'Land' } }] },
+      },
+    ]);
+  });
+
+  it('reads "a creature destroyed this way can\'t be regenerated" as the same no-op rider', () => {
+    const damn = interpretCard(
+      oracle({
+        name: 'Damn Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{W}{B}',
+        power: null,
+        toughness: null,
+        oracleText: "Destroy target creature. A creature destroyed this way can't be regenerated.",
+      }),
+    );
+    expect(damn.modeled).toBe(true);
+    expect(damn.spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }, { op: 'noOp' }]);
+  });
+
+  it('reads the attack-tax static (Ghostly Prison, Propaganda)', () => {
+    const propaganda = interpretCard(
+      oracle({
+        name: 'Propaganda Test',
+        typeLine: 'Enchantment',
+        manaCost: '{2}{U}',
+        power: null,
+        toughness: null,
+        oracleText: "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+      }),
+    );
+    expect(propaganda.modeled).toBe(true);
+    expect(propaganda.ruleStatics).toEqual([{ kind: 'attackTax', amount: 2 }]);
+  });
+
   it('reads the singular possessive bounce template ("its owner\'s hand"), not just the plural', () => {
     const snap = interpretCard(
       oracle({

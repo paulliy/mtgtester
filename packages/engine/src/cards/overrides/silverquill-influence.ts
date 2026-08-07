@@ -179,9 +179,9 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
           "~ and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control."
     ]);
 
-  unimplemented("e828b189-0e8f-43b8-b909-4c23e742e028", "Ghostly Prison", [
-          "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you."
-    ]);
+  // Now handled generically as `attackTax` (`parseRuleStaticLine` in interpret.ts) — see
+  // queen-marchesa-queens-gambit-remaining.ts, whose non-empty override for the same oracleId
+  // this stub used to be shadowed by (last-write-wins, and that file registers after this one).
 
   unimplemented("d2d9ecea-7925-420e-98b9-2f87f41f387c", "Land Tax", [
           "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle."

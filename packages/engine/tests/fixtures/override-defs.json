@@ -16041,21 +16041,6 @@
     }
   },
   {
-    "oracleId": "e828b189-0e8f-43b8-b909-4c23e742e028",
-    "name": "Ghostly Prison",
-    "handledLines": [
-      "unrecognized rules text: \"Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": 2,
-          "kind": "attackTax"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "e8c7566d-7cc0-48af-a986-83223ec7e06c",
     "name": "Midnight Reaper",
     "handledLines": [
@@ -24707,21 +24692,6 @@
             },
             "when": "becomesTapped"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-ghostly-prison",
-    "name": "Ghostly Prison",
-    "handledLines": [
-      "unrecognized rules text: \"Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": 2,
-          "kind": "attackTax"
         }
       ]
     }
