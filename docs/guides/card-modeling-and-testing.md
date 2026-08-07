@@ -49,15 +49,60 @@ needed — it never guesses or falls back to "close enough" (brief §6.3).
    face.
 2. Add or extend a deck-specific file under `overrides/` (one file per source deck, e.g.
    `draconic-destruction.ts`), and register it in `overrides/index.ts`.
-3. A `CardOverride` (`overrides/index.ts:42-53`) is:
+3. Register the card with **`defineCard`**, and build its `def` from the shared builders in
+   [`cards/templates.ts`](../../packages/engine/src/cards/templates.ts) and the token catalog in
+   [`cards/tokens.ts`](../../packages/engine/src/cards/tokens.ts):
+
    ```ts
-   { oracleId, name, handledLines: string[], def: Partial<CardDefinition> }
+   defineCard('06b77a80-…', 'Dragonkin Berserker', [
+     'Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying.',
+   ], {
+     activatedAbilities: [activated({
+       costs: [mana('{4}{R}')],
+       requiresAttackedThisTurn: true,
+       oncePerTurn: true,
+       effects: [{ op: 'createToken', spec: DRAGON_5_5_FLYING, count: constant(1) }],
+       description: 'Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying',
+     })],
+   });
    ```
+
+   `defineCard` registers the card under **both** its real Scryfall id and the `oracle-<slug>`
+   fixture id `tests/fixtures.ts::oracle()` derives from the name — so a test can build the card
+   by name and still get its behavior. Writing the two registrations separately is how cards ended
+   up behaving differently depending on which id loaded them.
+
+   Use `unimplemented(oracleId, name, handledLines)` for a card whose lines you want catalogued but
+   whose behavior isn't authored yet. It registers an empty patch, which `applyOverride`
+   deliberately refuses to honor — the card stays `modeled: false`, so this is a visible backlog
+   marker, never a way to make a card count as handled.
+
+   Reach for a builder rather than a literal: `spell` / `triggered` / `activated` for ability
+   envelopes, `onEtb()` / `onDies()` / `whenEnters(sel)` / `onUpkeep()` for trigger heads,
+   `mana('{2}{R}')` / `TAP` / `SAC_SELF` for costs, `targetSlots` when an ability has more than one
+   target, `lord` / `auraBuff` / `costReductionFor` for statics. ESLint blocks the two primitives
+   these replace (`registerOverride`, `parseManaCost`) inside `overrides/`.
+
    `def` may **only compose existing, already-tested `Effect`/`Ability` primitives** — a new
-   executor primitive is out of scope for an override and belongs in the engine itself.
+   executor primitive is out of scope for an override and belongs in the engine itself. If a card
+   needs a cost or effect that doesn't exist, leave it `unimplemented` rather than approximating:
+   six cards once carried fields that were not in the IR at all, and every one of them silently did
+   nothing (see `tests/silverquill-malformed-fields.test.ts`).
 4. `applyOverride` clears exactly one `unmodeledReasons` entry per `handledLines` string
    (one-for-one, not a filter) and merges `def` over the interpreted definition; `modeled` flips
-   true only once every reason is cleared.
+   true only once every reason is cleared. The merge is a **shallow spread, so arrays are replaced
+   wholesale** — setting `activatedAbilities` discards every ability the parser found, which is why
+   `draconic-destruction.ts:17` has to hand-carry one back.
+
+**Never inline a `TokenSpec`.** Add it to `cards/tokens.ts` and reference the const. A token is
+pure data, so one written out per file is one that drifts: before the catalog there were three
+different Treasures (one with no costs at all — a free repeatable any-color mana source) and a
+Soldier that was white in four places and white-green in two.
+
+Changing authored card data will fail `tests/override-defs.test.ts`, which pins the whole registry.
+That's a tripwire, not an error — confirm the diff is what you meant, then regenerate with
+`bun run scripts/snapshot-override-defs.ts`. Never regenerate to make it pass without reading the
+diff: a card quietly losing an ability looks exactly like a card intentionally gaining one.
 
 This has a **drift guard** you should understand before writing tests around it
 (`overrides/index.ts:1-30`): if a card gets errata'd, its printed line stops matching

@@ -408,9 +408,15 @@
           },
           "op": {
             "layer": 7,
-            "power": 0,
+            "power": {
+              "kind": "const",
+              "n": 0
+            },
             "sublayer": "b",
-            "toughness": 1
+            "toughness": {
+              "kind": "const",
+              "n": 1
+            }
           }
         }
       ]
@@ -892,69 +898,10 @@
     "oracleId": "0a7d6489-b239-4ce8-aea3-7b5d0e436f70",
     "name": "Sentinel’s Eyes",
     "handledLines": [
-      "Escape—{W}, Exile two other cards from your graveyard."
+      "unrecognized rules text: \"Enchanted creature gets +1/+1 and has vigilance.\"",
+      "unrecognized rules text: \"Escape—{W}, Exile two other cards from your graveyard.\""
     ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Escape — return Sentinel’s Eyes from your graveyard",
-            "effects": [
-              {
-                "op": "returnSelfFromGraveyardToHand"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 1
-                },
-                "colorless": 0,
-                "generic": 0
-              },
-              "kind": "mana"
-            },
-            {
-              "count": 2,
-              "excludeSelf": true,
-              "kind": "exileFromGraveyard"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "graveyard"
-        }
-      ],
-      "staticEffects": [
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "layer": 7,
-            "power": 1,
-            "sublayer": "d",
-            "toughness": 1
-          }
-        },
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "addKeyword": "vigilance",
-            "layer": 6
-          }
-        }
-      ]
-    }
+    "def": {}
   },
   {
     "oracleId": "0c85b8f7-0bd0-4680-9ec5-d4b110460a54",
@@ -3001,7 +2948,7 @@
           "description": "When your enchantment dies, put a +1/+1 counter on Starfield Mystic",
           "effects": [
             {
-              "amount": {
+              "count": {
                 "kind": "const",
                 "n": 1
               },
@@ -5380,9 +5327,7 @@
               {
                 "op": "pumpUntilEot",
                 "power": 2,
-                "target": {
-                  "kind": "attachedToSource"
-                },
+                "target": "attachedToSource",
                 "toughness": 1
               }
             ],
@@ -14233,20 +14178,11 @@
     ],
     "def": {
       "entersTappedUnless": {
-        "filter": {
-          "kind": "anyOf",
-          "of": [
-            {
-              "kind": "type",
-              "value": "Plains"
-            },
-            {
-              "kind": "type",
-              "value": "Swamp"
-            }
-          ]
-        },
-        "kind": "mayRevealCardFromHand"
+        "kind": "mayRevealCardFromHand",
+        "subtypes": [
+          "Plains",
+          "Swamp"
+        ]
       }
     }
   },
@@ -16821,7 +16757,8 @@
               "kind": "tap"
             }
           ],
-          "dynamic": "commanderIdentity"
+          "dynamic": "commanderIdentity",
+          "units": []
         }
       ]
     }
@@ -22048,9 +21985,15 @@
           },
           "op": {
             "layer": 7,
-            "power": 0,
+            "power": {
+              "kind": "const",
+              "n": 0
+            },
             "sublayer": "b",
-            "toughness": 1
+            "toughness": {
+              "kind": "const",
+              "n": 1
+            }
           }
         }
       ]
@@ -23787,9 +23730,7 @@
               {
                 "op": "pumpUntilEot",
                 "power": 2,
-                "target": {
-                  "kind": "attachedToSource"
-                },
+                "target": "attachedToSource",
                 "toughness": 1
               }
             ],
@@ -32215,69 +32156,10 @@
     "oracleId": "oracle-sentinel-s-eyes",
     "name": "Sentinel’s Eyes",
     "handledLines": [
-      "Escape—{W}, Exile two other cards from your graveyard."
+      "unrecognized rules text: \"Enchanted creature gets +1/+1 and has vigilance.\"",
+      "unrecognized rules text: \"Escape—{W}, Exile two other cards from your graveyard.\""
     ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Escape — return Sentinel’s Eyes from your graveyard",
-            "effects": [
-              {
-                "op": "returnSelfFromGraveyardToHand"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 1
-                },
-                "colorless": 0,
-                "generic": 0
-              },
-              "kind": "mana"
-            },
-            {
-              "count": 2,
-              "excludeSelf": true,
-              "kind": "exileFromGraveyard"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "graveyard"
-        }
-      ],
-      "staticEffects": [
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "layer": 7,
-            "power": 1,
-            "sublayer": "d",
-            "toughness": 1
-          }
-        },
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "addKeyword": "vigilance",
-            "layer": 6
-          }
-        }
-      ]
-    }
+    "def": {}
   },
   {
     "oracleId": "oracle-serum-snare",
@@ -32671,20 +32553,11 @@
     ],
     "def": {
       "entersTappedUnless": {
-        "filter": {
-          "kind": "anyOf",
-          "of": [
-            {
-              "kind": "type",
-              "value": "Plains"
-            },
-            {
-              "kind": "type",
-              "value": "Swamp"
-            }
-          ]
-        },
-        "kind": "mayRevealCardFromHand"
+        "kind": "mayRevealCardFromHand",
+        "subtypes": [
+          "Plains",
+          "Swamp"
+        ]
       }
     }
   },
@@ -33309,7 +33182,7 @@
           "description": "When your enchantment dies, put a +1/+1 counter on Starfield Mystic",
           "effects": [
             {
-              "amount": {
+              "count": {
                 "kind": "const",
                 "n": 1
               },
@@ -33523,7 +33396,8 @@
               "kind": "tap"
             }
           ],
-          "dynamic": "commanderIdentity"
+          "dynamic": "commanderIdentity",
+          "units": []
         }
       ]
     }
