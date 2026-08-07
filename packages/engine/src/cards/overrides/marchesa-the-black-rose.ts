@@ -87,22 +87,24 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   defineCard('2068185c-1b50-47d0-aa3f-bf505d199428', 'Dark Confidant', [
     'At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'you' }, targets: [], effects: [{ op: 'drawRevealTopLoseManaValue' }], description: 'Reveal the top card, draw it, and lose life equal to its mana value' }] });
-  defineCard('0456ec64-2c81-4763-a352-8ff64a4c3d6b', 'Deadly Rollick', [
-    'If you control a commander, you may cast this spell without paying its mana cost.',
-  ], { commanderFreeCast: true });
+  // "If you control a commander, you may cast this spell without paying its mana cost." now
+  // parses generically (a top-level commanderFreeCast flag), and "Exile target creature."
+  // already did -- no override needed.
+  // "If you control a commander, ..." now parses generically; only the retargeting line is
+  // still something the raw parser can't do on its own.
   defineCard('ae120613-97d6-4393-b39d-c3e6c076f5d6', 'Deflecting Swat', [
-    'If you control a commander, you may cast this spell without paying its mana cost.', 'You may choose new targets for target spell or ability.',
+    'You may choose new targets for target spell or ability.',
   ], { commanderFreeCast: true, spellAbility: { kind: 'spell', targets: [{ kind: 'stackObject' }], effects: [{ op: 'copyTargetSpell', target: 0 }], description: 'Change the target of target spell or ability' } });
   defineCard('8f2c8498-5b10-4ec7-8678-598c90987556', 'Disciple of Bolas', [
     'When this creature enters, sacrifice another creature. You gain X life and draw X cards, where X is that creature\'s power.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'sacrificeAndDrawForPower' }], description: 'Sacrifice another creature, then gain life and draw cards equal to its power' }] });
-  // "Counter target noncreature spell." now parses generically; only the commander-free-cast
-  // line is still something the raw parser can't do on its own, so that's the only remaining
-  // claim. The spellAbility field in `def` is now redundant with what the parser derives on its
-  // own, but kept for clarity (harmless — merge is idempotent when both sides agree).
-  defineCard('d09c9cba-fdd2-479b-ad5d-d05181c3e3f9', 'Fierce Guardianship', [
-    'If you control a commander, you may cast this spell without paying its mana cost.',
-  ], { commanderFreeCast: true, spellAbility: { kind: 'spell', targets: [{ kind: 'noncreatureSpell' }], effects: [{ op: 'counter', target: 0 }], description: 'Counter target noncreature spell' } });
+  // Both lines now parse generically on their own, but NOT to the same targets: the generic
+  // "counter target noncreature spell" rule restricts to an opponent's spell (matching the
+  // established, deliberately-simplified "counter target spell" convention elsewhere in this
+  // parser), while Fierce Guardianship's real text has no such restriction. Kept for that one
+  // real behavioral difference, with empty handledLines since neither line is an unmodeled
+  // reason to claim anymore.
+  defineCard('d09c9cba-fdd2-479b-ad5d-d05181c3e3f9', 'Fierce Guardianship', [], { commanderFreeCast: true, spellAbility: { kind: 'spell', targets: [{ kind: 'noncreatureSpell' }], effects: [{ op: 'counter', target: 0 }], description: 'Counter target noncreature spell' } });
   defineCard('437cfd16-94bc-43ba-afd8-e9e9d028a4ca', 'Flare of Denial', [
     'You may sacrifice a nontoken blue creature rather than pay this spell\'s mana cost.',
   ], { spellAbility: { kind: 'spell', targets: [{ kind: 'noncreatureSpell' }], effects: [{ op: 'counter', target: 0 }], description: 'Counter target noncreature spell' } });

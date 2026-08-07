@@ -809,6 +809,29 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
+  it('reads the commander-free-cast line as a top-level flag', () => {
+    const flawless = interpretCard(
+      oracle({
+        name: 'Flawless Maneuver Test',
+        typeLine: 'Instant',
+        manaCost: '{3}{W}',
+        power: null,
+        toughness: null,
+        oracleText:
+          'If you control a commander, you may cast this spell without paying its mana cost.\nCreatures you control gain indestructible until end of turn.',
+      }),
+    );
+    expect(flawless.modeled).toBe(true);
+    expect(flawless.commanderFreeCast).toBe(true);
+    expect(flawless.spellAbility?.effects).toEqual([
+      {
+        op: 'grantKeywordEachUntilEot',
+        selector: { kind: 'allOf', of: [{ kind: 'controller', who: 'you' }, { kind: 'type', value: 'Creature' }] },
+        keyword: 'indestructible',
+      },
+    ]);
+  });
+
   it('reads "cast or copy" onto the same castsSpell trigger head as plain "cast"', () => {
     const archmage = interpretCard(
       oracle({

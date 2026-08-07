@@ -310,16 +310,6 @@
     "def": {}
   },
   {
-    "oracleId": "0456ec64-2c81-4763-a352-8ff64a4c3d6b",
-    "name": "Deadly Rollick",
-    "handledLines": [
-      "If you control a commander, you may cast this spell without paying its mana cost."
-    ],
-    "def": {
-      "commanderFreeCast": true
-    }
-  },
-  {
     "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
     "name": "Verrak, Warped Sengir",
     "handledLines": [
@@ -11929,7 +11919,6 @@
     "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
     "name": "Deflecting Swat",
     "handledLines": [
-      "If you control a commander, you may cast this spell without paying its mana cost.",
       "You may choose new targets for target spell or ability."
     ],
     "def": {
@@ -14536,9 +14525,7 @@
   {
     "oracleId": "d09c9cba-fdd2-479b-ad5d-d05181c3e3f9",
     "name": "Fierce Guardianship",
-    "handledLines": [
-      "If you control a commander, you may cast this spell without paying its mana cost."
-    ],
+    "handledLines": [],
     "def": {
       "commanderFreeCast": true,
       "spellAbility": {
@@ -21726,16 +21713,6 @@
     }
   },
   {
-    "oracleId": "oracle-deadly-rollick",
-    "name": "Deadly Rollick",
-    "handledLines": [
-      "If you control a commander, you may cast this spell without paying its mana cost."
-    ],
-    "def": {
-      "commanderFreeCast": true
-    }
-  },
-  {
     "oracleId": "oracle-decoction-module",
     "name": "Decoction Module",
     "handledLines": [
@@ -21933,7 +21910,6 @@
     "oracleId": "oracle-deflecting-swat",
     "name": "Deflecting Swat",
     "handledLines": [
-      "If you control a commander, you may cast this spell without paying its mana cost.",
       "You may choose new targets for target spell or ability."
     ],
     "def": {
@@ -23548,9 +23524,7 @@
   {
     "oracleId": "oracle-fierce-guardianship",
     "name": "Fierce Guardianship",
-    "handledLines": [
-      "If you control a commander, you may cast this spell without paying its mana cost."
-    ],
+    "handledLines": [],
     "def": {
       "commanderFreeCast": true,
       "spellAbility": {

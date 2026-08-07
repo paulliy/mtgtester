@@ -3057,6 +3057,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   let ward: ParsedManaCost | undefined;
   let protectionFrom: Color[] | undefined;
   let spellCantBeCountered = false;
+  let commanderFreeCast = false;
   let spellModes: NonNullable<Ability['modes']> | undefined;
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined;
 
@@ -3740,6 +3741,14 @@ export function interpretCard(card: OracleCard): CardDefinition {
       spellCantBeCountered = true;
       continue;
     }
+    // "If you control a commander, you may cast this spell without paying its mana cost."
+    // (Flawless Maneuver, Deadly Rollick, Fierce Guardianship, Deflecting Swat) â€” a property of
+    // the cast action (CR 601.2f), so it's a top-level flag alongside `spellCantBeCountered`
+    // rather than a `spellAbility` effect.
+    if (lower === 'if you control a commander, you may cast this spell without paying its mana cost') {
+      commanderFreeCast = true;
+      continue;
+    }
     // 5. Spell effect sentences (instants/sorceries only). Parse into a scratch slot list
     //    (based at the current spell slot count) so a partially-parsing line allocates no
     //    slots; merge only when the whole line parses.
@@ -3867,6 +3876,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
           }
         : null,
     ...(spellCantBeCountered ? { spellCantBeCountered: true } : {}),
+    ...(commanderFreeCast ? { commanderFreeCast: true } : {}),
     triggers,
     staticEffects,
     ruleStatics,
