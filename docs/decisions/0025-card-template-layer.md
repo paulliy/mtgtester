@@ -137,3 +137,41 @@ const now used everywhere else a Treasure is created.
   but separately-constructed one) is the remaining piece of "parser-produced and hand-authored cards
   are structurally identical by construction," and is a smaller, more contained change than the
   grammar functions themselves.
+
+## Increment 3 — closing both flagged gaps (2026-08-07)
+
+**`parseTokenFace`'s catalog lookup.** `tokens.ts` exports `ALL_TOKENS` (every named const) plus
+`canonicalizeToken(spec)`, which structurally matches a parsed `TokenSpec` against the catalog and,
+on a hit, returns the catalog object itself rather than the freshly-parsed one. `interpret.ts` calls
+it at every `createToken` spec it builds (the bare parse, the keyword-merged form, and — where it
+still applies — the same-shape check after a granted trigger is attached).
+
+The match key excludes `typeLine`: the catalog's own builders spell it `"Creature — Human"` (the
+real printed type line) while `parseTokenFace` spells it `"Token Creature — Human"`, a "one word
+off" difference already flagged and left alone in two override files' comments
+(`queen-marchesa-queens-gambit.ts`, `draconic-destruction.ts`). Keying on it would make every lookup
+miss on formatting alone rather than on anything a card's text actually says. A hit still replaces
+the *whole* object, `typeLine` included — the substitution is what actually fixes the formatting
+mismatch for any card it applies to, not something the key comparison needed to special-case.
+
+This turned up the same mojibake em-dash bug ADR 0025 fixed across `overrides/` (increment 1), but
+in `interpret.ts` itself: `parseTokenFace`'s dynamically-built `typeLine` used the corrupted
+`"Token Creature â€” Pest"` byte sequence, live in the string template, not just in a comment. Two
+more hand-authored `AlternativeCast` Omen faces (Bloomvine Regent, Marang River Regent) carried the
+same corruption in their own `typeLine` literals. All three fixed; the golden interpret snapshot
+picked up exactly those two Omen-face cards and nothing else — no fixture-deck card's own parsed
+token happens to match the catalog closely enough to also flip on the `canonicalizeToken` change,
+so the fix landed with a two-card diff, not a large one.
+
+**The lint rule.** `eslint.config.js` gets a structural selector — an `ObjectExpression` carrying
+`typeLine`+`subtypes`+`colors` together but not `oracleId` (which excludes `CardDefinition` itself,
+built the same way at the bottom of `interpretCard`) — applied to both `overrides/**` and
+`interpret.ts`. `parseTokenFace` is the one legitimate site left (it IS the token constructor for a
+phrase with no name to look up), carrying its own inline `eslint-disable-next-line` with the reason
+attached: `creatureToken`/`artifactToken` don't fit there either, since a token's power/toughness
+from card text can be an X value or unknown ("`*`"), which those builders don't accept.
+
+Covered by `tests/token-catalog-canonicalization.test.ts`: object identity on a match, a
+non-matching token still parsing correctly (a miss is a no-op, not a dropped card), the
+keyword-before-match ordering, and the em-dash regression on a token that has no catalog match (so
+the assertion can't be accidentally passing via a substituted object instead of the actual fix).

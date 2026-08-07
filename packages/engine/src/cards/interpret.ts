@@ -83,7 +83,7 @@ import {
   whenEnters,
   whenPermanent,
 } from './templates';
-import { TREASURE } from './tokens';
+import { canonicalizeToken, TREASURE } from './tokens';
 // Use the explicit module path so the registry imported by authored override modules and the
 // interpreter share one module instance under Bun/TypeScript path resolution.
 import { applyOverride, getOverride } from './overrides/index';
@@ -1872,9 +1872,15 @@ function parseTokenFace(phrase: string, card: OracleCard): TokenSpec | null {
   if (subtypes.length === 0) return null;
 
   const name = subtypes.join(' ');
-  const typeLine = `Token ${types.join(' ')} â€” ${subtypes.join(' ')}`;
+  const typeLine = `Token ${types.join(' ')} — ${subtypes.join(' ')}`;
 
-  return {
+  // The one legitimate raw TokenSpec literal in this file: this function IS the constructor for a
+  // token read off a card's own printed phrase, so there is no named export to reference instead —
+  // `creatureToken`/`artifactToken` also don't fit, since power/toughness here can be an X value or
+  // unknown (`*`), which those builders don't accept. `canonicalizeToken` immediately below folds
+  // this back onto the shared catalog whenever the parsed shape happens to match one exactly.
+  // eslint-disable-next-line no-restricted-syntax
+  return canonicalizeToken({
     name,
     typeLine,
     types,
@@ -1883,7 +1889,7 @@ function parseTokenFace(phrase: string, card: OracleCard): TokenSpec | null {
     power,
     toughness,
     ...(legendary ? { legendary: true } : {}),
-  };
+  });
 }
 
 /**
@@ -1958,13 +1964,15 @@ function parseCreateTokenSentence(
     if (parsed === null || parsed.ward !== undefined || parsed.protectionFrom !== undefined) {
       return null;
     }
-    return [{ op: 'createToken', spec: { ...spec, keywords: parsed.keywords }, count, ...(tapped ? { tapped: true } : {}) }];
+    return [{ op: 'createToken', spec: canonicalizeToken({ ...spec, keywords: parsed.keywords }), count, ...(tapped ? { tapped: true } : {}) }];
   }
 
   const granted = m[5];
   if (granted !== undefined) {
     const triggers = parseTriggerLine(granted.replace(/^this token /i, 'this creature '), card);
     if (triggers === null) return null;
+    // A token with a granted trigger never matches the catalog (no cataloged token carries one),
+    // so this is not canonicalized — spelled out for symmetry with the two branches above.
     return [{ op: 'createToken', spec: { ...spec, triggers }, count, ...(tapped ? { tapped: true } : {}) }];
   }
 
@@ -3194,7 +3202,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
       {
         kind: 'omen',
         name: 'Claim Territory',
-        typeLine: 'Sorcery â€” Omen',
+        typeLine: 'Sorcery — Omen',
         manaCost: manaCost('{2}{G}'),
         description: 'Claim Territory',
         ability: spell({
@@ -3213,7 +3221,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
       {
         kind: 'omen',
         name: 'Coil and Catch',
-        typeLine: 'Instant â€” Omen',
+        typeLine: 'Instant — Omen',
         manaCost: manaCost('{3}{U}'),
         description: 'Coil and Catch',
         ability: spell({

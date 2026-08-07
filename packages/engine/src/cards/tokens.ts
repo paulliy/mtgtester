@@ -286,3 +286,86 @@ export const TREASURE: TokenSpec = artifactToken({
   subtypes: ['Treasure'],
   manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }] }],
 });
+
+// ---------------------------------------------------------------------------
+// The whole catalog, for structural lookup
+// ---------------------------------------------------------------------------
+
+/**
+ * Every named token above, in one array.
+ *
+ * `interpret.ts`'s generic "create a token" grammar (`parseTokenFace`) builds a `TokenSpec` from
+ * the printed phrase rather than importing one of these consts by name — it has no way to know
+ * which card it is reading. Without this list, a parsed "1/1 white Soldier creature token with
+ * lifelink" and `SOLDIER_1_1_LIFELINK` above are two structurally-identical but separately
+ * allocated objects: correct today, but nothing stops the two from drifting the way the same
+ * printed Treasure once did across `overrides/`. `interpret.ts` canonicalizes its parsed spec
+ * against this list (by deep structural equality) so a match returns the SAME object, not a copy.
+ */
+export const ALL_TOKENS: TokenSpec[] = [
+  SOLDIER_1_1_LIFELINK,
+  INKLING_2_1_FLYING,
+  ASSASSIN_1_1,
+  NECRON_WARRIOR_2_2,
+  BIRD_1_1_FLYING,
+  DRAGON_5_5_FLYING,
+  BEAST_3_3_GREEN,
+  THOPTER_1_1_FLYING,
+  SERVO_1_1,
+  CAT_2_2_WHITE,
+  INSECT_1_1_FLYING,
+  INSECT_1_1_FLYING_DEATHTOUCH_GREEN,
+  BEAST_6_6_ARTIFACT,
+  CONSTRUCT_4_4,
+  ELDRAZI_CONSTRUCT_10_10,
+  CAT_BEAST_2_2_WHITE,
+  SAPROLING_1_1_GREEN,
+  ELEPHANT_3_3_GREEN,
+  HUMAN_1_1_WHITE,
+  ELDRAZI_SPAWN_0_1,
+  MUTAGEN,
+  NALAAR_AETHERJET,
+  TREASURE,
+];
+
+/** A key two structurally-identical `TokenSpec`s always share, regardless of property order. */
+function canonicalKey(value: unknown): string {
+  if (value === undefined) return 'undefined';
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalKey).join(',')}]`;
+  const source = value as Record<string, unknown>;
+  const keys = Object.keys(source).sort();
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${canonicalKey(source[k])}`).join(',')}}`;
+}
+
+/**
+ * The key used to look a token up in the catalog — every field except `typeLine`.
+ *
+ * `typeLine` is derived from `types`/`subtypes` and carries no information the other fields don't
+ * already, but the two derivations disagree: this catalog's own `creatureToken`/`artifactToken`
+ * spell it `"Creature — Human"` (the real printed type line), while `interpret.ts`'s generic
+ * grammar spells it `"Token Creature — Human"` (see `queen-marchesa-queens-gambit.ts`'s and
+ * `draconic-destruction.ts`'s comments on the same "one word off" mismatch, both left as-is
+ * there). Keying on `typeLine` too would make every catalog lookup miss on that formatting
+ * difference alone, never on anything a card's rules text actually says — so it's excluded here,
+ * and `typeLine` itself is exactly why a lookup HIT still needs to substitute the whole catalog
+ * object rather than just returning `spec`: it corrects the format along with everything else.
+ */
+function tokenLookupKey(spec: TokenSpec): string {
+  const { typeLine: _typeLine, ...rest } = spec;
+  return canonicalKey(rest);
+}
+
+const BY_KEY = new Map(ALL_TOKENS.map((t) => [tokenLookupKey(t), t]));
+
+/**
+ * If `spec` is structurally identical to a cataloged token (`typeLine` aside — see
+ * `tokenLookupKey`), return that catalog object instead of `spec` itself — so a token the generic
+ * grammar parses off a card's own printed line ends up pointing at the exact same object as a
+ * hand-authored override that creates the same token, not a separately-built copy that only
+ * happens to match today. A miss returns `spec` unchanged: this is a lookup, not a validator, so
+ * an unrecognized or not-yet-cataloged token is still fine.
+ */
+export function canonicalizeToken(spec: TokenSpec): TokenSpec {
+  return BY_KEY.get(tokenLookupKey(spec)) ?? spec;
+}

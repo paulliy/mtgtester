@@ -157,7 +157,7 @@
           "generic": 3
         },
         "name": "Coil and Catch",
-        "typeLine": "Instant â€” Omen"
+        "typeLine": "Instant — Omen"
       }
     ],
     "colorIdentity": [
@@ -4317,7 +4317,7 @@
                   }
                 }
               ],
-              "typeLine": "Token Creature â€” Pest",
+              "typeLine": "Token Creature — Pest",
               "types": [
                 "Creature"
               ]
@@ -6952,7 +6952,7 @@
           "generic": 2
         },
         "name": "Claim Territory",
-        "typeLine": "Sorcery â€” Omen"
+        "typeLine": "Sorcery — Omen"
       }
     ],
     "colorIdentity": [
@@ -7730,7 +7730,7 @@
                 "Dragon"
               ],
               "toughness": 4,
-              "typeLine": "Token Creature â€” Dragon",
+              "typeLine": "Token Creature — Dragon",
               "types": [
                 "Creature"
               ]

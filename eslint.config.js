@@ -1,6 +1,16 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
+// A `TokenSpec` object literal, matched structurally rather than by import — the same shape a
+// hand-typed token and a `creatureToken()`/`artifactToken()` call both produce, so only the
+// literal's own properties can tell them apart. `typeLine`+`subtypes`+`colors` together are
+// specific to `TokenSpec` among the shapes these files build (an `AlternativeCast`'s Omen face has
+// `typeLine` alone; `CardDefinition` itself has all three but is excluded by its own `oracleId`).
+const TOKEN_SPEC_LITERAL_SELECTOR =
+  "ObjectExpression:has(Property[key.name='typeLine']):has(Property[key.name='subtypes']):has(Property[key.name='colors']):not(:has(Property[key.name='oracleId']))";
+const TOKEN_SPEC_LITERAL_MESSAGE =
+  'Build a token with creatureToken()/artifactToken() (cards/tokens.ts), or reference a named catalog export directly, rather than a raw TokenSpec object literal — this drift is exactly what produced three different Treasure tokens and a Soldier that disagreed on its own color.';
+
 export default tseslint.config(
   {
     // Not linted: build output, deps, vendored data/docs, Vue SFCs (no vue plugin in Phase 0).
@@ -53,6 +63,27 @@ export default tseslint.config(
           selector: "CallExpression[callee.name='parseManaCost']",
           message:
             "Use mana('{2}{R}') for a cost component or manaCost('{2}{R}') for a ParsedManaCost. Both throw on an unparseable cost, where parseManaCost(s).cost! yields a null cost the payment solver treats as free.",
+        },
+        {
+          selector: TOKEN_SPEC_LITERAL_SELECTOR,
+          message: TOKEN_SPEC_LITERAL_MESSAGE,
+        },
+      ],
+    },
+  },
+  {
+    // The generic "create a token" grammar (`parseTokenFace` in interpret.ts) is the one place
+    // outside `cards/tokens.ts` allowed to build a `TokenSpec` at all — it is reading a phrase off
+    // the card, not choosing from the catalog, so there is nothing to reference by name. It
+    // canonicalizes its result against the catalog immediately afterward (`canonicalizeToken`) and
+    // the one construction site carries its own inline disable.
+    files: ['packages/engine/src/cards/interpret.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: TOKEN_SPEC_LITERAL_SELECTOR,
+          message: TOKEN_SPEC_LITERAL_MESSAGE,
         },
       ],
     },
