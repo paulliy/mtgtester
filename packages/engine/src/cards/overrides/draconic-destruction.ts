@@ -514,12 +514,6 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
           "When this creature enters, it deals 5 damage to target opponent unless that player sacrifices a creature of their choice."
     ], DEMANDING_DRAGON_DEF);
 
-  defineCard("faf81ae0-0b35-45ef-a50d-6cecf0c0eeeb", "Dragonlord's Servant", [
-          "Dragon spells you cast cost {1} less to cast."
-    ], {
-      ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofSubtype('Dragon') }],
-    });
-
   defineCard("777b8ec4-a783-4297-96b7-4f200d0eb734", "Return to Nature", [
           "Choose one —",
           "• Destroy target artifact.",
@@ -543,11 +537,10 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
       },
     });
 
-  defineCard("6a29f36b-7911-4d84-a3ae-546b131d5159", "Dragonspeaker Shaman", [
-          "Dragon spells you cast cost {2} less to cast."
-    ], {
-      ruleStatics: [{ kind: 'costReduction', amount: constant(2), filter: ofSubtype('Dragon') }],
-    });
+  // Dragonlord's Servant ("Dragon spells you cast cost {1} less to cast.") and Dragonspeaker
+  // Shaman (the same line at {2}) no longer need overrides here â€” the line now parses
+  // generically (see the Sarkhan, Soul Aflame special case in interpret.ts, which used to
+  // hand-author this exact reduction and now leaves it to the same generic rule).
 
   defineCard("eab71e4e-27c3-4c41-b95f-259c1d14b97a", "Dragon Mage", [
           "Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards."

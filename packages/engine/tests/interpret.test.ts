@@ -769,6 +769,62 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(damn.spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }, { op: 'noOp' }]);
   });
 
+  it('reads a plain, unconditional cost reduction by type or by color', () => {
+    const electromancer = interpretCard(
+      oracle({
+        name: 'Electromancer Test',
+        typeLine: 'Creature — Goblin Wizard',
+        manaCost: '{1}{U}',
+        power: '2',
+        toughness: '1',
+        oracleText: 'Instant and sorcery spells you cast cost {1} less to cast.',
+      }),
+    );
+    expect(electromancer.modeled).toBe(true);
+    expect(electromancer.ruleStatics).toEqual([
+      {
+        kind: 'costReduction',
+        amount: { kind: 'const', n: 1 },
+        filter: { kind: 'anyOf', of: [{ kind: 'type', value: 'Instant' }, { kind: 'type', value: 'Sorcery' }] },
+      },
+    ]);
+
+    const anarchomancer = interpretCard(
+      oracle({
+        name: 'Anarchomancer Test',
+        typeLine: 'Creature — Goblin Shaman',
+        manaCost: '{R}',
+        power: '1',
+        toughness: '1',
+        oracleText: "Each spell you cast that's red or green costs {1} less to cast.",
+      }),
+    );
+    expect(anarchomancer.modeled).toBe(true);
+    expect(anarchomancer.ruleStatics).toEqual([
+      {
+        kind: 'costReduction',
+        amount: { kind: 'const', n: 1 },
+        filter: { kind: 'anyOf', of: [{ kind: 'color', value: 'R' }, { kind: 'color', value: 'G' }] },
+      },
+    ]);
+  });
+
+  it('reads "cast or copy" onto the same castsSpell trigger head as plain "cast"', () => {
+    const archmage = interpretCard(
+      oracle({
+        name: 'Archmage Emeritus Test',
+        typeLine: 'Creature — Human Wizard',
+        manaCost: '{2}{U}',
+        power: '2',
+        toughness: '3',
+        oracleText: 'Whenever you cast or copy an instant or sorcery spell, draw a card.',
+      }),
+    );
+    expect(archmage.modeled).toBe(true);
+    expect(archmage.triggers[0]?.trigger).toMatchObject({ when: 'castsSpell', caster: 'you' });
+    expect(archmage.triggers[0]?.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+  });
+
   it('reads the attack-tax static (Ghostly Prison, Propaganda)', () => {
     const propaganda = interpretCard(
       oracle({

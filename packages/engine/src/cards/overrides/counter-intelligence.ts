@@ -122,18 +122,13 @@ export function registerCOUNTER_INTELLIGENCEOverrides(): void {
           "{T}: Choose target artifact card in your graveyard. You may cast that card this turn."
     ]);
 
-  defineCard("c9722086-23e8-43dc-8a8c-541ff6962318", "Enthusiastic Mechanaut", [
-          "Artifact spells you cast cost {1} less to cast."
-    ], { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofType('Artifact') }] });
-
   unimplemented("7ecfa47e-1165-46a6-884c-290b1c14d020", "Etched Oracle", [
           "Sunburst",
           "{1}, Remove four +1/+1 counters from this creature: Target player draws three cards."
     ]);
 
-  defineCard("96b87445-6362-4a17-91b2-cbf203fd03fd", "Etherium Sculptor", [
-          "Artifact spells you cast cost {1} less to cast."
-    ], { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofType('Artifact') }] });
+  // Enthusiastic Mechanaut and Etherium Sculptor (both "Artifact spells you cast cost {1} less
+  // to cast.") no longer need overrides here â€” the line now parses generically.
 
   unimplemented("0a79237e-0811-4a8a-bd4d-db3ca91bff22", "Everflowing Chalice", [
           "~ enters with a charge counter on it for each time it was kicked.",

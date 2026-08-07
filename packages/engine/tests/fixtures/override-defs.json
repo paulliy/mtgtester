@@ -2926,7 +2926,6 @@
     "oracleId": "2975590d-6a5b-41e5-8a3b-e9325e71226a",
     "name": "Starfield Mystic",
     "handledLines": [
-      "Enchantment spells you cast cost {1} less to cast.",
       "Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature."
     ],
     "def": {
@@ -7309,28 +7308,6 @@
     }
   },
   {
-    "oracleId": "6a29f36b-7911-4d84-a3ae-546b131d5159",
-    "name": "Dragonspeaker Shaman",
-    "handledLines": [
-      "Dragon spells you cast cost {2} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 2
-          },
-          "filter": {
-            "kind": "subtype",
-            "value": "Dragon"
-          },
-          "kind": "costReduction"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "6a9cc11b-a223-46f0-bf58-c1e08ad1253d",
     "name": "Forum Filibuster",
     "handledLines": [
@@ -9804,28 +9781,6 @@
       "Draw three cards. Then discard two cards unless you discard an artifact card."
     ],
     "def": {}
-  },
-  {
-    "oracleId": "96b87445-6362-4a17-91b2-cbf203fd03fd",
-    "name": "Etherium Sculptor",
-    "handledLines": [
-      "Artifact spells you cast cost {1} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "filter": {
-            "kind": "type",
-            "value": "Artifact"
-          },
-          "kind": "costReduction"
-        }
-      ]
-    }
   },
   {
     "oracleId": "979a5d92-1c67-4fa4-b932-638b0cc1adcd",
@@ -14008,28 +13963,6 @@
     }
   },
   {
-    "oracleId": "c9722086-23e8-43dc-8a8c-541ff6962318",
-    "name": "Enthusiastic Mechanaut",
-    "handledLines": [
-      "Artifact spells you cast cost {1} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "filter": {
-            "kind": "type",
-            "value": "Artifact"
-          },
-          "kind": "costReduction"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e",
     "name": "Shineshadow Snarl",
     "handledLines": [
@@ -17246,28 +17179,6 @@
           }
         ]
       }
-    }
-  },
-  {
-    "oracleId": "faf81ae0-0b35-45ef-a50d-6cecf0c0eeeb",
-    "name": "Dragonlord's Servant",
-    "handledLines": [
-      "Dragon spells you cast cost {1} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "filter": {
-            "kind": "subtype",
-            "value": "Dragon"
-          },
-          "kind": "costReduction"
-        }
-      ]
     }
   },
   {
@@ -22481,28 +22392,6 @@
     }
   },
   {
-    "oracleId": "oracle-dragonlord-s-servant",
-    "name": "Dragonlord's Servant",
-    "handledLines": [
-      "Dragon spells you cast cost {1} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "filter": {
-            "kind": "subtype",
-            "value": "Dragon"
-          },
-          "kind": "costReduction"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-dragonmaster-outcast",
     "name": "Dragonmaster Outcast",
     "handledLines": [
@@ -22555,28 +22444,6 @@
             "player": "you",
             "when": "upkeep"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-dragonspeaker-shaman",
-    "name": "Dragonspeaker Shaman",
-    "handledLines": [
-      "Dragon spells you cast cost {2} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 2
-          },
-          "filter": {
-            "kind": "subtype",
-            "value": "Dragon"
-          },
-          "kind": "costReduction"
         }
       ]
     }
@@ -23147,28 +23014,6 @@
     }
   },
   {
-    "oracleId": "oracle-enthusiastic-mechanaut",
-    "name": "Enthusiastic Mechanaut",
-    "handledLines": [
-      "Artifact spells you cast cost {1} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "filter": {
-            "kind": "type",
-            "value": "Artifact"
-          },
-          "kind": "costReduction"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-era-of-innovation",
     "name": "Era of Innovation",
     "handledLines": [
@@ -23323,28 +23168,6 @@
       "{1}, Remove four +1/+1 counters from this creature: Target player draws three cards."
     ],
     "def": {}
-  },
-  {
-    "oracleId": "oracle-etherium-sculptor",
-    "name": "Etherium Sculptor",
-    "handledLines": [
-      "Artifact spells you cast cost {1} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "filter": {
-            "kind": "type",
-            "value": "Artifact"
-          },
-          "kind": "costReduction"
-        }
-      ]
-    }
   },
   {
     "oracleId": "oracle-everflowing-chalice",
@@ -32742,7 +32565,6 @@
     "oracleId": "oracle-starfield-mystic",
     "name": "Starfield Mystic",
     "handledLines": [
-      "Enchantment spells you cast cost {1} less to cast.",
       "Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature."
     ],
     "def": {

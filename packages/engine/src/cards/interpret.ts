@@ -67,7 +67,6 @@ import type { Value } from './value';
 import { constant } from './value';
 import {
   activated,
-  costReductionFor,
   lord,
   mana,
   manaCost,
@@ -1617,8 +1616,15 @@ const STEP_TRIGGER_HEAD_RE =
  */
 const AGGREGATE_TRIGGER_HEAD_RE =
   /^whenever one or more (.+?) (attack|deal combat damage to a player), (.*)$/;
-/** "Whenever you cast a Dragon spell" (CR 603.2). */
-const CAST_TRIGGER_HEAD_RE = /^whenever (you|an opponent) casts? (.+?), (.*)$/;
+/**
+ * "Whenever you cast a Dragon spell" (CR 603.2) / "Whenever you cast OR COPY an instant or
+ * sorcery spell" (Archmage Emeritus, Storm-Kiln Artist) â€” the "or copy" half is read onto the
+ * same `castsSpell` trigger head rather than added as a real copy-event (the engine has none),
+ * an intentionally under-permissive reading (ADR 0010): the ability fires correctly whenever the
+ * spell is actually CAST, only silently missing the strictly rarer copy case, rather than being
+ * left unmodeled over one clause it cannot fully honor.
+ */
+const CAST_TRIGGER_HEAD_RE = /^whenever (you|an opponent) casts?(?: or copy)? (.+?), (.*)$/;
 /** The intervening-if clause (CR 603.4): "â€¦, if you control a Dragon, draw a card". */
 const INTERVENING_IF_RE = /^if (.+?), (.+)$/;
 
@@ -1903,9 +1909,11 @@ function parseSpellFilter(phrase: string, card: OracleCard): Selector | null {
   const noun = phrase.replace(/ spells?$/, '').replace(/^an? /, '');
   if (noun === '' || noun === 'a' || noun === 'an') return ANY_SPELL;
   if (noun === 'noncreature') return not(ofType('Creature'));
-  // "an instant or sorcery spell" (Archmage Emeritus) â€” each side is its own card type, not a
-  // tribe the way `parseTriggerSubject`'s "or" handling elsewhere reads alternatives.
-  const orTypes = noun.match(/^(instant|sorcery|artifact|creature|enchantment|planeswalker|land) or (?:an? )?(instant|sorcery|artifact|creature|enchantment|planeswalker|land)$/);
+  // "an instant or sorcery spell" (Archmage Emeritus) / "Instant and sorcery spells" (Goblin
+  // Electromancer) â€” each side is its own card type, not a tribe the way `parseTriggerSubject`'s
+  // "or" handling elsewhere reads alternatives. "And" reads the same as "or" here: the predicate
+  // is "matches either type", not an intersection no single spell could ever satisfy.
+  const orTypes = noun.match(/^(instant|sorcery|artifact|creature|enchantment|planeswalker|land) (?:and|or) (?:an? )?(instant|sorcery|artifact|creature|enchantment|planeswalker|land)$/);
   if (orTypes !== null) {
     return anyOf(ofType(titleCase(orTypes[1] as string)), ofType(titleCase(orTypes[2] as string)));
   }
@@ -2909,6 +2917,35 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       ];
     }
   }
+  // "Instant and sorcery spells you cast cost {1} less to cast." (Goblin Electromancer) â€” a
+  // plain, unconditional, fixed reduction: no Eminence "as long as" wrapper, no Temur
+  // Battlecrier-style per-permanent scaling.
+  {
+    const m = lower.match(/^(.+ spells?) you cast cost \{(\d+)\} less to cast$/);
+    if (m) {
+      const filter = parseSpellFilter(m[1] as string, card);
+      if (filter === null) return null;
+      return [{ kind: 'costReduction', amount: constant(Number(m[2])), ...(filter !== ANY_SPELL ? { filter } : {}) }];
+    }
+  }
+  // "Each spell you cast that's red or green costs {1} less to cast." (Goblin Anarchomancer) â€”
+  // the same shape, but the subject is a color pair instead of a card type, and the verb order
+  // is reversed ("costs" trails the clause rather than "cost" following the subject).
+  {
+    const m = lower.match(/^each spell you cast that's (\w+)(?: or (\w+))? costs \{(\d+)\} less to cast$/);
+    if (m) {
+      const first = COLOR_WORDS[m[1] as string];
+      if (first === undefined) return null;
+      const colors = [ofColor(first)];
+      if (m[2] !== undefined) {
+        const second = COLOR_WORDS[m[2] as string];
+        if (second === undefined) return null;
+        colors.push(ofColor(second));
+      }
+      const filter = colors.length === 1 ? colors[0]! : anyOf(...colors);
+      return [{ kind: 'costReduction', amount: constant(Number(m[3])), filter }];
+    }
+  }
   {
     const m = lower.match(CANT_BE_COUNTERED_RE);
     if (m) {
@@ -3194,7 +3231,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
     );
     reasons.length = 0;
   } else if (card.name === 'Sarkhan, Soul Aflame') {
-    ruleStatics.push(costReductionFor(ofSubtype('Dragon'), 1));
+    // "Dragon spells you cast cost {1} less to cast." now parses generically (the per-line loop
+    // below), so it is no longer hand-pushed here.
     triggers.push(
       triggered(whenEnters(allOf(ofSubtype('Dragon'), YOURS)), {
         optional: true,
