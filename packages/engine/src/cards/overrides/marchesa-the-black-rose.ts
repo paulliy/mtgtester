@@ -1,18 +1,16 @@
 /** Authored overrides for marchesa-the-black-rose.txt. */
 
 import type { CardDefinition } from '../definition';
-import { SAC_SELF, TAP, manaCost } from '../templates';
+import { SAC_SELF, TAP, mana, manaCost } from '../templates';
 import type { Ability, TokenSpec } from '../ability';
-import { parseManaCost } from '../../mana/cost';
 import { constant } from '../value';
 import { allOf, anyOf, HAS_ANY_COUNTER, IS_TOKEN, OTHER, not, ofColor, ofSubtype, ofType, YOURS } from '../selector';
+import { TREASURE } from '../tokens';
 import { defineCard } from './index';
 
-const M = (cost: string) => ({ kind: 'mana' as const, cost: parseManaCost(cost).cost! });
 
 const BIRD: TokenSpec = { name: 'Bird', typeLine: 'Creature — Bird', types: ['Creature'], subtypes: ['Bird'], colors: ['W'], power: 1, toughness: 1, keywords: ['flying'] };
 const SPAWN: TokenSpec = { name: 'Eldrazi Spawn', typeLine: 'Creature — Eldrazi', types: ['Creature'], subtypes: ['Eldrazi'], colors: [], power: 0, toughness: 1, manaAbilities: [{ costs: [SAC_SELF], units: [['C']] }] };
-const TREASURE: TokenSpec = { name: 'Treasure', typeLine: 'Artifact — Treasure', types: ['Artifact'], subtypes: ['Treasure'], colors: [], power: null, toughness: null, manaAbilities: [{ costs: [SAC_SELF], units: [['W', 'U', 'B', 'R', 'G']] }] };
 const MUTAGEN: TokenSpec = { name: 'Mutagen', typeLine: 'Artifact — Mutagen', types: ['Artifact'], subtypes: ['Mutagen'], colors: [], power: null, toughness: null };
 
 // Dethrone (CR 702.103) has no generic keyword representation in this engine — every carrier
@@ -85,7 +83,7 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   ], { cantBlock: true, activatedAbilities: [{ costs: [{ kind: 'sacrificeOther', selector: ofType('Creature') }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }], description: 'Sacrifice a creature — put a +1/+1 counter on Carrion Feeder' } }] });
   defineCard('026ef98e-4f0a-4a6d-b74f-d17ac8b10e37', 'Cytoplast Manipulator', [
     'Graft 2', '{U}, {T}: Gain control of target creature with a +1/+1 counter on it for as long as this creature remains on the battlefield.',
-  ], { activatedAbilities: [{ costs: [M('{U}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature', filter: HAS_ANY_COUNTER }], effects: [{ op: 'gainControlTarget', target: 0 }], description: '{U}, {T} — gain control of a countered creature' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{U}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature', filter: HAS_ANY_COUNTER }], effects: [{ op: 'gainControlTarget', target: 0 }], description: '{U}, {T} — gain control of a countered creature' } }] });
   defineCard('724767ca-bd84-4137-9133-4ad2e96b8428', "Dack's Duplicate", [
     'You may have this creature enter as a copy of any creature on the battlefield, except it has haste and dethrone.',
   ], { entersAsCopy: { selector: ofType('Creature'), addKeywords: ['haste'], addTriggers: [DETHRONE_TRIGGER] } });
@@ -124,7 +122,7 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'opponent', filter: { kind: 'not', of: ofType('Creature') } }, targets: [], effects: [{ op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'powerOfSource' } }], description: 'An opponent casts a noncreature spell — deal damage equal to this creature’s power' }] });
   defineCard('5f3f68b5-8c6a-4181-bb8a-9c73967d198a', 'Glen Elendra Archmage', [
     '{U}, Sacrifice this creature: Counter target noncreature spell.', 'Persist',
-  ], { activatedAbilities: [{ costs: [M('{U}'), SAC_SELF], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'noncreatureSpell' }], effects: [{ op: 'counter', target: 0 }], description: '{U}, sacrifice Glen Elendra — counter target noncreature spell' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{U}'), SAC_SELF], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'noncreatureSpell' }], effects: [{ op: 'counter', target: 0 }], description: '{U}, sacrifice Glen Elendra — counter target noncreature spell' } }] });
   defineCard('6f4ac4a4-53ec-4bc9-8f5c-d4b801d867b2', 'Grave Pact', [
     'Whenever a creature you control dies, each other player sacrifices a creature of their choice.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) } }, targets: [], effects: [{ op: 'sacrificeOneEachOpponent', filter: 'creature' }], description: 'Each other player sacrifices a creature' }] });
@@ -169,7 +167,7 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), not(IS_TOKEN), YOURS) } }, targets: [], effects: [{ op: 'damageController', amount: 1 }, { op: 'draw', count: constant(1) }], description: 'A nontoken creature dies — draw and lose 1 life' }] });
   defineCard('57296ea3-3c0d-49b7-bc08-0d0d8414e9ad', 'Nightscape Familiar', [
     'Blue spells and red spells you cast cost {1} less to cast.', '{1}{B}: Regenerate this creature.',
-  ], { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: anyOf(ofColor('U'), ofColor('R')) }], activatedAbilities: [{ costs: [M('{1}{B}')], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'noOp' }], description: '{1}{B}: Regenerate Nightscape Familiar' } }] });
+  ], { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: anyOf(ofColor('U'), ofColor('R')) }], activatedAbilities: [{ costs: [mana('{1}{B}')], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'noOp' }], description: '{1}{B}: Regenerate Nightscape Familiar' } }] });
   defineCard('9bcaf141-1f1f-491f-aced-13dc093b9e2c', 'Pawn of Ulamog', [
     'Whenever this creature or another nontoken creature you control dies, you may create a 0/1 colorless Eldrazi Spawn creature token. It has "Sacrifice this token: Add {C}."',
   ], { triggers: [{ kind: 'triggered', optional: true, trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS, not(IS_TOKEN)) } }, targets: [], effects: [{ op: 'createToken', spec: SPAWN, count: constant(1) }], description: 'Create an Eldrazi Spawn' }] });
@@ -184,13 +182,13 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: YOURS } }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'A permanent enters from a graveyard — draw' }, { kind: 'triggered', trigger: { when: 'castsSpell', caster: 'each' }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'A player casts from a graveyard — draw' }] });
   defineCard('f53da056-97be-41ad-8cfc-0d92e17dcd7b', 'Sage of Fables', [
     'Each other Wizard creature you control enters with an additional +1/+1 counter on it.', '{2}, Remove a +1/+1 counter from a creature you control: Draw a card.',
-  ], { activatedAbilities: [{ costs: [M('{2}'), { kind: 'removeCounters', counter: '+1/+1', count: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Remove a +1/+1 counter — draw a card' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{2}'), { kind: 'removeCounters', counter: '+1/+1', count: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Remove a +1/+1 counter — draw a card' } }] });
   defineCard('7555c429-5f2d-4171-b6b0-8e3c8da7f314', 'Satoru, the Infiltrator', [
     'Whenever ~ and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), not(IS_TOKEN), YOURS) }, aggregate: true }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'A nontoken creature enters without being cast — draw' }] });
   defineCard('59c7496b-19a2-478b-b28f-6f153c2458ae', 'Siren Stormtamer', [
     '{U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control.',
-  ], { activatedAbilities: [{ costs: [M('{U}'), SAC_SELF], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'stackObject' }], effects: [{ op: 'counter', target: 0 }], description: '{U}, sacrifice — counter a spell or ability targeting you or your creature' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{U}'), SAC_SELF], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'stackObject' }], effects: [{ op: 'counter', target: 0 }], description: '{U}, sacrifice — counter a spell or ability targeting you or your creature' } }] });
   defineCard('fda61506-ed79-47fd-badd-639185297913', 'Smokestack', [
     'At the beginning of each player\'s upkeep, that player sacrifices a permanent of their choice for each soot counter on this artifact.',
   ], { entersWithCounters: { soot: 1 }, triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'each' }, targets: [], effects: [{ op: 'sacrificeEachPlayer', count: 1, filter: 'any' }], description: 'Each player sacrifices a permanent for each soot counter' }] });
@@ -214,7 +212,7 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(OTHER, ofType('Creature'), YOURS) }, aggregate: true }, targets: [], effects: [{ op: 'createTokenCopyOf', ref: 'triggerObject', count: constant(1), exceptNonLegendary: true }], description: 'A creature enters from a graveyard — create a copy token' }] });
   defineCard('4c209165-a159-4cd7-8e99-1e533d3a22a6', 'Vigean Graftmage', [
     'Graft 2', '{1}{U}: Untap target creature with a +1/+1 counter on it.',
-  ], { activatedAbilities: [{ costs: [M('{1}{U}')], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature', filter: HAS_ANY_COUNTER }], effects: [{ op: 'untapTarget', target: 0 }], description: '{1}{U}: Untap target creature with a +1/+1 counter' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{1}{U}')], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature', filter: HAS_ANY_COUNTER }], effects: [{ op: 'untapTarget', target: 0 }], description: '{1}{U}: Untap target creature with a +1/+1 counter' } }] });
   defineCard('6dc7f837-158f-4ccf-86a5-a07a20891ec5', 'Vindictive Lich', [
     'When this creature dies, choose one or more. Each mode must target a different player.', '\u2022 Target opponent sacrifices a creature of their choice.', '\u2022 Target opponent discards two cards.', '\u2022 Target opponent loses 5 life.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'vindictiveLichModes' }], description: 'When Vindictive Lich dies — choose one or more modes' }] });

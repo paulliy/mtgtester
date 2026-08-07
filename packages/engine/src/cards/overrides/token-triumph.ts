@@ -1,3 +1,4 @@
+import { SOLDIER_1_1_LIFELINK } from '../tokens';
 import { defineCard } from './index';
 import { ATTACHED, DISCARD_SELF, SAC_SELF, TAP, mana, manaCost } from '../templates';
 import { constant } from '../value';
@@ -31,16 +32,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
           effects: [
             {
               op: 'createToken',
-              spec: {
-                name: 'Soldier',
-                typeLine: 'Creature — Soldier',
-                types: ['Creature'],
-                subtypes: ['Soldier'],
-                colors: ['W'],
-                power: 1,
-                toughness: 1,
-                keywords: ['lifelink'],
-              },
+              spec: SOLDIER_1_1_LIFELINK,
               count: constant(1),
             },
           ],
@@ -372,7 +364,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
             effects: [
               {
                 op: 'createToken',
-                spec: { name: 'Soldier', typeLine: 'Creature — Soldier', types: ['Creature'], subtypes: ['Soldier'], colors: ['W'], power: 1, toughness: 1, keywords: ['lifelink'] },
+                spec: SOLDIER_1_1_LIFELINK,
                 count: constant(1),
               },
             ],
@@ -454,7 +446,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
           effects: [
             {
               op: 'createToken',
-              spec: { name: 'Soldier', typeLine: 'Creature — Soldier', types: ['Creature'], subtypes: ['Soldier'], colors: ['W', 'G'], power: 1, toughness: 1, keywords: ['lifelink'] },
+              spec: SOLDIER_1_1_LIFELINK,
               count: constant(2),
             },
           ],

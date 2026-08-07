@@ -4,7 +4,8 @@
 
 import { constant } from '../value';
 import { ATTACHED, SAC_SELF, TAP, mana, manaCost } from '../templates';
-import { defineCard, registerOverride, unimplemented } from './index';
+import { TREASURE } from '../tokens';
+import { defineCard, unimplemented } from './index';
 import { allOf, anyOf, not, ofSupertype, ofSubtype, ofType, IS_TOKEN, OTHER, SELF, YOURS, withKeyword } from '../selector';
 import type { CardDefinition } from '../definition';
 import type { TokenSpec } from '../ability';
@@ -43,16 +44,6 @@ const BEAST_TOKEN: TokenSpec = {
   toughness: 6,
 };
 
-const TREASURE_TOKEN: TokenSpec = {
-  name: 'Treasure',
-  typeLine: 'Artifact — Treasure',
-  types: ['Artifact'],
-  subtypes: ['Treasure'],
-  colors: [],
-  power: null,
-  toughness: null,
-  manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, SAC_SELF] }],
-};
 
 const GREEN_BEAST_TOKEN: TokenSpec = {
   name: 'Beast',
@@ -172,7 +163,7 @@ const BLASPHEMOUS_ACT_DEF: Partial<CardDefinition> = {
 const BOOTLEGGERS_STASH_DEF: Partial<CardDefinition> = {
   staticEffects: [{
     affects: allOf(ofType('Land'), YOURS),
-    op: { layer: 6, addActivatedAbility: { costs: [TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: TREASURE_TOKEN }], description: 'Tap — create a Treasure token' } } },
+    op: { layer: 6, addActivatedAbility: { costs: [TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: TREASURE }], description: 'Tap — create a Treasure token' } } },
   }],
 };
 
@@ -695,36 +686,14 @@ export function registerLIVING_ENERGYOverrides(): void {
           "Counter target spell, activated ability, or triggered ability."
     ], DISALLOW_DEF);
 
-  // Final exact-text registrations for the Unicode-sensitive oracle lines.
-  registerOverride({
-    oracleId: "295cd8e1-0830-46c1-9957-556afd4bcee6",
-    name: "Aetheric Amplifier",
-    handledLines: ["{4}, {T}: Choose one. Activate only as a sorcery.", "\u2022 Double the number of each kind of counter on target permanent.", "\u2022 Double the number of each kind of counter you have."],
-    def: AETHERIC_AMPLIFIER_DEF,
-  });
-  registerOverride({
-    oracleId: "397b9dcf-690a-4a58-8637-bb9baab7cc2f",
-    name: "Elder Gargaroth",
-    handledLines: ["Whenever this creature attacks or blocks, choose one \u2014", "\u2022 Create a 3/3 green Beast creature token.", "\u2022 You gain 3 life.", "\u2022 Draw a card."],
-    def: ELDER_GARGAROTH_DEF,
-  });
-  registerOverride({
-    oracleId: "88600bd4-4dcc-4788-bba4-78b6cf5ad8f8",
-    name: "Peema Trailblazer",
-    handledLines: ["Whenever this creature deals combat damage to a player, you get that many {E} .", "Exhaust \u2014 Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control."],
-    def: PEEMA_TRAILBLAZER_DEF,
-  });
-  registerOverride({
-    oracleId: "aaadfe41-b2be-4183-b45e-a70e53a59d2e",
-    name: "Retrofitter Foundry",
-    handledLines: ["{3}: Untap this artifact.", "{T}, Sacrifice a Thopter: Create a 4/4 colorless Construct artifact creature token."],
-    def: RETROFITTER_FOUNDRY_DEF,
-  });
-  registerOverride({
-    oracleId: "ab655810-f67e-4576-9174-35b16f5e3235",
-    name: "Saheeli, Sublime Artificer",
-    handledLines: ["Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.", "\u2212\u0032: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types."],
-    def: SAHEELI_SUBLIME_ARTIFICER_DEF,
-  });
+  // Final exact-text registrations for the Unicode-sensitive oracle lines. These re-register
+  // cards defined above whose `handledLines` literals were mojibake; going through defineCard
+  // means the corrected text reaches BOTH ids, not just the Scryfall one — previously the
+  // fixture id kept the broken text and the card stayed unmodeled when built by name.
+  defineCard("295cd8e1-0830-46c1-9957-556afd4bcee6", "Aetheric Amplifier", ["{4}, {T}: Choose one. Activate only as a sorcery.", "\u2022 Double the number of each kind of counter on target permanent.", "\u2022 Double the number of each kind of counter you have."], AETHERIC_AMPLIFIER_DEF);
+  defineCard("397b9dcf-690a-4a58-8637-bb9baab7cc2f", "Elder Gargaroth", ["Whenever this creature attacks or blocks, choose one \u2014", "\u2022 Create a 3/3 green Beast creature token.", "\u2022 You gain 3 life.", "\u2022 Draw a card."], ELDER_GARGAROTH_DEF);
+  defineCard("88600bd4-4dcc-4788-bba4-78b6cf5ad8f8", "Peema Trailblazer", ["Whenever this creature deals combat damage to a player, you get that many {E} .", "Exhaust \u2014 Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control."], PEEMA_TRAILBLAZER_DEF);
+  defineCard("aaadfe41-b2be-4183-b45e-a70e53a59d2e", "Retrofitter Foundry", ["{3}: Untap this artifact.", "{T}, Sacrifice a Thopter: Create a 4/4 colorless Construct artifact creature token."], RETROFITTER_FOUNDRY_DEF);
+  defineCard("ab655810-f67e-4576-9174-35b16f5e3235", "Saheeli, Sublime Artificer", ["Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.", "\u2212\u0032: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types."], SAHEELI_SUBLIME_ARTIFICER_DEF);
 
 }

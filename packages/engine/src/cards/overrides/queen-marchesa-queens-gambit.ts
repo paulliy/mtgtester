@@ -2,17 +2,15 @@
 
 import type { CardDefinition } from '../definition';
 import { constant } from '../value';
-import { SAC_SELF, TAP } from '../templates';
-import { parseManaCost } from '../../mana/cost';
+import { SAC_SELF, TAP, mana } from '../templates';
 import { allOf, ofType, YOURS } from '../selector';
 import { defineCard } from './index';
 import { ASSASSIN_1_1 as ASSASSIN_TOKEN } from '../tokens';
 
-const MANA = (cost: string) => ({ kind: 'mana' as const, cost: parseManaCost(cost).cost! });
 
 const SIGNET = (symbols: ['W' | 'U' | 'B' | 'R' | 'G', 'W' | 'U' | 'B' | 'R' | 'G']) => ({
   activatedAbilities: [{
-    costs: [MANA('{1}'), TAP],
+    costs: [mana('{1}'), TAP],
     timing: 'any' as const,
     ability: {
       kind: 'activated' as const,

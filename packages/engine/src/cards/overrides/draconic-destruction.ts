@@ -414,7 +414,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
   defineCard("7735eeba-693b-47e2-bd51-414379cf1016", "Beast Within", [
           "Destroy target permanent. Its controller creates a 3/3 green Beast creature token."
     ], {
-      spellAbility: { kind: 'spell', targets: [{ kind: 'permanent' }], effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: { name: 'Beast', typeLine: 'Creature � Beast', types: ['Creature'], subtypes: ['Beast'], colors: ['G'], power: 3, toughness: 3 } }], description: 'Destroy target permanent; its controller creates a 3/3 Beast' },
+      spellAbility: { kind: 'spell', targets: [{ kind: 'permanent' }], effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: { name: 'Beast', typeLine: 'Creature — Beast', types: ['Creature'], subtypes: ['Beast'], colors: ['G'], power: 3, toughness: 3 } }], description: 'Destroy target permanent; its controller creates a 3/3 Beast' },
     });
 
   defineCard("06b77a80-4968-4385-960a-fb66bb4faa94", "Dragonkin Berserker", [
@@ -441,11 +441,11 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
           op: 'createToken',
           count: constant(1),
           spec: {
-            name: 'Dragon', typeLine: 'Creature � Dragon', types: ['Creature'], subtypes: ['Dragon'],
+            name: 'Dragon', typeLine: 'Creature — Dragon', types: ['Creature'], subtypes: ['Dragon'],
             colors: ['R'], power: 5, toughness: 5, keywords: ['flying'],
           },
         }],
-        description: 'Upkeep with six lands � create a Dragon token',
+        description: 'Upkeep with six lands — create a Dragon token',
       }],
     });
 
@@ -600,7 +600,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
 
   defineCard("c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7", "Mordant Dragon", [
           "Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls."
-    ], { triggers: [{ kind: 'triggered', trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } }, targets: [{ kind: 'creature', controller: 'eventPlayer' }], effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'damageDealt' } }], description: 'Combat damage to player � may deal that much to one of their creatures' }] });
+    ], { triggers: [{ kind: 'triggered', trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } }, targets: [{ kind: 'creature', controller: 'eventPlayer' }], effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'damageDealt' } }], description: 'Combat damage to player — may deal that much to one of their creatures' }] });
 
   defineCard("58d7b8b3-ac47-4805-8259-4ba8e70d7dc3", "Primal Might", [
           "Target creature you control gets +X/+X until end of turn. Then it fights up to one target creature you don't control."
@@ -622,7 +622,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
         trigger: { when: 'attacks', subject: { kind: 'self' } },
         targets: [],
         effects: [{ op: 'addMana', amount: constant(6), colors: ['R', 'G'], fixedSymbols: ['R', 'R', 'R', 'G', 'G', 'G'], persistent: true }],
-        description: 'Attack � add {R}{R}{R}{G}{G}{G} until end of turn',
+        description: 'Attack — add {R}{R}{R}{G}{G}{G} until end of turn',
       }],
     });
 
@@ -651,7 +651,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
           op: 'dealDamage', target: 0,
           amount: { kind: 'countPermanents', selector: ofSubtype('Dragon'), scope: 'you' },
         }],
-        description: 'Dragon enters � deal damage equal to Dragons controlled',
+        description: 'Dragon enters — deal damage equal to Dragons controlled',
       }],
     });
 
@@ -669,7 +669,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
 
   defineCard("e958144e-01bc-46ff-8f56-ddf2eb098630", "Thundermaw Hellkite", [
           "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures."
-    ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'damageEach', selector: allOf(ofType('Creature'), withKeyword('flying'), { kind: 'controller', who: 'opponents' }), amount: constant(1) }, { op: 'tapEach', selector: allOf(ofType('Creature'), withKeyword('flying'), { kind: 'controller', who: 'opponents' }) }], description: 'Enters � deal one damage to and tap opposing fliers' }] });
+    ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'damageEach', selector: allOf(ofType('Creature'), withKeyword('flying'), { kind: 'controller', who: 'opponents' }), amount: constant(1) }, { op: 'tapEach', selector: allOf(ofType('Creature'), withKeyword('flying'), { kind: 'controller', who: 'opponents' }) }], description: 'Enters — deal one damage to and tap opposing fliers' }] });
 
   defineCard("63394e24-a456-4cc6-9885-8c62447b050a", "Tyrant's Familiar", [
           "As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\""
@@ -682,7 +682,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
         kind: 'spell',
         targets: [{ kind: 'creature' }],
         effects: [{ op: 'doublePowerTarget', target: 0 }],
-        description: 'Double target creature�s power until end of turn',
+        description: 'Double target creature’s power until end of turn',
       },
     });
 

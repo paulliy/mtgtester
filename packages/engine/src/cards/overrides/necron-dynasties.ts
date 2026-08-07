@@ -2,7 +2,7 @@
  * Authored card overrides for necron-dynasties.txt.
  */
 
-import { defineCard, registerOverride, unimplemented } from './index';
+import { defineCard, unimplemented } from './index';
 import { allOf, anyOf, CHOSEN_COLOR, IS_TOKEN, not, OTHER, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
 import { constant } from '../value';
 
@@ -51,7 +51,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
   defineCard("bcad5b83-5513-4455-a9c9-716281505eaa", "Canoptek Spyder", [
           "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card."
     ], {
-      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(OTHER, not(IS_TOKEN), ofType('Artifact'), anyOf(ofType('Creature'), ofType('Vehicle')), YOURS) } }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Another nontoken artifact creature or Vehicle enters � draw' }],
+      triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(OTHER, not(IS_TOKEN), ofType('Artifact'), anyOf(ofType('Creature'), ofType('Vehicle')), YOURS) } }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Another nontoken artifact creature or Vehicle enters — draw' }],
     });
 
   unimplemented("678b3fb5-aa9f-4268-9433-2a89dd37b927", "Canoptek Tomb Sentinel", [
@@ -114,7 +114,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     ], {
       triggers: [{
         kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [],
-        effects: [{ op: 'mill', count: constant(3) }], description: 'Enters � mill three cards',
+        effects: [{ op: 'mill', count: constant(3) }], description: 'Enters — mill three cards',
       }],
     });
 
@@ -195,8 +195,8 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     ], {
       triggers: [{
         kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [],
-        effects: [{ op: 'createToken', count: constant(1), spec: { name: 'Necron Warrior', typeLine: 'Artifact Creature � Necron Warrior', types: ['Artifact', 'Creature'], subtypes: ['Necron', 'Warrior'], colors: [], power: 2, toughness: 2 } }],
-        description: 'Enters � create a Necron Warrior token',
+        effects: [{ op: 'createToken', count: constant(1), spec: { name: 'Necron Warrior', typeLine: 'Artifact Creature — Necron Warrior', types: ['Artifact', 'Creature'], subtypes: ['Necron', 'Warrior'], colors: [], power: 2, toughness: 2 } }],
+        description: 'Enters — create a Necron Warrior token',
       }],
     });
 
@@ -213,28 +213,15 @@ export function registerNECRON_DYNASTIESOverrides(): void {
         effects: [
           { op: 'searchLibrary', filter: allOf(ofType('Land'), ofSupertype('Basic'), ofSubtype('Swamp')), destinations: [{ zone: 'hand' }] },
           { op: 'shuffle' },
-        ], description: 'Enters � search for a basic Swamp',
+        ], description: 'Enters — search for a basic Swamp',
       }],
     });
 
-  registerOverride({
-    oracleId: "589b742c-fee5-413a-a56c-4d4ffaf0f73d",
-    name: "Psychomancer",
-    handledLines: [
+  defineCard("589b742c-fee5-413a-a56c-4d4ffaf0f73d", "Psychomancer", [
           "Harbinger of Despair — Whenever this creature or another nontoken artifact you control is put into a graveyard from the battlefield or is put into exile from the battlefield, target opponent loses 1 life and you gain 1 life."
-    ],
-    def: {
+    ], {
       triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ofType('Artifact'), not(IS_TOKEN), YOURS) } }, targets: [{ kind: 'player' }], effects: [{ op: 'loseLife', amount: constant(1) }, { op: 'gainLife', amount: constant(1) }], description: 'An artifact leaves — target opponent loses 1 and you gain 1' }],
-    },
-  });
-  registerOverride({
-    oracleId: "oracle-psychomancer",
-    name: "Psychomancer",
-    handledLines: [
-          "Harbinger of Despair — Whenever this creature or another nontoken artifact you control is put into a graveyard from the battlefield or is put into exile from the battlefield, target opponent loses 1 life and you gain 1 life."
-    ],
-    def: {},
-  });
+    });
 
   unimplemented("c23e5b80-08d2-4e24-9908-fe2aa4f30f6f", "Reliquary Tower", [
           "You have no maximum hand size."
@@ -305,24 +292,11 @@ export function registerNECRON_DYNASTIESOverrides(): void {
           "{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery."
     ]);
 
-  registerOverride({
-    oracleId: "1ef3b48a-55ef-422e-ac7f-e1c1057eec2c",
-    name: "Trazyn the Infinite",
-    handledLines: [
+  defineCard("1ef3b48a-55ef-422e-ac7f-e1c1057eec2c", "Trazyn the Infinite", [
           "Prismatic Gallery — As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard."
-    ],
-    def: {
+    ], {
       activatedAbilities: [{ costs: [], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'noOp' }], description: 'Use an activated ability from an artifact card in your graveyard' } }],
-    },
-  });
-  registerOverride({
-    oracleId: "oracle-trazyn-the-infinite",
-    name: "Trazyn the Infinite",
-    handledLines: [
-          "Prismatic Gallery — As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard."
-    ],
-    def: {},
-  });
+    });
 
   unimplemented("52aa5a79-db0e-4eaa-b2df-e41674c47794", "Triarch Praetorian", [
           "Dynastic Codes — When this creature enters from a graveyard, you draw two cards and you lose 2 life."

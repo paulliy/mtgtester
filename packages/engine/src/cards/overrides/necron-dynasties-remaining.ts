@@ -1,15 +1,13 @@
 /** Remaining authored overrides for necron-dynasties.txt. */
 
 import type { CardDefinition } from '../definition';
-import { ATTACHED, SAC_SELF, TAP, manaCost } from '../templates';
+import { ATTACHED, SAC_SELF, TAP, mana, manaCost } from '../templates';
 import type { TokenSpec } from '../ability';
-import { parseManaCost } from '../../mana/cost';
 import { constant } from '../value';
 import { allOf, CHOSEN_COLOR, HAS_ANY_COUNTER, IS_TOKEN, OTHER, ofSubtype, ofSupertype, ofType, not, YOURS } from '../selector';
 import { defineCard } from './index';
 import { NECRON_WARRIOR_2_2 as NECRON_WARRIOR_TOKEN } from '../tokens';
 
-const M = (cost: string) => ({ kind: 'mana' as const, cost: parseManaCost(cost).cost! });
 const NECRON: TokenSpec = NECRON_WARRIOR_TOKEN;
 const INSECT: TokenSpec = { name: 'Insect', typeLine: 'Artifact Creature — Insect', types: ['Artifact', 'Creature'], subtypes: ['Insect'], colors: [], power: 1, toughness: 1, keywords: ['flying'] };
 
@@ -39,13 +37,13 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   ], { cantBeBlocked: true, triggers: [{ kind: 'triggered', trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'conditionalEffect', condition: { kind: 'mayPayMana', cost: manaCost('{3}') }, then: [{ op: 'sacrifice', target: 'source' }, { op: 'searchLibrary', filter: ofSupertype('Basic'), destinations: [{ zone: 'battlefield', tapped: true }, { zone: 'battlefield', tapped: true }] }, { op: 'shuffle' }], else: [] }], description: 'Pay {3} and sacrifice — search for two basic lands' }] });
   defineCard('655aece2-f33a-46e0-8f80-112ae8a457fe', 'Convergence of Dominion', [
     'Dynastic Command Node — As long as you control your commander, activated abilities of cards in your graveyard cost {2} less to activate. This effect can\'t reduce the mana in that ability\'s activation cost to less than one mana.', 'Translocation Protocols — {3}, {T}: Mill three cards.',
-  ], { activatedAbilities: [{ costs: [M('{3}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'mill', count: constant(3) }], description: '{3}, {T}: Mill three cards' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{3}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'mill', count: constant(3) }], description: '{3}, {T}: Mill three cards' } }] });
   defineCard('75564721-e4e9-463a-b49e-f0c7cd6f53a7', 'Cranial Plating', [
     'Equipped creature gets +1/+0 for each artifact you control.', '{B}{B}: Attach this Equipment to target creature you control.',
-  ], { staticEffects: [{ affects: ATTACHED, op: { layer: 7, sublayer: 'd', power: { kind: 'countPermanents', selector: ofType('Artifact'), scope: 'you' }, toughness: 0 } }], activatedAbilities: [{ costs: [M('{B}{B}')], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'attachSelfTo', target: 0 }], description: '{B}{B}: Attach Cranial Plating' } }] });
+  ], { staticEffects: [{ affects: ATTACHED, op: { layer: 7, sublayer: 'd', power: { kind: 'countPermanents', selector: ofType('Artifact'), scope: 'you' }, toughness: 0 } }], activatedAbilities: [{ costs: [mana('{B}{B}')], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'attachSelfTo', target: 0 }], description: '{B}{B}: Attach Cranial Plating' } }] });
   defineCard('27a4b633-5a62-4d8c-8cc6-44959c311de9', 'Cryptek', [
     '{1}{B}, {T}: Choose another target artifact creature you control. When that creature dies this turn, return it to the battlefield tapped under your control.',
-  ], { activatedAbilities: [{ costs: [M('{1}{B}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature', controller: 'you', filter: allOf(OTHER, ofType('Artifact')) }], effects: [{ op: 'registerDelayedTrigger', when: 'dies', expiry: 'cleanup', target: 0, controller: 'targetController', ability: { kind: 'triggered', targets: [], effects: [{ op: 'graveyardToBattlefield', target: 'triggerObject' }], description: 'Return that creature tapped' } }], description: 'Return the chosen artifact creature if it dies this turn' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{1}{B}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature', controller: 'you', filter: allOf(OTHER, ofType('Artifact')) }], effects: [{ op: 'registerDelayedTrigger', when: 'dies', expiry: 'cleanup', target: 0, controller: 'targetController', ability: { kind: 'triggered', targets: [], effects: [{ op: 'graveyardToBattlefield', target: 'triggerObject' }], description: 'Return that creature tapped' } }], description: 'Return the chosen artifact creature if it dies this turn' } }] });
   defineCard('932708ae-9d5c-4561-aa8b-0d2222d37fdc', 'Darkness', [
     'Prevent all combat damage that would be dealt this turn.',
   ], { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'preventCombatDamageAll' }], description: 'Prevent all combat damage this turn' } });
@@ -54,7 +52,7 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   ], { spellAbility: { kind: 'spell', targets: [{ kind: 'cardInGraveyard', filter: ofType('Creature') }], effects: [{ op: 'graveyardToBattlefield', target: 0 }], description: 'Return target creature card from your graveyard' } });
   defineCard('cb923c4d-1d2e-4039-90bb-72d1981b9738', 'Endless Atlas', [
     '{2}, {T}: Draw a card. Activate only if you control three or more lands with the same name.',
-  ], { activatedAbilities: [{ costs: [M('{2}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'draw', count: constant(1) }], description: '{2}, {T}: Draw a card' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{2}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'draw', count: constant(1) }], description: '{2}, {T}: Draw a card' } }] });
   defineCard('bb1b4786-3804-486b-9fd9-85848d24d362', 'Ghost Ark', [
     'Repair Barge — Whenever this Vehicle becomes crewed, each artifact creature card in your graveyard gains unearth {3} until end of turn.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'becomesTapped', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'grantUnearthToArtifactCreaturesInGraveyard', cost: manaCost('{3}') }], description: 'Artifact creature cards in your graveyard gain unearth {3} until end of turn' }] });
@@ -78,7 +76,7 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   ], { triggers: [{ kind: 'triggered', optional: true, trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'permanent', selector: { kind: 'isEquipped' } } }, targets: [], effects: [{ op: 'draw', count: constant(2) }, { op: 'discard', count: 1 }], description: 'Draw two cards, then discard a card' }] });
   defineCard('2549bc57-9ffb-4053-9f10-f2a5f792b845', 'Myriad Landscape', [
     '{2}, {T}, Sacrifice this land: Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle.',
-  ], { activatedAbilities: [{ costs: [M('{2}'), TAP, SAC_SELF], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibrary', filter: ofSupertype('Basic'), destinations: [{ zone: 'battlefield', tapped: true }, { zone: 'battlefield', tapped: true }] }, { op: 'shuffle' }], description: 'Search for up to two basic lands' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{2}'), TAP, SAC_SELF], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibrary', filter: ofSupertype('Basic'), destinations: [{ zone: 'battlefield', tapped: true }, { zone: 'battlefield', tapped: true }] }, { op: 'shuffle' }], description: 'Search for up to two basic lands' } }] });
   defineCard('994bc16d-fdc6-475c-96df-beeb4d5aa03e', 'Mystic Forge', [
     'You may cast artifact spells and colorless spells from the top of your library.', '{T}, Pay 1 life: Exile the top card of your library.',
   ], { ruleStatics: [{ kind: 'castFromZone', zone: 'libraryTop', filter: ofType('Artifact') }], activatedAbilities: [{ costs: [TAP, { kind: 'payLife', amount: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'mill', count: constant(1) }], description: 'Exile the top card of your library' } }] });
@@ -90,7 +88,7 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'millAndCreateTokensForCreatures', spec: NECRON }], description: 'Mill three cards and create Necron Warriors for creature cards' }] });
   defineCard('2c0de95f-4269-439c-a1bc-faa11348b185', 'Necron Overlord', [
     'Relentless March — {X}, {T}, Tap X untapped artifacts you control: Target opponent loses X life.',
-  ], { activatedAbilities: [{ costs: [M('{X}'), TAP, { kind: 'tapXOthers', selector: allOf(ofType('Artifact'), YOURS) }], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'loseLifeTarget', target: 0, amount: { kind: 'xValue' } }], description: '{X}, {T}, tap X artifacts: target opponent loses X life' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{X}'), TAP, { kind: 'tapXOthers', selector: allOf(ofType('Artifact'), YOURS) }], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'loseLifeTarget', target: 0, amount: { kind: 'xValue' } }], description: '{X}, {T}, tap X artifacts: target opponent loses X life' } }] });
   defineCard('473a7998-669d-4181-83fe-f178a2e781f0', 'Out of the Tombs', [
     'At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it.', 'If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can\'t, you lose the game.',
   ], { emptyLibraryCreatureReplacement: true, entersWithCounters: { eon: 2 }, triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'you' }, targets: [], effects: [{ op: 'putCounters', target: 'source', counter: 'eon', count: 2 }, { op: 'mill', count: { kind: 'countersOnSelf', counter: 'eon' } }], description: 'Put on eon counters, then mill equal to them' }] });
@@ -138,7 +136,7 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } }, targets: [{ kind: 'player' }], effects: [{ op: 'tombBladeHit', target: 0 }], description: 'The damaged player sacrifices a creature or loses life' }] });
   defineCard('986f510c-e2ec-423e-a443-51a169939558', 'Tomb Fortress', [
     '{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery.',
-  ], { activatedAbilities: [{ costs: [M('{2}{B}{B}{B}'), TAP, { kind: 'exileSelf' }], timing: 'sorcery', ability: { kind: 'activated', targets: [{ kind: 'cardInGraveyard', filter: ofType('Creature') }], effects: [{ op: 'mill', count: constant(4) }, { op: 'graveyardToBattlefield', target: 0 }], description: 'Mill four, then return a creature from your graveyard' } }] });
+  ], { activatedAbilities: [{ costs: [mana('{2}{B}{B}{B}'), TAP, { kind: 'exileSelf' }], timing: 'sorcery', ability: { kind: 'activated', targets: [{ kind: 'cardInGraveyard', filter: ofType('Creature') }], effects: [{ op: 'mill', count: constant(4) }, { op: 'graveyardToBattlefield', target: 0 }], description: 'Mill four, then return a creature from your graveyard' } }] });
   defineCard('1ef3b48a-55ef-4221-a0bc-e1c1057eec2c', 'Trazyn the Infinite', [
     'Prismatic Gallery \u2014 As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard.',
   ], { artifactGraveyardAbilities: true });

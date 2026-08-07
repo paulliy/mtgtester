@@ -1,22 +1,20 @@
 /** Remaining authored overrides for queen-marchesa-queens-gambit.txt. */
 
 import type { CardDefinition } from '../definition';
-import { TAP, UNATTACH_SELF } from '../templates';
-import { parseManaCost } from '../../mana/cost';
+import { TAP, UNATTACH_SELF, mana } from '../templates';
 import { allOf, CHOSEN_COLOR, IN_COMBAT, IS_TOKEN, manaValueAtMost, not, ofSupertype, ofType, YOURS } from '../selector';
 import { constant } from '../value';
+import { TREASURE } from '../tokens';
 import { defineCard } from './index';
 
-const M = (cost: string) => ({ kind: 'mana' as const, cost: parseManaCost(cost).cost! });
 const CREATURES: import('../selector').Selector = ofType('Creature');
 const INKLING = { name: 'Inkling', typeLine: 'Creature — Inkling', types: ['Creature'], subtypes: ['Inkling'], colors: ['W', 'B'] as ('W' | 'B')[], power: 2, toughness: 1, keywords: ['flying'] as ('flying')[] };
-const TREASURE = { name: 'Treasure', typeLine: 'Artifact — Treasure', types: ['Artifact'], subtypes: ['Treasure'], colors: [] as never[], power: null, toughness: null, manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G'] as ('W' | 'U' | 'B' | 'R' | 'G')[]] }] };
 
 const HYBRID_LAND = (a: 'W' | 'B' | 'R', b: 'W' | 'B' | 'R'): Partial<CardDefinition> => ({
   manaAbilities: [
-    { costs: [M(`{${a}/${b}}`), TAP], units: [[a], [a]] },
-    { costs: [M(`{${a}/${b}}`), TAP], units: [[a], [b]] },
-    { costs: [M(`{${a}/${b}}`), TAP], units: [[b], [b]] },
+    { costs: [mana(`{${a}/${b}}`), TAP], units: [[a], [a]] },
+    { costs: [mana(`{${a}/${b}}`), TAP], units: [[a], [b]] },
+    { costs: [mana(`{${a}/${b}}`), TAP], units: [[b], [b]] },
   ],
 });
 
@@ -34,14 +32,14 @@ const WEAR_TEAR: Partial<CardDefinition> = {
       options: [
         { description: 'Wear — destroy target artifact', targetSlots: [0], effects: [{ op: 'destroy', target: 0 }] },
         { description: 'Tear — destroy target enchantment', targetSlots: [1], effects: [{ op: 'destroy', target: 1 }] },
-        { description: 'Fuse — destroy target artifact and target enchantment', targetSlots: [0, 1], additionalCost: [M('{2}{W}')], effects: [{ op: 'destroy', target: 0 }, { op: 'destroy', target: 1 }] },
+        { description: 'Fuse — destroy target artifact and target enchantment', targetSlots: [0, 1], additionalCost: [mana('{2}{W}')], effects: [{ op: 'destroy', target: 0 }, { op: 'destroy', target: 1 }] },
       ],
     },
   },
 };
 const BRASH_TAUNTER: Partial<CardDefinition> = {
   triggers: [{ kind: 'triggered', trigger: { when: 'dealtDamage', subject: { kind: 'self' } }, targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'damageDealt' } }], description: 'When dealt damage, deal that much to target opponent' }],
-  activatedAbilities: [{ costs: [M('{2}{R}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature' }], effects: [{ op: 'fight', first: 'source', second: 0 }], description: 'Fight another target creature' } }],
+  activatedAbilities: [{ costs: [mana('{2}{R}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature' }], effects: [{ op: 'fight', first: 'source', second: 0 }], description: 'Fight another target creature' } }],
 };
 const BREENA: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: IN_COMBAT }, condition: { kind: 'attackingPlayerHasMoreLife' } }, targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'breenaAttack', target: 0 }], description: 'An opponent is attacked while they have more life — the attacker draws and your creature gets two counters' } as never] };
 const COMBAT_CALLIGRAPHER: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: IN_COMBAT } }, targets: [], effects: [{ op: 'combatCalligrapher' }], description: 'Whenever a player attacks an opponent, that player creates a tapped attacking Inkling' }] };
@@ -59,7 +57,7 @@ const LORAN: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger
 const MANGARA: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: IN_COMBAT } }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'When attacked by two or more creatures, draw a card' }, { kind: 'triggered', trigger: { when: 'castsSpell', caster: 'opponent' }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'When an opponent casts their second spell, draw a card' }] };
 const MASTER: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'you' }, targets: [], effects: [{ op: 'masterOfCeremonies' }], description: 'Each opponent chooses money, friends, or secrets' }] };
 const MICHIKO: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'dealtDamage', subject: { kind: 'permanent', selector: { kind: 'controller', who: 'you' } } }, targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'sacrificePermanentOnDamage', target: 0 }], description: 'When an opponent source damages you, that opponent sacrifices a permanent' } as never] };
-const MISTVEIL: Partial<CardDefinition> = { activatedAbilities: [{ costs: [M('{W}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'cardInGraveyard' }], effects: [{ op: 'graveyardToLibraryTop', target: 0 }], description: 'Put a card from your graveyard on the bottom of your library' } }] };
+const MISTVEIL: Partial<CardDefinition> = { activatedAbilities: [{ costs: [mana('{W}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'cardInGraveyard' }], effects: [{ op: 'graveyardToLibraryTop', target: 0 }], description: 'Put a card from your graveyard on the bottom of your library' } }] };
 const NILs: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'endStep', player: 'you' }, targets: [], effects: [{ op: 'putCountersEach', selector: CREATURES, counter: '+1/+1', count: 1 }], description: 'At your end step, put a +1/+1 counter on each player’s chosen creature' }] };
 const OLORIN: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'sacrificeGreatestEachOpponent', selector: 'creature', metric: 'power', action: 'exile' }], description: 'Each opponent exiles a creature with greatest power' } };
 const REVERBERATE: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [{ kind: 'spell' }], effects: [{ op: 'copyTargetSpell', target: 0 }], description: 'Copy target instant or sorcery spell' } };
@@ -73,16 +71,16 @@ const SUNFORGER: Partial<CardDefinition> = {
     // Equip {2} (CR 702.6) — printed as a keyword, but the override replaces the whole
     // `activatedAbilities` array, so it must be restated here alongside the search ability
     // below or equipping is silently lost.
-    { costs: [M('{2}')], timing: 'sorcery', ability: { kind: 'activated', targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'attachSelfTo', target: 0 }], description: 'Equip {2}' } },
+    { costs: [mana('{2}')], timing: 'sorcery', ability: { kind: 'activated', targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'attachSelfTo', target: 0 }], description: 'Equip {2}' } },
     // "{R}{W}, Unattach this Equipment: …" — `unattachSelf` both requires the Equipment to be
     // currently attached and unattaches it as part of paying the cost, so this cannot be
     // activated while sitting unattached on the battlefield.
-    { costs: [M('{R}{W}'), UNATTACH_SELF], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibraryCastFree', filter: allOf(ofType('Instant'), manaValueAtMost(4), { kind: 'anyOf', of: [{ kind: 'color', value: 'R' }, { kind: 'color', value: 'W' }] }) }, { op: 'shuffle' }], description: 'Unattach: search your library for a red or white instant with mana value 4 or less and cast it without paying its mana cost' } },
+    { costs: [mana('{R}{W}'), UNATTACH_SELF], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibraryCastFree', filter: allOf(ofType('Instant'), manaValueAtMost(4), { kind: 'anyOf', of: [{ kind: 'color', value: 'R' }, { kind: 'color', value: 'W' }] }) }, { op: 'shuffle' }], description: 'Unattach: search your library for a red or white instant with mana value 4 or less and cast it without paying its mana cost' } },
   ],
 };
 const TEYO: Partial<CardDefinition> = { activatedAbilities: [{ costs: [{ kind: 'loyalty', delta: 1 }], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'drawTargetAndController', target: 0 }], description: 'You and target opponent each draw a card' } }] };
-const WEATHERED: Partial<CardDefinition> = { activatedAbilities: [{ costs: [M('{W}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibrary', filter: ofType('Land'), destinations: [{ zone: 'hand' }] }, { op: 'shuffle' }], description: 'Search for a land if an opponent controls more lands' } }] };
-const WISHCLAW: Partial<CardDefinition> = { entersWithCounters: { wish: 3 }, activatedAbilities: [{ costs: [M('{1}'), TAP, { kind: 'removeCounters', counter: 'wish', count: 1 }], timing: 'sorcery', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibrary', filter: { kind: 'anyOf', of: [ofType('Artifact'), ofType('Creature'), ofType('Enchantment'), ofType('Instant'), ofType('Land'), ofType('Planeswalker'), ofType('Sorcery')] }, destinations: [{ zone: 'hand' }] }, { op: 'shuffle' }], description: 'Search your library for a card, then an opponent gains control of Wishclaw Talisman' } }] };
+const WEATHERED: Partial<CardDefinition> = { activatedAbilities: [{ costs: [mana('{W}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibrary', filter: ofType('Land'), destinations: [{ zone: 'hand' }] }, { op: 'shuffle' }], description: 'Search for a land if an opponent controls more lands' } }] };
+const WISHCLAW: Partial<CardDefinition> = { entersWithCounters: { wish: 3 }, activatedAbilities: [{ costs: [mana('{1}'), TAP, { kind: 'removeCounters', counter: 'wish', count: 1 }], timing: 'sorcery', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibrary', filter: { kind: 'anyOf', of: [ofType('Artifact'), ofType('Creature'), ofType('Enchantment'), ofType('Instant'), ofType('Land'), ofType('Planeswalker'), ofType('Sorcery')] }, destinations: [{ zone: 'hand' }] }, { op: 'shuffle' }], description: 'Search your library for a card, then an opponent gains control of Wishclaw Talisman' } }] };
 
 export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void {
   defineCard('e580a229-e800-4746-9d37-c32fcef8de28', 'Blightstep Pathway // Searstep Pathway', ['unsupported layout "modal_dfc"'], { manaAbilities: [{ units: [['B', 'R']] }] });
@@ -136,7 +134,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   defineCard('1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f', 'Weathered Wayfarer', ['unrecognized rules text: "{W}, {T}: Search your library for a land card, reveal it, put it into your hand, then shuffle. Activate only if an opponent controls more lands than you."'], WEATHERED);
   defineCard('81c70ae7-3c18-4c9b-8505-e4db9e0e6518', 'Wishclaw Talisman', ['unrecognized rules text: "~ enters with three wish counters on it."', 'unrecognized rules text: "{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artifact. Activate only during your turn."'], WISHCLAW);
   defineCard('4987c458-604a-4727-b360-170616e91e67', 'Kambal, Consul of Allocation', ['unrecognized rules text: "Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life."'], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'each', filter: not(ofType('Creature')) }, targets: [], effects: [{ op: 'kambal' }], description: 'An opponent casts a noncreature spell — they lose 2 and you gain 2' }] });
-  defineCard('15687ee3-3cdb-4a8f-a726-46b73bceb792', 'Shadowblood Ridge', ['unrecognized rules text: "{1}, {T}: Add {B}{R}."'], { manaAbilities: [{ costs: [M('{1}'), TAP], units: [['B'], ['R']] }] });
+  defineCard('15687ee3-3cdb-4a8f-a726-46b73bceb792', 'Shadowblood Ridge', ['unrecognized rules text: "{1}, {T}: Add {B}{R}."'], { manaAbilities: [{ costs: [mana('{1}'), TAP], units: [['B'], ['R']] }] });
   defineCard('1c633e02-95ef-445e-b4e0-fbfbc5ed9cc9', 'Brightclimb Pathway // Grimclimb Pathway', ['unsupported layout "modal_dfc"'], { manaAbilities: [{ units: [['W', 'B']] }] });
   defineCard('0dfdf1a1-a3a9-490f-bd9d-dcba088c6785', 'Teyo, Geometric Tactician', ['unrecognized rules text: "+1: You and target opponent each draw a card."', 'unrecognized rules text: "\u22122: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent."'], TEYO);
 }

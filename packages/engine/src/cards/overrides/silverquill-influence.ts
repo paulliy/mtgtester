@@ -294,7 +294,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   defineCard("04b7362d-0490-4cb0-b5d7-2a7732f659ce", "Bojuka Bog", [
           "When this land enters, exile target player's graveyard."
-    ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [{ kind: 'player' }], effects: [{ op: 'exileTargetPlayerGraveyard', target: 0 }], description: 'Enters � exile target player�s graveyard' }] });
+    ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [{ kind: 'player' }], effects: [{ op: 'exileTargetPlayerGraveyard', target: 0 }], description: 'Enters — exile target player’s graveyard' }] });
 
   unimplemented("c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e", "Shineshadow Snarl", [
           "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped."
