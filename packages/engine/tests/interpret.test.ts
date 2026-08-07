@@ -639,6 +639,72 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(austereCommand.spellAbility?.modes?.maxChoices).toBe(2);
   });
 
+  it('reads a lowercase "this <type>" at the start of a trigger body as a self-reference', () => {
+    const tremors = interpretCard(
+      oracle({
+        name: 'Impact Tremors Test',
+        typeLine: 'Enchantment',
+        manaCost: '{1}{R}',
+        power: null,
+        toughness: null,
+        oracleText: 'Whenever a creature you control enters, this enchantment deals 1 damage to each opponent.',
+      }),
+    );
+    expect(tremors.modeled).toBe(true);
+    expect(tremors.triggers?.[0]?.effects).toEqual([{ op: 'eachOpponentDamage', amount: 1 }]);
+
+    // A lowercase "this creature" that is NOT the leading word of the trigger body is a
+    // back-reference to an object the body itself already introduced ("target creature"), not
+    // to the source — only the leading word is eligible for the self-reference rewrite.
+    const backReference = interpretCard(
+      oracle({
+        name: 'Back Reference Test',
+        typeLine: 'Enchantment',
+        manaCost: '{2}{U}',
+        power: null,
+        toughness: null,
+        oracleText: 'Whenever a creature you control enters, exile target creature, then return this creature to its owner\'s hand.',
+      }),
+    );
+    expect(backReference.modeled).toBe(false);
+  });
+
+  it('filters spell triggers by "noncreature" and "instant or sorcery"', () => {
+    const noncreature = interpretCard(
+      oracle({
+        name: 'Noncreature Trigger Test',
+        typeLine: 'Enchantment',
+        manaCost: '{1}{U}',
+        power: null,
+        toughness: null,
+        oracleText: 'Whenever you cast a noncreature spell, draw a card.',
+      }),
+    );
+    expect(noncreature.modeled).toBe(true);
+    expect(noncreature.triggers?.[0]?.trigger).toMatchObject({
+      when: 'castsSpell',
+      caster: 'you',
+      filter: { kind: 'not', of: { kind: 'type', value: 'Creature' } },
+    });
+
+    const instantOrSorcery = interpretCard(
+      oracle({
+        name: 'Instant Sorcery Trigger Test',
+        typeLine: 'Creature — Human Wizard',
+        manaCost: '{2}{U}',
+        power: '2',
+        toughness: '3',
+        oracleText: 'Whenever you cast an instant or sorcery spell, draw a card.',
+      }),
+    );
+    expect(instantOrSorcery.modeled).toBe(true);
+    expect(instantOrSorcery.triggers?.[0]?.trigger).toMatchObject({
+      when: 'castsSpell',
+      caster: 'you',
+      filter: { kind: 'anyOf', of: [{ kind: 'type', value: 'Instant' }, { kind: 'type', value: 'Sorcery' }] },
+    });
+  });
+
   it('models self-pump activated abilities (~ gets +1/+0 until end of turn)', () => {
     const firebreather = interpretCard(
       oracle({

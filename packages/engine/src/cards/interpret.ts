@@ -1887,8 +1887,15 @@ const ANY_SPELL: Selector = { kind: 'type', value: '*any spell*' };
  * characteristics, and only the zone differs.
  */
 function parseSpellFilter(phrase: string, card: OracleCard): Selector | null {
-  const noun = phrase.replace(/ spells?$/, '');
-  if (noun === 'a' || noun === 'an' || noun === '') return ANY_SPELL;
+  const noun = phrase.replace(/ spells?$/, '').replace(/^an? /, '');
+  if (noun === '' || noun === 'a' || noun === 'an') return ANY_SPELL;
+  if (noun === 'noncreature') return not(ofType('Creature'));
+  // "an instant or sorcery spell" (Archmage Emeritus) â€” each side is its own card type, not a
+  // tribe the way `parseTriggerSubject`'s "or" handling elsewhere reads alternatives.
+  const orTypes = noun.match(/^(instant|sorcery|artifact|creature|enchantment|planeswalker|land) or (?:an? )?(instant|sorcery|artifact|creature|enchantment|planeswalker|land)$/);
+  if (orTypes !== null) {
+    return anyOf(ofType(titleCase(orTypes[1] as string)), ofType(titleCase(orTypes[2] as string)));
+  }
   return parseTriggerSubject(noun, card);
 }
 
@@ -1986,6 +1993,19 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     }
     heads = events.map((when) => ({ when, subject }));
   }
+
+  // "Whenever a creature you control enters, this enchantment deals 1 damage to each opponent"
+  // (Impact Tremors) — a self-reference that is unambiguous here (the trigger head already
+  // named a DIFFERENT subject; nothing else in `body` yet could be what "this" refers to) but
+  // prints lowercase, since it falls mid-sentence rather than at the start of a new one.
+  // `substituteSelfName`'s `SELF_REFERENCE_RE` is deliberately case-sensitive on capital "This"
+  // for exactly the opposite reason — mid-EFFECT lowercase "this" is usually a back-reference to
+  // an object the effect itself introduced earlier ("exile target creature, then return this
+  // creature") — so this only rewrites the leading word of the body, never a later sentence.
+  body = body.replace(
+    /^this (creature|artifact|enchantment|land|permanent|token|vehicle|equipment|saga|planeswalker|aura)\b/,
+    '~',
+  );
 
   // Intervening-if (CR 603.4) sits between the head and the effect.
   let condition: Condition | undefined;
