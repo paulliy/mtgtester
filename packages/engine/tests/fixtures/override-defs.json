@@ -4476,9 +4476,7 @@
   {
     "oracleId": "3edf9201-265f-4cd9-b27b-8073bf1a4cf2",
     "name": "Desolate Mire",
-    "handledLines": [
-      "unrecognized rules text: \"{1}, {T}: Add {W}{B}.\""
-    ],
+    "handledLines": [],
     "def": {
       "manaAbilities": [
         {
@@ -22135,9 +22133,7 @@
   {
     "oracleId": "oracle-desolate-mire",
     "name": "Desolate Mire",
-    "handledLines": [
-      "unrecognized rules text: \"{1}, {T}: Add {W}{B}.\""
-    ],
+    "handledLines": [],
     "def": {
       "manaAbilities": [
         {
