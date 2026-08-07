@@ -80,16 +80,60 @@ under both ids, and no card's real id carries behavior its fixture id lacks.
 The migration commits are byte-identical against that snapshot. The bug-fix commits change exactly
 the intended registrations and nothing else.
 
+The same problem exists one layer up for `interpretCard` itself: `overrides/snapshot.ts` only
+covers the registry, not what the generic grammar produces. `cards/interpret-snapshot.ts` +
+`tests/interpret-defs.test.ts` cover that half, pinned against the committed, offline, 93-card
+Ur-Dragon fixture `urdragon-coverage.test.ts` already used (no new gitignored-data dependency). It
+paid for itself immediately: the first `--check` after migrating interpret.ts's hand-authored
+special cases onto the builders showed a diff of exactly one card, which was the one case that also
+carried an intentional data fix (below) — proving the envelope migration itself moved nothing.
+
+## Increment 2 — the token catalog and interpret.ts (2026-08-07)
+
+Two follow-ups landed in the same session, both flagged as "not done" above:
+
+**Every remaining inline `TokenSpec` in `overrides/`** now references a named `tokens.ts` const —
+14 new consts, one dead `INKLING` deleted outright. Cataloguing surfaced two more divergences of the
+exact kind this whole layer exists to prevent: Night Scythe's Necron Warrior had `colors: []` and an
+extra `'Warrior'` subtype against its own handled line reading "black Necron Warrior"; and
+`THOPTER_1_1_FLYING` itself had shipped with `colors: ['U']` in increment 1 and gone uncaught because
+nothing referenced the const yet — every card that prints it says "1/1 **colorless** Thopter",
+verbatim, in its own `handledLines`. Both fixed, both covered in `token-catalog-fill-in.test.ts`.
+
+**`interpret.ts`'s ~16 hand-authored `if (card.name === '...')` special cases** (Dragon Tempest,
+Firkraag, Iymrith, Morophon, the two Sarkhans, and others the generic grammar cannot read at all)
+now compose `templates.ts` builders — structurally these were always identical to what override
+literals looked like before increment 1, so the migration was the same kind of mechanical swap.
+`triggered()`/`spell()` gained `modes` support (absent until Kairi's modal death trigger needed it —
+justified the same way as every other builder parameter, because 10 override sites already needed it
+too). The **~45 generic grammar functions** (`parseTriggerLine`, `parseActivatedLine`,
+`parseStaticLine`, `parseManaProduction`, …) were deliberately left alone: they build ability shapes
+across mutable accumulators and closures before the final literal, which doesn't fit the builders'
+single-call shape, and forcing it would mean redesigning the builders around one caller — the
+"never widen a shape to fit a second card" rule, at file scope.
+
+This surfaced a fourth Treasure spelling, distinct from the three fixed in increment 1's overrides:
+`interpret.ts`'s own `PREDEFINED_TOKENS.treasure` had `typeLine: 'Token Artifact — Treasure'`,
+encoding-corrupted in source on top of that, against the catalog's correct `'Artifact — Treasure'`.
+It fed both a special case (Sarkhan, Dragon Ascendant) and the generic "create a Treasure token"
+grammar (Old Gnawbone, in the same fixture) — fixed to `treasure: TREASURE`, one spelling, the same
+const now used everywhere else a Treasure is created.
+
 ## Consequences
 
-- `overrides/` drops from 9,564 to ~4,400 lines; `remaining-common.ts` is deleted.
+- `overrides/` drops from 9,564 to ~4,300 lines; `remaining-common.ts` is deleted.
 - A new card is one `defineCard` call composing builders, instead of two copy-pasted blocks of
   literals. Its shape is tested once in `templates.test.ts` rather than restated per card.
 - ESLint blocks `registerOverride` and `parseManaCost` inside `overrides/**` so new cards cannot
   regress to the primitives the builders replaced.
-- Suite goes 979 → 1,014 tests.
-- **Not done:** `interpret.ts` still builds its own literals. It is a parser with roughly one
-  construction site per grammar rule and is internally consistent, so it was left alone; adopting
-  the token catalog there is the obvious next step. The remaining inline `TokenSpec`s in
-  `overrides/` should also migrate to the catalog, at which point a lint rule banning `typeLine:`
-  in an override becomes enforceable.
+- No override file and no interpret.ts special case builds a raw `TokenSpec` literal anymore —
+  every token is a named `tokens.ts` export. A lint rule banning inline `TokenSpec` shape in either
+  location is now enforceable, not yet added.
+- Suite goes 979 → 1,019 tests.
+- **Still not done:** interpret.ts's generic grammar functions (the ~45 parser functions
+  themselves, not the name-keyed special cases) do not use the builders — see above for why. Adopting
+  the token catalog inside `parseTokenFace` (so a parsed "1/1 white Soldier creature token with
+  lifelink" resolves to the same object as `SOLDIER_1_1_LIFELINK` rather than a structurally-equal
+  but separately-constructed one) is the remaining piece of "parser-produced and hand-authored cards
+  are structurally identical by construction," and is a smaller, more contained change than the
+  grammar functions themselves.
