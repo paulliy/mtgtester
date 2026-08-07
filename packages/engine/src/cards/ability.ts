@@ -97,7 +97,16 @@ export type DynamicManaKind =
   /** "one mana of any color in your commander's color identity" (Command Tower). */
   | 'commanderIdentity'
   /** "one mana of any color that a land an opponent controls could produce" (Fellwar Stone). */
-  | 'opponentLandColors';
+  | 'opponentLandColors'
+  /**
+   * A modal DFC land (Pathway lands): produces whichever single color this specific permanent
+   * chose as it entered (`EnginePermanent.chosenOption`, via `CardDefinition.entersChoosingOption`
+   * — the same field Caged Sun's color pick and Frontier Siege's mode pick already use). Empty
+   * (no mana at all) if the permanent hasn't recorded a choice, which should never actually
+   * happen for a card this ability is put on — `entersChoosingOption` resolves before anything
+   * else can observe the permanent.
+   */
+  | 'chosenColor';
 
 /**
  * What a payment is *for*, so restricted mana can decide whether it may pay (CR 106.6).

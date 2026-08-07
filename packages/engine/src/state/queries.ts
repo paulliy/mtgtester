@@ -292,7 +292,8 @@ export function findObjectByCardId(ctx: GameContext, cardId: string): EngineObje
  * fabricated battlefield object. Every real `EnginePermanent` already satisfies this shape, so
  * existing call sites are unaffected.
  */
-export type ManaAbilityContext = Pick<EnginePermanent, 'id' | 'cardId' | 'controllerId'>;
+export type ManaAbilityContext = Pick<EnginePermanent, 'id' | 'cardId' | 'controllerId'> &
+  Partial<Pick<EnginePermanent, 'chosenOption'>>;
 
 /**
  * Derive the symbols of a state-dependent mana ability (`ManaAbilitySpec.dynamic`).
@@ -327,6 +328,14 @@ export function resolveDynamicUnits(
       if (commander === undefined) continue;
       const def = ctx.defs.get(commander.oracleId);
       for (const color of def?.colorIdentity ?? []) add(color);
+    }
+  } else if (spec.dynamic === 'chosenColor') {
+    // A modal DFC land's ETB face choice (`entersChoosingOption`), stored as the color's letter.
+    // Undefined for a card still in hand (previewed before it has entered, so it hasn't chosen
+    // yet) — correctly produces nothing rather than guessing.
+    const chosen = perm.chosenOption;
+    if (chosen === 'W' || chosen === 'U' || chosen === 'B' || chosen === 'R' || chosen === 'G') {
+      add(chosen);
     }
   } else {
     // "any color that a land an opponent controls could produce" — union over opponents'

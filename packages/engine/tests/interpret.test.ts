@@ -809,6 +809,35 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
+  it('refuses a modal DFC land face printing anything beyond the plain mana ability', () => {
+    // Guards against silently dropping a real clause: a Pathway-shaped detector that fired on
+    // any two-land-face DFC, ignoring extra text, would be exactly the over-permissive modeling
+    // this engine's contract refuses (brief §6.3).
+    const def = interpretCard(
+      oracle({
+        name: 'Test Pathway With Extra Text',
+        typeLine: 'Land',
+        manaCost: null,
+        power: null,
+        toughness: null,
+        layout: 'modal_dfc',
+        oracleText: '{T}: Add {B}.',
+        backFace: {
+          name: 'Test Back',
+          typeLine: 'Land',
+          oracleText: 'This land enters tapped.\n{T}: Add {R}.',
+          manaCost: null,
+          colors: [],
+          power: null,
+          toughness: null,
+        },
+      } as never),
+    );
+    expect(def.modeled).toBe(false);
+    expect(def.entersChoosingOption).toBeUndefined();
+    expect(def.unmodeledReasons.some((r) => r.includes('unsupported layout'))).toBe(true);
+  });
+
   it('reads the commander-free-cast line as a top-level flag', () => {
     const flawless = interpretCard(
       oracle({

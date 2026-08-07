@@ -110,6 +110,8 @@ export function toOracleCard(card: RawScryfallCard): OracleCard | null {
   const manaCost = faceFallback(card, card.mana_cost, 'mana_cost') ?? null;
   const oracleText = card.oracle_text ?? faceFallback(card, undefined, 'oracle_text') ?? '';
 
+  const back = card.card_faces?.[1];
+
   return {
     oracleId: card.oracle_id,
     scryfallId: card.id,
@@ -131,6 +133,25 @@ export function toOracleCard(card: RawScryfallCard): OracleCard | null {
     layout: card.layout ?? 'normal',
     commanderLegality: toCommanderLegality(card.legalities),
     isBasicLand: supertypes.includes('Basic') && types.includes('Land'),
+    // A true SECOND face's own characteristics (modal DFC, transform, …) — unlike every field
+    // above, not merged with the front via `faceFallback`. Adventure/split/omen cards have a
+    // `card_faces[1]` too, but every printed template this engine reads for those already comes
+    // through as the FRONT face's own oracle text (an Adventure's spell half is a clause on the
+    // front card, not a second independent object the way an MDFC's back face is) — `backFace`
+    // exists for interpret.ts's `modal_dfc` handling and is otherwise unused today.
+    ...(back !== undefined
+      ? {
+          backFace: {
+            name: back.name ?? '',
+            typeLine: back.type_line ?? '',
+            oracleText: back.oracle_text ?? '',
+            manaCost: back.mana_cost === undefined || back.mana_cost === '' ? null : (back.mana_cost as OracleCard['manaCost']),
+            colors: toColors(back.colors),
+            power: back.power ?? null,
+            toughness: back.toughness ?? null,
+          },
+        }
+      : {}),
   };
 }
 

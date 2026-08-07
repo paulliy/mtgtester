@@ -63,6 +63,7 @@ export function oracle(partial: Partial<OracleCard> & { name: string }): OracleC
     layout: partial.layout ?? 'normal',
     commanderLegality: partial.commanderLegality ?? 'legal',
     isBasicLand: partial.isBasicLand ?? typeLine.startsWith('Basic Land'),
+    ...(partial.backFace !== undefined ? { backFace: partial.backFace } : {}),
   };
 }
 

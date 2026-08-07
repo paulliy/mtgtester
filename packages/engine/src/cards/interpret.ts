@@ -3066,6 +3066,50 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
   return null;
 }
 
+/**
+ * A modal DFC face this parser can read as "just a land that taps for one fixed color" (Pathway
+ * lands: "{T}: Add {B}." and nothing else on either face â€” no other line, no enters-tapped, no
+ * second ability). Returns null for anything printed beyond that single sentence, since guessing
+ * at an unread clause on a land face would silently drop it rather than leave the card unmodeled.
+ */
+function parseSimpleLandFace(typeLine: string, oracleText: string): Color | null {
+  if (!typeLine.includes('Land')) return null;
+  const m = stripReminderText(oracleText)
+    .trim()
+    .toLowerCase()
+    .match(/^\{t\}: add \{([wubrg])\}\.?$/);
+  return m === null ? null : ((m[1] as string).toUpperCase() as Color);
+}
+
+/**
+ * A Pathway-shaped modal DFC land (CR 712.9, Zendikar Rising): two faces, each a plain land
+ * whose only text is a single fixed-color tap ability, no basic land types or other printed
+ * characteristics. Modeled with `entersChoosingOption` (the same as-enters modal-choice
+ * mechanism Caged Sun's color pick and Frontier Siege's mode pick already use) plus a
+ * `chosenColor`-dynamic mana ability that reads the choice back at query time, instead of the
+ * generic per-line loop's ordinary reading of the FRONT face alone (which is all `card.oracleText`
+ * ever carries) â€” that would silently lose the back face's color entirely, offering only half of
+ * what the land can actually do.
+ */
+function buildPathwayLand(
+  card: OracleCard,
+): { entersChoosingOption: NonNullable<CardDefinition['entersChoosingOption']>; manaAbilities: ManaAbilitySpec[] } | null {
+  if (card.backFace === undefined) return null;
+  const frontColor = parseSimpleLandFace(card.typeLine, card.oracleText);
+  const backColor = parseSimpleLandFace(card.backFace.typeLine, card.backFace.oracleText);
+  if (frontColor === null || backColor === null || frontColor === backColor) return null;
+  return {
+    entersChoosingOption: {
+      prompt: 'Choose a face',
+      options: [
+        { key: frontColor, label: card.name },
+        { key: backColor, label: card.backFace.name },
+      ],
+    },
+    manaAbilities: [{ units: [], dynamic: 'chosenColor' }],
+  };
+}
+
 /** Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors. */
 export function interpretCard(card: OracleCard): CardDefinition {
   const reasons: string[] = [];
@@ -3093,7 +3137,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
   const loyalty = parseNumeric(card.loyalty, 'loyalty');
   const defense = parseNumeric(card.defense, 'defense');
 
-  if (card.layout !== 'normal' && card.layout !== 'adventure' && card.layout !== 'omen') {
+  const pathwayLand = card.layout === 'modal_dfc' ? buildPathwayLand(card) : null;
+  if (
+    card.layout !== 'normal' &&
+    card.layout !== 'adventure' &&
+    card.layout !== 'omen' &&
+    pathwayLand === null
+  ) {
     reasons.push(`unsupported layout "${card.layout}"`);
   }
   const KNOWN_TYPES = [
@@ -3930,6 +3980,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
   ) {
     reasons.length = 0;
   }
+  // A recognized Pathway-shaped land overrides whatever the per-line loop derived from the
+  // FRONT face alone (a plain fixed-color mana ability â€” correct as far as it goes, but missing
+  // the back face's color entirely) with the dynamic, choice-aware version.
+  if (pathwayLand !== null) {
+    manaAbilities.length = 0;
+    manaAbilities.push(...pathwayLand.manaAbilities);
+  }
   // An authored override may implement lines the grammar cannot read (ADR 0010). It clears
   // only the specific reasons it names, so an errata'd card re-opens loudly rather than
   // silently keeping stale behavior â€” see `overrides/index.ts`.
@@ -3957,6 +4014,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
     entersTapped,
     ...(entersTappedUnless !== undefined ? { entersTappedUnless } : {}),
     ...(Object.keys(entersWithCounters).length > 0 ? { entersWithCounters } : {}),
+    ...(pathwayLand !== null ? { entersChoosingOption: pathwayLand.entersChoosingOption } : {}),
     spellAbility:
       isSpell && (spellEffects.length > 0 || spellModes !== undefined)
         ? {

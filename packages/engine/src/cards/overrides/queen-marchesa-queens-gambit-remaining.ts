@@ -81,12 +81,23 @@ const WEATHERED: Partial<CardDefinition> = { activatedAbilities: [{ costs: [mana
 const WISHCLAW: Partial<CardDefinition> = { entersWithCounters: { wish: 3 }, activatedAbilities: [{ costs: [mana('{1}'), TAP, { kind: 'removeCounters', counter: 'wish', count: 1 }], timing: 'sorcery', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibrary', filter: { kind: 'anyOf', of: [ofType('Artifact'), ofType('Creature'), ofType('Enchantment'), ofType('Instant'), ofType('Land'), ofType('Planeswalker'), ofType('Sorcery')] }, destinations: [{ zone: 'hand' }] }, { op: 'shuffle' }], description: 'Search your library for a card, then an opponent gains control of Wishclaw Talisman' } }] };
 
 export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void {
-  defineCard('e580a229-e800-4746-9d37-c32fcef8de28', 'Blightstep Pathway // Searstep Pathway', ['unsupported layout "modal_dfc"'], { manaAbilities: [{ units: [['B', 'R']] }] });
-  defineCard('1c633e02-95ef-445e-b4e0-fbfbc5ed9cc9', 'Brightclimb Pathway // Grimclimb Pathway', ['unsupported layout "modal_dfc"'], { manaAbilities: [{ units: [['W', 'B']] }] });
-  defineCard('a9b8d020-4d72-4934-8942-df29ef19fc1d', 'Needleverge Pathway // Pillarverge Pathway', ['unsupported layout "modal_dfc"'], { manaAbilities: [{ units: [['R', 'W']] }] });
-  defineCard('a731e87b-8d99-4b64-8ee3-8e540d652366', 'Malakir Rebirth // Malakir Mire', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Choose target creature. You lose 2 life. Until end of turn, that creature gains \"When this creature dies, return it to the battlefield tapped under its owner\'s control.\""'], { manaAbilities: [] });
-  defineCard('ff0ab867-b710-4b1a-baed-95fc3cf68f79', 'Valakut Awakening // Valakut Stoneforge', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one."'], { manaAbilities: [{ units: [['R']] }] });
-  defineCard('6556c4c0-b10d-4208-821b-0c0a49abd188', 'Wandering Archaic // Explore the Vastlands', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don\'t, you may copy that spell. You may choose new targets for the copy."'], { manaAbilities: [] });
+  // Blightstep/Brightclimb/Needleverge Pathway (land // land): now parses generically
+  // (`buildPathwayLand` in interpret.ts, a `chosenColor`-dynamic mana ability driven by
+  // `entersChoosingOption`) -- no override needed at all.
+  //
+  // Malakir Rebirth // Malakir Mire and Valakut Awakening // Valakut Stoneforge are the OTHER
+  // Zendikar Rising modal-DFC shape: front is a spell, back is a land, which
+  // `buildPathwayLand` doesn't cover (its front face isn't a land at all -- there is no color to
+  // choose between, just one land this engine can offer). Modeled as that land only: the
+  // overwhelming majority of real play taps these for mana rather than hard-casting the spell
+  // side, and offering only the land is honestly under-permissive (ADR 0010) rather than wrong --
+  // unlike the OLD `manaAbilities: []` / `staticEffects: []` registrations here, which slipped
+  // past applyOverride's empty-patch guard (fixed in the previous commit) and silently reported
+  // these as modeled with NO mana ability at all. Both real backs enter tapped, printed
+  // identically across the whole Zendikar Rising slow-land cycle these two belong to.
+  defineCard('a731e87b-8d99-4b64-8ee3-8e540d652366', 'Malakir Rebirth // Malakir Mire', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Choose target creature. You lose 2 life. Until end of turn, that creature gains \"When this creature dies, return it to the battlefield tapped under its owner\'s control.\""'], { entersTapped: true, manaAbilities: [{ units: [['B']] }] });
+  defineCard('ff0ab867-b710-4b1a-baed-95fc3cf68f79', 'Valakut Awakening // Valakut Stoneforge', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one."'], { entersTapped: true, manaAbilities: [{ units: [['R']] }] });
+  unimplemented('6556c4c0-b10d-4208-821b-0c0a49abd188', 'Wandering Archaic // Explore the Vastlands', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don\'t, you may copy that spell. You may choose new targets for the copy."']);
   defineCard('9842734c-1eac-4509-a731-4c22017ae586', 'Wear // Tear', ['unsupported layout "split"', 'unrecognized rules text: "Fuse"'], WEAR_TEAR);
   defineCard('66ca8a60-e028-4a5f-8177-860b888cb9d1', "Angel's Grace", ['unrecognized rules text: "Split second"', 'unrecognized rules text: "You can\'t lose the game this turn and your opponents can\'t win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead."'], ANGELS_GRACE);
   defineCard('01790829-cc03-430f-a899-2f274b7dbf62', 'Arcbond', ['unrecognized rules text: "Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player."'], ARCBOND);
@@ -136,6 +147,5 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   defineCard('81c70ae7-3c18-4c9b-8505-e4db9e0e6518', 'Wishclaw Talisman', ['unrecognized rules text: "~ enters with three wish counters on it."', 'unrecognized rules text: "{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artifact. Activate only during your turn."'], WISHCLAW);
   defineCard('4987c458-604a-4727-b360-170616e91e67', 'Kambal, Consul of Allocation', ['unrecognized rules text: "Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life."'], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'each', filter: not(ofType('Creature')) }, targets: [], effects: [{ op: 'kambal' }], description: 'An opponent casts a noncreature spell — they lose 2 and you gain 2' }] });
   defineCard('15687ee3-3cdb-4a8f-a726-46b73bceb792', 'Shadowblood Ridge', ['unrecognized rules text: "{1}, {T}: Add {B}{R}."'], { manaAbilities: [{ costs: [mana('{1}'), TAP], units: [['B'], ['R']] }] });
-  defineCard('1c633e02-95ef-445e-b4e0-fbfbc5ed9cc9', 'Brightclimb Pathway // Grimclimb Pathway', ['unsupported layout "modal_dfc"'], { manaAbilities: [{ units: [['W', 'B']] }] });
   defineCard('0dfdf1a1-a3a9-490f-bd9d-dcba088c6785', 'Teyo, Geometric Tactician', ['unrecognized rules text: "+1: You and target opponent each draw a card."', 'unrecognized rules text: "\u22122: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent."'], TEYO);
 }

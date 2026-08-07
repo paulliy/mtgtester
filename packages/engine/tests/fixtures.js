@@ -41,6 +41,7 @@ export function oracle(partial) {
         layout: partial.layout ?? 'normal',
         commanderLegality: partial.commanderLegality ?? 'legal',
         isBasicLand: partial.isBasicLand ?? typeLine.startsWith('Basic Land'),
+        ...(partial.backFace !== undefined ? { backFace: partial.backFace } : {}),
     };
 }
 // --- Standard fixture cards ---

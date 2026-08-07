@@ -1932,35 +1932,6 @@
     "def": {}
   },
   {
-    "oracleId": "1c633e02-95ef-445b-b4e0-fbfbc5ed9cc9",
-    "name": "Brightclimb Pathway // Grimclimb Pathway",
-    "handledLines": [
-      "unsupported layout \"modal_dfc\""
-    ],
-    "def": {
-      "staticEffects": []
-    }
-  },
-  {
-    "oracleId": "1c633e02-95ef-445e-b4e0-fbfbc5ed9cc9",
-    "name": "Brightclimb Pathway // Grimclimb Pathway",
-    "handledLines": [
-      "unsupported layout \"modal_dfc\""
-    ],
-    "def": {
-      "manaAbilities": [
-        {
-          "units": [
-            [
-              "W",
-              "B"
-            ]
-          ]
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "1d5ff280-7f4d-4801-aefd-9b6e6b1f2818",
     "name": "Ajani, Caller of the Pride",
     "handledLines": [
@@ -7030,9 +7001,7 @@
       "unrecognized rules text: \"Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don't, you may copy that spell. You may choose new targets for the copy.\"",
       "unsupported layout \"modal_dfc\""
     ],
-    "def": {
-      "manaAbilities": []
-    }
+    "def": {}
   },
   {
     "oracleId": "655aece2-f33a-46e0-8f80-112ae8a457fe",
@@ -11127,22 +11096,12 @@
       "unsupported layout \"modal_dfc\""
     ],
     "def": {
-      "manaAbilities": []
-    }
-  },
-  {
-    "oracleId": "a9b8d020-4d72-4934-8942-df29ef19fc1d",
-    "name": "Needleverge Pathway // Pillarverge Pathway",
-    "handledLines": [
-      "unsupported layout \"modal_dfc\""
-    ],
-    "def": {
+      "entersTapped": true,
       "manaAbilities": [
         {
           "units": [
             [
-              "R",
-              "W"
+              "B"
             ]
           ]
         }
@@ -15825,25 +15784,6 @@
     "def": {}
   },
   {
-    "oracleId": "e580a229-e800-4746-9d37-c32fcef8de28",
-    "name": "Blightstep Pathway // Searstep Pathway",
-    "handledLines": [
-      "unsupported layout \"modal_dfc\""
-    ],
-    "def": {
-      "manaAbilities": [
-        {
-          "units": [
-            [
-              "B",
-              "R"
-            ]
-          ]
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "e5e8e116-10fe-48b0-b3d8-6edb39bd5f90",
     "name": "Alibou, Ancient Witness",
     "handledLines": [
@@ -17431,6 +17371,7 @@
       "unsupported layout \"modal_dfc\""
     ],
     "def": {
+      "entersTapped": true,
       "manaAbilities": [
         {
           "units": [
@@ -19383,25 +19324,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-blightstep-pathway-searstep-pathway",
-    "name": "Blightstep Pathway // Searstep Pathway",
-    "handledLines": [
-      "unsupported layout \"modal_dfc\""
-    ],
-    "def": {
-      "manaAbilities": [
-        {
-          "units": [
-            [
-              "B",
-              "R"
-            ]
-          ]
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-blossoming-defense",
     "name": "Blossoming Defense",
     "handledLines": [
@@ -19903,25 +19825,6 @@
             },
             "when": "attacks"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-brightclimb-pathway-grimclimb-pathway",
-    "name": "Brightclimb Pathway // Grimclimb Pathway",
-    "handledLines": [
-      "unsupported layout \"modal_dfc\""
-    ],
-    "def": {
-      "manaAbilities": [
-        {
-          "units": [
-            [
-              "W",
-              "B"
-            ]
-          ]
         }
       ]
     }
@@ -26976,7 +26879,16 @@
       "unsupported layout \"modal_dfc\""
     ],
     "def": {
-      "manaAbilities": []
+      "entersTapped": true,
+      "manaAbilities": [
+        {
+          "units": [
+            [
+              "B"
+            ]
+          ]
+        }
+      ]
     }
   },
   {
@@ -28075,25 +27987,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-needleverge-pathway-pillarverge-pathway",
-    "name": "Needleverge Pathway // Pillarverge Pathway",
-    "handledLines": [
-      "unsupported layout \"modal_dfc\""
-    ],
-    "def": {
-      "manaAbilities": [
-        {
-          "units": [
-            [
-              "R",
-              "W"
-            ]
-          ]
         }
       ]
     }
@@ -34337,6 +34230,7 @@
       "unsupported layout \"modal_dfc\""
     ],
     "def": {
+      "entersTapped": true,
       "manaAbilities": [
         {
           "units": [
@@ -34488,9 +34382,7 @@
       "unrecognized rules text: \"Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don't, you may copy that spell. You may choose new targets for the copy.\"",
       "unsupported layout \"modal_dfc\""
     ],
-    "def": {
-      "manaAbilities": []
-    }
+    "def": {}
   },
   {
     "oracleId": "oracle-war-room",

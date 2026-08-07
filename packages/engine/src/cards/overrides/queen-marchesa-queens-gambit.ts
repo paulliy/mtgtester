@@ -117,12 +117,13 @@ const FABLED_PASSAGE: Partial<CardDefinition> = {
 };
 
 export function registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides(): void {
-  defineCard('e580a229-e800-4746-9d37-c32fcef8de28', 'Blightstep Pathway // Searstep Pathway', ['unsupported layout "modal_dfc"'], { staticEffects: [] });
-  defineCard('1c633e02-95ef-445b-b4e0-fbfbc5ed9cc9', 'Brightclimb Pathway // Grimclimb Pathway', ['unsupported layout "modal_dfc"'], { staticEffects: [] });
-  defineCard('a9b8d020-4d72-4934-8942-df29ef19fc1d', 'Needleverge Pathway // Pillarverge Pathway', ['unsupported layout "modal_dfc"'], { staticEffects: [] });
-  defineCard('a731e87b-8d99-4b64-8ee3-8e540d652366', 'Malakir Rebirth // Malakir Mire', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Choose target creature. You lose 2 life. Until end of turn, that creature gains \"When this creature dies, return it to the battlefield tapped under its owner\'s control.\""'], { staticEffects: [] });
-  defineCard('ff0ab867-b710-4b1a-baed-95fc3cf68f79', 'Valakut Awakening // Valakut Stoneforge', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one."'], { staticEffects: [] });
-  defineCard('6556c4c0-b10d-4208-821b-0c0a49abd188', 'Wandering Archaic // Explore the Vastlands', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don\'t, you may copy that spell. You may choose new targets for the copy."'], { staticEffects: [] });
+  // Blightstep/Brightclimb/Needleverge Pathway: a modal-DFC "choose a color as it enters" land
+  // now parses generically (`buildPathwayLand` in interpret.ts) -- no override needed at all.
+  // Malakir Rebirth // Malakir Mire and Valakut Awakening // Valakut Stoneforge are a different
+  // shape (spell // land, not land // land) that generic function doesn't cover; their real
+  // overrides are in queen-marchesa-queens-gambit-remaining.ts. Wandering Archaic //
+  // Explore the Vastlands (creature // enchantment) stays `unimplemented()` there too.
+
   defineCard('9842734c-1eac-4509-a731-4c22017ae586', 'Wear // Tear', ['unsupported layout "split"', 'unrecognized rules text: "Fuse"'], { staticEffects: [] });
   defineCard('2679d0dd-ba30-4a1c-b6a0-b3ac6c790496', 'Boros Charm', ['unrecognized rules text: "Choose one —"', 'unrecognized rules text: "• ~ deals 4 damage to target player or planeswalker."', 'unrecognized rules text: "• Permanents you control gain indestructible until end of turn."', 'unrecognized rules text: "• Target creature gains double strike until end of turn."'], BOROS_CHARM);
   defineCard('5e62b51d-faec-4aa0-9504-cf2c282d08ea', 'Rakdos Charm', ['unrecognized rules text: "Choose one —"', 'unrecognized rules text: "• Exile target player\'s graveyard."', 'unrecognized rules text: "• Destroy target artifact."', 'unrecognized rules text: "• Each creature deals 1 damage to its controller."'], RAKDOS_CHARM);
