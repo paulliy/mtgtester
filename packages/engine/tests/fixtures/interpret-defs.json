@@ -1,0 +1,7900 @@
+[
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 3,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 4
+    },
+    "modeled": true,
+    "name": "Drakuseth, Maw of Flames",
+    "oracleId": "060deaff-44d6-4f03-9568-bcb7add80255",
+    "power": 7,
+    "ruleStatics": [],
+    "scryfallId": "9e9b40f5-3dd0-4607-a78d-b004d57fa4ea",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 7,
+    "triggers": [
+      {
+        "description": "Whenever ~ attacks, it deals 4 damage to any target and 3 damage to each of up to two other targets.",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 4
+            },
+            "op": "dealDamage",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 3
+            },
+            "op": "dealDamageEachChosen",
+            "targetSlot": 1
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          },
+          {
+            "count": {
+              "max": 2,
+              "min": 0
+            },
+            "kind": "anyTarget"
+          }
+        ],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "attacks"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "dynamic": "commanderIdentity",
+        "units": []
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Command Tower",
+    "oracleId": "0895c9b7-ae7d-4bb3-af17-3b75deb50a25",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "0548fb60-c843-4f8f-a029-6f10efc63a41",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "alternativeCasts": [
+      {
+        "ability": {
+          "effects": [
+            {
+              "op": "returnToHand",
+              "target": 0
+            }
+          ],
+          "kind": "spell",
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "nonlandPermanent"
+            }
+          ]
+        },
+        "description": "Coil and Catch",
+        "kind": "omen",
+        "manaCost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 1,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 3
+        },
+        "name": "Coil and Catch",
+        "typeLine": "Instant — Omen"
+      }
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "colors": [
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 2,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 4
+    },
+    "modeled": true,
+    "name": "Marang River Regent // Coil and Catch",
+    "oracleId": "099b8d2c-b482-48dd-b6bc-dedf546d66c5",
+    "power": 6,
+    "ruleStatics": [],
+    "scryfallId": "f890bdc7-32e6-4492-bac7-7cabf54a8bfd",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [],
+    "toughness": 7,
+    "triggers": [
+      {
+        "description": "When this creature enters, return up to two other target nonland permanents to their owners' hands.",
+        "effects": [
+          {
+            "op": "returnToHandEachChosen",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [
+          {
+            "count": {
+              "max": 2,
+              "min": 0
+            },
+            "filter": {
+              "kind": "other"
+            },
+            "kind": "nonlandPermanent"
+          }
+        ],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Creature — Dragon // Instant — Omen",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "dynamic": "commanderIdentity",
+        "units": []
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2
+    },
+    "modeled": true,
+    "name": "Arcane Signet",
+    "oracleId": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "1cad1bd2-7c56-4ce0-99a6-b2a49c1288dd",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Artifact",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "spendTrigger": {
+          "ability": {
+            "description": "you gain 2 life",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 2
+                },
+                "op": "gainLife"
+              }
+            ],
+            "kind": "triggered",
+            "targets": []
+          },
+          "when": {
+            "description": "cast a dragon creature spell",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "purposes": [
+              "castSpell"
+            ]
+          }
+        },
+        "units": [
+          [
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Scaled Nurturer",
+    "oracleId": "13b96709-0e88-476b-9485-956e682bb818",
+    "power": 0,
+    "ruleStatics": [],
+    "scryfallId": "84ae5a76-b8b9-431d-8060-a6a96f5d1e0b",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon",
+      "Druid"
+    ],
+    "supertypes": [],
+    "toughness": 2,
+    "triggers": [],
+    "typeLine": "Creature — Dragon Druid",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2
+    },
+    "modeled": true,
+    "name": "Kodama's Reach",
+    "oracleId": "1593ea18-2f2f-4ab4-83fb-6ccc0bec8a90",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "90c423cc-1264-4067-9c50-e7c88c68ef2d",
+    "spellAbility": {
+      "effects": [
+        {
+          "destinations": [
+            {
+              "tapped": true,
+              "zone": "battlefield"
+            },
+            {
+              "zone": "hand"
+            }
+          ],
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "supertype",
+                "value": "Basic"
+              },
+              {
+                "kind": "type",
+                "value": "Land"
+              }
+            ]
+          },
+          "op": "searchLibrary"
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "kind": "spell",
+      "targets": []
+    },
+    "staticEffects": [],
+    "subtypes": [
+      "Arcane"
+    ],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Sorcery — Arcane",
+    "types": [
+      "Sorcery"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 2,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 5
+    },
+    "modeled": true,
+    "name": "Broodcaller Scourge",
+    "oracleId": "16aa790a-8f7c-401c-9d43-dc9440a6f585",
+    "power": 5,
+    "ruleStatics": [],
+    "scryfallId": "6fc0a74b-0b8a-4c70-87f2-f9f2625d5ff2",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [],
+    "toughness": 7,
+    "triggers": [
+      {
+        "description": "Whenever one or more Dragons you control deal combat damage to a player, you may put a permanent card with mana value less than or equal to that damage from your hand onto the battlefield.",
+        "effects": [
+          {
+            "count": "one",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                },
+                {
+                  "kind": "type",
+                  "value": "Battle"
+                }
+              ]
+            },
+            "maxManaValue": {
+              "kind": "damageDealt"
+            },
+            "op": "handToBattlefield"
+          }
+        ],
+        "kind": "triggered",
+        "optional": true,
+        "targets": [],
+        "trigger": {
+          "aggregate": true,
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                }
+              ]
+            }
+          },
+          "when": "dealsCombatDamageToPlayer"
+        }
+      }
+    ],
+    "typeLine": "Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "kind": "mayPayLife",
+      "n": 2
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "U"
+          ]
+        ]
+      },
+      {
+        "units": [
+          [
+            "R"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Steam Vents",
+    "oracleId": "17039058-822d-409f-938c-b727a366ba63",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "a83903c7-fd51-4526-aed2-359e946fea36",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Island",
+      "Mountain"
+    ],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land — Island Mountain",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Three Visits",
+    "oracleId": "1b882a0e-0ede-4d1a-bd1a-9b7cffbcde8e",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "99bf792f-963e-4509-8d3c-7db129c6a77f",
+    "spellAbility": {
+      "effects": [
+        {
+          "destinations": [
+            {
+              "zone": "battlefield"
+            }
+          ],
+          "filter": {
+            "kind": "subtype",
+            "value": "Forest"
+          },
+          "op": "searchLibrary"
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "kind": "spell",
+      "targets": []
+    },
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Sorcery",
+    "types": [
+      "Sorcery"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R",
+      "U"
+    ],
+    "colors": [
+      "G",
+      "R",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 1,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 5
+    },
+    "modeled": true,
+    "name": "Ureni, the Song Unending",
+    "oracleId": "1c995c80-3301-409b-822b-9297aa260823",
+    "power": 10,
+    "protectionFrom": [
+      "W",
+      "B"
+    ],
+    "ruleStatics": [],
+    "scryfallId": "227802c0-4ff6-43a8-a850-ed0f546dc5ac",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Spirit",
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 10,
+    "triggers": [
+      {
+        "description": "When ~ enters, it deals X damage divided as you choose among any number of target creatures and/or planeswalkers your opponents control, where X is the number of lands you control.",
+        "effects": [
+          {
+            "op": "dealDamageDivided",
+            "targetSlot": 0,
+            "total": {
+              "kind": "countPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "type",
+                "value": "Land"
+              }
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [
+          {
+            "controller": "opponent",
+            "count": {
+              "max": null,
+              "min": 0
+            },
+            "kind": "creature"
+          }
+        ],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Spirit Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "−1: Untap target permanent.",
+          "effects": [
+            {
+              "op": "untapTarget",
+              "target": 0
+            }
+          ],
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ]
+        },
+        "costs": [
+          {
+            "delta": -1,
+            "kind": "loyalty"
+          }
+        ],
+        "oncePerTurn": true,
+        "timing": "sorcery"
+      }
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "colors": [
+      "G",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": 7,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2,
+      "hybrid": [
+        [
+          "G",
+          "U"
+        ]
+      ]
+    },
+    "modeled": true,
+    "name": "Kiora, Behemoth Beckoner",
+    "oracleId": "1efe485e-6874-4f4c-b981-e10f41670865",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "7a61b1a6-a75f-47b0-b215-de9708b6d773",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Kiora"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": null,
+    "triggers": [
+      {
+        "description": "Whenever a creature you control with power 4 or greater enters, draw a card.",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Legendary Planeswalker — Kiora",
+    "types": [
+      "Planeswalker"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R"
+    ],
+    "colors": [
+      "B",
+      "G",
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying",
+      "haste"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 1,
+        "G": 1,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 4
+    },
+    "modeled": true,
+    "name": "Karrthus, Tyrant of Jund",
+    "oracleId": "242dfae4-504c-45d4-9a49-f7ab515fd23a",
+    "power": 7,
+    "ruleStatics": [],
+    "scryfallId": "2bfb85e8-278b-48a4-970e-e65bad1c4c47",
+    "spellAbility": null,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Dragon"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "addKeyword": "haste",
+          "layer": 6
+        }
+      }
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 7,
+    "triggers": [
+      {
+        "description": "When ~ enters, gain control of all Dragons, then untap all Dragons.",
+        "effects": [
+          {
+            "op": "gainControl",
+            "selector": {
+              "kind": "subtype",
+              "value": "Dragon"
+            }
+          },
+          {
+            "op": "untapEach",
+            "selector": {
+              "kind": "subtype",
+              "value": "Dragon"
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "dynamic": "opponentLandColors",
+        "units": []
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Exotic Orchard",
+    "oracleId": "27b047e3-0d41-45e2-98e9-9391d7923a1e",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "8853ff94-bf44-4cfd-9d3a-0743c361fb0d",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "colors": [
+      "G",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 0
+    },
+    "modeled": true,
+    "name": "Korlessa, Scale Singer",
+    "oracleId": "2ceac1be-32ab-4a04-ade3-852926a5ca45",
+    "power": 1,
+    "ruleStatics": [
+      {
+        "filter": {
+          "kind": "subtype",
+          "value": "Dragon"
+        },
+        "kind": "castFromZone",
+        "zone": "libraryTop"
+      }
+    ],
+    "scryfallId": "fe2d08ac-6c24-4158-87a1-c59d1cd447a8",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon",
+      "Bard"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 4,
+    "triggers": [],
+    "typeLine": "Legendary Creature — Dragon Bard",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2
+    },
+    "modeled": true,
+    "name": "Garruk's Uprising",
+    "oracleId": "3127ae9b-a7a7-43ec-89d7-688f8445b33d",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "b58c4033-f764-42f6-966f-b7202a2babbf",
+    "spellAbility": null,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "addKeyword": "trample",
+          "layer": 6
+        }
+      }
+    ],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [
+      {
+        "description": "When this enchantment enters, if you control a creature with power 4 or greater, draw a card.",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      },
+      {
+        "description": "Whenever a creature you control with power 4 or greater enters, draw a card.",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Enchantment",
+    "types": [
+      "Enchantment"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 2,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 6
+    },
+    "modeled": true,
+    "name": "Last March of the Ents",
+    "oracleId": "3999cd64-ff5c-4e2c-8aa6-d14f9f8a2b4c",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "7f1b99e0-ffb7-4f98-8ee5-4357bb79dd2e",
+    "spellAbility": {
+      "cantBeCountered": true,
+      "effects": [
+        {
+          "count": {
+            "kind": "greatestToughnessAmong",
+            "scope": "all",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "op": "draw"
+        },
+        {
+          "count": "any",
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "op": "handToBattlefield"
+        }
+      ],
+      "kind": "spell",
+      "targets": []
+    },
+    "spellCantBeCountered": true,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Sorcery",
+    "types": [
+      "Sorcery"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "U"
+    ],
+    "colors": [
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 0
+    },
+    "modeled": true,
+    "name": "Stubborn Denial",
+    "oracleId": "3adc3af3-5086-4d61-b38c-c1dddeaeebe6",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "6f8626c4-306f-4e9d-8840-2bb73fe87e87",
+    "spellAbility": {
+      "effects": [
+        {
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "else": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "op": "counterUnlessControllerPays",
+              "target": 0
+            }
+          ],
+          "op": "conditionalEffect",
+          "then": [
+            {
+              "op": "counter",
+              "target": 0
+            }
+          ]
+        }
+      ],
+      "kind": "spell",
+      "targets": [
+        {
+          "controller": "opponent",
+          "kind": "noncreatureSpell"
+        }
+      ]
+    },
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Instant",
+    "types": [
+      "Instant"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "C"
+          ]
+        ]
+      },
+      {
+        "onActivate": [
+          {
+            "amount": 1,
+            "op": "damageController"
+          }
+        ],
+        "units": [
+          [
+            "G",
+            "U"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Yavimaya Coast",
+    "oracleId": "40b36bc6-c185-4bda-99e7-0118953c2c97",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "f4c1500b-1f4c-4d33-810c-25e3bb0a4666",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "kind": "mayPayLife",
+      "n": 2
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "B"
+          ]
+        ]
+      },
+      {
+        "units": [
+          [
+            "R"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Blood Crypt",
+    "oracleId": "43985bbc-a0f6-4812-984e-392bc8562633",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "1b7eb998-3ec0-4cbc-a416-5a1e3e5a7316",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Swamp",
+      "Mountain"
+    ],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land — Swamp Mountain",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "cmp": ">=",
+      "kind": "countPermanents",
+      "n": 2,
+      "scope": "you",
+      "selector": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "type",
+            "value": "Land"
+          },
+          {
+            "kind": "other"
+          }
+        ]
+      }
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "U",
+            "R"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Stormcarved Coast",
+    "oracleId": "4722105b-0085-4bb8-bca1-9de0d3eb5600",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "bd3ae4fa-4c97-410a-8c0a-bd203342595d",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Farseek",
+    "oracleId": "495e52e6-4c2b-4574-9474-eadbdcc8b4ac",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "c1aac0f5-1d01-4673-b8d3-878d9a1d423c",
+    "spellAbility": {
+      "effects": [
+        {
+          "destinations": [
+            {
+              "tapped": true,
+              "zone": "battlefield"
+            }
+          ],
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Plains"
+              },
+              {
+                "kind": "subtype",
+                "value": "Island"
+              },
+              {
+                "kind": "subtype",
+                "value": "Swamp"
+              },
+              {
+                "kind": "subtype",
+                "value": "Mountain"
+              }
+            ]
+          },
+          "op": "searchLibrary"
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "kind": "spell",
+      "targets": []
+    },
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Sorcery",
+    "types": [
+      "Sorcery"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{4}, {T}, Sacrifice this land: Search your library for a Dragon card, reveal it, put it into your hand, then shuffle.",
+          "effects": [
+            {
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "subtype",
+                "value": "Dragon"
+              },
+              "op": "searchLibrary"
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 4
+            },
+            "kind": "mana"
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "C"
+          ]
+        ]
+      },
+      {
+        "restriction": {
+          "description": "cast a dragon spell or an omen spell",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Dragon"
+              },
+              {
+                "kind": "subtype",
+                "value": "Omen"
+              }
+            ]
+          },
+          "purposes": [
+            "castSpell"
+          ]
+        },
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Maelstrom of the Spirit Dragon",
+    "oracleId": "49e9fba7-8465-4bbb-95db-73a7e149f494",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "c4e90bfb-d9a5-48a9-9ff9-b0f50a813eee",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "colors": [
+      "B"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 2,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Crux of Fate",
+    "oracleId": "52a0dae4-2a95-487e-acd4-eabdb2d031e2",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "11721b88-2654-482c-b9d4-80e54efdbf63",
+    "spellAbility": {
+      "effects": [],
+      "kind": "spell",
+      "modes": {
+        "maxChoices": 1,
+        "minChoices": 1,
+        "options": [
+          {
+            "description": "Destroy all Dragon creatures",
+            "effects": [
+              {
+                "op": "destroyEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Dragon"
+                    }
+                  ]
+                }
+              }
+            ],
+            "targetSlots": []
+          },
+          {
+            "description": "Destroy all non-Dragon creatures",
+            "effects": [
+              {
+                "op": "destroyEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "subtype",
+                        "value": "Dragon"
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "targetSlots": []
+          }
+        ]
+      },
+      "targets": []
+    },
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Sorcery",
+    "types": [
+      "Sorcery"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Chromatic Lantern",
+    "oracleId": "539f5396-d99a-417d-a84c-dff7930b5900",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "693da13a-49af-4f7e-b247-36b454fb31a0",
+    "spellAbility": null,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Land"
+            }
+          ]
+        },
+        "op": {
+          "addManaAbility": {
+            "units": [
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            ]
+          },
+          "layer": 6
+        }
+      }
+    ],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Artifact",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "B"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Swamp",
+    "oracleId": "56719f6a-1a6c-4c0a-8d21-18f7d7350b68",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "74414c62-4b68-4e1b-9241-feff3231b9ee",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Swamp"
+    ],
+    "supertypes": [
+      "Basic"
+    ],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Basic Land — Swamp",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "cmp": ">=",
+      "kind": "countPermanents",
+      "n": 2,
+      "scope": "you",
+      "selector": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "type",
+            "value": "Land"
+          },
+          {
+            "kind": "other"
+          }
+        ]
+      }
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "R",
+            "W"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Sundown Pass",
+    "oracleId": "5ad0b405-cca4-475e-985c-4d7e3599d87e",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "b34000e9-ff20-4fb4-9d0b-03a172a92457",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "+1: Until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays 2 life for each of those creatures.",
+          "effects": [
+            {
+              "op": "noOp"
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "delta": 1,
+            "kind": "loyalty"
+          }
+        ],
+        "oncePerTurn": true,
+        "timing": "sorcery"
+      },
+      {
+        "ability": {
+          "description": "−3: Search your library for a Dragon card, reveal it, put it into your hand, then shuffle.",
+          "effects": [
+            {
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "subtype",
+                "value": "Dragon"
+              },
+              "op": "searchLibrary"
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "delta": -3,
+            "kind": "loyalty"
+          }
+        ],
+        "oncePerTurn": true,
+        "timing": "sorcery"
+      },
+      {
+        "ability": {
+          "description": "−7: Destroy all non-Dragon creatures.",
+          "effects": [
+            {
+              "op": "destroyEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "subtype",
+                      "value": "Dragon"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "delta": -7,
+            "kind": "loyalty"
+          }
+        ],
+        "oncePerTurn": true,
+        "timing": "sorcery"
+      }
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "colors": [
+      "B",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": 4,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 1,
+        "G": 0,
+        "R": 0,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2
+    },
+    "modeled": true,
+    "name": "Sivitri, Dragon Master",
+    "oracleId": "5cf86603-cc47-4644-890a-0997c694817f",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "b7505068-484e-4844-b3dd-89c28f18275d",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Sivitri"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Legendary Planeswalker — Sivitri",
+    "types": [
+      "Planeswalker"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 5
+    },
+    "modeled": true,
+    "name": "Ryusei, the Falling Star",
+    "oracleId": "5e99ba3b-dc2b-4c3c-84ce-228d4772cfee",
+    "power": 5,
+    "ruleStatics": [],
+    "scryfallId": "68d57ab8-fbe0-4f01-b7f7-2a5cccd2d13a",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon",
+      "Spirit"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 5,
+    "triggers": [
+      {
+        "description": "When ~ dies, it deals 5 damage to each creature without flying.",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 5
+            },
+            "op": "damageEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  }
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "dies"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon Spirit",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "conditionalUnits": {
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                }
+              ]
+            }
+          },
+          "linked": true,
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ],
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        },
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Ilysian Caryatid",
+    "oracleId": "5f2be3c2-060a-43e1-b63b-9cd3c78ffcb0",
+    "power": 1,
+    "ruleStatics": [],
+    "scryfallId": "3db65137-c9d6-4352-b7a0-f3968b167233",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Plant"
+    ],
+    "supertypes": [],
+    "toughness": 1,
+    "triggers": [],
+    "typeLine": "Creature — Plant",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "spendTrigger": {
+          "ability": {
+            "description": "it gains haste until end of turn",
+            "effects": [
+              {
+                "op": "grantHasteToResolvingSpell"
+              }
+            ],
+            "kind": "triggered",
+            "targets": []
+          },
+          "when": {
+            "description": "a dragon creature spell",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "purposes": [
+              "castSpell"
+            ]
+          }
+        },
+        "units": [
+          [
+            "R"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2
+    },
+    "modeled": true,
+    "name": "Carnelian Orb of Dragonkind",
+    "oracleId": "651c967c-8f71-4eb5-b22f-545e55ea050e",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "6db2741d-2722-4eb7-b09d-0d81649c7ca2",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Artifact",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B",
+      "R",
+      "W"
+    ],
+    "colors": [
+      "B",
+      "R",
+      "W"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 1,
+        "G": 0,
+        "R": 1,
+        "U": 0,
+        "W": 1
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Neriv, Heart of the Storm",
+    "oracleId": "66290104-ac65-4eb5-bf00-89b944249e07",
+    "power": 4,
+    "ruleStatics": [
+      {
+        "kind": "damageDoubled",
+        "sourceFilter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "enteredThisTurn"
+            }
+          ]
+        }
+      }
+    ],
+    "scryfallId": "b58112b0-a05c-4b98-b650-fd27ad97789f",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Spirit",
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 5,
+    "triggers": [],
+    "typeLine": "Legendary Creature — Spirit Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{R}, {T}: You may play the exiled card without paying its mana cost if an opponent was dealt 7 or more damage this turn.",
+          "effects": [
+            {
+              "condition": {
+                "kind": "opponentDealtDamageThisTurn",
+                "minDamage": 7
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "op": "playExiledCardFree"
+                }
+              ]
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 1,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 0
+            },
+            "kind": "mana"
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": true,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "R"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Spinerock Knoll",
+    "oracleId": "690c7f8e-fea2-4920-afa7-02ff120701a1",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "11e4ba4b-62d1-43ed-82e8-cd45d7a62c65",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [
+      {
+        "description": "Hideaway 4",
+        "effects": [
+          {
+            "op": "hideawayExileTop4"
+          }
+        ],
+        "kind": "triggered",
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "C"
+          ],
+          [
+            "C"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Sol Ring",
+    "oracleId": "6ad8011d-3471-4369-9d68-b264cc027487",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "91fdb56b-54d5-4272-8319-505ff987fe9b",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Artifact",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "C"
+          ]
+        ]
+      },
+      {
+        "onActivate": [
+          {
+            "amount": 1,
+            "op": "damageController"
+          }
+        ],
+        "units": [
+          [
+            "R",
+            "W"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Battlefield Forge",
+    "oracleId": "6b75b94e-83b7-457e-ac41-7ca90b5a59aa",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "c47c1bf5-f11e-4f86-b20b-5d899a11dc56",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{1}{G}, {T}: You may put a creature card from your hand onto the battlefield.",
+          "effects": [
+            {
+              "count": "one",
+              "filter": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "op": "handToBattlefield"
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 1,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 1
+            },
+            "kind": "mana"
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Monster Manual // Zoological Study",
+    "oracleId": "6d4e7943-1fdf-4085-8af0-658badbd0cb8",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "27223ee4-970a-438a-beff-a1b13b14aff4",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Book"
+    ],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Artifact — Book // Sorcery — Adventure",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 2,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 5
+    },
+    "modeled": true,
+    "name": "Thunder Dragon",
+    "oracleId": "70d9579f-c8a6-4406-afe1-9291fe5ee736",
+    "power": 5,
+    "ruleStatics": [],
+    "scryfallId": "9ff75ff4-495f-4a0c-9d98-69eff1b3fa32",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [],
+    "toughness": 5,
+    "triggers": [
+      {
+        "description": "When this creature enters, it deals 3 damage to each creature without flying.",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 3
+            },
+            "op": "damageEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  }
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Sarkhan, Dragon Ascendant",
+    "oracleId": "71cb48e2-2328-471c-a04a-7b6461f378f4",
+    "power": 2,
+    "ruleStatics": [],
+    "scryfallId": "c2200646-7b7c-489d-bbae-16b03e1d7fb2",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Human",
+      "Druid"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 2,
+    "triggers": [
+      {
+        "description": "ETB behold Treasure",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "createToken",
+            "spec": {
+              "colors": [],
+              "manaAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ],
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ]
+                }
+              ],
+              "name": "Treasure",
+              "power": null,
+              "subtypes": [
+                "Treasure"
+              ],
+              "toughness": null,
+              "typeLine": "Artifact — Treasure",
+              "types": [
+                "Artifact"
+              ]
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": true,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      },
+      {
+        "description": "Dragon ETB counter",
+        "effects": [
+          {
+            "count": 1,
+            "counter": "+1/+1",
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "self"
+            }
+          }
+        ],
+        "kind": "triggered",
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Human Druid",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{1}, {T}: Add {W}{U}.",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "colors": [],
+              "fixedSymbols": [
+                "W",
+                "U"
+              ],
+              "op": "addMana"
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 1
+            },
+            "kind": "mana"
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Skycloud Expanse",
+    "oracleId": "76f335d0-7f71-4b1a-b60d-73de954cbe2c",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "03f8c846-d80c-49a4-a562-e817cd0c6096",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Nature's Lore",
+    "oracleId": "78826359-fe63-44ad-adc4-a17ffcd710e4",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "7afc4a15-5ff8-457a-aa62-803b2d78d912",
+    "spellAbility": {
+      "effects": [
+        {
+          "destinations": [
+            {
+              "zone": "battlefield"
+            }
+          ],
+          "filter": {
+            "kind": "subtype",
+            "value": "Forest"
+          },
+          "op": "searchLibrary"
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "kind": "spell",
+      "targets": []
+    },
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Sorcery",
+    "types": [
+      "Sorcery"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{T}: Until end of turn, target creature you control with power 4 or greater gains trample and \"Whenever this creature deals combat damage to a player, draw a card.\"",
+          "effects": [
+            {
+              "keyword": "trample",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            },
+            {
+              "ability": {
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "draw"
+                  }
+                ],
+                "kind": "triggered",
+                "targets": [],
+                "trigger": {
+                  "subject": {
+                    "kind": "self"
+                  },
+                  "when": "dealsCombatDamageToPlayer"
+                }
+              },
+              "op": "grantAbilityUntilEot",
+              "target": 0
+            }
+          ],
+          "kind": "activated",
+          "targets": [
+            {
+              "controller": "you",
+              "filter": {
+                "kind": "powerAtLeast",
+                "n": 4
+              },
+              "kind": "creature"
+            }
+          ]
+        },
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "restriction": {
+          "description": "cast a creature spell",
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "purposes": [
+            "castSpell"
+          ]
+        },
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Herd Heirloom",
+    "oracleId": "78b6dd40-c182-4037-a4d3-9fd012b2c584",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "a88c7713-b3a9-4685-b1d3-623d35b62365",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Artifact",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{G}, {T}: You may play the exiled card without paying its mana cost if creatures you control have total power 10 or greater.",
+          "effects": [
+            {
+              "condition": {
+                "cmp": ">=",
+                "kind": "totalCreaturePower",
+                "n": 10,
+                "scope": "you"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "op": "playExiledCardFree"
+                }
+              ]
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 1,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 0
+            },
+            "kind": "mana"
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": true,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Mosswort Bridge",
+    "oracleId": "7cb9e29f-835f-4155-a2a5-4b778866c773",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "1490c0dc-06d6-45ee-af3c-2935b0ab1233",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [
+      {
+        "description": "Hideaway 4",
+        "effects": [
+          {
+            "op": "hideawayExileTop4"
+          }
+        ],
+        "kind": "triggered",
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": true,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G",
+            "U"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Temple of Mystery",
+    "oracleId": "7e26f0b7-20e6-46d5-8130-d98c14d6aa29",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "258077cf-edef-40fe-ab46-03c965ebe990",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [
+      {
+        "description": "When this land enters, scry 1.",
+        "effects": [
+          {
+            "count": 1,
+            "op": "scry"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "colors": [
+      "R",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying",
+      "haste"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Firkraag, Cunning Instigator",
+    "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
+    "power": 3,
+    "ruleStatics": [],
+    "scryfallId": "b55e624b-6f6a-42ae-89aa-0cc62ee55a31",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 3,
+    "triggers": [
+      {
+        "description": "Dragons attack an opponent — goad that player’s creature",
+        "effects": [
+          {
+            "op": "goad",
+            "target": 0
+          }
+        ],
+        "kind": "triggered",
+        "targets": [
+          {
+            "controller": "eventPlayer",
+            "kind": "creature"
+          }
+        ],
+        "trigger": {
+          "aggregate": "byEventPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "when": "attacks"
+        }
+      },
+      {
+        "description": "Forced attacker damages an opponent — grow Firkraag and draw",
+        "effects": [
+          {
+            "condition": {
+              "kind": "hadToAttackThisCombat"
+            },
+            "else": [],
+            "op": "conditionalEffect",
+            "then": [
+              {
+                "count": 1,
+                "counter": "+1/+1",
+                "op": "putCountersEach",
+                "selector": {
+                  "kind": "self"
+                }
+              },
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ]
+          }
+        ],
+        "kind": "triggered",
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          },
+          "when": "dealsCombatDamageToPlayer"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "colors": [
+      "G",
+      "W"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying",
+      "lifelink"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 1
+      },
+      "colorless": 0,
+      "generic": 4
+    },
+    "modeled": true,
+    "name": "Dragonlord Dromoka",
+    "oracleId": "82cdd612-3322-4372-810f-1ff106ea8e6a",
+    "power": 5,
+    "ruleStatics": [
+      {
+        "kind": "cantCastSpells",
+        "who": "opponents",
+        "yourTurnOnly": true
+      }
+    ],
+    "scryfallId": "4452d99e-23c2-408d-9eb8-ef31aefafa9d",
+    "spellAbility": null,
+    "spellCantBeCountered": true,
+    "staticEffects": [],
+    "subtypes": [
+      "Elder",
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 7,
+    "triggers": [],
+    "typeLine": "Legendary Creature — Elder Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "U"
+    ],
+    "colors": [
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 2,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 4
+    },
+    "modeled": true,
+    "name": "Kairi, the Swirling Sky",
+    "oracleId": "85aa53e8-f062-4d02-bc69-1413f7f0dcf1",
+    "power": 6,
+    "ruleStatics": [],
+    "scryfallId": "af7979d8-21f3-40ba-8a2e-7ebad210e48b",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon",
+      "Spirit"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 6,
+    "triggers": [
+      {
+        "description": "Dies — choose Kairi mode",
+        "effects": [],
+        "kind": "triggered",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Return nonland permanents with total mana value six or less",
+              "effects": [
+                {
+                  "op": "bounceUpTo6MV"
+                }
+              ]
+            },
+            {
+              "description": "Mill six, then return up to two instant or sorcery cards",
+              "effects": [
+                {
+                  "op": "millAndReturnSpells"
+                }
+              ]
+            }
+          ]
+        },
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "dies"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon Spirit",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": [],
+    "ward": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    }
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R",
+      "U",
+      "W"
+    ],
+    "colors": [
+      "B",
+      "G",
+      "R",
+      "U",
+      "W"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 1,
+        "G": 1,
+        "R": 1,
+        "U": 1,
+        "W": 1
+      },
+      "colorless": 0,
+      "generic": 4
+    },
+    "modeled": true,
+    "name": "The Ur-Dragon",
+    "oracleId": "87b22b09-4f6d-4bc5-9cfc-663e4c7c6981",
+    "power": 10,
+    "ruleStatics": [
+      {
+        "alsoFromCommandZone": true,
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "excludesSelf": true,
+        "filter": {
+          "kind": "subtype",
+          "value": "Dragon"
+        },
+        "kind": "costReduction"
+      }
+    ],
+    "scryfallId": "10d42b35-844f-4a64-9981-c6118d45e826",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon",
+      "Avatar"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 10,
+    "triggers": [
+      {
+        "description": "Whenever one or more Dragons you control attack, draw that many cards, then you may put a permanent card from your hand onto the battlefield.",
+        "effects": [
+          {
+            "count": {
+              "kind": "triggerCount"
+            },
+            "op": "draw"
+          },
+          {
+            "count": "one",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                },
+                {
+                  "kind": "type",
+                  "value": "Battle"
+                }
+              ]
+            },
+            "op": "handToBattlefield"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "aggregate": true,
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                }
+              ]
+            }
+          },
+          "when": "attacks"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon Avatar",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R",
+      "U"
+    ],
+    "colors": [
+      "G",
+      "R",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 1,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Miirym, Sentinel Wyrm",
+    "oracleId": "880fcf86-e6a9-482c-b91d-750f293127b2",
+    "power": 6,
+    "ruleStatics": [],
+    "scryfallId": "a934590b-5c70-4f07-af67-fbe817a99531",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon",
+      "Spirit"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 6,
+    "triggers": [
+      {
+        "description": "Whenever another nontoken Dragon you control enters, create a token that's a copy of it, except the token isn't legendary.",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "exceptNonLegendary": true,
+            "op": "createTokenCopyOf",
+            "ref": "triggerObject"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "isToken"
+                  }
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                }
+              ]
+            }
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon Spirit",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": [],
+    "ward": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2
+    }
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "colors": [
+      "G",
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying",
+      "haste"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 5
+    },
+    "modeled": true,
+    "name": "Klauth, Unrivaled Ancient",
+    "oracleId": "8cefa5d6-5151-4e75-8b72-f210a4c751ea",
+    "power": 4,
+    "ruleStatics": [],
+    "scryfallId": "7f5cf828-17b2-4105-9a9a-ee0ab720c2ee",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 4,
+    "triggers": [
+      {
+        "description": "Whenever ~ attacks, add X mana in any combination of colors, where X is the total power of attacking creatures. Spend this mana only to cast spells. Until end of turn, you don't lose this mana as steps and phases end.",
+        "effects": [
+          {
+            "amount": {
+              "kind": "totalPowerOfAttackers"
+            },
+            "colors": "any",
+            "op": "addMana",
+            "persistent": true,
+            "restriction": {
+              "description": "cast spells",
+              "purposes": [
+                "castSpell"
+              ]
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "attacks"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{T}, Remove a gold counter from this artifact: Draw a card.",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "count": 1,
+            "counter": "gold",
+            "kind": "removeCounters"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Dragon's Hoard",
+    "oracleId": "8cf77dc4-763b-41b7-a5da-0ef2734f08e6",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "3ee80876-6e87-46c4-a6fd-ff6752db3032",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [
+      {
+        "description": "Whenever a Dragon you control enters, put a gold counter on this artifact.",
+        "effects": [
+          {
+            "count": 1,
+            "counter": "gold",
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "self"
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                }
+              ]
+            }
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Artifact",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "Pay 10 life: Untap all lands you control. Activate only once each turn.",
+          "effects": [
+            {
+              "op": "untapEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "amount": 10,
+            "kind": "payLife"
+          }
+        ],
+        "oncePerTurn": true,
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "colors": [
+      "B",
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 1,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 5
+    },
+    "modeled": true,
+    "name": "Beledros Witherbloom",
+    "oracleId": "90194ff1-db61-463f-b5a3-15cd85311d0e",
+    "power": 4,
+    "ruleStatics": [],
+    "scryfallId": "144c2886-3d37-4a8a-8e37-99ccff66599e",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Elder",
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 4,
+    "triggers": [
+      {
+        "description": "At the beginning of each upkeep, create a 1/1 black and green Pest creature token with \"When this token dies, you gain 1 life.\"",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "createToken",
+            "spec": {
+              "colors": [
+                "B",
+                "G"
+              ],
+              "name": "Pest",
+              "power": 1,
+              "subtypes": [
+                "Pest"
+              ],
+              "toughness": 1,
+              "triggers": [
+                {
+                  "description": "when this token dies, you gain 1 life.",
+                  "effects": [
+                    {
+                      "amount": {
+                        "kind": "const",
+                        "n": 1
+                      },
+                      "op": "gainLife"
+                    }
+                  ],
+                  "kind": "triggered",
+                  "optional": false,
+                  "targets": [],
+                  "trigger": {
+                    "subject": {
+                      "kind": "self"
+                    },
+                    "when": "dies"
+                  }
+                }
+              ],
+              "typeLine": "Token Creature — Pest",
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "player": "each",
+          "when": "upkeep"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Elder Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "U",
+      "W"
+    ],
+    "colors": [
+      "R",
+      "U",
+      "W"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying",
+      "haste"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 1,
+        "W": 1
+      },
+      "colorless": 0,
+      "generic": 2
+    },
+    "modeled": true,
+    "name": "Zurgo and Ojutai",
+    "oracleId": "941c9acd-2773-456a-88d5-0537735f93c6",
+    "power": 4,
+    "ruleStatics": [],
+    "scryfallId": "eacbcd82-36e6-424c-bd4e-ec3a584836c5",
+    "spellAbility": null,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "condition": {
+          "kind": "enteredThisTurn"
+        },
+        "op": {
+          "addKeyword": "hexproof",
+          "layer": 6
+        }
+      }
+    ],
+    "subtypes": [
+      "Orc",
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 4,
+    "triggers": [
+      {
+        "description": "Combat damage look top 3",
+        "effects": [
+          {
+            "op": "noOp"
+          }
+        ],
+        "kind": "triggered",
+        "targets": [],
+        "trigger": {
+          "aggregate": true,
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "when": "dealsCombatDamageToPlayer"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Orc Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "cmp": "<=",
+      "kind": "countPermanents",
+      "n": 2,
+      "scope": "you",
+      "selector": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "type",
+            "value": "Land"
+          },
+          {
+            "kind": "other"
+          }
+        ]
+      }
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G",
+            "W"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Razorverge Thicket",
+    "oracleId": "94f6c407-e665-4032-be13-a01e40c1f306",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "df1233de-4449-4c32-944b-e19bed666324",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "cmp": ">=",
+      "kind": "countPermanents",
+      "n": 1,
+      "scope": "you",
+      "selector": {
+        "kind": "anyOf",
+        "of": [
+          {
+            "kind": "subtype",
+            "value": "Mountain"
+          },
+          {
+            "kind": "subtype",
+            "value": "Forest"
+          }
+        ]
+      }
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "R",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Rootbound Crag",
+    "oracleId": "9516c4c1-d72d-434f-97e1-6a862434a169",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "42d174e5-b8c2-45eb-8e08-1b94fc27cbee",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "dynamic": "opponentLandColors",
+        "units": []
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2
+    },
+    "modeled": true,
+    "name": "Fellwar Stone",
+    "oracleId": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "385b9f5e-81dd-49f6-a644-59d53245e3dc",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Artifact",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "kind": "mayPayLife",
+      "n": 2
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "B"
+          ]
+        ]
+      },
+      {
+        "units": [
+          [
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Overgrown Tomb",
+    "oracleId": "975ec9a3-6f20-4177-8211-82526e092538",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "ad7e18e2-c033-4b6c-86e8-d0e5cc824cfd",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Swamp",
+      "Forest"
+    ],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land — Swamp Forest",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R",
+      "U"
+    ],
+    "colors": [
+      "G",
+      "R",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying",
+      "trample"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 1,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 4
+    },
+    "modeled": true,
+    "name": "Ureni of the Unwritten",
+    "oracleId": "99c2d3ef-e5b4-48cd-b3f5-de9b02c7c36a",
+    "power": 7,
+    "ruleStatics": [],
+    "scryfallId": "f54ecbf1-83df-4486-bd6a-7d1f173b6863",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Spirit",
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 7,
+    "triggers": [
+      {
+        "description": "Whenever ~ enters or attacks, look at the top eight cards of your library. You may put a Dragon creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.",
+        "effects": [
+          {
+            "count": 8,
+            "mayPut": {
+              "destination": {
+                "zone": "battlefield"
+              },
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              }
+            },
+            "op": "lookAtTopN",
+            "rest": "bottomRandom"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      },
+      {
+        "description": "Whenever ~ enters or attacks, look at the top eight cards of your library. You may put a Dragon creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.",
+        "effects": [
+          {
+            "count": 8,
+            "mayPut": {
+              "destination": {
+                "zone": "battlefield"
+              },
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              }
+            },
+            "op": "lookAtTopN",
+            "rest": "bottomRandom"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "attacks"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Spirit Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 0,
+      "x": 1
+    },
+    "modeled": true,
+    "name": "Earthquake",
+    "oracleId": "9a40614b-50a3-422c-849e-53c8b7d3d204",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "7cf2f3c7-66b2-48f6-97ef-09150903df7e",
+    "spellAbility": {
+      "effects": [
+        {
+          "amount": {
+            "kind": "xValue"
+          },
+          "op": "damageEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "not",
+                "of": {
+                  "keyword": "flying",
+                  "kind": "hasKeyword"
+                }
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          }
+        },
+        {
+          "amount": {
+            "kind": "xValue"
+          },
+          "op": "damageEachPlayer"
+        }
+      ],
+      "kind": "spell",
+      "targets": []
+    },
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Sorcery",
+    "types": [
+      "Sorcery"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "cmp": ">=",
+      "kind": "countPermanents",
+      "n": 8,
+      "scope": "opponents",
+      "selector": {
+        "kind": "type",
+        "value": "Land"
+      }
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "U"
+          ]
+        ]
+      },
+      {
+        "units": [
+          [
+            "R"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Turbulent Springs",
+    "oracleId": "9aef7510-9f06-4939-8cae-f71330d1105e",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "a25cb813-aa6d-469c-aa29-61ffa32267f2",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Island",
+      "Mountain"
+    ],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land — Island Mountain",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "R"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Mountain",
+    "oracleId": "a3fb7228-e76b-4e96-a40e-20b5fed75685",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "426b0211-3d5d-4e53-bcf6-21823c655ffd",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Mountain"
+    ],
+    "supertypes": [
+      "Basic"
+    ],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Basic Land — Mountain",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "units": [
+          [
+            "R"
+          ],
+          [
+            "R"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Reckless Barbarian",
+    "oracleId": "a621ae15-122a-4e11-bfcf-11dfc09784c0",
+    "power": 2,
+    "ruleStatics": [],
+    "scryfallId": "c912e984-1d27-4da2-9733-d56e437bcf58",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon",
+      "Barbarian"
+    ],
+    "supertypes": [],
+    "toughness": 2,
+    "triggers": [],
+    "typeLine": "Creature — Dragon Barbarian",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{2}, {T}, Sacrifice this land: Return target Dragon creature card or Ugin planeswalker card from your graveyard to your hand.",
+          "effects": [
+            {
+              "op": "graveyardToHand",
+              "target": 0
+            }
+          ],
+          "kind": "activated",
+          "targets": [
+            {
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "subtype",
+                        "value": "Dragon"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "subtype",
+                        "value": "Ugin"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Planeswalker"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "kind": "cardInGraveyard"
+            }
+          ]
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 2
+            },
+            "kind": "mana"
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "C"
+          ]
+        ]
+      },
+      {
+        "restriction": {
+          "description": "cast a dragon creature spell",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Dragon"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "purposes": [
+            "castSpell"
+          ]
+        },
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Haven of the Spirit Dragon",
+    "oracleId": "acc9c16a-5e72-43bd-87e1-56a16aa892f5",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "d0c552da-874e-49eb-b221-47220b8b7786",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "colors": [
+      "G",
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Rhythm of the Wild",
+    "oracleId": "acfa77fd-3610-4f12-9c3c-bd860ce91700",
+    "power": null,
+    "ruleStatics": [
+      {
+        "filter": {
+          "kind": "type",
+          "value": "Creature"
+        },
+        "kind": "cantBeCountered"
+      }
+    ],
+    "scryfallId": "c2a6453e-a373-44ec-807a-15c0c8b1af57",
+    "spellAbility": null,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "not",
+              "of": {
+                "kind": "isToken"
+              }
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "addKeyword": "riot",
+          "layer": 6
+        }
+      }
+    ],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Enchantment",
+    "types": [
+      "Enchantment"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "U"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "U"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Island",
+    "oracleId": "b2c6aa39-2d2a-459c-a555-fb48ba993373",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "5a74175b-2418-4226-8435-1490532e644f",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Island"
+    ],
+    "supertypes": [
+      "Basic"
+    ],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Basic Land — Island",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Forest",
+    "oracleId": "b34bb2dc-c1af-4d77-b0b3-a0fb342a5fc6",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "22463284-2478-4b1e-9a37-6dd2383266cf",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Forest"
+    ],
+    "supertypes": [
+      "Basic"
+    ],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Basic Land — Forest",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": true,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "dynamic": "commanderIdentity",
+        "spendTrigger": {
+          "ability": {
+            "description": "scry 1",
+            "effects": [
+              {
+                "count": 1,
+                "op": "scry"
+              }
+            ],
+            "kind": "triggered",
+            "targets": []
+          },
+          "when": {
+            "description": "cast a creature spell that shares a creature type with your commander",
+            "filter": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "purposes": [
+              "castSpell"
+            ],
+            "sharesCreatureTypeWithCommander": true
+          }
+        },
+        "units": []
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Path of Ancestry",
+    "oracleId": "b473e293-59e3-4e04-acf2-622604aeb25f",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "836b8f52-10d2-4716-9f7b-38fb23bc68de",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Dragon Tempest",
+    "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "39ac7ad0-e570-4209-988c-7c0f9b9d2004",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [
+      {
+        "description": "Flying creature enters — gains haste",
+        "effects": [
+          {
+            "keyword": "haste",
+            "op": "grantKeywordUntilEot",
+            "target": "triggerObject"
+          }
+        ],
+        "kind": "triggered",
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "keyword": "flying",
+                  "kind": "hasKeyword"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "when": "enters"
+        }
+      },
+      {
+        "description": "Dragon enters — damage equal to Dragons controlled",
+        "effects": [
+          {
+            "amount": {
+              "kind": "countPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "subtype",
+                "value": "Dragon"
+              }
+            },
+            "op": "dealDamage",
+            "target": 0
+          }
+        ],
+        "kind": "triggered",
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Enchantment",
+    "types": [
+      "Enchantment"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "colors": [
+      "R",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Sarkhan, Soul Aflame",
+    "oracleId": "bbcae463-ba05-4cfe-9c25-13f2e64698c7",
+    "power": 2,
+    "ruleStatics": [
+      {
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "subtype",
+          "value": "Dragon"
+        },
+        "kind": "costReduction"
+      }
+    ],
+    "scryfallId": "49d64e6b-563f-486c-ba04-4a254a9a971d",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Human",
+      "Shaman"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 4,
+    "triggers": [
+      {
+        "description": "Dragon ETB copy",
+        "effects": [
+          {
+            "addSupertypes": [
+              "Legendary"
+            ],
+            "nameOverride": "Sarkhan, Soul Aflame",
+            "op": "becomeCopyOf",
+            "ref": "triggerObject",
+            "untilEot": true
+          }
+        ],
+        "kind": "triggered",
+        "optional": true,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Human Shaman",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "colors": [
+      "R",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Lozhan, Dragons' Legacy",
+    "oracleId": "be2075af-1cd8-42fe-a29b-a0fd2b047a44",
+    "power": 4,
+    "ruleStatics": [],
+    "scryfallId": "fe604232-19da-4331-a6f2-ddb004f1dd90",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon",
+      "Shaman"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 2,
+    "triggers": [
+      {
+        "description": "Cast Adventure or Dragon — deal its mana value to a noncommander target",
+        "effects": [
+          {
+            "amount": {
+              "kind": "spellManaValue"
+            },
+            "op": "dealDamage",
+            "target": 0
+          }
+        ],
+        "kind": "triggered",
+        "targets": [
+          {
+            "filter": {
+              "kind": "not",
+              "of": {
+                "kind": "isCommander"
+              }
+            },
+            "kind": "anyTarget"
+          }
+        ],
+        "trigger": {
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Adventure"
+              },
+              {
+                "kind": "subtype",
+                "value": "Dragon"
+              }
+            ]
+          },
+          "when": "castsSpell"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon Shaman",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R",
+      "U",
+      "W"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "changeling"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 7
+    },
+    "modeled": true,
+    "name": "Morophon, the Boundless",
+    "oracleId": "bf418a2f-e639-4e52-9cad-5a0713a1829b",
+    "power": 6,
+    "ruleStatics": [
+      {
+        "amount": {
+          "kind": "const",
+          "n": 0
+        },
+        "coloredAmount": {
+          "colored": {
+            "B": 1,
+            "G": 1,
+            "R": 1,
+            "U": 1,
+            "W": 1
+          },
+          "colorless": 0,
+          "generic": 0
+        },
+        "filter": {
+          "kind": "subtype",
+          "value": "Dragon"
+        },
+        "kind": "costReduction"
+      }
+    ],
+    "scryfallId": "84238335-e08c-421c-b9b9-70a679ff2967",
+    "spellAbility": null,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Dragon"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "power": 1,
+          "sublayer": "d",
+          "toughness": 1
+        }
+      },
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "addAllCreatureTypes": true,
+          "layer": 4
+        }
+      }
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 6,
+    "triggers": [],
+    "typeLine": "Legendary Creature — Shapeshifter",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "colors": [
+      "G",
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying",
+      "trample"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 5
+    },
+    "modeled": true,
+    "name": "Atarka, World Render",
+    "oracleId": "c0b3bbce-977c-42a9-afcb-dabdfc717c97",
+    "power": 6,
+    "ruleStatics": [],
+    "scryfallId": "c569fab1-6901-40ab-b958-001698819585",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 4,
+    "triggers": [
+      {
+        "description": "Whenever a Dragon you control attacks, it gains double strike until end of turn.",
+        "effects": [
+          {
+            "keyword": "double strike",
+            "op": "grantKeywordUntilEot",
+            "target": "triggerObject"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                }
+              ]
+            }
+          },
+          "when": "attacks"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{B}{R}: Dragon creatures get +1/+1 until end of turn.",
+          "effects": [
+            {
+              "op": "pumpEachUntilEot",
+              "power": 1,
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              },
+              "toughness": 1
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 1,
+                "G": 0,
+                "R": 1,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 0
+            },
+            "kind": "mana"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "colors": [
+      "B",
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 2,
+        "G": 0,
+        "R": 2,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Bladewing the Risen",
+    "oracleId": "c22cc70a-9533-4bfc-b3ce-b2d43a73f0c1",
+    "power": 4,
+    "ruleStatics": [],
+    "scryfallId": "27ce43cb-44f4-4d94-8700-d9f3cc043989",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Zombie",
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 4,
+    "triggers": [
+      {
+        "description": "When ~ enters, you may return target Dragon permanent card from your graveyard to the battlefield.",
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": 0
+          }
+        ],
+        "kind": "triggered",
+        "optional": true,
+        "targets": [
+          {
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Battle"
+                    }
+                  ]
+                }
+              ]
+            },
+            "kind": "cardInGraveyard"
+          }
+        ],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Zombie Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R"
+    ],
+    "colors": [
+      "B",
+      "G",
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 1,
+        "G": 1,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Vaevictis Asmadi, the Dire",
+    "oracleId": "c42ce2e9-4dfe-468a-8f41-49e187cb91d4",
+    "power": 6,
+    "ruleStatics": [],
+    "scryfallId": "d19fdc00-21eb-48dc-966a-6b634dc5a2c4",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Elder",
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 6,
+    "triggers": [
+      {
+        "description": "Attack sacrifice & reveal",
+        "effects": [
+          {
+            "op": "destroy",
+            "target": 0
+          }
+        ],
+        "kind": "triggered",
+        "targets": [
+          {
+            "kind": "permanent"
+          }
+        ],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "attacks"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Elder Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 2,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 4
+    },
+    "modeled": true,
+    "name": "Hellkite Courser",
+    "oracleId": "c5abd58f-3e00-447b-a978-64cb88ad501b",
+    "power": 6,
+    "ruleStatics": [],
+    "scryfallId": "d33eca2e-fef0-42fd-9970-46d5bdb4bd4b",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [],
+    "toughness": 5,
+    "triggers": [
+      {
+        "description": "When this creature enters, you may put a commander you own from the command zone onto the battlefield. It gains haste. Return it to the command zone at the beginning of the next end step.",
+        "effects": [
+          {
+            "entersHaste": true,
+            "op": "commandZoneToBattlefield",
+            "target": 0
+          },
+          {
+            "ability": {
+              "effects": [
+                {
+                  "op": "returnToCommandZone",
+                  "target": "triggerObject"
+                }
+              ],
+              "kind": "triggered",
+              "targets": []
+            },
+            "expiry": "endStep",
+            "op": "registerDelayedTrigger",
+            "target": 0,
+            "when": "endStep"
+          }
+        ],
+        "kind": "triggered",
+        "optional": true,
+        "targets": [
+          {
+            "kind": "commanderInCommandZone"
+          }
+        ],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "cmp": ">=",
+      "kind": "countPermanents",
+      "n": 1,
+      "scope": "you",
+      "selector": {
+        "kind": "anyOf",
+        "of": [
+          {
+            "kind": "subtype",
+            "value": "Swamp"
+          },
+          {
+            "kind": "subtype",
+            "value": "Forest"
+          }
+        ]
+      }
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "B",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Woodland Cemetery",
+    "oracleId": "c9fe1383-1331-4a58-a45a-3320250221a9",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "4d6f6c96-f813-4864-b4e1-b2a0aa8be1e8",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "Equip {0}",
+          "effects": [
+            {
+              "op": "attachSelfTo",
+              "target": 0
+            }
+          ],
+          "kind": "activated",
+          "targets": [
+            {
+              "controller": "you",
+              "kind": "creature"
+            }
+          ]
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 0
+            },
+            "kind": "mana"
+          }
+        ],
+        "timing": "sorcery"
+      }
+    ],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2
+    },
+    "modeled": true,
+    "name": "Lightning Greaves",
+    "oracleId": "ca204b66-8d0c-431a-8d34-282f7c2d17da",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "b61634ae-05be-4b56-8ebb-9d4ade902e42",
+    "spellAbility": null,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "addKeyword": "haste",
+          "layer": 6
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "addKeyword": "shroud",
+          "layer": 6
+        }
+      }
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Artifact — Equipment",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "cmp": ">=",
+      "kind": "opponentCount",
+      "n": 2
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "R",
+            "W"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Spectator Seating",
+    "oracleId": "cf6d10ed-85c3-48f2-8ba0-2960e03b408b",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "4c62dcfc-4bc8-4551-b3c7-9eec26be3362",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2
+    },
+    "modeled": true,
+    "name": "Hunter's Insight",
+    "oracleId": "cf8a0782-f545-445e-abac-d9063dad696b",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "de399acd-e792-4f4a-8025-434f1080c0fc",
+    "spellAbility": {
+      "effects": [
+        {
+          "ability": {
+            "effects": [
+              {
+                "count": {
+                  "kind": "damageDealt"
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "triggered",
+            "targets": []
+          },
+          "expiry": "cleanup",
+          "op": "registerDelayedTrigger",
+          "target": 0,
+          "when": "dealsCombatDamageToPlayer"
+        }
+      ],
+      "kind": "spell",
+      "targets": [
+        {
+          "controller": "you",
+          "kind": "creature"
+        }
+      ]
+    },
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Instant",
+    "types": [
+      "Instant"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "cmp": ">=",
+      "kind": "opponentCount",
+      "n": 2
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G",
+            "U"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Rejuvenating Springs",
+    "oracleId": "d1620449-930a-4895-a143-fd2a0a3c8b17",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "c4565a7b-a0ed-4a7f-ad48-7745c56d141b",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "U"
+    ],
+    "colors": [
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 2,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Iymrith, Desert Doom",
+    "oracleId": "d5efba91-8400-41a3-91c6-cb5e81f07976",
+    "power": 5,
+    "ruleStatics": [],
+    "scryfallId": "c3e6025d-d273-4ae4-9929-5e588612f1b3",
+    "spellAbility": null,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "condition": {
+          "kind": "isUntapped"
+        },
+        "op": {
+          "addWard": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 4
+          },
+          "layer": 6
+        }
+      }
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 5,
+    "triggers": [
+      {
+        "description": "Combat damage — draw, then draw to three cards in hand",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          },
+          {
+            "count": 3,
+            "op": "drawUpTo"
+          }
+        ],
+        "kind": "triggered",
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "dealsCombatDamageToPlayer"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "condition": {
+          "cmp": ">=",
+          "kind": "countPermanents",
+          "n": 1,
+          "scope": "you",
+          "selector": {
+            "kind": "subtype",
+            "value": "Dragon"
+          }
+        },
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 0
+    },
+    "modeled": true,
+    "name": "Mox Jasper",
+    "oracleId": "d5fca77c-377f-41b4-a9e9-e91a89d351cc",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "a851d2d3-7e93-4887-bee5-4d6c9aaf9419",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Legendary Artifact",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "alternativeCasts": [
+      {
+        "description": "Overload {6}{u}",
+        "kind": "overload",
+        "manaCost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 1,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 6
+        }
+      }
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "colors": [
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Cyclonic Rift",
+    "oracleId": "d75b9c82-1b49-4c3e-a1b5-aeef57d6644b",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "dfb7c4b9-f2f4-4d4e-baf2-86551c8150fe",
+    "spellAbility": {
+      "effects": [
+        {
+          "op": "returnToHand",
+          "target": 0
+        }
+      ],
+      "kind": "spell",
+      "targets": [
+        {
+          "controller": "opponent",
+          "kind": "nonlandPermanent"
+        }
+      ]
+    },
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Instant",
+    "types": [
+      "Instant"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "Search Dragon",
+          "effects": [
+            {
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "subtype",
+                "value": "Dragon"
+              },
+              "op": "searchLibrary"
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 1,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 0
+            },
+            "kind": "mana"
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "colors": [
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 1
+            },
+            "kind": "mana"
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "restriction": {
+          "description": "Dragon spells or abilities",
+          "filter": {
+            "kind": "subtype",
+            "value": "Dragon"
+          },
+          "purposes": [
+            "castSpell",
+            "activateAbility"
+          ]
+        },
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ],
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Orb of Dragonkind",
+    "oracleId": "d9c36ed5-629c-4709-bff5-2f10fcde608a",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "9a1c2cdd-353c-4747-bf0e-b995dd37ffca",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Artifact",
+    "types": [
+      "Artifact"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "alternativeCasts": [
+      {
+        "ability": {
+          "effects": [
+            {
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              "op": "searchLibrary"
+            }
+          ],
+          "kind": "spell",
+          "targets": []
+        },
+        "description": "Claim Territory",
+        "kind": "omen",
+        "manaCost": {
+          "colored": {
+            "B": 0,
+            "G": 1,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 2
+        },
+        "name": "Claim Territory",
+        "typeLine": "Sorcery — Omen"
+      }
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 2,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Bloomvine Regent // Claim Territory",
+    "oracleId": "da1e019c-2ffb-412d-90d7-f2e5e5c44c4b",
+    "power": 4,
+    "ruleStatics": [],
+    "scryfallId": "10e0a9a3-f63a-4f92-a083-9d181580e498",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [],
+    "toughness": 5,
+    "triggers": [
+      {
+        "description": "Whenever this creature or another Dragon you control enters, you gain 3 life.",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 3
+            },
+            "op": "gainLife"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Dragon"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Creature — Dragon // Sorcery — Omen",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "cmp": ">=",
+      "kind": "countPermanents",
+      "n": 2,
+      "scope": "you",
+      "selector": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "type",
+            "value": "Land"
+          },
+          {
+            "kind": "other"
+          }
+        ]
+      }
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G",
+            "U"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Dreamroot Cascade",
+    "oracleId": "dd8538e6-cd5f-4a88-aff5-eb5e76ce8ddb",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "ef662b92-5a7f-48c9-bcc1-14b55e091aef",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "colors": [
+      "G"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 2,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 5
+    },
+    "modeled": true,
+    "name": "Old Gnawbone",
+    "oracleId": "dff3f4c7-f792-4ca3-9b0a-0738e70664d9",
+    "power": 7,
+    "ruleStatics": [],
+    "scryfallId": "77ceba8b-de19-4db8-b5a7-f5df49bf241f",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 7,
+    "triggers": [
+      {
+        "description": "Whenever a creature you control deals combat damage to a player, create that many Treasure tokens.",
+        "effects": [
+          {
+            "count": {
+              "kind": "damageDealt"
+            },
+            "op": "createToken",
+            "spec": {
+              "colors": [],
+              "manaAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ],
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ]
+                }
+              ],
+              "name": "Treasure",
+              "power": null,
+              "subtypes": [
+                "Treasure"
+              ],
+              "toughness": null,
+              "typeLine": "Artifact — Treasure",
+              "types": [
+                "Artifact"
+              ]
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "when": "dealsCombatDamageToPlayer"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R",
+      "U"
+    ],
+    "colors": [
+      "G",
+      "R",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 1,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 0
+    },
+    "modeled": true,
+    "name": "Temur Ascendancy",
+    "oracleId": "e68dc47c-692f-4420-9799-eee104017273",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "5cedb54a-a6f6-48aa-acdf-01c988c1c37d",
+    "spellAbility": null,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "addKeyword": "haste",
+          "layer": 6
+        }
+      }
+    ],
+    "subtypes": [],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [
+      {
+        "description": "Whenever a creature you control with power 4 or greater enters, you may draw a card.",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          }
+        ],
+        "kind": "triggered",
+        "optional": true,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "when": "enters"
+        }
+      }
+    ],
+    "typeLine": "Enchantment",
+    "types": [
+      "Enchantment"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "colors": [
+      "B",
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "menace"
+    ],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "restriction": {
+          "description": "Dragon creature spells",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "subtype",
+                "value": "Dragon"
+              }
+            ]
+          },
+          "purposes": [
+            "castSpell"
+          ]
+        },
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ],
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ]
+      }
+    ],
+    "manaCost": {
+      "colored": {
+        "B": 1,
+        "G": 0,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 1
+    },
+    "modeled": true,
+    "name": "Rivaz of the Claw",
+    "oracleId": "ecff46b9-fcc9-4895-8b6f-c697fd15d01a",
+    "power": 3,
+    "ruleStatics": [],
+    "scryfallId": "9a47573a-601e-4738-acef-16118289f939",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Lizard",
+      "Warlock"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 3,
+    "triggers": [],
+    "typeLine": "Legendary Creature — Lizard Warlock",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "kind": "mayPayLife",
+      "n": 2
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G"
+          ]
+        ]
+      },
+      {
+        "units": [
+          [
+            "W"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Temple Garden",
+    "oracleId": "f413a83d-a40d-434c-b20a-4c707c0527fa",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "b9b0589d-f327-46a7-8bac-06b7654c547a",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Forest",
+      "Plains"
+    ],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land — Forest Plains",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "colors": [
+      "G",
+      "R"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "trample"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 1,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 3
+    },
+    "modeled": true,
+    "name": "Thrakkus the Butcher",
+    "oracleId": "f7cd7ede-51c1-4117-99b5-484d0d80c95f",
+    "power": 3,
+    "ruleStatics": [],
+    "scryfallId": "2255d1e4-f387-4187-8c10-7d0009f6ec79",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Dragon",
+      "Peasant"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 4,
+    "triggers": [
+      {
+        "description": "Attack — double each Dragon’s power until end of turn",
+        "effects": [
+          {
+            "op": "doublePower",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "triggered",
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "attacks"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon Peasant",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "cmp": ">=",
+      "kind": "countPermanents",
+      "n": 2,
+      "scope": "you",
+      "selector": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "type",
+            "value": "Land"
+          },
+          {
+            "kind": "supertype",
+            "value": "Basic"
+          }
+        ]
+      }
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "U"
+          ]
+        ]
+      },
+      {
+        "units": [
+          [
+            "R"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Scorched Geyser",
+    "oracleId": "f808b510-907a-4c3c-aea1-efb825c8e13e",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "43abdfba-0a55-4b8a-858e-3372ee40a579",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Island",
+      "Mountain"
+    ],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land — Island Mountain",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R",
+      "W"
+    ],
+    "colors": [
+      "G",
+      "R",
+      "W"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [
+      "flying"
+    ],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 1,
+        "U": 0,
+        "W": 1
+      },
+      "colorless": 0,
+      "generic": 2
+    },
+    "modeled": true,
+    "name": "Rith, Liberated Primeval",
+    "oracleId": "f89de40f-52d3-44b1-8faa-6ddaa32880d0",
+    "power": 5,
+    "ruleStatics": [],
+    "scryfallId": "ac148784-b7b6-4aae-bffb-a4cf09f56971",
+    "spellAbility": null,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Dragon"
+            }
+          ]
+        },
+        "op": {
+          "addWard": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 2
+          },
+          "layer": 6
+        }
+      }
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "supertypes": [
+      "Legendary"
+    ],
+    "toughness": 5,
+    "triggers": [
+      {
+        "description": "At the beginning of your end step, if a creature or planeswalker an opponent controlled was dealt excess damage this turn, create a 4/4 red Dragon creature token with flying.",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "createToken",
+            "spec": {
+              "colors": [
+                "R"
+              ],
+              "keywords": [
+                "flying"
+              ],
+              "name": "Dragon",
+              "power": 4,
+              "subtypes": [
+                "Dragon"
+              ],
+              "toughness": 4,
+              "typeLine": "Token Creature — Dragon",
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "condition": {
+            "kind": "excessDamageDealtTo",
+            "scope": "opponents"
+          },
+          "player": "you",
+          "when": "endStep"
+        }
+      }
+    ],
+    "typeLine": "Legendary Creature — Dragon",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": [],
+    "ward": {
+      "colored": {
+        "B": 0,
+        "G": 0,
+        "R": 0,
+        "U": 0,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 2
+    }
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "G",
+      "R",
+      "U"
+    ],
+    "colors": [
+      "G",
+      "R",
+      "U"
+    ],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [],
+    "manaCost": {
+      "colored": {
+        "B": 0,
+        "G": 1,
+        "R": 1,
+        "U": 1,
+        "W": 0
+      },
+      "colorless": 0,
+      "generic": 0
+    },
+    "modeled": true,
+    "name": "Temur Battlecrier",
+    "oracleId": "fadf984c-c224-432a-87b9-b34f929b8409",
+    "power": 4,
+    "ruleStatics": [
+      {
+        "amount": {
+          "kind": "countPermanents",
+          "scope": "all",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "powerAtLeast",
+                "n": 4
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          }
+        },
+        "kind": "costReduction",
+        "yourTurnOnly": true
+      }
+    ],
+    "scryfallId": "72184791-0767-4108-920c-763e92dae2d4",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Orc",
+      "Ranger"
+    ],
+    "supertypes": [],
+    "toughness": 3,
+    "triggers": [],
+    "typeLine": "Creature — Orc Ranger",
+    "types": [
+      "Creature"
+    ],
+    "unmodeledReasons": []
+  },
+  {
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "entersTappedUnless": {
+      "kind": "mayPayLife",
+      "n": 2
+    },
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "U"
+          ]
+        ]
+      },
+      {
+        "units": [
+          [
+            "B"
+          ]
+        ]
+      }
+    ],
+    "manaCost": null,
+    "modeled": true,
+    "name": "Watery Grave",
+    "oracleId": "fc9ec820-4245-4a96-b009-5308a818ca58",
+    "power": null,
+    "ruleStatics": [],
+    "scryfallId": "5525d6a6-e532-4047-9da4-bfae7927fecc",
+    "spellAbility": null,
+    "staticEffects": [],
+    "subtypes": [
+      "Island",
+      "Swamp"
+    ],
+    "supertypes": [],
+    "toughness": null,
+    "triggers": [],
+    "typeLine": "Land — Island Swamp",
+    "types": [
+      "Land"
+    ],
+    "unmodeledReasons": []
+  }
+]

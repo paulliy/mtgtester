@@ -137,9 +137,13 @@ describe('parsing costs', () => {
     expect(def.manaAbilities[0]?.units).toEqual([['R'], ['R']]);
   });
 
-  it('refuses a mana ability that costs mana, rather than making it free', () => {
-    // Paying mana to make mana would make `planPayment` recursive. Unmodeled halts loudly;
-    // parsing it while ignoring the cost would hand the player free mana every turn.
+  it('reads a mana-costed "add mana" line as a stack ability, never as a free mana ability', () => {
+    // `parseManaAbilityLine` refuses this outright — paying mana to make mana would make
+    // `planPayment` recursive — but that refusal only rules out the ManaAbilitySpec shape.
+    // A signet's `{1}, {T}: Add {U}{B}.` is a perfectly ordinary activated ability that happens
+    // to produce mana AS its stack effect (CR 605.1a: an ability whose cost includes mana is not
+    // a mana ability at all). The fallback activated-ability parse picks it up correctly, charging
+    // the {1} for real rather than either dropping it or leaving the card unmodeled.
     const def = interpretCard(
       oracle({
         name: 'Test Filter',
@@ -151,8 +155,16 @@ describe('parsing costs', () => {
       }),
     );
 
-    expect(def.modeled).toBe(false);
+    expect(def.modeled).toBe(true);
     expect(def.manaAbilities).toHaveLength(0);
+    expect(def.activatedAbilities).toHaveLength(1);
+    expect(def.activatedAbilities[0]?.costs).toEqual([
+      { kind: 'mana', cost: parseManaCost('{1}').cost },
+      { kind: 'tap' },
+    ]);
+    expect(def.activatedAbilities[0]?.ability.effects).toEqual([
+      { op: 'addMana', amount: { kind: 'const', n: 2 }, colors: [], fixedSymbols: ['W', 'U'] },
+    ]);
   });
 });
 

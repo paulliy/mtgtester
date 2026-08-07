@@ -137,6 +137,20 @@ export function describeManaCost(cost: ParsedManaCost): string {
   return out === '' ? '{0}' : out;
 }
 
+/**
+ * Mana value of a cost with X read as 0 (CR 202.3b's "not on the stack" case) — a permanent's
+ * mana value, as opposed to a spell's while it's still resolving with an announced X (see
+ * `spellManaValue` in `state/objects.ts`, which this mirrors for the X=0 case; kept here rather
+ * than imported there so `effects/continuous.ts` — which needs this for `candidateOf`'s
+ * `manaValueAtMost`/`manaValueAtLeast` support — doesn't have to import `state/objects.ts` and
+ * create a cycle back through it).
+ */
+export function manaValueOf(cost: ParsedManaCost | null): number {
+  if (cost === null) return 0;
+  const colored = ALL_COLORS.reduce((sum, c) => sum + cost.colored[c], 0);
+  return cost.generic + colored + cost.colorless;
+}
+
 export function totalPips(cost: ParsedManaCost): number {
   return (
     cost.generic +

@@ -41,6 +41,7 @@ import { CREATURE_TYPES } from '../cards/creature-types';
 import { evaluateValue, isDynamicValue } from '../cards/value';
 import type { ValueScope } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
+import { manaValueOf } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { digestOf, getCached, setCached } from './layer-cache';
 
@@ -240,6 +241,14 @@ export function candidateOf(
       }
     }
   }
+  // Mana value (CR 202.3) is a printed characteristic, not a layer's derived output, and reads
+  // X as 0 off the stack (202.3b) — the same rule `cardZoneCandidate` applies for library/hand/
+  // graveyard cards via `spellManaValue(def, undefined)`. Absent (not 0) when the def can't be
+  // found, so `manaValueAtMost`/`manaValueAtLeast` correctly never match rather than matching
+  // everything as mana value 0.
+  const ownDef = ctx.defs.get(perm.oracleId);
+  const manaValue = ownDef === undefined ? undefined : manaValueOf(ownDef.manaCost);
+
   return {
     cardId: perm.cardId,
     controllerId: perm.controllerId,
@@ -250,6 +259,7 @@ export function candidateOf(
     power: chars.power,
     toughness: chars.toughness,
     keywords: chars.keywords,
+    ...(manaValue === undefined ? {} : { manaValue }),
     isToken: perm.isToken,
     enteredThisTurn: perm.enteredTurnNumber === ctx.state.turnNumber,
     isCommander: perm.isCommander,

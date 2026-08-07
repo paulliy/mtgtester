@@ -407,6 +407,537 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
+  it('models a mana-costed "add mana" line as a stack ability (signets, rituals)', () => {
+    const signet = interpretCard(
+      oracle({
+        name: 'Test Signet',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+        oracleText: '{1}, {T}: Add {U}{B}.',
+      }),
+    );
+    expect(signet.modeled).toBe(true);
+    expect(signet.manaAbilities).toHaveLength(0);
+    expect(signet.activatedAbilities?.[0]?.costs).toEqual([
+      { kind: 'mana', cost: expect.objectContaining({ generic: 1 }) },
+      { kind: 'tap' },
+    ]);
+    expect(signet.activatedAbilities?.[0]?.ability.effects).toEqual([
+      { op: 'addMana', amount: { kind: 'const', n: 2 }, colors: [], fixedSymbols: ['U', 'B'] },
+    ]);
+
+    const ritual = interpretCard(
+      oracle({
+        name: 'Test Ritual',
+        typeLine: 'Instant',
+        manaCost: '{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Add {B}{B}{B}.',
+      }),
+    );
+    expect(ritual.modeled).toBe(true);
+    expect(ritual.spellAbility?.effects).toEqual([
+      { op: 'addMana', amount: { kind: 'const', n: 3 }, colors: [], fixedSymbols: ['B', 'B', 'B'] },
+    ]);
+  });
+
+  it('counters a noncreature spell', () => {
+    const negate = interpretCard(
+      oracle({
+        name: 'Negate Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{U}',
+        power: null,
+        toughness: null,
+        oracleText: 'Counter target noncreature spell.',
+      }),
+    );
+    expect(negate.modeled).toBe(true);
+    expect(negate.spellAbility?.targets).toEqual([{ kind: 'noncreatureSpell', controller: 'opponent' }]);
+  });
+
+  it('destroys target with an arbitrary permanent-type alternation not in the fixed compound list', () => {
+    const mortify = interpretCard(
+      oracle({
+        name: 'Mortify Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{W}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy target creature or enchantment.',
+      }),
+    );
+    expect(mortify.modeled).toBe(true);
+    expect(mortify.spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }]);
+    expect(mortify.spellAbility?.targets).toEqual([
+      {
+        kind: 'permanent',
+        filter: { kind: 'anyOf', of: [{ kind: 'type', value: 'Creature' }, { kind: 'type', value: 'Enchantment' }] },
+      },
+    ]);
+  });
+
+  it('models "destroy target X, its controller creates a token" as one combined effect', () => {
+    const pongify = interpretCard(
+      oracle({
+        name: 'Pongify Test',
+        typeLine: 'Instant',
+        manaCost: '{U}',
+        power: null,
+        toughness: null,
+        oracleText: "Destroy target creature. It can't be regenerated. Its controller creates a 3/3 green Ape creature token.",
+      }),
+    );
+    expect(pongify.modeled).toBe(true);
+    expect(pongify.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(pongify.spellAbility?.effects).toEqual([
+      {
+        op: 'destroyAndCreateTokenForController',
+        target: 0,
+        count: { kind: 'const', n: 1 },
+        spec: expect.objectContaining({ name: 'Ape', power: 3, toughness: 3, colors: ['G'] }),
+      },
+    ]);
+  });
+
+  it('models "you lose N life" and the "draw N, lose N life" cantrip shape', () => {
+    const grasp = interpretCard(
+      oracle({
+        name: 'Grasp Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy target creature. You lose 2 life.',
+      }),
+    );
+    expect(grasp.modeled).toBe(true);
+    expect(grasp.spellAbility?.effects).toEqual([
+      { op: 'destroy', target: 0 },
+      { op: 'loseLife', amount: { kind: 'const', n: 2 } },
+    ]);
+
+    const whisper = interpretCard(
+      oracle({
+        name: "Whisper Test",
+        typeLine: 'Sorcery',
+        manaCost: '{1}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'You draw two cards and lose 2 life.',
+      }),
+    );
+    expect(whisper.modeled).toBe(true);
+    expect(whisper.spellAbility?.effects).toEqual([
+      { op: 'draw', count: { kind: 'const', n: 2 } },
+      { op: 'loseLife', amount: { kind: 'const', n: 2 } },
+    ]);
+  });
+
+  it('tutors for an unrestricted card (Demonic Tutor)', () => {
+    const tutor = interpretCard(
+      oracle({
+        name: 'Demonic Tutor Test',
+        typeLine: 'Sorcery',
+        manaCost: '{1}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Search your library for a card, put that card into your hand, then shuffle.',
+      }),
+    );
+    expect(tutor.modeled).toBe(true);
+    expect(tutor.spellAbility?.effects).toEqual([
+      { op: 'searchLibrary', filter: { kind: 'allOf', of: [] }, destinations: [{ zone: 'hand' }] },
+      { op: 'shuffle' },
+    ]);
+  });
+
+  it('models the aristocrats drain trigger, targeted and each-opponent forms', () => {
+    const bloodArtist = interpretCard(
+      oracle({
+        name: 'Blood Artist Test',
+        typeLine: 'Creature — Vampire',
+        manaCost: '{B}',
+        power: '0',
+        toughness: '1',
+        oracleText: 'Whenever Blood Artist Test or another creature dies, target player loses 1 life and you gain 1 life.',
+      }),
+    );
+    expect(bloodArtist.modeled).toBe(true);
+    expect(bloodArtist.triggers?.[0]?.effects).toEqual([
+      { op: 'loseLifeTarget', target: 0, amount: { kind: 'const', n: 1 } },
+      { op: 'gainLife', amount: { kind: 'const', n: 1 } },
+    ]);
+    expect(bloodArtist.triggers?.[0]?.targets).toEqual([{ kind: 'player' }]);
+
+    const zulaport = interpretCard(
+      oracle({
+        name: 'Zulaport Test',
+        typeLine: 'Creature — Human Cleric',
+        manaCost: '{1}{B}',
+        power: '1',
+        toughness: '1',
+        oracleText: 'Whenever Zulaport Test or another creature you control dies, each opponent loses 1 life and you gain 1 life.',
+      }),
+    );
+    expect(zulaport.modeled).toBe(true);
+    expect(zulaport.triggers?.[0]?.effects).toEqual([
+      { op: 'eachOpponentLosesLife', amount: 1 },
+      { op: 'gainLife', amount: { kind: 'const', n: 1 } },
+    ]);
+  });
+
+  it('draws cards equal to the greatest power among a negated-tribe subject', () => {
+    const wildspeaker = interpretCard(
+      oracle({
+        name: 'Wildspeaker Test',
+        typeLine: 'Sorcery',
+        manaCost: '{3}{G}{G}',
+        power: null,
+        toughness: null,
+        oracleText: 'Choose one —\n• Draw cards equal to the greatest power among non-Human creatures you control.\n• Non-Human creatures you control get +3/+3 until end of turn.',
+      }),
+    );
+    expect(wildspeaker.modeled).toBe(true);
+    const drawMode = wildspeaker.spellAbility?.modes?.options[0];
+    expect(drawMode?.effects).toEqual([
+      {
+        op: 'draw',
+        count: {
+          kind: 'greatestPowerAmong',
+          selector: {
+            kind: 'allOf',
+            of: [
+              { kind: 'controller', who: 'you' },
+              { kind: 'not', of: { kind: 'subtype', value: 'Human' } },
+              { kind: 'type', value: 'Creature' },
+            ],
+          },
+          scope: 'all',
+        },
+      },
+    ]);
+  });
+
+  it('treats "choose two" as an exact count, unlike "choose one or more"', () => {
+    const austereCommand = interpretCard(
+      oracle({
+        name: 'Austere Command Test 2',
+        typeLine: 'Sorcery',
+        manaCost: '{4}{W}{W}',
+        power: null,
+        toughness: null,
+        oracleText:
+          'Choose two —\n• Destroy all artifacts.\n• Destroy all enchantments.\n• Destroy all creatures with mana value 3 or less.\n• Destroy all creatures with mana value 4 or greater.',
+      }),
+    );
+    expect(austereCommand.modeled).toBe(true);
+    expect(austereCommand.spellAbility?.modes?.minChoices).toBe(2);
+    expect(austereCommand.spellAbility?.modes?.maxChoices).toBe(2);
+  });
+
+  it('reads a lowercase "this <type>" at the start of a trigger body as a self-reference', () => {
+    const tremors = interpretCard(
+      oracle({
+        name: 'Impact Tremors Test',
+        typeLine: 'Enchantment',
+        manaCost: '{1}{R}',
+        power: null,
+        toughness: null,
+        oracleText: 'Whenever a creature you control enters, this enchantment deals 1 damage to each opponent.',
+      }),
+    );
+    expect(tremors.modeled).toBe(true);
+    expect(tremors.triggers?.[0]?.effects).toEqual([{ op: 'eachOpponentDamage', amount: 1 }]);
+
+    // A lowercase "this creature" that is NOT the leading word of the trigger body is a
+    // back-reference to an object the body itself already introduced ("target creature"), not
+    // to the source — only the leading word is eligible for the self-reference rewrite.
+    const backReference = interpretCard(
+      oracle({
+        name: 'Back Reference Test',
+        typeLine: 'Enchantment',
+        manaCost: '{2}{U}',
+        power: null,
+        toughness: null,
+        oracleText: 'Whenever a creature you control enters, exile target creature, then return this creature to its owner\'s hand.',
+      }),
+    );
+    expect(backReference.modeled).toBe(false);
+  });
+
+  it('filters spell triggers by "noncreature" and "instant or sorcery"', () => {
+    const noncreature = interpretCard(
+      oracle({
+        name: 'Noncreature Trigger Test',
+        typeLine: 'Enchantment',
+        manaCost: '{1}{U}',
+        power: null,
+        toughness: null,
+        oracleText: 'Whenever you cast a noncreature spell, draw a card.',
+      }),
+    );
+    expect(noncreature.modeled).toBe(true);
+    expect(noncreature.triggers?.[0]?.trigger).toMatchObject({
+      when: 'castsSpell',
+      caster: 'you',
+      filter: { kind: 'not', of: { kind: 'type', value: 'Creature' } },
+    });
+
+    const instantOrSorcery = interpretCard(
+      oracle({
+        name: 'Instant Sorcery Trigger Test',
+        typeLine: 'Creature — Human Wizard',
+        manaCost: '{2}{U}',
+        power: '2',
+        toughness: '3',
+        oracleText: 'Whenever you cast an instant or sorcery spell, draw a card.',
+      }),
+    );
+    expect(instantOrSorcery.modeled).toBe(true);
+    expect(instantOrSorcery.triggers?.[0]?.trigger).toMatchObject({
+      when: 'castsSpell',
+      caster: 'you',
+      filter: { kind: 'anyOf', of: [{ kind: 'type', value: 'Instant' }, { kind: 'type', value: 'Sorcery' }] },
+    });
+  });
+
+  it('reads a mass-destroy/exile subject qualified by mana value or a controller suffix', () => {
+    const despark = interpretCard(
+      oracle({
+        name: 'Despark Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{W}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Exile target permanent with mana value 4 or greater.',
+      }),
+    );
+    expect(despark.modeled).toBe(true);
+    expect(despark.spellAbility?.targets).toEqual([{ kind: 'permanent', filter: { kind: 'manaValueAtLeast', n: 4 } }]);
+    expect(despark.spellAbility?.effects).toEqual([{ op: 'exile', target: 0 }]);
+
+    const abruptDecay = interpretCard(
+      oracle({
+        name: 'Abrupt Decay Test',
+        typeLine: 'Instant',
+        manaCost: '{B}{G}',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy target nonland permanent with mana value 3 or less.',
+      }),
+    );
+    expect(abruptDecay.modeled).toBe(true);
+    expect(abruptDecay.spellAbility?.targets).toEqual([
+      { kind: 'nonlandPermanent', filter: { kind: 'manaValueAtMost', n: 3 } },
+    ]);
+
+    const ruinous = interpretCard(
+      oracle({
+        name: 'Ruinous Ultimatum Test',
+        typeLine: 'Sorcery',
+        manaCost: '{3}{B}{B}{R}{R}',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy all nonland permanents your opponents control.',
+      }),
+    );
+    expect(ruinous.modeled).toBe(true);
+    expect(ruinous.spellAbility?.effects).toEqual([
+      {
+        op: 'destroyEach',
+        selector: { kind: 'allOf', of: [{ kind: 'controller', who: 'opponents' }, { kind: 'not', of: { kind: 'type', value: 'Land' } }] },
+      },
+    ]);
+  });
+
+  it('reads "a creature destroyed this way can\'t be regenerated" as the same no-op rider', () => {
+    const damn = interpretCard(
+      oracle({
+        name: 'Damn Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{W}{B}',
+        power: null,
+        toughness: null,
+        oracleText: "Destroy target creature. A creature destroyed this way can't be regenerated.",
+      }),
+    );
+    expect(damn.modeled).toBe(true);
+    expect(damn.spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }, { op: 'noOp' }]);
+  });
+
+  it('reads a plain, unconditional cost reduction by type or by color', () => {
+    const electromancer = interpretCard(
+      oracle({
+        name: 'Electromancer Test',
+        typeLine: 'Creature — Goblin Wizard',
+        manaCost: '{1}{U}',
+        power: '2',
+        toughness: '1',
+        oracleText: 'Instant and sorcery spells you cast cost {1} less to cast.',
+      }),
+    );
+    expect(electromancer.modeled).toBe(true);
+    expect(electromancer.ruleStatics).toEqual([
+      {
+        kind: 'costReduction',
+        amount: { kind: 'const', n: 1 },
+        filter: { kind: 'anyOf', of: [{ kind: 'type', value: 'Instant' }, { kind: 'type', value: 'Sorcery' }] },
+      },
+    ]);
+
+    const anarchomancer = interpretCard(
+      oracle({
+        name: 'Anarchomancer Test',
+        typeLine: 'Creature — Goblin Shaman',
+        manaCost: '{R}',
+        power: '1',
+        toughness: '1',
+        oracleText: "Each spell you cast that's red or green costs {1} less to cast.",
+      }),
+    );
+    expect(anarchomancer.modeled).toBe(true);
+    expect(anarchomancer.ruleStatics).toEqual([
+      {
+        kind: 'costReduction',
+        amount: { kind: 'const', n: 1 },
+        filter: { kind: 'anyOf', of: [{ kind: 'color', value: 'R' }, { kind: 'color', value: 'G' }] },
+      },
+    ]);
+  });
+
+  it('refuses a modal DFC land face printing anything beyond the plain mana ability', () => {
+    // Guards against silently dropping a real clause: a Pathway-shaped detector that fired on
+    // any two-land-face DFC, ignoring extra text, would be exactly the over-permissive modeling
+    // this engine's contract refuses (brief §6.3).
+    const def = interpretCard(
+      oracle({
+        name: 'Test Pathway With Extra Text',
+        typeLine: 'Land',
+        manaCost: null,
+        power: null,
+        toughness: null,
+        layout: 'modal_dfc',
+        oracleText: '{T}: Add {B}.',
+        backFace: {
+          name: 'Test Back',
+          typeLine: 'Land',
+          oracleText: 'This land enters tapped.\n{T}: Add {R}.',
+          manaCost: null,
+          colors: [],
+          power: null,
+          toughness: null,
+        },
+      } as never),
+    );
+    expect(def.modeled).toBe(false);
+    expect(def.entersChoosingOption).toBeUndefined();
+    expect(def.unmodeledReasons.some((r) => r.includes('unsupported layout'))).toBe(true);
+  });
+
+  it('reads the commander-free-cast line as a top-level flag', () => {
+    const flawless = interpretCard(
+      oracle({
+        name: 'Flawless Maneuver Test',
+        typeLine: 'Instant',
+        manaCost: '{3}{W}',
+        power: null,
+        toughness: null,
+        oracleText:
+          'If you control a commander, you may cast this spell without paying its mana cost.\nCreatures you control gain indestructible until end of turn.',
+      }),
+    );
+    expect(flawless.modeled).toBe(true);
+    expect(flawless.commanderFreeCast).toBe(true);
+    expect(flawless.spellAbility?.effects).toEqual([
+      {
+        op: 'grantKeywordEachUntilEot',
+        selector: { kind: 'allOf', of: [{ kind: 'controller', who: 'you' }, { kind: 'type', value: 'Creature' }] },
+        keyword: 'indestructible',
+      },
+    ]);
+  });
+
+  it('reads "cast or copy" onto the same castsSpell trigger head as plain "cast"', () => {
+    const archmage = interpretCard(
+      oracle({
+        name: 'Archmage Emeritus Test',
+        typeLine: 'Creature — Human Wizard',
+        manaCost: '{2}{U}',
+        power: '2',
+        toughness: '3',
+        oracleText: 'Whenever you cast or copy an instant or sorcery spell, draw a card.',
+      }),
+    );
+    expect(archmage.modeled).toBe(true);
+    expect(archmage.triggers[0]?.trigger).toMatchObject({ when: 'castsSpell', caster: 'you' });
+    expect(archmage.triggers[0]?.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+  });
+
+  it('reads the attack-tax static (Ghostly Prison, Propaganda)', () => {
+    const propaganda = interpretCard(
+      oracle({
+        name: 'Propaganda Test',
+        typeLine: 'Enchantment',
+        manaCost: '{2}{U}',
+        power: null,
+        toughness: null,
+        oracleText: "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+      }),
+    );
+    expect(propaganda.modeled).toBe(true);
+    expect(propaganda.ruleStatics).toEqual([{ kind: 'attackTax', amount: 2 }]);
+  });
+
+  it('reads the singular possessive bounce template ("its owner\'s hand"), not just the plural', () => {
+    const snap = interpretCard(
+      oracle({
+        name: 'Snap Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{U}',
+        power: null,
+        toughness: null,
+        oracleText: "Return target creature to its owner's hand.",
+      }),
+    );
+    expect(snap.modeled).toBe(true);
+    expect(snap.spellAbility?.effects).toEqual([{ op: 'returnToHand', target: 0 }]);
+    expect(snap.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+
+    const nonland = interpretCard(
+      oracle({
+        name: 'Nonland Bounce Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{U}',
+        power: null,
+        toughness: null,
+        oracleText: "Return target nonland permanent to its owner's hand.",
+      }),
+    );
+    expect(nonland.modeled).toBe(true);
+    expect(nonland.spellAbility?.effects).toEqual([{ op: 'returnToHand', target: 0 }]);
+    expect(nonland.spellAbility?.targets).toEqual([{ kind: 'nonlandPermanent' }]);
+
+    // The plural possessive this rule already handled, unchanged.
+    const massReturn = interpretCard(
+      oracle({
+        name: 'Mass Return Test',
+        typeLine: 'Sorcery',
+        manaCost: '{3}{U}',
+        power: null,
+        toughness: null,
+        oracleText: "Return all artifacts to their owners' hands.",
+      }),
+    );
+    expect(massReturn.modeled).toBe(true);
+    expect(massReturn.spellAbility?.effects).toEqual([
+      { op: 'returnToHandEach', selector: { kind: 'type', value: 'Artifact' } },
+    ]);
+  });
+
   it('models self-pump activated abilities (~ gets +1/+0 until end of turn)', () => {
     const firebreather = interpretCard(
       oracle({

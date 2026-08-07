@@ -91,6 +91,62 @@ export function getOverride(oracleId: OracleId): CardOverride | undefined {
   return OVERRIDES.get(oracleId);
 }
 
+/**
+ * The fixture oracle id a card is ALSO registered under.
+ *
+ * `tests/fixtures.ts::oracle()` derives an oracle id from the card name by this exact rule, so a
+ * unit test can build a card by name alone and still pick up its override. Both registrations are
+ * required and they must agree — writing them out separately is how a card ended up with real
+ * behavior under its Scryfall id and an empty patch under its slug.
+ */
+export function fixtureOracleId(name: string): string {
+  return `oracle-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+}
+
+/**
+ * Register one card's authored behavior — the single entry point for an override.
+ *
+ * Registers under both the real Scryfall id and the derived fixture id, so a card is written once
+ * instead of twice.
+ *
+ * `handledLines` must be copied verbatim from the card's `unmodeledReasons` output, not typed from
+ * the card face: the interpreter strips reminder text and replaces the card's own name with `~`
+ * before reporting a line, and the drift guard matches byte-exactly.
+ */
+export function defineCard(
+  oracleId: string,
+  name: string,
+  handledLines: string[],
+  def: Partial<CardDefinition>,
+): void {
+  registerOverride({ oracleId, name, handledLines, def });
+  registerOverride({ oracleId: fixtureOracleId(name), name, handledLines, def });
+}
+
+/**
+ * A card whose unparsed lines are catalogued but whose behavior is not authored yet.
+ *
+ * This registers an empty patch, which `applyOverride` deliberately refuses to honor: the card
+ * stays `modeled: false` and gains an "override has no executable behavior" reason. So it is a
+ * visible backlog marker, not a way to make a card count as handled — the engine still halts
+ * loudly if such a card's behavior is ever needed.
+ */
+export function unimplemented(oracleId: string, name: string, handledLines: string[]): void {
+  defineCard(oracleId, name, handledLines, {});
+}
+
+/**
+ * Every registration currently in the registry, sorted by oracle id.
+ *
+ * This exists for the golden snapshot (`scripts/snapshot-override-defs.ts`), which serializes the
+ * whole registry so a refactor of the *authoring* layer can be proven to leave the authored DATA
+ * byte-identical. Reads the post-load state, so it reflects the last-write-wins resolution of the
+ * cards registered from more than one deck file.
+ */
+export function listOverrides(): CardOverride[] {
+  return [...OVERRIDES.values()].sort((a, b) => a.oracleId.localeCompare(b.oracleId));
+}
+
 /** Test seam: drop a registration so a fixture override cannot leak between tests. */
 export function unregisterOverride(oracleId: OracleId): void {
   OVERRIDES.delete(oracleId);
@@ -115,13 +171,31 @@ function normalizeLine(line: string): string {
  * Returns the definition unchanged when no override is registered, so this is safe to call
  * unconditionally at the end of `interpretCard`.
  */
+/**
+ * Does this patch actually change anything the executor reads? `{}` obviously doesn't, but
+ * neither does `{ manaAbilities: [] }` or `{ staticEffects: [] }` — an empty array is the same
+ * "nothing here" as an absent key, and a def carrying only empty-array/false fields patches in
+ * no more behavior than `{}` would. Two real registrations shipped exactly that shape (a
+ * leftover field from a template that was never filled in) and, because `Object.keys(...).length`
+ * saw one key and called it "non-empty," slipped past the check below entirely — reporting
+ * `modeled: true` for a card with zero executable abilities.
+ */
+function isEmptyPatch(patch: Partial<CardDefinition>): boolean {
+  return Object.values(patch).every((value) => {
+    if (value === undefined || value === null) return true;
+    if (Array.isArray(value)) return value.length === 0;
+    if (typeof value === 'boolean') return value === false;
+    return false;
+  });
+}
+
 export function applyOverride(def: CardDefinition): CardDefinition {
   const override = getOverride(def.oracleId);
   if (override === undefined) return def;
 
   // A registration must add executable card behavior. An empty patch is ignored so it cannot
   // clear an unsupported-rule reason and turn missing rules into a silent no-op.
-  if (Object.keys(override.def).length === 0) {
+  if (isEmptyPatch(override.def)) {
     // A previously-needed override may become obsolete after a parser/engine primitive lands.
     // It must not turn an otherwise complete definition back into an unmodeled card; there is
     // no behavior to merge and the interpreted definition is already the executable source.

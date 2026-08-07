@@ -97,7 +97,16 @@ export type DynamicManaKind =
   /** "one mana of any color in your commander's color identity" (Command Tower). */
   | 'commanderIdentity'
   /** "one mana of any color that a land an opponent controls could produce" (Fellwar Stone). */
-  | 'opponentLandColors';
+  | 'opponentLandColors'
+  /**
+   * A modal DFC land (Pathway lands): produces whichever single color this specific permanent
+   * chose as it entered (`EnginePermanent.chosenOption`, via `CardDefinition.entersChoosingOption`
+   * — the same field Caged Sun's color pick and Frontier Siege's mode pick already use). Empty
+   * (no mana at all) if the permanent hasn't recorded a choice, which should never actually
+   * happen for a card this ability is put on — `entersChoosingOption` resolves before anything
+   * else can observe the permanent.
+   */
+  | 'chosenColor';
 
 /**
  * What a payment is *for*, so restricted mana can decide whether it may pay (CR 106.6).
@@ -462,6 +471,9 @@ export type Effect =
   | { op: 'gainLife'; amount: Value } // controller gains
   | { op: 'loseLife'; amount: Value } // controller loses life (not damage)
   | { op: 'loseLifeTarget'; target: EffectRef; amount: Value }
+  /** "Target player draws two cards." (Sign in Blood) — the target draws, not the controller
+   * (contrast `drawTargetAndController`, where both do). */
+  | { op: 'drawTarget'; target: EffectRef; count: Value }
   | { op: 'eachOpponentLosesLife'; amount: Value | number }
   | { op: 'eachOpponentDamage'; amount: number } // damage from source to each opponent
   /** "This land deals 1 damage to you" — damage from the source to its own controller. */
@@ -530,6 +542,17 @@ export type Effect =
   | { op: 'gainControl'; selector: Selector }
   /** "Return target Dragon permanent card from your graveyard to the battlefield" (Bladewing). */
   | { op: 'graveyardToBattlefield'; target: EffectRef }
+  /**
+   * "Put target creature card from a graveyard onto the battlefield under your control. You
+   * lose life equal to its mana value." (Reanimate) — combined into one effect rather than a
+   * `graveyardToBattlefield` followed by a `loseLife` reading `manaValueOfTarget`, because
+   * `manaValueOfTarget` only ever searches the BATTLEFIELD: the card has no mana value the
+   * engine can read once it's already been moved, and it isn't on the battlefield yet before
+   * the move. Reading it while the card is still located, then moving it, is the only order
+   * that works — the same reason `destroyAndCreateTokenForController` is one effect instead of
+   * two (Beast Within).
+   */
+  | { op: 'reanimateAndLoseLife'; target: EffectRef }
   /** "Return target Dragon creature card from your graveyard to your hand" (Haven). */
   | { op: 'graveyardToHand'; target: EffectRef }
   /** Put target card from your graveyard on top of your library. */

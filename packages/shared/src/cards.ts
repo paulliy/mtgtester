@@ -57,4 +57,22 @@ export interface OracleCard {
   commanderLegality: CommanderLegality;
   /** Derived: a Basic land (CR 205.4b), exempt from the singleton rule (§8.3). */
   isBasicLand: boolean;
+  /**
+   * The SECOND face of a two-faced card (modal DFC, transform, split, adventure, omen — CR
+   * 712-715), present only when Scryfall's `card_faces` has one. Every other field on
+   * `OracleCard` above is the FRONT face's projection (via the same "first non-empty across the
+   * top-level field and any face, front first" rule `toOracleCard` already uses for the front);
+   * this is the one place a second face's own characteristics are readable at all. Deliberately
+   * a small, flat subset — just enough to model "this card is also a land with this mana
+   * ability" (modal DFC lands) — not a full second `OracleCard`, since nothing here needs one.
+   */
+  backFace?: {
+    name: string;
+    typeLine: string;
+    oracleText: string;
+    manaCost: ManaCostString | null;
+    colors: Color[];
+    power: string | null;
+    toughness: string | null;
+  };
 }

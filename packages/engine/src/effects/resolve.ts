@@ -660,10 +660,16 @@ export function* executeAbility(
       refCardIdCache.set(r, null);
       return null;
     }
-    // Stack objects do not have a battlefield cardId. Keep their ObjectId stable so
-    // multiple effects (for example Arcane Denial's delayed draw plus counter) can
-    // refer to the same stack item during this resolution.
-    if (spec.kind === 'stackObject') return id;
+    // Stack objects and players do not have a battlefield cardId to re-resolve through zone
+    // changes -- a stack object's identity is only stable for this resolution (Arcane Denial's
+    // delayed draw plus counter both need the same stack item), and a player's id needs no
+    // re-resolution at all (players don't change zones). Caching either through
+    // `findObjectByCardId` would incorrectly resolve to `undefined` on the SECOND effect that
+    // references the same player slot (e.g. Sign in Blood: draw, then lose life, both off slot
+    // 0) -- `findObjectById` finds no permanent for a PlayerId, so the cache would poison itself
+    // with `null` after the first effect and every later effect referencing that slot would
+    // silently do nothing.
+    if (spec.kind === 'stackObject' || spec.kind === 'player') return id;
     refCardIdCache.set(r, findObjectById(ctx, id)?.cardId ?? null);
     return id;
   };
@@ -1383,6 +1389,13 @@ export function* executeAbility(
         if (target === undefined) break;
         yield* drawCards(ctx, target, effect.count);
         yield* drawCards(ctx, controller, effect.count);
+        break;
+      }
+      case 'drawTarget': {
+        const targetId = ref(effect.target);
+        const target = targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
+        if (target === undefined) break;
+        yield* drawCards(ctx, target, amountOf(effect.count));
         break;
       }
       case 'breenaAttack': {
@@ -2113,13 +2126,45 @@ export function* executeAbility(
               : owner.graveyard.find((c) => c.cardId === triggerObjectCardId)
             : (() => {
                 const t = ref(effect.target);
-                return t === null ? undefined : owner.graveyard.find((c) => c.id === t);
+                if (t === null) return undefined;
+                // The target may be a permanent card in ANY player's graveyard, not just the
+                // ability's controller's own (Reanimate: "target creature card from A
+                // graveyard" — `cardInGraveyard`'s `graveyardOwnerScope: 'any'` already offers
+                // candidates from every graveyard at the targeting step; searching only
+                // `owner.graveyard` here would silently do nothing whenever the chosen card
+                // was actually an opponent's).
+                for (const player of ctx.state.players) {
+                  const found = player.graveyard.find((c) => c.id === t);
+                  if (found !== undefined) return found;
+                }
+                return undefined;
               })();
         // Left the graveyard between announcement and resolution (CR 608.2b) — `ref` already
         // re-checked legality via `graveyardTargets`, so this is the "gone" case, not a bug.
         if (cardObj === undefined) break;
         emit(ctx, 'graveyardToBattlefield', { target: cardObj.name, source: source.name });
         yield* moveObject(ctx, cardObj, { zone: 'battlefield', controllerId: source.controllerId });
+        break;
+      }
+      case 'reanimateAndLoseLife': {
+        const t = ref(effect.target);
+        let cardObj: EngineCardObject | undefined;
+        if (t !== null) {
+          for (const player of ctx.state.players) {
+            const found = player.graveyard.find((c) => c.id === t);
+            if (found !== undefined) {
+              cardObj = found;
+              break;
+            }
+          }
+        }
+        // Left the graveyard between announcement and resolution (CR 608.2b) — the "gone" case,
+        // not a bug. No life loss either: nothing was actually reanimated.
+        if (cardObj === undefined) break;
+        const manaValue = spellManaValue(getDefByOracleId(ctx, cardObj.oracleId, cardObj.name), undefined);
+        emit(ctx, 'graveyardToBattlefield', { target: cardObj.name, source: source.name });
+        yield* moveObject(ctx, cardObj, { zone: 'battlefield', controllerId: source.controllerId });
+        loseLife(ctx, controller, manaValue);
         break;
       }
       case 'graveyardToLibraryTop': {
