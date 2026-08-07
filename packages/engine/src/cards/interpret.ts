@@ -1362,6 +1362,66 @@ function parseDestroyAndCreateTokenBlock(
   };
 }
 
+/**
+ * "Put target creature card from a graveyard onto the battlefield under your control. You lose
+ * life equal to that card's mana value." (Reanimate) — one combined effect
+ * (`reanimateAndLoseLife`), not a `graveyardToBattlefield` followed by a `loseLife` reading the
+ * card's mana value: mana value can only be read from a card actually located somewhere (its
+ * printed characteristics), and by the time the card is on the battlefield to compute anything
+ * from, `graveyardToBattlefield`'s zone-change already gave it a new object identity. See the
+ * `reanimateAndLoseLife` op's own comment in ability.ts for the fuller version of this.
+ */
+function parseReanimateBlock(
+  text: string,
+  card: OracleCard,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const norm = stripReminderText(text).trim();
+  const m = norm.match(
+    /^put target (.+?) card from a graveyard onto the battlefield under your control\.\s*you lose life equal to (?:that card's|its) mana value\.?$/i,
+  );
+  if (m === null) return null;
+  const filter = parseCardFilterPhrase(m[1] as string, card);
+  if (filter === null) return null;
+  return {
+    targets: [{ kind: 'cardInGraveyard', filter, graveyardOwnerScope: 'any' }],
+    effects: [{ op: 'reanimateAndLoseLife', target: 0 }],
+  };
+}
+
+/**
+ * "Destroy target creature or enchantment an opponent controls. You lose life equal to that
+ * permanent's mana value." (Feed the Swarm) â€” the life-loss effect has to come FIRST in the
+ * emitted effects array, even though it's the second sentence: `manaValueOfTarget` reads the
+ * battlefield, and `destroy` has already removed the target from it by the time a plain
+ * sentence-by-sentence reading would get there (the same reordering Hoard Smelter Dragon's
+ * hand-authored pump-then-destroy already does for the identical reason).
+ */
+function parseDestroyThenLoseLifeEqualToManaValueBlock(
+  text: string,
+  _card: OracleCard,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const norm = stripReminderText(text).trim();
+  const m = norm.match(
+    /^destroy target (.+?)\.\s*you lose life equal to that (?:permanent|creature)'s mana value\.?$/i,
+  );
+  if (m === null) return null;
+  const targetClause = parseTargetClause((m[1] as string).toLowerCase());
+  if (targetClause === null) return null;
+  return {
+    targets: [
+      {
+        kind: targetClause.kind,
+        ...(targetClause.filter !== undefined ? { filter: targetClause.filter } : {}),
+        ...(targetClause.controller !== undefined ? { controller: targetClause.controller } : {}),
+      },
+    ],
+    effects: [
+      { op: 'loseLife', amount: { kind: 'manaValueOfTarget', target: 0 } },
+      { op: 'destroy', target: 0 },
+    ],
+  };
+}
+
 function parseHellkiteCourserBlock(
   body: string,
   alloc: SlotAllocator,
@@ -3318,6 +3378,20 @@ export function interpretCard(card: OracleCard): CardDefinition {
             spellTargets.push(...destroyToken.targets);
             spellEffects.push(...destroyToken.effects);
             spellBlockHandled = true;
+          } else {
+            const reanimate = parseReanimateBlock(text, card);
+            if (reanimate !== null) {
+              spellTargets.push(...reanimate.targets);
+              spellEffects.push(...reanimate.effects);
+              spellBlockHandled = true;
+            } else {
+              const destroyLoseLife = parseDestroyThenLoseLifeEqualToManaValueBlock(text, card);
+              if (destroyLoseLife !== null) {
+                spellTargets.push(...destroyLoseLife.targets);
+                spellEffects.push(...destroyLoseLife.effects);
+                spellBlockHandled = true;
+              }
+            }
           }
         }
       }

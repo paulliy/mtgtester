@@ -530,6 +530,17 @@ export type Effect =
   | { op: 'gainControl'; selector: Selector }
   /** "Return target Dragon permanent card from your graveyard to the battlefield" (Bladewing). */
   | { op: 'graveyardToBattlefield'; target: EffectRef }
+  /**
+   * "Put target creature card from a graveyard onto the battlefield under your control. You
+   * lose life equal to its mana value." (Reanimate) — combined into one effect rather than a
+   * `graveyardToBattlefield` followed by a `loseLife` reading `manaValueOfTarget`, because
+   * `manaValueOfTarget` only ever searches the BATTLEFIELD: the card has no mana value the
+   * engine can read once it's already been moved, and it isn't on the battlefield yet before
+   * the move. Reading it while the card is still located, then moving it, is the only order
+   * that works — the same reason `destroyAndCreateTokenForController` is one effect instead of
+   * two (Beast Within).
+   */
+  | { op: 'reanimateAndLoseLife'; target: EffectRef }
   /** "Return target Dragon creature card from your graveyard to your hand" (Haven). */
   | { op: 'graveyardToHand'; target: EffectRef }
   /** Put target card from your graveyard on top of your library. */
