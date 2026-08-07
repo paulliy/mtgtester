@@ -705,6 +705,52 @@ describe('oracle-text interpreter (brief §6)', () => {
     });
   });
 
+  it('reads the singular possessive bounce template ("its owner\'s hand"), not just the plural', () => {
+    const snap = interpretCard(
+      oracle({
+        name: 'Snap Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{U}',
+        power: null,
+        toughness: null,
+        oracleText: "Return target creature to its owner's hand.",
+      }),
+    );
+    expect(snap.modeled).toBe(true);
+    expect(snap.spellAbility?.effects).toEqual([{ op: 'returnToHand', target: 0 }]);
+    expect(snap.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+
+    const nonland = interpretCard(
+      oracle({
+        name: 'Nonland Bounce Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{U}',
+        power: null,
+        toughness: null,
+        oracleText: "Return target nonland permanent to its owner's hand.",
+      }),
+    );
+    expect(nonland.modeled).toBe(true);
+    expect(nonland.spellAbility?.effects).toEqual([{ op: 'returnToHand', target: 0 }]);
+    expect(nonland.spellAbility?.targets).toEqual([{ kind: 'nonlandPermanent' }]);
+
+    // The plural possessive this rule already handled, unchanged.
+    const massReturn = interpretCard(
+      oracle({
+        name: 'Mass Return Test',
+        typeLine: 'Sorcery',
+        manaCost: '{3}{U}',
+        power: null,
+        toughness: null,
+        oracleText: "Return all artifacts to their owners' hands.",
+      }),
+    );
+    expect(massReturn.modeled).toBe(true);
+    expect(massReturn.spellAbility?.effects).toEqual([
+      { op: 'returnToHandEach', selector: { kind: 'type', value: 'Artifact' } },
+    ]);
+  });
+
   it('models self-pump activated abilities (~ gets +1/+0 until end of turn)', () => {
     const firebreather = interpretCard(
       oracle({

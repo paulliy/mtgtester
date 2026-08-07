@@ -548,7 +548,7 @@ function parseEffectSentence(
   }
   {
     const m = s.match(
-      /^return (?:up to (\w+) )?(other )?target (nonland permanent|creature|permanent)s? to (?:their|its) owners?' hands?$/,
+      /^return (?:up to (\w+) )?(other )?target (nonland permanent|creature|permanent)s? to (?:its owner's hand|their owners' hands)$/,
     );
     if (m) {
       const noun = m[3] as string;
@@ -835,7 +835,7 @@ function parseEffectSentence(
   }
   // Generic mass removal filter ("destroy all creatures that aren't enchanted", "exile all nonland permanents", etc.)
   {
-    const m = s.match(/^(destroy|exile|return) all (.+?)(?: to (?:their|its) owners?' hands?)?$/);
+    const m = s.match(/^(destroy|exile|return) all (.+?)(?: to (?:its owner's hand|their owners' hands))?$/);
     if (m) {
       const action = m[1] as string;
       const phrase = m[2] as string;
