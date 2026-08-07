@@ -4260,58 +4260,6 @@
     }
   },
   {
-    "oracleId": "3adb7681-977f-4a32-9ec8-51481b958268",
-    "name": "Rakdos Signet",
-    "handledLines": [
-      "unrecognized rules text: \"{1}, {T}: Add {B}{R}.\""
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Pay {1} and tap — add {B}{R}",
-            "effects": [
-              {
-                "amount": {
-                  "kind": "const",
-                  "n": 2
-                },
-                "colors": [],
-                "fixedSymbols": [
-                  "B",
-                  "R"
-                ],
-                "op": "addMana"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c",
     "name": "Hour of Reckoning",
     "handledLines": [
@@ -4617,58 +4565,6 @@
       "• Put X charge counters on target artifact."
     ],
     "def": {}
-  },
-  {
-    "oracleId": "41c84665-1f99-40ab-aaca-1188649eb263",
-    "name": "Boros Signet",
-    "handledLines": [
-      "unrecognized rules text: \"{1}, {T}: Add {R}{W}.\""
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Pay {1} and tap — add {R}{W}",
-            "effects": [
-              {
-                "amount": {
-                  "kind": "const",
-                  "n": 2
-                },
-                "colors": [],
-                "fixedSymbols": [
-                  "R",
-                  "W"
-                ],
-                "op": "addMana"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    }
   },
   {
     "oracleId": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",
@@ -8321,9 +8217,7 @@
   {
     "oracleId": "7735eeba-693b-47e2-bd51-414379cf1016",
     "name": "Beast Within",
-    "handledLines": [
-      "Destroy target permanent. Its controller creates a 3/3 green Beast creature token."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Destroy target permanent; its controller creates a 3/3 Beast",
@@ -10306,9 +10200,7 @@
   {
     "oracleId": "9a107e48-3d50-4941-95b1-10f2b29a4245",
     "name": "Stroke of Midnight",
-    "handledLines": [
-      "unrecognized rules text: \"Destroy target nonland permanent. Its controller creates a 1/1 white Human creature token.\""
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Destroy target nonland permanent; its controller creates a 1/1 Human",
@@ -12025,37 +11917,6 @@
           ]
         },
         "targets": []
-      }
-    }
-  },
-  {
-    "oracleId": "ad09b3c3-c8e7-481c-8c45-e7f234935117",
-    "name": "Anguished Unmaking",
-    "handledLines": [
-      "Exile target nonland permanent. You lose 3 life."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Exile target nonland permanent; lose three life",
-        "effects": [
-          {
-            "op": "exile",
-            "target": 0
-          },
-          {
-            "amount": {
-              "kind": "const",
-              "n": 3
-            },
-            "op": "loseLife"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "nonlandPermanent"
-          }
-        ]
       }
     }
   },
@@ -14745,7 +14606,6 @@
     "oracleId": "d09c9cba-fdd2-479b-ad5d-d05181c3e3f9",
     "name": "Fierce Guardianship",
     "handledLines": [
-      "Counter target noncreature spell.",
       "If you control a commander, you may cast this spell without paying its mana cost."
     ],
     "def": {
@@ -15767,58 +15627,6 @@
             "player": "you",
             "when": "beginningOfCombat"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "de3dcb5d-775a-479f-99f5-d1883ed9b1b5",
-    "name": "Orzhov Signet",
-    "handledLines": [
-      "unrecognized rules text: \"{1}, {T}: Add {W}{B}.\""
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Pay {1} and tap — add {W}{B}",
-            "effects": [
-              {
-                "amount": {
-                  "kind": "const",
-                  "n": 2
-                },
-                "colors": [],
-                "fixedSymbols": [
-                  "W",
-                  "B"
-                ],
-                "op": "addMana"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
         }
       ]
     }
@@ -17419,9 +17227,7 @@
   {
     "oracleId": "fae37e28-e137-4177-b973-fa8b4dd8f409",
     "name": "Generous Gift",
-    "handledLines": [
-      "unrecognized rules text: \"Destroy target permanent. Its controller creates a 3/3 green Elephant creature token.\""
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Destroy target permanent; its controller creates a 3/3 Elephant",
@@ -18861,37 +18667,6 @@
     }
   },
   {
-    "oracleId": "oracle-anguished-unmaking",
-    "name": "Anguished Unmaking",
-    "handledLines": [
-      "Exile target nonland permanent. You lose 3 life."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Exile target nonland permanent; lose three life",
-        "effects": [
-          {
-            "op": "exile",
-            "target": 0
-          },
-          {
-            "amount": {
-              "kind": "const",
-              "n": 3
-            },
-            "op": "loseLife"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "nonlandPermanent"
-          }
-        ]
-      }
-    }
-  },
-  {
     "oracleId": "oracle-animate-dead",
     "name": "Animate Dead",
     "handledLines": [
@@ -19440,9 +19215,7 @@
   {
     "oracleId": "oracle-beast-within",
     "name": "Beast Within",
-    "handledLines": [
-      "Destroy target permanent. Its controller creates a 3/3 green Beast creature token."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Destroy target permanent; its controller creates a 3/3 Beast",
@@ -20137,58 +19910,6 @@
             },
             "when": "enters"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-boros-signet",
-    "name": "Boros Signet",
-    "handledLines": [
-      "unrecognized rules text: \"{1}, {T}: Add {R}{W}.\""
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Pay {1} and tap — add {R}{W}",
-            "effects": [
-              {
-                "amount": {
-                  "kind": "const",
-                  "n": 2
-                },
-                "colors": [],
-                "fixedSymbols": [
-                  "R",
-                  "W"
-                ],
-                "op": "addMana"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
         }
       ]
     }
@@ -24024,7 +23745,6 @@
     "oracleId": "oracle-fierce-guardianship",
     "name": "Fierce Guardianship",
     "handledLines": [
-      "Counter target noncreature spell.",
       "If you control a commander, you may cast this spell without paying its mana cost."
     ],
     "def": {
@@ -24860,9 +24580,7 @@
   {
     "oracleId": "oracle-generous-gift",
     "name": "Generous Gift",
-    "handledLines": [
-      "unrecognized rules text: \"Destroy target permanent. Its controller creates a 3/3 green Elephant creature token.\""
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Destroy target permanent; its controller creates a 3/3 Elephant",
@@ -29017,58 +28735,6 @@
     }
   },
   {
-    "oracleId": "oracle-orzhov-signet",
-    "name": "Orzhov Signet",
-    "handledLines": [
-      "unrecognized rules text: \"{1}, {T}: Add {W}{B}.\""
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Pay {1} and tap — add {W}{B}",
-            "effects": [
-              {
-                "amount": {
-                  "kind": "const",
-                  "n": 2
-                },
-                "colors": [],
-                "fixedSymbols": [
-                  "W",
-                  "B"
-                ],
-                "op": "addMana"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-out-of-the-tombs",
     "name": "Out of the Tombs",
     "handledLines": [
@@ -30264,58 +29930,6 @@
           }
         ]
       }
-    }
-  },
-  {
-    "oracleId": "oracle-rakdos-signet",
-    "name": "Rakdos Signet",
-    "handledLines": [
-      "unrecognized rules text: \"{1}, {T}: Add {B}{R}.\""
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Pay {1} and tap — add {B}{R}",
-            "effects": [
-              {
-                "amount": {
-                  "kind": "const",
-                  "n": 2
-                },
-                "colors": [],
-                "fixedSymbols": [
-                  "B",
-                  "R"
-                ],
-                "op": "addMana"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
     }
   },
   {
@@ -33330,9 +32944,7 @@
   {
     "oracleId": "oracle-stroke-of-midnight",
     "name": "Stroke of Midnight",
-    "handledLines": [
-      "unrecognized rules text: \"Destroy target nonland permanent. Its controller creates a 1/1 white Human creature token.\""
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Destroy target nonland permanent; its controller creates a 1/1 Human",

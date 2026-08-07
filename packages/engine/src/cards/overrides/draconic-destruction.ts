@@ -409,9 +409,12 @@ const DEMANDING_DRAGON_DEF = {
 };
 
 export function registerDRACONIC_DESTRUCTIONOverrides(): void {
-  defineCard("7735eeba-693b-47e2-bd51-414379cf1016", "Beast Within", [
-          "Destroy target permanent. Its controller creates a 3/3 green Beast creature token."
-    ], {
+  // The line now parses generically (`parseDestroyAndCreateTokenBlock` in interpret.ts), so
+  // there's no unmodeled reason left to claim — handledLines is empty. `def` stays: the parser's
+  // own token derivation prints `typeLine: "Token Creature — Beast"`, one word off the shared
+  // catalog's `"Creature — Beast"` (`tokens.ts`'s `creatureToken`), so this override's remaining
+  // job is keeping this card on the catalog token rather than the parser's near-miss.
+  defineCard("7735eeba-693b-47e2-bd51-414379cf1016", "Beast Within", [], {
       spellAbility: { kind: 'spell', targets: [{ kind: 'permanent' }], effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: BEAST_3_3_GREEN }], description: 'Destroy target permanent; its controller creates a 3/3 Beast' },
     });
 

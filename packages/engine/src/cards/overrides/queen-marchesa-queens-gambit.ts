@@ -2,25 +2,10 @@
 
 import type { CardDefinition } from '../definition';
 import { constant } from '../value';
-import { SAC_SELF, TAP, mana } from '../templates';
+import { SAC_SELF, TAP } from '../templates';
 import { allOf, ofType, YOURS } from '../selector';
 import { defineCard } from './index';
 import { ASSASSIN_1_1 as ASSASSIN_TOKEN, ELEPHANT_3_3_GREEN, HUMAN_1_1_WHITE } from '../tokens';
-
-
-const SIGNET = (symbols: ['W' | 'U' | 'B' | 'R' | 'G', 'W' | 'U' | 'B' | 'R' | 'G']) => ({
-  activatedAbilities: [{
-    costs: [mana('{1}'), TAP],
-    timing: 'any' as const,
-    ability: {
-      kind: 'activated' as const,
-      targets: [],
-      effects: [{ op: 'addMana' as const, amount: constant(2), colors: [], fixedSymbols: symbols },
-      ],
-      description: `Pay {1} and tap — add {${symbols.join('}{')}}`,
-    },
-  }],
-});
 
 const BOROS_CHARM: Partial<CardDefinition> = {
   spellAbility: {
@@ -143,13 +128,20 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides(): void {
   defineCard('5e62b51d-faec-4aa0-9504-cf2c282d08ea', 'Rakdos Charm', ['unrecognized rules text: "Choose one —"', 'unrecognized rules text: "• Exile target player\'s graveyard."', 'unrecognized rules text: "• Destroy target artifact."', 'unrecognized rules text: "• Each creature deals 1 damage to its controller."'], RAKDOS_CHARM);
   defineCard('acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce', 'Mob Rule', ['unrecognized rules text: "Choose one —"', 'unrecognized rules text: "• Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures. They gain haste until end of turn."', 'unrecognized rules text: "• Gain control of all creatures with power 3 or less until end of turn. Untap those creatures. They gain haste until end of turn."'], MOB_RULE);
   defineCard('d7ac4be1-dcca-49b6-8ddb-d1b0e6cf2dcf', 'Queen Marchesa', ['unrecognized rules text: "When ~ enters, you become the monarch."', 'unrecognized rules text: "At the beginning of your upkeep, if an opponent is the monarch, create a 1/1 black Assassin creature token with deathtouch and haste."'], QUEEN_MARCHESA);
-  defineCard('fae37e28-e137-4177-b973-fa8b4dd8f409', 'Generous Gift', ['unrecognized rules text: "Destroy target permanent. Its controller creates a 3/3 green Elephant creature token."'], GENEROUS_GIFT);
-  defineCard('9a107e48-3d50-4941-95b1-10f2b29a4245', 'Stroke of Midnight', ['unrecognized rules text: "Destroy target nonland permanent. Its controller creates a 1/1 white Human creature token."'], STROKE_OF_MIDNIGHT);
+  // The "destroy target X, its controller creates a token" line now parses generically
+  // (`parseDestroyAndCreateTokenBlock`), so there is no longer an unmodeled reason to claim —
+  // handledLines is empty. The `def` stays: the generic parser's own token spec derivation
+  // prints `typeLine: "Token Creature — Elephant"`, one word off the shared catalog's
+  // `"Creature — Elephant"` (`tokens.ts`'s `creatureToken`), and this override's job is now
+  // solely to keep this card on the catalog token rather than the parser's own near-miss.
+  defineCard('fae37e28-e137-4177-b973-fa8b4dd8f409', 'Generous Gift', [], GENEROUS_GIFT);
+  defineCard('9a107e48-3d50-4941-95b1-10f2b29a4245', 'Stroke of Midnight', [], STROKE_OF_MIDNIGHT);
   defineCard('b1544f21-7e98-461b-aed5-e748b0168c52', 'Swords to Plowshares', ['unrecognized rules text: "Exile target creature. Its controller gains life equal to its power."'], SWORDS_TO_PLOWSHARES);
   defineCard('0c85b8f7-0bd0-4680-9ec5-d4b110460a54', 'Fabled Passage', ['unrecognized rules text: "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land."'], FABLED_PASSAGE);
-  defineCard('41c84665-1f99-40ab-aaca-1188649eb263', 'Boros Signet', ['unrecognized rules text: "{1}, {T}: Add {R}{W}."'], SIGNET(['R', 'W']));
-  defineCard('de3dcb5d-775a-479f-99f5-d1883ed9b1b5', 'Orzhov Signet', ['unrecognized rules text: "{1}, {T}: Add {W}{B}."'], SIGNET(['W', 'B']));
-  defineCard('3adb7681-977f-4a32-9ec8-51481b958268', 'Rakdos Signet', ['unrecognized rules text: "{1}, {T}: Add {B}{R}."'], SIGNET(['B', 'R']));
+  // Boros/Orzhov/Rakdos Signet: no override needed at all now — a "{1}, {T}: Add {X}{Y}." line
+  // parses generically as a stack-based activated ability (`interpret.ts`'s `MANA_ABILITY_RE`
+  // case in `parseEffectSentence`), with no token/typeLine divergence risk the way the
+  // destroy-and-create-token cards above have. Deleted rather than kept-empty.
   defineCard('8fa3ac81-3dfe-4565-be99-5554f7597b4b', 'Boros Garrison', ['unrecognized rules text: "When this land enters, return a land you control to its owner\'s hand."'], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'returnOneToHand', selector: allOf(ofType('Land'), YOURS) }], description: 'Enters — return a land you control to its owner’s hand' }] });
   defineCard('aa00ae0b-7c0f-427e-8102-ce0e2a6af5df', 'Orzhov Basilica', ['unrecognized rules text: "When this land enters, return a land you control to its owner\'s hand."'], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'returnOneToHand', selector: allOf(ofType('Land'), YOURS) }], description: 'Enters — return a land you control to its owner’s hand' }] });
   defineCard('0a023964-2905-4928-9c3e-dc63e6ebd218', 'Rakdos Carnarium', ['unrecognized rules text: "When this land enters, return a land you control to its owner\'s hand."'], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'returnOneToHand', selector: allOf(ofType('Land'), YOURS) }], description: 'Enters — return a land you control to its owner’s hand' }] });

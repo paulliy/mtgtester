@@ -96,8 +96,12 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   defineCard('8f2c8498-5b10-4ec7-8678-598c90987556', 'Disciple of Bolas', [
     'When this creature enters, sacrifice another creature. You gain X life and draw X cards, where X is that creature\'s power.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'sacrificeAndDrawForPower' }], description: 'Sacrifice another creature, then gain life and draw cards equal to its power' }] });
+  // "Counter target noncreature spell." now parses generically; only the commander-free-cast
+  // line is still something the raw parser can't do on its own, so that's the only remaining
+  // claim. The spellAbility field in `def` is now redundant with what the parser derives on its
+  // own, but kept for clarity (harmless — merge is idempotent when both sides agree).
   defineCard('d09c9cba-fdd2-479b-ad5d-d05181c3e3f9', 'Fierce Guardianship', [
-    'If you control a commander, you may cast this spell without paying its mana cost.', 'Counter target noncreature spell.',
+    'If you control a commander, you may cast this spell without paying its mana cost.',
   ], { commanderFreeCast: true, spellAbility: { kind: 'spell', targets: [{ kind: 'noncreatureSpell' }], effects: [{ op: 'counter', target: 0 }], description: 'Counter target noncreature spell' } });
   defineCard('437cfd16-94bc-43ba-afd8-e9e9d028a4ca', 'Flare of Denial', [
     'You may sacrifice a nontoken blue creature rather than pay this spell\'s mana cost.',

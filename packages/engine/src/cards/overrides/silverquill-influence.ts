@@ -277,11 +277,10 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
           "Enchanted creature gets +10/+10 and has trample and annihilator 2."
     ]);
 
-  defineCard("ad09b3c3-c8e7-481c-8c45-e7f234935117", "Anguished Unmaking", [
-          "Exile target nonland permanent. You lose 3 life."
-    ], {
-      spellAbility: { kind: 'spell', targets: [{ kind: 'nonlandPermanent' }], effects: [{ op: 'exile', target: 0 }, { op: 'loseLife', amount: constant(3) }], description: 'Exile target nonland permanent; lose three life' },
-    });
+  // Anguished Unmaking: no override needed — "Exile target X. You lose N life." now parses
+  // generically (the existing "exile target …" rule plus the new "you lose N life" sentence),
+  // and there's no token/typeLine divergence risk here the way the token-creating removal spells
+  // above have. Deleted rather than kept-empty.
 
   unimplemented("34b90d3e-f48c-41ff-b3e4-5cab7a9cd597", "Secret Rendezvous", [
           "You and target opponent each draw three cards."
