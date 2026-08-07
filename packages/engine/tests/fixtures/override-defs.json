@@ -15849,15 +15849,16 @@
               },
               "op": "createToken",
               "spec": {
-                "colors": [],
+                "colors": [
+                  "B"
+                ],
                 "name": "Necron Warrior",
                 "power": 2,
                 "subtypes": [
-                  "Necron",
-                  "Warrior"
+                  "Necron"
                 ],
                 "toughness": 2,
-                "typeLine": "Artifact Creature — Necron Warrior",
+                "typeLine": "Artifact Creature — Necron",
                 "types": [
                   "Artifact",
                   "Creature"
@@ -28640,15 +28641,16 @@
               },
               "op": "createToken",
               "spec": {
-                "colors": [],
+                "colors": [
+                  "B"
+                ],
                 "name": "Necron Warrior",
                 "power": 2,
                 "subtypes": [
-                  "Necron",
-                  "Warrior"
+                  "Necron"
                 ],
                 "toughness": 2,
-                "typeLine": "Artifact Creature — Necron Warrior",
+                "typeLine": "Artifact Creature — Necron",
                 "types": [
                   "Artifact",
                   "Creature"

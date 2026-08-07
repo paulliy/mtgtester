@@ -6,10 +6,9 @@ import type { TokenSpec } from '../ability';
 import { constant } from '../value';
 import { allOf, CHOSEN_COLOR, HAS_ANY_COUNTER, IS_TOKEN, OTHER, ofSubtype, ofSupertype, ofType, not, YOURS } from '../selector';
 import { defineCard } from './index';
-import { NECRON_WARRIOR_2_2 as NECRON_WARRIOR_TOKEN } from '../tokens';
+import { INSECT_1_1_FLYING, NECRON_WARRIOR_2_2 as NECRON_WARRIOR_TOKEN } from '../tokens';
 
 const NECRON: TokenSpec = NECRON_WARRIOR_TOKEN;
-const INSECT: TokenSpec = { name: 'Insect', typeLine: 'Artifact Creature — Insect', types: ['Artifact', 'Creature'], subtypes: ['Insect'], colors: [], power: 1, toughness: 1, keywords: ['flying'] };
 
 export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   defineCard('32476743-c9d4-49ca-bec2-0669c215841b', 'Anrakyr the Traveller', [
@@ -28,7 +27,7 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   ], { entersChoosingOption: { prompt: 'Choose a color', options: [{ key: 'W', label: 'White' }, { key: 'U', label: 'Blue' }, { key: 'B', label: 'Black' }, { key: 'R', label: 'Red' }, { key: 'G', label: 'Green' }] }, staticEffects: [{ affects: allOf(ofType('Creature'), YOURS, CHOSEN_COLOR), op: { layer: 7, sublayer: 'd', power: 1, toughness: 1 } }] });
   defineCard('5b7f6cc3-8d4e-42e5-a908-7ebe3bccaf1e', 'Canoptek Scarab Swarm', [
     'Feeder Mandibles — When this creature enters, exile target player\'s graveyard. For each artifact or land card exiled this way, create a 1/1 colorless Insect artifact creature token with flying.',
-  ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [{ kind: 'player' }], effects: [{ op: 'exileGraveyardCreateTokens', target: 0, spec: INSECT }], description: 'Exile target player’s graveyard and create Insects' }] });
+  ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [{ kind: 'player' }], effects: [{ op: 'exileGraveyardCreateTokens', target: 0, spec: INSECT_1_1_FLYING }], description: 'Exile target player’s graveyard and create Insects' }] });
   defineCard('678b3fb5-aa9f-4268-9433-2a89dd37b927', 'Canoptek Tomb Sentinel', [
     'Exile Cannon — When this creature enters from a graveyard, exile up to one target nonland permanent.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [{ kind: 'nonlandPermanent' }], effects: [{ op: 'exile', target: 0 }], description: 'Exile target nonland permanent' }] });

@@ -2,16 +2,13 @@
 
 import type { CardDefinition } from '../definition';
 import { SAC_SELF, TAP, mana, manaCost } from '../templates';
-import type { Ability, TokenSpec } from '../ability';
+import type { Ability } from '../ability';
 import { constant } from '../value';
 import { allOf, anyOf, HAS_ANY_COUNTER, IS_TOKEN, OTHER, not, ofColor, ofSubtype, ofType, YOURS } from '../selector';
-import { TREASURE } from '../tokens';
+import { BIRD_1_1_FLYING, ELDRAZI_SPAWN_0_1, MUTAGEN, TREASURE } from '../tokens';
 import { defineCard } from './index';
 
 
-const BIRD: TokenSpec = { name: 'Bird', typeLine: 'Creature — Bird', types: ['Creature'], subtypes: ['Bird'], colors: ['W'], power: 1, toughness: 1, keywords: ['flying'] };
-const SPAWN: TokenSpec = { name: 'Eldrazi Spawn', typeLine: 'Creature — Eldrazi', types: ['Creature'], subtypes: ['Eldrazi'], colors: [], power: 0, toughness: 1, manaAbilities: [{ costs: [SAC_SELF], units: [['C']] }] };
-const MUTAGEN: TokenSpec = { name: 'Mutagen', typeLine: 'Artifact — Mutagen', types: ['Artifact'], subtypes: ['Mutagen'], colors: [], power: null, toughness: null };
 
 // Dethrone (CR 702.103) has no generic keyword representation in this engine — every carrier
 // (Marchesa's own trigger, the static ability she grants other creatures) is this same
@@ -30,7 +27,7 @@ const AETHER_CHANNELER: Partial<CardDefinition> = {
   triggers: [{
     kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [],
     effects: [{ op: 'chooseOne', options: [
-      { description: 'Create a 1/1 Bird with flying', effects: [{ op: 'createToken', spec: BIRD, count: constant(1) }] },
+      { description: 'Create a 1/1 Bird with flying', effects: [{ op: 'createToken', spec: BIRD_1_1_FLYING, count: constant(1) }] },
       { description: 'Return another nonland permanent to its owner’s hand', effects: [{ op: 'returnOneToHand', selector: allOf(OTHER, { kind: 'not', of: ofType('Land') }) }] },
       { description: 'Draw a card', effects: [{ op: 'draw', count: constant(1) }] },
     ] }],
@@ -170,7 +167,7 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   ], { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: anyOf(ofColor('U'), ofColor('R')) }], activatedAbilities: [{ costs: [mana('{1}{B}')], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'noOp' }], description: '{1}{B}: Regenerate Nightscape Familiar' } }] });
   defineCard('9bcaf141-1f1f-491f-aced-13dc093b9e2c', 'Pawn of Ulamog', [
     'Whenever this creature or another nontoken creature you control dies, you may create a 0/1 colorless Eldrazi Spawn creature token. It has "Sacrifice this token: Add {C}."',
-  ], { triggers: [{ kind: 'triggered', optional: true, trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS, not(IS_TOKEN)) } }, targets: [], effects: [{ op: 'createToken', spec: SPAWN, count: constant(1) }], description: 'Create an Eldrazi Spawn' }] });
+  ], { triggers: [{ kind: 'triggered', optional: true, trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS, not(IS_TOKEN)) } }, targets: [], effects: [{ op: 'createToken', spec: ELDRAZI_SPAWN_0_1, count: constant(1) }], description: 'Create an Eldrazi Spawn' }] });
   defineCard('4b8736e2-fc41-4a25-bb6c-7351afc40981', 'Pensive Professor', [
     'Increment', 'Whenever one or more +1/+1 counters are put on this creature, draw a card.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'dealtDamage', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Whenever a counter is put on this creature — draw' }] });

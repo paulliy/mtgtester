@@ -139,12 +139,136 @@ export const BEAST_3_3_GREEN: TokenSpec = creatureToken({
 export const THOPTER_1_1_FLYING: TokenSpec = creatureToken({
   name: 'Thopter',
   subtypes: ['Thopter'],
-  colors: ['U'],
+  // Colorless, not blue: "1/1 colorless Thopter artifact creature token with flying" is the
+  // verbatim printed line (living-energy.ts's handledLines, multiple cards). This const shipped
+  // with `colors: ['U']` in an earlier pass and went uncaught because nothing referenced it yet.
+  colors: [],
   power: 1,
   toughness: 1,
   keywords: ['flying'],
   artifact: true,
 });
+
+export const SERVO_1_1: TokenSpec = creatureToken({
+  name: 'Servo',
+  subtypes: ['Servo'],
+  colors: [],
+  power: 1,
+  toughness: 1,
+  artifact: true,
+});
+
+export const CAT_2_2_WHITE: TokenSpec = creatureToken({
+  name: 'Cat',
+  subtypes: ['Cat'],
+  colors: ['W'],
+  power: 2,
+  toughness: 2,
+});
+
+export const INSECT_1_1_FLYING: TokenSpec = creatureToken({
+  name: 'Insect',
+  subtypes: ['Insect'],
+  colors: [],
+  power: 1,
+  toughness: 1,
+  keywords: ['flying'],
+  artifact: true,
+});
+
+export const INSECT_1_1_FLYING_DEATHTOUCH_GREEN: TokenSpec = creatureToken({
+  name: 'Insect',
+  subtypes: ['Insect'],
+  colors: ['G'],
+  power: 1,
+  toughness: 1,
+  keywords: ['flying', 'deathtouch'],
+});
+
+export const BEAST_6_6_ARTIFACT: TokenSpec = creatureToken({
+  name: 'Beast',
+  subtypes: ['Beast'],
+  colors: [],
+  power: 6,
+  toughness: 6,
+  artifact: true,
+});
+
+export const CONSTRUCT_4_4: TokenSpec = creatureToken({
+  name: 'Construct',
+  subtypes: ['Construct'],
+  colors: [],
+  power: 4,
+  toughness: 4,
+  artifact: true,
+});
+
+export const ELDRAZI_CONSTRUCT_10_10: TokenSpec = creatureToken({
+  name: 'Eldrazi Construct',
+  subtypes: ['Eldrazi', 'Construct'],
+  colors: [],
+  power: 10,
+  toughness: 10,
+  artifact: true,
+});
+
+export const CAT_BEAST_2_2_WHITE: TokenSpec = creatureToken({
+  name: 'Cat Beast',
+  subtypes: ['Cat', 'Beast'],
+  colors: ['W'],
+  power: 2,
+  toughness: 2,
+});
+
+export const SAPROLING_1_1_GREEN: TokenSpec = creatureToken({
+  name: 'Saproling',
+  subtypes: ['Saproling'],
+  colors: ['G'],
+  power: 1,
+  toughness: 1,
+});
+
+export const ELEPHANT_3_3_GREEN: TokenSpec = creatureToken({
+  name: 'Elephant',
+  subtypes: ['Elephant'],
+  colors: ['G'],
+  power: 3,
+  toughness: 3,
+});
+
+export const HUMAN_1_1_WHITE: TokenSpec = creatureToken({
+  name: 'Human',
+  subtypes: ['Human'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+});
+
+/** "Sacrifice this creature: Add {C}." — a colorless 0/1 with the mana ability spelled inline
+ * because a sacrifice-for-mana ability is unique per token. */
+export const ELDRAZI_SPAWN_0_1: TokenSpec = {
+  ...creatureToken({ name: 'Eldrazi Spawn', subtypes: ['Eldrazi'], colors: [], power: 0, toughness: 1 }),
+  manaAbilities: [{ costs: [{ kind: 'sacrificeSelf' }], units: [['C']] }],
+};
+
+/** "Artifact — Mutagen", a colorless noncreature token with no printed ability. */
+export const MUTAGEN: TokenSpec = artifactToken({ name: 'Mutagen', subtypes: ['Mutagen'] });
+
+/**
+ * "0/0 Vehicle with flying. Crew 2." — single-use (Pia Nalaar, Chief Mechanic), catalogued
+ * anyway so no override carries an inline `TokenSpec` literal at all.
+ */
+export const NALAAR_AETHERJET: TokenSpec = {
+  ...artifactToken({ name: 'Nalaar Aetherjet', subtypes: ['Vehicle'] }),
+  power: 0,
+  toughness: 0,
+  keywords: ['flying'],
+  activatedAbilities: [{
+    costs: [{ kind: 'tapCreaturesTotalPower', minPower: 2 }],
+    timing: 'any',
+    ability: { kind: 'activated', targets: [], effects: [{ op: 'crewVehicle', minPower: 2 }], description: 'Crew 2' },
+  }],
+};
 
 // ---------------------------------------------------------------------------
 // Artifact tokens

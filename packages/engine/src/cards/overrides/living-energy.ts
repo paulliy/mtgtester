@@ -4,72 +4,17 @@
 
 import { constant } from '../value';
 import { ATTACHED, SAC_SELF, TAP, mana, manaCost } from '../templates';
-import { TREASURE } from '../tokens';
+import { BEAST_3_3_GREEN, BEAST_6_6_ARTIFACT, CONSTRUCT_4_4, NALAAR_AETHERJET, SERVO_1_1, THOPTER_1_1_FLYING, TREASURE } from '../tokens';
 import { defineCard, unimplemented } from './index';
 import { allOf, anyOf, not, ofSupertype, ofSubtype, ofType, IS_TOKEN, OTHER, SELF, YOURS, withKeyword } from '../selector';
 import type { CardDefinition } from '../definition';
-import type { TokenSpec } from '../ability';
 
 const ARTIFACT_OR_ARTIFICER = anyOf(ofType('Artifact'), ofSubtype('Artificer'));
 const ARTIFACT_CREATURES_YOU_CONTROL = allOf(ofType('Artifact'), ofType('Creature'), YOURS);
 
-const THOPTER_TOKEN: TokenSpec = {
-  name: 'Thopter',
-  typeLine: 'Artifact Creature — Thopter',
-  types: ['Artifact', 'Creature'],
-  subtypes: ['Thopter'],
-  colors: [],
-  power: 1,
-  toughness: 1,
-  keywords: ['flying'],
-};
-
-const SERVO_TOKEN: TokenSpec = {
-  name: 'Servo',
-  typeLine: 'Artifact Creature — Servo',
-  types: ['Artifact', 'Creature'],
-  subtypes: ['Servo'],
-  colors: [],
-  power: 1,
-  toughness: 1,
-};
-
-const BEAST_TOKEN: TokenSpec = {
-  name: 'Beast',
-  typeLine: 'Artifact Creature — Beast',
-  types: ['Artifact', 'Creature'],
-  subtypes: ['Beast'],
-  colors: [],
-  power: 6,
-  toughness: 6,
-};
 
 
-const GREEN_BEAST_TOKEN: TokenSpec = {
-  name: 'Beast',
-  typeLine: 'Creature — Beast',
-  types: ['Creature'],
-  subtypes: ['Beast'],
-  colors: ['G'],
-  power: 3,
-  toughness: 3,
-};
 
-const NALAAR_AETHERJET_TOKEN: TokenSpec = {
-  name: 'Nalaar Aetherjet',
-  typeLine: 'Artifact — Vehicle',
-  types: ['Artifact'],
-  subtypes: ['Vehicle'],
-  colors: [],
-  power: 0,
-  toughness: 0,
-  keywords: ['flying'],
-  activatedAbilities: [{
-    costs: [{ kind: 'tapCreaturesTotalPower', minPower: 2 }],
-    timing: 'any',
-    ability: { kind: 'activated', targets: [], effects: [{ op: 'crewVehicle', minPower: 2 }], description: 'Crew 2' },
-  }],
-};
 
 const NON_TOKEN_CREATURE: import('../selector').Selector = allOf(ofType('Creature'), not(IS_TOKEN));
 
@@ -143,7 +88,7 @@ const ARCHITECT_OF_THE_UNTAMED_DEF: Partial<CardDefinition> = {
   }],
   activatedAbilities: [{
     costs: [{ kind: 'payEnergy', amount: 8 }], timing: 'any',
-    ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: BEAST_TOKEN }], description: 'Pay eight energy — create a 6/6 Beast artifact creature token' },
+    ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: BEAST_6_6_ARTIFACT }], description: 'Pay eight energy — create a 6/6 Beast artifact creature token' },
   }],
 };
 
@@ -196,7 +141,7 @@ const VINEGLIMMER_SNARL_DEF: Partial<CardDefinition> = { entersTappedUnless: { k
 const LOYAL_APPRENTICE_DEF: Partial<CardDefinition> = {
   triggers: [{
     kind: 'triggered', trigger: { when: 'beginningOfCombat', player: 'you', condition: { kind: 'controlsYourCommander' } }, targets: [],
-    effects: [{ op: 'createToken', count: constant(1), spec: { ...THOPTER_TOKEN, grantHasteUntilEot: true } }],
+    effects: [{ op: 'createToken', count: constant(1), spec: { ...THOPTER_1_1_FLYING, grantHasteUntilEot: true } }],
     description: 'Beginning of combat — if you control your commander, create a hasty Thopter',
   }],
 };
@@ -218,8 +163,8 @@ const RECKLESS_FIREWEAVER_DEF: Partial<CardDefinition> = {
 const RETROFITTER_FOUNDRY_DEF: Partial<CardDefinition> = {
   activatedAbilities: [
     { costs: [mana('{3}')], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'untapTarget', target: 'source' }], description: 'Pay {3} — untap this artifact' } },
-    { costs: [mana('{1}'), TAP, { kind: 'sacrificeOther', selector: allOf(ofSubtype('Servo'), YOURS), count: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: THOPTER_TOKEN }], description: 'Pay {1}, tap, and sacrifice a Servo — create a Thopter' } },
-    { costs: [TAP, { kind: 'sacrificeOther', selector: allOf(ofSubtype('Thopter'), YOURS), count: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: { name: 'Construct', typeLine: 'Artifact Creature — Construct', types: ['Artifact', 'Creature'], subtypes: ['Construct'], colors: [], power: 4, toughness: 4 } }], description: 'Tap and sacrifice a Thopter — create a Construct' } },
+    { costs: [mana('{1}'), TAP, { kind: 'sacrificeOther', selector: allOf(ofSubtype('Servo'), YOURS), count: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: THOPTER_1_1_FLYING }], description: 'Pay {1}, tap, and sacrifice a Servo — create a Thopter' } },
+    { costs: [TAP, { kind: 'sacrificeOther', selector: allOf(ofSubtype('Thopter'), YOURS), count: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: CONSTRUCT_4_4 }], description: 'Tap and sacrifice a Thopter — create a Construct' } },
   ],
 };
 
@@ -244,7 +189,7 @@ const PIA_NALAAR_CHIEF_MECHANIC_DEF: Partial<CardDefinition> = {
     },
     {
       kind: 'triggered', trigger: { when: 'endStep', player: 'you' }, targets: [],
-      effects: [{ op: 'mayPayEnergyUpTo', min: 1, max: { kind: 'energyAvailable' }, then: [{ op: 'createToken', count: constant(1), spec: NALAAR_AETHERJET_TOKEN, powerOverride: { kind: 'energyPaid' }, toughnessOverride: { kind: 'energyPaid' } }] }],
+      effects: [{ op: 'mayPayEnergyUpTo', min: 1, max: { kind: 'energyAvailable' }, then: [{ op: 'createToken', count: constant(1), spec: NALAAR_AETHERJET, powerOverride: { kind: 'energyPaid' }, toughnessOverride: { kind: 'energyPaid' } }] }],
       description: 'End step — pay one or more energy to create an X/X Nalaar Aetherjet',
     },
   ],
@@ -326,12 +271,12 @@ const TERRITORIAL_AETHERKITE_DEF: Partial<CardDefinition> = {
 const ELDER_GARGAROTH_DEF: Partial<CardDefinition> = {
   triggers: [
     { kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'chooseOne', options: [
-      { description: 'Create a 3/3 Beast', effects: [{ op: 'createToken', count: constant(1), spec: GREEN_BEAST_TOKEN }] },
+      { description: 'Create a 3/3 Beast', effects: [{ op: 'createToken', count: constant(1), spec: BEAST_3_3_GREEN }] },
       { description: 'Gain 3 life', effects: [{ op: 'gainLife', amount: constant(3) }] },
       { description: 'Draw a card', effects: [{ op: 'draw', count: constant(1) }] },
     ] }], description: 'Attack — create a Beast, gain 3 life, or draw a card' },
     { kind: 'triggered', trigger: { when: 'blocks', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'chooseOne', options: [
-      { description: 'Create a 3/3 Beast', effects: [{ op: 'createToken', count: constant(1), spec: GREEN_BEAST_TOKEN }] },
+      { description: 'Create a 3/3 Beast', effects: [{ op: 'createToken', count: constant(1), spec: BEAST_3_3_GREEN }] },
       { description: 'Gain 3 life', effects: [{ op: 'gainLife', amount: constant(3) }] },
       { description: 'Draw a card', effects: [{ op: 'draw', count: constant(1) }] },
     ] }], description: 'Block — create a Beast, gain 3 life, or draw a card' },
@@ -379,9 +324,9 @@ const DUPLICANT_DEF: Partial<CardDefinition> = {
 };
 
 const SAHEELI_SUBLIME_ARTIFICER_DEF: Partial<CardDefinition> = {
-  triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'you', filter: not(ofType('Creature')) }, targets: [], effects: [{ op: 'createToken', count: constant(1), spec: SERVO_TOKEN }], description: 'Cast a noncreature spell — create a Servo' }],
+  triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'you', filter: not(ofType('Creature')) }, targets: [], effects: [{ op: 'createToken', count: constant(1), spec: SERVO_1_1 }], description: 'Cast a noncreature spell — create a Servo' }],
   activatedAbilities: [
-    { costs: [{ kind: 'loyalty', delta: 1 }], timing: 'sorcery', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: SERVO_TOKEN }], description: '+1: Create a Servo' } },
+    { costs: [{ kind: 'loyalty', delta: 1 }], timing: 'sorcery', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: SERVO_1_1 }], description: '+1: Create a Servo' } },
     { costs: [{ kind: 'loyalty', delta: -2 }], timing: 'sorcery', ability: { kind: 'activated', targets: [{ kind: 'artifact', controller: 'you' }, { kind: 'permanent', controller: 'you', filter: anyOf(ofType('Artifact'), ofType('Creature')) }], effects: [{ op: 'becomeCopyOfTarget', target: 0, ref: 1, untilEot: true, addTypes: ['Artifact'] }], description: '−2: Target artifact becomes a copy of another target artifact or creature, except it is an artifact' } },
   ],
 };
@@ -596,7 +541,7 @@ export function registerLIVING_ENERGYOverrides(): void {
           "Pay {E}{E}{E}: Create a 1/1 colorless Thopter artifact creature token with flying."
     ], {
       triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'gainEnergy', amount: constant(3) }], description: 'Enters — gain three energy' }],
-      activatedAbilities: [{ costs: [{ kind: 'payEnergy', amount: 3 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: { name: 'Thopter', typeLine: 'Artifact Creature — Thopter', types: ['Artifact', 'Creature'], subtypes: ['Thopter'], colors: [], power: 1, toughness: 1, keywords: ['flying'] } }], description: 'Pay three energy — create a Thopter' } }],
+      activatedAbilities: [{ costs: [{ kind: 'payEnergy', amount: 3 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'createToken', count: constant(1), spec: THOPTER_1_1_FLYING }], description: 'Pay three energy — create a Thopter' } }],
     });
 
   defineCard("07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8", "Chaos Warp", [

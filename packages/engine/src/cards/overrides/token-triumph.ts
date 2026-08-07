@@ -1,4 +1,4 @@
-import { SOLDIER_1_1_LIFELINK } from '../tokens';
+import { CAT_2_2_WHITE, CAT_BEAST_2_2_WHITE, ELDRAZI_CONSTRUCT_10_10, INSECT_1_1_FLYING_DEATHTOUCH_GREEN, SAPROLING_1_1_GREEN, SOLDIER_1_1_LIFELINK } from '../tokens';
 import { defineCard } from './index';
 import { ATTACHED, DISCARD_SELF, SAC_SELF, TAP, mana, manaCost } from '../templates';
 import { constant } from '../value';
@@ -215,7 +215,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
             effects: [
               {
                 op: 'createToken',
-                spec: { name: 'Cat', typeLine: 'Creature — Cat', types: ['Creature'], subtypes: ['Cat'], colors: ['W'], power: 2, toughness: 2 },
+                spec: CAT_2_2_WHITE,
                 count: { kind: 'lifeTotal', scope: 'you' },
               },
             ],
@@ -385,7 +385,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
           effects: [
             {
               op: 'createToken',
-              spec: { name: 'Insect', typeLine: 'Creature — Insect', types: ['Creature'], subtypes: ['Insect'], colors: ['G'], power: 1, toughness: 1, keywords: ['flying', 'deathtouch'] },
+              spec: INSECT_1_1_FLYING_DEATHTOUCH_GREEN,
               count: { kind: 'damageDealt' },
             },
           ],
@@ -424,7 +424,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
             effects: [
               {
                 op: 'createToken',
-                spec: { name: 'Eldrazi Construct', typeLine: 'Artifact Creature — Eldrazi Construct', types: ['Artifact', 'Creature'], subtypes: ['Eldrazi', 'Construct'], colors: [], power: 10, toughness: 10 },
+                spec: ELDRAZI_CONSTRUCT_10_10,
                 count: constant(1),
               },
             ],
@@ -542,7 +542,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
                 effects: [
                   {
                     op: 'createToken',
-                    spec: { name: 'Cat Beast', typeLine: 'Creature — Cat Beast', types: ['Creature'], subtypes: ['Cat', 'Beast'], colors: ['W'], power: 2, toughness: 2 },
+                    spec: CAT_BEAST_2_2_WHITE,
                     count: constant(1),
                   },
                 ],
@@ -667,7 +667,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
           {
             op: 'destroyAndCreateTokensEqualToManaValue',
             target: 0,
-            spec: { name: 'Saproling', typeLine: 'Creature — Saproling', types: ['Creature'], subtypes: ['Saproling'], colors: ['G'], power: 1, toughness: 1 },
+            spec: SAPROLING_1_1_GREEN,
           },
         ],
         description: "Destroy target enchantment. Create X 1/1 green Saproling creature tokens, where X is that enchantment's mana value.",

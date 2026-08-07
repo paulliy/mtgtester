@@ -5,7 +5,7 @@ import { constant } from '../value';
 import { SAC_SELF, TAP, mana } from '../templates';
 import { allOf, ofType, YOURS } from '../selector';
 import { defineCard } from './index';
-import { ASSASSIN_1_1 as ASSASSIN_TOKEN } from '../tokens';
+import { ASSASSIN_1_1 as ASSASSIN_TOKEN, ELEPHANT_3_3_GREEN, HUMAN_1_1_WHITE } from '../tokens';
 
 
 const SIGNET = (symbols: ['W' | 'U' | 'B' | 'R' | 'G', 'W' | 'U' | 'B' | 'R' | 'G']) => ({
@@ -95,7 +95,7 @@ const GENEROUS_GIFT: Partial<CardDefinition> = {
   spellAbility: {
     kind: 'spell',
     targets: [{ kind: 'permanent' }],
-    effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: { name: 'Elephant', typeLine: 'Creature — Elephant', types: ['Creature'], subtypes: ['Elephant'], colors: ['G'], power: 3, toughness: 3 } }],
+    effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: ELEPHANT_3_3_GREEN }],
     description: 'Destroy target permanent; its controller creates a 3/3 Elephant',
   },
 };
@@ -104,7 +104,7 @@ const STROKE_OF_MIDNIGHT: Partial<CardDefinition> = {
   spellAbility: {
     kind: 'spell',
     targets: [{ kind: 'nonlandPermanent' }],
-    effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: { name: 'Human', typeLine: 'Creature — Human', types: ['Creature'], subtypes: ['Human'], colors: ['W'], power: 1, toughness: 1 } }],
+    effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: HUMAN_1_1_WHITE }],
     description: 'Destroy target nonland permanent; its controller creates a 1/1 Human',
   },
 };

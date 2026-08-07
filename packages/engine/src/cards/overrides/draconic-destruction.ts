@@ -4,6 +4,7 @@
 
 import { constant } from '../value';
 import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost } from '../templates';
+import { BEAST_3_3_GREEN, DRAGON_5_5_FLYING } from '../tokens';
 import { defineCard } from './index';
 import { allOf, anyOf, not, OTHER, ofSubtype, ofType, SELF, withKeyword, YOURS } from '../selector';
 
@@ -28,10 +29,7 @@ const DRAGONKIN_BERSERKER_DEF = {
       effects: [{
         op: 'createToken' as const,
         count: constant(1),
-        spec: {
-          name: 'Dragon', typeLine: 'Creature — Dragon', types: ['Creature'], subtypes: ['Dragon'],
-          colors: ['R' as const], power: 5, toughness: 5, keywords: ['flying' as const],
-        },
+        spec: DRAGON_5_5_FLYING,
       }],
       description: 'Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying',
     },
@@ -414,7 +412,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
   defineCard("7735eeba-693b-47e2-bd51-414379cf1016", "Beast Within", [
           "Destroy target permanent. Its controller creates a 3/3 green Beast creature token."
     ], {
-      spellAbility: { kind: 'spell', targets: [{ kind: 'permanent' }], effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: { name: 'Beast', typeLine: 'Creature — Beast', types: ['Creature'], subtypes: ['Beast'], colors: ['G'], power: 3, toughness: 3 } }], description: 'Destroy target permanent; its controller creates a 3/3 Beast' },
+      spellAbility: { kind: 'spell', targets: [{ kind: 'permanent' }], effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: BEAST_3_3_GREEN }], description: 'Destroy target permanent; its controller creates a 3/3 Beast' },
     });
 
   defineCard("06b77a80-4968-4385-960a-fb66bb4faa94", "Dragonkin Berserker", [
@@ -440,10 +438,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
         effects: [{
           op: 'createToken',
           count: constant(1),
-          spec: {
-            name: 'Dragon', typeLine: 'Creature — Dragon', types: ['Creature'], subtypes: ['Dragon'],
-            colors: ['R'], power: 5, toughness: 5, keywords: ['flying'],
-          },
+          spec: DRAGON_5_5_FLYING,
         }],
         description: 'Upkeep with six lands — create a Dragon token',
       }],

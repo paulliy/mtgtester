@@ -8,8 +8,6 @@ import { TREASURE } from '../tokens';
 import { defineCard } from './index';
 
 const CREATURES: import('../selector').Selector = ofType('Creature');
-const INKLING = { name: 'Inkling', typeLine: 'Creature — Inkling', types: ['Creature'], subtypes: ['Inkling'], colors: ['W', 'B'] as ('W' | 'B')[], power: 2, toughness: 1, keywords: ['flying'] as ('flying')[] };
-
 const HYBRID_LAND = (a: 'W' | 'B' | 'R', b: 'W' | 'B' | 'R'): Partial<CardDefinition> => ({
   manaAbilities: [
     { costs: [mana(`{${a}/${b}}`), TAP], units: [[a], [a]] },

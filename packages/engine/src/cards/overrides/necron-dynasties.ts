@@ -2,6 +2,7 @@
  * Authored card overrides for necron-dynasties.txt.
  */
 
+import { NECRON_WARRIOR_2_2 } from '../tokens';
 import { defineCard, unimplemented } from './index';
 import { allOf, anyOf, CHOSEN_COLOR, IS_TOKEN, not, OTHER, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
 import { constant } from '../value';
@@ -195,7 +196,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     ], {
       triggers: [{
         kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [],
-        effects: [{ op: 'createToken', count: constant(1), spec: { name: 'Necron Warrior', typeLine: 'Artifact Creature — Necron Warrior', types: ['Artifact', 'Creature'], subtypes: ['Necron', 'Warrior'], colors: [], power: 2, toughness: 2 } }],
+        effects: [{ op: 'createToken', count: constant(1), spec: NECRON_WARRIOR_2_2 }],
         description: 'Enters — create a Necron Warrior token',
       }],
     });
