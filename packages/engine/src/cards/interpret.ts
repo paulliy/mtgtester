@@ -57,6 +57,8 @@ import {
   not,
   ofSubtype,
   ofSupertype,
+  manaValueAtLeast,
+  manaValueAtMost,
   ofType,
   powerAtLeast,
   withKeyword,
@@ -411,9 +413,18 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
   // "artifact creatures" is an intersection of card types, not a creature subtype named
   // Artifact. Treating it as a subtype would either reject the line or silently match nothing.
   const compoundTypes = noun.match(/^(artifact|enchantment) (creatures|artifacts|enchantments)$/);
+  // "non-Human creatures you control" (Return of the Wildspeaker) â€” a negated tribe, the plural
+  // counterpart to the mass-destroy grammar's own "non-Dragon creatures" (which reads the tribe
+  // out by hand rather than sharing this function; see the "destroy all non-X creatures" rule).
+  const negatedTribe = noun.match(/^non-(.+?) (creatures|artifacts|enchantments|lands|planeswalkers)$/);
   if (compoundTypes !== null) {
     parts.push(ofType(titleCase(compoundTypes[1] as string)));
     parts.push(ofType(CARD_TYPE_PLURALS[compoundTypes[2] as string] as string));
+  } else if (negatedTribe !== null) {
+    const subtype = resolveSubtype(negatedTribe[1] as string, card);
+    if (subtype === null) return null;
+    parts.push(not(ofSubtype(subtype)));
+    parts.push(ofType(CARD_TYPE_PLURALS[negatedTribe[2] as string] as string));
   } else {
     const bareType = CARD_TYPE_PLURALS[noun];
     if (bareType !== undefined) {
@@ -973,17 +984,17 @@ function parseEffectSentence(
       return [{ op: 'discard', count }];
     }
   }
-  // "draw cards equal to the greatest toughness among creatures you control" (Last March).
+  // "draw cards equal to the greatest toughness among creatures you control" (Last March) /
+  // "â€¦ greatest power among non-Human creatures you control" (Return of the Wildspeaker).
   // Bounded to exclude a comma so a trailing ", then â€¦" clause is left for the then-split
   // fallback below, rather than being swallowed into the subject phrase.
   {
-    const m = s.match(/^draw cards equal to the greatest toughness among ([^,]+)$/);
+    const m = s.match(/^draw cards equal to the greatest (power|toughness) among ([^,]+)$/);
     if (m) {
-      const selector = parseSubject(m[1] as string, card);
+      const selector = parseSubject(m[2] as string, card);
       if (selector === null) return null;
-      return [
-        { op: 'draw', count: { kind: 'greatestToughnessAmong', selector, scope: 'all' } },
-      ];
+      const kind = m[1] === 'power' ? 'greatestPowerAmong' : 'greatestToughnessAmong';
+      return [{ op: 'draw', count: { kind, selector, scope: 'all' } }];
     }
   }
   // "create a 1/1 black and green Pest creature token with 'â€¦'" / "create that many Treasure
@@ -1199,7 +1210,9 @@ function parseModalSpellBlock(
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
   if (lines.length < 3) return null;
-  const header = (lines[0] as string).match(/^choose (one|one or more|one or both|any number)\s*(?:\u2014|-)\s*$/i);
+  const header = (lines[0] as string).match(
+    /^choose (one|one or more|one or both|any number|two|three)\s*(?:\u2014|-)\s*$/i,
+  );
   if (header === null) return null;
 
   const targets: TargetSpec[] = [];
@@ -1221,8 +1234,12 @@ function parseModalSpellBlock(
   }
   if (options.length < 2) return null;
   const choice = (header[1] as string).toLowerCase();
-  const minChoices = choice === 'any number' ? 0 : 1;
-  const maxChoices = choice === 'one' ? 1 : choice === 'one or both' ? Math.min(2, options.length) : options.length;
+  // "Choose two —" (Austere Command) is an exact count (CR 700.2d), unlike the "at least"/"up
+  // to" headers above it: it must pick precisely N different modes, not merely up to N.
+  const exact = choice === 'two' ? 2 : choice === 'three' ? 3 : null;
+  const minChoices = exact ?? (choice === 'any number' ? 0 : 1);
+  const maxChoices =
+    exact ?? (choice === 'one' ? 1 : choice === 'one or both' ? Math.min(2, options.length) : options.length);
   return { targets, modes: { minChoices, maxChoices, options } };
 }
 
@@ -1430,6 +1447,14 @@ function parseMassSubject(phrase: string, card: OracleCard): Selector | null {
   if (powerClause !== null) {
     parts.push(powerAtLeast(Number(powerClause[2])));
     noun = powerClause[1] as string;
+  }
+
+  // "destroy all creatures with mana value 3 or less" / "â€¦4 or greater" (Austere Command).
+  const manaValueClause = noun.match(/^(.+) with mana value (\d+) or (less|greater)$/i);
+  if (manaValueClause !== null) {
+    const n = Number(manaValueClause[2]);
+    parts.push(manaValueClause[3]?.toLowerCase() === 'less' ? manaValueAtMost(n) : manaValueAtLeast(n));
+    noun = manaValueClause[1] as string;
   }
 
   // "â€¦without flying" / "â€¦with flying". Event-only (see `cards/selector.ts`): safe here because

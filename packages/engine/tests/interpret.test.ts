@@ -590,6 +590,55 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
+  it('draws cards equal to the greatest power among a negated-tribe subject', () => {
+    const wildspeaker = interpretCard(
+      oracle({
+        name: 'Wildspeaker Test',
+        typeLine: 'Sorcery',
+        manaCost: '{3}{G}{G}',
+        power: null,
+        toughness: null,
+        oracleText: 'Choose one —\n• Draw cards equal to the greatest power among non-Human creatures you control.\n• Non-Human creatures you control get +3/+3 until end of turn.',
+      }),
+    );
+    expect(wildspeaker.modeled).toBe(true);
+    const drawMode = wildspeaker.spellAbility?.modes?.options[0];
+    expect(drawMode?.effects).toEqual([
+      {
+        op: 'draw',
+        count: {
+          kind: 'greatestPowerAmong',
+          selector: {
+            kind: 'allOf',
+            of: [
+              { kind: 'controller', who: 'you' },
+              { kind: 'not', of: { kind: 'subtype', value: 'Human' } },
+              { kind: 'type', value: 'Creature' },
+            ],
+          },
+          scope: 'all',
+        },
+      },
+    ]);
+  });
+
+  it('treats "choose two" as an exact count, unlike "choose one or more"', () => {
+    const austereCommand = interpretCard(
+      oracle({
+        name: 'Austere Command Test 2',
+        typeLine: 'Sorcery',
+        manaCost: '{4}{W}{W}',
+        power: null,
+        toughness: null,
+        oracleText:
+          'Choose two —\n• Destroy all artifacts.\n• Destroy all enchantments.\n• Destroy all creatures with mana value 3 or less.\n• Destroy all creatures with mana value 4 or greater.',
+      }),
+    );
+    expect(austereCommand.modeled).toBe(true);
+    expect(austereCommand.spellAbility?.modes?.minChoices).toBe(2);
+    expect(austereCommand.spellAbility?.modes?.maxChoices).toBe(2);
+  });
+
   it('models self-pump activated abilities (~ gets +1/+0 until end of turn)', () => {
     const firebreather = interpretCard(
       oracle({

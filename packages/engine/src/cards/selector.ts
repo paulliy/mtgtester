@@ -50,9 +50,9 @@ export interface SelectorCandidate {
   toughness?: number;
   /** Current keywords. Only `hasKeyword` reads them — see the module comment. */
   keywords: readonly string[];
-  /** Mana value (CR 202.3). Only `manaValueAtMost` reads it. Absent for candidates that never
-   * need it (battlefield permanents don't compute this today), which is fine: an absent value
-   * simply never matches a mana-value filter. */
+  /** Mana value (CR 202.3), read by `manaValueAtMost`/`manaValueAtLeast`. Absent when the
+   * candidate's card definition can't be found, which is fine: an absent value simply never
+   * matches a mana-value filter rather than matching as though it were 0. */
   manaValue?: number;
   /** Token-ness (CR 111.1). NOT event-only: no layer can change it. */
   isToken: boolean;
@@ -111,6 +111,9 @@ export type Selector =
   /** "with mana value 4 or less" (Sunforger) — not event-only: mana value is a printed
    * characteristic, not a layer's derived output. */
   | { kind: 'manaValueAtMost'; n: number }
+  /** "with mana value 4 or greater" (Austere Command's other mode). Same rationale as
+   * `manaValueAtMost` — not event-only. */
+  | { kind: 'manaValueAtLeast'; n: number }
   /** Does the permanent have any counter of any kind on it (Rishkar, Peema Renegade)? Not
    * event-only: counters are real state, not a layer's derived output. */
   | { kind: 'hasAnyCounter' }
@@ -158,6 +161,7 @@ export const powerAtMost = (n: number): Selector => ({ kind: 'powerAtMost', n })
 export const HAS_ANY_COUNTER: Selector = { kind: 'hasAnyCounter' };
 export const toughnessAtLeast = (n: number): Selector => ({ kind: 'toughnessAtLeast', n });
 export const manaValueAtMost = (n: number): Selector => ({ kind: 'manaValueAtMost', n });
+export const manaValueAtLeast = (n: number): Selector => ({ kind: 'manaValueAtLeast', n });
 export const withKeyword = (keyword: string): Selector => ({ kind: 'hasKeyword', keyword });
 
 /** Miirym's subject leaf — see the  variant. */
@@ -238,6 +242,8 @@ export function selectMatches(
       return candidate.toughness !== undefined && candidate.toughness >= selector.n;
     case 'manaValueAtMost':
       return candidate.manaValue !== undefined && candidate.manaValue <= selector.n;
+    case 'manaValueAtLeast':
+      return candidate.manaValue !== undefined && candidate.manaValue >= selector.n;
     case 'hasKeyword':
       return candidate.keywords.includes(selector.keyword);
     case 'isToken':
