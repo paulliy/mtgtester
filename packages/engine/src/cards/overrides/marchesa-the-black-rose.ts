@@ -19,10 +19,6 @@ const DETHRONE_TRIGGER: Ability = {
   effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }], description: 'Dethrone — put a +1/+1 counter on this creature',
 };
 
-const SP = (targets: CardDefinition['spellAbility'] extends infer _T ? any[] : never, effects: any[], description: string): Partial<CardDefinition> => ({
-  spellAbility: { kind: 'spell', targets, effects, description },
-});
-
 const AETHER_CHANNELER: Partial<CardDefinition> = {
   triggers: [{
     kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [],
