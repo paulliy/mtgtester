@@ -132,4 +132,43 @@ describe('reanimation and mana-value-based life loss', () => {
     expect(ctx.state.battlefield.some((p) => p.id === target.id)).toBe(false);
     expect(ctx.state.players.find((p) => p.id === 'P1')!.life).toBe(p1BeforeLife - 4);
   });
+
+  it('parses and executes "target player draws N cards and loses N life" (Sign in Blood)', () => {
+    const def = interpretCard(
+      oracle({
+        name: 'Sign in Blood Test',
+        typeLine: 'Sorcery',
+        manaCost: '{1}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Target player draws two cards and loses 2 life.',
+      }),
+    );
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'player' }]);
+    expect(def.spellAbility?.effects).toEqual([
+      { op: 'drawTarget', target: 0, count: { kind: 'const', n: 2 } },
+      { op: 'loseLifeTarget', target: 0, amount: { kind: 'const', n: 2 } },
+    ]);
+
+    const ctx = pod();
+    const caster = spawn(ctx, 'P1', oracle({ name: 'Test Caster 4', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null }));
+    conjure(ctx, 'P2', oracle({ name: 'Library Card A' }), 'library');
+    conjure(ctx, 'P2', oracle({ name: 'Library Card B' }), 'library');
+    const p2 = ctx.state.players.find((p) => p.id === 'P2')!;
+    const beforeHand = p2.hand.length;
+    const beforeLife = p2.life;
+
+    pump(
+      executeAbility(
+        ctx,
+        caster,
+        { kind: 'spell', targets: [{ kind: 'player' }], effects: [{ op: 'drawTarget', target: 0, count: { kind: 'const', n: 2 } }, { op: 'loseLifeTarget', target: 0, amount: { kind: 'const', n: 2 } }] },
+        ['P2'],
+      ),
+    );
+
+    expect(p2.hand.length).toBe(beforeHand + 2);
+    expect(p2.life).toBe(beforeLife - 2);
+  });
 });

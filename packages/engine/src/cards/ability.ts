@@ -462,6 +462,9 @@ export type Effect =
   | { op: 'gainLife'; amount: Value } // controller gains
   | { op: 'loseLife'; amount: Value } // controller loses life (not damage)
   | { op: 'loseLifeTarget'; target: EffectRef; amount: Value }
+  /** "Target player draws two cards." (Sign in Blood) — the target draws, not the controller
+   * (contrast `drawTargetAndController`, where both do). */
+  | { op: 'drawTarget'; target: EffectRef; count: Value }
   | { op: 'eachOpponentLosesLife'; amount: Value | number }
   | { op: 'eachOpponentDamage'; amount: number } // damage from source to each opponent
   /** "This land deals 1 damage to you" — damage from the source to its own controller. */

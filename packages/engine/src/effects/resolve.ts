@@ -660,10 +660,16 @@ export function* executeAbility(
       refCardIdCache.set(r, null);
       return null;
     }
-    // Stack objects do not have a battlefield cardId. Keep their ObjectId stable so
-    // multiple effects (for example Arcane Denial's delayed draw plus counter) can
-    // refer to the same stack item during this resolution.
-    if (spec.kind === 'stackObject') return id;
+    // Stack objects and players do not have a battlefield cardId to re-resolve through zone
+    // changes -- a stack object's identity is only stable for this resolution (Arcane Denial's
+    // delayed draw plus counter both need the same stack item), and a player's id needs no
+    // re-resolution at all (players don't change zones). Caching either through
+    // `findObjectByCardId` would incorrectly resolve to `undefined` on the SECOND effect that
+    // references the same player slot (e.g. Sign in Blood: draw, then lose life, both off slot
+    // 0) -- `findObjectById` finds no permanent for a PlayerId, so the cache would poison itself
+    // with `null` after the first effect and every later effect referencing that slot would
+    // silently do nothing.
+    if (spec.kind === 'stackObject' || spec.kind === 'player') return id;
     refCardIdCache.set(r, findObjectById(ctx, id)?.cardId ?? null);
     return id;
   };
@@ -1383,6 +1389,13 @@ export function* executeAbility(
         if (target === undefined) break;
         yield* drawCards(ctx, target, effect.count);
         yield* drawCards(ctx, controller, effect.count);
+        break;
+      }
+      case 'drawTarget': {
+        const targetId = ref(effect.target);
+        const target = targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
+        if (target === undefined) break;
+        yield* drawCards(ctx, target, amountOf(effect.count));
         break;
       }
       case 'breenaAttack': {

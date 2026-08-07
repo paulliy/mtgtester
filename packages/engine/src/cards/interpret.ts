@@ -516,6 +516,24 @@ function parseEffectSentence(
   if (s === 'target player gets a poison counter') {
     return [{ op: 'giveTargetPoisonCounters', target: alloc('player'), count: 1 }];
   }
+  // "Target player draws two cards." / "Target player draws two cards and loses 2 life." (Sign
+  // in Blood) â€” the target draws, not the caster (contrast the untargeted "you draw N cards and
+  // lose N life" sentence above).
+  {
+    const m = s.match(/^target player draws (\w+) cards?(?: and loses (\w+) life)?$/);
+    if (m) {
+      const count = parseAmount(m[1] as string);
+      if (count === null) return null;
+      const target = alloc('player');
+      const effects: Effect[] = [{ op: 'drawTarget', target, count: constant(count) }];
+      if (m[2] !== undefined) {
+        const life = parseAmount(m[2] as string);
+        if (life === null) return null;
+        effects.push({ op: 'loseLifeTarget', target, amount: constant(life) });
+      }
+      return effects;
+    }
+  }
   if (s === 'each opponent gets a poison counter') {
     return [{ op: 'giveTargetPoisonCounters', target: 'eachOpponent', count: 1 }];
   }
