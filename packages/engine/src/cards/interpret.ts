@@ -63,6 +63,27 @@ import {
 } from './selector';
 import type { Value } from './value';
 import { constant } from './value';
+import {
+  activated,
+  costReductionFor,
+  lord,
+  mana,
+  manaAbility,
+  manaCost,
+  onAttacks,
+  onCast,
+  onCombatDamageToPlayer,
+  onDies,
+  onEtb,
+  SAC_SELF,
+  spell,
+  TAP,
+  triggered,
+  whenAttacks,
+  whenEnters,
+  whenPermanent,
+} from './templates';
+import { TREASURE } from './tokens';
 // Use the explicit module path so the registry imported by authored override modules and the
 // interpreter share one module instance under Bun/TypeScript path resolution.
 import { applyOverride, getOverride } from './overrides/index';
@@ -1557,21 +1578,10 @@ function parseTriggerSubject(phrase: string, card: OracleCard): Selector | null 
  * so it has to be spelled out here or the token would enter as a blank artifact.
  */
 const PREDEFINED_TOKENS: Record<string, TokenSpec> = {
-  treasure: {
-    name: 'Treasure',
-    typeLine: 'Token Artifact â€” Treasure',
-    types: ['Artifact'],
-    subtypes: ['Treasure'],
-    colors: [],
-    power: null,
-    toughness: null,
-    manaAbilities: [
-      {
-        units: [['W', 'U', 'B', 'R', 'G']],
-        costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }],
-      },
-    ],
-  },
+  // Was hand-spelled here with `typeLine: 'Token Artifact — Treasure'` (encoding-corrupted in
+  // source to boot) â€” disagreeing with `tokens.ts`'s `TREASURE` on the type line, though the two
+  // mana-ability costs happened to match. One token, one spelling.
+  treasure: TREASURE,
 };
 
 /** "1/1 black and green Pest creature token" â†’ a `TokenSpec`, or null if any part is unread. */
@@ -2789,11 +2799,9 @@ export function interpretCard(card: OracleCard): CardDefinition {
         kind: 'omen',
         name: 'Claim Territory',
         typeLine: 'Sorcery â€” Omen',
-        manaCost: parseManaCost('{2}{G}').cost!,
+        manaCost: manaCost('{2}{G}'),
         description: 'Claim Territory',
-        ability: {
-          kind: 'spell',
-          targets: [],
+        ability: spell({
           effects: [
             {
               op: 'searchLibrary',
@@ -2801,7 +2809,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
               destinations: [{ zone: 'hand' }],
             },
           ],
-        },
+        }),
       },
     ];
   } else if (card.name === 'Marang River Regent // Coil and Catch') {
@@ -2810,33 +2818,21 @@ export function interpretCard(card: OracleCard): CardDefinition {
         kind: 'omen',
         name: 'Coil and Catch',
         typeLine: 'Instant â€” Omen',
-        manaCost: parseManaCost('{3}{U}').cost!,
+        manaCost: manaCost('{3}{U}'),
         description: 'Coil and Catch',
-        ability: {
-          kind: 'spell',
+        ability: spell({
           targets: [{ kind: 'nonlandPermanent', controller: 'opponent' }],
           effects: [{ op: 'returnToHand', target: 0 }],
-        },
+        }),
       },
     ];
   } else if (card.name === 'Dragon Tempest') {
     triggers.push(
-      {
-        kind: 'triggered',
-        trigger: {
-          when: 'enters',
-          subject: { kind: 'permanent', selector: allOf(ofType('Creature'), withKeyword('flying'), YOURS) },
-        },
-        targets: [],
+      triggered(whenEnters(allOf(ofType('Creature'), withKeyword('flying'), YOURS)), {
         effects: [{ op: 'grantKeywordUntilEot', keyword: 'haste', target: 'triggerObject' }],
         description: 'Flying ETB haste',
-      },
-      {
-        kind: 'triggered',
-        trigger: {
-          when: 'enters',
-          subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
-        },
+      }),
+      triggered(whenEnters(allOf(ofSubtype('Dragon'), YOURS)), {
         targets: [{ kind: 'anyTarget' }],
         effects: [
           {
@@ -2846,29 +2842,17 @@ export function interpretCard(card: OracleCard): CardDefinition {
           },
         ],
         description: 'Dragon ETB damage equal to Dragon count',
-      },
+      }),
     );
     reasons.length = 0;
   } else if (card.name === 'Firkraag, Cunning Instigator') {
     triggers.push(
-      {
-        kind: 'triggered',
-        trigger: {
-          when: 'attacks',
-          subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
-          aggregate: true,
-        },
+      triggered(whenAttacks(allOf(ofSubtype('Dragon'), YOURS), { aggregate: true }), {
         targets: [{ kind: 'creature', controller: 'opponent' }],
         effects: [{ op: 'goad', target: 0 }],
         description: 'Dragon attack goad',
-      },
-      {
-        kind: 'triggered',
-        trigger: {
-          when: 'dealsCombatDamageToPlayer',
-          subject: { kind: 'permanent', selector: ofType('Creature') },
-        },
-        targets: [],
+      }),
+      triggered(whenPermanent('dealsCombatDamageToPlayer', ofType('Creature')), {
         effects: [
           {
             op: 'conditionalEffect',
@@ -2881,7 +2865,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
           },
         ],
         description: 'Combat damage draw & counter',
-      },
+      }),
     );
     reasons.length = 0;
   } else if (card.name === 'Iymrith, Desert Doom') {
@@ -2889,93 +2873,72 @@ export function interpretCard(card: OracleCard): CardDefinition {
       affects: SELF,
       op: {
         layer: 6,
-        addWard: parseManaCost('{4}').cost!,
+        addWard: manaCost('{4}'),
       },
       condition: { kind: 'isUntapped' },
     });
-    triggers.push({
-      kind: 'triggered',
-      trigger: { when: 'dealsCombatDamageToPlayer', subject: SELF_SUBJECT },
-      targets: [],
-      effects: [{ op: 'draw', count: constant(1) }, { op: 'drawUpTo', count: 3 }],
-      description: 'Combat damage draw up to 3',
-    });
+    triggers.push(
+      triggered(onCombatDamageToPlayer(), {
+        effects: [{ op: 'draw', count: constant(1) }, { op: 'drawUpTo', count: 3 }],
+        description: 'Combat damage draw up to 3',
+      }),
+    );
     reasons.length = 0;
   } else if (card.name === 'Kairi, the Swirling Sky') {
-    triggers.push({
-      kind: 'triggered',
-      trigger: { when: 'dies', subject: SELF_SUBJECT },
-      targets: [],
-      modes: {
-        minChoices: 1,
-        maxChoices: 1,
-        options: [
-          { description: 'Return nonland permanents <= 6 total MV', effects: [{ op: 'bounceUpTo6MV' }] },
-          { description: 'Mill 6 and return up to 2 spells from graveyard', effects: [{ op: 'millAndReturnSpells' }] },
-        ],
-      },
-      effects: [],
-    });
+    triggers.push(
+      triggered(onDies(), {
+        effects: [],
+        modes: {
+          minChoices: 1,
+          maxChoices: 1,
+          options: [
+            { description: 'Return nonland permanents <= 6 total MV', effects: [{ op: 'bounceUpTo6MV' }] },
+            { description: 'Mill 6 and return up to 2 spells from graveyard', effects: [{ op: 'millAndReturnSpells' }] },
+          ],
+        },
+      }),
+    );
     reasons.length = 0;
   } else if (card.name === "Lozhan, Dragons' Legacy") {
-    triggers.push({
-      kind: 'triggered',
-      trigger: {
-        when: 'castsSpell',
-        caster: 'you',
-        filter: anyOf(ofSubtype('Dragon'), ofSubtype('Adventure')),
-      },
-      targets: [{ kind: 'anyTarget', filter: not(IS_COMMANDER) }],
-      effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'spellManaValue' } }],
-      description: 'Spell cast damage',
-    });
+    triggers.push(
+      triggered(onCast('you', anyOf(ofSubtype('Dragon'), ofSubtype('Adventure'))), {
+        targets: [{ kind: 'anyTarget', filter: not(IS_COMMANDER) }],
+        effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'spellManaValue' } }],
+        description: 'Spell cast damage',
+      }),
+    );
     reasons.length = 0;
   } else if (card.name === 'Morophon, the Boundless') {
     ruleStatics.push({
       kind: 'costReduction',
       amount: constant(0),
-      coloredAmount: parseManaCost('{W}{U}{B}{R}{G}').cost!,
+      coloredAmount: manaCost('{W}{U}{B}{R}{G}'),
       filter: ofSubtype('Dragon'),
     });
-    staticEffects.push({
-      affects: allOf(OTHER, YOURS, ofSubtype('Dragon')),
-      op: {
-        layer: 7,
-        sublayer: 'd',
-        power: 1,
-        toughness: 1,
-      },
-    });
+    staticEffects.push(lord(allOf(OTHER, YOURS, ofSubtype('Dragon')), 1, 1));
     reasons.length = 0;
   } else if (card.name === 'Orb of Dragonkind') {
     manaAbilities.push({
       units: [ALL_COLORS, ALL_COLORS],
-      costs: [{ kind: 'mana', cost: parseManaCost('{1}').cost! }, { kind: 'tap' }],
+      costs: [mana('{1}'), TAP],
       restriction: {
         purposes: ['castSpell', 'activateAbility'],
         filter: ofSubtype('Dragon'),
         description: 'Dragon spells or abilities',
       },
     });
-    activatedAbilities.push({
-      costs: [
-        { kind: 'mana', cost: parseManaCost('{R}').cost! },
-        { kind: 'tap' },
-        { kind: 'sacrificeSelf' },
-      ],
-      timing: 'any',
-      ability: {
-        kind: 'activated',
-        targets: [],
+    activatedAbilities.push(
+      activated({
+        costs: [mana('{R}'), TAP, SAC_SELF],
         effects: [{ op: 'searchLibrary', filter: ofSubtype('Dragon'), destinations: [{ zone: 'hand' }] }],
         description: 'Search Dragon',
-      },
-    });
+      }),
+    );
     reasons.length = 0;
   } else if (card.name === 'Rivaz of the Claw') {
     manaAbilities.push({
       units: [ALL_COLORS, ALL_COLORS],
-      costs: [{ kind: 'tap' }],
+      costs: [TAP],
       restriction: {
         purposes: ['castSpell'],
         filter: allOf(ofType('Creature'), ofSubtype('Dragon')),
@@ -2989,75 +2952,54 @@ export function interpretCard(card: OracleCard): CardDefinition {
       // engine has no primitive yet for "reveal a card from hand or choose a permanent you
       // control" (behold's actual choice), so this never asks which Dragon, and offers the
       // Treasure even with none to behold.
-      {
-        kind: 'triggered',
-        trigger: { when: 'enters', subject: SELF_SUBJECT },
+      triggered(onEtb(), {
         optional: true,
-        targets: [],
-        effects: [{ op: 'createToken', count: constant(1), spec: PREDEFINED_TOKENS['treasure']! }],
+        effects: [{ op: 'createToken', count: constant(1), spec: TREASURE }],
         description: 'ETB behold Treasure',
-      },
-      {
-        kind: 'triggered',
-        trigger: {
-          when: 'enters',
-          subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
-        },
-        targets: [],
+      }),
+      triggered(whenEnters(allOf(ofSubtype('Dragon'), YOURS)), {
         effects: [{ op: 'putCountersEach', selector: SELF, counter: '+1/+1', count: 1 }],
         description: 'Dragon ETB counter',
-      },
+      }),
     );
     reasons.length = 0;
   } else if (card.name === 'Sarkhan, Soul Aflame') {
-    ruleStatics.push({
-      kind: 'costReduction',
-      amount: constant(1),
-      filter: ofSubtype('Dragon'),
-    });
-    triggers.push({
-      kind: 'triggered',
-      trigger: {
-        when: 'enters',
-        subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
-      },
-      optional: true,
-      targets: [],
-      effects: [
-        {
-          op: 'becomeCopyOf',
-          ref: 'triggerObject',
-          untilEot: true,
-          addSupertypes: ['Legendary'],
-          nameOverride: 'Sarkhan, Soul Aflame',
-        },
-      ],
-      description: 'Dragon ETB copy',
-    });
+    ruleStatics.push(costReductionFor(ofSubtype('Dragon'), 1));
+    triggers.push(
+      triggered(whenEnters(allOf(ofSubtype('Dragon'), YOURS)), {
+        optional: true,
+        effects: [
+          {
+            op: 'becomeCopyOf',
+            ref: 'triggerObject',
+            untilEot: true,
+            addSupertypes: ['Legendary'],
+            nameOverride: 'Sarkhan, Soul Aflame',
+          },
+        ],
+        description: 'Dragon ETB copy',
+      }),
+    );
     reasons.length = 0;
   } else if (card.name === 'Skycloud Expanse') {
-    manaAbilities.push({
-      units: [['W'], ['U']],
-      costs: [{ kind: 'tap' }],
-    });
+    manaAbilities.push(manaAbility([['W'], ['U']]));
     reasons.length = 0;
   } else if (card.name === 'Thrakkus the Butcher') {
-    triggers.push({
-      kind: 'triggered',
-      trigger: { when: 'attacks', subject: SELF_SUBJECT },
-      targets: [],
-      effects: [{ op: 'doublePower', selector: allOf(ofSubtype('Dragon'), YOURS) }],
-      description: 'Attack double Dragon power',
-    });
+    triggers.push(
+      triggered(onAttacks(), {
+        effects: [{ op: 'doublePower', selector: allOf(ofSubtype('Dragon'), YOURS) }],
+        description: 'Attack double Dragon power',
+      }),
+    );
     reasons.length = 0;
   } else if (card.name === 'Vaevictis Asmadi, the Dire') {
-    triggers.push({
-      kind: 'triggered',
-      trigger: { when: 'attacks', subject: SELF_SUBJECT },
-      targets: [{ kind: 'permanent' }],
-      effects: [{ op: 'destroy', target: 0 }],
-      description: 'Attack sacrifice & reveal',
-    });
+    triggers.push(
+      triggered(onAttacks(), {
+        targets: [{ kind: 'permanent' }],
+        effects: [{ op: 'destroy', target: 0 }],
+        description: 'Attack sacrifice & reveal',
+      }),
+    );
     reasons.length = 0;
   } else if (card.name === 'Zurgo and Ojutai') {
     staticEffects.push({
@@ -3068,17 +3010,12 @@ export function interpretCard(card: OracleCard): CardDefinition {
       },
       condition: { kind: 'enteredThisTurn' },
     });
-    triggers.push({
-      kind: 'triggered',
-      trigger: {
-        when: 'dealsCombatDamageToPlayer',
-        subject: { kind: 'permanent', selector: allOf(ofSubtype('Dragon'), YOURS) },
-        aggregate: true,
-      },
-      targets: [],
-      effects: [{ op: 'noOp' }],
-      description: 'Combat damage look top 3',
-    });
+    triggers.push(
+      triggered(whenPermanent('dealsCombatDamageToPlayer', allOf(ofSubtype('Dragon'), YOURS), { aggregate: true }), {
+        effects: [{ op: 'noOp' }],
+        description: 'Combat damage look top 3',
+      }),
+    );
     reasons.length = 0;
   }
 

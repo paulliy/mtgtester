@@ -268,6 +268,8 @@ interface AbilityBody {
   targets?: TargetSpec[];
   description?: string;
   optional?: boolean;
+  /** "Choose one — •… •…" (CR 700.2). The chosen mode's effects replace `effects` at cast time. */
+  modes?: NonNullable<Ability['modes']>;
 }
 
 function buildAbility(kind: Ability['kind'], body: AbilityBody, trigger?: TriggerSpec): Ability {
@@ -279,6 +281,7 @@ function buildAbility(kind: Ability['kind'], body: AbilityBody, trigger?: Trigge
   };
   if (body.optional !== undefined) ability.optional = body.optional;
   if (body.description !== undefined) ability.description = body.description;
+  if (body.modes !== undefined) ability.modes = body.modes;
   return ability;
 }
 

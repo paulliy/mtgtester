@@ -2978,7 +2978,7 @@
                 "Treasure"
               ],
               "toughness": null,
-              "typeLine": "Token Artifact â€” Treasure",
+              "typeLine": "Artifact — Treasure",
               "types": [
                 "Artifact"
               ]
@@ -7159,7 +7159,7 @@
                 "Treasure"
               ],
               "toughness": null,
-              "typeLine": "Token Artifact â€” Treasure",
+              "typeLine": "Artifact — Treasure",
               "types": [
                 "Artifact"
               ]
