@@ -537,6 +537,59 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
+  it('tutors for an unrestricted card (Demonic Tutor)', () => {
+    const tutor = interpretCard(
+      oracle({
+        name: 'Demonic Tutor Test',
+        typeLine: 'Sorcery',
+        manaCost: '{1}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Search your library for a card, put that card into your hand, then shuffle.',
+      }),
+    );
+    expect(tutor.modeled).toBe(true);
+    expect(tutor.spellAbility?.effects).toEqual([
+      { op: 'searchLibrary', filter: { kind: 'allOf', of: [] }, destinations: [{ zone: 'hand' }] },
+      { op: 'shuffle' },
+    ]);
+  });
+
+  it('models the aristocrats drain trigger, targeted and each-opponent forms', () => {
+    const bloodArtist = interpretCard(
+      oracle({
+        name: 'Blood Artist Test',
+        typeLine: 'Creature — Vampire',
+        manaCost: '{B}',
+        power: '0',
+        toughness: '1',
+        oracleText: 'Whenever Blood Artist Test or another creature dies, target player loses 1 life and you gain 1 life.',
+      }),
+    );
+    expect(bloodArtist.modeled).toBe(true);
+    expect(bloodArtist.triggers?.[0]?.effects).toEqual([
+      { op: 'loseLifeTarget', target: 0, amount: { kind: 'const', n: 1 } },
+      { op: 'gainLife', amount: { kind: 'const', n: 1 } },
+    ]);
+    expect(bloodArtist.triggers?.[0]?.targets).toEqual([{ kind: 'player' }]);
+
+    const zulaport = interpretCard(
+      oracle({
+        name: 'Zulaport Test',
+        typeLine: 'Creature — Human Cleric',
+        manaCost: '{1}{B}',
+        power: '1',
+        toughness: '1',
+        oracleText: 'Whenever Zulaport Test or another creature you control dies, each opponent loses 1 life and you gain 1 life.',
+      }),
+    );
+    expect(zulaport.modeled).toBe(true);
+    expect(zulaport.triggers?.[0]?.effects).toEqual([
+      { op: 'eachOpponentLosesLife', amount: 1 },
+      { op: 'gainLife', amount: { kind: 'const', n: 1 } },
+    ]);
+  });
+
   it('models self-pump activated abilities (~ gets +1/+0 until end of turn)', () => {
     const firebreather = interpretCard(
       oracle({

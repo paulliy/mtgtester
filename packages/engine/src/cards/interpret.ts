@@ -1042,13 +1042,38 @@ function parseEffectSentence(
       return [{ op: 'draw', count: constant(cards) }, { op: 'loseLife', amount: constant(life) }];
     }
   }
-  // "each opponent loses 1 life"
+  // "each opponent loses 1 life" / "each opponent loses 1 life and you gain 1 life" (the
+  // aristocrats drain template: Zulaport Cutthroat, Cauldron of Essence, Syr Konrad's activated
+  // ability). "Target player loses 1 life and you gain 1 life" (Blood Artist) is the same
+  // template with a targeted victim instead of every opponent.
   {
-    const m = s.match(/^each opponent loses (\w+) life$/);
+    const m = s.match(/^each opponent loses (\w+) life(?: and you gain (\w+) life)?$/);
     if (m) {
       const amount = parseAmount(m[1] as string);
       if (amount === null) return null;
-      return [{ op: 'eachOpponentLosesLife', amount }];
+      const effects: Effect[] = [{ op: 'eachOpponentLosesLife', amount }];
+      if (m[2] !== undefined) {
+        const gain = parseAmount(m[2] as string);
+        if (gain === null) return null;
+        effects.push({ op: 'gainLife', amount: constant(gain) });
+      }
+      return effects;
+    }
+  }
+  {
+    const m = s.match(/^target player loses (\w+) life(?: and you gain (\w+) life)?$/);
+    if (m) {
+      const amount = parseAmount(m[1] as string);
+      if (amount === null) return null;
+      const effects: Effect[] = [
+        { op: 'loseLifeTarget', target: alloc('player'), amount: constant(amount) },
+      ];
+      if (m[2] !== undefined) {
+        const gain = parseAmount(m[2] as string);
+        if (gain === null) return null;
+        effects.push({ op: 'gainLife', amount: constant(gain) });
+      }
+      return effects;
     }
   }
   // "~ deals 5 damage to each creature without flying" (Ryusei) / "it deals 3 damage to â€¦"
@@ -1446,6 +1471,13 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
 /** "a Plains, Island, Swamp, or Mountain card" / "up to two basic land cards" â†’ a `Selector`. */
 function parseSearchFilter(phrase: string, card: OracleCard): Selector | null {
   const noun = phrase.replace(/^(?:up to \w+|a|an) /, '').replace(/ cards?$/, '');
+
+  // "a card" (Demonic Tutor) â€” unrestricted, not narrowed to permanent types the way
+  // `parseCardFilterPhrase`'s bare "card"/"permanent" is for its (zone-restricted) callers.
+  // `allOf()` with no operands is vacuously true (CR-accurate: every `every()` over an empty
+  // list holds), so it matches any card in the library without a dedicated "match anything"
+  // selector kind.
+  if (noun === 'card' || noun === 'cards') return allOf();
 
   // "basic land" â€” a supertype plus a type, not a subtype.
   if (noun === 'basic land') return allOf(ofSupertype('Basic'), ofType('Land'));
