@@ -79,6 +79,27 @@ describe('authored-override registry', () => {
     expect(overridden.keywords).toEqual(['flying']);
   });
 
+  it('treats a patch of only empty arrays/false the same as {} (it adds no real behavior)', () => {
+    // Two real registrations shipped exactly this shape — a leftover `staticEffects: []` /
+    // `triggers: []` from a template that was never filled in — and reported `modeled: true`
+    // for a card with zero executable abilities, because `Object.keys({ staticEffects: [] })`
+    // is length 1, not 0. `isEmptyPatch` looks at the VALUES, not just the key count.
+    registerOverride({
+      oracleId: ORACLE_ID,
+      name: 'Test Bespoke',
+      handledLines: [
+        /^unrecognized rules text: "([\s\S]*)"$/.exec(
+          interpretCard(bespoke()).unmodeledReasons[0] as string,
+        )?.[1] as string,
+      ],
+      def: { staticEffects: [], triggers: [], commanderFreeCast: false },
+    });
+
+    const overridden = interpretCard(bespoke());
+    expect(overridden.modeled).toBe(false);
+    expect(overridden.unmodeledReasons.some((r) => r.includes('has no executable behavior'))).toBe(true);
+  });
+
   describe('drift guard', () => {
     it('re-opens the card when its oracle text changes by even one character', () => {
       const original = interpretCard(bespoke());

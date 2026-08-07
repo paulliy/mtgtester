@@ -5,7 +5,7 @@ import { TAP, UNATTACH_SELF, mana } from '../templates';
 import { allOf, CHOSEN_COLOR, IN_COMBAT, IS_TOKEN, manaValueAtMost, not, ofSupertype, ofType, YOURS } from '../selector';
 import { constant } from '../value';
 import { TREASURE } from '../tokens';
-import { defineCard } from './index';
+import { defineCard, unimplemented } from './index';
 
 const CREATURES: import('../selector').Selector = ofType('Creature');
 const HYBRID_LAND = (a: 'W' | 'B' | 'R', b: 'W' | 'B' | 'R'): Partial<CardDefinition> => ({
@@ -128,7 +128,10 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   defineCard('d1421070-a3cc-4af3-bf91-0f97372f4161', 'Sunforger', ['unrecognized rules text: "{R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost. Then shuffle."'], SUNFORGER);
   defineCard('0dfdf1a1-3a9a-490f-bd9d-dcba088c6785', 'Teyo, Geometric Tactician', ['unrecognized rules text: "+1: You and target opponent each draw a card."', 'unrecognized rules text: "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent."'], TEYO);
   defineCard('6623cb85-fb1e-4561-8b21-0977c25096c2', "Tibalt's Trickery", ['unrecognized rules text: "Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell. They may cast that card without paying its mana cost. Then they put the exiled cards on the bottom of their library in a random order."'], { spellAbility: { kind: 'spell', targets: [{ kind: 'spell' }], effects: [{ op: 'counter', target: 0 }], description: 'Counter target spell' } });
-  defineCard('04853f06-3fd2-445d-9b0d-d68d0f116635', 'Verrak, Warped Sengir', ['unrecognized rules text: "Whenever you activate an ability that isn\'t a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy."'], { triggers: [] });
+  // Leftover `triggers: []` here used to slip past applyOverride's "empty patch" guard (which
+  // only checked Object.keys().length, not whether the values were actually empty) and silently
+  // report this card as modeled with zero behavior. Converted to `unimplemented()`.
+  unimplemented('04853f06-3fd2-445d-9b0d-d68d0f116635', 'Verrak, Warped Sengir', ['unrecognized rules text: "Whenever you activate an ability that isn\'t a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy."']);
   defineCard('1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f', 'Weathered Wayfarer', ['unrecognized rules text: "{W}, {T}: Search your library for a land card, reveal it, put it into your hand, then shuffle. Activate only if an opponent controls more lands than you."'], WEATHERED);
   defineCard('81c70ae7-3c18-4c9b-8505-e4db9e0e6518', 'Wishclaw Talisman', ['unrecognized rules text: "~ enters with three wish counters on it."', 'unrecognized rules text: "{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artifact. Activate only during your turn."'], WISHCLAW);
   defineCard('4987c458-604a-4727-b360-170616e91e67', 'Kambal, Consul of Allocation', ['unrecognized rules text: "Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life."'], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'each', filter: not(ofType('Creature')) }, targets: [], effects: [{ op: 'kambal' }], description: 'An opponent casts a noncreature spell — they lose 2 and you gain 2' }] });

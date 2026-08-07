@@ -315,9 +315,7 @@
     "handledLines": [
       "unrecognized rules text: \"Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy.\""
     ],
-    "def": {
-      "triggers": []
-    }
+    "def": {}
   },
   {
     "oracleId": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
@@ -5619,9 +5617,7 @@
     "handledLines": [
       "Other creatures you control enter with an additional +1/+1 counter on them for each mana from a Treasure spent to cast them."
     ],
-    "def": {
-      "staticEffects": []
-    }
+    "def": {}
   },
   {
     "oracleId": "5004b84a-33b7-4f6f-b2c2-7086b9087535",
@@ -25988,9 +25984,7 @@
     "handledLines": [
       "Other creatures you control enter with an additional +1/+1 counter on them for each mana from a Treasure spent to cast them."
     ],
-    "def": {
-      "staticEffects": []
-    }
+    "def": {}
   },
   {
     "oracleId": "oracle-kambal-consul-of-allocation",
@@ -34360,9 +34354,7 @@
     "handledLines": [
       "unrecognized rules text: \"Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy.\""
     ],
-    "def": {
-      "triggers": []
-    }
+    "def": {}
   },
   {
     "oracleId": "oracle-vigean-graftmage",

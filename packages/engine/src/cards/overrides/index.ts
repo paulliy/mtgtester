@@ -171,13 +171,31 @@ function normalizeLine(line: string): string {
  * Returns the definition unchanged when no override is registered, so this is safe to call
  * unconditionally at the end of `interpretCard`.
  */
+/**
+ * Does this patch actually change anything the executor reads? `{}` obviously doesn't, but
+ * neither does `{ manaAbilities: [] }` or `{ staticEffects: [] }` — an empty array is the same
+ * "nothing here" as an absent key, and a def carrying only empty-array/false fields patches in
+ * no more behavior than `{}` would. Two real registrations shipped exactly that shape (a
+ * leftover field from a template that was never filled in) and, because `Object.keys(...).length`
+ * saw one key and called it "non-empty," slipped past the check below entirely — reporting
+ * `modeled: true` for a card with zero executable abilities.
+ */
+function isEmptyPatch(patch: Partial<CardDefinition>): boolean {
+  return Object.values(patch).every((value) => {
+    if (value === undefined || value === null) return true;
+    if (Array.isArray(value)) return value.length === 0;
+    if (typeof value === 'boolean') return value === false;
+    return false;
+  });
+}
+
 export function applyOverride(def: CardDefinition): CardDefinition {
   const override = getOverride(def.oracleId);
   if (override === undefined) return def;
 
   // A registration must add executable card behavior. An empty patch is ignored so it cannot
   // clear an unsupported-rule reason and turn missing rules into a silent no-op.
-  if (Object.keys(override.def).length === 0) {
+  if (isEmptyPatch(override.def)) {
     // A previously-needed override may become obsolete after a parser/engine primitive lands.
     // It must not turn an otherwise complete definition back into an unmodeled card; there is
     // no behavior to merge and the interpreted definition is already the executable source.

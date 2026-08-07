@@ -6,7 +6,7 @@ import type { Ability } from '../ability';
 import { constant } from '../value';
 import { allOf, anyOf, HAS_ANY_COUNTER, IS_TOKEN, OTHER, not, ofColor, ofSubtype, ofType, YOURS } from '../selector';
 import { BIRD_1_1_FLYING, ELDRAZI_SPAWN_0_1, MUTAGEN, TREASURE } from '../tokens';
-import { defineCard } from './index';
+import { defineCard, unimplemented } from './index';
 
 
 
@@ -141,9 +141,14 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   defineCard('cd0c8db0-67ee-483b-8298-455cce35fef7', 'Iron Apprentice', [
     'When this creature dies, if it had counters on it, put those counters on target creature you control.',
   ], { triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'self' }, condition: { kind: 'hasCounters', selector: { kind: 'self' }, counter: '', cmp: '>=', n: 1 } }, targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'transferCountersFromTriggerObject', target: 0 }], description: 'When Iron Apprentice dies — move its counters to target creature' }] });
-  defineCard('4fca09ac-8134-43d9-a84b-686db5e2bf69', 'Kalain, Reclusive Painter', [
+  // Leftover `staticEffects: []` here used to slip past applyOverride's "empty patch" guard
+  // (which only checked Object.keys().length, not whether the values were actually empty) and
+  // silently report this card as modeled with zero behavior. Converted to `unimplemented()` to
+  // say what it actually is: this mechanic ("enter with counters equal to Treasure mana spent")
+  // isn't modeled yet.
+  unimplemented('4fca09ac-8134-43d9-a84b-686db5e2bf69', 'Kalain, Reclusive Painter', [
     'Other creatures you control enter with an additional +1/+1 counter on them for each mana from a Treasure spent to cast them.',
-  ], { staticEffects: [] });
+  ]);
   defineCard('77b832a8-a3af-44fe-bc67-72510d292667', 'Gev, Scaled Scorch', [
     'Ward—Pay 2 life.', 'Other creatures you control enter with an additional +1/+1 counter on them for each opponent who lost life this turn.', 'Whenever you cast a Lizard spell, ~ deals 1 damage to target opponent.',
   ], { ward: manaCost('{2}'), triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'you', filter: ofSubtype('Lizard') }, targets: [{ kind: 'player' }], effects: [{ op: 'dealDamage', target: 0, amount: constant(1) }], description: 'Whenever you cast a Lizard spell — deal 1 damage' }] });
