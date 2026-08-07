@@ -3037,7 +3037,49 @@
     "unmodeledReasons": []
   },
   {
-    "activatedAbilities": [],
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{1}, {T}: Add {W}{U}.",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "colors": [],
+              "fixedSymbols": [
+                "W",
+                "U"
+              ],
+              "op": "addMana"
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 1
+            },
+            "kind": "mana"
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
     "colorIdentity": [
       "U",
       "W"
@@ -3048,23 +3090,7 @@
     "hasUnsupportedCost": false,
     "keywords": [],
     "loyalty": null,
-    "manaAbilities": [
-      {
-        "costs": [
-          {
-            "kind": "tap"
-          }
-        ],
-        "units": [
-          [
-            "W"
-          ],
-          [
-            "U"
-          ]
-        ]
-      }
-    ],
+    "manaAbilities": [],
     "manaCost": null,
     "modeled": true,
     "name": "Skycloud Expanse",

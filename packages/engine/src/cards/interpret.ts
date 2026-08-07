@@ -68,7 +68,6 @@ import {
   costReductionFor,
   lord,
   mana,
-  manaAbility,
   manaCost,
   onAttacks,
   onCast,
@@ -711,6 +710,23 @@ function parseEffectSentence(
   }
   if (s === 'counter target spell') {
     return [{ op: 'counter', target: alloc('spell', undefined, 'opponent') }];
+  }
+  if (s === 'counter target noncreature spell') {
+    return [{ op: 'counter', target: alloc('noncreatureSpell', undefined, 'opponent') }];
+  }
+  // "Add {B}{B}{B}." (a ritual spell) / "Add {U}{B}." (the effect half of a signet's activated
+  // ability, once its `{1}, {T}` cost has already routed it away from `parseManaAbilityLine` —
+  // that function refuses any cost paid in mana, so a rock with a mana activation cost falls
+  // through to the ordinary stack-based ability path and needs its production line readable as
+  // a ordinary effect too). Fixed symbols only: "Add {U} or {B}" is a player choice, a shape
+  // `parseManaProduction`'s `MANA_CHOICE_RE` already owns for true mana abilities and which this
+  // sentence-level path does not attempt to duplicate.
+  {
+    const m = s.match(MANA_ABILITY_RE);
+    if (m) {
+      const symbols = [...manaSymbols(m[1] as string)];
+      return [{ op: 'addMana', amount: constant(symbols.length), colors: [], fixedSymbols: symbols }];
+    }
   }
   // "destroy target creature" / "exile target monocolored permanent" / "destroy target artifact you don't control" / â€¦
   {
@@ -2980,9 +2996,6 @@ export function interpretCard(card: OracleCard): CardDefinition {
         description: 'Dragon ETB copy',
       }),
     );
-    reasons.length = 0;
-  } else if (card.name === 'Skycloud Expanse') {
-    manaAbilities.push(manaAbility([['W'], ['U']]));
     reasons.length = 0;
   } else if (card.name === 'Thrakkus the Butcher') {
     triggers.push(
