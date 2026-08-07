@@ -8,7 +8,7 @@
 The 200 cards are the most-included cards in Commander by deck count (user-supplied CSV),
 resolved against live Scryfall data via `/cards/collection` and converted with the production
 [`toOracleCard`](../../packages/server/src/cards/scryfall.ts) before running through
-`interpretCard`. This matters: it is a *real-world* frequency ranking, not the seven precon
+`interpretCard`. This matters: it is a _real-world_ frequency ranking, not the seven precon
 fixture decks the engine was built against, so it is the first coverage number here that
 reflects what players actually cast. The seven-deck coverage report (`bun run coverage`) needs
 the gitignored 180 MB bulk file and measures a different, precon-shaped population — the two
@@ -22,7 +22,7 @@ third-party data with no test value).
 
 The user's constraint on the previous increment was: **build extendable grammar, not card-specific
 implementations.** That is not a style preference here, it is the cheapest path — the previous
-increment closed 25 of these cards with ~7 generic rules and *deleted* four overrides in the
+increment closed 25 of these cards with ~7 generic rules and _deleted_ four overrides in the
 process. So this plan is ordered by **cards unlocked per unit of work**, and every item below is
 phrased as a capability, never as a card. Cards are listed only as evidence that the capability
 recurs.
@@ -41,14 +41,14 @@ last time and both were caught only because the guard exists.
 /^return (?:up to (\w+) )?(other )?target (nonland permanent|creature|permanent)s? to (?:their|its) owners?' hands?$/
 ```
 
-`owners?'` requires the apostrophe *after* an optional `s`, so it accepts `their owners' hands`
+`owners?'` requires the apostrophe _after_ an optional `s`, so it accepts `their owners' hands`
 but not `its owner's hand`. Verified:
 
-| text | matches |
-| --- | --- |
-| `return up to two target nonland permanents to their owners' hands` | ✅ |
-| `return target creature to its owner's hand` | ❌ |
-| `return target nonland permanent to its owner's hand` | ❌ |
+| text                                                                | matches |
+| ------------------------------------------------------------------- | ------- |
+| `return up to two target nonland permanents to their owners' hands` | ✅      |
+| `return target creature to its owner's hand`                        | ❌      |
+| `return target nonland permanent to its owner's hand`               | ❌      |
 
 The rule was written for Marang River Regent (plural, variable-count) and the singular form —
 the single most common bounce template in Magic — has never worked. It is masked today by an
@@ -65,21 +65,21 @@ an unknown number of cards outside these 200.
 Each of these composes primitives that already exist. Highest leverage, lowest risk; the golden
 snapshots should stay byte-identical except where a card genuinely changes.
 
-| # | Capability | Unlocks | Notes |
-| --- | --- | --- | --- |
-| 1.1 | Split an effect sentence on ` and ` when **both** halves parse independently | Tatyova; the second half of Deadly Dispute / Big Score / Storm-Kiln | The `, then ` split already exists and is the model to copy. Must be conservative: only split when both sides parse, or "destroy all creatures and planeswalkers" breaks. |
-| 1.2 | `with mana value N or less/greater` as a **target-clause** qualifier | Despark, Abrupt Decay | `manaValueAtMost`/`manaValueAtLeast` already exist and now work on the battlefield; `parseMassSubject` already reads this phrase. Only `parseTargetClause` is missing it. |
-| 1.3 | Controller suffix on mass subjects (`… your opponents control`) | Ruinous Ultimatum | `parseMassSubject` drops the suffix `parseSubject` already handles. |
-| 1.4 | `A creature destroyed this way can't be regenerated` as a no-op sentence | Damn | Sibling of the existing `it can't be regenerated`. |
-| 1.5 | `attackTax` in `parseRuleStaticLine` | Propaganda | The `RuleStatic` exists; Ghostly Prison has a hand-authored override for the **byte-identical** sentence. Generalizing lets that override be deleted — the exact duplication this whole effort targets. |
-| 1.6 | Cost-reduction subjects: `Instant and sorcery spells you cast`, `Each spell you cast that's <color> or <color>` | Goblin Electromancer, Goblin Anarchomancer | `costReduction` `RuleStatic` already carries a `filter`. |
-| 1.7 | `cast or copy` as a `castsSpell` trigger head | Archmage Emeritus; half of Storm-Kiln | Filter half already works as of the last increment. |
-| 1.8 | `dies` in the aggregate trigger head; `oncePerTurn` on **triggered** abilities | Morbid Opportunist | `AGGREGATE_TRIGGER_HEAD_RE` allows only `attack`/`deal combat damage`. `ActivatedAbility` has `oncePerTurn`; `Ability` does not. |
-| 1.9 | `Target player draws N cards [and loses N life]` | Sign in Blood | Needs a plain `drawTarget` op — `drawTargetAndController[N]` exists but always draws for both. |
-| 1.10 | `Untap up to N lands` (count slot, untargeted) | contributes to Snap, Frantic Search | `untapEach` exists; the bounded "up to N" form does not. |
-| 1.11 | `If you control a commander, you may cast this spell without paying its mana cost` | Flawless Maneuver | `commanderFreeCast` already on `CardDefinition`; two overrides hand-author this exact line and can shrink. |
-| 1.12 | `Put target <X> card from a graveyard onto the battlefield under your control` + `You lose life equal to that card's/permanent's mana value` | Reanimate, Feed the Swarm | `graveyardToBattlefield` and the `manaValueOfTarget` `Value` both already exist — only the phrasings are missing. |
-| 1.13 | `Untap all permanents you control during each other player's untap step` | Seedborn Muse | `untapStep` + `player: 'each'` + `untapEach` all exist. |
+| #    | Capability                                                                                                                                   | Unlocks                                                             | Notes                                                                                                                                                                                                   |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1  | Split an effect sentence on `and` when **both** halves parse independently                                                                   | Tatyova; the second half of Deadly Dispute / Big Score / Storm-Kiln | The `, then ` split already exists and is the model to copy. Must be conservative: only split when both sides parse, or "destroy all creatures and planeswalkers" breaks.                               |
+| 1.2  | `with mana value N or less/greater` as a **target-clause** qualifier                                                                         | Despark, Abrupt Decay                                               | `manaValueAtMost`/`manaValueAtLeast` already exist and now work on the battlefield; `parseMassSubject` already reads this phrase. Only `parseTargetClause` is missing it.                               |
+| 1.3  | Controller suffix on mass subjects (`… your opponents control`)                                                                              | Ruinous Ultimatum                                                   | `parseMassSubject` drops the suffix `parseSubject` already handles.                                                                                                                                     |
+| 1.4  | `A creature destroyed this way can't be regenerated` as a no-op sentence                                                                     | Damn                                                                | Sibling of the existing `it can't be regenerated`.                                                                                                                                                      |
+| 1.5  | `attackTax` in `parseRuleStaticLine`                                                                                                         | Propaganda                                                          | The `RuleStatic` exists; Ghostly Prison has a hand-authored override for the **byte-identical** sentence. Generalizing lets that override be deleted — the exact duplication this whole effort targets. |
+| 1.6  | Cost-reduction subjects: `Instant and sorcery spells you cast`, `Each spell you cast that's <color> or <color>`                              | Goblin Electromancer, Goblin Anarchomancer                          | `costReduction` `RuleStatic` already carries a `filter`.                                                                                                                                                |
+| 1.7  | `cast or copy` as a `castsSpell` trigger head                                                                                                | Archmage Emeritus; half of Storm-Kiln                               | Filter half already works as of the last increment.                                                                                                                                                     |
+| 1.8  | `dies` in the aggregate trigger head; `oncePerTurn` on **triggered** abilities                                                               | Morbid Opportunist                                                  | `AGGREGATE_TRIGGER_HEAD_RE` allows only `attack`/`deal combat damage`. `ActivatedAbility` has `oncePerTurn`; `Ability` does not.                                                                        |
+| 1.9  | `Target player draws N cards [and loses N life]`                                                                                             | Sign in Blood                                                       | Needs a plain `drawTarget` op — `drawTargetAndController[N]` exists but always draws for both.                                                                                                          |
+| 1.10 | `Untap up to N lands` (count slot, untargeted)                                                                                               | contributes to Snap, Frantic Search                                 | `untapEach` exists; the bounded "up to N" form does not.                                                                                                                                                |
+| 1.11 | `If you control a commander, you may cast this spell without paying its mana cost`                                                           | Flawless Maneuver                                                   | `commanderFreeCast` already on `CardDefinition`; two overrides hand-author this exact line and can shrink.                                                                                              |
+| 1.12 | `Put target <X> card from a graveyard onto the battlefield under your control` + `You lose life equal to that card's/permanent's mana value` | Reanimate, Feed the Swarm                                           | `graveyardToBattlefield` and the `manaValueOfTarget` `Value` both already exist — only the phrasings are missing.                                                                                       |
+| 1.13 | `Untap all permanents you control during each other player's untap step`                                                                     | Seedborn Muse                                                       | `untapStep` + `player: 'each'` + `untapEach` all exist.                                                                                                                                                 |
 
 **≈14 cards, no new engine surface.** Do these first and in one or two commits.
 
@@ -92,16 +92,16 @@ does nothing is worse than staying unmodeled).
 1. **Additional costs on casting a spell — 6 cards.**
    Deadly Dispute, Big Score, Thrill of Possibility, Village Rites, Crop Rotation, Harrow.
    `AbilityCost` already has `sacrificeOther`/`discardSelf`/`sacrificeSelf`; what is missing is
-   anywhere to *hang* costs on casting. `ActivatedAbility` carries `costs`, but a spell's only
+   anywhere to _hang_ costs on casting. `ActivatedAbility` carries `costs`, but a spell's only
    cost today is its mana cost, and `modes[].additionalCost` (Spree) is per-mode, not per-spell.
    Proposal: `CardDefinition.spellAdditionalCosts?: AbilityCost[]`, paid at announcement
-   (CR 601.2h) alongside mana, and — critically — checked for *payability* during option
+   (CR 601.2h) alongside mana, and — critically — checked for _payability_ during option
    generation, so the engine never offers Village Rites with no creature to sacrifice.
 
 2. **`libraryTop` as a `SearchDestination` — 4 cards.**
    Enlightened, Mystical, Worldly, Vampiric Tutor. `SearchDestination.zone` is
    `'battlefield' | 'hand' | 'graveyard'`; these four all end `…then shuffle and put that card on
-   top`. Note the ordering is shuffle-**then**-place, which the existing `searchLibrary` +
+top`. Note the ordering is shuffle-**then**-place, which the existing `searchLibrary` +
    `shuffle` effect pair gets right only if the destination is applied after the shuffle — worth
    a test asserting the searched card is on top, not shuffled in. (Gamble needs random discard
    too and is not closed by this alone.)
@@ -126,7 +126,7 @@ does nothing is worse than staying unmodeled).
 
 6. **Commander-conditional modal header — 2 cards.**
    Jeska's Will, Akroma's Will: `Choose one. If you control a commander as you cast this spell,
-   you may choose both instead.` `Ability.modes` already has `minChoices`/`maxChoices`; this
+you may choose both instead.` `Ability.modes` already has `minChoices`/`maxChoices`; this
    needs `maxChoices` to be state-dependent at announcement.
 
 7. **Token / counter doubling replacement — 2 cards.**
@@ -138,7 +138,7 @@ does nothing is worse than staying unmodeled).
 ## Tier 3 — genuinely bespoke, and honestly so
 
 The remaining ~57 are each one deep mechanic, and grinding them is a poor use of time relative to
-Tiers 1–2. They are worth *listing* so the backlog is visible, not worth planning in detail yet:
+Tiers 1–2. They are worth _listing_ so the backlog is visible, not worth planning in detail yet:
 
 - **Whole subsystems**: phasing (Teferi's Protection), cascade (Maelstrom Wanderer), flashback
   (Faithless Looting), amass (Orcish Bowmasters), devotion (Gray Merchant), exalted (both
@@ -159,17 +159,17 @@ Tiers 1–2. They are worth *listing* so the backlog is visible, not worth plann
 
 Some of these are individually cheap (Ponder, Brainstorm, Farewell, Mirkwood Bats, Mayhem Devil)
 and are fine to pick up opportunistically once a neighbouring Tier-1/2 item is in hand. None
-should be done *before* Tiers 1–2.
+should be done _before_ Tiers 1–2.
 
 ## Sequencing
 
-| Phase | Content | Expected |
-| --- | --- | --- |
-| 0 | The bounce-regex bug + regression test | +0–1 here, unknown elsewhere |
-| 1 | Tier 1 items 1.1–1.13, 1–2 commits | ~107 → ~121 |
-| 2 | Tier 2 items 1–3 (additional costs, library-top, MDFC) | ~121 → ~134 |
-| 3 | Tier 2 items 4–7 | ~134 → ~143 |
-| 4 | Re-measure, re-triage Tier 3 with fresh counts | — |
+| Phase | Content                                                | Expected                     |
+| ----- | ------------------------------------------------------ | ---------------------------- |
+| 0     | The bounce-regex bug + regression test                 | +0–1 here, unknown elsewhere |
+| 1     | Tier 1 items 1.1–1.13, 1–2 commits                     | ~107 → ~121                  |
+| 2     | Tier 2 items 1–3 (additional costs, library-top, MDFC) | ~121 → ~134                  |
+| 3     | Tier 2 items 4–7                                       | ~134 → ~143                  |
+| 4     | Re-measure, re-triage Tier 3 with fresh counts         | —                            |
 
 Do not batch phases into one commit. Last increment's two drift-guard regressions were both
 found by re-running the 200-card check between commits; a single large commit would have hidden
