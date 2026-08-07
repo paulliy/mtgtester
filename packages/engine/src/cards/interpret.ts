@@ -1022,6 +1022,26 @@ function parseEffectSentence(
       return [{ op: 'gainLife', amount: constant(amount) }];
     }
   }
+  // "you lose 2 life" (Infernal Grasp's second sentence; a ritual land's tap ability; etc).
+  {
+    const m = s.match(/^you lose (\w+) life$/);
+    if (m) {
+      const amount = parseAmount(m[1] as string);
+      if (amount === null) return null;
+      return [{ op: 'loseLife', amount: constant(amount) }];
+    }
+  }
+  // "you draw two cards and lose 2 life" (Night's Whisper) / "you draw a card and you lose 1
+  // life" (Phyrexian Arena's upkeep trigger repeats "you" before each verb).
+  {
+    const m = s.match(/^you draw (\w+) cards? and (?:you )?lose (\w+) life$/);
+    if (m) {
+      const cards = parseAmount(m[1] as string);
+      const life = parseAmount(m[2] as string);
+      if (cards === null || life === null) return null;
+      return [{ op: 'draw', count: constant(cards) }, { op: 'loseLife', amount: constant(life) }];
+    }
+  }
   // "each opponent loses 1 life"
   {
     const m = s.match(/^each opponent loses (\w+) life$/);
@@ -1251,6 +1271,41 @@ function parseHuntersInsightBlock(
     };
   }
   return null;
+}
+
+/**
+ * "Destroy target permanent. Its controller creates a 3/3 green Beast creature token." (Beast
+ * Within) / "â€¦ creature. It can't be regenerated. Its controller creates a 3/3 green Ape creature
+ * token." (Pongify) / "â€¦ That creature's controller creates a â€¦" (Rapid Hybridization). One
+ * combined effect rather than two independent sentences: `destroyAndCreateTokenForController`
+ * reads the target's controller before the destroy resolves, which a plain `parseEffectSentence`
+ * pass over "its controller creates â€¦" in isolation has no way to do (nothing upstream of it in
+ * the sentence list is in scope). Tried as a whole-card block, same as the modal/Ferocious/Hunter's
+ * Insight blocks above, so it can see both sentences together.
+ */
+function parseDestroyAndCreateTokenBlock(
+  text: string,
+  card: OracleCard,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const norm = stripReminderText(text).trim();
+  const m = norm.match(
+    /^destroy target (.+?)\.(?: it can't be regenerated\.)? (?:its|that creature's) controller creates (a .+ token)\.?$/i,
+  );
+  if (m === null) return null;
+  const targetClause = parseTargetClause((m[1] as string).toLowerCase());
+  if (targetClause === null) return null;
+  const spec = parseTokenFace((m[2] as string).replace(/^an?\s+/i, '').replace(/\.$/, ''), card);
+  if (spec === null) return null;
+  return {
+    targets: [
+      {
+        kind: targetClause.kind,
+        ...(targetClause.filter !== undefined ? { filter: targetClause.filter } : {}),
+        ...(targetClause.controller !== undefined ? { controller: targetClause.controller } : {}),
+      },
+    ],
+    effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec }],
+  };
 }
 
 function parseHellkiteCourserBlock(
@@ -1970,6 +2025,39 @@ function parseTargetNoun(noun: string): TargetKind | null {
   return TARGET_NOUNS[noun.trim()] ?? null;
 }
 
+/**
+ * "Artifact, creature, or planeswalker" / "creature or enchantment" â€” an arbitrary permanent-type
+ * alternation that `TARGET_NOUNS` doesn't special-case. Rather than adding a new `TargetKind`
+ * literal (and a new `permanentMatchesKind` branch) for every combination removal spells happen
+ * to print â€” Bedevil, Mortify, Putrefy, Despark's "with mana value N or greater" restriction all
+ * want a different subset â€” this composes the general `permanent` kind (matches everything) with
+ * an `anyOf(ofType(...))` filter, which the target-legality code already applies on top of any
+ * kind. Two or more comma/"or"-separated single-word type nouns, each a known permanent type;
+ * anything else (a card name, a qualifier, a single noun already in `TARGET_NOUNS`) returns null.
+ */
+const PERMANENT_TYPE_NOUNS: Record<string, string> = {
+  creature: 'Creature',
+  artifact: 'Artifact',
+  enchantment: 'Enchantment',
+  land: 'Land',
+  planeswalker: 'Planeswalker',
+};
+
+function parseCompoundPermanentTypeNoun(text: string): Selector | null {
+  const parts = text
+    .split(/,| or /)
+    .map((p) => p.replace(/^and\s+/, '').trim())
+    .filter((p) => p.length > 0);
+  if (parts.length < 2) return null;
+  const types: string[] = [];
+  for (const part of parts) {
+    const type = PERMANENT_TYPE_NOUNS[part];
+    if (type === undefined) return null;
+    types.push(type);
+  }
+  return anyOf(...types.map((t) => ofType(t)));
+}
+
 function parseTargetClause(text: string): { kind: TargetKind; filter?: Selector; controller?: 'you' | 'opponent' } | null {
   let cleaned = text.trim();
   let controller: 'you' | 'opponent' | undefined = undefined;
@@ -1988,9 +2076,20 @@ function parseTargetClause(text: string): { kind: TargetKind; filter?: Selector;
   }
 
   const kind = parseTargetNoun(cleaned);
-  if (kind === null) return null;
+  if (kind !== null) {
+    return { kind, ...(filter !== undefined ? { filter } : {}), ...(controller !== undefined ? { controller } : {}) };
+  }
 
-  return { kind, ...(filter !== undefined ? { filter } : {}), ...(controller !== undefined ? { controller } : {}) };
+  // Not one of the named single/compound target kinds â€” try reading it as an arbitrary
+  // permanent-type alternation instead (see `parseCompoundPermanentTypeNoun`). `filter` can
+  // already hold `IS_MONOCOLORED` from above; combine rather than overwrite.
+  const compound = parseCompoundPermanentTypeNoun(cleaned);
+  if (compound === null) return null;
+  return {
+    kind: 'permanent',
+    filter: filter === undefined ? compound : allOf(filter, compound),
+    ...(controller !== undefined ? { controller } : {}),
+  };
 }
 
 /**
@@ -3059,6 +3158,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
           spellTargets.push(...hunters.targets);
           spellEffects.push(...hunters.effects);
           spellBlockHandled = true;
+        } else {
+          const destroyToken = parseDestroyAndCreateTokenBlock(text, card);
+          if (destroyToken !== null) {
+            spellTargets.push(...destroyToken.targets);
+            spellEffects.push(...destroyToken.effects);
+            spellBlockHandled = true;
+          }
         }
       }
     }

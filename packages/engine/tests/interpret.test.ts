@@ -407,6 +407,136 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
+  it('models a mana-costed "add mana" line as a stack ability (signets, rituals)', () => {
+    const signet = interpretCard(
+      oracle({
+        name: 'Test Signet',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+        oracleText: '{1}, {T}: Add {U}{B}.',
+      }),
+    );
+    expect(signet.modeled).toBe(true);
+    expect(signet.manaAbilities).toHaveLength(0);
+    expect(signet.activatedAbilities?.[0]?.costs).toEqual([
+      { kind: 'mana', cost: expect.objectContaining({ generic: 1 }) },
+      { kind: 'tap' },
+    ]);
+    expect(signet.activatedAbilities?.[0]?.ability.effects).toEqual([
+      { op: 'addMana', amount: { kind: 'const', n: 2 }, colors: [], fixedSymbols: ['U', 'B'] },
+    ]);
+
+    const ritual = interpretCard(
+      oracle({
+        name: 'Test Ritual',
+        typeLine: 'Instant',
+        manaCost: '{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Add {B}{B}{B}.',
+      }),
+    );
+    expect(ritual.modeled).toBe(true);
+    expect(ritual.spellAbility?.effects).toEqual([
+      { op: 'addMana', amount: { kind: 'const', n: 3 }, colors: [], fixedSymbols: ['B', 'B', 'B'] },
+    ]);
+  });
+
+  it('counters a noncreature spell', () => {
+    const negate = interpretCard(
+      oracle({
+        name: 'Negate Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{U}',
+        power: null,
+        toughness: null,
+        oracleText: 'Counter target noncreature spell.',
+      }),
+    );
+    expect(negate.modeled).toBe(true);
+    expect(negate.spellAbility?.targets).toEqual([{ kind: 'noncreatureSpell', controller: 'opponent' }]);
+  });
+
+  it('destroys target with an arbitrary permanent-type alternation not in the fixed compound list', () => {
+    const mortify = interpretCard(
+      oracle({
+        name: 'Mortify Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{W}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy target creature or enchantment.',
+      }),
+    );
+    expect(mortify.modeled).toBe(true);
+    expect(mortify.spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }]);
+    expect(mortify.spellAbility?.targets).toEqual([
+      {
+        kind: 'permanent',
+        filter: { kind: 'anyOf', of: [{ kind: 'type', value: 'Creature' }, { kind: 'type', value: 'Enchantment' }] },
+      },
+    ]);
+  });
+
+  it('models "destroy target X, its controller creates a token" as one combined effect', () => {
+    const pongify = interpretCard(
+      oracle({
+        name: 'Pongify Test',
+        typeLine: 'Instant',
+        manaCost: '{U}',
+        power: null,
+        toughness: null,
+        oracleText: "Destroy target creature. It can't be regenerated. Its controller creates a 3/3 green Ape creature token.",
+      }),
+    );
+    expect(pongify.modeled).toBe(true);
+    expect(pongify.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(pongify.spellAbility?.effects).toEqual([
+      {
+        op: 'destroyAndCreateTokenForController',
+        target: 0,
+        count: { kind: 'const', n: 1 },
+        spec: expect.objectContaining({ name: 'Ape', power: 3, toughness: 3, colors: ['G'] }),
+      },
+    ]);
+  });
+
+  it('models "you lose N life" and the "draw N, lose N life" cantrip shape', () => {
+    const grasp = interpretCard(
+      oracle({
+        name: 'Grasp Test',
+        typeLine: 'Instant',
+        manaCost: '{1}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy target creature. You lose 2 life.',
+      }),
+    );
+    expect(grasp.modeled).toBe(true);
+    expect(grasp.spellAbility?.effects).toEqual([
+      { op: 'destroy', target: 0 },
+      { op: 'loseLife', amount: { kind: 'const', n: 2 } },
+    ]);
+
+    const whisper = interpretCard(
+      oracle({
+        name: "Whisper Test",
+        typeLine: 'Sorcery',
+        manaCost: '{1}{B}',
+        power: null,
+        toughness: null,
+        oracleText: 'You draw two cards and lose 2 life.',
+      }),
+    );
+    expect(whisper.modeled).toBe(true);
+    expect(whisper.spellAbility?.effects).toEqual([
+      { op: 'draw', count: { kind: 'const', n: 2 } },
+      { op: 'loseLife', amount: { kind: 'const', n: 2 } },
+    ]);
+  });
+
   it('models self-pump activated abilities (~ gets +1/+0 until end of turn)', () => {
     const firebreather = interpretCard(
       oracle({
