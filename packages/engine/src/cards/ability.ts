@@ -59,17 +59,35 @@ export type AbilityCost =
   | { kind: 'mana'; cost: ParsedManaCost }
   /** "Exile this card from your graveyard" (Runehorn Hellkite) — a graveyard-only cost. */
   | { kind: 'exileSelfFromGraveyard' }
+  /**
+   * "Exile a blue card from your hand" (Force of Will, Force of Negation) — `count` cards
+   * matching `filter`, chosen while paying. The card paying the cost is never a candidate: it
+   * has already left the hand for the stack by CR 601.2a.
+   */
+  | { kind: 'exileFromHand'; filter: Selector; count: number }
   /** "Unattach this Equipment" (Sunforger) — payable only while attached; unattaches as the
    * cost is paid. Distinct from `attachSelfTo`, which is an EFFECT (equipping), not a cost. */
   | { kind: 'unattachSelf' };
 
 export interface AlternativeCast {
-  kind: 'overload' | 'adventure' | 'omen';
+  /**
+   * `'alternativeCost'` is the free-cast template — "you may pay 1 life and exile a blue card
+   * from your hand rather than pay this spell's mana cost" (Force of Will, Force of Negation).
+   * It is the one kind whose price is not (only) mana, which is why `costs` exists alongside
+   * `manaCost`: an alternative cost is a cost like any other (CR 601.2f), and the engine
+   * already knows how to charge an `AbilityCost[]`.
+   */
+  kind: 'overload' | 'adventure' | 'omen' | 'alternativeCost';
+  /** The mana half. Empty (rather than absent) for a free cast paid entirely in other costs. */
   manaCost: ParsedManaCost;
+  /** Non-mana components paid instead of the printed cost. */
+  costs?: AbilityCost[];
   description: string;
   name?: string;
   typeLine?: string;
   ability?: Ability;
+  /** "If this spell was cast from your hand" (Force of Negation) — no other zone may use it. */
+  fromHandOnly?: boolean;
 }
 
 /** The `{T}` cost every mana ability has unless it says otherwise. */

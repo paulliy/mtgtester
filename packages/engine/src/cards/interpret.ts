@@ -11,7 +11,7 @@
  */
 
 import type { Color, OracleCard } from '@mtg/shared';
-import { parseManaCost } from '../mana/cost';
+import { emptyCost, parseManaCost } from '../mana/cost';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type {
   AbilityCost,
@@ -1678,6 +1678,18 @@ function parseCardFilterPhrase(phrase: string, card: OracleCard): Selector | nul
     const rest = parseCardFilterPhrase(legendary[1] as string, card);
     return rest === null ? null : allOf(ofSupertype('Legendary'), rest);
   }
+  // "a blue card" (Force of Will) / "a red creature card" — a leading color word narrows
+  // whatever follows it, and stands alone when nothing does.
+  const colored = noun.match(/^(white|blue|black|red|green) ?(.*)$/);
+  if (colored !== null) {
+    const color = COLOR_WORDS[colored[1] as string];
+    if (color !== undefined) {
+      const rest = (colored[2] as string).trim();
+      if (rest.length === 0) return ofColor(color);
+      const restSelector = parseCardFilterPhrase(rest, card);
+      return restSelector === null ? null : allOf(ofColor(color), restSelector);
+    }
+  }
   const anyPermanentType = (): Selector => anyOf(...PERMANENT_CARD_TYPES.map((t) => ofType(t)));
   if (noun === 'permanent' || noun === 'card' || noun === 'cards') return anyPermanentType();
   const cardType = CARD_TYPE_PLURALS[noun] ?? ((PERMANENT_CARD_TYPES as readonly string[]).includes(titleCase(noun)) ? titleCase(noun) : undefined);
@@ -2574,6 +2586,32 @@ function splitActivation(lower: string): { costText: string; effectText: string 
   const i = lower.indexOf(': ');
   if (i <= 0) return null;
   return { costText: lower.slice(0, i), effectText: lower.slice(i + 2) };
+}
+
+/**
+ * The price half of "you may `<costs>` rather than pay this spell's mana cost" (CR 601.2f).
+ *
+ * Split on " and " rather than the comma `parseActivationCosts` uses, because that is how the
+ * free-cast template joins its components ("pay 1 life AND exile a blue card from your hand").
+ * Each component is then read by the shared cost grammar, so anything an activation cost can
+ * charge an alternative cost can too.
+ */
+function parseAlternativeCostPhrase(phrase: string, card: OracleCard): AbilityCost[] | null {
+  const costs: AbilityCost[] = [];
+  for (const part of phrase.split(' and ')) {
+    const exile = part.trim().match(/^exile (a|an|one|two) (.+) from your hand$/);
+    if (exile !== null) {
+      const count = parseAmount(exile[1] === 'a' || exile[1] === 'an' ? 'one' : (exile[1] as string));
+      const filter = parseCardFilterPhrase(exile[2] as string, card);
+      if (count === null || filter === null) return null;
+      costs.push({ kind: 'exileFromHand', filter, count });
+      continue;
+    }
+    const parsed = parseActivationCosts(part.trim());
+    if (parsed === null) return null;
+    costs.push(...parsed);
+  }
+  return costs.length > 0 ? costs : null;
 }
 
 const ADDITIONAL_COST_RE = /^as an additional cost to cast this spell, (.+)$/;
@@ -3751,6 +3789,32 @@ export function interpretCard(card: OracleCard): CardDefinition {
           },
         });
         continue;
+      }
+    }
+    // "You may pay 1 life and exile a blue card from your hand rather than pay this spell's mana
+    // cost" (Force of Will) / "If this spell was cast from your hand, you may exile a blue card
+    // from your hand rather than pay this spell's mana cost" (Force of Negation).
+    //
+    // An alternative cost is a cost (CR 601.2f), so it reuses the same `AbilityCost[]` the
+    // engine already charges for additional costs — the payability check that gates the option
+    // and the payment itself are both shared with them, not reimplemented.
+    {
+      const m = lower.match(
+        /^(if this spell was cast from your hand, )?you may (.+?) rather than pay this spell's mana cost$/,
+      );
+      if (m !== null) {
+        const costs = parseAlternativeCostPhrase(m[2] as string, card);
+        if (costs !== null) {
+          if (!alternativeCasts) alternativeCasts = [];
+          alternativeCasts.push({
+            kind: 'alternativeCost',
+            manaCost: emptyCost(),
+            costs,
+            description: line,
+            ...(m[1] !== undefined ? { fromHandOnly: true } : {}),
+          });
+          continue;
+        }
       }
     }
     {

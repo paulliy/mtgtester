@@ -62,7 +62,7 @@ export type PriorityActionPayload =
       mode?: number;
       /** Chosen modal subset; supersedes mode for ranged modal spells. */
       modes?: number[];
-      alternativeCast?: 'overload' | 'adventure' | 'omen' | 'energy' | 'commanderFree';
+      alternativeCast?: 'overload' | 'adventure' | 'omen' | 'energy' | 'commanderFree' | 'alternativeCost';
       altIndex?: number;
     }
   /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
@@ -700,6 +700,38 @@ export function computePriorityOptions(
               },
             });
           }
+        } else if (alt.kind === 'alternativeCost') {
+          // Force of Will: castable only when its price is payable, and — for Force of
+          // Negation — only from hand. The spell's own targets are unchanged by paying an
+          // alternative cost, so they are computed exactly as the ordinary cast does.
+          if (alt.fromHandOnly === true && (fromCommand || fromLibraryTop)) continue;
+          const altCosts = alt.costs ?? [];
+          if (!canPaySpellAdditionalCosts(ctx, player, altCosts, obj.id)) continue;
+          const cost = applyRed(addManaCosts(alt.manaCost, manaPortionOf(altCosts)));
+          if (!canPay(cost, player.manaEntries, sources, allows)) continue;
+          const targets = computeCastTargets(ctx, def, player.id);
+          if (targets === null) continue;
+          const option: EngineActionOption = {
+            type: 'castSpell',
+            description: `Cast ${obj.name} for its alternative cost (${alt.description})`,
+            payload: {
+              kind: 'castSpell',
+              objectId: obj.id,
+              fromCommand,
+              alternativeCast: 'alternativeCost',
+              altIndex: index,
+            },
+            data: {
+              instantSpeed,
+              sourceName: obj.name,
+              sourceZone: fromCommand ? 'command' : 'hand',
+              manaCost: describeManaCost(cost),
+              ...paymentPreview(ctx, player, cost, sources, allows),
+              castVariant: 'alternativeCost',
+            },
+          };
+          if (targets.length > 0) option.targets = targets;
+          options.push(option);
         } else if (alt.kind === 'adventure' || alt.kind === 'omen') {
           const cost = applyRed(alt.manaCost);
           if (canPay(cost, player.manaEntries, sources, allows)) {

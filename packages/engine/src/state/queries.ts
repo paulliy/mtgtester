@@ -499,6 +499,27 @@ export function canPayNonManaCosts(
  * `castFromHandObjectId` is the spell itself: at CR 601.2h it has already left the hand for
  * the stack, so it is never a legal discard for its own "discard a card" cost.
  */
+/**
+ * Cards in hand that could pay an `exileFromHand` cost — matched on printed characteristics
+ * (`cardZoneCandidate`), since a card in hand has no layered ones.
+ *
+ * `castFromHandObjectId` is the spell being cast: it left the hand at CR 601.2a, so it can
+ * never be exiled to pay for itself.
+ */
+export function exileFromHandCandidates(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  filter: Selector,
+  castFromHandObjectId?: ObjectId,
+): EngineCardObject[] {
+  const from: SelectorSource = { cardId: '<spell-on-stack>', controllerId: player.id };
+  return player.hand.filter(
+    (card) =>
+      card.id !== castFromHandObjectId &&
+      selectMatches(cardZoneCandidate(ctx, card, player.id), filter, from),
+  );
+}
+
 export function canPaySpellAdditionalCosts(
   ctx: GameContext,
   player: EnginePlayerState,
@@ -528,6 +549,12 @@ export function canPaySpellAdditionalCosts(
       case 'discardCards': {
         const available = player.hand.filter((card) => card.id !== castFromHandObjectId).length;
         if (available < cost.count) return false;
+        break;
+      }
+      case 'exileFromHand': {
+        if (exileFromHandCandidates(ctx, player, cost.filter, castFromHandObjectId).length < cost.count) {
+          return false;
+        }
         break;
       }
       case 'payLife': {

@@ -220,6 +220,8 @@ export function* applyPriorityAction(
       let cost: ParsedManaCost;
       let ability: Ability;
       let targets: ObjectId[];
+      /** Non-mana components of an alternative cost, paid alongside the additional costs below. */
+      let alternativeCostComponents: readonly AbilityCost[] = [];
       if (payload.alternativeCast === 'energy') {
         const energyAlternativeCost = s.battlefield
           .filter((perm) => perm.controllerId === player.id)
@@ -254,6 +256,19 @@ export function* applyPriorityAction(
           effects: [{ op: 'overloadBounceAllNonlandOpponents' }],
         };
         targets = [];
+      } else if (payload.alternativeCast === 'alternativeCost') {
+        const alt = def.alternativeCasts?.[payload.altIndex ?? 0];
+        if (alt === undefined || alt.kind !== 'alternativeCost') throw new Error('missing alternative cost');
+        if (alt.fromHandOnly === true && (payload.fromCommand || payload.fromLibraryTop === true)) {
+          throw new Error('alternative cost is hand-only');
+        }
+        cost = applyRed(addManaCosts(alt.manaCost, manaPortionOf(alt.costs ?? [])));
+        // The non-mana half is charged below, after CR 601.2a has moved the card to the stack —
+        // the same point a spell's additional cost is paid, and for the same reason: "exile a
+        // card from your hand" must not be able to exile the spell paying with it.
+        alternativeCostComponents = alt.costs ?? [];
+        ability = resolveCastAbility(def, undefined, obj.name) ?? { kind: 'spell', targets: [], effects: [] };
+        targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
       } else if (payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen') {
         const alt =
           def.alternativeCasts?.[payload.altIndex ?? 0] ??
@@ -289,8 +304,9 @@ export function* applyPriorityAction(
       // moved the card to the stack. Paying it here rather than above is what keeps "discard a
       // card" from offering the spell itself, and lets a Treasure tapped for mana still be the
       // artifact sacrificed (the same ordering `payActivationCosts` uses for activations).
-      if (def.spellAdditionalCosts !== undefined && def.spellAdditionalCosts.length > 0) {
-        yield* paySpellAdditionalCosts(ctx, player, def.spellAdditionalCosts, obj.name);
+      const nonManaCastCosts = [...alternativeCostComponents, ...(def.spellAdditionalCosts ?? [])];
+      if (nonManaCastCosts.length > 0) {
+        yield* paySpellAdditionalCosts(ctx, player, nonManaCastCosts, obj.name);
       }
       const spellCard: EngineCardObject = {
         ...obj,

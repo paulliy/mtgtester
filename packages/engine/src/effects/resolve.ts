@@ -54,6 +54,7 @@ import {
   damageAmountAfterReplacements,
   damageMultiplierFor,
   effectivePT,
+  exileFromHandCandidates,
   findPermanent,
   getDefByOracleId,
   graveyardTargets,
@@ -3887,6 +3888,23 @@ export function* paySpellAdditionalCosts(
         if (player.hand.length < cost.count) throw new Error('engine bug: additional discard cost became unpayable');
         yield* discardCards(ctx, player, cost.count);
         break;
+      case 'exileFromHand': {
+        for (let i = 0; i < cost.count; i++) {
+          const candidates = exileFromHandCandidates(ctx, player, cost.filter);
+          if (candidates.length === 0) throw new Error('engine bug: exile-from-hand cost became unpayable');
+          const chosen = yield* chooseCard(ctx, {
+            player: player.id,
+            prompt: `${spellName}: exile a card from your hand (${i + 1} of ${cost.count}).`,
+            cards: candidates,
+            type: 'exile',
+            verb: 'Exile',
+          });
+          if (chosen === null) throw new Error('engine bug: exile-from-hand choice was not in hand');
+          emit(ctx, 'exile', { target: chosen.name, cardId: chosen.cardId }, player.id);
+          yield* moveObject(ctx, chosen as EngineCardObject, { zone: 'exile' });
+        }
+        break;
+      }
       case 'payLife':
         loseLife(ctx, player, cost.amount);
         break;
