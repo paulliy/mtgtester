@@ -1573,6 +1573,22 @@ function parseMassSubject(phrase: string, card: OracleCard): Selector | null {
  * shuffle got lost would leave the searcher's library ordered by what they looked at.
  */
 function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
+  // The tutor template inverts the usual order: "…, then shuffle and put that card on top"
+  // (Vampiric, Mystical, Enlightened, Worldly Tutor). Matched FIRST because its tail would
+  // otherwise be read as a plain "then shuffle" with the placement clause left over.
+  //
+  // No `shuffle` op is emitted: `searchLibrary` performs it before placing, which is both the
+  // printed order and the only order that leaves the found card on top (see `SearchDestination`).
+  const toTop = s.match(
+    /^search your library for (.+?), (?:reveal (?:it|that card), )?then shuffle and put that card on top$/,
+  );
+  if (toTop !== null) {
+    const filter = parseSearchFilter(toTop[1] as string, card);
+    return filter === null
+      ? null
+      : [{ op: 'searchLibrary', filter, destinations: [{ zone: 'libraryTop' }] }];
+  }
+
   const m = s.match(/^search your library for (.+?), (?:reveal .+?, )?(put .+?), then shuffle$/);
   if (m === null) return null;
 
@@ -1582,6 +1598,18 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
   if (destinations === null) return null;
   return [{ op: 'searchLibrary', filter, destinations }, { op: 'shuffle' }];
 }
+
+/** Singular card types a library search may name â€” every CR 300.1 type, not just permanents. */
+const SEARCHABLE_CARD_TYPES: Record<string, string> = {
+  artifact: 'Artifact',
+  battle: 'Battle',
+  creature: 'Creature',
+  enchantment: 'Enchantment',
+  instant: 'Instant',
+  land: 'Land',
+  planeswalker: 'Planeswalker',
+  sorcery: 'Sorcery',
+};
 
 /** "a Plains, Island, Swamp, or Mountain card" / "up to two basic land cards" â†’ a `Selector`. */
 function parseSearchFilter(phrase: string, card: OracleCard): Selector | null {
@@ -1604,6 +1632,14 @@ function parseSearchFilter(phrase: string, card: OracleCard): Selector | null {
     const subtype = LAND_SUBTYPES.find((t) => t.toLowerCase() === alternative);
     if (subtype !== undefined) {
       selectors.push(ofSubtype(subtype));
+      continue;
+    }
+    // A library search matches CARDS by their printed types (`cardZoneCandidate`), so the
+    // non-permanent types are legitimate here in a way they never are for a trigger subject —
+    // "an instant or sorcery card" (Mystical Tutor, Merchant Scroll) has no permanent reading.
+    const cardType = SEARCHABLE_CARD_TYPES[alternative];
+    if (cardType !== undefined) {
+      selectors.push(ofType(cardType));
       continue;
     }
     const parsed = parseTriggerSubject(alternative, card);

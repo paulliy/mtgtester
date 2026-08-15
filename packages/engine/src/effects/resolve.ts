@@ -32,6 +32,7 @@ import type { ManaEntry, PaymentPurpose } from '../cards/ability';
 import { debug, emit } from '../log/log';
 import { cardOption, plainOption, playerOption, presentedSource, valueOption } from '../present';
 import { chooseCard } from './choose';
+import type { MoveDestination } from '../state/objects';
 import {
   applyCopy,
   createToken,
@@ -3249,17 +3250,10 @@ function* lookAtTopN(
   );
 
   if (taken !== undefined) {
-    const destination = effect.mayPut.destination;
     yield* moveObject(
       ctx,
       taken,
-      destination.zone === 'battlefield'
-        ? {
-            zone: 'battlefield',
-            controllerId: player.id,
-            ...(destination.tapped === true ? { entersTapped: true } : {}),
-          }
-        : { zone: destination.zone },
+      moveDestinationFor(effect.mayPut.destination, player.id),
     );
   }
 }
@@ -3325,6 +3319,25 @@ export function shuffleLibrary(ctx: GameContext, player: EnginePlayerState): voi
  * 701.19c never requires a player to find a card, and a search with fewer matches than
  * destinations simply stops early.
  */
+/** Where a `SearchDestination` puts the card it found, as a `moveObject` destination. */
+function moveDestinationFor(
+  destination: SearchDestination,
+  controllerId: PlayerId,
+): MoveDestination {
+  switch (destination.zone) {
+    case 'battlefield':
+      return {
+        zone: 'battlefield',
+        controllerId,
+        ...(destination.tapped === true ? { entersTapped: true } : {}),
+      };
+    case 'libraryTop':
+      return { zone: 'library', libraryPosition: 'top' };
+    default:
+      return { zone: destination.zone };
+  }
+}
+
 function* searchLibrary(
   ctx: GameContext,
   source: EffectSource,
@@ -3337,12 +3350,26 @@ function* searchLibrary(
     const matches = player.library.filter((card) =>
       selectMatches(cardZoneCandidate(ctx, card, player.id), filter, selectorSource),
     );
-    if (matches.length === 0) break;
+    if (matches.length === 0) {
+      // CR 701.19: you shuffle whether or not you found anything, and for this destination the
+      // shuffle belongs to the search rather than to a following op — see `SearchDestination`.
+      if (destination.zone === 'libraryTop') shuffleLibrary(ctx, player);
+      break;
+    }
 
     const where =
       destination.zone === 'battlefield'
         ? `onto the battlefield${destination.tapped === true ? ' tapped' : ''}`
-        : `into your ${destination.zone}`;
+        : destination.zone === 'libraryTop'
+          ? 'on top of your library'
+          : `into your ${destination.zone}`;
+
+    const placeFound = function* (card: EngineCardObject): GameGen<void> {
+      // The found card is still in the library at this point, so shuffling first and placing
+      // second is the printed order exactly — and the only order that leaves it on top.
+      if (destination.zone === 'libraryTop') shuffleLibrary(ctx, player);
+      yield* moveObject(ctx, card, moveDestinationFor(destination, player.id));
+    };
 
     // Auto-select when all matching cards share the same name (e.g., mono-color basic
     // land search): the choice is meaningless and would waste an AI call.
@@ -3350,17 +3377,7 @@ function* searchLibrary(
     if (distinctNames.size === 1) {
       const card = matches[0] as EngineCardObject;
       emit(ctx, 'searchFound', { player: player.id, name: card.name, to: destination.zone });
-      yield* moveObject(
-        ctx,
-        card,
-        destination.zone === 'battlefield'
-          ? {
-              zone: 'battlefield',
-              controllerId: player.id,
-              ...(destination.tapped === true ? { entersTapped: true } : {}),
-            }
-          : { zone: destination.zone },
-      );
+      yield* placeFound(card);
       continue;
     }
 
@@ -3381,21 +3398,15 @@ function* searchLibrary(
         plainOption({ type: 'findNothing', description: 'Find nothing', verb: 'Find nothing', role: 'decline' }),
       ],
     };
-    if (outcome.index >= matches.length) break;
+    if (outcome.index >= matches.length) {
+      // Declined to find (CR 701.19c) — the shuffle still happens.
+      if (destination.zone === 'libraryTop') shuffleLibrary(ctx, player);
+      break;
+    }
 
     const card = matches[outcome.index] as EngineCardObject;
     emit(ctx, 'searchFound', { player: player.id, name: card.name, to: destination.zone });
-    yield* moveObject(
-      ctx,
-      card,
-      destination.zone === 'battlefield'
-        ? {
-            zone: 'battlefield',
-            controllerId: player.id,
-            ...(destination.tapped === true ? { entersTapped: true } : {}),
-          }
-        : { zone: destination.zone },
-    );
+    yield* placeFound(card);
   }
   // The searcher saw their library; shuffling is part of every printed search we model, and the
   // effect list carries an explicit `shuffle` op for it, so nothing is done here.

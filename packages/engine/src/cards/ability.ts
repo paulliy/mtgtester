@@ -813,7 +813,15 @@ export interface TokenSpec {
  * found card goes where ("put one onto the battlefield tapped and the other into your hand").
  */
 export interface SearchDestination {
-  zone: 'battlefield' | 'hand' | 'graveyard';
+  /**
+   * `'libraryTop'` is "…then shuffle and put that card on top" (Vampiric/Mystical/Enlightened/
+   * Worldly Tutor). It is deliberately its own zone rather than `'library'` plus a position,
+   * because the printed order is shuffle-**then**-place: the shuffle is performed by
+   * `searchLibrary` itself, and this template's effect list carries NO separate `shuffle` op.
+   * One that ran afterwards would shuffle the found card back in — the whole point of the
+   * tutor lost to an op ordering.
+   */
+  zone: 'battlefield' | 'hand' | 'graveyard' | 'libraryTop';
   /** Battlefield only: "put it onto the battlefield **tapped**". */
   tapped?: boolean;
 }
