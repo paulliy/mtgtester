@@ -50,6 +50,7 @@ import {
   allowanceFor,
   cardZoneCandidate,
   colorsOf,
+  counterCountAfterReplacements,
   damageAmountAfterReplacements,
   damageMultiplierFor,
   effectivePT,
@@ -468,14 +469,18 @@ function addCounters(
   count: number,
 ): void {
   if (count <= 0) return;
+  // CR 616 replacement (Doubling Season, Hardened Scales) — applied to the count before
+  // anything observes it, so counter-threshold triggers below see the replaced total.
+  const replaced = counterCountAfterReplacements(ctx, perm, counter, count);
+  if (replaced <= 0) return;
   const before = perm.counters[counter] ?? 0;
-  perm.counters[counter] = (perm.counters[counter] ?? 0) + count;
+  perm.counters[counter] = (perm.counters[counter] ?? 0) + replaced;
   emit(ctx, 'counters', {
     source: source.name,
     target: perm.name,
     targetCardId: perm.cardId,
     counter,
-    added: count,
+    added: replaced,
     total: perm.counters[counter],
   });
   const def = ctx.defs.get(perm.oracleId);

@@ -3094,6 +3094,46 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       { kind: 'damageDoubled', sourceFilter: allOf(ofType('Creature'), YOURS, ENTERED_THIS_TURN) },
     ];
   }
+  // "If you would create one or more tokens, create twice that many of those tokens instead"
+  // (Doubling Season, Parallel Lives, Anointed Procession).
+  {
+    const m = lower.match(
+      /^if you would create one or more tokens, create (twice|three times) that many of those tokens instead$/,
+    );
+    if (m !== null) {
+      return [{ kind: 'tokensMultiplied', factor: m[1] === 'twice' ? 2 : 3 }];
+    }
+  }
+  // "If you would put one or more counters on a permanent you control, put twice that many of
+  // those counters on it instead" (Doubling Season) and its counter-specific, additive sibling
+  // "If one or more +1/+1 counters would be put on a creature you control, that many plus one
+  // +1/+1 counters are put on it instead" (Hardened Scales).
+  {
+    const m = lower.match(
+      /^if you would put one or more counters on (a permanent|a creature) you control, put (twice|three times) that many of those counters on it instead$/,
+    );
+    if (m !== null) {
+      const subject = m[1] === 'a creature' ? allOf(ofType('Creature'), YOURS) : YOURS;
+      return [{ kind: 'countersMultiplied', factor: m[2] === 'twice' ? 2 : 3, subject }];
+    }
+  }
+  {
+    const m = lower.match(
+      /^if one or more (\+1\/\+1|-1\/-1) counters would be put on (a permanent|a creature|an artifact) you control, that many plus (one|two) \1 counters are put on it instead$/,
+    );
+    if (m !== null) {
+      const noun = m[2] as string;
+      const subject =
+        noun === 'a creature'
+          ? allOf(ofType('Creature'), YOURS)
+          : noun === 'an artifact'
+            ? allOf(ofType('Artifact'), YOURS)
+            : YOURS;
+      const plus = parseAmount(m[3] as string);
+      if (plus === null) return null;
+      return [{ kind: 'countersMultiplied', plus, counter: m[1] as string, subject }];
+    }
+  }
 
   {
     const m = lower.match(EMINENCE_COST_REDUCTION_RE);

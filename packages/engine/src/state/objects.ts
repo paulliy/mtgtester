@@ -20,7 +20,7 @@ import type { GameGen } from '../decisions';
 import { chooseCard } from '../effects/choose';
 import { computeCharacteristics, matchesSelector, selectPermanents } from '../effects/continuous';
 import { debug, emit } from '../log/log';
-import { getDefByOracleId, triggersOf } from './queries';
+import { getDefByOracleId, tokenMultiplierFor, triggersOf } from './queries';
 import type {
   CardId,
   EngineCardObject,
@@ -484,6 +484,25 @@ export function createToken(
   spec: TokenSpec,
   controllerId: PlayerId,
   applyTokenReplacements = true,
+): EnginePermanent {
+  // Doubling Season (CR 616) multiplies the creation event, so the extra tokens are made here
+  // rather than by the caller's loop: a caller asking for one gets two, and each enters
+  // separately with its own ETB trigger. Known under-application: a token created by the
+  // artifact-token rider below is not itself doubled.
+  const copies = applyTokenReplacements ? tokenMultiplierFor(ctx, controllerId) : 1;
+  let last: EnginePermanent | undefined;
+  for (let i = 0; i < copies; i++) {
+    last = createOneToken(ctx, spec, controllerId, applyTokenReplacements);
+  }
+  // `copies` is at least 1: `tokenMultiplierFor` starts at 1 and only ever multiplies.
+  return last as EnginePermanent;
+}
+
+function createOneToken(
+  ctx: GameContext,
+  spec: TokenSpec,
+  controllerId: PlayerId,
+  applyTokenReplacements: boolean,
 ): EnginePermanent {
   const oracleId = registerTokenDef(ctx, spec);
   const stub: EngineObject = {

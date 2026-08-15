@@ -60,6 +60,31 @@ export type RuleStatic =
   | { kind: 'damageDoubledToOpponents' }
   /** "Sources would deal damage to you or your permanents" (Gisela). */
   | { kind: 'damageHalvedToYou' }
+  /**
+   * "If you would create one or more tokens, create twice that many of those tokens instead"
+   * (Doubling Season, Parallel Lives) — a CR 616 replacement over token creation, the sibling of
+   * `damageDoubled` over damage. Applies only to tokens created by the static's own controller.
+   */
+  | { kind: 'tokensMultiplied'; factor: number }
+  /**
+   * "If you would put one or more counters on a permanent you control, put twice that many of
+   * those counters on it instead" (Doubling Season) / "If one or more +1/+1 counters would be
+   * put on a creature you control, that many plus one +1/+1 counters are put on it instead"
+   * (Hardened Scales).
+   *
+   * One shape for both because they are the same replacement with different arithmetic, applied
+   * in the CR order: multiply, then add (Doubling Season alongside Hardened Scales puts
+   * 2n + 1 counters, not 2(n + 1)).
+   */
+  | {
+      kind: 'countersMultiplied';
+      factor?: number;
+      plus?: number;
+      /** A specific counter kind ("+1/+1"); absent ⇒ every counter, as Doubling Season reads. */
+      counter?: string;
+      /** Which of the controller's permanents this covers — "a creature you control". */
+      subject: Selector;
+    }
   /** "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison). */
   | { kind: 'attackTax'; amount: number }
   | { kind: 'convoke' }

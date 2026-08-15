@@ -842,6 +842,54 @@ export function damageMultiplierFor(ctx: GameContext, sourceCardId: string): num
   return multiplier;
 }
 
+/**
+ * How many tokens `controllerId` actually creates when an effect says "create one".
+ *
+ * Multiplicative across every matching static, the same way `damageMultiplierFor` stacks: two
+ * Doubling Seasons quadruple (CR 616.1 — the controller applies one, then the other, to the
+ * already-replaced event).
+ */
+export function tokenMultiplierFor(ctx: GameContext, controllerId: PlayerId): number {
+  let multiplier = 1;
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'tokensMultiplied') continue;
+    // "If YOU would create" — never an opponent's tokens.
+    if (entry.controllerId !== controllerId) continue;
+    multiplier *= entry.static.factor;
+  }
+  return multiplier;
+}
+
+/**
+ * How many counters actually go on `perm` when an effect says to put `count` `counter`s there.
+ *
+ * Multiply first, then add: Doubling Season plus Hardened Scales puts 2n + 1 (+1/+1) counters,
+ * which is the order the affected object's controller would choose under CR 616.1 anyway, and
+ * the only order that makes both cards read as printed.
+ */
+export function counterCountAfterReplacements(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  counter: string,
+  count: number,
+): number {
+  let factor = 1;
+  let plus = 0;
+  for (const entry of gatherRuleStatics(ctx)) {
+    const rs = entry.static;
+    if (rs.kind !== 'countersMultiplied') continue;
+    // "on a permanent YOU control" — the replacement is its controller's, and only covers
+    // permanents they control.
+    if (entry.controllerId !== perm.controllerId) continue;
+    if (rs.counter !== undefined && rs.counter !== counter) continue;
+    const from: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
+    if (!matchesSelector(ctx, perm, rs.subject, from)) continue;
+    factor *= rs.factor ?? 1;
+    plus += rs.plus ?? 0;
+  }
+  return count * factor + plus;
+}
+
 /** Apply every active target-aware damage replacement to one damage event. */
 export function damageAmountAfterReplacements(
   ctx: GameContext,
