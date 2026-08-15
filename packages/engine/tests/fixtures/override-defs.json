@@ -4998,7 +4998,7 @@
           "kind": "triggered",
           "targets": [],
           "trigger": {
-            "caster": "each",
+            "caster": "opponent",
             "filter": {
               "kind": "not",
               "of": {
@@ -25907,7 +25907,7 @@
           "kind": "triggered",
           "targets": [],
           "trigger": {
-            "caster": "each",
+            "caster": "opponent",
             "filter": {
               "kind": "not",
               "of": {

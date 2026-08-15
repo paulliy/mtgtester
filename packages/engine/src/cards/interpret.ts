@@ -2159,7 +2159,24 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     condition = parsed;
     body = iff[2] as string;
   }
-  const optional = body.startsWith('you may ');
+  // "…unless that player pays {1}" (Rhystic Study, Mystic Remora). Taken off the body BEFORE
+  // the "you may" strip, and deliberately not folded into the ability-level `optional` flag:
+  // that flag asks the CONTROLLER first, and this clause asks the caster first. Rhystic Study
+  // where you announce the draw before the opponent decides is a different card.
+  let unlessPays: { cost: ParsedManaCost; optionalThen: boolean } | null = null;
+  {
+    const m = body.match(/^(.+?) unless that player pays ((?:\{[^}]+\})+)\.?$/);
+    if (m !== null) {
+      const parsed = parseManaCost((m[2] as string).toUpperCase() as never);
+      if (parsed.cost === null) return null;
+      let inner = m[1] as string;
+      const innerOptional = inner.startsWith('you may ');
+      if (innerOptional) inner = inner.slice('you may '.length);
+      unlessPays = { cost: parsed.cost, optionalThen: innerOptional };
+      body = inner;
+    }
+  }
+  const optional = unlessPays === null && body.startsWith('you may ');
   if (optional) body = body.slice('you may '.length);
 
   // A trigger may declare targets: its controller chooses them as the ability goes on the
@@ -2212,6 +2229,18 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     }
   }
   if (effects.length === 0) return null;
+
+  if (unlessPays !== null) {
+    effects = [
+      {
+        op: 'unlessPlayerPays',
+        payer: 'eventPlayer',
+        cost: unlessPays.cost,
+        then: effects,
+        ...(unlessPays.optionalThen ? { optionalThen: true as const } : {}),
+      },
+    ];
+  }
 
   return heads.map((head) => ({
     kind: 'triggered' as const,

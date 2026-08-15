@@ -1434,11 +1434,57 @@ export function* executeAbility(
         gainLife(ctx, controller, 2);
         break;
       }
-      case 'kambal': {
-        const caster = scope.eventPlayerId === undefined ? undefined : playerById(ctx, scope.eventPlayerId);
-        if (caster === undefined) break;
-        loseLife(ctx, caster, 2);
-        gainLife(ctx, controller, 2);
+      case 'unlessPlayerPays': {
+        // The payer is the player whose event fired this — the caster, for a `castsSpell`
+        // trigger. Absent means the trigger recorded no event player, which for this op is a
+        // modeling bug rather than a game state; failing closed (no effect) would silently
+        // turn Rhystic Study off, so it is loud.
+        if (scope.eventPlayerId === undefined) {
+          throw new Error(`engine bug: ${source.name} asks a player to pay but recorded no event player`);
+        }
+        const payer = playerById(ctx, scope.eventPlayerId);
+        // Not casting and not activating (CR 106.6), so restricted mana may not pay — which the
+        // default allowance already expresses by refusing every restriction.
+        if (canPay(effect.cost, payer.manaEntries, manaSourcesFor(ctx, payer.id))) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: payer.id,
+            prompt: `${source.name}: pay ${describeManaCost(effect.cost)}?`,
+            options: [
+              { type: 'payCost', description: `Pay ${describeManaCost(effect.cost)}` },
+              { type: 'decline', description: `Don't pay — ${source.name} resolves` },
+            ],
+          };
+          if (outcome.index === 0) {
+            yield* payManaCost(ctx, payer, effect.cost);
+            emit(ctx, 'rhysticPaid', { source: source.name }, payer.id);
+            break;
+          }
+        }
+        if (effect.optionalThen === true) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `${source.name}: ${payer.id} declined to pay. Use the ability?`,
+            options: [
+              { type: 'accept', description: `Resolve ${source.name}` },
+              { type: 'decline', description: 'Decline' },
+            ],
+          };
+          if (outcome.index !== 0) break;
+        }
+        if (effect.then.length > 0) {
+          yield* executeAbility(
+            ctx,
+            source,
+            { ...ability, effects: effect.then },
+            targets,
+            triggerObjectCardId,
+            extraScope,
+            countTargets,
+            divisionAmounts,
+          );
+        }
         break;
       }
       case 'arcbond': {

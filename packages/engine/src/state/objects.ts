@@ -873,7 +873,14 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
         sourceOracleId: source.oracleId,
         sourceName: source.name,
         ability,
-        scope: { spellManaValue: manaValue, ...(spell.triggerScope?.manaSpent !== undefined ? { manaSpent: spell.triggerScope.manaSpent } : {}) },
+        // The caster is the event player: "…unless THAT PLAYER pays {1}" (Rhystic Study) and
+        // "THAT PLAYER loses 2 life" (Kambal) both read it, and neither has any other way to
+        // name a player it did not choose as a target.
+        scope: {
+          spellManaValue: manaValue,
+          eventPlayerId: spell.controllerId,
+          ...(spell.triggerScope?.manaSpent !== undefined ? { manaSpent: spell.triggerScope.manaSpent } : {}),
+        },
       });
       debug(ctx, 'stack', `cast trigger queued: ${source.name} — ${spell.description}`);
     }

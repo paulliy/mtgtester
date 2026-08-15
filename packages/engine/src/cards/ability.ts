@@ -444,7 +444,23 @@ export type Effect =
   | { op: 'schemingSymmetry' }
   | { op: 'sacrificePermanentOnDamage'; target: EffectRef }
   | { op: 'kambal' }
-  | { op: 'kambal' }
+  /**
+   * "…unless that player pays {1}" (Rhystic Study, Mystic Remora) — the payer is the player
+   * whose event fired the trigger (`ValueScope.eventPlayerId`), not the ability's controller.
+   *
+   * Distinct from `counterUnlessPays`/`counterUnlessControllerPays`, which share the decision
+   * shape but can only ever counter: here the unpaid branch is an arbitrary effect list, so
+   * the same clause covers drawing, damage, or anything else a future card hangs on it.
+   */
+  | {
+      op: 'unlessPlayerPays';
+      payer: 'eventPlayer';
+      cost: ParsedManaCost;
+      /** Runs only when the payer declines, or cannot afford the cost. */
+      then: Effect[];
+      /** "you MAY draw a card unless …" — the controller's own choice, asked after the payer's. */
+      optionalThen?: true;
+    }
   | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
   | { op: 'exile'; target: EffectRef } // target creature
   | { op: 'exileCard'; target: EffectRef }
