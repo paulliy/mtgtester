@@ -1,7 +1,49 @@
 # Plan — closing the EDH-staple coverage gap
 
-> Status: proposed. Baseline measured 2026-08-07 at commit `83120f5`:
-> **107 / 200 modeled**, 93 remaining.
+> Status: Tiers 1 and 2 are **done**; Tier 3 is untouched and needs re-triage.
+> Baseline measured 2026-08-07 at commit `83120f5`: **107 / 200 modeled**, 93 remaining.
+> That number has NOT been re-measured since — see "Why the count is stale" below.
+
+## Where this stands (2026-08-15)
+
+Tier 0, Tier 1 and Tier 2 have all landed. The remaining Tier 1 items closed in the last
+increment were 1.1 (splitting a sentence on `and`); 1.8, 1.10 and 1.13 are still open and are
+the cheapest work left in this document. Every Tier 2 item is implemented:
+
+| Item | Capability                                            | Cards it actually closes                                                               |
+| ---- | ----------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 2.1  | `spellAdditionalCosts` (CR 601.2b/h)                  | Village Rites, Deadly Dispute, Thrill of Possibility, Big Score, Crop Rotation, Harrow |
+| 2.2  | `libraryTop` search destination                       | Vampiric, Mystical, Enlightened, Worldly Tutor                                         |
+| 2.3  | MDFC layout                                           | landed earlier (`e704b45`)                                                             |
+| 2.4  | `unlessPlayerPays` + `eventPlayerId` on cast triggers | Rhystic Study; also repaired Kambal, which was a silent no-op                          |
+| 2.5  | `AlternativeCast` with non-mana costs                 | Force of Will, Force of Negation                                                       |
+| 2.6  | Commander-conditional modal header                    | **none yet** — a gate; see below                                                       |
+| 2.7  | Token/counter doubling (CR 616)                       | Doubling Season, Parallel Lives, Hardened Scales                                       |
+
+Item 2.6 is deliberately banked as a gate rather than a closure. Jeska's Will and Akroma's Will
+each still need primitives of their own — "protection from all colors until end of turn", "Add
+{R} for each card in target opponent's hand", and a play-from-exile window — none of which the
+other card shares. The header was the one piece common to both.
+
+### Why the count is stale
+
+The 200-card measurement needs live Scryfall data, and the environment the last increment ran in
+had `api.scryfall.com`, `data.scryfall.io`, `mtgjson.com` and `json.edhrec.com` blocked by egress
+policy, with `data/scryfall-oracle-cards.json` (gitignored, 180 MB) absent. So every item above
+was verified against the offline instruments only — `bun run test`, both def snapshots, and
+per-capability tests built from the printed templates — and **no new modeled/200 number was
+produced**. Re-running the checker is the first thing to do when the bulk file is available
+again; do not assume the count moved by the card lists in the table, since several of those
+cards may have been blocked on a second clause as well.
+
+### On the top-50-commanders ask
+
+This document is also the answer to "add engine coverage for one deck from each of the top 50
+commanders". Those 49 decks share one staple core — the same 200 cards measured here — so
+closing staples is the work that pays off across all of them at once. Per-deck fixtures
+(`packages/server/fixtures/coverage-decks/*.txt` plus a committed `*-oracle.json` projection and
+a coverage test, as The Ur-Dragon has) cannot be added without the decklists and the bulk file,
+and are the natural next step once those are reachable.
 
 ## Where the measurement comes from
 
@@ -163,13 +205,13 @@ should be done _before_ Tiers 1–2.
 
 ## Sequencing
 
-| Phase | Content                                                | Expected                     |
-| ----- | ------------------------------------------------------ | ---------------------------- |
-| 0     | The bounce-regex bug + regression test                 | +0–1 here, unknown elsewhere |
-| 1     | Tier 1 items 1.1–1.13, 1–2 commits                     | ~107 → ~121                  |
-| 2     | Tier 2 items 1–3 (additional costs, library-top, MDFC) | ~121 → ~134                  |
-| 3     | Tier 2 items 4–7                                       | ~134 → ~143                  |
-| 4     | Re-measure, re-triage Tier 3 with fresh counts         | —                            |
+| Phase | Content                                                | Expected                     | Status                         |
+| ----- | ------------------------------------------------------ | ---------------------------- | ------------------------------ |
+| 0     | The bounce-regex bug + regression test                 | +0–1 here, unknown elsewhere | done (`f000cb3`)               |
+| 1     | Tier 1 items 1.1–1.13, 1–2 commits                     | ~107 → ~121                  | done except 1.8, 1.10, 1.13    |
+| 2     | Tier 2 items 1–3 (additional costs, library-top, MDFC) | ~121 → ~134                  | done                           |
+| 3     | Tier 2 items 4–7                                       | ~134 → ~143                  | done                           |
+| 4     | Re-measure, re-triage Tier 3 with fresh counts         | —                            | **blocked on Scryfall access** |
 
 Do not batch phases into one commit. Last increment's two drift-guard regressions were both
 found by re-running the 200-card check between commits; a single large commit would have hidden

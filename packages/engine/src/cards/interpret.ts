@@ -1167,6 +1167,37 @@ function parseEffectSentence(
       if (first !== null && second !== null) return [...first, ...second];
     }
   }
+  // "<effect> and <effect>" — the same sequencing printed without the "then" ("draw a card and
+  // you gain 1 life", Tatyova; "draw two cards and create a Treasure token", Deadly Dispute).
+  //
+  // Tried dead last and only when BOTH halves parse on their own, which is what keeps it from
+  // eating sentences where "and" joins a noun phrase rather than two effects: "destroy all
+  // creatures and planeswalkers" splits to a right half of "planeswalkers", which parses as
+  // nothing, so the split is rejected and the sentence stays whole.
+  //
+  // Each candidate split point is tried against THROWAWAY slot allocators first, and only the
+  // winning one is re-parsed through the real `alloc`. Allocating during the search would leave
+  // slots behind from split points that turned out not to parse, silently shifting every
+  // `Effect.target` index after them.
+  {
+    for (let i = s.indexOf(' and '); i > 0; i = s.indexOf(' and ', i + 1)) {
+      const left = s.slice(0, i);
+      const right = s.slice(i + ' and '.length);
+      let scratch = 0;
+      const dryOpts = {
+        ...opts,
+        ...(opts.allocCount !== undefined ? { allocCount: (): number => scratch++ } : {}),
+      };
+      if (parseEffectSentence(left, () => scratch++, card, dryOpts) === null) continue;
+      if (parseEffectSentence(right, () => scratch++, card, dryOpts) === null) continue;
+
+      const first = parseEffectSentence(left, alloc, card, opts);
+      const second = parseEffectSentence(right, alloc, card, opts);
+      // Parsing is deterministic, so a dry run that succeeded cannot fail here.
+      if (first === null || second === null) return null;
+      return [...first, ...second];
+    }
+  }
   return null;
 }
 
