@@ -2511,6 +2511,62 @@ function splitActivation(lower: string): { costText: string; effectText: string 
   return { costText: lower.slice(0, i), effectText: lower.slice(i + 2) };
 }
 
+const ADDITIONAL_COST_RE = /^as an additional cost to cast this spell, (.+)$/;
+
+/**
+ * "As an additional cost to cast this spell, `<cost>`" (CR 601.2b) as a list of `AbilityCost`s.
+ *
+ * Deliberately the SAME cost grammar an activated ability uses (`parseActivationCosts`): the
+ * rules draw no distinction between the two, and a second parser would drift. Returns null
+ * unless the whole cost phrase is understood â€” a half-read additional cost would make the
+ * spell cheaper than printed, which is worse than leaving the card unmodeled (brief Â§6.3).
+ */
+function parseSpellAdditionalCostSentence(sentence: string): AbilityCost[] | null {
+  const m = sentence
+    .trim()
+    .toLowerCase()
+    .replace(/\.$/, '')
+    .match(ADDITIONAL_COST_RE);
+  if (m === null) return null;
+  return parseActivationCosts(m[1] as string);
+}
+
+/**
+ * What "sacrifice `<noun>`" may name, singularized by the caller.
+ *
+ * Shared by activation costs and by a spell's additional cost (they are the same grammar in
+ * the Comprehensive Rules and should never drift), which is why the type table lives here
+ * rather than inline in one of them. `null` for anything unrecognized â€” a sacrifice the engine
+ * cannot charge would make the ability free.
+ */
+function parseSacrificeNoun(noun: string): Selector | null {
+  // "sacrifice an artifact or creature" (Deadly Dispute) â€” a union, not a compound type.
+  const either = noun.match(/^(\w+) or (\w+)$/);
+  if (either !== null) {
+    const left = parseSacrificeNoun(either[1] as string);
+    const right = parseSacrificeNoun(either[2] as string);
+    return left === null || right === null ? null : anyOf(left, right);
+  }
+  switch (noun) {
+    case 'artifact':
+      return ofType('Artifact');
+    case 'creature':
+      return ofType('Creature');
+    case 'land':
+      return ofType('Land');
+    case 'enchantment':
+      return ofType('Enchantment');
+    case 'permanent':
+      return anyOf(ofType('Artifact'), ofType('Creature'), ofType('Enchantment'), ofType('Land'), ofType('Planeswalker'), ofType('Battle'));
+    case 'servo':
+      return ofSubtype('Servo');
+    case 'token':
+      return IS_TOKEN;
+    default:
+      return null;
+  }
+}
+
 /**
  * The cost segment of an activated ability â€” "{1}, {T}, Sacrifice this creature" â€” as a list of
  * `AbilityCost`s. Returns null if ANY component is unrecognized: a cost the engine cannot charge
@@ -2553,19 +2609,20 @@ function parseActivationCosts(costText: string): AbilityCost[] | null {
       const countWord = picked[1] ?? 'one';
       const count = countWord === 'two' ? 2 : countWord === 'three' ? 3 : 1;
       const noun = (picked[2] as string).replace(/s$/, '');
-      const base = noun === 'artifact'
-        ? ofType('Artifact')
-        : noun === 'creature'
-          ? ofType('Creature')
-          : noun === 'permanent'
-            ? anyOf(ofType('Artifact'), ofType('Creature'), ofType('Enchantment'), ofType('Land'), ofType('Planeswalker'), ofType('Battle'))
-            : noun === 'servo'
-              ? ofSubtype('Servo')
-              : noun === 'token'
-                ? IS_TOKEN
-                : null;
+      const base = parseSacrificeNoun(noun);
       if (base === null) return null;
       costs.push({ kind: 'sacrificeOther', selector: allOf(OTHER, YOURS, base), ...(count > 1 ? { count } : {}) });
+      continue;
+    }
+    if (part === 'discard your hand') {
+      costs.push({ kind: 'discardHand' });
+      continue;
+    }
+    const discard = part.match(/^discard (a|an|one|two|three) cards?$/);
+    if (discard !== null) {
+      const count = parseAmount(discard[1] === 'a' || discard[1] === 'an' ? 'one' : (discard[1] as string));
+      if (count === null) return null;
+      costs.push({ kind: 'discardCards', count });
       continue;
     }
     const payLife = part.match(/^pay (\d+) life$/);
@@ -3196,6 +3253,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   let commanderFreeCast = false;
   let spellModes: NonNullable<Ability['modes']> | undefined;
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined;
+  let spellAdditionalCosts: AbilityCost[] | undefined;
 
   if (card.name === 'Bloomvine Regent // Claim Territory') {
     alternativeCasts = [
@@ -3899,11 +3957,27 @@ export function interpretCard(card: OracleCard): CardDefinition {
       commanderFreeCast = true;
       continue;
     }
+    // 4d. "As an additional cost to cast this spell, sacrifice a creature." (CR 601.2b)
+    //     Printed as its own paragraph on most cards, but it is a SENTENCE rule, not a line
+    //     rule: when it shares a line with the spell's effect the remaining sentences still
+    //     have to parse as effects, so the leading sentence is consumed here and the rest is
+    //     handed to the spell-sentence pass below unchanged.
+    let remainingSentences: string[] | null = null;
+    {
+      const sentences = splitSentences(line);
+      const first = sentences[0];
+      const costs = first === undefined ? null : parseSpellAdditionalCostSentence(first);
+      if (costs !== null) {
+        spellAdditionalCosts = [...(spellAdditionalCosts ?? []), ...costs];
+        if (sentences.length === 1) continue;
+        remainingSentences = sentences.slice(1);
+      }
+    }
     // 5. Spell effect sentences (instants/sorceries only). Parse into a scratch slot list
     //    (based at the current spell slot count) so a partially-parsing line allocates no
     //    slots; merge only when the whole line parses.
     if (isSpell) {
-      const sentences = splitSentences(line);
+      const sentences = remainingSentences ?? splitSentences(line);
       const lineEffects: Effect[] = [];
       const lineTargets: TargetSpec[] = [];
       const base = spellTargets.length;
@@ -4035,6 +4109,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         : null,
     ...(spellCantBeCountered ? { spellCantBeCountered: true } : {}),
     ...(commanderFreeCast ? { commanderFreeCast: true } : {}),
+    ...(spellAdditionalCosts !== undefined ? { spellAdditionalCosts } : {}),
     triggers,
     staticEffects,
     ruleStatics,

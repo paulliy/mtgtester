@@ -3771,6 +3771,74 @@ export function* payManaCost(
  * Sacrifice is applied last so a tap/counter cost on the same permanent is recorded on a
  * permanent that still exists.
  */
+/**
+ * Pay a spell's additional cost (CR 601.2h) — the permanent-free sibling of `payAbilityCosts`.
+ *
+ * It cannot reuse that function: every one of its choice prompts is phrased around, and half
+ * its cost kinds are answered by, an `EnginePermanent` the caster does not have. The cost kinds
+ * accepted here are exactly the ones `canPaySpellAdditionalCosts` vouched for, so an
+ * unrecognized kind is an engine bug, not a game state — it throws rather than skipping, which
+ * would make the spell free.
+ *
+ * Called AFTER the spell has left the hand for the stack, so a "discard a card" cost can never
+ * discard the spell paying it.
+ */
+export function* paySpellAdditionalCosts(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  costs: readonly AbilityCost[],
+  spellName: string,
+): GameGen<void> {
+  for (const cost of costs) {
+    switch (cost.kind) {
+      case 'mana':
+        break; // folded into the cast's mana cost by the caller.
+      case 'sacrificeOther': {
+        const count = cost.count ?? 1;
+        for (let i = 0; i < count; i++) {
+          const options = ctx.state.battlefield.filter((candidate) =>
+            candidate.controllerId === player.id &&
+            matchesSelector(ctx, candidate, cost.selector, {
+              cardId: '<spell-on-stack>',
+              controllerId: player.id,
+            }),
+          );
+          if (options.length === 0) throw new Error('engine bug: additional sacrifice cost became unpayable');
+          const outcome = yield {
+            decisionType: 'general',
+            player: player.id,
+            prompt: `${spellName}: choose permanent ${i + 1} of ${count} to sacrifice as an additional cost.`,
+            options: options.map((candidate) => ({
+              type: 'sacrificeCost',
+              description: `Sacrifice ${candidate.name}`,
+              payload: candidate.id,
+            })),
+          };
+          const chosen = options[outcome.index];
+          if (chosen === undefined) throw new Error('engine bug: additional sacrifice choice was invalid');
+          emit(ctx, 'sacrifice', { name: chosen.name, cardId: chosen.cardId }, player.id);
+          yield* moveObject(ctx, chosen, { zone: 'graveyard' });
+        }
+        break;
+      }
+      case 'discardCards':
+        if (player.hand.length < cost.count) throw new Error('engine bug: additional discard cost became unpayable');
+        yield* discardCards(ctx, player, cost.count);
+        break;
+      case 'payLife':
+        loseLife(ctx, player, cost.amount);
+        break;
+      case 'payEnergy':
+        if (player.energy < cost.amount) throw new Error('engine bug: additional energy cost became unpayable');
+        player.energy -= cost.amount;
+        emit(ctx, 'energy', { amount: -cost.amount, total: player.energy }, player.id);
+        break;
+      default:
+        throw new Error(`engine bug: unpayable additional cost kind "${cost.kind}" on ${spellName}`);
+    }
+  }
+}
+
 export function* payAbilityCosts(
   ctx: GameContext,
   player: EnginePlayerState,
@@ -3926,6 +3994,10 @@ export function* payAbilityCosts(
       }
       case 'discardHand':
         yield* discardCards(ctx, player, player.hand.length);
+        break;
+      case 'discardCards':
+        if (player.hand.length < cost.count) throw new Error('engine bug: discard cost became unpayable');
+        yield* discardCards(ctx, player, cost.count);
         break;
       case 'tapCreaturesTotalPower': {
         let tappedPower = 0;

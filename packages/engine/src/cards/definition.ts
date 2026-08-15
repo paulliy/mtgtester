@@ -119,6 +119,17 @@ export interface CardDefinition {
   spellCantBeCountered?: boolean;
   /** Alternative casting costs/modes (e.g. Overload). */
   alternativeCasts?: import('./ability').AlternativeCast[];
+  /**
+   * "As an additional cost to cast this spell, sacrifice a creature" (CR 601.2b/601.2h) —
+   * Village Rites, Deadly Dispute, Thrill of Possibility, Crop Rotation.
+   *
+   * Separate from `Ability.modes[].additionalCost`, which is per-MODE (Spree): this is a cost
+   * of casting the spell at all, so it is paid on every cast including alternative ones, and —
+   * the load-bearing half — its *payability* gates option generation. A spell whose additional
+   * cost cannot be paid is never offered (CR 601.2h: an unpayable cost makes the cast illegal,
+   * and the option menu is the engine's contract that an offered action is applicable).
+   */
+  spellAdditionalCosts?: import('./ability').AbilityCost[];
   /** "You may cast this spell without paying its mana cost if you control a commander." */
   commanderFreeCast?: boolean;
   /**

@@ -21,6 +21,7 @@ import type { ManaSource, ParsedManaCost } from '../mana/cost';
 import {
   allowanceFor,
   canPayNonManaCosts,
+  canPaySpellAdditionalCosts,
   castFromLibraryTopCandidates,
   castingSpellsBlockedFor,
   findPermanent,
@@ -525,9 +526,18 @@ export function computePriorityOptions(
     const instantSpeed = def.types.includes('Instant') || def.keywords.includes('flash');
     if (!instantSpeed && !sorcerySpeed) return;
 
+    // An additional cost is a cost of casting AT ALL (CR 601.2b), so it gates every variant
+    // below — mana, {X}, modes, and the alternative casts — not just the ordinary one. Village
+    // Rites with no creature to sacrifice is not a cheaper cast, it is an illegal one.
+    const additionalCosts = def.spellAdditionalCosts ?? [];
+    if (additionalCosts.length > 0 && !canPaySpellAdditionalCosts(ctx, player, additionalCosts, obj.id)) {
+      return;
+    }
+    const additionalMana = manaPortionOf(additionalCosts);
+
     const tax = fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
     const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
-    let base = addGeneric(def.manaCost, tax);
+    let base = addManaCosts(addGeneric(def.manaCost, tax), additionalMana);
     if (reduction.colored !== undefined) {
       base = subtractColored(base, reduction.colored);
     }

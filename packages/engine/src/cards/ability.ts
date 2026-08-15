@@ -39,6 +39,13 @@ export type AbilityCost =
   | { kind: 'sacrificeOther'; selector: Selector; count?: number }
   /** "Discard this card". */
   | { kind: 'discardSelf' }
+  /**
+   * "Discard a card" — discard `count` cards of the payer's choice. Distinct from
+   * `discardSelf`, which discards the cost's own source: this one asks a question, and the
+   * source is never a candidate answer (as a spell's additional cost it is already on the
+   * stack when the cost is paid, CR 601.2a-h).
+   */
+  | { kind: 'discardCards'; count: number }
   | { kind: 'discardHand' }
   /** "Tap any number of untapped creatures you control with total power N or greater". */
   | { kind: 'tapCreaturesTotalPower'; minPower: number }

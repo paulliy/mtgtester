@@ -7,7 +7,7 @@
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { Ability, AbilityCost, CardDefinition } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
-import { payAbilityCosts, payManaCost } from '../effects/resolve';
+import { payAbilityCosts, payManaCost, paySpellAdditionalCosts } from '../effects/resolve';
 import { computeCharacteristics } from '../effects/continuous';
 import { emit, debug } from '../log/log';
 import type { ParsedManaCost } from '../mana/cost';
@@ -264,7 +264,7 @@ export function* applyPriorityAction(
         targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
       } else {
         cost = withX(
-          applyRed(addGeneric(def.manaCost ?? emptyCost(), tax)),
+          applyRed(addManaCosts(addGeneric(def.manaCost ?? emptyCost(), tax), manaPortionOf(def.spellAdditionalCosts ?? []))),
           payload.x ?? 0,
         );
         const selectedModes = payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
@@ -285,6 +285,13 @@ export function* applyPriorityAction(
       }
 
       removeFromCurrentZone(ctx, obj);
+      // CR 601.2h — the additional cost is paid with the mana cost, but only after 601.2a has
+      // moved the card to the stack. Paying it here rather than above is what keeps "discard a
+      // card" from offering the spell itself, and lets a Treasure tapped for mana still be the
+      // artifact sacrificed (the same ordering `payActivationCosts` uses for activations).
+      if (def.spellAdditionalCosts !== undefined && def.spellAdditionalCosts.length > 0) {
+        yield* paySpellAdditionalCosts(ctx, player, def.spellAdditionalCosts, obj.name);
+      }
       const spellCard: EngineCardObject = {
         ...obj,
         id: `o-${s.nextObjectNum++}` as ObjectId,

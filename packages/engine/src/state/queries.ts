@@ -475,8 +475,71 @@ export function canPayNonManaCosts(
         if (totalPower < cost.minPower) return false;
         break;
       }
+      case 'discardCards': {
+        const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
+        if (controller === undefined || controller.hand.length < cost.count) return false;
+        break;
+      }
       case 'mana':
         break;
+    }
+  }
+  return true;
+}
+
+/**
+ * Can this player pay a SPELL's additional cost (CR 601.2b) right now?
+ *
+ * Separate from `canPayNonManaCosts` because that one is answered about a permanent on the
+ * battlefield — a spell being cast has no `EnginePermanent`, so "tap this", "sacrifice this"
+ * and the rest are not merely unpayable here, they are meaningless. Anything outside the
+ * subset an additional cost can actually print answers **false**, so a cost the engine cannot
+ * charge suppresses the cast rather than being silently skipped (brief §6.3).
+ *
+ * `castFromHandObjectId` is the spell itself: at CR 601.2h it has already left the hand for
+ * the stack, so it is never a legal discard for its own "discard a card" cost.
+ */
+export function canPaySpellAdditionalCosts(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  costs: readonly AbilityCost[],
+  castFromHandObjectId?: ObjectId,
+): boolean {
+  for (const cost of costs) {
+    switch (cost.kind) {
+      case 'mana':
+        break; // affordability is the caller's job — see `canPay`.
+      case 'sacrificeOther': {
+        const count = cost.count ?? 1;
+        // The selector carries `OTHER` (it is shared with activation costs), which excludes
+        // the source's own card id. A spell being cast is on the stack, never the battlefield,
+        // so no candidate can be it — an id that matches nothing is the honest source here.
+        const payable = ctx.state.battlefield.filter(
+          (candidate) =>
+            candidate.controllerId === player.id &&
+            matchesSelector(ctx, candidate, cost.selector, {
+              cardId: '<spell-on-stack>',
+              controllerId: player.id,
+            }),
+        );
+        if (payable.length < count) return false;
+        break;
+      }
+      case 'discardCards': {
+        const available = player.hand.filter((card) => card.id !== castFromHandObjectId).length;
+        if (available < cost.count) return false;
+        break;
+      }
+      case 'payLife': {
+        if (player.life < cost.amount) return false;
+        break;
+      }
+      case 'payEnergy': {
+        if (player.energy < cost.amount) return false;
+        break;
+      }
+      default:
+        return false;
     }
   }
   return true;
