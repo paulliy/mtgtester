@@ -360,13 +360,17 @@ fall back a lot this game?), though it's aggregate, not per-card.
 
 Everything above assembles single-card testing out of tools built for something else (unit
 fixtures, whole-deck CLIs, the real match UI). A proper "pick a deck, goldfish it, run a scenario
-like commander-cast-by-turn-N" workspace is planned but **not built** — see
+like commander-cast-by-turn-N" workspace is the long-term plan — see
 [`docs/plans/phase-10-deck-testing-lab.md`](../plans/phase-10-deck-testing-lab.md) ("Deck Testing
 Lab and Simulation Engine"), explicitly scoped to include saved decks, scenario/goldfish tests,
-and batch simulation with card-level metrics. Until that lands, level 4/5 above (a small curated
-real decklist through `play-decks` or the single-player UI) is the practical substitute — it's
-slower to set up per-card than a true sandbox would be, so don't skip levels 2-3 first; they're
-cheap and catch most correctness bugs before you burn time on a manual playtest.
+and batch simulation with card-level metrics — but that's a large, multi-milestone product effort.
+A much smaller slice aimed squarely at this gap is planned in
+[`docs/plans/single-card-sandbox.md`](../plans/single-card-sandbox.md): a `bun run sandbox <card>`
+CLI command and a web entry point that auto-build a legal deck around one target card and run it,
+with a pass/fail assertion instead of eyeballing a log. Until either lands, level 4/5 above (a
+small curated real decklist through `play-decks` or the single-player UI) is the practical
+substitute — it's slower to set up per-card than a true sandbox would be, so don't skip levels 2-3
+first; they're cheap and catch most correctness bugs before you burn time on a manual playtest.
 
 ## 6. Command cheat sheet
 
