@@ -998,6 +998,16 @@ export interface Ability {
   modes?: {
     minChoices: number;
     maxChoices: number;
+    /**
+     * "If you control a commander as you cast this spell, you may choose both instead"
+     * (Jeska's Will, Akroma's Will) — the cap while the caster controls a commander.
+     *
+     * The mode count is fixed at announcement (CR 601.2b), which is why this is resolved by
+     * option generation rather than at resolution: each affordable, legal set of modes is
+     * already its own cast option, so a state-dependent cap needs nothing beyond a second
+     * number here.
+     */
+    maxChoicesWithCommander?: number;
     options: {
       effects: Effect[];
       description?: string;

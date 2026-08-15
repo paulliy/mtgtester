@@ -1240,10 +1240,15 @@ function parseModalSpellBlock(
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
   if (lines.length < 3) return null;
+  // Two header shapes: the ordinary "Choose one \u2014", and the commander-conditional one whose
+  // cap depends on the board as the spell is cast (Jeska's Will, Akroma's Will).
   const header = (lines[0] as string).match(
     /^choose (one|one or more|one or both|any number|two|three)\s*(?:\u2014|-)\s*$/i,
   );
-  if (header === null) return null;
+  const commanderHeader = (lines[0] as string).match(
+    /^choose (one|two)\. if you control a commander as you cast this spell, you may choose (both|three) instead\.?$/i,
+  );
+  if (header === null && commanderHeader === null) return null;
 
   const targets: TargetSpec[] = [];
   const alloc: SlotAllocator = (kind, filter) => {
@@ -1263,7 +1268,18 @@ function parseModalSpellBlock(
     options.push({ effects: parsed, description: sentence, targetSlots });
   }
   if (options.length < 2) return null;
-  const choice = (header[1] as string).toLowerCase();
+  if (commanderHeader !== null) {
+    const base = (commanderHeader[1] as string).toLowerCase() === 'one' ? 1 : 2;
+    const withCommander = (commanderHeader[2] as string).toLowerCase() === 'both' ? 2 : 3;
+    // "You may choose BOTH" only reads as a card with exactly two modes; anything else means
+    // the template was misread, and guessing a cap would silently invent a mode combination.
+    if (withCommander > options.length) return null;
+    return {
+      targets,
+      modes: { minChoices: base, maxChoices: base, maxChoicesWithCommander: withCommander, options },
+    };
+  }
+  const choice = ((header as RegExpMatchArray)[1] as string).toLowerCase();
   // "Choose two —" (Austere Command) is an exact count (CR 700.2d), unlike the "at least"/"up
   // to" headers above it: it must pick precisely N different modes, not merely up to N.
   const exact = choice === 'two' ? 2 : choice === 'three' ? 3 : null;

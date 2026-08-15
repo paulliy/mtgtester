@@ -92,13 +92,24 @@ export function selectedModeTargetSlots(def: CardDefinition, selectedModes: numb
   return [...new Set(chosen.flatMap((option) => option?.targetSlots ?? []))].sort((a, b) => a - b);
 }
 
-function modalSelections(def: CardDefinition): (number[] | undefined)[] {
+/**
+ * Every legal set of modes for a cast (CR 700.2), one per cast option.
+ *
+ * `controlsCommander` is read here rather than at resolution because the number of modes is
+ * locked in at announcement (CR 601.2b): Jeska's Will offers a both-modes option only while its
+ * caster controls a commander, and an option that was offered stays applicable.
+ */
+function modalSelections(def: CardDefinition, controlsCommander: boolean): (number[] | undefined)[] {
   const modes = def.spellAbility?.modes;
   if (modes === undefined) return [undefined];
+  const maxChoices =
+    controlsCommander && modes.maxChoicesWithCommander !== undefined
+      ? Math.max(modes.maxChoices, modes.maxChoicesWithCommander)
+      : modes.maxChoices;
   const out: number[][] = [];
   const visit = (next: number, chosen: number[]): void => {
-    if (chosen.length >= modes.minChoices && chosen.length <= modes.maxChoices) out.push([...chosen]);
-    if (chosen.length === modes.maxChoices) return;
+    if (chosen.length >= modes.minChoices && chosen.length <= maxChoices) out.push([...chosen]);
+    if (chosen.length === maxChoices) return;
     for (let i = next; i < modes.options.length; i++) {
       chosen.push(i);
       visit(i + 1, chosen);
@@ -565,7 +576,10 @@ export function computePriorityOptions(
     // so each mode is its own cast option, the same "the option menu is the contract" treatment
     // {X} gets above. A non-modal spell has exactly one "mode" (undefined), so this loop is a
     // single iteration when `modes` is absent.
-    const selections = modalSelections(def);
+    const selections = modalSelections(
+      def,
+      ctx.state.battlefield.some((perm) => perm.controllerId === player.id && perm.isCommander),
+    );
 
     for (const x of xChoices) {
       const cost = withX(base, x);
