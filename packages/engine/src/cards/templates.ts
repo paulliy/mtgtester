@@ -67,6 +67,13 @@ import type { Value } from './value';
  * previously wrote `parseManaCost(s).cost!`, which turns an unsupported symbol into a `null` cost
  * silently accepted by the payment solver — the engine halts loudly on unmodeled cards everywhere
  * else, and an authored cost should be no different.
+ *
+ * This runs at module-init time (every `defineCard(...)` call in a deck file executes as soon as
+ * that file's `registerXOverrides()` runs), so a typo here throws during registration, not during
+ * play. `overrides/index.ts` wraps each deck file's registration call individually, so a throw
+ * here only drops that ONE deck's overrides (visible in `failedRegistrations` there and caught by
+ * `overrides.test.ts`'s "every deck registration succeeded" check) — it does not take every other
+ * deck's overrides down with it.
  */
 export function mana(cost: string): AbilityCost {
   const parsed = parseManaCost(cost as Parameters<typeof parseManaCost>[0]);
@@ -360,12 +367,18 @@ export function auraBuff(power: number, toughness: number, keywords: KeywordAbil
   ];
 }
 
-/** "`<filter>` spells you cast cost {N} less to cast" (CR 601.2f) — a rule static, not a layer effect. */
-export function costReductionFor(filter: Selector, amount: number | Value): RuleStatic {
+/**
+ * "`<filter>` spells you cast cost {N} less to cast" (CR 601.2f) — a rule static, not a layer
+ * effect. `filter` is optional, matching `RuleStatic`'s own field: absent means any spell, not a
+ * filter that happens to match everything — a caller with an "any spell" sentinel of its own
+ * (`interpret.ts`'s `ANY_SPELL`) must resolve it to `undefined` before calling this, not pass the
+ * sentinel through, or it would end up serialized into the def as a real (and unmatchable) filter.
+ */
+export function costReductionFor(filter: Selector | undefined, amount: number | Value): RuleStatic {
   return {
     kind: 'costReduction',
     amount: typeof amount === 'number' ? { kind: 'const', n: amount } : amount,
-    filter,
+    ...(filter === undefined ? {} : { filter }),
   };
 }
 

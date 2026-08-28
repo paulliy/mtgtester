@@ -4,9 +4,13 @@ import { executeAbility } from '../../../engine/src/effects/resolve';
 import { createGame } from '../../../engine/src/state/game';
 import type { GameContext } from '../../../engine/src/state/types';
 import { copies, drive, forest, gameConfig, makeEngine, oracle, pump, registerDef, RuleBasedProvider, spawn, whenChoose } from '../../../engine/tests/fixtures';
-import scryfallCards from '../../../../data/scryfall-oracle-cards.json' assert { type: 'json' };
+import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
 import type { OracleCard } from '@mtg/shared';
+
+const scryfallCards = loadScryfallBulkOrNull();
+// data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
+const SKIP = scryfallCards === null;
 
 const IMPLEMENTED_CARDS = [
   'Emmara, Soul of the Accord',
@@ -40,7 +44,7 @@ const IMPLEMENTED_CARDS = [
 ];
 
 function getOracleCard(name: string): OracleCard {
-  const raw = (scryfallCards as any[]).find((c: any) => c.name === name);
+  const raw = (scryfallCards ?? []).find((c: any) => c.name === name);
   if (!raw) throw new Error(`Card not found in scryfall data: ${name}`);
   const oracleCard = toOracleCard(raw);
   if (!oracleCard) throw new Error(`Failed to convert scryfall data for: ${name}`);
@@ -65,7 +69,7 @@ function setupEngineContext(): GameContext {
   return ctx;
 }
 
-describe('L1: Modeled & Drift Guard Smoke Check', () => {
+describe.skipIf(SKIP)('L1: Modeled & Drift Guard Smoke Check', () => {
   for (const cardName of IMPLEMENTED_CARDS) {
     it(`${cardName} passes L1 smoke check (modeled: true, unmodeledReasons: [])`, () => {
       const card = getOracleCard(cardName);
@@ -79,7 +83,7 @@ describe('L1: Modeled & Drift Guard Smoke Check', () => {
   }
 });
 
-describe('L2: Fixture & Unit Behavioral Tests', () => {
+describe.skipIf(SKIP)('L2: Fixture & Unit Behavioral Tests', () => {
   it('verifies unit behavior and trigger execution for representative cards', () => {
     const ctx = setupEngineContext();
 
@@ -146,7 +150,7 @@ describe('L2: Fixture & Unit Behavioral Tests', () => {
   });
 });
 
-describe('L3: Legality & Priority Engine Tests', () => {
+describe.skipIf(SKIP)('L3: Legality & Priority Engine Tests', () => {
   it('executes full engine priority pipeline for Path to Exile', () => {
     const pathCard = getOracleCard('Path to Exile');
     const bearCard = oracle({ name: 'Bear', typeLine: 'Creature', manaCost: '{1}' });

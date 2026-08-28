@@ -175,3 +175,72 @@ Covered by `tests/token-catalog-canonicalization.test.ts`: object identity on a 
 non-matching token still parsing correctly (a miss is a no-op, not a dropped card), the
 keyword-before-match ordering, and the em-dash regression on a token that has no catalog match (so
 the assertion can't be accidentally passing via a substituted object instead of the actual fix).
+
+## Increment 4 — post-merge review hardening (2026-08-07)
+
+A review of the merged migration (PR #7) surfaced nine issues, all fixed in the same session, all
+covered by new regression tests. None changed a live card's behavior in the shipped pool — the bugs
+were in the *machinery* the migration touched, reachable by any future override, not in a card any
+current deck plays. Grouped by the durable lesson, since the point of this section is prevention,
+not a changelog:
+
+- **A shallow merge doesn't know an override changed an ability's KIND.** Desolate Mire's override
+  switched a line from the interpreter's stack-based `activatedAbilities` reading to a true
+  `manaAbilities` one, but only set `manaAbilities` — `applyOverride`'s `{ ...def, ...override.def }`
+  left the interpreted `activatedAbilities` entry for the same line sitting alongside it, so the
+  land offered its mana twice (once uncounterable, once responder-vulnerable). Fixed by also
+  clearing `activatedAbilities: []`; captured as rule 4 in `overrides/index.ts`'s docstring.
+- **`handledLines: []` is a superpower, not a shrug.** Beast Within's override kept a hardcoded
+  `def` "just in case," years after `parseTokenFace` started canonicalizing away the exact
+  near-miss it existed to patch — a `handledLines: []` registration claims no line, so the drift
+  guard has nothing to check it against, and a stale override could silently keep overriding a
+  correct interpretation forever with no diagnostic. Deleted rather than kept as a no-op; captured
+  as rule 5.
+- **A catalog lookup returning a shared object is a mutation hazard, not just an equality win.**
+  `parseCreateTokenSentence` named a token by writing `spec.name = …` directly onto whatever
+  `parseTokenFace` returned — which, on a catalog hit, IS the shared exported `TokenSpec` const,
+  not a copy. Any card creating a same-shaped NAMED token would have corrupted that const for every
+  other card creating the plain version afterward in the same process. Fixed by cloning before
+  mutating; captured as rule 4 in `tokens.ts`'s docstring.
+- **An "is this patch empty" heuristic has to match its own type's shape, not a syntax guess.**
+  `isEmptyPatch` treated any `boolean` value as "contributes nothing" if `false`, and any object
+  value as "always contributes something" regardless of content. Both wrong: `entersTapped: false`
+  is a real, meaningful override (few `CardDefinition` fields are required with a non-`false`
+  interpreted default — `entersTapped` is one), while `entersWithCounters: {}` is exactly the same
+  "nothing here" as an absent key that arrays already got right. Fixed with a small denylist for
+  the required-boolean case rather than a blanket rule, since most boolean fields ARE optional
+  flags where `false` and absent are interchangeable.
+- **A guard duplicated by hand drifts from the original.** `registerOverride`'s legacy-fixture
+  guard re-implemented "is this patch empty" as `Object.keys(def).length === 0` — the exact bug
+  `isEmptyPatch` exists to fix for `applyOverride`, left unfixed in this sibling function one
+  screen away. Fixed by calling `isEmptyPatch` from both places instead of re-deriving the check.
+- **A throw at module-init time has a blast radius equal to whatever imports the module — not
+  just the file that threw.** `templates.mana()` deliberately throws on a bad cost string (see its
+  docstring), but every deck's `registerXOverrides()` used to run unguarded in one sequence at
+  `overrides/index.ts` import time, which `interpret.ts` imports statically. One typo in any deck
+  file would have crashed card-interpretation module load entirely — every card in the pool, not
+  just the one with the typo. Fixed by wrapping each deck's registration individually
+  (`registerDeck`), with failures collected in an exported `failedRegistrations` array a test
+  asserts is empty — loud in CI, contained in blast radius.
+- **A generic-parsing branch that duplicates a builder's shape defeats the builder.** Two of
+  `interpret.ts`'s own `costReduction` cases hand-wrote the object literal `costReductionFor`
+  exists to produce, inside the very PR that added it. Fixed by calling it from both sites;
+  `costReductionFor`'s `filter` parameter widened to accept `undefined` so `interpret.ts`'s
+  internal "any spell" sentinel can resolve to "omit the key" before calling in, rather than the
+  sentinel leaking into the builder.
+- **A test suite that imports a large gitignored fixture statically fails the same way a real bug
+  does.** Five suites imported `data/scryfall-oracle-cards.json` via a static
+  `assert { type: 'json' }` import; on any machine without that ~180 MB file staged (a fresh clone,
+  any CI run — the repo has no workflow provisioning it), that's a "can't find module" crash at
+  collection time, indistinguishable from a real regression. Fixed with
+  `cards/scryfall-bulk-fixture.ts` — a `readFileSync` behind `existsSync`, `describe.skipIf`'d, with
+  a `console.warn` naming the missing file — so absence is a reported skip, not noise. (One of the
+  five loaded its data-file path from a hand-authored absolute Windows path, unrelated to the
+  gitignored-fixture problem but caught by the same pass; fixed to `resolve(...)` alongside it.)
+
+None of these needed a new increment of the authoring layer itself — the builders' shapes were
+right. What was missing was closer scrutiny of the *composition* code around them (`applyOverride`,
+`registerOverride`, `parseCreateTokenSentence`'s post-parse mutation, the registration entry point)
+and of two overrides that had quietly outlived the bug they were written to work around. The rule-4
+and rule-5 additions to `overrides/index.ts` and `tokens.ts` above are the durable artifact: read
+them before writing a new override, not just this ADR.

@@ -67,6 +67,7 @@ import type { Value } from './value';
 import { constant } from './value';
 import {
   activated,
+  costReductionFor,
   lord,
   mana,
   manaCost,
@@ -1950,13 +1951,15 @@ function parseCreateTokenSentence(
   const customName = m[3];
   const faceStr = m[4] as string;
 
-  const spec = parseTokenFace(faceStr, card);
-  if (spec === null) return null;
+  const parsedSpec = parseTokenFace(faceStr, card);
+  if (parsedSpec === null) return null;
 
-  if (customName) {
-    spec.name = customName.trim();
-    spec.legendary = true;
-  }
+  // `parsedSpec` may be a reference to a shared catalog object (`canonicalizeToken`/
+  // `PREDEFINED_TOKENS` can both return one by identity, not a copy — see their docstrings).
+  // Naming the token overrides its identity for THIS card only, so it must produce a new object
+  // rather than mutate `parsedSpec` in place; mutating it would corrupt the shared catalog const
+  // for every other card that references the same token afterward in this process.
+  const spec = customName ? { ...parsedSpec, name: customName.trim(), legendary: true } : parsedSpec;
 
   const bareKeywords = m[6];
   if (bareKeywords !== undefined) {
@@ -3011,7 +3014,7 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
     if (m) {
       const filter = parseSpellFilter(m[1] as string, card);
       if (filter === null) return null;
-      return [{ kind: 'costReduction', amount: constant(Number(m[2])), ...(filter !== ANY_SPELL ? { filter } : {}) }];
+      return [costReductionFor(filter === ANY_SPELL ? undefined : filter, Number(m[2]))];
     }
   }
   // "Each spell you cast that's red or green costs {1} less to cast." (Goblin Anarchomancer) â€”
@@ -3029,7 +3032,7 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
         colors.push(ofColor(second));
       }
       const filter = colors.length === 1 ? colors[0]! : anyOf(...colors);
-      return [{ kind: 'costReduction', amount: constant(Number(m[3])), filter }];
+      return [costReductionFor(filter, Number(m[3]))];
     }
   }
   {

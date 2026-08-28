@@ -9,7 +9,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
-import { registerOverride, unregisterOverride } from '../src/cards/overrides';
+import { failedRegistrations, getOverride, registerOverride, unregisterOverride } from '../src/cards/overrides';
 import { oracle } from './fixtures';
 
 const ORACLE_ID = 'oracle-test-override-card';
@@ -79,7 +79,7 @@ describe('authored-override registry', () => {
     expect(overridden.keywords).toEqual(['flying']);
   });
 
-  it('treats a patch of only empty arrays/false the same as {} (it adds no real behavior)', () => {
+  it('treats a patch of only empty arrays/objects/optional-false the same as {} (it adds no real behavior)', () => {
     // Two real registrations shipped exactly this shape — a leftover `staticEffects: []` /
     // `triggers: []` from a template that was never filled in — and reported `modeled: true`
     // for a card with zero executable abilities, because `Object.keys({ staticEffects: [] })`
@@ -92,12 +92,55 @@ describe('authored-override registry', () => {
           interpretCard(bespoke()).unmodeledReasons[0] as string,
         )?.[1] as string,
       ],
-      def: { staticEffects: [], triggers: [], commanderFreeCast: false },
+      def: { staticEffects: [], triggers: [], commanderFreeCast: false, entersWithCounters: {} },
     });
 
     const overridden = interpretCard(bespoke());
     expect(overridden.modeled).toBe(false);
     expect(overridden.unmodeledReasons.some((r) => r.includes('has no executable behavior'))).toBe(true);
+  });
+
+  it('does NOT treat `entersTapped: false` as an empty patch, even alone', () => {
+    // `entersTapped` is a required field the interpreter always fills in with a real value
+    // (possibly `true`) — unlike an optional flag, `false` here is a meaningful correction, not
+    // a leftover unfilled template field. Misclassifying it would let `applyOverride` silently
+    // drop the fix and keep shipping the interpreted (wrong) value.
+    const line = /^unrecognized rules text: "([\s\S]*)"$/.exec(
+      interpretCard(bespoke()).unmodeledReasons[0] as string,
+    )?.[1] as string;
+
+    registerOverride({
+      oracleId: ORACLE_ID,
+      name: 'Test Bespoke',
+      handledLines: [line],
+      def: { entersTapped: false },
+    });
+
+    const overridden = interpretCard(bespoke());
+    expect(overridden.unmodeledReasons.some((r) => r.includes('has no executable behavior'))).toBe(false);
+    expect(overridden.entersTapped).toBe(false);
+  });
+
+  it('registerOverride guards a real registration by patch CONTENT, not key count', () => {
+    // The same bug class `isEmptyPatch` fixes for `applyOverride`, in its sibling guard: a
+    // content-empty-but-key-nonempty re-registration (e.g. a leftover `manaAbilities: []` from
+    // a later, unrelated file re-registering the same oracle id) must not silently erase a real
+    // registration already in the map. `Object.keys({ manaAbilities: [] }).length` is 1, not 0,
+    // so a key-count guard would have let this overwrite through.
+    registerOverride({
+      oracleId: ORACLE_ID,
+      name: 'Test Bespoke',
+      handledLines: ['irrelevant'],
+      def: { keywords: ['flying'] },
+    });
+    registerOverride({
+      oracleId: ORACLE_ID,
+      name: 'Test Bespoke',
+      handledLines: ['irrelevant'],
+      def: { manaAbilities: [] },
+    });
+
+    expect(getOverride(ORACLE_ID)?.def).toEqual({ keywords: ['flying'] });
   });
 
   describe('drift guard', () => {
@@ -156,5 +199,41 @@ describe('authored-override registry', () => {
       // One claim clears one reason — not both.
       expect(interpretCard(bespoke(text)).unmodeledReasons).toHaveLength(3);
     });
+  });
+});
+
+describe('registry module init', () => {
+  it('every deck registration succeeded (a bad mana string etc. would only fail its own deck)', () => {
+    // `registerDeck` isolates each deck file's registration so a typo in one does not crash the
+    // whole registry (and every other deck's overrides with it). This must still be caught
+    // loudly, in CI, at the file that has the bug — this is that check.
+    expect(failedRegistrations).toEqual([]);
+  });
+});
+
+describe('Desolate Mire (real registration regression)', () => {
+  // No registerOverride/afterEach here on purpose: this exercises the REAL production
+  // registration already in the registry (from `silverquill-influence-remaining.ts`), not a
+  // test-local one. `unregisterOverride` deletes from the shared, process-wide `OVERRIDES` map —
+  // calling it on a real oracle id would permanently remove that card's override for every other
+  // test in this worker, corrupting `override-defs.test.ts`'s golden-snapshot check.
+
+  it('does not leave the interpreter\'s own stack-based reading of the same line behind', () => {
+    // "{1}, {T}: Add {W}{B}." has a mana-inclusive cost, so CR 605.1a disqualifies it as a mana
+    // ability and the interpreter's OWN generic parse reads it as a stack-based activated
+    // ability. The override deliberately keeps this land a true (uncounterable) mana ability
+    // instead — which means it must also clear the interpreter's activated-ability reading, or
+    // the land would offer its mana twice.
+    const def = interpretCard(
+      oracle({
+        name: 'Desolate Mire',
+        typeLine: 'Land',
+        manaCost: null,
+        oracleText: '{1}, {T}: Add {W}{B}.',
+      }),
+    );
+
+    expect(def.manaAbilities).toHaveLength(1);
+    expect(def.activatedAbilities).toEqual([]);
   });
 });

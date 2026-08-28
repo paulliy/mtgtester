@@ -1,8 +1,9 @@
 import fs from 'fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../../../engine/src/cards/interpret';
 import { makeEngine, RuleBasedProvider, whenChoose } from '../../../engine/tests/fixtures';
-import scryfallCards from '../../../../data/scryfall-oracle-cards.json' assert { type: 'json' };
+import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
 import type { OracleCard } from '@mtg/shared';
 import { parsePlaintextDeck } from '../decks/plaintext';
@@ -10,13 +11,17 @@ import { registerTOKEN_TRIUMPHOverrides } from '../../../engine/src/cards/overri
 
 registerTOKEN_TRIUMPHOverrides();
 
+const scryfallCards = loadScryfallBulkOrNull();
+// data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
+const SKIP = scryfallCards === null;
+
 function loadTokenTriumphDeckCards(): { commanderCard: OracleCard; deckCards: OracleCard[] } {
-  const filePath = 'c:/Users/paulf/OneDrive/Documents/GitHub/mtgtester/packages/server/fixtures/coverage-decks/token-triumph.txt';
+  const filePath = resolve('packages/server/fixtures/coverage-decks/token-triumph.txt');
   const text = fs.readFileSync(filePath, 'utf8');
   const parsed = parsePlaintextDeck(text);
 
   const cardMap = new Map<string, OracleCard>();
-  for (const raw of scryfallCards as any[]) {
+  for (const raw of scryfallCards ?? []) {
     const card = toOracleCard(raw);
     if (card) cardMap.set(card.name, card);
   }
@@ -37,7 +42,13 @@ function loadTokenTriumphDeckCards(): { commanderCard: OracleCard; deckCards: Or
   return { commanderCard, deckCards };
 }
 
-describe('Token Triumph Deck — L1-L7 Test Suite', () => {
+describe.skipIf(SKIP)('Token Triumph Deck — L1-L7 Test Suite', () => {
+  // `describe.skipIf` still calls this factory to collect its `it`s (only the `it` bodies
+  // themselves are skipped) — so without this guard, `loadTokenTriumphDeckCards()` below would
+  // still throw during collection even when the suite is meant to be skipped for a missing
+  // Scryfall bulk file, defeating the skip entirely.
+  if (SKIP) return;
+
   const { commanderCard, deckCards } = loadTokenTriumphDeckCards();
   const allUniqueCards = Array.from(new Set([commanderCard, ...deckCards]));
 

@@ -16,6 +16,12 @@
  *    disagreeing with the types the engine actually reads.
  * 3. A token that genuinely differs from an existing one gets its own named export describing the
  *    difference, never a near-copy of another const.
+ * 4. **Never mutate a `TokenSpec` you did not just construct.** `canonicalizeToken` and the
+ *    `PREDEFINED_TOKENS` lookup in `interpret.ts` both return a catalog object BY REFERENCE on a
+ *    match — that's the point of rule 1, one shared object standing in for every card that creates
+ *    that token. A caller that then does `spec.name = …` (e.g. to name a legendary token) mutates
+ *    the shared const itself, corrupting it for every other card that references it afterward in
+ *    the same process. Always spread into a new object first: `{ ...spec, name: … }`.
  */
 
 import type { Color } from '@mtg/shared';

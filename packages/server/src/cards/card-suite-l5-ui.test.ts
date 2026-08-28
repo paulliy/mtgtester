@@ -5,11 +5,15 @@ import { executeAbility } from '../../../engine/src/effects/resolve';
 import { createGame } from '../../../engine/src/state/game';
 import type { GameContext } from '../../../engine/src/state/types';
 import { copies, forest, gameConfig, oracle, pump, registerDef, spawn } from '../../../engine/tests/fixtures';
-import scryfallCards from '../../../../data/scryfall-oracle-cards.json' assert { type: 'json' };
+import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
 
+const scryfallCards = loadScryfallBulkOrNull();
+// data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
+const SKIP = scryfallCards === null;
+
 function getOracleCard(name: string) {
-  const raw = (scryfallCards as any[]).find((c: any) => c.name === name);
+  const raw = (scryfallCards ?? []).find((c: any) => c.name === name);
   if (!raw) throw new Error(`Card not found in scryfall data: ${name}`);
   const oracleCard = toOracleCard(raw);
   if (!oracleCard) throw new Error(`Failed to convert scryfall data for: ${name}`);
@@ -68,7 +72,7 @@ function expectAllReachable(ctx: GameContext, decisions: PendingDecision[]): voi
   }
 }
 
-describe('L5: Human UI Reachability Tests', () => {
+describe.skipIf(SKIP)('L5: Human UI Reachability Tests', () => {
   it('validates UI decision reachability for Path to Exile', () => {
     const ctx = pod();
     const target = spawn(ctx, 'P2', oracle({ name: 'Ogre', typeLine: 'Creature', manaCost: '{2}' }));

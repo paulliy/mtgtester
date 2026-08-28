@@ -7,8 +7,12 @@ import { interpretCard } from '../../../engine/src/cards/interpret';
 import { MatchSession } from '../match/session';
 import type { SeatSetup } from '../match/setup';
 import { parsePlaintextDeck } from '../decks/plaintext';
-import scryfallCards from '../../../../data/scryfall-oracle-cards.json' assert { type: 'json' };
+import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
+
+const scryfallCards = loadScryfallBulkOrNull();
+// data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
+const SKIP = scryfallCards === null;
 
 const deckSlugs = [
   'marchesa-the-black-rose',
@@ -18,7 +22,7 @@ const deckSlugs = [
 ] as const;
 
 const oracleByName = new Map<string, OracleCard>();
-for (const raw of scryfallCards as any[]) {
+for (const raw of scryfallCards ?? []) {
   const card = toOracleCard(raw);
   if (card !== null) oracleByName.set(card.name, card);
 }
@@ -65,7 +69,7 @@ function seat(seatId: string, deckData: ReturnType<typeof deck>): SeatSetup {
   };
 }
 
-describe('remaining coverage decks — AI and single-player smoke checks', () => {
+describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke checks', () => {
   it('models every unique card in all four committed fixtures', () => {
     for (const slug of deckSlugs) {
       const parsed = parsePlaintextDeck(

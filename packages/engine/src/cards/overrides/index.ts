@@ -19,7 +19,7 @@
  * - If an override claims a line the card no longer has, that is reported too. A silent no-op
  *   would mean the override's `def` is being applied to a card it was never written for.
  *
- * ## Three rules for adding one
+ * ## Rules for adding one
  *
  * 1. It may only compose `Effect`/`Ability` primitives that already exist and have tests. If an
  *    override needs a new executor case, that case belongs in an earlier increment.
@@ -27,6 +27,23 @@
  *    from the card face — the interpreter rewrites text before reporting it (reminder text
  *    stripped, the card's own name replaced by `~`).
  * 3. Every override gets a *behavioral* test, never a `modeled === true` test.
+ * 4. `def` merges over the interpreted definition with a shallow spread (`applyOverride` below) —
+ *    it does not know which ability arrays are "the same line, read differently." If the override
+ *    changes how a line is modeled (e.g. forcing a true mana ability where the generic grammar
+ *    reads a stack-based activated ability instead, because the printed cost includes mana and
+ *    CR 605.1a disqualifies it), the `def` must ALSO clear the interpreted array it is overriding
+ *    away from (`activatedAbilities: []`, here), or both versions ship side by side. See Desolate
+ *    Mire in `silverquill-influence-remaining.ts` for a worked example and the failure it avoids.
+ * 5. Before writing a `handledLines: []` override just to pin a `def` the interpreter already
+ *    derives correctly on its own (a token-catalog near-miss, a formatting fix now handled by
+ *    `canonicalizeToken`, …) — check whether it's still needed at all. `handledLines: []` claims
+ *    nothing, so it disables the drift guard for that card with nothing watching in return: a
+ *    stale hardcoded `def` would keep silently overriding the interpreted definition forever, with
+ *    no diagnostic if the card's text or the interpreter's own reading of it ever changes. If the
+ *    override's `def` is now identical to what plain `interpretCard` already produces, delete the
+ *    override — the interpreter, not a frozen copy of its own output, should be the source of
+ *    truth. (Beast Within in `draconic-destruction.ts` was exactly this once `parseTokenFace`
+ *    started canonicalizing; removed rather than kept as a no-op.)
  */
 
 import type { OracleId } from '@mtg/shared';
@@ -62,26 +79,52 @@ export interface CardOverride {
  */
 const OVERRIDES = new Map<OracleId, CardOverride>();
 
+/**
+ * Deck registrations (`registerXOverrides`) that threw during module init, one entry per failed
+ * deck file, in registration order. Exported so a startup check or a test can assert this is
+ * empty — `mana()` and friends throw on purpose (templates.ts) rather than silently degrading a
+ * single card, but this file loads at import time, statically, from `interpret.ts`: an uncaught
+ * throw here would crash loading of the ENTIRE card-interpretation module, taking every deck's
+ * overrides down with the one that has the typo. Isolating each deck's registration keeps a bad
+ * mana string in one file from failing cards in every other file too.
+ *
+ * The engine is I/O-free (CLAUDE.md), so a failure here is not logged from this package — it is
+ * surfaced by `overrides.test.ts` asserting this array is empty (so a broken registration fails
+ * CI loudly, at the file that has the bug, rather than shipping silently) and is available to any
+ * I/O-capable caller (e.g. server startup) that wants to report it.
+ */
+export const failedRegistrations: { deck: string; error: unknown }[] = [];
+
+function registerDeck(deck: string, register: () => void): void {
+  try {
+    register();
+  } catch (error) {
+    failedRegistrations.push({ deck, error });
+  }
+}
+
 // Register all deck overrides
-registerURDRAGONOverrides();
-registerDRACONIC_DESTRUCTIONOverrides();
-registerTOKEN_TRIUMPHOverrides();
-registerLIVING_ENERGYOverrides();
-registerSILVERQUILL_INFLUENCEOverrides();
-registerSILVERQUILL_INFLUENCE_REMAININGOverrides();
-registerCOUNTER_INTELLIGENCEOverrides();
-registerNECRON_DYNASTIESOverrides();
-registerNECRON_DYNASTIES_REMAININGOverrides();
-registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides();
-registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides();
-registerMARCHESA_THE_BLACK_ROSEOverrides();
+registerDeck('urdragon', registerURDRAGONOverrides);
+registerDeck('draconic-destruction', registerDRACONIC_DESTRUCTIONOverrides);
+registerDeck('token-triumph', registerTOKEN_TRIUMPHOverrides);
+registerDeck('living-energy', registerLIVING_ENERGYOverrides);
+registerDeck('silverquill-influence', registerSILVERQUILL_INFLUENCEOverrides);
+registerDeck('silverquill-influence-remaining', registerSILVERQUILL_INFLUENCE_REMAININGOverrides);
+registerDeck('counter-intelligence', registerCOUNTER_INTELLIGENCEOverrides);
+registerDeck('necron-dynasties', registerNECRON_DYNASTIESOverrides);
+registerDeck('necron-dynasties-remaining', registerNECRON_DYNASTIES_REMAININGOverrides);
+registerDeck('queen-marchesa-queens-gambit', registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides);
+registerDeck('queen-marchesa-queens-gambit-remaining', registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides);
+registerDeck('marchesa-the-black-rose', registerMARCHESA_THE_BLACK_ROSEOverrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {
   const existing = OVERRIDES.get(override.oracleId);
   // A legacy fixture registration may still exist for a card whose authored implementation was
   // moved into a later increment. Never let that empty placeholder erase executable behavior.
-  if (existing !== undefined && Object.keys(existing.def).length > 0 && Object.keys(override.def).length === 0) {
+  // Checked by CONTENT (isEmptyPatch), not by key count: `{ manaAbilities: [] }` has one key but
+  // patches in no more behavior than `{}` — the same distinction `applyOverride` makes below.
+  if (existing !== undefined && !isEmptyPatch(existing.def) && isEmptyPatch(override.def)) {
     return;
   }
   OVERRIDES.set(override.oracleId, override);
@@ -172,19 +215,37 @@ function normalizeLine(line: string): string {
  * unconditionally at the end of `interpretCard`.
  */
 /**
+ * `CardDefinition` fields where `false`/absent are NOT interchangeable, unlike every other
+ * boolean field on the type. Both are required fields the interpreter always fills in with a real
+ * (possibly `true`) value — an override setting one to `false` is overriding that interpreted
+ * value, not leaving a template field unfilled, and `isEmptyPatch` must not treat it as a no-op.
+ * Every other boolean field (`commanderFreeCast`, `cantBlock`, …) is optional and `false`-shaped
+ * when absent, so an explicit `false` there really does patch in nothing beyond the default.
+ */
+const REQUIRED_BOOLEAN_FIELDS: ReadonlySet<string> = new Set(['entersTapped', 'hasUnsupportedCost']);
+
+/**
  * Does this patch actually change anything the executor reads? `{}` obviously doesn't, but
- * neither does `{ manaAbilities: [] }` or `{ staticEffects: [] }` — an empty array is the same
- * "nothing here" as an absent key, and a def carrying only empty-array/false fields patches in
- * no more behavior than `{}` would. Two real registrations shipped exactly that shape (a
- * leftover field from a template that was never filled in) and, because `Object.keys(...).length`
- * saw one key and called it "non-empty," slipped past the check below entirely — reporting
- * `modeled: true` for a card with zero executable abilities.
+ * neither does `{ manaAbilities: [] }`, `{ staticEffects: [] }`, `{ entersWithCounters: {} }`, or
+ * `{ commanderFreeCast: false }` — an empty array, empty plain object, or `false` on an optional
+ * flag is the same "nothing here" as an absent key, and a def carrying only such fields patches in
+ * no more behavior than `{}` would. Two real registrations shipped exactly that shape (a leftover
+ * field from a template that was never filled in) and, because `Object.keys(...).length` saw one
+ * key and called it "non-empty," slipped past the check below entirely — reporting `modeled: true`
+ * for a card with zero executable abilities.
+ *
+ * `REQUIRED_BOOLEAN_FIELDS` is the one exception: `entersTapped: false` is a legitimate, meaningful
+ * override (correcting an interpreted `entersTapped: true`), not a leftover, because that field is
+ * never merely absent — the interpreted def always has some real value there already. Treating it
+ * as empty would make `applyOverride` silently drop that exact fix and keep shipping the wrong
+ * interpreted value.
  */
 function isEmptyPatch(patch: Partial<CardDefinition>): boolean {
-  return Object.values(patch).every((value) => {
+  return Object.entries(patch).every(([key, value]) => {
     if (value === undefined || value === null) return true;
     if (Array.isArray(value)) return value.length === 0;
-    if (typeof value === 'boolean') return value === false;
+    if (typeof value === 'boolean') return value === false && !REQUIRED_BOOLEAN_FIELDS.has(key);
+    if (typeof value === 'object') return Object.keys(value).length === 0;
     return false;
   });
 }

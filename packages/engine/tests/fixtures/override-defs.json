@@ -4436,6 +4436,7 @@
     "name": "Desolate Mire",
     "handledLines": [],
     "def": {
+      "activatedAbilities": [],
       "manaAbilities": [
         {
           "costs": [
@@ -8142,47 +8143,6 @@
           "kind": "triggerAdditionalOnArtifactOrCreatureEntry"
         }
       ]
-    }
-  },
-  {
-    "oracleId": "7735eeba-693b-47e2-bd51-414379cf1016",
-    "name": "Beast Within",
-    "handledLines": [],
-    "def": {
-      "spellAbility": {
-        "description": "Destroy target permanent; its controller creates a 3/3 Beast",
-        "effects": [
-          {
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "destroyAndCreateTokenForController",
-            "spec": {
-              "colors": [
-                "G"
-              ],
-              "name": "Beast",
-              "power": 3,
-              "subtypes": [
-                "Beast"
-              ],
-              "toughness": 3,
-              "typeLine": "Creature — Beast",
-              "types": [
-                "Creature"
-              ]
-            },
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "permanent"
-          }
-        ]
-      }
     }
   },
   {
@@ -19031,47 +18991,6 @@
     }
   },
   {
-    "oracleId": "oracle-beast-within",
-    "name": "Beast Within",
-    "handledLines": [],
-    "def": {
-      "spellAbility": {
-        "description": "Destroy target permanent; its controller creates a 3/3 Beast",
-        "effects": [
-          {
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "destroyAndCreateTokenForController",
-            "spec": {
-              "colors": [
-                "G"
-              ],
-              "name": "Beast",
-              "power": 3,
-              "subtypes": [
-                "Beast"
-              ],
-              "toughness": 3,
-              "typeLine": "Creature — Beast",
-              "types": [
-                "Creature"
-              ]
-            },
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "permanent"
-          }
-        ]
-      }
-    }
-  },
-  {
     "oracleId": "oracle-belisarius-cawl",
     "name": "Belisarius Cawl",
     "handledLines": [
@@ -21906,6 +21825,7 @@
     "name": "Desolate Mire",
     "handledLines": [],
     "def": {
+      "activatedAbilities": [],
       "manaAbilities": [
         {
           "costs": [

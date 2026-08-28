@@ -11,13 +11,17 @@ import { interpretCard } from '../../../engine/src/cards/interpret';
 import { MatchSession } from '../match/session';
 import type { SeatSetup } from '../match/setup';
 import { parsePlaintextDeck } from '../decks/plaintext';
-import scryfallCards from '../../../../data/scryfall-oracle-cards.json' assert { type: 'json' };
+import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
+
+const scryfallCards = loadScryfallBulkOrNull();
+// data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
+const SKIP = scryfallCards === null;
 
 const livingFixture = resolve('packages/server/fixtures/coverage-decks/living-energy.txt');
 const livingParsed = parsePlaintextDeck(readFileSync(livingFixture, 'utf8'));
 const oracleByName = new Map<string, OracleCard>();
-for (const raw of scryfallCards as any[]) {
+for (const raw of scryfallCards ?? []) {
   const card = toOracleCard(raw);
   if (card !== null) oracleByName.set(card.name, card);
 }
@@ -67,7 +71,7 @@ function livingSeat(seat: string, commander: OracleCard, cards: OracleCard[]): S
   };
 }
 
-describe('Living Energy modeled-card and player-experience checks', () => {
+describe.skipIf(SKIP)('Living Energy modeled-card and player-experience checks', () => {
   it('models every unique card in the committed deck fixture', () => {
     const names = new Set([
       ...livingParsed.commanderNames,

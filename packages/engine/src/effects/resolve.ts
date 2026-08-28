@@ -86,6 +86,25 @@ function findObjectById(ctx: GameContext, id: ObjectId): EngineObject | undefine
   return undefined;
 }
 
+/**
+ * A card currently sitting in ANY player's graveyard, by object id — not just the ability
+ * controller's own (Reanimate: "target creature card from A graveyard" offers candidates from
+ * every graveyard at the targeting step, so resolution has to look in all of them too).
+ *
+ * Deliberately narrower than `findObjectById`: if the card left the graveyard between
+ * announcement and resolution (CR 608.2b), the correct outcome is "target is gone, do nothing" —
+ * not finding it in whatever OTHER zone it ended up in and acting on it there. `ref()` already
+ * re-checks the target's legality before this ever runs, so returning `undefined` here is the
+ * expected "gone" case, not a bug.
+ */
+function findCardInAnyGraveyard(ctx: GameContext, id: ObjectId): EngineCardObject | undefined {
+  for (const player of ctx.state.players) {
+    const found = player.graveyard.find((c) => c.id === id);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
+
 /** Apply CR 701.15a/d: one player contributes at most one active goad requirement. */
 function addGoadRequirement(ctx: GameContext, perm: EnginePermanent, goaderId: PlayerId): void {
   const existing = perm.goadedBy ?? [];
@@ -2126,18 +2145,10 @@ export function* executeAbility(
               : owner.graveyard.find((c) => c.cardId === triggerObjectCardId)
             : (() => {
                 const t = ref(effect.target);
-                if (t === null) return undefined;
                 // The target may be a permanent card in ANY player's graveyard, not just the
-                // ability's controller's own (Reanimate: "target creature card from A
-                // graveyard" — `cardInGraveyard`'s `graveyardOwnerScope: 'any'` already offers
-                // candidates from every graveyard at the targeting step; searching only
-                // `owner.graveyard` here would silently do nothing whenever the chosen card
-                // was actually an opponent's).
-                for (const player of ctx.state.players) {
-                  const found = player.graveyard.find((c) => c.id === t);
-                  if (found !== undefined) return found;
-                }
-                return undefined;
+                // ability's controller's own (`cardInGraveyard`'s `graveyardOwnerScope: 'any'`
+                // already offers candidates from every graveyard at the targeting step).
+                return t === null ? undefined : findCardInAnyGraveyard(ctx, t);
               })();
         // Left the graveyard between announcement and resolution (CR 608.2b) — `ref` already
         // re-checked legality via `graveyardTargets`, so this is the "gone" case, not a bug.
@@ -2148,16 +2159,7 @@ export function* executeAbility(
       }
       case 'reanimateAndLoseLife': {
         const t = ref(effect.target);
-        let cardObj: EngineCardObject | undefined;
-        if (t !== null) {
-          for (const player of ctx.state.players) {
-            const found = player.graveyard.find((c) => c.id === t);
-            if (found !== undefined) {
-              cardObj = found;
-              break;
-            }
-          }
-        }
+        const cardObj = t === null ? undefined : findCardInAnyGraveyard(ctx, t);
         // Left the graveyard between announcement and resolution (CR 608.2b) — the "gone" case,
         // not a bug. No life loss either: nothing was actually reanimated.
         if (cardObj === undefined) break;

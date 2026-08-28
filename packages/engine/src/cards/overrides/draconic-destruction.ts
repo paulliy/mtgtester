@@ -4,7 +4,7 @@
 
 import { constant } from '../value';
 import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost } from '../templates';
-import { BEAST_3_3_GREEN, DRAGON_5_5_FLYING } from '../tokens';
+import { DRAGON_5_5_FLYING } from '../tokens';
 import { defineCard } from './index';
 import { allOf, anyOf, not, OTHER, ofSubtype, ofType, SELF, withKeyword, YOURS } from '../selector';
 
@@ -409,14 +409,16 @@ const DEMANDING_DRAGON_DEF = {
 };
 
 export function registerDRACONIC_DESTRUCTIONOverrides(): void {
-  // The line now parses generically (`parseDestroyAndCreateTokenBlock` in interpret.ts), so
-  // there's no unmodeled reason left to claim — handledLines is empty. `def` stays: the parser's
-  // own token derivation prints `typeLine: "Token Creature — Beast"`, one word off the shared
-  // catalog's `"Creature — Beast"` (`tokens.ts`'s `creatureToken`), so this override's remaining
-  // job is keeping this card on the catalog token rather than the parser's near-miss.
-  defineCard("7735eeba-693b-47e2-bd51-414379cf1016", "Beast Within", [], {
-      spellAbility: { kind: 'spell', targets: [{ kind: 'permanent' }], effects: [{ op: 'destroyAndCreateTokenForController', target: 0, count: constant(1), spec: BEAST_3_3_GREEN }], description: 'Destroy target permanent; its controller creates a 3/3 Beast' },
-    });
+  // Beast Within used to need an override here: `parseDestroyAndCreateTokenBlock`'s own token
+  // derivation printed `typeLine: "Token Creature — Beast"`, one word off the shared catalog's
+  // `"Creature — Beast"` (`tokens.ts`'s `creatureToken`). `parseTokenFace` now runs every parsed
+  // token through `canonicalizeToken`, so the interpreter's own generic parse already produces
+  // `BEAST_3_3_GREEN` by reference — verified in `draconic-destruction-overrides.test.ts`. A
+  // `handledLines: []` override with a hardcoded `def` would have been strictly worse than no
+  // override at all: it unconditionally pins that hardcoded shape with no drift guard watching
+  // it (nothing is claimed, so `applyOverride` can never flag "this line is gone"), silently
+  // masking a future errata or interpreter regression instead of surfacing it. Removed rather
+  // than kept as a no-op-but-redundant registration.
 
   defineCard("06b77a80-4968-4385-960a-fb66bb4faa94", "Dragonkin Berserker", [
           "Boast abilities you activate cost {1} less to activate for each Dragon you control.",

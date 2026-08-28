@@ -61,7 +61,11 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // override deliberately keeps. handledLines emptied rather than changing the def: switching
   // this land off `manaAbilities` is a real behavior change (a stack ability can be responded
   // to; a mana ability can't) outside the scope of a drift-guard cleanup.
-  defineCard('3edf9201-265f-4cd9-b27b-8073bf1a4cf2', 'Desolate Mire', [], { manaAbilities: [{ costs: [mana('{1}'), TAP], units: [['W'], ['B']] }] });
+  // `activatedAbilities: []` clears the interpreter's own stack-based reading of this same line —
+  // without it, `applyOverride`'s shallow merge leaves the interpreted activated ability sitting
+  // alongside this override's mana ability, offering the land's mana twice (once uncounterable,
+  // once respondable) for one printed line.
+  defineCard('3edf9201-265f-4cd9-b27b-8073bf1a4cf2', 'Desolate Mire', [], { manaAbilities: [{ costs: [mana('{1}'), TAP], units: [['W'], ['B']] }], activatedAbilities: [] });
   defineCard('441b51b0-ecd0-466d-9ca8-e754eb563aec', 'Eidolon of Countless Battles', ['unrecognized rules text: "Bestow {2}{W}{W}"', 'unrecognized rules text: "~ and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control."'], { ...auraBuff(1, 1), staticEffects: [{ affects: { kind: 'self' }, op: { layer: 7, sublayer: 'd', power: { kind: 'countPermanents', selector: CREATURE, scope: 'you' }, toughness: { kind: 'countPermanents', selector: CREATURE, scope: 'you' } } }] });
   defineCard('09b7ea91-2620-4c45-af3c-60bbeab89966', 'Eiganjo Dynastorian // Replenish', ['unsupported layout "prepare"', 'unrecognized rules text: "Whenever you attack with two or more creatures, this creature becomes prepared."'], { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'pumpUntilEot', target: 'source', power: 2, toughness: 2 }], description: 'Prepare when attacking with two or more creatures' }] });
   defineCard('3635e4e5-e655-45f4-a444-39756f55129a', 'Eldrazi Conscription', ['unsupported card type "Kindred"', 'unrecognized rules text: "Enchanted creature gets +10/+10 and has trample and annihilator 2."'], auraBuff(10, 10, ['trample']));
