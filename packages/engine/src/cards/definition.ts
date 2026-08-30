@@ -8,7 +8,7 @@
 
 import type { Color, OracleId } from '@mtg/shared';
 import type { ParsedManaCost } from '../mana/cost';
-import type { Ability, ActivatedAbility, KeywordAbility, ManaAbilitySpec } from './ability';
+import type { Ability, AbilityCost, ActivatedAbility, KeywordAbility, ManaAbilitySpec } from './ability';
 import type { Condition } from './condition';
 import type { StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
@@ -121,6 +121,8 @@ export interface CardDefinition {
   alternativeCasts?: import('./ability').AlternativeCast[];
   /** "You may cast this spell without paying its mana cost if you control a commander." */
   commanderFreeCast?: boolean;
+  /** Additional costs paid while announcing a spell (CR 601.2h), apart from its mana cost. */
+  spellAdditionalCosts?: AbilityCost[];
   /**
    * "You may have this enter the battlefield as a copy of …" (CR 707.2, as-enters
    * replacement — Dack's Duplicate, Spark Double, Sculpting Steel). `selector` is a

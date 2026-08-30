@@ -2556,10 +2556,14 @@ function parseActivationCosts(costText: string): AbilityCost[] | null {
       const countWord = picked[1] ?? 'one';
       const count = countWord === 'two' ? 2 : countWord === 'three' ? 3 : 1;
       const noun = (picked[2] as string).replace(/s$/, '');
-      const base = noun === 'artifact'
+      const base = noun === 'artifact or creature'
+        ? anyOf(ofType('Artifact'), ofType('Creature'))
+        : noun === 'artifact'
         ? ofType('Artifact')
         : noun === 'creature'
           ? ofType('Creature')
+          : noun === 'land'
+            ? ofType('Land')
           : noun === 'permanent'
             ? anyOf(ofType('Artifact'), ofType('Creature'), ofType('Enchantment'), ofType('Land'), ofType('Planeswalker'), ofType('Battle'))
             : noun === 'servo'
@@ -2569,6 +2573,13 @@ function parseActivationCosts(costText: string): AbilityCost[] | null {
                 : null;
       if (base === null) return null;
       costs.push({ kind: 'sacrificeOther', selector: allOf(OTHER, YOURS, base), ...(count > 1 ? { count } : {}) });
+      continue;
+    }
+    const discard = part.match(/^discard (a|an|one|two|three|four|five|six|seven|eight|nine|ten) cards?$/);
+    if (discard !== null) {
+      const count = parseAmount(discard[1] as string);
+      if (count === null) return null;
+      costs.push({ kind: 'discardCard', ...(count > 1 ? { count } : {}) });
       continue;
     }
     const payLife = part.match(/^pay (\d+) life$/);
@@ -2606,6 +2617,12 @@ function parseActivationCosts(costText: string): AbilityCost[] | null {
   return costs.length > 0 ? costs : null;
 }
 
+/** Parse the "As an additional cost to cast this spell, ..." header. */
+function parseSpellAdditionalCost(line: string): AbilityCost[] | null {
+  const m = line.match(/^as an additional cost to cast this spell, (.+)$/i);
+  if (m === null) return null;
+  return parseActivationCosts(m[1] as string);
+}
 /** Symbols inside a mana clause, uppercased: "{g} or {w}" â†’ ['G','W']. */
 function manaSymbols(clause: string): ManaUnit {
   return [...clause.matchAll(/\{([wubrgc])\}/g)].map(
@@ -3487,6 +3504,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
     const line = genericLabelStripAllowed ? stripGenericAbilityLabel(knownAbilityWordStripped) : knownAbilityWordStripped;
     if (line.length === 0) continue;
     const lower = line.toLowerCase().replace(/\.$/, '');
+    if (isSpell) {
+      const additionalCosts = parseSpellAdditionalCost(lower);
+      if (additionalCosts !== null) {
+        spellAdditionalCosts.push(...additionalCosts);
+        continue;
+      }
+    }
     if (lower === 'station') {
       activatedAbilities.push({
         costs: [{ kind: 'tapOther', selector: allOf(OTHER, YOURS, ofType('Creature')), capturePowerForStation: true }],
@@ -4038,6 +4062,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         : null,
     ...(spellCantBeCountered ? { spellCantBeCountered: true } : {}),
     ...(commanderFreeCast ? { commanderFreeCast: true } : {}),
+    ...(spellAdditionalCosts.length > 0 ? { spellAdditionalCosts } : {}),
     triggers,
     staticEffects,
     ruleStatics,

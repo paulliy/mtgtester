@@ -91,6 +91,7 @@ does nothing is worse than staying unmodeled).
 
 1. **Additional costs on casting a spell — 6 cards.**
    Deadly Dispute, Big Score, Thrill of Possibility, Village Rites, Crop Rotation, Harrow.
+   **Status (2026-08-30): implemented.** The generic primitive is wired through card definitions, parsing, legality, announcement payment, and executor coverage.
    `AbilityCost` already has `sacrificeOther`/`discardSelf`/`sacrificeSelf`; what is missing is
    anywhere to _hang_ costs on casting. `ActivatedAbility` carries `costs`, but a spell's only
    cost today is its mana cost, and `modes[].additionalCost` (Spree) is per-mode, not per-spell.
@@ -133,7 +134,7 @@ you may choose both instead.` `Ability.modes` already has `minChoices`/`maxChoic
    Doubling Season, Hardened Scales. `RuleStatic` already carries `damageDoubled` as precedent
    for a CR 616 replacement; these are the same shape over `createToken` and `putCounters`.
 
-**≈22 cards across 7 primitives.**
+**6 cards implemented; ≈16 cards remain across 6 primitives.**
 
 ## Tier 3 — genuinely bespoke, and honestly so
 

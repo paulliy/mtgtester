@@ -124,6 +124,54 @@ export function manaPortionOf(costs: readonly AbilityCost[]): ParsedManaCost {
   }
   return total;
 }
+/**
+ * Check the non-mana components of a spell's additional casting costs. The spell is still in its
+ * source zone while options are generated, so a hand-cast spell cannot discard itself.
+ */
+export function canPaySpellAdditionalCosts(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  costs: readonly AbilityCost[],
+  sourceCardId: string,
+  sourceInHand: boolean,
+): boolean {
+  let discardAvailable = player.hand.filter((card) => !sourceInHand || card.cardId !== sourceCardId).length;
+  const sacrificeCosts = costs.filter((cost): cost is Extract<AbilityCost, { kind: 'sacrificeOther' }> => cost.kind === 'sacrificeOther');
+
+  for (const cost of costs) {
+    if (cost.kind === 'discardCard') {
+      const count = cost.count ?? 1;
+      if (discardAvailable < count) return false;
+      discardAvailable -= count;
+    } else if (cost.kind !== 'sacrificeOther' && cost.kind !== 'mana') {
+      return false;
+    }
+  }
+
+  if (sacrificeCosts.length === 0) return true;
+  const candidates = ctx.state.battlefield.filter((perm) => perm.controllerId === player.id);
+  const canAssign = (costIndex: number, used: Set<string>): boolean => {
+    const cost = sacrificeCosts[costIndex];
+    if (cost === undefined) return true;
+    const count = cost.count ?? 1;
+    const eligible = candidates.filter((perm) =>
+      !used.has(perm.cardId) &&
+      matchesSelector(ctx, perm, cost.selector, { cardId: sourceCardId, controllerId: player.id }),
+    );
+    const chooseForCost = (remaining: number, nextUsed: Set<string>): boolean => {
+      if (remaining === 0) return canAssign(costIndex + 1, nextUsed);
+      for (const candidate of eligible) {
+        if (nextUsed.has(candidate.cardId)) continue;
+        const updated = new Set(nextUsed);
+        updated.add(candidate.cardId);
+        if (chooseForCost(remaining - 1, updated)) return true;
+      }
+      return false;
+    };
+    return chooseForCost(count, used);
+  };
+  return canAssign(0, new Set());
+}
 
 /**
  * The engine's deterministic auto-pay plan, exposed as presentation data only. The browser may
@@ -484,6 +532,9 @@ export function computePriorityOptions(
     fromExile = false,
   ): void => {
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+    const spellAdditionalCosts = def.spellAdditionalCosts ?? [];
+    const sourceInHand = !fromCommand && !fromLibraryTop && !fromExile;
+    const additionalManaCost = manaPortionOf(spellAdditionalCosts);
     requireModeled(
       def,
       fromLibraryTop ? 'on top of your library' : fromCommand ? 'in the command zone' : 'in hand',
@@ -545,7 +596,7 @@ export function computePriorityOptions(
     if (xSymbols === 0) xChoices.push(0);
     else {
       for (let x = 0; ; x++) {
-        if (!canPay(withX(base, x), player.manaEntries, sources, allows)) break;
+        if (!canPay(addManaCosts(withX(base, x), additionalManaCost), player.manaEntries, sources, allows)) break;
         xChoices.push(x);
       }
       if (xChoices.length === 0) return;
@@ -564,9 +615,11 @@ export function computePriorityOptions(
       for (const selectedModes of selections) {
         const targets = computeCastTargets(ctx, def, player.id, selectedModeTargetSlots(def, selectedModes));
         if (targets === null) continue;
-        const additional = selectedModes?.flatMap((mode) => def.spellAbility?.modes?.options[mode]?.additionalCost ?? []) ?? [];
-        const selectionCost = addManaCosts(cost, manaPortionOf(additional));
+        const modeAdditionalCosts = selectedModes?.flatMap((mode) => def.spellAbility?.modes?.options[mode]?.additionalCost ?? []) ?? [];
+        const additionalCosts = [...spellAdditionalCosts, ...modeAdditionalCosts];
+        const selectionCost = addManaCosts(cost, manaPortionOf(additionalCosts));
         if (!canPay(selectionCost, player.manaEntries, sources, allows)) continue;
+        if (!canPaySpellAdditionalCosts(ctx, player, additionalCosts, obj.cardId, sourceInHand)) continue;
         const modeLabel = selectedModes === undefined
           ? undefined
           : selectedModes.map((mode) => def.spellAbility?.modes?.options[mode]?.description ?? `mode ${mode + 1}`).join('; ');
@@ -602,6 +655,7 @@ export function computePriorityOptions(
             ...(tax > 0 ? { commanderTax: tax } : {}),
             ...(xSymbols > 0 ? { x } : {}),
             ...(modeLabel !== undefined ? { modeLabel } : {}),
+            ...(additionalCosts.length > 0 ? { abilityCosts: additionalCosts } : {}),
           },
         };
         if (targets.length > 0) option.targets = targets;
@@ -615,7 +669,7 @@ export function computePriorityOptions(
     // Lands are permanents, but they are played rather than cast as permanent spells, so Nissa's
     // alternate energy cost must never be offered for a land card.
     const isPermanentSpell = def.types.some((type) => ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Planeswalker'].includes(type));
-    if (isPermanentSpell && energyAlternativeCost !== undefined && player.energy >= energyAlternativeCost && !fromExile) {
+    if (isPermanentSpell && energyAlternativeCost !== undefined && player.energy >= energyAlternativeCost && !fromExile && canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)) {
       const targets = computeCastTargets(ctx, def, player.id);
       if (targets !== null) {
         const option: EngineActionOption = {
@@ -629,6 +683,7 @@ export function computePriorityOptions(
             manaCost: `{${energyAlternativeCost}} energy`,
             energyCost: energyAlternativeCost,
             castVariant: 'energy',
+            ...(spellAdditionalCosts.length > 0 ? { abilityCosts: spellAdditionalCosts } : {}),
           },
         };
         if (targets.length > 0) option.targets = targets;
@@ -638,7 +693,8 @@ export function computePriorityOptions(
     if (
       def.commanderFreeCast === true &&
       !fromCommand &&
-      ctx.state.battlefield.some((perm) => perm.controllerId === player.id && perm.isCommander)
+      ctx.state.battlefield.some((perm) => perm.controllerId === player.id && perm.isCommander) &&
+      canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)
     ) {
       const targets = computeCastTargets(ctx, def, player.id);
       if (targets !== null) {
@@ -652,6 +708,7 @@ export function computePriorityOptions(
             sourceZone: 'hand',
             manaCost: 'free',
             castVariant: 'commanderFree',
+            ...(spellAdditionalCosts.length > 0 ? { abilityCosts: spellAdditionalCosts } : {}),
           },
           ...(targets.length > 0 ? { targets } : {}),
         });
@@ -668,8 +725,8 @@ export function computePriorityOptions(
     if (def.alternativeCasts && def.alternativeCasts.length > 0 && !fromExile) {
       for (const [index, alt] of def.alternativeCasts.entries()) {
         if (alt.kind === 'overload') {
-          const cost = applyRed(alt.manaCost);
-          if (canPay(cost, player.manaEntries, sources, allows)) {
+          const cost = addManaCosts(applyRed(alt.manaCost), additionalManaCost);
+          if (canPay(cost, player.manaEntries, sources, allows) && canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)) {
             options.push({
               type: 'castSpell',
               description: `Cast ${obj.name} via Overload (${describeManaCost(cost)})`,
@@ -691,8 +748,8 @@ export function computePriorityOptions(
             });
           }
         } else if (alt.kind === 'adventure' || alt.kind === 'omen') {
-          const cost = applyRed(alt.manaCost);
-          if (canPay(cost, player.manaEntries, sources, allows)) {
+          const cost = addManaCosts(applyRed(alt.manaCost), additionalManaCost);
+          if (canPay(cost, player.manaEntries, sources, allows) && canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)) {
             const altName = alt.name ?? alt.description;
             const note =
               alt.kind === 'omen'

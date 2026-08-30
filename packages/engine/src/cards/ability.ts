@@ -39,6 +39,8 @@ export type AbilityCost =
   | { kind: 'sacrificeOther'; selector: Selector; count?: number }
   /** "Discard this card". */
   | { kind: 'discardSelf' }
+  /** "Discard a card" from the controller's hand as a spell or activation cost. */
+  | { kind: 'discardCard'; count?: number }
   | { kind: 'discardHand' }
   /** "Tap any number of untapped creatures you control with total power N or greater". */
   | { kind: 'tapCreaturesTotalPower'; minPower: number }

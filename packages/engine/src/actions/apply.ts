@@ -7,7 +7,7 @@
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { Ability, AbilityCost, CardDefinition } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
-import { payAbilityCosts, payManaCost } from '../effects/resolve';
+import { payAbilityCosts, payManaCost, paySpellAdditionalCosts } from '../effects/resolve';
 import { computeCharacteristics } from '../effects/continuous';
 import { emit, debug } from '../log/log';
 import type { ParsedManaCost } from '../mana/cost';
@@ -206,6 +206,7 @@ export function* applyPriorityAction(
       const obj = fromZone.find((o) => o.id === payload.objectId);
       if (obj === undefined) throw new Error('engine bug: spell to cast not found');
       const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+      let castingAdditionalCosts: AbilityCost[] = [...(def.spellAdditionalCosts ?? [])];
 
       const tax = payload.fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
       const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
@@ -268,8 +269,8 @@ export function* applyPriorityAction(
           payload.x ?? 0,
         );
         const selectedModes = payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
-        const additional = selectedModes?.flatMap((mode) => def.spellAbility?.modes?.options[mode]?.additionalCost ?? []) ?? [];
-        cost = addManaCosts(cost, manaPortionOf(additional));
+        const modeAdditionalCosts = selectedModes?.flatMap((mode) => def.spellAbility?.modes?.options[mode]?.additionalCost ?? []) ?? [];
+        castingAdditionalCosts = [...castingAdditionalCosts, ...modeAdditionalCosts];
         ability = resolveCastAbility(def, payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined), obj.name) ?? {
           kind: 'spell',
           targets: [],
@@ -278,7 +279,9 @@ export function* applyPriorityAction(
         targets = validateChosenTargets(ctx, def, player.id, outcome.targets, selectedModeTargetSlots(def, selectedModes));
       }
 
+      cost = addManaCosts(cost, manaPortionOf(castingAdditionalCosts));
       yield* payManaCost(ctx, player, cost, { kind: 'castSpell', oracleId: obj.oracleId });
+      yield* paySpellAdditionalCosts(ctx, player, castingAdditionalCosts, obj.cardId, payload.fromCommand === false && payload.fromLibraryTop !== true && payload.fromExile !== true);
 
       if (payload.fromCommand) {
         player.commanderCastCount[obj.cardId] = (player.commanderCastCount[obj.cardId] ?? 0) + 1;

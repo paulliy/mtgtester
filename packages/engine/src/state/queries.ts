@@ -475,6 +475,11 @@ export function canPayNonManaCosts(
         if (totalPower < cost.minPower) return false;
         break;
       }
+      case 'discardCard': {
+        const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
+        if (controller === undefined || controller.hand.length < (cost.count ?? 1)) return false;
+        break;
+      }
       case 'mana':
         break;
     }

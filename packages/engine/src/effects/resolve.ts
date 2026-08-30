@@ -381,12 +381,14 @@ export function* drawCards(
 }
 
 /** Discard N cards, one controller choice at a time (CR 701.8a). */
-function* discardCards(ctx: GameContext, player: EnginePlayerState, count: number): GameGen<void> {
-  for (let i = 0; i < count && player.hand.length > 0; i++) {
+function* discardCards(ctx: GameContext, player: EnginePlayerState, count: number, excludeCardId?: string): GameGen<void> {
+  for (let i = 0; i < count; i++) {
+    const cards = player.hand.filter((card) => card.cardId !== excludeCardId);
+    if (cards.length === 0) break;
     const chosen = yield* chooseCard(ctx, {
       player: player.id,
       prompt: `Discard a card (${i + 1} of ${count}).`,
-      cards: player.hand,
+      cards,
       type: 'discard',
       verb: 'Discard',
     });
@@ -397,6 +399,51 @@ function* discardCards(ctx: GameContext, player: EnginePlayerState, count: numbe
   }
 }
 
+/**
+ * Pay the non-mana components of a spell's additional casting cost. Mana components are folded
+ * into the normal payment plan before this generator is called.
+ */
+export function* paySpellAdditionalCosts(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  costs: readonly AbilityCost[],
+  sourceCardId: string,
+  sourceInHand: boolean,
+): GameGen<void> {
+  for (const cost of costs) {
+    switch (cost.kind) {
+      case 'discardCard':
+        yield* discardCards(ctx, player, cost.count ?? 1, sourceInHand ? sourceCardId : undefined);
+        break;
+      case 'sacrificeOther': {
+        const count = cost.count ?? 1;
+        for (let i = 0; i < count; i++) {
+          const options = ctx.state.battlefield.filter((candidate) =>
+            candidate.controllerId === player.id &&
+            matchesSelector(ctx, candidate, cost.selector, { cardId: sourceCardId, controllerId: player.id }),
+          );
+          if (options.length === 0) throw new Error('engine bug: spell additional sacrifice cost became unpayable');
+          const chosen = yield* chooseCard(ctx, {
+            player: player.id,
+            prompt: player.id + ': choose a permanent to sacrifice as a spell cost (' + (i + 1) + ' of ' + count + ').',
+            cards: options,
+            type: 'sacrifice',
+            verb: 'Sacrifice',
+          });
+          if (chosen === null) throw new Error('engine bug: spell additional sacrifice choice was invalid');
+          const permanent = chosen as EnginePermanent;
+          emit(ctx, 'sacrifice', { name: permanent.name, cardId: permanent.cardId }, player.id);
+          yield* moveObject(ctx, permanent, { zone: 'graveyard' });
+        }
+        break;
+      }
+      case 'mana':
+        break;
+      default:
+        throw new Error('engine bug: unsupported spell additional cost ' + cost.kind);
+    }
+  }
+}
 /**
  * Is `target` (an object id or player id) still a legal target (CR 608.2b)?
  *
@@ -3926,6 +3973,9 @@ export function* payAbilityCosts(
         emit(ctx, 'unattach', { equipment: perm.name, from: hostName }, player.id);
         break;
       }
+      case 'discardCard':
+        yield* discardCards(ctx, player, cost.count ?? 1);
+        break;
       case 'discardHand':
         yield* discardCards(ctx, player, player.hand.length);
         break;
