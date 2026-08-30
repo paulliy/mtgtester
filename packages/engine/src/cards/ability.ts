@@ -973,12 +973,14 @@ export interface Ability {
    * one CAST OPTION per mode (the same "the option menu is the contract" treatment `{X}`
    * already gets) rather than asking a resolution-time decision; the chosen mode's `effects`
    * are substituted for `effects` at cast time, and the executor never sees `modes` at all.
-   * `choose` is always 1 for every mode this engine reads today — a "choose two" grammar is not
-   * something any closed-set card here needs, so it is not built.
+   * minChoices and maxChoices capture fixed modal counts; maxChoicesIf can raise the maximum
+   * when a state condition is true at announcement.
    */
   modes?: {
     minChoices: number;
     maxChoices: number;
+    /** A state-dependent maximum announced at cast time (for example, two while controlling a commander). */
+    maxChoicesIf?: { condition: import('./condition').Condition; maxChoices: number };
     options: {
       effects: Effect[];
       description?: string;

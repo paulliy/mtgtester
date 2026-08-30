@@ -94,13 +94,22 @@ export function selectedModeTargetSlots(def: CardDefinition, selectedModes: numb
   return [...new Set(chosen.flatMap((option) => option?.targetSlots ?? []))].sort((a, b) => a - b);
 }
 
-function modalSelections(def: CardDefinition): (number[] | undefined)[] {
+export function maxChoicesFor(ctx: GameContext, def: CardDefinition, source: SelectorSource): number | undefined {
+  const modes = def.spellAbility?.modes;
+  if (modes === undefined || modes.maxChoicesIf === undefined) return modes?.maxChoices;
+  return evaluateCondition(ctx, modes.maxChoicesIf.condition, source)
+    ? modes.maxChoicesIf.maxChoices
+    : modes.maxChoices;
+}
+
+function modalSelections(def: CardDefinition, maxChoices = def.spellAbility?.modes?.maxChoices): (number[] | undefined)[] {
   const modes = def.spellAbility?.modes;
   if (modes === undefined) return [undefined];
+  if (maxChoices === undefined) return [];
   const out: number[][] = [];
   const visit = (next: number, chosen: number[]): void => {
-    if (chosen.length >= modes.minChoices && chosen.length <= modes.maxChoices) out.push([...chosen]);
-    if (chosen.length === modes.maxChoices) return;
+    if (chosen.length >= modes.minChoices && chosen.length <= maxChoices) out.push([...chosen]);
+    if (chosen.length === maxChoices) return;
     for (let i = next; i < modes.options.length; i++) {
       chosen.push(i);
       visit(i + 1, chosen);
@@ -648,7 +657,7 @@ export function computePriorityOptions(
     // so each mode is its own cast option, the same "the option menu is the contract" treatment
     // {X} gets above. A non-modal spell has exactly one "mode" (undefined), so this loop is a
     // single iteration when `modes` is absent.
-    const selections = modalSelections(def);
+    const selections = modalSelections(def, maxChoicesFor(ctx, def, { cardId: obj.cardId, controllerId: player.id }));
 
     for (const x of xChoices) {
       const cost = withX(base, x);

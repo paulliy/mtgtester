@@ -126,15 +126,15 @@ does nothing is worse than staying unmodeled).
    Force of Will, Force of Negation (`exile a blue card from your hand` ± `pay 1 life`).
 
 6. **Commander-conditional modal header — 2 cards.**
-   Jeska's Will, Akroma's Will: `Choose one. If you control a commander as you cast this spell,
-you may choose both instead.` `Ability.modes` already has `minChoices`/`maxChoices`; this
-   needs `maxChoices` to be state-dependent at announcement.
+   **Status (2026-08-30): implemented.** Modal abilities now carry a generic conditional maximum;
+   Jeska's Will and Akroma's Will's choose-one/choose-both header shape is parsed and covered
+   through announcement option generation, runtime mode execution, and forged-payload rejection.
 
 7. **Token / counter doubling replacement — 2 cards.**
    Doubling Season, Hardened Scales. `RuleStatic` already carries `damageDoubled` as precedent
    for a CR 616 replacement; these are the same shape over `createToken` and `putCounters`.
 
-**14 cards implemented; ≈8 cards remain across 4 primitives.**
+**18 cards implemented; approximately 4 cards remain across 2 primitives.**
 
 ## Tier 3 — genuinely bespoke, and honestly so
 

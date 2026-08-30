@@ -29,7 +29,7 @@ import type {
   GameContext,
 } from '../state/types';
 import type { PriorityActionPayload } from './legal';
-import { activationCostReductionFor, computeTargetOptions, costReductionFor, manaPortionOf, selectedModeTargetSlots, validateChosenTargets } from './legal';
+import { activationCostReductionFor, computeTargetOptions, costReductionFor, manaPortionOf, maxChoicesFor, selectedModeTargetSlots, validateChosenTargets } from './legal';
 import { breakYieldsForStop } from '../turn/stops';
 
 /**
@@ -60,6 +60,7 @@ function resolveCastAbility(
   def: CardDefinition,
   selectedModes: number[] | undefined,
   cardName: string,
+  maxChoices?: number,
 ): Ability | null {
   if (def.spellAbility === null) {
     return def.spellCantBeCountered === true
@@ -69,7 +70,7 @@ function resolveCastAbility(
   const modes = def.spellAbility.modes;
   if (modes === undefined) return def.spellAbility;
   const indices = selectedModes ?? [0];
-  if (indices.length < modes.minChoices || indices.length > modes.maxChoices) {
+  if (indices.length < modes.minChoices || indices.length > (maxChoices ?? modes.maxChoices)) {
     throw new Error(`engine bug: invalid mode count ${indices.length} for ${cardName}`);
   }
   const chosen = indices.map((index) => modes.options[index]);
@@ -299,7 +300,7 @@ export function* applyPriorityAction(
         const selectedModes = payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
         const modeAdditionalCosts = selectedModes?.flatMap((mode) => def.spellAbility?.modes?.options[mode]?.additionalCost ?? []) ?? [];
         castingAdditionalCosts = [...castingAdditionalCosts, ...modeAdditionalCosts];
-        ability = resolveCastAbility(def, payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined), obj.name) ?? {
+        ability = resolveCastAbility(def, payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined), obj.name, maxChoicesFor(ctx, def, { cardId: obj.cardId, controllerId: player.id })) ?? {
           kind: 'spell',
           targets: [],
           effects: [],

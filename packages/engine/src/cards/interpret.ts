@@ -1259,9 +1259,17 @@ function parseModalSpellBlock(
     .filter((l) => l.length > 0);
   if (lines.length < 3) return null;
   const header = (lines[0] as string).match(
-    /^choose (one|one or more|one or both|any number|two|three)\s*(?:\u2014|-)\s*$/i,
+    /^choose (one|one or more|one or both|any number|two|three)(?:\s*(?:\u2014|-)|\.)\s*(.*)$/i,
   );
   if (header === null) return null;
+
+  const conditionalHeader = (header[2] as string).trim().toLowerCase();
+  const maxChoicesIf = conditionalHeader === 'if you control a commander as you cast this spell, you may choose both instead.'
+    ? { condition: { kind: 'controlsYourCommander' as const }, maxChoices: 2 }
+    : conditionalHeader.length === 0
+      ? undefined
+      : null;
+  if (maxChoicesIf === null) return null;
 
   const targets: TargetSpec[] = [];
   const alloc: SlotAllocator = (kind, filter) => {
@@ -1288,7 +1296,7 @@ function parseModalSpellBlock(
   const minChoices = exact ?? (choice === 'any number' ? 0 : 1);
   const maxChoices =
     exact ?? (choice === 'one' ? 1 : choice === 'one or both' ? Math.min(2, options.length) : options.length);
-  return { targets, modes: { minChoices, maxChoices, options } };
+  return { targets, modes: { minChoices, maxChoices, ...(maxChoicesIf !== undefined ? { maxChoicesIf } : {}), options } };
 }
 
 /**
