@@ -54,13 +54,19 @@ export type AbilityCost =
   | { kind: 'mana'; cost: ParsedManaCost }
   /** "Exile this card from your graveyard" (Runehorn Hellkite) — a graveyard-only cost. */
   | { kind: 'exileSelfFromGraveyard' }
+  /** Exile a matching card from the controller's hand as a casting cost (Force of Will). */
+  | { kind: 'exileCardFromHand'; selector: Selector; count?: number }
   /** "Unattach this Equipment" (Sunforger) — payable only while attached; unattaches as the
    * cost is paid. Distinct from `attachSelfTo`, which is an EFFECT (equipping), not a cost. */
   | { kind: 'unattachSelf' };
 
 export interface AlternativeCast {
-  kind: 'overload' | 'adventure' | 'omen' | 'mdfc';
+  kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana';
   manaCost: ParsedManaCost;
+  /** Non-mana components of a cost that replaces the spell's printed mana cost. */
+  costs?: AbilityCost[];
+  /** State condition required to choose this alternative cost at announcement. */
+  condition?: Condition;
   description: string;
   name?: string;
   typeLine?: string;

@@ -2647,6 +2647,36 @@ function parseActivationCosts(costText: string): AbilityCost[] | null {
   return costs.length > 0 ? costs : null;
 }
 
+/** Parse a non-mana alternate-cost line such as Force of Will's pitch cost. */
+function parseNonManaAlternativeCost(line: string): { costs: AbilityCost[]; condition?: Condition } | null {
+  const match = line.match(/^(if it's not your turn, )?you may (.+) rather than pay (?:this spell's|its) mana cost$/);
+  if (match === null) return null;
+  const costs: AbilityCost[] = [];
+  for (const part of (match[2] as string).split(' and ')) {
+    const payLife = part.match(/^(?:pay) (\d+) life$/);
+    if (payLife !== null) {
+      costs.push({ kind: 'payLife', amount: Number(payLife[1]) });
+      continue;
+    }
+    const exile = part.match(/^exile (?:a|one) (white|blue|black|red|green) card from your hand$/);
+    if (exile !== null) {
+      const colors: Record<string, Color> = {
+        white: 'W',
+        blue: 'U',
+        black: 'B',
+        red: 'R',
+        green: 'G',
+      };
+      costs.push({ kind: 'exileCardFromHand', selector: ofColor(colors[exile[1] as string] as Color) });
+      continue;
+    }
+    return null;
+  }
+  return costs.length > 0
+    ? { costs, ...(match[1] !== undefined ? { condition: { kind: 'notYourTurn' } as Condition } : {}) }
+    : null;
+}
+
 /** Parse the "As an additional cost to cast this spell, ..." header. */
 function parseSpellAdditionalCost(line: string): AbilityCost[] | null {
   const m = line.match(/^as an additional cost to cast this spell, (.+)$/i);
@@ -3610,6 +3640,18 @@ export function interpretCard(card: OracleCard): CardDefinition {
       const additionalCosts = parseSpellAdditionalCost(lower);
       if (additionalCosts !== null) {
         spellAdditionalCosts.push(...additionalCosts);
+        continue;
+      }
+      const alternativeCosts = parseNonManaAlternativeCost(lower);
+      if (alternativeCosts !== null) {
+        if (alternativeCasts === undefined) alternativeCasts = [];
+        alternativeCasts.push({
+          kind: 'nonMana',
+          manaCost: parseManaCost('{0}').cost!,
+          costs: alternativeCosts.costs,
+          ...(alternativeCosts.condition !== undefined ? { condition: alternativeCosts.condition } : {}),
+          description: line,
+        });
         continue;
       }
     }

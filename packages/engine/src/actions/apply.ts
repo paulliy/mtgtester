@@ -5,6 +5,7 @@
  */
 
 import type { ObjectId, PlayerId } from '@mtg/shared';
+import { evaluateCondition } from '../cards/condition';
 import type { Ability, AbilityCost, CardDefinition } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
 import { payAbilityCosts, payManaCost, paySpellAdditionalCosts } from '../effects/resolve';
@@ -255,6 +256,22 @@ export function* applyPriorityAction(
         }
         cost = emptyCost();
         ability = resolveCastAbility(def, undefined, obj.name) ?? { kind: 'spell', targets: [], effects: [] };
+        targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
+      } else if (payload.alternativeCast === 'nonMana') {
+        const alt =
+          def.alternativeCasts?.[payload.altIndex ?? 0] ??
+          def.alternativeCasts?.find((a) => a.kind === 'nonMana');
+        if (alt?.kind !== 'nonMana') throw new Error('missing non-mana alternative cost');
+        if (alt.condition !== undefined && !evaluateCondition(ctx, alt.condition, { cardId: obj.cardId, controllerId: player.id })) {
+          throw new Error('non-mana alternative cost condition is not met');
+        }
+        castingAdditionalCosts = [...castingAdditionalCosts, ...(alt.costs ?? [])];
+        cost = emptyCost();
+        ability = resolveCastAbility(def, undefined, obj.name) ?? {
+          kind: 'spell',
+          targets: [],
+          effects: [],
+        };
         targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
       } else if (payload.alternativeCast === 'overload') {
         const alt = def.alternativeCasts?.find((a) => a.kind === 'overload');

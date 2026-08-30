@@ -157,7 +157,7 @@ export interface EngineStackObject extends StackObject {
   /** True when the "spell" is a commander cast from the command zone. */
   isCommanderCast: boolean;
   /** Kind of alternative cast used, if any (overload, adventure, omen). */
-  alternativeCastKind?: 'overload' | 'adventure' | 'omen' | 'energy' | 'commanderFree';
+  alternativeCastKind?: 'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree';
   altIndex?: number;
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;

@@ -480,6 +480,8 @@ export function canPayNonManaCosts(
         if (controller === undefined || controller.hand.length < (cost.count ?? 1)) return false;
         break;
       }
+      case 'exileCardFromHand':
+        return false;
       case 'mana':
         break;
     }

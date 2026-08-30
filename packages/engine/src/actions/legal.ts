@@ -9,6 +9,7 @@
  */
 
 import { ALL_COLORS } from '@mtg/shared';
+import { evaluateCondition } from '../cards/condition';
 import type { Color, ObjectId, OracleId, PlayerId } from '@mtg/shared';
 import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../cards/definition';
 import type { SelectorCandidate, SelectorSource } from '../cards/selector';
@@ -20,6 +21,7 @@ import { addGeneric, canPay, describeManaCost, emptyCost, planPayment, subtractC
 import type { ManaSource, ParsedManaCost } from '../mana/cost';
 import {
   allowanceFor,
+  cardZoneCandidate,
   canPayNonManaCosts,
   castFromLibraryTopCandidates,
   castingSpellsBlockedFor,
@@ -62,7 +64,7 @@ export type PriorityActionPayload =
       mode?: number;
       /** Chosen modal subset; supersedes mode for ranged modal spells. */
       modes?: number[];
-      alternativeCast?: 'overload' | 'adventure' | 'omen' | 'energy' | 'commanderFree';
+      alternativeCast?: 'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree';
       altIndex?: number;
     }
   /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
@@ -144,6 +146,18 @@ export function canPaySpellAdditionalCosts(
       const count = cost.count ?? 1;
       if (discardAvailable < count) return false;
       discardAvailable -= count;
+    } else if (cost.kind === 'payLife') {
+      if (player.life < cost.amount) return false;
+    } else if (cost.kind === 'exileCardFromHand') {
+      const count = cost.count ?? 1;
+      const eligible = player.hand.filter((card) =>
+        (!sourceInHand || card.cardId !== sourceCardId) &&
+        selectMatches(cardZoneCandidate(ctx, card, player.id), cost.selector, {
+          cardId: sourceCardId,
+          controllerId: player.id,
+        }),
+      );
+      if (eligible.length < count) return false;
     } else if (cost.kind !== 'sacrificeOther' && cost.kind !== 'mana') {
       return false;
     }
@@ -752,7 +766,39 @@ export function computePriorityOptions(
 
     if (def.alternativeCasts && def.alternativeCasts.length > 0 && !fromExile) {
       for (const [index, alt] of def.alternativeCasts.entries()) {
-        if (alt.kind === 'overload') {
+        if (alt.kind === 'nonMana') {
+          const alternativeCosts = [...spellAdditionalCosts, ...(alt.costs ?? [])];
+          const cost = addManaCosts(applyRed(alt.manaCost), manaPortionOf(alternativeCosts));
+          if (
+            (alt.condition === undefined || evaluateCondition(ctx, alt.condition, { cardId: obj.cardId, controllerId: player.id })) &&
+            canPay(cost, player.manaEntries, sources, allows) &&
+            canPaySpellAdditionalCosts(ctx, player, alternativeCosts, obj.cardId, sourceInHand)
+          ) {
+            const targets = computeCastTargets(ctx, def, player.id);
+            if (targets !== null) {
+              options.push({
+                type: 'castSpell',
+                description: 'Cast ' + obj.name + ' without paying its mana cost (alternate cost)',
+                payload: {
+                  kind: 'castSpell',
+                  objectId: obj.id,
+                  fromCommand,
+                  alternativeCast: 'nonMana',
+                  altIndex: index,
+                },
+                data: {
+                  instantSpeed,
+                  sourceName: obj.name,
+                  sourceZone: fromCommand ? 'command' : 'hand',
+                  manaCost: 'free',
+                  ...paymentPreview(ctx, player, cost, sources, allows),
+                  castVariant: 'nonMana',
+                  abilityCosts: alternativeCosts,
+                },
+              });
+            }
+          }
+        } else if (alt.kind === 'overload') {
           const cost = addManaCosts(applyRed(alt.manaCost), additionalManaCost);
           if (canPay(cost, player.manaEntries, sources, allows) && canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)) {
             options.push({

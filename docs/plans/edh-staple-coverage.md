@@ -120,9 +120,10 @@ does nothing is worse than staying unmodeled).
    still needs "first … each turn" plus `X = this creature’s power`.
 
 5. **Free alternative casts with a non-mana cost — 2 cards.**
+   **Status (2026-08-30): implemented.** `AlternativeCast` now carries typed non-mana costs and an optional
+   announcement condition; Force of Will and Force of Negation are parsed and covered through legal
+   option generation, life/payment resolution, and actual counter-spell execution.
    Force of Will, Force of Negation (`exile a blue card from your hand` ± `pay 1 life`).
-   `AlternativeCast` exists but is keyed to a mana cost; this generalizes it to `AbilityCost[]`,
-   which composes with item 1 above — do them adjacently.
 
 6. **Commander-conditional modal header — 2 cards.**
    Jeska's Will, Akroma's Will: `Choose one. If you control a commander as you cast this spell,

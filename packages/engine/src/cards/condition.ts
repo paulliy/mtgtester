@@ -100,6 +100,8 @@ export type Condition =
   | { kind: 'controlsYourCommander' }
   /** "if an opponent is the monarch" (Queen Marchesa). */
   | { kind: 'opponentIsMonarch' }
+  /** A non-your-turn restriction, as on Force of Negation. */
+  | { kind: 'notYourTurn' }
   /** Attack trigger condition: the defending player has more life than the attacker’s controller. */
   | { kind: 'attackingPlayerHasMoreLife' }
   | { kind: 'allOf'; of: Condition[] }
@@ -160,6 +162,8 @@ export function evaluateCondition(
       });
       return compare(inScope.length, condition.cmp, condition.n);
     }
+    case 'notYourTurn':
+      return ctx.state.currentTurnPlayer !== source.controllerId;
     case 'opponentCount':
       return compare(opponentsOf(ctx, source.controllerId).length, condition.cmp, condition.n);
     case 'excessDamageDealtTo': {

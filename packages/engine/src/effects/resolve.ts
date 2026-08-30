@@ -415,6 +415,34 @@ export function* paySpellAdditionalCosts(
       case 'discardCard':
         yield* discardCards(ctx, player, cost.count ?? 1, sourceInHand ? sourceCardId : undefined);
         break;
+      case 'exileCardFromHand': {
+        const count = cost.count ?? 1;
+        for (let i = 0; i < count; i++) {
+          const options = player.hand.filter((card) =>
+            (!sourceInHand || card.cardId !== sourceCardId) &&
+            selectMatches(cardZoneCandidate(ctx, card, player.id), cost.selector, {
+              cardId: sourceCardId,
+              controllerId: player.id,
+            }),
+          );
+          if (options.length === 0) throw new Error('engine bug: exile-from-hand cost became unpayable');
+          const chosen = yield* chooseCard(ctx, {
+            player: player.id,
+            prompt: player.id + ': choose a card to exile from hand as a spell cost.',
+            cards: options,
+            type: 'exile',
+            verb: 'Exile',
+          });
+          if (chosen === null) throw new Error('engine bug: exile-from-hand choice was invalid');
+          const card = chosen as EngineCardObject;
+          emit(ctx, 'exile', { player: player.id, name: card.name, cardId: card.cardId }, player.id);
+          yield* moveObject(ctx, card, { zone: 'exile' });
+        }
+        break;
+      }
+      case 'payLife':
+        loseLife(ctx, player, cost.amount);
+        break;
       case 'sacrificeOther': {
         const count = cost.count ?? 1;
         for (let i = 0; i < count; i++) {
