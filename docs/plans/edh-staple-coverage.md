@@ -1,4 +1,4 @@
-# Plan — closing the EDH-staple coverage gap
+﻿# Plan — closing the EDH-staple coverage gap
 
 > Status: proposed. Baseline measured 2026-08-07 at commit `83120f5`:
 > **107 / 200 modeled**, 93 remaining.
@@ -133,8 +133,11 @@ does nothing is worse than staying unmodeled).
 7. **Token / counter doubling replacement — 2 cards.**
    Doubling Season, Hardened Scales. `RuleStatic` already carries `damageDoubled` as precedent
    for a CR 616 replacement; these are the same shape over `createToken` and `putCounters`.
+   **Status (2026-08-30): implemented.** Token creation and counter placement now share generic
+   CR 616 replacement handling; Doubling Season and Hardened Scales are parsed and covered
+   through batch creation, controller scoping, runtime placement, and as-enter counter tests.
 
-**18 cards implemented; approximately 4 cards remain across 2 primitives.**
+**20 cards implemented; approximately 2 cards remain across 1 primitive.**
 
 ## Tier 3 — genuinely bespoke, and honestly so
 

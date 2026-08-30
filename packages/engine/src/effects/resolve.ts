@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Effect resolution (brief §6.2): applying the mechanical outcome of `EffectSpec`s, plus
  * the shared damage/draw/life primitives used by combat and turn-based actions.
  */
@@ -48,6 +48,7 @@ import {
 import {
   allowanceFor,
   cardZoneCandidate,
+  counterAmountAfterReplacements,
   colorsOf,
   damageAmountAfterReplacements,
   damageMultiplierFor,
@@ -565,14 +566,15 @@ function addCounters(
   count: number,
 ): void {
   if (count <= 0) return;
+  const adjustedCount = counterAmountAfterReplacements(ctx, perm, counter, count);
   const before = perm.counters[counter] ?? 0;
-  perm.counters[counter] = (perm.counters[counter] ?? 0) + count;
+  perm.counters[counter] = (perm.counters[counter] ?? 0) + adjustedCount;
   emit(ctx, 'counters', {
     source: source.name,
     target: perm.name,
     targetCardId: perm.cardId,
     counter,
-    added: count,
+    added: adjustedCount,
     total: perm.counters[counter],
   });
   const def = ctx.defs.get(perm.oracleId);

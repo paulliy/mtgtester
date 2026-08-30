@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Read-only state queries: definitions, effective characteristics (computed through the CR
  * 613 layer engine — see `effects/continuous.ts`), players in the game, and mana sources.
  */
@@ -805,4 +805,53 @@ export function damageAmountAfterReplacements(
     }
   }
   return amount;
+}
+/** The multiplicative token replacement effects active for controllerId. */
+export function tokenCreationMultiplierFor(ctx: GameContext, controllerId: PlayerId): number {
+  return gatherRuleStatics(ctx).reduce((multiplier, entry) => {
+    if (entry.static.kind !== 'tokenCountMultiplier' || entry.controllerId !== controllerId) return multiplier;
+    return multiplier * entry.static.multiplier;
+  }, 1);
+}
+
+function applyCounterReplacements(
+  ctx: GameContext,
+  counter: string,
+  amount: number,
+  matches: (filter: Selector, source: SelectorSource) => boolean,
+): number {
+  if (amount <= 0) return amount;
+  let adjusted = amount;
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'counterPlacementReplacement') continue;
+    if (entry.static.counter !== undefined && entry.static.counter !== counter) continue;
+    const source: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
+    if (!matches(entry.static.filter, source)) continue;
+    adjusted = adjusted * entry.static.multiplier + entry.static.addition;
+  }
+  return adjusted;
+}
+
+/** Apply active counter replacements to counters placed on an existing permanent. */
+export function counterAmountAfterReplacements(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  counter: string,
+  amount: number,
+): number {
+  return applyCounterReplacements(ctx, counter, amount, (filter, source) =>
+    matchesSelector(ctx, perm, filter, source),
+  );
+}
+
+/** Apply active counter replacements to a permanent while it is still entering. */
+export function counterAmountAfterReplacementsForCandidate(
+  ctx: GameContext,
+  candidate: SelectorCandidate,
+  counter: string,
+  amount: number,
+): number {
+  return applyCounterReplacements(ctx, counter, amount, (filter, source) =>
+    selectMatches(candidate, filter, source),
+  );
 }

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Object identity and zone movement (CR 400.7, brief §5.2). A card changing zones becomes
  * a NEW object with a new `ObjectId`; the stable `cardId` links its zone-visits together.
  *
@@ -20,7 +20,7 @@ import type { GameGen } from '../decisions';
 import { chooseCard } from '../effects/choose';
 import { computeCharacteristics, matchesSelector, selectPermanents } from '../effects/continuous';
 import { debug, emit } from '../log/log';
-import { getDefByOracleId, triggersOf } from './queries';
+import { cardZoneCandidate, counterAmountAfterReplacementsForCandidate, getDefByOracleId, tokenCreationMultiplierFor, triggersOf } from './queries';
 import type {
   CardId,
   EngineCardObject,
@@ -138,6 +138,10 @@ export function makePermanent(
   // are already there as it enters, so it is never momentarily 0-toughness.
   for (const [counter, n] of Object.entries(def.entersWithCounters ?? {})) {
     counters[counter] = (counters[counter] ?? 0) + n;
+  }
+  const incoming = cardZoneCandidate(ctx, obj as EngineCardObject, controllerId);
+  for (const [counter, amount] of Object.entries(counters)) {
+    counters[counter] = counterAmountAfterReplacementsForCandidate(ctx, incoming, counter, amount);
   }
   return {
     ...reincarnate(ctx, obj, 'battlefield'),
@@ -550,6 +554,11 @@ export function createToken(
       keywords: ['flying'],
     }, controllerId, false);
   }
+  if (applyTokenReplacements) {
+    const multiplier = tokenCreationMultiplierFor(ctx, controllerId);
+    for (let i = 1; i < multiplier; i++) createToken(ctx, spec, controllerId, false);
+  }
+
   return perm;
 }
 

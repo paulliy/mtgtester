@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rule-modifying statics (ADR 0010, Inc 13) — continuous effects that change the RULES of
  * casting or countering, rather than a permanent's characteristics.
  *
@@ -60,6 +60,16 @@ export type RuleStatic =
   | { kind: 'damageDoubledToOpponents' }
   /** "Sources would deal damage to you or your permanents" (Gisela). */
   | { kind: 'damageHalvedToYou' }
+  /** "If an effect would create one or more tokens under your control, it creates twice that many instead." */
+  | { kind: 'tokenCountMultiplier'; multiplier: number }
+  /** A CR 616 replacement for counters placed on a matching permanent. */
+  | {
+      kind: 'counterPlacementReplacement';
+      filter: Selector;
+      counter?: string;
+      multiplier: number;
+      addition: number;
+    }
   /** "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison). */
   | { kind: 'attackTax'; amount: number }
   | { kind: 'convoke' }

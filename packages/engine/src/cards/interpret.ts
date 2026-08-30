@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle-text interpreter (brief Â§6). Turns an `OracleCard` into a `CardDefinition` by
  * accounting for EVERY line of rules text against the mechanics the engine implements:
  * keyword lists, mana abilities, enters-tapped clauses, a registry of spell-effect
@@ -3040,6 +3040,14 @@ const LOOK_AT_TOP_ANY_TIME_RE = /^you may look at the top card of your library a
  */
 const DAMAGE_DOUBLED_RE =
   /^if a creature you control that entered this turn would deal damage, it deals twice that much damage instead$/;
+const TOKEN_COUNT_DOUBLED_RE =
+  /^if an effect would create one or more tokens under your control, it creates twice that many instead$/;
+
+const COUNTER_COUNT_DOUBLED_RE =
+  /^if an effect would put one or more counters on a permanent you control, it puts twice that many of each of those counters on that permanent instead$/;
+
+const PLUS_COUNTER_ADDITION_RE =
+  /^if one or more \+1\/\+1 counters would be put on a creature you control, that many plus one \+1\/\+1 counters are put on that creature instead$/;
 
 /**
  * Rule-modifying statics (ADR 0010, Inc 13) â€” cost reduction, "can't be countered", "opponents
@@ -3060,6 +3068,16 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       { kind: 'damageDoubled', sourceFilter: allOf(ofType('Creature'), YOURS, ENTERED_THIS_TURN) },
     ];
   }
+  if (TOKEN_COUNT_DOUBLED_RE.test(lower)) {
+    return [{ kind: 'tokenCountMultiplier', multiplier: 2 }];
+  }
+  if (COUNTER_COUNT_DOUBLED_RE.test(lower)) {
+    return [{ kind: 'counterPlacementReplacement', filter: YOURS, multiplier: 2, addition: 0 }];
+  }
+  if (PLUS_COUNTER_ADDITION_RE.test(lower)) {
+    return [{ kind: 'counterPlacementReplacement', filter: allOf(ofType('Creature'), YOURS), counter: '+1/+1', multiplier: 1, addition: 1 }];
+  }
+
 
   {
     const m = lower.match(EMINENCE_COST_REDUCTION_RE);
