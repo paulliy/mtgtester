@@ -59,12 +59,30 @@ export type AbilityCost =
   | { kind: 'unattachSelf' };
 
 export interface AlternativeCast {
-  kind: 'overload' | 'adventure' | 'omen';
+  kind: 'overload' | 'adventure' | 'omen' | 'mdfc';
   manaCost: ParsedManaCost;
   description: string;
   name?: string;
   typeLine?: string;
   ability?: Ability;
+  /** Back-face characteristics for a modal DFC that may be played as a land. */
+  landFace?: MdfcLandFace;
+}
+
+export interface MdfcLandFace {
+  name: string;
+  typeLine: string;
+  oracleText: string;
+  manaCost: string | null;
+  frontOracleText: string;
+  frontManaCost: string | null;
+  colors: Color[];
+  supertypes: string[];
+  types: string[];
+  subtypes: string[];
+  manaAbilities: ManaAbilitySpec[];
+  entersTapped: boolean;
+  entersTappedUnless?: Condition;
 }
 
 /** The `{T}` cost every mana ability has unless it says otherwise. */
@@ -275,6 +293,8 @@ export type TargetKind =
   | 'anyTarget' // creature or player (CR 115.4)
   | 'playerOrPlaneswalker' // "target player or planeswalker" (Clan Defiance)
   | 'spell'
+  /** A spell on the stack or a nonland permanent. */
+  | 'spellOrNonlandPermanent'
   /** Any object currently on the stack: spells, activated abilities, or triggered abilities. */
   | 'stackObject'
   /**

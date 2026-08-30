@@ -247,7 +247,7 @@ export function candidateOf(
   // found, so `manaValueAtMost`/`manaValueAtLeast` correctly never match rather than matching
   // everything as mana value 0.
   const ownDef = ctx.defs.get(perm.oracleId);
-  const manaValue = ownDef === undefined ? undefined : manaValueOf(ownDef.manaCost);
+  const manaValue = ownDef === undefined ? undefined : perm.face === 'back' ? 0 : manaValueOf(ownDef.manaCost);
 
   return {
     cardId: perm.cardId,
@@ -546,15 +546,16 @@ function runLayers(
   for (const perm of perms) {
     const def = ctx.defs.get(perm.oracleId);
     if (def === undefined) throw new Error(`engine bug: no def for ${perm.name}`);
-    let types = [...def.types];
-    let subtypes = [...def.subtypes];
-    let supertypes = [...def.supertypes];
-    let colors = [...def.colors];
+    const landFace = perm.face === 'back' ? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace : undefined;
+    let types = [...(landFace?.types ?? def.types)];
+    let subtypes = [...(landFace?.subtypes ?? def.subtypes)];
+    let supertypes = [...(landFace?.supertypes ?? def.supertypes)];
+    let colors = [...(landFace?.colors ?? def.colors)];
     let power = perm.power ?? 0;
     let toughness = perm.toughness ?? 0;
-    let keywords = [...def.keywords];
-    let triggers = [...def.triggers];
-    let manaAbilities = [...def.manaAbilities];
+    let keywords = landFace === undefined ? [...def.keywords] : [];
+    let triggers = landFace === undefined ? [...def.triggers] : [];
+    let manaAbilities = [...(landFace?.manaAbilities ?? def.manaAbilities)];
     if (perm.faceDown === true) {
       types = ['Creature'];
       subtypes = [];
@@ -593,10 +594,10 @@ function runLayers(
         // Layer 5 is not implemented — printed color, read from here so it has one home.
         colors,
         keywords,
-        ward: def.ward ?? null,
-        protectionFrom: [...(def.protectionFrom ?? [])],
-        cantBeBlocked: def.cantBeBlocked === true,
-        activatedAbilities: [...def.activatedAbilities],
+        ward: landFace === undefined ? def.ward ?? null : null,
+        protectionFrom: landFace === undefined ? [...(def.protectionFrom ?? [])] : [],
+        cantBeBlocked: landFace === undefined && def.cantBeBlocked === true,
+        activatedAbilities: landFace === undefined ? [...def.activatedAbilities] : [],
         triggers,
         manaAbilities,
         // Base P/T comes from the permanent (a copy effect would set it there — layer 1).

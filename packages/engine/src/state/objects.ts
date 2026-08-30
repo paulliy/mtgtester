@@ -46,6 +46,8 @@ export interface MoveDestination {
   zone: Zone;
   /** Battlefield only: the controller it enters under (defaults to its owner). */
   controllerId?: PlayerId;
+  /** Battlefield only: choose the back face of an MDFC land // spell. */
+  face?: 'front' | 'back';
   /**
    * Battlefield only: the moving EFFECT says it enters tapped ("put it onto the battlefield
    * tapped"). Independent of the card's own `entersTapped`/`entersTappedUnless`, and decisive:
@@ -89,24 +91,31 @@ export function removeFromCurrentZone(ctx: GameContext, obj: EngineObject): void
   }
 }
 
+function mdfcLandFaceFor(ctx: GameContext, obj: EngineObject) {
+  if (obj.face !== 'back') return undefined;
+  return ctx.defs.get(obj.oracleId)?.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace;
+}
+
 /** Clone `obj` as a brand-new object (new `ObjectId`) in `zone` (CR 400.7). */
 function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCardObject {
   const original = obj.zone === 'battlefield' ? (obj as EnginePermanent).copyOriginal : undefined;
+  const frontDef = ctx.defs.get(obj.oracleId);
+  const landFace = mdfcLandFaceFor(ctx, obj);
   return {
     id: newObjectId(ctx),
     cardId: obj.cardId,
     oracleId: original?.oracleId ?? obj.oracleId,
     ownerId: obj.ownerId,
-    name: original?.name ?? obj.name,
-    typeLine: original?.typeLine ?? obj.typeLine,
-    oracleText: original?.oracleText ?? obj.oracleText,
-    manaCost: original?.manaCost ?? obj.manaCost,
+    name: original?.name ?? (zone === 'battlefield' ? landFace?.name ?? obj.name : frontDef?.name ?? obj.name),
+    typeLine: original?.typeLine ?? (zone === 'battlefield' ? landFace?.typeLine ?? obj.typeLine : frontDef?.typeLine ?? obj.typeLine),
+    oracleText: original?.oracleText ?? (zone === 'battlefield' ? landFace?.oracleText ?? obj.oracleText : landFace?.frontOracleText ?? obj.oracleText),
+    manaCost: original?.manaCost ?? (zone === 'battlefield' ? landFace?.manaCost ?? obj.manaCost : landFace?.frontManaCost ?? obj.manaCost),
     isToken: obj.isToken,
     isCommander: obj.isCommander,
     zone,
+    ...(zone === 'battlefield' && obj.face !== undefined ? { face: obj.face } : {}),
   };
 }
-
 /** Build the battlefield form of an object (used by moveObject and by casting). */
 export function makePermanent(
   ctx: GameContext,
@@ -120,10 +129,11 @@ export function makePermanent(
   entersTappedOverride?: boolean,
 ): EnginePermanent {
   const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+  const landFace = mdfcLandFaceFor(ctx, obj);
   // Planeswalkers/battles enter with their printed loyalty/defense (CR 306.5b, 310.6).
   const counters: Record<string, number> = {};
-  if (def.types.includes('Planeswalker') && def.loyalty !== null) counters['loyalty'] = def.loyalty;
-  if (def.types.includes('Battle') && def.defense !== null) counters['defense'] = def.defense;
+  if (landFace === undefined && def.types.includes('Planeswalker') && def.loyalty !== null) counters['loyalty'] = def.loyalty;
+  if (landFace === undefined && def.types.includes('Battle') && def.defense !== null) counters['defense'] = def.defense;
   // "~ enters with N +1/+1 counters on it" is a replacement effect (CR 614.1c): the counters
   // are already there as it enters, so it is never momentarily 0-toughness.
   for (const [counter, n] of Object.entries(def.entersWithCounters ?? {})) {
@@ -133,9 +143,9 @@ export function makePermanent(
     ...reincarnate(ctx, obj, 'battlefield'),
     zone: 'battlefield',
     controllerId,
-    tapped: entersTappedOverride ?? def.entersTapped,
-    power: def.power,
-    toughness: def.toughness,
+    tapped: entersTappedOverride ?? landFace?.entersTapped ?? def.entersTapped,
+    power: landFace === undefined ? def.power : null,
+    toughness: landFace === undefined ? def.toughness : null,
     damageMarked: 0,
     counters,
     statuses: [],
@@ -262,18 +272,21 @@ export function* moveObject(
     // the permanent exists, so it is never momentarily tapped-then-untapped — and because the
     // condition may be a choice ("you may pay 2 life"), it is resolved here, in the generator.
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+    const landFace = target.face === 'back' ? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace : undefined;
     let entersTappedOverride: boolean | undefined;
-    if (def.entersTappedUnless !== undefined) {
+    const entersTappedUnless = landFace?.entersTappedUnless ?? def.entersTappedUnless;
+    if (entersTappedUnless !== undefined) {
       const met = yield* resolveCondition(
         ctx,
-        def.entersTappedUnless,
+        entersTappedUnless,
         { cardId: obj.cardId, controllerId },
-        obj.name,
+        landFace?.name ?? obj.name,
       );
       entersTappedOverride = !met;
     }
     if (target.entersTapped === true) entersTappedOverride = true;
-    const perm = makePermanent(ctx, obj, controllerId, entersTappedOverride);
+    const incoming = target.face === 'back' ? { ...obj, face: 'back' as const } : obj;
+    const perm = makePermanent(ctx, incoming, controllerId, entersTappedOverride);
     ctx.state.battlefield.push(perm);
   if (ctx.state.createdTokenThisTurn) ctx.state.createdTokenThisTurn[controllerId] = true;
     next = perm;

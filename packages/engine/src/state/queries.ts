@@ -598,42 +598,41 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
   return sources;
 }
 
-/**
- * Best-effort preview of what a land card WOULD produce if played right now, without it
- * actually being on the battlefield. Used only to populate descriptive `data` on a `playLand`
- * option (never legality) — see ADR 0010 decision 2. Evaluates the card's OWN printed mana
- * abilities against current game state (commander identity, opponents' lands, "control a
- * Dragon"-style gates), which is sound because none of those depend on the land itself being
- * in play. A gate that read the land's OWN future battlefield state would be approximated
- * incorrectly; no modeled card's mana ability does this today.
- */
-export function previewLandManaSymbols(
+/** Best-effort preview of mana symbols produced by a set of mana abilities. */
+export function previewManaAbilities(
   ctx: GameContext,
-  def: CardDefinition,
+  abilities: readonly ManaAbilitySpec[],
   playerId: PlayerId,
+  sourceKey = 'preview',
 ): (Color | 'C')[] {
   const stub: ManaAbilityContext = {
-    id: `preview-${def.oracleId}` as ObjectId,
-    cardId: `preview-${def.oracleId}`,
+    id: `${sourceKey}-${playerId}` as ObjectId,
+    cardId: `${sourceKey}-${playerId}`,
     controllerId: playerId,
   };
   const symbols: (Color | 'C')[] = [];
   const add = (sym: Color | 'C'): void => {
     if (!symbols.includes(sym)) symbols.push(sym);
   };
-  for (const ability of def.manaAbilities) {
+  for (const ability of abilities) {
     if (
       ability.condition !== undefined &&
       !evaluateCondition(ctx, ability.condition, { cardId: stub.cardId, controllerId: playerId })
-    ) {
-      continue;
-    }
+    ) continue;
     const resolved = resolveDynamicUnits(ctx, resolveConditionalUnits(ctx, ability, stub), stub);
     for (const unit of resolved.units) for (const sym of unit) add(sym);
   }
   return symbols;
 }
 
+/** Best-effort preview of what a land card WOULD produce if played right now. */
+export function previewLandManaSymbols(
+  ctx: GameContext,
+  def: CardDefinition,
+  playerId: PlayerId,
+): (Color | 'C')[] {
+  return previewManaAbilities(ctx, def.manaAbilities, playerId, `preview-${def.oracleId}`);
+}
 /** One card's `RuleStatic` plus who contributes it, for `gatherRuleStatics`. */
 export interface RuleStaticEntry {
   static: RuleStatic;

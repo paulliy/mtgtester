@@ -106,10 +106,11 @@ does nothing is worse than staying unmodeled).
    (Gamble needs random discard too and is not closed by this alone.)
 
 3. **MDFC layout — 3 cards.**
-   Sink into Stupor, Fell the Profane, Revitalizing Repast. `layout: 'modal_dfc'` is refused
-   outright. Adventure/Omen dual-face support already exists (`AlternativeCast`), and MDFC is the
-   same shape with a different legality rule (either face castable, back face is usually a land).
-   Reuse rather than add a parallel mechanism.
+   **Status (2026-08-30): implemented.** Modal DFC spell // land cards now reuse the
+   `AlternativeCast` shape for a typed back-face land option; legality, as-enters choices,
+   battlefield characteristics, mana production, and front-face restoration on zone change are
+   covered by the generic runtime path and dedicated executor tests.
+   Sink into Stupor, Fell the Profane, and Revitalizing Repast are modeled.
 
 4. **`unless that player pays {N}` on a cast trigger — 3 cards.**
    Rhystic Study, Mystic Remora, Esper Sentinel. `counterUnlessControllerPays` proves the
@@ -132,7 +133,7 @@ you may choose both instead.` `Ability.modes` already has `minChoices`/`maxChoic
    Doubling Season, Hardened Scales. `RuleStatic` already carries `damageDoubled` as precedent
    for a CR 616 replacement; these are the same shape over `createToken` and `putCounters`.
 
-**10 cards implemented; ≈12 cards remain across 5 primitives.**
+**13 cards implemented; ≈9 cards remain across 4 primitives.**
 
 ## Tier 3 — genuinely bespoke, and honestly so
 

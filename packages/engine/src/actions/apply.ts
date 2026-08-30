@@ -187,10 +187,21 @@ export function* applyPriorityAction(
     case 'playLand': {
       const obj = player.hand.find((o) => o.id === payload.objectId);
       if (obj === undefined) throw new Error('engine bug: land to play not in hand');
+      const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+      const mdfc = payload.alternativeCast === 'mdfc'
+        ? def.alternativeCasts?.[payload.altIndex ?? 0] ?? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')
+        : undefined;
+      if (payload.alternativeCast === 'mdfc' && (mdfc?.kind !== 'mdfc' || mdfc.landFace === undefined)) {
+        throw new Error('missing MDFC land face');
+      }
       player.landsPlayedThisTurn += 1;
-      emit(ctx, 'playLand', { player: player.id, name: obj.name, cardId: obj.cardId }, player.id);
-      debug(ctx, 'legalActions', `${player.id} plays ${obj.name}`);
-      yield* moveObject(ctx, obj, { zone: 'battlefield', controllerId: player.id });
+      emit(ctx, 'playLand', { player: player.id, name: mdfc?.landFace?.name ?? obj.name, cardId: obj.cardId }, player.id);
+      debug(ctx, 'legalActions', `${player.id} plays ${mdfc?.landFace?.name ?? obj.name}`);
+      yield* moveObject(ctx, obj, {
+        zone: 'battlefield',
+        controllerId: player.id,
+        ...(mdfc?.kind === 'mdfc' ? { face: 'back' as const } : {}),
+      });
       return;
     }
 

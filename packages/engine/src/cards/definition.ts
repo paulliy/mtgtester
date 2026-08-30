@@ -24,6 +24,7 @@ export type { RuleStatic } from './rule-statics';
 export { IMPLEMENTED_KEYWORDS, TAP_COST } from './ability';
 export type {
   AlternativeCast,
+  MdfcLandFace,
   Ability,
   AbilityCost,
   ActivatedAbility,

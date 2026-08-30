@@ -32,6 +32,7 @@ import {
   manaSourcesFor,
   playersInApnapOrder,
   previewLandManaSymbols,
+  previewManaAbilities,
   requireModeled,
 } from '../state/queries';
 import { playerById } from '../state/objects';
@@ -48,7 +49,7 @@ export type PriorityActionPayload =
   | { kind: 'pass' }
   | { kind: 'passAndYieldTurn' }
   | { kind: 'yieldToAbility'; sourceOracleId: OracleId }
-  | { kind: 'playLand'; objectId: ObjectId }
+  | { kind: 'playLand'; objectId: ObjectId; alternativeCast?: 'mdfc'; altIndex?: number }
   | {
       kind: 'castSpell';
       objectId: ObjectId;
@@ -352,6 +353,7 @@ export function permanentMatchesKind(
     case 'artifactEnchantmentOrPlaneswalker':
       return types.includes('Artifact') || types.includes('Enchantment') || types.includes('Planeswalker');
     case 'nonlandPermanent':
+    case 'spellOrNonlandPermanent':
       return !types.includes('Land');
     case 'permanent':
       return true;
@@ -402,6 +404,11 @@ export function computeTargetOptions(
 
   if (kind === 'stackObject') {
     return ctx.state.stack.map((entry) => entry.id);
+  }
+  if (kind === 'spellOrNonlandPermanent') {
+    const permanentSpec = { kind: 'nonlandPermanent' as const, ...(controller !== undefined ? { controller } : {}), ...(filter !== undefined ? { filter } : {}) };
+    const spellSpec = { kind: 'spell' as const, ...(controller !== undefined ? { controller } : {}) };
+    return [...computeTargetOptions(ctx, spellSpec, casterId, sourceColors, eventPlayerId, chosenTargets), ...computeTargetOptions(ctx, permanentSpec, casterId, sourceColors, eventPlayerId, chosenTargets)];
   }
   if (kind === 'spell' || kind === 'noncreatureSpell') {
     return ctx.state.stack
@@ -569,6 +576,27 @@ export function computePriorityOptions(
         });
       }
       return;
+    }
+
+    const mdfcIndex = def.alternativeCasts?.findIndex((alt) => alt.kind === 'mdfc' && alt.landFace !== undefined) ?? -1;
+    const mdfc = mdfcIndex >= 0 ? def.alternativeCasts?.[mdfcIndex] : undefined;
+    if (mdfc?.landFace !== undefined && !fromCommand && !fromLibraryTop && !fromExile && sorcerySpeed && player.landsPlayedThisTurn < 1) {
+      const face = mdfc.landFace;
+      const data: Record<string, unknown> = {
+        producesMana: previewManaAbilities(ctx, face.manaAbilities, player.id, `preview-${obj.oracleId}-mdfc`),
+        sourceName: face.name,
+        sourceZone: 'hand',
+        castVariant: 'mdfc',
+      };
+      if (face.entersTappedUnless?.kind === 'mayPayLife') data['payLifeToUntap'] = face.entersTappedUnless.n;
+      else if (face.entersTappedUnless !== undefined) data['entersTappedConditional'] = true;
+      else data['entersTapped'] = face.entersTapped;
+      options.push({
+        type: 'playLand',
+        description: `Play ${face.name}`,
+        payload: { kind: 'playLand', objectId: obj.id, alternativeCast: 'mdfc', altIndex: mdfcIndex },
+        data,
+      });
     }
 
     if (spellCastingBlocked) return;

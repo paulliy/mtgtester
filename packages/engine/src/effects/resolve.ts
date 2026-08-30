@@ -464,6 +464,10 @@ export function isTargetStillLegal(
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
 
+  if (kind === 'spellOrNonlandPermanent') {
+    const entry = ctx.state.stack.find((s) => s.id === targetId && s.kind === 'spell');
+    if (entry !== undefined) return controller === undefined || (controller === 'you' ? entry.controllerId === spellControllerId : controller === 'opponent' ? entry.controllerId !== spellControllerId : entry.controllerId === eventPlayerId);
+  }
   if (kind === 'spell' || kind === 'noncreatureSpell') {
     const entry = ctx.state.stack.find((s) => s.id === targetId && s.kind === 'spell');
     if (entry === undefined) return false;
@@ -489,7 +493,7 @@ export function isTargetStillLegal(
     return true;
   }
   const perm = findPermanent(ctx, targetId);
-  if (perm === undefined || !permanentMatchesKind(ctx, perm, kind)) return false;
+  if (perm === undefined || !permanentMatchesKind(ctx, perm, kind === 'spellOrNonlandPermanent' ? 'nonlandPermanent' : kind)) return false;
   if (filter !== undefined && !matchesSelector(ctx, perm, filter, { cardId: '', controllerId: spellControllerId })) return false;
   // Shroud (CR 702.18): untargetable by anything, including its own controller.
   if (hasKeyword(ctx, perm, 'shroud')) return false;
@@ -2235,9 +2239,18 @@ export function* executeAbility(
       case 'returnToHand': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
-        emit(ctx, 'returnToHand', { target: perm.name, source: source.name });
-        yield* moveObject(ctx, perm, { zone: 'hand' });
+        const perm = findPermanent(ctx, t);
+        if (perm !== undefined) {
+          emit(ctx, 'returnToHand', { target: perm.name, source: source.name });
+          yield* moveObject(ctx, perm, { zone: 'hand' });
+          break;
+        }
+        const stackIndex = ctx.state.stack.findIndex((entry) => entry.id === t && entry.kind === 'spell');
+        const stackEntry = stackIndex < 0 ? undefined : ctx.state.stack[stackIndex];
+        if (stackEntry?.card === null || stackEntry?.card === undefined) break;
+        ctx.state.stack.splice(stackIndex, 1);
+        emit(ctx, 'returnToHand', { target: stackEntry.card.name, source: source.name });
+        yield* moveObject(ctx, stackEntry.card, { zone: 'hand' });
         break;
       }
       case 'returnOneToHand': {

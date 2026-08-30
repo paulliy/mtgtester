@@ -42,6 +42,8 @@ export interface GoadRequirement {
 
 export interface EngineObject extends GameObject {
   cardId: CardId;
+  /** The active face while a modal DFC is on the battlefield. Non-battlefield cards use front. */
+  face?: 'front' | 'back';
   /** Tokens cease to exist when they leave the battlefield (CR 704.5d). */
   isToken: boolean;
   /** Commander-ness is a property of the physical card (brief §5.7). */

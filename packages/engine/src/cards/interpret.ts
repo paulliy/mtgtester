@@ -16,6 +16,8 @@ import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type {
   AbilityCost,
   ActivatedAbility,
+  AlternativeCast,
+  MdfcLandFace,
   ManaRestriction,
   SearchDestination,
 } from './ability';
@@ -574,7 +576,9 @@ function parseEffectSentence(
   if (s === 'destroy all non-dragon creatures') {
     return [{ op: 'destroyEach', selector: allOf(ofType('Creature'), not(ofSubtype('Dragon'))) }];
   }
-  if (s === "return target nonland permanent you don't control to its owner's hand") {
+  if (s === "return target spell or nonland permanent an opponent controls to its owner's hand") {
+    return [{ op: 'returnToHand', target: alloc('spellOrNonlandPermanent', undefined, 'opponent') }];
+  }  if (s === "return target nonland permanent you don't control to its owner's hand") {
     return [{ op: 'returnToHand', target: alloc('nonlandPermanent', undefined, 'opponent') }];
   }
   {
@@ -3132,6 +3136,75 @@ function parseSimpleLandFace(typeLine: string, oracleText: string): Color | null
  * ever carries) â€” that would silently lose the back face's color entirely, offering only half of
  * what the land can actually do.
  */
+/**
+ * Parse the land face of a spell // land modal DFC. The back face is deliberately represented as
+ * an alternate cast rather than a second CardDefinition: it is playable from hand, but only as a
+ * land, and its front face remains the spell used by the normal casting path.
+ */
+function buildMdfcLandFace(card: OracleCard): AlternativeCast | null {
+  const back = card.backFace;
+  if (card.layout !== 'modal_dfc' || back === undefined || card.types.includes('Land')) return null;
+  if (!card.types.includes('Instant') && !card.types.includes('Sorcery')) return null;
+
+  const typeParts = back.typeLine.split(/\s+—\s+/);
+  const typeWords = (typeParts[0] ?? '').trim().split(/\s+/).filter(Boolean);
+  const supertypes = typeWords.filter((type) => ['Basic', 'Legendary', 'Snow', 'World'].includes(type));
+  const types = typeWords.filter((type) => !supertypes.includes(type));
+  if (!types.includes('Land')) return null;
+  const subtypes = (typeParts[1] ?? '').trim().split(/\s+/).filter(Boolean);
+
+  let entersTapped = false;
+  let entersTappedUnless: Condition | undefined;
+  const manaAbilities: ManaAbilitySpec[] = [];
+  const unhandled: string[] = [];
+  for (const rawLine of stripReminderText(back.oracleText).split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (line.length === 0) continue;
+    const lower = line.toLowerCase().replace(/\.$/, '');
+    const pay = lower.match(ENTERS_PAY_LIFE_RE);
+    if (pay !== null) {
+      entersTappedUnless = { kind: 'mayPayLife', n: Number(pay[1]) };
+      continue;
+    }
+    if (/^(?:~|this land) enters (?:the battlefield )?tapped$/.test(lower)) {
+      entersTapped = true;
+      continue;
+    }
+    const mana = parseManaAbilityLine(lower, card);
+    if (mana !== null) {
+      manaAbilities.push(mana);
+      continue;
+    }
+    unhandled.push(line);
+  }
+  if (manaAbilities.length === 0 || unhandled.length > 0) return null;
+
+  // This is a card-face descriptor, not a token definition; the shared rule is intentionally scoped out here.
+  // eslint-disable-next-line no-restricted-syntax
+  const landFace: MdfcLandFace = {
+    name: back.name,
+    typeLine: back.typeLine,
+    oracleText: back.oracleText,
+    manaCost: back.manaCost,
+    frontOracleText: card.oracleText,
+    frontManaCost: card.manaCost,
+    colors: [...back.colors],
+    supertypes,
+    types,
+    subtypes,
+    manaAbilities,
+    entersTapped,
+    ...(entersTappedUnless !== undefined ? { entersTappedUnless } : {}),
+  };
+  return {
+    kind: 'mdfc',
+    name: back.name,
+    typeLine: back.typeLine,
+    manaCost: parseManaCost('{0}').cost!,
+    description: back.name,
+    landFace,
+  };
+}
 function buildPathwayLand(
   card: OracleCard,
 ): { entersChoosingOption: NonNullable<CardDefinition['entersChoosingOption']>; manaAbilities: ManaAbilitySpec[] } | null {
@@ -3179,11 +3252,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
   const defense = parseNumeric(card.defense, 'defense');
 
   const pathwayLand = card.layout === 'modal_dfc' ? buildPathwayLand(card) : null;
+  const mdfcLandFace = card.layout === 'modal_dfc' ? buildMdfcLandFace(card) : null;
   if (
     card.layout !== 'normal' &&
     card.layout !== 'adventure' &&
     card.layout !== 'omen' &&
     pathwayLand === null
+    && mdfcLandFace === null
   ) {
     reasons.push(`unsupported layout "${card.layout}"`);
   }
@@ -3228,7 +3303,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
   let spellCantBeCountered = false;
   let commanderFreeCast = false;
   let spellModes: NonNullable<Ability['modes']> | undefined;
-  let alternativeCasts: import('./ability').AlternativeCast[] | undefined;
+  let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
+    mdfcLandFace === null ? undefined : [mdfcLandFace];
 
   if (card.name === 'Bloomvine Regent // Claim Territory') {
     alternativeCasts = [
