@@ -147,6 +147,107 @@ describe('library search', () => {
     expect(player.library.map((c) => c.name)).toEqual(['Plains', 'Forest']);
   });
 
+  it('shuffles before putting a tutor target on top of the library', () => {
+    const ctx = pod('top-tutor');
+    const player = p1(ctx);
+    player.library.length = 0;
+    const topTutor = oracle({
+      name: 'Top Tutor',
+      typeLine: 'Instant',
+      manaCost: '{U}',
+      power: null,
+      toughness: null,
+      oracleText:
+        'Search your library for an artifact card, reveal it, then shuffle and put that card on top.',
+    });
+    const relic = oracle({ name: 'Aether Relic', typeLine: 'Artifact' });
+    const bauble = oracle({ name: 'Myr Bauble', typeLine: 'Artifact' });
+    conjure(ctx, 'P1', forest(), 'library');
+    conjure(ctx, 'P1', relic, 'library');
+    conjure(ctx, 'P1', bauble, 'library');
+
+    const { decisions } = castSpell(ctx, topTutor, choose(/Aether Relic/));
+
+    expect(decisions.filter((d) => d.prompt.includes('search your library'))).toHaveLength(1);
+    expect(player.library[0]?.name).toBe('Aether Relic');
+    expect(player.library).toHaveLength(3);
+    expect(player.library.some((card) => card.name === 'Myr Bauble')).toBe(true);
+    expect(player.library.some((card) => card.name === 'Forest')).toBe(true);
+  });
+  it('executes the four top-library tutors and leaves the chosen card on top', () => {
+    const cases = [
+      {
+        card: oracle({
+          name: 'Enlightened Tutor',
+          typeLine: 'Instant',
+          manaCost: '{W}',
+          power: null,
+          toughness: null,
+          oracleText:
+            'Search your library for an artifact or enchantment card, reveal it, then shuffle and put that card on top.',
+        }),
+        target: oracle({ name: 'Tutor Artifact', typeLine: 'Artifact' }),
+        other: oracle({ name: 'Tutor Enchantment', typeLine: 'Enchantment' }),
+      },
+      {
+        card: oracle({
+          name: 'Mystical Tutor',
+          typeLine: 'Instant',
+          manaCost: '{U}',
+          power: null,
+          toughness: null,
+          oracleText:
+            'Search your library for an instant or sorcery card, reveal it, then shuffle and put that card on top.',
+        }),
+        target: oracle({ name: 'Tutor Instant', typeLine: 'Instant' }),
+        other: oracle({ name: 'Tutor Sorcery', typeLine: 'Sorcery' }),
+      },
+      {
+        card: oracle({
+          name: 'Worldly Tutor',
+          typeLine: 'Instant',
+          manaCost: '{G}',
+          power: null,
+          toughness: null,
+          oracleText:
+            'Search your library for a creature card, reveal it, then shuffle and put that card on top.',
+        }),
+        target: oracle({ name: 'Tutor Creature', typeLine: 'Creature' }),
+        other: oracle({ name: 'Tutor Backup Creature', typeLine: 'Creature' }),
+      },
+      {
+        card: oracle({
+          name: 'Vampiric Tutor',
+          typeLine: 'Instant',
+          manaCost: '{B}',
+          power: null,
+          toughness: null,
+          oracleText: 'Search your library for a card, then shuffle and put that card on top.',
+        }),
+        target: oracle({ name: 'Tutor Any Card' }),
+        other: oracle({ name: 'Tutor Another Card' }),
+      },
+    ] as const;
+
+    for (const [index, testCase] of cases.entries()) {
+      const ctx = pod('top-tutor-' + index);
+      const player = p1(ctx);
+      player.library.length = 0;
+      conjure(ctx, 'P1', forest(), 'library');
+      conjure(ctx, 'P1', testCase.target, 'library');
+      conjure(ctx, 'P1', testCase.other, 'library');
+
+      const { decisions } = castSpell(
+        ctx,
+        testCase.card,
+        choose(new RegExp(testCase.target.name)),
+      );
+
+      expect(decisions.filter((d) => d.prompt.includes('search your library'))).toHaveLength(1);
+      expect(player.library[0]?.name).toBe(testCase.target.name);
+      expect(player.library).toHaveLength(3);
+    }
+  });
   it('auto-selects when all matching cards in library share the same name', () => {
     const ctx = pod();
     const player = p1(ctx);

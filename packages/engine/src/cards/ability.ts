@@ -808,7 +808,7 @@ export interface TokenSpec {
  * found card goes where ("put one onto the battlefield tapped and the other into your hand").
  */
 export interface SearchDestination {
-  zone: 'battlefield' | 'hand' | 'graveyard';
+  zone: 'battlefield' | 'hand' | 'graveyard' | 'libraryTop';
   /** Battlefield only: "put it onto the battlefield **tapped**". */
   tapped?: boolean;
 }

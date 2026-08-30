@@ -3391,13 +3391,22 @@ function* searchLibrary(
     const where =
       destination.zone === 'battlefield'
         ? `onto the battlefield${destination.tapped === true ? ' tapped' : ''}`
-        : `into your ${destination.zone}`;
+        : destination.zone === 'libraryTop'
+          ? 'on top of your library'
+          : `into your ${destination.zone}`;
 
     // Auto-select when all matching cards share the same name (e.g., mono-color basic
     // land search): the choice is meaningless and would waste an AI call.
     const distinctNames = new Set(matches.map((c) => c.name));
     if (distinctNames.size === 1) {
       const card = matches[0] as EngineCardObject;
+      if (destination.zone === 'libraryTop') {
+        player.library.splice(player.library.indexOf(card), 1);
+        shuffleLibrary(ctx, player);
+        player.library.unshift(card);
+        emit(ctx, 'searchFound', { player: player.id, name: card.name, to: destination.zone });
+        continue;
+      }
       emit(ctx, 'searchFound', { player: player.id, name: card.name, to: destination.zone });
       yield* moveObject(
         ctx,
@@ -3433,6 +3442,13 @@ function* searchLibrary(
     if (outcome.index >= matches.length) break;
 
     const card = matches[outcome.index] as EngineCardObject;
+    if (destination.zone === 'libraryTop') {
+      player.library.splice(player.library.indexOf(card), 1);
+      shuffleLibrary(ctx, player);
+      player.library.unshift(card);
+      emit(ctx, 'searchFound', { player: player.id, name: card.name, to: destination.zone });
+      continue;
+    }
     emit(ctx, 'searchFound', { player: player.id, name: card.name, to: destination.zone });
     yield* moveObject(
       ctx,

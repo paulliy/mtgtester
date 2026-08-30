@@ -100,12 +100,10 @@ does nothing is worse than staying unmodeled).
    generation, so the engine never offers Village Rites with no creature to sacrifice.
 
 2. **`libraryTop` as a `SearchDestination` — 4 cards.**
-   Enlightened, Mystical, Worldly, Vampiric Tutor. `SearchDestination.zone` is
-   `'battlefield' | 'hand' | 'graveyard'`; these four all end `…then shuffle and put that card on
-top`. Note the ordering is shuffle-**then**-place, which the existing `searchLibrary` +
-   `shuffle` effect pair gets right only if the destination is applied after the shuffle — worth
-   a test asserting the searched card is on top, not shuffled in. (Gamble needs random discard
-   too and is not closed by this alone.)
+   **Status (2026-08-30): implemented.** SearchDestination.zone now includes libraryTop; the
+   interpreter handles Enlightened, Mystical, Worldly, and Vampiric Tutor, and executor tests
+   assert that the selected card is placed on top after the library is shuffled.
+   (Gamble needs random discard too and is not closed by this alone.)
 
 3. **MDFC layout — 3 cards.**
    Sink into Stupor, Fell the Profane, Revitalizing Repast. `layout: 'modal_dfc'` is refused
@@ -134,7 +132,7 @@ you may choose both instead.` `Ability.modes` already has `minChoices`/`maxChoic
    Doubling Season, Hardened Scales. `RuleStatic` already carries `damageDoubled` as precedent
    for a CR 616 replacement; these are the same shape over `createToken` and `putCounters`.
 
-**6 cards implemented; ≈16 cards remain across 6 primitives.**
+**10 cards implemented; ≈12 cards remain across 5 primitives.**
 
 ## Tier 3 — genuinely bespoke, and honestly so
 

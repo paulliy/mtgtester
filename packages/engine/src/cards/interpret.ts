@@ -1574,6 +1574,15 @@ function parseMassSubject(phrase: string, card: OracleCard): Selector | null {
  * shuffle got lost would leave the searcher's library ordered by what they looked at.
  */
 function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
+  const top = s.match(
+    /^search your library for (.+?), (?:reveal .+?, )?then shuffle and put (?:that card|it) on top(?: of your library)?$/,
+  );
+  if (top !== null) {
+    const filter = parseSearchFilter(top[1] as string, card);
+    if (filter === null) return null;
+    return [{ op: 'searchLibrary', filter, destinations: [{ zone: 'libraryTop' }] }];
+  }
+
   const m = s.match(/^search your library for (.+?), (?:reveal .+?, )?(put .+?), then shuffle$/);
   if (m === null) return null;
 
@@ -1664,7 +1673,7 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
   const out: SearchDestination[] = [];
   for (const clause of phrase.split(' and ')) {
     const m = clause.match(
-      /^(?:put )?(?:it|that card|them|those cards|one|the other) (onto the battlefield( tapped)?|into your hand|into your graveyard)$/,
+      /^(?:put )?(?:it|that card|them|those cards|one|the other) (onto the battlefield( tapped)?|into your hand|into your graveyard|on top of your library)$/,
     );
     if (m === null) return null;
     const where = m[1] as string;
@@ -1672,6 +1681,8 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
       out.push(m[2] === undefined ? { zone: 'battlefield' } : { zone: 'battlefield', tapped: true });
     } else if (where === 'into your hand') {
       out.push({ zone: 'hand' });
+    } else if (where === 'on top of your library') {
+      out.push({ zone: 'libraryTop' });
     } else {
       out.push({ zone: 'graveyard' });
     }
@@ -1720,6 +1731,8 @@ const SELF_TRIGGER_SUBJECT_RE =
 /** Singular card types that can head a trigger subject ("a creature you control"). */
 const CARD_TYPE_SINGULARS: Record<string, string> = {
   creature: 'Creature',
+  instant: 'Instant',
+  sorcery: 'Sorcery',
   artifact: 'Artifact',
   enchantment: 'Enchantment',
   land: 'Land',
