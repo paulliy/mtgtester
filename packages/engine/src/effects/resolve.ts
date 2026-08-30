@@ -2658,6 +2658,43 @@ export function* executeAbility(
         yield* counterUnlessPays(ctx, source, t, effect.cost);
         break;
       }
+      case 'unlessPays': {
+        const payerId = effect.payer === 'eventPlayer' ? scope.eventPlayerId : controller.id;
+        if (payerId === undefined) throw new Error(source.name + ': unlessPays has no payer');
+        const payer = playerById(ctx, payerId);
+        const costDescription = describeManaCost(effect.cost);
+        const canAfford = canPay(effect.cost, payer.manaEntries, manaSourcesFor(ctx, payer.id));
+        let paid = false;
+        if (canAfford) {
+          const outcome = yield {
+            decisionType: 'general' as const,
+            player: payer.id,
+            prompt: source.name + ': pay ' + costDescription + ' or its effect does not happen.',
+            options: [
+              { type: 'payCost', description: 'Pay ' + costDescription },
+              { type: 'decline', description: "Don't pay " + costDescription },
+            ],
+          };
+          if (outcome.index === 0) {
+            yield* payManaCost(ctx, payer, effect.cost);
+            emit(ctx, 'unlessPaid', { source: source.name, player: payer.id, cost: costDescription }, payer.id);
+            paid = true;
+          }
+        }
+        if (!paid) {
+          yield* executeAbility(
+            ctx,
+            source,
+            { ...ability, effects: effect.then },
+            targets,
+            triggerObjectCardId,
+            extraScope,
+            countTargets,
+            divisionAmounts,
+          );
+        }
+        break;
+      }
       case 'grantAbilityUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;

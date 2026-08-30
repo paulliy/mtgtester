@@ -113,11 +113,11 @@ does nothing is worse than staying unmodeled).
    Sink into Stupor, Fell the Profane, and Revitalizing Repast are modeled.
 
 4. **`unless that player pays {N}` on a cast trigger — 3 cards.**
-   Rhystic Study, Mystic Remora, Esper Sentinel. `counterUnlessControllerPays` proves the
-   ask-an-opponent-to-pay decision shape exists; this needs the same for a non-counter effect.
-   Rhystic Study is the clean case; Mystic Remora also needs cumulative upkeep and Esper Sentinel
-   needs "first … each turn" plus `X = this creature's power`, so scope this to the shared
-   mechanism and accept that two of the three need a second increment.
+   **Status (2026-08-30): shared primitive implemented.** The generic `unlessPays` effect now
+   carries the cast-event player through trigger scope, asks that player whether they can pay, and
+   executes the wrapped effect only when they decline or cannot pay. Rhystic Study is modeled and
+   covered by dedicated executor tests. Mystic Remora still needs cumulative upkeep; Esper Sentinel
+   still needs "first … each turn" plus `X = this creature’s power`.
 
 5. **Free alternative casts with a non-mana cost — 2 cards.**
    Force of Will, Force of Negation (`exile a blue card from your hand` ± `pay 1 life`).
@@ -133,7 +133,7 @@ you may choose both instead.` `Ability.modes` already has `minChoices`/`maxChoic
    Doubling Season, Hardened Scales. `RuleStatic` already carries `damageDoubled` as precedent
    for a CR 616 replacement; these are the same shape over `createToken` and `putCounters`.
 
-**13 cards implemented; ≈9 cards remain across 4 primitives.**
+**14 cards implemented; ≈8 cards remain across 4 primitives.**
 
 ## Tier 3 — genuinely bespoke, and honestly so
 

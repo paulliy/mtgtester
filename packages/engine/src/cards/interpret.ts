@@ -993,6 +993,19 @@ function parseEffectSentence(
     }
   }
   // "draw a card" / "draw two cards" / "you draw a card" / "draw that many cards"
+  // "draw a card unless that player pays {1}" (Rhystic Study). The payment belongs to the
+  // player named by the triggering cast event, not to the controller of this ability.
+  {
+    const m = s.match(/^(.+?) unless that player pays ((?:\{[^}]+\})+)$/);
+    if (m !== null) {
+      const parsedCost = parseManaCost((m[2] as string).toUpperCase() as never);
+      const then = parseEffectSentence(m[1] as string, alloc, card, opts);
+      if (parsedCost.cost !== null && then !== null) {
+        return [{ op: 'unlessPays', payer: 'eventPlayer', cost: parsedCost.cost, then }];
+      }
+      return null;
+    }
+  }
   {
     const m = s.match(/^(?:you )?draw (that many|\w+) cards?$/);
     if (m) {

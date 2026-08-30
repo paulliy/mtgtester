@@ -886,7 +886,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
         sourceOracleId: source.oracleId,
         sourceName: source.name,
         ability,
-        scope: { spellManaValue: manaValue, ...(spell.triggerScope?.manaSpent !== undefined ? { manaSpent: spell.triggerScope.manaSpent } : {}) },
+        scope: { spellManaValue: manaValue, eventPlayerId: spell.controllerId, ...(spell.triggerScope?.manaSpent !== undefined ? { manaSpent: spell.triggerScope.manaSpent } : {}) },
       });
       debug(ctx, 'stack', `cast trigger queued: ${source.name} — ${spell.description}`);
     }

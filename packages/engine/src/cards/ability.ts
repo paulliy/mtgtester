@@ -668,6 +668,8 @@ export type Effect =
    * slot — an ordinary, announced target.
    */
   | { op: 'counterUnlessControllerPays'; target: number; cost: ParsedManaCost }
+  /** Execute `then` unless the designated player pays the cost (for example, Rhystic Study). */
+  | { op: 'unlessPays'; payer: 'eventPlayer' | 'controller'; cost: ParsedManaCost; then: Effect[] }
   /**
    * "Add X mana in any combination of colors" (Klauth) — mana entering the pool from a
    * RESOLVING ability rather than an activation (CR 605 vs the stack). One color decision per
