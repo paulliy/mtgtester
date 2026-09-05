@@ -11,3 +11,8 @@ docs/rules
 
 # The authoritative spec — an input artifact, do not reformat
 docs/mtg-commander-ai-simulator-brief.md
+
+# Generated snapshot fixtures — written byte-for-byte by scripts/snapshot-*.ts and compared
+# byte-for-byte by the suites that read them. Reformatting them makes those tests fail with a
+# diff that has no semantic content. Regenerate with the scripts, never with prettier.
+packages/engine/tests/fixtures

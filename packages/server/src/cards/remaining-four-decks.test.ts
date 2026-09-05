@@ -70,7 +70,19 @@ function seat(seatId: string, deckData: ReturnType<typeof deck>): SeatSetup {
 }
 
 describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke checks', () => {
-  it('models every unique card in all four committed fixtures', () => {
+  it('models every unique card except the explicit fail-closed backlog', () => {
+    const expectedUnmodeled = new Set([
+      'Verrak, Warped Sengir',
+      'Wandering Archaic // Explore the Vastlands',
+      // Study Hall's `{1}, {T}` cost is charged now (see
+      // `packages/engine/tests/mana-cost-in-mana-ability.test.ts`); what still stops it is the
+      // spend trigger it rides — "when you spend this mana to cast your commander, scry X".
+      'Study Hall',
+      // Audit: incomplete mechanics must not silently simulate approximate card text.
+      'Pearl-Ear, Imperial Advisor', 'Killian, Decisive Mentor', "Sage's Reverie",
+      'Spirit Mantle', 'Scriv, the Obligator', "Songbirds' Blessing", 'Promise of Loyalty',
+    ]);
+    const observedUnmodeled = new Set<string>();
     for (const slug of deckSlugs) {
       const parsed = parsePlaintextDeck(
         readFileSync(resolve('packages/server/fixtures/coverage-decks', `${slug}.txt`), 'utf8'),
@@ -78,10 +90,15 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       const names = new Set([...parsed.commanderNames, ...parsed.cards.map((entry) => entry.name)]);
       for (const name of names) {
         const def = interpretCard(realCard(name));
-        expect(def.modeled, `${slug}: ${name} is not modeled`).toBe(true);
+        if (!def.modeled) {
+          observedUnmodeled.add(name);
+          expect(def.unmodeledReasons.length, `${slug}: ${name} must fail closed with a reason`).toBeGreaterThan(0);
+          continue;
+        }
         expect(def.unmodeledReasons, `${slug}: ${name} still has parser reasons`).toEqual([]);
       }
     }
+    expect(observedUnmodeled).toEqual(expectedUnmodeled);
   });
 
   it.each(deckSlugs)('starts %s in single-player mode and reaches a human decision', async (slug) => {

@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
+import vue from 'eslint-plugin-vue';
 
 // A `TokenSpec` object literal, matched structurally rather than by import — the same shape a
 // hand-typed token and a `creatureToken()`/`artifactToken()` call both produce, so only the
@@ -13,7 +14,7 @@ const TOKEN_SPEC_LITERAL_MESSAGE =
 
 export default tseslint.config(
   {
-    // Not linted: build output, deps, vendored data/docs, Vue SFCs (no vue plugin in Phase 0).
+    // Not linted: build output, dependencies, and vendored data/docs.
     ignores: [
       '**/dist/**',
       '**/node_modules/**',
@@ -21,7 +22,6 @@ export default tseslint.config(
       'coverage/**',
       'data/**',
       'docs/**',
-      '**/*.vue',
     ],
   },
   js.configs.recommended,
@@ -87,5 +87,21 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.spec.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', {
+        selector: "CallExpression:matches([callee.name='it'], [callee.name='test'], [callee.object.name='it'], [callee.object.name='test']) > FunctionExpression[generator=true]",
+        message: 'Vitest does not execute generator test bodies. Use a normal callback and drive the generator with pump().',
+      }],
+    },
+  },
+  ...vue.configs['flat/essential'],
+  {
+    files: ['**/*.vue'],
+    // vue-tsc checks identifiers with the DOM and TypeScript namespaces.
+    rules: { 'no-undef': 'off' },
+    languageOptions: { parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.vue'] } },
   },
 );

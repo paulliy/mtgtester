@@ -79,6 +79,8 @@ describe('toOracleCard', () => {
       colors: [],
       power: null,
       toughness: null,
+      loyalty: null,
+      defense: null,
     });
   });
 

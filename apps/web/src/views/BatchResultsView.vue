@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import type { BatchResults } from '@mtg/shared';
-const route = useRoute(); const batchId = String(route.params.id); const data = ref<BatchResults | null>(null); const error = ref<string | null>(null); let timer: ReturnType<typeof setInterval> | null = null;
+const route = useRoute(); const batchId = String(route.params['id']); const data = ref<BatchResults | null>(null); const error = ref<string | null>(null); let timer: ReturnType<typeof setInterval> | null = null;
 const terminal = computed(() => data.value !== null && ['completed','failed','cancelled'].includes(data.value.progress.status));
 async function load(): Promise<void> { try { const response = await fetch(`/api/batches/${encodeURIComponent(batchId)}/results`); if (!response.ok) throw new Error((await response.json() as {message?:string}).message ?? 'Could not load batch.'); data.value = await response.json() as BatchResults; if (terminal.value && timer !== null) { clearInterval(timer); timer = null; } } catch (reason) { error.value = reason instanceof Error ? reason.message : String(reason); } }
 async function cancel(): Promise<void> { await fetch(`/api/batches/${encodeURIComponent(batchId)}/cancel`, { method:'POST' }); await load(); }

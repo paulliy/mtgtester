@@ -11,7 +11,7 @@
  */
 
 import type { Color, OracleCard } from '@mtg/shared';
-import { parseManaCost } from '../mana/cost';
+import { emptyCost, parseManaCost } from '../mana/cost';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type {
   AbilityCost,
@@ -41,6 +41,7 @@ import type { StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
 import type { Selector } from './selector';
 import {
+  CHOSEN_SUBTYPE,
   ENTERED_THIS_TURN,
   IS_COMMANDER,
   IS_ENCHANTED,
@@ -55,6 +56,7 @@ import {
   YOURS,
   allOf,
   anyOf,
+  hasCounter,
   ofColor,
   not,
   ofSubtype,
@@ -70,7 +72,6 @@ import { constant } from './value';
 import {
   activated,
   costReductionFor,
-  lord,
   mana,
   manaCost,
   onAttacks,
@@ -86,11 +87,11 @@ import {
   whenEnters,
   whenPermanent,
 } from './templates';
-import { canonicalizeToken, TREASURE } from './tokens';
+import { canonicalizeToken, FOOD, SOLDIER_1_1, TREASURE } from './tokens';
 // Use the explicit module path so the registry imported by authored override modules and the
 // interpreter share one module instance under Bun/TypeScript path resolution.
 import { applyOverride, getOverride } from './overrides/index';
-import type { CardDefinition, ManaAbilitySpec } from './definition';
+import type { BackFace, CardDefinition, ManaAbilitySpec } from './definition';
 import { PERMANENT_CARD_TYPES } from './definition';
 
 /**
@@ -100,7 +101,7 @@ import { PERMANENT_CARD_TYPES } from './definition';
 type SlotAllocator = (
   kind: TargetKind,
   filter?: Selector,
-  controller?: 'you' | 'opponent',
+  controller?: TargetSpec['controller'],
 ) => number;
 
 /**
@@ -113,7 +114,7 @@ type SlotAllocator = (
 type CountSlotAllocator = (
   kind: TargetKind,
   count: { min: number; max: number },
-  controller?: 'you' | 'opponent',
+  controller?: TargetSpec['controller'],
   filter?: Selector,
 ) => number;
 
@@ -168,6 +169,65 @@ function parseCountPhrase(phrase: string, thatMany?: Value): Value | null {
   if (phrase === 'x') return { kind: 'xValue' };
   const n = parseAmount(phrase);
   return n === null ? null : constant(n);
+}
+
+/** Parse count clauses that depend on the source, trigger object, or current battlefield. */
+function parseDynamicCountValue(
+  clause: string,
+  card: OracleCard,
+  opts: { triggerObject?: boolean } = {},
+): Value | null {
+  // Scryfall prints the typographic apostrophe; every literal below is written with the
+  // straight one, and "~’s power" would otherwise miss.
+  const text = clause.trim().toLowerCase().replace(/’/g, "'");
+  const devotion = text.match(/^your devotion to (white|blue|black|red|green)$/);
+  if (devotion !== null) return { kind: 'devotionTo', color: COLOR_WORDS[devotion[1] as string] as Color };
+  // The singular reaches here from the "gets +1/+1 **for each color** among permanents you
+  // control" buff parse (Faeburrow Elder), which prefixes its clause with "the number of ".
+  if (/^the number of colou?rs? among permanents you control$/.test(text)) {
+    return { kind: 'colorsAmongPermanents' };
+  }
+  const opponents = text.match(/^(?:the )?number of opponents$/);
+  if (opponents !== null) return { kind: 'countOpponents' };
+  const entered = text.match(/^(?:the )?number of (.+) that entered the battlefield under your control this turn$/);
+  if (entered !== null) {
+    const selector = parseSubject(entered[1] as string, card);
+    if (selector !== null) return { kind: 'countPermanents', selector: allOf(selector, YOURS, ENTERED_THIS_TURN), scope: 'all' };
+  }
+  const plus = text.match(/^one plus the number of (.+)$/);
+  if (plus !== null) {
+    const base = parseDynamicCountValue('the number of ' + (plus[1] as string), card, opts);
+    return base === null ? null : { kind: 'plus', of: base, n: 1 };
+  }
+  const number = text.match(/^(?:the )?number of (.+)$/);
+  if (number !== null) {
+    const noun = number[1] as string;
+    const selector = parseSubject(noun, card);
+    if (selector !== null) {
+      // The scope has to follow the subject. Defaulting to 'you' intersects an explicitly
+      // opposing subject ("creatures your opponents control") with a you-only filter and counts
+      // a constant 0 — silently, with the card still reporting modeled.
+      const scope: 'you' | 'opponents' | 'all' = /\byour opponents control\b|\ban opponent controls\b/.test(noun)
+        ? 'opponents'
+        : /\byou control\b/.test(noun)
+          ? 'you'
+          : 'all';
+      return { kind: 'countPermanents', selector, scope };
+    }
+  }
+  if (text === "~'s power" || text === 'this creature\'s power') return { kind: 'powerOfSource' };
+  if (text === "~'s toughness" || text === 'this creature\'s toughness') return { kind: 'toughnessOfSource' };
+  if (opts.triggerObject === true && (text === 'its power' || text === 'that creature\'s power')) {
+    return { kind: 'powerOfTriggerObject' };
+  }
+  const counters = text.match(/^(?:the number of )?([+-][0-9]+[/][+-][0-9]+) counters? on (?:~|this creature|it)$/);
+  if (counters !== null) {
+    return opts.triggerObject === true && text.endsWith('on it')
+      ? { kind: 'countersOnTriggerObject', counter: counters[1] as string }
+      : { kind: 'countersOnSelf', counter: counters[1] as string };
+  }
+  if (text === 'the number of opponents who lost life this turn') return { kind: 'opponentsLostLifeThisTurn' };
+  return null;
 }
 
 /** Strip reminder text (parenthesized), collapse whitespace. */
@@ -280,18 +340,33 @@ interface ParsedKeywordLine {
 const WARD_RE = /^ward ((?:\{[^}]+\})+)$/;
 const PROTECTION_RE = /^protection from (.+)$/;
 
+/** CR 105.1 — the five colors. Distinct from the mana-side `ALL_COLORS` below, which is a
+ * `ManaUnit` and is about production, not about what "each color" means. */
+const FIVE_COLORS: readonly Color[] = ['W', 'U', 'B', 'R', 'G'];
+
 function parseKeywordLine(text: string): ParsedKeywordLine | null {
   const out: ParsedKeywordLine = { keywords: [] };
   // Split on commas only at the top level: " and " is ambiguous, because it also joins the
   // colors inside "protection from white and from black".
   for (const raw of text.split(',')) {
-    const part = raw.trim();
+    // An Oxford list ("flying, vigilance, and double strike") leaves a leading "and" on the last
+    // part. Stripped here rather than by pre-normalizing the whole string, so the " and " INSIDE
+    // "protection from white and from black" — which is a conjunction of arguments, not of
+    // keywords — is left alone.
+    const part = raw.trim().replace(/^and /, '');
     if (part.length === 0) continue;
 
     const protection = part.match(PROTECTION_RE);
     if (protection !== null) {
+      const argument = (protection[1] as string).trim();
+      // "protection from each color" (Akroma's Will) — the five colors of CR 105.1, which is
+      // what "each color" means; colorless is not a color and is correctly excluded.
+      if (argument === 'each color' || argument === 'all colors') {
+        out.protectionFrom = [...(out.protectionFrom ?? []), ...FIVE_COLORS];
+        continue;
+      }
       const colors: Color[] = [];
-      for (const word of (protection[1] as string).split(/ and (?:from )?/)) {
+      for (const word of argument.split(/ and (?:from )?/)) {
         const color = COLOR_WORDS[word.trim()];
         if (color === undefined) return null;
         colors.push(color);
@@ -385,6 +460,7 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
   // the source is currently attached to, which is a relation, not a characteristic.
   if (/^(equipped|enchanted|fortified) /.test(noun)) return { kind: 'attachedToSource' };
 
+  if (noun.startsWith('each ')) noun = noun.slice('each '.length);
   if (noun.startsWith('other ')) {
     parts.push(OTHER);
     noun = noun.slice('other '.length);
@@ -395,6 +471,21 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
     parts.push(not(IS_TOKEN));
     noun = noun.slice('nontoken '.length);
   }
+  const powerClause = noun.match(/^(.+) with power (\d+) or greater$/);
+  if (powerClause !== null) {
+    parts.push(powerAtLeast(Number(powerClause[2])));
+    noun = powerClause[1] as string;
+  }
+
+  // "Creatures you control OF THE CHOSEN TYPE get +1/+1" (Patchwork Banner) - the type was named
+  // as the source entered (`entersChoosingOption`). Stripped before the "you control" suffix
+  // below, because it is printed AFTER it.
+  const chosenTypeClause = noun.match(/^(.+) of the chosen type$/);
+  if (chosenTypeClause !== null) {
+    parts.push(CHOSEN_SUBTYPE);
+    noun = chosenTypeClause[1] as string;
+  }
+
   for (const [suffix, who] of [
     [' you control', YOURS],
     [' your opponents control', OPPONENTS],
@@ -410,6 +501,43 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
   if (colorMatch !== null) {
     parts.push(ofColor(COLOR_WORDS[colorMatch[1] as string] as Color));
     noun = colorMatch[2] as string;
+  }
+
+  // "legendary creatures you control" (Boseiju's discount, Kindred Discovery-style anthems) -
+  // a SUPERTYPE adjective, read the same way as the color adjective above. CR 205.4a's list;
+  // "World" is included for completeness even though nothing in the pool prints it.
+  const supertypeMatch = noun.match(/^(basic|legendary|snow|world) (.+)$/);
+  if (supertypeMatch !== null) {
+    parts.push(ofSupertype(titleCase(supertypeMatch[1] as string)));
+    noun = supertypeMatch[2] as string;
+  }
+
+  const counterClause = noun.match(/^(.+) with (?:a )?\+1\/\+1 counter on it$/);
+  if (counterClause !== null) {
+    // The printed subject names the counter KIND. "Any counter" would pull in -1/-1, stun and
+    // charge counters, which is a different (and strictly larger) set of creatures.
+    parts.push(hasCounter('+1/+1'));
+    noun = counterClause[1] as string;
+    for (const [suffix, who] of [
+      [' you control', YOURS],
+      [' your opponents control', OPPONENTS],
+    ] as const) {
+      if (noun.endsWith(suffix)) {
+        parts.push(who);
+        noun = noun.slice(0, -suffix.length);
+        break;
+      }
+    }
+  }
+
+  // "creature tokens" is an intersection too: the token status is not a subtype. Keep it in
+  // the shared subject grammar so activated effects such as "Creature tokens you control gain
+  // indestructible" compose with the same selector used by anthems and triggers.
+  const tokenType = noun.match(/^(?:(creature|artifact|enchantment|land|planeswalker) )?tokens$/);
+  if (tokenType !== null) {
+    parts.push(IS_TOKEN);
+    if (tokenType[1] !== undefined) parts.push(ofType(titleCase(tokenType[1] as string)));
+    noun = 'permanents';
   }
 
   // "artifact creatures" is an intersection of card types, not a creature subtype named
@@ -434,15 +562,18 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
     parts.push(NONLAND);
   } else {
     const bareType = CARD_TYPE_PLURALS[noun];
+    const singularType = Object.entries(CARD_TYPE_PLURALS).find(([, type]) => type.toLowerCase() === noun)?.[1];
     if (bareType !== undefined) {
       parts.push(ofType(bareType));
+    } else if (singularType !== undefined) {
+      parts.push(ofType(singularType));
     } else if (noun !== 'permanents') {
       // Either a bare tribe ("elves") or a tribe plus a card type ("elf creatures").
-      const m = noun.match(/^(.+) (creatures|artifacts|enchantments|lands|planeswalkers)$/);
+      const m = noun.match(/^(.+) (creature|creatures|artifact|artifacts|enchantment|enchantments|land|lands|planeswalker|planeswalkers)$/);
       const subtype = resolveSubtype(m?.[1] ?? noun, card);
       if (subtype === null) return null;
       parts.push(ofSubtype(subtype));
-      if (m !== null) parts.push(ofType(CARD_TYPE_PLURALS[m[2] as string] as string));
+      if (m !== null) parts.push(ofType(CARD_TYPE_PLURALS[m[2] as string] ?? titleCase(m[2] as string)));
     }
   }
 
@@ -479,8 +610,115 @@ function parseEffectSentence(
   opts: { triggerObject?: boolean; thatMany?: Value; allocCount?: CountSlotAllocator } = {},
 ): Effect[] | null {
   const s = sentence.toLowerCase();
-
-  if (s === 'it gains haste until end of turn' || s === 'that spell gains haste until end of turn') {
+  // "transform this creature" is the modern templating; "transform ~" the older printing that
+  // `substituteSelfName` produces. Both name the ability's own source (CR 701.28a).
+  if (/^transform (?:it|~|this (?:artifact|creature|enchantment|land|permanent|planeswalker))$/.test(s)) {
+    return [{ op: 'transformSelf' }];
+  }
+  // "Then if it has no ice counters on it, transform it." (Thing in the Ice) — a check made on
+  // RESOLUTION, after the earlier sentences of the same ability have already run. Not CR 603.4's
+  // intervening-if, which is checked when the ability would trigger; this one has to see the
+  // counter the sentence before it just removed, which is why it is an effect and not a
+  // `trigger.condition`.
+  {
+    const trailing = s.match(/^then (?:if|when) (.+?), (.+)$/);
+    if (trailing !== null) {
+      const condition = parseConditionClause(trailing[1] as string, card);
+      const then = condition === null ? null : parseEffectSentence(trailing[2] as string, alloc, card, opts);
+      if (condition !== null && then !== null) {
+        return [{ op: 'conditionalEffect', condition, then, else: [] }];
+      }
+    }
+  }
+  if (s === 'exile all graveyards') return [{ op: 'exileAllGraveyards' }];
+  if (/^return (?:~|this (?:creature|artifact|enchantment|permanent)) to its owner's hand$/.test(s)) {
+    return [{ op: 'returnToHand', target: 'source' }];
+  }
+  // Sensei's Divining Top's second ability. "its owner's library", not "your library" — the
+  // distinction matters for a Top someone else has taken control of.
+  if (/^put (?:~|this (?:creature|artifact|enchantment|permanent|land)) on top of its owner's library$/.test(s)) {
+    return [{ op: 'selfToLibraryTop' }];
+  }
+  if (s === 'after this main phase, there is an additional combat phase followed by an additional main phase') {
+    return [{ op: 'extraCombatPhase' }];
+  }
+  {
+    const copy = s.match(/^create a token that's a copy of target creature you control, except it isn't legendary$/);
+    if (copy !== null) {
+      const target = alloc('creature', undefined, 'you');
+      return [{ op: 'createTokenCopyOf', ref: target, count: constant(1), exceptNonLegendary: true }];
+    }
+  }
+  // An explicit two-target clause is not two independent sentences: both targets are announced
+  // together, as in Hull Breach's "destroy target artifact and target enchantment" mode.
+  {
+    const pair = s.match(/^destroy target (.+?) and target (.+)$/);
+    if (pair !== null) {
+      const first = parseTargetClause(pair[1] as string);
+      const second = parseTargetClause(pair[2] as string);
+      if (first !== null && second !== null) {
+        const firstTarget = alloc(first.kind, first.filter, first.controller);
+        const secondTarget = alloc(second.kind, second.filter, second.controller);
+        return [
+          { op: 'destroy', target: firstTarget },
+          { op: 'destroy', target: secondTarget },
+        ];
+      }
+    }
+  }
+  // "<effect> and <effect>" — two independent clauses joined by "and" rather than a comma (a
+  // removal spell that also draws a card). This has to run BEFORE the specific handlers, not
+  // after: several of them hard-`return null` on a partial match ("destroy target <filter>"
+  // rejects the filter "artifact and draw a card"), which would strand the split half of every
+  // such sentence.
+  //
+  // Running first is only safe because both halves are parsed against a throwaway allocator
+  // first. The trial run is what bounds it. `alloc` mutates the caller's target list, so a half
+  // that allocates a slot and THEN fails would leave a phantom target behind; and a half that
+  // acquires a target its own text never announces ("gains trample until end of turn") is
+  // reading a "target" that belongs to the other half — "target creature gets +3/+3 and gains
+  // trample until end of turn" is ONE effect on ONE target (CR 601.2c), and the whole-sentence
+  // handler below is the one that reads it correctly.
+  for (const match of s.matchAll(/\s+and\s+/g)) {
+    const i = match.index ?? -1;
+    if (i <= 0) continue;
+    const halves = [s.slice(0, i), s.slice(i + match[0].length)] as const;
+    let trialSlots = 0;
+    const trial: SlotAllocator = () => trialSlots++;
+    const splittable = halves.every((half) => {
+      const before = trialSlots;
+      if (parseEffectSentence(half, trial, card, opts) === null) return false;
+      return trialSlots === before || half.includes('target');
+    });
+    if (!splittable) continue;
+    const first = parseEffectSentence(halves[0], alloc, card, opts);
+    const second = parseEffectSentence(halves[1], alloc, card, opts);
+    if (first !== null && second !== null) return [...first, ...second];
+  }  if (s === "goad all creatures you don't control") return [{ op: 'goadEachOpponent' }];
+  if (s === 'target creature attacks this turn if able') {
+    return [{ op: 'forceAttack', target: alloc('creature') }];
+  }
+  {
+    const m = s.match(/^put (a|one|two|three|four|five|\d+) cards? from your hand on top of your library(?: in any order)?$/);
+    if (m !== null) {
+      const count = parseAmount(m[1] as string);
+      if (count !== null) return [{ op: 'putFromHandOnLibraryTop', count: constant(count), anyOrder: s.endsWith(' in any order') }];
+    }
+  }
+  if (s === 'discard a card at random') return [{ op: 'discardAtRandom', count: constant(1) }];
+  if (s === 'each creature attacks this turn if able') {
+    return [{ op: 'forceAttackEach', selector: { kind: 'type', value: 'Creature' } }];
+  }
+  {
+    const m = s.match(/^attach (?:this equipment|~) to target creature an opponent controls$/);
+    if (m !== null) return [{ op: 'attachSelfTo', target: alloc('creature', undefined, 'opponent') }];
+  }
+  if (s === 'it gains haste until end of turn') {
+    return opts.triggerObject === true
+      ? [{ op: 'grantKeywordUntilEot', target: 'triggerObject', keyword: 'haste' }]
+      : [{ op: 'grantHasteToResolvingSpell' }];
+  }
+  if (s === 'that spell gains haste until end of turn') {
     return [{ op: 'grantHasteToResolvingSpell' }];
   }
   if (s === 'they gain haste until end of turn' || s === 'those creatures gain haste until end of turn') {
@@ -551,7 +789,10 @@ function parseEffectSentence(
     const first = alloc('creature', filter);
     const second = alloc('creature', filter);
     return [{ op: 'untapTarget', target: first }, { op: 'untapTarget', target: second }];
-  }  if (s === 'untap target permanent') {
+  }  if (s === 'untap target creature') {
+    return [{ op: 'untapTarget', target: alloc('creature') }];
+  }
+  if (s === 'untap target permanent') {
     return [{ op: 'untapTarget', target: alloc('anyTarget') }];
   }
   if (s === 'untap another target permanent') {
@@ -562,6 +803,12 @@ function parseEffectSentence(
   }
   if (s === 'untap another target artifact') {
     return [{ op: 'untapTarget', target: alloc('artifact', OTHER) }];
+  }
+  // "…, then untap it" (Westvale Abbey) — the ability's own source, not a target. Reached via
+  // `parseEffectSentence`'s ", then " split, so the "it" is whatever the first half acted on,
+  // which for every printing of this shape is the source itself.
+  if (/^untap (?:it|~|this (?:artifact|creature|enchantment|land|permanent))$/.test(s)) {
+    return [{ op: 'untapTarget', target: 'source' }];
   }
   if (s === 'put target artifact card from your graveyard on top of your library') {
     return [{ op: 'graveyardToLibraryTop', target: alloc('cardInGraveyard', ofType('Artifact')) }];
@@ -578,18 +825,38 @@ function parseEffectSentence(
   }
   if (s === "return target spell or nonland permanent an opponent controls to its owner's hand") {
     return [{ op: 'returnToHand', target: alloc('spellOrNonlandPermanent', undefined, 'opponent') }];
-  }  if (s === "return target nonland permanent you don't control to its owner's hand") {
+  }
+  if (s === "return target nonland permanent you don't control to its owner's hand") {
     return [{ op: 'returnToHand', target: alloc('nonlandPermanent', undefined, 'opponent') }];
   }
+  // "Return target spell you don't control to its owner's hand" (Hullbreaker Horror). Bouncing a
+  // spell off the stack is NOT countering it — the card goes to hand rather than the graveyard,
+  // and a "can't be countered" spell is still returned this way. `returnToHand` already handles
+  // a stack target; only the phrasing was missing.
   {
+    const m = s.match(/^return target spell (?:you don't control|an opponent controls) to its owner's hand$/);
+    if (m !== null) {
+      return [{ op: 'returnToHand', target: alloc('spell', undefined, 'opponent') }];
+    }
+  }
+  {
+    // The target noun is read by `parseTargetClause`, not a fixed list: Otawara bounces an
+    // "artifact, creature, enchantment, or planeswalker", which is a compound alternation, and
+    // the clause parser already composes those (and any "you control" / "an opponent controls"
+    // suffix) into a kind plus a filter.
     const m = s.match(
-      /^return (?:up to (\w+) )?(other )?target (nonland permanent|creature|permanent)s? to (?:its owner's hand|their owners' hands)$/,
+      /^return (?:up to (\w+) )?(other )?target (.+?)s? to (?:its owner's hand|their owners' hands)$/,
     );
     if (m) {
-      const noun = m[3] as string;
-      const kind = parseTargetNoun(noun);
-      if (kind !== null) {
-        const filter = m[2] !== undefined ? OTHER : undefined;
+      const clause = parseTargetClause(m[3] as string);
+      if (clause !== null) {
+        const kind = clause.kind;
+        const filter =
+          m[2] !== undefined
+            ? clause.filter === undefined
+              ? OTHER
+              : allOf(OTHER, clause.filter)
+            : clause.filter;
         // "up to N" (Marang River Regent) is a variable-count announcement (CR 601.2b/603.3d),
         // not N separate ordinary slots and not one mandatory slot — the count itself used to be
         // silently dropped here, which turned "up to two, never obliges you" into "return
@@ -597,12 +864,30 @@ function parseEffectSentence(
         if (m[1] !== undefined) {
           const max = parseAmount(m[1] as string);
           if (max === null || opts.allocCount === undefined) return null;
-          const slot = opts.allocCount(kind, { min: 0, max }, undefined, filter);
+          const slot = opts.allocCount(kind, { min: 0, max }, clause.controller, filter);
           return [{ op: 'returnToHandEachChosen', targetSlot: slot }];
         }
-        return [{ op: 'returnToHand', target: alloc(kind, filter) }];
+        // `clause.controller` MUST be carried through: dropping it turns "target creature you
+        // control" into "target creature", which is a strictly more permissive spell.
+        return [{ op: 'returnToHand', target: alloc(kind, filter, clause.controller) }];
       }
     }
+  }
+  // "Each player discards their hand, then draws seven cards" (Dragon Mage) and Windfall's
+  // "...draws cards equal to the greatest number of cards a player discarded this way."
+  {
+    const m = s.match(
+      /^each player discards their hand, then draws (\\w+) cards$|^each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way$/,
+    );
+    if (m !== null) {
+      if (m[1] === undefined) return [{ op: 'eachPlayerDiscardHandThenDraw', greatestDiscarded: true }];
+      const n = parseAmount(m[1] as string);
+      if (n === null) return null;
+      return [{ op: 'eachPlayerDiscardHandThenDraw', count: constant(n) }];
+    }
+  }
+  if (s === 'put your commander into your hand from the command zone') {
+    return [{ op: 'commandZoneToHand' }];
   }
   if (s.startsWith("until your next turn, creatures can't attack you")) {
     return [{ op: 'noOp' }];
@@ -655,7 +940,63 @@ function parseEffectSentence(
   if (s === "target creature can't be blocked this turn") {
     return [{ op: 'cantBeBlockedUntilEot', target: alloc('creature') }];
   }
-  // "target creature gets +3/+3 until end of turn"
+  // A pump may use the announced X and grant one or more keywords to the same target.
+  {
+    const m = s.match(
+      /^(target creature|~) gets \+x\/\+0 and gains ([a-z]+(?: and [a-z]+)*) until end of turn$/,
+    );
+    if (m !== null) {
+      const parsed = parseKeywordLine(m[2] as string);
+      if (parsed === null || parsed.ward !== undefined || parsed.protectionFrom !== undefined) {
+        return null;
+      }
+      const power: Value = { kind: 'xValue' };
+      if (m[1] === '~') {
+        return [
+          { op: 'pumpEachUntilEot', selector: SELF, power, toughness: 0 },
+          ...parsed.keywords.map(
+            (keyword): Effect => ({ op: 'grantKeywordEachUntilEot', selector: SELF, keyword }),
+          ),
+        ];
+      }
+      const target = alloc('creature');
+      return [
+        { op: 'pumpUntilEot', target, power, toughness: 0 },
+        ...parsed.keywords.map(
+          (keyword): Effect => ({ op: 'grantKeywordUntilEot', target, keyword }),
+        ),
+      ];
+    }
+  }
+  // A pump may grant a list of implemented keywords to the same target.
+  {
+    const m = s.match(
+      /^(target creature|~) gets ([+-]\d+)\/([+-]\d+) and gains ([a-z]+(?: and [a-z]+)+) until end of turn$/,
+    );
+    if (m !== null) {
+      const parsed = parseKeywordLine(m[4] as string);
+      if (parsed === null || parsed.ward !== undefined || parsed.protectionFrom !== undefined) {
+        return null;
+      }
+      const power = Number(m[2]);
+      const toughness = Number(m[3]);
+      if (m[1] === '~') {
+        return [
+          { op: 'pumpEachUntilEot', selector: SELF, power, toughness },
+          ...parsed.keywords.map(
+            (keyword): Effect => ({ op: 'grantKeywordEachUntilEot', selector: SELF, keyword }),
+          ),
+        ];
+      }
+      const target = alloc('creature');
+      return [
+        { op: 'pumpUntilEot', target, power, toughness },
+        ...parsed.keywords.map(
+          (keyword): Effect => ({ op: 'grantKeywordUntilEot', target, keyword }),
+        ),
+      ];
+    }
+  }  // "target creature gets +3/+3 until end of turn"
   // "~ gets +1/+0 until end of turn" (firebreathing)
   // "target creature gets +2/+2 and gains flying until end of turn"
   {
@@ -678,10 +1019,14 @@ function parseEffectSentence(
         }
         return effects;
       } else {
+        // ONE "target creature", so ONE target slot (CR 601.2c): the pump and the keyword grant
+        // both apply to the creature the spell announced. Allocating a second slot here would
+        // let the pump and the grant land on different creatures.
+        const target = alloc('creature');
         const effects: Effect[] = [
           {
             op: 'pumpUntilEot',
-            target: alloc('creature'),
+            target,
             power,
             toughness,
           },
@@ -690,7 +1035,7 @@ function parseEffectSentence(
           if (!KEYWORD_SET.has(m[4])) return null;
           effects.push({
             op: 'grantKeywordUntilEot',
-            target: alloc('creature'),
+            target,
             keyword: m[4] as KeywordAbility,
           });
         }
@@ -727,13 +1072,20 @@ function parseEffectSentence(
       const keywordText = m[4] ?? m[5];
       if (keywordText !== undefined) {
         const parsed = parseKeywordLine(keywordText);
-        // Only plain keywords can be granted until end of turn: `UntilEotEffect` carries a
-        // single keyword name, and a ward/protection grant would need a shape it does not have.
-        if (parsed === null || parsed.ward !== undefined || parsed.protectionFrom !== undefined) {
-          return null;
-        }
+        // Ward is still refused: `UntilEotEffect` has no shape for a granted ward cost, and a
+        // grant the engine drops silently would leave the card claiming to be modeled.
+        // Protection IS supported here (Akroma's Will) via its own effect op — it carries an
+        // argument, so it cannot ride on `keyword`.
+        if (parsed === null || parsed.ward !== undefined) return null;
         for (const keyword of parsed.keywords) {
           effects.push({ op: 'grantKeywordEachUntilEot', selector, keyword });
+        }
+        if (parsed.protectionFrom !== undefined) {
+          effects.push({
+            op: 'grantProtectionEachUntilEot',
+            selector,
+            colors: [...parsed.protectionFrom],
+          });
         }
       }
       if (effects.length > 0) return effects;
@@ -741,6 +1093,46 @@ function parseEffectSentence(
   }
   // "~ deals 3 damage to any target" / "â€¦ to target creature" / "â€¦ to each opponent"
   {
+  if (
+    opts.triggerObject === true &&
+    s === 'it deals damage equal to its power to any target'
+  ) {
+    return [{
+      op: 'dealDamage',
+      target: alloc('anyTarget'),
+      amount: { kind: 'powerOfTriggerObject' },
+      source: 'triggerObject',
+    }];
+  }
+  {
+    const targetHandDamage = s.match(
+      /^~ deals damage to target player equal to the number of cards in that player's hand$/,
+    );
+    if (targetHandDamage !== null) {
+      const target = alloc('player');
+      return [{ op: 'dealDamage', target, amount: { kind: 'cardsInTargetHand', target } }];
+    }
+    if (s === "~ deals 2 damage to that creature's controller") {
+      return [{ op: 'dealDamage', target: 'eventPlayer', amount: constant(2) }];
+    }
+    if (
+      s === "~ deals damage equal to the number of spells you've cast this turn to any target" ||
+      (opts.triggerObject !== true &&
+        s === "it deals damage equal to the number of spells you've cast this turn to any target")
+    ) {
+      return [{ op: 'dealDamage', target: alloc('anyTarget'), amount: { kind: 'spellsCastThisTurn' } }];
+    }
+  }
+  {
+    // "This land deals 1 damage to you" (City of Brass) - damage from the source to its OWN
+    // controller. `it` is the printed pronoun once the trigger head has already named the source.
+    const m = s.match(/^(?:~|it) deals (\w+) damage to you$/);
+    if (m !== null) {
+      const amount = parseAmount(m[1] as string);
+      if (amount === null) return null;
+      return [{ op: 'damageController', amount }];
+    }
+  }
     const m = s.match(/^~ deals (\w+) damage to (any target|target creature|each opponent)$/);
     if (m) {
       const amount = parseAmount(m[1] as string);
@@ -759,6 +1151,20 @@ function parseEffectSentence(
   }
   if (s === 'counter target noncreature spell') {
     return [{ op: 'counter', target: alloc('noncreatureSpell', undefined, 'opponent') }];
+  }
+  // "Counter target spell unless its controller pays {3}" (Mystic Confluence's first mode).
+  // `counterUnlessControllerPays` already exists for Stubborn Denial, but only inside that
+  // card's whole-block parser; this is the same effect as a plain sentence, so it also reaches
+  // a modal bullet.
+  {
+    const m = s.match(/^counter target (noncreature )?spell unless its controller pays (\{[^}]+\})$/);
+    if (m !== null) {
+      const parsedCost = parseManaCost((m[2] as string).toUpperCase() as never);
+      if (parsedCost.cost !== null) {
+        const target = alloc(m[1] === undefined ? 'spell' : 'noncreatureSpell', undefined, 'opponent');
+        return [{ op: 'counterUnlessControllerPays', target, cost: parsedCost.cost }];
+      }
+    }
   }
   // "Add {B}{B}{B}." (a ritual spell) / "Add {U}{B}." (the effect half of a signet's activated
   // ability, once its `{1}, {T}` cost has already routed it away from `parseManaAbilityLine` —
@@ -924,14 +1330,16 @@ function parseEffectSentence(
   }
   // "put a +1/+1 counter on target creature" / "put two -1/-1 counters on ~"
   {
-    const m = s.match(/^put (\w+) ([+-]\d+\/[+-]\d+) counters? on (target creature|~)$/);
+    const m = s.match(/^put (\w+) ([+-]\d+\/[+-]\d+) counters? on (target creature|~|this creature|it)$/);
     if (m) {
       const count = parseAmount(m[1] as string);
       if (count === null) return null;
       const counter = m[2] as string;
-      return m[3] === '~'
-        ? [{ op: 'putCountersEach', selector: SELF, counter, count }]
-        : [{ op: 'putCounters', target: alloc('creature'), counter, count }];
+      return m[3] === 'it' && opts.triggerObject === true
+        ? [{ op: 'putCounters', target: 'triggerObject', counter, count }]
+        : m[3] === '~' || m[3] === 'this creature'
+          ? [{ op: 'putCountersEach', selector: SELF, counter, count }]
+          : [{ op: 'putCounters', target: alloc('creature'), counter, count }];
     }
   }
   // "put a gold counter on this artifact" â€” a named counter on the ability's own source. Not a
@@ -992,9 +1400,61 @@ function parseEffectSentence(
       }
     }
   }
+  {
+    const targetHand = s.match(/^draw cards equal to the number of cards in target opponent's hand$/);
+    if (targetHand !== null) {
+      const target = alloc('player', undefined, 'opponent');
+      return [{ op: 'draw', count: { kind: 'cardsInTargetHand', target } }];
+    }
+    if (s === 'draw a card for each tapped creature target opponent controls') {
+      const target = alloc('player', undefined, 'opponent');
+      return [{ op: 'draw', count: { kind: 'tappedCreaturesControlledByTarget', target } }];
+    }
+    if (s === 'draw a card for each attacking creature') {
+      return [{ op: 'draw', count: { kind: 'attackingCreatures' } }];
+    }
+    // "Add {R} for each card in target opponent's hand" (Jeska's Will). A SPELL effect, not a
+    // mana ability: it is one bullet of a modal sorcery, it targets, and it uses the stack.
+    const addPerCard = s.match(
+      /^add (\{[wubrgc]\}) for each card in target opponent's hand$/,
+    );
+    if (addPerCard !== null) {
+      const target = alloc('player', undefined, 'opponent');
+      const symbol = manaSymbols(addPerCard[1] as string)[0];
+      if (symbol === undefined) return null;
+      return [{
+        op: 'addMana',
+        amount: { kind: 'cardsInTargetHand', target },
+        colors: [symbol],
+      }];
+    }
+  }
+  {
+    const freeCast = s.match(
+      /^you may cast a spell with mana value (\d+) or less from your hand without paying its mana cost$/,
+    );
+    if (freeCast !== null) {
+      return [{ op: 'castOneFromHandFreeUpTo', maxManaValue: Number(freeCast[1]) }];
+    }
+  }
   // "draw a card" / "draw two cards" / "you draw a card" / "draw that many cards"
   // "draw a card unless that player pays {1}" (Rhystic Study). The payment belongs to the
   // player named by the triggering cast event, not to the controller of this ability.
+  // "…unless that player pays {X}, where X is this creature's power" (Esper Sentinel). The
+  // amount is a Value, so it cannot be folded into the printed-symbol branch below.
+  {
+    const m = s.match(/^(.+?) unless that player pays \{x\}, where x is (.+)$/);
+    if (m !== null) {
+      const genericValue = parseDynamicCountValue(m[2] as string, card);
+      const then = parseEffectSentence(m[1] as string, alloc, card, opts);
+      if (genericValue !== null && then !== null) {
+        return [
+          { op: 'unlessPays', payer: 'eventPlayer', cost: emptyCost(), genericValue, then },
+        ];
+      }
+      return null;
+    }
+  }
   {
     const m = s.match(/^(.+?) unless that player pays ((?:\{[^}]+\})+)$/);
     if (m !== null) {
@@ -1048,7 +1508,48 @@ function parseEffectSentence(
   // "create a 1/1 black and green Pest creature token with 'â€¦'" / "create that many Treasure
   // tokens" / "create a token that's a copy of it, except the token isn't legendary"
   {
-    const parsed = parseCreateTokenSentence(s, card, opts);
+    const beneficiary = s.match(/^target (?:opponent|player) creates? (.+)$/);
+    if (beneficiary !== null) {
+      const parsed = parseCreateTokenSentence(`create ${beneficiary[1] as string}`, card, opts);
+      const token = parsed?.length === 1 && parsed[0]?.op === 'createToken' ? parsed[0] : null;
+      if (token !== null) {
+        return [{
+          op: 'createTokenForPlayer',
+          target: alloc('player', undefined, 'opponent'),
+          spec: token.spec,
+          count: token.count,
+        }];
+      }
+    }
+    const exceptTarget = s.match(/^each player other than target player creates (.+)$/);
+    if (exceptTarget !== null) {
+      const parsed = parseCreateTokenSentence(`create ${exceptTarget[1] as string}`, card, opts);
+      const token = parsed?.length === 1 && parsed[0]?.op === 'createToken' ? parsed[0] : null;
+      if (token !== null) {
+        return [{
+          op: 'createTokenForEachPlayerExceptTarget',
+          target: alloc('player'),
+          spec: token.spec,
+          count: token.count,
+        }];
+      }
+    }
+    const perToken = s.match(/^for each token you control, create (.+)$/);
+    if (perToken !== null) {
+      const parsed = parseCreateTokenSentence(`create ${perToken[1] as string}`, card, opts);
+      const token = parsed?.length === 1 && parsed[0]?.op === 'createToken' ? parsed[0] : null;
+      if (token !== null) {
+        return [{
+          op: 'createToken',
+          spec: token.spec,
+          count: { kind: 'countPermanents', selector: allOf(IS_TOKEN, YOURS), scope: 'all' },
+        }];
+      }
+    }
+    if (s.startsWith('you create ')) {
+    const parsed = parseCreateTokenSentence(s.slice('you '.length), card, opts);
+    if (parsed !== null) return parsed;
+  }  const parsed = parseCreateTokenSentence(s, card, opts);
     if (parsed !== null) return parsed;
   }
   // "gain control of all Dragons" (Karrthus, Tyrant of Jund). Bounded to exclude a comma so a
@@ -1061,6 +1562,15 @@ function parseEffectSentence(
       const selector = parseSubject(m[1] as string, card);
       if (selector === null) return null;
       return [{ op: 'gainControl', selector }];
+    }
+  }
+  {
+    const m = s.match(/^untap up to (\w+) (.+)$/);
+    if (m) {
+      const max = parseAmount(m[1] as string);
+      const selector = parseSubject(m[2] as string, card);
+      if (max === null || selector === null) return null;
+      return [{ op: 'untapUpTo', selector, max }];
     }
   }
   // "untap all lands you control"
@@ -1105,6 +1615,25 @@ function parseEffectSentence(
   // aristocrats drain template: Zulaport Cutthroat, Cauldron of Essence, Syr Konrad's activated
   // ability). "Target player loses 1 life and you gain 1 life" (Blood Artist) is the same
   // template with a targeted victim instead of every opponent.
+  // The Gray Merchant / Exsanguinate drain, whose amount is a Value rather than a number.
+  // Its "you gain life equal to the life lost this way" half is a separate sentence and is
+  // matched on its own below — the two communicate through the resolution-scoped total, not
+  // through the IR.
+  {
+    const m = s.match(/^each opponent loses (?:x life, where x is (.+)|life equal to (.+))$/);
+    if (m) {
+      const amount = parseDynamicCountValue((m[1] ?? m[2]) as string, card);
+      if (amount === null) return null;
+      return [{ op: 'eachOpponentLosesLife', amount }];
+    }
+    // Bare "{X}" with no "where X is" gloss: the value announced for the spell's own {X}.
+    if (s === 'each opponent loses x life') {
+      return [{ op: 'eachOpponentLosesLife', amount: { kind: 'xValue' } }];
+    }
+  }
+  if (s === 'you gain life equal to the life lost this way') {
+    return [{ op: 'gainLifeEqualToLifeLostThisWay' }];
+  }
   {
     const m = s.match(/^each opponent loses (\w+) life(?: and you gain (\w+) life)?$/);
     if (m) {
@@ -1185,7 +1714,26 @@ function parseEffectSentence(
       if (first !== null && second !== null) return [...first, ...second];
     }
   }
+
   return null;
+}
+
+/**
+ * "Exile the top three cards of your library. You may play them this turn." (Jeska's Will)
+ *
+ * A whole-block parse for the same reason `parseLookAtTopBlock` is one: "them" in the second
+ * sentence only means anything relative to the first, and the IR has no way to carry an exiled
+ * set between two independently-parsed ops.
+ */
+const EXILE_TOP_PLAYABLE_RE =
+  /^exile the top (\w+) cards? of your library\. you may play (?:them|it) this turn$/;
+
+function parseExileTopPlayableBlock(lower: string): Effect[] | null {
+  const m = lower.replace(/\.$/, '').match(EXILE_TOP_PLAYABLE_RE);
+  if (m === null) return null;
+  const count = parseAmount(m[1] as string);
+  if (count === null || count <= 0) return null;
+  return [{ op: 'exileTopNPlayableUntilEot', count: constant(count) }];
 }
 
 /**
@@ -1197,8 +1745,36 @@ function parseEffectSentence(
  * independently would need the IR to carry a revealed set between ops, which it does not.
  */
 function parseLookAtTopBlock(lower: string, card: OracleCard): Effect[] | null {
-  const m = lower.replace(/\.$/, '').match(
-    /^look at the top (\w+) cards of your library\. you may put (?:a|an) (.+?) from among them (onto the battlefield( tapped)?|into your hand)\. put the rest on the bottom of your library in a random order$/,
+  const normalized = lower.replace(/\.$/, '');
+  const reorder = normalized.match(
+    /^look at the top (\w+) cards of your library, then put them back in any order(?:\. you may shuffle(?: your library)?)?(?:\. draw a card)?$/,
+  );
+  if (reorder !== null) {
+    const count = parseAmount(reorder[1] as string);
+    if (count === null) return null;
+    const mayShuffle = /\. you may shuffle(?: your library)?(?:\.|$)/.test(normalized);
+    const drawAfter = normalized.endsWith('. draw a card');
+    return [
+      { op: 'lookAtTopN', count, rest: 'topAnyOrder', ...(mayShuffle ? { mayShuffle: true as const } : {}) },
+      ...(drawAfter ? [{ op: 'draw' as const, count: constant(1) }] : []),
+    ];
+  }
+
+  // "Look at the top card of your library. If it's a creature card of the chosen type, you may
+  // reveal it and put it into your hand." (Herald's Horn) - the SINGULAR form, with the filter
+  // in an if-clause instead of on the "you may put" and no "put the rest": a card not taken
+  // simply stays where it was, which is what `rest: 'topAnyOrder'` means for one card.
+  const single = normalized.match(
+    /^look at the top card of your library\. if it's (?:a|an) (.+?), you may reveal it and put it into your hand$/,
+  );
+  if (single !== null) {
+    const filter = parseSearchFilter(single[1] as string, card);
+    if (filter === null) return null;
+    return [{ op: 'lookAtTopN', count: 1, mayPut: { filter, destination: { zone: 'hand' } }, rest: 'topAnyOrder' }];
+  }
+
+  const m = normalized.match(
+    /^look at the top (\w+) cards of your library\. you may put (?:a|an) (.+?) from among them (onto the battlefield( tapped)?|into your hand)\. put the rest (on the bottom of your library in a random order|on top of your library in any order)$/,
   );
   if (m === null) return null;
 
@@ -1213,7 +1789,7 @@ function parseLookAtTopBlock(lower: string, card: OracleCard): Effect[] | null {
       : { zone: 'battlefield', tapped: true }
     : { zone: 'hand' };
 
-  return [{ op: 'lookAtTopN', count, mayPut: { filter, destination }, rest: 'bottomRandom' }];
+  return [{ op: 'lookAtTopN', count, mayPut: { filter, destination }, rest: (m[5] as string).startsWith('on top') ? 'topAnyOrder' : 'bottomRandom' }];
 }
 
 /**
@@ -1257,23 +1833,31 @@ function parseModalSpellBlock(
     .split('\n')
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
-  if (lines.length < 3) return null;
+  // A header plus at least ONE bullet. One mode under an "up to one"/"one or more" header is a
+  // real printing; whether the count is actually satisfiable is checked against `exact` below,
+  // once the header has been read.
+  if (lines.length < 2) return null;
   const header = (lines[0] as string).match(
-    /^choose (one|one or more|one or both|any number|two|three)(?:\s*(?:\u2014|-)|\.)\s*(.*)$/i,
+    /^choose (up to one|one|one or more|one or both|any number|two|three)(?:\s*(?:\u2014|-)|\.)\s*(.*)$/i,
   );
   if (header === null) return null;
 
   const conditionalHeader = (header[2] as string).trim().toLowerCase();
+  const repeatable = /^you may choose the same mode more than once\.?$/.test(conditionalHeader);
   const maxChoicesIf = conditionalHeader === 'if you control a commander as you cast this spell, you may choose both instead.'
     ? { condition: { kind: 'controlsYourCommander' as const }, maxChoices: 2 }
-    : conditionalHeader.length === 0
+    : repeatable || conditionalHeader.length === 0
       ? undefined
       : null;
   if (maxChoicesIf === null) return null;
 
   const targets: TargetSpec[] = [];
-  const alloc: SlotAllocator = (kind, filter) => {
-    targets.push(filter === undefined ? { kind } : { kind, filter });
+  const alloc: SlotAllocator = (kind, filter, controller) => {
+    targets.push({
+      kind,
+      ...(filter !== undefined ? { filter } : {}),
+      ...(controller !== undefined ? { controller } : {}),
+    });
     return targets.length - 1;
   };
 
@@ -1281,22 +1865,45 @@ function parseModalSpellBlock(
   for (const bulletLine of lines.slice(1)) {
     const m = bulletLine.match(/^\u2022\s*(.+?)\.?$/);
     if (m === null) return null;
-    const sentence = m[1] as string;
+    const raw = m[1] as string;
+    const labeled = raw.match(/^(.+?)\s*(?:\u2014|\s-\s)\s*(.+)$/);
+    const label = labeled?.[1] as string | undefined;
+    const text = (labeled?.[2] ?? raw) as string;
     const firstTargetSlot = targets.length;
-    const parsed = parseEffectSentence(sentence, alloc, card);
-    if (parsed === null) return null;
+    // Whole-bullet blocks first: a bullet whose second sentence refers back to the first
+    // ("...you may play THEM this turn") cannot be parsed sentence by sentence.
+    // The block parsers match lowercased text, the way `parseEffectSentence` does internally.
+    const blockText = text.toLowerCase();
+    const block = parseLookAtTopBlock(blockText, card) ?? parseExileTopPlayableBlock(blockText);
+    const parsed: Effect[] = [];
+    if (block !== null) {
+      parsed.push(...block);
+    } else {
+      const parsedSentences = splitSentences(text);
+      if (parsedSentences.length === 0) return null;
+      for (const sentence of parsedSentences) {
+        const sentenceEffects = parseEffectSentence(sentence, alloc, card);
+        if (sentenceEffects === null) return null;
+        parsed.push(...sentenceEffects);
+      }
+    }
     const targetSlots = Array.from({ length: targets.length - firstTargetSlot }, (_, index) => firstTargetSlot + index);
-    options.push({ effects: parsed, description: sentence, targetSlots });
+    const description = label === undefined ? text : `${label}: ${text}`;
+    options.push({ effects: parsed, description, targetSlots });
   }
-  if (options.length < 2) return null;
+  if (options.length === 0) return null;
   const choice = (header[1] as string).toLowerCase();
   // "Choose two —" (Austere Command) is an exact count (CR 700.2d), unlike the "at least"/"up
   // to" headers above it: it must pick precisely N different modes, not merely up to N.
   const exact = choice === 'two' ? 2 : choice === 'three' ? 3 : null;
-  const minChoices = exact ?? (choice === 'any number' ? 0 : 1);
+  // An exact-count header needs at least that many DISTINCT modes to be satisfiable — unless
+  // the block is repeatable (Mystic Confluence), where one mode can be chosen again. A single
+  // bullet under an "up to"/"one or more" header is legal and was previously rejected.
+  if (exact !== null && !repeatable && options.length < exact) return null;
+  const minChoices = exact ?? (choice === 'any number' || choice === 'up to one' ? 0 : 1);
   const maxChoices =
-    exact ?? (choice === 'one' ? 1 : choice === 'one or both' ? Math.min(2, options.length) : options.length);
-  return { targets, modes: { minChoices, maxChoices, ...(maxChoicesIf !== undefined ? { maxChoicesIf } : {}), options } };
+    exact ?? (choice === 'up to one' ? 1 : choice === 'one' ? 1 : choice === 'one or both' ? Math.min(2, options.length) : options.length);
+  return { targets, modes: { minChoices, maxChoices, ...(repeatable ? { repeatable: true } : {}), ...(maxChoicesIf !== undefined ? { maxChoicesIf } : {}), options } };
 }
 
 /**
@@ -1381,6 +1988,89 @@ function parseHuntersInsightBlock(
  * the sentence list is in scope). Tried as a whole-card block, same as the modal/Ferocious/Hunter's
  * Insight blocks above, so it can see both sentences together.
  */
+/**
+ * Counter a spell, then create tokens for that spell's controller. The combined primitive keeps
+ * the beneficiary available after the countered spell has left the stack.
+ */
+/** Parse Path/Trophy-style removal whose target's controller receives a basic-land search. */
+function parseRemoveAndControllerSearchBlock(
+  text: string,
+  _card: OracleCard,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const norm = stripReminderText(text).trim();
+  const m = norm.match(
+    /^(destroy|exile) target (.+?)\. its controller may search their library for a basic land card, put (?:that card|it) onto the battlefield( tapped)?, then shuffle\.?$/i,
+  );
+  if (m === null) {
+    const winds = norm.match(
+      /^exile target (.+?)\. for each creature exiled this way, its controller searches their library for a basic land card\. those players put those cards onto the battlefield tapped, then shuffle\.?$/i,
+    );
+    if (winds === null) return null;
+    const clause = parseTargetClause((winds[1] as string).toLowerCase());
+    if (clause === null) return null;
+    return {
+      targets: [{
+        kind: clause.kind,
+        ...(clause.filter !== undefined ? { filter: clause.filter } : {}),
+        ...(clause.controller !== undefined ? { controller: clause.controller } : {}),
+      }],
+      effects: [{
+        op: 'removeTargetAndControllerMaySearchBasicLand',
+        target: 0,
+        action: 'exile',
+        entersTapped: true,
+      }],
+    };
+  }
+  const clause = parseTargetClause((m[2] as string).toLowerCase());
+  if (clause === null) return null;
+  return {
+    targets: [{
+      kind: clause.kind,
+      ...(clause.filter !== undefined ? { filter: clause.filter } : {}),
+      ...(clause.controller !== undefined ? { controller: clause.controller } : {}),
+    }],
+    effects: [{
+      op: 'removeTargetAndControllerMaySearchBasicLand',
+      target: 0,
+      action: (m[1] as string).toLowerCase() as 'destroy' | 'exile',
+      entersTapped: m[3] !== undefined,
+    }],
+  };
+}
+function parseCounterAndCreateTokenBlock(
+  text: string,
+  card: OracleCard,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const norm = stripReminderText(text).trim();
+  const m = norm.match(
+    /^counter target (?:(.+?) )?spell\. its controller creates (a|an|one|two|three|four|five|\d+) (.+? tokens?(?: with .+)?)\.?$/i,
+  );
+  if (m === null) return null;
+
+  const qualifier = (m[1] ?? '').toLowerCase();
+  let target: TargetSpec;
+  if (qualifier === '') {
+    target = { kind: 'spell' };
+  } else if (qualifier === 'noncreature') {
+    target = { kind: 'noncreatureSpell' };
+  } else {
+    const parts = qualifier.split(/,\s*(?:or\s+)?|\s+or\s+/).filter(Boolean);
+    const known = new Set(['artifact', 'creature', 'enchantment', 'instant', 'sorcery', 'planeswalker']);
+    if (parts.length === 0 || parts.some((part) => !known.has(part))) return null;
+    target = { kind: 'spell', filter: anyOf(...parts.map((part) => ofType(titleCase(part)))) };
+  }
+  const count = parseAmount((m[2] as string).toLowerCase());
+  const tokenPhrase = (m[3] as string).replace(/\.$/, '').replace(/ tokens$/i, ' token');
+  const parsedToken = parseCreateTokenSentence(('create a ' + tokenPhrase).toLowerCase(), card, {});
+  const tokenEffect = parsedToken?.length === 1 && parsedToken[0]?.op === 'createToken' ? parsedToken[0] : null;
+  if (count === null || tokenEffect === null) return null;
+  const spec = tokenEffect.spec;
+  return {
+    targets: [target],
+    effects: [{ op: 'counterAndCreateTokenForController', target: 0, spec, count: constant(count) }],
+  };
+}
 function parseDestroyAndCreateTokenBlock(
   text: string,
   card: OracleCard,
@@ -1585,9 +2275,30 @@ function parseMassSubject(phrase: string, card: OracleCard): Selector | null {
     }
   }
 
+  // "artifacts and enchantments" is one mass-removal subject, not two independent effects.
+  // Keep the alternation inside the selector so modal bullets such as Cleansing Nova remain
+  // single modes and the conservative sentence splitter never sees this conjunction.
+  const typeAlternation = noun.split(' and ');
+  const typeNames: Record<string, string> = {
+    creatures: 'Creature',
+    artifacts: 'Artifact',
+    enchantments: 'Enchantment',
+    lands: 'Land',
+    planeswalkers: 'Planeswalker',
+  };
+  let compoundTypeSelected = false;
+  if (
+    typeAlternation.length > 1 &&
+    typeAlternation.every((type) => typeNames[type] !== undefined)
+  ) {
+    parts.push(anyOf(...typeAlternation.map((type) => ofType(typeNames[type] as string))));
+    compoundTypeSelected = true;
+    noun = 'permanents';
+  }
+
   const subject = parseSubject(noun, card) ?? parseTriggerSubject(noun, card);
-  if (subject === null) return null;
-  parts.push(subject);
+  if (subject === null && !compoundTypeSelected) return null;
+  if (subject !== null) parts.push(subject);
   return parts.length === 1 ? (parts[0] as Selector) : allOf(...parts);
 }
 
@@ -1600,28 +2311,70 @@ function parseMassSubject(phrase: string, card: OracleCard): Selector | null {
  */
 function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
   const top = s.match(
-    /^search your library for (.+?), (?:reveal .+?, )?then shuffle and put (?:that card|it) on top(?: of your library)?$/,
+    /^search your library for (.+?), (?:reveal .+?, )?then shuffle and put (?:that card|the card|it) on top(?: of your library)?$/,
   );
   if (top !== null) {
     const filter = parseSearchFilter(top[1] as string, card);
     if (filter === null) return null;
-    return [{ op: 'searchLibrary', filter, destinations: [{ zone: 'libraryTop' }] }];
+    // Shuffle BEFORE the placement, which is the printed order ("...then shuffle and put the
+    // card on top") and the one that matters: shuffling afterwards would bury the card the
+    // whole spell exists to set up. Which card is chosen cannot depend on the shuffle, so
+    // asking first and shuffling first are the same decision.
+    return [
+      { op: 'shuffle' },
+      { op: 'searchLibrary', filter, destinations: [{ zone: 'libraryTop' }] },
+    ];
   }
 
   const m = s.match(/^search your library for (.+?), (?:reveal .+?, )?(put .+?), then shuffle$/);
   if (m === null) return null;
 
-  const filter = parseSearchFilter(m[1] as string, card);
+  const differentNames = (m[1] as string).endsWith(' with different names');
+  const filterText = differentNames
+    ? (m[1] as string).slice(0, -' with different names'.length)
+    : (m[1] as string);
+  const filter = parseSearchFilter(filterText, card);
   if (filter === null) return null;
   const destinations = parseSearchDestinations(m[2] as string);
   if (destinations === null) return null;
-  return [{ op: 'searchLibrary', filter, destinations }, { op: 'shuffle' }];
+  const countMatch = (m[1] as string).match(/^up to (\w+) /);
+  const count = countMatch === null ? null : parseAmount(countMatch[1] as string);
+  if (countMatch !== null && count === null) return null;
+  return [
+    {
+      op: 'searchLibrary',
+      filter,
+      destinations,
+      ...(count === null ? {} : { count: constant(count) }),
+      ...(differentNames ? { differentNames: true } : {}),
+    },
+    { op: 'shuffle' },
+  ];
 }
 
 /** "a Plains, Island, Swamp, or Mountain card" / "up to two basic land cards" â†’ a `Selector`. */
 function parseSearchFilter(phrase: string, card: OracleCard): Selector | null {
+  // "a creature card OF THE CHOSEN TYPE" (Herald's Horn) - stripped first, because it trails
+  // the noun everything below reads. The chosen type is per-permanent state recorded as the
+  // source entered (`entersChoosingOption`), so it is a selector, not a literal subtype.
+  const chosen = phrase.match(/^(.+) of the chosen type$/);
+  if (chosen !== null) {
+    const rest = parseSearchFilter(chosen[1] as string, card);
+    return rest === null ? null : allOf(rest, CHOSEN_SUBTYPE);
+  }
+
   const noun = phrase.replace(/^(?:up to \w+|a|an) /, '').replace(/ cards?$/, '');
 
+  // "basic land cards and/or Gate cards" is one search filter accepting either branch.
+  if (noun.includes(' and/or ')) {
+    const alternatives: Selector[] = [];
+    for (const part of noun.split(' and/or ')) {
+      const parsed = parseSearchFilter(part, card);
+      if (parsed === null) return null;
+      alternatives.push(parsed);
+    }
+    return anyOf(...alternatives);
+  }
   // "a card" (Demonic Tutor) â€” unrestricted, not narrowed to permanent types the way
   // `parseCardFilterPhrase`'s bare "card"/"permanent" is for its (zone-restricted) callers.
   // `allOf()` with no operands is vacuously true (CR-accurate: every `every()` over an empty
@@ -1669,9 +2422,19 @@ function parseCardFilterPhrase(phrase: string, card: OracleCard): Selector | nul
     return parts.length === 1 ? (parts[0] as Selector) : anyOf(...parts);
   }
 
+  // "a creature spell OF THE CHOSEN TYPE" (Cavern of Souls) / "a creature card of the chosen
+  // type" (Herald's Horn) - the type named as the source entered. Stripped first, because it
+  // trails the noun the rest of this function reads.
+  const chosen = phrase.match(/^(.+) of the chosen type$/);
+  if (chosen !== null) {
+    const rest = parseCardFilterPhrase(chosen[1] as string, card);
+    return rest === null ? null : allOf(rest, CHOSEN_SUBTYPE);
+  }
+
   const noun = phrase.replace(/ (?:cards?|spells?)$/, '').replace(/^(?:an?) /, '');
   // "legendary creature card" combines a supertype with the ordinary card filter. Keep this
   // here rather than teaching trigger subjects about card-zone-only wording.
+  if (noun === 'legendary') return ofSupertype('Legendary');
   const legendary = noun.match(/^legendary (.+)$/);
   if (legendary !== null) {
     const rest = parseCardFilterPhrase(legendary[1] as string, card);
@@ -1720,9 +2483,9 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters(?: the battlefield)?(?: or attacks)?|dies|attacks|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|dies|attacks|becomes tapped|deals combat damage to a player), (.*)$/;
 const STEP_TRIGGER_HEAD_RE =
-  /^at the beginning of (your|each(?: player's)?) (upkeep|end step), (.*)$/;
+  /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
 /**
  * "Whenever **one or more** Dragons you control attack" â€” the aggregate form (CR 603.2c). The
  * plural subject is stripped back to its singular here so `parseTriggerSubject` sees the same
@@ -1730,7 +2493,7 @@ const STEP_TRIGGER_HEAD_RE =
  * selector.
  */
 const AGGREGATE_TRIGGER_HEAD_RE =
-  /^whenever one or more (.+?) (attack|deal combat damage to a player), (.*)$/;
+  /^whenever one or more (.+?) (attack|enter|deal combat damage to a player), (.*)$/;
 /**
  * "Whenever you cast a Dragon spell" (CR 603.2) / "Whenever you cast OR COPY an instant or
  * sorcery spell" (Archmage Emeritus, Storm-Kiln Artist) â€” the "or copy" half is read onto the
@@ -1739,7 +2502,23 @@ const AGGREGATE_TRIGGER_HEAD_RE =
  * spell is actually CAST, only silently missing the strictly rarer copy case, rather than being
  * left unmodeled over one clause it cannot fully honor.
  */
-const CAST_TRIGGER_HEAD_RE = /^whenever (you|an opponent) casts?(?: or copy)? (.+?), (.*)$/;
+const TOKEN_CREATED_TRIGGER_HEAD_RE = /^whenever (you|a player|an opponent) create(?:s)? ((?:one or more |a )?(?:creature )?tokens?), (.*)$/;
+// English verb agreement makes the second person a separate surface form: cards print
+// "Whenever YOU DRAW YOUR second card" but "Whenever an opponent DRAWS THEIR second card".
+// `draws?` plus an either-possessive keeps one regex over both rather than two that drift.
+const DRAW_COUNT_TRIGGER_HEAD_RE = /^whenever (you|a player|an opponent) draws? (?:their|your) (second|third|fourth|fifth|sixth) card each turn, (.*)$/;
+const DRAW_TRIGGER_HEAD_RE = /^whenever (you|a player|an opponent) draws? (?:a|one) card, (.*)$/;
+const DRAW_EXCEPT_FIRST_TRIGGER_HEAD_RE =
+  /^whenever (you|a player|an opponent) draws? a card except the first one they draw in each of their draw steps, (.*)$/;
+const SACRIFICE_TRIGGER_HEAD_RE =
+  /^whenever (you|a player|an opponent) sacrifices? (.+?), (.*)$/;
+const TOKEN_OR_SACRIFICE_TRIGGER_HEAD_RE =
+  /^whenever (you|a player|an opponent) create(?:s)? or sacrifice(?:s)? (?:a )?tokens?, (.*)$/;
+const GRAVEYARD_CROSSING_TRIGGER_HEAD_RE =
+  /^whenever another creature dies, or a creature card is put into a graveyard from anywhere other than the battlefield, or a creature card leaves your graveyard, (.*)$/;
+const ORDINAL_CAST_TRIGGER_HEAD_RE =
+  /^whenever (you|an opponent) casts? (?:your|their) (first|second|third|fourth|fifth|sixth) (.+?) each turn, (.*)$/;
+const CAST_TRIGGER_HEAD_RE = /^whenever (you|an opponent|a player) casts?(?: or copy)? (.+?), (.*)$/;
 /** The intervening-if clause (CR 603.4): "â€¦, if you control a Dragon, draw a card". */
 const INTERVENING_IF_RE = /^if (.+?), (.+)$/;
 
@@ -1820,6 +2599,11 @@ function parseTriggerSubject(phrase: string, card: OracleCard): Selector | null 
     }
   }
 
+  const tokenType = noun.match(/^(creature|artifact|enchantment|land|planeswalker)? ?tokens?$/);
+  if (tokenType !== null) {
+    parts.push(IS_TOKEN);
+    if (tokenType[1] !== undefined) parts.push(ofType(CARD_TYPE_SINGULARS[tokenType[1] as string] as string));
+  } else {
   const bareType = CARD_TYPE_SINGULARS[noun];
   if (bareType !== undefined) {
     parts.push(ofType(bareType));
@@ -1830,6 +2614,7 @@ function parseTriggerSubject(phrase: string, card: OracleCard): Selector | null 
     if (subtype === null) return null;
     parts.push(ofSubtype(subtype));
     if (m !== null) parts.push(ofType(CARD_TYPE_SINGULARS[m[2] as string] as string));
+  }
   }
 
   if (parts.length === 0) return null;
@@ -1846,6 +2631,7 @@ const PREDEFINED_TOKENS: Record<string, TokenSpec> = {
   // source to boot) â€” disagreeing with `tokens.ts`'s `TREASURE` on the type line, though the two
   // mana-ability costs happened to match. One token, one spelling.
   treasure: TREASURE,
+  food: FOOD,
 };
 
 /** "1/1 black and green Pest creature token" â†’ a `TokenSpec`, or null if any part is unread. */
@@ -1942,6 +2728,14 @@ function parseCreateTokenSentence(
   opts: { triggerObject?: boolean; thatMany?: Value },
 ): Effect[] | null {
   // The copy form first: it shares the "create a token" prefix but nothing else.
+  // Per-opponent attacking tokens (Adeline, Ainok Strike Leader, Endless Foot Assault).
+  {
+    const attacking = s.match(/^create (?:a|an) (.+?) token that(?:'s| is) tapped and attacking that player(?: or a planeswalker they control)?$/);
+    if (attacking !== null) {
+      const spec = parseTokenFace((attacking[1] as string) + ' token', card);
+      if (spec !== null) return [{ op: 'createTokenForEachOpponent', spec, attacking: true }];
+    }
+  }
   const copy = s.match(/^create (a|that many|\w+) tokens? that's a copy of it(, except .+)?$/i);
   if (copy !== null) {
     if (opts.triggerObject !== true) return null;
@@ -1959,6 +2753,41 @@ function parseCreateTokenSentence(
     ];
   }
 
+  // "Create a Food token or a Treasure token" (Tireless Provisioner) — a resolution-time choice
+  // between two whole token creations, which is exactly `chooseOne`. Matched before the general
+  // form below, whose trailing group would otherwise read "food token or a treasure" as one
+  // token face.
+  {
+    const either = s.match(/^create (?:a|an) (.+?) token or (?:a|an) (.+?) token$/);
+    if (either !== null) {
+      const first = parseTokenFace((either[1] as string) + ' token', card);
+      const second = parseTokenFace((either[2] as string) + ' token', card);
+      if (first !== null && second !== null) {
+        return [{
+          op: 'chooseOne',
+          options: [
+            { effects: [{ op: 'createToken', spec: first, count: constant(1) }], description: `Create a ${first.name} token` },
+            { effects: [{ op: 'createToken', spec: second, count: constant(1) }], description: `Create a ${second.name} token` },
+          ],
+        }];
+      }
+    }
+  }
+
+  {
+    const byValue = s.match(/^create a number of (.+) tokens equal to (.+)$/);
+    if (byValue !== null) {
+      const count = parseDynamicCountValue(byValue[2] as string, card, opts);
+      const spec = parseTokenFace((byValue[1] as string) + ' token', card);
+      if (count !== null && spec !== null) return [{ op: 'createToken', spec, count }];
+    }
+    const forEach = s.match(/^create (?:a|an) (.+?) token for each (.+)$/);
+    if (forEach !== null) {
+      const count = parseDynamicCountValue('the number of ' + (forEach[2] as string), card, opts);
+      const spec = parseTokenFace((forEach[1] as string) + ' token', card);
+      if (count !== null && spec !== null) return [{ op: 'createToken', spec, count }];
+    }
+  }
   const m = s.match(
     /^create (a|an|two|three|four|five|\d+|x|that many|a number of [^,]+ equal to [^,]+)?\s*(tapped )?(?:([a-z\s]+),\s+(?:a|an)\s+)?(.+?)(?: with (?:"(.+)"|([a-z]+(?:,\s*[a-z]+)*(?:\s+and\s+[a-z]+)*)))?$/i,
   );
@@ -2033,8 +2862,32 @@ const ANY_SPELL: Selector = { kind: 'type', value: '*any spell*' };
  * characteristics, and only the zone differs.
  */
 function parseSpellFilter(phrase: string, card: OracleCard): Selector | null {
+  // "Spells OF THE CHOSEN TYPE you cast..." (Morophon) - the qualifier sits on the subject here,
+  // where Herald's Horn prints it after "you cast". Same selector either way.
+  const chosen = phrase.match(/^(.+) of the chosen type$/);
+  if (chosen !== null) {
+    const rest = parseSpellFilter(chosen[1] as string, card);
+    return rest === null ? null : rest === ANY_SPELL ? CHOSEN_SUBTYPE : allOf(rest, CHOSEN_SUBTYPE);
+  }
+
   const noun = phrase.replace(/ spells?$/, '').replace(/^an? /, '');
-  if (noun === '' || noun === 'a' || noun === 'an') return ANY_SPELL;
+  // "spells" reaches here bare when a qualifier was stripped off the front of it ("spells of the
+  // chosen type" -> "spells"); the ` spells?$` strip above needs a leading space and leaves it.
+  if (noun === '' || noun === 'a' || noun === 'an' || noun === 'spell' || noun === 'spells') {
+    return ANY_SPELL;
+  }
+  const manaValue = noun.match(
+    /^(?:(.+?) )?spell with mana value (\d+) or (less|greater)$/,
+  );
+  if (manaValue !== null) {
+    const bound =
+      manaValue[3] === 'less'
+        ? manaValueAtMost(Number(manaValue[2]))
+        : manaValueAtLeast(Number(manaValue[2]));
+    if (manaValue[1] === undefined) return bound;
+    const base = parseTriggerSubject(manaValue[1] as string, card);
+    return base === null ? null : allOf(base, bound);
+  }
   if (noun === 'noncreature') return not(ofType('Creature'));
   // "an instant or sorcery spell" (Archmage Emeritus) / "Instant and sorcery spells" (Goblin
   // Electromancer) â€” each side is its own card type, not a tribe the way `parseTriggerSubject`'s
@@ -2056,14 +2909,139 @@ function parseConditionClause(clause: string, card: OracleCard): Condition | nul
   if (clause === 'it was kicked' || clause === 'this spell was kicked') {
     return { kind: 'wasKicked' };
   }
+  if (clause === 'it escaped' || clause === '~ escaped') {
+    return { kind: 'escaped' };
+  }
   if (clause === 'a creature or planeswalker an opponent controlled was dealt excess damage this turn') {
     return { kind: 'excessDamageDealtTo', scope: 'opponents' };
+  }
+  // "if you've cast a noncreature spell this turn" — the shared intervening-if of the Fantastic
+  // Four cycle. A tally kept at cast time, not a board read, so it survives the spell resolving.
+  {
+    const cast = clause.match(/^you've cast (?:a|an) (noncreature )?spell this turn$/);
+    if (cast !== null) {
+      return { kind: 'castSpellThisTurn', category: cast[1] === undefined ? 'any' : 'noncreature', cmp: '>=', n: 1 };
+    }
+  }
+  // "if you control four or more creatures" — a threshold rather than the bare "you control a
+  // creature" below, which is the same condition with an implied n of 1. The subject is stripped
+  // of its count before `parseTriggerSubject` sees it, so it reads the same singular grammar.
+  {
+    const counted = clause.match(/^you control (\w+) or more (.+)$/);
+    if (counted !== null) {
+      const n = parseAmount(counted[1] as string);
+      const selector = parseSubject(counted[2] as string, card);
+      if (n === null || selector === null) return null;
+      return countPermanents(selector, 'you', '>=', n);
+    }
+  }
+  // "if it has no ice counters on it" / "if ~ has three or more charge counters on it" — the
+  // ability's own source, not a selector match.
+  {
+    const counters = clause.match(
+      /^(?:it|~|this (?:artifact|creature|enchantment|land|permanent)) has (no|\w+ or more|\w+ or fewer) ([a-z]+) counters? on it$/,
+    );
+    if (counters !== null) {
+      const quantifier = counters[1] as string;
+      const counter = counters[2] as string;
+      if (quantifier === 'no') return { kind: 'sourceHasCounters', counter, cmp: '<=', n: 0 };
+      const [word, , direction] = quantifier.split(' ');
+      const n = parseAmount(word as string);
+      if (n === null) return null;
+      return { kind: 'sourceHasCounters', counter, cmp: direction === 'more' ? '>=' : '<=', n };
+    }
+  }
+  // "if you have seven or more cards in your graveyard" (Search for Azcanta).
+  {
+    const graveyard = clause.match(/^you have (\w+) or more cards in your graveyard$/);
+    if (graveyard !== null) {
+      const n = parseAmount(graveyard[1] as string);
+      if (n === null) return null;
+      return { kind: 'cardsInYourGraveyard', cmp: '>=', n };
+    }
   }
   const m = clause.match(/^you control (.+)$/);
   if (m === null) return null;
   const selector = parseTriggerSubject(m[1] as string, card);
   if (selector === null) return null;
   return countPermanents(selector, 'you', '>=', 1);
+}
+
+function parseBlinkSpellBlock(
+  text: string,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const normalized = text.trim().toLowerCase().replace(/\.$/, '');
+  if (
+    normalized !==
+    'exile two target artifacts, creatures, and/or lands you control, then return those cards to the battlefield under your control'
+  ) {
+    return null;
+  }
+  return {
+    targets: [
+      {
+        kind: 'permanent',
+        controller: 'you',
+        filter: anyOf(ofType('Artifact'), ofType('Creature'), ofType('Land')),
+        count: { min: 2, max: 2 },
+      },
+    ],
+    effects: [{ op: 'blinkEachChosen', targetSlot: 0, returnUnder: 'sourceController' }],
+  };
+}
+
+function parseKeywordCountSpellBlock(
+  text: string,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const match = text.trim().toLowerCase().replace(/\.$/, '').match(
+    /^up to (\w+) target (permanents?|creatures?|artifacts?|lands?) you control gain ([a-z ,]+) until end of turn$/,
+  );
+  if (match === null) return null;
+  const max = parseAmount(match[1] as string);
+  const singular = (match[2] as string).replace(/s$/, '');
+  const clause = parseTargetClause(`${singular} you control`);
+  const keywords = parseKeywordLine(match[3] as string);
+  if (
+    max === null ||
+    clause === null ||
+    keywords === null ||
+    keywords.ward !== undefined ||
+    keywords.protectionFrom !== undefined
+  ) {
+    return null;
+  }
+  return {
+    targets: [{
+      kind: clause.kind,
+      ...(clause.controller !== undefined ? { controller: clause.controller } : {}),
+      ...(clause.filter !== undefined ? { filter: clause.filter } : {}),
+      count: { min: 0, max },
+    }],
+    effects: keywords.keywords.map((keyword) => ({
+      op: 'grantKeywordEachChosenUntilEot',
+      targetSlot: 0,
+      keyword,
+    })),
+  };
+}
+
+function parseBlinkChosenBlock(
+  body: string,
+  allocCount: CountSlotAllocator,
+): Effect[] | null {
+  const match = body.match(
+    /^exile up to one target (.+?) you control, then return (?:it|that card) to the battlefield under its owner's control\.?$/,
+  );
+  if (match === null) return null;
+  const clause = parseTargetClause(`${match[1] as string} you control`);
+  if (clause === null) return null;
+  const targetSlot = allocCount(
+    clause.kind,
+    { min: 0, max: 1 },
+    clause.controller,
+    clause.filter,
+  );
+  return [{ op: 'blinkEachChosen', targetSlot, returnUnder: 'owner' }];
 }
 
 /**
@@ -2075,22 +3053,197 @@ function parseConditionClause(clause: string, card: OracleCard): Condition | nul
  */
 function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   const lower = line.toLowerCase();
+  const firstLine = lower.split('\n')[0] as string;
+  const continuation = lower.split('\n').slice(1).join('\n');
 
   // The head decides the event; the rest of the line is the effect (after an optional
   // intervening-if and an optional "you may").
   let heads: TriggerHead[];
   let body: string;
-  const step = lower.match(STEP_TRIGGER_HEAD_RE);
-  const aggregate = lower.match(AGGREGATE_TRIGGER_HEAD_RE);
-  const cast = lower.match(CAST_TRIGGER_HEAD_RE);
-  if (step !== null) {
+  let implicitCondition: Condition | undefined;
+  const enterAndCast = firstLine.match(
+    /^when (.+?) enters and whenever (you|an opponent|a player) casts? (.+?), (.*)$/,
+  );
+  const becomesTargeted = firstLine.match(
+    /^whenever (.+?) becomes the target of a spell or ability an opponent controls, (.*)$/,
+  );
+  const attacksWhile = firstLine.match(/^whenever (.+?) attacks while (.+?), (.*)$/);
+  const step = firstLine.match(STEP_TRIGGER_HEAD_RE);
+  const combatOnTurn = firstLine.match(/^at the beginning of combat on (your|each(?: player's)?) turn, (.*)$/);
+  const attackEachOpponent = firstLine.match(/^whenever you attack( with (?:this creature|~) and\/or your commander)?, for each opponent, (.*)$/);
+  const aggregate = firstLine.match(AGGREGATE_TRIGGER_HEAD_RE);
+  const ordinalCast = firstLine.match(ORDINAL_CAST_TRIGGER_HEAD_RE);
+  const cast = firstLine.match(CAST_TRIGGER_HEAD_RE);
+  const tokenCreated = firstLine.match(TOKEN_CREATED_TRIGGER_HEAD_RE);
+  const tokenOrSacrifice = firstLine.match(TOKEN_OR_SACRIFICE_TRIGGER_HEAD_RE);
+  const sacrifice = firstLine.match(SACRIFICE_TRIGGER_HEAD_RE);
+  const drawCount = firstLine.match(DRAW_COUNT_TRIGGER_HEAD_RE);
+  const drawExceptFirst = firstLine.match(DRAW_EXCEPT_FIRST_TRIGGER_HEAD_RE);
+  const draw = firstLine.match(DRAW_TRIGGER_HEAD_RE);
+  const graveyardCrossing = firstLine.match(GRAVEYARD_CROSSING_TRIGGER_HEAD_RE);
+  if (enterAndCast !== null) {
+    const subjectPhrase = enterAndCast[1] as string;
+    let subject: TriggerSubject;
+    if (SELF_TRIGGER_SUBJECT_RE.test(subjectPhrase)) {
+      subject = SELF_SUBJECT;
+    } else {
+      const selector = parseTriggerSubject(subjectPhrase, card);
+      if (selector === null) return null;
+      subject = { kind: 'permanent', selector };
+    }
+    const filter = parseSpellFilter(enterAndCast[3] as string, card);
+    if (filter === null) return null;
+    heads = [
+      { when: 'enters', subject },
+      {
+        when: 'castsSpell',
+        caster:
+          enterAndCast[2] === 'you'
+            ? 'you'
+            : enterAndCast[2] === 'an opponent'
+              ? 'opponent'
+              : 'each',
+        ...(filter === ANY_SPELL ? {} : { filter }),
+      },
+    ];
+    body = enterAndCast[4] as string;
+  } else if (becomesTargeted !== null || attacksWhile !== null) {
+    const match = becomesTargeted ?? attacksWhile;
+    if (match === null) return null;
+    const subjectPhrase = match[1] as string;
+    let subject: TriggerSubject;
+    if (SELF_TRIGGER_SUBJECT_RE.test(subjectPhrase)) {
+      subject = SELF_SUBJECT;
+    } else {
+      const selector = parseTriggerSubject(subjectPhrase, card);
+      if (selector === null) return null;
+      subject = { kind: 'permanent', selector };
+    }
+    heads = [{
+      when: becomesTargeted !== null ? 'becomesTargeted' : 'attacks',
+      subject,
+    }];
+    if (attacksWhile !== null) {
+      const parsed = parseConditionClause(attacksWhile[2] as string, card);
+      if (parsed === null) return null;
+      implicitCondition = parsed;
+      body = attacksWhile[3] as string;
+    } else {
+      body = match[2] as string;
+    }
+  } else if (graveyardCrossing !== null) {
     heads = [
       {
-        when: step[2] === 'upkeep' ? 'upkeep' : 'endStep',
+        when: 'dies',
+        subject: { kind: 'permanent', selector: allOf(ofType('Creature'), OTHER) },
+      },
+      {
+        when: 'putIntoGraveyardFromAnywhere',
+        subject: { kind: 'permanent', selector: allOf(ofType('Creature'), not(IS_TOKEN)) },
+      },
+      {
+        when: 'leavesGraveyard',
+        subject: {
+          kind: 'permanent',
+          selector: allOf(ofType('Creature'), not(IS_TOKEN), YOURS),
+        },
+      },
+    ];
+    body = graveyardCrossing[1] as string;
+  } else if (tokenOrSacrifice !== null) {
+    const relation =
+      tokenOrSacrifice[1] === 'you'
+        ? YOURS
+        : tokenOrSacrifice[1] === 'an opponent'
+          ? OPPONENTS
+          : undefined;
+    const selector = relation === undefined ? IS_TOKEN : allOf(IS_TOKEN, relation);
+    heads = [
+      { when: 'tokenCreated', subject: { kind: 'permanent', selector } },
+      { when: 'sacrificed', subject: { kind: 'permanent', selector } },
+    ];
+    body = tokenOrSacrifice[2] as string;
+  } else if (sacrifice !== null) {
+    const relation =
+      sacrifice[1] === 'you'
+        ? YOURS
+        : sacrifice[1] === 'an opponent'
+          ? OPPONENTS
+          : undefined;
+    const phrase = sacrifice[2] as string;
+    let selector =
+      phrase === 'a permanent' || phrase === 'permanent'
+        ? allOf()
+        : parseTriggerSubject(phrase, card);
+    if (selector === null) return null;
+    if (relation !== undefined) selector = allOf(selector, relation);
+    heads = [{ when: 'sacrificed', subject: { kind: 'permanent', selector } }];
+    body = sacrifice[3] as string;
+  } else if (drawExceptFirst !== null) {
+    const playerPhrase = drawExceptFirst[1] as string;
+    heads = [{
+      when: 'drawsCard',
+      player: playerPhrase === 'you' ? 'you' : playerPhrase === 'an opponent' ? 'opponent' : 'each',
+    }];
+    implicitCondition = { kind: 'notFirstDrawInOwnDrawStep' };
+    body = drawExceptFirst[2] as string;
+  } else if (step !== null) {
+    heads = [
+      {
+        when:
+          step[2] === 'upkeep'
+            ? 'upkeep'
+            : step[2] === 'end step'
+              ? 'endStep'
+              : step[2] === 'combat'
+                ? 'beginningOfCombat'
+                : 'precombatMain',
         player: step[1] === 'your' ? 'you' : 'each',
       },
     ];
     body = step[3] as string;
+  } else if (combatOnTurn !== null) {
+    heads = [{ when: 'beginningOfCombat', player: combatOnTurn[1] === 'your' ? 'you' : 'each' }];
+    body = combatOnTurn[2] as string;
+  } else if (attackEachOpponent !== null) {
+    // "Whenever you attack" is the AGGREGATE attack trigger (CR 603.2c over the CR 508.1
+    // declaration): it fires once when you declare one or more attackers, whether or not this
+    // creature is among them. Reading it as `subject: self` silently narrows Adeline to
+    // "whenever Adeline attacks" — she still triggers with a tapped-out Adeline at home.
+    // The longer form names its own attackers instead: Ainok Strike Leader fires on this
+    // creature AND/OR your commander, so either one attacking is enough.
+    const selector =
+      attackEachOpponent[1] === undefined
+        ? allOf(ofType('Creature'), YOURS)
+        : anyOf(SELF, allOf(IS_COMMANDER, YOURS));
+    heads = [{ when: 'attacks', subject: { kind: 'permanent', selector }, aggregate: true }];
+    body = attackEachOpponent[2] as string;
+  } else if (tokenCreated !== null) {
+    const relation = tokenCreated[1] === 'you' ? YOURS : tokenCreated[1] === 'an opponent' ? OPPONENTS : undefined;
+    const tokenSelector = tokenCreated[2]?.includes('creature') === true
+      ? allOf(IS_TOKEN, ofType('Creature'))
+      : IS_TOKEN;
+    const selector = relation === undefined ? tokenSelector : allOf(tokenSelector, relation);
+    heads = [{ when: 'tokenCreated', subject: { kind: 'permanent', selector }, aggregate: tokenCreated[2]?.startsWith('one or more') === true }];
+    body = tokenCreated[3] as string;
+  } else if (drawCount !== null || draw !== null) {
+    const match = drawCount ?? draw;
+    if (match === null) return null;
+    const playerPhrase = match[1] as string;
+    heads = [{
+      when: 'drawsCard',
+      player: playerPhrase === 'you' ? 'you' : playerPhrase === 'an opponent' ? 'opponent' : 'each',
+    }];
+    if (drawCount !== null) {
+      const ordinal = { second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6 }[match[2] as string];
+      if (ordinal === undefined) return null;
+      // "your SECOND card each turn" fires once, on that draw — not on every draw from the
+      // second onward, which is what a '>=' here would mean.
+      implicitCondition = { kind: 'eventPlayerDrawCount', cmp: '==', n: ordinal };
+      body = match[3] as string;
+    } else {
+      body = match[2] as string;
+    }
   } else if (aggregate !== null) {
     // The subject is plural here ("Dragons you control"), so it reads through `parseSubject`
     // rather than `parseTriggerSubject`.
@@ -2098,37 +3251,71 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     if (selector === null) return null;
     heads = [
       {
-        when: aggregate[2] === 'attack' ? 'attacks' : 'dealsCombatDamageToPlayer',
+        when: aggregate[2] === 'attack'
+          ? 'attacks'
+          : aggregate[2] === 'enter'
+            ? 'enters'
+            : 'dealsCombatDamageToPlayer',
         subject: { kind: 'permanent', selector },
         aggregate: true,
       },
     ];
     body = aggregate[3] as string;
-  } else if (cast !== null) {
+  } else if (ordinalCast !== null) {
+    const filter = parseSpellFilter(ordinalCast[3] as string, card);
+    const ordinal = {
+      first: 1,
+      second: 2,
+      third: 3,
+      fourth: 4,
+      fifth: 5,
+      sixth: 6,
+    }[ordinalCast[2] as string];
+    if (filter === null || ordinal === undefined) return null;
+    heads = [
+      {
+        when: 'castsSpell',
+        caster: ordinalCast[1] === 'you' ? 'you' : 'opponent',
+        ...(filter === ANY_SPELL ? {} : { filter }),
+        ordinal,
+      },
+    ];
+    body = ordinalCast[4] as string;  } else if (cast !== null) {
     const filter = parseSpellFilter(cast[2] as string, card);
     if (filter === null) return null;
     heads = [
       {
         when: 'castsSpell',
-        caster: cast[1] === 'you' ? 'you' : 'opponent',
+        caster: cast[1] === 'you' ? 'you' : cast[1] === 'an opponent' ? 'opponent' : 'each',
         ...(filter === ANY_SPELL ? {} : { filter }),
       },
     ];
     body = cast[3] as string;
   } else {
-    const m = lower.match(OBJECT_TRIGGER_HEAD_RE);
+    const m = firstLine.match(OBJECT_TRIGGER_HEAD_RE);
     if (m === null) return null;
     const subjectPhrase = m[1] as string;
     const event = m[2] as string;
     const events: ObjectTriggerWhen[] = event.startsWith('enters')
       ? event.endsWith('or attacks')
         ? ['enters', 'attacks']
-        : ['enters']
+        : event.includes('transforms into')
+          ? ['enters', 'transformsInto']
+          : ['enters']
+      // A BACK face prints the bare form ("When this creature transforms into Awoken Horror"):
+      // it only ever exists after the flip, so unlike the front face's "enters or transforms
+      // into ~" there is no entry event to pair it with.
+      : event === 'transforms into ~'
+        ? ['transformsInto']
       : event === 'dies'
         ? ['dies']
         : event === 'attacks'
           ? ['attacks']
-          : ['dealsCombatDamageToPlayer'];
+          : event === 'becomes tapped'
+            // City of Brass. `becomesTapped` is queued from every tap path already, including
+            // `payAbilityCosts(..., 'tapForMana')` - so tapping the land for mana fires it.
+            ? ['becomesTapped']
+            : ['dealsCombatDamageToPlayer'];
     body = m[3] as string;
 
     let subject: TriggerSubject;
@@ -2141,6 +3328,8 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     }
     heads = events.map((when) => ({ when, subject }));
   }
+
+  if (continuation.length > 0) body += '\n' + continuation;
 
   // "Whenever a creature you control enters, this enchantment deals 1 damage to each opponent"
   // (Impact Tremors) — a self-reference that is unambiguous here (the trigger head already
@@ -2156,7 +3345,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   );
 
   // Intervening-if (CR 603.4) sits between the head and the effect.
-  let condition: Condition | undefined;
+  let condition: Condition | undefined = implicitCondition;
   const iff = body.match(INTERVENING_IF_RE);
   if (iff !== null) {
     const parsed = parseConditionClause(iff[1] as string, card);
@@ -2164,14 +3353,40 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     condition = parsed;
     body = iff[2] as string;
   }
-  const optional = body.startsWith('you may ');
-  if (optional) body = body.slice('you may '.length);
+  let paidTransform: Effect[] | null = null;
+  const paidTransformMatch = body.match(/^you may pay ((?:\{[^}]+\})+)\. if you do, transform ~\.?$/);
+  if (paidTransformMatch !== null) {
+    const parsed = parseManaCost((paidTransformMatch[1] as string).toUpperCase() as never);
+    if (parsed.cost === null || parsed.unsupportedSymbols.length > 0) return null;
+    paidTransform = [{
+      op: 'conditionalEffect',
+      condition: { kind: 'mayPayMana', cost: parsed.cost },
+      then: [{ op: 'transformSelf' }],
+      else: [],
+    }];
+  }
+  let optional = paidTransform === null && body.startsWith('you may ');
+  if (body.startsWith('you may have ')) {
+    optional = true;
+    body = body
+      .slice('you may have '.length)
+      .replace(/^this (creature|artifact|enchantment|land|permanent)\b/, '~')
+      .replace(/^~ deal\b/, '~ deals');
+  } else if (optional) {
+    body = body.slice('you may '.length);
+  }
+  const modalBlock = parseModalSpellBlock(body, card);
 
   // A trigger may declare targets: its controller chooses them as the ability goes on the
   // stack (CR 603.3d), which `placePendingTriggers` surfaces as a decision.
   const targets: TargetSpec[] = [];
-  const alloc: SlotAllocator = (kind, filter) => {
-    targets.push(filter === undefined ? { kind } : { kind, filter });
+  if (modalBlock !== null) targets.push(...modalBlock.targets);
+  const alloc: SlotAllocator = (kind, filter, controller) => {
+    targets.push({
+      kind,
+      ...(filter !== undefined ? { filter } : {}),
+      ...(controller !== undefined ? { controller } : {}),
+    });
     return targets.length - 1;
   };
   // A variable-count slot ("up to two other targets", "any number of target creatures") â€” see
@@ -2204,10 +3419,13 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // A whole-body pattern first: some effects span several sentences that only mean anything
   // together ("look at the top eight â€¦ put the rest â€¦", Klauth's mana-then-restriction-then-
   // persistence).
-  let effects =
-    parseLookAtTopBlock(body, card) ??
-    parseAddManaTriggerBlock(body, card) ??
-    parseHellkiteCourserBlock(body, alloc, card);
+  let effects: Effect[] | null = paidTransform ?? (modalBlock === null
+    ? parseBlinkChosenBlock(body, allocCount) ??
+      parseLookAtTopBlock(body, card) ??
+      parseExileTopPlayableBlock(body) ??
+      parseAddManaTriggerBlock(body, card) ??
+      parseHellkiteCourserBlock(body, alloc, card)
+    : []);
   if (effects === null) {
     effects = [];
     for (const sentence of splitSentences(body)) {
@@ -2216,7 +3434,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       effects.push(...parsed);
     }
   }
-  if (effects.length === 0) return null;
+  if (effects.length === 0 && modalBlock === null) return null;
 
   return heads.map((head) => ({
     kind: 'triggered' as const,
@@ -2224,6 +3442,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     optional,
     targets,
     effects,
+    ...(modalBlock !== null ? { modes: modalBlock.modes } : {}),
     description: line,
   }));
 }
@@ -2283,15 +3502,18 @@ function parseCompoundPermanentTypeNoun(text: string): Selector | null {
   return anyOf(...types.map((t) => ofType(t)));
 }
 
-function parseTargetClause(text: string): { kind: TargetKind; filter?: Selector; controller?: 'you' | 'opponent' } | null {
+function parseTargetClause(text: string): { kind: TargetKind; filter?: Selector; controller?: TargetSpec['controller'] } | null {
   let cleaned = text.trim();
-  let controller: 'you' | 'opponent' | undefined = undefined;
+  let controller: TargetSpec['controller'] | undefined = undefined;
   if (cleaned.endsWith("you don't control") || cleaned.endsWith("an opponent controls")) {
     controller = 'opponent';
     cleaned = cleaned.replace(/\s+(you don't control|an opponent controls)$/, '').trim();
   } else if (cleaned.endsWith("you control")) {
     controller = 'you';
     cleaned = cleaned.replace(/\s+you control$/, '').trim();
+  } else if (cleaned.endsWith('that player controls')) {
+    controller = 'eventPlayer';
+    cleaned = cleaned.replace(/\s+that player controls$/, '').trim();
   }
 
   let filter: Selector | undefined = undefined;
@@ -2420,8 +3642,22 @@ const SELF_OBJECT_RE =
 const MANA_ABILITY_RE = /^add ((?:\{[wubrgc]\})+)$/;
 /** "Add {G} or {W}." / "Add {W}, {U}, or {B}." â€” ONE unit, several symbol choices. */
 const MANA_CHOICE_RE = /^add (\{[wubrgc]\}(?:,? (?:or )?\{[wubrgc]\})+)$/;
+/**
+ * A filter land - "Add {W}{W}, {W}{B}, or {B}{B}." Three printed two-mana outputs; the parse
+ * checks they really are the three you can draw twice from a two-symbol alphabet before reading
+ * the clause as two independent units.
+ */
+const MANA_FILTER_PAIR_RE = /^add ((?:\{[wubrgc]\}){2}), ((?:\{[wubrgc]\}){2}), or ((?:\{[wubrgc]\}){2})$/;
 /** "Add one mana of any color." â€” one unit, any of the five colors. */
 const MANA_ANY_COLOR_RE = /^add one mana of any color$/;
+/**
+ * "Choose a color. Add an amount of mana of that color equal to X." - Nykthos (X is devotion to
+ * the chosen colour) and Three Tree City (X is creatures you control of the chosen creature
+ * TYPE, a different choice made as the land entered). Expanded into one alternative ability per
+ * colour; see `parseManaAbilityLines`.
+ */
+const MANA_CHOSEN_COLOR_AMOUNT_RE =
+  /^choose a color\. add an amount of mana of that color equal to (.+)$/;
 const ALL_COLORS: ManaUnit = ['W', 'U', 'B', 'R', 'G'];
 
 /**
@@ -2441,23 +3677,42 @@ const MANA_CONDITIONAL_AMOUNT_RE =
 const MANA_COMMANDER_IDENTITY_RE = /^add one mana of any color in your commander's color identity$/;
 const MANA_OPPONENT_LANDS_RE =
   /^add one mana of any color that a land an opponent controls could produce$/;
+const MANA_PERMANENT_COLORS_RE = /^for each color among permanents you control, add one mana of that color$/;
+const MANA_ONE_PERMANENT_COLOR_RE = /^add one mana of any color among permanents you control$/;
+/** "Add one mana of any type that a land you control could produce" (Reflecting Pool). */
+const MANA_OWN_LANDS_RE =
+  /^add one mana of any type that a land you control could produce$/;
+/** "…any color among legendary creatures and planeswalkers you control" (Mox Amber). */
+const MANA_LEGENDARY_PERMANENT_COLOR_RE =
+  /^add one mana of any color among legendary creatures and planeswalkers you control$/;
+
+/**
+ * "Add {G} for each creature you control" (Gaea's Cradle, Itlimoc) - a fixed SYMBOL repeated a
+ * state-derived number of times. The mirror of the dynamic forms above, which compute the symbol
+ * set and keep the count fixed.
+ */
+const MANA_PER_PERMANENT_RE = /^add ((?:\{[wubrgc]\})+) for each (.+)$/;
 
 /**
  * A painland: "{T}: Add {R} or {W}. This land deals 1 damage to you." The damage is a rider on
- * the mana ability, not a separate ability â€” mana abilities never use the stack (CR 605.3a), so
- * it applies the moment the mana is produced.
+ * the mana ability, not a separate ability - mana abilities never use the stack (CR 605.3a), so
+ * it applies the moment the mana is produced. Ancient Tomb's "Add {C}{C}" is the same shape.
  */
 const MANA_WITH_SELF_DAMAGE_RE =
-  /^add (\{[wubrgc]\}(?:,? (?:or )?\{[wubrgc]\})*)\. ~ deals (\d+) damage to you$/;
+  /^(add [^.]+)\. ~ deals (\d+) damage to you$/;
 
 /** "Add one mana of any color. Activate only if you control a Dragon." (Mox Jasper) */
 const MANA_ACTIVATE_ONLY_IF_RE = /^(add [^.]+)\. activate only if you control (?:a|an) (.+)$/;
+/** "Activate only if you control five or more lands." (Temple of the False God) */
+const MANA_ACTIVATE_ONLY_IF_COUNT_RE =
+  /^(add [^.]+)\. activate only if you control (\w+) or more (.+)$/;
 
 /**
  * "â€¦Spend this mana only to cast a Dragon creature spell." (Haven of the Spirit Dragon) â€” a
  * CR 106.6 restriction riding on the mana produced.
  */
 const MANA_SPEND_ONLY_RE = /^(add [^.]+)\. spend this mana only to (.+)$/;
+const MANA_SPEND_UNCOUNTERABLE_RE = /^(add [^.]+)\. spend this mana only to (.+?),? and that spell (?:can't|cannot) be countered$/;
 
 /**
  * "â€¦When you spend this mana to cast a Dragon creature spell, you gain 2 life." (Scaled
@@ -2557,7 +3812,7 @@ function splitActivation(lower: string): { costText: string; effectText: string 
  * `AbilityCost`s. Returns null if ANY component is unrecognized: a cost the engine cannot charge
  * is worse than an ability it cannot use, because the ability would then be free.
  */
-function parseActivationCosts(costText: string): AbilityCost[] | null {
+function parseActivationCosts(costText: string, card?: OracleCard): AbilityCost[] | null {
   const costs: AbilityCost[] = [];
   for (const raw of costText.split(',')) {
     const part = raw.trim();
@@ -2589,11 +3844,16 @@ function parseActivationCosts(costText: string): AbilityCost[] | null {
         costs.push({ kind: 'sacrificeSelf' });
         continue;
       }
-      const picked = phrase.match(/^(?:(one|two|three|a|an) )?(?:another )?(.+)$/);
+      // The count word runs the full number vocabulary, not just one-to-three: Westvale Abbey
+      // asks for FIVE creatures, and a truncated list silently left the whole cost unparsed.
+      const picked = phrase.match(
+        /^(?:(a|an|one|two|three|four|five|six|seven|eight|nine|ten) )?(another )?(.+)$/,
+      );
       if (picked === null) return null;
       const countWord = picked[1] ?? 'one';
-      const count = countWord === 'two' ? 2 : countWord === 'three' ? 3 : 1;
-      const noun = (picked[2] as string).replace(/s$/, '');
+      const count = countWord === 'a' || countWord === 'an' ? 1 : (parseAmount(countWord) ?? 1);
+      const noun = (picked[3] as string).replace(/s$/, '');
+      const subtype = card === undefined ? null : resolveSubtype(noun, card);
       const base = noun === 'artifact or creature'
         ? anyOf(ofType('Artifact'), ofType('Creature'))
         : noun === 'artifact'
@@ -2608,9 +3868,23 @@ function parseActivationCosts(costText: string): AbilityCost[] | null {
               ? ofSubtype('Servo')
               : noun === 'token'
                 ? IS_TOKEN
-                : null;
+                : subtype !== null
+                  ? ofSubtype(subtype)
+                  : null;
       if (base === null) return null;
-      costs.push({ kind: 'sacrificeOther', selector: allOf(OTHER, YOURS, base), ...(count > 1 ? { count } : {}) });
+      costs.push({
+        kind: 'sacrificeOther',
+        selector: allOf(YOURS, base),
+        ...(count > 1 ? { count } : {}),
+        ...(picked[2] === undefined ? { allowSelf: true } : {}),
+      });
+      continue;
+    }
+    // "Discard this card" (channel lands - Boseiju, Otawara) is the SOURCE leaving hand, not a
+    // free choice of card, so it is `discardSelf` rather than `discardCard`. The zone that makes
+    // it payable is set by the caller (`parseActivatedLine`), which sees the whole line.
+    if (/^discard (?:~|this card)$/.test(part)) {
+      costs.push({ kind: 'discardSelf' });
       continue;
     }
     const discard = part.match(/^discard (a|an|one|two|three|four|five|six|seven|eight|nine|ten) cards?$/);
@@ -2655,6 +3929,15 @@ function parseActivationCosts(costText: string): AbilityCost[] | null {
   return costs.length > 0 ? costs : null;
 }
 
+/** Parse Flashback/Escape non-mana components that are not ordinary activation costs. */
+function parseGraveyardAlternativeCosts(costText: string): AbilityCost[] | null {
+  const exileOther = costText.match(/^exile (one|two|three|four|five|six|seven|eight|nine|ten|\d+) other cards? from your graveyard$/);
+  if (exileOther !== null) {
+    const count = parseAmount(exileOther[1] as string);
+    return count === null ? null : [{ kind: 'exileOtherCardsFromGraveyard', count }];
+  }
+  return parseActivationCosts(costText);
+}
 /** Parse a non-mana alternate-cost line such as Force of Will's pitch cost. */
 function parseNonManaAlternativeCost(line: string): { costs: AbilityCost[]; condition?: Condition } | null {
   const match = line.match(/^(if it's not your turn, )?you may (.+) rather than pay (?:this spell's|its) mana cost$/);
@@ -2714,7 +3997,29 @@ function parseManaProduction(effectText: string, card: OracleCard): ManaAbilityS
       return { ...base, condition: countPermanents(ofSubtype(subtype), 'you', '>=', 1) };
     }
   }
+  // "Activate only if you control five or more lands" (Temple of the False God) - the counted
+  // form of the gate above. `ManaAbilitySpec.condition` is already honoured by `manaSourcesFor`,
+  // so this is a parser gap only.
+  {
+    const m = effectText.match(MANA_ACTIVATE_ONLY_IF_COUNT_RE);
+    if (m !== null) {
+      const base = parseManaProduction(m[1] as string, card);
+      const count = parseAmount(m[2] as string);
+      const selector = parseSubject(m[3] as string, card);
+      if (base === null || count === null || selector === null) return null;
+      return { ...base, condition: countPermanents(selector, 'you', '>=', count) };
+    }
+  }
   // "â€¦ Spend this mana only to cast a Dragon creature spell." (CR 106.6) â€” rides on the mana.
+  {
+    const m = effectText.match(MANA_SPEND_UNCOUNTERABLE_RE);
+    if (m) {
+      const base = parseManaProduction(m[1] as string, card);
+      const restriction = parseManaSpendClause(m[2] as string, card);
+      if (base === null || restriction === null) return null;
+      return { ...base, restriction, uncounterableSpell: true };
+    }
+  }
   {
     const m = effectText.match(MANA_SPEND_ONLY_RE);
     if (m) {
@@ -2767,6 +4072,19 @@ function parseManaProduction(effectText: string, card: OracleCard): ManaAbilityS
     const m = effectText.match(MANA_CHOICE_RE);
     if (m) return { units: [manaSymbols(m[1] as string)] };
   }
+  // A filter land's three printed outputs are exactly the three multisets you can draw twice
+  // from a two-symbol alphabet, so the clause IS two independent units each offering both
+  // symbols. Verified as that identity rather than matched loosely: a card printing some other
+  // three pairs is a different ability and stays unmodeled.
+  {
+    const m = effectText.match(MANA_FILTER_PAIR_RE);
+    if (m !== null) {
+      const options = [m[1], m[2], m[3]].map((group) => manaSymbols(group as string));
+      const symbols = [...new Set(options.flat())];
+      const multisets = new Set(options.map((option) => [...option].sort().join('')));
+      if (symbols.length === 2 && multisets.size === 3) return { units: [symbols, symbols] };
+    }
+  }
   if (MANA_ANY_COLOR_RE.test(effectText)) return { units: [ALL_COLORS] };
   {
     const m = effectText.match(MANA_CONDITIONAL_AMOUNT_RE);
@@ -2789,14 +4107,34 @@ function parseManaProduction(effectText: string, card: OracleCard): ManaAbilityS
     return { units: [], dynamic: 'commanderIdentity' };
   }
   if (MANA_OPPONENT_LANDS_RE.test(effectText)) return { units: [], dynamic: 'opponentLandColors' };
+  if (MANA_OWN_LANDS_RE.test(effectText)) return { units: [], dynamic: 'ownLandTypes' };
+  if (MANA_LEGENDARY_PERMANENT_COLOR_RE.test(effectText)) {
+    return { units: [], dynamic: 'legendaryPermanentColors' };
+  }
+  // "Add {G} for each creature you control" - one fixed unit, repeated a computed number of times.
+  {
+    const m = effectText.match(MANA_PER_PERMANENT_RE);
+    if (m !== null) {
+      const amount = parseDynamicCountValue('the number of ' + (m[2] as string), card);
+      if (amount !== null) {
+        return { units: manaSymbols(m[1] as string).map((sym) => [sym]), amount };
+      }
+    }
+  }
+  if (MANA_PERMANENT_COLORS_RE.test(effectText)) return { units: [], dynamic: 'colorsAmongPermanents' };
+  if (MANA_ONE_PERMANENT_COLOR_RE.test(effectText)) return { units: [], dynamic: 'oneColorAmongPermanents' };
   // A painland: the self-damage rider applies as the mana is produced.
   {
     const m = effectText.match(MANA_WITH_SELF_DAMAGE_RE);
     if (m) {
-      return {
-        units: [manaSymbols(m[1] as string)],
-        onActivate: [{ op: 'damageController', amount: Number(m[2]) }],
-      };
+      // Recurse for the production half rather than re-reading the symbols here. "Add {R} or {W}"
+      // is ONE mana with two choices; Ancient Tomb's "Add {C}{C}" is TWO mana. Parsing the
+      // symbols inline collapsed both into a single unit, so Ancient Tomb would have tapped for
+      // one colorless and taken 2 damage for it.
+      const base = parseManaProduction(m[1] as string, card);
+      if (base !== null) {
+        return { ...base, onActivate: [{ op: 'damageController', amount: Number(m[2]) }] };
+      }
     }
   }
   return null;
@@ -2805,20 +4143,55 @@ function parseManaProduction(effectText: string, card: OracleCard): ManaAbilityS
 /**
  * Parse one whole line as a mana ability â€” cost and production. Returns null if it is not one.
  *
- * A mana ability whose cost includes mana is refused outright: paying mana to make mana would
- * make `planPayment` recursive, and the card is better left unmodeled (halting loudly) than
- * offered with a cost the payment solver would ignore.
+ * A cost paid in MANA is a mana ability like any other (CR 605.1a says nothing about what the
+ * cost may be) — a filter land's `{W/B}, {T}`, Cabal Coffers' `{2}, {T}`. `planPayment` pays for
+ * its own sources, so the cost is charged rather than ignored. `{X}` in that cost is still
+ * refused, one layer down in `manaSourcesFor`: nobody announces X for an ability the payment
+ * solver activates on its own.
  */
-function parseManaAbilityLine(lower: string, card: OracleCard): ManaAbilitySpec | null {
+function parseManaAbilityLines(lower: string, card: OracleCard): ManaAbilitySpec[] | null {
   const split = splitActivation(lower);
   if (split === null) return null;
-  const costs = parseActivationCosts(split.costText);
-  if (costs === null || costs.some((c) => c.kind === 'mana')) return null;
-  const production = parseManaProduction(split.effectText, card);
-  if (production === null) return null;
+  const costs = parseActivationCosts(split.costText, card);
+  if (costs === null) return null;
   // Omit the default so every land and mana rock's spec stays byte-identical to before.
   const tapOnly = costs.length === 1 && costs[0]?.kind === 'tap';
-  return tapOnly ? production : { ...production, costs };
+  const withCosts = (spec: ManaAbilitySpec): ManaAbilitySpec =>
+    tapOnly ? spec : { ...spec, costs };
+
+  // "Choose a color. Add an amount of mana of that color equal to your devotion to that color."
+  // (Nykthos.) The colour choice and the AMOUNT are the same decision — devotion is per colour —
+  // and `ManaAbilitySpec` deliberately has no channel coupling a unit's chosen symbol to its own
+  // count. So the choice is expressed as five alternative abilities of one permanent, which is
+  // the machinery `manaSourcesFor` and `planPayment` already have for Haven of the Spirit
+  // Dragon: alternatives share a `cardId` and at most one of them is tapped. Colours with zero
+  // devotion resolve to zero units and drop out on their own.
+  {
+    const m = split.effectText.match(MANA_CHOSEN_COLOR_AMOUNT_RE);
+    if (m !== null) {
+      const tail = m[1] as string;
+      // "your devotion to that color" is per-colour, so each alternative reads its OWN colour.
+      // Every other amount ("the number of creatures you control of the chosen type") is the
+      // same number whichever colour is picked, and is parsed once.
+      const perColour = tail === 'your devotion to that color';
+      const shared = perColour ? null : parseDynamicCountValue(tail, card);
+      if (perColour || shared !== null) {
+        return ALL_COLORS.map((symbol) =>
+          withCosts({
+            units: [[symbol]],
+            amount: perColour
+              ? ({ kind: 'devotionTo', color: symbol as Color } as Value)
+              : (shared as Value),
+          }),
+        );
+      }
+      return null;
+    }
+  }
+
+  const production = parseManaProduction(split.effectText, card);
+  if (production === null) return null;
+  return [withCosts(production)];
 }
 
 /**
@@ -2845,11 +4218,27 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
 
   const split = splitActivation(lower);
   if (split === null) return null;
-  const costs = parseActivationCosts(split.costText);
+  const costs = parseActivationCosts(split.costText, card);
   if (costs === null) return null;
   if (costs.some((c) => c.kind === 'loyalty') || card.types.includes('Planeswalker')) {
     timing = 'sorcery';
     oncePerTurn = true;
+  }
+
+  const modal = parseModalSpellBlock(split.effectText, card);
+  if (modal !== null) {
+    return {
+      costs,
+      timing,
+      ...(oncePerTurn ? { oncePerTurn: true } : {}),
+      ability: {
+        kind: 'activated',
+        targets: modal.targets,
+        effects: [],
+        modes: modal.modes,
+        description: line,
+      },
+    };
   }
 
   const targets: TargetSpec[] = [];
@@ -2857,7 +4246,13 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     targets.push({ kind, ...(filter !== undefined ? { filter } : {}), ...(controller !== undefined ? { controller } : {}) });
     return targets.length - 1;
   };
-  const effects: Effect[] = parseHerdHeirloomEffect(split.effectText, alloc, card) ?? [];
+  const effects: Effect[] =
+    parseHerdHeirloomEffect(split.effectText, alloc, card) ??
+    // Same reason as the spell path: this block's later sentences refer back to the first
+    // ("them", "the rest"), so it must be matched whole rather than sentence by sentence.
+    // Sensei's Divining Top prints it as an activated ability, not as a spell.
+    parseLookAtTopBlock(split.effectText, card) ??
+    [];
   if (effects.length === 0) {
     for (const sentence of splitSentences(split.effectText)) {
       const parsed = parseEffectSentence(sentence, alloc, card);
@@ -2871,11 +4266,15 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     costs,
     timing,
     ...(oncePerTurn ? { oncePerTurn: true } : {}),
+    // "Discard this card" can only be paid from the hand, so the ability functions there
+    // (CR 112.6a) — channel lands, Boseiju and Otawara. Without the zone the battlefield loop
+    // would offer it and `canPayNonManaCosts` would refuse the cost, making it dead either way.
+    ...(costs.some((c) => c.kind === 'discardSelf') ? { zone: 'hand' as const } : {}),
     ability: { kind: 'activated', targets, effects, description: line },
   };
 }
 
-/** "dragon" â†’ "Dragon". Subtypes are printed capitalized; the parser lowercases lines. */
+/** "dragon" → "Dragon". Subtypes are printed capitalized; the parser lowercases lines. */
 function titleCase(word: string): string {
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
@@ -2887,7 +4286,60 @@ function titleCase(word: string): string {
  * have haste" is one layer-7d effect and one layer-6 effect over the same subject.
  */
 function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null {
+  if (lower === "~ can't be blocked") {
+    return [{ affects: SELF, op: { layer: 6, setCantBeBlocked: true } }];
+  }
+/**
+ * The five basic land types (CR 305.6). Wastes is a land type but NOT a basic land type, so it
+ * is deliberately absent - `docs/rules/comprehensive-rules.txt` is the authority here, and a
+ * card reading "every basic land type" must not grant it.
+ *
+ * Distinct from `BASIC_LAND_MANA` in `continuous.ts`, which maps a subtype to the mana it makes
+ * and DOES include Wastes, because a permanent that is a Wastes taps for {C}.
+ */
+const BASIC_LAND_TYPES = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'] as const;
+
   // Blood Moon â€” "Nonbasic lands are Mountains." (layer 4: set subtype, lose abilities.)
+  if (lower === 'enchanted permanent is a colorless forest land') {
+    return [
+      { affects: { kind: 'attachedToSource' }, op: { layer: 4, setTypes: ['Land'], setSubtypes: ['Forest'], loseAbilities: true } },
+      { affects: { kind: 'attachedToSource' }, op: { layer: 5, setColors: [] } },
+    ];
+  }
+  /*
+   * "Lands you control are every basic land type in addition to their other types."
+   * (Dryad of the Ilysian Grove, Leyline of the Guildpact) and the single-type twin
+   * "Each land is a Swamp in addition to its other land types." (Urborg, Yavimaya).
+   *
+   * Both are layer-4 ADDITIONS, which is why the same `addSubtypes` op serves them: `finishLayer4`
+   * keeps the printed types and `BASIC_LAND_MANA` derives the intrinsic mana ability from the
+   * resulting subtype set, so the mana consequence falls out for free (see `continuous.ts`).
+   *
+   * The five basic land types are Plains, Island, Swamp, Mountain and Forest (CR 305.6,
+   * `docs/rules/comprehensive-rules.txt`). Wastes is NOT one of them - do not add it.
+   *
+   * Note the difference in scope, which the printed text is precise about and this must be too:
+   * "lands you control" is controller-restricted; Urborg's "each land" is every land in the game,
+   * including opponents'.
+   */
+  if (lower === 'lands you control are every basic land type in addition to their other types') {
+    return [{
+      affects: allOf(ofType('Land'), YOURS),
+      op: { layer: 4, addSubtypes: [...BASIC_LAND_TYPES] },
+    }];
+  }
+  {
+    const m = lower.match(
+      /^each land is an? (plains|island|swamp|mountain|forest) in addition to its other land types$/,
+    );
+    if (m !== null) {
+      const subtype = (m[1] as string);
+      return [{
+        affects: ofType('Land'),
+        op: { layer: 4, addSubtypes: [subtype.charAt(0).toUpperCase() + subtype.slice(1)] },
+      }];
+    }
+  }
   if (lower === 'nonbasic lands are mountains') {
     return [
       {
@@ -2916,6 +4368,88 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
       ];
     }
   }
+  {
+    const both = lower.match(/^~['’]s power and toughness are each equal to the number of (.+)$/);
+    if (both !== null) {
+      const selector = parseSubject(both[1] as string, card);
+      if (selector !== null) {
+        const count: Value = { kind: 'countPermanents', selector, scope: 'you' };
+        return [{ affects: { kind: 'self' }, op: { layer: 7, sublayer: 'a', power: count, toughness: count } }];
+      }
+    }
+    const power = lower.match(/^~['’]s power is equal to the number of (.+)$/);
+    if (power !== null) {
+      const selector = parseSubject(power[1] as string, card);
+      if (selector !== null) {
+        // Only the POWER is characteristic-defining here, so toughness keeps its printed value.
+        // A card printed with a "*" toughness would come through as NaN, and a CDA that sets a
+        // NaN toughness is worse than leaving the line unmodeled.
+        const printedToughness = Number(card.toughness ?? 0);
+        if (!Number.isFinite(printedToughness)) return null;
+        return [{
+          affects: { kind: 'self' },
+          op: { layer: 7, sublayer: 'a', power: { kind: 'countPermanents', selector, scope: 'you' }, toughness: constant(printedToughness) },
+        }];
+      }
+    }
+  }
+  {
+    const m = lower.match(/^(.+?) gets ([+-]?[0-9]+|[+-]?x)[/]([+-]?[0-9]+|[+-]?x) for each (.+)$/);
+    if (m !== null) {
+      const affects = (m[1] as string) === '~' ? { kind: 'self' as const } : parseSubject(m[1] as string, card);
+      const count = parseDynamicCountValue('the number of ' + (m[4] as string), card);
+      if (affects !== null && count !== null) {
+        const power = (m[2] as string).toLowerCase().includes('x') ? count : { kind: 'times' as const, of: count, n: Number(m[2]) };
+        const toughness = (m[3] as string).toLowerCase().includes('x') ? count : { kind: 'times' as const, of: count, n: Number(m[3]) };
+        return [{ affects, op: { layer: 7, sublayer: 'd', power, toughness } }];
+      }
+    }
+  }
+  {
+    const m = lower.match(/^(.+?) gets? ([+-]?x)\/([+-]?x), where x is (.+)$/);
+    if (m !== null) {
+      const affects = (m[1] as string) === '~' ? { kind: 'self' as const } : parseSubject(m[1] as string, card);
+      const count = parseDynamicCountValue(m[4] as string, card);
+      if (affects !== null && count !== null) return [{ affects, op: { layer: 7, sublayer: 'd', power: count, toughness: count } }];
+    }
+  }
+  if (lower === 'all creatures have double strike and attack each combat if able') {
+    const affects = parseSubject('creatures', card);
+    if (affects !== null) {
+      return [
+        { affects, op: { layer: 6, addKeyword: 'double strike' } },
+        { affects, op: { layer: 6, setMustAttackEachCombat: true } },
+      ];
+    }
+  }
+  if (lower === 'creatures your opponents control attack each combat if able') {
+    const affects = parseSubject('creatures your opponents control', card);
+    if (affects !== null) return [{ affects, op: { layer: 6, setMustAttackEachCombat: true } }];
+  }
+  // "Enchanted/Equipped creature ... and is goaded" (CR 701.38 - it attacks each combat if able
+  // and attacks a player other than the goad's controller if able).
+  //
+  // Anchored to the whole line and delegated back to the ordinary aura/equipment grammar for
+  // everything BEFORE the goad, because that prefix carries real abilities: Ghoulish Impetus's
+  // +1/+1 and deathtouch, Redemption Arc's indestructible. A loose `(.+) is goaded` would match
+  // the entire prefix as a "subject", report the card modeled, and silently drop those - the
+  // exact silent-drift failure `requireModeled` exists to catch. If the prefix does not parse,
+  // this returns null so the card stays honestly unmodeled rather than half-modeled.
+  {
+    const affects: Selector = { kind: 'attachedToSource' };
+    const goad: StaticEffect = { affects, op: { layer: 6, addGoad: true } };
+    if (lower === 'enchanted creature is goaded' || lower === 'equipped creature is goaded') {
+      return [goad];
+    }
+    const m = lower.match(/^(enchanted|equipped) creature (.*?),? and is goaded$/);
+    if (m !== null) {
+      // The printed form is an Oxford list ("gets +1/+1, has deathtouch, and is goaded"); the
+      // anthem grammar spells the same thing with "and".
+      const rest = (m[2] as string).replace(/, (has|have) /g, ' and $1 ');
+      const parsed = parseStaticLine(`${m[1] as string} creature ${rest}`, card);
+      return parsed === null ? null : [...parsed, goad];
+    }
+  }
   // Granted mana ability â€” Chromatic Lantern's `Lands you control have "{T}: Add â€¦"`.
   // Checked before ANTHEM_RE, whose "<subject> have <keywords>" arm would otherwise match this
   // line and reject it as an unimplemented keyword.
@@ -2924,10 +4458,12 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
     if (m) {
       // The granted ability's own terminal period sits INSIDE the quotes, so the line-level
       // strip in the main loop never reaches it.
-      const granted = parseManaAbilityLine((m[2] as string).replace(/\.$/, ''), card);
+      // A grant of ALTERNATIVE abilities (the Nykthos shape) has no `addManaAbility` form —
+      // layer 6 grants one ability — so it stays unmodeled rather than granting only the first.
+      const granted = parseManaAbilityLines((m[2] as string).replace(/\.$/, ''), card);
       const affects = parseSubject(m[1] as string, card);
-      if (granted !== null && affects !== null) {
-        return [{ affects, op: { layer: 6, addManaAbility: granted } }];
+      if (granted !== null && granted.length === 1 && affects !== null) {
+        return [{ affects, op: { layer: 6, addManaAbility: granted[0] as ManaAbilitySpec } }];
       }
     }
   }
@@ -2943,8 +4479,8 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
         const selector = parseSubject(countClause, card);
         if (selector !== null) {
           const countVal: Value = { kind: 'countPermanents', selector, scope: 'you' };
-          const power: Value | number = pStr.toLowerCase() === 'x' || pStr.includes('1') ? countVal : Number(pStr);
-          const toughness: Value | number = tStr.toLowerCase() === 'x' || tStr.includes('1') ? countVal : Number(tStr);
+          const power: Value | number = pStr.toLowerCase().includes('x') ? countVal : Number(pStr);
+          const toughness: Value | number = tStr.toLowerCase().includes('x') ? countVal : Number(tStr);
           return [{ affects, op: { layer: 7, sublayer: 'd', power, toughness } }];
         }
       } else {
@@ -3022,7 +4558,13 @@ const CANT_BE_COUNTERED_RE = /^(.+ spells?) you control can't be countered$/;
 const CANT_CAST_SPELLS_RE = /^your opponents can't cast spells during your turn$/;
 
 /** "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer). */
+const ADDITIONAL_LAND_DROP_RE = /^you may play (an additional land|(?:one|two|three|four) additional lands?) (?:on |during )?each of your turns$/;
 const CAST_FROM_LIBRARY_TOP_RE = /^you may cast (.+ spells?) from the top of your library$/;
+const PLAY_FROM_ZONE_RE = /^you may play (lands?|permanent cards?) from (the top of your library|your graveyard)$/;
+const MULDROTHA_PLAY_RE = /^during each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard$/;
+const REVEAL_TOP_LIBRARY_RE = /^play with the top card of your library revealed$/;
+const ENCHANTED_LAND_MANA_RIDER_RE = /^whenever enchanted land is tapped for mana, its controller adds an additional ((?:\{[wubrgc]\})+)$/;
+const SAME_TYPE_LAND_MANA_RIDER_RE = /^whenever you tap a land for mana, add one mana of any type that land produced$/;
 
 /**
  * "You may look at the top card of your library any time" (Korlessa) â€” a `PlayerView` reveal
@@ -3040,14 +4582,15 @@ const LOOK_AT_TOP_ANY_TIME_RE = /^you may look at the top card of your library a
  */
 const DAMAGE_DOUBLED_RE =
   /^if a creature you control that entered this turn would deal damage, it deals twice that much damage instead$/;
+
 const TOKEN_COUNT_DOUBLED_RE =
-  /^if an effect would create one or more tokens under your control, it creates twice that many instead$/;
+  /^if an effect would create one or more tokens under your control, it creates twice that many(?: of those tokens)? instead$/;
 
 const COUNTER_COUNT_DOUBLED_RE =
-  /^if an effect would put one or more counters on a permanent you control, it puts twice that many of each of those counters on that permanent instead$/;
+  /^if an effect would put one or more counters on a permanent you control, it puts twice that many(?: of (?:each of )?those counters)? on that permanent instead$/;
 
 const PLUS_COUNTER_ADDITION_RE =
-  /^if one or more \+1\/\+1 counters would be put on a creature you control, that many plus one \+1\/\+1 counters are put on that creature instead$/;
+  /^if one or more \+1\/\+1 counters would be put on a creature you control, that many plus one \+1\/\+1 counters are put on (?:that creature|it) instead$/;
 
 /**
  * Rule-modifying statics (ADR 0010, Inc 13) â€” cost reduction, "can't be countered", "opponents
@@ -3055,6 +4598,12 @@ const PLUS_COUNTER_ADDITION_RE =
  * to (`rule-statics.ts`), so they are collected separately from `parseStaticLine`.
  */
 function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | null {
+  if (
+    lower ===
+    'if a source you control would deal damage to an opponent or a permanent an opponent controls, it deals double that damage instead'
+  ) {
+    return [{ kind: 'damageDoubledToOpponents' }];
+  }
   if (lower === 'affinity for artifacts') {
     return [{
       kind: 'costReduction',
@@ -3068,6 +4617,7 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       { kind: 'damageDoubled', sourceFilter: allOf(ofType('Creature'), YOURS, ENTERED_THIS_TURN) },
     ];
   }
+
   if (TOKEN_COUNT_DOUBLED_RE.test(lower)) {
     return [{ kind: 'tokenCountMultiplier', multiplier: 2 }];
   }
@@ -3077,7 +4627,6 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
   if (PLUS_COUNTER_ADDITION_RE.test(lower)) {
     return [{ kind: 'counterPlacementReplacement', filter: allOf(ofType('Creature'), YOURS), counter: '+1/+1', multiplier: 1, addition: 1 }];
   }
-
 
   {
     const m = lower.match(EMINENCE_COST_REDUCTION_RE);
@@ -3109,15 +4658,46 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       ];
     }
   }
+  // "Spells of the chosen type you cast cost {W}{U}{B}{R}{G} less to cast. This effect reduces
+  // only the amount of colored mana you pay." (Morophon) - a COLORED reduction, which is a
+  // different field from the generic one: it subtracts colored pips, and CR 601.2f forbids it
+  // reducing generic mana at all. Checked before the generic form below, whose subject group
+  // would otherwise swallow the whole line.
+  {
+    const m = lower.match(
+      /^(.+?) you cast cost ((?:\{[^}]+\})+) less to cast\. this effect reduces only the amount of colou?red mana you pay$/,
+    );
+    if (m) {
+      const parsed = parseSpellFilter(m[1] as string, card);
+      if (parsed === null) return null;
+      const cost = parseManaCost((m[2] as string).toUpperCase() as never);
+      if (cost.cost === null || cost.unsupportedSymbols.length > 0) return null;
+      return [{
+        kind: 'costReduction',
+        amount: constant(0),
+        coloredAmount: cost.cost,
+        ...(parsed === ANY_SPELL ? {} : { filter: parsed }),
+      }];
+    }
+  }
   // "Instant and sorcery spells you cast cost {1} less to cast." (Goblin Electromancer) â€” a
   // plain, unconditional, fixed reduction: no Eminence "as long as" wrapper, no Temur
   // Battlecrier-style per-permanent scaling.
   {
-    const m = lower.match(/^(.+ spells?) you cast cost \{(\d+)\} less to cast$/);
+    // The optional " of the chosen type" trails "you cast" rather than the subject
+    // (Herald's Horn: "Creature spells you cast of the chosen type cost {1} less to cast").
+    const m = lower.match(/^(.+ spells?) you cast( of the chosen type)? cost \{(\d+)\} less to cast$/);
     if (m) {
-      const filter = parseSpellFilter(m[1] as string, card);
-      if (filter === null) return null;
-      return [costReductionFor(filter === ANY_SPELL ? undefined : filter, Number(m[2]))];
+      const parsed = parseSpellFilter(m[1] as string, card);
+      if (parsed === null) return null;
+      const base = parsed === ANY_SPELL ? undefined : parsed;
+      const filter =
+        m[2] === undefined
+          ? base
+          : base === undefined
+            ? CHOSEN_SUBTYPE
+            : allOf(base, CHOSEN_SUBTYPE);
+      return [costReductionFor(filter, Number(m[3]))];
     }
   }
   // "Each spell you cast that's red or green costs {1} less to cast." (Goblin Anarchomancer) â€”
@@ -3146,10 +4726,80 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       return [{ kind: 'cantBeCountered', ...(filter !== ANY_SPELL ? { filter } : {}) }];
     }
   }
+  // Basandra, Battle Seraph. "PLAYERS" — its own controller included, unlike Marisi's
+  // opponents-only wording immediately below.
+  if (lower === "during your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments") {
+    return [
+      { kind: 'cantCastSpells', who: 'opponents', yourTurnOnly: true },
+      { kind: 'cantActivateAbilities', who: 'opponents', yourTurnOnly: true, filter: anyOf(ofType('Artifact'), ofType('Creature'), ofType('Enchantment')) },
+    ];
+  }
+  if (lower === "players can't cast spells during combat") {
+    return [{ kind: 'cantCastSpells', who: 'all', yourTurnOnly: false, duringCombatOnly: true }];
+  }
+  // Marisi, Breaker of the Coil.
+  if (lower === "your opponents can't cast spells during combat") {
+    return [{ kind: 'cantCastSpells', who: 'opponents', yourTurnOnly: false, duringCombatOnly: true }];
+  }
   if (CANT_CAST_SPELLS_RE.test(lower)) {
     return [{ kind: 'cantCastSpells', who: 'opponents', yourTurnOnly: true }];
   }
   {
+    const m = lower.match(ADDITIONAL_LAND_DROP_RE);
+    if (m !== null) {
+      const amount = (m[1] as string).startsWith('an ') ? 1 : ({ one: 1, two: 2, three: 3, four: 4 }[(m[1] as string).split(' ')[0] as string] ?? 0);
+      return amount > 0 ? [{ kind: 'additionalLandDrops', count: constant(amount) }] : null;
+    }
+  }
+  {
+    const m = lower.match(ENCHANTED_LAND_MANA_RIDER_RE);
+    if (m !== null) {
+      return [{
+        kind: 'manaActivationRider',
+        source: { kind: 'attachedToSource' },
+        add: { kind: 'fixed', units: manaSymbols(m[1] as string).map((symbol) => [symbol]) },
+      }];
+    }
+  }
+  if (SAME_TYPE_LAND_MANA_RIDER_RE.test(lower)) {
+    return [{
+      kind: 'manaActivationRider',
+      source: allOf(ofType('Land'), YOURS),
+      add: { kind: 'oneOfProducedTypes' },
+    }];
+  }
+  if (REVEAL_TOP_LIBRARY_RE.test(lower)) return [{ kind: 'revealTopLibrary' }];
+  if (MULDROTHA_PLAY_RE.test(lower)) {
+    return [{
+      kind: 'playFromZone',
+      zone: 'graveyard',
+      filter: anyOf(
+        ofType('Artifact'),
+        ofType('Battle'),
+        ofType('Creature'),
+        ofType('Enchantment'),
+        ofType('Land'),
+        ofType('Planeswalker'),
+      ),
+      yourTurnOnly: true,
+      permanentTypeBudget: 1,
+    }];
+  }
+  {
+    const m = lower.match(PLAY_FROM_ZONE_RE);
+    if (m !== null) {
+      const zone = (m[2] as string) === 'your graveyard' ? 'graveyard' as const : 'libraryTop' as const;
+      const filter = (m[1] as string).startsWith('land') ? ofType('Land') : anyOf(
+        ofType('Artifact'),
+        ofType('Battle'),
+        ofType('Creature'),
+        ofType('Enchantment'),
+        ofType('Land'),
+        ofType('Planeswalker'),
+      );
+      return [{ kind: 'playFromZone', zone, filter }];
+    }
+  }  {
     const m = lower.match(CAST_FROM_LIBRARY_TOP_RE);
     if (m) {
       const filter = parseSpellFilter(m[1] as string, card);
@@ -3235,13 +4885,13 @@ function buildMdfcLandFace(card: OracleCard): AlternativeCast | null {
       entersTappedUnless = { kind: 'mayPayLife', n: Number(pay[1]) };
       continue;
     }
-    if (/^(?:~|this land) enters (?:the battlefield )?tapped$/.test(lower)) {
+    if (/^(?:~|this land) enters (?:the battlefield )?tapped$/.test(lower) || lower === back.name.toLowerCase() + ' enters tapped') {
       entersTapped = true;
       continue;
     }
-    const mana = parseManaAbilityLine(lower, card);
+    const mana = parseManaAbilityLines(lower, card);
     if (mana !== null) {
-      manaAbilities.push(mana);
+      manaAbilities.push(...mana);
       continue;
     }
     unhandled.push(line);
@@ -3273,6 +4923,82 @@ function buildMdfcLandFace(card: OracleCard): AlternativeCast | null {
     description: back.name,
     landFace,
   };
+}
+interface TransformBackFaceResult {
+  backFace: BackFace;
+  reasons: string[];
+}
+
+/** Interpret the second face of a traditional transforming DFC with the normal card grammar. */
+function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | null {
+  const back = card.backFace;
+  if (card.layout !== 'transform' || back === undefined) return null;
+
+  const [leftRaw, rightRaw = ''] = back.typeLine.split(/\s+\u2014\s+/);
+  const left = (leftRaw ?? '').trim().split(/\s+/).filter(Boolean);
+  const knownSupertypes = new Set(['Basic', 'Legendary', 'Snow', 'World', 'Ongoing', 'Host', 'Elite']);
+  const supertypes = left.filter((word) => knownSupertypes.has(word));
+  const types = left.filter((word) => !knownSupertypes.has(word));
+  const subtypes = rightRaw.trim().split(/\s+/).filter(Boolean);
+  const synthetic: OracleCard = {
+    oracleId: `${card.oracleId}:back` as OracleCard['oracleId'],
+    scryfallId: `${card.scryfallId}:back`,
+    name: back.name,
+    manaCost: back.manaCost,
+    cmc: 0,
+    colors: [...back.colors],
+    colorIdentity: [...card.colorIdentity],
+    typeLine: back.typeLine,
+    supertypes,
+    types,
+    subtypes,
+    oracleText: back.oracleText,
+    power: back.power,
+    toughness: back.toughness,
+    loyalty: back.loyalty ?? null,
+    defense: back.defense ?? null,
+    keywords: [],
+    layout: 'normal',
+    commanderLegality: card.commanderLegality,
+    isBasicLand: supertypes.includes('Basic') && types.includes('Land'),
+  };
+  const def = interpretCard(synthetic);
+  /* eslint-disable no-restricted-syntax -- this is a permanent face descriptor, not a token spec */
+  return {
+    backFace: {
+      name: def.name,
+      typeLine: def.typeLine,
+      oracleText: back.oracleText,
+      manaCostText: back.manaCost,
+      frontOracleText: card.oracleText,
+      frontManaCostText: card.manaCost,
+      manaCost: def.manaCost,
+      hasUnsupportedCost: def.hasUnsupportedCost,
+      supertypes: [...def.supertypes],
+      types: [...def.types],
+      subtypes: [...def.subtypes],
+      colors: [...def.colors],
+      power: def.power,
+      toughness: def.toughness,
+      loyalty: def.loyalty,
+      defense: def.defense,
+      keywords: [...def.keywords],
+      ...(def.ward !== undefined ? { ward: def.ward } : {}),
+      ...(def.protectionFrom !== undefined ? { protectionFrom: [...def.protectionFrom] } : {}),
+      manaAbilities: [...def.manaAbilities],
+      activatedAbilities: [...def.activatedAbilities],
+      entersTapped: def.entersTapped,
+      ...(def.entersTappedUnless !== undefined ? { entersTappedUnless: def.entersTappedUnless } : {}),
+      ...(def.entersWithCounters !== undefined ? { entersWithCounters: { ...def.entersWithCounters } } : {}),
+      triggers: [...def.triggers],
+      staticEffects: [...def.staticEffects],
+      ruleStatics: [...def.ruleStatics],
+      ...(def.cantBlock === true ? { cantBlock: true } : {}),
+      ...(def.cantBeBlocked === true ? { cantBeBlocked: true } : {}),
+    },
+    reasons: def.unmodeledReasons.map((reason) => `back face: ${reason}`),
+  };
+  /* eslint-enable no-restricted-syntax */
 }
 function buildPathwayLand(
   card: OracleCard,
@@ -3322,12 +5048,15 @@ export function interpretCard(card: OracleCard): CardDefinition {
 
   const pathwayLand = card.layout === 'modal_dfc' ? buildPathwayLand(card) : null;
   const mdfcLandFace = card.layout === 'modal_dfc' ? buildMdfcLandFace(card) : null;
+  const transformBack = card.layout === 'transform' ? buildTransformBackFace(card) : null;
+  if (transformBack !== null) reasons.push(...transformBack.reasons);
   if (
     card.layout !== 'normal' &&
     card.layout !== 'adventure' &&
     card.layout !== 'omen' &&
     pathwayLand === null
     && mdfcLandFace === null
+    && transformBack === null
   ) {
     reasons.push(`unsupported layout "${card.layout}"`);
   }
@@ -3363,13 +5092,17 @@ export function interpretCard(card: OracleCard): CardDefinition {
   const spellEffects: Effect[] = [];
   const triggers: Ability[] = [];
   const staticEffects: StaticEffect[] = [];
+  const additionalCountersOnEntry: { affects: Selector; counter: string; count: Value }[] = [];
   const ruleStatics: RuleStatic[] = [];
-  const entersWithCounters: Record<string, number> = {};
+  const entersWithCounters: Record<string, number | Value> = {};
   let entersTapped = false;
   let entersTappedUnless: Condition | undefined;
+  let tokenCreationReplacement: TokenSpec | undefined;
+  let chosenCreatureType = false;
   let ward: ParsedManaCost | undefined;
   let protectionFrom: Color[] | undefined;
   let spellCantBeCountered = false;
+  const spellAdditionalCosts: AbilityCost[] = [];
   let commanderFreeCast = false;
   let spellModes: NonNullable<Ability['modes']> | undefined;
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
@@ -3490,15 +5223,10 @@ export function interpretCard(card: OracleCard): CardDefinition {
       }),
     );
     reasons.length = 0;
-  } else if (card.name === 'Morophon, the Boundless') {
-    ruleStatics.push({
-      kind: 'costReduction',
-      amount: constant(0),
-      coloredAmount: manaCost('{W}{U}{B}{R}{G}'),
-      filter: ofSubtype('Dragon'),
-    });
-    staticEffects.push(lord(allOf(OTHER, YOURS, ofSubtype('Dragon')), 1, 1));
-    reasons.length = 0;
+  // Morophon, the Boundless is no longer bespoke. Its two "of the chosen type" lines used to be
+  // hardcoded to Dragon (correct only in the Ur-Dragon fixture deck it was written for); the
+  // generic grammar now reads them as `chosenSubtype` against the type actually chosen as it
+  // entered, which is what the card says.
   } else if (card.name === 'Orb of Dragonkind') {
     manaAbilities.push({
       units: [ALL_COLORS, ALL_COLORS],
@@ -3600,7 +5328,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
   }
 
   const isSpell = card.types.includes('Instant') || card.types.includes('Sorcery');
-  const text = substituteSelfName(stripReminderText(card.oracleText), card.name);
+  const frontName = card.layout === 'transform' ? (card.name.split(' // ')[0] ?? card.name) : card.name;
+  const text = substituteSelfName(stripReminderText(card.oracleText), frontName);
 
   // Whole-card block patterns that only mean something read together: a modal spell's mode
   // choice (CR 601.2b) and Stubborn Denial's Ferocious clause, which shares line 1's target
@@ -3608,53 +5337,59 @@ export function interpretCard(card: OracleCard): CardDefinition {
   // allocate each line its own disconnected target slot.
   let spellBlockHandled = false;
   if (isSpell) {
-    const spree = parseSpreeSpellBlock(text, card);
-    const modal = spree ?? parseModalSpellBlock(text, card);
+    const spellBlockHasTrailingRebound = /\nrebound\.?$/i.test(text.trim());
+    const spellBlockText = spellBlockHasTrailingRebound
+      ? text.trim().replace(/\nrebound\.?$/i, '')
+      : text;
+    const libraryBlock = parseLookAtTopBlock(spellBlockText.toLowerCase(), card);
+    if (libraryBlock !== null) {
+      spellEffects.push(...libraryBlock);
+      spellBlockHandled = true;
+    }
+    if (!spellBlockHandled) {
+    const spree = parseSpreeSpellBlock(spellBlockText, card);
+    const modal = spree ?? parseModalSpellBlock(spellBlockText, card);
     if (modal !== null) {
       spellTargets.push(...modal.targets);
       spellModes = modal.modes;
       spellBlockHandled = true;
     } else {
-      const ferocious = parseCounterUnlessFerociousBlock(text, card);
+      const ferocious = parseCounterUnlessFerociousBlock(spellBlockText, card);
       if (ferocious !== null) {
         spellTargets.push(...ferocious.targets);
         spellEffects.push(...ferocious.effects);
         spellBlockHandled = true;
       } else {
-        const hunters = parseHuntersInsightBlock(text, card);
-        if (hunters !== null) {
-          spellTargets.push(...hunters.targets);
-          spellEffects.push(...hunters.effects);
+        const wholeSpell =
+          parseBlinkSpellBlock(spellBlockText) ??
+          parseKeywordCountSpellBlock(spellBlockText) ??
+          parseHuntersInsightBlock(spellBlockText, card) ??
+          parseRemoveAndControllerSearchBlock(spellBlockText, card) ??
+          parseCounterAndCreateTokenBlock(spellBlockText, card) ??
+          parseDestroyAndCreateTokenBlock(spellBlockText, card) ??
+          parseReanimateBlock(spellBlockText, card) ??
+          parseDestroyThenLoseLifeEqualToManaValueBlock(spellBlockText, card);
+        if (wholeSpell !== null) {
+          spellTargets.push(...wholeSpell.targets);
+          spellEffects.push(...wholeSpell.effects);
           spellBlockHandled = true;
-        } else {
-          const destroyToken = parseDestroyAndCreateTokenBlock(text, card);
-          if (destroyToken !== null) {
-            spellTargets.push(...destroyToken.targets);
-            spellEffects.push(...destroyToken.effects);
-            spellBlockHandled = true;
-          } else {
-            const reanimate = parseReanimateBlock(text, card);
-            if (reanimate !== null) {
-              spellTargets.push(...reanimate.targets);
-              spellEffects.push(...reanimate.effects);
-              spellBlockHandled = true;
-            } else {
-              const destroyLoseLife = parseDestroyThenLoseLifeEqualToManaValueBlock(text, card);
-              if (destroyLoseLife !== null) {
-                spellTargets.push(...destroyLoseLife.targets);
-                spellEffects.push(...destroyLoseLife.effects);
-                spellBlockHandled = true;
-              }
-            }
-          }
         }
       }
     }
+    if (
+      spellBlockHandled &&
+      spellBlockHasTrailingRebound &&
+      !keywords.includes('rebound')
+    ) {
+      keywords.push('rebound');
+    }
   }
-
+  }
   const registeredOverride = getOverride(card.oracleId);
   const genericLabelStripAllowed = registeredOverride === undefined || Object.keys(registeredOverride.def).length === 0;
-  for (const rawLine of text.split('\n')) {
+  const rawLines = text.split('\n');
+  for (let lineIndex = 0; lineIndex < rawLines.length; lineIndex++) {
+    const rawLine = rawLines[lineIndex] as string;
     if (spellBlockHandled) break;
     const originalLine = rawLine.trim();
     const knownAbilityWordStripped = stripAbilityWord(originalLine);
@@ -3662,6 +5397,28 @@ export function interpretCard(card: OracleCard): CardDefinition {
     const line = genericLabelStripAllowed ? stripGenericAbilityLabel(knownAbilityWordStripped) : knownAbilityWordStripped;
     if (line.length === 0) continue;
     const lower = line.toLowerCase().replace(/\.$/, '');
+    {
+      const graveyardAlternative = lower.match(/^(flashback|escape)(?:\s+|[\u2014\u2013-])((?:\{[^}]+\})+)(?:,\s*(.+))?$/);
+      if (graveyardAlternative !== null) {
+        const cost = parseManaCost((graveyardAlternative[2] as string).toUpperCase() as never);
+        const additionalCosts = graveyardAlternative[3] === undefined
+          ? []
+          : parseGraveyardAlternativeCosts(graveyardAlternative[3] as string);
+        if (cost.cost !== null && additionalCosts !== null) {
+          if (alternativeCasts === undefined) alternativeCasts = [];
+          alternativeCasts.push({
+            kind: 'nonMana',
+            from: 'graveyard',
+            manaCost: cost.cost,
+            ...(additionalCosts.length > 0 ? { costs: additionalCosts } : {}),
+            exileOnResolution: true,
+            ...(graveyardAlternative[1] === 'escape' ? { escaped: true } : {}),
+            description: line,
+          });
+          continue;
+        }
+      }
+    }
     if (isSpell) {
       const additionalCosts = parseSpellAdditionalCost(lower);
       if (additionalCosts !== null) {
@@ -3819,9 +5576,9 @@ export function interpretCard(card: OracleCard): CardDefinition {
     //    ONE unit with two symbol choices (one mana, player picks) â€” the distinction the
     //    payment solver's per-unit backtracking already understands.
     {
-      const mana = parseManaAbilityLine(lower, card);
+      const mana = parseManaAbilityLines(lower, card);
       if (mana !== null) {
-        manaAbilities.push(mana);
+        manaAbilities.push(...mana);
         continue;
       }
       // Only judge production once the COST half really is a cost. Otherwise a line that
@@ -3830,7 +5587,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
       const split = splitActivation(lower);
       if (
         split !== null &&
-        parseActivationCosts(split.costText) !== null &&
+        parseActivationCosts(split.costText, card) !== null &&
         UNSUPPORTED_MANA_RE.test(split.effectText)
       ) {
         reasons.push(`unsupported mana production: "${line}"`);
@@ -3861,29 +5618,102 @@ export function interpretCard(card: OracleCard): CardDefinition {
         continue;
       }
     }
+    // Static replacement effects that add counters to other permanents as they enter.
+    {
+      const fixedAdditional = lower.match(/^each (.+) enters with an additional ([+-][0-9]+[/][+-][0-9]+) counter on (?:it|them)$/);
+      if (fixedAdditional !== null) {
+        const affects = parseSubject(fixedAdditional[1] as string, card);
+        if (affects !== null) {
+          additionalCountersOnEntry.push({ affects, counter: fixedAdditional[2] as string, count: constant(1) });
+          continue;
+        }
+      }
+      const arwen = lower.match(/^each (.+) enters with a number of additional ([+-][0-9]+[/][+-][0-9]+) counters? on (?:it|them) equal to (.+)$/);
+      if (arwen !== null) {
+        const affects = parseSubject(arwen[1] as string, card);
+        const count = parseDynamicCountValue(arwen[3] as string, card);
+        if (affects !== null && count !== null) {
+          additionalCountersOnEntry.push({ affects, counter: arwen[2] as string, count });
+          continue;
+        }
+      }
+      const gev = lower.match(/^other (.+) enter with an additional ([+-][0-9]+[/][+-][0-9]+) counter on them for each opponent who lost life this turn$/);
+      if (gev !== null) {
+        const affects = parseSubject('other ' + (gev[1] as string), card);
+        if (affects !== null) {
+          additionalCountersOnEntry.push({ affects, counter: gev[2] as string, count: { kind: 'opponentsLostLifeThisTurn' } });
+          continue;
+        }
+      }
+    }
+    // 3a-bis. "As this artifact enters, choose a creature type." (Cavern of Souls, Herald's Horn,
+    //     Patchwork Banner) - an as-enters CHOICE (CR 614.1c), not a trigger, so the type is
+    //     recorded before anything can read it back. The domain is computed at entry rather than
+    //     printed here; see `creatureTypeChoicesFor`.
+    if (/^as (?:~|this (?:artifact|creature|enchantment|land|permanent)) enters, choose a creature type$/.test(lower)) {
+      chosenCreatureType = true;
+      continue;
+    }
     // 3b. "~ enters with three +1/+1 counters on it" â€” a replacement effect (CR 614.1c),
     //     applied in `makePermanent`, never a trigger. See `CardDefinition.entersWithCounters`.
     {
       const m = lower.match(
-        /^~ enters (?:the battlefield )?with (\w+) ([+-]\d+\/[+-]\d+) counters? on it$/,
+        // A NAMED counter ("four ice counters") is as valid here as a P/T one: `entersWithCounters`
+        // is keyed by counter name, and `makePermanent` applies whatever it finds.
+        /^~ enters (?:the battlefield )?with (\w+) ([+-]\d+\/[+-]\d+|[a-z]+) counters? on it$/,
       );
       if (m) {
-        const count = parseAmount(m[1] as string);
+        const count = parseCountPhrase(m[1] as string);
         if (count !== null) {
           const counter = m[2] as string;
-          entersWithCounters[counter] = (entersWithCounters[counter] ?? 0) + count;
+          const previous = entersWithCounters[counter];
+          if (previous === undefined) {
+            entersWithCounters[counter] = count.kind === 'const' ? count.n : count;
+          } else if (typeof previous === 'number' && count.kind === 'const') {
+            entersWithCounters[counter] = previous + count.n;
+          } else {
+            reasons.push('multiple dynamic entry-counter replacements for ' + counter);
+          }
           continue;
         }
       }
+      const dynamic = lower.match(/^~ enters (?:the battlefield )?with (?:a number of )?([+-][0-9]+[/][+-][0-9]+) counters? on it equal to (.+)$/);
+      if (dynamic !== null) {
+        const count = parseDynamicCountValue(dynamic[2] as string, card);
+        if (count !== null) {
+          entersWithCounters[dynamic[1] as string] = count;
+          continue;
+        }
+      }
+    }
+    if (lower === 'if one or more creature tokens would be created under your control, those tokens plus a 1/1 white soldier creature token are created instead') {
+      tokenCreationReplacement = SOLDIER_1_1;
+      continue;
     }
     if (lower === 'you have no maximum hand size') {
       ruleStatics.push({ kind: 'noMaximumHandSize' });
       continue;
     }    // 4. A triggered ability.
     {
-      const parsed = parseTriggerLine(line, card);
+      let triggerText = line;
+      let triggerEnd = lineIndex;
+      const lowerLine = line.toLowerCase();
+      const modalHeader = ['choose up to one', 'choose one', 'choose one or more', 'choose one or both', 'choose any number', 'choose two', 'choose three']
+        .some((header) => lowerLine.includes(header));
+      if (modalHeader && (rawLines[lineIndex + 1] as string | undefined)?.trimStart().startsWith(String.fromCharCode(8226)) === true) {
+        const blockLines = [line];
+        let next = lineIndex + 1;
+        while (next < rawLines.length && (rawLines[next] as string).trimStart().startsWith(String.fromCharCode(8226))) {
+          blockLines.push((rawLines[next] as string).trim());
+          triggerEnd = next;
+          next += 1;
+        }
+        if (triggerEnd > lineIndex) triggerText = blockLines.join(String.fromCharCode(10));
+      }
+      const parsed = parseTriggerLine(triggerText, card);
       if (parsed !== null) {
         triggers.push(...parsed);
+        lineIndex = triggerEnd;
         continue;
       }
     }
@@ -3907,7 +5737,48 @@ export function interpretCard(card: OracleCard): CardDefinition {
         continue;
       }
     }
-    // 4b2. Equip (CR 702.6) â€” "Equip {2}" is a sorcery-speed activated ability that attaches
+    // Outlast is a sorcery-speed tap ability whose effect is always one +1/+1 counter on self.
+    {
+      const m = lower.match(/^outlast ((?:\{[^}]+\})+)$/);
+      if (m !== null) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          activatedAbilities.push({
+            costs: [{ kind: 'mana', cost: cost.cost }, { kind: 'tap' }],
+            timing: 'sorcery',
+            ability: {
+              kind: 'activated',
+              targets: [],
+              effects: [
+                { op: 'putCountersEach', selector: SELF, counter: '+1/+1', count: constant(1) },
+              ],
+              description: line,
+            },
+          });
+          continue;
+        }
+      }
+    }
+    // Equip commander is Equip with a commander-only target restriction.
+    {
+      const m = lower.match(/^equip commander ((?:\{[^}]+\})+)$/);
+      if (m !== null) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          activatedAbilities.push({
+            costs: [{ kind: 'mana', cost: cost.cost }],
+            timing: 'sorcery',
+            ability: {
+              kind: 'activated',
+              targets: [{ kind: 'creature', controller: 'you', filter: IS_COMMANDER }],
+              effects: [{ op: 'attachSelfTo', target: 0 }],
+              description: line,
+            },
+          });
+          continue;
+        }
+      }
+    }    // 4b2. Equip (CR 702.6) â€” "Equip {2}" is a sorcery-speed activated ability that attaches
     //      the Equipment to target creature you control. Printed as a keyword with a cost, so
     //      it never reaches the generic activated-ability parse.
     {
@@ -4009,21 +5880,22 @@ export function interpretCard(card: OracleCard): CardDefinition {
         }
       }
     }
-    {
-      const m = lower.match(/^(?:multikicker|kicker) ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
-      if (m) {
-        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
-        if (cost.cost !== null) {
-          ruleStatics.push({ kind: 'kicker', cost: cost.cost });
-          continue;
-        }
-      }
-      const mGen = lower.match(/^kicker[â€”\s](.+)$/i);
-      if (mGen) {
-        ruleStatics.push({ kind: 'kicker' });
-        continue;
-      }
-    }
+    /*
+     * KICKER IS DELIBERATELY NOT PARSED - it falls through to `unrecognized rules text`.
+     *
+     * `{ kind: 'kicker' }` (see `rule-statics.ts`) used to be pushed here, but nothing ever
+     * consumed it: no cast path offers the optional cost, and `EnginePermanent.kicked` /
+     * `wasKicked` are never assigned, so the `wasKicked` Condition is ALWAYS false. Every
+     * "if this spell was kicked" clause silently took the not-kicked branch while the card
+     * reported `modeled: true` - a failure no coverage metric can see, because a card that is
+     * modeled and does nothing looks exactly like a card that works.
+     *
+     * The `RuleStatic` member, the state fields and the Condition are kept: they are the right
+     * shape for a real implementation. Kicker is a full additional-cost mechanic - an
+     * announcement-time choice (CR 601.2b), multikicker's repeatable payment, and {X} kicker -
+     * and belongs with the other cost-bearing keywords in
+     * `docs/plans/post-tier3-card-coverage.md`, not with a one-line parse.
+     */
     {
       const m = lower.match(/^unearth ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
       if (m) {
@@ -4072,9 +5944,46 @@ export function interpretCard(card: OracleCard): CardDefinition {
     // 4c. An activated ability â€” "<costs>: <effect>" (CR 602). Tried after statics so a line
     //     that GRANTS an ability (`Lands you control have "{T}: Add â€¦"`) is not read as one.
     {
-      const activated = parseActivatedLine(line, card);
+      let activatedText = line;
+      let activatedEnd = lineIndex;
+      const lowerLine = line.toLowerCase();
+      const modalHeader = ['choose up to one', 'choose one', 'choose one or more', 'choose one or both', 'choose any number', 'choose two', 'choose three']
+        .some((header) => lowerLine.includes(header));
+      if (modalHeader && (rawLines[lineIndex + 1] as string | undefined)?.trimStart().startsWith(String.fromCharCode(8226)) === true) {
+        const blockLines = [line];
+        let next = lineIndex + 1;
+        while (next < rawLines.length && (rawLines[next] as string).trimStart().startsWith(String.fromCharCode(8226))) {
+          blockLines.push((rawLines[next] as string).trim());
+          activatedEnd = next;
+          next += 1;
+        }
+        if (activatedEnd > lineIndex) activatedText = blockLines.join(String.fromCharCode(10));
+      }
+      // "This ability costs {1} less to activate for each legendary creature you control."
+      // (Boseiju, Otawara) - a scaling ACTIVATION discount printed as the ability's last
+      // sentence. Stripped here rather than inside `parseActivatedLine`, because it is a
+      // card-level `RuleStatic`, not part of the ability it trails.
+      let activationDiscount: RuleStatic | null = null;
+      const discount = activatedText.match(
+        /^([\s\S]+?)\. this ability costs \{(\d+)\} less to activate for each (.+?)\.?$/i,
+      );
+      if (discount !== null) {
+        const selector = parseSubject((discount[3] as string).toLowerCase(), card);
+        if (selector !== null) {
+          activationDiscount = {
+            kind: 'costReduction',
+            appliesTo: 'activate',
+            selfOnly: true,
+            amount: { kind: 'countPermanents', selector, scope: 'you' },
+          };
+          activatedText = discount[1] as string;
+        }
+      }
+      const activated = parseActivatedLine(activatedText, card);
       if (activated !== null) {
         activatedAbilities.push(activated);
+        if (activationDiscount !== null) ruleStatics.push(activationDiscount);
+        lineIndex = activatedEnd;
         continue;
       }
     }
@@ -4100,6 +6009,67 @@ export function interpretCard(card: OracleCard): CardDefinition {
     //    (based at the current spell slot count) so a partially-parsing line allocates no
     //    slots; merge only when the whole line parses.
     if (isSpell) {
+      if (lower === "counter target spell. at the beginning of your next main phase, add an amount of {c} equal to that spell's mana value") {
+        const target = spellTargets.length;
+        spellTargets.push({ kind: 'spell' });
+        spellEffects.push({ op: 'counter', target, addManaAtNextMainPhase: true });
+        continue;
+      }
+      if (lower === "counter target noncreature spell. if that spell is countered this way, exile it instead of putting it into its owner's graveyard") {
+        const target = spellTargets.length;
+        spellTargets.push({ kind: 'noncreatureSpell', controller: 'opponent' });
+        spellEffects.push({ op: 'counter', target, exileIfCountered: true });
+        continue;
+      }
+      const counterAndKeyword = lower.match(
+        /^put (\w+) ([+-]\d+\/[+-]\d+) counters? on target creature( you control)?\. it gains ([a-z ,]+) until end of turn$/,
+      );
+      if (counterAndKeyword !== null) {
+        const count = parseAmount(counterAndKeyword[1] as string);
+        const parsed = parseKeywordLine(counterAndKeyword[4] as string);
+        if (
+          count !== null &&
+          parsed !== null &&
+          parsed.ward === undefined &&
+          parsed.protectionFrom === undefined
+        ) {
+          const target = spellTargets.length;
+          spellTargets.push({
+            kind: 'creature',
+            ...(counterAndKeyword[3] === undefined ? {} : { controller: 'you' as const }),
+          });
+          spellEffects.push(
+            {
+              op: 'putCounters',
+              target,
+              counter: counterAndKeyword[2] as string,
+              count: constant(count),
+            },
+            ...parsed.keywords.map(
+              (keyword): Effect => ({ op: 'grantKeywordUntilEot', target, keyword }),
+            ),
+          );
+          continue;
+        }
+      }      if (lower === 'put a +1/+1 counter on target creature. it gains indestructible until end of turn') {
+        const target = spellTargets.length;
+        spellTargets.push({ kind: 'creature' });
+        spellEffects.push(
+          { op: 'putCounters', target, counter: '+1/+1', count: constant(1) },
+          { op: 'grantKeywordUntilEot', target, keyword: 'indestructible' },
+        );
+        continue;
+      }
+      // The look-at-top-N block is multi-SENTENCE but single-LINE ("…put them back in any
+      // order. You may shuffle."), so it has to be tried before `splitSentences` cuts it up —
+      // its later sentences say "them"/"the rest", which mean nothing on their own. The
+      // whole-card attempt above only fires when the block IS the entire card; Ponder prints
+      // "Draw a card." on a second line, which is what brings it here.
+      const lineLibraryBlock = parseLookAtTopBlock(lower, card);
+      if (lineLibraryBlock !== null) {
+        spellEffects.push(...lineLibraryBlock);
+        continue;
+      }
       const sentences = splitSentences(line);
       const lineEffects: Effect[] = [];
       const lineTargets: TargetSpec[] = [];
@@ -4173,7 +6143,6 @@ export function interpretCard(card: OracleCard): CardDefinition {
   // clear reasons after the ordinary line pass, which otherwise records the bespoke lines again.
   if (
     [
-      'Morophon, the Boundless',
       'Orb of Dragonkind',
       'Rivaz of the Claw',
       'Sarkhan, Dragon Ascendant',
@@ -4198,7 +6167,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   return applyOverride({
     oracleId: card.oracleId,
     scryfallId: card.scryfallId,
-    name: card.name,
+    name: frontName,
     typeLine: card.typeLine,
     supertypes: card.supertypes,
     types: card.types,
@@ -4211,6 +6180,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
     toughness,
     loyalty,
     defense,
+    ...(transformBack !== null ? { backFace: transformBack.backFace } : {}),
     keywords,
     ...(ward !== undefined ? { ward } : {}),
     ...(protectionFrom !== undefined ? { protectionFrom } : {}),
@@ -4219,7 +6189,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
     entersTapped,
     ...(entersTappedUnless !== undefined ? { entersTappedUnless } : {}),
     ...(Object.keys(entersWithCounters).length > 0 ? { entersWithCounters } : {}),
-    ...(pathwayLand !== null ? { entersChoosingOption: pathwayLand.entersChoosingOption } : {}),
+    ...(additionalCountersOnEntry.length > 0 ? { additionalCountersOnEntry } : {}),
+    ...(tokenCreationReplacement !== undefined ? { tokenCreationReplacement } : {}),
+    ...(pathwayLand !== null
+      ? { entersChoosingOption: pathwayLand.entersChoosingOption }
+      : chosenCreatureType
+        ? { entersChoosingOption: { prompt: 'choose a creature type', domain: 'creatureType' as const } }
+        : {}),
     spellAbility:
       isSpell && (spellEffects.length > 0 || spellModes !== undefined)
         ? {

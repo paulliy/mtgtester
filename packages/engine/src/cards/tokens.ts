@@ -24,8 +24,10 @@
  *    the same process. Always spread into a new object first: `{ ...spec, name: … }`.
  */
 
-import type { Color } from '@mtg/shared';
+import type { Color, ManaCostString } from '@mtg/shared';
 import type { KeywordAbility, ManaAbilitySpec, TokenSpec } from './ability';
+import type { ParsedManaCost } from '../mana/cost';
+import { parseManaCost } from '../mana/cost';
 
 /**
  * A creature token. `typeLine`, `types` and `subtypes` are derived from `subtypes` so they cannot
@@ -79,6 +81,14 @@ export function artifactToken(spec: {
 // ---------------------------------------------------------------------------
 // Creature tokens
 // ---------------------------------------------------------------------------
+
+export const SOLDIER_1_1: TokenSpec = creatureToken({
+  name: 'Soldier',
+  subtypes: ['Soldier'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+});
 
 export const SOLDIER_1_1_LIFELINK: TokenSpec = creatureToken({
   name: 'Soldier',
@@ -293,6 +303,30 @@ export const TREASURE: TokenSpec = artifactToken({
   manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }] }],
 });
 
+/**
+ * Food (CR 111.10) — "{2}, {T}, Sacrifice this token: You gain 3 life."
+ *
+ * All three cost components matter, the same way Treasure's two do: without the {2} it is free
+ * life, without the tap it is repeatable, and without the sacrifice it is both.
+ */
+export const FOOD: TokenSpec = {
+  ...artifactToken({ name: 'Food', subtypes: ['Food'] }),
+  activatedAbilities: [{
+    costs: [
+      { kind: 'mana', cost: parseManaCost('{2}' as ManaCostString).cost as ParsedManaCost },
+      { kind: 'tap' },
+      { kind: 'sacrificeSelf' },
+    ],
+    timing: 'any',
+    ability: {
+      kind: 'activated',
+      targets: [],
+      effects: [{ op: 'gainLife', amount: { kind: 'const', n: 3 } }],
+      description: '{2}, {T}, Sacrifice this token: You gain 3 life.',
+    },
+  }],
+};
+
 // ---------------------------------------------------------------------------
 // The whole catalog, for structural lookup
 // ---------------------------------------------------------------------------
@@ -332,6 +366,7 @@ export const ALL_TOKENS: TokenSpec[] = [
   MUTAGEN,
   NALAAR_AETHERJET,
   TREASURE,
+  FOOD,
 ];
 
 /** A key two structurally-identical `TokenSpec`s always share, regardless of property order. */

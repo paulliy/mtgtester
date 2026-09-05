@@ -17,7 +17,7 @@ const props = defineProps<{
   waiting: boolean;
   isRunning?: boolean;
   /** Seats in the game, for turns → rounds. Four in v1, but never assume it here. */
-  seatCount?: number;
+  seatCount?: number | undefined;
   paceMs?: number;
   /** Whether an action step is available in each direction — asked of the log, not the turn. */
   canStepBackAction?: boolean;

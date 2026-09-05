@@ -66,7 +66,8 @@ describe('mana value selector on battlefield permanents', () => {
       executeAbility(
         ctx,
         source,
-        { kind: 'spell', targets: [], effects: cheapMode!.effects, description: cheapMode!.description },
+        // `description` is optional; under exactOptionalPropertyTypes it must be omitted, not undefined.
+        { kind: 'spell', targets: [], effects: cheapMode!.effects, ...(cheapMode!.description === undefined ? {} : { description: cheapMode!.description }) },
         [],
       ),
     );

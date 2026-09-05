@@ -41,6 +41,40 @@ export type {
   TriggerWhen,
 } from './ability';
 
+/** Fully interpreted back face of a transforming double-faced permanent. */
+export interface BackFace {
+  name: string;
+  typeLine: string;
+  oracleText: string;
+  manaCostText: string | null;
+  frontOracleText: string;
+  frontManaCostText: string | null;
+  manaCost: ParsedManaCost | null;
+  hasUnsupportedCost: boolean;
+  supertypes: string[];
+  types: string[];
+  subtypes: string[];
+  colors: Color[];
+  power: number | null;
+  toughness: number | null;
+  loyalty: number | null;
+  defense: number | null;
+  /** Interpreted second face for a transforming double-faced permanent. */
+  backFace?: BackFace;
+  keywords: KeywordAbility[];
+  ward?: ParsedManaCost;
+  protectionFrom?: Color[];
+  manaAbilities: ManaAbilitySpec[];
+  activatedAbilities: ActivatedAbility[];
+  entersTapped: boolean;
+  entersTappedUnless?: Condition;
+  entersWithCounters?: Record<string, number | import('./value').Value>;
+  triggers: Ability[];
+  staticEffects: StaticEffect[];
+  ruleStatics: RuleStatic[];
+  cantBlock?: boolean;
+  cantBeBlocked?: boolean;
+}
 /** Interpreted card. Immutable; one per oracle id per game. */
 export interface CardDefinition {
   oracleId: OracleId;
@@ -72,6 +106,8 @@ export interface CardDefinition {
   loyalty: number | null;
   /** Parsed starting defense (battles, CR 310.6); null otherwise. `*` is unmodeled. */
   defense: number | null;
+  /** Interpreted second face for a transforming double-faced permanent. */
+  backFace?: BackFace;
   keywords: KeywordAbility[];
   /** Printed ward cost (CR 702.21), or absent. Parameterized, so not in `keywords`. */
   ward?: ParsedManaCost;
@@ -95,14 +131,27 @@ export interface CardDefinition {
    * via the `chosenColor` selector or a `chosenOptionIs` condition, rather than each card
    * inventing its own memory field.
    */
-  entersChoosingOption?: { prompt: string; options: { key: string; label: string }[] };
+  entersChoosingOption?: {
+    prompt: string;
+    /** A printed, closed list — Caged Sun's five colors, Frontier Siege's two modes. */
+    options?: { key: string; label: string }[];
+    /**
+     * "As this enters, choose a creature type" — the domain is not printed and cannot be, so it
+     * is computed as the permanent enters (see `moveObject`). Mutually exclusive with `options`.
+     */
+    domain?: 'creatureType';
+  };
   /**
    * Counters the permanent enters the battlefield with (CR 614.1c) — a replacement effect,
    * NOT a triggered ability. The distinction is load-bearing: as a trigger, a 0/0 that
    * "enters with three +1/+1 counters" would briefly exist at 0 toughness and die to a
    * state-based action before its own trigger could resolve.
    */
-  entersWithCounters?: Record<string, number>;
+  entersWithCounters?: Record<string, number | import('./value').Value>;
+  /** Additional counters applied by static replacement effects as another permanent enters. */
+  additionalCountersOnEntry?: { affects: import('./selector').Selector; counter: string; count: import('./value').Value }[];
+  /** Additional 1/1 token replacement generated whenever a creature token is created. */
+  tokenCreationReplacement?: import('./ability').TokenSpec;
   /** Static characteristic behavior for a Duplicant-style last-exiled creature copy. */
   copyLastExiledCreature?: boolean;
   /** Grants an energy alternative cost to permanent spells while this permanent is controlled. */

@@ -8,10 +8,10 @@
  */
 
 import type { Value, ValueScope } from '../cards/value';
-import { cardTypesInAllGraveyards } from '../cards/value';
+import { cardTypesInAllGraveyards, devotionTo } from '../cards/value';
 import type { Selector } from '../cards/selector';
 import type { EnginePermanent, GameContext } from '../state/types';
-import { selectPermanents } from './continuous';
+import { computeCharacteristics, selectPermanents } from './continuous';
 import { effectivePT, getDefByOracleId } from '../state/queries';
 import { spellManaValue } from '../state/objects';
 
@@ -42,6 +42,18 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return cardTypesInAllGraveyards(ctx);
     case 'countPermanents':
       return scopedPermanents(ctx, scope, value.selector, value.scope).length;
+    case 'colorsAmongPermanents': {
+      const colors = new Set<string>();
+      for (const perm of ctx.state.battlefield) {
+        if (perm.controllerId !== scope.controllerId) continue;
+        for (const color of computeCharacteristics(ctx, perm).colors) colors.add(color);
+      }
+      return colors.size;
+    }
+    case 'devotionTo':
+      return devotionTo(ctx, scope.controllerId, value.color);
+    case 'countOpponents':
+      return ctx.state.players.filter((player) => player.id !== scope.controllerId).length;
     case 'greatestToughnessAmong':
       return scopedPermanents(ctx, scope, value.selector, value.scope).reduce(
         (best, perm) => Math.max(best, effectivePT(ctx, perm).toughness),
@@ -74,6 +86,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return scope.spellManaValue ?? 0;
     case 'manaSpent':
       return scope.manaSpent ?? 0;
+    case 'treasureManaSpent':
+      return scope.treasureManaSpent ?? 0;
     case 'energyPaid':
       return scope.energyPaid ?? 0;
     case 'energyAvailable':
@@ -135,12 +149,40 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
       return perm === undefined ? 0 : effectivePT(ctx, perm).power;
     }
+    case 'toughnessOfSource': {
+      const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
+      return perm === undefined ? 0 : effectivePT(ctx, perm).toughness;
+    }
+    case 'opponentsLostLifeThisTurn':
+      return ctx.state.players.filter(
+        (player) => player.id !== scope.controllerId && ctx.state.lifeLostThisTurn[player.id] === true,
+      ).length;
     case 'powerOfTriggerObject': {
       const perm = scope.triggerObjectCardId === undefined
         ? undefined
         : ctx.state.battlefield.find((p) => p.cardId === scope.triggerObjectCardId);
       return perm === undefined ? 0 : effectivePT(ctx, perm).power;
     }
+    case 'cardsInTargetHand': {
+      const targetId =
+        typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
+      return ctx.state.players.find((player) => player.id === targetId)?.hand.length ?? 0;
+    }
+    case 'tappedCreaturesControlledByTarget': {
+      const targetId =
+        typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
+      if (targetId === undefined) return 0;
+      return ctx.state.battlefield.filter(
+        (permanent) =>
+          permanent.controllerId === targetId &&
+          permanent.tapped &&
+          computeCharacteristics(ctx, permanent).types.includes('Creature'),
+      ).length;
+    }
+    case 'attackingCreatures':
+      return ctx.state.battlefield.filter((permanent) => permanent.attacking !== null).length;
+    case 'spellsCastThisTurn':
+      return ctx.state.players.find((player) => player.id === scope.controllerId)?.spellsCastThisTurn ?? 0;
     case 'countersOnTriggerObject': {
       const object = scope.triggerObjectCardId === undefined
         ? undefined

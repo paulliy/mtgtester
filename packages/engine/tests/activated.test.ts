@@ -137,13 +137,11 @@ describe('parsing costs', () => {
     expect(def.manaAbilities[0]?.units).toEqual([['R'], ['R']]);
   });
 
-  it('reads a mana-costed "add mana" line as a stack ability, never as a free mana ability', () => {
-    // `parseManaAbilityLine` refuses this outright — paying mana to make mana would make
-    // `planPayment` recursive — but that refusal only rules out the ManaAbilitySpec shape.
-    // A signet's `{1}, {T}: Add {U}{B}.` is a perfectly ordinary activated ability that happens
-    // to produce mana AS its stack effect (CR 605.1a: an ability whose cost includes mana is not
-    // a mana ability at all). The fallback activated-ability parse picks it up correctly, charging
-    // the {1} for real rather than either dropping it or leaving the card unmodeled.
+  it('reads a mana-costed "add mana" line as a mana ability that charges its own cost', () => {
+    // CR 605.1a says nothing about what a mana ability's cost may be: a filter land's
+    // `{1}, {T}: Add {W}{U}` is a mana ability, it does not use the stack, and it cannot be
+    // responded to. The engine refused this shape for as long as `planPayment` could not pay
+    // for its own sources; now that it can, the {1} is charged out of the same payment.
     const def = interpretCard(
       oracle({
         name: 'Test Filter',
@@ -156,15 +154,13 @@ describe('parsing costs', () => {
     );
 
     expect(def.modeled).toBe(true);
-    expect(def.manaAbilities).toHaveLength(0);
-    expect(def.activatedAbilities).toHaveLength(1);
-    expect(def.activatedAbilities[0]?.costs).toEqual([
+    expect(def.activatedAbilities).toHaveLength(0);
+    expect(def.manaAbilities).toHaveLength(1);
+    expect(def.manaAbilities[0]?.costs).toEqual([
       { kind: 'mana', cost: parseManaCost('{1}').cost },
       { kind: 'tap' },
     ]);
-    expect(def.activatedAbilities[0]?.ability.effects).toEqual([
-      { op: 'addMana', amount: { kind: 'const', n: 2 }, colors: [], fixedSymbols: ['W', 'U'] },
-    ]);
+    expect(def.manaAbilities[0]?.units).toEqual([['W'], ['U']]);
   });
 });
 

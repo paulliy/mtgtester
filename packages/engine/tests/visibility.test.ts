@@ -148,16 +148,49 @@ describe('PlayerView visibility (brief §7.1)', () => {
 
     const view = buildPlayerView(ctx, 'P1');
     const shown = view.battlefield.find((p) => p.name === 'Public Threat');
-    const concealed = view.battlefield.find((p) => p.name === 'Morph Target');
+    const concealed = view.battlefield.find((p) => p.id === facedown.id);
 
     expect(shown?.oracleText).toBe('Trample');
     expect(shown?.typeLine).toBe('Creature — Test Ogre');
+    expect(shown?.keywords).toEqual(['trample']);
 
     // Face down: identity withheld. The permanent is still visible as an object.
     expect(concealed).toBeDefined();
+    expect(concealed?.name).toBe('Face-down permanent');
     expect(concealed?.oracleText).toBeUndefined();
     expect(concealed?.typeLine).toBeUndefined();
+    // Keywords are part of that identity: a face-down creature must not report the abilities of
+    // the card it actually is, the same way it does not report its text box (ADR 0023 item 20).
+    expect(concealed?.keywords).toBeUndefined();
     expect(JSON.stringify(view)).not.toContain('turned face up');
+  });
+
+  it('projects GRANTED keywords, not just printed ones (ADR 0023 item 20)', () => {
+    // The whole reason this is a projection and not something the reader re-derives from
+    // `oracleText`: layer 6 grants keywords that appear nowhere in the permanent's own text.
+    const ctx = createGame(secretPod());
+    const anthem = oracle({
+      name: 'Trample Anthem',
+      typeLine: 'Enchantment',
+      manaCost: '{2}{G}',
+      power: null,
+      toughness: null,
+      oracleText: 'Creatures you control have trample.',
+    });
+    const vanilla = oracle({
+      name: 'Plain Beast',
+      typeLine: 'Creature — Test Beast',
+      manaCost: '{2}{G}',
+      power: '3',
+      toughness: '3',
+      oracleText: '',
+    });
+    spawn(ctx, 'P2', anthem);
+    spawn(ctx, 'P2', vanilla);
+
+    const beast = buildPlayerView(ctx, 'P1').battlefield.find((p) => p.name === 'Plain Beast');
+    expect(beast?.oracleText).toBe('');
+    expect(beast?.keywords).toContain('trample');
   });
 
   it('includes power and toughness for creature cards in hand', () => {

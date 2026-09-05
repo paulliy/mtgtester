@@ -32,8 +32,20 @@ export function buildOracleIndex(rawCards: RawScryfallCard[]): OracleIndex {
   const byLoose = new Map<string, OracleCard | null>(); // null marks an ambiguous loose key
 
   const addStrict = (key: string, card: OracleCard): void => {
+    const existing = byStrict.get(key);
     // Prefer the full-name mapping; don't let a front-face alias overwrite an exact name.
-    if (!byStrict.has(key)) byStrict.set(key, card);
+    if (existing === undefined) {
+      byStrict.set(key, card);
+      return;
+    }
+    // Some names are printed on more than one distinct Oracle card — a Mystery Booster playtest
+    // card, a promo, or an Unknown Event card sharing a name with a real one (e.g. "Pick Your
+    // Poison": the {3}{B}{G} `cmb2` playtest card and the {G} Karlov Manor sorcery). Bulk order
+    // decides who wins otherwise, so a decklist could silently resolve to a card that is not
+    // legal in Commander and cannot be cast. Prefer the Commander-legal printing.
+    const wasLegal = existing.commanderLegality !== 'not_legal';
+    const isLegal = card.commanderLegality !== 'not_legal';
+    if (isLegal && !wasLegal) byStrict.set(key, card);
   };
   const addLoose = (key: string, card: OracleCard): void => {
     if (!byLoose.has(key)) byLoose.set(key, card);

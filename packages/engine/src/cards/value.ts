@@ -17,7 +17,7 @@
  * silent zero would make an X-valued effect quietly do nothing (brief §6.3).
  */
 
-import type { PlayerId } from '@mtg/shared';
+import type { Color, PlayerId } from '@mtg/shared';
 import type { GameContext } from '../state/types';
 import type { Selector } from './selector';
 import type { EffectRef } from './ability';
@@ -42,6 +42,8 @@ export interface ValueScope {
   spellManaValue?: number;
   /** Mana actually spent to cast the spell that fired a trigger (Aetherflux Conduit). */
   manaSpent?: number;
+  /** Mana produced by Treasure permanents that was spent to cast the entering spell. */
+  treasureManaSpent?: number;
   /** Energy paid by a preceding variable-payment effect in this same resolution. */
   energyPaid?: number;
   stationPower?: number;
@@ -51,6 +53,7 @@ export interface ValueScope {
   targets?: readonly string[];
   /** Card id of the object that fired the trigger. */
   triggerObjectCardId?: string;
+  countPermanents?: (selector: Selector, scope: 'you' | 'opponents' | 'all') => number;
 }
 
 /**
@@ -70,6 +73,12 @@ export type Value =
   | { kind: 'times'; of: Value; n: number }
   /** "the number of Dragons you control" / "the number of lands you control". */
   | { kind: 'countPermanents'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
+  /** Number of distinct colors among permanents controlled by the resolving player. */
+  | { kind: 'colorsAmongPermanents' }
+  /** Colored mana symbols in the mana costs of permanents controlled by the resolving player. */
+  | { kind: 'devotionTo'; color: import('@mtg/shared').Color }
+  /** Number of opponents of the resolving controller. */
+  | { kind: 'countOpponents' }
   /** "the greatest toughness among creatures you control" (Last March of the Ents). */
   | { kind: 'greatestToughnessAmong'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
   /** "the greatest power among creatures you control". */
@@ -87,6 +96,7 @@ export type Value =
   /** "equal to that spell's mana value" — the spell that fired a `castsSpell` trigger. */
   | { kind: 'spellManaValue' }
   | { kind: 'manaSpent' }
+  | { kind: 'treasureManaSpent' }
   | { kind: 'energyPaid' }
   | { kind: 'energyAvailable' }
   /** Power of the creature tapped to pay a Station activation cost, captured at announcement. */
@@ -100,7 +110,13 @@ export type Value =
   | { kind: 'countOpponentsWithFewerCreatures' }
   | { kind: 'creaturesDiedThisTurn' }
   | { kind: 'powerOfSource' }
+  | { kind: 'toughnessOfSource' }
+  | { kind: 'opponentsLostLifeThisTurn' }
   | { kind: 'powerOfTriggerObject' }
+  | { kind: 'cardsInTargetHand'; target: EffectRef }
+  | { kind: 'tappedCreaturesControlledByTarget'; target: EffectRef }
+  | { kind: 'attackingCreatures' }
+  | { kind: 'spellsCastThisTurn' }
   | { kind: 'countersOnTriggerObject'; counter: string };
 
 export const constant = (n: number): Value => ({ kind: 'const', n });
@@ -163,6 +179,17 @@ export function cardTypesInAllGraveyards(ctx: GameContext): number {
 }
 
 /**
+ * Devotion to a colour (CR 700.5): mana symbols of that colour in the mana costs of permanents
+ * you control. Printed costs, read straight off the definitions — nothing continuous changes a
+ * permanent's mana cost, so this needs no layer pass and is safe to answer from `evaluateValue`.
+ */
+export function devotionTo(ctx: GameContext, controllerId: PlayerId, color: Color): number {
+  return ctx.state.battlefield
+    .filter((perm) => perm.controllerId === controllerId)
+    .reduce((total, perm) => total + (ctx.defs.get(perm.oracleId)?.manaCost?.colored[color] ?? 0), 0);
+}
+
+/**
  * Board-only evaluation, for the layer engine. See the module comment for what it refuses.
  *
  * `scope` is deliberately narrower than a resolving ability's full `ValueScope` — just the
@@ -174,7 +201,7 @@ export function cardTypesInAllGraveyards(ctx: GameContext): number {
 export function evaluateValue(
   ctx: GameContext,
   value: Value,
-  scope?: Pick<ValueScope, 'controllerId'>,
+  scope?: Pick<ValueScope, 'controllerId' | 'countPermanents'>,
 ): number {
   switch (value.kind) {
     case 'const':
@@ -185,6 +212,16 @@ export function evaluateValue(
       return evaluateValue(ctx, value.of, scope) * value.n;
     case 'cardTypesInAllGraveyards':
       return cardTypesInAllGraveyards(ctx);
+    case 'countPermanents':
+      if (!scope?.countPermanents) {
+        throw 'engine bug: value countPermanents needs a layer evaluation scope';
+      }
+      return scope.countPermanents(value.selector, value.scope);
+    case 'devotionTo':
+      if (scope?.controllerId === undefined) {
+        throw new Error(`engine bug: value "devotionTo" needs a source controller`);
+      }
+      return devotionTo(ctx, scope.controllerId, value.color);
     case 'commanderCastCount': {
       if (scope?.controllerId === undefined) {
         throw new Error(

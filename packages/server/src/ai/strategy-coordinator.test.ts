@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Engine } from '@mtg/engine';
 import type { DecisionRequest, PlayerView } from '@mtg/shared';
 import type { AiClient } from './client';
+
+type AiCallResult = Awaited<ReturnType<AiClient['requestDecision']>>;
 import { DEFAULT_AI_CONFIG } from './config';
 import { StrategyCoordinator } from './strategy-coordinator';
 
@@ -191,8 +193,8 @@ describe('StrategyCoordinator', () => {
   });
 
   it('rejects late-resolving strategist calls after opponent intervention', async () => {
-    let resolveFirst!: (val: any) => void;
-    const promise1 = new Promise<any>((resolve) => {
+    let resolveFirst!: (val: AiCallResult) => void;
+    const promise1 = new Promise<AiCallResult>((resolve) => {
       resolveFirst = resolve;
     });
 
@@ -273,11 +275,11 @@ describe('StrategyCoordinator', () => {
   });
 
   it('prevents out-of-order re-plans from overwriting fresh strategies', async () => {
-    let resolveFirst!: (val: any) => void;
-    let resolveSecond!: (val: any) => void;
+    let resolveFirst!: (val: AiCallResult) => void;
+    let resolveSecond!: (val: AiCallResult) => void;
 
-    const promise1 = new Promise<any>((resolve) => { resolveFirst = resolve; });
-    const promise2 = new Promise<any>((resolve) => { resolveSecond = resolve; });
+    const promise1 = new Promise<AiCallResult>((resolve) => { resolveFirst = resolve; });
+    const promise2 = new Promise<AiCallResult>((resolve) => { resolveSecond = resolve; });
 
     let callCount = 0;
     const client: AiClient = {

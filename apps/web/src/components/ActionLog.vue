@@ -13,7 +13,7 @@ import type { AiAnnotation, SpectatorLogLine } from '@mtg/shared';
 const props = defineProps<{
   lines: SpectatorLogLine[];
   follow: boolean;
-  activeSequence?: number;
+  activeSequence?: number | undefined;
   /** Reasoning keyed by the line sequence it explains; empty when the toggle is off. */
   annotations?: Map<number, AiAnnotation[]>;
   /** Hidden entirely when reasoning cannot exist — a random-provider game has none. */

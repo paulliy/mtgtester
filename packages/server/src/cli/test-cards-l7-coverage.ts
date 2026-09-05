@@ -1,5 +1,6 @@
 import fs from 'fs';
-import scryfallCards from '../../../../data/scryfall-oracle-cards.json' assert { type: 'json' };
+import { resolve } from 'node:path';
+import { loadScryfallBulkOrNull } from '../cards/scryfall-bulk-fixture';
 import { toOracleCard } from '../cards/scryfall';
 import { interpretCard } from '../../../engine/src/cards/interpret';
 
@@ -34,15 +35,26 @@ const IMPLEMENTED_CARDS = [
   'Rootborn Defenses',
 ];
 
-export function runL7CoverageCheck(): { success: boolean; totalModeled: number; verifiedCount: number } {
+export function runL7CoverageCheck(): {
+  success: boolean;
+  totalModeled: number;
+  verifiedCount: number;
+} {
   console.log('Running L7 Aggregate Signal Check...');
 
-  const mdPath = 'c:/Users/paulf/OneDrive/Documents/GitHub/mtgtester/docs/modelled-cards.md';
+  const scryfallCards = loadScryfallBulkOrNull();
+  if (scryfallCards === null) {
+    throw new Error(
+      'data/scryfall-oracle-cards.json is required for the L7 check — see data/README.md.',
+    );
+  }
+
+  const mdPath = resolve('docs/modelled-cards.md');
   const mdContent = fs.readFileSync(mdPath, 'utf8');
 
   let verifiedCount = 0;
   for (const name of IMPLEMENTED_CARDS) {
-    const raw = (scryfallCards as any[]).find((c: any) => c.name === name);
+    const raw = scryfallCards.find((c) => c.name === name);
     const oracleCard = raw ? toOracleCard(raw) : null;
     const isLand = oracleCard?.types.includes('Land') ?? false;
 
@@ -54,14 +66,16 @@ export function runL7CoverageCheck(): { success: boolean; totalModeled: number; 
   }
 
   let totalModeled = 0;
-  for (const raw of scryfallCards as any[]) {
+  for (const raw of scryfallCards) {
     const oracleCard = toOracleCard(raw);
     if (!oracleCard || oracleCard.types.includes('Land')) continue;
     const def = interpretCard(oracleCard);
     if (def.modeled) totalModeled++;
   }
 
-  console.log(`L7 Coverage Signal: ${verifiedCount}/${IMPLEMENTED_CARDS.length} implemented cards confirmed in modeled cards check.`);
+  console.log(
+    `L7 Coverage Signal: ${verifiedCount}/${IMPLEMENTED_CARDS.length} implemented cards confirmed in modeled cards check.`,
+  );
   console.log(`Total non-land modeled pool size: ${totalModeled} cards.`);
 
   return { success: verifiedCount === IMPLEMENTED_CARDS.length, totalModeled, verifiedCount };

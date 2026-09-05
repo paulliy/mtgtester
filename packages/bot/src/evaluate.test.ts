@@ -80,8 +80,13 @@ describe('evaluate — the suicide-loop fix', () => {
       data: { abilityCosts: [{ kind: 'payLife', amount: 2 }] },
     };
     const request = baseRequest([PASS, payTwo]);
+    // Only the ability accumulates repeats — `provider.ts`'s `activationKey` returns null for
+    // `pass` (it has no source interaction), so pass genuinely stays pinned at 0.
+    const repeatsOfAbility = (n: number) => (action: LegalAction) => (action.id === 2 ? n : 0);
     const scoresByRepeat = Array.from({ length: 12 }, (_, n) => {
-      const ranked = evaluate(request, baseView({ life: 20 }), { repeatCount: () => n });
+      const ranked = evaluate(request, baseView({ life: 20 }), {
+        repeatCount: repeatsOfAbility(n),
+      });
       return ranked.find((r) => r.action.id === 2)!.score;
     });
     // Strictly decreasing...
@@ -89,8 +94,33 @@ describe('evaluate — the suicide-loop fix', () => {
       expect(scoresByRepeat[i]!).toBeLessThan(scoresByRepeat[i - 1]!);
     }
     // ...and eventually below pass's fixed 0, so pass wins the decision outright.
-    const laterRepeat = evaluate(request, baseView({ life: 20 }), { repeatCount: () => 10 });
+    const laterRepeat = evaluate(request, baseView({ life: 20 }), {
+      repeatCount: repeatsOfAbility(10),
+    });
     expect(laterRepeat[0]!.action.id).toBe(0);
+  });
+
+  it('stops a FREE repeatable ability too — the hole that let one card take 1,270 activations', () => {
+    // A `{0}` ability has no cost for the damper's subtraction to bite on, so decaying the
+    // benefit alone left `tempo.activateAbility * 0.6^n` — positive at every n, and forever
+    // better than pass. A real game found it: a Hyalopterous Lemure's `{0}: ~ gets -1/-0 and
+    // gains flying` stacked 1,270 copies of itself in one priority window and the turn never
+    // ended. `repeatActivationPenalty` is what makes the score genuinely cross zero.
+    const freeAbility: LegalAction = {
+      id: 2,
+      type: 'activateAbility',
+      description: '{0}: ~ gets -1/-0 and gains flying until end of turn.',
+    };
+    const request = baseRequest([PASS, freeAbility]);
+    const winnerAfter = (n: number): number =>
+      evaluate(request, baseView(), {
+        repeatCount: (action) => (action.id === 2 ? n : 0),
+      })[0]!.action.id;
+
+    expect(winnerAfter(0)).toBe(2); // worth doing once
+    const stops = Array.from({ length: 40 }, (_, n) => n).find((n) => winnerAfter(n) === 0);
+    expect(stops).toBeDefined();
+    expect(stops!).toBeLessThan(10); // and bounded, not merely eventually
   });
 });
 
@@ -171,7 +201,15 @@ function perm(id: string, power: number, toughness: number): PermanentView {
   return { id, controller: 'P2', name: id, power, toughness, tapped: false, status: [] };
 }
 
-describe('decide — blockDeclaration (ADR 0023 Phase 4)', () => {
+/**
+ * These fixtures never put the deciding seat's own blocker on the battlefield, so ADR 0024 Phase
+ * 7b's search declines on every one of them and `decide` falls back to the Phase 4 heuristic.
+ * That is deliberate: what these cases pin down is `staticBlockChoices`, which is still the
+ * fallback and still has to behave exactly this way. The search path has its own fixtures, with
+ * realistic battlefields, in `combat-search.test.ts` — including the boards where the two
+ * deliberately disagree.
+ */
+describe('decide — blockDeclaration (ADR 0023 Phase 4 heuristic, reached as the 7b fallback)', () => {
   const blockRequest = (
     subjects: { subjectId: string; power: number; toughness: number; mustBlock: boolean }[],
     options: string[][],
@@ -244,6 +282,11 @@ describe('decide — blockDeclaration (ADR 0023 Phase 4)', () => {
   });
 });
 
+/**
+ * Same arrangement as the block fixtures above: no attacker in the view carries a `blockedBy`
+ * matching these targets, so `searchDamageSplit` cannot identify the dividing creature, declines,
+ * and `staticDamageSplit` answers. See `combat-search.test.ts` for the search path.
+ */
 describe('decide — combatDamageSplit (ADR 0023 Phase 4, CR 510.1c-d)', () => {
   it('kills blockers cheapest-lethal-first until power runs out, no trample means no leftover to the player', () => {
     const request: DecisionRequest = {

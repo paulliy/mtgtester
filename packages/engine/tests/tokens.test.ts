@@ -21,11 +21,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { runCombatPhase } from '../src/combat/combat';
+import { runCombatPhase } from '../src/combat/combat'
+import { SOLDIER_1_1 } from '../src/cards/tokens';
 import { interpretCard } from '../src/cards/interpret';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { createGame } from '../src/state/game';
-import { moveObject } from '../src/state/objects';
+import { createToken, createTokens, moveObject } from '../src/state/objects';
 import { canPayNonManaCosts, effectivePT, manaSourcesFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -134,6 +135,42 @@ function attackAll(ctx: GameContext): void {
   });
 }
 
+describe('token creation replacements', () => {
+  it('adds Queen Allenal-style replacement Soldiers without recursing', () => {
+    const ctx = pod();
+    const queen = oracle({
+      name: 'Test Queen',
+      typeLine: 'Legendary Creature',
+      oracleText:
+        'If one or more creature tokens would be created under your control, those tokens plus a 1/1 white Soldier creature token are created instead.',
+    });
+    const def = interpretCard(queen);
+    expect(def.modeled).toBe(true);
+    spawn(ctx, 'P1', queen);
+
+    createToken(ctx, SOLDIER_1_1, 'P1');
+
+    expect(tokensOf(ctx, 'Soldier')).toHaveLength(2);
+  });
+
+  it('adds ONE replacement Soldier for a multi-token creation event', () => {
+    // "If ONE OR MORE creature tokens would be created" describes a single event (CR 614.1c,
+    // 616.1), so a resolution that creates three Soldiers adds one Soldier, not three. Applying
+    // the replacement per token instead of per event is the difference between 4 and 6 bodies.
+    const ctx = pod();
+    const queen = oracle({
+      name: 'Test Queen',
+      typeLine: 'Legendary Creature',
+      oracleText:
+        'If one or more creature tokens would be created under your control, those tokens plus a 1/1 white Soldier creature token are created instead.',
+    });
+    spawn(ctx, 'P1', queen);
+
+    createTokens(ctx, SOLDIER_1_1, 3, 'P1');
+
+    expect(tokensOf(ctx, 'Soldier')).toHaveLength(4);
+  });
+});
 describe('a created token is a real permanent', () => {
   it('parses the face, including colors and the granted ability', () => {
     const def = interpretCard(pestMaker());

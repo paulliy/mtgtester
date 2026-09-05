@@ -16,10 +16,8 @@ import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
 import { breakYieldsForStop } from '../turn/stops';
-import { moveObject } from '../state/objects';
+import { moveObject, movePermanentsToGraveyard } from '../state/objects';
 import {
-  effectivePT,
-  hasKeyword,
   isCreaturePermanent,
   playersInApnapOrder,
 } from '../state/queries';
@@ -127,52 +125,37 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     return true;
   }
 
-  // --- Battlefield checks ---
-  for (const perm of [...s.battlefield]) {
-    if (!s.battlefield.includes(perm)) continue; // removed by an earlier action this pass
+  // Determine all lethal/zero-characteristic deaths from one board state. Moving
+  // the first creature early loses dying watchers and can remove an anthem before
+  // deciding whether another creature belongs to this event (CR 704.3/603.10).
+  const dying: EnginePermanent[] = [];
+  for (const perm of s.battlefield) {
     const chars = computeCharacteristics(ctx, perm);
-
-    if (isCreaturePermanent(ctx, perm)) {
-      const pt = effectivePT(ctx, perm);
-      if (pt.toughness <= 0) {
-        debug(ctx, 'sba', `${perm.name} has toughness ${pt.toughness} ≤ 0 — to graveyard`);
-        emit(ctx, 'sbaCreatureDies', { name: perm.name, reason: 'zeroToughness' });
-        yield* moveObject(ctx, perm, { zone: 'graveyard' });
-        return true;
-      }
-      if (
-        (perm.damageMarked >= pt.toughness || perm.damagedByDeathtouch) &&
-        perm.damageMarked > 0 &&
-        !hasKeyword(ctx, perm, 'indestructible')
-      ) {
-        debug(
-          ctx,
-          'sba',
-          `${perm.name} destroyed (damage ${perm.damageMarked}/${pt.toughness}${perm.damagedByDeathtouch ? ', deathtouch' : ''})`,
-        );
-        emit(ctx, 'sbaCreatureDies', { name: perm.name, reason: 'lethalDamage' });
-        yield* moveObject(ctx, perm, { zone: 'graveyard' });
-        return true;
-      }
+    let reason: string | undefined;
+    if (chars.types.includes('Creature')) {
+      if (chars.toughness <= 0) reason = 'zeroToughness';
+      else if (perm.damageMarked > 0 && (perm.damageMarked >= chars.toughness || perm.damagedByDeathtouch) && !chars.keywords.includes('indestructible')) reason = 'lethalDamage';
     }
-
-    // Planeswalker with zero loyalty (CR 704.5i). Types are computed, not printed: a
-    // permanent animated into (or out of) a planeswalker gets the matching SBA.
-    if (chars.types.includes('Planeswalker') && (perm.counters['loyalty'] ?? 0) <= 0) {
-      debug(ctx, 'sba', `${perm.name} has 0 loyalty — to graveyard`);
+    if (reason !== undefined) {
+      emit(ctx, 'sbaCreatureDies', { name: perm.name, reason });
+      dying.push(perm);
+    } else if (chars.types.includes('Planeswalker') && (perm.counters['loyalty'] ?? 0) <= 0) {
       emit(ctx, 'sbaPlaneswalkerDies', { name: perm.name });
-      yield* moveObject(ctx, perm, { zone: 'graveyard' });
-      return true;
-    }
-
-    // Battle with zero defense (CR 704.5s). Enters with printed defense; when it hits 0
-    // its controller puts it into its owner's graveyard.
-    if (chars.types.includes('Battle') && (perm.counters['defense'] ?? 0) <= 0) {
-      debug(ctx, 'sba', `${perm.name} has 0 defense — to graveyard`);
+      dying.push(perm);
+    } else if (chars.types.includes('Battle') && (perm.counters['defense'] ?? 0) <= 0) {
       emit(ctx, 'sbaBattleDies', { name: perm.name });
-      yield* moveObject(ctx, perm, { zone: 'graveyard' });
-      return true;
+      dying.push(perm);
     }
+  }
+  if (dying.length > 0) {
+    yield* movePermanentsToGraveyard(ctx, dying);
+    return true;
+  }
+
+  // --- Other battlefield checks ---
+  for (const perm of [...s.battlefield]) {
+    if (!s.battlefield.includes(perm)) continue;
+    const chars = computeCharacteristics(ctx, perm);
 
     // Aura attached to nothing/illegally (CR 704.5m). Auras enter Phase 2 only via test
     // fixtures, but the SBA is real.

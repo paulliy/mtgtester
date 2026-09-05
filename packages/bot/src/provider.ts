@@ -1,4 +1,5 @@
 import type { DecisionRequest, DecisionResponse, LegalAction, PlayerView } from '@mtg/shared';
+import type { CombatSearchOptions } from './combat-search';
 import { decide } from './evaluate';
 import { Rng } from './rng';
 
@@ -32,9 +33,19 @@ function activationKey(action: LegalAction): string | null {
  * occupies (`session.ts`, `pool.ts`, `play-decks.ts`), where the repeat-activation damper below
  * actually matters: it persists across every decision this instance answers.
  */
+export interface HeuristicProviderOptions {
+  /**
+   * Bounds for ADR 0024's combat search, and the switch that turns it off. Omitted everywhere in
+   * normal play — the sweep that tunes those bounds is the only caller, and it needs two
+   * differently-configured seats inside one game.
+   */
+  combatSearch?: CombatSearchOptions;
+}
+
 export class HeuristicDecisionProvider implements DecisionProviderLike {
   private readonly rng: Rng;
   private readonly viewOf: () => PlayerView;
+  private readonly opts: HeuristicProviderOptions;
   private turnSeen = -1;
   private readonly activationsThisTurn = new Map<string, number>();
 
@@ -43,9 +54,10 @@ export class HeuristicDecisionProvider implements DecisionProviderLike {
    * deciding player's current life and board every time, and re-fetching it per decision (via
    * `engine.view(seat)`) is cheap and always current.
    */
-  constructor(seed: string, viewOf: () => PlayerView) {
+  constructor(seed: string, viewOf: () => PlayerView, opts: HeuristicProviderOptions = {}) {
     this.rng = new Rng(seed);
     this.viewOf = viewOf;
+    this.opts = opts;
   }
 
   decide(request: DecisionRequest): DecisionResponse {
@@ -59,6 +71,7 @@ export class HeuristicDecisionProvider implements DecisionProviderLike {
         const key = activationKey(action);
         return key === null ? 0 : (this.activationsThisTurn.get(key) ?? 0);
       },
+      ...(this.opts.combatSearch !== undefined ? { combatSearch: this.opts.combatSearch } : {}),
     });
 
     const chosen = request.legalActions.find((a) => a.id === response.actionId);

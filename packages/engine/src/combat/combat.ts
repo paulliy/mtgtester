@@ -65,6 +65,22 @@ function creaturesOf(ctx: GameContext, playerId: PlayerId): EnginePermanent[] {
   return controlledPermanents(ctx, playerId).filter((p) => isCreaturePermanent(ctx, p));
 }
 
+function goaderIdsFor(ctx: GameContext, creature: EnginePermanent): Set<PlayerId> {
+  const chars = computeCharacteristics(ctx, creature);
+  return new Set([
+    ...(creature.goadedBy ?? []).map((requirement) => requirement.goaderId),
+    ...(chars.staticGoadedBy ?? []),
+  ]);
+}
+
+function hasAttackRequirement(ctx: GameContext, creature: EnginePermanent): boolean {
+  const chars = computeCharacteristics(ctx, creature);
+  return (creature.goadedBy?.length ?? 0) > 0 ||
+    (chars.staticGoadedBy?.length ?? 0) > 0 ||
+    creature.mustAttackThisTurn === true ||
+    chars.mustAttackEachCombat === true;
+}
+
 function canAttack(ctx: GameContext, perm: EnginePermanent): boolean {
   if (perm.tapped) return false;
   if (hasKeyword(ctx, perm, 'defender')) return false;
@@ -107,7 +123,7 @@ function attackTargetsFor(
   opponents: readonly EnginePlayerState[],
 ): EnginePlayerState[] {
   const payable = opponents.filter((opp) => canPayAttackTax(ctx, creature.controllerId, opp.id));
-  const goaderIds = new Set((creature.goadedBy ?? []).map((requirement) => requirement.goaderId));
+  const goaderIds = goaderIdsFor(ctx, creature);
   const preferred = payable.filter((opp) => !goaderIds.has(opp.id));
   return preferred.length > 0 ? preferred : payable;
 }
@@ -129,7 +145,7 @@ function freeAttackTargetsFor(
   opponents: readonly EnginePlayerState[],
 ): EnginePlayerState[] {
   const free = opponents.filter((opp) => attackTax(ctx, opp.id) === 0);
-  const goaderIds = new Set((creature.goadedBy ?? []).map((requirement) => requirement.goaderId));
+  const goaderIds = goaderIdsFor(ctx, creature);
   const preferred = free.filter((opp) => !goaderIds.has(opp.id));
   return preferred.length > 0 ? preferred : free;
 }
@@ -231,7 +247,7 @@ function buildAttackSubjects(
     const pt = effectivePT(ctx, creature);
     const legal = attackTargetsFor(ctx, creature, opponents);
     const mustAttack =
-      (creature.goadedBy?.length ?? 0) > 0 &&
+      hasAttackRequirement(ctx, creature) &&
       freeAttackTargetsFor(ctx, creature, opponents).length > 0;
     return {
       subjectId: creature.id,
@@ -365,7 +381,7 @@ function* applyAttackDeclaration(
     yield* payAttackTax(ctx, ap.id, defenderId, creatures.length);
     for (const creature of creatures) {
       const hadToAttack =
-        (creature.goadedBy?.length ?? 0) > 0 &&
+        hasAttackRequirement(ctx, creature) &&
         freeAttackTargetsFor(ctx, creature, opponents).length > 0;
       commitAttacker(ctx, creature, defenderId, ap.id, hadToAttack);
     }
@@ -400,7 +416,7 @@ function repairAttackDeclaration(
     const pick = candidates[0];
     if (pick === undefined) break; // unreachable: every violation names an eligible subject
     const mustAttack =
-      (pick.goadedBy?.length ?? 0) > 0 && freeAttackTargetsFor(ctx, pick, opponents).length > 0;
+      hasAttackRequirement(ctx, pick) && freeAttackTargetsFor(ctx, pick, opponents).length > 0;
     repaired.set(
       pick.id,
       mustAttack ? (freeAttackTargetsFor(ctx, pick, opponents)[0]?.id ?? null) : null,
@@ -499,7 +515,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   for (const defId of defendingPlayers) {
     playerById(ctx, defId).yieldUntilEndOfTurn = false;
     const auras = ctx.state.battlefield.filter(
-      (p) => p.attachedTo === defId || (p as any).attachedToPlayerId === defId,
+      (p) => p.attachedTo === defId,
     );
     for (const aura of auras) {
       queueTriggersForEvent(ctx, 'enchantedPlayerAttacked', [{ permanent: aura, playerId: ap.id }]);
@@ -978,7 +994,8 @@ function dealCombatDamage(
     // 0 or 1 live blocker: nothing to choose. With exactly one, CR 510.1c forces the whole
     // amount to it, EXCEPT trample still splits lethal-to-blocker/excess-to-player (CR 702.19b)
     // with no decision needed either, since there's only one way to satisfy "lethal first."
-    // With zero live blockers and no trample, CR 510.1c deals no combat damage at all.
+    // With zero live blockers, trample sends all remaining damage to the defending player once the
+    // blocker is gone — even if that happened in the first-strike step and this is the regular step.
     const [only] = liveBlockers;
     if (only !== undefined) {
       const bpt = effectivePT(ctx, only);
@@ -999,6 +1016,13 @@ function dealCombatDamage(
           amount: excess,
         });
       }
+    } else if (trample && attacker.attacking !== null) {
+      assignments.push({
+        source: attacker,
+        targetCreature: null,
+        targetPlayer: attacker.attacking,
+        amount: power,
+      });
     }
   }
 

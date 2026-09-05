@@ -6,40 +6,21 @@ import {
   YOURS,
   OTHER,
   ofType,
-  ofSubtype,
   ofSupertype,
   allOf,
-  anyOf,
   not,
   powerAtMost,
   HAS_ANY_COUNTER,
-  SELF,
   IN_COMBAT,
   toughnessAtLeast,
   IS_TOKEN,
 } from '../selector';
 
 export function registerTOKEN_TRIUMPHOverrides(): void {
-  // Emmara, Soul of the Accord
-  defineCard("c65ba242-3369-48a9-864f-1b1f85238f67", "Emmara, Soul of the Accord", [
-    "Whenever ~ becomes tapped, create a 1/1 white Soldier creature token with lifelink."
-], {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'becomesTapped', subject: { kind: 'self' } },
-          targets: [],
-          effects: [
-            {
-              op: 'createToken',
-              spec: SOLDIER_1_1_LIFELINK,
-              count: constant(1),
-            },
-          ],
-          description: 'Create a 1/1 white Soldier creature token with lifelink',
-        },
-      ],
-    });
+  // Emmara, Soul of the Accord no longer needs an override: the generic parser reads
+  // "Whenever ~ becomes tapped, ..." since City of Brass added `becomes tapped` to the object
+  // trigger head, and produces the identical IR. The drift guard flagged the stale
+  // `handledLines` claim, which is what this comment replaces.
   // Karametra's Favor
   defineCard("fc3e48c9-e303-435c-bdb1-7dc7881a9858", "Karametra's Favor", [
     "Enchanted creature has \"{T}: Add one mana of any color.\""
@@ -603,7 +584,6 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     });
   // Champion of Lambholt
   defineCard("c549b0fd-1e08-4873-952e-a14dc45a0fd2", "Champion of Lambholt", [
-    "Whenever another creature you control enters, put a +1/+1 counter on this creature.",
     "Creatures with power less than this creature's power can't block creatures you control."
 ], {
       triggers: [
@@ -630,17 +610,6 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
           description: 'Whenever enchanted player is attacked, untap all nonland permanents attacking player controls.',
         },
       ],
-    });
-  // Path to Exile
-  defineCard("d683d985-9888-4d21-8b5f-69e69ce4a03b", "Path to Exile", [
-    "Exile target creature. Its controller may search their library for a basic land card, put that card onto the battlefield tapped, then shuffle."
-], {
-      spellAbility: {
-        kind: 'spell',
-        targets: [{ kind: 'creature' }],
-        effects: [{ op: 'exileTargetAndControllerMaySearchBasicLandTapped', targetSlot: 0 }],
-        description: 'Exile target creature. Its controller may search their library for a basic land card, put that card onto the battlefield tapped, then shuffle.',
-      },
     });
   // Rootborn Defenses
   defineCard("04046ae4-5c51-434b-930c-f3b1d348bf4b", "Rootborn Defenses", [

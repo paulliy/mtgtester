@@ -62,10 +62,6 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
           "At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying. When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token."
     ]);
 
-  unimplemented("dbb8a3d9-6b1b-4ad1-b8b9-f92ead03d1d9", "Coercive Impetus", [
-          "Enchanted creature gets +1/+1 and is goaded.",
-          "Whenever enchanted creature attacks, you draw a card and lose 1 life."
-    ]);
 
   unimplemented("cdfa9de4-7d7d-4638-8ac4-793ece6372dd", "Changing Loyalty", [
           "Replicate {2}",
@@ -83,12 +79,10 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     ]);
 
   unimplemented("c22e5fc6-9b4e-4197-b472-70d168eb4330", "Redemption Arc", [
-          "Enchanted creature has indestructible and is goaded.",
           "{1}{W}: Exile enchanted creature."
     ]);
 
   unimplemented("276eccd6-4a76-46e8-b604-94472e618115", "Ghoulish Impetus", [
-          "Enchanted creature gets +1/+1, has deathtouch, and is goaded.",
           "When enchanted creature dies, return this card to the battlefield at the beginning of the next end step."
     ]);
 
@@ -105,12 +99,8 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
           "Enchanted creature gets +1/+1 for each Aura you control that's attached to a creature."
     ]);
 
-  unimplemented("0a7d6489-b239-4ce8-aea3-7b5d0e436f70", "Sentinel's Eyes", [
-          "Escape—{W}, Exile two other cards from your graveyard."
-    ]);
 
   unimplemented("ff3de07d-86c3-49e1-9de0-97c85301ff93", "Parasitic Impetus", [
-          "Enchanted creature gets +2/+2 and is goaded.",
           "Whenever enchanted creature attacks, its controller loses 2 life and you gain 2 life."
     ]);
 
@@ -152,7 +142,6 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     ]);
 
   unimplemented("c8decfdf-1421-4649-acde-5215e7f08bb9", "Martial Impetus", [
-          "Enchanted creature gets +1/+1 and is goaded.",
           "Whenever enchanted creature attacks, each other creature that's attacking one of your opponents gets +1/+1 until end of turn."
     ]);
 
@@ -286,10 +275,6 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
           "You and target opponent each draw three cards."
     ]);
 
-  unimplemented("42bf259d-4bb9-49c3-b4ec-223dca62f4d6", "Fetid Heath", [
-          "{W/B}, {T}: Add {W}{W}, {W}{B}, or {B}{B}."
-    ]);
-
 
   defineCard("04b7362d-0490-4cb0-b5d7-2a7732f659ce", "Bojuka Bog", [
           "When this land enters, exile target player's graveyard."
@@ -306,10 +291,6 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   unimplemented("d11e627b-8a48-411d-a261-2c9a02a758ba", "Breena, the Demagogue", [
           "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control."
-    ]);
-
-  unimplemented("3edf9201-265f-4cd9-b27b-8073bf1a4cf2", "Desolate Mire", [
-          "{1}, {T}: Add {W}{B}."
     ]);
 
   unimplemented("eb735501-19e7-4910-aa6a-6667fff6f4e5", "Study Hall", [

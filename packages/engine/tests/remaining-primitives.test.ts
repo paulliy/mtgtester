@@ -100,7 +100,7 @@ describe('ADR 0020 Phase 1 primitives', () => {
     });
     const def = interpretCard(raw);
     expect(def.activatedAbilities[0]?.costs).toEqual([
-      { kind: 'sacrificeOther', selector: { kind: 'allOf', of: [{ kind: 'other' }, { kind: 'controller', who: 'you' }, { kind: 'type', value: 'Artifact' }] } },
+      { kind: 'sacrificeOther', selector: { kind: 'allOf', of: [{ kind: 'controller', who: 'you' }, { kind: 'type', value: 'Artifact' }] } },
     ]);
     const source = spawn(ctx, 'P1', raw);
     const fodder = spawn(ctx, 'P1', oracle({ name: 'Test Servo', typeLine: 'Artifact Creature — Servo', manaCost: '{1}', power: '1', toughness: '1' }));

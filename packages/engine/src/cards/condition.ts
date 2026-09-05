@@ -32,6 +32,13 @@ import { ofType } from './selector';
 import type { PlayerId } from '@mtg/shared';
 import type { EnginePermanent } from '../state/types';
 
+/**
+ * How a counted condition compares. `'=='` is not decoration: "whenever you draw your **second**
+ * card each turn" fires once, on the second draw, and `'>='` would keep firing on the third and
+ * fourth. An "or more"/"or greater" phrasing is what asks for `'>='`.
+ */
+export type Comparison = '>=' | '<=' | '==';
+
 export type Condition =
   /**
    * "you control two or more other lands" — count the permanents matching `selector` within
@@ -45,6 +52,14 @@ export type Condition =
       cmp: '>=' | '<=';
       n: number;
     }
+  /**
+   * "if an opponent controls more lands than you" (Land Tax, Ghirapur Orrery) — a per-opponent
+   * comparison, not a total. `countPermanents` with `scope: 'opponents'` cannot express this:
+   * it pools every opponent's permanents into one number, so in a four-player game it answers
+   * "do the three of them have more between them", which is true almost immediately and for
+   * almost any threshold. The printed line asks whether ANY SINGLE opponent is ahead of you.
+   */
+  | { kind: 'opponentControlsMore'; selector: Selector }
   /** "you have two or more opponents" — counts players still in the game, not permanents. */
   | { kind: 'opponentCount'; cmp: '>=' | '<='; n: number }
   /** "you may pay 2 life" — a choice, not a fact. Only `resolveCondition` can answer it. */
@@ -73,6 +88,7 @@ export type Condition =
   | { kind: 'totalCreaturePower'; scope: 'you' | 'opponents' | 'all'; cmp: '>=' | '<='; n: number }
   | { kind: 'isUntapped' }
   | { kind: 'wasKicked' }
+  | { kind: 'escaped' }
   | { kind: 'hasCounters'; selector: Selector; counter: string; cmp: '>=' | '<='; n: number }
   | { kind: 'enteredThisTurn' }
   | { kind: 'createdTokenThisTurn' }
@@ -106,6 +122,28 @@ export type Condition =
   | { kind: 'attackingPlayerHasMoreLife' }
   | { kind: 'allOf'; of: Condition[] }
   | { kind: 'anyOf'; of: Condition[] }
+  | { kind: 'eventPlayerDrawCount'; cmp: Comparison; n: number }
+  /**
+   * "except the first one they draw in each of their draw steps" (Orcish Bowmasters, Notion
+   * Thief). NOT a count of draws this turn: the exemption is for exactly one draw, the one the
+   * event player takes during their OWN draw step. Every other draw qualifies — including the
+   * first one they take during somebody else's turn, which is the common Windfall line.
+   */
+  | { kind: 'notFirstDrawInOwnDrawStep' }
+  /** "if you have seven or more cards in your graveyard" (Search for Azcanta, threshold cards). */
+  | { kind: 'cardsInYourGraveyard'; cmp: Comparison; n: number }
+  /**
+   * "if it has no ice counters on it" (Thing in the Ice) — counters on the ability's OWN source.
+   * Distinct from `hasCounters`, which counts permanents matching a selector: this asks about
+   * one specific permanent and is false once that permanent has left the battlefield.
+   */
+  | { kind: 'sourceHasCounters'; counter: string; cmp: Comparison; n: number }
+  /**
+   * "if you've cast a noncreature spell this turn" — a per-turn, per-player cast tally kept by
+   * `queueCastTriggers`, not a board read. `category` is how the printed line narrows it; the
+   * counters reset for every player at untap, so "this turn" means the whole game turn.
+   */
+  | { kind: 'castSpellThisTurn'; category: 'any' | 'noncreature'; cmp: '>=' | '<='; n: number }
   | { kind: 'not'; of: Condition };
 
 export const countPermanents = (
@@ -135,8 +173,8 @@ export function isChoiceCondition(condition: Condition): boolean {
   }
 }
 
-const compare = (actual: number, cmp: '>=' | '<=', n: number): boolean =>
-  cmp === '>=' ? actual >= n : actual <= n;
+const compare = (actual: number, cmp: Comparison, n: number): boolean =>
+  cmp === '>=' ? actual >= n : cmp === '<=' ? actual <= n : actual === n;
 
 /**
  * Answer a state condition. Throws on a choice condition — see the module comment.
@@ -150,6 +188,42 @@ export function evaluateCondition(
   source: SelectorSource,
 ): boolean {
   switch (condition.kind) {
+    case 'castSpellThisTurn': {
+      const player = ctx.state.players.find((candidate) => candidate.id === source.controllerId);
+      if (player === undefined) return false;
+      const cast = condition.category === 'noncreature'
+        ? player.noncreatureSpellsCastThisTurn
+        : player.spellsCastThisTurn;
+      return compare(cast, condition.cmp, condition.n);
+    }
+    case 'cardsInYourGraveyard': {
+      const player = ctx.state.players.find((candidate) => candidate.id === source.controllerId);
+      return player !== undefined && compare(player.graveyard.length, condition.cmp, condition.n);
+    }
+    case 'sourceHasCounters': {
+      const self = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
+      // A source that has left the battlefield has no counters, which is the right answer for
+      // every printing of this shape ("if it has no ice counters on it" cannot fire on a
+      // creature that is no longer there to transform).
+      if (self === undefined) return false;
+      return compare(self.counters[condition.counter] ?? 0, condition.cmp, condition.n);
+    }
+    case 'notFirstDrawInOwnDrawStep': {
+      const eventPlayer = source.eventPlayerId;
+      if (eventPlayer === undefined) return false;
+      const player = ctx.state.players.find((candidate) => candidate.id === eventPlayer);
+      if (player === undefined) return false;
+      // The draw has already been counted by the time the trigger is checked, so the draw being
+      // exempted is the one that made the step counter 1.
+      const isOwnDrawStep = ctx.state.step === 'draw' && ctx.state.currentTurnPlayer === eventPlayer;
+      return !(isOwnDrawStep && player.cardsDrawnThisDrawStep === 1);
+    }
+    case 'eventPlayerDrawCount': {
+      const eventPlayer = source.eventPlayerId === undefined
+        ? undefined
+        : ctx.state.players.find((player) => player.id === source.eventPlayerId);
+      return eventPlayer !== undefined && compare(eventPlayer.cardsDrawnThisTurn, condition.cmp, condition.n);
+    }
     case 'countPermanents': {
       // `selectPermanents` judges on CURRENT characteristics (ADR 0007), so a land Blood Moon
       // turned into a Mountain counts as one here for the same reason it taps for {R}.
@@ -161,6 +235,16 @@ export function evaluateCondition(
         return true;
       });
       return compare(inScope.length, condition.cmp, condition.n);
+    }
+    case 'opponentControlsMore': {
+      // Counted per opponent and compared against yours, so "more lands than you" stays a
+      // question about one opponent being ahead — see the type's comment for why the pooled
+      // `countPermanents(…, 'opponents', …)` shape gets this wrong.
+      const matched = selectPermanents(ctx, condition.selector, source);
+      const yours = matched.filter((perm) => perm.controllerId === source.controllerId).length;
+      return opponentsOf(ctx, source.controllerId).some(
+        (opp) => matched.filter((perm) => perm.controllerId === opp.id).length > yours,
+      );
     }
     case 'notYourTurn':
       return ctx.state.currentTurnPlayer !== source.controllerId;
@@ -250,7 +334,17 @@ export function evaluateCondition(
       const stackObj = ctx.state.stack.find(
         (s) => s.sourceCardId === source.cardId || s.card?.cardId === source.cardId,
       );
-      return stackObj !== undefined && ((stackObj as any).wasKicked === true || (stackObj as any).kicked === true);
+      return stackObj !== undefined && (stackObj.wasKicked === true || stackObj.kicked === true);
+    }
+    case 'escaped': {
+      if (source.cardId === undefined) return false;
+      const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === source.cardId);
+      if (permanent !== undefined) return permanent.escaped === true;
+      return ctx.state.stack.some(
+        (candidate) =>
+          (candidate.sourceCardId === source.cardId || candidate.card?.cardId === source.cardId) &&
+          candidate.escaped === true,
+      );
     }
     case 'hasCounters': {
       // SELF is used by Station's continuous threshold. Resolving it through selectPermanents
@@ -287,9 +381,8 @@ export function evaluateCondition(
 }
 
 /**
- * Answer any condition, asking the controller when it is a choice. Paying is *not* gated on
- * having the life to spare: CR 118.4 lets a player pay life they cannot afford down to 0, and
- * the resulting loss is a state-based action, not an illegal payment.
+ * Answer any condition, asking the controller when it is a choice. CR 119.4 permits
+ * paying exactly the current life total, but never more than the player has.
  */
 export function* resolveCondition(
   ctx: GameContext,
@@ -303,6 +396,7 @@ export function* resolveCondition(
       // this module, and importing back would close a runtime import cycle.
       const player = ctx.state.players.find((p) => p.id === source.controllerId);
       if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
+      if (condition.n > player.life) return false;
       const outcome = yield {
         decisionType: 'general',
         player: player.id,

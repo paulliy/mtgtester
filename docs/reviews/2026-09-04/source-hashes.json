@@ -1,0 +1,1382 @@
+[
+  {
+    "Hash": "FAF5AE02139F5C71479905674F9FD009312F48BA6DCE7CFCC065731BFFC553BE",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\combat-search.test.ts"
+  },
+  {
+    "Hash": "368989D43B87C59D505B17CB4EE55C7DA3144D62C0892750C149700A69A9565D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\combat-search.ts"
+  },
+  {
+    "Hash": "E0CFB77774F74A9D8739A56E71641900E4C334B6F690FEF8547FCA71BB5B3DB6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\combat-snapshot.ts"
+  },
+  {
+    "Hash": "E97DC31FDC45A6F4EF9CAB83017A757FA34E612ED7A92AB904E567E1810B754C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\evaluate.test.ts"
+  },
+  {
+    "Hash": "8303BB679EA0D5690538DDD35FD44E81BC9D5B4AFC641F3566B3A9AC32C60E81",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\evaluate.ts"
+  },
+  {
+    "Hash": "E4A0CF9647A64E9739F7893B09C08783E41A0D2591F2C8246CD8B809D4065C2B",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\index.ts"
+  },
+  {
+    "Hash": "28EF020CA96321E148DB04BBF5B8A2298F4092F804C49C8A29325BBDCCC3CA53",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\provider.test.ts"
+  },
+  {
+    "Hash": "60CFFC88330E8EA00C0CCE31CA63728ECC20088F703B775A5BAAB59FC139C132",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\provider.ts"
+  },
+  {
+    "Hash": "0CEEF48BD25F6F4D034B80D5E626F365F51C97E0FB87611C2ED778FFA2D08A2F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\rng.ts"
+  },
+  {
+    "Hash": "3A2CD910FB198D328761B5AC4BFC4F29309FFEA66BE9AB0763AB85AAF57F4AF1",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\veto.test.ts"
+  },
+  {
+    "Hash": "D666C687ADAB77BD9AC05ECA7E61D4565933F5077A22F7DF14B7EAC230DA11AF",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\veto.ts"
+  },
+  {
+    "Hash": "6F7EDEAED7BA8DEA7D6A22BFADF21874C1F514A4BD25B52171871FF089F0C940",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\bot\\src\\weights.ts"
+  },
+  {
+    "Hash": "6EADA0D44A2420D58DCCD69AA39C4EA8CE656F5963BCE9A1B74981E91D67CE83",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\actions\\apply.ts"
+  },
+  {
+    "Hash": "4E456D19CCECC25C74C78B5D355CAC070ABE502EFDE4DC136423122221A066E5",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\actions\\legal.ts"
+  },
+  {
+    "Hash": "60DAB264A04B4EDF84EF0C11810D037058176E073BF1D03D83E6FEE1B6D8795D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\counter-intelligence.ts"
+  },
+  {
+    "Hash": "1525771DA50EC6C981122340BD33D7017FA2C10980D2F6CBCE89980364A052AC",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\draconic-destruction.ts"
+  },
+  {
+    "Hash": "7D735DE673141AD5BFF02CD5490DC597AD62AC54CC892C00D68F8A041CADE862",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\index.ts"
+  },
+  {
+    "Hash": "DDBF084C66F854320A78FA0722097B2C0F5F2AA9A809633E0E32B1585D95B1AF",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\living-energy.ts"
+  },
+  {
+    "Hash": "56B55C3737031BEF335B812B4A77E4355448CE3E6655D38E163EC20A5A9E77A8",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\marchesa-the-black-rose.ts"
+  },
+  {
+    "Hash": "1CFC37C5DFCEEA0FE4EB8B15B0CDDFBC066BD39EE497D769B5335F5CA4BCADEF",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\necron-dynasties-remaining.ts"
+  },
+  {
+    "Hash": "7579E92FD1DA7B092D00AC03E5C6CD3EDC87DF7EE3A3762C405669F5059E82D9",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\necron-dynasties.ts"
+  },
+  {
+    "Hash": "0D113CF25FE1D172CF4BBFE65C4001F3CE9BA7CD7382D7D942E1A2C4274A06ED",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\queen-marchesa-queens-gambit-remaining.ts"
+  },
+  {
+    "Hash": "1D8C80BAE7079AD30D5E5E6325A93177E4A4336789FF9AA5308D08442FC59F93",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\queen-marchesa-queens-gambit.ts"
+  },
+  {
+    "Hash": "8503D76EA43FAD32DB83442D421A8951D264EE4DA99DC2B111FFF414AA4B16B9",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\silverquill-influence-remaining.ts"
+  },
+  {
+    "Hash": "F2B29F92A2F0B9AAB66893B4CA5C950D62EC03F77C4E0B6084CFAC03A63CC8DB",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\silverquill-influence.ts"
+  },
+  {
+    "Hash": "49E8FE9CB8606F78CB9A5477E028F786E6210D0E3925736BEC20D2D9956804EF",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\snapshot.ts"
+  },
+  {
+    "Hash": "734ADBE7674F4DA1716341689C664E38989B7749B6DC444912A84233BA2AB071",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\token-triumph.ts"
+  },
+  {
+    "Hash": "69A75EA4186F7377C5DE725CEB822F7ACFB20A02B15C5DA2347384AF55CB4E37",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\overrides\\urdragon.ts"
+  },
+  {
+    "Hash": "ECD0522F67273CA7BDA544867C62CA37D7B54320FD6FBC59014A07FD9B889814",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\ability.ts"
+  },
+  {
+    "Hash": "F63172B19B92281C63E47F56D87A5FF67814F869CC6EA0C13FA6C8982EE89A6F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\condition.ts"
+  },
+  {
+    "Hash": "2E4FF31248982029818FBB7C25524613A717C59BA5C6F55E08A79270939AA8DF",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\continuous-types.ts"
+  },
+  {
+    "Hash": "2782F0305E515D279B11B8D262476F239BAA178DE027B254CA08498C72800D76",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\creature-types.ts"
+  },
+  {
+    "Hash": "42306655B44478B765F2AD0E392E20763147E5BF54EC3B3983127A84A901DE0C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\definition.ts"
+  },
+  {
+    "Hash": "072D94FAA50D6DC5954AD8DBA909408BC9BF06C3EF6FF20145A2F48C9740ACC5",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\interpret-snapshot.ts"
+  },
+  {
+    "Hash": "40D09B548B5E53052CCABE0AE3E605B1A3A3F44F6782BB589783660AF0F6DC1A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\interpret.ts"
+  },
+  {
+    "Hash": "8DBE484E02E74A65C78D2B631CACE9CBF38BEA1AD30526C64B0550C3CD57FE67",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\rule-statics.ts"
+  },
+  {
+    "Hash": "EF4987B88CD53A9BB822D9887C101AC0C33B115BDC7F822F0B5735BFAD582A90",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\selector.ts"
+  },
+  {
+    "Hash": "7BCA1CAEB93E932285747F99A582A1184CD978101263B607C48C97B8CB05D20F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\templates.ts"
+  },
+  {
+    "Hash": "064710637F422A6A55E38CB630A69BD1FE3D85BE4A05C9C4FDE290949CD2938A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\tokens.ts"
+  },
+  {
+    "Hash": "717673B8C363B016EAFE937ED37BBC2EEE57B83D840640C6B5101E950F77D2A7",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\cards\\value.ts"
+  },
+  {
+    "Hash": "36CAA52689EA795F0B28DF0C614F9F63263C65F097A64A0AE55D3689DA020AA2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\combat\\combat.ts"
+  },
+  {
+    "Hash": "1DCB061BCDE2DC4D936D159B61DF564CC7C359C867034E77B5C549C9AFE926D2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\effects\\choose.ts"
+  },
+  {
+    "Hash": "350425406099C8D5B2E77CECBD79EA1E2046D487B4F2231065B2C142EEBB8659",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\effects\\continuous.ts"
+  },
+  {
+    "Hash": "253E0713C2C0B6CDDD159F4E39B58C83C32729D5F50F7C24C3865E085755795A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\effects\\layer-cache.ts"
+  },
+  {
+    "Hash": "E49CF8F80D585AD71532C7E5A37B93B04B356A0F980C5EE376625FDB14A46007",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\effects\\resolve.ts"
+  },
+  {
+    "Hash": "64BA8A6797B554F2E3FC64FA614D58F63EF6354ACFE6F52ED4CBED4857E7392C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\effects\\values.ts"
+  },
+  {
+    "Hash": "FB72822F8BEFB1E52F7636538F16FB815B86651AA1FACF1CAF95CCA22CC12A97",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\flow\\game.ts"
+  },
+  {
+    "Hash": "F699676CE7F1CCBE9A83E3C5CBD6C341FD0AE9843047B9376785DE2CE269B512",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\log\\log.ts"
+  },
+  {
+    "Hash": "B1FEB5563F80700A4DA4DFC23B3C5869F6EC0A04560AE5FF22223C85E955D981",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\mana\\cost.ts"
+  },
+  {
+    "Hash": "603A742B16DD74C7EA735E089A53149CFCE07232CADFEC688F6C4B6657C31C39",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\mana\\pool.ts"
+  },
+  {
+    "Hash": "F3EEBF077FAAB8D8A1BA125BF99AD9A4ADCDB29E06782D926722B56B3B3F9ECE",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\providers\\providers.ts"
+  },
+  {
+    "Hash": "61D89960FC28F4769B1A7FC8FC4DDE0BDCB5E40B479E3F3EBE431302B5FC6DB1",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\rng\\prng.ts"
+  },
+  {
+    "Hash": "8E2865883FC727264C55014EC962F06F2A6E6DCB444CE56E1B20CFD4852B0124",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\sba\\sba.ts"
+  },
+  {
+    "Hash": "460F2C2B18B6FB76E2DEE388CF6171B16C22E038FEAAB019512BAE036B093639",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\stack\\stack.ts"
+  },
+  {
+    "Hash": "CE3B9D583B92376E418D1EE30383B022E8798F2E2E6E74309DDB3D1939239D20",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\state\\game.ts"
+  },
+  {
+    "Hash": "328B497D2F2794973A1FB8DF7D5C16B97860F7CA952D9EAEF2F253634AFD10FB",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\state\\objects.ts"
+  },
+  {
+    "Hash": "E7A30F7444717D150E2E9C5CEFFEC369B6A5EEB38545DD5231A83DA9079377D2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\state\\queries.ts"
+  },
+  {
+    "Hash": "5193EF06E657F3E769DC88858C9AA0836F155F4B9E1A8B129AF9CE4900EC6393",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\state\\types.ts"
+  },
+  {
+    "Hash": "B2FC36F20657B4900DDE23ED414C1077AC6E82A817CA3AA95F6286DF4BBF659F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\turn\\mulligan.ts"
+  },
+  {
+    "Hash": "69A585248CDA555E4F9786481465BDA6BCF103AD62361A09AD93D577E9681710",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\turn\\priority.ts"
+  },
+  {
+    "Hash": "C9A70DC27CEC8E90F3B01CD0F0E6BCF858C8E4B595AA866C6E1CCF830D571B4D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\turn\\stops.ts"
+  },
+  {
+    "Hash": "4AD99DFA5C2316D074FE5359E585A8EC68777CCB972F6039F2821C0CE8EFF2EE",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\turn\\turn.ts"
+  },
+  {
+    "Hash": "980E738D4D9D29DE2A3433870F77D0FBB943DF1C6DF8742792302FB723110B1C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\view\\spectator.ts"
+  },
+  {
+    "Hash": "2BA3C8CEA2C2474EF7AFEDAFEDEE8061DBA0CB602CD260E40F5011A389C7A913",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\view\\view.ts"
+  },
+  {
+    "Hash": "3027E33C1A31F0978AB3A97F60C5D4CAEFBD3DD96373B2A3095A4A08E3F6F4A3",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\decisions.ts"
+  },
+  {
+    "Hash": "F4E00C2DB6E76CFD2AC7B4517BFB97DE3168F4A639A270A45E141157B8C94592",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\engine.ts"
+  },
+  {
+    "Hash": "444541BF125359DC726655649F28F3BAEE718CD9824C818ABC4DA0F88D49A6FA",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\errors.ts"
+  },
+  {
+    "Hash": "C321CF8EC37C491A35ACCF483B0BA62BED28A64F236F73F464C0CE12D725B5DC",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\index.ts"
+  },
+  {
+    "Hash": "E2856C8376BDF82AB5F43DD6AC1D508E0E87A3754BC0E4AC83C6EA3B27513690",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\present.ts"
+  },
+  {
+    "Hash": "21364508FEDA47A60847B321E684EF6806189F1E67714C4F1D88B9C8FBE65A76",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\src\\signals.ts"
+  },
+  {
+    "Hash": "7612D9D7EA677B77C0ADEC1B56192170601AFF10B0DFB73E2F73F95D2012BA5F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\abilities-layer6.test.ts"
+  },
+  {
+    "Hash": "BADF0A1FE6EE1588CA2F68E6A6291A6E8307986911291EA94F35CECEEDB463F8",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\ability-cost-coverage.test.ts"
+  },
+  {
+    "Hash": "C22F76774F401D6F2032842043318FE62E3C7D260EC4FF06A9DAF4CA8DEBA3E6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\activated.test.ts"
+  },
+  {
+    "Hash": "84252621BFC5441060E7743738F0B6166CD23DD5D991EABB1D69976D82D8E2F6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\adventures.test.ts"
+  },
+  {
+    "Hash": "3BFE4240F12D17718DC4E38B6811B65AFB6A3A64CF6E1A94BDA568D49D143EA0",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\alternative-casts.test.ts"
+  },
+  {
+    "Hash": "6EFF839E1632735678E1C71F26E292882FFD758AED408B552312819CBEC50E7B",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\anthems.test.ts"
+  },
+  {
+    "Hash": "70BEC2799117D33721343A222FA379EE6071AF8B4F40AB5AE2F44B4A43C126D4",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\async-providers.test.ts"
+  },
+  {
+    "Hash": "DC50C3911B325420CD551DBC198E287DDD25A0B63105722BBAAD11A450765D5A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\auto-pass-optimizations.test.ts"
+  },
+  {
+    "Hash": "4B105DBCC8A6D697BD06DD206DA39ACDFB2BD503CE4D2611082EF3A42B468D23",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\batch1-overrides.test.ts"
+  },
+  {
+    "Hash": "91CD87665677DB2156AEB7B143E00C3770F8743893709739E076B147F7E54382",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\batch2-overrides.test.ts"
+  },
+  {
+    "Hash": "BC9D10800BBFCB1D3C2C0F4E1E62D133009CF49768115A06057D34148F32920D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\batch2-primitives.test.ts"
+  },
+  {
+    "Hash": "580F6F91230E7D9588AEA2DC858C12E3CD8F676513BBF607623A69781BC8005F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\batch3-subsystems.test.ts"
+  },
+  {
+    "Hash": "C8B4FFC3A560DE7AC0C68B4484AE33C31DDF501B9D85739F8A3A782E270B33A9",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\caged-sun.test.ts"
+  },
+  {
+    "Hash": "132F3971070BCAF6BDEC5B940E5840515D6D769647EBFE7149466D95CD4B35F4",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\cascade-rebound.test.ts"
+  },
+  {
+    "Hash": "6785F41E11C3E51AB732E865CAAA317A609C16CBA08801AEB774F9AF7E884129",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\characteristics-source.test.ts"
+  },
+  {
+    "Hash": "004509D45582B2AFBA773644FB868CE0468321AC9DF8145132FEB286FD2CE760",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\cloud-key.test.ts"
+  },
+  {
+    "Hash": "D78AF75EE54B30E9DF82EC11C673CEA270E93F820DE14866B767FE068CB50E88",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\combat-presentation.test.ts"
+  },
+  {
+    "Hash": "2A38675A94A3DC297469922DF7026DCB213AA801F2C7C024930475F8C8F42921",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\combat.test.ts"
+  },
+  {
+    "Hash": "1F55E6DBE99B2D1AA0BE7D343C89836246A90F0C86D0D5AD8F4A55BF298877C7",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\commander-modal.test.ts"
+  },
+  {
+    "Hash": "E3C0E590F905B49B33AB63A8F09AC19A6D98A77A745251B1CE2B61FEEB8DE927",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\commander.test.ts"
+  },
+  {
+    "Hash": "BDD4F9603F411AE3E770582ED0D971D5C56FA6304EEEF4DED8A7E70669A89110",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\commanders-insignia.test.ts"
+  },
+  {
+    "Hash": "DD11ADDEB8B44638043BF05AE88DECD8FEBF2B43C1CEF03909BE043C27E2B581",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\counted-and-conditional-mana.test.ts"
+  },
+  {
+    "Hash": "30122BD8A9AF474060DC32C3E0561D79FC5006410FF45D77ECE94E4D8F530D0C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\counter-token-replacements.test.ts"
+  },
+  {
+    "Hash": "FF32C43F0067B4F6A97373793DF7EBD93CE809182E3BC08800E7BA89B909BE10",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\counters.test.ts"
+  },
+  {
+    "Hash": "334376449EFE7A3CFCE4E732575550239CAB0A63173AD5A50CFED0529B279267",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\decision-presentation.test.ts"
+  },
+  {
+    "Hash": "E9F520E7F068CD5A512B96C1E429198838337BD48C2FED3B5A2FC24673D3DCC2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\delayed-triggers.test.ts"
+  },
+  {
+    "Hash": "76060F3D3206B98FBE865C93DE4AF44BE0F588D5F8CEBB449D902F25A42C0616",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\demanding-dragon.test.ts"
+  },
+  {
+    "Hash": "7012F140D54CEA014A5FEC329757398480E3421F187D0087DDBD3C7EF6AF90ED",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\determinism.test.ts"
+  },
+  {
+    "Hash": "897FC6CC4E43F769014C7C139B08561A9DB5A89A4510669A741B3FE4D742CC1A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\discrepancies-fix.test.ts"
+  },
+  {
+    "Hash": "D02BDE1E9F4933E814370ED7D364B01502459DE6B7B24F7988A712457C348AF8",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\draconic-destruction-overrides.test.ts"
+  },
+  {
+    "Hash": "0F9E8F8DE646FF4A8FC19E41951A8D58B2044FDB8812A18848F8F56FEC513456",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\draconic-destruction.test.ts"
+  },
+  {
+    "Hash": "B3AF2286171F7F8674E65865924C667CAA98494760F2B59538DFF95F351686E5",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\effect-op-coverage.test.ts"
+  },
+  {
+    "Hash": "6D6516F92F6D11E736375D958EECC257C1A09AB1718D893DA9D0A500C3B54CA8",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\engine.test.ts"
+  },
+  {
+    "Hash": "5EB08C895BA3FAB38F4B86ECCEF7A4DEF239242BEC7C8E60DEF5841EF9E31679",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\enters-tapped.test.ts"
+  },
+  {
+    "Hash": "1DE88563D405E8C6FC714CA40EEE577C441AA412E27475052C8916D2D9CFA2E2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\fixtures.ts"
+  },
+  {
+    "Hash": "3A1BF149209D9AEBA66CA00862C9ACE55932C585036EEC8C5565C9D0D7A87D59",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\flickering-ward.test.ts"
+  },
+  {
+    "Hash": "E33238D73D6AB55FCB225952011BA20B03E5C6AD1E8B6A9B14DA1B3181D47787",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\frontier-siege.test.ts"
+  },
+  {
+    "Hash": "5438C32FE0949BB3913D0CC8B561FD7FFAF99ABD393103607C35FECC23176848",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\fullgame.test.ts"
+  },
+  {
+    "Hash": "9EA85578099BDBDC39F18EFCBF135B8AF03FFB710D9B069853C8B01486A42A43",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\game-trail.test.ts"
+  },
+  {
+    "Hash": "BA3C4C2A1CE7B1556D8583954389C835308D18C852377406D6864166EE6FCB2D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\generic-parser-m2.test.ts"
+  },
+  {
+    "Hash": "B6C29F65420E4757802654279BDAD593D09F2BD2FE5E53C70383E886654D2D65",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\hand-activated-abilities.test.ts"
+  },
+  {
+    "Hash": "01CE2A04DD8A741AB53C05F930A7472EBE3454B5D92D586FA95BC9475F79450F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\hideaway.test.ts"
+  },
+  {
+    "Hash": "440C9DD8ADEFE707F6E18C2021095B4B410899E8B9819851BBE280A10DECC92D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\human-ui-reachability.test.ts"
+  },
+  {
+    "Hash": "27D5A56636C5A981FFA73BFA8E184FEF9061C87F1AFD617C45657FFAE84C25CA",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\hunters-prowess.test.ts"
+  },
+  {
+    "Hash": "99F68D04B88FB104BE8014B7CC567007F867334FEC49EF194B1AC8841B74675E",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\inc19-legends.test.ts"
+  },
+  {
+    "Hash": "17E9B37D947D635CE33A3C7D25677E477FF395A39D2487508BDDE80430964E9B",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\interpret-defs.test.ts"
+  },
+  {
+    "Hash": "9D1C8D952A4C10D067021573EFEB351D90966E998734CC581A8A42FF12BDEB84",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\interpret-treasure.test.ts"
+  },
+  {
+    "Hash": "78D4CB023009C3EAF06DB5763A454BCA3B33C70ABAC63D89B343987FD4444E78",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\interpret.test.ts"
+  },
+  {
+    "Hash": "B604135FE42D0156D5EB00CE7497178633A90FA6565C310293F53161D8FF24EE",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\land-type-grants.test.ts"
+  },
+  {
+    "Hash": "413D5CE4782F92DF605F85768A45E8D0E9B5938E9F4E445BE1DC67C7F59C2E59",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\layers.test.ts"
+  },
+  {
+    "Hash": "4F9E8DA808236173153778B864E92B433308E3E956A37E67DFA61A8DFAF9FB8C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\library.test.ts"
+  },
+  {
+    "Hash": "0DA2D87DFDD2A3B3D908AF04A8C8C6575E69668C3D257FBFE5356D87CFA8BA3C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\mana-cost-in-mana-ability.test.ts"
+  },
+  {
+    "Hash": "F9479CC9FBE7B509CBC877DE0172B1015A089CF389FD44938FDC1A28B3F687D0",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\mana-dynamic.test.ts"
+  },
+  {
+    "Hash": "508F24F13237DE3B69A9DD2F17CC1ADC28B055FD2299D470965F851AEC7DE9BE",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\mana-preview.test.ts"
+  },
+  {
+    "Hash": "9FE7F1DEB632B99448A3BC4A0B32C996598648A24A3E8337EB0A1A35C80CCECD",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\mana-restricted.test.ts"
+  },
+  {
+    "Hash": "72627A0B39E70B59A26D0A84214EBC5FF21F13964F9EDEB756E5051D9A6D386F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\mana-riders.test.ts"
+  },
+  {
+    "Hash": "D8A1142FC1414CE606B9B352760FE89BB58540B52D505327243B10DC4688B4B2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\mana-value-selector.test.ts"
+  },
+  {
+    "Hash": "6E158924441AD8F20C50BF0BF25C3E3B66719D13FA162EE32F2BBD5DC6B6611C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\mana.test.ts"
+  },
+  {
+    "Hash": "6C7D5E12FCFFB4A7E346C7E269DAC8B80EF51CA1ACE6CF61FFC0D33E5AF438ED",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\marchesa-the-black-rose.test.ts"
+  },
+  {
+    "Hash": "0DB550D5705A00CA5D4E8D14309F2A970DC3D9455E3A53B9F1F0327A102F719E",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\mdfc.test.ts"
+  },
+  {
+    "Hash": "BB21B7EBA8C119DD11F7432192C6F843FA6FC271EFE4D948CF631639B75F86CA",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\mill-and-return-spells.test.ts"
+  },
+  {
+    "Hash": "8AB5AC11B3EBF19153393B764205A36B94F485F738EA2D372BC25D9ADF4ED2B5",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\modal-and-divided.test.ts"
+  },
+  {
+    "Hash": "2394F363BC06F4C4ECCC60C0B151FE7A3AFDD4E0F04ABC682AD120BBEFE80DFF",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\mulligan.test.ts"
+  },
+  {
+    "Hash": "D081C25BF1333B1D95B3DC6C755DC735A8DC8928D294544CC954023B087104AB",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\override-defs.test.ts"
+  },
+  {
+    "Hash": "2DB642F4244C3206A05C2FF276C9FA3C829E5E102EABB2BD4C002CCC36B7B8AF",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\overrides.test.ts"
+  },
+  {
+    "Hash": "886AC9B888CF5D038AA3CDD29645CD4287F816A1FC866456ADE58BE0399416B9",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\pathway-land.test.ts"
+  },
+  {
+    "Hash": "9F7DDD6C970E5BBD210FA3DCC9719205568C8EEA8002F4C916371EAC1F0E0C04",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\permanents.test.ts"
+  },
+  {
+    "Hash": "F0B7C159CE5098679E8B0422B6CA61129E69953E97586DBD6D13BB34B6CDE41F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\planeswalkers.test.ts"
+  },
+  {
+    "Hash": "5A53577ADB2110436658E661E2E38EF52242B8268A2E34120CDC4E606F28DCB3",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\player-board.test.ts"
+  },
+  {
+    "Hash": "6540397E5F26E456C26419B19CF3B776E9E831B5E4783696CF3CF362E9EDC323",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\priority.test.ts"
+  },
+  {
+    "Hash": "8D02060ACF8B62C759C1F10525B5E08583992A7BCA370BB592DC200B7648094A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\prng.test.ts"
+  },
+  {
+    "Hash": "7533EFF980592E5DC72C0223FC69E15CC7BE1794588C72DEBC7D9979530BEE48",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\provoke-the-trolls.test.ts"
+  },
+  {
+    "Hash": "9BB4CB1D4E263DBB91F08B9EC8278864C1AFD89D1EDE239B8A19D614190F0A67",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\reanimate.test.ts"
+  },
+  {
+    "Hash": "D061C046B34EABF05187137AB3AEBF005493AAAE9CB425EFFBFEEBFE7A395324",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\remaining-primitives.test.ts"
+  },
+  {
+    "Hash": "BFA1EE09776B29D180ADF83BFB28A1709E4DD0B1B4F6A51F526E1F31D8DC1E9A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\replacement-and-control.test.ts"
+  },
+  {
+    "Hash": "6EB9E01585460B86538B8293C670640D65CC2FD743C5DA8ADFA459250D53617A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\riot.test.ts"
+  },
+  {
+    "Hash": "AAF7BB32C4A0C08326D0256E9D1F876BBE9D35487D7DDBE4ADB3BBB582566F9B",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\rule-static-coverage.test.ts"
+  },
+  {
+    "Hash": "F097CC9DFC5F72AC0875382723F5609B54740C274C2102DB77A6678EC8F5A815",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\rule-statics.test.ts"
+  },
+  {
+    "Hash": "442FA4FD5D4927F93D237E39E93293E5D10132ED72A846F2AD17637520EED7D3",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\sarkhan-soul-aflame.test.ts"
+  },
+  {
+    "Hash": "4EE6F34E05471B407E66EB8C8788320D7B4361839D4438EE36E83023EA111918",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\sba.test.ts"
+  },
+  {
+    "Hash": "6854330343BFC2BBA33A7F5F3DE0774E76A51855A7C4643484B7CBAF1E6A7F23",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\scaffold.test.ts"
+  },
+  {
+    "Hash": "DC12DEB196AD067BA12FB784B55D1ECF309A15597AA22935A1925217D0A531E7",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\silverquill-malformed-fields.test.ts"
+  },
+  {
+    "Hash": "927BB836067225BEE08B72F0696BE11C6F777557B7FD89F378F2BDA32A858CA0",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\spectator-seek.test.ts"
+  },
+  {
+    "Hash": "F67E1F2864425E690D2F16A0C0A9C07079EBB6713ACD318A35D8ED61DD3DA301",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\spectator-view.test.ts"
+  },
+  {
+    "Hash": "65CD53C282D66B323D1FAD9DAF4DC4EFD71EB31B3D990B8B108E0686C8348DC0",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\spectator.test.ts"
+  },
+  {
+    "Hash": "124B5E2749C0C4D9195E3E7C327ABBB9CC6AF86C7D7E3B350EB72FAB3D0B0C18",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\spell-additional-costs.test.ts"
+  },
+  {
+    "Hash": "A8B9AE5D7E2A180CCFC02CEC587577CC274C4D74FDC0FFBF3536F61E17D29344",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\stack.test.ts"
+  },
+  {
+    "Hash": "3300A28EF6C22EB5C23B49C7558A974A0973E5B33A8043479690CEC596D3F01F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\sunforger.test.ts"
+  },
+  {
+    "Hash": "1219D5018FB79993B8D1A4345450533D5DA5B584D6C2B7B277F520651E51CA93",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\templates.test.ts"
+  },
+  {
+    "Hash": "CC82259096C622800A602204DE3176BF96DC1563F9477CFE1F526D9C6734B9FC",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tier3-beneficiary-graveyard.test.ts"
+  },
+  {
+    "Hash": "41F23850C532BA7ADA9C2AA1308C4131803184B7512CA3B9F248B464A8A59D54",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tier3-coverage-grammar.test.ts"
+  },
+  {
+    "Hash": "5DA716F9778C468459A6DED0B2FA7F0E5F22510A326FF42AD19EDC6BF90D63E6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tier3-graveyard-casts.test.ts"
+  },
+  {
+    "Hash": "F13FD7752EE6A8D940E725F61C6DC979F592294D4996058F003D3CA80E6B60AB",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tier3-library-ordering.test.ts"
+  },
+  {
+    "Hash": "2A5FF5E022C7A4365DE8B1A82E29C54DADF09A69AAB47FC3ED6EB76460E36293",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tier3-mana-reach.test.ts"
+  },
+  {
+    "Hash": "0C48A26840CA571F0A4B8A6540AD317FC3D9C528F67662989D30D20563425FA3",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tier3-modal-abilities.test.ts"
+  },
+  {
+    "Hash": "41A5985098770FF7170DE6A6C45ACA6A90641ADBB3E757DEBBFC508DF359EB68",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tier3-transform.test.ts"
+  },
+  {
+    "Hash": "277561AD73A081DD96B2AA9CC115C6339C77C7ABC39D88A5B15CC4704AE9C383",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tier3-trigger-events.test.ts"
+  },
+  {
+    "Hash": "1676333911571006DE213A90E9D077E26ED0C6A4D2066996F6D217E97C0A36CC",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tier3-zone-statics.test.ts"
+  },
+  {
+    "Hash": "48FD3C6719FEA003B1E0B5C8E94B36B96264B663723040F56B2312040E562AF2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\token-catalog-canonicalization.test.ts"
+  },
+  {
+    "Hash": "C3CE265298E6D9C37B900CFC5BE901B8950857D99D4B68E62E6B6ADD12930AD4",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\token-catalog-fill-in.test.ts"
+  },
+  {
+    "Hash": "70E17F9BA96E5A62D86E12BF232B566AEE1A9C3FBFA63A9E9C9DC7D96AB98983",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\token-divergence.test.ts"
+  },
+  {
+    "Hash": "73BBDBD53084FC06F367CCF0DAABC4CCAE49039DB316932C9627A2173BF59307",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tokens.test.ts"
+  },
+  {
+    "Hash": "D03B7A51263EE3608B9D5D486D9F85647C1452E3DB53CEB80AFA03845C01EB4E",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\trigger-events-2.test.ts"
+  },
+  {
+    "Hash": "D3C07B1B24079C0C0DA24A1AE146EBC6127A6A8294E429C235B380EA34AD3C18",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\trigger-events.test.ts"
+  },
+  {
+    "Hash": "D35CA34D18930EC5E847DB8E58838092A46A02DD0FB0D3394A6A88E9C7EDE267",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\triggers.test.ts"
+  },
+  {
+    "Hash": "792CE9CFA6B310230BA072745B617BAD25D8A7FEB5865215C9A6D224F71A6761",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\tyrants-familiar.test.ts"
+  },
+  {
+    "Hash": "A1B63E28284C471673493E86842435DDC097061E38921EA63258FF1805018994",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\unless-payment.test.ts"
+  },
+  {
+    "Hash": "31BE03C4B1FE1A09703AF3EAC7CD480C5C5EE09C48DACCD302508D8585C01B26",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\urdragon-coverage.test.ts"
+  },
+  {
+    "Hash": "4AF4C091C4AEE3238776BBF52C6F19AA39DA113B5E67194BC4BC9ACAC3DD5110",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\visibility.test.ts"
+  },
+  {
+    "Hash": "67B6A8C08F38E8085B523B20D56C2ACF69E5AD1BB75F5BC869F28119C52E1D81",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\engine\\tests\\zone-effects.test.ts"
+  },
+  {
+    "Hash": "C74C909100AE6F62B57732A0DC067AB4E7528640BD818E8EE1CE2975185E7468",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\archetype.test.ts"
+  },
+  {
+    "Hash": "E5AAB74A727D1DA5F112835F52FDCA8C3BD64B18A9628CEB26B9F57BA6C3DE35",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\archetype.ts"
+  },
+  {
+    "Hash": "5A571950F6CE8449EE95183344AD90F6DDB6C26A56381857655EC49B46FFB1C2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\challenger-empirical.test.ts"
+  },
+  {
+    "Hash": "74D6F05327BA36FEA4F195D707E76BFDFB0D13F18134D5B2CBE788AB1B55D756",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\client.test.ts"
+  },
+  {
+    "Hash": "A24EF73409C05C7A36D82F7D19FF778612DA42BAE1519EE1F8C7C60B1061E70D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\client.ts"
+  },
+  {
+    "Hash": "E74B6D8D81FF743ACA996B89754312D9C895BB962798B19E964D708AAE259046",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\config.test.ts"
+  },
+  {
+    "Hash": "6FB7C8710C510293D80F4BE687BEDFC5CEAE036BEFD8E3C1AA41F0B6391ABB04",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\config.ts"
+  },
+  {
+    "Hash": "3391DE55BED426E721649C6CE8D15E87EE2D49DAD561EEE8CDBD63356D45920A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\context.test.ts"
+  },
+  {
+    "Hash": "0B0BC713BF70BE7CB493A1CE5343233DCABAAD6BF351427313CA3ED2B5CFEE62",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\context.ts"
+  },
+  {
+    "Hash": "27363537F6D32E4E5AF15026AAB874814BF63CFFAC9D6AA625D99EE092798D62",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\decision-cache.test.ts"
+  },
+  {
+    "Hash": "29D91DC3FAA5F4EA1DC574423A389520791B7AD089B7C8BBA69EC6B1973EF23B",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\decision-cache.ts"
+  },
+  {
+    "Hash": "6C7C5AD0C3F0E6EC47DE71F380D73F8F874D77EC85FB0D1FDB34D9BE4E402ED4",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\errors.ts"
+  },
+  {
+    "Hash": "60C2FF04A50D1B16053BE6035B40A371F0C05AF8F846B9F30356950070F3BBA6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\fallback.test.ts"
+  },
+  {
+    "Hash": "A7295BD40E0B6D7F5B78C6D1BFADF714032594F0956963CB4D78D6B05BABEE5C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\fallback.ts"
+  },
+  {
+    "Hash": "1BD8FE60B7EBA06A833F3B64EF31B5633F39E6B9A937B4545FE2FE1F9A4F808E",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\heuristics.test.ts"
+  },
+  {
+    "Hash": "3D97D903842690CBDCE1C5DE69E4D01371A50453E391DDA1C38BCCCA6057C784",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\heuristics.ts"
+  },
+  {
+    "Hash": "DFCF3AF9B56691C88F024E84A6C02402402146155E30668D4344D714A9CB533A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\index.ts"
+  },
+  {
+    "Hash": "A6A65B1E4B497982C8F67C36E392CEFEE7A3977C7118FC4F920823086A911F4C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\logger.test.ts"
+  },
+  {
+    "Hash": "E8B74D3DAD2AF9D8059D7491371E2CEBFF4159E2B2D146715E3BDFDA7189F3B6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\logger.ts"
+  },
+  {
+    "Hash": "83F6C54602984F48EA979B1C22D460C8087AA4E606C31FA1F596145B04B8C5A2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\openrouter-provider-filter.test.ts"
+  },
+  {
+    "Hash": "4228463A69C6D01E4C5A953DBCF81224E061D825D5E2E622432A54532C1AA9EA",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\openrouter-provider-filter.ts"
+  },
+  {
+    "Hash": "276A33D32CF894BDC8D1F83977B1A7EED88F62AA8B048783B57821388BA543EF",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\primer.test.ts"
+  },
+  {
+    "Hash": "9BBED71CA487D6003FFD61CF8475CB47D806661FB2C537E4DAB7E1A23F60DFEB",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\primer.ts"
+  },
+  {
+    "Hash": "4841323665839785324B5F1CE0DA722A68F13F55146D7666A917DF8B5FE10EA2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\provider.test.ts"
+  },
+  {
+    "Hash": "249B16180345B78A177CA110DE418CEC6346D020F667221674353E3B4B117797",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\provider.ts"
+  },
+  {
+    "Hash": "EBA04CA5C0959C2CC7DE7D209136D3D9E1602D6164A4DA0F0583A2C5C6C1AC8C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\queue.test.ts"
+  },
+  {
+    "Hash": "04F07B119EAB468D698EAF771C71EAF0C54217216167EF64A8329B1E4702F420",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\queue.ts"
+  },
+  {
+    "Hash": "796020A3D0546FDCB5371D6C9BE7023CC8A26FC82FF868281A850437661B76D0",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\r2-empirical.test.ts"
+  },
+  {
+    "Hash": "0B015D1A1D6F39BAAC8C555C8035E5C2C6FE4116D8C3AC5FCB8B40406C39BC0D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\reflection.test.ts"
+  },
+  {
+    "Hash": "51CFC35C6745692AF5C612D162145FFD425DCA70C3F4B54D7CFEFD23D5ABD596",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\reflection.ts"
+  },
+  {
+    "Hash": "69D9D73F88632A589EC94798380B9DCBBAEC10D5D10EB8D46C2A6913EACA106A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\retry.test.ts"
+  },
+  {
+    "Hash": "6D2A7E9D688F125F4BE3339A070006C641981DBE05F83B364990A55808C941D5",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\retry.ts"
+  },
+  {
+    "Hash": "CECBAA1368E129138ECF06843CD418ACFD5A03D34BC315DBC86CFEB944EB9651",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\strategy-coordinator.test.ts"
+  },
+  {
+    "Hash": "95760610344E5452BB9749B204517BAE188E422A920AA87B7BBA83CBB5CEB744",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\strategy-coordinator.ts"
+  },
+  {
+    "Hash": "CFE7CB829C0A0F5C08FD055573D4EE798EA9E6B361C52CB4647E888D92A89BA5",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\stress-challenge.test.ts"
+  },
+  {
+    "Hash": "9333E26F7DF5C13F5C32598747401AEB01DEE62089687682F76FB6BE314F5098",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\turn-plan.test.ts"
+  },
+  {
+    "Hash": "5AC9A86F8B595B38B53626D1C80819DBF75339C56F412B38BBD5CD9C30D4FCD2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\turn-plan.ts"
+  },
+  {
+    "Hash": "E99A41100814F00AAFC5755F34D18F294AFD0BF360B91CA11E876CEAA9B16AC8",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\validate.test.ts"
+  },
+  {
+    "Hash": "5BA6D4ACA3B725CF8353762B5A2F240170A0794C43FCCD53BD0D701C96226DEB",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ai\\validate.ts"
+  },
+  {
+    "Hash": "3CDF73F532C726E6DF4413148FEED1697C02E75996D6D2DD5A71625B3FAD6558",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\batch\\manager.test.ts"
+  },
+  {
+    "Hash": "16E9F285B9E79794FBE03443D9238D3380945808824805021796D56FA5F0DDEC",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\batch\\manager.ts"
+  },
+  {
+    "Hash": "3CE15E6FA23B5FAE87E626AAEB2AE59A47EC61E30D0CD5B8BF5E4EAA2296DE7E",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\bot\\combat-snapshot-parity.test.ts"
+  },
+  {
+    "Hash": "0B90E55206E8958ACF49E744C89526DA069662809C482C848B2590C34099714D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\card-suite-l1-l3.test.ts"
+  },
+  {
+    "Hash": "67055F5F8B18815F1B0799DEB80CED846C41EB10E24D2AB84756FEC4600C16BD",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\card-suite-l5-ui.test.ts"
+  },
+  {
+    "Hash": "A921AF5B29129057C9C9CD724B4B44022D2D12D35C7A0B1B787EC7C56A98ECE9",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\coverage.test.ts"
+  },
+  {
+    "Hash": "7B5CD55942A92C05A8047B63789F18B78D1D539AA63355B90E60426C37D6CE85",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\coverage.ts"
+  },
+  {
+    "Hash": "28DE2992A772DD405D6FB738F5079BF7ACC5854752DE6E8ECACAB98834352EDF",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\known-decks.ts"
+  },
+  {
+    "Hash": "4E11E51583841BD1B81CBCDBEA96609DF6317CF213035648BEAB99FA649789C3",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\living-energy.test.ts"
+  },
+  {
+    "Hash": "A98A40C11B807338FABD940D5DEDD331745C7340D0B7EA336C6A3EC63A13D592",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\normalize.ts"
+  },
+  {
+    "Hash": "95BEC99D2EF7FE6063552CA059D29CEB01C4A02F641AC5E2405694BE4E7C8474",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\oracle-index.test.ts"
+  },
+  {
+    "Hash": "5E6619E624172765AB82761A574E6D0087AE7B04E556115A2A31B88EE515E928",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\oracle-index.ts"
+  },
+  {
+    "Hash": "AE357E80E943A277B3E4A703F36BBF3AE954ADDA5409028B902C77083C7FB51F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\pool.ts"
+  },
+  {
+    "Hash": "C0925C6621EB6599161B76946EE4523F6317D9864891C1A2898B77A77B279535",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\remaining-four-decks.test.ts"
+  },
+  {
+    "Hash": "942CC814173DA2298919649716EA1A628F58232C24D000916CAA7F9058E7CC6D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\scryfall-bulk-fixture.ts"
+  },
+  {
+    "Hash": "E32C986D1E0A60703C68CF780C981AF3FD250D858FC9DBB5C2E6972866FC1748",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\scryfall.test.ts"
+  },
+  {
+    "Hash": "DC13D29367E9736FE31743400593B3A914FA5FE6B64B0A511B4C73929B94C386",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\scryfall.ts"
+  },
+  {
+    "Hash": "0566489DB63D719CEFA169EEDD166F7AFBBAFE4836D6530F595B6E7C4A3C0D0E",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cards\\token-triumph-deck.test.ts"
+  },
+  {
+    "Hash": "FF71075CD95EB163E953FD287C3BA07A3281D2D6BFE53E58308D0CD27C48BB85",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\combat-sweep-game.ts"
+  },
+  {
+    "Hash": "4A0A640F8514B874C6C0EC28BD221FDFF613CA672C141BBDF6ADE39BE99E66A9",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\combat-sweep.ts"
+  },
+  {
+    "Hash": "DC7CEDF416F3CFFEDB9A7FD6C5E10E2ACF4C9029A54C069DA5F483F3366544B4",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\coverage.ts"
+  },
+  {
+    "Hash": "8126924C0485AEB3D96C70CDF00D136C8EE2D9CAD95E0EDAE5DBD7DD1A63FD9C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\import-decks.ts"
+  },
+  {
+    "Hash": "C7B7A763281500892FC313C7758E25F128666D49225D1493A53D0AE3314ACC51",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\modelled-cards.ts"
+  },
+  {
+    "Hash": "71D7AED3898DB308B32D4B812430402D57B3F3F519AACF56B3DE63AE2FA0843C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\play-decks.ts"
+  },
+  {
+    "Hash": "52A95637C085CC8A07EA8F97D3F3F3AC540B30C204101956C086931804CBB6E9",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\pool.ts"
+  },
+  {
+    "Hash": "3A2F8E1DA770FB6D099B2A5CCAEDF7A1698D99E67BB8A3A5C54A3FEB723FF7C3",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\retag.ts"
+  },
+  {
+    "Hash": "4EBC40627CCAC018751469427D928FA17B8387F595913A90410DE8FAA5EE8619",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\serve.ts"
+  },
+  {
+    "Hash": "69D9564F709DC0A94B25817AAB423C8538D958E888B51F03F99283D8953F1CD3",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\snapshot-coverage-decks.ts"
+  },
+  {
+    "Hash": "11398DC7CE6F56D7E0D7639D7030FCCEEC3C5E44C8857090F7E1920A90506E95",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\snapshot-deck-oracle.ts"
+  },
+  {
+    "Hash": "C460199E856CE2F14F34662526305B03261C0822213E06B3ED3C3CA7E159CBA9",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\staple-coverage.ts"
+  },
+  {
+    "Hash": "E3A32F192E2AC9D23FCF8D11A961AEE9B70B1596B5404DA1DBE7FB82E1EC4EE1",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\test-cards-l4-l6.ts"
+  },
+  {
+    "Hash": "8A3AD9CAEC9DC0F8296C1CE974D0504C43267EFDAEA0D75A9024E1CA65B403C2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\cli\\test-cards-l7-coverage.ts"
+  },
+  {
+    "Hash": "E7818593BE02ED7CC932101525FA5D42D3FE508BC553030980F723AF4637CD9B",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\config\\mana-metrics.ts"
+  },
+  {
+    "Hash": "F786952B5384A8A7EB0F47586C722B0FBC570F667F842B6589C0718E82706B0A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\db\\batches.ts"
+  },
+  {
+    "Hash": "070F7FB1A5BD10170BBAAAEFB5AD94D7D6D6764C750DD63DEB30CB6557454F08",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\db\\games.test.ts"
+  },
+  {
+    "Hash": "5AA0236E9B2F1910B1243B76F0703972D113D1D088F6E3B96E83D8E1EB3CA4FD",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\db\\games.ts"
+  },
+  {
+    "Hash": "F48FA69A5317CB15B8695DBFFC4BF52A7F1C68EB9DFBD46E96A1313B853B97A1",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\db\\index.ts"
+  },
+  {
+    "Hash": "C436033D8E32B9E8AA10B10E006EBFADC13ED0F03206B696E05DD812018AAA4E",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\db\\schema.ts"
+  },
+  {
+    "Hash": "A407E2951461533D6F880813F8F43D96919DF77AF2234E336A16F79CBDB8F0EB",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\db\\stats.test.ts"
+  },
+  {
+    "Hash": "FA2CC46040AB46B092A204E2F22334C33A3976C1DAA25313396C625E641AE2A2",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\db\\stats.ts"
+  },
+  {
+    "Hash": "540DA8EA1EEDF32AA733D78CB18E9CFC1372C39ECBF41C136683D716B786E997",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\archetype.test.ts"
+  },
+  {
+    "Hash": "7FB06CC8013088EA4D166F90C15C05B50ED4777441ECE6185801E9A7BACCB608",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\archetype.ts"
+  },
+  {
+    "Hash": "3301ABC4CFD1500BAA63C33FC026343F0FB7D5D627EFB2311A03C801E8A19315",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\archidekt.ts"
+  },
+  {
+    "Hash": "F5FBA0FD5E7B602EA32EDA215169BB0FBECA581D9CAA7680F88F4577AADDB3CB",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\banned.test.ts"
+  },
+  {
+    "Hash": "8ADD1BA9591360674681B151990DD786181D53D64D73FF3DFD526D4910A431B6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\banned.ts"
+  },
+  {
+    "Hash": "7CE8615FB672D3A45DD510AAED5192481111DCA8A0ABE117FFAFDD08E8103D12",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\companions.ts"
+  },
+  {
+    "Hash": "532732ADAA4123F7C482974B6F4FC65180B1FB332C551D031D61AEA816DDBB66",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\errors.ts"
+  },
+  {
+    "Hash": "C90AE7E847884BCF8A6CA7D805F0E1D3485F045808267F3E011CE600EF9F115D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\generate.test.ts"
+  },
+  {
+    "Hash": "BFC70D79750DCB33D6EAB6AB21EFC9FDFE01ACE7880E3D6381489A31D231D3C3",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\generate.ts"
+  },
+  {
+    "Hash": "F9DD7635F898A5154963F5F6206F51793154AF607564C0357DB6E9B2AA08FFFE",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\moxfield.ts"
+  },
+  {
+    "Hash": "19C0ADDE07AC093B733DA7273DF17FA97A807096B98FAAAA88F9A452E6B27753",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\pipeline.test.ts"
+  },
+  {
+    "Hash": "66037E26F42E13BD9A729B461BA677CACDE9514B61C094834FA5E7161E2DEA6C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\pipeline.ts"
+  },
+  {
+    "Hash": "C0D85B397BFA5BCA931999CE0525F53E15B3E29070E5043CF6B4869C72E939C7",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\plaintext.test.ts"
+  },
+  {
+    "Hash": "02188BB0E00063E83307464072264DB1B14052384A1F54BFD2D32476AF5A8031",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\plaintext.ts"
+  },
+  {
+    "Hash": "CB3B0617F63D27B4F07AC01481094F1384CA29FC7D0BFF00073E70260573AD27",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\resolve.ts"
+  },
+  {
+    "Hash": "5705AC83A2016689C8884C403111CFDE19825D1D2CE8F7899D3529AE911585F7",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\source.ts"
+  },
+  {
+    "Hash": "6551C97D5D73DF7756E6E0FE2FCDF50D368A0AD3C491D0F8C63043DC39F12FE3",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\validate.test.ts"
+  },
+  {
+    "Hash": "4059F2CA2E57A02C7817C16A834F217FBC662B45B1510219F6BEF0E62687C17C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\decks\\validate.ts"
+  },
+  {
+    "Hash": "FAE675414FC8F3BE6C8E2CE27812D33B153E8A28583B1B1F63353CE0C3A78850",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\match\\annotations.test.ts"
+  },
+  {
+    "Hash": "28DC4985CAC86A927325EB9F1CECB2E21EAD3F5D6CACF78322DE9AB1B9145536",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\match\\annotations.ts"
+  },
+  {
+    "Hash": "98520AB3CA81129A70A23CA520DD9E075F1CE34697719C0B57293FCD93CCBA18",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\match\\human-provider.test.ts"
+  },
+  {
+    "Hash": "C8A3A9A5B99BC2BFCEF42E4FCB15DE32088AF04723C8F840E73D10CF89CAA979",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\match\\human-provider.ts"
+  },
+  {
+    "Hash": "41D1E220877D071A44E45B316413228DBFEB8BD9A4C45EBD28BC21948A654E0C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\match\\runner.test.ts"
+  },
+  {
+    "Hash": "DBA9E23DD44E9C83C49B6C23A6F63351035C1368EE360FCD0731862A114EBD8B",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\match\\runner.ts"
+  },
+  {
+    "Hash": "1939FCB3580AB5F1600A98885660E360F4ADC43071FE2AEE13ED878A49FC9B10",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\match\\session.test.ts"
+  },
+  {
+    "Hash": "6BB9E426C99892874C8E4861EF2494D971CB98D7583ED9BABE7908D31179678D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\match\\session.ts"
+  },
+  {
+    "Hash": "37C3EB68227E521602880F609B0815B5D048A194A6C5D720AE945CA13EFBD447",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\match\\setup.ts"
+  },
+  {
+    "Hash": "3D5ACF4028C28BE89F5E86AC27FE5858B87BF88C496509844C2F067F2B52D56A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\ws\\server.ts"
+  },
+  {
+    "Hash": "4347D887AC317468FEE81DA427B6036B67A85E9D562746579156710FCC45565F",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\index.ts"
+  },
+  {
+    "Hash": "29B4E4852CF194750844E173A8DE48D3715F041F6F5A1DD5E79352014B1669F8",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\server\\src\\test-factory.ts"
+  },
+  {
+    "Hash": "BE6BAF86A06253E2853900245179BE9AAA34F28F4BEA15DD8D618B497D56593D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\batch.ts"
+  },
+  {
+    "Hash": "591E3BF49802BB43A6AE2FEC0E38D25B23B5E6010B92EB1589DE2497A1B82908",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\cards.ts"
+  },
+  {
+    "Hash": "ECEF776258A73044EE3D87215FC56B8E176ED773FF80AA4BE1F1D5BC782FC3A0",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\decks.ts"
+  },
+  {
+    "Hash": "4CC823C3DB588A197AFDE8A0C407662AC84E907C06F7FB4B512F29690A94256B",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\effects.ts"
+  },
+  {
+    "Hash": "471F968EEC19A3E244EC40393A1D45DCD526DAFA80A300E8A5D6423A2F921899",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\engine.ts"
+  },
+  {
+    "Hash": "DC6DCA092CBD37848412CA59D0333355C3B7EFC43C49221C1CD1C21DA29CF822",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\enums.ts"
+  },
+  {
+    "Hash": "EE085565A5B063F25C08582752D63178DC4690935C4308EDCBC877E39E58CF3C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\events.ts"
+  },
+  {
+    "Hash": "CC2C8CE8C59DC8CEC80E3B35C0AEC793A106FF2A88322A36DFF37124E7C9E2CD",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\ids.ts"
+  },
+  {
+    "Hash": "5C9B0BF4EC0857076A8BC0CB952596B84B56BABA8E18FF345441070ED0D7E887",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\index.test.ts"
+  },
+  {
+    "Hash": "7BF952EB343A4435FD7961ED9D33069822BA3C843B953CE5185019D55F5DCCBE",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\index.ts"
+  },
+  {
+    "Hash": "0F9C315C197BC525A349BF94F1FFD57AEA2833360B9D40FCEF96ECDE98F78292",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\mana.ts"
+  },
+  {
+    "Hash": "5F8ACE37D2EBD932592C2EC7276126546EDFE36C15E9DFF56E386416CC753C54",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\objects.ts"
+  },
+  {
+    "Hash": "DBB014411D1137BEC47ED279B441F028C3348C121DA50B8D82E9F4F0AD84402B",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\player.ts"
+  },
+  {
+    "Hash": "6327C653D24D3094DA524D9281EA9889E34E6AA627250DA75999C44AA7549571",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\protocol.test.ts"
+  },
+  {
+    "Hash": "8A74AF8DB250B5507367E4AC86A963EC71F270F5B8ADA0611B2EE89B7182763A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\protocol.ts"
+  },
+  {
+    "Hash": "4BC1DA66830CD7CEF1D479BBC96C5AC3090D2314C2B1B344AC5B463687182A29",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\spectator.ts"
+  },
+  {
+    "Hash": "12D21324041CE13CF07168CFC62F52884F7896395A83C5328973E954B2351B9D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\state.ts"
+  },
+  {
+    "Hash": "1F51A4ABF28EE6C29A7F99C66BE7C93BD594E591A02DD862F537F44556C6B47C",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\packages\\shared\\src\\view.ts"
+  },
+  {
+    "Hash": "F55CADD1530435EF763FFA6D49ED1D870C546A0091A2A6D11F49DDF83740F1A8",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\ActionLog.vue"
+  },
+  {
+    "Hash": "7F6A08182C376B6B23F3A3F393070D28300429CFFC61D380322CA9E9FAC470A9",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\CardImage.vue"
+  },
+  {
+    "Hash": "1BC3B9F57B8983892EA93B8A18EF8F8FD1F59E0FD2DB6748F43EA9CB1CFD2CC5",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\CardPreviewOverlay.vue"
+  },
+  {
+    "Hash": "8F6E0F03E8F8B4A5AACC15975F059169D5CDA8E2AD2E0DE80B2ED63C2549037B",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\CombatOverlay.vue"
+  },
+  {
+    "Hash": "CE41CCD7D795206EDACFA743492878F5B28D1D9EFD3F8A2F8CDAB83A418D7608",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\CommanderDamageGrid.vue"
+  },
+  {
+    "Hash": "597F3DB9312390C44018EA6F52B976D3EB89F183EB9F66B7CB82390126F8EA98",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\DecisionPanel.vue"
+  },
+  {
+    "Hash": "BE1646ACC522C1E4569D8098BCA9A5978CC6518EC6650FD00281EC0601A23EBD",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\GameOverPanel.vue"
+  },
+  {
+    "Hash": "DBDEAB2778BEC11C04BCD46E219B6DCA6502743BAA109561D4137CEEE72CB23A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\GlobalCounters.vue"
+  },
+  {
+    "Hash": "E6A05638376B711469DC573E744707D44D903BD0780FAD653150481A97242231",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\HandStrip.vue"
+  },
+  {
+    "Hash": "D162509964E05B405F10DF003845AA8237BEFCC45719D6053EF0A3DCC2C3288A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\HeldDecision.vue"
+  },
+  {
+    "Hash": "823A13ECDB6FF82FEC74D92D1DA3011C9200F834964BE8F52D2D334279B86F1A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\PermanentChip.vue"
+  },
+  {
+    "Hash": "7DEAF0458809490239983348AECF2060B192F9C47286F17EFB9823EE486793CB",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\PlaybackControls.vue"
+  },
+  {
+    "Hash": "E81CF731332C807F3574414A67E316BB92854EBE1231BDD4D1B2A5E09D273D0D",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\SeatPanel.vue"
+  },
+  {
+    "Hash": "7BB06C51010E70DDA18DBA5039C30FEF4D794CBA3EE3214D95E79B4CF18BCAD1",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\StackPanel.vue"
+  },
+  {
+    "Hash": "19D82CE8293B56F2AC4AC748E4AF1412750C2BE5B6CD7E101F0FB3961A70B13E",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\components\\ZoneStrip.vue"
+  },
+  {
+    "Hash": "CCBD986805515C5CA3C2C17F07117ABA585B7F48C2F562050060C953EC1E94C0",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\composables\\useBoardAnchors.ts"
+  },
+  {
+    "Hash": "AD75F509126ECB8CEA9C8193BD75CA63E23734B4BC95C179D279947B0B3ACB66",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\composables\\useBoardFlash.ts"
+  },
+  {
+    "Hash": "EE3C96EDD3499647462AC6D4B6CB509DCE398F90E2358BCC1D37247559201F69",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\composables\\useCombatStrikes.ts"
+  },
+  {
+    "Hash": "3541C36187839B339D9A8A02ECA50691B8C5D93ADBF9371AA801577E34C51671",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\composables\\useLifeFlash.ts"
+  },
+  {
+    "Hash": "75B1107CF41F4B3CDC7AFC743F887E7792CA7A32317F7902499D6468CF32E389",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\lib\\card.ts"
+  },
+  {
+    "Hash": "AF4B5608A03BC1A12EB56BA5C1B4E48883D6374EFB3B91CB84688A8EF4B511D6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\lib\\socket.ts"
+  },
+  {
+    "Hash": "160690DEBFA5E2FBB1E36E363AD0189304E448CDA665BFCB0B5E2A221B7ED2CC",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\lib\\stackPermanents.ts"
+  },
+  {
+    "Hash": "994884A9EB1D8A3C058D97BF6025F6018209015824E0495FB0805C9B5CD9DCAC",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\stores\\cardPreview.ts"
+  },
+  {
+    "Hash": "EB7897A6B075252EC65C89508553EA9DC6976F8B54FD24E3AFF33DA593F737C9",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\stores\\combatPlan.test.ts"
+  },
+  {
+    "Hash": "354A82A0B819726174F9331C8BAEFB3DDB81BE55BD33C5EE169AA20F36F5AE95",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\stores\\combatPlan.ts"
+  },
+  {
+    "Hash": "7CD73384511E8C02F9CB1F957CBEB2A5809521A72A998D6D35297189B2868E22",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\stores\\game.test.ts"
+  },
+  {
+    "Hash": "353441268A52086F881DE8C90783DBD9E7364011D66D116141368DA698F5BC51",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\stores\\game.ts"
+  },
+  {
+    "Hash": "EEA80063F4E12E2F54232DA78D9D206465C3F0489ABE49C0D210081AD54187F5",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\views\\BatchResultsView.vue"
+  },
+  {
+    "Hash": "C42B4DCED154F6E28D5064198A4991C58CCDA1EADABEA73CBA6A159876DA8B09",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\views\\BatchSetupView.vue"
+  },
+  {
+    "Hash": "144A659040250842961CFB516A3803962CE8EA106D0EC3DF50EEE0C355DDC0A6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\views\\DebugView.vue"
+  },
+  {
+    "Hash": "8E2D6262BB322DFE1531BAC77CA35190E992EBC7F1A9473F095E66E894C1A8A6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\views\\GameView.vue"
+  },
+  {
+    "Hash": "72A288F7CCF2A2320445A4AF94B77817219E032E0FB78F652517D80FDAF763B5",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\views\\PlayerGameView.vue"
+  },
+  {
+    "Hash": "4021D8DB4DAC0E3AD914D97A67E01DEA796CC6803BDA4163310AF2E114629FD5",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\views\\SetupView.vue"
+  },
+  {
+    "Hash": "83E82251A230F36EC4A79DEFC2858E6C3F1BB97D768F2F3B487798CB0BFFA068",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\views\\StatsView.vue"
+  },
+  {
+    "Hash": "40E3D95A99D40B8DCFB9DE304BDD4EE185657EE22E7065A98B1993B0B16503F6",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\App.vue"
+  },
+  {
+    "Hash": "8F3424DE496B594B70F1F333012251FEB19B72F31A0A11ACB13FE0FEB4D9E956",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\main.ts"
+  },
+  {
+    "Hash": "110B9CFE5FAA183334F7FE6C210F04945B4DE77AA2FB5A534B32BD37EACE05EF",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\src\\router.ts"
+  },
+  {
+    "Hash": "DF4D6068B9F8E20181FC34C7E864FF09C3E326E3ABF3C77EEA6C5A9514BC290A",
+    "Path": "C:\\Users\\paulf\\OneDrive\\Documents\\GitHub\\mtgtester\\apps\\web\\vite.config.ts"
+  }
+]

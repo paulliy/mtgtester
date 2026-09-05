@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Subtype vocabularies, verbatim from CR 205.3 (docs/rules/comprehensive-rules.txt, effective
  * 2026-06-19) — creature types (205.3m), planeswalker types (205.3j) and spell types (205.3k).
  * Reference DATA, not a heuristic: each is a complete, closed list, so a subtype these lookups
@@ -83,7 +83,27 @@ export const SPELL_TYPES: readonly string[] = [
   "Adventure", "Arcane", "Lesson", "Omen", "Trap",
 ];
 
+/** Land types, verbatim from CR 205.3i. */
+export const LAND_TYPES: readonly string[] = [
+  'Cave',
+  'Desert',
+  'Forest',
+  'Gate',
+  'Island',
+  'Lair',
+  'Locus',
+  'Mine',
+  'Mountain',
+  'Plains',
+  'Planet',
+  'Power-Plant',
+  'Sphere',
+  'Swamp',
+  'Tower',
+  'Town',
+  'Urza’s',
+];
 /** Lowercased index over every non-creature subtype vocabulary above. */
 export const NONCREATURE_SUBTYPE_BY_LOWER = new Map<string, string>(
-  [...PLANESWALKER_TYPES, ...SPELL_TYPES].map((t) => [t.toLowerCase(), t]),
+  [...PLANESWALKER_TYPES, ...SPELL_TYPES, ...LAND_TYPES].map((t) => [t.toLowerCase(), t]),
 );

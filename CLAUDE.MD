@@ -1,4 +1,4 @@
-# MTG Commander AI Simulator
+-# MTG Commander AI Simulator
 
 Read [docs/mtg-commander-ai-simulator-brief.md](docs/mtg-commander-ai-simulator-brief.md)
 in full before writing any code. It is the original v1 spec — do not start implementing
@@ -6,12 +6,28 @@ until you've read it. (The brief and this file historically referenced
 `docs/project-brief.md`; the real filename is the link above. See
 [docs/decisions/0001-foundations.md](docs/decisions/0001-foundations.md).)
 
-**v1 shipped and the project has moved past it.** The brief's Phase 0-5 plan is done;
-phases 6-10 (single-player mode, direct player controls, action animations, the
-player-experience overhaul, and a planned deck-testing lab) exist only as ADRs and plan
-docs under `docs/decisions/` and `docs/plans/` — read `docs/decisions/0021-player-experience-overhaul.md`
-(most recent) for where things currently stand. Where this file or the brief conflicts
-with a numbered ADR, the ADR wins.
+**v1 shipped and the project has moved past it.** The brief's Phase 0-5 plan is done.
+Single-player mode and direct player controls are live (ADRs 0018/0019); action
+animations are partly built (combat strikes, attack pulses, life-change flashes —
+`apps/web/src/composables/useCombatStrikes.ts`, `PermanentChip.vue`), short of the full
+`docs/plans/phase-8-action-animations.md`;
+the deck-testing lab (`docs/plans/phase-10-deck-testing-lab.md`) and the deferred AI
+features (`docs/plans/phase-11-deferred-ai-features.md`, ADR 0022) are unbuilt plans.
+
+**Numbered brief phases are no longer how work is organized.** Two streams are active:
+
+- **Card coverage — the main one.** [docs/plans/edh-staple-coverage.md](docs/plans/edh-staple-coverage.md)
+  organizes it as Tiers and Clusters, and recent commits are literally `Tier 2.1`, `Tier 2.2`,
+  `Tier 2.3`. Built on ADR 0025's card template layer. The interesting number is not overall
+  fixture coverage but its split: the precons the engine was built against sit at 97-100%,
+  community decks at 35-40%, and that gap is where every remaining mechanic of consequence lives.
+- **Bot and combat.** ADR 0023 (heuristic bot in `packages/bot`, batched combat) is accepted and
+  built through its Phase 5; ADR 0024 (bounded combat search) is still **Proposed** and is
+  blocked on ADR 0023's item 20 — `PermanentView` has no `keywords` projection, so the
+  `CombatSnapshot` 0024 specifies cannot be built from a `PlayerView` yet.
+
+Read `docs/decisions/` in descending order from **0025** for current state; ADR numbers, not
+this file, are the record. Where this file or the brief conflicts with a numbered ADR, the ADR wins.
 
 ## Current architecture at a glance
 
@@ -20,6 +36,8 @@ with a numbered ADR, the ADR wins.
   AI orchestration in `src/ai/`, deck import in `src/decks/`, card pool/coverage in
   `src/cards/`, SQLite in `src/db/`, match orchestration in `src/match/`, CLI entry
   points in `src/cli/`) → `apps/web` (Vue 3 spectator **and** player UI).
+  `packages/bot` is the deterministic heuristic bot (ADR 0023) — an alternative to the LLM
+  provider, scoring engine-offered options from a `PlayerView` with a seeded RNG, no I/O.
 - **AI provider:** OpenAI-compatible client (`packages/server/src/ai/client.ts`), not
   `@google/genai`. **OpenRouter is the default provider**, auto-detected from whichever
   `*_API_KEY` is set (Groq, Gemini, DeepSeek, and OpenAI are also supported presets) — see
@@ -106,6 +124,11 @@ bun run pool --write [--seed S]           # commit the 4 decks as fixtures
 
 # Play specific curated decklists against each other (fixtures or URLs):
 bun run play-decks <deckA> <deckB> ...
+
+# Bot combat search — multi-seed A/B and bound sweep (ADR 0024 sub-phase 7c).
+# Two seats run the search, two run the Phase 4 static heuristic, in the SAME seeded games.
+bun run combat-sweep [--games N] [--seed S] [--json out.json]
+bun run combat-sweep --top-k 1,2,4,16 --max-permanents 12   # sweep one axis at a time
 
 # Real-deck model coverage — the mechanics backlog:
 bun run coverage                          # per-deck + aggregate, ranked blocking mechanics

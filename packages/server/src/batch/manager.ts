@@ -56,6 +56,9 @@ export class BatchManager {
   private cancelled = false;
   constructor(private readonly deps: BatchManagerDeps) {}
 
+  /** Await completion, including durable failure cleanup. */
+  async settled(): Promise<void> { await this.running; }
+
   isActive(): boolean { return this.running !== null; }
   start(spec: BatchSpec): string {
     if (this.running !== null || this.deps.store.batches().activeBatchExists()) throw new Error('A batch is already running.');
@@ -82,8 +85,11 @@ export class BatchManager {
 
   private async run(batchId: string, spec: BatchSpec): Promise<void> {
     const repo = this.deps.store.batches();
+    let scenarioId = spec.scenarios[0]?.id ?? '';
+    try {
     repo.markRunning(batchId);
     for (const [scenarioIndex, scenario] of spec.scenarios.entries()) {
+      scenarioId = scenario.id;
       if (this.cancelled) { repo.markFinished(batchId, 'cancelled'); return; }
       const setup = await setupSeats(scenario.seats, this.deps, `${spec.seed}:scenario:${scenarioIndex + 1}`);
       if (!setup.ok) { const failure: BatchFailure = { scenarioId: scenario.id, gameIndex: null, reason: setup.problems.map((problem) => `${problem.seat}: ${problem.message}`).join('\n'), kind: 'setup' }; repo.markFinished(batchId, 'failed', failure); return; }
@@ -92,9 +98,9 @@ export class BatchManager {
         const seed = deriveBatchGameSeed(spec.seed ?? '', scenarioIndex, gameIndex);
         const gameId = `${batchId}-${scenario.id}-${gameIndex + 1}`;
         repo.createGame(batchId, scenario.id, gameIndex, gameId, seed);
+        try {
         const session = new MatchSession({ gameId, seed, seats: setup.seats, providerKind: scenario.providerKind, store: this.deps.store, playbackMode: 'live', livePaceMs: 0, ...(scenario.reflectionEnabled !== undefined ? { reflectionEnabled: scenario.reflectionEnabled } : {}), send: () => undefined });
         this.currentSession = session;
-        try {
           session.start();
           await session.settled();
           const status = session.runner.getStatus();
@@ -107,6 +113,9 @@ export class BatchManager {
       }
     }
     repo.markFinished(batchId, 'completed');
+    } catch (error) {
+      repo.markFinished(batchId, this.cancelled ? 'cancelled' : 'failed', { scenarioId, gameIndex: null, reason: error instanceof Error ? error.message : String(error), kind: 'exception' });
+    }
   }
 }
 

@@ -22,7 +22,7 @@ describe('StatsRepository', () => {
     }], [], [], [], []])).deckStatistics();
 
     expect(stats).toHaveLength(1);
-    expect(stats[0]).toMatchObject({ name: 'Test Deck', gamesPlayed: 0, winRate: 0, manaFloodRate: 0 });
+    expect(stats[0]).toMatchObject({ name: 'Test Deck', gamesPlayed: 0, winRate: 0, manaFloodRate: null, manaDroughtRate: null });
   });
 
   it('bundles every persisted source required by the JSON game export', () => {

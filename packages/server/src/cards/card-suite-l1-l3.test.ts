@@ -3,7 +3,7 @@ import { interpretCard } from '../../../engine/src/cards/interpret';
 import { executeAbility } from '../../../engine/src/effects/resolve';
 import { createGame } from '../../../engine/src/state/game';
 import type { GameContext } from '../../../engine/src/state/types';
-import { copies, drive, forest, gameConfig, makeEngine, oracle, pump, registerDef, RuleBasedProvider, spawn, whenChoose } from '../../../engine/tests/fixtures';
+import { conjure, copies, drive, forest, gameConfig, makeEngine, oracle, pump, registerDef, RuleBasedProvider, spawn, whenChoose } from '../../../engine/tests/fixtures';
 import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
 import type { OracleCard } from '@mtg/shared';
@@ -44,7 +44,7 @@ const IMPLEMENTED_CARDS = [
 ];
 
 function getOracleCard(name: string): OracleCard {
-  const raw = (scryfallCards ?? []).find((c: any) => c.name === name);
+  const raw = (scryfallCards ?? []).find((c) => c.name === name);
   if (!raw) throw new Error(`Card not found in scryfall data: ${name}`);
   const oracleCard = toOracleCard(raw);
   if (!oracleCard) throw new Error(`Failed to convert scryfall data for: ${name}`);
@@ -114,10 +114,9 @@ describe.skipIf(SKIP)('L2: Fixture & Unit Behavioral Tests', () => {
 
     // 3. Path to Exile "may search" optional decision (Yes vs No)
     const p2Target = spawn(ctx, 'P2', oracle({ name: 'Ogre', typeLine: 'Creature', manaCost: '{2}' }));
-    const p2 = ctx.state.players.find((p) => p.id === 'P2')!;
     const plainsCard = oracle({ name: 'Plains', typeLine: 'Basic Land — Plains', supertypes: ['Basic'], types: ['Land'] });
     registerDef(ctx, plainsCard);
-    p2.library = [plainsCard as any];
+    conjure(ctx, 'P2', plainsCard, 'library');
     const pathCard = getOracleCard('Path to Exile');
     const pathSpell = spawn(ctx, 'P1', pathCard);
     const defPath = interpretCard(pathCard);
@@ -133,9 +132,9 @@ describe.skipIf(SKIP)('L2: Fixture & Unit Behavioral Tests', () => {
 
     // 4. Populate multi-token decision
     const token1 = spawn(ctx, 'P1', oracle({ name: 'Soldier', typeLine: 'Creature — Soldier', power: '1', toughness: '1' }));
-    (token1 as any).isToken = true;
+    token1.isToken = true;
     const token2 = spawn(ctx, 'P1', oracle({ name: 'Beast', typeLine: 'Creature — Beast', power: '3', toughness: '3' }));
-    (token2 as any).isToken = true;
+    token2.isToken = true;
     const rootbornCard = getOracleCard('Rootborn Defenses');
     const rootbornSpell = spawn(ctx, 'P1', rootbornCard);
     const defRootborn = interpretCard(rootbornCard);

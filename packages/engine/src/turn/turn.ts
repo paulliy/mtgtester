@@ -34,8 +34,16 @@ function untapStep(ctx: GameContext): void {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
   setPhase(ctx, 'beginning', 'untap');
   ap.landsPlayedThisTurn = 0;
+  for (const player of ctx.state.players) {
+    player.cardsDrawnThisTurn = 0;
+    player.cardsDrawnThisDrawStep = 0;
+    player.spellsCastThisTurn = 0;
+    player.noncreatureSpellsCastThisTurn = 0;
+    player.playFromZoneTypeUsesThisTurn = {};
+  }
   ctx.state.excessDamageControllerIds = [];
   ctx.state.damageDealtToPlayersThisTurn = {};
+  ctx.state.lifeLostThisTurn = {};
   ctx.state.combatDamagePlayersBySource = {};
   ctx.state.creaturesDiedThisTurn = 0;
   ctx.state.combatDamagePrevention = { all: false, players: {} };
@@ -83,7 +91,7 @@ function untapStep(ctx: GameContext): void {
  */
 export function queueStepTriggers(
   ctx: GameContext,
-  when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'mainPhase' | 'beginningOfCombat',
+  when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'mainPhase' | 'precombatMain' | 'beginningOfCombat',
 ): void {
   const apId = ctx.state.currentTurnPlayer;
   for (const perm of [...ctx.state.battlefield]) {
@@ -124,7 +132,10 @@ export function queueStepTriggers(
   }
   const remainingDelayed = [];
   for (const delayed of ctx.state.delayedTriggers) {
-    if (delayed.when === when) {
+    // "your next upkeep" is not "the next upkeep": a player-scoped delayed trigger waits for its
+    // own controller's step, the same `player === 'you'` filter the permanent loop above applies.
+    const scoped = delayed.player === 'you' && delayed.controllerId !== apId;
+    if (delayed.when === when && !scoped) {
       ctx.state.pendingTriggers.push({
         controllerId: delayed.controllerId,
         sourceCardId: delayed.sourceCardId,
@@ -134,7 +145,7 @@ export function queueStepTriggers(
         ...(delayed.targetId !== undefined ? { triggerObjectCardId: delayed.targetId } : {}),
       });
       debug(ctx, 'stack', `delayed ${when} trigger queued: ${delayed.id}`);
-      if (delayed.expiry === 'endStep') {
+      if (delayed.expiry === 'endStep' || delayed.expiry === 'onFire') {
         continue;
       }
     }
@@ -170,6 +181,7 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
     for (const perm of ctx.state.battlefield) {
       perm.damageMarked = 0;
       perm.damagedByDeathtouch = false;
+      delete perm.mustAttackThisTurn;
     }
     endUntilEotEffects(ctx);
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter((dt) => dt.expiry !== 'cleanup');
@@ -200,7 +212,7 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   untapStep(ctx);
 
   if (ctx.state.createdTokenThisTurn) {
-    for (const p of Object.keys(ctx.state.createdTokenThisTurn)) ctx.state.createdTokenThisTurn[p as any] = false;
+    for (const player of ctx.state.players) ctx.state.createdTokenThisTurn[player.id] = false;
   }
   setStep(ctx, 'upkeep');
   queueStepTriggers(ctx, 'upkeep');
@@ -208,6 +220,10 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   emptyManaPools(ctx);
 
   setStep(ctx, 'draw');
+  // Reset before the turn-based draw, so the active player's own draw is the FIRST one counted
+  // in their draw step. Only the active player has a draw step, so the others' counters are
+  // reset here purely to keep the field meaningless rather than stale for them.
+  for (const player of ctx.state.players) player.cardsDrawnThisDrawStep = 0;
   queueStepTriggers(ctx, 'drawStep');
   yield* drawCards(ctx, ap, 1); // multiplayer: first-turn draw included (brief §5.3)
   if (ctx.state.monarchPlayerId === ap.id) {
@@ -220,6 +236,9 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   // Precombat main.
   setPhase(ctx, 'precombatMain', null);
   queueStepTriggers(ctx, 'mainPhase');
+  // "your first main phase" is the precombat one specifically, so it gets its own event
+  // alongside the both-mains `mainPhase` above rather than replacing it.
+  queueStepTriggers(ctx, 'precombatMain');
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 

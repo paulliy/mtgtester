@@ -26,7 +26,6 @@ import {
   mana,
   manaCost,
   onCast,
-  onDies,
   onEtb,
   onUpkeep,
   spell,

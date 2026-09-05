@@ -78,6 +78,8 @@ function main(): void {
 
   const server = new GameServer({ pool, index, banned, store, port: args.port });
   const handle = server.listen();
+  // Recover only after acquiring the port: a failed second launch must not close live work.
+  store?.batches().recoverInterrupted();
 
   console.log(`\nMTG Commander AI Simulator — spectator server`);
   console.log('─'.repeat(45));

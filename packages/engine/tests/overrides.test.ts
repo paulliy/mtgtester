@@ -218,12 +218,13 @@ describe('Desolate Mire (real registration regression)', () => {
   // calling it on a real oracle id would permanently remove that card's override for every other
   // test in this worker, corrupting `override-defs.test.ts`'s golden-snapshot check.
 
-  it('does not leave the interpreter\'s own stack-based reading of the same line behind', () => {
-    // "{1}, {T}: Add {W}{B}." has a mana-inclusive cost, so CR 605.1a disqualifies it as a mana
-    // ability and the interpreter's OWN generic parse reads it as a stack-based activated
-    // ability. The override deliberately keeps this land a true (uncounterable) mana ability
-    // instead — which means it must also clear the interpreter's activated-ability reading, or
-    // the land would offer its mana twice.
+  it('reads as a mana ability that charges its own {1}', () => {
+    // "{1}, {T}: Add {W}{B}." An override used to author this as a mana ability at a time when
+    // nothing paid a mana ability's mana cost, so it tapped this land for two mana out of
+    // nothing, every turn. The override is gone and the interpreter's own parse now produces the
+    // same shape honestly: `planPayment` pays for its own sources, so the {1} is charged and the
+    // ability keeps the property a real filter land has of not using the stack.
+    // See `tests/mana-cost-in-mana-ability.test.ts`.
     const def = interpretCard(
       oracle({
         name: 'Desolate Mire',
@@ -233,7 +234,8 @@ describe('Desolate Mire (real registration regression)', () => {
       }),
     );
 
-    expect(def.manaAbilities).toHaveLength(1);
     expect(def.activatedAbilities).toEqual([]);
+    expect(def.manaAbilities).toHaveLength(1);
+    expect(def.manaAbilities[0]?.units).toEqual([['W'], ['B']]);
   });
 });

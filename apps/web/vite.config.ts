@@ -8,7 +8,7 @@ import vue from '@vitejs/plugin-vue';
  * URL from `window.location` and a production build needs no configuration.
  */
 const gameServerPort = Number.parseInt(process.env.GAME_SERVER_PORT ?? '3001', 10);
-const gameServerHost = `localhost:${Number.isFinite(gameServerPort) ? gameServerPort : 3001}`;
+const gameServerHost = `127.0.0.1:${Number.isFinite(gameServerPort) ? gameServerPort : 3001}`;
 
 export default defineConfig({
   plugins: [vue()],

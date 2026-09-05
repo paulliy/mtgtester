@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ComponentPublicInstance } from 'vue';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { SpectatorPermanent } from '@mtg/shared';
 import CardImage from './CardImage.vue';
@@ -13,7 +14,7 @@ const props = withDefaults(
     permanent: SpectatorPermanent;
     count?: number;
     /** Object/card id → display name, for naming a blocked attacker. Optional; falls back to id. */
-    nameById?: Map<string, string>;
+    nameById?: Map<string, string> | undefined;
   }>(),
   { count: 1 },
 );
@@ -54,7 +55,7 @@ watch(
 );
 
 const tileEl = ref<HTMLElement | null>(null);
-function setTileEl(el: Element | null): void {
+function setTileEl(el: Element | ComponentPublicInstance | null): void {
   tileEl.value = el instanceof HTMLElement ? el : null;
 }
 /** Anchor id is the permanent's object id, so the combat overlay can draw a line to it. */

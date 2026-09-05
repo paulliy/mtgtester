@@ -26,14 +26,14 @@ const additionalCostCards = [
     name: 'Deadly Dispute',
     typeLine: 'Instant',
     manaCost: '{1}{B}',
-    oracleText: 'As an additional cost to cast this spell, sacrifice an artifact or creature.' + String.fromCharCode(10) + 'Draw two cards and create two Treasure tokens.',
+    oracleText: 'As an additional cost to cast this spell, sacrifice an artifact or creature.' + String.fromCharCode(10) + 'Draw two cards and create a Treasure token.',
     expected: { kind: 'sacrificeOther', selector: 'artifactOrCreature' },
   },
   {
     name: 'Big Score',
     typeLine: 'Instant',
     manaCost: '{3}{R}',
-    oracleText: 'As an additional cost to cast this spell, discard a card.' + String.fromCharCode(10) + 'Create two Treasure tokens. Draw two cards.',
+    oracleText: 'As an additional cost to cast this spell, discard a card.' + String.fromCharCode(10) + 'Draw two cards and create two Treasure tokens.',
     expected: { kind: 'discardCard' },
   },
   {
@@ -54,14 +54,14 @@ const additionalCostCards = [
     name: 'Crop Rotation',
     typeLine: 'Instant',
     manaCost: '{G}',
-    oracleText: 'As an additional cost to cast this spell, sacrifice a land.' + String.fromCharCode(10) + 'Search your library for a basic land card, put that card onto the battlefield, then shuffle.',
+    oracleText: 'As an additional cost to cast this spell, sacrifice a land.' + String.fromCharCode(10) + 'Search your library for a land card, put that card onto the battlefield, then shuffle.',
     expected: { kind: 'sacrificeOther', selector: 'land' },
   },
   {
     name: 'Harrow',
     typeLine: 'Instant',
     manaCost: '{2}{G}',
-    oracleText: 'As an additional cost to cast this spell, sacrifice a land.' + String.fromCharCode(10) + 'Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.',
+    oracleText: 'As an additional cost to cast this spell, sacrifice a land.' + String.fromCharCode(10) + 'Search your library for up to two basic land cards, put them onto the battlefield, then shuffle.',
     expected: { kind: 'sacrificeOther', selector: 'land' },
   },
 ] as const;

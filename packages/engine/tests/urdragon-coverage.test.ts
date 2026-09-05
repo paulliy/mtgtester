@@ -88,10 +88,12 @@ const MODELED = [
   'Path of Ancestry',
   'Scaled Nurturer',
   // Inc 12b â€” conditional-amount + linked mana; `addMana` from a resolving (non-activation)
-  // ability. Skycloud Expanse, Orb of Dragonkind, and Carnelian Orb of Dragonkind stay
-  // unmodeled â€” see the increment note in the plan for why.
+  // ability. Skycloud Expanse and Carnelian Orb of Dragonkind stay unmodeled â€” see the
+  // increment note in the plan for why. Orb of Dragonkind joined once a mana ability could
+  // charge its own `{1}` (`mana-cost-in-mana-ability.test.ts`).
   'Ilysian Caryatid',
   'Klauth, Unrivaled Ancient',
+  'Orb of Dragonkind',
   // Inc 13 â€” rule-modifying statics: cost reduction (fixed and dynamic, including from the
   // command zone), "can't be countered" as a state-dependent rule (not just a fixed spell
   // property), "opponents can't cast spells", casting from the top of the library.
@@ -135,7 +137,6 @@ const MODELED = [
   'Kairi, the Swirling Sky',
   "Lozhan, Dragons' Legacy",
   'Morophon, the Boundless',
-  'Orb of Dragonkind',
   'Rivaz of the Claw',
   'Sarkhan, Dragon Ascendant',
   'Sarkhan, Soul Aflame',

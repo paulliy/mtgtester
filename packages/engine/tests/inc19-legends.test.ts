@@ -217,6 +217,8 @@ describe('Ur-Dragon residual-card implementation', () => {
       'Kairi, the Swirling Sky',
       "Lozhan, Dragons' Legacy",
       'Morophon, the Boundless',
+      // Back on the list: its `{1}, {T}` mana ability is honoured now that `planPayment` pays
+      // for its own sources (`mana-cost-in-mana-ability.test.ts`).
       'Orb of Dragonkind',
       'Rivaz of the Claw',
       'Sarkhan, Dragon Ascendant',

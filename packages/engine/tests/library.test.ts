@@ -222,7 +222,7 @@ describe('library search', () => {
           manaCost: '{B}',
           power: null,
           toughness: null,
-          oracleText: 'Search your library for a card, then shuffle and put that card on top.',
+          oracleText: 'Search your library for a card, then shuffle and put that card on top. You lose 2 life.',
         }),
         target: oracle({ name: 'Tutor Any Card' }),
         other: oracle({ name: 'Tutor Another Card' }),

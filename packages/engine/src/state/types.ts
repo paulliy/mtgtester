@@ -12,6 +12,7 @@
  */
 
 import type {
+  Color,
   ContinuousEffect,
   GameEvent,
   GameId,
@@ -48,10 +49,14 @@ export interface EngineObject extends GameObject {
   isToken: boolean;
   /** Commander-ness is a property of the physical card (brief §5.7). */
   isCommander: boolean;
+  /** This object entered the stack/battlefield through an Escape alternative cost. */
+  escaped?: boolean;
 }
 
 export interface EnginePermanent extends PermanentState, EngineObject {
   zone: 'battlefield';
+  /** Whether a transforming double-faced permanent currently uses its back face. */
+  transformed: boolean;
   /** Player this creature is attacking, while in combat. */
   attacking: PlayerId | null;
   /** Attacker this creature is blocking, while in combat. */
@@ -70,6 +75,8 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   goadedBy?: GoadRequirement[];
   /** Latched during declare attackers for "had to attack this combat" triggers. */
   hadToAttackThisCombat?: boolean;
+  /** A temporary requirement for this creature to attack this turn if able. */
+  mustAttackThisTurn?: boolean;
   /** A temporary requirement for this creature to block if able. */
   mustBlockThisTurn?: boolean;
   /** Printed/static restriction: this creature cannot block. */
@@ -130,6 +137,10 @@ export interface EnginePermanent extends PermanentState, EngineObject {
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
 export interface EngineCardObject extends EngineObject {
+  /** X announced when this card was cast, retained while it resolves into a permanent. */
+  announcedX?: number;
+  /** Mana from Treasure permanents spent to cast this card, retained until it enters. */
+  treasureManaSpentToCast?: number;
   /** Counters last held while this card was a permanent, for death-triggered effects. */
   rememberedCounters?: Record<string, number>;
   /** 903.9a flag — see `EnginePermanent.commanderSbaPending`. */
@@ -143,6 +154,8 @@ export interface EngineCardObject extends EngineObject {
    * which player may cast this exiled card, and only until the cleanup step clears the grant.
    */
   playableUntilEotBy?: PlayerId;
+  /** Rebound's one-shot permission to cast this card from exile at the next upkeep. */
+  reboundCastBy?: PlayerId;
 }
 
 export interface EngineStackObject extends StackObject {
@@ -163,6 +176,9 @@ export interface EngineStackObject extends StackObject {
   triggerObjectCardId?: CardId;
   /** Numbers the firing event contributed (count, damage, spell mana value). */
   triggerScope?: TriggerScope;
+  /** Kicker announcement state retained while the spell is on the stack. */
+  wasKicked?: boolean;
+  kicked?: boolean;
   /** The X announced when this spell was cast (CR 601.2b), for its own effects to read. */
   announcedX?: number;
   /**
@@ -181,6 +197,12 @@ export interface EngineStackObject extends StackObject {
    */
   divisionAmounts?: Record<ObjectId, number>;
   grantHasteOnResolution?: boolean;
+  /** The original hand-cast carried Rebound and should be exiled after resolving. */
+  reboundPending?: boolean;
+  /** Flashback/Escape-style casts exile the spell after resolution or fizzle. */
+  exileOnResolution?: boolean;
+  /** This spell was announced for its Escape cost. */
+  escaped?: boolean;
 }
 
 export interface EngineEmblem {
@@ -220,6 +242,21 @@ export interface EnginePlayerState extends PlayerState {
   commanderNames: Record<CardId, string>;
   /** Set when a draw was attempted from an empty library (loss at next SBA check). */
   attemptedDrawFromEmptyLibrary: boolean;
+  /** Number of cards this player has drawn during the current turn. */
+  cardsDrawnThisTurn: number;
+  /**
+   * Cards drawn since this player's own draw step began (CR 504.1). Distinct from
+   * `cardsDrawnThisTurn`, which spans the whole game turn: "except the first one they draw in
+   * each of their draw steps" (Orcish Bowmasters, Notion Thief) exempts exactly one draw, and
+   * only the one taken in that player's own draw step.
+   */
+  cardsDrawnThisDrawStep: number;
+  /** Number of spells this player has cast during the current turn. */
+  spellsCastThisTurn: number;
+  /** Of those, the ones that were not creature spells ("you've cast a noncreature spell"). */
+  noncreatureSpellsCastThisTurn: number;
+  /** Muldrotha-style graveyard play uses, keyed by the permanent type spent. */
+  playFromZoneTypeUsesThisTurn: Record<string, number>;
   mulligansTaken: number;
   /** The player's decklist (oracle ids) — contents only; feeds the PlayerView. */
   decklistOracleIds: OracleId[];
@@ -240,10 +277,22 @@ export interface UntilEotEffect extends ContinuousEffect {
    * creature entering afterwards is not pumped and one that leaves and returns is not either.
    */
   targetCardIds: CardId[];
-  kind: 'ptDelta' | 'grantKeyword' | 'grantAbility' | 'cantBeBlocked' | 'becomeCreature';
+  kind:
+    | 'ptDelta'
+    | 'grantKeyword'
+    | 'grantProtection'
+    | 'grantAbility'
+    | 'cantBeBlocked'
+    | 'becomeCreature';
   power?: number;
   toughness?: number;
   keyword?: KeywordAbility;
+  /**
+   * "…gain protection from each color until end of turn" (Akroma's Will). Protection is not a
+   * `KeywordAbility` — it carries an argument — so it needs its own field and its own layer-6
+   * op (`addProtection`) rather than riding on `keyword`.
+   */
+  protectionFrom?: Color[];
   ability?: Ability;
   /**
    * "Becomes a 4/4 red and green Dragon artifact creature with flying until end of turn"
@@ -302,7 +351,19 @@ export interface DelayedTrigger {
   targetId?: CardId;
   when: TriggerWhen;
   ability: Ability;
-  expiry: 'endStep' | 'cleanup';
+  /**
+   * `'endStep'`/`'cleanup'` are step- and turn-scoped: the trigger is swept when that boundary
+   * passes, whether or not it fired. `'onFire'` is the opposite — it survives every cleanup and
+   * is removed only once it has fired, which is what a delayed trigger waiting for a LATER turn
+   * (Rebound's "at the beginning of your next upkeep") needs.
+   */
+  expiry: 'endStep' | 'cleanup' | 'onFire';
+  /**
+   * `'you'` restricts firing to the controller's own step. Without it a `when: 'upkeep'` delayed
+   * trigger fires at the next upkeep in turn order, whoever's it is — right for "the next end
+   * step", wrong for "your next upkeep".
+   */
+  player?: 'you';
 }
 
 export interface EngineState extends GameState {
@@ -342,6 +403,8 @@ export interface EngineState extends GameState {
   excessDamageControllerIds: PlayerId[];
   /** Total damage dealt to each player THIS TURN (Spinerock Knoll). Reset at untap step. */
   damageDealtToPlayersThisTurn: Record<PlayerId, number>;
+  /** Whether each player has lost life THIS TURN. */
+  lifeLostThisTurn: Record<PlayerId, boolean>;
   /** Whether each player has created a token THIS TURN (Idol of Oblivion). Reset at untap step. */
   createdTokenThisTurn: Record<PlayerId, boolean>;
   /** Number of creatures put into graveyards this turn. */

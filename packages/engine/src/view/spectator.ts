@@ -52,7 +52,7 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
     toughness: isCreature ? chars.toughness : null,
     damageMarked: perm.damageMarked,
     counters: { ...perm.counters },
-    statuses: [...perm.statuses],
+    statuses: [...new Set([...perm.statuses, ...(perm.faceDown ? ['faceDown' as const] : [])])],
     summoningSick: perm.summoningSick && isCreature,
     attachedTo: perm.attachedTo,
     attacking: perm.attacking,

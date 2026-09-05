@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Engine } from '@mtg/engine';
 import type { DecisionRequest, PlayerView } from '@mtg/shared';
 import type { AiClient } from './client';
+
+type AiCallResult = Awaited<ReturnType<AiClient['requestDecision']>>;
 import { DEFAULT_AI_CONFIG } from './config';
 import { StrategyCoordinator } from './strategy-coordinator';
 
@@ -43,11 +45,11 @@ function makeRequest(overrides: Partial<DecisionRequest> = {}): DecisionRequest 
 
 describe('Empirical Stress Testing (R1 & R3)', () => {
   it('Stress Test 1a: Rapid back-to-back opponent interventions reject all in-flight stale plans', async () => {
-    let resolveCall1!: (val: any) => void;
-    let resolveCall2!: (val: any) => void;
+    let resolveCall1!: (val: AiCallResult) => void;
+    let resolveCall2!: (val: AiCallResult) => void;
 
-    const promise1 = new Promise<any>((r) => { resolveCall1 = r; });
-    const promise2 = new Promise<any>((r) => { resolveCall2 = r; });
+    const promise1 = new Promise<AiCallResult>((r) => { resolveCall1 = r; });
+    const promise2 = new Promise<AiCallResult>((r) => { resolveCall2 = r; });
 
     let callCount = 0;
     const client: AiClient = {
@@ -161,7 +163,7 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
   });
 
   it('Stress Test 2a: Reverse order promise settlement across 3 turn transitions', async () => {
-    const resolvers: Array<(val: any) => void> = [];
+    const resolvers: Array<(val: AiCallResult) => void> = [];
     const client: AiClient = {
       activeModel: 'test-model',
       requestDecision: vi.fn().mockImplementation(() => {
@@ -228,10 +230,10 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
   });
 
   it('Stress Test 3: Turn change mid-flight rejects turn 1 strategist completion', async () => {
-    let resolveTurn1!: (val: any) => void;
-    let resolveTurn2!: (val: any) => void;
-    const promise1 = new Promise<any>((r) => { resolveTurn1 = r; });
-    const promise2 = new Promise<any>((r) => { resolveTurn2 = r; });
+    let resolveTurn1!: (val: AiCallResult) => void;
+    let resolveTurn2!: (val: AiCallResult) => void;
+    const promise1 = new Promise<AiCallResult>((r) => { resolveTurn1 = r; });
+    const promise2 = new Promise<AiCallResult>((r) => { resolveTurn2 = r; });
 
     let count = 0;
     const client: AiClient = {

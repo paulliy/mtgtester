@@ -1,42 +1,16 @@
 import fs from 'fs';
-import { createGame } from '../../../engine/src/state/game';
-import { gameConfig, makeEngine, RuleBasedProvider, whenChoose } from '../../../engine/tests/fixtures';
+import { resolve } from 'node:path';
+import {
+  makeEngine,
+  RuleBasedProvider,
+  whenChoose,
+} from '../../../engine/tests/fixtures';
 import type { Engine } from '../../../engine/src/engine';
-import scryfallCards from '../../../../data/scryfall-oracle-cards.json' assert { type: 'json' };
+import { loadScryfallBulkOrNull } from '../cards/scryfall-bulk-fixture';
 import { toOracleCard } from '../cards/scryfall';
 import type { OracleCard } from '@mtg/shared';
+import type { RawScryfallCard } from '../cards/scryfall';
 import { parsePlaintextDeck } from '../decks/plaintext';
-
-const IMPLEMENTED_CARDS = [
-  'Emmara, Soul of the Accord',
-  "Karametra's Favor",
-  'Leafkin Druid',
-  'Nullmage Shepherd',
-  'Thunderfoot Baloth',
-  'Fortified Village',
-  'Overwhelming Instinct',
-  'Rishkar, Peema Renegade',
-  'Ajani, Caller of the Pride',
-  'Sylvan Reclamation',
-  'Mentor of the Meek',
-  "Commander's Insignia",
-  'Voice of Many',
-  'Loyal Guardian',
-  'Dawn of Hope',
-  'Hornet Nest',
-  'Idol of Oblivion',
-  'Trostani Discordant',
-  'Harvest Season',
-  'Slate of Ancestry',
-  'Scavenging Ooze',
-  'Felidar Retreat',
-  'Great Oak Guardian',
-  'Conclave Tribunal',
-  'Champion of Lambholt',
-  'Curse of Bounty',
-  'Path to Exile',
-  'Rootborn Defenses',
-];
 
 /**
  * Drive up to `maxSteps` decisions, stopping early on game-over. Unlike `drive()` (which runs
@@ -53,8 +27,20 @@ function runBoundedMatch(engine: Engine, provider: RuleBasedProvider, maxSteps: 
   }
 }
 
+/** The bulk file, loaded on first use. Throws rather than skipping: this is a CLI harness a
+ * human invoked, so a missing file is an actionable setup error, not a reason to no-op. */
+function bulk(): RawScryfallCard[] {
+  const cards = loadScryfallBulkOrNull();
+  if (cards === null) {
+    throw new Error(
+      'data/scryfall-oracle-cards.json is required for this harness — see data/README.md.',
+    );
+  }
+  return cards;
+}
+
 function getOracleCard(name: string): OracleCard {
-  const raw = (scryfallCards as any[]).find((c: any) => c.name === name);
+  const raw = bulk().find((c) => c.name === name);
   if (!raw) throw new Error(`Card not found: ${name}`);
   const card = toOracleCard(raw);
   if (!card) throw new Error(`Failed to convert card: ${name}`);
@@ -62,10 +48,13 @@ function getOracleCard(name: string): OracleCard {
 }
 
 export function loadTokenTriumphDeck(): OracleCard[] {
-  const text = fs.readFileSync('c:/Users/paulf/OneDrive/Documents/GitHub/mtgtester/packages/server/fixtures/coverage-decks/token-triumph.txt', 'utf8');
+  const text = fs.readFileSync(
+    resolve('packages/server/fixtures/coverage-decks/token-triumph.txt'),
+    'utf8',
+  );
   const parsed = parsePlaintextDeck(text);
   const cardMap = new Map<string, OracleCard>();
-  for (const raw of scryfallCards as any[]) {
+  for (const raw of bulk()) {
     const card = toOracleCard(raw);
     if (card) cardMap.set(card.name, card);
   }
@@ -86,16 +75,15 @@ export function runL4PracticeMatch(): { success: boolean; cardsTestedCount: numb
   const forestCard = getOracleCard('Forest');
   const plainsCard = getOracleCard('Plains');
 
-  const p2Cards: OracleCard[] = Array.from({ length: 100 }, (_, i) => (i % 2 === 0 ? forestCard : plainsCard));
+  const p2Cards: OracleCard[] = Array.from({ length: 100 }, (_, i) =>
+    i % 2 === 0 ? forestCard : plainsCard,
+  );
 
-  const engine = makeEngine([
-    { cards: deckCards },
-    { cards: p2Cards },
-  ], { seed: 'l4-practice-seed' });
+  const engine = makeEngine([{ cards: deckCards }, { cards: p2Cards }], {
+    seed: 'l4-practice-seed',
+  });
 
-  const provider = new RuleBasedProvider([
-    whenChoose({ option: /./ }),
-  ]);
+  const provider = new RuleBasedProvider([whenChoose({ option: /./ })]);
 
   runBoundedMatch(engine, provider, 20_000);
   console.log(`L4 Practice Match complete. Turn reached: ${engine.getState().turnNumber}`);
@@ -108,19 +96,20 @@ export function runL6SpectatorMatch(): { success: boolean; aiPassCount: number }
   const forestCard = getOracleCard('Forest');
   const plainsCard = getOracleCard('Plains');
 
-  const p2Cards: OracleCard[] = Array.from({ length: 100 }, (_, i) => (i % 2 === 0 ? forestCard : plainsCard));
+  const p2Cards: OracleCard[] = Array.from({ length: 100 }, (_, i) =>
+    i % 2 === 0 ? forestCard : plainsCard,
+  );
 
-  const engine = makeEngine([
-    { cards: deckCards },
-    { cards: p2Cards },
-  ], { seed: 'l6-spectator-seed' });
+  const engine = makeEngine([{ cards: deckCards }, { cards: p2Cards }], {
+    seed: 'l6-spectator-seed',
+  });
 
-  const provider = new RuleBasedProvider([
-    whenChoose({ option: /./ }),
-  ]);
+  const provider = new RuleBasedProvider([whenChoose({ option: /./ })]);
 
   runBoundedMatch(engine, provider, 20_000);
-  console.log(`L6 Spectator Match complete. Game ended cleanly with turn ${engine.getState().turnNumber}`);
+  console.log(
+    `L6 Spectator Match complete. Game ended cleanly with turn ${engine.getState().turnNumber}`,
+  );
   return { success: true, aiPassCount: deckCards.length };
 }
 

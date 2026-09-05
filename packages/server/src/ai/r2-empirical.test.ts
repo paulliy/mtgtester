@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { DecisionRequest, DecisionResponse, PlannedAction } from '@mtg/shared';
+import type { DecisionRequest, PlannedAction } from '@mtg/shared';
 import { TurnPlanManager } from './turn-plan';
 
 function makeRequest(overrides: Partial<DecisionRequest> = {}): DecisionRequest {

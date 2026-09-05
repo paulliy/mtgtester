@@ -17,10 +17,11 @@ import {
   makePermanent,
   moveObject,
   queueCastTriggers,
+  queueKeywordCastTriggers,
   queueTriggersForEvent,
   removeFromCurrentZone,
 } from '../state/objects';
-import { getDefByOracleId, wardCostOf } from '../state/queries';
+import { activatingAbilitiesBlockedFor, castFromLibraryTopCandidates, getDefByOracleId, playFromZonePermission, wardCostOf } from '../state/queries';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -29,7 +30,7 @@ import type {
   GameContext,
 } from '../state/types';
 import type { PriorityActionPayload } from './legal';
-import { activationCostReductionFor, computeTargetOptions, costReductionFor, manaPortionOf, maxChoicesFor, selectedModeTargetSlots, validateChosenTargets } from './legal';
+import { activationCostReductionFor, computeTargetOptions, costReductionFor, handActivationCost, manaPortionOf, maxChoicesFor, selectedModeTargetSlots, validateChosenTargets } from './legal';
 import { breakYieldsForStop } from '../turn/stops';
 
 /**
@@ -100,10 +101,16 @@ function* payActivationCosts(
     if (totalPips(mana) > 0) {
       // The purpose must match the one `computePriorityOptions` used to decide affordability, or
       // restricted mana that made the ability appear payable would not be spendable here.
-      yield* payManaCost(ctx, player, mana, {
-        kind: 'activateAbility',
-        sourceOracleId: perm.oracleId,
-      });
+      const spendsSource = costs.some((cost) =>
+        cost.kind === 'tap' || cost.kind === 'sacrificeSelf' || cost.kind === 'exileSelf',
+      );
+      yield* payManaCost(
+        ctx,
+        player,
+        mana,
+        { kind: 'activateAbility', sourceOracleId: perm.oracleId },
+        spendsSource ? [perm.cardId] : [],
+      );
     }
   };
   if (paysManaBeforeSacrifice) yield* payMana();
@@ -171,6 +178,39 @@ function queueBecomesTargetedTriggers(
   queueTriggersForEvent(ctx, 'becomesTargeted', subjects);
 }
 
+function validatePlayFromZonePermission(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  card: EngineCardObject,
+  zone: 'libraryTop' | 'graveyard',
+  chosenBudgetType: string | undefined,
+): string | undefined {
+  const permission = playFromZonePermission(ctx, player.id, card, zone);
+  if (permission === null) throw new Error(`play from ${zone} is not legal`);
+  if (permission.budgetTypes === undefined) {
+    if (chosenBudgetType !== undefined) throw new Error('unexpected permanent-type budget choice');
+    return undefined;
+  }
+  if (chosenBudgetType === undefined || !permission.budgetTypes.includes(chosenBudgetType)) {
+    throw new Error('permanent-type play budget is not available');
+  }
+  return chosenBudgetType;
+}
+
+function consumePlayFromZonePermission(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  card: EngineCardObject,
+  zone: 'libraryTop' | 'graveyard',
+  chosenBudgetType: string | undefined,
+): void {
+  const budgetType = validatePlayFromZonePermission(ctx, player, card, zone, chosenBudgetType);
+  if (budgetType !== undefined) {
+    player.playFromZoneTypeUsesThisTurn[budgetType] =
+      (player.playFromZoneTypeUsesThisTurn[budgetType] ?? 0) + 1;
+  }
+}
+
 /**
  * Apply a non-pass priority action for `player`. Casting puts the spell on the stack
  * (targets chosen at announcement — brief §5.5); the caster retains priority (CR 117.3c).
@@ -187,8 +227,21 @@ export function* applyPriorityAction(
       throw new Error('engine bug: pass is not applied via applyPriorityAction');
 
     case 'playLand': {
-      const obj = player.hand.find((o) => o.id === payload.objectId);
-      if (obj === undefined) throw new Error('engine bug: land to play not in hand');
+      const sourceZone = payload.fromLibraryTop === true
+        ? player.library
+        : payload.fromGraveyard === true
+          ? player.graveyard
+          : payload.fromExile === true
+            ? ctx.state.exile
+            : player.hand;
+      const obj = sourceZone.find((o) => o.id === payload.objectId);
+      if (obj === undefined) throw new Error('engine bug: land to play not in its source zone');
+      if (payload.fromLibraryTop === true) {
+        consumePlayFromZonePermission(ctx, player, obj, 'libraryTop', payload.zoneBudgetType);
+      }
+      if (payload.fromGraveyard === true) {
+        consumePlayFromZonePermission(ctx, player, obj, 'graveyard', payload.zoneBudgetType);
+      }
       const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
       const mdfc = payload.alternativeCast === 'mdfc'
         ? def.alternativeCasts?.[payload.altIndex ?? 0] ?? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')
@@ -213,13 +266,39 @@ export function* applyPriorityAction(
           ? s.exile
           : payload.fromLibraryTop === true
             ? player.library
-            : payload.fromCommand
-              ? player.commandZone
-              : player.hand;
+            : payload.fromGraveyard === true
+              ? player.graveyard
+              : payload.fromCommand
+                ? player.commandZone
+                : player.hand;
       const obj = fromZone.find((o) => o.id === payload.objectId);
       if (obj === undefined) throw new Error('engine bug: spell to cast not found');
       const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+      let consumeZonePermission: 'libraryTop' | 'graveyard' | undefined;
+      if (payload.fromGraveyard === true && payload.alternativeCast === undefined) {
+        validatePlayFromZonePermission(ctx, player, obj, 'graveyard', payload.zoneBudgetType);
+        consumeZonePermission = 'graveyard';
+      }
+      if (payload.fromLibraryTop === true && payload.alternativeCast === undefined) {
+        const permission = playFromZonePermission(ctx, player.id, obj, 'libraryTop');
+        if (permission !== null) {
+          validatePlayFromZonePermission(ctx, player, obj, 'libraryTop', payload.zoneBudgetType);
+          consumeZonePermission = 'libraryTop';
+        } else if (!castFromLibraryTopCandidates(ctx, player.id).some((card) => card.id === obj.id)) {
+          throw new Error('cast from library top is not legal');
+        }
+      }
       let castingAdditionalCosts: AbilityCost[] = [...(def.spellAdditionalCosts ?? [])];
+      if (
+        payload.fromExile === true &&
+        obj.onAdventure !== true &&
+        obj.playableUntilEotBy !== player.id
+      ) {
+        throw new Error('exile cast permission is not legal');
+      }
+      if (payload.reboundCast === true) {
+        throw new Error('rebound cards may be cast only while their delayed trigger resolves');
+      }
 
       const tax = payload.fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
       const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
@@ -234,6 +313,8 @@ export function* applyPriorityAction(
       let cost: ParsedManaCost;
       let ability: Ability;
       let targets: ObjectId[];
+      let exileOnResolution = false;
+      let escaped = false;
       if (payload.alternativeCast === 'energy') {
         const energyAlternativeCost = s.battlefield
           .filter((perm) => perm.controllerId === player.id)
@@ -263,11 +344,16 @@ export function* applyPriorityAction(
           def.alternativeCasts?.[payload.altIndex ?? 0] ??
           def.alternativeCasts?.find((a) => a.kind === 'nonMana');
         if (alt?.kind !== 'nonMana') throw new Error('missing non-mana alternative cost');
+        if ((payload.fromGraveyard === true && alt.from !== 'graveyard') || (payload.fromGraveyard !== true && alt.from === 'graveyard')) {
+          throw new Error('graveyard alternative cost is not legal from this zone');
+        }
         if (alt.condition !== undefined && !evaluateCondition(ctx, alt.condition, { cardId: obj.cardId, controllerId: player.id })) {
           throw new Error('non-mana alternative cost condition is not met');
         }
         castingAdditionalCosts = [...castingAdditionalCosts, ...(alt.costs ?? [])];
-        cost = emptyCost();
+        cost = payload.fromGraveyard === true ? applyRed(alt.manaCost) : emptyCost();
+        exileOnResolution = alt.exileOnResolution === true;
+        escaped = alt.escaped === true;
         ability = resolveCastAbility(def, undefined, obj.name) ?? {
           kind: 'spell',
           targets: [],
@@ -309,8 +395,12 @@ export function* applyPriorityAction(
       }
 
       cost = addManaCosts(cost, manaPortionOf(castingAdditionalCosts));
-      yield* payManaCost(ctx, player, cost, { kind: 'castSpell', oracleId: obj.oracleId });
-      yield* paySpellAdditionalCosts(ctx, player, castingAdditionalCosts, obj.cardId, payload.fromCommand === false && payload.fromLibraryTop !== true && payload.fromExile !== true);
+      const manaPayment = yield* payManaCost(ctx, player, cost, { kind: 'castSpell', oracleId: obj.oracleId });
+      if (manaPayment.spellCantBeCountered) ability = { ...ability, cantBeCountered: true };
+      yield* paySpellAdditionalCosts(ctx, player, castingAdditionalCosts, obj.cardId, payload.fromCommand === false && payload.fromLibraryTop !== true && payload.fromExile !== true && payload.fromGraveyard !== true);
+      if (consumeZonePermission !== undefined) {
+        consumePlayFromZonePermission(ctx, player, obj, consumeZonePermission, payload.zoneBudgetType);
+      }
 
       if (payload.fromCommand) {
         player.commanderCastCount[obj.cardId] = (player.commanderCastCount[obj.cardId] ?? 0) + 1;
@@ -321,6 +411,11 @@ export function* applyPriorityAction(
         ...obj,
         id: `o-${s.nextObjectNum++}` as ObjectId,
         zone: 'stack',
+        ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
+        ...(manaPayment.treasureManaSpent > 0
+          ? { treasureManaSpentToCast: manaPayment.treasureManaSpent }
+          : {}),
+        ...(escaped ? { escaped: true } : {}),
       };
       const spellEntry: EngineStackObject = {
         id: spellCard.id,
@@ -336,6 +431,9 @@ export function* applyPriorityAction(
         isCommanderCast: payload.fromCommand,
         ...(payload.alternativeCast ? { alternativeCastKind: payload.alternativeCast } : {}),
         ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
+        ...(exileOnResolution ? { exileOnResolution: true } : {}),
+        ...(escaped ? { escaped: true } : {}),
+        ...(payload.fromExile !== true && payload.fromLibraryTop !== true && payload.fromGraveyard !== true && payload.fromCommand !== true && def.keywords.includes('rebound') ? { reboundPending: true } : {}),
         triggerScope: { manaSpent: totalPips(cost) },
       };
       s.stack.push(spellEntry);
@@ -359,12 +457,84 @@ export function* applyPriorityAction(
       // "Whenever you cast a Dragon spell" fires now, with the spell already on the stack below
       // it (CR 603.3b), so the trigger resolves first.
       queueCastTriggers(ctx, spellEntry);
+      queueKeywordCastTriggers(ctx, spellEntry);
       queueWardTriggers(ctx, player.id, spellCard.id, targets);
       queueBecomesTargetedTriggers(ctx, player.id, targets);
       return;
     }
 
     case 'activateAbility': {
+      // Hand-zone activation (CR 112.6a) — cycling and its typed variants. Same short path as
+      // the graveyard branch below and for the same reason: the source is a card in a hidden
+      // zone with no `EnginePermanent` behind it.
+      //
+      // `discardSelf` is paid BEFORE the mana, which is what makes cycling behave correctly:
+      // the card is in the graveyard while the ability is on the stack (CR 702.29a), so a
+      // "whenever you cycle a card" or madness-style observer sees it there, and the card can
+      // never be spent twice. `computePriorityOptions` refuses to offer a hand ability with any
+      // other non-mana cost, so there is nothing else to pay here.
+      if (payload.fromHand === true) {
+        const card = player.hand.find((c) => c.id === payload.objectId);
+        if (card === undefined) throw new Error('engine bug: hand ability source not in hand');
+        const def = getDefByOracleId(ctx, card.oracleId, card.name);
+        const activated = def.activatedAbilities[payload.index];
+        if (activated === undefined) throw new Error('engine bug: activated ability index invalid');
+
+        // CR 601.2c — targets first, then costs. Same validation as the battlefield path below.
+        const targets: ObjectId[] = [];
+        for (const [slot, spec] of activated.ability.targets.entries()) {
+          const choice = outcome.targets.get(slot);
+          if (choice === undefined) throw new Error(`missing target for slot ${slot} of ${card.name}`);
+          if (!computeTargetOptions(ctx, spec, player.id).includes(choice)) {
+            throw new Error(`illegal target ${choice} for slot ${slot} of ${card.name}`);
+          }
+          targets.push(choice);
+        }
+
+        // The reduced cost, computed exactly as `computePriorityOptions` computed it when it
+        // decided this action was affordable — a channel land's own "costs {1} less to activate
+        // for each legendary creature you control" is on a card in HAND, which
+        // `activationCostReductionFor` cannot see. Read BEFORE the discard, because the card
+        // leaving hand must not change what it costs.
+        const manaCost = handActivationCost(ctx, def, activated.costs, player.id, card.cardId);
+
+        if (activated.costs.some((c) => c.kind === 'discardSelf')) {
+          yield* moveObject(ctx, card, { zone: 'graveyard' });
+        }
+        if (totalPips(manaCost) > 0) {
+          yield* payManaCost(ctx, player, manaCost, {
+            kind: 'activateAbility',
+            sourceOracleId: card.oracleId,
+          });
+        }
+
+        const description = activated.ability.description ?? 'activated ability';
+        const id = `o-${s.nextObjectNum++}` as ObjectId;
+        const stackEntry: EngineStackObject = {
+          id,
+          sourceId: id,
+          controllerId: player.id,
+          kind: 'activatedAbility' as const,
+          description: `${card.name} — ${description}`,
+          targets,
+          card: null,
+          ability: activated.ability,
+          sourceOracleId: card.oracleId,
+          sourceCardId: card.cardId,
+          isCommanderCast: false,
+        };
+        s.stack.push(stackEntry);
+        breakYieldsForStop(ctx, stackEntry);
+        emit(
+          ctx,
+          'activateAbility',
+          { player: player.id, source: card.name, cardId: card.cardId, description, targets },
+          player.id,
+        );
+        debug(ctx, 'stack', `${player.id} activates ${card.name} (hand) — ${description}`);
+        return;
+      }
+
       // Graveyard-zone activation (CR 112.6a/602.5c, Runehorn Hellkite) — the source has no
       // `EnginePermanent` (tap/sacrifice/etc. machinery), so it takes its own short path: pay
       // mana directly, pay `exileSelfFromGraveyard` by moving the card, and push a stack entry
@@ -415,6 +585,9 @@ export function* applyPriorityAction(
 
       const perm = ctx.state.battlefield.find((p) => p.id === payload.objectId);
       if (perm === undefined) throw new Error('engine bug: ability source not on the battlefield');
+      if (activatingAbilitiesBlockedFor(ctx, player.id, perm)) {
+        throw new Error('activated abilities of this permanent are currently forbidden');
+      }
       const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
       const activated = (computeCharacteristics(ctx, perm).activatedAbilities ?? def.activatedAbilities)[payload.index];
       if (activated === undefined) throw new Error('engine bug: activated ability index invalid');

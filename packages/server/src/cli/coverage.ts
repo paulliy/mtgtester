@@ -4,8 +4,14 @@
  *   bun run coverage                          # the committed fixture decks
  *   bun run coverage --json                   # machine-diffable, for tracking a delta
  *   bun run coverage <fileOrUrl> [more...]    # arbitrary decks, including live URLs
+ *   bun run coverage --strict                 # skip decks that aren't Commander-legal
  *
  * Paths are resolved from the repository root (the process working directory).
+ *
+ * Deck legality is NOT required by default: coverage measures which cards the engine can model,
+ * which is independent of whether the pile around them is a legal 100. Some committed fixtures
+ * are real decks mid-tune (see `snapshot-coverage-decks.ts`), and dropping them would silently
+ * shrink the measured population. `--strict` restores the old skip-on-invalid behaviour.
  */
 
 import { readFileSync, readdirSync } from 'node:fs';
@@ -21,14 +27,16 @@ import { loadBannedList } from '../decks/banned';
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const FIXTURE_DIR = 'packages/server/fixtures/coverage-decks';
 
-function parseArgs(argv: string[]): { inputs: string[]; json: boolean } {
+function parseArgs(argv: string[]): { inputs: string[]; json: boolean; strict: boolean } {
   const inputs: string[] = [];
   let json = false;
+  let strict = false;
   for (const arg of argv) {
     if (arg === '--json') json = true;
+    else if (arg === '--strict') strict = true;
     else inputs.push(arg);
   }
-  return { inputs, json };
+  return { inputs, json, strict };
 }
 
 /**
@@ -51,10 +59,12 @@ const pct = (n: number, of: number): string =>
   of === 0 ? '0.0%' : `${((n / of) * 100).toFixed(1)}%`;
 
 async function main(): Promise<void> {
-  const { inputs: userInputs, json } = parseArgs(process.argv.slice(2));
+  const { inputs: userInputs, json, strict } = parseArgs(process.argv.slice(2));
   const inputs = userInputs.length > 0 ? userInputs : defaultInputs();
   if (inputs.length === 0) {
-    console.error(`No decks to measure. Run "bun run coverage:snapshot" to populate ${FIXTURE_DIR}.`);
+    console.error(
+      `No decks to measure. Run "bun run coverage:snapshot" to populate ${FIXTURE_DIR}.`,
+    );
     process.exit(2);
   }
 
@@ -90,11 +100,12 @@ async function main(): Promise<void> {
 
     const validation = validateDeck(resolved, banned);
     if (!validation.valid) {
-      const issues = validation.issues
-        .map((i) => `[${i.code}] ${i.message}`)
-        .join('; ');
-      console.error(`  ✗ invalid deck in "${arg}": ${issues}`);
-      continue;
+      const issues = validation.issues.map((i) => `[${i.code}] ${i.message}`).join('; ');
+      if (strict) {
+        console.error(`  ✗ invalid deck in "${arg}": ${issues} — skipped (--strict)`);
+        continue;
+      }
+      console.error(`  ! measuring "${arg}" anyway: ${issues}`);
     }
 
     // Commanders and the companion live OUTSIDE `.cards` — unioning them is not optional,

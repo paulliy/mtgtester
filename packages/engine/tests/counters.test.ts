@@ -12,7 +12,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import { queueTriggersForObject } from '../src/state/objects';
 import { effectivePT } from '../src/state/queries';
-import { executeAbility } from '../src/effects/resolve';
+import { dealDamageToPlayer, executeAbility } from '../src/effects/resolve';
 import type { GameContext } from '../src/state/types';
 import { runTurn } from '../src/turn/turn';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
@@ -201,5 +201,36 @@ describe('enters with counters (CR 614.1c replacement)', () => {
 
     pump(runTurn(ctx));
     expect(ctx.state.battlefield.some((p) => p.id === perm.id)).toBe(true);
+  });
+
+  it('counts an opponent DAMAGED this turn as having lost life (Gev, Scaled Scorch)', () => {
+    // CR 120.3: damage dealt to a player causes that player to lose that much life. Tracking the
+    // flag only in `loseLife` misses combat and burn — which is every way an opponent normally
+    // loses life — so Gev's own damage trigger would not even satisfy its own counter clause.
+    const ctx = ctx4();
+    const gev = spawn(ctx, 'P1', oracle({
+      name: 'Test Gev',
+      typeLine: 'Legendary Creature — Lizard',
+      power: '3',
+      toughness: '2',
+      oracleText:
+        'Other creatures you control enter with an additional +1/+1 counter on them for each opponent who lost life this turn.',
+    }));
+    expect(ctx.state.lifeLostThisTurn['P2']).toBeUndefined();
+
+    const victim = ctx.state.players.find((p) => p.id === 'P2');
+    if (victim === undefined) throw new Error('test bug');
+    dealDamageToPlayer(
+      ctx,
+      { cardId: gev.cardId, name: gev.name, oracleId: gev.oracleId, controllerId: 'P1' },
+      victim,
+      1,
+      { combat: false, sourceIsCommander: false, sourceHasLifelink: false },
+    );
+    expect(ctx.state.lifeLostThisTurn['P2']).toBe(true);
+
+    // The replacement now sees one opponent who lost life, so the next creature enters bigger.
+    const friend = spawn(ctx, 'P1', bear());
+    expect(friend.counters['+1/+1']).toBe(1);
   });
 });

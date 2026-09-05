@@ -149,6 +149,8 @@ export function toOracleCard(card: RawScryfallCard): OracleCard | null {
             colors: toColors(back.colors),
             power: back.power ?? null,
             toughness: back.toughness ?? null,
+            loyalty: back.loyalty ?? null,
+            defense: back.defense ?? null,
           },
         }
       : {}),

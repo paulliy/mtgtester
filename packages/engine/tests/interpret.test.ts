@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
+import { allOf, ofType, YOURS } from '../src/cards/selector';
 import { bear, bolt, cancel, divination, doom, forest, giantGrowth, oracle } from './fixtures';
 
 describe('oracle-text interpreter (brief §6)', () => {
@@ -17,9 +18,12 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(good.modeled).toBe(true);
     expect(good.keywords).toEqual(expect.arrayContaining(['flying', 'vigilance', 'deathtouch']));
 
-    const bad = interpretCard(oracle({ name: 'Fancy', oracleText: 'Cascade' }));
-    expect(bad.modeled).toBe(false);
-    expect(bad.unmodeledReasons.join()).toContain('Cascade');
+    const cascade = interpretCard(oracle({ name: 'Cascade Creature', oracleText: 'Cascade' }));
+    expect(cascade.modeled).toBe(true);
+    expect(cascade.keywords).toContain('cascade');
+    const rebound = interpretCard(oracle({ name: 'Rebound Spell', typeLine: 'Sorcery', oracleText: 'Draw a card.' + String.fromCharCode(10) + 'Rebound' }));
+    expect(rebound.modeled).toBe(true);
+    expect(rebound.keywords).toContain('rebound');
   });
 
   it('ignores reminder text', () => {
@@ -407,7 +411,7 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
-  it('models a mana-costed "add mana" line as a stack ability (signets, rituals)', () => {
+  it('models a signet as a mana ability and a ritual as a spell effect', () => {
     const signet = interpretCard(
       oracle({
         name: 'Test Signet',
@@ -418,15 +422,18 @@ describe('oracle-text interpreter (brief §6)', () => {
         oracleText: '{1}, {T}: Add {U}{B}.',
       }),
     );
+    // A signet is a MANA ability (CR 605.1a — the rule constrains the effect, not the cost), so
+    // it never uses the stack and the payment solver can reach for it. The {1} is charged.
     expect(signet.modeled).toBe(true);
-    expect(signet.manaAbilities).toHaveLength(0);
-    expect(signet.activatedAbilities?.[0]?.costs).toEqual([
+    expect(signet.activatedAbilities).toHaveLength(0);
+    expect(signet.manaAbilities?.[0]?.costs).toEqual([
       { kind: 'mana', cost: expect.objectContaining({ generic: 1 }) },
       { kind: 'tap' },
     ]);
-    expect(signet.activatedAbilities?.[0]?.ability.effects).toEqual([
-      { op: 'addMana', amount: { kind: 'const', n: 2 }, colors: [], fixedSymbols: ['U', 'B'] },
-    ]);
+    expect(signet.manaAbilities?.[0]?.units).toEqual([['U'], ['B']]);
+
+    // The ritual half is unchanged: "Add {B}{B}{B}" printed as a SPELL is a spell effect, not a
+    // mana ability, because a spell is not an ability at all.
 
     const ritual = interpretCard(
       oracle({
@@ -555,6 +562,38 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
+  it('parses revealed tutors that shuffle and put the card on top', () => {
+    const tutor = interpretCard(
+      oracle({
+        name: 'Top Tutor Test',
+        typeLine: 'Instant',
+        manaCost: '{U}',
+        power: null,
+        toughness: null,
+        oracleText:
+          'Search your library for an artifact or enchantment card, reveal it, then shuffle and put that card on top.',
+      }),
+    );
+    expect(tutor.modeled).toBe(true);
+    // The shuffle comes FIRST. "…then shuffle and put that card on top" is the printed order,
+    // and it is the order that matters: shuffling afterwards would bury the card the spell
+    // exists to set up. Which card is chosen cannot depend on the shuffle, so asking first and
+    // shuffling first are the same decision.
+    expect(tutor.spellAbility?.effects).toEqual([
+      { op: 'shuffle' },
+      {
+        op: 'searchLibrary',
+        filter: {
+          kind: 'anyOf',
+          of: [
+            { kind: 'type', value: 'Artifact' },
+            { kind: 'type', value: 'Enchantment' },
+          ],
+        },
+        destinations: [{ zone: 'libraryTop' }],
+      },
+    ]);
+  });
   it('models the aristocrats drain trigger, targeted and each-opponent forms', () => {
     const bloodArtist = interpretCard(
       oracle({
@@ -622,6 +661,56 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
+  it('keeps a compound permanent-type mass effect inside one modal mode', () => {
+    const cleansingNova = interpretCard(
+      oracle({
+        name: 'Cleansing Nova Test',
+        typeLine: 'Sorcery',
+        manaCost: '{3}{W}{W}',
+        power: null,
+        toughness: null,
+        oracleText:
+          'Choose one —\n• Destroy all creatures.\n• Destroy all artifacts and enchantments.',
+      }),
+    );
+    expect(cleansingNova.modeled).toBe(true);
+    expect(cleansingNova.spellAbility?.modes?.options[1]?.effects).toEqual([
+      {
+        op: 'destroyEach',
+        selector: {
+          kind: 'anyOf',
+          of: [
+            { kind: 'type', value: 'Artifact' },
+            { kind: 'type', value: 'Enchantment' },
+          ],
+        },
+      },
+    ]);
+  });
+  it('keeps a two-target destruction clause inside one modal mode', () => {
+    const hullBreach = interpretCard(
+      oracle({
+        name: 'Hull Breach Test',
+        typeLine: 'Sorcery',
+        manaCost: '{G}{R}',
+        power: null,
+        toughness: null,
+        oracleText:
+          'Choose one —\n• Destroy target artifact.\n• Destroy target enchantment.\n• Destroy target artifact and target enchantment.',
+      }),
+    );
+    expect(hullBreach.modeled).toBe(true);
+    expect(hullBreach.spellAbility?.targets).toEqual([
+      { kind: 'artifact' },
+      { kind: 'enchantment' },
+      { kind: 'artifact' },
+      { kind: 'enchantment' },
+    ]);
+    expect(hullBreach.spellAbility?.modes?.options[2]?.effects).toEqual([
+      { op: 'destroy', target: 2 },
+      { op: 'destroy', target: 3 },
+    ]);
+  });
   it('treats "choose two" as an exact count, unlike "choose one or more"', () => {
     const austereCommand = interpretCard(
       oracle({
@@ -938,6 +1027,175 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
+  it('splits conservative compound effects only when both halves parse', () => {
+    const def = interpretCard(
+      oracle({
+        name: 'Compound Removal',
+        typeLine: 'Sorcery',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy target artifact and draw a card.',
+      }),
+    );
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'artifact' }]);
+    expect(def.spellAbility?.effects).toEqual([
+      { op: 'destroy', target: 0 },
+      { op: 'draw', count: { kind: 'const', n: 1 } },
+    ]);
+
+    const coordinatedNouns = interpretCard(
+      oracle({
+        name: 'Coordinated Nouns',
+        typeLine: 'Sorcery',
+        power: null,
+        toughness: null,
+        oracleText: 'Destroy all artifacts and enchantments.',
+      }),
+    );
+    expect(coordinatedNouns.modeled).toBe(true);
+    expect(coordinatedNouns.spellAbility?.effects).toEqual([
+      {
+        op: 'destroyEach',
+        selector: {
+          kind: 'anyOf',
+          of: [
+            { kind: 'type', value: 'Artifact' },
+            { kind: 'type', value: 'Enchantment' },
+          ],
+        },
+      },
+    ]);
+  });
+  it('scopes counter-qualified static keywords to the matching creatures', () => {
+    const def = interpretCard(
+      oracle({
+        name: 'Counter Captain',
+        typeLine: 'Creature',
+        oracleText: 'Each creature you control with a +1/+1 counter on it has trample.',
+      }),
+    );
+    expect(def.modeled).toBe(true);
+    // The subject names the counter KIND. Reading it as "any counter" is not a harmless
+    // widening — a creature carrying only a -1/-1 counter, which is what persist gives back,
+    // would qualify. See marchesa-the-black-rose.test.ts for what that costs behaviourally.
+    expect(def.staticEffects[0]).toMatchObject({
+      affects: {
+        kind: 'allOf',
+        of: expect.arrayContaining([
+          { kind: 'hasCounter', counter: '+1/+1' },
+          { kind: 'controller', who: 'you' },
+          { kind: 'type', value: 'Creature' },
+        ]),
+      },
+      op: { layer: 6, addKeyword: 'trample' },
+    });
+  });
+  it('models dynamic count values across P/T, counters, and combat triggers', () => {
+    const shanna = interpretCard(
+      oracle({
+        name: 'Count Shanna',
+        typeLine: 'Legendary Creature',
+        oracleText: "~ gets +1/+1 for each creature you control.",
+      }),
+    );
+    expect(shanna.modeled).toBe(true);
+    expect(shanna.staticEffects[0]?.op).toMatchObject({
+      power: { kind: 'times', n: 1, of: { kind: 'countPermanents', scope: 'you' } },
+      toughness: { kind: 'times', n: 1, of: { kind: 'countPermanents', scope: 'you' } },
+    });
+
+    const chauffeur = interpretCard(
+      oracle({
+        name: "Count Boss's Chauffeur",
+        typeLine: 'Creature',
+        oracleText:
+          'This creature enters with a number of +1/+1 counters on it equal to one plus the number of other creatures you control.',
+      }),
+    );
+    expect(chauffeur.modeled).toBe(true);
+    expect(chauffeur.entersWithCounters?.['+1/+1']).toMatchObject({
+      kind: 'plus',
+      n: 1,
+      of: { kind: 'countPermanents', scope: 'you' },
+    });
+
+    const kinbinding = interpretCard(
+      oracle({
+        name: 'Count Kinbinding',
+        typeLine: 'Enchantment',
+        power: null,
+        toughness: null,
+        oracleText:
+          'Creatures you control get +X/+X, where X is the number of creatures that entered the battlefield under your control this turn.\nAt the beginning of combat on your turn, create a 1/1 green and white Kithkin creature token.',
+      }),
+    );
+    expect(kinbinding.modeled).toBe(true);
+    expect(kinbinding.triggers[0]?.trigger).toMatchObject({
+      when: 'beginningOfCombat',
+      player: 'you',
+    });
+  });
+
+  it('models combat restrictions and per-opponent attacking tokens', () => {
+    const basandra = interpretCard(
+      oracle({
+        name: 'Count Basandra',
+        typeLine: 'Legendary Creature — Angel',
+        oracleText: "Flying\nPlayers can't cast spells during combat.\n{R}: Target creature attacks this turn if able.",
+      }),
+    );
+    expect(basandra.modeled).toBe(true);
+    // "PLAYERS can't cast spells during combat" — Basandra binds its own controller too, unlike
+    // Marisi's "your opponents can't cast spells during combat".
+    expect(basandra.ruleStatics).toContainEqual({
+      kind: 'cantCastSpells',
+      who: 'all',
+      yourTurnOnly: false,
+      duringCombatOnly: true,
+    });
+
+    const adeline = interpretCard(
+      oracle({
+        name: 'Count Adeline',
+        typeLine: 'Legendary Creature — Human Soldier',
+        oracleText:
+          "Whenever you attack, for each opponent, create a 1/1 white Human creature token that's tapped and attacking that player.",
+      }),
+    );
+    expect(adeline.modeled).toBe(true);
+    expect(adeline.triggers[0]?.effects[0]).toMatchObject({
+      op: 'createTokenForEachOpponent',
+      attacking: true,
+      spec: { name: 'Human', power: 1, toughness: 1 },
+    });
+    // "Whenever YOU attack" fires on the declaration, not on this creature attacking: it is the
+    // aggregate form over your attacking creatures, so it triggers with Adeline left at home.
+    expect(adeline.triggers[0]?.trigger).toEqual({
+      when: 'attacks',
+      subject: {
+        kind: 'permanent',
+        selector: allOf(ofType('Creature'), YOURS),
+      },
+      aggregate: true,
+    });
+  });
+  it('models a creature whose static ability makes itself unblockable', () => {
+    const unblockable = interpretCard(
+      oracle({
+        name: 'Unblockable Test',
+        typeLine: 'Creature — Illusion',
+        manaCost: '{2}{U}',
+        power: '2',
+        toughness: '2',
+        oracleText: "~ can't be blocked.",
+      }),
+    );
+    expect(unblockable.modeled).toBe(true);
+    expect(unblockable.staticEffects).toEqual([
+      { affects: { kind: 'self' }, op: { layer: 6, setCantBeBlocked: true } },
+    ]);
+  });
   it('models self-pump activated abilities (~ gets +1/+0 until end of turn)', () => {
     const firebreather = interpretCard(
       oracle({
@@ -955,4 +1213,94 @@ describe('oracle-text interpreter (brief §6)', () => {
       { op: 'pumpEachUntilEot', selector: { kind: 'self' }, power: 1, toughness: 0 },
     ]);
   });
+
+  it('announces ONE target for "target creature gets +N/+N and gains <keyword>"', () => {
+    // CR 601.2c: the spell announces the targets its text names, and this text names one
+    // "target creature". Two slots would let the pump and the keyword land on different
+    // creatures — the printed card buffs a single creature. ~170 printed cards use this form.
+    const def = interpretCard(
+      oracle({
+        name: 'Tread Upon Test',
+        typeLine: 'Instant',
+        power: null,
+        toughness: null,
+        oracleText: 'Target creature gets +2/+2 and gains trample until end of turn.',
+      }),
+    );
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(def.spellAbility?.effects).toEqual([
+      { op: 'pumpUntilEot', target: 0, power: 2, toughness: 2 },
+      { op: 'grantKeywordUntilEot', target: 0, keyword: 'trample' },
+    ]);
+  });
+
+  it('keeps every ability on an Aura whose line ends "and is goaded"', () => {
+    // The goad rider is the LAST clause of a line that also grants real abilities. Reading the
+    // whole prefix as a "subject" would report the card modeled while dropping them silently.
+    const ghoulish = interpretCard(
+      oracle({
+        name: 'Ghoulish Test',
+        typeLine: 'Enchantment — Aura',
+        power: null,
+        toughness: null,
+        oracleText: 'Enchant creature\nEnchanted creature gets +1/+1, has deathtouch, and is goaded.',
+      }),
+    );
+    expect(ghoulish.modeled).toBe(true);
+    expect(ghoulish.staticEffects).toEqual([
+      { affects: { kind: 'attachedToSource' }, op: { layer: 7, sublayer: 'd', power: 1, toughness: 1 } },
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addKeyword: 'deathtouch' } },
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addGoad: true } },
+    ]);
+
+    const indestructible = interpretCard(
+      oracle({
+        name: 'Redemption Test',
+        typeLine: 'Enchantment — Aura',
+        power: null,
+        toughness: null,
+        oracleText: 'Enchant creature\nEnchanted creature has indestructible and is goaded.',
+      }),
+    );
+    expect(indestructible.staticEffects).toEqual([
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addKeyword: 'indestructible' } },
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addGoad: true } },
+    ]);
+
+    // A prefix the grammar cannot read must leave the whole line unmodeled rather than ship the
+    // goad on its own.
+    const unreadable = interpretCard(
+      oracle({
+        name: 'Unreadable Test',
+        typeLine: 'Enchantment — Aura',
+        power: null,
+        toughness: null,
+        oracleText: 'Enchant creature\nEnchanted creature gets +3/+3, must be blocked if able, and is goaded.',
+      }),
+    );
+    expect(unreadable.modeled).toBe(false);
+    expect(unreadable.staticEffects ?? []).toEqual([]);
+  });
+
+  it('scopes "for each" counts to the subject that was printed', () => {
+    // Counting an explicitly opposing subject under a you-only scope yields a constant 0, with
+    // the card still reporting modeled.
+    const opposing = interpretCard(
+      oracle({
+        name: 'Opposing Count Test',
+        typeLine: 'Creature — Test',
+        power: '1',
+        toughness: '1',
+        oracleText: '~ gets +1/+0 for each creature your opponents control.',
+      }),
+    );
+    expect(opposing.modeled).toBe(true);
+    const op = opposing.staticEffects?.[0]?.op;
+    expect(op !== undefined && 'power' in op ? op.power : null).toMatchObject({
+      kind: 'times',
+      of: { kind: 'countPermanents', scope: 'opponents' },
+    });
+  });
+
 });

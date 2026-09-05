@@ -40,30 +40,6 @@ function shouldAutoPassPriority(ctx: GameContext, player: EnginePlayerState): bo
     }
   }
 
-  // MTGA/MTGO-style Upkeep & Draw auto-pass: skip priority for all players when the
-  // stack is empty and no triggers are pending. Upkeep/draw priority windows are only
-  // meaningful when something is happening (e.g., Nyx-Fleece Ram upkeep trigger).
-  if (
-    (ctx.state.step === 'upkeep' || ctx.state.step === 'draw') &&
-    ctx.state.stack.length === 0 &&
-    ctx.state.pendingTriggers.length === 0
-  ) {
-    return true;
-  }
-
-  // Bystander combat auto-pass: a player who is neither the active player (attacker)
-  // nor a defending player has no meaningful combat actions when the stack is empty.
-  // In the log this eliminated ~5 API calls per combat for each bystander.
-  if (
-    ctx.state.phase === 'combat' &&
-    player.id !== ctx.state.currentTurnPlayer &&
-    !(ctx.state.combat?.defendingPlayers.includes(player.id) === true) &&
-    ctx.state.stack.length === 0 &&
-    ctx.state.pendingTriggers.length === 0
-  ) {
-    return true;
-  }
-
   return false;
 }
 

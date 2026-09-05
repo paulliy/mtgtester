@@ -15,7 +15,7 @@ import { createGame } from '../src/state/game';
 import { queueTriggersForEvent } from '../src/state/objects';
 import { queueStepTriggers } from '../src/turn/turn';
 import type { GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 const frontierSiege = (): ReturnType<typeof oracle> =>
   oracle({

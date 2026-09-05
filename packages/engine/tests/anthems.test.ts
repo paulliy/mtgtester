@@ -406,9 +406,35 @@ describe('verbatim oracle text from printed cards (ADR 0008)', () => {
   });
 
   it('accounts for the anthem line even when another line of the card is unmodeled', () => {
-    // Elvish Archdruid's second line is an activated mana ability with a count — not modeled.
-    // The card is correctly unmodeled overall, but the reason list names only that line, which
-    // is how we know the anthem line was actually accounted for rather than swept up with it.
+    // The reason list must name ONLY the unreadable line. That is how we know the anthem line
+    // was actually accounted for, rather than swept up with the rest of the card.
+    //
+    // This has moved twice as the grammar grew: first off Elvish Archdruid's counted mana
+    // ability, then off Esper Sentinel's "unless that player pays {X}" (both parse now). The
+    // second line here is cumulative upkeep, which is a whole unbuilt subsystem rather than a
+    // sentence shape, so it should hold.
+    const def = interpretCard(
+      oracle({
+        name: 'Test Sentinel',
+        typeLine: 'Creature — Elf Druid',
+        subtypes: ['Elf', 'Druid'],
+        manaCost: '{1}{G}{G}',
+        power: '2',
+        toughness: '2',
+        oracleText:
+          'Other Elves you control get +1/+1.\nCumulative upkeep {1}',
+      }),
+    );
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons).toEqual([
+      'unrecognized rules text: "Cumulative upkeep {1}"',
+    ]);
+    expect(def.staticEffects).toHaveLength(1);
+  });
+
+  it('models Elvish Archdruid whole, anthem and counted mana ability together', () => {
+    // Oracle text verbatim. Both lines are readable now: the anthem is a layer-7c static and the
+    // mana ability is a counted amount.
     const def = interpretCard(
       oracle({
         name: 'Elvish Archdruid',
@@ -420,11 +446,11 @@ describe('verbatim oracle text from printed cards (ADR 0008)', () => {
         oracleText: 'Other Elves you control get +1/+1.\n{T}: Add {G} for each Elf you control.',
       }),
     );
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons).toEqual([
-      'unrecognized rules text: "{T}: Add {G} for each Elf you control."',
-    ]);
+    expect(def.modeled, JSON.stringify(def.unmodeledReasons)).toBe(true);
     expect(def.staticEffects).toHaveLength(1);
+    expect(def.manaAbilities).toHaveLength(1);
+    expect(def.manaAbilities[0]!.units).toEqual([['G']]);
+    expect(def.manaAbilities[0]!.amount).toBeDefined();
   });
 });
 

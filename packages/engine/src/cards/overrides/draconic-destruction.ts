@@ -6,7 +6,7 @@ import { constant } from '../value';
 import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost } from '../templates';
 import { DRAGON_5_5_FLYING } from '../tokens';
 import { defineCard } from './index';
-import { allOf, anyOf, not, OTHER, ofSubtype, ofType, SELF, withKeyword, YOURS } from '../selector';
+import { allOf, anyOf, not, ofSubtype, ofType, SELF, withKeyword, YOURS } from '../selector';
 
 const DRAGONKIN_BERSERKER_DEF = {
   ruleStatics: [{
@@ -429,26 +429,6 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
           "Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying."
     ], DRAGONKIN_BERSERKER_DEF);
 
-  defineCard("b6fb79c3-cd32-4045-8177-e52841eea65b", "Dragonmaster Outcast", [
-          "At the beginning of your upkeep, if you control six or more lands, create a 5/5 red Dragon creature token with flying."
-    ], {
-      triggers: [{
-        kind: 'triggered',
-        trigger: {
-          when: 'upkeep',
-          player: 'you',
-          condition: { kind: 'countPermanents', selector: ofType('Land'), scope: 'you', cmp: '>=', n: 6 },
-        },
-        targets: [],
-        effects: [{
-          op: 'createToken',
-          count: constant(1),
-          spec: DRAGON_5_5_FLYING,
-        }],
-        description: 'Upkeep with six lands — create a Dragon token',
-      }],
-    });
-
   defineCard("d1d171de-1c6d-4fb9-817a-9c689c709f3d", "Shamanic Revelation", [
           "Draw a card for each creature you control.",
           "You gain 4 life for each creature you control with power 4 or greater."
@@ -570,10 +550,6 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
           "• Khans — At the beginning of each of your main phases, add {G}{G}.",
           "• Dragons — Whenever a creature you control with flying enters, you may have it fight target creature you don't control."
     ], FRONTIER_SIEGE_DEF);
-
-  defineCard("3256029f-6558-4fcc-9fa1-74ceba3e5c92", "Harbinger of the Hunt", [
-          "{2}{G}: ~ deals 1 damage to each other creature with flying."
-    ], { activatedAbilities: [{ costs: [mana('{2}{G}')], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'damageEach', selector: allOf(OTHER, ofType('Creature'), withKeyword('flying')), amount: constant(1) }], description: 'Deal one damage to each other flying creature' } }] });
 
   defineCard("cf9db2be-3c95-45a2-ab85-694e3bd3bf1d", "Hoard-Smelter Dragon", [
           "{3}{R}: Destroy target artifact. ~ gets +X/+0 until end of turn, where X is that artifact's mana value."

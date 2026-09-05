@@ -21,10 +21,12 @@ import type {
 } from '@mtg/shared';
 import {
   effectivePT,
+  gatherRuleStatics,
   isCreaturePermanent,
   manaSourcesFor,
   playersInApnapOrder,
 } from '../state/queries';
+import { computeCharacteristics } from '../effects/continuous';
 import { playerById } from '../state/objects';
 import type { EngineCardObject, EnginePlayerState, GameContext } from '../state/types';
 
@@ -89,7 +91,7 @@ function permanentViews(ctx: GameContext): PermanentView[] {
     const view: PermanentView = {
       id: perm.id,
       controller: perm.controllerId,
-      name: perm.name,
+      name: perm.faceDown || perm.statuses.includes('faceDown') ? 'Face-down permanent' : perm.name,
       tapped: perm.tapped,
       status: [
         ...perm.statuses,
@@ -100,13 +102,16 @@ function permanentViews(ctx: GameContext): PermanentView[] {
     // zones whose oracle text is relevant. The projection is faithful; trimming redundant
     // text (basic lands, repeats) is the context assembler's job, as it already is for hand.
     //
-    // EXCEPT face down (§7.1: "face-down cards' identities" are never visible). Nothing sets
-    // this status today — morph/manifest are unmodeled — but the status is already in the
-    // vocabulary, so the guard is written now: when manifest lands, a permanent that gains it
-    // must not start leaking its text box through a projection nobody re-reads.
-    if (!perm.statuses.includes('faceDown')) {
+    // Manifest uses the faceDown field; legacy fixtures may still use the status.
+    // Neither representation may expose the printed identity or abilities.
+    if (!perm.faceDown && !perm.statuses.includes('faceDown')) {
       view.typeLine = perm.typeLine;
       view.oracleText = perm.oracleText;
+      // Computed, not printed: layer 6 grants and removes keywords, so an anthem's trample or a
+      // Darksteel Mutation's lost abilities have to be visible here. Behind the same face-down
+      // guard as the text box, for the same reason — see the comment above.
+      const keywords = computeCharacteristics(ctx, perm).keywords;
+      if (keywords.length > 0) view.keywords = [...keywords];
     }
     if (isCreaturePermanent(ctx, perm)) {
       const pt = effectivePT(ctx, perm);
@@ -219,6 +224,13 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
     .filter((e) => !isPrivateEvent(e))
     .slice(-15)
     .map(formatEvent);
+  const revealedLibraryTops = s.players.flatMap((player) => {
+    const top = player.library[0];
+    const revealed = gatherRuleStatics(ctx).some(
+      (entry) => entry.controllerId === player.id && entry.static.kind === 'revealTopLibrary',
+    );
+    return top !== undefined && revealed ? [{ player: player.id, card: fullCardView(top, ctx) }] : [];
+  });
 
   return {
     seat: playerId,
@@ -235,6 +247,7 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
     energy: viewer.energy,
     manaSources,
     opponents,
+    revealedLibraryTops,
     battlefield: permanentViews(ctx),
     exile: exileViews(ctx, playerId),
     stack,

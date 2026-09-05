@@ -74,5 +74,7 @@ export interface OracleCard {
     colors: Color[];
     power: string | null;
     toughness: string | null;
+    loyalty?: string | null;
+    defense?: string | null;
   };
 }

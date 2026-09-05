@@ -3,11 +3,10 @@ import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { interpretCard } from '../src/cards/interpret';
-import { manaSourcesFor } from '../src/state/queries';
 import { moveObject } from '../src/state/objects';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 const mdfcCards = [
   oracle({
@@ -61,18 +60,18 @@ const mdfcCards = [
     typeLine: 'Instant',
     types: ['Instant'],
     subtypes: [],
-    manaCost: '{1}{G}{G}',
-    cmc: 3,
-    colors: ['G'],
-    colorIdentity: ['G'],
+    manaCost: '{B/G}',
+    cmc: 1,
+    colors: ['B', 'G'],
+    colorIdentity: ['B', 'G'],
     power: null,
     toughness: null,
-    oracleText: 'You gain 6 life and draw a card.',
+    oracleText: 'Put a +1/+1 counter on target creature. It gains indestructible until end of turn.',
     layout: 'modal_dfc',
     backFace: {
       name: 'Old-Growth Grove',
       typeLine: 'Land',
-      oracleText: "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {G}.",
+      oracleText: 'Old-Growth Grove enters tapped.\n{T}: Add {B} or {G}.',
       manaCost: null,
       colors: [],
       power: null,
@@ -100,7 +99,11 @@ describe('MDFC spell // land layout', () => {
     const landFace = def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace;
     expect(landFace?.name).toBe(card.backFace?.name);
     expect(landFace?.manaAbilities).toHaveLength(1);
-    expect(landFace?.entersTappedUnless).toEqual({ kind: 'mayPayLife', n: 3 });
+    if (card.name.startsWith('Revitalizing Repast')) {
+      expect(landFace?.entersTapped).toBe(true);
+    } else {
+      expect(landFace?.entersTappedUnless).toEqual({ kind: 'mayPayLife', n: 3 });
+    }
 
     const { ctx, objectId } = pod(card);
     const player = ctx.state.players[0]!;
@@ -111,7 +114,11 @@ describe('MDFC spell // land layout', () => {
     });
     expect(landOption).toBeDefined();
     expect(landOption?.description).toBe(`Play ${card.backFace?.name}`);
-    expect(landOption?.data).toMatchObject({ castVariant: 'mdfc', payLifeToUntap: 3 });
+    expect(landOption?.data).toMatchObject(
+      card.name.startsWith('Revitalizing Repast')
+        ? { castVariant: 'mdfc', entersTapped: true }
+        : { castVariant: 'mdfc', payLifeToUntap: 3 },
+    );
 
     const payload = landOption?.payload as PriorityActionPayload | undefined;
     if (payload === undefined || payload.kind !== 'playLand') throw new Error('missing MDFC land action');
@@ -127,9 +134,9 @@ describe('MDFC spell // land layout', () => {
     expect(permanent?.name).toBe(card.backFace?.name);
     expect(permanent?.face).toBe('back');
     expect(computeCharacteristics(ctx, permanent!).types).toContain('Land');
-    expect(permanent?.tapped).toBe(false);
-    expect(player.life).toBe(37);
-    expect(manaSourcesFor(ctx, player.id).some((source) => source.cardId === permanent?.cardId && source.units.some((unit) => unit.includes(card.colors[0]!)))).toBe(true);
+    expect(permanent?.tapped).toBe(card.name.startsWith('Revitalizing Repast'));
+    expect(player.life).toBe(card.name.startsWith('Revitalizing Repast') ? 40 : 37);
+    expect(computeCharacteristics(ctx, permanent!).manaAbilities.some((ability) => ability.units.some((unit) => unit.includes(card.colors[0]!)))).toBe(true);
     expect(player.hand.some((object) => object.id === objectId)).toBe(false);
     expect(player.landsPlayedThisTurn).toBe(1);
 
@@ -145,6 +152,7 @@ describe('MDFC spell // land layout', () => {
     const card = mdfcCards[2];
     const { ctx } = pod(card);
     const player = ctx.state.players[0]!;
+    spawn(ctx, 'P1', bear());
     const options = computePriorityOptions(ctx, player);
     expect(options.some((option) => option.type === 'castSpell' && option.description.startsWith('Cast Revitalizing Repast'))).toBe(true);
     expect(options.some((option) => option.type === 'playLand' && option.description === 'Play Old-Growth Grove')).toBe(true);

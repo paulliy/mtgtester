@@ -17,6 +17,23 @@ export interface BatchRow { id: string; seed: string; status: BatchStatus; creat
 export class BatchRepository {
   constructor(private readonly db: SqliteLike) {}
 
+  /** Called once after the server has acquired its listening port, before accepting work. */
+  recoverInterrupted(): number {
+    const interrupted = rows(this.db, `SELECT b.id, bs.scenario_id FROM batches b LEFT JOIN batch_scenarios bs ON bs.batch_id = b.id AND bs.scenario_index = 0 WHERE b.status IN ('queued', 'running')`);
+    const now = new Date().toISOString();
+    const reason = 'Server restarted before the batch completed.';
+    const recover = (): void => {
+      for (const row of interrupted) {
+        const id = String(row['id']);
+        this.db.query(`UPDATE games SET status = 'abandoned', ended_at = ? WHERE status = 'running' AND id IN (SELECT game_id FROM batch_games WHERE batch_id = ? AND status IN ('queued', 'running'))`).run(now, id);
+        this.db.query(`UPDATE batch_games SET status = 'failed', failure_reason = ?, ended_at = ? WHERE batch_id = ? AND status IN ('queued', 'running')`).run(reason, now, id);
+        this.markFinished(id, 'failed', { scenarioId: String(row['scenario_id'] ?? ''), gameIndex: null, reason, kind: 'interrupted' });
+      }
+    };
+    if (this.db.transaction !== undefined) this.db.transaction(recover)(); else recover();
+    return interrupted.length;
+  }
+
   create(id: string, seed: string, scenarios: readonly BatchScenarioSpec[]): void {
     const now = new Date().toISOString();
     const write = (): void => {

@@ -12,7 +12,7 @@ console.log('[L1-L3 Engine Test Suite] Running vitest on token-triumph-deck.test
 try {
   execSync('bun test packages/engine/tests/token-triumph-deck.test.ts', { stdio: 'inherit' });
   console.log('✓ Token Triumph L1-L3 Engine Test Suite passed successfully.\n');
-} catch (e) {
+} catch {
   console.error('✗ Token Triumph L1-L3 Engine Test Suite failed!');
   process.exit(1);
 }
@@ -22,7 +22,7 @@ console.log('[L1-L3 Card Specific Suite] Running vitest on card-suite-l1-l3.test
 try {
   execSync('bun test packages/engine/tests/card-suite-l1-l3.test.ts', { stdio: 'inherit' });
   console.log('✓ Card Specific L1-L3 Engine Test Suite passed successfully.\n');
-} catch (e) {
+} catch {
   console.error('✗ Card Specific L1-L3 Engine Test Suite failed!');
   process.exit(1);
 }
@@ -32,7 +32,7 @@ console.log('[L5 Human UI Reachability] Running vitest on card-suite-l5-ui.test.
 try {
   execSync('bun test packages/engine/tests/card-suite-l5-ui.test.ts', { stdio: 'inherit' });
   console.log('✓ L5 Human UI Reachability Suite passed successfully.\n');
-} catch (e) {
+} catch {
   console.error('✗ L5 Human UI Reachability Suite failed!');
   process.exit(1);
 }

@@ -45,10 +45,6 @@ export function registerCOUNTER_INTELLIGENCEOverrides(): void {
           "{T}: Choose a color. Add one mana of that color for each charge counter on this artifact."
     ]);
 
-  unimplemented("f1603384-4361-49c9-98aa-7785fc3504c4", "Cascade Bluffs", [
-          "{U/R}, {T}: Add {U}{U}, {U}{R}, or {R}{R}."
-    ]);
-
   unimplemented("837c5d0e-0a33-4f9d-ae25-68a687bdf640", "Chrome Host Seedshark", [
           "Whenever you cast a noncreature spell, incubate X, where X is that spell's mana value."
     ]);
@@ -212,10 +208,6 @@ export function registerCOUNTER_INTELLIGENCEOverrides(): void {
           "Proliferate, then choose any number of permanents you control that had a counter put on them this way. Those permanents phase out."
     ]);
 
-  unimplemented("8e7641e1-e814-4d5a-9cb3-71ad2f4ceee8", "Rugged Prairie", [
-          "{R/W}, {T}: Add {R}{R}, {R}{W}, or {W}{W}."
-    ]);
-
   unimplemented("e8e2f273-5e74-4f16-8d49-2e86e9c9f2dc", "Solar Array", [
           "{T}: Add one mana of any color. When you next cast an artifact spell this turn, that spell gains sunburst."
     ]);
@@ -226,10 +218,6 @@ export function registerCOUNTER_INTELLIGENCEOverrides(): void {
 
   unimplemented("dc11d9dc-7d18-45dc-955b-d0ba71fc0db8", "Surge Conductor", [
           "Whenever another nontoken artifact you control enters, proliferate."
-    ]);
-
-  unimplemented("8ddfc283-c9b4-41a5-af88-cf0068e986cc", "Swan Song", [
-          "Counter target enchantment, instant, or sorcery spell. Its controller creates a 2/2 blue Bird creature token with flying."
     ]);
 
   unimplemented("b1544f21-7e98-461b-aed5-e748b0168c52", "Swords to Plowshares", [

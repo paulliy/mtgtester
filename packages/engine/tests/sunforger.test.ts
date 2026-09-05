@@ -15,6 +15,7 @@
 import { describe, expect, it } from 'vitest';
 import { computePriorityOptions } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
+import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
 import { executeAbility, payAbilityCosts } from '../src/effects/resolve';
 import type { EnginePlayerState, GameContext } from '../src/state/types';
@@ -122,6 +123,7 @@ describe('Sunforger', () => {
         return { index: 0, targets: new Map() };
       },
     );
+    pump(resolveTopOfStack(ctx));
 
     expect(opponent.life).toBe(lifeBefore - 3);
     expect(p1(ctx).hand.some((c) => c.name === 'Test Red Bolt')).toBe(false);

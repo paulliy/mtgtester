@@ -18,6 +18,8 @@ const SRC = join(import.meta.dirname, '..', 'src');
 /** Printed-characteristic reads that are correct, and why. */
 const ALLOWED: Record<string, string> = {
   'cards/definition.ts': 'declares the CardDefinition model and its type predicates',
+  'cards/interpret.ts':
+    'buildTransformBackFace copies printed characteristics from a freshly interpreted synthetic card face',
   'effects/continuous.ts': 'the layer engine itself: printed values seed the layer pass',
   'actions/apply.ts':
     'reads the printed type of a card being announced from hand or the command zone, before it is a permanent',

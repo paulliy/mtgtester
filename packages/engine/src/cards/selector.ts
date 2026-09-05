@@ -68,6 +68,12 @@ export interface SelectorCandidate {
   inCombat?: boolean;
   /** Does this permanent have any counter of any kind on it (Rishkar, Peema Renegade)? */
   hasAnyCounter?: boolean;
+  /**
+   * The permanent's counters by kind, for subjects that name one ("with a +1/+1 counter on it").
+   * Absent for objects that cannot carry counters — a card in hand, a spell on the stack — which
+   * is why `hasCounter` correctly never matches them.
+   */
+  counters?: Record<string, number>;
 }
 
 /** The object a relative selector ("self", "you control") is resolved against. */
@@ -78,6 +84,8 @@ export interface SelectorSource {
   attachedToCardId?: string | null;
   /** Object whose event fired a trigger, when a condition refers to that object. */
   triggerObjectCardId?: string;
+  /** Player whose action caused the event, for event-relative conditions. */
+  eventPlayerId?: string;
   /** The source's `chosenOption` (Caged Sun's color, …), for the `chosenColor` selector. */
   chosenOption?: string;
 }
@@ -101,6 +109,13 @@ export type Selector =
   | { kind: 'chosenColor' }
   /** "of the chosen type" (Cloud Key) — same idea as `chosenColor`, over card types. */
   | { kind: 'chosenType' }
+  /**
+   * "of the chosen type" where the chosen thing is a CREATURE TYPE (Cavern of Souls, Herald's
+   * Horn, Patchwork Banner) — the same words as `chosenType`, a different domain. Card types
+   * live in `types` and creature types in `subtypes`, so one selector cannot serve both:
+   * `chosenType` against "Elf" would compare it to ["Creature"] and never match.
+   */
+  | { kind: 'chosenSubtype' }
   /** Controlled by the source's controller, or by any of their opponents. */
   | { kind: 'controller'; who: 'you' | 'opponents' }
   /** EVENT-ONLY (see the module comment): "with power 4 or greater". */
@@ -117,6 +132,13 @@ export type Selector =
   /** Does the permanent have any counter of any kind on it (Rishkar, Peema Renegade)? Not
    * event-only: counters are real state, not a layer's derived output. */
   | { kind: 'hasAnyCounter' }
+  /**
+   * A counter of a NAMED kind — "with a +1/+1 counter on it" (Marchesa, the Black Rose; The Ooze;
+   * Herald of Secret Streams). Distinct from `hasAnyCounter` on purpose: reading these subjects
+   * as "any counter" makes a creature carrying only a -1/-1 counter qualify, which turns
+   * Marchesa plus persist into a loop the printed cards do not support.
+   */
+  | { kind: 'hasCounter'; counter: string }
   /** EVENT-ONLY (see the module comment): "with flying" / (negated) "without flying". */
   | { kind: 'hasKeyword'; keyword: string }
   /**
@@ -148,6 +170,7 @@ export const ofSupertype = (value: string): Selector => ({ kind: 'supertype', va
 export const ofColor = (value: Color): Selector => ({ kind: 'color', value });
 export const CHOSEN_COLOR: Selector = { kind: 'chosenColor' };
 export const CHOSEN_TYPE: Selector = { kind: 'chosenType' };
+export const CHOSEN_SUBTYPE: Selector = { kind: 'chosenSubtype' };
 
 export const allOf = (...of: Selector[]): Selector => ({ kind: 'allOf', of });
 export const anyOf = (...of: Selector[]): Selector => ({ kind: 'anyOf', of });
@@ -159,6 +182,7 @@ export const NONBASIC_LANDS: Selector = allOf(ofType('Land'), not(ofSupertype('B
 export const powerAtLeast = (n: number): Selector => ({ kind: 'powerAtLeast', n });
 export const powerAtMost = (n: number): Selector => ({ kind: 'powerAtMost', n });
 export const HAS_ANY_COUNTER: Selector = { kind: 'hasAnyCounter' };
+export const hasCounter = (counter: string): Selector => ({ kind: 'hasCounter', counter });
 export const toughnessAtLeast = (n: number): Selector => ({ kind: 'toughnessAtLeast', n });
 export const manaValueAtMost = (n: number): Selector => ({ kind: 'manaValueAtMost', n });
 export const manaValueAtLeast = (n: number): Selector => ({ kind: 'manaValueAtLeast', n });
@@ -228,6 +252,8 @@ export function selectMatches(
       return source.chosenOption !== undefined && candidate.colors.includes(source.chosenOption as Color);
     case 'chosenType':
       return source.chosenOption !== undefined && candidate.types.includes(source.chosenOption);
+    case 'chosenSubtype':
+      return source.chosenOption !== undefined && candidate.subtypes.includes(source.chosenOption);
     case 'controller':
       return selector.who === 'you'
         ? candidate.controllerId === source.controllerId
@@ -238,6 +264,10 @@ export function selectMatches(
       return candidate.power <= selector.n;
     case 'hasAnyCounter':
       return candidate.hasAnyCounter === true;
+    case 'hasCounter':
+      // `> 0`, not presence: the counter map keeps zeroed entries once a kind has been on the
+      // permanent, so a key alone does not mean the permanent still carries one.
+      return (candidate.counters?.[selector.counter] ?? 0) > 0;
     case 'toughnessAtLeast':
       return candidate.toughness !== undefined && candidate.toughness >= selector.n;
     case 'manaValueAtMost':

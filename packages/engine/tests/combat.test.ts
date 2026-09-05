@@ -187,6 +187,27 @@ describe('combat (brief §5.4 worked example and CR 506–511)', () => {
     expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(36);
   });
 
+  it('double strike plus trample sends the regular-step remainder to the defending player when the blocker dies in first strike', () => {
+    const ctx = combatContext();
+    const champion = spawn(
+      ctx,
+      'P1',
+      keywordCreature('Test Champion', 'Double strike, trample', '{1}{W}', '4/4'),
+    );
+    spawn(ctx, 'P2', keywordCreature('Test Sapling', '', '{1}', '1/1'));
+
+    pump(runCombatPhase(ctx), (d) => {
+      const attack = attackWith('Test Champion', 'P2')(d);
+      if (attack !== null) return attack;
+      const block = blockWith('Test Sapling', champion.id)(d);
+      if (block !== null) return block;
+      return pick(d, /Pass|does not/);
+    });
+
+    expect(ctx.state.battlefield.find((p) => p.name === 'Test Sapling')).toBeUndefined();
+    expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(33);
+  });
+
   it('trample assigns lethal to the blocker and the rest to the player; deathtouch makes 1 lethal', () => {
     const ctx = combatContext();
     const crusher = spawn(

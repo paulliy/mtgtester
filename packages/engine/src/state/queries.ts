@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Read-only state queries: definitions, effective characteristics (computed through the CR
  * 613 layer engine — see `effects/continuous.ts`), players in the game, and mana sources.
  */
@@ -18,9 +18,10 @@ import { evaluateCondition } from '../cards/condition';
 import { evaluateValue } from '../cards/value';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
-import { computeCharacteristics, matchesSelector } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector, selectPermanents } from '../effects/continuous';
 import { UnmodeledCardError } from '../errors';
 import type { ManaAllowance, ManaSource, ManaUnit, ParsedManaCost } from '../mana/cost';
+import { manaCostComponent } from '../mana/cost';
 import type {
   EngineCardObject,
   EngineObject,
@@ -329,6 +330,36 @@ export function resolveDynamicUnits(
       const def = ctx.defs.get(commander.oracleId);
       for (const color of def?.colorIdentity ?? []) add(color);
     }
+  } else if (spec.dynamic === 'colorsAmongPermanents' || spec.dynamic === 'oneColorAmongPermanents') {
+    // The source sees current colors, including color-changing continuous effects.
+    for (const permanent of controlledPermanents(ctx, perm.controllerId)) {
+      for (const color of computeCharacteristics(ctx, permanent).colors) add(color);
+    }
+  } else if (spec.dynamic === 'legendaryPermanentColors') {
+    // Mox Amber. "Among legendary creatures and planeswalkers you control" — read through the
+    // layer engine, so a permanent that has BECOME legendary (or lost legendary) counts as it
+    // currently is. Mox Amber itself is a legendary artifact, not a creature, so it never
+    // feeds its own ability.
+    for (const permanent of controlledPermanents(ctx, perm.controllerId)) {
+      const chars = computeCharacteristics(ctx, permanent);
+      if (!chars.supertypes.includes('Legendary')) continue;
+      if (!chars.types.includes('Creature') && !chars.types.includes('Planeswalker')) continue;
+      for (const color of chars.colors) add(color);
+    }
+  } else if (spec.dynamic === 'ownLandTypes') {
+    // Reflecting Pool — the mirror of `opponentLandColors` over your own lands, with one real
+    // difference: "any TYPE that a land could produce" is broader than "any color", so {C} is
+    // included rather than filtered out. `visited` is what stops two Reflecting Pools (or a Pool
+    // and an Exotic Orchard) recursing into each other forever.
+    for (const land of controlledPermanents(ctx, perm.controllerId)) {
+      const chars = computeCharacteristics(ctx, land);
+      if (!chars.types.includes('Land')) continue;
+      for (const ability of chars.manaAbilities) {
+        for (const unit of resolveDynamicUnits(ctx, ability, land, visited).units) {
+          for (const sym of unit) add(sym);
+        }
+      }
+    }
   } else if (spec.dynamic === 'chosenColor') {
     // A modal DFC land's ETB face choice (`entersChoosingOption`), stored as the color's letter.
     // Undefined for a card still in hand (previewed before it has entered, so it hasn't chosen
@@ -353,7 +384,56 @@ export function resolveDynamicUnits(
     }
   }
 
-  return { ...spec, units: symbols.length > 0 ? [symbols] : [] };
+  return {
+    ...spec,
+    units: symbols.length === 0
+      ? []
+      : spec.dynamic === 'colorsAmongPermanents'
+        ? symbols.map((symbol) => [symbol])
+        : [symbols],
+  };
+}
+
+/**
+ * "Add {G} for each creature you control" (Gaea's Cradle, Itlimoc) - expand a state-derived
+ * AMOUNT into concrete units.
+ *
+ * The symbol is fixed here and the COUNT is computed, which is the mirror of `resolveDynamicUnits`
+ * (computed symbols, fixed count). Run after it, so a spec could in principle use both.
+ *
+ * Zero is a real answer, not a failure: Gaea's Cradle with no creatures produces nothing, and
+ * `manaSourcesFor`'s `units.length > 0` filter then correctly declines to offer it as a payment
+ * source rather than offering a source that makes no mana.
+ */
+export function resolveDynamicAmount(
+  ctx: GameContext,
+  spec: ManaAbilitySpec,
+  perm: ManaAbilityContext,
+): ManaAbilitySpec {
+  if (spec.amount === undefined) return spec;
+  const { amount, ...rest } = spec;
+  const count = Math.max(
+    0,
+    evaluateValue(ctx, amount, {
+      controllerId: perm.controllerId,
+      // Counted through the layer engine, so a permanent that has BECOME a creature (or lost
+      // the type) counts as it currently is — the same rule `landPlayLimitFor` uses.
+      countPermanents: (selector, scope) =>
+        selectPermanents(ctx, selector, {
+          cardId: perm.cardId,
+          controllerId: perm.controllerId,
+          // Three Tree City counts creatures "of the chosen type", which is a `chosenSubtype`
+          // clause resolved against the SOURCE's own as-enters choice.
+          ...(perm.chosenOption !== undefined ? { chosenOption: perm.chosenOption } : {}),
+        }).filter((candidate) =>
+          scope === 'all' ||
+          (scope === 'you'
+            ? candidate.controllerId === perm.controllerId
+            : candidate.controllerId !== perm.controllerId),
+        ).length,
+    }),
+  );
+  return { ...rest, units: Array.from({ length: count }, () => spec.units).flat() };
 }
 
 /**
@@ -415,7 +495,7 @@ export function canPayNonManaCosts(
       case 'sacrificeOther': {
         const count = cost.count ?? 1;
         const payable = ctx.state.battlefield.filter((candidate) =>
-          candidate.id !== perm.id && candidate.controllerId === perm.controllerId &&
+          (cost.allowSelf === true || candidate.id !== perm.id) && candidate.controllerId === perm.controllerId &&
           matchesSelector(ctx, candidate, cost.selector, { cardId: perm.cardId, controllerId: perm.controllerId }),
         );
         if (payable.length < count) return false;
@@ -482,6 +562,15 @@ export function canPayNonManaCosts(
       }
       case 'exileCardFromHand':
         return false;
+      case 'discardSelf':
+      case 'exileSelfFromGraveyard':
+        // Paid by moving the SOURCE CARD out of hand / out of the graveyard. A battlefield
+        // permanent is in neither zone, so it can never pay one. This function is only ever
+        // asked about battlefield permanents; the hand and graveyard activation paths in
+        // `computePriorityOptions`/`applyPriorityAction` pay these directly and never call it.
+        // Falling through to the permissive `true` below is what let a battlefield creature
+        // claim it could pay for its own cycling.
+        return false;
       case 'mana':
         break;
     }
@@ -499,8 +588,13 @@ function interchangeableSignature(ability: ManaAbilitySpec): string {
     ability.costs ?? TAP_COST,
     ability.restriction ?? null,
     ability.spendTrigger ?? null,
+    ability.uncounterableSpell ?? false,
     ability.persistent ?? false,
     ability.linked ?? false,
+    // Two abilities that differ only in their ON-ACTIVATE rider are NOT interchangeable:
+    // collapsing them would let the payment path apply the wrong permanent-side effect (or
+    // apply a rider to an ability that has none). See `payManaCost`.
+    ability.onActivate ?? null,
   ]);
 }
 
@@ -539,10 +633,26 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
       return priority(a.chars.types) - priority(b.chars.types) || a.index - b.index;
     });
   for (const { perm, chars } of permanents) {
+    // Grand Abolisher bars opponents from activating abilities of artifacts, creatures and
+    // enchantments during its controller's turn — and a mana ability is an activated ability
+    // (CR 605.1a), so the restriction reaches Sol Ring and Birds of Paradise too. Checked here
+    // rather than only in `computePriorityOptions`, because a source that cannot be activated
+    // is not available to pay for anything either.
+    if (activatingAbilitiesBlockedFor(ctx, playerId, perm)) continue;
     // Mana abilities are computed, not printed: a layer-4 subtype change replaces them
     // (Blood Moon → a Mountain that taps for R), layer 6 can remove them outright, and layer 6
     // can also GRANT them (Chromatic Lantern).
-    const abilities = chars.manaAbilities
+    let abilities = chars.manaAbilities
+      /*
+       * A mana ability whose cost includes {X} still cannot be honoured. There is nobody to
+       * announce X for a mana ability — it is activated by the payment solver, not by a player
+       * at priority — so the cost has no value and would go uncharged. No printed card does
+       * this; the guard is here because an override could author one.
+       *
+       * The rest of the mana-in-cost family IS honoured now: `ManaSource.manaCost` carries it
+       * and `planPayment`'s second pass pays for its own sources. See `mana/cost.ts`.
+       */
+      .filter((a) => !(a.costs ?? []).some((c) => c.kind === 'mana' && (c.cost.x ?? 0) > 0))
       // "Activate only if you control a Dragon" — an unavailable source is not a source.
       .filter(
         (a) =>
@@ -554,12 +664,40 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
       )
       .map((a) => resolveConditionalUnits(ctx, a, perm))
       .map((a) => resolveDynamicUnits(ctx, a, perm))
+      .map((a) => resolveDynamicAmount(ctx, a, perm))
       // A dynamic source can resolve to nothing at all — Fellwar Stone with no opposing
       // lands taps for no mana, so it must not be offered as a payment source.
       .filter((a) => a.units.length > 0)
       // Not every mana ability costs {T}: "Sacrifice this creature: Add {R}{R}" is available
       // from a tapped, summoning-sick creature. Availability is per ability, not per permanent.
       .filter((a) => canPayNonManaCosts(ctx, perm, a.costs ?? TAP_COST));
+
+    for (const entry of gatherRuleStatics(ctx)) {
+      const rider = entry.static;
+      if (rider.kind !== 'manaActivationRider') continue;
+      const riderSource = ctx.state.battlefield.find((candidate) => candidate.cardId === entry.sourceCardId);
+      const attachedToCardId = riderSource?.attachedTo === undefined
+        ? undefined
+        : ctx.state.battlefield.find((candidate) => candidate.id === riderSource.attachedTo)?.cardId;
+      if (!matchesSelector(ctx, perm, rider.source, {
+        cardId: entry.sourceCardId,
+        controllerId: entry.controllerId,
+        ...(attachedToCardId !== undefined ? { attachedToCardId } : {}),
+      })) continue;
+
+      abilities = abilities.map((ability) => {
+        if (rider.add.kind === 'fixed') {
+          return { ...ability, units: [...ability.units, ...rider.add.units] };
+        }
+        const producedTypes = [...new Set(ability.units.flat())];
+        if (producedTypes.length === 0) return ability;
+        return {
+          ...ability,
+          units: [...ability.units, producedTypes],
+          ...(ability.linked === true || ability.units.length === 1 ? { linked: true as const } : {}),
+        };
+      });
+    }
     if (abilities.length === 0) continue;
 
     // Group interchangeable abilities, preserving first-seen order for determinism.
@@ -575,10 +713,17 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
       const first = group[0] as ManaAbilitySpec;
       const rider = {
         costs: first.costs ?? TAP_COST,
+        // Lifted out of `costs` so the payment solver can see it without knowing what an
+        // `AbilityCost` is — a filter land's `{W/B}`, Cabal Coffers' `{2}`.
+        ...(manaCostComponent(first.costs ?? TAP_COST) !== undefined
+          ? { manaCost: manaCostComponent(first.costs ?? TAP_COST) as ParsedManaCost }
+          : {}),
         ...(first.restriction !== undefined ? { restriction: first.restriction } : {}),
         ...(first.spendTrigger !== undefined ? { spendTrigger: first.spendTrigger } : {}),
+        ...(first.uncounterableSpell === true ? { uncounterableSpell: true as const } : {}),
         ...(first.persistent === true ? { persistent: true } : {}),
         ...(first.linked === true ? { linked: true as const } : {}),
+        ...(first.onActivate !== undefined ? { onActivate: first.onActivate } : {}),
       };
       // Collapse only when every member makes exactly one mana; otherwise the members differ in
       // AMOUNT, which is a real choice and belongs to the alternatives path below.
@@ -655,9 +800,13 @@ export interface RuleStaticEntry {
 export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
   const out: RuleStaticEntry[] = [];
   for (const perm of ctx.state.battlefield) {
+    if (perm.faceDown) continue;
     const def = ctx.defs.get(perm.oracleId);
     if (def === undefined) continue;
-    for (const rs of def.ruleStatics) {
+    const printedRuleStatics = perm.transformed && def.backFace !== undefined
+      ? def.backFace.ruleStatics
+      : def.ruleStatics;
+    for (const rs of printedRuleStatics) {
       if (rs.kind === 'costReduction' && rs.selfOnly === true) continue;
       out.push({
         static: rs,
@@ -686,6 +835,26 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
   return out;
 }
 
+/** Number of land plays available to a player this turn, including the normal play. */
+export function landPlayLimitFor(ctx: GameContext, playerId: PlayerId): number {
+  return 1 + gatherRuleStatics(ctx).reduce(
+    (total, entry) => entry.controllerId === playerId && entry.static.kind === 'additionalLandDrops'
+      ? total + evaluateValue(ctx, entry.static.count, {
+          controllerId: entry.controllerId,
+          countPermanents: (selector, scope) =>
+            selectPermanents(ctx, selector, {
+              cardId: entry.sourceCardId,
+              controllerId: entry.controllerId,
+            }).filter((permanent) =>
+              scope === 'all' ||
+              (scope === 'you' ? permanent.controllerId === entry.controllerId : permanent.controllerId !== entry.controllerId),
+            ).length,
+        })
+      : total,
+    0,
+  );
+}
+
 /** Does this player currently have no maximum hand size? */
 export function hasNoMaximumHandSize(ctx: GameContext, playerId: PlayerId): boolean {
   return gatherRuleStatics(ctx).some(
@@ -697,7 +866,9 @@ export function castingSpellsBlockedFor(ctx: GameContext, playerId: PlayerId): b
   return gatherRuleStatics(ctx).some((entry) => {
     if (entry.static.kind !== 'cantCastSpells') return false;
     // "Your OPPONENTS can't cast spells" — the source's own controller is never blocked by it.
-    if (entry.controllerId === playerId) return false;
+    // "PLAYERS can't cast spells" (Basandra) binds everyone, its controller included.
+    if (entry.static.who !== 'all' && entry.controllerId === playerId) return false;
+    if (entry.static.duringCombatOnly === true && ctx.state.phase !== 'combat') return false;
     return entry.static.yourTurnOnly !== true || ctx.state.currentTurnPlayer === entry.controllerId;
   });
 }
@@ -708,6 +879,23 @@ export function castingSpellsBlockedFor(ctx: GameContext, playerId: PlayerId): b
  * (Last March of the Ents) — this is re-checked at the moment of countering (CR 611.2), since the
  * source (Rhythm of the Wild) could have left the battlefield since the spell was cast.
  */
+/** Does a rule static currently forbid this player from activating this permanent's ability? */
+export function activatingAbilitiesBlockedFor(
+  ctx: GameContext,
+  playerId: PlayerId,
+  permanent: EnginePermanent,
+): boolean {
+  return gatherRuleStatics(ctx).some((entry) => {
+    if (entry.static.kind !== 'cantActivateAbilities') return false;
+    if (entry.static.who !== 'all' && entry.controllerId === playerId) return false;
+    if (entry.static.yourTurnOnly && ctx.state.currentTurnPlayer !== entry.controllerId) return false;
+    return matchesSelector(ctx, permanent, entry.static.filter, {
+      cardId: entry.sourceCardId,
+      controllerId: entry.controllerId,
+    });
+  });
+}
+
 export function spellProtectedFromCounter(
   ctx: GameContext,
   casterId: PlayerId,
@@ -743,6 +931,54 @@ export function spellProtectedFromCounter(
  * Always at most one card — the printed template names the top card specifically, never "a card
  * in your library".
  */
+const PERMANENT_TYPES = ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Land', 'Planeswalker'] as const;
+
+/**
+ * The currently available permission for a non-hand play. `budgetTypes` is absent for an
+ * unlimited permission; otherwise the action must choose one of those still-unused permanent
+ * types and consume it. Keeping that choice in the action payload handles multitype cards.
+ */
+export function playFromZonePermission(
+  ctx: GameContext,
+  playerId: PlayerId,
+  card: EngineCardObject,
+  zone: 'libraryTop' | 'graveyard',
+): { budgetTypes?: string[] } | null {
+  const player = ctx.state.players.find((candidate) => candidate.id === playerId);
+  if (player === undefined) return null;
+  const candidate = cardZoneCandidate(ctx, card, playerId);
+  const source: SelectorSource = { cardId: '', controllerId: playerId };
+  const matching = gatherRuleStatics(ctx).filter((entry) => {
+    if (entry.static.kind !== 'playFromZone' || entry.static.zone !== zone) return false;
+    if (entry.controllerId !== playerId) return false;
+    if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== playerId) return false;
+    return entry.static.filter === undefined || selectMatches(candidate, entry.static.filter, source);
+  });
+  if (matching.length === 0) return null;
+  if (matching.some((entry) => entry.static.kind === 'playFromZone' && entry.static.permanentTypeBudget === undefined)) {
+    return {};
+  }
+
+  const budgetTypes = PERMANENT_TYPES.filter((type) => {
+    if (!candidate.types.includes(type)) return false;
+    return matching.some((entry) =>
+      entry.static.kind === 'playFromZone' &&
+      entry.static.permanentTypeBudget !== undefined &&
+      (player.playFromZoneTypeUsesThisTurn[type] ?? 0) < entry.static.permanentTypeBudget
+    );
+  });
+  return budgetTypes.length > 0 ? { budgetTypes: [...budgetTypes] } : null;
+}
+
+/** Does `playerId` currently have a static permission to play `card` from `zone`? */
+export function canPlayFromZone(
+  ctx: GameContext,
+  playerId: PlayerId,
+  card: EngineCardObject,
+  zone: 'libraryTop' | 'graveyard',
+): boolean {
+  return playFromZonePermission(ctx, playerId, card, zone) !== null;
+}
 export function castFromLibraryTopCandidates(
   ctx: GameContext,
   playerId: PlayerId,
@@ -806,7 +1042,8 @@ export function damageAmountAfterReplacements(
   }
   return amount;
 }
-/** The multiplicative token replacement effects active for controllerId. */
+
+/** The multiplicative token replacement effects active for tokens created under `controllerId`. */
 export function tokenCreationMultiplierFor(ctx: GameContext, controllerId: PlayerId): number {
   return gatherRuleStatics(ctx).reduce((multiplier, entry) => {
     if (entry.static.kind !== 'tokenCountMultiplier' || entry.controllerId !== controllerId) return multiplier;

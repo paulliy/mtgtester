@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ComponentPublicInstance } from 'vue';
+import type { ManaPool } from '@mtg/shared';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type {
@@ -52,11 +54,11 @@ function onBoardDragOver(event: DragEvent): void {
  * spuriously unregister/re-register the anchor on every unrelated re-render (a seat id never
  * changes once the game starts). Caching one stable function per seat avoids that churn.
  */
-const seatAnchorRefs = new Map<string, (el: Element | null) => void>();
-function seatAnchorRef(seatId: string): (el: Element | null) => void {
+const seatAnchorRefs = new Map<string, (el: Element | ComponentPublicInstance | null) => void>();
+function seatAnchorRef(seatId: string): (el: Element | ComponentPublicInstance | null) => void {
   let fn = seatAnchorRefs.get(seatId);
   if (fn === undefined) {
-    fn = (el) => registerAnchor(seatId, el);
+    fn = (el) => registerAnchor(seatId, el instanceof Element ? el : null);
     seatAnchorRefs.set(seatId, fn);
   }
   return fn;
@@ -639,7 +641,7 @@ function hideCardPreview(): void {
   cardPreview.hide();
 }
 
-function resourceSummary(pool: Record<string, number>): string {
+function resourceSummary(pool: ManaPool): string {
   const entries = Object.entries(pool).filter(([, amount]) => amount > 0);
   return entries.length === 0
     ? ''

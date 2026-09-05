@@ -95,9 +95,13 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
   const out: LayerEffect[] = [];
 
   for (const source of ctx.state.battlefield) {
+    if (source.faceDown) continue;
     const def = ctx.defs.get(source.oracleId);
     if (def === undefined) continue;
-    for (const s of def.staticEffects as StaticEffect[]) {
+    const printedStatics = source.transformed && def.backFace !== undefined
+      ? def.backFace.staticEffects
+      : def.staticEffects;
+    for (const s of printedStatics as StaticEffect[]) {
       // A selector that reads power cannot be a continuous effect's affected set: it would make
       // one 7d effect able to change another's, reinstating the dependency analysis `applyGroup`
       // deliberately skips for 7d. Event-only selectors are legal in triggers and conditions
@@ -151,7 +155,7 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         timestamp: source.timestamp,
       });
     }
-    if (def.artifactGraveyardAbilities === true) {
+    if (!source.transformed && def.artifactGraveyardAbilities === true) {
       const controller = ctx.state.players.find((p) => p.id === source.controllerId);
       for (const card of controller?.graveyard ?? []) {
         const graveyardDef = ctx.defs.get(card.oracleId);
@@ -181,6 +185,12 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       });
     } else if (eff.kind === 'grantKeyword' && eff.keyword !== undefined) {
       out.push({ applies, op: { layer: 6, addKeyword: eff.keyword }, timestamp: eff.timestamp });
+    } else if (eff.kind === 'grantProtection' && eff.protectionFrom !== undefined) {
+      out.push({
+        applies,
+        op: { layer: 6, addProtection: eff.protectionFrom },
+        timestamp: eff.timestamp,
+      });
     } else if (eff.kind === 'grantAbility' && eff.ability !== undefined) {
       out.push({ applies, op: { layer: 6, addTrigger: eff.ability }, timestamp: eff.timestamp });
     } else if (eff.kind === 'becomeCreature' && eff.becomeCreature !== undefined) {
@@ -267,6 +277,7 @@ export function candidateOf(
     isEquipped,
     inCombat: perm.attacking !== null || perm.blocking !== null,
     hasAnyCounter: Object.values(perm.counters).some((c) => c > 0),
+    counters: perm.counters,
   };
 }
 
@@ -294,17 +305,33 @@ function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean
 }
 
 /** The static effect source's controller — the only scope the layer engine can offer a `Value`. */
-function scopeOf(effect: LayerEffect): Pick<ValueScope, 'controllerId'> | undefined {
-  return effect.applies.kind === 'selector'
-    ? { controllerId: effect.applies.source.controllerId }
-    : undefined;
+/** The static effect scope, including counts over the current layer working set. */
+function scopeOf(
+  ctx: GameContext,
+  work: WorkMap,
+  effect: LayerEffect,
+): Pick<ValueScope, 'controllerId' | 'countPermanents'> | undefined {
+  if (effect.applies.kind !== 'selector') return undefined;
+  const source = effect.applies.source;
+  return {
+    controllerId: source.controllerId,
+    countPermanents: (selector, who) => {
+      let count = 0;
+      for (const entry of work.values()) {
+        if (!selectMatches(candidateOf(ctx, entry.perm, entry.chars), selector, source)) continue;
+        if (who === 'you' && entry.perm.controllerId !== source.controllerId) continue;
+        if (who === 'opponents' && entry.perm.controllerId === source.controllerId) continue;
+        count += 1;
+      }
+      return count;
+    },
+  };
 }
-
 function applyOpTo(
   ctx: GameContext,
   chars: Characteristics,
   op: ContinuousOp,
-  scope: Pick<ValueScope, 'controllerId'> | undefined,
+  scope: Pick<ValueScope, 'controllerId' | 'countPermanents'> | undefined,
 ): void {
   switch (op.layer) {
     case 4:
@@ -320,6 +347,9 @@ function applyOpTo(
       // CR 305.7: *setting* a land's subtype replaces its land types outright.
       if (op.setLandSubtype !== undefined) chars.subtypes = [op.setLandSubtype];
       if (op.loseAbilities === true) chars.loseAbilities = true;
+      break;
+    case 5:
+      chars.colors = [...op.setColors];
       break;
     case 6:
       if ('loseAllAbilities' in op) {
@@ -351,6 +381,13 @@ function applyOpTo(
         }
       } else if ('setCantBeBlocked' in op) {
         chars.cantBeBlocked = true;
+      } else if ('setMustAttackEachCombat' in op) {
+        chars.mustAttackEachCombat = true;
+      } else if ('addGoad' in op) {
+        const controllerId = scope?.controllerId;
+        if (controllerId !== undefined) {
+          chars.staticGoadedBy = [...(chars.staticGoadedBy ?? []), controllerId];
+        }
       }
       break;
     case 7:
@@ -370,7 +407,7 @@ function applyOpTo(
 
 function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
   if (!effectExists(work, effect)) return;
-  const scope = scopeOf(effect);
+  const scope = scopeOf(ctx, work, effect);
   for (const entry of work.values()) {
     if (affects(ctx, effect, entry)) applyOpTo(ctx, entry.chars, effect.op, scope);
   }
@@ -391,7 +428,7 @@ function fingerprint(ctx: GameContext, work: WorkMap, effect: LayerEffect): stri
   // Resolve any `Value`s, so an effect whose *magnitude* changes counts as changed too.
   const action =
     op.layer === 7 && op.sublayer !== 'd'
-      ? `7${op.sublayer}:${evaluateValue(ctx, op.power, scopeOf(effect))}/${evaluateValue(ctx, op.toughness, scopeOf(effect))}`
+      ? `7${op.sublayer}:${evaluateValue(ctx, op.power, scopeOf(ctx, work, effect))}/${evaluateValue(ctx, op.toughness, scopeOf(ctx, work, effect))}`
       : JSON.stringify(op);
   return `${targets.sort().join(',')}|${action}`;
 }
@@ -410,6 +447,12 @@ function cloneWork(work: WorkMap): WorkMap {
         ward: entry.chars.ward,
         protectionFrom: [...entry.chars.protectionFrom],
         cantBeBlocked: entry.chars.cantBeBlocked,
+        ...(entry.chars.staticGoadedBy === undefined
+          ? {}
+          : { staticGoadedBy: [...entry.chars.staticGoadedBy] }),
+        ...(entry.chars.mustAttackEachCombat === undefined
+          ? {}
+          : { mustAttackEachCombat: entry.chars.mustAttackEachCombat }),
         ...(entry.chars.activatedAbilities === undefined
           ? {}
           : { activatedAbilities: [...entry.chars.activatedAbilities] }),
@@ -547,16 +590,19 @@ function runLayers(
     const def = ctx.defs.get(perm.oracleId);
     if (def === undefined) throw new Error(`engine bug: no def for ${perm.name}`);
     const landFace = perm.face === 'back' ? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace : undefined;
-    let types = [...(landFace?.types ?? def.types)];
-    let subtypes = [...(landFace?.subtypes ?? def.subtypes)];
-    let supertypes = [...(landFace?.supertypes ?? def.supertypes)];
-    let colors = [...(landFace?.colors ?? def.colors)];
-    let power = perm.power ?? 0;
-    let toughness = perm.toughness ?? 0;
-    let keywords = landFace === undefined ? [...def.keywords] : [];
-    let triggers = landFace === undefined ? [...def.triggers] : [];
-    let manaAbilities = [...(landFace?.manaAbilities ?? def.manaAbilities)];
+    const transformFace = perm.transformed ? def.backFace : undefined;
+    const activeFace = transformFace ?? landFace;
+    let types = [...(activeFace?.types ?? def.types)];
+    let subtypes = [...(activeFace?.subtypes ?? def.subtypes)];
+    let supertypes = [...(activeFace?.supertypes ?? def.supertypes)];
+    let colors = [...(activeFace?.colors ?? def.colors)];
+    let power = transformFace?.power ?? perm.power ?? 0;
+    let toughness = transformFace?.toughness ?? perm.toughness ?? 0;
+    let keywords = landFace === undefined ? [...(transformFace?.keywords ?? def.keywords)] : [];
+    let triggers = landFace === undefined ? [...(transformFace?.triggers ?? def.triggers)] : [];
+    let manaAbilities = [...(activeFace?.manaAbilities ?? def.manaAbilities)];
     if (perm.faceDown === true) {
+      supertypes = [];
       types = ['Creature'];
       subtypes = [];
       colors = [];
@@ -594,10 +640,14 @@ function runLayers(
         // Layer 5 is not implemented — printed color, read from here so it has one home.
         colors,
         keywords,
-        ward: landFace === undefined ? def.ward ?? null : null,
-        protectionFrom: landFace === undefined ? [...(def.protectionFrom ?? [])] : [],
-        cantBeBlocked: landFace === undefined && def.cantBeBlocked === true,
-        activatedAbilities: landFace === undefined ? [...def.activatedAbilities] : [],
+        ward: !perm.faceDown && landFace === undefined
+          ? transformFace !== undefined ? transformFace.ward ?? null : def.ward ?? null
+          : null,
+        protectionFrom: !perm.faceDown && landFace === undefined
+          ? [...(transformFace !== undefined ? transformFace.protectionFrom ?? [] : def.protectionFrom ?? [])]
+          : [],
+        cantBeBlocked: !perm.faceDown && landFace === undefined && (transformFace !== undefined ? transformFace.cantBeBlocked === true : def.cantBeBlocked === true),
+        activatedAbilities: !perm.faceDown && landFace === undefined ? [...(transformFace?.activatedAbilities ?? def.activatedAbilities)] : [],
         triggers,
         manaAbilities,
         // Base P/T comes from the permanent (a copy effect would set it there — layer 1).
@@ -619,6 +669,7 @@ function runLayers(
 
   applyGroup(ctx, work, group('4'));
   finishLayer4(ctx, work);
+  applyGroup(ctx, work, group('5'));
   applyGroup(ctx, work, group('6'));
   applyGroup(ctx, work, group('7a'));
   applyGroup(ctx, work, group('7b'));
@@ -632,6 +683,26 @@ function runLayers(
 
 /** Set `MTG_VERIFY_LAYER_CACHE=1` to recompute on every cache hit and assert they agree. */
 const VERIFY_CACHE = ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.['MTG_VERIFY_LAYER_CACHE']) === '1';
+
+/**
+ * Serialize characteristics for the verification oracle with SET-LIKE fields order-normalized.
+ *
+ * `subtypes`, `keywords` and friends are sets that layer passes append to; two passes over the
+ * same state can legitimately produce the same set in a different order (a land granted Forest
+ * and Island by two effects is one example). Comparing raw `JSON.stringify` output reported
+ * those as stale-cache bugs, which made the oracle too noisy to run as a gate.
+ *
+ * Only arrays of primitives are sorted. Arrays of objects — `manaAbilities`, `triggers`,
+ * `activatedAbilities` — keep their order, because a genuine reordering there WOULD change
+ * which ability an index refers to and is worth failing on.
+ */
+function canonicalJson(map: ReadonlyMap<string, Characteristics>): string {
+  return JSON.stringify([...map.entries()], (_key, value: unknown) =>
+    Array.isArray(value) && value.every((item) => typeof item === 'string')
+      ? [...(value as string[])].sort()
+      : value,
+  );
+}
 
 /**
  * Compute current characteristics for every permanent on the battlefield in one layered pass,
@@ -653,8 +724,8 @@ export function computeAllCharacteristics(
   if (cached !== undefined && cached.digest === digest && cached.extraCardId === extraCardId) {
     if (!VERIFY_CACHE) return cached.map;
     const fresh = runLayers(ctx, permsFor(ctx, extra));
-    const a = JSON.stringify([...cached.map.entries()]);
-    const b = JSON.stringify([...fresh.map.entries()]);
+    const a = canonicalJson(cached.map);
+    const b = canonicalJson(fresh.map);
     if (a !== b) {
       throw new Error(
         `engine bug: stale layer cache — digest collided or an input is missing from it.\ncached: ${a}\nfresh:  ${b}`,

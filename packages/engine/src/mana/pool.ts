@@ -107,11 +107,23 @@ export function selectEntriesToSpend(
   for (const c of ALL_COLORS) {
     if (!take(cost.colored[c], (e) => e.symbol === c)) return null;
   }
-  // Each hybrid pip ({U/B}) is covered by one entry of ANY symbol in its tuple — every entry
-  // is still spent exactly once (`taken.includes` above/below excludes it from later buckets).
-  for (const h of cost.hybrid ?? []) {
-    if (!take(1, (e) => (h as string[]).includes(e.symbol))) return null;
-  }
+  // Backtrack only across hybrid assignments. Entries of the same symbol are
+  // interchangeable here; preserve restricted-first preference within that symbol.
+  const hybrid = cost.hybrid ?? [];
+  const coverHybrid = (index: number): boolean => {
+    if (index === hybrid.length) return true;
+    const tried = new Set<string>();
+    for (const entry of available) {
+      if (taken.includes(entry) || tried.has(entry.symbol) ||
+          !(hybrid[index]! as string[]).includes(entry.symbol)) continue;
+      tried.add(entry.symbol);
+      taken.push(entry);
+      if (coverHybrid(index + 1)) return true;
+      taken.pop();
+    }
+    return false;
+  };
+  if (!coverHybrid(0)) return null;
   if (!take(cost.colorless, (e) => e.symbol === 'C')) return null;
   // Generic prefers colorless, then WUBRG — the same order the pre-entry code deducted in.
   let generic = cost.generic;

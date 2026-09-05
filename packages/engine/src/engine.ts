@@ -304,7 +304,15 @@ export class Engine implements EngineDriver {
    * monotonic per game, so the caller tracks one number rather than a cursor object.
    */
   eventsSince(sequence: number): GameEvent[] {
-    return this.ctx.state.eventLog.filter((e) => e.sequence >= sequence);
+    const events = this.ctx.state.eventLog;
+    let low = 0;
+    let high = events.length;
+    while (low < high) {
+      const mid = low + Math.floor((high - low) / 2);
+      if (events[mid]!.sequence < sequence) low = mid + 1;
+      else high = mid;
+    }
+    return events.slice(low);
   }
 
   getDebugLog(): readonly DebugEntry[] {

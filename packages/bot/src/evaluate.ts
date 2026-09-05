@@ -7,6 +7,13 @@ import type {
   TargetChoice,
 } from '@mtg/shared';
 import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
+import {
+  searchBlockAssignment,
+  searchDamageSplit,
+  staticBlockChoices,
+  staticDamageSplit,
+} from './combat-search';
+import type { CombatSearchOptions } from './combat-search';
 import type { Rng } from './rng';
 import { passesVeto, totalDiscardCount, totalLifeCost, totalSacrificeCount } from './veto';
 import { WEIGHTS } from './weights';
@@ -19,6 +26,12 @@ export interface ScoredAction {
 export interface EvaluateOptions {
   /** How many times this action's source ability has already been chosen this turn (item 5). */
   repeatCount?: (action: LegalAction) => number;
+  /**
+   * Bounds for ADR 0024's combat search, and the switch that turns it off. Absent everywhere in
+   * normal play — it exists so the sweep that tunes those bounds can run both arms against the
+   * same seeds in one process. See `CombatSearchOptions`.
+   */
+  combatSearch?: CombatSearchOptions;
 }
 
 function firstTargets(action: LegalAction): TargetChoice[] {
@@ -53,115 +66,61 @@ function attackDeclarationTargets(action: LegalAction, view: PlayerView): Target
   });
 }
 
-interface BlockSubjectData {
-  subjectId: string;
-  power: number;
-  toughness: number;
-  mustBlock: boolean;
-}
-
-function parseBlockSubjects(action: LegalAction): BlockSubjectData[] {
-  const raw = action.data?.['subjects'];
-  if (!Array.isArray(raw)) return [];
-  return raw.filter((s): s is BlockSubjectData => {
-    if (typeof s !== 'object' || s === null) return false;
-    const v = s as Record<string, unknown>;
-    return (
-      typeof v['subjectId'] === 'string' &&
-      typeof v['power'] === 'number' &&
-      typeof v['toughness'] === 'number' &&
-      typeof v['mustBlock'] === 'boolean'
-    );
-  });
-}
-
 /**
- * Per-slot target choice for the batched `blockDeclaration` action (ADR 0023 Phase 4) — the
- * blocker-side mirror of `attackDeclarationTargets`. Each blocker independently answers its own
- * "is this block worth it" question: block the biggest-power incoming attacker it can either
- * survive (its toughness beats that attacker's power) or trade with (its power kills that
- * attacker too), or — once the defending player is at `dangerousLifeThreshold` or below — any
- * attacker at all, a chump block being better than dying. Declines otherwise. No cross-blocker
- * coordination (no gang-blocking a threat down together, no leaving a double-covered attacker for
- * someone else to answer) — the same "simplest honest realization" of item 8 the attacker side
- * landed with in Phase 3b, not yet the full keyword-aware group evaluation still scoped as a
- * Workstream A refinement. `data.subjects` and `targets` come from the SAME `subjects` array in
- * `combat.ts`'s `buildBlockOption`, so they line up by index (`slot.slot`) without needing a
- * lookup by id.
+ * Per-slot target choice for the batched `blockDeclaration` action — Phase 4's per-blocker
+ * heuristic (`staticBlockChoices`, now in `combat-search.ts`) with ADR 0024 Phase 7b's bounded
+ * search in front of it.
+ *
+ * The search is an enhancement, never a dependency (0024 Decision item 5): it declines outright
+ * on a board wider than `WEIGHTS.combat`'s cutoff, or when the view can't supply a body for
+ * something in combat, and this falls straight back to the Phase 4 answer. That answer is also
+ * seeded into the search's own candidate set, so the search cannot return something its own
+ * scoring rates below the heuristic it replaces.
+ *
+ * What the search adds over Phase 4 is the two things a per-blocker rule structurally cannot do:
+ * consider blockers together (gang blocks, and leaving an attacker for a better-suited body), and
+ * charge each candidate for the swing it leaves available next turn.
  */
-function blockDeclarationTargets(action: LegalAction, view: PlayerView): TargetChoice[] {
-  const subjects = parseBlockSubjects(action);
-  const permById = new Map(view.battlefield.map((p) => [p.id, p]));
-  const desperate = view.life <= WEIGHTS.dangerousLifeThreshold;
-
-  return (action.targets ?? []).map((slot) => {
-    const subject = subjects[slot.slot];
-    const real = slot.options.filter((o) => o !== NO_BLOCK_TARGET);
-    if (subject === undefined || real.length === 0) {
-      return { slot: slot.slot, choice: slot.options[0] as string };
-    }
-    const worthwhile = real.filter((id) => {
-      const attacker = permById.get(id);
-      const attackerPower = attacker?.power ?? 0;
-      const attackerToughness = attacker?.toughness ?? 1;
-      const survives = subject.toughness > attackerPower;
-      const tradesUp = subject.power >= attackerToughness;
-      return desperate || survives || tradesUp;
-    });
-    if (worthwhile.length === 0) {
-      return { slot: slot.slot, choice: subject.mustBlock ? (real[0] as string) : NO_BLOCK_TARGET };
-    }
-    const best = worthwhile.reduce((a, b) =>
-      (permById.get(a)?.power ?? 0) >= (permById.get(b)?.power ?? 0) ? a : b,
-    );
-    return { slot: slot.slot, choice: best };
-  });
+function blockDeclarationTargets(
+  action: LegalAction,
+  view: PlayerView,
+  opts: CombatSearchOptions | undefined,
+): TargetChoice[] {
+  const slots = action.targets ?? [];
+  const choices = searchBlockAssignment(action, view, opts) ?? staticBlockChoices(action, view);
+  return slots.map((slot, i) => ({
+    slot: slot.slot,
+    choice: choices[i] ?? NO_BLOCK_TARGET,
+  }));
 }
 
-function targetsFor(action: LegalAction, view: PlayerView): TargetChoice[] {
+function targetsFor(
+  action: LegalAction,
+  view: PlayerView,
+  opts: CombatSearchOptions | undefined,
+): TargetChoice[] {
   if (action.type === 'attackDeclaration') return attackDeclarationTargets(action, view);
-  if (action.type === 'blockDeclaration') return blockDeclarationTargets(action, view);
+  if (action.type === 'blockDeclaration') return blockDeclarationTargets(action, view, opts);
   return firstTargets(action);
 }
 
 /**
- * Real answer for a batched combat-damage-division decision (ADR 0023 Phase 4, CR 510.1c-d):
- * unlike every other decision, the choice that matters here isn't which `assignDamage` option
- * gets picked (those exist only so a provider that doesn't know this field — the random fuzzer —
- * still has something to pick from) but the `combatDamageSplit` map itself. Kills blockers
- * cheapest-lethal-first until the attacker's power runs out, then — with trample — sends
- * whatever's left over the top; a trampler's own creature never leaves power unassigned once every
- * blocker is already covered. `PermanentView` doesn't carry damage already marked or deathtouch
- * (no `keywords` projection yet — item 20's deferred half), so "lethal" is read as plain
- * toughness: always a safe (if occasionally wasteful) overestimate, never an illegal split.
+ * Real answer for a batched combat-damage-division decision (CR 510.1c-d): unlike every other
+ * decision, the choice that matters here isn't which `assignDamage` option gets picked (those
+ * exist only so a provider that doesn't know this field — the random fuzzer — still has something
+ * to pick from) but the `combatDamageSplit` map itself.
+ *
+ * ADR 0024 Phase 7b's search over kill-subsets first, falling back to Phase 4's cheapest-lethal-
+ * first division (`staticDamageSplit`) whenever it declines. The search's advantage is that it
+ * can see deathtouch — Phase 4 had to read "lethal" as plain toughness for want of a keyword
+ * projection, wasting most of a deathtoucher's damage on the first blocker it covered.
  */
 function combatDamageSplitFor(
   spec: { amount: number; targets: ObjectId[] },
   view: PlayerView,
+  opts: CombatSearchOptions | undefined,
 ): Record<ObjectId, number> {
-  const permById = new Map(view.battlefield.map((p) => [p.id, p]));
-  const blockerIds = spec.targets.filter((id) => permById.has(id));
-  const playerTargetId = spec.targets.find((id) => !permById.has(id));
-  const lethalFor = (id: ObjectId): number => Math.max(1, permById.get(id)?.toughness ?? 1);
-
-  const ordered = [...blockerIds].sort((a, b) => lethalFor(a) - lethalFor(b));
-  const split: Record<ObjectId, number> = {};
-  let remaining = spec.amount;
-  for (const id of ordered) {
-    const lethal = lethalFor(id);
-    if (remaining < lethal) continue;
-    split[id] = lethal;
-    remaining -= lethal;
-  }
-  if (remaining > 0) {
-    if (playerTargetId !== undefined) {
-      split[playerTargetId] = remaining;
-    } else {
-      const last = ordered[ordered.length - 1];
-      if (last !== undefined) split[last] = (split[last] ?? 0) + remaining;
-    }
-  }
-  return split;
+  return searchDamageSplit(spec, view, opts) ?? staticDamageSplit(spec, view);
 }
 
 /**
@@ -213,12 +172,20 @@ export function evaluate(
   return request.legalActions
     .filter((action) => passesVeto(action, view.life))
     .map((action) => {
-      // The damper decays the BENEFIT, not the net score: a fixed cost subtracted after decay
+      // The damper decays the BENEFIT, not the net score: a fixed amount subtracted after decay
       // is what lets repeated activation eventually score below `pass` and stop (item 5). If
       // the whole net score were decayed instead, a positive net would only ever shrink toward
       // zero without crossing it, and the loop would never actually die.
-      const decay = WEIGHTS.repeatActivationDecay ** repeatCount(action);
-      const score = baseValue(action) * decay - costValue(action, view);
+      //
+      // `repeatActivationPenalty` is what guarantees there IS such a fixed amount. Relying on the
+      // ability's own costs left a hole for `{0}` abilities, which have none — see that weight's
+      // comment for the 1,270-activation game that found it.
+      const repeats = repeatCount(action);
+      const decay = WEIGHTS.repeatActivationDecay ** repeats;
+      const score =
+        baseValue(action) * decay -
+        costValue(action, view) -
+        repeats * WEIGHTS.repeatActivationPenalty;
       return { action, score };
     })
     .sort((a, b) => b.score - a.score);
@@ -246,7 +213,7 @@ export function decide(
     return {
       requestId: request.requestId,
       actionId: fallback.id,
-      combatDamageSplit: combatDamageSplitFor(request.combatDamageSplit, view),
+      combatDamageSplit: combatDamageSplitFor(request.combatDamageSplit, view, opts.combatSearch),
       note: 'Heuristic bot: dividing combat damage cheapest-lethal-first among blockers',
     };
   }
@@ -261,7 +228,7 @@ export function decide(
     if (fallback === undefined) {
       throw new Error(`decision ${request.requestId} has no legal actions`);
     }
-    const targets = targetsFor(fallback, view);
+    const targets = targetsFor(fallback, view, opts.combatSearch);
     const response: DecisionResponse = { requestId: request.requestId, actionId: fallback.id };
     if (targets.length > 0) response.targets = targets;
     response.note = 'Heuristic bot: veto excluded every candidate, using first legal action';
@@ -271,7 +238,7 @@ export function decide(
   const topScore = ranked[0]!.score;
   const tied = ranked.filter((r) => r.score === topScore);
   const chosen = (tied[rng.nextInt(tied.length)] ?? ranked[0]!).action;
-  const targets = targetsFor(chosen, view);
+  const targets = targetsFor(chosen, view, opts.combatSearch);
   const response: DecisionResponse = { requestId: request.requestId, actionId: chosen.id };
   if (targets.length > 0) response.targets = targets;
   response.note = `Heuristic bot: ${chosen.type} (score ${topScore.toFixed(2)})`;

@@ -8,5 +8,25 @@ export type { ScoredAction, EvaluateOptions } from './evaluate';
 export { passesVeto, totalLifeCost, totalSacrificeCount, totalDiscardCount } from './veto';
 export { WEIGHTS } from './weights';
 export { Rng } from './rng';
+export { resolveCombatSnapshot } from './combat-snapshot';
+export type {
+  CombatSnapshot,
+  CombatOutcome,
+  SnapshotAttacker,
+  SnapshotCreature,
+} from './combat-snapshot';
+export {
+  searchBlockAssignment,
+  searchDamageSplit,
+  staticBlockChoices,
+  staticDamageSplit,
+  parseBlockSubjects,
+} from './combat-search';
+export type {
+  BlockAssignment,
+  BlockSubjectData,
+  CombatSearchOptions,
+  DamageSplitSpec,
+} from './combat-search';
 export { HeuristicDecisionProvider } from './provider';
-export type { DecisionProviderLike } from './provider';
+export type { DecisionProviderLike, HeuristicProviderOptions } from './provider';

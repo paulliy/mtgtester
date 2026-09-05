@@ -12,8 +12,8 @@
     "apps/*"
   ],
   "scripts": {
-    "typecheck": "tsc --build",
-    "typecheck:tests": "tsc -p packages/engine/tsconfig.test.json --noEmit",
+    "typecheck": "tsc --build && vue-tsc --noEmit -p apps/web/tsconfig.json",
+    "typecheck:tests": "tsc -p packages/engine/tsconfig.test.json --noEmit && tsc -p packages/server/tsconfig.test.json --noEmit",
     "typecheck:clean": "tsc --build --clean",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -30,10 +30,13 @@
     "pool": "bun run packages/server/src/cli/pool.ts",
     "modelled-cards": "bun run packages/server/src/cli/modelled-cards.ts",
     "play-decks": "bun run packages/server/src/cli/play-decks.ts",
+    "combat-sweep": "bun run packages/server/src/cli/combat-sweep.ts",
     "coverage": "bun run packages/server/src/cli/coverage.ts",
+    "staples": "bun run packages/server/src/cli/staple-coverage.ts",
     "coverage:snapshot": "bun run packages/server/src/cli/snapshot-coverage-decks.ts",
     "snapshot:oracle": "bun run packages/server/src/cli/snapshot-deck-oracle.ts",
-    "test:implemented": "bun run scripts/test-implemented-cards.ts"
+    "test:implemented": "bun run scripts/test-implemented-cards.ts",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
@@ -41,9 +44,11 @@
     "@types/bun": "^1.3.14",
     "@types/node": "^22.10.0",
     "eslint": "^9.17.0",
+    "eslint-plugin-vue": "^10.10.0",
     "prettier": "^3.4.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.18.0",
-    "vitest": "^3.0.0"
+    "vitest": "^3.0.0",
+    "vue-tsc": "^3.3.11"
   }
 }

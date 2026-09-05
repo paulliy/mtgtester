@@ -1,7 +1,6 @@
 /** Phase 5 read models: aggregate deck statistics and one-game debug/export payloads. */
 
 import type { AiAnnotation, AiReflection, ReflectionMoment } from '@mtg/shared';
-import { MANA_METRICS } from '../config/mana-metrics';
 import type { SqliteLike } from './games';
 
 type Row = Record<string, unknown>;
@@ -21,8 +20,8 @@ export interface DeckStatistic {
   mulliganDistribution: Array<{ mulligans: number; games: number }>;
   eliminationCauses: Array<{ reason: string; count: number }>;
   lossesTo: Array<{ commanders: string[]; colorIdentity: string[]; archetypeTag: string; count: number }>;
-  manaFloodRate: number;
-  manaDroughtRate: number;
+  manaFloodRate: number | null;
+  manaDroughtRate: number | null;
 }
 
 export interface DebugGameData {
@@ -155,49 +154,11 @@ export class StatsRepository {
     };
   }
 
-  private manaRates(snapshotId: string, batchId?: string): { floodRate: number; droughtRate: number } {
-    const metrics = batchId === undefined
-      ? rows(this.db, `SELECT mm.game_id, mm.seat, mm.turn, mm.lands_in_hand, mm.lands_drawn_cumulative,
-              mm.cards_drawn_cumulative, mm.spells_castable, mm.unspent_mana, mm.on_curve
-         FROM mana_metrics mm JOIN game_players gp ON gp.game_id = mm.game_id AND gp.seat = mm.seat
-         JOIN games g ON g.id = mm.game_id WHERE gp.deck_snapshot_id = ? AND g.status = 'finished'
-         ORDER BY mm.game_id, mm.seat, mm.turn`, snapshotId)
-      : rows(this.db, `SELECT mm.game_id, mm.seat, mm.turn, mm.lands_in_hand, mm.lands_drawn_cumulative,
-              mm.cards_drawn_cumulative, mm.spells_castable, mm.unspent_mana, mm.on_curve
-         FROM mana_metrics mm JOIN game_players gp ON gp.game_id = mm.game_id AND gp.seat = mm.seat
-         JOIN games g ON g.id = mm.game_id JOIN batch_games bg ON bg.game_id = mm.game_id
-        WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND bg.batch_id = ?
-        ORDER BY mm.game_id, mm.seat, mm.turn`, snapshotId, batchId);    const games = new Map<string, Row[]>();
-    for (const metric of metrics) {
-      const key = `${metric['game_id']}:${metric['seat']}`;
-      const list = games.get(key) ?? [];
-      list.push(metric);
-      games.set(key, list);
-    }
-    let flooded = 0;
-    let drought = 0;
-    for (const game of games.values()) {
-      let floodTurns = 0;
-      let droughtTurns = 0;
-      for (let i = 0; i < game.length; i++) {
-        const current = game[i] as Row;
-        const start = Math.max(0, i - MANA_METRICS.trailingDraws + 1);
-        const firstMetric = game[start] as Row;
-        const landDraws = number(current['lands_drawn_cumulative']) - number(firstMetric['lands_drawn_cumulative']);
-        const draws = number(current['cards_drawn_cumulative']) - number(firstMetric['cards_drawn_cumulative']);
-        const floodedNow = draws >= MANA_METRICS.trailingDraws && landDraws >= MANA_METRICS.floodedLandDraws &&
-          number(current['unspent_mana']) >= MANA_METRICS.floodedUnspentMana && number(current['spells_castable']) === 0;
-        const missedLand = number(current['on_curve']) === 0;
-        const droughtNow = missedLand && (number(current['spells_castable']) >= MANA_METRICS.droughtUncastableCards ||
-          number(current['lands_in_hand']) < Math.max(0, number(current['turn']) - MANA_METRICS.expectedLandLag));
-        if (floodedNow) floodTurns += 1;
-        if (droughtNow) droughtTurns += 1;
-      }
-      if (floodTurns >= MANA_METRICS.affectedTurns) flooded += 1;
-      if (droughtTurns >= MANA_METRICS.affectedTurns) drought += 1;
-    }
-    const total = games.size;
-    return { floodRate: total === 0 ? 0 : flooded / total, droughtRate: total === 0 ? 0 : drought / total };
+  private manaRates(_snapshotId: string, _batchId?: string): { floodRate: null; droughtRate: null } {
+    // Legacy observations do not record actual affordability, the last five draws,
+    // battlefield land counts, or the player's end-turn land drop. They cannot support
+    // the advertised heuristic. Never present invented percentages from these rows.
+    return { floodRate: null, droughtRate: null };
   }
 
   gameDebug(gameId: string): DebugGameData {

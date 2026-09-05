@@ -66,8 +66,13 @@ describe('Engine driver (brief §5.1)', () => {
     const seatCards = pod[0] as { cards: ReturnType<typeof forestsPod>[0]['cards'] };
     seatCards.cards = [
       ...seatCards.cards.slice(0, 6),
-      // An unmodelable card that will end up in hand or be drawn.
-      ...Array.from({ length: 6 }, () => oracle({ name: 'Mystery Box', oracleText: 'Cascade' })),
+      // An unmodelable card that will end up in hand or be drawn. Deliberately a line no grammar
+      // claims — a bare keyword is a poor choice here, because implementing that keyword later
+      // (Cascade was exactly this) silently turns the fixture modelable and the test green for
+      // the wrong reason.
+      ...Array.from({
+        length: 6,
+      }, () => oracle({ name: 'Mystery Box', oracleText: 'Whenever the moon is gibbous, ponder the void.' })),
     ];
     const engine = makeEngine(pod, { seed: 'halt-1' });
     const result = drive(engine, new RuleBasedProvider([]));

@@ -61,7 +61,7 @@ const lines = computed<Line[]>(() => {
         x2: to.x,
         y2: to.y,
         dashed: combatPlan.mode === 'composing',
-        current: combatPlan.currentEntry?.subjectId === entry.subjectId,
+        current: false, // Batched declarations have no per-creature replay cursor.
       });
     }
   }

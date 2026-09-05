@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Authored card overrides for living-energy.txt.
  */
 
@@ -6,7 +6,7 @@ import { constant } from '../value';
 import { ATTACHED, SAC_SELF, TAP, mana, manaCost } from '../templates';
 import { BEAST_3_3_GREEN, BEAST_6_6_ARTIFACT, CONSTRUCT_4_4, NALAAR_AETHERJET, SERVO_1_1, THOPTER_1_1_FLYING, TREASURE } from '../tokens';
 import { defineCard, unimplemented } from './index';
-import { allOf, anyOf, not, ofSupertype, ofSubtype, ofType, IS_TOKEN, OTHER, SELF, YOURS, withKeyword } from '../selector';
+import { allOf, anyOf, not, ofSupertype, ofSubtype, ofType, IS_TOKEN, OTHER, SELF, YOURS } from '../selector';
 import type { CardDefinition } from '../definition';
 
 const ARTIFACT_OR_ARTIFICER = anyOf(ofType('Artifact'), ofSubtype('Artificer'));
@@ -112,14 +112,14 @@ const BOOTLEGGERS_STASH_DEF: Partial<CardDefinition> = {
   }],
 };
 
+// Decoction Module's activated ability is no longer overridden: "return target creature you
+// control to its owner's hand" parses generically now that the return-to-hand sentence reads its
+// target noun through `parseTargetClause` (which handles the "you control" suffix) instead of a
+// fixed three-noun list. Only the energy trigger still needs authoring.
 const DECOCTION_MODULE_DEF: Partial<CardDefinition> = {
   triggers: [{
     kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) } }, targets: [],
     effects: [{ op: 'gainEnergy', amount: constant(1) }], description: 'A creature enters under your control — gain one energy',
-  }],
-  activatedAbilities: [{
-    costs: [mana('{4}'), TAP], timing: 'any',
-    ability: { kind: 'activated', targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'returnToHand', target: 0 }], description: 'Pay {4} and tap — return target creature you control to its owner’s hand' },
   }],
 };
 
@@ -143,13 +143,6 @@ const LOYAL_APPRENTICE_DEF: Partial<CardDefinition> = {
     kind: 'triggered', trigger: { when: 'beginningOfCombat', player: 'you', condition: { kind: 'controlsYourCommander' } }, targets: [],
     effects: [{ op: 'createToken', count: constant(1), spec: { ...THOPTER_1_1_FLYING, grantHasteUntilEot: true } }],
     description: 'Beginning of combat — if you control your commander, create a hasty Thopter',
-  }],
-};
-
-const OVERFLOWING_BASIN_DEF: Partial<CardDefinition> = {
-  activatedAbilities: [{
-    costs: [mana('{1}'), TAP], timing: 'any',
-    ability: { kind: 'activated', targets: [], effects: [{ op: 'addMana', amount: constant(2), colors: [], fixedSymbols: ['G', 'U'] }], description: 'Pay {1} and tap — add {G}{U}' },
   }],
 };
 
@@ -425,7 +418,7 @@ export function registerLIVING_ENERGYOverrides(): void {
     ], NISSA_WORLDSOUL_SPEAKER_DEF);
 
   defineCard("e91240bc-4a13-4131-9379-5ddac6555f4a", "Adaptive Omnitool", [
-          "Equipped creature gets +1/+1 for each artifact you control.",
+
           "Whenever equipped creature attacks, look at the top six cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order."
     ], ADAPTIVE_OMNITOOL_DEF);
 
@@ -468,8 +461,7 @@ export function registerLIVING_ENERGYOverrides(): void {
     ], ARCHITECT_OF_THE_UNTAMED_DEF);
 
   defineCard("1daba4f6-2a7d-426a-97d1-0298a7100c45", "Decoction Module", [
-          "Whenever a creature you control enters, you get {E} .",
-          "{4}, {T}: Return target creature you control to its owner's hand."
+          "Whenever a creature you control enters, you get {E} ."
     ], DECOCTION_MODULE_DEF);
 
   defineCard("aaadfe41-b2be-4183-b45e-a70e53a59d2e", "Retrofitter Foundry", [
@@ -577,10 +569,6 @@ export function registerLIVING_ENERGYOverrides(): void {
           "As this land enters, you may reveal an Island or Mountain card from your hand. If you don't, this land enters tapped."
     ], FROSTBOIL_SNARL_DEF);
 
-  defineCard("5ac8e01c-b0a7-4855-a122-1cd26b07c4a5", "Overflowing Basin", [
-          "{1}, {T}: Add {G}{U}."
-    ], OVERFLOWING_BASIN_DEF);
-
   defineCard("33f52df8-4b44-4422-8b0a-37fead9c894b", "Vineglimmer Snarl", [
           "As this land enters, you may reveal a Forest or Island card from your hand. If you don't, this land enters tapped."
     ], VINEGLIMMER_SNARL_DEF);
@@ -589,8 +577,10 @@ export function registerLIVING_ENERGYOverrides(): void {
           "When this creature enters, starting with you, each player may choose an artifact or enchantment you don't control. Destroy each permanent chosen this way."
     ], DRUID_OF_PURIFICATION_DEF);
 
+  // Stale claim removed: Scryfall's 2026-08-28 oracle update rewrote this card into current
+  // templating, which the generic parser reads on its own. Keeping the claim made the
+  // override look drifted. The def stays — it still wins the merge and pins the exact shape.
   defineCard("ab655810-f67e-4576-9174-35b16f5e3235", "Saheeli, Sublime Artificer", [
-          "Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.",
           "âˆ’2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types."
     ], SAHEELI_SUBLIME_ARTIFICER_DEF);
 
@@ -615,9 +605,10 @@ export function registerLIVING_ENERGYOverrides(): void {
           "{T}, Sacrifice this artifact: Exile each opponent's graveyard."
     ], SOUL_GUIDE_LANTERN_DEF);
 
-  defineCard("180e1a7e-890d-477c-80a5-da8a5f2857b3", "Reckless Fireweaver", [
-          "Whenever an artifact you control enters, this creature deals 1 damage to each opponent."
-    ], RECKLESS_FIREWEAVER_DEF);
+  // Stale claim removed: Scryfall's 2026-08-28 oracle update rewrote this card into current
+  // templating, which the generic parser reads on its own. Keeping the claim made the
+  // override look drifted. The def stays — it still wins the merge and pins the exact shape.
+  defineCard("180e1a7e-890d-477c-80a5-da8a5f2857b3", "Reckless Fireweaver", [], RECKLESS_FIREWEAVER_DEF);
 
   defineCard("757eadac-dd29-4a7f-8683-5bc823168326", "One with the Machine", [
           "Draw cards equal to the greatest mana value among artifacts you control."
@@ -638,7 +629,7 @@ export function registerLIVING_ENERGYOverrides(): void {
   defineCard("295cd8e1-0830-46c1-9957-556afd4bcee6", "Aetheric Amplifier", ["{4}, {T}: Choose one. Activate only as a sorcery.", "\u2022 Double the number of each kind of counter on target permanent.", "\u2022 Double the number of each kind of counter you have."], AETHERIC_AMPLIFIER_DEF);
   defineCard("397b9dcf-690a-4a58-8637-bb9baab7cc2f", "Elder Gargaroth", ["Whenever this creature attacks or blocks, choose one \u2014", "\u2022 Create a 3/3 green Beast creature token.", "\u2022 You gain 3 life.", "\u2022 Draw a card."], ELDER_GARGAROTH_DEF);
   defineCard("88600bd4-4dcc-4788-bba4-78b6cf5ad8f8", "Peema Trailblazer", ["Whenever this creature deals combat damage to a player, you get that many {E} .", "Exhaust \u2014 Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control."], PEEMA_TRAILBLAZER_DEF);
-  defineCard("aaadfe41-b2be-4183-b45e-a70e53a59d2e", "Retrofitter Foundry", ["{3}: Untap this artifact.", "{T}, Sacrifice a Thopter: Create a 4/4 colorless Construct artifact creature token."], RETROFITTER_FOUNDRY_DEF);
-  defineCard("ab655810-f67e-4576-9174-35b16f5e3235", "Saheeli, Sublime Artificer", ["Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.", "\u2212\u0032: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types."], SAHEELI_SUBLIME_ARTIFICER_DEF);
+  defineCard("aaadfe41-b2be-4183-b45e-a70e53a59d2e", "Retrofitter Foundry", [], RETROFITTER_FOUNDRY_DEF);
+  defineCard("ab655810-f67e-4576-9174-35b16f5e3235", "Saheeli, Sublime Artificer", ["\u2212\u0032: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types."], SAHEELI_SUBLIME_ARTIFICER_DEF);
 
 }

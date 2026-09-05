@@ -20,10 +20,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
           "Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library."
     ]);
 
-  unimplemented("5443557e-440f-4fdd-a29b-7740d7cec085", "Biotransference", [
-          "Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren't on the battlefield.",
-          "Whenever you cast an artifact spell, you lose 1 life and create a 2/2 black Necron Warrior artifact creature token."
-    ]);
+
 
   defineCard("09b895ff-e729-48d1-bfc1-ea5fd7adda6a", "Caged Sun", [
           "As this artifact enters, choose a color.",
@@ -73,10 +70,6 @@ export function registerNECRON_DYNASTIESOverrides(): void {
           "Translocation Protocols — {3}, {T}: Mill three cards."
     ]);
 
-  unimplemented("75564721-e4e9-463a-b49e-f0c7cd6f53a7", "Cranial Plating", [
-          "Equipped creature gets +1/+0 for each artifact you control.",
-          "{B}{B}: Attach this Equipment to target creature you control."
-    ]);
 
   unimplemented("27a4b633-5a62-4d8c-8cc6-44959c311de9", "Cryptek", [
           "{1}{B}, {T}: Choose another target artifact creature you control. When that creature dies this turn, return it to the battlefield tapped under your control."

@@ -42,6 +42,19 @@ export interface PermanentView {
   oracleText?: string;
   power?: number | null;
   toughness?: number | null;
+  /**
+   * The permanent's CURRENT keywords after CR 613 layers (ADR 0023 item 20) — the granted ones
+   * as well as the printed ones, which is why this cannot be re-derived from `oracleText`.
+   *
+   * Combat evaluation needs it: deathtouch, first strike, trample, lifelink, indestructible and
+   * menace all change what a block or a damage split is worth, and `status` carries game statuses
+   * (`tapped`, `summoningSick`, `faceDown`), not keywords. Evasion is not needed for legality —
+   * the engine's own `canBlock` already filters the offered menu (brief §1.2).
+   *
+   * Absent, not empty, for a face-down permanent: keywords are part of the hidden identity
+   * (§7.1), alongside `typeLine`/`oracleText` above.
+   */
+  keywords?: string[];
   tapped: boolean;
   status: string[];
   blockedBy?: ObjectId[];
@@ -93,6 +106,8 @@ export interface PlayerView {
    */
   manaSources: { name: string; symbols: string[]; count: number }[];
   opponents: OpponentView[];
+  /** Library top cards made public by effects such as Oracle of Mul Daya. */
+  revealedLibraryTops?: { player: PlayerId; card: CardView }[];
   /** All battlefields, public state (brief §7.1). */
   battlefield: PermanentView[];
   /**

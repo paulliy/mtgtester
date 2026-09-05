@@ -39,9 +39,15 @@ export type ContinuousOp =
       loseAbilities?: boolean;
     }
   // Layer 6 — ability adding and removing.
+  // Layer 5 — color-changing.
+  | { layer: 5; setColors: Color[] }
   | { layer: 6; addKeyword: KeywordAbility }
   /** "Creatures with counters on them can't be blocked" (Herald of Secret Streams). */
   | { layer: 6; setCantBeBlocked: true }
+  /** "Creatures your opponents control attack each combat if able." */
+  | { layer: 6; setMustAttackEachCombat: true }
+  /** A static effect that goads each affected creature. */
+  | { layer: 6; addGoad: true }
   /** "Other Dragons you control have ward {2}" — parameterized, so not an `addKeyword`. */
   | { layer: 6; addWard: ParsedManaCost }
   /** "Protection from white and from black" (CR 702.16). */
@@ -108,6 +114,10 @@ export interface Characteristics {
   protectionFrom: Color[];
   /** Computed evasion from a layer-6 effect, separate from printed characteristics. */
   cantBeBlocked: boolean;
+  /** Static goad requirements, stored as the controlling player id. */
+  staticGoadedBy?: string[];
+  /** Static attack requirement checked by combat. */
+  mustAttackEachCombat?: boolean;
   /** Triggered abilities the permanent currently has (CR 603). */
   triggers: Ability[];
   /** Mana abilities the permanent currently has — printed, or replaced by a subtype change. */

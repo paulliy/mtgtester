@@ -67,7 +67,9 @@ describe('runToCompletionAsync', () => {
     expect(decisionsNotified.length).toBeGreaterThan(0);
     expect(decisionsNotified[0]?.req.requestId).toBeDefined();
     expect(decisionsNotified[0]?.res.actionId).toBeDefined();
-  });
+    // This is a full multiplayer game; legal upkeep/combat responses add decisions.
+    // Allow headroom for contention when the whole suite runs concurrently.
+  }, 15_000);
 
   it('propagates provider errors without corrupting engine', async () => {
     const seed = 'async-err-test';

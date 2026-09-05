@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Rule-modifying statics (ADR 0010, Inc 13) — continuous effects that change the RULES of
  * casting or countering, rather than a permanent's characteristics.
  *
@@ -10,7 +10,7 @@
  * permanent-shaped.
  */
 
-import type { ParsedManaCost } from '../mana/cost';
+import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { Selector } from './selector';
 import type { Value } from './value';
 
@@ -50,9 +50,31 @@ export type RuleStatic =
    */
   | { kind: 'cantBeCountered'; filter?: Selector }
   /** "Your opponents can't cast spells during your turn" (Dragonlord Dromoka). */
-  | { kind: 'cantCastSpells'; who: 'opponents'; yourTurnOnly: boolean }
+  | { kind: 'cantCastSpells'; who: 'opponents' | 'all'; yourTurnOnly: boolean; duringCombatOnly?: boolean }
   /** "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer). */
   | { kind: 'castFromZone'; zone: 'libraryTop'; filter?: Selector }
+  /** "You may play lands from the top of your library/your graveyard." */
+  | {
+      kind: 'playFromZone';
+      zone: 'libraryTop' | 'graveyard';
+      filter?: Selector;
+      /** Muldrotha-style permission is active only during its controller's turn. */
+      yourTurnOnly?: boolean;
+      /** Maximum uses of this permission for each permanent type during a turn. */
+      permanentTypeBudget?: number;
+    }
+  /** Add mana inline when a matching permanent's mana ability is activated. */
+  | {
+      kind: 'manaActivationRider';
+      source: Selector;
+      add: { kind: 'fixed'; units: ManaUnit[] } | { kind: 'oneOfProducedTypes' };
+    }
+  /** "Play with the top card of your library revealed." */
+  | { kind: 'revealTopLibrary' }
+  /** Additional land plays available to the controller each turn. */
+  | { kind: 'additionalLandDrops'; count: Value }
+  /** Opponents/players cannot activate abilities of matching battlefield sources. */
+  | { kind: 'cantActivateAbilities'; who: 'opponents' | 'all'; yourTurnOnly: boolean; filter: Selector }
   /** "If a creature you control that entered this turn would deal damage, it deals twice that
    * much damage instead" (Neriv, Heart of the Storm) — a damage REPLACEMENT effect (CR 616). */
   | { kind: 'damageDoubled'; sourceFilter: Selector }

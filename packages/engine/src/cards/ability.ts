@@ -36,7 +36,7 @@ export type AbilityCost =
   /** "Exile this permanent" — a battlefield-only activation cost. */
   | { kind: 'exileSelf' }
   /** Sacrifice one or more other controlled permanents matching the filter. */
-  | { kind: 'sacrificeOther'; selector: Selector; count?: number }
+  | { kind: 'sacrificeOther'; selector: Selector; count?: number; allowSelf?: boolean }
   /** "Discard this card". */
   | { kind: 'discardSelf' }
   /** "Discard a card" from the controller's hand as a spell or activation cost. */
@@ -54,6 +54,8 @@ export type AbilityCost =
   | { kind: 'mana'; cost: ParsedManaCost }
   /** "Exile this card from your graveyard" (Runehorn Hellkite) — a graveyard-only cost. */
   | { kind: 'exileSelfFromGraveyard' }
+  /** Exile other cards from the controller's graveyard as an Escape-style casting cost. */
+  | { kind: 'exileOtherCardsFromGraveyard'; count: number }
   /** Exile a matching card from the controller's hand as a casting cost (Force of Will). */
   | { kind: 'exileCardFromHand'; selector: Selector; count?: number }
   /** "Unattach this Equipment" (Sunforger) — payable only while attached; unattaches as the
@@ -62,6 +64,8 @@ export type AbilityCost =
 
 export interface AlternativeCast {
   kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana';
+  /** Zone from which this alternative may be announced. Defaults to the hand. */
+  from?: 'hand' | 'graveyard' | 'exile';
   manaCost: ParsedManaCost;
   /** Non-mana components of a cost that replaces the spell's printed mana cost. */
   costs?: AbilityCost[];
@@ -73,6 +77,10 @@ export interface AlternativeCast {
   ability?: Ability;
   /** Back-face characteristics for a modal DFC that may be played as a land. */
   landFace?: MdfcLandFace;
+  /** Flashback/escape-style replacement: exile the card after it leaves the stack. */
+  exileOnResolution?: boolean;
+  /** The alternative is Escape and marks the resulting stack/permanent object as escaped. */
+  escaped?: true;
 }
 
 export interface MdfcLandFace {
@@ -132,7 +140,17 @@ export type DynamicManaKind =
    * happen for a card this ability is put on — `entersChoosingOption` resolves before anything
    * else can observe the permanent.
    */
-  | 'chosenColor';
+  | 'chosenColor'
+  | 'colorsAmongPermanents'
+  | 'oneColorAmongPermanents'
+  /**
+   * "one mana of any type that a land YOU control could produce" (Reflecting Pool) - the same
+   * union as `opponentLandColors` over the other side of the table, and it keeps {C}: "any TYPE"
+   * is broader than "any color", so a Wastes contributes colorless.
+   */
+  | 'ownLandTypes'
+  /** "…any color among legendary creatures and planeswalkers you control" (Mox Amber). */
+  | 'legendaryPermanentColors';
 
 /**
  * What a payment is *for*, so restricted mana can decide whether it may pay (CR 106.6).
@@ -216,6 +234,8 @@ export interface ManaAbilitySpec {
   restriction?: ManaRestriction;
   /** "When you spend this mana to cast a Dragon creature spell, you gain 2 life." */
   spendTrigger?: ManaSpendTrigger;
+  /** Mana spent on a spell makes that spell uncounterable. */
+  uncounterableSpell?: true;
   /** "Until end of turn, you don't lose this mana as steps and phases end" (Klauth). */
   persistent?: boolean;
   /**
@@ -232,6 +252,19 @@ export interface ManaAbilitySpec {
    * production is not also on offer, matching "instead".
    */
   conditionalUnits?: { condition: Condition; units: ManaUnit[]; linked?: true };
+  /**
+   * "Add {G} for each creature you control" (Gaea's Cradle, Itlimoc) - a state-derived AMOUNT
+   * with a fixed symbol, which is the opposite of `dynamic` (a state-derived symbol set with a
+   * fixed amount).
+   *
+   * `units` describes ONE repetition and the whole of it is repeated this many times, resolved
+   * at query time by `resolveDynamicAmount`. Zero repetitions produces no units at all, which
+   * correctly stops the source being offered - Gaea's Cradle with no creatures taps for nothing.
+   *
+   * There is no other amount channel: `units.length` IS the mana count everywhere else, and
+   * that is what this expands into, so nothing downstream needs to know the count was computed.
+   */
+  amount?: Value;
 }
 
 /**
@@ -247,6 +280,10 @@ export interface ManaEntry {
   restriction?: ManaRestriction;
   /** Fires when this specific mana is consumed (Scaled Nurturer, Path of Ancestry). */
   spendTrigger?: ManaSpendTrigger;
+  /** If consumed to cast a spell, that spell becomes uncounterable. */
+  uncounterableSpell?: true;
+  /** This mana was produced by a permanent with the Treasure subtype. */
+  fromTreasure?: true;
   /** Survives `emptyManaPools` at the end of a step/phase (CR 500.4 exception — Klauth). */
   persistent?: boolean;
 }
@@ -280,6 +317,8 @@ export const IMPLEMENTED_KEYWORDS = [
   'convoke',
   'improvise',
   'infect',
+  'cascade',
+  'rebound',
 ] as const;
 export type KeywordAbility = (typeof IMPLEMENTED_KEYWORDS)[number];
 
@@ -405,7 +444,13 @@ export type Effect =
   | { op: 'fight'; first: EffectRef; second: EffectRef }
   | { op: 'pumpEachUntilEot'; selector: Selector; power: Value | number; toughness: Value | number }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
-  | { op: 'dealDamage'; target: EffectRef; amount: Value } // to the slot's creature or player
+  /**
+   * "Creatures you control gain protection from each color until end of turn" (Akroma's Will).
+   * Separate from `grantKeywordEachUntilEot` because protection carries an ARGUMENT: it is not a
+   * `KeywordAbility` name, and layer 6 applies it through `addProtection`, not `addKeyword`.
+   */
+  | { op: 'grantProtectionEachUntilEot'; selector: Selector; colors: Color[] }
+  | { op: 'dealDamage'; target: EffectRef; amount: Value; source?: 'triggerObject' } // to the slot's creature or player
   /**
    * "deals N damage to target opponent unless that player sacrifices a creature of their
    * choice" (Demanding Dragon, Tomb Blade) — the choice belongs to the TARGET, not the
@@ -469,7 +514,9 @@ export type Effect =
   | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
   | { op: 'exile'; target: EffectRef } // target creature
   | { op: 'exileCard'; target: EffectRef }
-  | { op: 'counter'; target: number } // target spell — always a real target
+  | { op: 'counter'; target: number; exileIfCountered?: boolean; addManaAtNextMainPhase?: boolean }
+  /** Counter a spell, then create tokens for that spell's controller (Offer/Swan Song). */
+  | { op: 'counterAndCreateTokenForController'; target: number; spec: TokenSpec; count: Value } // target spell — always a real target
   | { op: 'sacrifice'; target: EffectRef }
   | { op: 'gainControlTarget'; target: EffectRef }
   | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
@@ -483,6 +530,7 @@ export type Effect =
   | { op: 'crewVehicle'; minPower: number }
   | { op: 'exileEach'; selector: Selector }
   | { op: 'exileEachOpponentGraveyard' }
+  | { op: 'exileAllGraveyards' }
   | { op: 'exileTargetPlayerGraveyard'; target: EffectRef }
   | { op: 'returnToHandEach'; selector: Selector }
   | { op: 'graveyardToBattlefieldEach'; filter: Selector; scope?: 'you' | 'all' }
@@ -492,6 +540,10 @@ export type Effect =
   | { op: 'exileSource' }
   | { op: 'draw'; count: Value } // controller draws
   | { op: 'discard'; count: number } // controller chooses cards to discard
+  /** Put a chosen number of cards from hand on top of the library, optionally ordering them. */
+  | { op: 'putFromHandOnLibraryTop'; count: Value; anyOrder: boolean }
+  /** Discard cards using the game PRNG rather than a player choice. */
+  | { op: 'discardAtRandom'; count: Value }
   | { op: 'mill'; count: Value } // controller mills
   | { op: 'gainEnergy'; amount: Value }
   /** Create a player-owned emblem containing abilities but no targetable characteristics. */
@@ -502,7 +554,18 @@ export type Effect =
   /** "Target player draws two cards." (Sign in Blood) — the target draws, not the controller
    * (contrast `drawTargetAndController`, where both do). */
   | { op: 'drawTarget'; target: EffectRef; count: Value }
+  /** Cascade — reveal until a lower-mana-value nonland, then optionally cast it for free. */
+  | { op: 'cascade' }
+  /** Rebound's optional next-upkeep cast from exile. */
+  | { op: 'reboundCastFromExile' }
   | { op: 'eachOpponentLosesLife'; amount: Value | number }
+  /**
+   * "You gain life equal to the life lost this way" (Gray Merchant of Asphodel, Exsanguinate).
+   * Reads back the life ACTUALLY lost by earlier life-loss effects of the SAME resolution —
+   * which a life-loss floor can make smaller than the amount asked for — so it is scoped to one
+   * `executeAbility` call and is 0 if nothing in this ability lost anyone life.
+   */
+  | { op: 'gainLifeEqualToLifeLostThisWay' }
   | { op: 'eachOpponentDamage'; amount: number } // damage from source to each opponent
   /** "This land deals 1 damage to you" — damage from the source to its own controller. */
   | { op: 'damageController'; amount: number }
@@ -517,7 +580,7 @@ export type Effect =
    * `destinations[0]` that many times instead of a fixed-length array, since the number of
    * cards that may be found isn't known until resolution.
    */
-  | { op: 'searchLibrary'; filter: Selector; destinations: SearchDestination[]; count?: Value }
+  | { op: 'searchLibrary'; filter: Selector; destinations: SearchDestination[]; count?: Value; differentNames?: boolean }
   /**
    * "Search your library for a `<filter>` card and cast that card without paying its mana
    * cost" (Sunforger) — like `searchLibrary`, but the found card is cast for free instead of
@@ -539,6 +602,10 @@ export type Effect =
   | { op: 'attachSelfTo'; target: EffectRef }
   /** "Create a 1/1 black and green Pest creature token …" (CR 111.1). */
   | { op: 'createToken'; spec: TokenSpec; count: Value; powerOverride?: number | Value; toughnessOverride?: number | Value }
+  /** Create one token for each opponent, optionally attacking that opponent. */
+  | { op: 'createTokenForEachOpponent'; spec: TokenSpec; attacking?: boolean }
+  | { op: 'createTokenForPlayer'; target: EffectRef; spec: TokenSpec; count: Value }
+  | { op: 'createTokenForEachPlayerExceptTarget'; target: EffectRef; spec: TokenSpec; count: Value }
   /**
    * "Create a token that's a copy of it, except the token isn't legendary" (Miirym).
    *
@@ -612,9 +679,11 @@ export type Effect =
       op: 'lookAtTopN';
       count: number;
       /** What may be taken from among them, and where it goes. Optional — "you may". */
-      mayPut: { filter: Selector; destination: SearchDestination };
+      mayPut?: { filter: Selector; destination: SearchDestination };
       /** Where everything not taken ends up. */
-      rest: 'bottomRandom';
+      rest: 'bottomRandom' | 'topAnyOrder';
+      /** After replacing the looked-at cards, offer to shuffle the whole library. */
+      mayShuffle?: true;
     }
   /** "Destroy all Dragon creatures" (Crux of Fate) — the untargeted mass form of `destroy`. */
   | { op: 'destroyEach'; selector: Selector }
@@ -631,14 +700,31 @@ export type Effect =
    * variable-count slot is returned independently, no shared total to divide.
    */
   | { op: 'returnToHandEachChosen'; targetSlot: number }
+  /** Toggle this transforming permanent between its front and back faces. */
+  | { op: 'transformSelf' }
+  /**
+   * "Put this artifact on top of its owner's library" (Sensei's Divining Top). Distinct from a
+   * bounce: the destination is the LIBRARY of the OWNER, not the controller's hand, so a stolen
+   * Top goes back to the library of the player who owns it (CR 400.3).
+   */
+  | { op: 'selfToLibraryTop' }
   | { op: 'putCountersEachChosen'; targetSlot: number; counter: string; count: Value | number }
+  | { op: 'grantKeywordEachChosenUntilEot'; targetSlot: number; keyword: KeywordAbility }
+  | { op: 'untapUpTo'; selector: Selector; max: number }
   | { op: 'exileEachChosen'; targetSlot: number }
+  | {
+      op: 'blinkEachChosen';
+      targetSlot: number;
+      returnUnder: 'owner' | 'sourceController';
+    }
   | { op: 'regainControlOfOwnCreatures' }
   | { op: 'exileTargetGraveyardAndBuffIfCreature'; targetSlot: number }
   | { op: 'pumpTargetPlayerCreaturesUntilEot'; targetSlot: number; power: number; toughness: number }
   | { op: 'untapTargetPlayerCreatures'; targetSlot: number }
   | { op: 'exileUntilSourceLeaves'; targetSlot: number }
   | { op: 'exileTargetAndControllerMaySearchBasicLandTapped'; targetSlot: number }
+  /** Remove a target, then let its controller search for a basic land (Path/Trophy). */
+  | { op: 'removeTargetAndControllerMaySearchBasicLand'; target: EffectRef; action: 'destroy' | 'exile'; entersTapped: boolean }
   | { op: 'populate' }
   | { op: 'untapAttackingPlayerNonlandPermanents' }
   /**
@@ -674,8 +760,21 @@ export type Effect =
    * slot — an ordinary, announced target.
    */
   | { op: 'counterUnlessControllerPays'; target: number; cost: ParsedManaCost }
-  /** Execute `then` unless the designated player pays the cost (for example, Rhystic Study). */
-  | { op: 'unlessPays'; payer: 'eventPlayer' | 'controller'; cost: ParsedManaCost; then: Effect[] }
+  /**
+   * Execute `then` unless the designated player pays the cost (for example, Rhystic Study).
+   *
+   * `genericValue` is Esper Sentinel's "pays {X}, where X is this creature's power" — generic
+   * mana whose amount is only known at resolution, ADDED to whatever `cost` prints. It is a
+   * separate field rather than a `Value`-typed `cost` because every other user of this op pays
+   * a printed cost, and `ParsedManaCost` is the shape `canPay` and `payManaCost` both take.
+   */
+  | {
+      op: 'unlessPays';
+      payer: 'eventPlayer' | 'controller';
+      cost: ParsedManaCost;
+      genericValue?: Value;
+      then: Effect[];
+    }
   /**
    * "Add X mana in any combination of colors" (Klauth) — mana entering the pool from a
    * RESOLVING ability rather than an activation (CR 605 vs the stack). One color decision per
@@ -703,12 +802,20 @@ export type Effect =
       controller?: 'source' | 'targetController';
     }
   | { op: 'commandZoneToBattlefield'; target: EffectRef; entersHaste?: boolean }
+  /**
+   * "Put your commander into your hand from the command zone" (Command Beacon) — a way OUT of
+   * the command zone, and the reason the card exists: it dodges the CR 903.8 commander tax by
+   * letting the commander be cast from hand instead.
+   */
+  | { op: 'commandZoneToHand' }
   | { op: 'returnToCommandZone'; target: EffectRef }
   | { op: 'grantAbilityUntilEot'; target: EffectRef; ability: Ability }
   | { op: 'grantHasteToResolvingSpell' }
   | { op: 'grantHasteOnResolution'; target: EffectRef }
   | { op: 'overloadBounceAllNonlandOpponents' }
   | { op: 'goad'; target: EffectRef }
+  | { op: 'forceAttack'; target: EffectRef }
+  | { op: 'forceAttackEach'; selector: Selector }
   | { op: 'doublePower'; selector: Selector }
   | { op: 'doublePowerTarget'; target: EffectRef }
   | { op: 'drawUpTo'; count: number }
@@ -723,6 +830,7 @@ export type Effect =
   | { op: 'opponentMayDrawOrMillThenDamage'; target: EffectRef; drawCount: number; millCount: number }
   | { op: 'lookAtTopNCastOneFree'; count: number }
   | { op: 'castAnyFromHandFree' }
+  | { op: 'castOneFromHandFreeUpTo'; maxManaValue: number }
   | { op: 'setMustBlockThisTurn'; target: EffectRef }
   | { op: 'extraCombatPhase' }
   /** Make the ability's controller the monarch (CR  monarch). */
@@ -769,7 +877,17 @@ export type Effect =
   /** "Discard your hand" (Sarkhan's emblem) — the controller only, no draw follows. */
   | { op: 'discardHand' }
   /** "Each player discards their hand, then draws seven cards" (Dragon Mage, Runehorn Hellkite). */
-  | { op: 'eachPlayerDiscardHandThenDraw'; count: Value }
+  | {
+      op: 'eachPlayerDiscardHandThenDraw';
+      /** Fixed draw count. Omitted when `greatestDiscarded` supplies it instead. */
+      count?: Value;
+      /**
+       * Windfall: "...draws cards equal to the greatest number of cards a player discarded this
+       * way." The number is not knowable until every discard has happened, which is why the
+       * executor runs in two phases rather than discarding and drawing player by player.
+       */
+      greatestDiscarded?: true;
+    }
   /**
    * "Target player shuffles any number of target cards from their graveyard into their
    * library" (Loaming Shaman) — always shuffles, even if zero cards were chosen.
@@ -883,9 +1001,11 @@ export type TriggerWhen =
   | 'upkeep'
   | 'endStep'
   | 'mainPhase'
+  | 'precombatMain'
   | 'beginningOfCombat'
   | 'gainsLife'
-  | 'dealtDamage';
+  | 'dealtDamage'
+  | 'drawsCard';
 
 /** The object-event half of `TriggerHead`. */
 export type ObjectTriggerWhen =
@@ -898,7 +1018,12 @@ export type ObjectTriggerWhen =
   | 'fights'
   | 'becomesTargeted'
   | 'enchantedPlayerAttacked'
-  | 'dealtDamage';
+  | 'dealtDamage'
+  | 'sacrificed'
+  | 'tokenCreated'
+  | 'putIntoGraveyardFromAnywhere'
+  | 'leavesGraveyard'
+  | 'transformsInto';
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
 export type TriggerHead =
@@ -919,7 +1044,13 @@ export type TriggerHead =
    * "Whenever you cast a Dragon spell" — the subject is a spell on the stack, so it is matched
    * by its *card* characteristics rather than as a permanent.
    */
-  | { when: 'castsSpell'; caster: 'you' | 'opponent' | 'each'; filter?: Selector }
+  | {
+      when: 'castsSpell';
+      caster: 'you' | 'opponent' | 'each';
+      filter?: Selector;
+      /** Fire only for this numbered spell by that caster during the current turn. */
+      ordinal?: number;
+    }
   /**
    * "At the beginning of your/each upkeep|end step" — `player` says whose step counts.
    * `beginningOfCombat` is CR 507.1's begin combat step, queued the same way.
@@ -930,8 +1061,14 @@ export type TriggerHead =
    * BOTH precombat and postcombat main, unlike the single-step triggers above.
    */
   | { when: 'mainPhase'; player: 'you' | 'each' }
+  /**
+   * "At the beginning of your first main phase" (Black Market Connections) — the PRECOMBAT main
+   * only, so it is a separate event from `mainPhase`, which deliberately fires at both.
+   */
+  | { when: 'precombatMain'; player: 'you' | 'each' }
   /** "Whenever you gain life" (Dawn of Hope) — player-scoped, like the step triggers above. */
-  | { when: 'gainsLife'; player: 'you' | 'each' };
+  | { when: 'gainsLife'; player: 'you' | 'each' }
+  | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' };
 
 /**
  * When a triggered ability fires.
@@ -979,6 +1116,8 @@ export interface Ability {
   modes?: {
     minChoices: number;
     maxChoices: number;
+    /** Whether a modal choice may select the same mode more than once. */
+    repeatable?: boolean;
     /** A state-dependent maximum announced at cast time (for example, two while controlling a commander). */
     maxChoicesIf?: { condition: import('./condition').Condition; maxChoices: number };
     options: {

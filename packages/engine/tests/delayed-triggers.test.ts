@@ -15,7 +15,7 @@ import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
 import { queueTriggersForEvent } from '../src/state/objects';
-import { conjure, copies, forest, gameConfig, oracle, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 const huntersInsight = () =>
   oracle({
@@ -96,7 +96,7 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
     expect(interpretCard(carnelianOrb()).modeled).toBe(true);
   });
 
-  it('Hunter\'s Insight registers a delayed trigger that draws cards equal to combat damage dealt', function* () {
+  it('Hunter\'s Insight registers a delayed trigger that draws cards equal to combat damage dealt', () => {
     const ctx = pod();
     const p1 = ctx.state.players[0]!;
 
@@ -108,12 +108,12 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
     const def = interpretCard(huntersInsight());
 
     // Resolve Hunter's Insight targeting attacker
-    yield* executeAbility(
+    pump(executeAbility(
       ctx,
       { cardId: 'insight-1', name: "Hunter's Insight", oracleId: def.oracleId, controllerId: 'P1' },
       def.spellAbility!,
       [attacker.id],
-    );
+    ));
 
     expect(ctx.state.delayedTriggers.length).toBe(1);
     expect(ctx.state.delayedTriggers[0]?.targetId).toBe(attacker.cardId);
@@ -137,19 +137,19 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
     const pending = ctx.state.pendingTriggers[0]!;
 
     // Resolve the pending trigger
-    yield* executeAbility(
+    pump(executeAbility(
       ctx,
       { cardId: pending.sourceCardId, name: pending.sourceName, oracleId: pending.sourceOracleId, controllerId: pending.controllerId },
       pending.ability,
       [],
       pending.triggerObjectCardId,
       pending.scope,
-    );
+    ));
 
     expect(p1.hand.length).toBe(initialHandCount + 3);
   });
 
-  it('Hellkite Courser puts commander on battlefield with haste and returns it to command zone at end step', function* () {
+  it('Hellkite Courser puts commander on battlefield with haste and returns it to command zone at end step', () => {
     const ctx = pod();
     const p1 = ctx.state.players[0]!;
 
@@ -163,17 +163,19 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
 
     // Courser enters battlefield -> ETB trigger resolves
     const etbAbility = courserDef.triggers[0]!;
-    yield* executeAbility(
+    pump(executeAbility(
       ctx,
       { cardId: 'courser-1', name: 'Hellkite Courser', oracleId: courserDef.oracleId, controllerId: 'P1' },
       etbAbility,
       [cmdObj.id],
-    );
+    ));
 
     // Commander should be on battlefield
     const onBattlefield = ctx.state.battlefield.find((p) => p.cardId === cmdObj.cardId);
     expect(onBattlefield).toBeDefined();
-    expect(p1.commandZone.length).toBe(0);
+    // The pod deals every player their own commander, so an empty command zone would be the
+    // wrong assertion here — what matters is that THIS commander left it.
+    expect(p1.commandZone.some((c) => c.cardId === cmdObj.cardId)).toBe(false);
 
     // Delayed trigger registered for endStep, tracking targetId across zone change (CR 608.2b)
     expect(ctx.state.delayedTriggers.length).toBe(1);
@@ -182,20 +184,20 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
 
     // Simulate end step
     const delayed = ctx.state.delayedTriggers.pop()!;
-    yield* executeAbility(
+    pump(executeAbility(
       ctx,
       { cardId: delayed.sourceCardId, name: 'Delayed Trigger', oracleId: delayed.sourceOracleId, controllerId: delayed.controllerId },
       delayed.ability,
       [],
       delayed.targetId,
-    );
+    ));
 
     // Commander returned to command zone
     expect(ctx.state.battlefield.find((p) => p.cardId === cmdObj.cardId)).toBeUndefined();
     expect(p1.commandZone.some((c) => c.cardId === cmdObj.cardId)).toBe(true);
   });
 
-  it('Herd Heirloom grants trample and combat damage draw trigger until end of turn', function* () {
+  it('Herd Heirloom grants trample and combat damage draw trigger until end of turn', () => {
     const ctx = pod();
     const p1 = ctx.state.players[0]!;
 
@@ -208,14 +210,14 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
     const heirloomDef = interpretCard(herdHeirloom());
     ctx.defs.set(heirloomDef.oracleId, heirloomDef);
 
-    const actAbility = heirloomDef.activatedAbilities[1]!.ability;
+    const actAbility = heirloomDef.activatedAbilities[0]!.ability;
 
-    yield* executeAbility(
+    pump(executeAbility(
       ctx,
       { cardId: 'heirloom-1', name: 'Herd Heirloom', oracleId: heirloomDef.oracleId, controllerId: 'P1' },
       actAbility,
       [bigCreature.id],
-    );
+    ));
 
     // Verify UntilEotEffect for granted ability added
     expect(ctx.state.effects.some((e) => e.kind === 'grantAbility')).toBe(true);
@@ -230,12 +232,12 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
     expect(ctx.state.pendingTriggers.length).toBe(1);
     const pending = ctx.state.pendingTriggers[0]!;
 
-    yield* executeAbility(
+    pump(executeAbility(
       ctx,
       { cardId: pending.sourceCardId, name: pending.sourceName, oracleId: pending.sourceOracleId, controllerId: pending.controllerId },
       pending.ability,
       [],
-    );
+    ));
 
     expect(p1.hand.length).toBe(initialHandCount + 1);
   });

@@ -1,10 +1,9 @@
 /** Remaining authored overrides for necron-dynasties.txt. */
 
-import type { CardDefinition } from '../definition';
 import { ATTACHED, SAC_SELF, TAP, mana, manaCost } from '../templates';
 import type { TokenSpec } from '../ability';
 import { constant } from '../value';
-import { allOf, CHOSEN_COLOR, HAS_ANY_COUNTER, IS_TOKEN, OTHER, ofSubtype, ofSupertype, ofType, not, YOURS } from '../selector';
+import { allOf, CHOSEN_COLOR, IS_TOKEN, OTHER, ofSupertype, ofType, not, YOURS } from '../selector';
 import { defineCard } from './index';
 import { INSECT_1_1_FLYING, NECRON_WARRIOR_2_2 as NECRON_WARRIOR_TOKEN } from '../tokens';
 
@@ -18,7 +17,7 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner\'s library.',
   ], { spellAbility: { kind: 'spell', targets: [{ kind: 'cardInGraveyard', graveyardOwnerScope: 'any', filter: { kind: 'anyOf', of: [ofType('Artifact'), ofType('Creature')] } }], effects: [{ op: 'graveyardToBattlefield', target: 0 }, { op: 'shuffle' }], description: 'Return target artifact or creature card from a graveyard' } });
   defineCard('5443557e-440f-4fdd-a29b-7740d7cec085', 'Biotransference', [
-    'Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren\'t on the battlefield.', 'Whenever you cast an artifact spell, you lose 1 life and create a 2/2 black Necron Warrior artifact creature token.',
+    'Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren\'t on the battlefield.',
   ], { staticEffects: [{ affects: allOf(ofType('Creature'), YOURS), op: { layer: 4, addTypes: ['Artifact'] } }], triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'you', filter: ofType('Artifact') }, targets: [], effects: [{ op: 'loseLife', amount: constant(1) }, { op: 'createToken', spec: NECRON, count: constant(1) }], description: 'Cast an artifact — lose 1 life and create a Necron Warrior' }] });
   defineCard('09b895ff-e729-48d1-bfc1-ea5fd7adda6a', 'Caged Sun', [
     'As this artifact enters, choose a color.',
@@ -38,7 +37,7 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Dynastic Command Node — As long as you control your commander, activated abilities of cards in your graveyard cost {2} less to activate. This effect can\'t reduce the mana in that ability\'s activation cost to less than one mana.', 'Translocation Protocols — {3}, {T}: Mill three cards.',
   ], { activatedAbilities: [{ costs: [mana('{3}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'mill', count: constant(3) }], description: '{3}, {T}: Mill three cards' } }] });
   defineCard('75564721-e4e9-463a-b49e-f0c7cd6f53a7', 'Cranial Plating', [
-    'Equipped creature gets +1/+0 for each artifact you control.', '{B}{B}: Attach this Equipment to target creature you control.',
+    '{B}{B}: Attach this Equipment to target creature you control.',
   ], { staticEffects: [{ affects: ATTACHED, op: { layer: 7, sublayer: 'd', power: { kind: 'countPermanents', selector: ofType('Artifact'), scope: 'you' }, toughness: 0 } }], activatedAbilities: [{ costs: [mana('{B}{B}')], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'attachSelfTo', target: 0 }], description: '{B}{B}: Attach Cranial Plating' } }] });
   defineCard('27a4b633-5a62-4d8c-8cc6-44959c311de9', 'Cryptek', [
     '{1}{B}, {T}: Choose another target artifact creature you control. When that creature dies this turn, return it to the battlefield tapped under your control.',

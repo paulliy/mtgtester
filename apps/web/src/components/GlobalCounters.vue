@@ -4,7 +4,7 @@ import { computed } from 'vue';
 const props = defineProps<{
   energy: number;
   poisonCounters: number;
-  counters?: Record<string, number>;
+  counters?: Record<string, number> | undefined;
   compact?: boolean;
 }>();
 

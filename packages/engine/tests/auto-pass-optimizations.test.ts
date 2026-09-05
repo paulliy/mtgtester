@@ -52,7 +52,7 @@ function setup4PlayerContext(): GameContext {
 
 describe('Engine Auto-Passing & Decision Optimizations', () => {
   describe('1. Upkeep & Draw Step Auto-Passing', () => {
-    it('auto-passes priority for all players during upkeep when stack is empty', () => {
+    it('offers priority to all players during upkeep when stack is empty', () => {
       const ctx = setup4PlayerContext();
       ctx.state.step = 'upkeep';
       // Give everyone instant-speed spells so they would normally have choices
@@ -67,11 +67,11 @@ describe('Engine Auto-Passing & Decision Optimizations', () => {
         return pick(d, 'Pass');
       });
 
-      // Nobody surfaced because Upkeep auto-passes when stack is empty
-      expect(surfaced).toEqual([]);
+      // An empty stack does not remove the right to cast an instant.
+      expect(surfaced).toEqual(['P1', 'P2', 'P3', 'P4']);
     });
 
-    it('auto-passes priority for all players during draw step when stack is empty', () => {
+    it('offers priority to all players during draw step when stack is empty', () => {
       const ctx = setup4PlayerContext();
       ctx.state.step = 'draw';
       for (const p of ctx.state.players) {
@@ -85,7 +85,7 @@ describe('Engine Auto-Passing & Decision Optimizations', () => {
         return pick(d, 'Pass');
       });
 
-      expect(surfaced).toEqual([]);
+      expect(surfaced).toEqual(['P1', 'P2', 'P3', 'P4']);
     });
 
     it('surfaces priority during upkeep when a trigger is queued or on the stack', () => {
@@ -123,7 +123,7 @@ describe('Engine Auto-Passing & Decision Optimizations', () => {
   });
 
   describe('2. Bystander Auto-Passing in Combat', () => {
-    it('auto-passes non-active non-defending bystanders during combat sub-steps', () => {
+    it('offers bystanders priority during combat sub-steps', () => {
       const ctx = setup4PlayerContext();
       ctx.state.phase = 'combat';
       ctx.state.step = 'declareBlockers';
@@ -142,28 +142,29 @@ describe('Engine Auto-Passing & Decision Optimizations', () => {
         return pick(d, 'Pass');
       });
 
-      // P1 and P3 are bystanders and auto-passed! Only P2 (attacker) and P4 (defender) surface.
-      expect(surfaced).not.toContain('P1');
-      expect(surfaced).not.toContain('P3');
+      // Bystanders can legally intervene in combat.
+      expect(surfaced).toContain('P1');
+      expect(surfaced).toContain('P3');
       expect(surfaced).toContain('P2');
       expect(surfaced).toContain('P4');
     });
   });
 
   describe('3. Action Utility & Phase Filtering', () => {
-    it('filters out pure combat trick instants during precombat main phase when no creatures in combat', () => {
+    it('offers pump instants during precombat main phase', () => {
       const ctx = setup4PlayerContext();
       ctx.state.phase = 'precombatMain';
       ctx.state.step = null;
       const p1 = ctx.state.players[0]!;
 
       spawn(ctx, 'P1', forest());
-      conjure(ctx, 'P1', giantGrowth(), 'hand'); // +3/+3 until EOT combat trick
+      conjure(ctx, 'P1', giantGrowth(), 'hand');
+      spawn(ctx, 'P1', bear());
 
       const options = computePriorityOptions(ctx, p1);
 
-      // Giant Growth is filtered out because it is a combat trick in precombat main phase with no combatants
-      expect(options.some((o) => o.description.includes('Test Growth'))).toBe(false);
+      // A pump can protect a creature from damage or enable a power-based ability.
+      expect(options.some((o) => o.description.includes('Test Growth'))).toBe(true);
     });
 
     it('retains combat trick instants during combat phase when creatures are in combat', () => {

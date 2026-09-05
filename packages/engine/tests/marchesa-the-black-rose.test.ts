@@ -64,4 +64,39 @@ describe('Marchesa, the Black Rose', () => {
     expect(ctx.state.players.find((p) => p.id === 'P1')!.graveyard.some((c) => c.cardId === victim.cardId)).toBe(false);
     expect(ctx.state.delayedTriggers).toHaveLength(0);
   });
+
+  it('ignores a creature that died carrying only a -1/-1 counter', () => {
+    // "a creature you control with a +1/+1 counter on it" names the counter KIND. Reading it as
+    // "any counter" is not a harmless widening: persist returns a creature with a -1/-1 counter
+    // on it, so on that creature's second death a loose filter satisfies Marchesa and returns it
+    // again — an unbounded loop between two cards that do not loop in paper.
+    const ctx = pod('marchesa-minus-one-counter');
+    spawn(ctx, 'P1', marchesaOracle());
+    const victim = spawn(ctx, 'P1', bear());
+    victim.counters['-1/-1'] = 1;
+
+    pump(moveObject(ctx, victim, { zone: 'graveyard' }));
+    pump(runPrioritySequence(ctx));
+
+    expect(ctx.state.delayedTriggers).toHaveLength(0);
+
+    queueStepTriggers(ctx, 'endStep');
+    pump(runPrioritySequence(ctx));
+
+    expect(ctx.state.battlefield.some((p) => p.cardId === victim.cardId)).toBe(false);
+    expect(ctx.state.players.find((p) => p.id === 'P1')!.graveyard.some((c) => c.cardId === victim.cardId)).toBe(true);
+  });
+
+  it('still returns a creature that died with a +1/+1 counter among other counters', () => {
+    const ctx = pod('marchesa-mixed-counters');
+    spawn(ctx, 'P1', marchesaOracle());
+    const victim = spawn(ctx, 'P1', bear());
+    victim.counters['stun'] = 1;
+    victim.counters['+1/+1'] = 1;
+
+    pump(moveObject(ctx, victim, { zone: 'graveyard' }));
+    pump(runPrioritySequence(ctx));
+
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+  });
 });

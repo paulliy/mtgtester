@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Object identity and zone movement (CR 400.7, brief §5.2). A card changing zones becomes
  * a NEW object with a new `ObjectId`; the stable `cardId` links its zone-visits together.
  *
@@ -18,9 +18,11 @@ import type { TriggerScope } from '../cards/value';
 import { evaluateValue } from '../cards/value';
 import type { GameGen } from '../decisions';
 import { chooseCard } from '../effects/choose';
+import { evaluateValueIn } from '../effects/values';
 import { computeCharacteristics, matchesSelector, selectPermanents } from '../effects/continuous';
+import { CREATURE_TYPES } from '../cards/creature-types';
 import { debug, emit } from '../log/log';
-import { cardZoneCandidate, counterAmountAfterReplacementsForCandidate, getDefByOracleId, tokenCreationMultiplierFor, triggersOf } from './queries';
+import { cardZoneCandidate, counterAmountAfterReplacements, counterAmountAfterReplacementsForCandidate, getDefByOracleId, opponentsOf, tokenCreationMultiplierFor, triggersOf } from './queries';
 import type {
   CardId,
   EngineCardObject,
@@ -44,6 +46,10 @@ export function playerById(ctx: GameContext, id: PlayerId): EnginePlayerState {
 /** Where a moved object should land. */
 export interface MoveDestination {
   zone: Zone;
+  /** Why the object entered the graveyard, when this move is an explicit sacrifice. */
+  reason?: 'sacrifice';
+  /** Internal simultaneous-move batch: leave processing is owned by the batch. */
+  deferLeaveProcessing?: boolean;
   /** Battlefield only: the controller it enters under (defaults to its owner). */
   controllerId?: PlayerId;
   /** Battlefield only: choose the back face of an MDFC land // spell. */
@@ -54,6 +60,8 @@ export interface MoveDestination {
    * a condition that would have let it enter untapped cannot untap it (CR 614.1c).
    */
   entersTapped?: boolean;
+  /** Manifest: enter with face-down characteristics before replacements and triggers. */
+  faceDown?: boolean;
   /** Library only: where to put it. Defaults to 'top'. Index 0 is the top. */
   libraryPosition?: 'top' | 'bottom';
 }
@@ -101,19 +109,38 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
   const original = obj.zone === 'battlefield' ? (obj as EnginePermanent).copyOriginal : undefined;
   const frontDef = ctx.defs.get(obj.oracleId);
   const landFace = mdfcLandFaceFor(ctx, obj);
+  const transformFace = frontDef?.backFace;
   return {
     id: newObjectId(ctx),
     cardId: obj.cardId,
     oracleId: original?.oracleId ?? obj.oracleId,
     ownerId: obj.ownerId,
-    name: original?.name ?? (zone === 'battlefield' ? landFace?.name ?? obj.name : frontDef?.name ?? obj.name),
-    typeLine: original?.typeLine ?? (zone === 'battlefield' ? landFace?.typeLine ?? obj.typeLine : frontDef?.typeLine ?? obj.typeLine),
-    oracleText: original?.oracleText ?? (zone === 'battlefield' ? landFace?.oracleText ?? obj.oracleText : landFace?.frontOracleText ?? obj.oracleText),
-    manaCost: original?.manaCost ?? (zone === 'battlefield' ? landFace?.manaCost ?? obj.manaCost : landFace?.frontManaCost ?? obj.manaCost),
+    name:
+      original?.name ??
+      (zone === 'battlefield' && landFace !== undefined
+        ? landFace.name
+        : (frontDef?.name ?? obj.name)),
+    typeLine:
+      original?.typeLine ??
+      (zone === 'battlefield' && landFace !== undefined
+        ? landFace.typeLine
+        : (frontDef?.typeLine ?? obj.typeLine)),
+    oracleText:
+      original?.oracleText ??
+      (zone === 'battlefield' && landFace !== undefined
+        ? landFace.oracleText
+        : (landFace?.frontOracleText ?? transformFace?.frontOracleText ?? obj.oracleText)),
+    manaCost:
+      original?.manaCost ??
+      (zone === 'battlefield' && landFace !== undefined
+        ? landFace.manaCost
+        : (landFace?.frontManaCost ?? transformFace?.frontManaCostText ?? obj.manaCost)),
     isToken: obj.isToken,
     isCommander: obj.isCommander,
     zone,
     ...(zone === 'battlefield' && obj.face !== undefined ? { face: obj.face } : {}),
+    ...(zone === 'battlefield' && obj.escaped === true ? { escaped: true } : {}),
+    ...((obj as EngineCardObject).announcedX !== undefined ? { announcedX: (obj as EngineCardObject).announcedX } : {}),
   };
 }
 /** Build the battlefield form of an object (used by moveObject and by casting). */
@@ -127,19 +154,50 @@ export function makePermanent(
    * function is not a generator so it cannot ask.
    */
   entersTappedOverride?: boolean,
+  faceDown = false,
 ): EnginePermanent {
   const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
   const landFace = mdfcLandFaceFor(ctx, obj);
   // Planeswalkers/battles enter with their printed loyalty/defense (CR 306.5b, 310.6).
   const counters: Record<string, number> = {};
-  if (landFace === undefined && def.types.includes('Planeswalker') && def.loyalty !== null) counters['loyalty'] = def.loyalty;
-  if (landFace === undefined && def.types.includes('Battle') && def.defense !== null) counters['defense'] = def.defense;
+  if (!faceDown && landFace === undefined && def.types.includes('Planeswalker') && def.loyalty !== null) counters['loyalty'] = def.loyalty;
+  if (!faceDown && landFace === undefined && def.types.includes('Battle') && def.defense !== null) counters['defense'] = def.defense;
   // "~ enters with N +1/+1 counters on it" is a replacement effect (CR 614.1c): the counters
   // are already there as it enters, so it is never momentarily 0-toughness.
-  for (const [counter, n] of Object.entries(def.entersWithCounters ?? {})) {
-    counters[counter] = (counters[counter] ?? 0) + n;
+  const valueScope = {
+    controllerId,
+    sourceCardId: obj.cardId,
+    ...((obj as EngineCardObject).announcedX !== undefined
+      ? { x: (obj as EngineCardObject).announcedX }
+      : {}),
+    ...((obj as EngineCardObject).treasureManaSpentToCast !== undefined
+      ? { treasureManaSpent: (obj as EngineCardObject).treasureManaSpentToCast }
+      : {}),
+  };
+  for (const [counter, value] of Object.entries(!faceDown && landFace === undefined ? (def.entersWithCounters ?? {}) : {})) {
+    const amount = typeof value === 'number' ? value : evaluateValueIn(ctx, value, valueScope);
+    counters[counter] = (counters[counter] ?? 0) + amount;
   }
+  // Static entry replacements are generated by permanents already on the battlefield. Evaluate
+  // the incoming card by its printed characteristics, as CR 614.1c does before it exists.
   const incoming = cardZoneCandidate(ctx, obj as EngineCardObject, controllerId);
+  if (faceDown) Object.assign(incoming, { types: ['Creature'], supertypes: [], subtypes: [], colors: [], keywords: [], power: 2, toughness: 2, manaValue: 0 });
+  for (const source of ctx.state.battlefield) {
+    if (source.faceDown) continue;
+    const sourceDef = getDefByOracleId(ctx, source.oracleId, source.name);
+    for (const replacement of sourceDef.additionalCountersOnEntry ?? []) {
+      if (!selectMatches(incoming, replacement.affects, {
+        cardId: source.cardId,
+        controllerId: source.controllerId,
+      })) continue;
+      const amount = evaluateValueIn(ctx, replacement.count, {
+        ...valueScope,
+        controllerId: source.controllerId,
+        sourceCardId: source.cardId,
+      });
+      counters[replacement.counter] = (counters[replacement.counter] ?? 0) + amount;
+    }
+  }
   for (const [counter, amount] of Object.entries(counters)) {
     counters[counter] = counterAmountAfterReplacementsForCandidate(ctx, incoming, counter, amount);
   }
@@ -147,7 +205,9 @@ export function makePermanent(
     ...reincarnate(ctx, obj, 'battlefield'),
     zone: 'battlefield',
     controllerId,
-    tapped: entersTappedOverride ?? landFace?.entersTapped ?? def.entersTapped,
+    transformed: false,
+    tapped: entersTappedOverride ?? (faceDown ? false : landFace?.entersTapped ?? def.entersTapped),
+    faceDown,
     power: landFace === undefined ? def.power : null,
     toughness: landFace === undefined ? def.toughness : null,
     damageMarked: 0,
@@ -160,14 +220,34 @@ export function makePermanent(
     blockedByOrdered: [],
     damagedByDeathtouch: false,
     dealtFirstStrikeDamage: false,
-    ...(def.cantBlock === true ? { cantBlock: true } : {}),
-    ...(def.cantBeBlocked === true ? { cantBeBlocked: true } : {}),
+    ...(!faceDown && def.cantBlock === true ? { cantBlock: true } : {}),
+    ...(!faceDown && def.cantBeBlocked === true ? { cantBeBlocked: true } : {}),
     timestamp: ctx.state.nextTimestamp++,
     activationsThisTurn: [],
     enteredTurnNumber: ctx.state.turnNumber,
   };
 }
 
+/** Transform a permanent in place without changing its object identity or attached state. */
+export function transformPermanent(ctx: GameContext, perm: EnginePermanent): boolean {
+  const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
+  if (def.backFace === undefined) return false;
+
+  perm.transformed = !perm.transformed;
+  const face = perm.transformed ? def.backFace : def;
+  perm.name = face.name;
+  perm.typeLine = face.typeLine;
+  perm.oracleText = perm.transformed ? def.backFace.oracleText : def.backFace.frontOracleText;
+  perm.manaCost = (perm.transformed ? def.backFace.manaCostText : def.backFace.frontManaCostText) as EnginePermanent['manaCost'];
+  if (face.cantBlock === true) perm.cantBlock = true;
+  else delete perm.cantBlock;
+  if (face.cantBeBlocked === true) perm.cantBeBlocked = true;
+  else delete perm.cantBeBlocked;
+
+  emit(ctx, 'transform', { cardId: perm.cardId, name: perm.name, face: perm.transformed ? 'back' : 'front' });
+  queueTriggersForObject(ctx, 'transformsInto', perm);
+  return true;
+}
 export interface ApplyCopyOptions {
   /** Reverted at cleanup instead of persisting (Living Energy's temporary clone). */
   untilEot?: boolean | undefined;
@@ -231,6 +311,56 @@ export function applyCopy(
  * exist). Emits the zone-change event, applies the CR 903.9b commander replacement, sets
  * the CR 903.9a bookkeeping flag, and queues ETB/dies triggers.
  */
+/**
+ * The creature types offered by "As this enters, choose a creature type" (Cavern of Souls,
+ * Herald's Horn, Patchwork Banner, Three Tree City).
+ *
+ * **A deliberate deviation from the rules, and the reason is the decision shape.** CR 614.1c
+ * lets a player name ANY creature type — roughly 280 of them. The engine's as-enters choice is a
+ * closed option list rendered one entry per option (see the prompt in `moveObject`), and there
+ * is no free-text decision anywhere in the protocol; offering 280 options would also put a
+ * 280-way choice in front of the AI for a decision that is nearly always obvious.
+ *
+ * So the domain is narrowed to types the controller could plausibly care about: every creature
+ * type appearing in their own DECKLIST (`decklistOracleIds`, which the engine already keeps)
+ * plus every creature type on the battlefield right now, including opponents'. That is what a
+ * real player names in all but one case.
+ *
+ * The case it mis-serves: naming a type that is nowhere yet — a Cavern held open for a creature
+ * still to be drawn, or a type an opponent has not played. The decklist half covers the first;
+ * the second is genuinely lost. Revisit if a board ever turns on it.
+ *
+ * Both halves read PRINTED subtypes, not computed ones. A changeling (CR 702.73 — "this card is
+ * every creature type") would otherwise contribute all ~324 of them and blow the option list up
+ * to exactly the size this design exists to avoid. Reading it as its printed Shapeshifter loses
+ * nothing that matters, because every option is equivalent against an all-types permanent: it
+ * is hit whichever type you name. What this does forfeit is a type a permanent acquired from a
+ * layer-4 effect, which no printing in the current pool turns on.
+ *
+ * Sorted for determinism (brief §4 — no unseeded ordering anywhere in the engine).
+ */
+export function creatureTypeChoicesFor(
+  ctx: GameContext,
+  controllerId: PlayerId,
+): { key: string; label: string }[] {
+  const types = new Set<string>();
+  const player = ctx.state.players.find((p) => p.id === controllerId);
+  for (const oracleId of player?.decklistOracleIds ?? []) {
+    const def = ctx.defs.get(oracleId);
+    if (def === undefined || !def.types.includes('Creature')) continue;
+    for (const subtype of def.subtypes) types.add(subtype);
+  }
+  for (const perm of ctx.state.battlefield) {
+    const def = ctx.defs.get(perm.oracleId);
+    if (def === undefined || !def.types.includes('Creature')) continue;
+    for (const subtype of def.subtypes) types.add(subtype);
+  }
+  return [...types]
+    .filter((type) => CREATURE_TYPES.includes(type))
+    .sort()
+    .map((type) => ({ key: type, label: type }));
+}
+
 export function* moveObject(
   ctx: GameContext,
   obj: EngineObject,
@@ -264,8 +394,10 @@ export function* moveObject(
   if (obj.isToken && from === 'battlefield' && target.zone !== 'battlefield') {
     emit(ctx, 'tokenCeased', { name: obj.name, cardId: obj.cardId });
     debug(ctx, 'zoneChange', `token ${obj.name} ceased to exist`);
-    queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
-    yield* returnExiledUntilLeaves(ctx, obj.cardId);
+    if (!target.deferLeaveProcessing) {
+      queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+      yield* returnExiledUntilLeaves(ctx, obj.cardId);
+    }
     return null;
   }
 
@@ -279,7 +411,7 @@ export function* moveObject(
     const landFace = target.face === 'back' ? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace : undefined;
     let entersTappedOverride: boolean | undefined;
     const entersTappedUnless = landFace?.entersTappedUnless ?? def.entersTappedUnless;
-    if (entersTappedUnless !== undefined) {
+    if (!target.faceDown && entersTappedUnless !== undefined) {
       const met = yield* resolveCondition(
         ctx,
         entersTappedUnless,
@@ -290,7 +422,7 @@ export function* moveObject(
     }
     if (target.entersTapped === true) entersTappedOverride = true;
     const incoming = target.face === 'back' ? { ...obj, face: 'back' as const } : obj;
-    const perm = makePermanent(ctx, incoming, controllerId, entersTappedOverride);
+    const perm = makePermanent(ctx, incoming, controllerId, entersTappedOverride, target.faceDown);
     ctx.state.battlefield.push(perm);
   if (ctx.state.createdTokenThisTurn) ctx.state.createdTokenThisTurn[controllerId] = true;
     next = perm;
@@ -318,16 +450,27 @@ export function* moveObject(
         });
         emit(ctx, 'grantKeyword', { source: 'Riot', target: perm.name, keyword: 'haste' });
       } else {
-        perm.counters['+1/+1'] = (perm.counters['+1/+1'] ?? 0) + 1;
-        emit(ctx, 'putCounter', { target: perm.name, counter: '+1/+1', count: 1 });
+        const count = counterAmountAfterReplacements(ctx, perm, '+1/+1', 1);
+        perm.counters['+1/+1'] = (perm.counters['+1/+1'] ?? 0) + count;
+        emit(ctx, 'putCounter', { target: perm.name, counter: '+1/+1', count });
       }
     }
 
     // As-enters modal choice (CR 614.1c), e.g. Caged Sun's color or Frontier Siege's mode.
     // Resolved here, before anything else can observe the permanent, so nothing built on
     // `chosenOption` can ever run before it exists.
-    if (def.entersChoosingOption !== undefined) {
-      const { prompt, options } = def.entersChoosingOption;
+    if (!target.faceDown && def.entersChoosingOption !== undefined) {
+      const { prompt, domain } = def.entersChoosingOption;
+      const options =
+        domain === 'creatureType'
+          ? creatureTypeChoicesFor(ctx, controllerId)
+          : (def.entersChoosingOption.options ?? []);
+      if (options.length === 0) {
+        // Nothing to choose from — a Cavern of Souls in a deck with no creatures at all. The
+        // permanent still enters; it simply never records a choice, and every "of the chosen
+        // type" clause reading `chosenOption` correctly matches nothing.
+        debug(ctx, 'decision', `${perm.name}: no options for as-enters choice, skipping`);
+      } else {
       const outcome = yield {
         decisionType: 'general',
         player: controllerId,
@@ -341,6 +484,7 @@ export function* moveObject(
       };
       const chosen = options[outcome.index]?.key;
       if (chosen !== undefined) perm.chosenOption = chosen;
+      }
     }
 
     // "You may have this enter the battlefield as a copy of …" (CR 707.2, as-enters
@@ -348,7 +492,7 @@ export function* moveObject(
     // permanent exists (so it can be excluded from its own candidate list) but before
     // `queueTriggersForObject(ctx, 'enters', …)` below, so ETB triggers reflect the copied
     // identity rather than the entering card's own.
-    if (def.entersAsCopy !== undefined) {
+    if (!target.faceDown && def.entersAsCopy !== undefined) {
       const config = def.entersAsCopy;
       const candidates = selectPermanents(ctx, config.selector, { cardId: perm.cardId, controllerId })
         .filter((p) => p.cardId !== perm.cardId);
@@ -374,7 +518,8 @@ export function* moveObject(
           const counter = copiedTypes.includes('Planeswalker')
             ? config.addCounterByType.planeswalkerCounter
             : config.addCounterByType.creatureCounter;
-          perm.counters[counter] = (perm.counters[counter] ?? 0) + config.addCounterByType.count;
+          const count = counterAmountAfterReplacements(ctx, perm, counter, config.addCounterByType.count);
+          perm.counters[counter] = (perm.counters[counter] ?? 0) + count;
         }
         emit(ctx, 'becomeCopy', { source: originalName, target: copyTargetPerm.name, untilEot: false });
       }
@@ -412,7 +557,7 @@ export function* moveObject(
 
   emit(ctx, 'zoneChange', {
     cardId: obj.cardId,
-    name: obj.name,
+    name: target.faceDown ? 'Face-down permanent' : obj.name,
     from,
     to: target.zone,
     owner: obj.ownerId,
@@ -420,13 +565,28 @@ export function* moveObject(
   });
   debug(ctx, 'zoneChange', `${obj.name}: ${from} → ${target.zone}`, { cardId: obj.cardId });
 
+  // Syr Konrad's card-zone events are distinct from dies: the graveyard-entry event here
+  // intentionally covers only non-battlefield origins so one battlefield death cannot fire twice.
+  if (target.zone === 'graveyard' && from !== 'battlefield' && from !== 'graveyard') {
+    queueCardZoneTriggers(ctx, 'putIntoGraveyardFromAnywhere', next as EngineCardObject);
+  }
+  if (from === 'graveyard' && target.zone !== 'graveyard') {
+    queueCardZoneTriggers(ctx, 'leavesGraveyard', obj as EngineCardObject);
+  }
+
+  if (target.reason === 'sacrifice' && from === 'battlefield') {
+    queueTriggersForObject(ctx, 'sacrificed', obj as EnginePermanent);
+  }
+
   // Triggers: enters on arriving, dies on battlefield → graveyard.
   if (target.zone === 'battlefield' && from !== 'battlefield') {
     queueTriggersForObject(ctx, 'enters', next as EnginePermanent);
   }
   if (from === 'battlefield') {
-    queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
-    yield* returnExiledUntilLeaves(ctx, obj.cardId);
+    if (!target.deferLeaveProcessing) {
+      queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+      yield* returnExiledUntilLeaves(ctx, obj.cardId);
+    }
   }
 
   return next;
@@ -496,12 +656,32 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
  * spell does, so a token with an ETB trigger fires it and a token entering under an anthem is
  * pumped. It does NOT go through `moveObject`, because a token has no previous zone to leave.
  */
+function queueTokenCreatedEvent(ctx: GameContext, tokens: EnginePermanent[]): void {
+  if (tokens.length === 0) return;
+  queueTriggersForEvent(ctx, 'tokenCreated', tokens.map((permanent) => ({ permanent })));
+}
+
 export function createToken(
   ctx: GameContext,
   spec: TokenSpec,
   controllerId: PlayerId,
   applyTokenReplacements = true,
+  queueEvent = true,
+  queueEntersEvent = true,
 ): EnginePermanent {
+  if (applyTokenReplacements) {
+    const multiplier = tokenCreationMultiplierFor(ctx, controllerId);
+    const created: EnginePermanent[] = [];
+    for (let i = 0; i < multiplier; i++) {
+      created.push(createToken(ctx, spec, controllerId, false, false, false));
+    }
+    queueTokenCreatedEvent(ctx, created);
+    queueTriggersForEvent(ctx, 'enters', created.map((permanent) => ({ permanent })));
+    applyTokenCreationReplacements(ctx, spec, controllerId);
+    const first = created[0];
+    if (first === undefined) throw new Error('engine bug: token multiplier created no token');
+    return first;
+  }
   const oracleId = registerTokenDef(ctx, spec);
   const stub: EngineObject = {
     id: newObjectId(ctx),
@@ -531,11 +711,39 @@ export function createToken(
       timestamp: ctx.state.nextTimestamp++,
     });
   }
+  if (queueEvent) queueTokenCreatedEvent(ctx, [perm]);
   emit(ctx, 'tokenCreated', { name: spec.name, controller: controllerId, cardId: perm.cardId });
   debug(ctx, 'zoneChange', `token created: ${spec.name} under ${controllerId}`);
-  queueTriggersForObject(ctx, 'enters', perm);
+  if (queueEntersEvent) queueTriggersForObject(ctx, 'enters', perm);
+  if (applyTokenReplacements) applyTokenCreationReplacements(ctx, spec, controllerId);
+  return perm;
+}
+
+/**
+ * "If one or more <kind> tokens would be created under your control, those tokens plus an
+ * additional <token> are created instead" — Queen Allenal of Ruadach, Stridehangar Automaton.
+ *
+ * Applied once per token-creation EVENT, not once per token (CR 614.1c/616.1): the printed
+ * trigger condition is "one or more", so creating three Soldiers in one resolution adds one
+ * Soldier, not three. That is why this is a separate function rather than a tail on
+ * `createToken` — `createTokens` runs it once for a whole batch. The extra tokens are themselves
+ * created with replacements OFF, so one replacement can never feed another.
+ */
+export function applyTokenCreationReplacements(
+  ctx: GameContext,
+  spec: TokenSpec,
+  controllerId: PlayerId,
+): void {
+  if (spec.types.includes('Creature')) {
+    const replacements = ctx.state.battlefield
+      .filter((candidate) => candidate.controllerId === controllerId)
+      .flatMap((candidate) => {
+        const def = ctx.defs.get(candidate.oracleId);
+        return def?.tokenCreationReplacement === undefined ? [] : [def.tokenCreationReplacement];
+      });
+    for (const replacement of replacements) createToken(ctx, replacement, controllerId, false);
+  }
   if (
-    applyTokenReplacements &&
     spec.types.includes('Artifact') &&
     ctx.state.battlefield.some((candidate) => {
       if (candidate.controllerId !== controllerId) return false;
@@ -554,12 +762,28 @@ export function createToken(
       keywords: ['flying'],
     }, controllerId, false);
   }
-  if (applyTokenReplacements) {
-    const multiplier = tokenCreationMultiplierFor(ctx, controllerId);
-    for (let i = 1; i < multiplier; i++) createToken(ctx, spec, controllerId, false);
-  }
+}
 
-  return perm;
+/**
+ * Create `count` tokens as ONE creation event: each token is a separate object with its own ETB
+ * trigger (CR 707.2), but the "one or more tokens would be created" replacements above see a
+ * single event and fire once.
+ */
+export function createTokens(
+  ctx: GameContext,
+  spec: TokenSpec,
+  count: number,
+  controllerId: PlayerId,
+): EnginePermanent[] {
+  const created: EnginePermanent[] = [];
+  const multiplier = tokenCreationMultiplierFor(ctx, controllerId);
+  for (let i = 0; i < count * multiplier; i++) created.push(createToken(ctx, spec, controllerId, false, false, false));
+  if (created.length > 0) {
+    queueTokenCreatedEvent(ctx, created);
+    queueTriggersForEvent(ctx, 'enters', created.map((permanent) => ({ permanent })));
+    applyTokenCreationReplacements(ctx, spec, controllerId);
+  }
+  return created;
 }
 
 /**
@@ -614,6 +838,57 @@ export interface TriggerEventSubject {
    * the watching permanent's own controller, which nothing else in `TriggerEventSubject` names.
    */
   sourceControllerId?: PlayerId;
+}
+
+/**
+ * Queue the narrow non-battlefield card-transition events used by Syr Konrad. These are card
+ * events rather than permanent events, so they match printed card characteristics directly and
+ * intentionally scan only battlefield sources.
+ */
+function queueCardZoneTriggers(
+  ctx: GameContext,
+  when: 'putIntoGraveyardFromAnywhere' | 'leavesGraveyard',
+  card: EngineCardObject,
+): void {
+  const hasWatcher = ctx.state.battlefield.some((source) =>
+    triggersOf(ctx, source).some((ability) => ability.trigger?.when === when),
+  );
+  if (!hasWatcher) return;
+  const candidate = cardZoneCandidate(ctx, card, card.ownerId);
+  for (const source of ctx.state.battlefield) {
+    for (const ability of triggersOf(ctx, source)) {
+      const spec = ability.trigger;
+      if (spec === undefined || spec.when !== when || !('subject' in spec)) continue;
+      const from: SelectorSource = {
+        cardId: source.cardId,
+        controllerId: source.controllerId,
+        attachedToCardId:
+          source.attachedTo === null
+            ? null
+            : (ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId ?? null),
+      };
+      const matches =
+        spec.subject.kind === 'self'
+          ? source.cardId === card.cardId
+          : selectMatches(candidate, spec.subject.selector, from);
+      if (!matches) continue;
+      if (
+        spec.condition !== undefined &&
+        !evaluateCondition(ctx, spec.condition, { ...from, triggerObjectCardId: card.cardId })
+      ) {
+        continue;
+      }
+      ctx.state.pendingTriggers.push({
+        controllerId: source.controllerId,
+        sourceCardId: source.cardId,
+        sourceOracleId: source.oracleId,
+        sourceName: source.name,
+        ability,
+        ...(spec.subject.kind === 'self' ? {} : { triggerObjectCardId: card.cardId }),
+      });
+      debug(ctx, 'stack', `${when} trigger queued: ${source.name}`);
+    }
+  }
 }
 
 /**
@@ -849,6 +1124,12 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
   const def = ctx.defs.get(spell.sourceOracleId);
   if (def === undefined) return;
 
+  const caster = playerById(ctx, spell.controllerId);
+  caster.spellsCastThisTurn += 1;
+  // A spell's type is read off its printed characteristics — it is on the stack, not the
+  // battlefield, so the layer engine has produced nothing for it (CR 608.2 has not run yet).
+  if (!def.types.includes('Creature')) caster.noncreatureSpellsCastThisTurn += 1;
+
   // A spell is matched on its printed characteristics: it is not on the battlefield, so the
   // layer engine has produced nothing for it.
   const candidate: SelectorCandidate = {
@@ -875,6 +1156,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       const isController = spell.controllerId === source.controllerId;
       if (spec.caster === 'you' && !isController) continue;
       if (spec.caster === 'opponent' && isController) continue;
+      if (spec.ordinal !== undefined && caster.spellsCastThisTurn !== spec.ordinal) continue;
 
       const from: SelectorSource = {
         cardId: source.cardId,
@@ -903,6 +1185,35 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
 }
 
 /**
+ * Keyword abilities that trigger when their spell is cast. Cascade is attached to the spell
+ * rather than a battlefield permanent, so it is queued beside ordinary cast triggers after the
+ * spell has entered the stack.
+ */
+export function queueKeywordCastTriggers(ctx: GameContext, spell: EngineStackObject): void {
+  const def = ctx.defs.get(spell.sourceOracleId);
+  if (def === undefined) return;
+  const cascadeCount = def.keywords.filter((keyword) => keyword === 'cascade').length;
+  if (cascadeCount === 0) return;
+
+  const manaValue = spellManaValue(def, spell.announcedX);
+  for (let i = 0; i < cascadeCount; i++) {
+    ctx.state.pendingTriggers.push({
+      controllerId: spell.controllerId,
+      sourceCardId: spell.sourceCardId,
+      sourceOracleId: spell.sourceOracleId,
+      sourceName: spell.description,
+      ability: {
+        kind: 'triggered',
+        targets: [],
+        effects: [{ op: 'cascade' }],
+        description: spell.description + ': Cascade',
+      },
+      scope: { spellManaValue: manaValue },
+    });
+    debug(ctx, 'stack', spell.description + ' — Cascade keyword trigger queued');
+  }
+}
+/**
  * Mana value of a card (CR 202.3). `{X}` counts as the value announced for it (CR 202.3b) when
  * it is on the stack, or 0 off the stack — which is why this takes the announced X rather than
  * reading the printed cost alone: Lozhan off an X spell would otherwise always deal 0, and a
@@ -913,6 +1224,21 @@ export function spellManaValue(def: CardDefinition, announcedX: number | undefin
   if (cost === null) return 0;
   const colored = Object.values(cost.colored).reduce((sum, n) => sum + n, 0);
   return cost.generic + colored + cost.colorless + (cost.x ?? 0) * (announcedX ?? 0);
+}
+
+/** Resolve a simultaneous graveyard move using pre-event characteristics and watchers. */
+export function* movePermanentsToGraveyard(ctx: GameContext, permanents: EnginePermanent[]): GameGen<void> {
+  if (permanents.length === 0) return;
+  ctx.state.creaturesDiedThisTurn += permanents.filter((perm) =>
+    computeCharacteristics(ctx, perm).types.includes('Creature'),
+  ).length;
+  queueTriggersForEvent(ctx, 'dies', permanents.map((permanent) => ({ permanent })));
+  for (const perm of permanents) {
+    yield* moveObject(ctx, perm, { zone: 'graveyard', deferLeaveProcessing: true });
+  }
+  // Linked returns happen after every member has left; ETB effects cannot change
+  // which other permanents were dying in the same event.
+  for (const perm of permanents) yield* returnExiledUntilLeaves(ctx, perm.cardId);
 }
 
 function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: Zone): void {
@@ -946,7 +1272,7 @@ function* returnExiledUntilLeaves(ctx: GameContext, sourceCardId: CardId): GameG
 
 export function queuePlayerTriggersForEvent(
   ctx: GameContext,
-  when: 'gainsLife',
+  when: 'gainsLife' | 'drawsCard',
   playerId: PlayerId,
   amount?: number,
 ): void {
@@ -955,7 +1281,8 @@ export function queuePlayerTriggersForEvent(
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       if (spec.player === 'you' && perm.controllerId !== playerId) continue;
-      const source = { cardId: perm.cardId, controllerId: perm.controllerId };
+      if (spec.player === 'opponent' && !opponentsOf(ctx, perm.controllerId).some((opponent) => opponent.id === playerId)) continue;
+      const source: SelectorSource = { cardId: perm.cardId, controllerId: perm.controllerId, eventPlayerId: playerId };
       if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
       ctx.state.pendingTriggers.push({
         controllerId: perm.controllerId,
@@ -963,7 +1290,7 @@ export function queuePlayerTriggersForEvent(
         sourceOracleId: perm.oracleId,
         sourceName: perm.name,
         ability,
-        ...(amount !== undefined ? { scope: { damageDealt: amount } } : {}),
+        scope: { eventPlayerId: playerId, ...(amount !== undefined ? { damageDealt: amount } : {}) },
       });
       debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
     }

@@ -30,6 +30,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     !evaluateCondition(ctx, intervening, {
       cardId: top.sourceCardId,
       controllerId: top.controllerId,
+      ...(top.triggerScope?.eventPlayerId === undefined ? {} : { eventPlayerId: top.triggerScope.eventPlayerId }),
     })
   ) {
     emit(ctx, 'triggerConditionFailed', { description: top.description }, top.controllerId);
@@ -77,7 +78,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     emit(ctx, 'fizzle', { description: top.description }, top.controllerId);
     debug(ctx, 'stack', `${top.description} fizzles — all targets illegal`);
     if (top.card !== null) {
-      yield* moveObject(ctx, top.card, { zone: 'graveyard' });
+      yield* moveObject(ctx, top.card, { zone: top.exileOnResolution === true ? 'exile' : 'graveyard' });
     }
     return;
   }
@@ -141,6 +142,30 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
         kind: 'grantKeyword',
         keyword: 'haste',
         timestamp: ctx.state.nextTimestamp++,
+      });
+    }
+  } else if (spell.exileOnResolution) {
+    yield* moveObject(ctx, card, { zone: 'exile' });
+  } else if (spell.reboundPending) {
+    const moved = yield* moveObject(ctx, card, { zone: 'exile' });
+    if (moved !== null && moved.zone === 'exile') {
+      moved.reboundCastBy = spell.controllerId;
+      ctx.state.delayedTriggers.push({
+        id: 'dt-' + ctx.state.nextObjectNum++,
+        sourceCardId: moved.cardId,
+        sourceOracleId: moved.oracleId,
+        controllerId: spell.controllerId,
+        when: 'upkeep',
+        // CR 702.88a: "at the beginning of YOUR NEXT upkeep" — a later turn, so this must
+        // survive every intervening cleanup, and must not fire on another player's upkeep.
+        expiry: 'onFire',
+        player: 'you',
+        ability: {
+          kind: 'triggered',
+          targets: [],
+          effects: [{ op: 'reboundCastFromExile' }],
+          description: moved.name + ': Rebound',
+        },
       });
     }
   } else {

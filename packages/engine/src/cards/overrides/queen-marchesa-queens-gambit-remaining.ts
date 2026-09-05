@@ -2,19 +2,12 @@
 
 import type { CardDefinition } from '../definition';
 import { TAP, UNATTACH_SELF, mana } from '../templates';
-import { allOf, CHOSEN_COLOR, IN_COMBAT, IS_TOKEN, manaValueAtMost, not, ofSupertype, ofType, YOURS } from '../selector';
+import { allOf, IN_COMBAT, manaValueAtMost, not, ofType } from '../selector';
 import { constant } from '../value';
 import { TREASURE } from '../tokens';
 import { defineCard, unimplemented } from './index';
 
 const CREATURES: import('../selector').Selector = ofType('Creature');
-const HYBRID_LAND = (a: 'W' | 'B' | 'R', b: 'W' | 'B' | 'R'): Partial<CardDefinition> => ({
-  manaAbilities: [
-    { costs: [mana(`{${a}/${b}}`), TAP], units: [[a], [a]] },
-    { costs: [mana(`{${a}/${b}}`), TAP], units: [[a], [b]] },
-    { costs: [mana(`{${a}/${b}}`), TAP], units: [[b], [b]] },
-  ],
-});
 
 const ANGELS_GRACE: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'angelGrace' }], description: 'You cannot lose this turn and your life total cannot go below 1' } };
 const ARCBOND: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [{ kind: 'creature' }], effects: [{ op: 'arcbond', target: 0 }], description: 'Whenever the chosen creature is dealt damage, it deals that much to each other creature and player' } };
@@ -81,6 +74,10 @@ const WEATHERED: Partial<CardDefinition> = { activatedAbilities: [{ costs: [mana
 const WISHCLAW: Partial<CardDefinition> = { entersWithCounters: { wish: 3 }, activatedAbilities: [{ costs: [mana('{1}'), TAP, { kind: 'removeCounters', counter: 'wish', count: 1 }], timing: 'sorcery', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibrary', filter: { kind: 'anyOf', of: [ofType('Artifact'), ofType('Creature'), ofType('Enchantment'), ofType('Instant'), ofType('Land'), ofType('Planeswalker'), ofType('Sorcery')] }, destinations: [{ zone: 'hand' }] }, { op: 'shuffle' }], description: 'Search your library for a card, then an opponent gains control of Wishclaw Talisman' } }] };
 
 export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void {
+  // Removed: the printed ability charges MANA, which the payment solver cannot pay
+  // (see tests/mana-cost-in-mana-ability.test.ts). Authoring it here made the land tap
+  // for two mana out of nothing. Left unmodeled until a mana source can pay for itself.
+
   // Blightstep/Brightclimb/Needleverge Pathway (land // land): now parses generically
   // (`buildPathwayLand` in interpret.ts, a `chosenColor`-dynamic mana ability driven by
   // `entersChoosingOption`) -- no override needed at all.
@@ -95,8 +92,8 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   // past applyOverride's empty-patch guard (fixed in the previous commit) and silently reported
   // these as modeled with NO mana ability at all. Both real backs enter tapped, printed
   // identically across the whole Zendikar Rising slow-land cycle these two belong to.
-  defineCard('a731e87b-8d99-4b64-8ee3-8e540d652366', 'Malakir Rebirth // Malakir Mire', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Choose target creature. You lose 2 life. Until end of turn, that creature gains \"When this creature dies, return it to the battlefield tapped under its owner\'s control.\""'], { entersTapped: true, manaAbilities: [{ units: [['B']] }] });
-  defineCard('ff0ab867-b710-4b1a-baed-95fc3cf68f79', 'Valakut Awakening // Valakut Stoneforge', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one."'], { entersTapped: true, manaAbilities: [{ units: [['R']] }] });
+  defineCard('a731e87b-8d99-4b64-8ee3-8e540d652366', 'Malakir Rebirth // Malakir Mire', ['unrecognized rules text: "Choose target creature. You lose 2 life. Until end of turn, that creature gains "When this creature dies, return it to the battlefield tapped under its owner\'s control.""'], { entersTapped: true, manaAbilities: [{ units: [['B']] }] });
+  defineCard('ff0ab867-b710-4b1a-baed-95fc3cf68f79', 'Valakut Awakening // Valakut Stoneforge', ['unrecognized rules text: "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one."'], { entersTapped: true, manaAbilities: [{ units: [['R']] }] });
   unimplemented('6556c4c0-b10d-4208-821b-0c0a49abd188', 'Wandering Archaic // Explore the Vastlands', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don\'t, you may copy that spell. You may choose new targets for the copy."']);
   defineCard('9842734c-1eac-4509-a731-4c22017ae586', 'Wear // Tear', ['unsupported layout "split"', 'unrecognized rules text: "Fuse"'], WEAR_TEAR);
   defineCard('66ca8a60-e028-4a5f-8177-860b888cb9d1', "Angel's Grace", ['unrecognized rules text: "Split second"', 'unrecognized rules text: "You can\'t lose the game this turn and your opponents can\'t win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead."'], ANGELS_GRACE);
@@ -113,9 +110,6 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   defineCard('99140891-face-4015-aacd-1309e87d8f9f', 'Display of Power', ['unrecognized rules text: "This spell can\'t be copied."', 'unrecognized rules text: "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies."'], DISPLAY_OF_POWER);
   defineCard('0ff7440b-b831-40a9-81c4-99d77bf93b8d', 'Dream Devourer', ['unrecognized rules text: "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal to its mana cost reduced by {2}."', 'unrecognized rules text: "Whenever you foretell a card, this creature gets +2/+0 until end of turn."'], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'you' }, targets: [], effects: [{ op: 'pumpUntilEot', target: 'source', power: 2, toughness: 0 }], description: 'Whenever you foretell a card, Dream Devourer gets +2/+0' }] });
   defineCard('5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb', "Duelist's Heritage", ['unrecognized rules text: "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn."'], DUELISTS_HERITAGE);
-  defineCard('42bf259d-4bb9-49c3-b4ec-223dca62f4d6', 'Fetid Heath', ['unrecognized rules text: "{W/B}, {T}: Add {W}{W}, {W}{B}, or {B}{B}."'], HYBRID_LAND('W', 'B'));
-  defineCard('5004b84a-33b7-4f6f-b2c2-7086b9087535', 'Graven Cairns', ['unrecognized rules text: "{B/R}, {T}: Add {B}{B}, {B}{R}, or {R}{R}."'], HYBRID_LAND('B', 'R'));
-  defineCard('8e7641e1-e814-4d5a-9cb3-71ad2f4ceee8', 'Rugged Prairie', ['unrecognized rules text: "{R/W}, {T}: Add {R}{R}, {R}{W}, or {W}{W}."'], HYBRID_LAND('R', 'W'));
   defineCard('bc328acc-8521-4581-88c3-99a7cb2c1cdb', 'Flumph', ['unrecognized rules text: "Whenever this creature is dealt damage, you and target opponent each draw a card."'], FLUMPH);
   // The line now parses generically (`attackTax` in `parseRuleStaticLine`) — no override needed.
   defineCard('66f9f325-5e8e-4ebf-b5b3-c6410d80f2c5', 'Gisela, Blade of Goldnight', ['unrecognized rules text: "If a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead."', 'unrecognized rules text: "If a source would deal damage to you or a permanent you control, prevent half that damage, rounded up."'], { ruleStatics: [{ kind: 'damageDoubledToOpponents' }, { kind: 'damageHalvedToYou' }] });
@@ -123,7 +117,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   defineCard('da93264e-4e04-401a-9809-e4e1056cf604', 'Inkshield', ['unrecognized rules text: "Prevent all combat damage that would be dealt to you this turn. For each 1 damage prevented this way, create a 2/1 white and black Inkling creature token with flying."'], INKSHIELD);
   defineCard('4987c458-604a-472b-b360-170616e91e67', 'Kambal, Consul of Allocation', ['unrecognized rules text: "Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life."'], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'opponent' }, targets: [], effects: [{ op: 'eachOpponentLosesLife', amount: 2 }, { op: 'gainLife', amount: constant(2) }], description: 'An opponent casts a noncreature spell — they lose 2 and you gain 2' }] });
   defineCard('b3d81980-76f2-44e2-b1c9-01e30c726312', 'Loran of the Third Path', ['unrecognized rules text: "When ~ enters, destroy up to one target artifact or enchantment."', 'unrecognized rules text: "{T}: You and target opponent each draw a card."'], LORAN);
-  defineCard('cbcb6d9a-6ae5-4bcd-8013-2b657553764a', 'Mangara, the Diplomat', ['unrecognized rules text: "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card."', 'unrecognized rules text: "Whenever an opponent casts their second spell each turn, draw a card."'], MANGARA);
+  defineCard('cbcb6d9a-6ae5-4bcd-8013-2b657553764a', 'Mangara, the Diplomat', ['unrecognized rules text: "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card."'], MANGARA);
   defineCard('18ed0c8a-db8f-4247-87c4-544b833f01bd', 'Master of Ceremonies', ['unrecognized rules text: "At the beginning of your upkeep, each opponent chooses money, friends, or secrets. For each player who chose money, you and that player each create a Treasure token. For each player who chose friends, you and that player each create a 1/1 green and white Citizen creature token. For each player who chose secrets, you and that player each draw a card."'], MASTER);
   defineCard('fbe190eb-fd4b-40e7-9a17-48c96b60f653', 'Michiko Konda, Truth Seeker', ['unrecognized rules text: "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice."'], MICHIKO);
   defineCard('bb5c1817-ac22-4779-9005-251bc354f181', 'Mistveil Plains', ['unrecognized rules text: "{W}, {T}: Put target card from your graveyard on the bottom of your library. Activate only if you control two or more white permanents."'], MISTVEIL);
@@ -144,8 +138,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   // report this card as modeled with zero behavior. Converted to `unimplemented()`.
   unimplemented('04853f06-3fd2-445d-9b0d-d68d0f116635', 'Verrak, Warped Sengir', ['unrecognized rules text: "Whenever you activate an ability that isn\'t a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy."']);
   defineCard('1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f', 'Weathered Wayfarer', ['unrecognized rules text: "{W}, {T}: Search your library for a land card, reveal it, put it into your hand, then shuffle. Activate only if an opponent controls more lands than you."'], WEATHERED);
-  defineCard('81c70ae7-3c18-4c9b-8505-e4db9e0e6518', 'Wishclaw Talisman', ['unrecognized rules text: "~ enters with three wish counters on it."', 'unrecognized rules text: "{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artifact. Activate only during your turn."'], WISHCLAW);
+  defineCard('81c70ae7-3c18-4c9b-8505-e4db9e0e6518', 'Wishclaw Talisman', ['unrecognized rules text: "{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artifact. Activate only during your turn."'], WISHCLAW);
   defineCard('4987c458-604a-4727-b360-170616e91e67', 'Kambal, Consul of Allocation', ['unrecognized rules text: "Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life."'], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'each', filter: not(ofType('Creature')) }, targets: [], effects: [{ op: 'kambal' }], description: 'An opponent casts a noncreature spell — they lose 2 and you gain 2' }] });
-  defineCard('15687ee3-3cdb-4a8f-a726-46b73bceb792', 'Shadowblood Ridge', ['unrecognized rules text: "{1}, {T}: Add {B}{R}."'], { manaAbilities: [{ costs: [mana('{1}'), TAP], units: [['B'], ['R']] }] });
   defineCard('0dfdf1a1-a3a9-490f-bd9d-dcba088c6785', 'Teyo, Geometric Tactician', ['unrecognized rules text: "+1: You and target opponent each draw a card."', 'unrecognized rules text: "\u22122: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent."'], TEYO);
 }

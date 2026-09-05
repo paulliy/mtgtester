@@ -410,12 +410,7 @@ describe('MatchSession — post-game reflection stays out of the way when off', 
     return message?.payload;
   }
 
-  function stateSnapshots(sent: ServerToClientMessage[]) {
-    return sent.filter(
-      (candidate): candidate is Extract<ServerToClientMessage, { type: 'stateSnapshot' }> =>
-        candidate.type === 'stateSnapshot',
-    );
-  }
+
 
   // `finishedGame()` plays a full random-fuzzed 4-player game (`providerKind: 'random'`, brief
   // §5.9's fuzzer, not the live bot/AI opponent). Batched combat declarations (ADR 0023 items

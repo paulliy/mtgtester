@@ -14,11 +14,12 @@ import { ALL_COLORS } from '@mtg/shared';
 // `ParsedManaCost` from here).
 import type {
   AbilityCost,
+  Effect,
   ManaEntry,
   ManaRestriction,
   ManaSpendTrigger,
 } from '../cards/ability';
-import { emptyPool, summarize } from './pool';
+import { emptyPool, selectEntriesToSpend, summarize } from './pool';
 
 export { emptyPool } from './pool';
 
@@ -179,10 +180,19 @@ export interface ManaSource {
   /** The units of mana produced when activated, each a choice among symbols. */
   units: ManaUnit[];
   /**
-   * What activating it costs. The solver ignores this — availability was already decided — but
-   * the caller applying the plan needs it, because "tap it" is not the only way to pay.
+   * What activating it costs. The solver ignores the non-mana components — availability was
+   * already decided — but the caller applying the plan needs them, because "tap it" is not the
+   * only way to pay.
    */
   costs: readonly AbilityCost[];
+  /**
+   * The MANA component of `costs`, if any — a filter land's `{W/B}`, Cabal Coffers' `{2}`.
+   *
+   * Unlike the rest of `costs` this one *is* the solver's business: a source that costs mana is
+   * a net producer, and whether it helps depends on what else is available. See `planPayment`'s
+   * second pass. Absent for the overwhelming majority of sources, which are free to activate.
+   */
+  manaCost?: ParsedManaCost;
   /**
    * CR 106.6 restriction carried by the mana this source produces — "spend this mana only to
    * cast a Dragon creature spell" (Haven of the Spirit Dragon). The solver drops the whole
@@ -191,8 +201,17 @@ export interface ManaSource {
   restriction?: ManaRestriction;
   /** Rides onto the mana produced — "when you spend this mana to cast X, …". */
   spendTrigger?: ManaSpendTrigger;
+  /** If this mana is spent to cast a spell, that spell becomes uncounterable. */
+  uncounterableSpell?: true;
   /** Rides onto the mana produced — it survives the end-of-step drain (Klauth). */
   persistent?: boolean;
+  /**
+   * Non-mana effects the ability applies when activated — a painland's "deals 1 damage to you",
+   * Ancient Tomb's 2. Carried on the SOURCE rather than re-read from the permanent, because a
+   * permanent with several mana abilities has several riders and only the activated one applies;
+   * `interchangeableSignature` keeps abilities with different riders in different sources.
+   */
+  onActivate?: readonly Effect[];
   /**
    * "…add two mana of any ONE color" (Ilysian Caryatid) — every unit of this source must
    * resolve to the SAME symbol. Only meaningful with more than one unit; forces the backtracker
@@ -214,6 +233,17 @@ export interface PaymentPlan {
    * this creature") appears here too, and the caller pays whatever that source's cost is.
    */
   tapCardIds: string[];
+  /**
+   * The specific `ManaSource` the plan chose for each entry of `tapCardIds`, same order and
+   * length.
+   *
+   * A permanent with several non-interchangeable mana abilities contributes several sources that
+   * all share a `cardId` (Ancient Tomb's {C} and its {C}{C}), so the card id alone does not say
+   * which ability was activated — and the riders, restrictions and activation cost that must be
+   * applied all belong to that one ability. Recorded by the solver rather than re-derived by the
+   * applier, so the two cannot disagree.
+   */
+  tapSources: ManaSource[];
   /** Summary of the floating mana the plan intends to consume. Informational. */
   fromPool: ManaPool;
   /**
@@ -268,6 +298,12 @@ export function entryIsUsable(entry: ManaEntry, allows: ManaAllowance): boolean 
  * "it can only be tapped once" means once collapsing them into a single multi-choice unit stops
  * being sound.
  *
+ * **A source may cost mana to activate** — a filter land's `{W/B}`, Cabal Coffers' `{2}`. Those
+ * are held out of the ordinary solve and reached for only when it fails, because they are the
+ * strictly worse way to make mana and because bringing them in costs the exactness of the
+ * restricted-mana argument above (see `solveWithCostly`). When one is used, the returned
+ * `tapCardIds` are in an order the applier can actually execute, not merely a set that balances.
+ *
  * Deterministic given identical inputs: sources are considered in the order supplied
  * (callers supply battlefield order), pool mana is preferred over tapping.
  */
@@ -277,12 +313,150 @@ export function planPayment(
   sources: readonly ManaSource[],
   allows: ManaAllowance = ALLOW_NOTHING,
 ): PaymentPlan | null {
+  // Hybrid choices must be solved jointly with the floating pool and sources. Greedy
+  // consumption loses legal payments such as {W/U}{W/B} from a W,U pool.
+  if ((cost.hybrid?.length ?? 0) > 0) {
+    const tried = new Set<string>();
+    const expand = (index: number, colored: ParsedManaCost['colored']): PaymentPlan | null => {
+      if (index === cost.hybrid!.length) {
+        const key = ALL_COLORS.map((c) => colored[c]).join(',');
+        if (tried.has(key)) return null;
+        tried.add(key);
+        return planPayment({ generic: cost.generic, colorless: cost.colorless, colored }, poolEntries, sources, allows);
+      }
+      for (const color of cost.hybrid![index]!) {
+        const result = expand(index + 1, { ...colored, [color]: colored[color] + 1 });
+        if (result !== null) return result;
+      }
+      return null;
+    };
+    return expand(0, cost.colored);
+  }
   // Drop everything this payment may not legally spend, then solve the unrestricted problem.
   const usableEntries = poolEntries.filter((e) => entryIsUsable(e, allows));
   const usableSources = sources.filter(
     (s) => s.restriction === undefined || allows(s.restriction),
   );
 
+  // Sources that cost mana to activate are held back for a second pass (see `solveWithCostly`):
+  // the first pass is byte-identical to the payment this function has always planned, so every
+  // existing card's tap choices are unchanged and a filter land is only reached for.
+  const freeSources = usableSources.filter((s) => s.manaCost === undefined);
+  const firstPass = solveFrom(cost, usableEntries, freeSources);
+  if (firstPass !== null || freeSources.length === usableSources.length) return firstPass;
+  return solveWithCostly(cost, usableEntries, usableSources);
+}
+
+/**
+ * The second pass: solve again with mana-costing sources in play, then put the activations in an
+ * order that can actually be executed.
+ *
+ * **Restricted mana is dropped wholesale here**, pool entries and sources alike. Whether a
+ * CR 106.6 restriction lets its mana pay for *activating a mana ability* is a different question
+ * from whether it may pay for the spell this payment is for, and the solver's exactness argument
+ * rests on every remaining mana being interchangeable. Rather than add that dimension for a
+ * combination no real board reaches — restricted mana and a filter land in one payment — this
+ * fails closed: the payment is declared impossible, never mispaid.
+ */
+function solveWithCostly(
+  cost: ParsedManaCost,
+  usableEntries: readonly ManaEntry[],
+  usableSources: readonly ManaSource[],
+): PaymentPlan | null {
+  const entries = usableEntries.filter((e) => e.restriction === undefined);
+  const sources = usableSources.filter((s) => s.restriction === undefined);
+  const plan = solveFrom(cost, entries, sources);
+  return plan === null ? null : orderForActivation(cost, entries, plan);
+}
+
+/**
+ * The mana component of an activation cost, or undefined when activating costs no mana.
+ *
+ * `{0}` answers undefined too: a zero cost and no cost are the same source, and keeping them
+ * distinct would push a free ability onto `planPayment`'s slower second pass for nothing.
+ */
+export function manaCostComponent(costs: readonly AbilityCost[]): ParsedManaCost | undefined {
+  let total: ParsedManaCost | undefined;
+  for (const cost of costs) {
+    if (cost.kind !== 'mana') continue;
+    total = total === undefined ? cost.cost : addCosts(total, cost.cost);
+  }
+  return total !== undefined && totalPips(total) > 0 ? total : undefined;
+}
+
+/** `a` plus `b`, pip for pip. `{X}` is not representable in an activation cost and is dropped. */
+function addCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
+  const colored = { ...a.colored };
+  for (const c of ALL_COLORS) colored[c] += b.colored[c];
+  const hybrid = [...(a.hybrid ?? []), ...(b.hybrid ?? [])];
+  return {
+    generic: a.generic + b.generic,
+    colored,
+    colorless: a.colorless + b.colorless,
+    ...(hybrid.length > 0 ? { hybrid } : {}),
+  };
+}
+
+/**
+ * Put a plan's activations in an order that can be executed, and verify it end to end.
+ *
+ * The solver's arithmetic is a *bag* argument — total production covers the cost plus every
+ * activation cost — which says nothing about timing, and you cannot spend mana you have not made
+ * yet. Free sources always go first (they only add). The mana-costing ones are then ordered by
+ * search, and the whole sequence is replayed with `selectEntriesToSpend`, the same function
+ * `payManaCost` will use, so the plan the applier receives is one it is known to be able to
+ * execute — including the final payment of `cost` from what is left.
+ *
+ * Returns null when no order works, which is the fail-closed direction: the source is simply not
+ * offered.
+ */
+function orderForActivation(
+  cost: ParsedManaCost,
+  poolEntries: readonly ManaEntry[],
+  plan: PaymentPlan,
+): PaymentPlan | null {
+  const free: ManaSource[] = [];
+  const costly: ManaSource[] = [];
+  for (const source of plan.tapSources) (source.manaCost === undefined ? free : costly).push(source);
+  // Guard against a factorial search. No real board has this many mana-costing sources in one
+  // payment; refusing is fail-closed.
+  if (costly.length > 6) return null;
+
+  const producedBy = (source: ManaSource): ManaEntry[] =>
+    plan.produced
+      .filter((p) => p.cardId === source.cardId)
+      .map(({ symbol }) => ({ symbol }));
+
+  const start: ManaEntry[] = [...poolEntries];
+  for (const source of free) start.push(...producedBy(source));
+
+  const order: ManaSource[] = [];
+  const search = (available: readonly ManaEntry[], remaining: readonly ManaSource[]): boolean => {
+    if (remaining.length === 0) return selectEntriesToSpend(available, cost) !== null;
+    for (const source of remaining) {
+      const spent = selectEntriesToSpend(available, source.manaCost as ParsedManaCost);
+      if (spent === null) continue;
+      const next = available.filter((e) => !spent.includes(e));
+      order.push(source);
+      if (search([...next, ...producedBy(source)], remaining.filter((s) => s !== source))) {
+        return true;
+      }
+      order.pop();
+    }
+    return false;
+  };
+  if (!search(start, costly)) return null;
+
+  const tapSources = [...free, ...order];
+  return { ...plan, tapSources, tapCardIds: tapSources.map((s) => s.cardId) };
+}
+
+/** The exact solve over a fixed set of usable entries and sources. */
+function solveFrom(
+  cost: ParsedManaCost,
+  usableEntries: readonly ManaEntry[],
+  usableSources: readonly ManaSource[],
+): PaymentPlan | null {
   // Work on a mutable remaining-cost copy. Strategy: satisfy colored + {C} pips first
   // (they are the constrained ones), then generic from whatever remains.
   const remaining: ParsedManaCost = {
@@ -330,11 +504,15 @@ export function planPayment(
 
   // 2. Cover the rest by tapping sources.
   const need = remaining;
-  if (totalPips(need) === 0) return { tapCardIds: [], fromPool, produced: [] };
+  if (totalPips(need) === 0) return { tapCardIds: [], tapSources: [], fromPool, produced: [] };
 
   const hasAlternatives = new Set(usableSources.map((s) => s.cardId)).size !== usableSources.length;
   const hasHybrid = (cost.hybrid?.length ?? 0) > 0;
-  if (!hasHybrid && !hasAlternatives && usableSources.every((s) => s.units.every((u) => u.length === 1))) {
+  // A source that costs mana breaks the fast path's credit accounting, which assumes tapping a
+  // source is pure gain. Those only ever reach here on `planPayment`'s second pass, so the fast
+  // path still covers every payment it covered before.
+  const hasCostly = usableSources.some((s) => s.manaCost !== undefined);
+  if (!hasHybrid && !hasAlternatives && !hasCostly && usableSources.every((s) => s.units.every((u) => u.length === 1))) {
     return planSingleChoice(need, usableSources, fromPool);
   }
 
@@ -343,12 +521,25 @@ export function planPayment(
   // Source counts are small (≤ dozens of lands), and we prune on total production. The
   // `produced` accumulator records the symbol actually chosen for each unit of every tapped
   // source (pushes are undone on backtrack), so callers add exactly what was chosen.
-  const chosen: string[] = [];
+  const chosen: ManaSource[] = [];
   const produced: ProducedMana[] = [];
 
+  // Optimistic suffix bounds: alternative abilities and linked production may be
+  // double-counted here, which only weakens pruning and cannot reject a legal payment.
+  const suffix = Array.from({ length: usableSources.length + 1 }, () => emptyPool());
+  for (let i = usableSources.length - 1; i >= 0; i--) {
+    Object.assign(suffix[i]!, suffix[i + 1]!);
+    for (const unit of usableSources[i]!.units) {
+      for (const symbol of new Set(unit)) suffix[i]![symbol]++;
+    }
+  }
   const solve = (srcIdx: number, need2: ParsedManaCost): boolean => {
     if (totalPips(need2) === 0) return true;
     if (srcIdx >= usableSources.length) return false;
+    for (const color of ALL_COLORS) {
+      if (need2.colored[color] > suffix[srcIdx]![color]) return false;
+    }
+    if (need2.colorless > suffix[srcIdx]!.C) return false;
     // Prune: remaining sources cannot produce enough units.
     let unitsLeft = 0;
     for (let i = srcIdx; i < usableSources.length; i++)
@@ -357,7 +548,7 @@ export function planPayment(
 
     const src = usableSources[srcIdx] as ManaSource;
     // Alternatives of one permanent share a cardId; it can only be tapped once.
-    if (chosen.includes(src.cardId)) return solve(srcIdx + 1, need2);
+    if (chosen.some((s) => s.cardId === src.cardId)) return solve(srcIdx + 1, need2);
 
     // Option A: tap this source. Assign each unit to a pip (or let it float). A tapped
     // source produces ALL its units, so each unit adds a symbol to `produced`.
@@ -415,8 +606,15 @@ export function planPayment(
       return attempt((candidates[0] ?? unit[0]) as Color | 'C', needNow);
     };
 
-    chosen.push(src.cardId);
-    if (assignUnits(0, need2)) return true;
+    chosen.push(src);
+    // A source that costs mana to activate adds its own cost to what still has to be found:
+    // the payment as a whole must cover `cost` PLUS every activation cost it pays along the
+    // way. `assignUnits`'s terminal test still compares against the un-augmented `need2`, so
+    // a source that does not net-reduce the need is pruned — a Cabal Coffers with one Swamp
+    // costs {2} to make {B} and is correctly declined.
+    if (assignUnits(0, src.manaCost === undefined ? need2 : addCosts(need2, src.manaCost))) {
+      return true;
+    }
     chosen.pop();
 
     // Option B: skip this source.
@@ -424,7 +622,7 @@ export function planPayment(
   };
 
   if (!solve(0, need)) return null;
-  return { tapCardIds: chosen, fromPool, produced };
+  return { tapCardIds: chosen.map((s) => s.cardId), tapSources: [...chosen], fromPool, produced };
 }
 
 /**
@@ -507,7 +705,7 @@ function planSingleChoice(
     }
   }
   const tapCardIds = tappedProds.map((p) => p.source.cardId);
-  return { tapCardIds, fromPool, produced };
+  return { tapCardIds, tapSources: tappedProds.map((p) => p.source), fromPool, produced };
 }
 
 /** True iff `cost` is payable from the floating pool + `sources`, for this payment's purpose. */

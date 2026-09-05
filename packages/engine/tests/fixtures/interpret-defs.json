@@ -402,6 +402,10 @@
     "spellAbility": {
       "effects": [
         {
+          "count": {
+            "kind": "const",
+            "n": 2
+          },
           "destinations": [
             {
               "tapped": true,
@@ -3037,27 +3041,19 @@
     "unmodeledReasons": []
   },
   {
-    "activatedAbilities": [
+    "activatedAbilities": [],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "colors": [],
+    "defense": null,
+    "entersTapped": false,
+    "hasUnsupportedCost": false,
+    "keywords": [],
+    "loyalty": null,
+    "manaAbilities": [
       {
-        "ability": {
-          "description": "{1}, {T}: Add {W}{U}.",
-          "effects": [
-            {
-              "amount": {
-                "kind": "const",
-                "n": 2
-              },
-              "colors": [],
-              "fixedSymbols": [
-                "W",
-                "U"
-              ],
-              "op": "addMana"
-            }
-          ],
-          "kind": "activated",
-          "targets": []
-        },
         "costs": [
           {
             "cost": {
@@ -3077,20 +3073,16 @@
             "kind": "tap"
           }
         ],
-        "timing": "any"
+        "units": [
+          [
+            "W"
+          ],
+          [
+            "U"
+          ]
+        ]
       }
     ],
-    "colorIdentity": [
-      "U",
-      "W"
-    ],
-    "colors": [],
-    "defense": null,
-    "entersTapped": false,
-    "hasUnsupportedCost": false,
-    "keywords": [],
-    "loyalty": null,
-    "manaAbilities": [],
     "manaCost": null,
     "modeled": true,
     "name": "Skycloud Expanse",
@@ -5714,6 +5706,10 @@
     ],
     "colors": [],
     "defense": null,
+    "entersChoosingOption": {
+      "domain": "creatureType",
+      "prompt": "choose a creature type"
+    },
     "entersTapped": false,
     "hasUnsupportedCost": false,
     "keywords": [
@@ -5754,8 +5750,7 @@
           "generic": 0
         },
         "filter": {
-          "kind": "subtype",
-          "value": "Dragon"
+          "kind": "chosenSubtype"
         },
         "kind": "costReduction"
       }
@@ -5771,12 +5766,15 @@
               "kind": "other"
             },
             {
+              "kind": "chosenSubtype"
+            },
+            {
               "kind": "controller",
               "who": "you"
             },
             {
-              "kind": "subtype",
-              "value": "Dragon"
+              "kind": "type",
+              "value": "Creature"
             }
           ]
         },

@@ -45,10 +45,26 @@ interface SocketData {
   clientId: string;
 }
 
+/** Local UI only. Validate Host too so DNS rebinding cannot turn a foreign origin into local access. */
+export function isAllowedLocalRequest(request: Request, port: number): boolean {
+  const local = (url: URL): boolean => ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+  const target = new URL(request.url);
+  if (!local(target)) return false;
+  const origin = request.headers.get('origin');
+  if (origin === null) return true; // local CLI / same-origin GET
+  try {
+    const source = new URL(origin);
+    return source.protocol === 'http:' && local(source) && [String(port), '5173'].includes(source.port);
+  } catch { return false; }
+}
+
 export class GameServer {
   private readonly sockets = new Set<ServerWebSocket<SocketData>>();
   private session: MatchSession | null = null;
   private nextGameNum = 1;
+  private startingGame = false;
+  private startingSocket: ServerWebSocket<SocketData> | null = null;
+  private startGeneration = 0;
   private orphanTimer: ReturnType<typeof setTimeout> | null = null;
   private playerSocket: ServerWebSocket<SocketData> | null = null;
   private sessionToken: string | null = null;
@@ -84,8 +100,10 @@ export class GameServer {
     const port = this.deps.port ?? 3001;
     const server = Bun.serve<SocketData, never>({
       port,
+      hostname: '127.0.0.1',
       fetch: async (request, srv) => {
         const url = new URL(request.url);
+        if (!isAllowedLocalRequest(request, port)) return new Response('Forbidden origin or host', { status: 403 });
         if (url.pathname === '/ws') {
           const upgraded = srv.upgrade(request, { data: { clientId: crypto.randomUUID() } });
           return upgraded ? undefined : new Response('WebSocket upgrade failed', { status: 400 });
@@ -109,6 +127,7 @@ export class GameServer {
           try { body = await request.json(); } catch { return Response.json({ message: 'Malformed JSON body.' }, { status: 400 }); }
           const validation = validateBatch(body);
           if (!validation.ok) return Response.json({ message: validation.message }, { status: 400 });
+          if (this.startingGame || (this.session !== null && !['finished', 'halted', 'abandoned'].includes(this.session.runner.getStatus()))) return Response.json({ message: 'An interactive game is starting or running.' }, { status: 409 });
           try { const batchId = this.batchManager.start(validation.spec); return Response.json({ batchId }, { status: 202 }); }
           catch (error) { return Response.json({ message: error instanceof Error ? error.message : String(error) }, { status: 409 }); }
         }
@@ -188,6 +207,7 @@ export class GameServer {
         },
         close: (socket) => {
           this.sockets.delete(socket);
+          if (socket === this.startingSocket) this.startGeneration++;
           if (socket === this.playerSocket) {
             this.playerSocket = null;
             this.session?.setPlayerConnected(false);
@@ -234,7 +254,15 @@ export class GameServer {
           });
           return;
         }
-        await this.startGame(socket, message.payload);
+        if (this.startingGame || this.batchManager?.isActive()) {
+          this.sendTo(socket, { type: 'error', payload: { message: 'A game is already starting or a batch is running.' } });
+          return;
+        }
+        this.startingGame = true;
+        this.startingSocket = socket;
+        try { await this.startGame(socket, message.payload); }
+        catch (error) { this.sendTo(socket, { type: 'error', payload: { message: error instanceof Error ? error.message : String(error) } }); }
+        finally { this.startingGame = false; this.startingSocket = null; }
         return;
 
       case 'jumpToTurn':
@@ -257,10 +285,15 @@ export class GameServer {
         return;
 
       case 'abandonGame':
+        if (socket === this.startingSocket) {
+          this.startGeneration++;
+          if (this.session === null) return;
+        }
         this.cancelOrphanTimer();
         {
           const session = this.requireSession(socket);
           if (session === null) return;
+          this.startGeneration++;
           session.abandon();
         }
         this.session = null;
@@ -419,10 +452,10 @@ export class GameServer {
       return;
     }
 
-    // Abandon any game still running — one at a time (brief §15).
-    this.session?.abandon();
-
+    // Prepare the replacement before abandoning the current game.
+    const generation = this.startGeneration;
     const setup = await setupSeats(seats, this.deps, seed);
+    if (generation !== this.startGeneration) return;
     if (!setup.ok) {
       this.sendTo(socket, {
         type: 'error',
@@ -461,6 +494,7 @@ export class GameServer {
         }
       },
     });
+    this.session?.abandon();
     this.session = session;
     this.sessionToken = gameMode === 'singlePlayer' ? crypto.randomUUID() : null;
     this.playerSocket = gameMode === 'singlePlayer' ? socket : null;

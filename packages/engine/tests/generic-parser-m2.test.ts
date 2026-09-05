@@ -38,9 +38,13 @@ describe('Generic Static Parser Expansions (Milestone 2 Task 1)', () => {
       { op: 'shuffle' },
     ]);
 
-    // Kicker
+    // Kicker fails CLOSED. It used to push `{ kind: 'kicker' }`, but nothing consumed it and
+    // `wasKicked` was never assigned, so "if it was kicked" always took the not-kicked branch
+    // while the card reported modeled. Until the additional-cost path exists, the line must
+    // land in `unrecognized` so the card is honestly unmodeled rather than quietly wrong.
     const kickerCard = interpretCard(makeCard('Test Kicker', 'Creature — Dragon', 'Kicker {2}\nWhen ~ enters, if it was kicked, put two +1/+1 counters on it.'));
-    expect(kickerCard.ruleStatics.some((r) => r.kind === 'kicker')).toBe(true);
+    expect(kickerCard.ruleStatics.some((r) => r.kind === 'kicker')).toBe(false);
+    expect(kickerCard.modeled).toBe(false);
 
     // Unearth
     const unearthCard = interpretCard(makeCard('Test Unearth', 'Creature — Zombie', 'Unearth {2}{B}'));

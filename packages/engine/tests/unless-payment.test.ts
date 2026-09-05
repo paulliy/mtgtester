@@ -13,6 +13,23 @@ const rhysticStudy = (): ReturnType<typeof oracle> =>
     oracleText: 'Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.',
   });
 
+/**
+ * Esper Sentinel prints the same clause with a Value in place of a printed cost -
+ * "unless that player pays {X}, where X is this creature's power". Oracle text verbatim
+ * (Scryfall bulk, checked 2026-09-04), typographic apostrophe and all: the straight-quote
+ * literals in the value parser never saw it before.
+ */
+const esperSentinel = (): ReturnType<typeof oracle> =>
+  oracle({
+    name: 'Esper Sentinel',
+    typeLine: 'Artifact Creature - Human Citizen',
+    manaCost: '{W}',
+    power: '1',
+    toughness: '1',
+    oracleText:
+      'Whenever an opponent casts their first noncreature spell each turn, draw a card unless that player pays {X}, where X is this creature’s power.',
+  });
+
 const testSpell = (): ReturnType<typeof oracle> =>
   oracle({
     name: 'Test Spell',
@@ -91,6 +108,39 @@ describe('unlessPays', () => {
     expect(p1.library).toHaveLength(cardsBefore - 1);
     expect(p2.manaEntries).toHaveLength(0);
     expect(study.controllerId).toBe('P1');
+  });
+
+  it("charges Esper Sentinel's CURRENT power, not a printed number", () => {
+    const ctx = pod();
+    const sentinel = spawn(ctx, 'P1', esperSentinel());
+    const pending = queueOpponentCast(ctx);
+    const p1 = ctx.state.players.find((player) => player.id === 'P1');
+    const p2 = ctx.state.players.find((player) => player.id === 'P2');
+    if (p1 === undefined || p2 === undefined) throw new Error('test players missing');
+
+    // Power 3, so the tax is {3}. A one-mana pool is not enough and the option is not offered
+    // at all — the draw simply happens.
+    sentinel.counters = { ...sentinel.counters, '+1/+1': 2 };
+    p2.manaEntries = [{ symbol: 'C' }];
+    const cardsBefore = p1.library.length;
+    resolvePending(ctx, pending);
+    expect(p1.library).toHaveLength(cardsBefore - 1);
+    expect(p2.manaEntries).toHaveLength(1);
+  });
+
+  it("lets the opponent pay Esper Sentinel's tax to stop the draw", () => {
+    const ctx = pod();
+    spawn(ctx, 'P1', esperSentinel());
+    const pending = queueOpponentCast(ctx);
+    const p1 = ctx.state.players.find((player) => player.id === 'P1');
+    const p2 = ctx.state.players.find((player) => player.id === 'P2');
+    if (p1 === undefined || p2 === undefined) throw new Error('test players missing');
+    p2.manaEntries = [{ symbol: 'C' }];
+
+    const cardsBefore = p1.library.length;
+    resolvePending(ctx, pending, (decision) => pick(decision, 'Pay {1}'));
+    expect(p1.library).toHaveLength(cardsBefore);
+    expect(p2.manaEntries).toHaveLength(0);
   });
 
   it('suppresses the wrapped effect after the cast-event player pays', () => {

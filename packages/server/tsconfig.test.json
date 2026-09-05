@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    // Test files reach into `packages/engine/tests/` for shared helpers, so no single directory
+    // contains every input. `rootDir` only constrains emit, and this project emits nothing.
+    "rootDir": "../.."
+  },
+  "include": ["src", "../engine/tests"],
+  "exclude": []
+}

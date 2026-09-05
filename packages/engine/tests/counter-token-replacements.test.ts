@@ -23,6 +23,14 @@ function pod(seed = 'counter-token-replacements'): GameContext {
   return ctx;
 }
 
+/*
+ * Oracle text below is copied VERBATIM from the printed cards (Scryfall bulk, checked
+ * 2026-09-04). It used to be paraphrased - "it creates twice that many instead", "twice that
+ * many of each of those counters", "put on that creature instead" - and no printing has ever
+ * read that way. The tests passed against the paraphrase while the real Doubling Season and
+ * Hardened Scales stayed unmodeled, which is the whole failure this file now guards against.
+ * If you change these strings, change them to match a real printing.
+ */
 const doublingSeason = (): ReturnType<typeof oracle> =>
   oracle({
     name: 'Doubling Season',
@@ -31,7 +39,7 @@ const doublingSeason = (): ReturnType<typeof oracle> =>
     power: null,
     toughness: null,
     oracleText:
-      'If an effect would create one or more tokens under your control, it creates twice that many instead.\nIf an effect would put one or more counters on a permanent you control, it puts twice that many of each of those counters on that permanent instead.',
+      'If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead.\nIf an effect would put one or more counters on a permanent you control, it puts twice that many of those counters on that permanent instead.',
   });
 
 const hardenedScales = (): ReturnType<typeof oracle> =>
@@ -42,7 +50,7 @@ const hardenedScales = (): ReturnType<typeof oracle> =>
     power: null,
     toughness: null,
     oracleText:
-      'If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on that creature instead.',
+      'If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.',
   });
 
 const oneCounterOnSource: Ability = {

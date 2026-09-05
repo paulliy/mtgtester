@@ -13,7 +13,7 @@ const scryfallCards = loadScryfallBulkOrNull();
 const SKIP = scryfallCards === null;
 
 function getOracleCard(name: string) {
-  const raw = (scryfallCards ?? []).find((c: any) => c.name === name);
+  const raw = (scryfallCards ?? []).find((c) => c.name === name);
   if (!raw) throw new Error(`Card not found in scryfall data: ${name}`);
   const oracleCard = toOracleCard(raw);
   if (!oracleCard) throw new Error(`Failed to convert scryfall data for: ${name}`);

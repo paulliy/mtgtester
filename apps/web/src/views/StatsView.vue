@@ -16,8 +16,8 @@ interface DeckStatistic {
   mulliganDistribution: Array<{ mulligans: number; games: number }>;
   eliminationCauses: Array<{ reason: string; count: number }>;
   lossesTo: Array<{ commanders: string[]; colorIdentity: string[]; archetypeTag: string; count: number }>;
-  manaFloodRate: number;
-  manaDroughtRate: number;
+  manaFloodRate: number | null;
+  manaDroughtRate: number | null;
 }
 
 const decks = ref<DeckStatistic[]>([]);
@@ -25,7 +25,8 @@ const batchId = new URLSearchParams(window.location.search).get('batchId');
 const error = ref<string | null>(null);
 const loading = ref(true);
 
-function percent(value: number): string {
+function percent(value: number | null): string {
+  if (value === null) return 'Unavailable';
   return `${Math.round(value * 100)}%`;
 }
 
@@ -51,7 +52,7 @@ onMounted(() => void load());
     <header>
       <div>
         <h1>{{ batchId === null ? 'Deck statistics' : 'Batch deck statistics' }}</h1>
-        <p>Finished games only. Mana rates use the configurable heuristic below.</p>
+        <p>Finished games only.</p>
       </div>
       <button @click="load">Refresh</button>
     </header>
@@ -84,7 +85,7 @@ onMounted(() => void load());
       </div>
     </article>
 
-    <aside class="method"><strong>Mana heuristic.</strong> Flood requires at least 4 lands among the trailing 5 draws, 3+ unspent mana, and no castable nonland spell on 3+ turns. Drought requires a missed land drop plus two or more uncastable cards or an expected-land deficit on 3+ turns.</aside>
+    <aside class="method"><strong>Mana rates unavailable.</strong> Earlier recordings lack the draw history and end-of-turn information needed to calculate reliable flood and drought rates.</aside>
   </section>
 </template>
 

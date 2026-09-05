@@ -55,19 +55,16 @@ describe('Starfield Mystic', () => {
 });
 
 describe('Study Hall', () => {
-  it('declares the required units array alongside its dynamic production', () => {
-    // `units` is not optional; the parser writes `units: []` for a dynamic ability (interpret.ts).
-    const ability = defOf('eb735501-19e7-4910-aa6a-6667fff6f4e5')?.manaAbilities?.[0];
-    expect(ability?.units).toEqual([]);
-    expect(ability?.dynamic).toBe('commanderIdentity');
+  it('has no hand-authored mana ability, because its cost is mana it cannot pay', () => {
+    // Study Hall is "{1}, {T}: Add one mana …". The override used to author that as a true mana
+    // ability, but a mana ability may not charge mana (see tests/mana-cost-in-mana-ability.test.ts); the authored version tapped for free mana. The card is
+    // honestly unmodeled until a mana source can pay for itself.
+    expect(defOf('eb735501-19e7-4910-aa6a-6667fff6f4e5')?.manaAbilities ?? []).toEqual([]);
   });
 });
 
 describe("Sentinel's Eyes", () => {
-  it('stays unmodeled rather than carrying an unpayable Escape cost', () => {
-    // Escape's "exile two other cards from your graveyard" has no AbilityCost primitive. The cost
-    // written here was not a member of the union either. Per brief §6.3 the engine halts loudly
-    // instead of approximating, so this card goes back to the backlog until the primitive exists.
-    expect(defOf('0a7d6489-b239-4ce8-aea3-7b5d0e436f70')).toEqual({});
+  it('has no stale hand-authored override after Escape became generic', () => {
+    expect(defOf('0a7d6489-b239-4ce8-aea3-7b5d0e436f70')).toBeUndefined();
   });
 });
