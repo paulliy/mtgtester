@@ -7,7 +7,8 @@ describe('Riot (CR 702.136)', () => {
       name: 'Rhythm of the Wild',
       typeLine: 'Enchantment',
       manaCost: '{1}{R}{G}',
-      oracleText: "Creature spells you control can't be countered. Nontoken creatures you control have riot.",
+      oracleText:
+        "Creature spells you control can't be countered. Nontoken creatures you control have riot.",
     });
     const dromoka = oracle({
       name: 'Dragonlord Dromoka',

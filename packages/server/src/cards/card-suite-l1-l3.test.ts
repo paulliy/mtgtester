@@ -1,47 +1,32 @@
 import { describe, expect, it } from 'vitest';
+import { applyPriorityAction } from '../../../engine/src/actions/apply';
+import {
+  computePriorityOptions,
+  type PriorityActionPayload,
+} from '../../../engine/src/actions/legal';
 import { interpretCard } from '../../../engine/src/cards/interpret';
 import { executeAbility } from '../../../engine/src/effects/resolve';
+import { resolveTopOfStack } from '../../../engine/src/stack/stack';
 import { createGame } from '../../../engine/src/state/game';
 import type { GameContext } from '../../../engine/src/state/types';
-import { conjure, copies, drive, forest, gameConfig, makeEngine, oracle, pump, registerDef, RuleBasedProvider, spawn, whenChoose } from '../../../engine/tests/fixtures';
+import {
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  registerDef,
+  spawn,
+} from '../../../engine/tests/fixtures';
 import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
+import { VERIFIED_TOKEN_TRIUMPH_CARDS } from './token-triumph-support';
 import type { OracleCard } from '@mtg/shared';
 
 const scryfallCards = loadScryfallBulkOrNull();
 // data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
 const SKIP = scryfallCards === null;
-
-const IMPLEMENTED_CARDS = [
-  'Emmara, Soul of the Accord',
-  "Karametra's Favor",
-  'Leafkin Druid',
-  'Nullmage Shepherd',
-  'Thunderfoot Baloth',
-  'Fortified Village',
-  'Overwhelming Instinct',
-  'Rishkar, Peema Renegade',
-  'Ajani, Caller of the Pride',
-  'Sylvan Reclamation',
-  'Mentor of the Meek',
-  "Commander's Insignia",
-  'Voice of Many',
-  'Loyal Guardian',
-  'Dawn of Hope',
-  'Hornet Nest',
-  'Idol of Oblivion',
-  'Trostani Discordant',
-  'Harvest Season',
-  'Slate of Ancestry',
-  'Scavenging Ooze',
-  'Felidar Retreat',
-  'Great Oak Guardian',
-  'Conclave Tribunal',
-  'Champion of Lambholt',
-  'Curse of Bounty',
-  'Path to Exile',
-  'Rootborn Defenses',
-];
 
 function getOracleCard(name: string): OracleCard {
   const raw = (scryfallCards ?? []).find((c) => c.name === name);
@@ -53,13 +38,9 @@ function getOracleCard(name: string): OracleCard {
 
 function setupEngineContext(): GameContext {
   const ctx = createGame(
-    gameConfig(
-      [
-        { cards: copies(4, forest) },
-        { cards: copies(4, forest) },
-      ],
-      { seed: 'l1-l3-test-seed' }
-    )
+    gameConfig([{ cards: copies(4, forest) }, { cards: copies(4, forest) }], {
+      seed: 'l1-l3-test-seed',
+    }),
   );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
@@ -70,21 +51,21 @@ function setupEngineContext(): GameContext {
 }
 
 describe.skipIf(SKIP)('L1: Modeled & Drift Guard Smoke Check', () => {
-  for (const cardName of IMPLEMENTED_CARDS) {
+  for (const cardName of VERIFIED_TOKEN_TRIUMPH_CARDS) {
     it(`${cardName} passes L1 smoke check (modeled: true, unmodeledReasons: [])`, () => {
       const card = getOracleCard(cardName);
       const def = interpretCard(card);
       expect(def.modeled, `Card ${cardName} is not marked as modeled`).toBe(true);
       expect(
         def.unmodeledReasons,
-        `Card ${cardName} has unmodeled reasons: ${def.unmodeledReasons.join('; ')}`
+        `Card ${cardName} has unmodeled reasons: ${def.unmodeledReasons.join('; ')}`,
       ).toEqual([]);
     });
   }
 });
 
 describe.skipIf(SKIP)('L2: Fixture & Unit Behavioral Tests', () => {
-  it('verifies unit behavior and trigger execution for representative cards', () => {
+  it('path-engine-optional-search: verifies Path and representative triggered behavior', () => {
     const ctx = setupEngineContext();
 
     // 1. Emmara, Soul of the Accord triggers
@@ -95,7 +76,9 @@ describe.skipIf(SKIP)('L2: Fixture & Unit Behavioral Tests', () => {
     expect(emmaraTrigger).toBeDefined();
     if (emmaraTrigger) {
       pump(executeAbility(ctx, emmara, emmaraTrigger, []));
-      const soldier = ctx.state.battlefield.find((p) => p.name === 'Soldier' && p.controllerId === 'P1');
+      const soldier = ctx.state.battlefield.find(
+        (p) => p.name === 'Soldier' && p.controllerId === 'P1',
+      );
       expect(soldier).toBeDefined();
       expect(soldier?.power).toBe(1);
     }
@@ -108,13 +91,24 @@ describe.skipIf(SKIP)('L2: Fixture & Unit Behavioral Tests', () => {
     expect(nestTrigger).toBeDefined();
     if (nestTrigger) {
       pump(executeAbility(ctx, nest, nestTrigger, [], undefined, { damageDealt: 3 }));
-      const insects = ctx.state.battlefield.filter((p) => p.name === 'Insect' && p.controllerId === 'P1');
+      const insects = ctx.state.battlefield.filter(
+        (p) => p.name === 'Insect' && p.controllerId === 'P1',
+      );
       expect(insects.length).toBe(3);
     }
 
     // 3. Path to Exile "may search" optional decision (Yes vs No)
-    const p2Target = spawn(ctx, 'P2', oracle({ name: 'Ogre', typeLine: 'Creature', manaCost: '{2}' }));
-    const plainsCard = oracle({ name: 'Plains', typeLine: 'Basic Land — Plains', supertypes: ['Basic'], types: ['Land'] });
+    const p2Target = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Ogre', typeLine: 'Creature', manaCost: '{2}' }),
+    );
+    const plainsCard = oracle({
+      name: 'Plains',
+      typeLine: 'Basic Land — Plains',
+      supertypes: ['Basic'],
+      types: ['Land'],
+    });
     registerDef(ctx, plainsCard);
     conjure(ctx, 'P2', plainsCard, 'library');
     const pathCard = getOracleCard('Path to Exile');
@@ -122,67 +116,84 @@ describe.skipIf(SKIP)('L2: Fixture & Unit Behavioral Tests', () => {
     const defPath = interpretCard(pathCard);
     if (defPath.spellAbility) {
       // Test Yes choice
-      pump(
-        executeAbility(ctx, pathSpell, defPath.spellAbility, [p2Target.id]),
-        () => ({ index: 0, targets: new Map() }),
-      );
+      pump(executeAbility(ctx, pathSpell, defPath.spellAbility, [p2Target.id]), () => ({
+        index: 0,
+        targets: new Map(),
+      }));
       expect(ctx.state.battlefield.find((p) => p.id === p2Target.id)).toBeUndefined();
-      expect(ctx.state.battlefield.find((p) => p.name === 'Plains' && p.controllerId === 'P2')).toBeDefined();
+      expect(
+        ctx.state.battlefield.find((p) => p.name === 'Plains' && p.controllerId === 'P2'),
+      ).toBeDefined();
     }
 
     // 4. Populate multi-token decision
-    const token1 = spawn(ctx, 'P1', oracle({ name: 'Soldier', typeLine: 'Creature — Soldier', power: '1', toughness: '1' }));
+    const token1 = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Soldier', typeLine: 'Creature — Soldier', power: '1', toughness: '1' }),
+    );
     token1.isToken = true;
-    const token2 = spawn(ctx, 'P1', oracle({ name: 'Beast', typeLine: 'Creature — Beast', power: '3', toughness: '3' }));
+    const token2 = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Beast', typeLine: 'Creature — Beast', power: '3', toughness: '3' }),
+    );
     token2.isToken = true;
     const rootbornCard = getOracleCard('Rootborn Defenses');
     const rootbornSpell = spawn(ctx, 'P1', rootbornCard);
     const defRootborn = interpretCard(rootbornCard);
     if (defRootborn.spellAbility) {
-      pump(
-        executeAbility(ctx, rootbornSpell, defRootborn.spellAbility, []),
-        (d) => ({ index: d.options.findIndex((o) => o.description.includes('Beast')), targets: new Map() }),
+      pump(executeAbility(ctx, rootbornSpell, defRootborn.spellAbility, []), (d) => ({
+        index: d.options.findIndex((o) => o.description.includes('Beast')),
+        targets: new Map(),
+      }));
+      const beasts = ctx.state.battlefield.filter(
+        (p) => p.name === 'Beast' && p.controllerId === 'P1',
       );
-      const beasts = ctx.state.battlefield.filter((p) => p.name === 'Beast' && p.controllerId === 'P1');
       expect(beasts.length).toBe(2);
     }
   });
 });
 
 describe.skipIf(SKIP)('L3: Legality & Priority Engine Tests', () => {
-  it('executes full engine priority pipeline for Path to Exile', () => {
+  it('path-engine-normal-cast: executes full engine priority pipeline for Path to Exile', () => {
     const pathCard = getOracleCard('Path to Exile');
     const bearCard = oracle({ name: 'Bear', typeLine: 'Creature', manaCost: '{1}' });
+    const plainsCard = oracle({ name: 'Casting Plains', typeLine: 'Basic Land — Plains' });
+    const ctx = setupEngineContext();
+    const player = ctx.state.players.find((candidate) => candidate.id === 'P1')!;
+    const pathObject = conjure(ctx, 'P1', pathCard, 'hand');
+    const plains = spawn(ctx, 'P1', plainsCard);
+    const target = spawn(ctx, 'P2', bearCard);
 
-    const engine = makeEngine([
-      { cards: [pathCard, oracle({ name: 'Plains', typeLine: 'Basic Land — Plains' })] },
-      { cards: [bearCard, oracle({ name: 'Plains', typeLine: 'Basic Land — Plains' })] },
-    ]);
+    const castOption = computePriorityOptions(ctx, player).find((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'castSpell' && payload.objectId === pathObject.id;
+    });
+    expect(castOption).toBeDefined();
+    expect(castOption?.targets?.[0]?.options).toContain(target.id);
 
-    const provider = new RuleBasedProvider([
-      whenChoose({ player: 'P1', option: /Path to Exile/i }),
-      whenChoose({ player: 'P1', prompt: /target/i, option: /Bear/i }),
-      whenChoose({ player: 'P2', prompt: /may search/i, option: /search/i }),
-    ]);
+    pump(
+      applyPriorityAction(ctx, player, castOption!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map([[0, target.id]]),
+      }),
+    );
+    expect(player.hand.some((card) => card.cardId === pathObject.cardId)).toBe(false);
+    expect(plains.tapped).toBe(true);
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(ctx.state.stack[0]?.sourceCardId).toBe(pathObject.cardId);
+    expect(ctx.state.stack[0]?.targets).toEqual([target.id]);
 
-    const result = drive(engine, provider);
-    expect(result).toBeDefined();
-  });
+    pump(resolveTopOfStack(ctx), (decision) => {
+      const decline = decision.options.findIndex((option) => option.type === 'decline');
+      expect(decline).toBeGreaterThanOrEqual(0);
+      return { index: decline, targets: new Map() };
+    });
 
-  it('executes full engine priority pipeline for Conclave Tribunal', () => {
-    const tribunalCard = getOracleCard('Conclave Tribunal');
-    const ringCard = oracle({ name: 'Sol Ring', typeLine: 'Artifact', manaCost: '{1}' });
-
-    const engine = makeEngine([
-      { cards: [tribunalCard] },
-      { cards: [ringCard] },
-    ]);
-
-    const provider = new RuleBasedProvider([
-      whenChoose({ option: /./ }),
-    ]);
-
-    const result = drive(engine, provider);
-    expect(result).toBeDefined();
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(ctx.state.battlefield.some((permanent) => permanent.id === target.id)).toBe(false);
+    expect(ctx.state.exile.some((card) => card.cardId === target.cardId)).toBe(true);
+    expect(player.graveyard.some((card) => card.cardId === pathObject.cardId)).toBe(true);
   });
 });

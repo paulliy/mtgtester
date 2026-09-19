@@ -74,7 +74,11 @@ describe('classifyReason', () => {
       unrecognized('{T}, Sacrifice this creature: Create a 1/1 white Soldier creature token.'),
     );
     expect(families).toEqual(
-      expect.arrayContaining(['activated ability (non-mana)', 'sacrifice outlet', 'token creation']),
+      expect.arrayContaining([
+        'activated ability (non-mana)',
+        'sacrifice outlet',
+        'token creation',
+      ]),
     );
   });
 
@@ -87,13 +91,17 @@ describe('classifyReason', () => {
 
   it('recognizes an ability-word prefix', () => {
     expect(
-      classifyReason(unrecognized('Metalcraft — If you control three or more artifacts, draw a card.')),
+      classifyReason(
+        unrecognized('Metalcraft — If you control three or more artifacts, draw a card.'),
+      ),
     ).toContain('ability word prefix');
   });
 
   it('recognizes aura statics', () => {
     expect(classifyReason(unrecognized('Enchant creature'))).toContain('aura statics');
-    expect(classifyReason(unrecognized('Enchanted creature gets +1/+1.'))).toContain('aura statics');
+    expect(classifyReason(unrecognized('Enchanted creature gets +1/+1.'))).toContain(
+      'aura statics',
+    );
   });
 
   it('falls back to "other" rather than guessing', () => {

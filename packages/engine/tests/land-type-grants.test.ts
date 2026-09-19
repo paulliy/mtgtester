@@ -87,7 +87,7 @@ describe('basic land type grants (layer 4)', () => {
     }
   });
 
-  it('Urborg makes every land a Swamp — including an opponent\'s', () => {
+  it("Urborg makes every land a Swamp — including an opponent's", () => {
     const ctx = ctx4();
     const mine = spawn(ctx, 'P1', forest());
     const theirs = spawn(ctx, 'P2', island());
@@ -120,7 +120,11 @@ describe('basic land type grants (layer 4)', () => {
     // CR 305.6 lists exactly five basic land types. Wastes is a land type but NOT a basic land
     // type, so {C} must not appear here.
     expect(computeCharacteristics(ctx, mine).subtypes.sort()).toEqual([
-      'Forest', 'Island', 'Mountain', 'Plains', 'Swamp',
+      'Forest',
+      'Island',
+      'Mountain',
+      'Plains',
+      'Swamp',
     ]);
     expect(symbolsFor(ctx, 'P1')).toEqual(['B', 'G', 'R', 'U', 'W']);
 

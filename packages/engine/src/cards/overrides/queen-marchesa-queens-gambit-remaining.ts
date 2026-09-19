@@ -1,78 +1,62 @@
 /** Remaining authored overrides for queen-marchesa-queens-gambit.txt. */
 
 import type { CardDefinition } from '../definition';
-import { TAP, UNATTACH_SELF, mana } from '../templates';
-import { allOf, IN_COMBAT, manaValueAtMost, not, ofType } from '../selector';
-import { constant } from '../value';
-import { TREASURE } from '../tokens';
-import { defineCard, unimplemented } from './index';
+import { defineCard, unsupportedCard } from './index';
 
-const CREATURES: import('../selector').Selector = ofType('Creature');
-
-const ANGELS_GRACE: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'angelGrace' }], description: 'You cannot lose this turn and your life total cannot go below 1' } };
-const ARCBOND: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [{ kind: 'creature' }], effects: [{ op: 'arcbond', target: 0 }], description: 'Whenever the chosen creature is dealt damage, it deals that much to each other creature and player' } };
-const BACKLASH: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [{ kind: 'creature' }], effects: [{ op: 'tapAndDamageController', target: 0 }], description: 'Tap target creature; it deals damage equal to its power to its controller' } };
-const WEAR_TEAR: Partial<CardDefinition> = {
+const CRACKLING_DOOM: Partial<CardDefinition> = {
   spellAbility: {
     kind: 'spell',
-    targets: [{ kind: 'artifact' }, { kind: 'enchantment' }],
-    effects: [],
-    modes: {
-      minChoices: 1,
-      maxChoices: 1,
-      options: [
-        { description: 'Wear — destroy target artifact', targetSlots: [0], effects: [{ op: 'destroy', target: 0 }] },
-        { description: 'Tear — destroy target enchantment', targetSlots: [1], effects: [{ op: 'destroy', target: 1 }] },
-        { description: 'Fuse — destroy target artifact and target enchantment', targetSlots: [0, 1], additionalCost: [mana('{2}{W}')], effects: [{ op: 'destroy', target: 0 }, { op: 'destroy', target: 1 }] },
-      ],
-    },
+    targets: [],
+    effects: [
+      { op: 'eachOpponentDamage', amount: 2 },
+      {
+        op: 'sacrificeGreatestEachOpponent',
+        selector: 'creature',
+        metric: 'power',
+        action: 'sacrifice',
+      },
+    ],
+    description: 'Each opponent takes 2 damage and sacrifices their greatest-power creature',
   },
 };
-const BRASH_TAUNTER: Partial<CardDefinition> = {
-  triggers: [{ kind: 'triggered', trigger: { when: 'dealtDamage', subject: { kind: 'self' } }, targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'damageDealt' } }], description: 'When dealt damage, deal that much to target opponent' }],
-  activatedAbilities: [{ costs: [mana('{2}{R}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'creature' }], effects: [{ op: 'fight', first: 'source', second: 0 }], description: 'Fight another target creature' } }],
-};
-const BREENA: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: IN_COMBAT }, condition: { kind: 'attackingPlayerHasMoreLife' } }, targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'breenaAttack', target: 0 }], description: 'An opponent is attacked while they have more life — the attacker draws and your creature gets two counters' }] };
-const COMBAT_CALLIGRAPHER: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: IN_COMBAT } }, targets: [], effects: [{ op: 'combatCalligrapher' }], description: 'Whenever a player attacks an opponent, that player creates a tapped attacking Inkling' }] };
-const COMEUPPANCE: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'preventCombatDamageToController' }], description: 'Prevent damage to you this turn' } };
-const CRACKLING_DOOM: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'eachOpponentDamage', amount: 2 }, { op: 'sacrificeGreatestEachOpponent', selector: 'creature', metric: 'power', action: 'sacrifice' }], description: 'Each opponent takes 2 damage and sacrifices their greatest-power creature' } };
-const CUT_A_DEAL: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'drawForEachOpponent' }], description: 'Each opponent draws a card, then you draw for each opponent who did' } };
-const DEFLECTING_PALM: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [{ kind: 'anyTarget' }], effects: [{ op: 'deflectingPalm', target: 0 }], description: 'Prevent the next damage from the chosen source and reflect it' } };
-const DELIRIUM: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [{ kind: 'creature', controller: 'opponent' }], effects: [{ op: 'delirium' }], description: 'Tap target opposing creature; it damages its controller and cannot deal or receive combat damage this turn' } };
-const DISPLAY_OF_POWER: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [{ kind: 'stackObject', count: { min: 0, max: 8 } }], effects: [{ op: 'copyEachTargetedSpell', targetSlot: 0 }], description: 'Copy any number of target instant or sorcery spells' } };
-const DUELISTS_HERITAGE: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: IN_COMBAT } }, targets: [{ kind: 'creature' }], effects: [{ op: 'grantKeywordUntilEot', target: 0, keyword: 'double strike' }], description: 'An attacking creature gains double strike' }] };
-const FLUMPH: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'dealtDamage', subject: { kind: 'self' } }, targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'drawTargetAndController', target: 0 }], description: 'When dealt damage, you and an opponent each draw' }] };
-const HUMBLE_DEFECTOR: Partial<CardDefinition> = { activatedAbilities: [{ costs: [TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'humbleDefector', target: 0 }], description: 'Draw two cards, then target opponent gains control of Humble Defector' } }] };
-const INKSHIELD: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'inkshield' }], description: 'Prevent all combat damage to you; create one Inkling for each damage prevented' } };
-const LORAN: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [{ kind: 'artifactOrEnchantment' }], effects: [{ op: 'destroy', target: 0 }], description: 'When Loran enters, destroy up to one artifact or enchantment' }], activatedAbilities: [{ costs: [TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'drawTargetAndController', target: 0 }], description: 'You and target opponent each draw a card' } }] };
-const MANGARA: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: IN_COMBAT } }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'When attacked by two or more creatures, draw a card' }, { kind: 'triggered', trigger: { when: 'castsSpell', caster: 'opponent' }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'When an opponent casts their second spell, draw a card' }] };
-const MASTER: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'you' }, targets: [], effects: [{ op: 'masterOfCeremonies' }], description: 'Each opponent chooses money, friends, or secrets' }] };
-const MICHIKO: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'dealtDamage', subject: { kind: 'permanent', selector: { kind: 'controller', who: 'you' } } }, targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'sacrificePermanentOnDamage', target: 0 }], description: 'When an opponent source damages you, that opponent sacrifices a permanent' }] };
-const MISTVEIL: Partial<CardDefinition> = { activatedAbilities: [{ costs: [mana('{W}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'cardInGraveyard' }], effects: [{ op: 'graveyardToLibraryTop', target: 0 }], description: 'Put a card from your graveyard on the bottom of your library' } }] };
-const NILs: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'endStep', player: 'you' }, targets: [], effects: [{ op: 'putCountersEach', selector: CREATURES, counter: '+1/+1', count: 1 }], description: 'At your end step, put a +1/+1 counter on each player’s chosen creature' }] };
-const OLORIN: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [], effects: [{ op: 'sacrificeGreatestEachOpponent', selector: 'creature', metric: 'power', action: 'exile' }], description: 'Each opponent exiles a creature with greatest power' } };
-const REVERBERATE: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [{ kind: 'spell' }], effects: [{ op: 'copyTargetSpell', target: 0 }], description: 'Copy target instant or sorcery spell' } };
-const SCHEMING: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [{ kind: 'player' }, { kind: 'player' }], effects: [{ op: 'schemingSymmetry' }], description: 'Two target players each search for a card and put it on top' } };
-const SECRET_RENDEZVOUS: Partial<CardDefinition> = { spellAbility: { kind: 'spell', targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'drawTargetAndControllerN', target: 0, count: 3 }], description: 'You and target opponent each draw three cards' } };
-const SELFLESS: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'preventCombatDamageToController' }], description: 'When Selfless Squire enters, prevent damage to you this turn' }] };
-const SHADRIX: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'beginningOfCombat', player: 'you' }, targets: [], effects: [{ op: 'shadrixModes' }], description: 'Choose two modes targeting different players' }] };
-const SMOTHERING_TITHE: Partial<CardDefinition> = { triggers: [{ kind: 'triggered', trigger: { when: 'drawStep', player: 'each' }, targets: [], effects: [{ op: 'createToken', spec: TREASURE, count: constant(1) }], description: 'When an opponent draws, create a Treasure unless they pay' }] };
-const SUNFORGER: Partial<CardDefinition> = {
-  activatedAbilities: [
-    // Equip {2} (CR 702.6) — printed as a keyword, but the override replaces the whole
-    // `activatedAbilities` array, so it must be restated here alongside the search ability
-    // below or equipping is silently lost.
-    { costs: [mana('{2}')], timing: 'sorcery', ability: { kind: 'activated', targets: [{ kind: 'creature', controller: 'you' }], effects: [{ op: 'attachSelfTo', target: 0 }], description: 'Equip {2}' } },
-    // "{R}{W}, Unattach this Equipment: …" — `unattachSelf` both requires the Equipment to be
-    // currently attached and unattaches it as part of paying the cost, so this cannot be
-    // activated while sitting unattached on the battlefield.
-    { costs: [mana('{R}{W}'), UNATTACH_SELF], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibraryCastFree', filter: allOf(ofType('Instant'), manaValueAtMost(4), { kind: 'anyOf', of: [{ kind: 'color', value: 'R' }, { kind: 'color', value: 'W' }] }) }, { op: 'shuffle' }], description: 'Unattach: search your library for a red or white instant with mana value 4 or less and cast it without paying its mana cost' } },
+const FLUMPH: Partial<CardDefinition> = {
+  triggers: [
+    {
+      kind: 'triggered',
+      trigger: { when: 'dealtDamage', subject: { kind: 'self' } },
+      targets: [{ kind: 'player', controller: 'opponent' }],
+      effects: [{ op: 'drawTargetAndController', target: 0 }],
+      description: 'When dealt damage, you and an opponent each draw',
+    },
   ],
 };
-const TEYO: Partial<CardDefinition> = { activatedAbilities: [{ costs: [{ kind: 'loyalty', delta: 1 }], timing: 'any', ability: { kind: 'activated', targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'drawTargetAndController', target: 0 }], description: 'You and target opponent each draw a card' } }] };
-const WEATHERED: Partial<CardDefinition> = { activatedAbilities: [{ costs: [mana('{W}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibrary', filter: ofType('Land'), destinations: [{ zone: 'hand' }] }, { op: 'shuffle' }], description: 'Search for a land if an opponent controls more lands' } }] };
-const WISHCLAW: Partial<CardDefinition> = { entersWithCounters: { wish: 3 }, activatedAbilities: [{ costs: [mana('{1}'), TAP, { kind: 'removeCounters', counter: 'wish', count: 1 }], timing: 'sorcery', ability: { kind: 'activated', targets: [], effects: [{ op: 'searchLibrary', filter: { kind: 'anyOf', of: [ofType('Artifact'), ofType('Creature'), ofType('Enchantment'), ofType('Instant'), ofType('Land'), ofType('Planeswalker'), ofType('Sorcery')] }, destinations: [{ zone: 'hand' }] }, { op: 'shuffle' }], description: 'Search your library for a card, then an opponent gains control of Wishclaw Talisman' } }] };
-
+const INKSHIELD: Partial<CardDefinition> = {
+  spellAbility: {
+    kind: 'spell',
+    targets: [],
+    effects: [{ op: 'inkshield' }],
+    description: 'Prevent all combat damage to you; create one Inkling for each damage prevented',
+  },
+};
+const MASTER: Partial<CardDefinition> = {
+  triggers: [
+    {
+      kind: 'triggered',
+      trigger: { when: 'upkeep', player: 'you' },
+      targets: [],
+      effects: [{ op: 'masterOfCeremonies' }],
+      description: 'Each opponent chooses money, friends, or secrets',
+    },
+  ],
+};
+const SECRET_RENDEZVOUS: Partial<CardDefinition> = {
+  spellAbility: {
+    kind: 'spell',
+    targets: [{ kind: 'player', controller: 'opponent' }],
+    effects: [{ op: 'drawTargetAndControllerN', target: 0, count: 3 }],
+    description: 'You and target opponent each draw three cards',
+  },
+};
 export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void {
   // Removed: the printed ability charges MANA, which the payment solver cannot pay
   // (see tests/mana-cost-in-mana-ability.test.ts). Authoring it here made the land tap
@@ -92,53 +76,283 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   // past applyOverride's empty-patch guard (fixed in the previous commit) and silently reported
   // these as modeled with NO mana ability at all. Both real backs enter tapped, printed
   // identically across the whole Zendikar Rising slow-land cycle these two belong to.
-  defineCard('a731e87b-8d99-4b64-8ee3-8e540d652366', 'Malakir Rebirth // Malakir Mire', ['unrecognized rules text: "Choose target creature. You lose 2 life. Until end of turn, that creature gains "When this creature dies, return it to the battlefield tapped under its owner\'s control.""'], { entersTapped: true, manaAbilities: [{ units: [['B']] }] });
-  defineCard('ff0ab867-b710-4b1a-baed-95fc3cf68f79', 'Valakut Awakening // Valakut Stoneforge', ['unrecognized rules text: "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one."'], { entersTapped: true, manaAbilities: [{ units: [['R']] }] });
-  unimplemented('6556c4c0-b10d-4208-821b-0c0a49abd188', 'Wandering Archaic // Explore the Vastlands', ['unsupported layout "modal_dfc"', 'unrecognized rules text: "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don\'t, you may copy that spell. You may choose new targets for the copy."']);
-  defineCard('9842734c-1eac-4509-a731-4c22017ae586', 'Wear // Tear', ['unsupported layout "split"', 'unrecognized rules text: "Fuse"'], WEAR_TEAR);
-  defineCard('66ca8a60-e028-4a5f-8177-860b888cb9d1', "Angel's Grace", ['unrecognized rules text: "Split second"', 'unrecognized rules text: "You can\'t lose the game this turn and your opponents can\'t win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead."'], ANGELS_GRACE);
-  defineCard('01790829-cc03-430f-a899-2f274b7dbf62', 'Arcbond', ['unrecognized rules text: "Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player."'], ARCBOND);
-  defineCard('3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c', 'Backlash', ['unrecognized rules text: "Tap target untapped creature. That creature deals damage equal to its power to its controller."'], BACKLASH);
-  defineCard('3e41648f-c5a9-4b26-b97e-8176fe5e9c85', 'Brash Taunter', ['unrecognized rules text: "Whenever this creature is dealt damage, it deals that much damage to target opponent."', 'unrecognized rules text: "{2}{R}, {T}: ~ fights another target creature."'], BRASH_TAUNTER);
-  defineCard('d11e627b-8a48-411d-a261-2c9a02a758ba', 'Breena, the Demagogue', ['unrecognized rules text: "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control."'], BREENA);
-  defineCard('ee7ebbc1-2f9e-4867-a522-424869b6d772', 'Combat Calligrapher', ['unrecognized rules text: "Inklings can\'t attack you or planeswalkers you control."', 'unrecognized rules text: "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that\'s attacking that opponent."'], COMBAT_CALLIGRAPHER);
-  defineCard('01f29158-2dc9-4b9d-b726-add5d3fd5782', 'Comeuppance', ['unrecognized rules text: "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don\'t control. If damage from a creature source is prevented this way, ~ deals that much damage to that creature. If damage from a noncreature source is prevented this way, ~ deals that much damage to the source\'s controller."'], COMEUPPANCE);
-  defineCard('ee81f37b-2a81-46d7-8d2f-9091123846c4', 'Crackling Doom', ['unrecognized rules text: "~ deals 2 damage to each opponent. Each opponent sacrifices a creature with the greatest power among creatures that player controls."'], CRACKLING_DOOM);
-  defineCard('8b5cffd5-5db3-4151-9275-d91387554412', 'Cut a Deal', ['unrecognized rules text: "Each opponent draws a card, then you draw a card for each opponent who drew a card this way."'], CUT_A_DEAL);
-  defineCard('dc5dffc8-fac5-4956-bac4-1ad2cc16f6be', 'Deflecting Palm', ['unrecognized rules text: "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, ~ deals that much damage to that source\'s controller."'], DEFLECTING_PALM);
-  defineCard('a00e5eb6-b916-4cd6-8ff2-c02f4929abc7', 'Delirium', ['unrecognized rules text: "Cast this spell only during an opponent\'s turn."', 'unrecognized rules text: "Tap target creature that player controls. That creature deals damage equal to its power to the player. Prevent all combat damage that would be dealt to and dealt by the creature this turn."'], DELIRIUM);
-  defineCard('99140891-face-4015-aacd-1309e87d8f9f', 'Display of Power', ['unrecognized rules text: "This spell can\'t be copied."', 'unrecognized rules text: "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies."'], DISPLAY_OF_POWER);
-  defineCard('0ff7440b-b831-40a9-81c4-99d77bf93b8d', 'Dream Devourer', ['unrecognized rules text: "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal to its mana cost reduced by {2}."', 'unrecognized rules text: "Whenever you foretell a card, this creature gets +2/+0 until end of turn."'], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'you' }, targets: [], effects: [{ op: 'pumpUntilEot', target: 'source', power: 2, toughness: 0 }], description: 'Whenever you foretell a card, Dream Devourer gets +2/+0' }] });
-  defineCard('5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb', "Duelist's Heritage", ['unrecognized rules text: "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn."'], DUELISTS_HERITAGE);
-  defineCard('bc328acc-8521-4581-88c3-99a7cb2c1cdb', 'Flumph', ['unrecognized rules text: "Whenever this creature is dealt damage, you and target opponent each draw a card."'], FLUMPH);
+  // Catalog audit queen-batch-2: spell face is claimed; only the land back is authored.
+  unsupportedCard(
+    'a731e87b-8d99-4b64-8ee3-8e540d652366',
+    'Malakir Rebirth // Malakir Mire',
+    'Spell face is claimed; only the land back is authored.',
+  );
+  // Catalog audit queen-batch-2: spell face is claimed; only the land back is authored.
+  unsupportedCard(
+    'ff0ab867-b710-4b1a-baed-95fc3cf68f79',
+    'Valakut Awakening // Valakut Stoneforge',
+    'Spell face is claimed; only the land back is authored.',
+  );
+  // Catalog audit queen-batch-5: modal DFC copy-on-cast with retarget is unimplemented.
+  unsupportedCard(
+    '6556c4c0-b10d-4208-821b-0c0a49abd188',
+    'Wandering Archaic // Explore the Vastlands',
+    'Modal DFC copy-on-cast with retarget is unimplemented.',
+  );
+  // Catalog audit queen-batch-2: Fuse authored as a third extra-cost mode.
+  unsupportedCard(
+    '9842734c-1eac-4509-a731-4c22017ae586',
+    'Wear // Tear',
+    'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
+  );
+  // Catalog audit queen-batch-1: Split second and can't-lose/can't-win are claimed as lifeFloor.
+  unsupportedCard(
+    '66ca8a60-e028-4a5f-8177-860b888cb9d1',
+    "Angel's Grace",
+    'Split second and cannot-lose/cannot-win are implemented as a damage life floor only.',
+  );
+  // Catalog audit queen-batch-4: delayed damage is dealt by Arcbond, not the creature.
+  unsupportedCard(
+    '01790829-cc03-430f-a899-2f274b7dbf62',
+    'Arcbond',
+    'The delayed damage is dealt by Arcbond, not by the chosen creature.',
+  );
+  // Catalog audit queen-batch-4: untapped restriction omitted.
+  unsupportedCard(
+    '3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c',
+    'Backlash',
+    'Untapped-creature targeting is implemented as any creature.',
+  );
+  // Catalog audit queen-batch-4: another-target fight can target this creature.
+  unsupportedCard(
+    '3e41648f-c5a9-4b26-b97e-8176fe5e9c85',
+    'Brash Taunter',
+    'Another-target fight can target this creature.',
+  );
+  // Catalog audit queen-batch-4: life comparison is attacker vs defender.
+  unsupportedCard(
+    'd11e627b-8a48-411d-a261-2c9a02a758ba',
+    'Breena, the Demagogue',
+    'Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.',
+  );
+  // Catalog audit queen-batch-2: Inklings-cannot-attack-you omitted; trigger unscoped.
+  unsupportedCard(
+    'ee7ebbc1-2f9e-4867-a522-424869b6d772',
+    'Combat Calligrapher',
+    'Inklings-cannot-attack-you is omitted, and the token trigger is unscoped.',
+  );
+  // Catalog audit queen-batch-2: reflection and planeswalker prevention omitted.
+  unsupportedCard(
+    '01f29158-2dc9-4b9d-b726-add5d3fd5782',
+    'Comeuppance',
+    'All-damage prevention and reflection are implemented as preventCombatDamageToController.',
+  );
+  defineCard(
+    'ee81f37b-2a81-46d7-8d2f-9091123846c4',
+    'Crackling Doom',
+    [
+      'unrecognized rules text: "~ deals 2 damage to each opponent. Each opponent sacrifices a creature with the greatest power among creatures that player controls."',
+    ],
+    CRACKLING_DOOM,
+  );
+  // Catalog audit queen-batch-5: you draw for every opponent, not those who drew.
+  unsupportedCard(
+    '8b5cffd5-5db3-4151-9275-d91387554412',
+    'Cut a Deal',
+    'You draw for each opponent, not for each opponent who drew a card.',
+  );
+  // Catalog audit queen-batch-4: source choice and reflection omitted.
+  unsupportedCard(
+    'dc5dffc8-fac5-4956-bac4-1ad2cc16f6be',
+    'Deflecting Palm',
+    'Source choice and reflection are implemented as unscoped combat-damage prevention.',
+  );
+  // Catalog audit queen-batch-3: opponent-turn restriction omitted.
+  unsupportedCard(
+    'a00e5eb6-b916-4cd6-8ff2-c02f4929abc7',
+    'Delirium',
+    "Cast-only-during-an-opponent's-turn is omitted.",
+  );
+  // Catalog audit queen-batch-1: copies keep original targets; can't-be-copied is omitted.
+  unsupportedCard(
+    '99140891-face-4015-aacd-1309e87d8f9f',
+    'Display of Power',
+    'Cannot-be-copied is omitted, and copies keep original targets instead of choosing new ones.',
+  );
+  // Catalog audit queen-batch-2: Foretell claimed as any-cast pump.
+  unsupportedCard(
+    '0ff7440b-b831-40a9-81c4-99d77bf93b8d',
+    'Dream Devourer',
+    'Foretell grant is omitted, and the pump fires on any spell you cast.',
+  );
+  // Catalog audit queen-batch-3: optional once-per-attack-group is a per-attacker grant.
+  unsupportedCard(
+    '5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb',
+    "Duelist's Heritage",
+    'Once-per-attack-group optional double strike is implemented as a per-attacker grant on any creature.',
+  );
+  defineCard(
+    'bc328acc-8521-4581-88c3-99a7cb2c1cdb',
+    'Flumph',
+    [
+      'unrecognized rules text: "Whenever this creature is dealt damage, you and target opponent each draw a card."',
+    ],
+    FLUMPH,
+  );
   // The line now parses generically (`attackTax` in `parseRuleStaticLine`) — no override needed.
-  defineCard('66f9f325-5e8e-4ebf-b5b3-c6410d80f2c5', 'Gisela, Blade of Goldnight', ['unrecognized rules text: "If a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead."', 'unrecognized rules text: "If a source would deal damage to you or a permanent you control, prevent half that damage, rounded up."'], { ruleStatics: [{ kind: 'damageDoubledToOpponents' }, { kind: 'damageHalvedToYou' }] });
-  defineCard('1582e16d-4825-4cc5-b12c-449c45e4e449', 'Humble Defector', ['unrecognized rules text: "{T}: Draw two cards. Target opponent gains control of this creature. Activate only during your turn."'], HUMBLE_DEFECTOR);
-  defineCard('da93264e-4e04-401a-9809-e4e1056cf604', 'Inkshield', ['unrecognized rules text: "Prevent all combat damage that would be dealt to you this turn. For each 1 damage prevented this way, create a 2/1 white and black Inkling creature token with flying."'], INKSHIELD);
-  defineCard('4987c458-604a-472b-b360-170616e91e67', 'Kambal, Consul of Allocation', ['unrecognized rules text: "Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life."'], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'opponent' }, targets: [], effects: [{ op: 'eachOpponentLosesLife', amount: 2 }, { op: 'gainLife', amount: constant(2) }], description: 'An opponent casts a noncreature spell — they lose 2 and you gain 2' }] });
-  defineCard('b3d81980-76f2-44e2-b1c9-01e30c726312', 'Loran of the Third Path', ['unrecognized rules text: "When ~ enters, destroy up to one target artifact or enchantment."', 'unrecognized rules text: "{T}: You and target opponent each draw a card."'], LORAN);
-  defineCard('cbcb6d9a-6ae5-4bcd-8013-2b657553764a', 'Mangara, the Diplomat', ['unrecognized rules text: "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card."'], MANGARA);
-  defineCard('18ed0c8a-db8f-4247-87c4-544b833f01bd', 'Master of Ceremonies', ['unrecognized rules text: "At the beginning of your upkeep, each opponent chooses money, friends, or secrets. For each player who chose money, you and that player each create a Treasure token. For each player who chose friends, you and that player each create a 1/1 green and white Citizen creature token. For each player who chose secrets, you and that player each draw a card."'], MASTER);
-  defineCard('fbe190eb-fd4b-40e7-9a17-48c96b60f653', 'Michiko Konda, Truth Seeker', ['unrecognized rules text: "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice."'], MICHIKO);
-  defineCard('bb5c1817-ac22-4779-9005-251bc354f181', 'Mistveil Plains', ['unrecognized rules text: "{W}, {T}: Put target card from your graveyard on the bottom of your library. Activate only if you control two or more white permanents."'], MISTVEIL);
-  defineCard('379ed4ec-8f2e-448b-9ed2-a3181e2f877e', 'Nighthawk Scavenger', ['unrecognized rules text: "~\'s power is equal to 1 plus the number of card types among cards in your opponents\' graveyards."', 'non-numeric power/toughness "1+*"'], { staticEffects: [{ affects: { kind: 'self' }, op: { layer: 7, sublayer: 'a', power: { kind: 'plus', of: { kind: 'cardTypesInAllGraveyards' }, n: 1 }, toughness: constant(3) } }] });
-  defineCard('ff6b52b7-ae3c-465b-b10e-901160e5230e', 'Nils, Discipline Enforcer', ['unrecognized rules text: "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls."', 'unrecognized rules text: "Each creature with one or more counters on it can\'t attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature."'], NILs);
-  defineCard('e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe', "Olórin's Searing Light", ['unrecognized rules text: "Each opponent exiles a creature with the greatest power among creatures that player controls."', 'unrecognized rules text: "If there are two or more instant and/or sorcery cards in your graveyard, ~ deals damage to each opponent equal to the power of the creature they exiled."'], OLORIN);
-  defineCard('a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca', 'Reverberate', ['unrecognized rules text: "Copy target instant or sorcery spell. You may choose new targets for the copy."'], REVERBERATE);
-  defineCard('6dfb50d7-359b-4644-90e3-7ecdacee7c12', 'Scheming Symmetry', ['unrecognized rules text: "Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top."'], SCHEMING);
-  defineCard('34b90d3e-f48c-41ff-b3e4-5cab7a9cd597', 'Secret Rendezvous', ['unrecognized rules text: "You and target opponent each draw three cards."'], SECRET_RENDEZVOUS);
-  defineCard('7d079c78-b2a9-444f-ab54-c61c041baa6d', 'Selfless Squire', ['unrecognized rules text: "When this creature enters, prevent all damage that would be dealt to you this turn."', 'unrecognized rules text: "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature."'], SELFLESS);
-  defineCard('2143f413-7baa-4fd6-a7ca-32f52bfa553f', 'Shadrix Silverquill', ['unrecognized rules text: "At the beginning of combat on your turn, you may choose two. Each mode must target a different player."', 'unrecognized rules text: "\u2022 Target player creates a 2/1 white and black Inkling creature token with flying."', 'unrecognized rules text: "\u2022 Target player draws a card and loses 1 life."', 'unrecognized rules text: "\u2022 Target player puts a +1/+1 counter on each creature they control."'], SHADRIX);
-  defineCard('153376c9-dffd-458c-8ce3-a4c8269bc4e9', 'Smothering Tithe', ['unrecognized rules text: "Whenever an opponent draws a card, that player may pay {2}. If the player doesn\'t, you create a Treasure token."'], SMOTHERING_TITHE);
-  defineCard('d1421070-a3cc-4af3-bf91-0f97372f4161', 'Sunforger', ['unrecognized rules text: "{R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost. Then shuffle."'], SUNFORGER);
-  defineCard('0dfdf1a1-3a9a-490f-bd9d-dcba088c6785', 'Teyo, Geometric Tactician', ['unrecognized rules text: "+1: You and target opponent each draw a card."', 'unrecognized rules text: "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent."'], TEYO);
-  defineCard('6623cb85-fb1e-4561-8b21-0977c25096c2', "Tibalt's Trickery", ['unrecognized rules text: "Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell. They may cast that card without paying its mana cost. Then they put the exiled cards on the bottom of their library in a random order."'], { spellAbility: { kind: 'spell', targets: [{ kind: 'spell' }], effects: [{ op: 'counter', target: 0 }], description: 'Counter target spell' } });
+  defineCard(
+    '66f9f325-5e8e-4ebf-b5b3-c6410d80f2c5',
+    'Gisela, Blade of Goldnight',
+    [
+      'unrecognized rules text: "If a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead."',
+      'unrecognized rules text: "If a source would deal damage to you or a permanent you control, prevent half that damage, rounded up."',
+    ],
+    { ruleStatics: [{ kind: 'damageDoubledToOpponents' }, { kind: 'damageHalvedToYou' }] },
+  );
+  // Catalog audit queen-batch-3: activate-only-during-your-turn is timing any.
+  unsupportedCard(
+    '1582e16d-4825-4cc5-b12c-449c45e4e449',
+    'Humble Defector',
+    'Activate-only-during-your-turn is implemented as timing any.',
+  );
+  defineCard(
+    'da93264e-4e04-401a-9809-e4e1056cf604',
+    'Inkshield',
+    [
+      'unrecognized rules text: "Prevent all combat damage that would be dealt to you this turn. For each 1 damage prevented this way, create a 2/1 white and black Inkling creature token with flying."',
+    ],
+    INKSHIELD,
+  );
+  // Catalog audit queen-batch-4: up-to-one destroy is a required target.
+  unsupportedCard(
+    'b3d81980-76f2-44e2-b1c9-01e30c726312',
+    'Loran of the Third Path',
+    'Up-to-one destroy is a required target.',
+  );
+  // Catalog audit queen-batch-2: attack restriction omitted; extra second-spell trigger added.
+  unsupportedCard(
+    'cbcb6d9a-6ae5-4bcd-8013-2b657553764a',
+    'Mangara, the Diplomat',
+    'Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added.',
+  );
+  defineCard(
+    '18ed0c8a-db8f-4247-87c4-544b833f01bd',
+    'Master of Ceremonies',
+    [
+      'unrecognized rules text: "At the beginning of your upkeep, each opponent chooses money, friends, or secrets. For each player who chose money, you and that player each create a Treasure token. For each player who chose friends, you and that player each create a 1/1 green and white Citizen creature token. For each player who chose secrets, you and that player each draw a card."',
+    ],
+    MASTER,
+  );
+  // Catalog audit queen-batch-2: player damage watched as permanents you control.
+  unsupportedCard(
+    'fbe190eb-fd4b-40e7-9a17-48c96b60f653',
+    'Michiko Konda, Truth Seeker',
+    'Damage-to-you is implemented as damage to permanents you control.',
+  );
+  // Catalog audit queen-batch-2: bottom of library authored as library top.
+  unsupportedCard(
+    'bb5c1817-ac22-4779-9005-251bc354f181',
+    'Mistveil Plains',
+    'Bottom-of-library is implemented as graveyardToLibraryTop.',
+  );
+  // Catalog audit queen-batch-1: power uses all graveyards, not opponents' graveyards.
+  unsupportedCard(
+    '379ed4ec-8f2e-448b-9ed2-a3181e2f877e',
+    'Nighthawk Scavenger',
+    "Power counts card types in all graveyards, not only opponents' graveyards.",
+  );
+  // Catalog audit queen-batch-1: putCountersEach hits every creature; attack-tax static omitted.
+  unsupportedCard(
+    'ff6b52b7-ae3c-465b-b10e-901160e5230e',
+    'Nils, Discipline Enforcer',
+    'End-step trigger counters every creature, and the attack-tax static is omitted.',
+  );
+  // Catalog audit queen-batch-1: threshold damage clause is claimed but not authored.
+  unsupportedCard(
+    'e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe',
+    "Olórin's Searing Light",
+    'Graveyard-threshold opponent damage is claimed without an implementation.',
+  );
+  // Catalog audit queen-batch-1: copyTargetSpell copies original targets.
+  unsupportedCard(
+    'a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca',
+    'Reverberate',
+    'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
+  );
+  // Catalog audit queen-batch-4: shuffle-then-top is move-to-top without shuffling.
+  unsupportedCard(
+    '6dfb50d7-359b-4644-90e3-7ecdacee7c12',
+    'Scheming Symmetry',
+    'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
+  );
+  defineCard(
+    '34b90d3e-f48c-41ff-b3e4-5cab7a9cd597',
+    'Secret Rendezvous',
+    ['unrecognized rules text: "You and target opponent each draw three cards."'],
+    SECRET_RENDEZVOUS,
+  );
+  // Catalog audit queen-batch-3: all-damage prevention and counters omitted.
+  unsupportedCard(
+    '7d079c78-b2a9-444f-ab54-c61c041baa6d',
+    'Selfless Squire',
+    'All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.',
+  );
+  // Catalog audit queen-batch-5: optional choose-two is mandatory; duplicate modes allowed.
+  unsupportedCard(
+    '2143f413-7baa-4fd6-a7ca-32f52bfa553f',
+    'Shadrix Silverquill',
+    'Optional choose-two is mandatory, and the same mode can be chosen twice.',
+  );
+  // Catalog audit queen-batch-3: {2} tax omitted; trigger is every draw step.
+  unsupportedCard(
+    '153376c9-dffd-458c-8ce3-a4c8269bc4e9',
+    'Smothering Tithe',
+    'Opponent-draw with a {2} tax is implemented as an unconditional Treasure on every draw step.',
+  );
+  // Catalog audit queen-batch-7: Equip {2} is authored; current Oracle is Equip {3}.
+  unsupportedCard(
+    'd1421070-a3cc-4af3-bf91-0f97372f4161',
+    'Sunforger',
+    'Equip {2} is authored; current Oracle is Equip {3}.',
+  );
+  // Catalog audit queen-batch-3: −2 attack restriction claimed without an implementation.
+  unsupportedCard(
+    '0dfdf1a1-3a9a-490f-bd9d-dcba088c6785',
+    'Teyo, Geometric Tactician',
+    'The −2 directional attack restriction is claimed without an implementation.',
+  );
+  // Catalog audit queen-batch-1: mill/exile/cast cascade is claimed as counter only.
+  unsupportedCard(
+    '6623cb85-fb1e-4561-8b21-0977c25096c2',
+    "Tibalt's Trickery",
+    'Mill, exile, and free-cast cascade are claimed as a counter-only spell.',
+  );
   // Leftover `triggers: []` here used to slip past applyOverride's "empty patch" guard (which
   // only checked Object.keys().length, not whether the values were actually empty) and silently
   // report this card as modeled with zero behavior. Converted to `unimplemented()`.
-  unimplemented('04853f06-3fd2-445d-9b0d-d68d0f116635', 'Verrak, Warped Sengir', ['unrecognized rules text: "Whenever you activate an ability that isn\'t a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy."']);
-  defineCard('1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f', 'Weathered Wayfarer', ['unrecognized rules text: "{W}, {T}: Search your library for a land card, reveal it, put it into your hand, then shuffle. Activate only if an opponent controls more lands than you."'], WEATHERED);
-  defineCard('81c70ae7-3c18-4c9b-8505-e4db9e0e6518', 'Wishclaw Talisman', ['unrecognized rules text: "{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artifact. Activate only during your turn."'], WISHCLAW);
-  defineCard('4987c458-604a-4727-b360-170616e91e67', 'Kambal, Consul of Allocation', ['unrecognized rules text: "Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life."'], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'each', filter: not(ofType('Creature')) }, targets: [], effects: [{ op: 'kambal' }], description: 'An opponent casts a noncreature spell — they lose 2 and you gain 2' }] });
-  defineCard('0dfdf1a1-a3a9-490f-bd9d-dcba088c6785', 'Teyo, Geometric Tactician', ['unrecognized rules text: "+1: You and target opponent each draw a card."', 'unrecognized rules text: "\u22122: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent."'], TEYO);
+  // Catalog audit queen-batch-5: copy-activated-ability when life was paid is unimplemented.
+  unsupportedCard(
+    '04853f06-3fd2-445d-9b0d-d68d0f116635',
+    'Verrak, Warped Sengir',
+    'Copy-activated-ability when life was paid is unimplemented.',
+  );
+  // Catalog audit queen-batch-3: more-lands restriction omitted.
+  unsupportedCard(
+    '1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f',
+    'Weathered Wayfarer',
+    'Opponent-controls-more-lands restriction is omitted from the search activation.',
+  );
+  // Catalog audit queen-batch-3: opponent-gains-control omitted.
+  unsupportedCard(
+    '81c70ae7-3c18-4c9b-8505-e4db9e0e6518',
+    'Wishclaw Talisman',
+    'Opponent-gains-control is omitted from the search activation.',
+  );
+  // Catalog audit queen-batch-5: opponent-casts is implemented as caster each.
+  unsupportedCard(
+    '4987c458-604a-4727-b360-170616e91e67',
+    'Kambal, Consul of Allocation',
+    'Opponent-casts is implemented as caster each, so your own noncreature spells also trigger.',
+  );
+  // Catalog audit queen-batch-3: −2 attack restriction claimed without an implementation.
+  unsupportedCard(
+    '0dfdf1a1-a3a9-490f-bd9d-dcba088c6785',
+    'Teyo, Geometric Tactician',
+    'The −2 directional attack restriction is claimed without an implementation.',
+  );
 }

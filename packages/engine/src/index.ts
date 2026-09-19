@@ -12,7 +12,8 @@ export const ENGINE_VERSION = '0.2.0-phase2';
 
 // The driver.
 export { Engine } from './engine';
-export type { EngineDriver } from './engine';
+export type { EngineDriver, EngineOptions } from './engine';
+export type { PreparedScenarioSpec } from './testing/prepared-scenario';
 
 // Game construction.
 export { createGame } from './state/game';
@@ -67,4 +68,3 @@ export {
   runToCompletionAsync,
 } from './providers/providers';
 export type { DecisionProvider, AsyncDecisionProvider, ScriptedStep } from './providers/providers';
-

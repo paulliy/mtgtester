@@ -26,10 +26,21 @@ const flickeringWard = (): ReturnType<typeof oracle> =>
   });
 
 const bear = (): ReturnType<typeof oracle> =>
-  oracle({ name: 'Test Bear', typeLine: 'Creature — Bear', manaCost: '{1}{G}', power: '2', toughness: '2' });
+  oracle({
+    name: 'Test Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{1}{G}',
+    power: '2',
+    toughness: '2',
+  });
 
 function ctxWithSeats(seats: number): GameContext {
-  const ctx = createGame(gameConfig(Array.from({ length: seats }, () => ({ cards: [] })), { seed: 'flickering-ward' }));
+  const ctx = createGame(
+    gameConfig(
+      Array.from({ length: seats }, () => ({ cards: [] })),
+      { seed: 'flickering-ward' },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;

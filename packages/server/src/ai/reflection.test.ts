@@ -89,14 +89,20 @@ function clientReturning(rawResponse: string): AiClient {
     requestDecision: vi.fn().mockResolvedValue({
       response: { requestId: 'reflection', actionId: 0 },
       meta: {
-        model: 'test/model', promptTokens: 500, responseTokens: 120, latencyMs: 900,
-        wasRetry: false, wasFallback: false, rawResponse, costUsd: 0,
+        model: 'test/model',
+        promptTokens: 500,
+        responseTokens: 120,
+        latencyMs: 900,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse,
+        costUsd: 0,
       },
     }),
   };
 }
 
-const queue = { enqueue: <T,>(fn: () => Promise<T>) => fn() };
+const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
 
 const GOOD_RESPONSE = JSON.stringify({
   summary: 'I ramped well but never answered the Krenko board.',

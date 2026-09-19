@@ -29,10 +29,7 @@ describe('TurnPlanManager', () => {
     const res1: DecisionResponse = {
       requestId: 'req-1',
       actionId: 1, // Play Forest
-      plannedActions: [
-        { type: 'castSpell', name: 'Grizzly Bears' },
-        { type: 'pass' },
-      ],
+      plannedActions: [{ type: 'castSpell', name: 'Grizzly Bears' }, { type: 'pass' }],
     };
 
     manager.recordDecision(req1, res1, 'primary');
@@ -174,10 +171,7 @@ describe('TurnPlanManager', () => {
     const res1: DecisionResponse = {
       requestId: 'req-1',
       actionId: 1, // Play Forest
-      plannedActions: [
-        { type: 'castSpell', name: 'Grizzly Bears' },
-        { type: 'pass' },
-      ],
+      plannedActions: [{ type: 'castSpell', name: 'Grizzly Bears' }, { type: 'pass' }],
     };
     manager.recordDecision(req1, res1, 'primary');
     expect(manager.getQueue().length).toBe(2);
@@ -232,7 +226,12 @@ describe('TurnPlanManager', () => {
     const reqInit = makeRequest({ decidingPlayer: 'P1', phase: 'combat', step: 'beginCombat' });
     const plannedActions = [
       { type: 'pass', phase: 'combat' as const, step: 'beginCombat' as const },
-      { type: 'castSpell', name: 'Lightning Bolt', phase: 'combat' as const, step: 'declareBlockers' as const },
+      {
+        type: 'castSpell',
+        name: 'Lightning Bolt',
+        phase: 'combat' as const,
+        step: 'declareBlockers' as const,
+      },
     ];
     manager.recordPlan(reqInit, plannedActions);
 
@@ -287,4 +286,3 @@ describe('TurnPlanManager', () => {
     }
   });
 });
-

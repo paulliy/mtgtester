@@ -15,7 +15,12 @@ interface DeckStatistic {
   averageMulligans: number;
   mulliganDistribution: Array<{ mulligans: number; games: number }>;
   eliminationCauses: Array<{ reason: string; count: number }>;
-  lossesTo: Array<{ commanders: string[]; colorIdentity: string[]; archetypeTag: string; count: number }>;
+  lossesTo: Array<{
+    commanders: string[];
+    colorIdentity: string[];
+    archetypeTag: string;
+    count: number;
+  }>;
   manaFloodRate: number | null;
   manaDroughtRate: number | null;
 }
@@ -34,9 +39,14 @@ async function load(): Promise<void> {
   loading.value = true;
   error.value = null;
   try {
-    const response = await fetch(batchId === null ? '/api/stats' : `/api/stats?batchId=${encodeURIComponent(batchId)}`);
-    if (!response.ok) throw new Error((await response.json() as { message?: string }).message ?? 'Could not load stats.');
-    decks.value = (await response.json() as { decks: DeckStatistic[] }).decks;
+    const response = await fetch(
+      batchId === null ? '/api/stats' : `/api/stats?batchId=${encodeURIComponent(batchId)}`,
+    );
+    if (!response.ok)
+      throw new Error(
+        ((await response.json()) as { message?: string }).message ?? 'Could not load stats.',
+      );
+    decks.value = ((await response.json()) as { decks: DeckStatistic[] }).decks;
   } catch (reason) {
     error.value = reason instanceof Error ? reason.message : String(reason);
   } finally {
@@ -65,40 +75,156 @@ onMounted(() => void load());
       <header>
         <div>
           <h2>{{ deck.name }}</h2>
-          <p>{{ deck.commanders.join(' / ') }} · {{ deck.colorIdentity.join('') || 'Colorless' }} · {{ deck.archetypeTag }}</p>
+          <p>
+            {{ deck.commanders.join(' / ') }} · {{ deck.colorIdentity.join('') || 'Colorless' }} ·
+            {{ deck.archetypeTag }}
+          </p>
         </div>
         <strong>{{ percent(deck.winRate) }} wins</strong>
       </header>
       <dl class="summary">
-        <div><dt>Games</dt><dd>{{ deck.gamesPlayed }}</dd></div>
-        <div><dt>Wins</dt><dd>{{ deck.wins }}</dd></div>
-        <div><dt>Avg. finish</dt><dd>{{ deck.averageFinish?.toFixed(2) ?? '—' }}</dd></div>
-        <div><dt>Avg. length</dt><dd>{{ deck.averageGameLength?.toFixed(1) ?? '—' }} turns</dd></div>
-        <div><dt>Avg. mulligans</dt><dd>{{ deck.averageMulligans.toFixed(2) }}</dd></div>
-        <div><dt>Flood rate</dt><dd>{{ percent(deck.manaFloodRate) }}</dd></div>
-        <div><dt>Drought rate</dt><dd>{{ percent(deck.manaDroughtRate) }}</dd></div>
+        <div>
+          <dt>Games</dt>
+          <dd>{{ deck.gamesPlayed }}</dd>
+        </div>
+        <div>
+          <dt>Wins</dt>
+          <dd>{{ deck.wins }}</dd>
+        </div>
+        <div>
+          <dt>Avg. finish</dt>
+          <dd>{{ deck.averageFinish?.toFixed(2) ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt>Avg. length</dt>
+          <dd>{{ deck.averageGameLength?.toFixed(1) ?? '—' }} turns</dd>
+        </div>
+        <div>
+          <dt>Avg. mulligans</dt>
+          <dd>{{ deck.averageMulligans.toFixed(2) }}</dd>
+        </div>
+        <div>
+          <dt>Flood rate</dt>
+          <dd>{{ percent(deck.manaFloodRate) }}</dd>
+        </div>
+        <div>
+          <dt>Drought rate</dt>
+          <dd>{{ percent(deck.manaDroughtRate) }}</dd>
+        </div>
       </dl>
       <div class="breakdowns">
-        <section><h3>Elimination causes</h3><p v-if="deck.eliminationCauses.length === 0">No losses recorded.</p><ul v-else><li v-for="entry in deck.eliminationCauses" :key="entry.reason">{{ entry.reason }}: {{ entry.count }}</li></ul></section>
-        <section><h3>Who beats me</h3><p v-if="deck.lossesTo.length === 0">No attributable eliminations recorded.</p><ul v-else><li v-for="entry in deck.lossesTo" :key="`${entry.commanders.join()}${entry.archetypeTag}`">{{ entry.commanders.join(' / ') }} ({{ entry.colorIdentity.join('') }}, {{ entry.archetypeTag }}): {{ entry.count }}</li></ul></section>
-        <section><h3>Mulligans</h3><p>{{ deck.mulliganDistribution.map((item) => `${item.mulligans}: ${item.games}`).join(' · ') || '—' }}</p></section>
+        <section>
+          <h3>Elimination causes</h3>
+          <p v-if="deck.eliminationCauses.length === 0">No losses recorded.</p>
+          <ul v-else>
+            <li v-for="entry in deck.eliminationCauses" :key="entry.reason">
+              {{ entry.reason }}: {{ entry.count }}
+            </li>
+          </ul>
+        </section>
+        <section>
+          <h3>Who beats me</h3>
+          <p v-if="deck.lossesTo.length === 0">No attributable eliminations recorded.</p>
+          <ul v-else>
+            <li
+              v-for="entry in deck.lossesTo"
+              :key="`${entry.commanders.join()}${entry.archetypeTag}`"
+            >
+              {{ entry.commanders.join(' / ') }} ({{ entry.colorIdentity.join('') }},
+              {{ entry.archetypeTag }}): {{ entry.count }}
+            </li>
+          </ul>
+        </section>
+        <section>
+          <h3>Mulligans</h3>
+          <p>
+            {{
+              deck.mulliganDistribution
+                .map((item) => `${item.mulligans}: ${item.games}`)
+                .join(' · ') || '—'
+            }}
+          </p>
+        </section>
       </div>
     </article>
 
-    <aside class="method"><strong>Mana rates unavailable.</strong> Earlier recordings lack the draw history and end-of-turn information needed to calculate reliable flood and drought rates.</aside>
+    <aside class="method">
+      <strong>Mana rates unavailable.</strong> Earlier recordings lack the draw history and
+      end-of-turn information needed to calculate reliable flood and drought rates.
+    </aside>
   </section>
 </template>
 
 <style scoped>
-.stats { max-width: 1100px; margin: 0 auto; padding: 1rem; }
-header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
-h1, h2, h3, p { margin: 0; }
-p { color: var(--muted); margin-top: .25rem; }
-.deck { border: 1px solid var(--line); background: var(--surface); padding: .8rem; margin-top: .8rem; }
-.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: .5rem; margin: .8rem 0; }
-.summary div { background: var(--surface-2); padding: .45rem; }
-dt { color: var(--muted); font-size: .78rem; } dd { margin: .15rem 0 0; font-weight: 600; }
-.breakdowns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; font-size: .86rem; }
-h3 { font-size: .9rem; } ul { margin: .35rem 0 0; padding-left: 1.1rem; }.error { color: var(--danger); }.method { margin-top: 1rem; color: var(--muted); font-size: .85rem; }
-@media (max-width: 700px) { .breakdowns { grid-template-columns: 1fr; } }
+.stats {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+p {
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+.deck {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 0.8rem;
+  margin-top: 0.8rem;
+}
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+  gap: 0.5rem;
+  margin: 0.8rem 0;
+}
+.summary div {
+  background: var(--surface-2);
+  padding: 0.45rem;
+}
+dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+}
+.breakdowns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  font-size: 0.86rem;
+}
+h3 {
+  font-size: 0.9rem;
+}
+ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+.error {
+  color: var(--danger);
+}
+.method {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+@media (max-width: 700px) {
+  .breakdowns {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

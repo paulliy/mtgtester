@@ -78,7 +78,10 @@ const dummyCommander = () =>
 
 function pod(seed = 'delayed-triggers'): GameContext {
   const ctx = createGame(
-    gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
@@ -96,7 +99,7 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
     expect(interpretCard(carnelianOrb()).modeled).toBe(true);
   });
 
-  it('Hunter\'s Insight registers a delayed trigger that draws cards equal to combat damage dealt', () => {
+  it("Hunter's Insight registers a delayed trigger that draws cards equal to combat damage dealt", () => {
     const ctx = pod();
     const p1 = ctx.state.players[0]!;
 
@@ -108,12 +111,19 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
     const def = interpretCard(huntersInsight());
 
     // Resolve Hunter's Insight targeting attacker
-    pump(executeAbility(
-      ctx,
-      { cardId: 'insight-1', name: "Hunter's Insight", oracleId: def.oracleId, controllerId: 'P1' },
-      def.spellAbility!,
-      [attacker.id],
-    ));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'insight-1',
+          name: "Hunter's Insight",
+          oracleId: def.oracleId,
+          controllerId: 'P1',
+        },
+        def.spellAbility!,
+        [attacker.id],
+      ),
+    );
 
     expect(ctx.state.delayedTriggers.length).toBe(1);
     expect(ctx.state.delayedTriggers[0]?.targetId).toBe(attacker.cardId);
@@ -137,14 +147,21 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
     const pending = ctx.state.pendingTriggers[0]!;
 
     // Resolve the pending trigger
-    pump(executeAbility(
-      ctx,
-      { cardId: pending.sourceCardId, name: pending.sourceName, oracleId: pending.sourceOracleId, controllerId: pending.controllerId },
-      pending.ability,
-      [],
-      pending.triggerObjectCardId,
-      pending.scope,
-    ));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: pending.sourceCardId,
+          name: pending.sourceName,
+          oracleId: pending.sourceOracleId,
+          controllerId: pending.controllerId,
+        },
+        pending.ability,
+        [],
+        pending.triggerObjectCardId,
+        pending.scope,
+      ),
+    );
 
     expect(p1.hand.length).toBe(initialHandCount + 3);
   });
@@ -163,12 +180,19 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
 
     // Courser enters battlefield -> ETB trigger resolves
     const etbAbility = courserDef.triggers[0]!;
-    pump(executeAbility(
-      ctx,
-      { cardId: 'courser-1', name: 'Hellkite Courser', oracleId: courserDef.oracleId, controllerId: 'P1' },
-      etbAbility,
-      [cmdObj.id],
-    ));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'courser-1',
+          name: 'Hellkite Courser',
+          oracleId: courserDef.oracleId,
+          controllerId: 'P1',
+        },
+        etbAbility,
+        [cmdObj.id],
+      ),
+    );
 
     // Commander should be on battlefield
     const onBattlefield = ctx.state.battlefield.find((p) => p.cardId === cmdObj.cardId);
@@ -184,13 +208,20 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
 
     // Simulate end step
     const delayed = ctx.state.delayedTriggers.pop()!;
-    pump(executeAbility(
-      ctx,
-      { cardId: delayed.sourceCardId, name: 'Delayed Trigger', oracleId: delayed.sourceOracleId, controllerId: delayed.controllerId },
-      delayed.ability,
-      [],
-      delayed.targetId,
-    ));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: delayed.sourceCardId,
+          name: 'Delayed Trigger',
+          oracleId: delayed.sourceOracleId,
+          controllerId: delayed.controllerId,
+        },
+        delayed.ability,
+        [],
+        delayed.targetId,
+      ),
+    );
 
     // Commander returned to command zone
     expect(ctx.state.battlefield.find((p) => p.cardId === cmdObj.cardId)).toBeUndefined();
@@ -212,12 +243,19 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
 
     const actAbility = heirloomDef.activatedAbilities[0]!.ability;
 
-    pump(executeAbility(
-      ctx,
-      { cardId: 'heirloom-1', name: 'Herd Heirloom', oracleId: heirloomDef.oracleId, controllerId: 'P1' },
-      actAbility,
-      [bigCreature.id],
-    ));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'heirloom-1',
+          name: 'Herd Heirloom',
+          oracleId: heirloomDef.oracleId,
+          controllerId: 'P1',
+        },
+        actAbility,
+        [bigCreature.id],
+      ),
+    );
 
     // Verify UntilEotEffect for granted ability added
     expect(ctx.state.effects.some((e) => e.kind === 'grantAbility')).toBe(true);
@@ -232,12 +270,19 @@ describe('Increment 16: Delayed triggers and granted abilities', () => {
     expect(ctx.state.pendingTriggers.length).toBe(1);
     const pending = ctx.state.pendingTriggers[0]!;
 
-    pump(executeAbility(
-      ctx,
-      { cardId: pending.sourceCardId, name: pending.sourceName, oracleId: pending.sourceOracleId, controllerId: pending.controllerId },
-      pending.ability,
-      [],
-    ));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: pending.sourceCardId,
+          name: pending.sourceName,
+          oracleId: pending.sourceOracleId,
+          controllerId: pending.controllerId,
+        },
+        pending.ability,
+        [],
+      ),
+    );
 
     expect(p1.hand.length).toBe(initialHandCount + 1);
   });

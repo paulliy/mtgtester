@@ -32,7 +32,15 @@ const artifact = (name: string, oracleText: string): ReturnType<typeof oracle> =
   oracle({ name, typeLine: 'Artifact', oracleText, manaCost: '{2}', power: null, toughness: null });
 
 const land = (name: string, oracleText: string): ReturnType<typeof oracle> =>
-  oracle({ name, typeLine: 'Land', oracleText, manaCost: null, cmc: 0, power: null, toughness: null });
+  oracle({
+    name,
+    typeLine: 'Land',
+    oracleText,
+    manaCost: null,
+    cmc: 0,
+    power: null,
+    toughness: null,
+  });
 
 const commandTower = (): ReturnType<typeof oracle> =>
   land('Test Tower', "{T}: Add one mana of any color in your commander's color identity.");

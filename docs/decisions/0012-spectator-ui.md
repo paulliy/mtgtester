@@ -41,8 +41,8 @@ CLI game prints its result and exits.
 
 The scrubber cannot be built on top of nothing: §10.1 requires that "all past turn states and
 the complete action log are persisted" so the user can move to any already-played turn. So
-Phase 4 writes these tables. This is not scope creep into Phase 5 — Phase 5 owns *aggregate
-statistics* over `games`/`game_players`, which is a different concern from recording that a
+Phase 4 writes these tables. This is not scope creep into Phase 5 — Phase 5 owns _aggregate
+statistics_ over `games`/`game_players`, which is a different concern from recording that a
 game happened at all.
 
 `game_state_snapshots.state_json` holds the **`SpectatorState` projection, not `GameState`**.
@@ -124,7 +124,7 @@ parked is not finished, and a row that never closes is still wrong.
 
 - Phase 4 is meaningfully larger than "build a Vue app": roughly half of it is the server-side
   orchestration and persistence layer that Phase 2 and Phase 3 each left to the other.
-- `game_state_snapshots` rows are display projections. Anything that later needs to *resume* a
+- `game_state_snapshots` rows are display projections. Anything that later needs to _resume_ a
   game from mid-flight must replay `game_events` from the seed, which is what §4 already
   specifies; the snapshot table must not grow into a half-authoritative second source.
 - The pre-flight makes the coverage backlog visible in the product surface, not just in

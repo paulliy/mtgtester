@@ -78,9 +78,7 @@ export async function getNonCachingProviders(
     return cached.providers;
   }
 
-  const cleanBase = baseUrl
-    .replace(/\/chat\/completions\/?$/, '')
-    .replace(/\/+$/, '');
+  const cleanBase = baseUrl.replace(/\/chat\/completions\/?$/, '').replace(/\/+$/, '');
   /**
    * The route is `/models/:author/:slug/endpoints` — two path segments. Encoding the model as
    * a whole turned the separator into `%2F`, collapsing it to one segment that matches no

@@ -12,7 +12,12 @@
  * prompt (`ActionPresentation`/`PresentedCard` are deliberately not part of `LegalAction`).
  */
 
-import type { ActionPresentation, ActionSubject, PresentedCard, PresentedSource } from '@mtg/shared';
+import type {
+  ActionPresentation,
+  ActionSubject,
+  PresentedCard,
+  PresentedSource,
+} from '@mtg/shared';
 import type { EngineActionOption } from './decisions';
 import { scryfallIdOf } from './state/queries';
 import type { EngineCardObject, EnginePermanent, GameContext } from './state/types';
@@ -66,7 +71,11 @@ export function cardOption(
     description: opts.description,
     ...(opts.payload !== undefined ? { payload: opts.payload } : {}),
     ...(opts.data !== undefined ? { data: opts.data } : {}),
-    presentation: { verb: opts.verb, subjects: [subject], ...(opts.role ? { role: opts.role } : {}) },
+    presentation: {
+      verb: opts.verb,
+      subjects: [subject],
+      ...(opts.role ? { role: opts.role } : {}),
+    },
   };
 }
 
@@ -82,23 +91,27 @@ export function playerOption(
     description: opts.description,
     ...(opts.payload !== undefined ? { payload: opts.payload } : {}),
     ...(opts.data !== undefined ? { data: opts.data } : {}),
-    presentation: { verb: opts.verb, subjects: [subject], ...(opts.role ? { role: opts.role } : {}) },
+    presentation: {
+      verb: opts.verb,
+      subjects: [subject],
+      ...(opts.role ? { role: opts.role } : {}),
+    },
   };
 }
 
 /** An option whose subject is a bare number (an X choice, a damage-division amount). */
-export function valueOption(
-  value: number,
-  label: string,
-  opts: OptionBase,
-): EngineActionOption {
+export function valueOption(value: number, label: string, opts: OptionBase): EngineActionOption {
   const subject: ActionSubject = { kind: 'value', label, value };
   return {
     type: opts.type,
     description: opts.description,
     ...(opts.payload !== undefined ? { payload: opts.payload } : {}),
     ...(opts.data !== undefined ? { data: opts.data } : {}),
-    presentation: { verb: opts.verb, subjects: [subject], ...(opts.role ? { role: opts.role } : {}) },
+    presentation: {
+      verb: opts.verb,
+      subjects: [subject],
+      ...(opts.role ? { role: opts.role } : {}),
+    },
   };
 }
 

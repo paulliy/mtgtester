@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "381ed468108dc1189f0bf7e3c38a00c4cb7db62a080cc3bbb559f320cd9ec24a",
+      "card": {
+        "oracleId": "9833e3bd-6e7f-41b7-bf7e-ffb74ff17844",
+        "scryfallId": "a960acea-3404-4834-9296-d6715add49af",
+        "name": "Chronomancer",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact Creature — Necron Wizard",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron",
+          "Wizard"
+        ],
+        "oracleText": "Flying\nAtomic Transmutation — {1}, {T}, Sacrifice another artifact: Draw a card.\nUnearth {2}{B} ({2}{B}: Return this card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step or if it would leave the battlefield. Unearth only as a sorcery.)",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Atomic Transmutation",
+          "Unearth"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2bdc70414a3dd2d2299ea20ce91581f4a5a43986881655aa793a63c3d5f2e275",
+      "card": {
+        "oracleId": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
+        "scryfallId": "e2a27742-08c1-4153-af7f-25a7a98f585e",
+        "name": "Reliquary Tower",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "You have no maximum hand size.\n{T}: Add {C}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "94222887e73e265aa341b44edff1728d4032765a1472ed3f8ae88d9253a6d8c8",
+      "card": {
+        "oracleId": "0192ba05-6144-4fec-a803-462ecdf64195",
+        "scryfallId": "0a968eac-2840-41ba-b7de-3182964d4913",
+        "name": "Royal Warden",
+        "manaCost": "{3}{B}{B}",
+        "cmc": 5,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact Creature — Necron",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron"
+        ],
+        "oracleText": "Phalanx Commander — When this creature enters, create two tapped 2/2 black Necron Warrior artifact creature tokens.\nUnearth {3}{B} ({3}{B}: Return this card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step or if it would leave the battlefield. Unearth only as a sorcery.)",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Phalanx Commander",
+          "Unearth"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2047e02e515efe959261ccf9dc3bbf914b7a63729f9a8f0ea4fcc36dd9d3ef39",
+      "card": {
+        "oracleId": "9965d9c5-2ebf-4a6c-930e-55c5890979be",
+        "scryfallId": "ad077996-6b5e-4eb8-bb6e-93d43c5efa8f",
+        "name": "Thought Vessel",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "You have no maximum hand size.\n{T}: Add {C}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

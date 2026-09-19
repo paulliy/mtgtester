@@ -155,6 +155,61 @@ describe('MatchRunner — compute-ahead cap (brief §10.1)', () => {
     await run;
   });
 
+  it('does not park before the first decision of a prepared mid-game scenario', async () => {
+    // Card Test Lab engines start at turn 1+: the initial snapshot is already past turn 0, so a
+    // viewer anchored at turn 0 with no lookahead must not deadlock the pump (the lab stall).
+    const engine = new Engine(
+      {
+        gameId: 'g-lab',
+        seed: 'runner-lab',
+        turnCap: 4,
+        players: [1, 2, 3, 4].map((n) => ({
+          id: `P${n}`,
+          deckId: `deck-${n}`,
+          commanders: [],
+          cards: Array.from({ length: 10 }, (_, i) => forest(i)),
+        })),
+      },
+      {
+        preparedScenario: {
+          currentTurnPlayer: 'P1',
+          phase: 'precombatMain',
+          step: null,
+          turnNumber: 1,
+          // A playable land keeps the first priority window a real choice rather than a forced
+          // pass the engine auto-resolves without surfacing a decision.
+          hand: [{ playerId: 'P1', cardNames: ['Forest'] }],
+          battlefield: [],
+        },
+      },
+    );
+    const seen: DecisionRequest[] = [];
+    const runner = new MatchRunner({
+      engine,
+      gameId: 'g-lab',
+      seed: 'runner-lab',
+      seats: SEATS,
+      lookaheadTurns: 0,
+      providerFor: () => ({
+        decide: (request) => {
+          seen.push(request);
+          const action =
+            request.legalActions.find((candidate) => candidate.type === 'pass') ??
+            request.legalActions[0]!;
+          return Promise.resolve({ requestId: request.requestId, actionId: action.id });
+        },
+      }),
+    });
+
+    const run = runner.run();
+    await waitFor(() => {
+      expect(seen.length).toBeGreaterThan(0);
+    });
+
+    runner.abandon();
+    await run;
+  });
+
   it('runs to a finished game when the viewer keeps up', async () => {
     const engine = makeEngine();
     const runner = new MatchRunner({

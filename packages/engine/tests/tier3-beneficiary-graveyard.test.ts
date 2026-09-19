@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
-import { computePriorityOptions, computeTargetOptions, type PriorityActionPayload } from '../src/actions/legal';
+import {
+  computePriorityOptions,
+  computeTargetOptions,
+  type PriorityActionPayload,
+} from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
 import { executeAbility } from '../src/effects/resolve';
 import { resolveTopOfStack } from '../src/stack/stack';
@@ -12,7 +16,12 @@ const dash = String.fromCharCode(0x2014);
 const nl = String.fromCharCode(10);
 
 function pod(seed: string): GameContext {
-  const ctx = createGame(gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(4, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(4, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.turnNumber = 4;
@@ -80,19 +89,29 @@ describe('Tier 3 target-controller beneficiaries', () => {
     });
 
     const ctx = pod('tier3-offer-beneficiary');
-    const target = putSpellOnStack(ctx, 'P2', oracle({
-      name: 'Target Sorcery',
-      typeLine: 'Sorcery',
-      manaCost: '{2}',
-      oracleText: 'Draw a card.',
-    }));
+    const target = putSpellOnStack(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Target Sorcery',
+        typeLine: 'Sorcery',
+        manaCost: '{2}',
+        oracleText: 'Draw a card.',
+      }),
+    );
     pump(executeAbility(ctx, sourceFor(offer.name), def.spellAbility!, [target.id]));
 
     expect(ctx.state.stack.some((entry) => entry.id === target.id)).toBe(false);
-    expect(ctx.state.players[1]!.graveyard.some((card) => card.cardId === target.sourceCardId)).toBe(true);
-    const treasures = ctx.state.battlefield.filter((perm) => perm.controllerId === 'P2' && perm.name === 'Treasure');
+    expect(
+      ctx.state.players[1]!.graveyard.some((card) => card.cardId === target.sourceCardId),
+    ).toBe(true);
+    const treasures = ctx.state.battlefield.filter(
+      (perm) => perm.controllerId === 'P2' && perm.name === 'Treasure',
+    );
     expect(treasures).toHaveLength(2);
-    expect(ctx.state.battlefield.some((perm) => perm.controllerId === 'P1' && perm.name === 'Treasure')).toBe(false);
+    expect(
+      ctx.state.battlefield.some((perm) => perm.controllerId === 'P1' && perm.name === 'Treasure'),
+    ).toBe(false);
   });
 
   it('uses filtered stack targets for Swan Song and still grants the token if countering is prevented', () => {
@@ -102,19 +121,37 @@ describe('Tier 3 target-controller beneficiaries', () => {
       manaCost: '{U}',
       colors: ['U'],
       colorIdentity: ['U'],
-      oracleText: 'Counter target enchantment, instant, or sorcery spell. Its controller creates a 2/2 blue Bird creature token with flying.',
+      oracleText:
+        'Counter target enchantment, instant, or sorcery spell. Its controller creates a 2/2 blue Bird creature token with flying.',
     });
     const def = interpretCard(swan);
     expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
     const ctx = pod('tier3-swan-beneficiary');
-    const artifact = putSpellOnStack(ctx, 'P2', oracle({ name: 'Target Artifact', typeLine: 'Artifact', oracleText: '' }));
+    const artifact = putSpellOnStack(
+      ctx,
+      'P2',
+      oracle({ name: 'Target Artifact', typeLine: 'Artifact', oracleText: '' }),
+    );
     const creature = putSpellOnStack(ctx, 'P2', bear());
-    const enchantment = putSpellOnStack(ctx, 'P2', oracle({ name: 'Target Enchantment', typeLine: 'Enchantment', oracleText: '' }), true);
+    const enchantment = putSpellOnStack(
+      ctx,
+      'P2',
+      oracle({ name: 'Target Enchantment', typeLine: 'Enchantment', oracleText: '' }),
+      true,
+    );
 
-    expect(computeTargetOptions(ctx, def.spellAbility!.targets[0]!, 'P1')).toEqual([enchantment.id]);
+    expect(computeTargetOptions(ctx, def.spellAbility!.targets[0]!, 'P1')).toEqual([
+      enchantment.id,
+    ]);
     pump(executeAbility(ctx, sourceFor(swan.name), def.spellAbility!, [enchantment.id]));
-    expect(ctx.state.stack.map((entry) => entry.id)).toEqual([artifact.id, creature.id, enchantment.id]);
-    const birds = ctx.state.battlefield.filter((perm) => perm.controllerId === 'P2' && perm.name === 'Bird');
+    expect(ctx.state.stack.map((entry) => entry.id)).toEqual([
+      artifact.id,
+      creature.id,
+      enchantment.id,
+    ]);
+    const birds = ctx.state.battlefield.filter(
+      (perm) => perm.controllerId === 'P2' && perm.name === 'Bird',
+    );
     expect(birds).toHaveLength(1);
     expect(birds[0] && birds[0].controllerId).toBe('P2');
   });
@@ -126,7 +163,8 @@ describe('Tier 3 target-controller beneficiaries', () => {
       manaCost: '{B}{G}',
       colors: ['B', 'G'],
       colorIdentity: ['B', 'G'],
-      oracleText: 'Destroy target permanent an opponent controls. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle.',
+      oracleText:
+        'Destroy target permanent an opponent controls. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle.',
     });
     const def = interpretCard(trophy);
     expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
@@ -135,7 +173,9 @@ describe('Tier 3 target-controller beneficiaries', () => {
     const basic = conjure(ctx, 'P2', forest(), 'library');
 
     pump(executeAbility(ctx, sourceFor(trophy.name), def.spellAbility!, [victim.id]));
-    expect(ctx.state.players[1]!.graveyard.some((card) => card.cardId === victim.cardId)).toBe(true);
+    expect(ctx.state.players[1]!.graveyard.some((card) => card.cardId === victim.cardId)).toBe(
+      true,
+    );
     const found = ctx.state.battlefield.find((perm) => perm.cardId === basic.cardId);
     expect(found?.controllerId).toBe('P2');
     expect(found?.tapped).toBe(false);
@@ -177,10 +217,12 @@ describe('Tier 3 full-graveyard exile', () => {
     });
     const def = interpretCard(grounds);
     expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
-    expect(def.activatedAbilities[0]?.costs).toContainEqual(expect.objectContaining({
-      kind: 'sacrificeOther',
-      allowSelf: true,
-    }));
+    expect(def.activatedAbilities[0]?.costs).toContainEqual(
+      expect.objectContaining({
+        kind: 'sacrificeOther',
+        allowSelf: true,
+      }),
+    );
 
     const ctx = pod('tier3-scavenger-grounds');
     const source = spawn(ctx, 'P1', grounds);
@@ -193,7 +235,12 @@ describe('Tier 3 full-graveyard exile', () => {
       return payload.kind === 'activateAbility' && payload.objectId === source.id;
     });
     expect(option).toBeDefined();
-    pump(applyPriorityAction(ctx, player, option!.payload as PriorityActionPayload, { index: 0, targets: new Map() }));
+    pump(
+      applyPriorityAction(ctx, player, option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
     expect(manaA.tapped && manaB.tapped).toBe(true);
     expect(player.graveyard.some((card) => card.cardId === source.cardId)).toBe(true);
     pump(resolveTopOfStack(ctx));

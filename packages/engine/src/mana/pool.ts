@@ -88,7 +88,7 @@ export function drainPool(holder: ManaPoolHolder, includePersistent: boolean): v
  */
 export function selectEntriesToSpend(
   entries: readonly ManaEntry[],
-  cost: { generic: number; colored: Record<Color, number>; colorless: number; hybrid?: (Color[])[] },
+  cost: { generic: number; colored: Record<Color, number>; colorless: number; hybrid?: Color[][] },
 ): ManaEntry[] | null {
   const available = [...entries].sort(sortRestrictedFirst);
   const taken: ManaEntry[] = [];
@@ -114,8 +114,12 @@ export function selectEntriesToSpend(
     if (index === hybrid.length) return true;
     const tried = new Set<string>();
     for (const entry of available) {
-      if (taken.includes(entry) || tried.has(entry.symbol) ||
-          !(hybrid[index]! as string[]).includes(entry.symbol)) continue;
+      if (
+        taken.includes(entry) ||
+        tried.has(entry.symbol) ||
+        !(hybrid[index]! as string[]).includes(entry.symbol)
+      )
+        continue;
       tried.add(entry.symbol);
       taken.push(entry);
       if (coverHybrid(index + 1)) return true;

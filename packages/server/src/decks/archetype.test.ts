@@ -40,20 +40,36 @@ function card(overrides: Partial<OracleCard> & { name: string }): OracleCard {
 
 function land(n: number): OracleCard {
   return card({
-    name: `Forest ${n}`, typeLine: 'Basic Land — Forest', types: ['Land'], supertypes: ['Basic'],
-    subtypes: ['Forest'], manaCost: null, cmc: 0, power: null, toughness: null, isBasicLand: true,
+    name: `Forest ${n}`,
+    typeLine: 'Basic Land — Forest',
+    types: ['Land'],
+    supertypes: ['Basic'],
+    subtypes: ['Forest'],
+    manaCost: null,
+    cmc: 0,
+    power: null,
+    toughness: null,
+    isBasicLand: true,
   });
 }
 
-function many(count: number, make: (index: number) => OracleCard): Array<{ card: OracleCard; quantity: number }> {
+function many(
+  count: number,
+  make: (index: number) => OracleCard,
+): Array<{ card: OracleCard; quantity: number }> {
   return Array.from({ length: count }, (_, index) => ({ card: make(index), quantity: 1 }));
 }
 
 /** Signal-free filler: no creature subtype to read as a tribe, no theme text, no keywords. */
 function filler(n: number): OracleCard {
   return card({
-    name: `Filler ${n}`, typeLine: 'Enchantment', types: ['Enchantment'], subtypes: [],
-    cmc: 3, power: null, toughness: null,
+    name: `Filler ${n}`,
+    typeLine: 'Enchantment',
+    types: ['Enchantment'],
+    subtypes: [],
+    cmc: 3,
+    power: null,
+    toughness: null,
   });
 }
 
@@ -102,9 +118,33 @@ describe('strategy axis', () => {
   it('reads a low-creature interaction pile as control', () => {
     const result = tagFor([
       ...LANDS,
-      ...many(12, (i) => card({ name: `Counter ${i}`, typeLine: 'Instant', types: ['Instant'], subtypes: [], oracleText: 'Counter target spell.' })),
-      ...many(8, (i) => card({ name: `Removal ${i}`, typeLine: 'Instant', types: ['Instant'], subtypes: [], oracleText: 'Destroy target creature.' })),
-      ...many(6, (i) => card({ name: `Wipe ${i}`, typeLine: 'Sorcery', types: ['Sorcery'], subtypes: [], oracleText: 'Destroy all creatures.' })),
+      ...many(12, (i) =>
+        card({
+          name: `Counter ${i}`,
+          typeLine: 'Instant',
+          types: ['Instant'],
+          subtypes: [],
+          oracleText: 'Counter target spell.',
+        }),
+      ),
+      ...many(8, (i) =>
+        card({
+          name: `Removal ${i}`,
+          typeLine: 'Instant',
+          types: ['Instant'],
+          subtypes: [],
+          oracleText: 'Destroy target creature.',
+        }),
+      ),
+      ...many(6, (i) =>
+        card({
+          name: `Wipe ${i}`,
+          typeLine: 'Sorcery',
+          types: ['Sorcery'],
+          subtypes: [],
+          oracleText: 'Destroy all creatures.',
+        }),
+      ),
       ...many(4, (i) => card({ name: `Blocker ${i}` })),
     ]);
 
@@ -114,8 +154,24 @@ describe('strategy axis', () => {
   it('reads denial effects as stax before they look like control', () => {
     const result = tagFor([
       ...LANDS,
-      ...many(12, (i) => card({ name: `Tax ${i}`, typeLine: 'Enchantment', types: ['Enchantment'], subtypes: [], oracleText: 'Creatures your opponents control don\'t untap during their untap step.' })),
-      ...many(10, (i) => card({ name: `Removal ${i}`, typeLine: 'Instant', types: ['Instant'], subtypes: [], oracleText: 'Destroy target creature.' })),
+      ...many(12, (i) =>
+        card({
+          name: `Tax ${i}`,
+          typeLine: 'Enchantment',
+          types: ['Enchantment'],
+          subtypes: [],
+          oracleText: "Creatures your opponents control don't untap during their untap step.",
+        }),
+      ),
+      ...many(10, (i) =>
+        card({
+          name: `Removal ${i}`,
+          typeLine: 'Instant',
+          types: ['Instant'],
+          subtypes: [],
+          oracleText: 'Destroy target creature.',
+        }),
+      ),
       ...many(8, (i) => card({ name: `Body ${i}` })),
     ]);
 
@@ -125,8 +181,24 @@ describe('strategy axis', () => {
   it('reads a tutor-and-draw shell as combo', () => {
     const result = tagFor([
       ...LANDS,
-      ...many(10, (i) => card({ name: `Tutor ${i}`, typeLine: 'Sorcery', types: ['Sorcery'], subtypes: [], oracleText: 'Search your library for a card, then shuffle and put that card on top.' })),
-      ...many(14, (i) => card({ name: `Draw ${i}`, typeLine: 'Instant', types: ['Instant'], subtypes: [], oracleText: 'Draw two cards.' })),
+      ...many(10, (i) =>
+        card({
+          name: `Tutor ${i}`,
+          typeLine: 'Sorcery',
+          types: ['Sorcery'],
+          subtypes: [],
+          oracleText: 'Search your library for a card, then shuffle and put that card on top.',
+        }),
+      ),
+      ...many(14, (i) =>
+        card({
+          name: `Draw ${i}`,
+          typeLine: 'Instant',
+          types: ['Instant'],
+          subtypes: [],
+          oracleText: 'Draw two cards.',
+        }),
+      ),
       ...many(16, (i) => card({ name: `Piece ${i}` })),
     ]);
 
@@ -136,7 +208,16 @@ describe('strategy axis', () => {
   it('reads expensive spells behind mana acceleration as ramp', () => {
     const result = tagFor([
       ...LANDS,
-      ...many(18, (i) => card({ name: `Rock ${i}`, typeLine: 'Artifact', types: ['Artifact'], subtypes: [], cmc: 2, oracleText: '{T}: Add {G}.' })),
+      ...many(18, (i) =>
+        card({
+          name: `Rock ${i}`,
+          typeLine: 'Artifact',
+          types: ['Artifact'],
+          subtypes: [],
+          cmc: 2,
+          oracleText: '{T}: Add {G}.',
+        }),
+      ),
       ...many(22, (i) => card({ name: `Fatty ${i}`, cmc: 7 })),
     ]);
 
@@ -151,10 +232,19 @@ describe('strategy axis', () => {
 
   it('does not count lands that merely tap for mana as ramp', () => {
     // Every dual land says "Add {G}". Scoring those as ramp made every deck a ramp deck.
-    const manaLands = many(30, (i) => card({
-      name: `Dual ${i}`, typeLine: 'Land', types: ['Land'], subtypes: [],
-      manaCost: null, cmc: 0, power: null, toughness: null, oracleText: '{T}: Add {G} or {W}.',
-    }));
+    const manaLands = many(30, (i) =>
+      card({
+        name: `Dual ${i}`,
+        typeLine: 'Land',
+        types: ['Land'],
+        subtypes: [],
+        manaCost: null,
+        cmc: 0,
+        power: null,
+        toughness: null,
+        oracleText: '{T}: Add {G} or {W}.',
+      }),
+    );
     const result = tagFor([...manaLands, ...many(40, (i) => card({ name: `Value ${i}`, cmc: 3 }))]);
 
     expect(result.features.ramp).toBe(0);
@@ -166,7 +256,8 @@ describe('theme axis', () => {
   it("lets the commander's own text decide the theme", () => {
     // Twelve token mentions would be noise in 99 cards; on the commander it is the deck's plan.
     const commander = card({
-      name: 'Token Maker', typeLine: 'Legendary Creature — Human',
+      name: 'Token Maker',
+      typeLine: 'Legendary Creature — Human',
       oracleText: 'At the beginning of your end step, create a 1/1 white Soldier creature token.',
     });
     const result = tagFor([...LANDS, ...many(40, (i) => filler(i))], commander);
@@ -177,12 +268,16 @@ describe('theme axis', () => {
 
   it('names a tribe when the commander shares it and the creature base is concentrated', () => {
     const elfGeneral = card({
-      name: 'Elf General', typeLine: 'Legendary Creature — Elf Druid', subtypes: ['Elf', 'Druid'],
+      name: 'Elf General',
+      typeLine: 'Legendary Creature — Elf Druid',
+      subtypes: ['Elf', 'Druid'],
     });
     const result = tagFor(
       [
         ...LANDS,
-        ...many(16, (i) => card({ name: `Elf ${i}`, typeLine: 'Creature — Elf', subtypes: ['Elf'] })),
+        ...many(16, (i) =>
+          card({ name: `Elf ${i}`, typeLine: 'Creature — Elf', subtypes: ['Elf'] }),
+        ),
         ...many(8, (i) => card({ name: `Other ${i}`, cmc: 3 })),
       ],
       elfGeneral,
@@ -196,7 +291,9 @@ describe('theme axis', () => {
     // Half the creatures being Wizards is how a counters deck gets mislabelled "wizard tribal".
     const result = tagFor([
       ...LANDS,
-      ...many(12, (i) => card({ name: `Wizard ${i}`, typeLine: 'Creature — Wizard', subtypes: ['Wizard'] })),
+      ...many(12, (i) =>
+        card({ name: `Wizard ${i}`, typeLine: 'Creature — Wizard', subtypes: ['Wizard'] }),
+      ),
       ...many(10, (i) => card({ name: `Other ${i}`, cmc: 3 })),
     ]);
 
@@ -214,7 +311,10 @@ describe('theme axis', () => {
 
 describe('determinism (brief §4 — the same input must give the same answer)', () => {
   it('returns an identical tag when the same decklist is classified twice', () => {
-    const cards = [...LANDS, ...many(40, (i) => card({ name: `Beater ${i}`, cmc: 2, keywords: ['Haste'] }))];
+    const cards = [
+      ...LANDS,
+      ...many(40, (i) => card({ name: `Beater ${i}`, cmc: 2, keywords: ['Haste'] })),
+    ];
 
     expect(tagFor(cards).tag).toBe(tagFor(cards).tag);
   });
@@ -223,7 +323,9 @@ describe('determinism (brief §4 — the same input must give the same answer)',
     const cards = [
       ...LANDS,
       ...many(9, (i) => card({ name: `Elf ${i}`, typeLine: 'Creature — Elf', subtypes: ['Elf'] })),
-      ...many(9, (i) => card({ name: `Goblin ${i}`, typeLine: 'Creature — Goblin', subtypes: ['Goblin'] })),
+      ...many(9, (i) =>
+        card({ name: `Goblin ${i}`, typeLine: 'Creature — Goblin', subtypes: ['Goblin'] }),
+      ),
     ];
 
     // A tie on subtype count must not resolve by insertion order, or the same deck tags
@@ -242,7 +344,9 @@ describe('a real committed decklist', () => {
 
     const result = inferArchetype({
       commanders: [commander as OracleCard],
-      cards: cards.filter((entry) => entry !== commander).map((entry) => ({ card: entry, quantity: 1 })),
+      cards: cards
+        .filter((entry) => entry !== commander)
+        .map((entry) => ({ card: entry, quantity: 1 })),
       colorIdentity: ['W', 'U', 'B', 'R', 'G'],
     });
 

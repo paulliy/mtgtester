@@ -85,7 +85,12 @@ describe('toOracleCard', () => {
   });
 
   it('omits backFace for a single-faced card', () => {
-    const raw: RawScryfallCard = { id: 's4', oracle_id: 'o4', name: 'Forest', type_line: 'Basic Land — Forest' };
+    const raw: RawScryfallCard = {
+      id: 's4',
+      oracle_id: 'o4',
+      name: 'Forest',
+      type_line: 'Basic Land — Forest',
+    };
     expect(toOracleCard(raw)?.backFace).toBeUndefined();
   });
 

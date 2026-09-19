@@ -182,7 +182,12 @@ describe('Bladewing the Risen — graveyard reanimation target', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: 'c-bladewing', name: 'Bladewing the Risen', oracleId: def.oracleId, controllerId: 'P1' },
+        {
+          cardId: 'c-bladewing',
+          name: 'Bladewing the Risen',
+          oracleId: def.oracleId,
+          controllerId: 'P1',
+        },
         trigger,
         [dragonCard.id],
       ),
@@ -213,7 +218,12 @@ describe('Bladewing the Risen — graveyard reanimation target', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: 'c-bladewing', name: 'Bladewing the Risen', oracleId: def.oracleId, controllerId: 'P1' },
+        {
+          cardId: 'c-bladewing',
+          name: 'Bladewing the Risen',
+          oracleId: def.oracleId,
+          controllerId: 'P1',
+        },
         trigger,
         [dragonCard.id],
       ),
@@ -232,7 +242,12 @@ describe('Broodcaller Scourge — bounded hand-to-battlefield', () => {
     expect(trigger?.trigger).toMatchObject({ when: 'dealsCombatDamageToPlayer', aggregate: true });
     expect(trigger?.optional).toBe(true);
     expect(trigger?.effects).toEqual([
-      { op: 'handToBattlefield', filter: expect.anything(), maxManaValue: { kind: 'damageDealt' }, count: 'one' },
+      {
+        op: 'handToBattlefield',
+        filter: expect.anything(),
+        maxManaValue: { kind: 'damageDealt' },
+        count: 'one',
+      },
     ]);
   });
 
@@ -247,12 +262,22 @@ describe('Broodcaller Scourge — bounded hand-to-battlefield', () => {
       oracle({ name: 'Test Cheap Rock', typeLine: 'Artifact', manaCost: '{3}' }),
       'hand',
     );
-    conjure(ctx, 'P1', oracle({ name: 'Test Pricey Rock', typeLine: 'Artifact', manaCost: '{6}' }), 'hand');
+    conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Test Pricey Rock', typeLine: 'Artifact', manaCost: '{6}' }),
+      'hand',
+    );
 
     const { decisions } = pump(
       executeAbility(
         ctx,
-        { cardId: 'c-brood', name: 'Broodcaller Scourge', oracleId: def.oracleId, controllerId: 'P1' },
+        {
+          cardId: 'c-brood',
+          name: 'Broodcaller Scourge',
+          oracleId: def.oracleId,
+          controllerId: 'P1',
+        },
         trigger,
         [],
         undefined,
@@ -283,7 +308,12 @@ describe('Broodcaller Scourge — bounded hand-to-battlefield', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: 'c-brood', name: 'Broodcaller Scourge', oracleId: def.oracleId, controllerId: 'P1' },
+        {
+          cardId: 'c-brood',
+          name: 'Broodcaller Scourge',
+          oracleId: def.oracleId,
+          controllerId: 'P1',
+        },
         trigger,
         [],
         undefined,
@@ -318,12 +348,47 @@ describe('Last March of the Ents — draw-then-put and uncounterability', () => 
     const def = registerDef(ctx, lastMarch());
     const ability = def.spellAbility as Ability;
 
-    spawn(ctx, 'P1', oracle({ name: 'Test Small', typeLine: 'Creature — Bear', manaCost: '{1}{G}', power: '2', toughness: '3' }));
-    spawn(ctx, 'P1', oracle({ name: 'Test Big', typeLine: 'Creature — Bear', manaCost: '{1}{G}', power: '2', toughness: '5' }));
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Small',
+        typeLine: 'Creature — Bear',
+        manaCost: '{1}{G}',
+        power: '2',
+        toughness: '3',
+      }),
+    );
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Big',
+        typeLine: 'Creature — Bear',
+        manaCost: '{1}{G}',
+        power: '2',
+        toughness: '5',
+      }),
+    );
 
-    const creatureA = conjure(ctx, 'P1', oracle({ name: 'Test Hand Creature A', typeLine: 'Creature — Bear', manaCost: '{2}{G}' }), 'hand');
-    const creatureB = conjure(ctx, 'P1', oracle({ name: 'Test Hand Creature B', typeLine: 'Creature — Bear', manaCost: '{2}{G}' }), 'hand');
-    const nonCreature = conjure(ctx, 'P1', oracle({ name: 'Test Hand Rock', typeLine: 'Artifact', manaCost: '{2}' }), 'hand');
+    const creatureA = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Test Hand Creature A', typeLine: 'Creature — Bear', manaCost: '{2}{G}' }),
+      'hand',
+    );
+    const creatureB = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Test Hand Creature B', typeLine: 'Creature — Bear', manaCost: '{2}{G}' }),
+      'hand',
+    );
+    const nonCreature = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Test Hand Rock', typeLine: 'Artifact', manaCost: '{2}' }),
+      'hand',
+    );
 
     const p1 = ctx.state.players.find((p) => p.id === 'P1');
     if (p1 === undefined) throw new Error('test bug');
@@ -332,7 +397,12 @@ describe('Last March of the Ents — draw-then-put and uncounterability', () => 
     pump(
       executeAbility(
         ctx,
-        { cardId: 'c-march', name: 'Last March of the Ents', oracleId: def.oracleId, controllerId: 'P1' },
+        {
+          cardId: 'c-march',
+          name: 'Last March of the Ents',
+          oracleId: def.oracleId,
+          controllerId: 'P1',
+        },
         ability,
         [],
       ),
@@ -423,7 +493,11 @@ describe('returnToHand — the general bounce primitive', () => {
 
   it('a bounced non-token permanent lands in its owner’s hand', () => {
     const ctx = pod();
-    const bear = spawn(ctx, 'P1', oracle({ name: 'Test Bear', typeLine: 'Creature — Bear', manaCost: '{1}{G}' }));
+    const bear = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Test Bear', typeLine: 'Creature — Bear', manaCost: '{1}{G}' }),
+    );
 
     const ability: Ability = {
       kind: 'triggered',

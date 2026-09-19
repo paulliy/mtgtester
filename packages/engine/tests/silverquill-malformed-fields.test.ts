@@ -28,11 +28,10 @@ describe('Darksteel Mutation', () => {
 });
 
 describe('Fallen Ideal', () => {
-  it('pumps via the attachedToSource EffectRef string, not a Selector object', () => {
-    // `EffectRef` is a string union; a `{ kind: 'attachedToSource' }` Selector object put here
-    // meant `ref()` returned null and the pump was skipped every time.
-    const effect = defOf('4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3')?.activatedAbilities?.[0]?.ability.effects[0];
-    expect(effect).toEqual({ op: 'pumpUntilEot', target: 'attachedToSource', power: 2, toughness: 1 });
+  it('stays explicitly unsupported while its sacrifice ability is attached to the wrong object', () => {
+    const override = getOverride('4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3');
+    expect(override?.unsupportedReason).toContain('Granted sacrifice ability');
+    expect(override?.def.activatedAbilities).toBeUndefined();
   });
 });
 
@@ -50,16 +49,23 @@ describe('Shineshadow Snarl', () => {
 describe('Starfield Mystic', () => {
   it('places its counter through `count`, the field putCounters actually reads', () => {
     const effect = defOf('2975590d-6a5b-41e5-8a3b-e9325e71226a')?.triggers?.[0]?.effects[0];
-    expect(effect).toEqual({ op: 'putCounters', counter: '+1/+1', count: constant(1), target: 'source' });
+    expect(effect).toEqual({
+      op: 'putCounters',
+      counter: '+1/+1',
+      count: constant(1),
+      target: 'source',
+    });
   });
 });
 
 describe('Study Hall', () => {
-  it('has no hand-authored mana ability, because its cost is mana it cannot pay', () => {
-    // Study Hall is "{1}, {T}: Add one mana …". The override used to author that as a true mana
-    // ability, but a mana ability may not charge mana (see tests/mana-cost-in-mana-ability.test.ts); the authored version tapped for free mana. The card is
-    // honestly unmodeled until a mana source can pay for itself.
-    expect(defOf('eb735501-19e7-4910-aa6a-6667fff6f4e5')?.manaAbilities ?? []).toEqual([]);
+  it('authors the mana-costed ability with its commander spend trigger', () => {
+    const abilities = defOf('eb735501-19e7-4910-aa6a-6667fff6f4e5')?.manaAbilities ?? [];
+    expect(abilities).toHaveLength(2);
+    expect(abilities[1]?.costs?.map((cost) => cost.kind)).toEqual(['mana', 'tap']);
+    expect(abilities[1]?.spendTrigger?.ability.effects).toEqual([
+      { op: 'scry', count: { kind: 'commanderCastCount', player: 'you' } },
+    ]);
   });
 });
 

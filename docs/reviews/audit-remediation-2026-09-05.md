@@ -23,21 +23,21 @@ Hellkite Courser's repaired test, Hunter's Insight, Herd Heirloom, Land Tax, Par
 
 ## Original finding status
 
-| Finding | Status after this work |
-| --- | --- |
-| F01: strategic filtering changes legality | Reproduced cases fixed; explicit user yields retained. |
-| F02: manifest identity and printed behavior | Reproduced entry/static/visibility defects fixed. Full face-down rules and all information-flow paths are not exhaustively audited. |
-| F03: tapped state omitted from cache | Fix was already present; Iymrith regression passes. |
-| F04: sequential simultaneous SBAs | Simultaneous lethal/zero-characteristic death group fixed. A complete transaction covering every combination of legend choices, attachment SBAs, counter cancellation, and player elimination remains architectural work. |
-| F05: hybrid payment false negative | Reproduced pool/source cases fixed in planning and spending. |
-| F06: impossible mana search stalls | Missing-color stall fixed with suffix feasibility bounds. General search memoization and the costly-source solver's existing limitations remain. |
-| F07: approximate overrides | Sram corrected; seven identified approximations quarantined. Prior Land Tax/Parasitic fixes retained. Other authored overrides still need a systematic semantics audit. |
-| F08: invalid mana statistics | Misleading percentages withdrawn. Accurate versioned measurements still required. |
-| F09: asynchronous start race | Fixed, including failed setup preservation and pending-start cancellation. |
-| F10: network control exposure | Restricted to the local application boundary. Authenticated LAN/remote sharing is not implemented. |
-| F11: batch exceptions strand active state | Setup/construction failures handled; restart recovery added and tested. Unrecoverable database write failures still require operator intervention. |
-| F12: unaffordable life payment | Fixed and tested at 0, 1, 2, and 3 life. |
-| F13: missing Vue/browser validation | Vue checking/lint and three browser tests added. Full import-to-winner browser coverage and hosted CI remain open. |
+| Finding                                     | Status after this work                                                                                                                                                                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F01: strategic filtering changes legality   | Reproduced cases fixed; explicit user yields retained.                                                                                                                                                                    |
+| F02: manifest identity and printed behavior | Reproduced entry/static/visibility defects fixed. Full face-down rules and all information-flow paths are not exhaustively audited.                                                                                       |
+| F03: tapped state omitted from cache        | Fix was already present; Iymrith regression passes.                                                                                                                                                                       |
+| F04: sequential simultaneous SBAs           | Simultaneous lethal/zero-characteristic death group fixed. A complete transaction covering every combination of legend choices, attachment SBAs, counter cancellation, and player elimination remains architectural work. |
+| F05: hybrid payment false negative          | Reproduced pool/source cases fixed in planning and spending.                                                                                                                                                              |
+| F06: impossible mana search stalls          | Missing-color stall fixed with suffix feasibility bounds. General search memoization and the costly-source solver's existing limitations remain.                                                                          |
+| F07: approximate overrides                  | Sram corrected; seven identified approximations quarantined. Prior Land Tax/Parasitic fixes retained. Other authored overrides still need a systematic semantics audit.                                                   |
+| F08: invalid mana statistics                | Misleading percentages withdrawn. Accurate versioned measurements still required.                                                                                                                                         |
+| F09: asynchronous start race                | Fixed, including failed setup preservation and pending-start cancellation.                                                                                                                                                |
+| F10: network control exposure               | Restricted to the local application boundary. Authenticated LAN/remote sharing is not implemented.                                                                                                                        |
+| F11: batch exceptions strand active state   | Setup/construction failures handled; restart recovery added and tested. Unrecoverable database write failures still require operator intervention.                                                                        |
+| F12: unaffordable life payment              | Fixed and tested at 0, 1, 2, and 3 life.                                                                                                                                                                                  |
+| F13: missing Vue/browser validation         | Vue checking/lint and three browser tests added. Full import-to-winner browser coverage and hosted CI remain open.                                                                                                        |
 
 ## Evidence and validation
 
@@ -57,10 +57,10 @@ The original review's "1,249 passed" was a runner result that included three gen
 
 Synthetic medians on the same local workspace, not claims about whole-game throughput:
 
-| Case | Original review | After fixes |
-| --- | ---: | ---: |
-| Impossible 16-source G/W payment needing U | ~2,363 ms | ~0.08 ms |
-| 1,000 empty event polls against 100,000 retained events | ~500 ms | ~0.18 ms |
+| Case                                                    | Original review | After fixes |
+| ------------------------------------------------------- | --------------: | ----------: |
+| Impossible 16-source G/W payment needing U              |       ~2,363 ms |    ~0.08 ms |
+| 1,000 empty event polls against 100,000 retained events |         ~500 ms |    ~0.18 ms |
 
 Stable-board characteristic queries still show the original repeated-digest cost. Revisions/indexes need disciplined mutation ownership first; this change does not pretend to deliver that architectural refactor.
 

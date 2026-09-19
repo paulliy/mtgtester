@@ -68,7 +68,13 @@ describe('ability builders', () => {
   it('folds an intervening-if condition into the trigger, not the ability', () => {
     // CR 603.4: the condition belongs to the trigger and is checked twice — at trigger time and
     // again on resolution. Hanging it off the ability instead would skip the second check.
-    const condition = { kind: 'countPermanents', selector: ofType('Creature'), scope: 'you', cmp: '>=', n: 1 } as const;
+    const condition = {
+      kind: 'countPermanents',
+      selector: ofType('Creature'),
+      scope: 'you',
+      cmp: '>=',
+      n: 1,
+    } as const;
     const ability = triggered(onUpkeep(), { effects: [{ op: 'shuffle' }], condition });
     expect(ability.trigger).toEqual({ when: 'upkeep', player: 'you', condition });
     expect('condition' in ability).toBe(false);
@@ -110,7 +116,10 @@ describe('ability builders', () => {
   });
 
   it('builds a loyalty ability at sorcery speed', () => {
-    const ability = loyaltyAbility(-3, { effects: [{ op: 'destroy', target: 0 }], targets: [{ kind: 'creature' }] });
+    const ability = loyaltyAbility(-3, {
+      effects: [{ op: 'destroy', target: 0 }],
+      targets: [{ kind: 'creature' }],
+    });
     expect(ability.costs).toEqual([{ kind: 'loyalty', delta: -3 }]);
     expect(ability.timing).toBe('sorcery');
   });
@@ -124,7 +133,7 @@ describe('mana cost helpers', () => {
   it('throws on an unparseable cost rather than silently producing a null cost', () => {
     // The old `parseManaCost(s).cost!` spelling turned an unsupported symbol into `null`, which
     // the payment solver accepts as "free".
-    expect(() => mana('{G/P}')).toThrow(/unparseable mana cost/);
+    expect(() => mana('{S}')).toThrow(/unparseable mana cost/);
   });
 });
 
@@ -152,7 +161,9 @@ describe('targetSlots', () => {
 
 describe('static-ability helpers', () => {
   it('builds a lord as a layer 7d modification', () => {
-    expect(auraBuff(2, 2)).toEqual([{ affects: ATTACHED, op: { layer: 7, sublayer: 'd', power: 2, toughness: 2 } }]);
+    expect(auraBuff(2, 2)).toEqual([
+      { affects: ATTACHED, op: { layer: 7, sublayer: 'd', power: 2, toughness: 2 } },
+    ]);
   });
 
   it('appends one layer 6 static per granted keyword', () => {
@@ -173,7 +184,13 @@ describe('static-ability helpers', () => {
 
 describe('token catalog', () => {
   it('derives typeLine from the types and subtypes so they cannot disagree', () => {
-    const token = creatureToken({ name: 'Zombie', subtypes: ['Zombie'], colors: ['B'], power: 2, toughness: 2 });
+    const token = creatureToken({
+      name: 'Zombie',
+      subtypes: ['Zombie'],
+      colors: ['B'],
+      power: 2,
+      toughness: 2,
+    });
     expect(token.typeLine).toBe('Creature — Zombie');
     expect(token.types).toEqual(['Creature']);
     expect(token.subtypes).toEqual(['Zombie']);
@@ -181,14 +198,22 @@ describe('token catalog', () => {
 
   it('puts Artifact ahead of Creature for artifact creature tokens', () => {
     const token = creatureToken({
-      name: 'Thopter', subtypes: ['Thopter'], colors: ['U'], power: 1, toughness: 1, artifact: true,
+      name: 'Thopter',
+      subtypes: ['Thopter'],
+      colors: ['U'],
+      power: 1,
+      toughness: 1,
+      artifact: true,
     });
     expect(token.typeLine).toBe('Artifact Creature — Thopter');
     expect(token.types).toEqual(['Artifact', 'Creature']);
   });
 
   it('omits keywords entirely when a token has none', () => {
-    expect('keywords' in creatureToken({ name: 'Bear', subtypes: ['Bear'], colors: ['G'], power: 2, toughness: 2 })).toBe(false);
+    expect(
+      'keywords' in
+        creatureToken({ name: 'Bear', subtypes: ['Bear'], colors: ['G'], power: 2, toughness: 2 }),
+    ).toBe(false);
   });
 
   it('gives noncreature artifact tokens null power and toughness', () => {
@@ -200,7 +225,10 @@ describe('token catalog', () => {
   it('gives Treasure both a tap and a sacrifice cost', () => {
     // Three different Treasures existed across override files before the catalog: one correct,
     // one missing the {T}, and one with no costs at all — a free repeatable any-color source.
-    expect(TREASURE.manaAbilities?.[0]?.costs).toEqual([{ kind: 'tap' }, { kind: 'sacrificeSelf' }]);
+    expect(TREASURE.manaAbilities?.[0]?.costs).toEqual([
+      { kind: 'tap' },
+      { kind: 'sacrificeSelf' },
+    ]);
   });
 
   it('makes the lifelink Soldier white, matching the cards that print it', () => {

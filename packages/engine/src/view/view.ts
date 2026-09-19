@@ -229,7 +229,9 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
     const revealed = gatherRuleStatics(ctx).some(
       (entry) => entry.controllerId === player.id && entry.static.kind === 'revealTopLibrary',
     );
-    return top !== undefined && revealed ? [{ player: player.id, card: fullCardView(top, ctx) }] : [];
+    return top !== undefined && revealed
+      ? [{ player: player.id, card: fullCardView(top, ctx) }]
+      : [];
   });
 
   return {

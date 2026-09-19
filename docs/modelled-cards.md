@@ -2,7 +2,7 @@
 
 Generated from the engine-supported card pool.
 
-**Total**: 3920 modeled non-land cards
+**Total**: 5790 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -15,14 +15,29 @@ Generated from the engine-supported card pool.
 - Abbey Griffin
 - Abbey Matron
 - Abrade
+- Abrupt Decay
 - Absorb
+- Absorb Vis
+- Abzan Ascendancy
 - Abzan Banner
+- Abzan Battle Priest
+- Abzan Falconer
 - Accelerate
 - Accelerated Evolution
 - Accorder's Shield
+- Acid Rain
+- Acidic Slime
+- Acolyte of Xathrid
+- Acorn Harvest
+- Acrobatic Leap
+- Action News Crew
 - Adamant Will
 - Adaptive Shimmerer
+- Adaptive Sporesinger
 - Adarkar Sentinel
+- Adeline, Resplendent Cathar
+- Adeliz, the Cinder Wind
+- Adherent of Hope
 - Adult Gold Dragon
 - Adun Oakenshield
 - Advance Scout
@@ -32,29 +47,57 @@ Generated from the engine-supported card pool.
 - Aegis of the Heavens
 - Aegis Turtle
 - Aerial Boost
+- Aerial Doombot
 - Aerial Responder
 - Aerie Mystics
 - Aeronaut's Wings
+- Aesi, Tyrant of Gyre Strait
+- Aether Adept
+- Aether Helix
+- Aether Spellbomb
+- Aetherflux Conduit
+- Aethersquall Ancient
+- Aethertide Whale
+- Aetherwind Basker
 - Affa Guard Hound
 - Affa Protector
 - Afflict
+- Aftershock
 - Ageless Guardian
+- Agent of Masks
+- Agent of Shauku
+- Agent of Stromgald
 - Agent Phil Coulson
+- Agent Venom
 - Agents of HYDRA
+- Aggravated Assault
 - Aggressive Mammoth
 - Aggressive Urge
+- Agonizing Syphon
 - Agony Warp
 - Aid the Fallen
+- Ainok Bond-Kin
+- Ainok Guide
+- Ainok Strike Leader
 - Air Elemental
 - Air Response Unit
+- Air-Cult Elemental
 - Ajani, Caller of the Pride
+- Ajani's Comrade
 - Ajani's Sunstriker
 - Ajani's Welcome
+- Akki Avalanchers
+- Akki Coalflinger
 - Akki Drillmaster
+- Akki Rockspeaker
+- Akoum Battlesinger
+- Akoum Hellhound
 - Akoum Hellkite
 - Akroan Phalanx
 - Akroma, Angel of Wrath
 - Akroma's Devoted
+- Akroma's Memorial
+- Akroma's Will
 - Alabaster Host Sanctifier
 - Alabaster Kirin
 - Alaborn Grenadier
@@ -64,6 +107,7 @@ Generated from the engine-supported card pool.
 - Alchemist's Apprentice
 - Alert Shu Infantry
 - Alexi's Cloak
+- Algae Gharial
 - Alley Strangler
 - Allied Reinforcements
 - Allied Teamwork
@@ -73,10 +117,14 @@ Generated from the engine-supported card pool.
 - Alpha Tyrranax
 - Alpine Grizzly
 - Alpine Watchdog
+- Altar of Bone
 - Altar's Light
+- Altar's Reap
 - Always Watching
 - Amateur Hero
 - Ambassador Oak
+- Ambition's Cost
+- Ambush
 - Ambush Paratrooper
 - Ambush Party
 - Ambush Viper
@@ -84,11 +132,16 @@ Generated from the engine-supported card pool.
 - Amphin Cutthroat
 - Amphin Pathmage
 - Ampryn Tactician
+- Amugaba
+- An Offer You Can't Refuse
+- An Unexpected Party // At the Door
 - Ana Disciple
 - Anaba Bodyguard
 - Anaba Shaman
 - Anaba Spirit Crafter
+- Anarchist
 - Anarchy
+- Anathemancer
 - Ancestors' Aid
 - Ancestral Reminiscence
 - Ancestral Vengeance
@@ -96,6 +149,8 @@ Generated from the engine-supported card pool.
 - Ancient Brontodon
 - Ancient Carp
 - Ancient Crab
+- Ancient Craving
+- Ancient Grudge
 - Ancient Spider
 - Angel of Despair
 - Angel of Flight Alabaster
@@ -107,31 +162,48 @@ Generated from the engine-supported card pool.
 - Angel of the God-Pharaoh
 - Angel's Mercy
 - Angelfire Crusader
+- Angelfire Ignition
 - Angelic Blessing
+- Angelic Edict
 - Angelic Gift
+- Angelic Purge
+- Angelic Shield
 - Angelic Wall
+- Angler Drake
+- Angler Turtle
+- Angry Rabble
 - Anguished Unmaking
 - Animating Faerie // Bring to Life
 - Ankle Biter
 - Ankle Shanker
+- Annoyed Altisaur
 - Anodet Lurker
 - Anointed Chorister
+- Anointed Procession
 - Ant Queen
 - Ant-Man, Scott Lang
+- Ant-Man's Army
 - Antagonize
 - Anthem of Champions
 - Anvilwrought Raptor
+- Apex Devastator
 - Apothecary Geist
+- Apothecary Stomper
 - Appa, the Vigilant
 - Appendage Amalgam
 - Appetite for the Unnatural
+- Applied Biomancy
+- Apprentice Wizard
 - April, Reporter of the Weird
+- Aquatic Alchemist // Bubble Up
 - Aquitect's Defenses
 - Aquus Steed
 - Arachnoid
+- Arachnoid Adaptation
 - Aradara Express
 - Arahbo, the First Fang
 - Arashin Cleric
+- Arasta of the Endless Web
 - Arborback Stomper
 - Arborea Pegasus
 - Arboretum Elemental
@@ -139,17 +211,24 @@ Generated from the engine-supported card pool.
 - Arcane Encyclopedia
 - Arcane Flight
 - Arcane Signet
+- Arcane Spyglass
+- Arcanis the Omnipotent
+- Archaeomancer
 - Archaeomender
 - Archangel
 - Archers of Qarsi
 - Archers' Parapet
 - Archfiend of Sorrows
+- Architect of the Untamed
 - Archive Dragon
 - Archivist
+- Archmage Emeritus
+- Archmage of Runes
 - Archon of Falling Stars
 - Archon of Justice
 - Archon of Sun's Grace
 - Archweaver
+- Ardent Elementalist
 - Ardent Militia
 - Ardenvale Tactician // Dizzying Swoop
 - Argentum Armor
@@ -173,53 +252,84 @@ Generated from the engine-supported card pool.
 - Armored Whirl Turtle
 - Armored Wolf-Rider
 - Armorer Guildmage
+- Armory of Iroas
+- Arms Dealer
+- Army Ants
+- Army of Allah
+- Aron, Benalia's Ruin
 - Arrogant Vampire
+- Artful Dodge
+- Artful Maneuver
 - Artificer's Dragon
+- Artillerize
 - Artisan's Sorrow
+- Arvad the Cursed
+- Arwen, Weaver of Hope
 - Ascended Lawmage
+- Asha's Favor
 - Ashcoat Bear
 - Ashen Firebeast
 - Ashnod's Altar
 - Aspect of Gorgon
 - Aspect of Manticore
 - Aspiring Aeronaut
+- Assassin's Trophy
 - Assault Griffin
 - Assault Strobe
 - Assault Zeppelid
 - Astral Wingspan
 - Atalan Jackal
-- Atarka Monument
 - Atarka, World Render
+- Atlantean Cavalry
+- Atmosphere Surgeon
 - Atog
 - Atomize
 - Atraxa, Praetors' Voice
 - Attended Knight
-- Attune with Aether
+- Attended Socialite
+- Attentive Sunscribe
+- Attercop
 - Atzocan Seer
+- Audacious Thief
 - Auger Spree
 - Augmenting Automaton
 - Augury Owl
 - Aura Blast
+- Aura Fracture
+- Aura Mutation
 - Aura of Dominion
 - Aura Shards
 - Auramancer
 - Auramancer's Guise
+- Auron's Inspiration
+- Auroral Procession
+- Austere Command
 - Autochthon Wurm
 - Automatic Librarian
 - Avacyn, Angel of Hope
+- Avacyn's Memorial
 - Avacyn's Pilgrim
+- Avatar Enthusiasts
+- Avatar of Slaughter
 - Aven Battle Priest
 - Aven Brigadier
 - Aven Cloudchaser
 - Aven Envoy
+- Aven Fateshaper
 - Aven Fisher
 - Aven Fleetwing
 - Aven Flock
+- Aven Fogbringer
 - Aven of Enduring Hope
 - Aven Reedstalker
 - Aven Sentry
 - Aven Skirmisher
 - Aven Smokeweaver
+- Aven Surveyor
+- Aven Trooper
+- Aven Wind Mage
+- Avenger of Zendikar
+- Avengers Quinjet
 - Avian Changeling
 - Aviation Pioneer
 - Awaken the Bear
@@ -227,27 +337,42 @@ Generated from the engine-supported card pool.
 - Axebane Beast
 - Axebane Stag
 - Axegrinder Giant
+- Axgard Braggart
 - Axgard Cavalry
+- Axiom Engraver
 - Azimaet Drake
 - Azorius Cluestone
+- Azorius Knight-Arbiter
 - Azorius Locket
+- Azorius Signet
 - Azorius Skyguard
 - Azula Always Lies
 - Azure Drake
 - Azure Mage
+- Azusa, Lost but Seeking
 - Back to Nature
 - Backup Agent
 - Bad Moon
 - Badlands Revival
+- Bake into a Pie
+- Bala Ged Recovery // Bala Ged Sanctuary
 - Balamb T-Rexaur
 - Balduvian Barbarians
 - Balduvian Bears
 - Baleful Ammit
+- Baleful Beholder
+- Baleful Force
 - Baleful Strix
+- Balloon Peddler
+- Balmor, Battlemage Captain
 - Baloth Null
+- Baloth Woodcrasher
 - Balshan Collaborator
+- Balshan Griffin
 - Bane Alley Blackguard
 - Banehound
+- Banishing Betrayal
+- Bankrupt in Blood
 - Banners Raised
 - Bant Battlemage
 - Bar the Door
@@ -262,13 +387,18 @@ Generated from the engine-supported card pool.
 - Barrage of Expendables
 - Barrage Ogre
 - Barrier of Bones
+- Barrin, Master Wizard
 - Barrow Witches
 - Bartizan Bats
 - Basal Thrull
+- Basandra, Battle Seraph
+- Bash to Bits
 - Basilisk Collar
+- Basri's Solidarity
 - Bassara Tower Archer
 - Bastion Enforcer
 - Bastion Inventor
+- Bastion of Remembrance
 - Bathe in Dragonfire
 - Batterhorn
 - Battershield Warrior
@@ -276,47 +406,66 @@ Generated from the engine-supported card pool.
 - Battle Mastery
 - Battle Rampart
 - Battle Sliver
+- Battle Squadron
 - Battlefield Raptor
 - Battleflight Eagle
 - Battleground Geist
 - Battlegrowth
+- Battlewand Oak
 - Battlewise Valor
 - Bay Falcon
 - Bazaar Trademage
+- Beacon Hawk
+- Beacon of Creation
 - Beacon of Destruction
 - Beanstalk Wurm // Plant Beans
 - Bear Cub
 - Bear's Companion
+- Beast Attack
 - Beast Whisperer
 - Beast Within
+- Beast-Kin Ranger
 - Beastcaller Savant
 - Bebop, Warthog Warrior
+- Bedevil
 - Bedhead Beastie
 - Bee Sting
 - Beetleback Chief
 - Beetleform Mage
 - Befuddle
 - Behemoth Sledge
+- Belbe's Portal
 - Beledros Witherbloom
 - Belle of the Brawl
 - Belligerent Sliver
 - Bellowing Bruiser // Beat a Path
 - Bellowing Crier
 - Bellows Lizard
-- Benalish Emissary
 - Benalish Heralds
+- Benalish Honor Guard
 - Benalish Knight
 - Benalish Marshal
 - Beneath the Sands
 - Benthic Giant
+- Beorn, Reluctant Host // Till and Tend
 - Bequeathal
 - Beregond of the Guard
+- Berserkers' Onslaught
 - Beskir Shieldmate
+- Bespoke Bō
 - Bestial Menace
 - Bestow Greatness
+- Betrayal
 - Bewilder
 - Bewildering Blizzard
+- Beyeen Veil // Beyeen Coast
 - Bhaal's Invoker
+- Big Play
+- Big Score
+- Bilbo Baggins, Burglar // Take a Glance
+- Bilbo, Luckwearer // Burglar's Plot
+- Bilbo's Deadly Slice
+- Bile Urchin
 - Biogenic Ooze
 - Biomathematician
 - Bird Maiden
@@ -324,66 +473,121 @@ Generated from the engine-supported card pool.
 - Birthing Boughs
 - Bishop of Wings
 - Bishop's Soldier
+- Bitterbloom Bearer
 - Bitterbow Sharpshooters
+- Bituminous Blast
+- Black Bolt, Inhuman King
 - Black Knight
+- Black Market Connections
+- Black Panther, Vanguard
+- Black Waltz No. 3
+- Black Widow, Agile Avenger
+- Black Widow, Daring Operative
 - Black Widow, Natasha Romanoff
 - Blackcleave Goblin
+- Blade Historian
 - Blade of the Sixth Pride
 - Blade Splicer
 - Bladebrand
 - Bladed Pinions
 - Bladestitched Skaab
 - Bladewing the Risen
+- Blanchwood Armor
 - Blanchwood Treefolk
+- Blanket of Night
+- Blasphemous Act
+- Blasting Station
 - Blazing Hellhound
 - Blazing Volley
+- Bleak Coven Vampires
+- Blessed Light
 - Blessed Orator
+- Blessed Spirits
 - Blessing
+- Blight Mound
 - Blight Rot
+- Blighted Agent
+- Blighted Shaman
 - Blightsoil Druid
 - Blightwidow
+- Blind Creeper
 - Blind Phantasm
 - Blinding Spray
+- Blinking Spirit
 - Blinkmoth Infusion
 - Blister Beetle
+- Blistercoil Weird
 - Blistering Barrier
 - Blistering Dieflyn
+- Blisterspit Gremlin
 - Blitzball Shot
+- Blizzard Elemental
 - Bloated Toad
+- Blood Age General
+- Blood Artist
 - Blood Bairn
+- Blood Celebrant
+- Blood Divination
 - Blood Glutton
+- Blood Host
 - Blood Knight
 - Blood Moon
+- Blood Pact
 - Blood Pet
 - Blood Rites
+- Blood Tithe
 - Blood Vassal
 - Blood-Chin Rager
+- Bloodbraid Challenger
+- Bloodbraid Elf
+- Bloodbriar
 - Bloodcrusher of Khorne
 - Bloodfire Colossus
 - Bloodfire Dwarf
 - Bloodfire Kavu
 - Bloodfire Mentor
+- Bloodflow Connoisseur
+- Bloodgift Demon
+- Bloodhaze Wolverine
+- Bloodhunter Bat
 - Bloodied Ghost
+- Bloodline Culling
 - Bloodline Necromancer
 - Bloodlust Inciter
 - Bloodmark Mentor
 - Bloodrage Brawler
+- Bloodrite Invoker
+- Bloodsoaked Altar
 - Bloodstone Cameo
 - Bloodtallow Candle
+- Bloodthirsty Blade
 - Bloodthrone Vampire
 - Bloom Hulk
+- Bloom Tender
 - Bloomvine Regent // Claim Territory
 - Blossoming Defense
+- Blue Marvel, Adam Brashear
+- Blur of Blades
 - Blur Sliver
 - Blurred Mongoose
 - Boa Constrictor
+- Boar-q-pine
+- Boarding Party
 - Boartusk Liege
-- Bog Badger
+- Bofur, Reliable Guardian // Concerted Care
 - Bog Imp
+- Bog Initiate
+- Bog Witch
 - Bogardan Rager
 - Boggart Brute
+- Boggart Cursecrafter
+- Boggart Harbinger
 - Bogstomper
 - Bogwater Lumaret
+- Boil
+- Boiling Blood
+- Boiling Seas
+- Bold Biochemist
 - Bold Impaler
 - Boldwyr Aggressor
 - Bolt Hound
@@ -394,37 +598,59 @@ Generated from the engine-supported card pool.
 - Bombard
 - Bond Beetle
 - Bonded Fetch
+- Bonded Herdbeast // Plated Kilnbeast
 - Bone Pit Brute
+- Bone Sabres
 - Bone Saw
+- Bone Splinters
 - Bonebreaker Giant
 - Bonecaller Cleric
+- Boneclub Berserker
 - Bonescythe Sliver
 - Bonesplitter
 - Book of Rass
+- Boomerang
 - Boon of Emrakul
 - Boon of Safety
+- Boon of the Spirit Realm
 - Boon of the Wish-Giver
+- Bootleggers' Stash
 - Boots of Speed
+- Borborygmos
 - Border Guard
 - Border Patrol
+- Borderland Behemoth
 - Borderland Minotaur
 - Borderland Ranger
 - Boreal Druid
+- Boros Charm
 - Boros Cluestone
 - Boros Guildmage
 - Boros Locket
 - Boros Recruit
+- Boros Signet
 - Boros Swiftblade
 - Borough Backup
+- Borrowing 100,000 Arrows
+- Boss's Chauffeur
 - Bottle Gnomes
 - Boulderborn Dragon
 - Bounding Wolf
 - Bounty of Might
+- Bovine Intervention
 - Braidwood Cup
 - Braidwood Sextant
+- Brainstone
+- Brainstorm
+- Brainsurge
+- Bramble Familiar // Fetch Quest
 - Bramblesnap
 - Brambleweft Behemoth
+- Bramblewood Paragon
 - Brass Secretary
+- Braulios of Pheres Band
+- Bravado
+- Brave Brawler
 - Brave-Kin Duo
 - Brawler's Plate
 - Brazen Freebooter
@@ -437,20 +663,27 @@ Generated from the engine-supported card pool.
 - Breathstealer
 - Briarpack Alpha
 - Brightblade Stoat
+- Brigid, Clachan's Heart // Brigid, Doun's Mind
 - Brilliant Plan
 - Brimstone Dragon
+- Brimstone Trebuchet
 - Brindle Boar
 - Brindle Shoat
 - Broadcast Rambler
 - Broken Bond
 - Brokers Veteran
+- Bronze Guardian
 - Bronze Sable
 - Bronze Sword
 - Bronze Walrus
+- Bronzebeak Moa
 - Brood Weaver
 - Broodcaller Scourge
 - Broodhunter Wurm
 - Broodmate Dragon
+- Broodstar
+- Brotherhood Patriarch
+- Brotherhood Vertibird
 - Brushstrider
 - Brute Force
 - Brute Strength
@@ -458,36 +691,61 @@ Generated from the engine-supported card pool.
 - Bugenhagen, Wise Elder
 - Bull Cerodon
 - Bull Rush
+- Bull's Strength
 - Bulwark Giant
+- Bumbleflower's Sharepot
 - Buoyancy
 - Burden of Guilt
 - Buried Alive
+- Burlfist Oak
 - Burn Bright
+- Burning Prophet
+- Burning-Fist Minotaur
+- Burning-Tree Emissary
 - Burnished Hart
 - Burrenton Shield-Bearers
 - Burrog Banemaker
+- Burrowguard Mentor
 - Burrowing Razormaw
 - Burst of Energy
 - Burst of Speed
+- Burst of Strength
+- Bushmaster, Coiled Henchman
 - Bushwhack
+- Butcher of Malakir
 - Buzz Bots
+- Cabal Archon
 - Cabal Evangel
 - Cabal Trainee
+- Cackling Imp
+- Cactusfolk Sureshot
 - Cadaver Imp
+- Cadira, Caller of the Small
 - Caelorna, Coral Tyrant
 - Call of the Conclave
+- Call of the Herd
+- Call the Bloodline
 - Call the Cavalry
 - Call the Gatewatch
+- Call the Mountain Chocobo
 - Call to Glory
+- Call to Mind
 - Call to the Feast
 - Caller of Gales
+- Camaraderie
+- Camera Launcher
+- Campus Guide
 - Canal Monitor
 - Cancel
 - Candlelight Vigil
-- Canoptek Spyder
+- Candy Trail
+- Cankerbloom
+- Canoptek Scarab Swarm
+- Canopy Baloth
 - Canopy Gorger
 - Canopy Spider
 - Canopy Tactician
+- Canyon Crawler
 - Canyon Jerboa
 - Canyon Minotaur
 - Capashen Knight
@@ -498,12 +756,15 @@ Generated from the engine-supported card pool.
 - Captain of Umbar
 - Captain's Call
 - Captive Flame
+- Captured Sunlight
 - Caravan Hurda
 - Careening Mine Cart
 - Careful Study
 - Carnage Altar
 - Carnage Tyrant
 - Carnelian Orb of Dragonkind
+- Carnival of Souls
+- Carnivorous Moss-Beast
 - Carnivorous Plant
 - Carrion Ants
 - Carrion Call
@@ -523,31 +784,50 @@ Generated from the engine-supported card pool.
 - Cateran Summons
 - Cathar Commando
 - Cathar's Shield
+- Cathars' Crusade
+- Cathartic Reunion
 - Cathedral Sanctifier
+- Cathodion
+- Cauldron of Essence
 - Caustic Caterpillar
 - Caustic Rain
+- Caustic Wasps
 - Cavalry Drillmaster
+- Cavalry Pegasus
+- Cave-In
 - Cavern Thoctar
+- Celebrity Fencer
+- Celestial Ancient
 - Celestial Force
+- Celestial Prism
 - Cemetery Gate
+- Censor
 - Centaur Courser
 - Centaur Glade
 - Centaur Healer
 - Centaur Nurturer
 - Centaur Rootcaster
 - Centaur's Herald
+- Cephalid Pathmage
+- Cephalid Scout
+- Cephalopod Sentry
 - Cerodon Yearling
 - Cerulean Wyvern
+- Ceta Disciple
 - Chain Reaction
 - Chain to Memory
 - Chainbreaker
+- Chains of Custody
 - Champion of Arashin
-- Champion of Lambholt
+- Champion of the Parish
+- Champion of the Perished
 - Chandra, Novice Pyromancer
 - Chandra's Embercat
 - Changeling Sentinel
 - Changeling Wayfinder
+- Channel the Suns
 - Chant of the Skifsang
+- Chaos Maw
 - Chapel Geist
 - Chaplain's Blessing
 - Char-Rumbler
@@ -557,52 +837,79 @@ Generated from the engine-supported card pool.
 - Charge Through
 - Charging Badger
 - Charging Monstrosaur
+- Charging Strifeknight
+- Chariot of Victory
 - Charismatic Vanguard
 - Charity Extractor
 - Chartooth Cougar
 - Chasm Guide
+- Chatter of the Squirrel
 - Chief of the Edge
 - Chief of the Foundry
 - Chief of the Scale
+- Chieftain en-Dal
 - Child of Alara
 - Child of Night
 - Child of Thorns
 - Chimney Rabble
 - Chitinous Cloak
 - Chitinous Graspling
+- Chocobo Racetrack
+- Choking Fumes
 - Chorus of Woe
 - Chosen by Heliod
 - Chromatic Lantern
 - Chrome Cat
+- Chronicle of Victory
 - Chronomancer
+- Chronomaton
+- Chulane, Teller of Tales
+- Cinder Giant
 - Cinder Storm
+- Circle of Dreams Druid
+- Circle of Power
 - Circle of the Land Druid
+- Circuitous Route
+- Cirith Ungol Patrol
+- Citanul Druid
 - Citanul Hierophants
-- Citanul Woodreaders
 - Citywatch Sphinx
+- Citywide Bust
 - Civic Stalwart
 - Civic Wayfinder
+- Claim of Erebos
+- Clamavus
 - Clamorous Ironclad
 - Clan Defiance
 - Clarion Cathars
+- Clarion Spirit
+- Clash of Wills
 - Claws of Gix
 - Claws of Valakut
 - Claws of Wirewood
 - Cleanfall
+- Cleansing Nova
 - Cleansing Screech
 - Clear
 - Cleaver Riot
 - Cleaving Sliver
+- Clever Lumimancer
+- Clickslither
 - Cliffhaven Sell-Sword
 - Cliffside Lookout
 - Clinging Darkness
+- Clinquant Skymage
 - Cloak of Feathers
 - Cloak of the Bat
 - Cloaked Siren
+- Cloakwood Swarmkeeper
 - Clock of Omens
+- Cloistered Youth // Unholy Fiend
 - Cloud Crusader
 - Cloud Key
 - Cloud Manta
+- Cloud of Faeries
+- Cloudblazer
 - Cloudbound Moogle
 - Cloudchaser Eagle
 - Cloudcrown Oak
@@ -610,15 +917,21 @@ Generated from the engine-supported card pool.
 - Cloudreader Sphinx
 - Cloudshredder Sliver
 - Clutch of Undeath
+- Coal Golem
 - Coast Watcher
 - Coat with Venom
 - Cobblebrute
 - Cobbled Wings
+- Coercive Impetus
 - Cogworker's Puzzleknot
 - Coiled Tinviper
 - Cold-Water Snapper
+- Coliseum Behemoth
+- Collateral Damage
 - Collective Blessing
+- Collective Effort
 - Collective Nightmare
+- Collective Unconscious
 - Collector's Vault
 - Colorful Feiyi Sparrow
 - Colossadactyl
@@ -626,10 +939,13 @@ Generated from the engine-supported card pool.
 - Colossal Dreadmaw
 - Colossal Majesty
 - Colossal Might
+- Colossal Skyturtle
 - Colossapede
 - Colossification
 - Colossodon Yearling
 - Combat Courier
+- Combine Chrysalis
+- Combustible Gearhulk
 - Coming In Hot
 - Command the Storm
 - Commander's Authority
@@ -637,23 +953,32 @@ Generated from the engine-supported card pool.
 - Commander's Sphere
 - Common Bond
 - Common Crook
+- Compassionate Healer
 - Composite Golem
+- Compulsion
 - Conceited Witch // Price of Beauty
 - Concentrate
 - Concentrated Fire
+- Conch Horn
 - Conclave Cavalier
 - Conclave Equenaut
 - Conclave Guildmage
 - Conclave Naturalists
-- Conclave Tribunal
+- Conclave's Blessing
 - Concordia Pegasus
+- Condescend
 - Confidence from Strength
+- Confiscation Coup
+- Confusticate and Bebother
 - Conifer Strider
 - Conscripted Infantry
+- Consecrated Sphinx
 - Consider
+- Consign to the Pit
 - Constricting Tendrils
 - Consulate Dreadnought
 - Consulate Skygate
+- Consumptive Goo
 - Contagion Clasp
 - Contagious Nim
 - Contemplation
@@ -662,30 +987,45 @@ Generated from the engine-supported card pool.
 - Contraband Kingpin
 - Contract Killing
 - Contradict
+- Convolute
 - Coordinated Charge
 - Copper Gnomes
 - Copper Host Crusher
 - Copper Longlegs
 - Copper Myr
+- Coppercoat Vanguard
 - Coral Commando
 - Coral Eel
 - Coral Merfolk
 - Coralhelm Guide
 - Cordial Vampire
 - Core Prowler
+- Cori Mountain Stalwart
 - Corpse Connoisseur
 - Corpse Knight
+- Corroding Dragonstorm
+- Corrosive Gale
+- Corrupted Conviction
 - Corsair Captain
+- Cosmic Spider-Man
+- Cosmogrand Zenith
+- Costly Plunder
 - Council of Advisors
 - Counsel of the Soratami
 - Counterspell
+- Courageous Goblin
 - Courier Griffin
 - Courier Hawk
 - Courier's Briefcase
 - Courier's Capsule
+- Courser of Kruphix
+- Covenant of Blood
+- Covert Operative
 - Cower in Fear
 - Cowl Prowler
 - Crack Open
+- Crackling Cyclops
+- Crackling Doom
 - Cradle of Safety
 - Crash of Rhinos
 - Crash the Ramparts
@@ -696,17 +1036,33 @@ Generated from the engine-supported card pool.
 - Crazed Skirge
 - Creakwood Liege
 - Creeping Corrosion
+- Creeping Mold
 - Crenellated Wall
+- Crescendo of War
 - Crested Herdcaller
+- Crime Novelist
+- Criminal Enterprise
 - Crimson Kobolds
+- Crippling Fatigue
 - Crocodile of the Crossing
 - Crooked Custodian
 - Crookshank Kobolds
+- Crop Rotation
+- Crosis's Attendant
 - Crossbow Ambush
+- Crossroads Watcher
 - Crowd's Favor
+- Crowned Ceratok
 - Crucible of Fire
+- Crucible of Worlds
 - Cruel Finality
+- Cruel Truths
+- Cruel Tutor
+- Cruel Witness
+- Crusader of Odric
+- Crusading Knight
 - Crush Contraband
+- Crush of Wurms
 - Crux of Fate
 - Crypt Ripper
 - Cryptic Annelid
@@ -717,53 +1073,69 @@ Generated from the engine-supported card pool.
 - Crystal Carapace
 - Crystal Chimes
 - Crystal Dragon // Rob the Hoard
+- Crystal Seer
 - Crystal Slipper
 - Crystalline Armor
+- Culling the Weak
 - Cultbrand Cinder
 - Cultist's Staff
 - Cultivate
 - Cultivator's Caravan
 - Cumber Stone
+- Cunning Breezedancer
 - Cunning Sparkmage
 - Curate
 - Curio Vendor
+- Curiosity Crafter
 - Curious Altisaur
-- Curse of Bounty
 - Curse of Chains
 - Cursebreak
 - Cursed Minotaur
 - Custodian of the Trove
+- Cutthroat Centurion
 - Cutthroat Contender
 - Cyclonic Rift
 - Cyclops of Eternal Fury
 - Cyclops of One-Eyed Pass
 - Cylian Elf
 - Cystbearer
+- Dack's Duplicate
 - Daggerback Basilisk
 - Daggerdrome Imp
 - Daggerfang Duo
 - Daggermaw Megalodon
 - Dai Li Censor
 - Daily Bugle Newspaper
+- Dakkon Blackblade
 - Dakmor Bat
 - Dakmor Plague
 - Dakmor Scorpion
+- Dakmor Sorceress
+- Damn
 - Damnation
 - Dampening Pulse
 - Dancing Scimitar
+- Darigaaz's Attendant
 - Darigaaz's Charm
 - Daring Apprentice
 - Daring Escape
 - Daring Thunder-Thief
 - Dark Deed
+- Dark Favor
+- Dark Heart of the Wood
 - Dark Nourishment
+- Dark Prophecy
 - Dark Remedy
+- Dark Ritual
 - Darklit Gargoyle
+- Darkness
+- Darkness Descends
 - Darkslick Drake
 - Darksteel Axe
 - Darksteel Forge
 - Darksteel Gargoyle
 - Darksteel Ingot
+- Darksteel Mutation
 - Darksteel Myr
 - Darksteel Pendant
 - Darksteel Plate
@@ -771,7 +1143,10 @@ Generated from the engine-supported card pool.
 - Darksteel Sentinel
 - Darkthicket Wolf
 - Darkwatch Elves
+- Darkwater Egg
 - Darling of the Masses
+- Darting Merfolk
+- Daru Warchief
 - Dauntless Escort
 - Dauntless Survivor
 - Dauntless Veteran
@@ -780,93 +1155,155 @@ Generated from the engine-supported card pool.
 - Dawn to Dusk
 - Dawn's Light Archer
 - Dawnfeather Eagle
+- Dawnhart Disciple
 - Dawnhart Geist
 - Dawnhart Rejuvenator
 - Dawning Angel
 - Dawnstrike Paladin
 - Dawntreader Elk
 - Dawnwing Marshal
+- Day of Destiny
 - Day of Judgment
 - Daybreak Chaplain
 - Daybreak Charger
+- Daybreak Chimera
 - Daybreak Combatants
 - Daysquad Marshal
 - Dazzling Angel
 - Dazzling Lights
 - Dead Weight
+- Deadapult
+- Deadeye Plunderers
+- Deadly Derision
+- Deadly Dispute
 - Deadly Insect
 - Deadly Recluse
+- Deadly Rollick
 - Deadly Visit
 - Deafening Clarion
+- Death by Dragons
+- Death Cultist
+- Death in the Family
 - Death Speakers
+- Deathbellow War Cry
 - Deathbloom Gardener
 - Deathbloom Thallid
 - Deathcap Marionette
 - Deathgaze Cockatrice
 - Deathless Angel
+- Deathspore Thallid
 - Deathsprout
 - Debilitating Injury
+- Debris Beetle
 - Decadent Dragon // Expensive Taste
 - Decanter of Endless Water
+- Decisive Denial
+- Decoction Module
+- Deconstruct
 - Decoy Ploy
 - Dedicated Martyr
+- Deep Analysis
+- Deep Reconnaissance
+- Deeproot Champion
 - Deeproot Waters
+- Deepwood Drummer
 - Deer-Dog
 - Defender of Chaos
 - Defender of Law
 - Defensive Stance
 - Defiant Elf
 - Defiant Khenra
+- Defiant Ogre
+- Defiant Salvager
 - Defiant Strike
 - Defile
 - Deft Duelist
+- Defy Gravity
 - Dega Disciple
+- Déjà Vu
 - Deliberate
+- Delighted Halfling
 - Demanding Dragon
+- Dematerialize
+- Demolish
+- Demon's Due
 - Demon's Grasp
+- Demonic Tutor
 - Demystify
+- Deny Reality
 - Dependable Quinjet
+- Depths of Desire
+- Deranged Outcast
 - Deranged Whelp
+- Desecration Plague
 - Desert Cerodon
 - Desert Drake
 - Desert Sandstorm
 - Desert Twister
+- Desolation Prowler
+- Despark
 - Desperate Charge
+- Desperate Farmer // Depraved Harvester
 - Desperate Lunge
+- Desperate Ravings
 - Devastate
+- Devastation
 - Devil Dinosaur
 - Devilthorn Fox
 - Devkarin Dissident
+- Devoted Duelist
 - Devoted Hero
 - Devotee of Strength
 - Devouring Light
 - Devouring Swarm
 - Devout Monk
+- Devout Witness
+- Diabolic Intent
+- Diabolic Tutor
+- Dictate of Erebos
 - Dictate of Heliod
 - Didgeridoo
+- Dig Site Inventory
 - Dimir Cluestone
 - Dimir Informant
 - Dimir Locket
+- Dimir Signet
+- Dingus Staff
+- Dinosaur Stampede
 - Diplomatic Immunity
 - Dire Fleet Hoarder
+- Dire Fleet Neckbreaker
 - Dire Wolf Prowler
 - Diregraf Ghoul
+- Diresight
 - Dirgur Island Dragon // Skimming Strike
+- Disallow
+- Disciple of Bolas
 - Disciple of Grace
 - Disciple of Law
 - Disciple of Malice
 - Disciple of Tevesh Szat
 - Disciples of Gix
+- Disciplined Duelist
 - Discordant Piper
 - Disease Carriers
 - Disenchant
 - Disentomb
 - Disfigure
+- Dismember
 - Dismiss
 - Dismissive Denial
 - Disorient
+- Disowned Ancestor
 - Dispatch
 - Dispeller's Capsule
+- Dispersal Technician
+- Disperse
+- Dispersing Orb
+- Displacer Kitten
+- Disrupt Decorum
+- Disruptive Student
+- Disruptor of Currents
 - Dissenter's Deliverance
 - Dissolve
 - Divination
@@ -874,19 +1311,32 @@ Generated from the engine-supported card pool.
 - Divine Transformation
 - Diving Griffin
 - Djinn of the Lamp
+- Docent of Perfection // Final Iteration
+- Dockside Chef
+- Doctor Spectrum
+- Dogged Pursuit
 - Donatello, Turtle Techie
 - Donatello, Way with Machines
 - Doom Whisperer
+- Doom's Servo-Guards
 - Doomed Dissenter
 - Doomed Necromancer
 - Doomed Traveler
 - Doomwake Giant
+- Door of Destinies
+- Dori, Bearer of Friends
 - Dosan's Oldest Chant
 - Double Cleave
+- Doubling Season
+- Douse in Gloom
 - Douser of Lights
+- Dovin's Veto
 - Dowsing Shaman
+- Draconautics Engineer
 - Draconic Disciple
 - Draconic Muralists
+- Drag to the Underworld
+- Drag Under
 - Dragon Blood
 - Dragon Engine
 - Dragon Fodder
@@ -896,44 +1346,59 @@ Generated from the engine-supported card pool.
 - Dragon Moose
 - Dragon Roost
 - Dragon Sniper
-- Dragon Tempest
 - Dragon Trainer
 - Dragon's Eye Sentry
 - Dragon's Hoard
 - Dragonborn Looter
 - Dragonfly Suit
-- Dragonkin Berserker
 - Dragonlair Spider
 - Dragonlord Dromoka
 - Dragonlord's Servant
 - Dragonmaster Outcast
+- Dragonscale Boon
 - Dragonspeaker Shaman
+- Dragonstorm Globe
 - Dragoon's Wyvern
 - Drain the Well
 - Drake Hatchling
 - Drake-Skull Cameo
 - Drakewing Krasis
 - Drakuseth, Maw of Flames
+- Dramatic Rescue
+- Dramatic Reversal
+- Drana, Liberator of Malakir
+- Drana's Emissary
 - Draugr Recruiter
 - Dread of Night
+- Dread Presence
+- Dread Reaper
 - Dread Shade
+- Dreadbore
 - Dreadwing
-- Dream Pillager
+- Dream Beavers
+- Dreams of Laguna
+- Dreamscape Artist
 - Dreamstone Hedron
 - Dreg Reaver
+- Dreg Recycler
 - Dregscape Zombie
 - Drey Keeper
 - Drider
+- Drift of the Dead
 - Drifting Shade
 - Drogskol Captain
 - Drogskol Cavalry
 - Drogskol Shieldmate
+- Dromar's Attendant
 - Dromar's Charm
 - Dromoka Warrior
 - Dross Crocodile
+- Dross Harvester
 - Dross Ripper
 - Dross Skullbomb
+- Drove of Elves
 - Drown in Ichor
+- Drown in Shapelessness
 - Drowned Rusalka
 - Druid Lyrist
 - Druid of the Anima
@@ -941,44 +1406,76 @@ Generated from the engine-supported card pool.
 - Druids' Repository
 - Drumhunter
 - Dry Spell
+- Dryad Greenseeker
+- Dryad of the Ilysian Grove
+- Dryad's Revival
 - Dual-Sun Adepts
+- Dueling Coach
+- Duergar Hedge-Mage
+- Dundoolin Weaver
 - Dune Beetle
+- Dune-Brood Nephilim
 - Dungeon Shade
+- Dungrove Elder
 - Durkwood Boars
 - Dusk Imp
 - Dusk Legion Dreadnought
+- Dusk Legion Zealot
 - Duskdale Wurm
 - Duskrider Falcon
+- Duskshell Crawler
 - Dutiful Return
 - Dutiful Servants
+- Duty Beyond Death
 - Dwarven Castle Guard
+- Dwarven Provisioner
 - Dwarven Trader
 - Dwynen's Elite
 - Eager Cadet
+- Eager First-Year
 - Eager Glyphmage
+- Eager Trufflesnout
 - Eagle of the Watch
 - Eagles of the North
 - Earth Elemental
+- Earth King's Lieutenant
+- Earth Rift
+- Earth Servant
 - Earth-Origin Yak
+- Earthblighter
 - Earthquake
 - Earthshaker Giant
 - Earthshaking Si
+- East Wind Avatar
+- Easy Prey
+- Eat to Extinction
+- Ebon Drake
 - Ebony Rhino
 - Ebony Treefolk
 - Ecologist's Terrarium
+- Ecstatic Awakener // Awoken Demon
+- Edgewalker
 - Eerie Procession
 - Efficient Construction
 - Eidolon of Blossoms
 - Eidolon of Philosophy
+- Eject
 - Ekundu Griffin
 - Eladamri's Call
 - Elas il-Kor, Sadistic Pilgrim
 - Elder Auntie
+- Elder Gargaroth
+- Elderfang Venom
 - Elderleaf Mentor
 - Eldrazi Devastator
+- Electric Revelation
 - Electrify
+- Electrostatic Field
+- Electrostatic Infantry
 - Elemental Bond
+- Elemental Masterpiece
 - Elemental Summoning
+- Elephant Ambush
 - Elephant Guide
 - Elephant-Rat
 - Elesh Norn, Grand Cenobite
@@ -986,15 +1483,24 @@ Generated from the engine-supported card pool.
 - Elfhame Wurm
 - Elfsworn Giant
 - Elgaud Inquisitor
+- Eliminate
+- Elite Guardmage
 - Elite Instructor
 - Elite Vanguard
 - Elixir of Vitality
 - Elturgard Ranger
+- Elven Ambush
+- Elven Cache
 - Elven Chorus
 - Elven Lyre
+- Elvenking's Harper
 - Elves of Deep Shadow
 - Elvish Aberration
+- Elvish Archdruid
 - Elvish Archers
+- Elvish Farmer
+- Elvish Handservant
+- Elvish Harbinger
 - Elvish Herder
 - Elvish Hexhunter
 - Elvish Lookout
@@ -1005,6 +1511,7 @@ Generated from the engine-supported card pool.
 - Elvish Regrower
 - Elvish Rejuvenator
 - Elvish Scrapper
+- Elvish Vanguard
 - Elvish Visionary
 - Elvish Warrior
 - Ember Shot
@@ -1018,11 +1525,17 @@ Generated from the engine-supported card pool.
 - Emeria Angel
 - Emmara, Soul of the Accord
 - Emmessi Tome
+- Emrakul's Influence
 - Enatu Golem
 - Encampment Keeper
 - Enchanted Carriage
 - Enchantress's Presence
+- Encroaching Dragonstorm
 - End-Raze Forerunners
+- Endless Foot Assault
+- Endless One
+- Energizer
+- Energy Refractor
 - Enfeeblement
 - Enforcer Griffin
 - Engine Rat
@@ -1031,75 +1544,122 @@ Generated from the engine-supported card pool.
 - Enhanced Awareness
 - Enlightened Ascetic
 - Enlightened Maniac
+- Enlightened Tutor
+- Enlisted Wurm
 - Enormous Baloth
+- Enraged Flamecaster
 - Enraged Giant
 - Enter the Enigma
 - Enthusiastic Mechanaut
+- Entomb
 - Environmental Sciences
 - Environmental Scientist
 - Envoy of Okinec Ahau
+- EPF Point Squad
 - Ephara's Radiance
 - Ephemeral Shields
+- Ephemeron
+- Epic Downfall
 - Epic Proportions
+- Epiphany Storm
+- Era of Innovation
 - Erase
+- Erdwal Ripper
+- Erebor Flamesmith
 - Erkenbrand, Lord of Westfold
+- Erode
 - Erratic Visionary
 - Ertai, Wizard Adept
+- Erudite Wizard
+- Escape Artist
+- Escape from Orthanc
+- Escape Velocity
 - Esper Cormorants
+- Esper Sentinel
+- Essence Drain
+- Essence Extraction
+- Essence Infusion
 - Essence Warden
+- Etched Familiar
 - Eternal Warrior
+- Eternal Witness
 - Ethereal Armor
 - Ethereal Guidance
 - Etherium Abomination
 - Etherium Astrolabe
 - Etherium Sculptor
+- Etherium Spinner
+- Etherium-Horn Sorcerer
+- Ethersworn Adjudicator
+- Ethersworn Sphinx
+- Etherwrought Page
 - Ettercap // Web Shot
 - Eumidian Terrabotanist
 - Eureka Moment
 - Evacuation
+- Evangel of Heliod
 - Eviscerate
+- Eviscerator
+- Eviscerator's Insight
 - Evolution Charm
 - Evolution Sage
 - Excavated Wall
-- Excavation Elephant
 - Excavation Mole
+- Exhibition Magician
 - Exhilarating Elocution
 - Exiled Boggart
+- Exosuit Savior
 - Exotic Pets
+- Expanded Anatomy
 - Expedite
 - Expedition Envoy
 - Expedition Map
 - Experimental Armor
 - Experimental Aviator
+- Exploration
 - Explosive Derailment
 - Explosive Impact
 - Explosive Shot
 - Explosive Vegetation
 - Expose to Daylight
+- Exsanguinate
 - Exultant Cultist
 - Exultant Skymarcher
+- Eye of Nowhere
 - Eye of Ramos
 - Eyeblight Cullers
+- Eyeblight Massacre
 - Eyes of the Beholder
 - Ezio, Blade of Vengeance
 - Fabricate
 - Facet Reader
+- Facevaulter
 - Fade into Antiquity
 - Fae Flight
+- Fae of Wishes // Granted
+- Faeburrow Elder
 - Faerie Formation
 - Faerie Guidemother // Gift of the Fae
+- Faerie Harbinger
 - Faerie Invaders
 - Faerie Noble
 - Faerie Seer
+- Faerie Swarm
+- Faerie Vandal
 - Failed Conversion
 - Failed Inspection
 - Faithbearer Paladin
 - Faithful Watchdog
+- Faithless Looting
+- Faithless Salvaging
+- Falkenrath Marauders
+- Falkenrath Noble
 - Falkenrath Reaver
 - Fall of the Gavel
 - Fallaji Vanguard
 - Fallen Angel
 - Fallen Ferromancer
+- Fallowsage
 - False Defeat
 - False Prophet
 - Family Reunion
@@ -1108,33 +1668,44 @@ Generated from the engine-supported card pool.
 - Fanatical Strength
 - Fang Dragon // Forktail Sweep
 - Fang of Shigeki
+- Fangren Firstborn
 - Fangren Hunter
+- Fangren Pathcutter
+- Fantastic Elasticity
 - Farbog Boneflinger
+- Farewell
 - Farfinder
 - Farhaven Elf
 - Farmer Cotton
 - Farseek
 - Fatal Fumes
 - Fate Forgotten
+- Fateful Discovery
 - Fateful End
 - Fathom Fleet Firebrand
 - Fault Line
+- Fault Riders
 - Fear of Failed Tests
 - Fear of Surveillance
+- Fearless Fledgling
 - Fearless Halberdier
 - Fearless Liberator
 - Fearless Pup
 - Feast of the Unicorn
 - Feather of Flight
 - Feebleness
+- Feed the Serpent
+- Feed the Swarm
 - Feiyi Snake
 - Felhide Minotaur
 - Felhide Petrifier
 - Felidar Cub
 - Felidar Retreat
 - Fell
+- Fell the Profane // Fell Mire
 - Fellwar Stone
 - Femeref Scouts
+- Fencer Clique
 - Fencing Ace
 - Feral Abomination
 - Feral Ferocity
@@ -1149,75 +1720,106 @@ Generated from the engine-supported card pool.
 - Ferocious Pup
 - Ferocious Werefox // Guard Change
 - Ferocious Zheng
+- Ferocity of the Wilds
 - Ferrovore
+- Fervent Denial
 - Fervor
+- Festering Evil
 - Festering Goblin
 - Festering Mummy
 - Festerleech
+- Festival Crasher
 - Fetid Horror
 - Fevered Convulsions
 - Field Creeper
 - Field Marshal
+- Fierce Guardianship
+- Fierce Witchstalker
+- Fiery Conclusion
+- Fiery Confluence
 - Fiery Fall
 - Fiery Finish
 - Fiery Hellhound
 - Fiery Intervention
 - Fight On!
 - Fighting Drake
+- Filigree Attendant
 - Filigree Crawler
 - Filigree Familiar
 - Filigree Sages
 - Final Death
 - Final Judgment
 - Final Reward
+- Finishing Blow
 - Fire Ambush
+- Fire Ants
 - Fire Diamond
 - Fire Drake
 - Fire Elemental
 - Fire Nation Ambushers
 - Fire Nation Archers
+- Fire Nation Sentinels
 - Fire Nation Soldier
 - Fire Nation's Conquest
 - Fire Snake
+- Fire Sprites
 - Fire Tempest
+- Fire Urchin
 - Fire-Field Ogre
 - Fire-Rim Form
+- Firebolt
 - Fireborn Knight
+- Firebrand Archer
 - Firebreathing
 - Firefly
 - Firehoof Cavalry
 - Firemantle Mage
+- Fires of Undeath
 - Fires of Yavimaya
 - Firescreamer
 - Fireshrieker
-- Firkraag, Cunning Instigator
+- First-Sphere Gargantua
+- Fissure
 - Fists of Ironwood
 - Fists of the Anvil
 - Fit of Rage
+- Five Hundred Year Diary
+- Flame Blitz
 - Flame Lash
+- Flame On!
 - Flame Slash
 - Flame Spirit
 - Flame-Chain Mauler
 - Flame-Kin Zealot
-- Flameblast Dragon
 - Flameborn Viron
 - Flamekin Brawler
 - Flamekin Gildweaver
+- Flamekin Harbinger
 - Flamekin Spitfire
 - Flaming Sword
+- Flashfires
 - Flatten
+- Flawless Maneuver
 - Flayed One
+- Fledgling Djinn
 - Fleetfeather Sandals
 - Fleetfoot Dancer
 - Fleeting Distraction
+- Fleeting Effigy
+- Fleeting Image
 - Flensermite
 - Flesh to Dust
 - Flesh-Eater Imp
+- Fleshtaker
+- Flick a Coin
 - Flickering Ward
 - Flight
 - Flight of Equenauts
 - Flight of Fancy
+- Flock Impostor
+- Flora Colossus
 - Flowstone Blade
+- Flowstone Channeler
 - Flowstone Crusher
 - Flowstone Embrace
 - Flowstone Giant
@@ -1232,12 +1834,13 @@ Generated from the engine-supported card pool.
 - Flowstone Thopter
 - Flowstone Wall
 - Flowstone Wyvern
+- Flumph
 - Flurry of Horns
+- Flux Channeler
 - Flying Carpet
 - Flying Dolphin-Fish
 - Flying Men
 - Fodder Cannon
-- Foe-Razer Regent
 - Folk of the Pines
 - Fomori Nomad
 - Font of Fertility
@@ -1246,29 +1849,47 @@ Generated from the engine-supported card pool.
 - Font of Vigor
 - Foot Soldiers
 - For the Emperor!
+- Foratog
 - Forbidden Friendship
 - Forbidding Spirit
+- Force of Negation
 - Force of Savagery
+- Force of Will
+- Force Spike
+- Forceful Denial
+- Forerunner of the Coalition
+- Forerunner of the Empire
+- Forerunner of the Heralds
+- Forerunner of the Legion
 - Foresee
 - Forest Bear
+- Forgeborn Oreads
 - Forgotten Sentinel
 - Forsake the Worldly
 - Forsaken Drifters
 - Fortified Rampart
 - Fortify
+- Fortifying Provisions
 - Fortress Crab
 - Fortuitous Find
+- Foul Imp
 - Foulmire Knight // Profane Insight
 - Foundry Assembler
+- Foundry Inspector
 - Fountain of Renewal
 - Fountain of Youth
+- Fountainport Bell
 - Foxfire Oak
 - Fracture
+- Fragmentize
+- Frantic Search
 - Frantic Strength
 - Freed from the Real
+- Freedom Fighter Recruit
 - Freejam Regent
 - Freewind Falcon
 - Frenzied Arynx
+- Frenzied Devils
 - Frenzied Rage
 - Frenzied Raptor
 - Frenzied Tilling
@@ -1280,22 +1901,26 @@ Generated from the engine-supported card pool.
 - Frog Tongue
 - Frog-Squirrels
 - Frogmite
+- Frolicking Familiar // Blow Off Steam
 - Frontier Guide
-- Frontier Siege
 - Frost Ogre
 - Frostburn Weird
 - Frostwind Invoker
 - Frozen Shade
+- Fruit of Tizerus
 - Fuel for the Cause
 - Fuel the Flames
 - Fugitive Wizard
+- Fumarole
 - Fume Spitter
+- Fumiko the Lowblood
 - Funeral Longboat
 - Fungal Infection
 - Furious Bellow
 - Furious Strength
 - Furnace Hellkite
 - Furnace Host Charger
+- Furnace Skullbomb
 - Furnace Spirit
 - Furnace Whelp
 - Furtive Analyst
@@ -1304,12 +1929,15 @@ Generated from the engine-supported card pool.
 - Futurist Forge
 - Futurist Sentinel
 - Fyndhorn Bow
+- Fyndhorn Brownie
 - Fyndhorn Elder
 - Fyndhorn Elves
 - Gaea's Anthem
 - Gaea's Bounty
+- Gaea's Gift
 - Gaea's Skyfolk
 - Galadhrim Guide
+- Galazeth Prismari
 - Gale Force
 - Gale Swooper
 - Galerider Sliver
@@ -1323,21 +1951,35 @@ Generated from the engine-supported card pool.
 - Game-Trail Changeling
 - Gangly Stompling
 - Garrison Cat
+- Garruk, Primal Hunter
 - Garruk's Companion
 - Garruk's Gorehorn
+- Garruk's Horde
 - Garruk's Packleader
 - Garruk's Uprising
 - Gather Courage
+- Gather the White Lotus
+- Gavony Unhallowed
+- Gaze of Adamaro
 - Geist of the Archives
 - Geist of the Moors
+- Geist-Honored Monk
+- Geistflame
 - Gelatinous Genesis
+- Gelectrode
 - Gemstone Array
 - Generator Servant
+- Generous Ent
+- Generous Gift
 - Generous Stray
 - Generous Visitor
 - Gerrard's Battle Cry
 - Gerrard's Irregulars
 - Get the Point
+- Gev, Scaled Scorch
+- Geyserfield Stalker
+- Ghalta and Mavren
+- Ghalta, Primal Hunger
 - Ghalta, Stampede Tyrant
 - Ghirapur Aether Grid
 - Ghirapur Gearcrafter
@@ -1345,12 +1987,22 @@ Generated from the engine-supported card pool.
 - Ghitu War Cry
 - Ghor-Clan Bloodscale
 - Ghor-Clan Wrecker
+- Ghost Tactician
 - Ghost Warden
+- Ghost-Lit Nourisher
+- Ghost-Lit Redeemer
+- Ghost-Lit Warder
+- Ghost, Spectral Saboteur
 - Ghostly Changeling
+- Ghostly Flicker
+- Ghostly Prison
 - Ghostly Sentinel
 - Ghosts of the Damned
 - Giant Cockroach
+- Giant Fly
 - Giant Growth
+- Giant Harbinger
+- Giant Ladybug
 - Giant Mantis
 - Giant Octopus
 - Giant Scorpion
@@ -1359,82 +2011,117 @@ Generated from the engine-supported card pool.
 - Giant Spider
 - Giant Strength
 - Giant Warthog
+- Giant's Boulder
+- Giantfall
+- Gibbering Barricade
+- Gideon's Avenger
 - Gift of Fangs
 - Gift of Granite
 - Gift of Orzhova
 - Gift of Strands
 - Gift of Strength
 - Gifted Aetherborn
+- Gigantic Big Bear
 - Gigantosaurus
 - Gilacorn
 - Gilded Lotus
 - Gilded Pinions
 - Gilded Sentinel
+- Gilt-Leaf Seer
+- Gingerbread Hunter // Puny Snack
+- Gisela, Blade of Goldnight
+- Gitaxian Raptor
 - Give In to Violence
+- Gixian Infiltrator
 - Glacial Wall
 - Gladecover Scout
 - Glaive of the Guildpact
 - Glamorous Grapplers
 - Glass Golem
+- Glaze Fiend
+- Gleam of Battle
 - Gleaming Barrier
 - Glen Elendra Liege
+- Glidedive Duo
 - Glider Kids
 - Glimmer Bairn
 - Glimmer of Genius
+- Glimmerbell
 - Glimmerburst
 - Glimmerlight
+- Glimpse of Freedom
+- Glint-Eye Nephilim
 - Glintwing Invoker
 - Glissa, the Traitor
 - Glistener Elf
+- Glistener Seer
 - Glittermonger
+- Glóin the Mighty // Easy Pickings
 - Gloom Pangolin
 - Gloomhunter
 - Glorious Anthem
 - Glorious Charge
 - Glory Seeker
+- Glowing Anemone
 - Gnarled Effigy
 - Gnarled Mass
+- Gnawing Zombie
 - Gnottvold Recluse
 - Go for Blood
 - Go for the Throat
 - Go Forth
 - Go-Shintai of Life's Origin
+- Gobbling Ooze
+- Goblin Anarchomancer
 - Goblin Assailant
 - Goblin Assault Team
 - Goblin Berserker
 - Goblin Bombardment
 - Goblin Bully
-- Goblin Bushwhacker
 - Goblin Cavaliers
 - Goblin Chariot
 - Goblin Chieftain
 - Goblin Deathraiders
+- Goblin Diplomats
+- Goblin Electromancer
 - Goblin Firebomb
 - Goblin Gang Leader
 - Goblin Gardener
 - Goblin General
 - Goblin Hero
 - Goblin Instigator
+- Goblin Lookout
 - Goblin Matron
 - Goblin Motivator
 - Goblin Offensive
+- Goblin Oriflamme
 - Goblin Outlander
+- Goblin Picker
 - Goblin Piker
 - Goblin Rally
 - Goblin Replica
 - Goblin Roughrider
 - Goblin Settler
 - Goblin Sky Raider
+- Goblin Sledder
+- Goblin Soothsayer
+- Goblin Spy
 - Goblin Striker
 - Goblin Surprise
 - Goblin Trailblazer
+- Goblin Trashmaster
+- Goblin Trenches
 - Goblin War Drums
 - Goblin War Paint
+- Goblin Warchief
+- Goblin Warrens
+- Godtracker of Jund
 - Goggles of Night
 - Gold Myr
 - Gold Pan
 - Gold-Forged Sentinel
 - Golden Bear
+- Golden Egg
 - Golden Hind
 - Golden-Tail Disciple
 - Goldhound
@@ -1447,42 +2134,59 @@ Generated from the engine-supported card pool.
 - Golgari Guildmage
 - Golgari Locket
 - Golgari Longlegs
+- Golgari Rotwurm
+- Golgari Signet
 - Goliath Beetle
 - Goliath Sphinx
 - Goliath Spider
+- Gollum, Silent Slinker // Meager Meal
 - Goobbue Gardener
 - Gore Swine
+- Goreclaw, Terror of Qal Sisma
 - Gorgon Flail
 - Gorgon's Head
 - Gorilla Warrior
 - Goring Ceratops
 - Graceful Adept
+- Grand Abolisher
 - Grand Crescendo
 - Grandmother Sengir
 - Granite Gargoyle
+- Granite Grip
 - Granitic Titan
+- Grapple with Death
 - Grappler Spider
 - Grasp of Darkness
 - Grasping Longneck
+- Grave Pact
 - Grave Titan
 - Gravedigger
 - Gravel-Hide Goblin
 - Graveshifter
 - Gravpack Monoist
+- Gray Merchant of Asphodel
 - Gray Ogre
+- Graypelt Hunter
 - Grazing Whiptail
 - Great Forest Druid
 - Great Hart
 - Great Oak Guardian
 - Great Sable Stag
+- Great Teacher's Decree
+- Great Ugly-Looking Goblin // Clap! Snap!
+- Great Whale
 - Great-Horn Krushok
 - Greataxe
 - Greater Auramancy
 - Greater Basilisk
 - Greater Forgeling
+- Greater Tanuki
 - Greatsword
 - Greed
+- Greedy Freebooter
 - Greel's Caress
+- Greenbelt Guardian
+- Greenseeker
 - Greenweaver Druid
 - Greenwood Sentinel
 - Grendel, Spawn of Knull
@@ -1490,68 +2194,107 @@ Generated from the engine-supported card pool.
 - Grey Havens Navigator
 - Griffin Dreamfinder
 - Griffin Guide
+- Griffin Protector
 - Griffin Sentinel
+- Grim Bounty
 - Grim Discovery
 - Grim Guardian
+- Grim Tutor
 - Grimclaw Bats
+- Gristle Grinner
+- Grixis Charm
 - Grizzled Leotau
 - Grizzled Outrider
 - Grizzly Bears
 - Grotesque Mutation
 - Groundshaker Sliver
+- Grove Rumbler
 - Growth Spiral
+- Gruesome Realization
 - Gruul Cluestone
 - Gruul Locket
+- Gruul Signet
+- Gruul War Chant
 - Gryff Vanguard
+- Guac & Marshmallow Pizza
 - Guard Duty
 - Guarded Heir
 - Guardian Automaton
 - Guardian Gladewalker
+- Guardian Kirin
 - Guardian Lions
+- Guardian of Cloverdell
 - Guardian of Pilgrims
+- Guardian of the Halls
 - Guardian of Vitu-Ghazi
 - Guardians of Meletis
 - Guardians' Pledge
 - Guided Strike
+- Guidelight Synergist
 - Guma
 - Gurmag Swiftwing
+- Gustrider Exuberant
+- Gut Shot
 - Gutless Ghoul
 - Gutter Skulk
+- Guttersnipe
 - Guul Draz Mucklord
+- Gwyllion Hedge-Mage
 - Gyre Engineer
+- Gysahl Greens
+- H.E.R.B.I.E., Lovable Robot
+- Hada Freeblade
 - Hagi Mob
+- Hagra Constrictor
 - Hagra Sharpshooter
+- Hajar, Loyal Bodyguard
 - Hakoda, Selfless Commander
 - Halberdier
 - Halo Hopper
 - Hamato Guardian Stance
+- Hammer of Purphoros
 - Hammerfist Giant
 - Hampering Snare
 - Hana Kami
+- Hanabi Blast
 - Hand of Silumgar
 - Hanna, Ship's Navigator
+- Hanweir Militia Captain // Westvale Cult Leader
 - Hapless Researcher
 - Happy Hogan, Dauntless Driver
+- Harbinger of Night
 - Harbinger of the Hunt
 - Hard-Won Jitte
+- Hardened Scales
 - Hardened Tactician
 - Hardened-Scale Armor
 - Harmattan Efreet
+- Harmonic Prodigy
+- Harmonious Grovestrider
 - Harmonize
 - Harnessed Snubhorn
+- Harried Artisan // Phyrexian Skyflayer
 - Harrier Naga
-- Harvest Season
+- Harrow
+- Harrowing Journey
+- Harvester of Misery
 - Harvester of Souls
+- Haunted Cloak
 - Haunted Guardian
 - Haunter of Nightveil
+- Havengul Vampire
 - Havenwood Wurm
 - Havoc Devils
+- Havoc Jester
 - Hawkeater Moth
 - Hawkeye, Clint Barton
+- Hazard of the Dunes
+- Hazel's Nocturne
 - Hazerider Drake
 - Head of the Homestead
 - Headless Horseman
 - Headless Rider
+- Headlong Rush
 - Headwater Sentries
 - Healer of the Glade
 - Healer of the Pride
@@ -1560,27 +2303,43 @@ Generated from the engine-supported card pool.
 - Heart of Ramos
 - Heart Warden
 - Hearthfire Hobgoblin
-- Heartstabber Mosquito
+- Heartless Summoning
+- Heckling Fiends
 - Hedron Archive
 - Hedron Crawler
+- Hedron Rover
+- Hedron Scrabbler
+- Heir of Falkenrath // Heir to the Night
 - Heirloom Auntie
+- Helionaut
 - Hellkite Courser
 - Hellkite Punisher
+- Helm of the Gods
 - Helpful Hunter
 - Hematite Golem
 - Herald of Dromoka
 - Herald of Faith
+- Herald of Secret Streams
+- Herald of the Pantheon
+- Herald's Horn
+- Heralds of Tzeentch
+- Herd Gnarr
 - Herd Heirloom
 - Hermetic Study
+- Hermitic Herbalist
 - Hermitic Nautilus
 - Hero of Goma Fada
+- Hero's Downfall
 - Hero's Resolve
 - Heroic Intervention
 - Heron's Grace Champion
 - Hexplate Golem
 - Hibernation
 - Hieroglyphic Illumination
+- High Sentinels of Arashin
+- High Stride
 - Highborn Vampire
+- Highland Berserker
 - Highland Game
 - Highland Giant
 - Highspire Mantis
@@ -1598,39 +2357,57 @@ Generated from the engine-supported card pool.
 - Hoar Shade
 - Hoard Robber
 - Hoard-Smelter Dragon
+- Hobblefiend
 - Hobgoblin Dragoon
+- Hold the Line
 - Hollowhenge Beast
 - Holy Armor
+- Holy Cow
 - Holy Strength
+- Homestead Courage
+- Honden of Life's Web
 - Honed Khopesh
+- Honest Rutstein
 - Honey Mammoth
 - Honor
 - Honor Guard
 - Honor of the Pure
+- Hoodwink
 - Hop to It
 - Hopping Automaton
+- Horde of Boggarts
 - Hordeling Outburst
+- Horizon Chimera
 - Horizon Scholar
 - Horizon Seeker
 - Horn of Ramos
+- Horn of Valhalla // Ysgard's Call
 - Horned Turtle
 - Hornet Cobra
 - Hornet Harasser
 - Hornet Nest
 - Hornet Queen
 - Hornet Sting
+- Horseshoe Crab
 - Hostile Minotaur
+- Hot Dog Cart
 - Hour of Defeat
+- Hour of Promise
 - Hover Barrier
 - Hoverguard Sweepers
 - Hovermyr
+- Howl of the Night Pack
 - Howling Fury
+- Howling Gale
 - Howling Giant
 - Huatli's Raptor
 - Huatli's Snubhorn
 - Hulk, Bruce Banner
 - Hulking Bugbear
 - Hulking Devil
+- Hulking Raptor
+- Hull Breach
+- Hullbreaker Horror
 - Hullcarver
 - Hulldrifter
 - Humble Budoka
@@ -1638,6 +2415,10 @@ Generated from the engine-supported card pool.
 - Humbler of Mortals
 - Humongulus
 - Hundroog
+- Hungry Ghoul
+- Hungry Megasloth
+- Hunted Lammasu
+- Hunted Phantasm
 - Hunted Witness
 - Hunter's Insight
 - Hunter's Prowess
@@ -1648,29 +2429,40 @@ Generated from the engine-supported card pool.
 - Hush
 - Hussar Patrol
 - Hyalopterous Lemure
+- Hydro-Channeler
+- Hydrolash
 - Hydrosurge
 - Hyena Pack
 - Hypnotic Sprite // Mesmeric Glare
+- Hyrax Tower Scout
 - Hysterical Blindness
+- Icatian Crier
 - Icatian Priest
 - Icatian Scout
 - Icatian Town
 - Ice Storm
+- Iceberg
+- Icecave Crasher
+- Icetill Explorer
 - Icewind Elemental
-- Idol of Oblivion
 - Idyllic Tutor
 - Igneous Cur
 - Ignite the Beacon
 - Ihsan's Shade
 - Il Mheg Pixie
+- Illness in the Ranks
 - Illvoi Galeblade
+- Illvoi Operative
 - Ilysian Caryatid
+- Immolating Souleater
 - Immolation
 - Imodane's Recruiter // Train Troops
+- Impact Tremors
 - Impale
 - Impassioned Orator
 - Imperial Oath
 - Imperial Outrider
+- Imperial Seal
 - Imperious Inkmage
 - Imperious Perfect
 - Impervious Greatwurm
@@ -1678,14 +2470,19 @@ Generated from the engine-supported card pool.
 - Imposing Vantasaur
 - Imposing Visage
 - Impostor of the Sixth Pride
+- Improbable Alliance
 - Improvised Armor
+- Improvised Club
 - Improvised Weaponry
 - In Oketra's Name
 - Incandescent Aria
+- Incendiary Sabotage
+- Incubation Sac
 - Incurable Ogre
 - Indatha Crystal
 - Independent Troops
 - Indestructibility
+- Index
 - Indomitable Ancients
 - Indomitable Will
 - Indrik Stomphowler
@@ -1693,52 +2490,91 @@ Generated from the engine-supported card pool.
 - Inescapable Blaze
 - Inexorable Tide
 - Infectious Horror
+- Infectious Host
+- Infectious Inquiry
+- Infernal Grasp
+- Infernal Idol
+- Infernal Plunge
 - Inferno
 - Infestation Sage
 - Infiltrate
 - Infuriate
+- Ingenuity Engine
 - Inkling Summoning
 - Inkrise Infiltrator
+- Inkshield
+- Inner Demons Gangsters
 - Inordinate Rage
+- Insatiable Avarice
 - Insatiable Harpy
+- Insolence
+- Insolent Neonate
+- Inspiration
 - Inspired Charge
 - Inspired Insurgent
+- Inspired Sprite
+- Inspiring Bard
 - Inspiring Captain
 - Inspiring Cleric
+- Inspiring Overseer
+- Inspiring Roar
 - Inspiring Unicorn
 - Inspiring Veteran
 - Instant Ramen
 - Instill Infection
+- Instruments of War
+- Intangible Virtue
 - Interjection
 - Into the Maw of Hell
+- Into Thin Air
+- Intrepid Tenderfoot
 - Introduction to Prophecy
 - Invasion Reinforcements
 - Invasion Tactics
+- Invisible Force Field
+- Invisible Stalker
 - Invoke the Divine
+- Iona's Judgment
 - Ioreth of the Healing House
+- Irencrag Pyromancer
+- Iridescent Angel
 - Iridescent Blademaster
 - Iroas's Champion
+- Iroh, Firebending Instructor
 - Iroh's Demonstration
 - Iron Bully
 - Iron Giant
+- Iron Lad, Young Avenger
 - Iron Lance
 - Iron Myr
 - Iron Tusk Elephant
 - Iron Will
 - Ironclad Krovod
+- Ironhoof Boar
 - Ironpaw Aspirant
 - Ironroot Treefolk
+- Ironroot Warlord
 - Ironshell Beetle
 - Irontread Crusher
 - Ironwright's Cleansing
 - Irregular Cohort
 - Isamaru, Hound of Konda
+- It'll Quench Ya!
+- It's Clobberin' Time!
 - Ithilien Kingfisher
+- Ivy Elemental
 - Ixalli's Keeper
 - Iymrith, Desert Doom
+- Izoni, Thousand-Eyed
+- Izzet Charm
+- Izzet Chronarch
 - Izzet Cluestone
 - Izzet Locket
+- Izzet Signet
+- Jace's Archivist
 - Jace's Ingenuity
+- Jace's Sanctum
+- Jacked Rabbit
 - Jackhammer
 - Jacques le Vert
 - Jaddi Offshoot
@@ -1746,6 +2582,7 @@ Generated from the engine-supported card pool.
 - Jadecraft Artisan
 - Jagwasp Swarm
 - Jalum Tome
+- Jandor's Saddlebags
 - Jarvis, Earth's Mightiest Butler
 - Jasmine Boreal
 - Jaspera Sentinel
@@ -1758,58 +2595,86 @@ Generated from the engine-supported card pool.
 - Jeong Jeong's Deserters
 - Jerrard of the Closed Fist
 - Jeska, Warrior Adept
+- Jeska's Will
 - Jeskai Banner
+- Jeskai Shrinekeeper
 - Jewel Thief
 - Jewel-Eyed Cobra
+- Jhessian Infiltrator
 - Jhessian Lookout
 - Jhovall Queen
 - Jhovall Rider
 - Jibbirik Omnivore
+- Join the Dance
 - Join the Ranks
 - Joiner Adept
+- Joraga Bard
 - Joraga Visionary
+- Jori En, Ruin Diver
 - Journeyer's Kite
 - Jousting Dummy
 - Judith, the Scourge Diva
+- Jukai Naturalist
 - Jump
+- Jund Battlemage
 - Jungle Barrier
+- Jungle Delver
 - Jungle Weaver
 - Jungleborn Pioneer
-- Juniper Order Rootweaver
+- Juzám Djinn
+- Jwari Disruption // Jwari Ruins
 - Jwari Scuttler
 - Kabuto Moth
 - Kaervek, the Spiteful
-- Kairi, the Swirling Sky
+- Kalain, Reclusive Painter
 - Kalakscion, Hunger Tyrant
+- Kalastria Healer
+- Kaleidostone
 - Kalonian Behemoth
 - Kalonian Tusker
 - Kamahl, Pit Fighter
 - Kami of Ancient Law
 - Kami of Old Stone
-- Karametra's Favor
+- Kami of Twisted Reflection
 - Kargan Warleader
+- Karok Wrangler
 - Karoo Meerkat
 - Karrthus, Tyrant of Jund
 - Karstoderm
 - Karvanista, Loyal Lupari // Lupari Shield
 - Kasimir the Lone Wolf
+- Katara, Heroic Healer
 - Kathari Screecher
 - Kavu Climber
+- Kavu Monarch
 - Kaysa
+- Kazandu Blademaster
 - Kazandu Nectarpot
+- Kazuul Warlord
 - Kederekt Creeper
+- Kederekt Leviathan
+- Keen Buccaneer
 - Keen Glidemaster
 - Keen-Eyed Archers
 - Keeneye Aven
 - Keening Apparition
 - Keening Banshee
+- Keep Watch
+- Keeper of Fables
 - Keepers of the Faith
+- Keldon Arsonist
+- Keldon Warlord
 - Kelinore Bat
 - Kemba's Skyguard
+- Kessig Flamebreather
 - Kessig Recluse
 - Ketria Crystal
+- Khalni Ambush // Khalni Territory
 - Khenra Charioteer
 - Killer Bees
+- Kiln Fiend
+- Kilo, Apogee Mind
+- Kinbinding
 - Kindercatch
 - Kindled Fury
 - Kindled Heroism
@@ -1817,6 +2682,8 @@ Generated from the engine-supported card pool.
 - King Cheetah
 - King of the Pride
 - Kingfisher
+- Kingpin's Enforcers
+- Kinjalli's Caller
 - Kinsbaile Cavalier
 - Kinsbaile Skirmisher
 - Kiora, Behemoth Beckoner
@@ -1826,20 +2693,27 @@ Generated from the engine-supported card pool.
 - Kitesail
 - Kitesail Scout
 - Kithkin Billyrider
+- Kithkin Harbinger
+- Kithkin Rabble
 - Kjeldoran Outrider
 - Klauth, Unrivaled Ancient
 - Knight Errant
 - Knight Exemplar
+- Knight of Autumn
 - Knight of Meadowgrain
 - Knight of New Benalia
 - Knight of the Keep
 - Knight of the Skyward Eye
+- Knight of the Stampede
 - Knight of the Tusk
 - Knight Watch
 - Knight's Pledge
 - Knightfisher
 - Knighthood
 - Knightly Valor
+- Knights of Dol Amroth
+- Knights' Charge
+- Knotvine Mystic
 - Koala-Sheep
 - Kobold Drill Sergeant
 - Kobold Overlord
@@ -1847,18 +2721,18 @@ Generated from the engine-supported card pool.
 - Kobolds of Kher Keep
 - Kodama of the North Tree
 - Kodama's Reach
+- Kokusho, the Evening Star
 - Komodo Rhino
 - Kongming, "Sleeping Dragon"
-- Kor Aeronaut
 - Kor Blademaster
 - Kor Bladewhirl
 - Kor Cartographer
 - Kor Celebrant
 - Kor Halberd
-- Kor Sanctifiers
 - Korlessa, Scale Singer
 - Kozilek's Channeler
 - Kraken Hatchling
+- Krang, Utrom Warlord
 - Kranioceros
 - Krark-Clan Engineers
 - Krark-Clan Grunt
@@ -1868,14 +2742,24 @@ Generated from the engine-supported card pool.
 - Kraul Raider
 - Kraul Stinger
 - Kraul Warrior
+- Kraum, Violent Cacophony
 - Kraven's Cats
 - Kree Sentinel
+- Krenko, Tin Street Kingpin
 - Krenko's Command
-- Krosan Druid
+- Kris Mage
+- Kronch Wrangler
+- Krosan Archer
 - Krosan Wayfarer
 - Krovikan Scoundrel
+- Kruin Striker
 - Kujar Seedsculptor
 - Kuldotha Forgemaster
+- Kuldotha Rebirth
+- Kulrath Mystic
+- Kurgadon
+- Kykar, Wind's Fury
+- Kyoshi Warrior Exemplars
 - Kyoshi Warrior Guard
 - Kyoshi Warriors
 - Laboratory Brute
@@ -1883,22 +2767,35 @@ Generated from the engine-supported card pool.
 - Lady Orca
 - Lagac Lizard
 - Lagonna-Band Elder
+- Lake-town Mariners // Gone Fishing
+- Lakeshore Apothecary
+- Lampad of Death's Vigil
 - Lance
 - Lancer Sliver
 - Land Leeches
 - Lantern Kami
 - Lantern Scout
+- Lantern Spirit
 - Lapis Orb of Dragonkind
 - Larder Zombie
+- Large Bear
 - Larger Than Life
 - Lash of Malice
 - Lash of the Whip
 - Lash of Thorns
+- Last Caress
 - Last Gasp
+- Last Kiss
 - Last March of the Ents
 - Last Word
+- Lat-Nam Adept
+- Latch Seeker
+- Late to Dinner
 - Lathliss, Dragon Queen
 - Lathnu Sailback
+- Laughing Mad
+- Lava Flow
+- Lava Hounds
 - Lava Serpent
 - Lavafume Invoker
 - Lavastep Raider
@@ -1911,13 +2808,19 @@ Generated from the engine-supported card pool.
 - Leaf Gilder
 - Leafkin Druid
 - Leap
+- Leaping Ambush
 - Leaping Lizard
 - Leatherback Baloth
+- Leatherhead, Iron Gator
+- Leave in the Dust
 - Ledev Guardian
 - Leering Emblem
 - Legion Lieutenant
 - Leonin Abunas
 - Leonin Armorguard
+- Leonin Battlemage
+- Leonin Bladetrap
+- Leonin Lightscribe
 - Leonin Scimitar
 - Leonin Skyhunter
 - Leonin Sun Standard
@@ -1928,54 +2831,81 @@ Generated from the engine-supported card pool.
 - Leyline Prowler
 - Library Larcenist
 - Lich's Caress
+- Lifeblood
 - Lifecreed Duo
 - Lifelink
 - Lifespring Druid
+- Lifetap
 - Light of Hope
+- Lightfoot Technique
 - Lightning Angel
 - Lightning Blast
 - Lightning Bolt
 - Lightning Elemental
 - Lightning Greaves
+- Lightning Helix
 - Lightning Hounds
 - Lightning Javelin
 - Lightning Stormkin
 - Lightning Strike
 - Lightning Talons
+- Lightning-Rig Crew
 - Lightshield Parry
+- Liliana's Elite
 - Liliana's Mastery
 - Liliana's Shade
+- Limestone Golem
+- Lingering Souls
 - Lionheart Maverick
+- Lithatog
+- Liturgy of Blood
 - Live or Die
 - Living Hive
+- Living Lies of Loki
+- Living Lightning
 - Living Tempest
 - Lizard Warrior
 - Llanowar Behemoth
 - Llanowar Dead
+- Llanowar Druid
 - Llanowar Elves
+- Llanowar Envoy
 - Llanowar Knight
 - Llanowar Scout
+- Llanowar Stalker
 - Llanowar Tribe
 - Llanowar Vanguard
 - Llanowar Visionary
 - Loam Dryad
+- Loam Larva
 - Loamdragger Giant
 - Loaming Shaman
 - Loch Korrigan
 - Locke Cole
 - Locthwain Gargoyle
+- Locthwain Lancer
 - Locust Spray
 - Lofty Dreams
+- Lokhust Heavy Destroyer
 - Lone Missionary
 - Lonesome Unicorn // Rider in Need
+- Long Goodbye
+- Long-Bodied Grey Dog
+- Long-Forgotten Gohei
 - Longbow Archer
+- Longshot Squad
+- Longshot, Rebel Bowman
 - Looming Altisaur
 - Looming Shade
+- Loporrit Scout
 - Lord of the Undead
 - Lord of the Unreal
+- Lorehold Pledgemage
+- Lorescale Coatl
 - Lórien Revealed
 - Lose Hope
 - Lost in a Labyrinth
+- Lost in the Mist
 - Lost Legion
 - Lost Leonin
 - Lothlórien Lookout
@@ -1989,26 +2919,42 @@ Generated from the engine-supported card pool.
 - Loxodon Stalwart
 - Loxodon Warhammer
 - Loxodon Wayfarer
+- Loyal Apprentice
 - Loyal Guardian
 - Lozhan, Dragons' Legacy
 - Lucent Liminid
+- Lucky Offering
+- Luke Cage, Hero for Hire
+- Lumbering Worldwagon
+- Lumberknot
 - Lumen-Class Frigate
+- Lumengrid Drake
 - Lumengrid Gargoyle
 - Lumengrid Warden
+- Luminarch Aspirant
 - Luminous Angel
 - Lunatic Pandora
 - Lurching Rotbeast
+- Lurking Lizards
 - Lux Cannon
 - Lychguard
+- Lyla, Holographic Assistant
 - Lyra Dawnbringer
 - Lys Alana Huntmaster
 - Maalfeld Twins
 - Macabre Waltz
 - Mace of the Valiant
 - Macetail Hystrodon
+- Machinesmith Automaton
+- Mad Prophet
+- Mad Ratter
 - Madame Hydra
+- Madame Hydra, Reanimated
+- Madame Null, Power Broker
 - Madcap Skills
 - Madrush Cyclops
+- Maelstrom Colossus
+- Maelstrom Wanderer
 - Mage's Guile
 - Magefire Wings
 - Mageta's Boon
@@ -2016,50 +2962,82 @@ Generated from the engine-supported card pool.
 - Magitek Armor
 - Magma Giant
 - Magma Jet
+- Magma Rift
+- Magma Vein
 - Magmaquake
+- Magmaroth
+- Magmatic Force
 - Magnetic Flux
 - Magnigoth Sentry
 - Magus of the Bazaar
+- Magus of the Coffers
 - Magus of the Moon
+- Mahadi, Emporium Master
 - Mahamoti Djinn
 - Maja, Bretagard Protector
 - Major Teroh
 - Make a Stand
 - Make Obsolete
+- Makeshift Munitions
 - Makindi Aeronaut
 - Makindi Griffin
 - Makindi Patrol
+- Makindi Shieldmate
+- Makindi Sliderunner
+- Makindi Stampede // Makindi Mesas
+- Malakir Bloodwitch
+- Malakir Cullblade
 - Malamet War Scribe
 - Malcator's Watcher
 - Malevolent Awakening
 - Mammoth Spider
+- Man-o'-War
+- Mana Cylix
+- Mana Drain
 - Mana Geode
+- Mana Leak
+- Mana Matrix
+- Mana Prism
+- Mana Tithe
+- Managorger Hydra
 - Manakin
 - Manalith
 - Manaweft Sliver
+- Mandible Justiciar
 - Mandroid Squadron
 - Maned Serval
+- Manhole Cover
 - Manic Vandal
 - Manifold Key
 - Mantis Rider
 - Mantle of Leadership
 - Mantle of Webs
+- Many Partings
+- Map the Frontier
 - Maraleaf Pixie
 - Marang River Regent // Coil and Catch
 - Marauder's Axe
 - Marauding Brinefang
+- Marauding Knight
 - Marble Chalice
 - Marble Diamond
 - Marble Gargoyle
 - March of the Multitudes
 - March of the Returned
+- Marchesa, the Black Rose
 - Mardu Banner
 - Marisi's Twinclaws
 - Maritime Guard
 - Mark of the Vampire
 - Marked by Honor
 - Marker Beetles
+- Markov Blademaster
+- Markov Dreadknight
 - Markov Patrician
+- Marneus Calgar
+- Marrow Shards
+- Marshaling Cry
+- Marshmist Titan
 - Martial Glory
 - Martyr for the Cause
 - Martyr of Dusk
@@ -2068,9 +3046,13 @@ Generated from the engine-supported card pool.
 - Mask of Avacyn
 - Mask of Law and Grace
 - Masked Blackguard
+- Masked Meower
 - Mass of Ghouls
 - Mass Production
 - Massive Might
+- Master of Ceremonies
+- Master of Etherium
+- Master of Waves
 - Master Splicer
 - Master's Call
 - Maul Splicer
@@ -2080,8 +3062,13 @@ Generated from the engine-supported card pool.
 - Maw of the Mire
 - Maw of the Obzedat
 - Mawcor
+- Maximum Overdrive
+- Mayhem Devil
+- Mazirek, Kraul Death Priest
+- Mechan Navigator
 - Mechanized Ninja Cavalry
 - Meditation Puzzle
+- Medusa, Inhuman Queen
 - Meeting of Minds
 - Megantic Sliver
 - Megatog
@@ -2091,12 +3078,16 @@ Generated from the engine-supported card pool.
 - Memory Guardian
 - Meng Huo, Barbarian King
 - Meng Huo's Horde
+- Mental Discipline
 - Mental Journey
 - Mental Note
 - Mentor of the Meek
+- Mer-Ek Nightblade
 - Merchant of Secrets
+- Merchant of the Vale // Haggle
 - Merciless Enforcers
 - Merciless Eviction
+- Mercurial Geists
 - Merfolk Coralsmith
 - Merfolk Looter
 - Merfolk Mistbinder
@@ -2112,15 +3103,26 @@ Generated from the engine-supported card pool.
 - Messenger Drake
 - Messenger Falcons
 - Messenger's Speed
+- Metallic Rebuke
 - Metallic Sliver
+- Metalspinner's Puzzleknot
 - Metastatic Evangel
+- Metathran Soldier
 - Meteor Golem
 - Meteor Sword
+- Meteoric Mace
 - Metropolis Sprite
 - Midnight Assassin
+- Midnight Clock
 - Midnight Covenant
+- Midnight Entourage
+- Midnight Guard
 - Midnight Haunting
+- Midnight Mayhem
+- Midnight Reaper
 - Might of Oaks
+- Mightstone
+- Mighty Emergence
 - Mighty Leap
 - Mighty Mutanimals
 - Migrating Ketradon
@@ -2132,155 +3134,263 @@ Generated from the engine-supported card pool.
 - Mind Spring
 - Mind Stone
 - Mindful Biomancer
+- Mindspring Merfolk
+- Mindstatic
 - Miner's Bane
 - Mineshaft Spider
 - Minotaur Abomination
 - Minotaur Aggressor
 - Minotaur Sureshot
 - Minotaur Warrior
+- Minotaur, Roxxon CEO
+- Mintstrosity
+- Miraculous Recovery
+- Mirari's Wake
+- Mire Shade
+- Mire Triton
 - Mire's Grasp
+- Mirkwood Bats
+- Mirkwood Pathmaker
 - Mirran Crusader
+- Mirran Spy
+- Mirri's Guile
+- Mirror of Galadriel
+- Miscalculation
+- Mischievous Mystic
+- Mischievous Pup
 - Mischievous Sneakling
 - Mishra's Onslaught
 - Misshapen Fiend
 - Mist Leopard
+- Mist Raven
+- Mist-Cloaked Herald
+- Mistcutter Hydra
+- Mister Fantastic, Reed Richards
 - Mistral Charger
 - Mistwalker
 - Mm'menon, Uthros Exile
+- Mnemonic Sphere
+- Mnemonic Wall
+- Moan of the Unhallowed
 - Moaning Spirit
 - Moaning Wall
 - Moat Piranhas
 - Mob
 - Mobilization
 - Mobilize
+- Mocking Sprite
+- Mogg Raider
+- Mogg Sentry
+- Mogis's Favor
 - Moldering Karok
+- Moldervine Reclamation
+- Molimo, Maro-Sorcerer
+- Molten Gatekeeper
 - Molten Ravager
+- Moltensteel Dragon
 - Moment of Craving
 - Moment of Defiance
 - Moment of Heroism
 - Moment of Triumph
+- Mondrak, Glory Dominus
 - Monk Idealist
 - Monk Realist
 - Monoist Sentry
+- Monologue Tax
 - Mons's Goblin Raiders
 - Monster Manual // Zoological Study
 - Monster Mashup
 - Monstrous Growth
 - Moon Heron
 - Moon Sprite
+- Moon-Blessed Cleric
+- Moon-Boy, Dino Rider
+- Moonfolk Puzzlemaker
+- Moonglove Extractor
 - Moonglove Winnower
 - Moonlit Wake
 - Moonrise Cleric
 - Moonsilver Spear
+- Moonveil Dragon
 - Moonwing Moth
 - Moorish Cavalry
+- Morale
+- Morbid Hunger
 - Morbid Plunder
-- Mordant Dragon
+- Morgue Theft
 - Morgue Thrull
 - Morgue Toad
 - Moriok Reaver
+- Moriok Replica
+- Morningtide
+- Moroii
 - Morophon, the Boundless
 - Mortal's Ardor
 - Mortal's Resolve
+- Mortician Beetle
+- Mortify
 - Moss Diamond
 - Moss Kami
 - Moss Monster
 - Moss Viper
 - Mossbeard Ancient
 - Mosscoat Goriak
+- Mossdog
+- Mossfire Egg
 - Most Wanted
 - Mountain Bandit
 - Mouser Attack!
+- Mox Amber
 - Mox Jasper
+- Mox Opal
 - Muck Rats
+- Muldrotha, the Gravetide
+- Multiversal Recruitment
+- Mummy Paramount
 - Murasa Brute
 - Murder
+- Murmuring Mystic
 - Murmuring Phantasm
 - Muse Drake
 - Muse's Encouragement
+- Mutagenic Growth
+- Mutant Town Musicians
 - Mutilate
 - Mwonvuli Acid-Moss
+- Mycologist
 - Myr Enforcer
 - Myr Kinsmith
 - Myr Matrix
+- Myr Moonvessel
 - Myr Scrapling
 - Myr Sire
 - Myrkul's Invoker
+- Mysidian Elder
 - Mysterio's Phantasm
 - Mystic Archaeologist
+- Mystic Confluence
+- Mystic Retrieval
+- Mystic Skull // Mystic Monstrosity
 - Mystic Snake
+- Mystical Tutor
 - Mythic Proportions
 - Nacatl Outlander
 - Naga Eternal
 - Naga Oracle
+- Naga Vitalist
+- Namor, Atlantean King
 - Namora, the Sea Queen
 - Nantuko Disciple
 - Nantuko Elder
 - Nantuko Husk
 - Nantuko Shade
+- Narcissism
+- Narrow Escape
 - Narstad Scrapper
 - Narwhal
+- Nasty Little Rabbit
 - Natural Connection
 - Natural End
+- Natural Reclamation
+- Natural State
 - Naturalize
 - Nature's Chant
 - Nature's Lore
 - Nature's Spiral
+- Navigation Orb
+- Necrogen Censer
+- Necrogen Scudder
 - Necromancer's Assistant
 - Necromantic Thirst
+- Necron Monolith
+- Necron Overlord
 - Necropede
+- Need for Speed
 - Needle Storm
 - Needlepeak Spider
 - Needleshot Gourna
 - Needlethorn Drake
+- Negate
 - Nema Siltlurker
+- Nemata, Grove Guardian
 - Nephalia Seakite
 - Neriv, Heart of the Storm
 - Nessian Courser
+- Nessian Hornbeetle
 - Nest Robber
 - Nether Horror
 - Nettle Swine
+- Nettletooth Djinn
 - Neurok Commando
 - Neurok Hoversail
+- Neurok Invisimancer
+- Neurok Replica
 - Neutralize
 - News Helicopter
 - Nexus Wardens
+- Night Market Lookout
 - Night Scythe
+- Night's Whisper
 - Nightguard Patrol
 - Nighthawk, Dark Defender
+- Nighthowl Pursuer
+- Nightmare
+- Nightscape Familiar
+- Nightscape Master
 - Nightshade Dryad
 - Nightveil Predator
 - Nightveil Sprite
 - Nightwind Glider
 - Nightwing Shade
+- Nim Grotesque
+- Nim Lasher
 - Nim Replica
+- Nim Shrieker
+- Nimana Sell-Sword
 - Nimble Birdsticker
 - Nimble Innovator
 - Nimble Thopterist
 - Nimbus of the Isles
+- Nimbus Swimmer
 - Nimbus Wings
 - Nine-Tail White Fox
 - Ninja's Kunai
 - Nip Gwyllion
+- Nissa, Worldsoul Speaker
 - Nissa's Expedition
 - Nissa's Renewal
+- Niv-Mizzet, Parun
+- Niv-Mizzet, the Firemind
 - No-Dachi
+- Nobilis of War
 - Noble Steeds
 - Noble Templar
+- Nobody
+- Nocturnal Feeder
 - Nocturnal Raid
+- Noise Marine
+- Nomadic Elf
+- Nomads' Assembly
+- Noose Constrictor
+- Norn's Annex
+- Norn's Wellspring
 - Norwood Archers
 - Norwood Ranger
+- Notion Rain
 - Nourish
 - Nova Cleric
+- Nova Flame
 - Novice Dissector
+- Novice Occultist
+- Noxious Dragon
 - Noxious Groodion
 - Noxious Newt
 - Nuisance Engine
-- Nullmage Shepherd
-- Nullpriest of Oblivion
 - Nurturing Bristleback
+- Nurturing Presence
 - Nylea's Forerunner
 - Nyx Infusion
+- Nyx Lotus
 - Nyx-Fleece Ram
 - Nyxborn Brute
 - Nyxborn Colossus
@@ -2293,6 +3403,7 @@ Generated from the engine-supported card pool.
 - Oakheart Dryads
 - Oashra Cultivator
 - Oasis Gardener
+- Oath of Ajani
 - Oath of the Ancient Wood
 - Oathsworn Giant
 - Obelisk of Bant
@@ -2300,6 +3411,8 @@ Generated from the engine-supported card pool.
 - Obelisk of Grixis
 - Obelisk of Jund
 - Obelisk of Naya
+- Obelisk of Urd
+- Oblivion Crown
 - Obsessive Stitcher
 - Obsianus Golem
 - Obsidian Giant
@@ -2310,6 +3423,7 @@ Generated from the engine-supported card pool.
 - Ocular Halo
 - Oculus
 - Odric's Outrider
+- Offering to Asha
 - Oggyar Battle-Seer
 - Ogre Arsonist
 - Ogre Berserker
@@ -2319,48 +3433,79 @@ Generated from the engine-supported card pool.
 - Ogre Slumlord
 - Ogre Warrior
 - Ogre's Cleaver
+- Ohran Frostfang
+- Oji, the Exquisite Blade
+- Ojutai's Summons
 - Oko's Accomplices
+- Okoye, Dora Milaje Leader
 - Old Ghastbark
 - Old Gnawbone
+- Oltec Archaeologists
 - Oltec Cloud Guard
 - Omega Myr
+- Omen
 - Omen of the Dead
 - Omen of the Hunt
 - Omen of the Sea
+- Omen of the Sun
 - Omenspeaker
 - Omnath, Locus of Rage
+- Omni-Cheese Pizza
+- On Serra's Wings
 - Onakke Ogre
 - Ondu Champion
 - Ondu Giant
+- Ondu Greathorn
+- Ondu Inversion // Ondu Skyruins
 - One with Nature
+- One with the Machine
 - One With the Wind
+- Oneirophage
 - Onulet
+- Onyx Goblet
+- Opal Lake Gatekeepers
 - Opaline Unicorn
 - Open Fire
 - Open the Graves
+- Opportunity
 - Opt
+- Oracle of Mul Daya
 - Oracle's Insight
 - Oran-Rief Invoker
+- Oran-Rief Ooze
+- Oran-Rief Survivalist
 - Oraxid
 - Orazca Frillback
 - Orazca Raptor
 - Orb of Dragonkind
+- Orchard Strider
 - Orcish Bloodpainter
 - Orcish Mechanics
+- Orcish Oriflamme
 - Orcish Vandal
 - Order of the Sacred Bell
+- Ordinary Bear
+- Oread of Mountain's Blaze
 - Oreskos Swiftclaw
 - Organic Extinction
 - Ornery Kudu
 - Ornithopter
 - Ornithopter of Paradise
+- Orochi Hatchery
+- Orochi Leafcaller
 - Orochi Sustainer
 - Orzhov Cluestone
 - Orzhov Locket
+- Orzhov Signet
 - Oscorp Research Team
+- Otherworldly Gaze
 - Outlaw Medic
 - Ovalchase Dragster
 - Overcome
+- Overeager Apprentice
+- Overflowing Insight
+- Overgrown Estate
+- Overgrowth
 - Overkill
 - Overrun
 - Overseer of the Damned
@@ -2371,126 +3516,196 @@ Generated from the engine-supported card pool.
 - Oxidda Scrapmelter
 - Oxidize
 - Pack's Favor
+- Pactdoll Terror
+- Painful Lesson
 - Palace Familiar
 - Paladin en-Vec
 - Paladin of the Bloodstained
 - Paleoloth
+- Palinchron
 - Palladium Myr
+- Panharmonicon
 - Panicked Altisaur
 - Panther Robot
 - Panther Warriors
+- Parallel Lives
 - Parapet Watchers
+- Parasitic Impetus
 - Parcel Myr
 - Pardic Collaborator
 - Pardic Wanderer
+- Pashalik Mons
 - Passwall Adept
+- Patchwork Automaton
+- Patchwork Banner
 - Path of Anger's Flame
 - Path to Exile
+- Patron of the Valiant
 - Pavel Maliki
+- Pawn of Ulamog
+- Peace of Mind
 - Peace Strider
 - Pearl Dragon
+- Pearl-Ear, Imperial Advisor
 - Pearled Unicorn
+- Peema Aether-Seer
 - Pegasus Charger
+- Pegasus Refuge
 - Pelakka Wurm
 - Pemmin's Aura
 - Pendrell Drake
 - Pendulum of Patterns
+- Pennon Blade
 - Pensive Minotaur
 - Penumbra Bobcat
 - Penumbra Kavu
 - Penumbra Spider
 - Penumbra Wurm
+- Peregrine Drake
 - Peregrine Griffin
+- Peregrine Mask
+- Perennial Behemoth
 - Perilous Shadow
+- Perimeter Patrol
 - Perimeter Sergeant
+- Perplexing Test
+- Personal Tutor
+- Pest Control
 - Pest Summoning
 - Pestbrood Sloth
+- Pestered Wellguard
 - Pestilence Demon
+- Pet Avengers
+- Phalanx Vanguard
+- Phantom General
+- Phantom Interference
 - Phantom Monster
+- Phantom Ninja
+- Phantom Warrior
 - Pharika's Chosen
+- Pharika's Cure
 - Pharika's Mender
 - Pheres-Band Centaurs
 - Pheres-Band Warchief
 - Phyresis
 - Phyrexian Altar
+- Phyrexian Arena
 - Phyrexian Boon
+- Phyrexian Broodlings
 - Phyrexian Crusader
 - Phyrexian Debaser
 - Phyrexian Defiler
 - Phyrexian Denouncer
 - Phyrexian Digester
 - Phyrexian Driver
+- Phyrexian Gargantua
 - Phyrexian Ghoul
 - Phyrexian Hulk
 - Phyrexian Lens
-- Phyrexian Missionary
 - Phyrexian Plaguelord
+- Phyrexian Rager
 - Phyrexian Reclamation
+- Phyrexian Tribute
 - Phyrexian Vault
 - Phyrexian Vivisector
 - Phyrexian Walker
-- Phyrexian Warhorse
 - Phytoburst
 - Pia and Kiran Nalaar
+- Pia Nalaar, Chief Mechanic
+- Pianna, Nomad Captain
+- Pick Your Poison
 - Picklock Prankster // Free the Fae
+- Piety
 - Piggy Bank
+- Pile On
 - Pilgrim of the Fires
 - Pilgrim's Eye
+- Pillage
+- Pillar Launch
+- Pillar of Origins
+- Pillardrop Warden
 - Pillarfield Ox
 - Pin to the Earth
 - Pincher Beetles
 - Pious Wayfarer
 - Piranha Fly
+- Pirate Peddlers
+- Pirate's Pillage
 - Pirate's Prize
+- Pith Driller
 - Pitiless Gorgon
 - Pitiless Plunderer
 - Pixie Queen
 - Plague Belcher
 - Plague Myr
+- Plague Spitter
 - Plague Stinger
+- Plague Witch
 - Plagued Rusalka
 - Plaguemaw Beast
 - Planar Cleansing
-- Plasmancer
+- Planar Gate
+- Planar Portal
+- Plasma Elemental
 - Plated Crusher
+- Plated Geopede
 - Plated Onslaught
 - Plated Rootwalla
 - Plated Seastrider
 - Plated Slagwurm
 - Plated Spider
 - Plated Wurm
+- Platoon Dispenser
 - Playful Shove
 - Plea for Guidance
 - Plover Knights
 - Plumeveil
+- Plundering Barbarian
 - Plundering Pirate
+- Poised Practitioner
 - Poison the Blade
 - Poison-Tip Archer
+- Pollen-Shield Hare // Hare Raising
+- Pollenbright Druid
 - Pollenbright Wings
 - Polluted Dead
+- Polukranos Reborn // Polukranos, Engine of Ruin
 - Pond Prophet
+- Ponder
+- Pondering Mage
+- Pongify
+- Porcelain Legionnaire
 - Potion of Healing
 - Pounce
 - Pouncing Cheetah
 - Power Boost
 - Power of Fire
+- Powerstone Fracture
 - Prakhata Club Security
 - Precinct Captain
 - Precise Strike
 - Precision Bolt
+- Predation Steward
 - Predator's Strike
 - Predatory Sliver
 - Preening Champion
 - Preordain
 - Preposterous Proportions
+- Prescient Chimera
 - Presence of Gond
 - Pretending Poxbearers
 - Prey Upon
+- Prey's Vengeance
 - Pride of the Perfect
 - Prideful Feastling
 - Prideful Parent
+- Pridemalkin
+- Priest of Ancient Lore
 - Priest of Fell Rites
+- Priest of Gix
 - Priest of Iroas
+- Priest of the Blood Rite
+- Priest of Urabrask
 - Priests of Norn
 - Primal Druid
 - Primal Frenzy
@@ -2498,6 +3713,7 @@ Generated from the engine-supported card pool.
 - Primal Might
 - Primal Rage
 - Primal Visitation
+- Primeval Bounty
 - Primeval Herald
 - Primeval Shambler
 - Primevals' Glorious Rebirth
@@ -2505,7 +3721,12 @@ Generated from the engine-supported card pool.
 - Primordial Pachyderm
 - Primordial Sage
 - Primordial Wurm
+- Prince Imrahil the Fair
 - Princess Lucrezia
+- Prismatic Lens
+- Prismatic Omen
+- Prismite
+- Pristine Talisman
 - Privileged Position
 - Prized Griffin
 - Prizefight
@@ -2516,41 +3737,67 @@ Generated from the engine-supported card pool.
 - Professor Hulk
 - Professor of Zoomancy
 - Professor's Warning
+- Profound Journey
 - Prologue to Phyresis
+- Propaganda
 - Prophet of the Peak
+- Prophetic Prism
 - Prosperous Innkeeper
 - Prosperous Partnership
 - Prosperous Pirates
 - Protective Bubble
 - Protector of Gondor
 - Protomatter Powder
+- Proud Pack-Rhino
 - Provoke the Trolls
+- Prowcatcher Specialist
 - Prowling Caracal
+- Prowling Felidar
 - Prowling Serpopard
 - Prying Blade
 - Prying Eyes
+- Psemilla, Meletian Poet
 - Pseudodragon Familiar
 - Psionic Gift
+- Psychotrope Thallid
+- Pterafractyl
 - Pull from the Grave
 - Pull from Tomorrow
 - Pull Under
+- Pulsating Illusion
 - Pulse Tracker
 - Punk Frogs
+- Purify
 - Purple-Crystal Crab
+- Pursue Glory
+- Putrefy
 - Putrid Leech
 - Pygmy Razorback
 - Pyre Charger
+- Pyre Hound
+- Pyretic Ritual
+- Pyroceratops
 - Pyroclasm
+- Pyromancer's Assault
 - Pyromantic Pilgrim
 - Python
 - Qasali Slingers
 - Qilin's Blessing
+- Qiqirn Merchant
+- Quag Sickness
 - Quagmire Druid
 - Quakestrider Ceratops
 - Quaketusk Boar
+- Quandrix Pledgemage
+- Quantum Misalignment
+- Quarrel
+- Quarrel's End
 - Quarry Beetle
+- Queen Allenal of Ruadach
+- Queen Marchesa
 - Queen's Bay Soldier
 - Queen's Commission
+- Quench
 - Quick Study
 - Quicksilver Amulet
 - Quicksilver Fisher
@@ -2561,9 +3808,12 @@ Generated from the engine-supported card pool.
 - Quirion Explorer
 - Quirion Trailblazer
 - Qumulox
+- Radha, Heir to Keld
+- Rage Nimbus
 - Rage Reflection
 - Rageblood Shaman
 - Ragefire
+- Ragemonger
 - Raging Bull
 - Raging Cougar
 - Raging Goblin
@@ -2571,6 +3821,8 @@ Generated from the engine-supported card pool.
 - Raging Minotaur
 - Raging Poltergeist
 - Raging Redcap
+- Raging Swordtooth
+- Rain of Blades
 - Rain of Embers
 - Rain of Revelation
 - Rain of Tears
@@ -2578,78 +3830,129 @@ Generated from the engine-supported card pool.
 - Raise Dead
 - Raise the Alarm
 - Raised by Wolves
+- Rakdos Charm
 - Rakdos Cluestone
 - Rakdos Locket
 - Rakdos Ragemutt
 - Rakdos Shred-Freak
+- Rakdos Signet
 - Rakdos Trumpeter
 - Raking Claws
+- Rakish Heir
 - Rakka Mar
 - Ral's Reinforcements
+- Rally
 - Rally at the Hornburg
+- Rally the Forces
+- Rally the Peasants
+- Rally the Ranks
 - Rambunctious Mutt
 - Ramirez DePietro
 - Ramosian Greatsword
+- Rampaging Aetherhood
 - Rampaging Baloths
 - Rampaging Hippo
 - Rampaging Rendhorn
 - Rampant Growth
+- Ramunap Excavator
 - Ranger's Longbow
 - Ranger's Path
 - Rank and File
 - Rapacious Dragon
+- Rapid Hybridization
 - Raptor Companion
+- Rapturous Moment
+- Rats of Rath
 - Raugrin Crystal
 - Ravages of War
 - Ravaging Horde
+- Ravenhill Flock
+- Ravening Warg
+- Ravenous Amulet
+- Ravenous Baloth
+- Ravenous Bloodseeker
 - Ravenous Chupacabra
+- Ravenous Giant
+- Ravenous Harpy
 - Ravenous Intruder
 - Ravenous Lindwurm
+- Ravenous Robots
 - Ravine Raider
 - Ray of Dissolution
+- Ray of Distortion
+- Ray of Revelation
+- Razaketh, the Foulblooded
+- Razaketh's Rite
+- Raze
 - Razor Swine
 - Razorfield Thresher
 - Razorfin Hunter
 - Razorfoot Griffin
+- Reach the Horizon
 - Reach Through Mists
+- Read the Bones
 - Realm-Cloaked Giant // Cast Off
+- Reanimate
+- Reap the Seagraf
 - Rearing Embermare
 - Rebellious Strike
 - Rebuild
+- Reckless Abandon
 - Reckless Assault
 - Reckless Barbarian
+- Reckless Charge
+- Reckless Fireweaver
+- Reckless Lackey
 - Reckless Ransacking
 - Reckless Reveler
+- Reclaiming Vines
 - Reclamation Sage
+- Recollect
+- Recon Craft Theta
 - Reconnaissance Mission
 - Reconstructed Thopter
 - Reconstruction
 - Recover
+- Recurring Insight
+- Red Ghost, Intangible Genius
 - Redcap Thief
+- Redrock Sentinel
+- Reduce to Dreams
 - Redwood Treefolk
 - Reflexes
+- Refocus
 - Refurbish
+- Refuse to Yield
 - Refute
+- Regal Bunnicorn
 - Regal Caracal
 - Regal Imperiosaur
 - Regal Unicorn
 - Regathan Firecat
 - Regenesis
 - Regisaur Alpha
+- Regress
+- Regrowth
+- Reinforced Ronin
 - Rejuvenate
+- Relearn
 - Release the Dogs
 - Relentless Hunter
 - Relic of Legends
 - Relic Sloth
 - Reliquary Monk
 - Remember the Fallen
+- Remnant Elemental
 - Renegade Demon
 - Renegade Map
 - Renegade Troops
 - Renowned Weaver
 - Repentant Blacksmith
 - Replenish
+- Repulse
 - Repulsor Rays
+- Rescind
+- Rescue
 - Research Assistant
 - Reshape the Earth
 - Resistance Reunited
@@ -2660,71 +3963,107 @@ Generated from the engine-supported card pool.
 - Restoration Gearsmith
 - Resupply
 - Resurrection
+- Retreat to Emeria
+- Retreat to Hagra
+- Retreat to Kazandu
 - Retribution of the Meek
 - Retrieval Agent
+- Return from the Wilds
+- Return of the Wildspeaker
 - Return to Battle
-- Return to Nature
 - Revel of the Fallen God
 - Revelsong Horn
+- Reverent Hoplite
+- Reverent Howl
 - Reverse Engineer
 - Revitalize
+- Revitalizing Repast // Old-Growth Grove
+- Revive the Shire
 - Reviving Dose
 - Reviving Melody
 - Revoke Existence
+- Rewind
 - Reya Dawnbringer
+- Rhizome Lurcher
 - Rhox Brute
 - Rhox Oracle
 - Rhox Pikemaster
 - Rhox War Monk
+- Rhystic Study
 - Rhythm of the Wild
 - Rib Cage Spider
 - Ridge Rannet
+- Ridged Kusite
 - Ridgeline Rager
+- Ridgescale Tusker
 - Ridgetop Raptor
 - Righteous Cause
 - Righteous Charge
+- Righteous Confluence
 - Righteous War
+- Rimekin Recluse
 - Rimeshield Frost Giant
+- Ring of Renewal
+- Ring of Three Wishes
 - Riot Devils
 - Riot Gear
 - Riot Ringleader
 - Riot Spikes
 - Rip-Clan Crasher
+- Ripchain Razorkin
 - Ripscale Predator
 - Riptide Crab
 - Riptide Turtle
 - Rise Again
 - Rise of Eagles
+- Rise of the Ants
 - Rise to the Challenge
 - Risen Sanctuary
-- Rishkar, Peema Renegade
+- Rishkar's Expertise
+- Rising of the Day
+- Risky Research
+- Rite of the Dragoncaller
 - Rith, Liberated Primeval
+- Rith's Attendant
 - Ritual of Rejuvenation
 - Ritual of Restoration
+- Ritual of Soot
 - Rivaz of the Claw
 - Riven Turnbull
+- River Hoopoe
 - River Kaijin
+- River Sneak
+- Riverguard's Reflexes
+- Riverwise Augur
+- Roar of the Wurm
 - Robe of Mirrors
 - Robotics Mastery
 - Roc Egg
 - Roc Hunter
 - Roc of Kher Ridges
 - Rockcaster Platoon
+- Rockslide Elemental
+- Rocky Rebuke
 - Rod of Ruin
+- Rodeo Pyromancers
 - Rogue Refiner
 - Rogue's Gloves
+- Roiling Dragonstorm
+- Rolling Temblor
 - Romantic Rendezvous
 - Ronom Unicorn
 - Rooftop Bypass
 - Root-Kin Ally
 - Rootborn Defenses
 - Rootbreaker Wurm
+- Rootrider Faun
 - Rootwalla
 - Rootwater Diver
 - Rootwater Hunter
 - Rorix Bladewing
 - Rosemane Centaur
 - Rosethorn Acolyte // Seasonal Ritual
+- Rot Shambler
 - Rotlung Reanimator
 - Rotted Hulk
 - Rotted Hystrix
@@ -2737,27 +4076,39 @@ Generated from the engine-supported card pool.
 - Rover Blades
 - Roving Harper
 - Rowan Treefolk
+- Roxxon Brutes
 - Royal Falcon
+- Royal Talon Fighter Jet
 - Royal Warden
 - Rubble Reading
 - Rubble Slinger
 - Rubbleback Rhino
 - Rubblebelt Boar
+- Ruby, Daring Tracker
 - Ruination Wurm
 - Ruinous Gremlin
+- Ruinous Rampage
+- Ruinous Ultimatum
+- Ruins Recluse
 - Rumbling Baloth
 - Rumbling Sentry
+- Rummaging Goblin
 - Rummaging Wizard
 - Rune-Cervin Rider
+- Rune-Scarred Demon
 - Rune-Sealed Wall
+- Runeboggle
 - Runeclaw Bear
 - Runehorn Hellkite
 - Runewing
 - Rush of Adrenaline
 - Rush of Battle
+- Rush of Vitality
+- Rushwood Elemental
 - Russet Wolves
 - Rust Monster
 - Rusted Sentinel
+- Rustmouth Ogre
 - Rustwing Falcon
 - Rydia's Return
 - Ryusei, the Falling Star
@@ -2766,105 +4117,146 @@ Generated from the engine-supported card pool.
 - Saber-Tooth Moose-Lion
 - Sabertooth Nishoba
 - Sabertooth Wyvern
+- Sabotender
 - Sabretooth Tiger
 - Sachi, Daughter of Seshiro
 - Sacred Armory
+- Sacred Fire
 - Sacred Nectar
 - Sacred Wolf
 - Sadistic Obsession
 - Safewright Quest
+- Sage Aven
+- Sage of Epityr
 - Sage of Lat-Nam
+- Sage of the Inward Eye
+- Sage Owl
+- Sage's Knowledge
+- Sage's Reverie
 - Sage's Row Savant
 - Sagu Wildling // Roost Seek
 - Sai, Master Thopterist
 - Sailor of Means
 - Sakura-Tribe Elder
 - Sakura-Tribe Scout
+- Salivating Gremlins
+- Salt Road Patrol
 - Saltfield Recluse
 - Salvage Scout
+- Salvage Slasher
+- Salvager of Secrets
 - Salvation Engine
+- Samite Herbalist
 - Samut, Tyrant Smasher
 - Samut's Sprint
 - Sanctify
 - Sanctuary Cat
 - Sanctum Gargoyle
+- Sanctum Seeker
 - Sandbar Merfolk
 - Sandbar Serpent
+- Sandsteppe Outcast
 - Sandstone Warrior
+- Sandstorm
 - Sangrite Backlash
 - Sangrite Surge
+- Sanguinary Priest
+- Sanguine Syphoner
 - Sanitation Automaton
+- Sapphire Drake
 - Sarkhan, Dragon Ascendant
 - Sarkhan, Soul Aflame
-- Sarkhan, the Dragonspeaker
 - Sarkhan's Triumph
 - Saruli Caretaker
+- Saruli Gatekeepers
 - Satyr Enchanter
 - Satyr Grovedancer
+- Satyr Hedonist
 - Satyr Rambler
+- Saurian Symbiote
 - Savage Gorilla
 - Savage Hunger
 - Savage Land Dinosaur
 - Savage Twister
 - Savage Ventmaw
+- Savageborn Hydra
 - Savai Crystal
 - Savai Sabertooth
 - Savannah Lions
 - Savannah Sage
+- Savor
+- Sazh's Chocobo
 - Scale of Chiss-Goria
 - Scalebane's Elite
 - Scaled Behemoth
 - Scaled Herbalist
 - Scaled Nurturer
 - Scaled Wurm
+- Scalelord Reckoner
 - Scampering Scorcher
 - Scar
 - Scarblade Scout
 - Scare Tactics
+- Scarland Thrinax
 - Scarlet Witch, Wanda Maximoff
 - Scarwood Goblins
 - Scarwood Treefolk
 - Scathe Zombies
+- Scatter Arc
 - Scatter the Seeds
 - Scattershot Archer
 - Scavenged Weaponry
+- Scavenger Drake
 - Scavenger Folk
-- Scavenging Ooze
 - Scepter of Celebration
 - Scepter of Insight
+- Scholar of Athreos
 - Scholar of Stars
+- School Daze
 - Scion of Glaciers
 - Scion of Oona
+- Scion of the Wild
 - Scion of Ugin
-- Scorch Rider
 - Scorch the Fields
 - Scorching Shot
 - Scorching Spear
 - Scoria Elemental
 - Scorpion's Sting
+- Scour All Possibilities
 - Scour for Scrap
 - Scour from Existence
 - Scourge Devil
-- Scourge of Valkas
+- Scourge of Geier Reach
+- Scourge of Kher Ridges
 - Scourge Servant
 - Scourgemark
 - Scouring Sands
 - Scragnoth
 - Scrap
 - Scrapwork Cohort
+- Scrapwork Rager
 - Scrapyard Steelbreaker
+- Scream Puff
+- Screamer-Killer
 - Screaming Fury
 - Screaming Phantom
 - Screeching Drake
 - Screeching Phoenix
 - Screeching Skaab
+- Scribe of the Mindful
+- Scriv, the Obligator
+- Scrivener
 - Scroll Thief
 - Scrounger of Souls
 - Scryb Sprites
+- Sculpting Steel
+- Scute Mob
+- Scythe Leopard
 - Sea Eagle
 - Sea Gate Banneret
 - Sea Hag // Aquatic Ingress
 - Sea Legs
+- Sea Scryer
 - Sea Spirit
 - Sea Sprite
 - Seacoast Drake
@@ -2872,45 +4264,68 @@ Generated from the engine-supported card pool.
 - Seagraf Skaab
 - Seal of Cleansing
 - Seal of Primordium
+- Seal of Removal
 - Seal of Strength
 - Searchlight Companion
 - Searing Spear
 - Searing Wind
+- Seascape Aerialist
 - Seashell Cameo
 - Season of Renewal
+- Seasoned Warrenguard
 - Second Wind
+- Secret Rendezvous
 - Secure the Wastes
+- Securitron Squadron
 - Sedge Scorpion
 - Seedguide Ash
 - Seeds of Strength
 - Seek the Horizon
+- Seeker of Skybreak
 - Seer's Lantern
+- Seething Pathblazer
+- Seething Song
 - Segovian Angel
+- Seismic Mage
+- Seismic Monstrosaur
 - Seismic Rupture
 - Seismic Shudder
+- Seismic Spike
+- Seize the Day
 - Seize the Initiative
+- Seize the Spoils
 - Sek'Kuar, Deathkeeper
+- Selenia, Dark Angel
 - Selesnya Cluestone
 - Selesnya Evangel
 - Selesnya Guildmage
 - Selesnya Locket
+- Selesnya Signet
 - Self-Assembler
 - Selfless Cathar
 - Selfless Spirit
+- Sell-Sword Brute
 - Seller of Songbirds
 - Senate Griffin
 - Senate Guildmage
+- Sensei's Divining Top
 - Sensor Splicer
 - Sensory Deprivation
 - Sentinel Sliver
 - Sentinel Spider
+- Sentinel's Eyes
 - Sentinels of Glen Elendra
+- Separatist Voidmage
 - Sephiroth, Planet's Heir
 - Sephiroth's Intervention
 - Sepulcher Ghoul
 - Seraph of Dawn
+- Seraph of the Masses
 - Seraph of the Suns
-- Sergeant-at-Arms
+- Serendib Efreet
+- Serenity
+- Serpent Specialist
+- Serpent Warrior
 - Serpent's Gift
 - Serra Angel
 - Serra Sphinx
@@ -2919,19 +4334,24 @@ Generated from the engine-supported card pool.
 - Serra's Boon
 - Serra's Embrace
 - Serra's Guardian
+- Serum Sovereign
 - Serum Tank
 - Serum Visionary
 - Serum Visions
 - Servant of the Conduit
 - Servo Exhibition
 - Seshiro the Anointed
+- Setessan Champion
 - Setessan Griffin
+- Setessan Skirmisher
 - Setessan Training
 - Sethron, Hurloon General
 - Sewn-Eye Drake
 - Shadow Glider
 - Shadow Lance
 - Shadow Summoning
+- Shadowbeast Sighting
+- Shadowblood Egg
 - Shake the Foundations
 - Shaman of Spring
 - Shamanic Revelation
@@ -2939,9 +4359,14 @@ Generated from the engine-supported card pool.
 - Shambling Strider
 - Shape the Sands
 - Shaper Guildmage
+- Shapers' Sanctuary
 - Shard of Broken Glass
+- Shard Volley
+- Shardless Agent
 - Shardless Outlander
 - Shared Roots
+- Shared Summons
+- Shared Triumph
 - Sharuum the Hegemon
 - Shatter
 - Shattered Acolyte
@@ -2949,18 +4374,29 @@ Generated from the engine-supported card pool.
 - Shatterskull Giant
 - Shatterskull Recruit
 - Shatterstorm
+- She-Hulk, Jennifer Walters
+- Shelob's Ambush
 - Sheltering Boughs
 - Sheltering Light
+- Sheoldred's Edict
 - Shepherd of the Lost
 - Shepherding Spirits
 - Shield Mate
 - Shield of Duty and Reason
 - Shield Wall
+- Shifting Wall
 - Shimmering Barrier
 - Shimmerscale Drake
+- Shimmerwing Chimera
+- Shinen of Flight's Wings
+- Shinen of Fury's Fire
+- Shinen of Stars' Light
 - Shining Aerosaur
+- Shinra Reinforcements
+- Shiny Impetus
 - Shiv's Embrace
 - Shivan Branch-Burner
+- Shivan Devastator
 - Shivan Dragon
 - Shivan Hellkite
 - Shivan Zombie
@@ -2971,50 +4407,73 @@ Generated from the engine-supported card pool.
 - Shore Lurker
 - Shorecomber Crab
 - Shoreline Ranger
+- Shoreline Salvager
 - Short Bow
 - Short Sword
 - Show of Valor
+- Shrapnel Blast
 - Shriek Raptor
 - Shrike Force
 - Shrink
 - Shroofus Sproutsire
+- Shroudstomper
 - Shu Elite Infantry
 - Shu Foot Soldiers
 - Shu Grain Caravan
 - Shu Soldier-Farmers
 - Shuko
+- Shuri, Vibranium Technologist
 - Sicken
+- Sidequest: Raise a Chocobo // Black Chocobo
 - Siege Mastodon
+- Siege Rhino
+- Siege Veteran
 - Siege Wurm
 - Siege Zombie
+- Siege-Gang Commander
 - Siegecraft
 - Sift
 - Sigil of the Empty Throne
+- Sigil of the Nayan Gods
 - Sigiled Skink
 - Sigiled Starfish
+- Sign in Blood
+- Signpost Scarecrow
 - Silent Artisan
 - Silent Attendant
+- Silent Departure
 - Silent Observer
 - Silent Sentinel
 - Silk Net
 - Silkwing Scout
+- Silumgar's Command
 - Silver Erne
 - Silver Knight
 - Silver Myr
 - Silver Raven
 - Silverback Ape
+- Silverback Elder
 - Silverback Shaman
 - Silverbeak Griffin
 - Silverchase Fox
 - Silverclaw Griffin
 - Silvercoat Lion
+- Silvergill Peddler
 - Silverglade Elemental
+- Silverglade Pathfinder
+- Silverquill Apprentice
+- Sima Yi, Wei Field Marshal
 - Simian Simulacrum
+- Simic Charm
 - Simic Cluestone
 - Simic Locket
+- Simic Ragworm
+- Simic Signet
 - Simic Sky Swallower
+- Sinister Monolith
 - Sinister Sabotage
 - Sinister Starfish
+- Sink into Stupor // Soporific Springs
 - Sinkhole
 - Sir Shandlar of Eberyn
 - Sisay's Ring
@@ -3027,22 +4486,33 @@ Generated from the engine-supported card pool.
 - Skeletal Snake
 - Skillful Lunge
 - Skinrender
+- Skirge Familiar
+- Skirk Prospector
+- Skirmish Rhino
 - Skirsdag Cultist
+- Skirsdag Flayer
 - Skittering Surveyor
+- Skorpekh Destroyer
 - Skorpekh Lord
 - Skull Catapult
 - Skull of Orm
 - Skull of Ramos
 - Skull Prophet
 - Skullclamp
+- Skullmead Cauldron
+- Skulltap
 - Sky Diamond
 - Sky Ruin Drake
 - Sky Skiff
 - Sky Spirit
 - Sky Terror
+- Sky Theater Strix
 - Sky-Eel School
+- Skybeast Tracker
 - Skyblade of the Legion
 - Skybox Ferry
+- Skyclave Geopede
+- Skycloud Egg
 - Skycrash
 - Skyhunter Patrol
 - Skyhunter Prowler
@@ -3054,87 +4524,145 @@ Generated from the engine-supported card pool.
 - Skyscanner
 - Skyshaper
 - Skyshroud Claim
+- Skyshroud Elf
 - Skyshroud Falcon
 - Skyshroud Ranger
 - Skyshroud Troopers
 - Skysnare Spider
 - Skyspear Cavalry
+- Skystreak Engineer
 - Skyswirl Harrier
+- Skywing Aven
 - Slag Strider
 - Slagwurm Armor
+- Slash Panther
 - Slash, Reptile Rampager
 - Slate of Ancestry
 - Slaughter Cry
 - Slavering Branchsnapper
+- Sledding Otter-Penguin
 - Sleek Schooner
 - Slice in Twain
 - Slimebind
+- Slimefoot, the Stowaway
+- Sling-Gang Lieutenant
 - Slinking Skirge
 - Slippery Bogle
+- Sliptide Serpent
+- Slith Ascendant
+- Slith Firewalker
+- Slith Predator
+- Slither Blade
 - Sliver Construct
 - Sliver Hivelord
 - Sliver Queen
 - Smash
+- Smaug, the Great Calamity // Spew Flame
 - Smelt
+- Smiting Helix
 - Smitten Swordmaster // Curry Favor
 - Smokespew Invoker
+- Smoldering Efreet
+- Smother
 - Snake Basket
+- Snakeskin Veil
+- Snap
+- Snapback
 - Snapping Drake
+- Snapping Gnarlid
 - Snare the Skies
 - Snare Thopter
 - Snarling Wolf
+- Sneering Shadewriter
+- Snow Villiers
 - Soaring Drake
 - Soaring Sandwing
 - Social Climber
 - Sokka, Wolf Cove's Protector
 - Sol Ring
-- Solar Transformer
 - Soldier of the Grey Host
+- Soldier On
 - Solemn Offering
 - Solemn Simulacrum
 - Solidarity
+- Soliton
+- Solve the Equation
 - Somber Hoverguard
+- Somberwald Beastmaster
+- Song of the Dryads
 - Sonic Screwdriver
 - Soothsayer Adept
+- Sorin's Thirst
+- Soul Feast
 - Soul of the Harvest
 - Soul of the Rapids
+- Soul Read
 - Soul Salvage
+- Soul Snuffers
 - Soul Warden
+- Soulblade Djinn
 - Soulbound Guardians
+- Souldrinker
 - Soulknife Spy
 - Soulmender
 - Soulreaper of Mogis
+- Soulsurge Elemental
 - Southern Elephant
+- Sovereign's Bite
 - Spare Supplies
+- Spark Double
 - Spark Jolt
 - Spark Spray
 - Sparring Construct
+- Sparring Mummy
 - Spatial Contortion
 - Spawning Pit
 - Spectral Flight
 - Spectral Hunt-Caller
 - Spectral Reserves
 - Spectral Sailor
+- Spell Pierce
+- Spell Satchel
+- Spell Snip
 - Spellbook
+- Spellgorger Weird
 - Spellgyre
+- Spellkeeper Weird
 - Sphinx of Jwar Isle
+- Sphinx of Magosi
+- Sphinx of the Final Word
 - Sphinx of the Steel Wind
+- Spider Manifestation
+- Spider-Bot
+- Spider-Byte, Web Warden
+- Spider-Man 2099, Miguel O'Hara
 - Spider-Rex, Daring Dino
 - Spidersilk Armor
 - Spidersilk Net
 - Spike Jester
 - Spiked Baloth
+- Spiketail Drake
+- Spiketail Drakeling
+- Spiketail Hatchling
 - Spinal Centipede
 - Spined Karok
 - Spined Megalodon
+- Spined Thopter
 - Spined Wurm
 - Spire Monitor
+- Spire Owl
+- Spirit of Malevolence
+- Spirit Shackle
 - Spirit Summoning
 - Spirited Companion
 - Spiritual Guardian
 - Spit Flame
+- Spiteful Blow
 - Spiteful Motives
+- Spitfire Lagac
 - Spitting Drake
+- Spitting Spider
+- Spontaneous Combustion
 - Spore Crawler
 - Spore Swarm
 - Sporecap Spider
@@ -3143,27 +4671,45 @@ Generated from the engine-supported card pool.
 - Spotted Griffin
 - Spring of Eternal Peace
 - Springleaf Drum
+- Springleaf Parade
 - Springmane Cervin
 - Springsage Ritual
+- Sprite Dragon
 - Sprout
 - Sprouting Thrinax
 - Squall
 - Squall Line
+- Squelching Leeches
 - Squire
 - Squire's Devotion
 - Squirrel Sovereign
+- Squirrel Wrangler
 - Squirrelanoids
+- Sram, Senior Edificer
+- Sram's Expertise
 - Stab
 - Staff of Nin
+- Staff of the Storyteller
+- Staff of Titania
 - Staff of Zegon
 - Staggering Size
+- Staggershock
+- Stalking Bloodsucker
+- Stampede
+- Stampede Driver
 - Stampeding Rhino
+- Stampeding Scurryfoot
 - Stand Firm
+- Standing Stones
 - Standing Troops
+- Starfield Mystic
+- Starfighter Pilot
 - Stark Industries Executive
 - Starlight Invoker
 - Starlit Angel
 - Starlit Mantle
+- Starnheim Aspirant
+- Starnheim Courser
 - Starnheim Memento
 - Starstorm
 - Start from Scratch
@@ -3180,14 +4726,23 @@ Generated from the engine-supported card pool.
 - Steam Spitter
 - Steel Hellkite
 - Steel Wall
+- Steelfin Whale
 - Steelform Sliver
+- Steelgaze Griffin
+- Steely Resolve
 - Steeple Roc
+- Steppe Lynx
+- Sterling Grove
 - Sterling Hound
+- Stern Proctor
 - Steward of Valeron
+- Stickytongue Sentinel
 - Stinging Barrier
+- Stinkdrinker Daredevil
 - Stockman, Mad Fly-entist
 - Stoic Builder
 - Stoke the Flames
+- Stomp and Howl
 - Stomper Cub
 - Stone Golem
 - Stone Haven Medic
@@ -3197,37 +4752,64 @@ Generated from the engine-supported card pool.
 - Stoneskin
 - Stonewood Invoker
 - Stonework Puma
+- Stonybrook Schoolmaster
 - Storm Crow
+- Storm Fleet Sprinter
+- Storm Seeker
 - Storm Shaman
+- Storm Skreelix
 - Storm Spirit
 - Storm Strike
+- Storm the Vault // Vault of Catlacan
+- Storm-Kiln Artist
 - Stormcaller of Keranos
+- Stormcaller's Boon
 - Stormcloud Spirit
 - Stormfront Pegasus
+- Stormkeld Prowler
 - Stormrider Spirit
 - Stormshriek Feral // Flush Out
+- Stormwatch Eagle
 - Story Seeker
 - Storyteller Pixie
+- Strands of Night
 - Strangling Spores
 - Stratosoarer
 - Straw Soldiers
 - Streetbreaker Wurm
+- Strength of the Pack
+- Stridehangar Automaton
 - Strider Harness
+- Strike It Rich
 - Striking Sliver
 - Striped Bears
 - Striped Riverwinder
 - Strix Lookout
+- Strix Serenade
 - Strixhaven Skycoach
+- Stroke of Midnight
 - Stromkirk Captain
+- Stromkirk Condemned
+- Stromkirk Patrol
+- Strongarm Monk
 - Strongarm Thug
+- Stronghold Machinist
 - Stronghold Taskmaster
 - Stubborn Denial
+- Student of Ojutai
+- Stymied Hopes
+- Su-Chi
 - Subterranean Spirit
 - Subtle Strike
+- Subversion
+- Succumb to Temptation
 - Sudden Breakthrough
+- Sudden Impact
 - Sudden Strength
+- Suffocating Blast
 - Suffocating Fumes
 - Sugar Rush
+- Suki, Kyoshi Captain
 - Sultai Ascendancy
 - Sultai Banner
 - Sultai Charm
@@ -3241,26 +4823,43 @@ Generated from the engine-supported card pool.
 - Sunbeam Spellbomb
 - Sunblade Angel
 - Sunder
+- Sunder from Within
 - Sundering Vitae
 - Sundial, Dawn Tyrant
 - Sungrace Pegasus
+- Sungrass Egg
 - Sunhome Guildmage
 - Sunrise Sovereign
+- Sunscape Master
+- Sunscorch Regent
+- Sunset Pyramid
+- Sunshower Druid
+- Sunspire Gatekeepers
 - Sunspire Griffin
+- Sunstar Lightsmith
 - Suntail Hawk
 - Super Speed
+- Super-Skrull
+- Supply Runners
 - Supply-Line Cranes
 - Supportive Parents
 - Supreme Phantom
 - Supreme Verdict
 - Sure Strike
 - Surge Conductor
+- Surge Node
+- Surgical Skullbomb
+- Surrak and Goreclaw
 - Surrak Dragonclaw
 - Surveilling Sprite
 - Survey the Wreckage
 - Suspicious Bookcase
+- Sustenance
 - Swab Goblin
+- Swan Song
 - Swarm Guildmage
+- Swarm of Bloodflies
+- Swarm of Rats
 - Swashbuckling
 - Sweatworks Brawler
 - Swell of Growth
@@ -3269,24 +4868,32 @@ Generated from the engine-supported card pool.
 - Swiftblade Vindicator
 - Swiftfoot Boots
 - Swooping Lookout
+- Swooping Protector
+- Sword of Fire and Ice
 - Sword of the Animist
+- Sword of Vengeance
+- Swords to Plowshares
 - Swordwise Centaur
 - Sworn Companions
 - Sworn Guardian
 - Sylvan Brushstrider
 - Sylvan Caryatid
+- Sylvan Might
 - Sylvan Ranger
-- Sylvan Reclamation
 - Sylvan Scrying
+- Sylvan Tutor
 - Sylvok Explorer
 - Sylvok Lifestaff
 - Sylvok Replica
+- Symbiote Spawn
 - Symbiotic Beast
 - Symbiotic Elf
+- Symbol of Unsummoning
 - Syphon Fuel
 - Syphon Sliver
 - Syr Alin, the Lion's Claw
 - Syr Vondam, the Lucent
+- Sythis, Harvest's Hand
 - Tahngarth's Rage
 - Taigam's Scheming
 - Tainted Strike
@@ -3296,9 +4903,11 @@ Generated from the engine-supported card pool.
 - Tajuru Snarecaster
 - Tajuru Warcaller
 - Take Up Arms
+- Take Up the Shield
 - Talas Air Ship
 - Talas Merchant
 - Talas Scout
+- Talas Warrior
 - Talisman of Conviction
 - Talisman of Creativity
 - Talisman of Curiosity
@@ -3312,31 +4921,47 @@ Generated from the engine-supported card pool.
 - Talon Trooper
 - Talonrend
 - Talons of Falkenrath
+- Talrand, Sky Summoner
 - Talrand's Invocation
 - Talruum Minotaur
 - Tamiyo's Epiphany
+- Tamiyo's Logbook
 - Tangle Mantis
 - Tangle Spider
 - Tanglebloom
+- Tanufel Rimespeaker
 - Taoist Hermit
+- Tar Pitcher
 - Tar Snare
+- Tarkir Duneshaper // Burnished Dunestomper
 - Tarmogoyf
 - Tarpan
 - Tasseled Dromedary
 - Tattered Apparition
 - Tattered Mummy
+- Tatyova, Benthic Druid
+- Taurean Mauler
 - Taxi Driver
 - Team Transmitter
+- Teeming Dragonstorm
 - Teeterpeak Ambusher
 - Teferi's Protege
+- Tegwyll, Duke of Splendor
 - Tel-Jilad Justice
+- Teleportation Circle
 - Tempered Steel
+- Tempest Angler
+- Tempest Djinn
 - Tempest Drake
+- Tempest Hart // Scan the Clouds
 - Tempest of Light
 - Temple Acolyte
+- Temporal Adept
 - Temur Ascendancy
 - Temur Banner
 - Temur Battlecrier
+- Tender Wildguide
+- Tenderize
 - Tenement Crasher
 - Tenth District Guard
 - Tenza, Godo's Maul
@@ -3344,28 +4969,47 @@ Generated from the engine-supported card pool.
 - Teroh's Faithful
 - Terra Stomper
 - Terrain Elemental
+- Terramorph
 - Terrian, World Tyrant
+- Territorial Baloth
+- Territorial Boar
 - Territorial Roc
+- Territorial Scythecat
 - Terror of Mount Velus
 - Terror of the Fairgrounds
+- Terror of the Peaks
 - Teyo's Lightshield
+- Tezzeret's Gambit
+- Thalia's Lieutenant
 - Thallid
+- Thallid Devourer
+- Thallid Germinator
 - Thallid Shell-Dweller
 - Thallid Soothsayer
 - Thanos, Death's Consort
 - Thaumaturge's Familiar
+- The Arkenstone // Seek the Heart
 - The Fabulous Frog-Man
+- The Falcon, Sam Wilson
 - The Howling Commandos
 - The Lady of the Mountain
 - The Terror of Serpent's Pass
+- The Underworld Cookbook
 - The Unspeakable
 - The Ur-Dragon
+- The Vision and Scarlet Witch
 - The Walls of Ba Sing Se
 - The Whizzer, Classic Speedster
+- Theft of Dreams
+- Their Name Is Death
 - Théoden, King of Rohan
 - Thermal Glider
+- Thermo-Alchemist
 - Thicket Crasher
+- Thing in the Ice // Awoken Horror
 - Think Tank
+- Think Twice
+- Third Path Iconoclast
 - Third Path Savant
 - Thirsting Bloodlord
 - Thirsting Roots
@@ -3373,7 +5017,11 @@ Generated from the engine-supported card pool.
 - Thistledown Liege
 - Thopter Architect
 - Thopter Engineer
+- Thopter Fabricator
+- Thopter Mechanic
 - Thopter Spy Network
+- Thorin's Last Stand
+- Thorn Lieutenant
 - Thornhide Wolves
 - Thornweald Archer
 - Thornwind Faeries
@@ -3383,37 +5031,52 @@ Generated from the engine-supported card pool.
 - Thought Vessel
 - Thoughtcast
 - Thoughtflare
+- Thraben Gargoyle // Stonewing Antagonizer
 - Thraben Purebloods
+- Thraben Sentry // Thraben Militia
+- Thraben Standard Bearer
 - Thraben Valiant
 - Thraben Watcher
 - Thrakkus the Butcher
 - Thran Dynamo
 - Thran Power Suit
+- Thran Vigil
+- Thranduil the Strategist
+- Thranduil, Sindarin Liege // Silvan Rally
 - Thrashing Brontodon
 - Thrashing Wumpus
 - Threadbind Clique // Rip the Seams
 - Three Tree Rootweaver
 - Three Visits
+- Thrill of Possibility
+- Thrill of the Hunt
 - Thriss, Nantuko Primus
 - Throne of Geth
+- Thrór's Map
 - Throttle
 - Thrummingbird
 - Thunder Dragon
+- Thunder Drake
 - Thunder Spirit
 - Thunder Strike
 - Thunder Wall
-- Thunderbreak Regent
-- Thunderfoot Baloth
+- Thunderhawk Gunship
 - Thunderhead Squadron
 - Thundering Ceratok
 - Thundering Chariot
 - Thundering Giant
 - Thundering Spineback
-- Thundermaw Hellkite
+- Thundering Tanadon
+- Thunderous Snapper
+- Thunderscape Apprentice
+- Thunderscape Master
 - Thundersteel Colossus
+- Thunderwolf Cavalry
 - Ticked Off
+- Tidal Kraken
 - Tidehollow Strix
 - Tidepool Turtle
+- Tidespout Tyrant
 - Tidings
 - Tiger Claws
 - Tigereye Cameo
@@ -3421,21 +5084,29 @@ Generated from the engine-supported card pool.
 - Timberland Ancient
 - Timberland Guide
 - Timeless Lotus
+- Timid Drake
 - Timid Shieldbearer
 - Tine Shrike
 - Tinker's Tote
 - Tireless Missionaries
+- Tireless Provisioner
+- Tireless Tribe
 - Titan Forge
 - Titan's Strength
+- Titania's Boon
 - Titanic Growth
+- Tithebearer Giant
 - Tivadar's Crusade
 - To Arms!
+- Toadstool Admirer
 - Tobias Andrion
-- Tolarian Emissary
 - Tolarian Scholar
+- Tolarian Sentinel
 - Tolarian Serpent
 - Tolsimir Wolfblood
 - Tomakul Honor Guard
+- Tombstone, Career Criminal
+- Tome Blast
 - Tome Raider
 - Tooth of Chiss-Goria
 - Tooth of Ramos
@@ -3448,11 +5119,14 @@ Generated from the engine-supported card pool.
 - Torch Gauntlet
 - Torment
 - Tormented Angel
+- Tormenting Voice
+- Tormentor Exarch
 - Torpor Dust
 - Torsten Von Ursus
 - Tortoise Formation
 - Touch of Brilliance
 - Touch of Invisibility
+- Towashi Songshaper
 - Tower Defense
 - Tower Drake
 - Tower Gargoyle
@@ -3461,6 +5135,9 @@ Generated from the engine-supported card pool.
 - Tower of Eons
 - Tower of Fortunes
 - Towering Indrik
+- Toxic Abomination
+- Tradewind Rider
+- Trading Post
 - Tragic Poet
 - Trailblazer
 - Trained Armodon
@@ -3472,99 +5149,154 @@ Generated from the engine-supported card pool.
 - Tranquility
 - Transcendent Envoy
 - Transcendent Message
+- Transmogrant Altar
 - Trapmaker's Snare
+- Trash for Treasure
 - Traumatic Visions
 - Traveler's Amulet
 - Traveling Minister
 - Traveling Philosopher
+- Trawler Drake
 - Tread Upon
 - Treasure Dredger
 - Treasure Hunter
 - Treasure Trove
 - Tree Monkey
+- Treefolk Harbinger
 - Treetop Freedom Fighters
 - Treetop Sentinel
 - Treetop Snarespinner
 - Tremor
+- Trenching Steed
+- Treva's Attendant
+- Tribute Mage
 - Triclopean Sight
+- Trigon of Corruption
+- Trigon of Infestation
+- Trigon of Rage
+- Trigon of Thought
 - Triplicate Spirits
 - Triplicate Titan
+- Triton Shorestalker
 - Triton Shorethief
 - Trokin High Guard
 - Troll-Horn Cameo
+- Troop of Ponies
 - Trostani Discordant
 - Trostani, Three Whispers
 - Trostani's Summoner
 - True Conviction
 - True Love's Kiss
+- Trufflesnout
+- Trumpet Blast
+- Trumpeting Herd
 - Trusty Machete
 - Trusty Packbeast
+- Trusty Retriever
+- Trygon Predator
+- Tsunami
 - Tukatongue Thallid
 - Tuknir Deathlock
+- Tuktuk Grunts
 - Tuktuk Rubblefort
 - Tundra Wall
 - Tundra Wolves
 - Tunnel Surveyor
+- Tunneling Geopede
+- Tura Kennerüd, Skyknight
 - Turn the Tide
 - Turntimber Ascetic
 - Turtle Blimp
 - Turtle Power!
 - Turtle-Seals
 - Tusked Colossodon
+- Tuskguard Captain
+- Tuvasa the Sunlit
 - Twin-Silk Spider
 - Twinblade Blessing
+- Twinflame Tyrant
 - Twining Twins // Swift Spiral
 - Twinmaw Stormbrood // Charring Bite
 - Twinscroll Shaman
 - Twisted Experiment
+- Twisted Spider-Clone
+- Twitching Doll
 - Two-Headed Cerberus
 - Two-Headed Hellkite
 - Two-Headed Hunter // Twice the Rage
 - Two-Headed Zombie
 - Typhoid Rats
 - Tyranid Harridan
-- Tyrant's Familiar
+- Tyrant's Scorn
 - Tyrox, Saurid Tyrant
 - Tyrranax
 - Uktabi Faerie
 - Uktabi Orangutan
 - Ukud Cobra
+- Ulcerate
 - Ultima Weapon
+- Ultimate Nullification
 - Ultimate Price
+- Ultimo, Civilization's End
+- Ultron Drone
+- Ulvenwald Captive // Ulvenwald Abomination
+- Ulvenwald Hydra
+- Ulvenwald Oddity // Ulvenwald Behemoth
+- Umara Raptor
 - Umezawa's Charm
+- Unauthorized Exit
 - Unbender Tine
+- Unburial Rites
+- Unburied Earthcarver
 - Uncaged Fury
 - Uncanny Speed
 - Uncomfortable Chill
+- Undead Augur
 - Undead Leotau
 - Undead Minotaur
+- Undead Warchief
 - Undercity Dire Rat
 - Underdark Basilisk
 - Undergrowth Leopard
 - Undersea Invader
+- Undertaker
 - Underworld Coinsmith
+- Underworld Hermit
 - Unexpected Assistance
+- Unexpected Windfall
+- Unexplained Disappearance
 - Unflinching Courage
 - Unfriendly Fire
 - Unfulfilled Desires
 - Unhallowed Phalanx
+- Unholy Officiant
 - Unholy Strength
+- United Front
 - Universal Automaton
 - Universal Solvent
 - Universal Surveillance
 - Unleash Fury
 - Unlikely Aid
+- Unliving Legionnaire
 - Unmake
 - Unmake the Graves
 - Unnatural Predation
 - Unnatural Restoration
 - Unnatural Speed
+- Unruly Catapult
+- Unruly Mob
 - Unspeakable Symbol
+- Unstable Molecule Suit
 - Unstable Obelisk
+- Unstoppable Plan
 - Unsubtle Mockery
+- Unsummon
 - Untamed Hunger
 - Untamed Wilds
+- Untethered Express
+- Unwind
 - Unyaro Bee Sting
+- Up the Beanstalk
 - Updraft Elemental
 - Ur-Golem's Eye
 - Urbis Protector
@@ -3573,14 +5305,18 @@ Generated from the engine-supported card pool.
 - Urborg Uprising
 - Ureni of the Unwritten
 - Ureni, the Song Unending
+- Urn of Godfire
 - Ursapine
 - Usher of the Fallen
+- Utopia Mycon
 - Utopia Tree
 - Utrom Monitor
 - Utter End
 - Utvara Hellkite
 - Vaevictis Asmadi, the Dire
 - Valakut Invoker
+- Valakut Predator
+- Valeria Richards, Precocious
 - Valeron Outlander
 - Valgavoth's Faithful
 - Valiant Guard
@@ -3592,24 +5328,40 @@ Generated from the engine-supported card pool.
 - Valorous Steed
 - Vampire Aristocrat
 - Vampire Champion
+- Vampire Envoy
+- Vampire Neonate
 - Vampire Nighthawk
 - Vampire Noble
 - Vampire of the Dire Moon
+- Vampire Opportunist
 - Vampire Revenant
+- Vampire Spawn
+- Vampiric Feast
 - Vampiric Fury
+- Vampiric Rites
+- Vampiric Spirit
+- Vampiric Tutor
 - Vandalblast
 - Vandalize
 - Vanishing Verse
 - Vanquisher's Axe
+- Vanquisher's Banner
 - Vassal Soul
+- Vastwood Fortification // Vastwood Thicket
 - Vastwood Gorger
+- Vault Plunderer
+- Vault Skirge
+- Vault Skyward
 - Vedalken Archmage
 - Vedalken Infuser
+- Vedalken Mastermind
 - Vedalken Outlander
 - Veiled Shade
 - Veloheart Bike
+- Velvetwing Butterflies // Gaze in Wonder
 - Venerable Lammasu
 - Venerable Monk
+- Vengeant Vampire
 - Vengeful Dead
 - Venom Sliver
 - Venomized Cat
@@ -3617,23 +5369,29 @@ Generated from the engine-supported card pool.
 - Venomous Hierophant
 - Venomthrope
 - Venser's Sliver
+- Verdant Automaton
+- Verdant Confluence
 - Verdant Force
 - Verdigris
-- Verduran Emissary
 - Verduran Enchantress
 - Verix Bladewing
+- Vermiculos
+- Vermin Gorger
 - Vernadi Shieldmate
 - Vesper Ghoul
 - Vessel of Ephemera
+- Vessel of Volatility
 - Veteran Armorer
 - Veteran Armorsmith
 - Veteran Cavalier
+- Veteran of the Depths
 - Veteran Swordsmith
 - Veteran's Sidearm
 - Vexing Gull
 - Vial of Poison
 - Viashino Bladescout
 - Viashino Fangtail
+- Viashino Lashclaw
 - Viashino Runner
 - Viashino Slasher
 - Viashino Slaughtermaster
@@ -3642,12 +5400,29 @@ Generated from the engine-supported card pool.
 - Viashivan Dragon
 - Vibranium Energy Daggers
 - Vicious Conquistador
+- Vicious Hunger
+- Vicious Shadows
+- Victory's Envoy
+- Victory's Herald
 - Vigilance
 - Vigilant Baloth
+- Vigilant Drake
+- Vigilante Justice
+- Vildin-Pack Outcast // Dronepack Kindred
+- Vile Entomber
+- Vilespawn Spider
 - Village Bell-Ringer
+- Village Cannibals
+- Village Rites
 - Vindicate
+- Vindictive Vampire
 - Vine Trellis
+- Vinelasher Kudzu
+- Vines of the Recluse
+- Violent Impact
+- Violent Outburst
 - Viral Drake
+- Viridian Acolyte
 - Viridian Claw
 - Viridian Corrupter
 - Viridian Emissary
@@ -3657,40 +5432,58 @@ Generated from the engine-supported card pool.
 - Virtuous Charge
 - Virtuous Variant
 - Virulent Emissary
+- Virulent Plague
+- Virulent Swipe
 - Visara the Dreadful
 - Viscera Dragger
 - Viscera Seer
 - Vitalize
 - Vitalizing Wind
+- Vitaspore Thallid
 - Vithian Renegades
 - Vithian Stinger
+- Vivisection
 - Vivisurgeon's Insight
 - Vizkopa Vampire
 - Vizzerdrix
+- Vodalian Arcanist
+- Vodalian Hexcatcher
+- Vodalian Mage
 - Vodalian Merchant
 - Vodalian Soldiers
 - Vodalian Zombie
 - Voice of Duty
 - Voice of Grace
 - Voice of Law
-- Voice of Many
 - Voice of Reason
 - Voice of the Provinces
 - Voice of Truth
 - Voiceless Spirit
+- Void Helix
 - Void Rend
+- Void Snare
+- Void Squall
+- Voidwielder
 - Volcanic Dragon
 - Volcanic Fallout
 - Volcanic Hammer
+- Volcanic Rush
+- Volcanic Spray
+- Volcanic Submersion
 - Volcanic Upheaval
+- Volcanic Villain
 - Volrath's Gardens
 - Volt Charge
 - Voltaic Key
 - Voltaic Servant
 - Volunteer Militia
+- Voracious Null
 - Voracious Varmint
 - Vorstclaw
 - Vote Out
+- Voyage's End
+- Voyager Quickwelder
+- Vraska's Contempt
 - Vulpine Goliath
 - Vulshok Battlegear
 - Vulshok Berserker
@@ -3702,6 +5495,7 @@ Generated from the engine-supported card pool.
 - Wailing Ghoul
 - Wakandan Drone Flock
 - Wakandan Shield Guard
+- Wakandan Tusker
 - Wake the Past
 - Walking Atlas
 - Walking Corpse
@@ -3729,19 +5523,28 @@ Generated from the engine-supported card pool.
 - Wall of Vines
 - Wall of Water
 - Wall of Wood
+- Wand of the Elements
 - Wander in Death
 - Wander Off
+- Wanderbrine Preacher
 - Wanderer's Twig
 - Wandering Musicians
 - Wandering Ones
 - Wandering Tombshell
+- Wanted Scoundrels
 - War Chariot
+- War Horn
 - War Mammoth
 - War Priest of Thune
 - War Screecher
 - Warclamp Mastiff
+- Warded Battlements
 - Warden of Geometries
+- Warden of the Eye
+- Warden of the Woods
 - Wardscale Crocodile
+- Warleader's Call
+- Warleader's Helix
 - Warlord's Axe
 - Warlord's Fury
 - Warpath Ghoul
@@ -3751,9 +5554,11 @@ Generated from the engine-supported card pool.
 - Warrior's Honor
 - Warriors of Wakanda
 - Warship Scout
+- Warstorm Surge
 - Warteye Witch
 - Wary Okapi
 - Wasp Lancer
+- Waste Away
 - Wasteland Scorpion
 - Watcher in the Mist
 - Watchful Automaton
@@ -3762,29 +5567,42 @@ Generated from the engine-supported card pool.
 - Water Elemental
 - Water Servant
 - Water Tribe Captain
+- Waterbending Scroll
 - Watercourser
 - Waterfall Aerialist
+- Waterfront Bouncer
+- Wave-Wing Elemental
 - Wayfarer's Bauble
 - Wayward Giant
+- Wayward Servant
+- Wayward Soul
 - Weakness
+- Weakstone
 - Weaponize the Monsters
 - Weaselback Redcap
 - Weatherseed Faeries
 - Weave Fate
 - Weaver of Currents
 - Web
+- Web of Life and Destiny
+- Web-Warriors
+- Wee Dragonauts
 - Wei Infantry
 - Weight of the Underworld
+- Weirding Shaman
 - Welder Automaton
 - Welkin Guide
+- Well-Worn Spatula
 - Westfold Rider
 - Wetland Sambar
+- Where Ancients Tread
 - Whip Sergeant
 - Whiptail Wurm
 - Whirler Rogue
 - Whirler Virtuoso
 - Whirlermaker
 - Whirlwind
+- Whirlwind of Thought
 - Whisper Agent
 - Whisper of the Dross
 - Whisper, Blood Liturgist
@@ -3795,8 +5613,10 @@ Generated from the engine-supported card pool.
 - White Sun's Zenith
 - Whitesun's Passage
 - Whitewater Naiads
+- Wicked Reward
 - Wicker Witch
 - Wielding the Green Dragon
+- Wight of the Reliquary
 - Wild Aesthir
 - Wild Cantor
 - Wild Celebrants
@@ -3804,9 +5624,13 @@ Generated from the engine-supported card pool.
 - Wild Colos
 - Wild Elephant
 - Wild Griffin
+- Wild Growth
+- Wild Guess
+- Wild Hunger
 - Wild Jhovall
 - Wild Wanderer
 - Wild-Field Scarecrow
+- Wilderland Scrounger
 - Wilderness Reclamation
 - Wildfire Emissary
 - Wildheart Invoker
@@ -3825,16 +5649,23 @@ Generated from the engine-supported card pool.
 - Wind Spirit
 - Wind Strider
 - Wind-Kin Raiders
+- Windborn Muse
+- Windbrisk Raptor
+- Windfall
+- Windgrace Acolyte
 - Windreaper Falcon
+- Windrider Eel
 - Windrider Patrol
 - Winds of Rath
 - Windseeker Centaur
 - Windstorm
 - Wing Splicer
+- Wingblade Disciple
 - Winged Coatl
 - Winged Shepherd
 - Wings of Aesthir
 - Wings of Hope
+- Wings of the Cosmos
 - Winter Soldier, Bucky Barnes
 - Winter's Grasp
 - Winter's Intervention
@@ -3846,13 +5677,21 @@ Generated from the engine-supported card pool.
 - Wirewood Savage
 - Wishcoin Crab
 - Wistful Selkie
+- Witch's Cauldron
 - Witch's Familiar
+- Witch's Web
 - Witches' Eye
 - Witching Well
+- Witherbloom Apprentice
+- Witherbloom Pledgemage
+- Withering Torment
 - Withstand Death
 - Witness of Tomorrows
+- Witty Roastmaster
+- Wizard Replica
 - Wizened Cenn
 - Wolf Cove Villager
+- Wolf's Quarry
 - Wolfkin Bond
 - Wolfsbane, Highland Hero
 - Wondrous Revival
@@ -3866,21 +5705,34 @@ Generated from the engine-supported card pool.
 - Woolly Thoctar
 - World Map
 - World-Weary
+- Worldly Tutor
+- Worldsoul Colossus
 - Wormhole Serpent
 - Worn Powerstone
+- Worthy Cost
 - Worthy Knight
+- Wraith, Vicious Vigilante
 - Wrath of God
+- Wreak Havoc
+- Wreath of Geists
 - Wreckage Wickerfolk
+- Wrecking Ball
 - Wrecking Beast
 - Wrecking Crew
+- Wretched Anurid
+- Wretched Confluence
 - Wretched Doll
 - Wriggling Grub
 - Wring Flesh
 - Wu Infantry
 - Wurmcoil Engine
 - Wurmcoil Larva
+- Wydwen, the Biting Gale
+- Wylie Duke, Atiin Hero
 - Wyluli Wolf
+- Xande, Dark Mage
 - Xathrid Necromancer
+- Xira Arien
 - Yargle and Multani
 - Yargle, Glutton of Urborg
 - Yavimaya Ancients
@@ -3888,6 +5740,7 @@ Generated from the engine-supported card pool.
 - Yavimaya Elder
 - Yavimaya Sapherd
 - Yavimaya Wurm
+- Yawning Fissure
 - Yellowjacket, Heartless Marauder
 - Yeva's Forcemage
 - Yoked Ox
@@ -3896,14 +5749,23 @@ Generated from the engine-supported card pool.
 - Yotian Medic
 - Yotian Soldier
 - Yotian Tactician
+- You Find the Villains' Lair
+- You Happen On a Glade
+- You See a Pair of Goblins
+- You're Ambushed on the Road
 - Young Blue Dragon // Sand Augury
+- Young Pyromancer
 - Youthful Knight
 - Youthful Scholar
+- Youthful Valkyrie
 - Zagoth Crystal
 - Zap
 - Zarichi Tiger
 - Zealous Guardian
+- Zealous Lorecaster
 - Zealous Strike
+- Zendikar Incarnate
+- Zendikar Resurgent
 - Zendikar's Roil
 - Zephid
 - Zephid's Embrace
@@ -3911,16 +5773,24 @@ Generated from the engine-supported card pool.
 - Zephyr Charge
 - Zephyr Falcon
 - Zephyr Net
+- Zephyr Scribe
 - Zephyr Sprite
 - Zeriam, Golden Wind
 - Zetalpa, Primal Dawn
+- Zhalfirin Lancer
 - Zhao, the Seething Flame
 - Zhur-Taa Goblin
+- Zof Consumption // Zof Bloodbog
 - Zof Shade
 - Zombie Goliath
+- Zombie Infestation
 - Zombie Outlander
 - Zombify
+- Zopandrel, Hunger Dominus
 - Zuberi, Golden Feather
 - Zuko's Offense
+- Zulaport Cutthroat
+- Zuran Orb
 - Zuran Spellcaster
 - Zurgo and Ojutai
+- Zuri, Warrior of Wakanda

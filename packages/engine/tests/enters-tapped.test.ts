@@ -14,7 +14,17 @@ import { interpretCard } from '../src/cards/interpret';
 import { moveObject } from '../src/state/objects';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, mountain, oracle, pick, pump, spawn } from './fixtures';
+import {
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  mountain,
+  oracle,
+  pick,
+  pump,
+  spawn,
+} from './fixtures';
 
 const land = (name: string, typeLine: string, oracleText: string): ReturnType<typeof oracle> =>
   oracle({ name, typeLine, oracleText, manaCost: null, cmc: 0, power: null, toughness: null });
@@ -66,7 +76,9 @@ function ctxWithSeats(seats: number): GameContext {
 function playFromHand(
   ctx: GameContext,
   card: ReturnType<typeof oracle>,
-  answer?: (d: ReturnType<typeof pick> extends never ? never : Parameters<typeof pick>[0]) => ReturnType<typeof pick>,
+  answer?: (
+    d: ReturnType<typeof pick> extends never ? never : Parameters<typeof pick>[0],
+  ) => ReturnType<typeof pick>,
 ): boolean {
   const obj = conjure(ctx, 'P1', card, 'hand');
   pump(moveObject(ctx, obj, { zone: 'battlefield' }), answer);
@@ -89,7 +101,7 @@ describe('as-enters tapped conditions (CR 614.1c)', () => {
     expect(check.entersTappedUnless?.kind).toBe('countPermanents');
   });
 
-  describe('shockland — the choice is the player\'s', () => {
+  describe("shockland — the choice is the player's", () => {
     it('states the tapped/untapped consequence in the option text, not just "pay life"', () => {
       const ctx = ctxWithSeats(4);
       const obj = conjure(ctx, 'P1', shockland(), 'hand');
@@ -139,7 +151,7 @@ describe('as-enters tapped conditions (CR 614.1c)', () => {
       expect(playFromHand(ctx, checkland())).toBe(true);
     });
 
-    it('does not count an opponent\'s enabling land', () => {
+    it("does not count an opponent's enabling land", () => {
       const ctx = ctxWithSeats(4);
       spawn(ctx, 'P2', mountain());
 

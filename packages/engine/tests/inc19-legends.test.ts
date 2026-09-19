@@ -135,7 +135,7 @@ const sarkhanSoulAflame = () =>
     power: '2',
     toughness: '4',
     oracleText:
-      'Dragon spells you cast cost {1} less to cast.\nWhenever a Dragon you control enters, you may have Sarkhan, Soul Aflame become a copy of it until end of turn, except its name is Sarkhan, Soul Aflame and it\'s legendary in addition to its other types.',
+      "Dragon spells you cast cost {1} less to cast.\nWhenever a Dragon you control enters, you may have Sarkhan, Soul Aflame become a copy of it until end of turn, except its name is Sarkhan, Soul Aflame and it's legendary in addition to its other types.",
   });
 
 const skycloudExpanse = () =>
@@ -157,7 +157,8 @@ const thrakkus = () =>
     supertypes: ['Legendary'],
     power: '3',
     toughness: '4',
-    oracleText: 'Trample\nWhenever Thrakkus the Butcher attacks, double the power of each Dragon you control until end of turn.',
+    oracleText:
+      'Trample\nWhenever Thrakkus the Butcher attacks, double the power of each Dragon you control until end of turn.',
     keywords: ['Trample'],
   });
 
@@ -172,7 +173,7 @@ const vaevictis = () =>
     power: '6',
     toughness: '6',
     oracleText:
-      'Flying\nWhenever Vaevictis Asmadi, the Dire attacks, for each player, choose target permanent that player controls. Those players sacrifice those permanents. Each player who sacrificed a permanent this way reveals the top card of their library, then puts it onto the battlefield if it\'s a permanent card.',
+      "Flying\nWhenever Vaevictis Asmadi, the Dire attacks, for each player, choose target permanent that player controls. Those players sacrifice those permanents. Each player who sacrificed a permanent this way reveals the top card of their library, then puts it onto the battlefield if it's a permanent card.",
     keywords: ['Flying'],
   });
 
@@ -211,10 +212,7 @@ describe('Ur-Dragon residual-card implementation', () => {
     ];
 
     const executable = new Set([
-      'Dragon Tempest',
-      'Firkraag, Cunning Instigator',
       'Iymrith, Desert Doom',
-      'Kairi, the Swirling Sky',
       "Lozhan, Dragons' Legacy",
       'Morophon, the Boundless',
       // Back on the list: its `{1}, {T}` mana ability is honoured now that `planPayment` pays

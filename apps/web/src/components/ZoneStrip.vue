@@ -12,9 +12,22 @@ const props = withDefaults(
     cards: SpectatorCard[];
     /** Cap the visible thumbnails, showing a "+N" overflow chip for the rest. Uncapped by default. */
     max?: number;
+    /**
+     * Object ids that are legal targets of the action currently being composed (for example a
+     * "return target card from your graveyard" ability). Those cards become clickable; every
+     * other card stays display-only.
+     */
+    selectableIds?: string[];
   }>(),
-  { max: Infinity },
+  { max: Infinity, selectableIds: () => [] },
 );
+
+const emit = defineEmits<{ select: [id: string] }>();
+
+function onCardClick(card: SpectatorCard): void {
+  if (!props.selectableIds.includes(card.id)) return;
+  emit('select', card.id);
+}
 
 const visibleCards = computed(() => props.cards.slice(0, props.max));
 const overflowCount = computed(() => Math.max(0, props.cards.length - props.max));
@@ -41,6 +54,9 @@ function onCardLeave(): void {
         v-for="card in visibleCards"
         :key="card.id"
         class="zone-card-thumb"
+        :class="{ targetable: props.selectableIds.includes(card.id) }"
+        :role="props.selectableIds.includes(card.id) ? 'button' : undefined"
+        @click="onCardClick(card)"
         @mouseenter="onCardEnter(card, $event)"
         @mousemove="onCardMove"
         @mouseleave="onCardLeave"
@@ -79,6 +95,12 @@ function onCardLeave(): void {
 .zone-card-thumb {
   width: 52px;
   flex-shrink: 0;
+}
+.zone-card-thumb.targetable {
+  cursor: pointer;
+  outline: 2px solid var(--accent, #7ab3f5);
+  outline-offset: 1px;
+  border-radius: 4px;
 }
 .zone-overflow {
   flex-shrink: 0;

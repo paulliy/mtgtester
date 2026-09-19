@@ -141,7 +141,16 @@ describe('GameRecorder', () => {
 
     const insert = calls.find((c) => c.sql.includes('INSERT INTO game_events'));
     expect(insert?.sql).toContain('ON CONFLICT(game_id, sequence) DO NOTHING');
-    expect(insert?.args).toEqual(['g1', 7, 2, 'combat', 'declareAttackers', 2, 'attackersDeclared', '{"count":3}']);
+    expect(insert?.args).toEqual([
+      'g1',
+      7,
+      2,
+      'combat',
+      'declareAttackers',
+      2,
+      'attackersDeclared',
+      '{"count":3}',
+    ]);
   });
 
   it('writes nothing for an empty event batch', () => {
@@ -158,8 +167,14 @@ describe('GameRecorder', () => {
     ]);
     recorder.saveManaMetrics([
       {
-        seat: 'P1', turn: 3, landsInHand: 2, landsDrawnCumulative: 4,
-        cardsDrawnCumulative: 8, spellsCastable: 1, unspentMana: 3, onCurve: true,
+        seat: 'P1',
+        turn: 3,
+        landsInHand: 2,
+        landsDrawnCumulative: 4,
+        cardsDrawnCumulative: 8,
+        spellsCastable: 1,
+        unspentMana: 3,
+        onCurve: true,
       },
     ]);
 
@@ -198,10 +213,38 @@ describe('GameRecorder', () => {
     };
 
     new GameRecorder(db, 'g1').finish(result, 'finished', [
-      { seat: 'P1', lossReason: 'lifeZeroOrLess', eliminatedOnTurn: 12, eliminatedBySeat: 'P2', mulligansTaken: 1, openingHandSize: 7 },
-      { seat: 'P2', lossReason: null, eliminatedOnTurn: null, eliminatedBySeat: null, mulligansTaken: 0, openingHandSize: 7 },
-      { seat: 'P3', lossReason: 'commanderDamage', eliminatedOnTurn: 9, eliminatedBySeat: 'P2', mulligansTaken: 0, openingHandSize: 7 },
-      { seat: 'P4', lossReason: 'lifeZeroOrLess', eliminatedOnTurn: 15, eliminatedBySeat: 'P2', mulligansTaken: 2, openingHandSize: 7 },
+      {
+        seat: 'P1',
+        lossReason: 'lifeZeroOrLess',
+        eliminatedOnTurn: 12,
+        eliminatedBySeat: 'P2',
+        mulligansTaken: 1,
+        openingHandSize: 7,
+      },
+      {
+        seat: 'P2',
+        lossReason: null,
+        eliminatedOnTurn: null,
+        eliminatedBySeat: null,
+        mulligansTaken: 0,
+        openingHandSize: 7,
+      },
+      {
+        seat: 'P3',
+        lossReason: 'commanderDamage',
+        eliminatedOnTurn: 9,
+        eliminatedBySeat: 'P2',
+        mulligansTaken: 0,
+        openingHandSize: 7,
+      },
+      {
+        seat: 'P4',
+        lossReason: 'lifeZeroOrLess',
+        eliminatedOnTurn: 15,
+        eliminatedBySeat: 'P2',
+        mulligansTaken: 2,
+        openingHandSize: 7,
+      },
     ]);
 
     const update = calls.find((c) => c.sql.includes('UPDATE games'));

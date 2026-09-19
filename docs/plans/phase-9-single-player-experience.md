@@ -66,7 +66,7 @@ phase.
 
 1. **The default path never names engine machinery.** Ordinary play must not expose action IDs,
    legal-option indices, payloads, state revisions, or generic phrases such as `You have an
-   action`. Those remain available only in Debug. Player-facing language says what is happening:
+action`. Those remain available only in Debug. Player-facing language says what is happening:
    `Choose targets for Lightning Bolt`, `Order these triggers`, or `Pay {2}{W}`.
 2. **A card is the control.** A player begins an ordinary cast by clicking or dragging the card
    they mean, begins an activation on its permanent, and chooses a target by clicking it. The UI

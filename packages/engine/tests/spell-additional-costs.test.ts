@@ -11,7 +11,10 @@ import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixt
 
 function pod(seed = 'spell-additional-costs'): GameContext {
   const ctx = createGame(
-    gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
@@ -26,42 +29,60 @@ const additionalCostCards = [
     name: 'Deadly Dispute',
     typeLine: 'Instant',
     manaCost: '{1}{B}',
-    oracleText: 'As an additional cost to cast this spell, sacrifice an artifact or creature.' + String.fromCharCode(10) + 'Draw two cards and create a Treasure token.',
+    oracleText:
+      'As an additional cost to cast this spell, sacrifice an artifact or creature.' +
+      String.fromCharCode(10) +
+      'Draw two cards and create a Treasure token.',
     expected: { kind: 'sacrificeOther', selector: 'artifactOrCreature' },
   },
   {
     name: 'Big Score',
     typeLine: 'Instant',
     manaCost: '{3}{R}',
-    oracleText: 'As an additional cost to cast this spell, discard a card.' + String.fromCharCode(10) + 'Draw two cards and create two Treasure tokens.',
+    oracleText:
+      'As an additional cost to cast this spell, discard a card.' +
+      String.fromCharCode(10) +
+      'Draw two cards and create two Treasure tokens.',
     expected: { kind: 'discardCard' },
   },
   {
     name: 'Thrill of Possibility',
     typeLine: 'Instant',
     manaCost: '{1}{R}',
-    oracleText: 'As an additional cost to cast this spell, discard a card.' + String.fromCharCode(10) + 'Draw two cards.',
+    oracleText:
+      'As an additional cost to cast this spell, discard a card.' +
+      String.fromCharCode(10) +
+      'Draw two cards.',
     expected: { kind: 'discardCard' },
   },
   {
     name: 'Village Rites',
     typeLine: 'Instant',
     manaCost: '{B}',
-    oracleText: 'As an additional cost to cast this spell, sacrifice a creature.' + String.fromCharCode(10) + 'Draw two cards.',
+    oracleText:
+      'As an additional cost to cast this spell, sacrifice a creature.' +
+      String.fromCharCode(10) +
+      'Draw two cards.',
     expected: { kind: 'sacrificeOther', selector: 'creature' },
   },
   {
     name: 'Crop Rotation',
     typeLine: 'Instant',
     manaCost: '{G}',
-    oracleText: 'As an additional cost to cast this spell, sacrifice a land.' + String.fromCharCode(10) + 'Search your library for a land card, put that card onto the battlefield, then shuffle.',
+    oracleText:
+      'As an additional cost to cast this spell, sacrifice a land.' +
+      String.fromCharCode(10) +
+      'Search your library for a land card, put that card onto the battlefield, then shuffle.',
     expected: { kind: 'sacrificeOther', selector: 'land' },
   },
   {
     name: 'Harrow',
     typeLine: 'Instant',
     manaCost: '{2}{G}',
-    oracleText: 'As an additional cost to cast this spell, sacrifice a land.' + String.fromCharCode(10) + 'Search your library for up to two basic land cards, put them onto the battlefield, then shuffle.',
+    oracleText:
+      'As an additional cost to cast this spell, sacrifice a land.' +
+      String.fromCharCode(10) +
+      'Search your library for up to two basic land cards, put them onto the battlefield, then shuffle.',
     expected: { kind: 'sacrificeOther', selector: 'land' },
   },
 ] as const;
@@ -89,24 +110,42 @@ describe('spell additional casting costs', () => {
       name: 'Village Rites',
       typeLine: 'Instant',
       manaCost: '{B}',
-      oracleText: 'As an additional cost to cast this spell, sacrifice a creature.' + String.fromCharCode(10) + 'Draw two cards.',
+      oracleText:
+        'As an additional cost to cast this spell, sacrifice a creature.' +
+        String.fromCharCode(10) +
+        'Draw two cards.',
     });
     const ritesObject = conjure(ctx, 'P1', rites, 'hand');
     addMana(player, [{ symbol: 'B' }]);
 
-    expect(computePriorityOptions(ctx, player).some((option) =>
-      option.type === 'castSpell' && (option.payload as PriorityActionPayload).kind === 'castSpell',
-    )).toBe(false);
+    expect(
+      computePriorityOptions(ctx, player).some(
+        (option) =>
+          option.type === 'castSpell' &&
+          (option.payload as PriorityActionPayload).kind === 'castSpell',
+      ),
+    ).toBe(false);
 
-    const first = spawn(ctx, 'P1', oracle({ name: 'First Creature', typeLine: 'Creature — Test', manaCost: '{1}' }));
-    const second = spawn(ctx, 'P1', oracle({ name: 'Second Creature', typeLine: 'Creature — Test', manaCost: '{1}' }));
+    const first = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'First Creature', typeLine: 'Creature — Test', manaCost: '{1}' }),
+    );
+    const second = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Second Creature', typeLine: 'Creature — Test', manaCost: '{1}' }),
+    );
     const drawOne = oracle({ name: 'Draw One', typeLine: 'Creature — Test', manaCost: '{1}' });
     const drawTwo = oracle({ name: 'Draw Two', typeLine: 'Creature — Test', manaCost: '{1}' });
     conjure(ctx, 'P1', drawOne, 'library');
     conjure(ctx, 'P1', drawTwo, 'library');
 
-    const cast = computePriorityOptions(ctx, player).find((option) =>
-      option.type === 'castSpell' && (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).objectId === ritesObject.id,
+    const cast = computePriorityOptions(ctx, player).find(
+      (option) =>
+        option.type === 'castSpell' &&
+        (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).objectId ===
+          ritesObject.id,
     );
     expect(cast).toBeDefined();
     const payload = cast!.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>;
@@ -137,25 +176,44 @@ describe('spell additional casting costs', () => {
       name: 'Thrill of Possibility',
       typeLine: 'Instant',
       manaCost: '{1}{R}',
-      oracleText: 'As an additional cost to cast this spell, discard a card.' + String.fromCharCode(10) + 'Draw two cards.',
+      oracleText:
+        'As an additional cost to cast this spell, discard a card.' +
+        String.fromCharCode(10) +
+        'Draw two cards.',
     });
     const thrillObject = conjure(ctx, 'P1', thrill, 'hand');
     player.manaEntries = [{ symbol: 'R' }, { symbol: 'C' }];
     player.manaPool = { W: 0, U: 0, B: 0, R: 1, G: 0, C: 1 };
 
-    expect(computePriorityOptions(ctx, player).some((option) =>
-      option.type === 'castSpell' && (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).objectId === thrillObject.id,
-    )).toBe(false);
+    expect(
+      computePriorityOptions(ctx, player).some(
+        (option) =>
+          option.type === 'castSpell' &&
+          (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).objectId ===
+            thrillObject.id,
+      ),
+    ).toBe(false);
 
     const spare = oracle({ name: 'Spare Card', typeLine: 'Creature — Test', manaCost: '{1}' });
     const spareObject = conjure(ctx, 'P1', spare, 'hand');
-    const drawOne = oracle({ name: 'Thrill Draw One', typeLine: 'Creature — Test', manaCost: '{1}' });
-    const drawTwo = oracle({ name: 'Thrill Draw Two', typeLine: 'Creature — Test', manaCost: '{1}' });
+    const drawOne = oracle({
+      name: 'Thrill Draw One',
+      typeLine: 'Creature — Test',
+      manaCost: '{1}',
+    });
+    const drawTwo = oracle({
+      name: 'Thrill Draw Two',
+      typeLine: 'Creature — Test',
+      manaCost: '{1}',
+    });
     conjure(ctx, 'P1', drawOne, 'library');
     conjure(ctx, 'P1', drawTwo, 'library');
 
-    const cast = computePriorityOptions(ctx, player).find((option) =>
-      option.type === 'castSpell' && (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).objectId === thrillObject.id,
+    const cast = computePriorityOptions(ctx, player).find(
+      (option) =>
+        option.type === 'castSpell' &&
+        (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).objectId ===
+          thrillObject.id,
     );
     expect(cast).toBeDefined();
     const payload = cast!.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>;

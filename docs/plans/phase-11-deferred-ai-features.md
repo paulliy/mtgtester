@@ -11,18 +11,18 @@ Brief §15 cut three features from v1:
 All three deferrals were cost/scope calls, not design objections, and each one was explicitly
 left "ready for later" in the schema and the type surface. This phase builds them.
 
-Because §15 is a *deferral list*, not a prohibition, overturning it needs a numbered ADR —
+Because §15 is a _deferral list_, not a prohibition, overturning it needs a numbered ADR —
 `docs/decisions/0022-deferred-ai-features.md`, written as the first task of this phase — per
 CLAUDE.md's "where this file or the brief conflicts with a numbered ADR, the ADR wins."
 
 Phase 11 is independent of Phase 10 (deck testing lab). The three workstreams are also
 independent of each other and are ordered cheapest-and-lowest-risk first:
 
-| # | Workstream | New API calls | Main risk |
-|---|---|---|---|
-| 11.1 | AI reasoning in the spectator log | none | leaking hidden info into a single-player game |
-| 11.2 | Automatic archetype tagging | none by default | retagging shifts historical stats grouping |
-| 11.3 | Post-game AI self-reflection | ≤1 per seat per game | cost; must never touch engine state |
+| #    | Workstream                        | New API calls        | Main risk                                     |
+| ---- | --------------------------------- | -------------------- | --------------------------------------------- |
+| 11.1 | AI reasoning in the spectator log | none                 | leaking hidden info into a single-player game |
+| 11.2 | Automatic archetype tagging       | none by default      | retagging shifts historical stats grouping    |
+| 11.3 | Post-game AI self-reflection      | ≤1 per seat per game | cost; must never touch engine state           |
 
 ## Invariants that hold across all three
 
@@ -91,7 +91,7 @@ export interface AiAnnotation {
 ```
 
 **Sequence anchoring.** `Runner.loop()` calls `onDecision` after `engine.submit(response)` and
-*before* `flushEvents()` ([packages/server/src/match/runner.ts:348-353](packages/server/src/match/runner.ts#L348-L353)),
+_before_ `flushEvents()` ([packages/server/src/match/runner.ts:348-353](packages/server/src/match/runner.ts#L348-L353)),
 so `this.eventCursor` at that instant is exactly the sequence of the first event the decision will
 produce. Pass it through:
 
@@ -189,7 +189,7 @@ Extract a feature vector:
 - theme signals by oracle-text frequency: `+1/+1 counter`, `token`, `graveyard`, `landfall`,
   `lifelink`/`gain life`, `artifact`, `sacrifice`, `mill`, `equip`/`aura`, and creature-subtype
   concentration for tribal,
-- the commander's own oracle text, weighted heaviest — in Commander the general *is* the thesis.
+- the commander's own oracle text, weighted heaviest — in Commander the general _is_ the thesis.
 
 Map to two axes and render one free-text tag:
 
@@ -203,8 +203,8 @@ Result: `"Gruul tokens aggro"`, `"Azorius control"`, `"Rakdos sacrifice combo"` 
 the brief's own examples. Falls back to `defaultArchetypeTag()` when nothing clears the threshold.
 
 **Stage 2 — optional AI refinement (new `packages/server/src/ai/archetype.ts`).**
-One call per import, behind `AI_ARCHETYPE_INFERENCE=true` (default off). It receives the *feature
-vector and card names only* — never full oracle text, never the rules — and returns
+One call per import, behind `AI_ARCHETYPE_INFERENCE=true` (default off). It receives the _feature
+vector and card names only_ — never full oracle text, never the rules — and returns
 `{ tag, confidence }`. Reuses `OpenAiCompatibleClient` with a new `configForRole(config, 'archetype')`
 profile (cheap model, reasoning off, tiny output budget). On timeout, invalid JSON, low confidence,
 or any error, keep the Stage 1 tag. Validate and clamp with a `validateArchetype()` mirroring
@@ -240,7 +240,7 @@ same reasoning §9.2 gives for logging raw mana inputs rather than booleans.
 - `--dry-run` prints old → new for every row and writes nothing.
 
 ⚠️ **Call out to the user before running it:** `stats.ts` groups `lossesTo` by `archetype_tag`, so
-retagging *changes how historical results aggregate*. Nothing is lost (the underlying game rows are
+retagging _changes how historical results aggregate_. Nothing is lost (the underlying game rows are
 untouched), but the "what type of deck do I lose to" table will regroup. `--dry-run` is the default
 recommendation.
 
@@ -295,10 +295,10 @@ data produces "I should have known about the counterspell", which is not a lesso
 
 ```jsonc
 {
-  "summary": "…",                    // ≤600 chars, what this deck was trying to do and why it ended how it did
-  "keyMistakes": [{ "turn": 7, "what": "…", "better": "…" }],  // ≤5
-  "keyPlays":    [{ "turn": 4, "what": "…" }],                 // ≤3
-  "threatRead":  "…"                 // ≤300 chars, which opponent it should have respected sooner
+  "summary": "…", // ≤600 chars, what this deck was trying to do and why it ended how it did
+  "keyMistakes": [{ "turn": 7, "what": "…", "better": "…" }], // ≤5
+  "keyPlays": [{ "turn": 4, "what": "…" }], // ≤3
+  "threatRead": "…", // ≤300 chars, which opponent it should have respected sooner
 }
 ```
 
@@ -365,7 +365,7 @@ on `GameOverPayload`:
 - `gameOver` is sent before any reflection resolves (assert ordering — this is the whole point).
   **As built, this one is not covered by an automated test.** Reaching a real `gameOver` requires
   running a whole game, and a game with `providerKind: 'ai'` makes live provider calls for every
-  decision — there is no seam to stub the *decision* provider, only the reflection client. The
+  decision — there is no seam to stub the _decision_ provider, only the reflection client. The
   ordering is instead enforced by construction (`publishGameOver` sends, then assigns
   `this.reflectionRun` without awaiting) and the surrounding behaviour — incremental publishing,
   one-seat failure isolation, terminal `complete` — is tested directly via `publishReflections`.

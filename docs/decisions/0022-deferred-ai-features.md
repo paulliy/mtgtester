@@ -93,7 +93,7 @@ is the single most useful post-game artifact the system can produce for a human 
   single-player — and only when explicitly enabled.
 - `gameReflections` is a new server→client message rather than a field on `GameOverPayload`. ADR
   0012's rule is to ride on an existing payload instead of widening the message set; this is the
-  case that rule cannot cover, because the whole point is that commentary arrives *after* the
+  case that rule cannot cover, because the whole point is that commentary arrives _after_ the
   result. `gameOver` carries only `reflectingSeats`, so the screen knows what is coming.
 - `ai_calls.source = 'reflection'` is counted as a billed call but excluded from `avgLatencyMs`. A
   20-second retrospective is real spend and must show up as such, but it is not a decision, and

@@ -14,10 +14,25 @@ import type { EffectSource } from '../src/effects/resolve';
 import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, island, mountain, oracle, pump, spawn } from './fixtures';
+import {
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  island,
+  mountain,
+  oracle,
+  pump,
+  spawn,
+} from './fixtures';
 
 function pod(seed: string): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;
@@ -77,7 +92,12 @@ describe('decision presentation contract', () => {
     conjure(ctx, 'P1', mountain(), 'library');
     conjure(ctx, 'P1', island(), 'library');
     const def = interpretCard(
-      oracle({ name: 'Test Surveil', typeLine: 'Sorcery', manaCost: '{U}', oracleText: 'Surveil 2.' }),
+      oracle({
+        name: 'Test Surveil',
+        typeLine: 'Sorcery',
+        manaCost: '{U}',
+        oracleText: 'Surveil 2.',
+      }),
     ).spellAbility!;
 
     const { decisions } = pump(
@@ -91,7 +111,12 @@ describe('decision presentation contract', () => {
     conjure(ctx, 'P1', mountain(), 'hand');
     conjure(ctx, 'P1', island(), 'hand');
     const def = interpretCard(
-      oracle({ name: 'Test Discard', typeLine: 'Sorcery', manaCost: '{B}', oracleText: 'Discard a card.' }),
+      oracle({
+        name: 'Test Discard',
+        typeLine: 'Sorcery',
+        manaCost: '{B}',
+        oracleText: 'Discard a card.',
+      }),
     ).spellAbility!;
 
     const { decisions } = pump(
@@ -105,7 +130,12 @@ describe('decision presentation contract', () => {
     const bear = spawn(ctx, 'P1', forest());
     bear.counters = { '+1/+1': 1 };
     const def = interpretCard(
-      oracle({ name: 'Test Proliferate', typeLine: 'Sorcery', manaCost: '{1}{G}', oracleText: 'Proliferate.' }),
+      oracle({
+        name: 'Test Proliferate',
+        typeLine: 'Sorcery',
+        manaCost: '{1}{G}',
+        oracleText: 'Proliferate.',
+      }),
     ).spellAbility!;
 
     const { decisions } = pump(

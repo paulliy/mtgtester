@@ -25,10 +25,21 @@ const dragon = (): ReturnType<typeof oracle> =>
   });
 
 const bear = (): ReturnType<typeof oracle> =>
-  oracle({ name: 'Test Bear', typeLine: 'Creature — Bear', manaCost: '{1}{G}', power: '2', toughness: '2' });
+  oracle({
+    name: 'Test Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{1}{G}',
+    power: '2',
+    toughness: '2',
+  });
 
 function pod(): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(6, forest) })), { seed: 'demanding-dragon' }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(6, forest) })),
+      { seed: 'demanding-dragon' },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;
@@ -40,7 +51,7 @@ function fireTrigger(ctx: GameContext, source: ReturnType<typeof spawn>) {
 }
 
 describe('Demanding Dragon (dealDamageUnlessSacrifice)', () => {
-  it("deals damage when the opponent has no creature to sacrifice", () => {
+  it('deals damage when the opponent has no creature to sacrifice', () => {
     const ctx = pod();
     const d = spawn(ctx, 'P1', dragon());
     const p2 = ctx.state.players[1]!;
@@ -50,7 +61,12 @@ describe('Demanding Dragon (dealDamageUnlessSacrifice)', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: pending.sourceCardId, name: pending.sourceName, oracleId: pending.sourceOracleId, controllerId: pending.controllerId },
+        {
+          cardId: pending.sourceCardId,
+          name: pending.sourceName,
+          oracleId: pending.sourceOracleId,
+          controllerId: pending.controllerId,
+        },
         pending.ability,
         [p2.id],
       ),
@@ -70,7 +86,12 @@ describe('Demanding Dragon (dealDamageUnlessSacrifice)', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: pending.sourceCardId, name: pending.sourceName, oracleId: pending.sourceOracleId, controllerId: pending.controllerId },
+        {
+          cardId: pending.sourceCardId,
+          name: pending.sourceName,
+          oracleId: pending.sourceOracleId,
+          controllerId: pending.controllerId,
+        },
         pending.ability,
         [p2.id],
       ),
@@ -92,7 +113,12 @@ describe('Demanding Dragon (dealDamageUnlessSacrifice)', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: pending.sourceCardId, name: pending.sourceName, oracleId: pending.sourceOracleId, controllerId: pending.controllerId },
+        {
+          cardId: pending.sourceCardId,
+          name: pending.sourceName,
+          oracleId: pending.sourceOracleId,
+          controllerId: pending.controllerId,
+        },
         pending.ability,
         [p2.id],
       ),

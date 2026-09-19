@@ -233,7 +233,7 @@ describe('Context Assembler', () => {
  * decklist. One seat's tag must never reach another seat's prompt.
  */
 describe('strategist deck archetype', () => {
-  it("tells the strategist what its own deck is built to do", () => {
+  it('tells the strategist what its own deck is built to do', () => {
     const prompt = assembleStrategistPrompt(
       fixtureRequest(),
       fixtureView(),
@@ -255,7 +255,7 @@ describe('strategist deck archetype', () => {
     expect(payload.strategyTask.requirements[0]).not.toContain('yourDeckArchetype');
   });
 
-  it('never carries another seat\'s archetype anywhere in the prompt', () => {
+  it("never carries another seat's archetype anywhere in the prompt", () => {
     const prompt = assembleStrategistPrompt(
       fixtureRequest(),
       fixtureView(),

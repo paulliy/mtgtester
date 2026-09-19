@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "26deff86f38527596d5f6cb3eb0baaec1ebc73a116895991a2ccda55d05fe2b4",
+      "card": {
+        "oracleId": "fae37e28-e137-4177-b973-fa8b4dd8f409",
+        "scryfallId": "c3f9b454-97e9-4c77-b37a-e974221ae385",
+        "name": "Generous Gift",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target permanent. Its controller creates a 3/3 green Elephant creature token.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "425d2f14a7efafc268c493db437c98a66212c20a706d994c64e73edf1fd563c5",
+      "card": {
+        "oracleId": "9a107e48-3d50-4941-95b1-10f2b29a4245",
+        "scryfallId": "b000f605-177f-459d-a197-fcf54efec2fb",
+        "name": "Stroke of Midnight",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target nonland permanent. Its controller creates a 1/1 white Human creature token.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f6b07067acb518e1cfb5efef9ff8bda3effb08cc35dc7011ab296583801986fb",
+      "card": {
+        "oracleId": "b1544f21-7e98-461b-aed5-e748b0168c52",
+        "scryfallId": "b4e9c870-23c0-413a-ae39-265f09da16d1",
+        "name": "Swords to Plowshares",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Exile target creature. Its controller gains life equal to its power.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bb4279dac89225538f936309a5db203e2a364c26480b02a394cd44dd50255d57",
+      "card": {
+        "oracleId": "d7ac4be1-dcca-49b6-8ddb-d1b0e6cf2dcf",
+        "scryfallId": "0fdae05f-7bdc-45fb-b9b9-e5ec3766f965",
+        "name": "Queen Marchesa",
+        "manaCost": "{1}{R}{W}{B}",
+        "cmc": 4,
+        "colors": [
+          "B",
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "R",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Assassin",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Assassin"
+        ],
+        "oracleText": "Deathtouch, haste\nWhen Queen Marchesa enters, you become the monarch.\nAt the beginning of your upkeep, if an opponent is the monarch, create a 1/1 black Assassin creature token with deathtouch and haste.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Haste",
+          "Deathtouch"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

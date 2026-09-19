@@ -17,10 +17,27 @@ const HEURISTIC: ArchetypeResult = {
   strategy: 'midrange',
   theme: 'dragon tribal',
   features: {
-    totalCards: 100, lands: 36, creatures: 30, instants: 6, sorceries: 6, artifacts: 10,
-    enchantments: 4, planeswalkers: 1, averageManaValue: 4.1, ramp: 12, spotRemoval: 6,
-    boardWipes: 2, cardDraw: 7, tutors: 3, counterspells: 0, recursion: 2, sacOutlets: 1,
-    stax: 0, aggressiveKeywords: 9, themeScores: {}, topSubtype: { subtype: 'Dragon', count: 24 },
+    totalCards: 100,
+    lands: 36,
+    creatures: 30,
+    instants: 6,
+    sorceries: 6,
+    artifacts: 10,
+    enchantments: 4,
+    planeswalkers: 1,
+    averageManaValue: 4.1,
+    ramp: 12,
+    spotRemoval: 6,
+    boardWipes: 2,
+    cardDraw: 7,
+    tutors: 3,
+    counterspells: 0,
+    recursion: 2,
+    sacOutlets: 1,
+    stax: 0,
+    aggressiveKeywords: 9,
+    themeScores: {},
+    topSubtype: { subtype: 'Dragon', count: 24 },
     commanderSharesTopSubtype: true,
   },
 };
@@ -32,7 +49,7 @@ const INPUT = {
   colorIdentityName: 'Gruul',
 };
 
-const queue = { enqueue: <T,>(fn: () => Promise<T>) => fn() };
+const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
 
 /** A client whose raw response body is whatever the test supplies. */
 function clientReturning(rawResponse: string): AiClient {
@@ -41,8 +58,14 @@ function clientReturning(rawResponse: string): AiClient {
     requestDecision: vi.fn().mockResolvedValue({
       response: { requestId: 'archetype', actionId: 0 },
       meta: {
-        model: 'test/model', promptTokens: 100, responseTokens: 10, latencyMs: 20,
-        wasRetry: false, wasFallback: false, rawResponse, costUsd: 0,
+        model: 'test/model',
+        promptTokens: 100,
+        responseTokens: 10,
+        latencyMs: 20,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse,
+        costUsd: 0,
       },
     }),
   };
@@ -50,13 +73,15 @@ function clientReturning(rawResponse: string): AiClient {
 
 describe('validateArchetypeResponse', () => {
   it('accepts a confident, short tag', () => {
-    expect(validateArchetypeResponse({ tag: 'Gruul dragon aggro', confidence: 0.9 }))
-      .toBe('Gruul dragon aggro');
+    expect(validateArchetypeResponse({ tag: 'Gruul dragon aggro', confidence: 0.9 })).toBe(
+      'Gruul dragon aggro',
+    );
   });
 
   it('normalises surrounding and repeated whitespace', () => {
-    expect(validateArchetypeResponse({ tag: '  Gruul   dragon  aggro ', confidence: 0.8 }))
-      .toBe('Gruul dragon aggro');
+    expect(validateArchetypeResponse({ tag: '  Gruul   dragon  aggro ', confidence: 0.8 })).toBe(
+      'Gruul dragon aggro',
+    );
   });
 
   it('rejects a low-confidence answer so the computed tag stands', () => {
@@ -70,7 +95,8 @@ describe('validateArchetypeResponse', () => {
   });
 
   it('rejects a tag that is a sentence rather than a label', () => {
-    const essay = 'This deck appears to be a Gruul deck that wants to cast large dragons and attack';
+    const essay =
+      'This deck appears to be a Gruul deck that wants to cast large dragons and attack';
     expect(validateArchetypeResponse({ tag: essay, confidence: 1 })).toBeNull();
   });
 
@@ -100,8 +126,9 @@ describe('refineArchetype — the heuristic tag always survives', () => {
   it('returns a better tag when the model is confident', async () => {
     const client = clientReturning('{"tag":"Gruul dragon tribal aggro","confidence":0.9}');
 
-    expect(await refineArchetype(client, queue, INPUT, { enabled: true }))
-      .toBe('Gruul dragon tribal aggro');
+    expect(await refineArchetype(client, queue, INPUT, { enabled: true })).toBe(
+      'Gruul dragon tribal aggro',
+    );
   });
 
   it('returns null when the model merely agrees, so nothing is rewritten needlessly', async () => {

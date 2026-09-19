@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "0b8d6d5c836d1d873c47a683c90b26127ba0c05adc71a7a2faea72815615a225",
+      "card": {
+        "oracleId": "e26f0fcd-d6d2-4e7b-82dd-711bc0b9dad3",
+        "scryfallId": "086d94a0-763e-495e-b952-5c13383657c9",
+        "name": "Cryptothrall",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Construct",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Construct"
+        ],
+        "oracleText": "Protector — Other artifact creatures you control have hexproof.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Protector"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "75acaf20bc5c4cc38e422c5b39d6525b9542fe676cd425d311b12170b01206ee",
+      "card": {
+        "oracleId": "49dddec0-d958-4810-8c6e-225fc8118c8f",
+        "scryfallId": "5bcb4398-edd1-41a7-a496-b12bce22ceb6",
+        "name": "Defile",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets -1/-1 until end of turn for each Swamp you control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "331d893c878ae03d9ab1dee0af324962a42c5d5228a07e6be26d4b313e35b738",
+      "card": {
+        "oracleId": "899415fd-4164-42a5-a0c7-eef1967c5ec5",
+        "scryfallId": "b0ab96a5-0bcc-4732-8936-9522f3de3962",
+        "name": "Flayed One",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact Creature — Necron",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron"
+        ],
+        "oracleText": "Lifelink\nFlesh Flayer — When this creature enters, mill three cards.",
+        "power": "4",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink",
+          "Flesh Flayer",
+          "Mill"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "831b60c5a5242a64bd47616b8de1efd402712025885e3ac41494fa6829a964fd",
+      "card": {
+        "oracleId": "9a02a9a7-39d9-4763-85d3-747a0540b60b",
+        "scryfallId": "28e619e6-ecc1-49c3-8fa9-ce42becdb9ba",
+        "name": "Gilded Lotus",
+        "manaCost": "{5}",
+        "cmc": 5,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add three mana of any one color.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e5d08df57eb7b3a9276e1ccb5664af6f5b11a851bde80f17ede1450836ac2840",
+      "card": {
+        "oracleId": "2f092562-9e17-43cd-aeb8-d0567f99363e",
+        "scryfallId": "5446e1ba-c745-45b2-ad05-b22abf04daec",
+        "name": "Go for the Throat",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target nonartifact creature.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "07262aea4e34cc49ac258f903145239232858012d95a48c0539f0061e7e0a8d7",
+      "card": {
+        "oracleId": "698e79ec-c2bc-4973-a095-f3c57b50e39c",
+        "scryfallId": "04587192-e5a6-46f6-98b5-3b349d618880",
+        "name": "Mutilate",
+        "manaCost": "{2}{B}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "All creatures get -1/-1 until end of turn for each Swamp you control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0526c1650bcd43f8b13771ea695e0df17f5067c12acd5ed5ff8e7a1a29dec87b",
+      "card": {
+        "oracleId": "dea9741a-3360-4a17-aeea-a854e2174d25",
+        "scryfallId": "9a71531f-d4b6-4cc7-8193-b2f5bce33b21",
+        "name": "Night Scythe",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact — Vehicle",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Vehicle"
+        ],
+        "oracleText": "Flying\nInvasion Beams — When this Vehicle enters, create a 2/2 black Necron Warrior artifact creature token.\nCrew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)",
+        "power": "3",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Invasion Beams",
+          "Crew"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -38,6 +38,7 @@ export type ServerToClientType = (typeof SERVER_TO_CLIENT_TYPES)[number];
 /** Client → server message types (brief §11). */
 export const CLIENT_TO_SERVER_TYPES = [
   'startGame',
+  'startCardTestScenario',
   'jumpToTurn',
   'setPlaybackMode',
   'resolveHeldDecision',
@@ -79,12 +80,7 @@ export type SeatSource =
 
 /** Why the runner stopped computing (brief §10.1 hold-and-wait). */
 export type HaltKind =
-  | 'unmodeledCard'
-  | 'invalidAiResponse'
-  | 'engineError'
-  | 'draw'
-  | 'aiBudgetExhausted'
-  | 'turnCap';
+  'unmodeledCard' | 'invalidAiResponse' | 'engineError' | 'draw' | 'aiBudgetExhausted' | 'turnCap';
 
 export interface SeatSummary {
   seat: PlayerId;
@@ -111,6 +107,17 @@ export interface GameStartedPayload {
   /** Current bot presentation pace, retained across a player-session reconnect. */
   paceMs?: number;
   startedAt: string;
+  cardTestScenario?: CardTestScenarioMetadata;
+}
+
+export interface CardTestScenarioMetadata {
+  id: string;
+  version: number;
+  title: string;
+  instructions: string[];
+  expectedOutcome: string;
+  oracleSha256: string;
+  clauseIds: string[];
 }
 
 /** The board at one turn. Sent on start, on jump, and whenever the viewer's position moves. */
@@ -191,7 +198,12 @@ export interface DebugFlags {
 
 export interface DebugEventsPayload {
   gameId: GameId;
-  entries: Array<{ turn: number; category: string; message: string; data?: Record<string, unknown> }>;
+  entries: Array<{
+    turn: number;
+    category: string;
+    message: string;
+    data?: Record<string, unknown>;
+  }>;
 }
 
 /** Current hidden-information-safe board for the active human player. */
@@ -319,6 +331,10 @@ export type StartGamePayload = StartGameCommon &
     | { gameMode: 'singlePlayer'; humanSeat: PlayerId }
   );
 
+export interface StartCardTestScenarioPayload {
+  scenarioId: string;
+}
+
 export interface JumpToTurnPayload {
   turn: number;
   sequence?: number;
@@ -369,6 +385,7 @@ export interface ResumeGamePayload {
 
 export type ClientToServerMessage =
   | { type: 'startGame'; payload: StartGamePayload }
+  | { type: 'startCardTestScenario'; payload: StartCardTestScenarioPayload }
   | { type: 'jumpToTurn'; payload: JumpToTurnPayload }
   | { type: 'setPlaybackMode'; payload: SetPlaybackModePayload }
   | { type: 'resolveHeldDecision'; payload: ResolveHeldDecisionPayload }
@@ -475,6 +492,8 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
         (payload['reflectionEnabled'] === undefined ||
           typeof payload['reflectionEnabled'] === 'boolean')
       );
+    case 'startCardTestScenario':
+      return typeof payload['scenarioId'] === 'string' && payload['scenarioId'].length > 0;
     case 'jumpToTurn':
       return (
         Number.isInteger(payload['turn']) &&

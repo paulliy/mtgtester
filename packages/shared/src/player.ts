@@ -1,10 +1,5 @@
 import type { PlayerId } from './ids';
-import type {
-  SpectatorCard,
-  SpectatorPermanent,
-  SpectatorSeat,
-  SpectatorState,
-} from './spectator';
+import type { SpectatorCard, SpectatorPermanent, SpectatorSeat, SpectatorState } from './spectator';
 
 /** A seat rendered to an active player. Only the player's own hand has card identities. */
 export interface PlayerBoardSeat extends Omit<SpectatorSeat, 'hand'> {

@@ -122,9 +122,7 @@ describe('Neriv, Heart of the Storm — damage-doubling replacement (CR 616)', (
   it('parses to a damageDoubled rule static over creatures you control that entered this turn', () => {
     const def = interpretCard(neriv());
     expect(def.modeled).toBe(true);
-    expect(def.ruleStatics).toEqual([
-      { kind: 'damageDoubled', sourceFilter: expect.anything() },
-    ]);
+    expect(def.ruleStatics).toEqual([{ kind: 'damageDoubled', sourceFilter: expect.anything() }]);
   });
 
   it('doubles damage from a creature that entered THIS turn', () => {

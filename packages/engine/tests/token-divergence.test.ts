@@ -16,7 +16,12 @@ import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 import { TREASURE } from '../src/cards/tokens';
 
 function pod(seed: string): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;
@@ -37,7 +42,9 @@ describe('Trostani Discordant', () => {
     const trigger = def?.def.triggers?.[0];
     const create = trigger?.effects.find((e) => e.op === 'createToken');
     expect(create).toBeDefined();
-    expect((create as { spec: { colors: string[]; keywords?: string[] } }).spec.colors).toEqual(['W']);
+    expect((create as { spec: { colors: string[]; keywords?: string[] } }).spec.colors).toEqual([
+      'W',
+    ]);
     expect((create as { spec: { keywords?: string[] } }).spec.keywords).toEqual(['lifelink']);
   });
 
@@ -72,20 +79,31 @@ describe('Treasure tokens', () => {
     // Three Treasures existed across override files: one correct, one missing the {T}, and one
     // with no costs at all — which made it a free, repeatable any-color mana source.
     expect(TREASURE.manaAbilities).toHaveLength(1);
-    expect(TREASURE.manaAbilities?.[0]?.costs).toEqual([{ kind: 'tap' }, { kind: 'sacrificeSelf' }]);
+    expect(TREASURE.manaAbilities?.[0]?.costs).toEqual([
+      { kind: 'tap' },
+      { kind: 'sacrificeSelf' },
+    ]);
     expect(TREASURE.manaAbilities?.[0]?.units).toEqual([['W', 'U', 'B', 'R', 'G']]);
   });
 
-  it('is the same token wherever a card creates one', () => {
-    // Smothering Tithe and Mahadi both create "a Treasure token"; they must create the same one.
-    const specs = ['1b3e841e-0f8f-467d-9983-f9b8d081a67f', '153376c9-dffd-458c-8ce3-a4c8269bc4e9']
-      .map((id) => getOverride(id))
-      .flatMap((o) => o?.def.triggers ?? [])
-      .flatMap((t) => t.effects)
-      .filter((e) => e.op === 'createToken')
-      .map((e) => (e as { spec: unknown }).spec);
+  it('uses the same Treasure catalog entry from supported trigger and granted ability paths', () => {
+    const mahadi = getOverride('1b3e841e-0f8f-467d-9983-f9b8d081a67f');
+    const stash = getOverride('d1deba03-b26a-4a0d-b242-24bb3a3f9ea6');
+    const triggerToken = mahadi?.def.triggers?.[0]?.effects.find(
+      (effect) => effect.op === 'createToken',
+    );
+    const granted = stash?.def.staticEffects?.find((effect) => 'addActivatedAbility' in effect.op);
+    const abilityToken =
+      granted && 'addActivatedAbility' in granted.op
+        ? granted.op.addActivatedAbility.ability.effects.find(
+            (effect) => effect.op === 'createToken',
+          )
+        : undefined;
 
-    expect(specs.length).toBeGreaterThanOrEqual(2);
-    for (const spec of specs) expect(spec).toEqual(TREASURE);
+    expect(triggerToken?.op).toBe('createToken');
+    expect(abilityToken?.op).toBe('createToken');
+    if (triggerToken?.op !== 'createToken' || abilityToken?.op !== 'createToken') return;
+    expect(triggerToken.spec).toEqual(TREASURE);
+    expect(abilityToken.spec).toEqual(TREASURE);
   });
 });

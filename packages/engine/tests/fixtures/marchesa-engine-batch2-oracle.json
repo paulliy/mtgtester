@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-10",
+  "cards": [
+    {
+      "sha256": "a604568f3e0a07b568182481d569107549e6b1071631584e8f661e4eb616081f",
+      "card": {
+        "oracleId": "137b5708-50a9-4f4c-84e6-9043be9f1989",
+        "scryfallId": "ab106855-bd85-4c00-b596-c46d34f8cdd0",
+        "name": "Anathemancer",
+        "manaCost": "{1}{B}{R}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Creature — Zombie Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Zombie",
+          "Wizard"
+        ],
+        "oracleText": "When this creature enters, it deals damage to target player equal to the number of nonbasic lands that player controls.\nUnearth {5}{B}{R} ({5}{B}{R}: Return this card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step or if it would leave the battlefield. Unearth only as a sorcery.)",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Unearth"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "92ab227dd89d69ae9d3d94f70245c3c2db6cee90216cb6a39c10fdda47324338",
+      "card": {
+        "oracleId": "8f2c8498-5b10-4ec7-8678-598c90987556",
+        "scryfallId": "01ea8333-38a8-4b7b-9f03-c5534df28353",
+        "name": "Disciple of Bolas",
+        "manaCost": "{3}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Human Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Wizard"
+        ],
+        "oracleText": "When this creature enters, sacrifice another creature. You gain X life and draw X cards, where X is that creature's power.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bed73877ab5abe9f0e996cfb5dcd30da8730631557ce1d42b9238e6660be1a7c",
+      "card": {
+        "oracleId": "d09c9cba-fdd2-479b-ad5d-d05181c3e3f9",
+        "scryfallId": "f7f3dd95-bd14-4e0f-a388-444f9cf1b0dc",
+        "name": "Fierce Guardianship",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "If you control a commander, you may cast this spell without paying its mana cost.\nCounter target noncreature spell.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b3c938ef77cde5231aae8b1bdd9f449aac40013646206f61171c16679c2885c5",
+      "card": {
+        "oracleId": "77807103-bcd5-479f-bedd-f5d97aa6d3d2",
+        "scryfallId": "5f11f053-5150-4a76-b2ca-9df3a0629911",
+        "name": "Forge of Heroes",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{T}: Choose target commander that entered this turn. Put a +1/+1 counter on it if it's a creature and a loyalty counter on it if it's a planeswalker.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ecce90e398a9e1b95406e24aef4c745d0798766a21b1477bcda9253a7bdda293",
+      "card": {
+        "oracleId": "73413bd5-8c40-4d45-8f05-c20c39ee4017",
+        "scryfallId": "4e712d5c-d6fe-40bb-b8e5-5f50c6ea8d4f",
+        "name": "Madame Null, Power Broker",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Legendary Creature — Demon Advisor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Demon",
+          "Advisor"
+        ],
+        "oracleText": "Deathtouch\nWhenever another creature you control enters, you may pay life equal to its power. If you do, put that many +1/+1 counters on it.",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Deathtouch"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a30b4eb0457c37784311162d42413ea17546cc3f1b4ac7864fecb5e721713fd2",
+      "card": {
+        "oracleId": "1b3e841e-0f8f-467d-9983-f9b8d081a67f",
+        "scryfallId": "c3da2b1a-76c5-4d36-bdf8-025b86f61eb5",
+        "name": "Mahadi, Emporium Master",
+        "manaCost": "{1}{B}{R}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Devil",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Devil"
+        ],
+        "oracleText": "At the beginning of your end step, create a Treasure token for each creature that died this turn. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Treasure"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

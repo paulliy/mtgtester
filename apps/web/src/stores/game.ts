@@ -11,6 +11,7 @@ import { defineStore } from 'pinia';
 import type {
   AiAnnotation,
   AiReflection,
+  CardTestScenarioMetadata,
   ComputeHaltedPayload,
   DebugFlags,
   DecisionPendingPayload,
@@ -67,6 +68,7 @@ export const useGameStore = defineStore('game', () => {
   );
   const gameMode = ref<GameMode>(sessionToken.value === null ? 'spectator' : 'singlePlayer');
   const humanSeat = ref<string | null>(null);
+  const cardTestScenario = ref<CardTestScenarioMetadata | null>(null);
 
   /** `shallowRef`: the board is replaced wholesale on every push, never mutated in place. */
   const state = shallowRef<SpectatorState | null>(null);
@@ -84,11 +86,13 @@ export const useGameStore = defineStore('game', () => {
   const paceMs = ref(DEFAULT_PACE_MS);
   /** Routine land plays and passes are one-click by default; this restores the safer all-confirm mode. */
   const confirmRoutineActions = ref(
-    typeof localStorage !== 'undefined' && localStorage.getItem('mtg-player-confirm-routine') === 'true',
+    typeof localStorage !== 'undefined' &&
+      localStorage.getItem('mtg-player-confirm-routine') === 'true',
   );
   /** Opt-in: skip the manual "Confirm" click on the tray once every target slot is filled. */
   const autoConfirmActions = ref(
-    typeof localStorage !== 'undefined' && localStorage.getItem('mtg-player-auto-confirm') === 'true',
+    typeof localStorage !== 'undefined' &&
+      localStorage.getItem('mtg-player-auto-confirm') === 'true',
   );
   /**
    * Suppresses combat-overlay lines, drag ghost/cursor line, and (via a global CSS override)
@@ -197,6 +201,7 @@ export const useGameStore = defineStore('game', () => {
         providerKind.value = message.payload.providerKind;
         gameMode.value = message.payload.gameMode ?? 'spectator';
         humanSeat.value = message.payload.humanSeat ?? null;
+        cardTestScenario.value = message.payload.cardTestScenario ?? null;
         if (message.payload.paceMs !== undefined) paceMs.value = message.payload.paceMs;
         if (message.payload.sessionToken !== undefined) {
           sessionToken.value = message.payload.sessionToken;
@@ -288,10 +293,7 @@ export const useGameStore = defineStore('game', () => {
         playerState.value = message.payload.state;
         playerRevision.value = message.payload.revision;
         ignoredAbilities.value = message.payload.ignoredAbilities;
-        if (
-          playerAction.value !== null &&
-          message.payload.revision > playerAction.value.revision
-        ) {
+        if (playerAction.value !== null && message.payload.revision > playerAction.value.revision) {
           playerAction.value = null;
         }
         viewTurn.value = message.payload.state.turnNumber;
@@ -396,6 +398,15 @@ export const useGameStore = defineStore('game', () => {
     });
   }
 
+  function startCardTestScenario(scenarioId: string): void {
+    connect();
+    errors.value = [];
+    socket?.send({
+      type: 'startCardTestScenario',
+      payload: { scenarioId },
+    });
+  }
+
   /**
    * Move the viewer. This is also what un-parks compute: the server computes at most five turns
    * past this position (brief §10.1), so watching is what pays for the next turns.
@@ -488,17 +499,20 @@ export const useGameStore = defineStore('game', () => {
 
   function setConfirmRoutineActions(value: boolean): void {
     confirmRoutineActions.value = value;
-    if (typeof localStorage !== 'undefined') localStorage.setItem('mtg-player-confirm-routine', String(value));
+    if (typeof localStorage !== 'undefined')
+      localStorage.setItem('mtg-player-confirm-routine', String(value));
   }
 
   function setAutoConfirmActions(value: boolean): void {
     autoConfirmActions.value = value;
-    if (typeof localStorage !== 'undefined') localStorage.setItem('mtg-player-auto-confirm', String(value));
+    if (typeof localStorage !== 'undefined')
+      localStorage.setItem('mtg-player-auto-confirm', String(value));
   }
 
   function setReducedMotion(value: boolean): void {
     reducedMotion.value = value;
-    if (typeof localStorage !== 'undefined') localStorage.setItem('mtg-player-reduced-motion', String(value));
+    if (typeof localStorage !== 'undefined')
+      localStorage.setItem('mtg-player-reduced-motion', String(value));
   }
 
   function resolveHeldDecision(actionId: number): void {
@@ -565,6 +579,7 @@ export const useGameStore = defineStore('game', () => {
     activeSequence.value = null;
     heldDecision.value = null;
     sessionToken.value = null;
+    cardTestScenario.value = null;
     if (typeof localStorage !== 'undefined') localStorage.removeItem('mtg-player-session');
   }
 
@@ -576,6 +591,7 @@ export const useGameStore = defineStore('game', () => {
     providerKind,
     gameMode,
     humanSeat,
+    cardTestScenario,
     sessionToken,
     state,
     playerState,
@@ -609,6 +625,7 @@ export const useGameStore = defineStore('game', () => {
     isRunning,
     connect,
     startGame,
+    startCardTestScenario,
     jumpToTurn,
     seek,
     stepBack,

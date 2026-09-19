@@ -1,4 +1,4 @@
-import type { DecisionRequest, PlayerId } from '@mtg/shared';
+import type { DecisionRequest } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { createCardTestScenario, listCardTestScenarios } from './card-test-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
@@ -83,6 +83,33 @@ describe('deterministic Card Test Lab scenarios', () => {
       'trostani-viewer-etb-two-lifelink-soldiers',
       'felidar-viewer-landfall-cat-beast',
       'nest-viewer-damage-makes-insects',
+      'slate-viewer-discard-and-draw-for-creatures',
+      'scarab-viewer-exile-graveyard-make-insects',
+      'oak-viewer-pump-and-untap-target-player',
+      'frostboil-viewer-reveal-enters-untapped',
+      'vineglimmer-viewer-reveal-enters-untapped',
+      'stroke-viewer-destroy-nonland-make-human',
+      'gift-viewer-destroy-and-make-elephant',
+      'garrison-viewer-bounce-forest-enters-tapped',
+      'basilica-viewer-bounce-forest-enters-tapped',
+      'pia-kiran-viewer-etb-two-thopters',
+      'crackling-viewer-damage-and-greatest-sacrifice',
+      'carnarium-viewer-bounce-forest-enters-tapped',
+      'whirler-viewer-etb-two-thopters',
+      'weaver-viewer-artifact-etb-pings-opponents',
+      'spit-viewer-four-damage-to-ox',
+      'sai-viewer-cast-artifact-makes-thopter',
+      'rendezvous-viewer-you-and-opponent-draw-three',
+      'demanding-viewer-five-damage-no-creature',
+      'cryptothrall-viewer-hexproof-other-artifact-creatures',
+      'boros-charm-viewer-four-damage-to-player',
+      'rakdos-charm-viewer-destroy-artifact',
+      'hellkite-viewer-plus-one-power-until-eot',
+      'refiner-viewer-etb-draw-two-energy',
+      'virtuoso-viewer-energy-makes-thopter',
+      'ajani-viewer-plus-one-counter',
+      'terror-viewer-etb-damage-to-player',
+      'basker-viewer-plus-one-until-eot',
     ]);
   });
 
@@ -579,7 +606,11 @@ describe('deterministic Card Test Lab scenarios — reviewed cards', () => {
     expect(state.battlefield.some((permanent) => permanent.name === 'Night Scythe')).toBe(true);
     const warrior = state.battlefield.find((permanent) => permanent.name === 'Necron Warrior');
     expect(warrior).toBeDefined();
-    expect(warrior?.isToken).toBe(true);
+    expect(
+      state.eventLog.some(
+        (event) => event.type === 'tokenCreated' && event.payload['name'] === warrior?.name,
+      ),
+    ).toBe(true);
     expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
   });
 
@@ -678,19 +709,21 @@ describe('deterministic Card Test Lab scenarios — reviewed cards', () => {
   });
 
   it('Royal Warden: ETB creates two tapped Necron Warriors', () => {
-    const { scenario } = runScenarioWith(
-      'warden-viewer-etb-two-tapped-warriors',
-      (request, sc) => {
-        const cast = chooseWithTarget(request, sc, 'Royal Warden');
-        if (cast !== null) return cast;
-        return passChoice(request);
-      },
-    );
+    const { scenario } = runScenarioWith('warden-viewer-etb-two-tapped-warriors', (request, sc) => {
+      const cast = chooseWithTarget(request, sc, 'Royal Warden');
+      if (cast !== null) return cast;
+      return passChoice(request);
+    });
     const state = scenario.engine.getState();
     const warriors = state.battlefield.filter((permanent) => permanent.name === 'Necron Warrior');
     expect(state.battlefield.some((permanent) => permanent.name === 'Royal Warden')).toBe(true);
     expect(warriors).toHaveLength(2);
-    expect(warriors.every((token) => token.tapped && token.isToken)).toBe(true);
+    expect(warriors.every((token) => token.tapped)).toBe(true);
+    expect(
+      state.eventLog.filter(
+        (event) => event.type === 'tokenCreated' && event.payload['name'] === 'Necron Warrior',
+      ),
+    ).toHaveLength(2);
     expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
   });
 
@@ -723,8 +756,7 @@ describe('deterministic Card Test Lab scenarios — reviewed cards', () => {
           const slots =
             (
               activate.interaction as
-                | { targetSlots?: Array<{ slot: number; options: string[] }> }
-                | undefined
+                { targetSlots?: Array<{ slot: number; options: string[] }> } | undefined
             )?.targetSlots ?? [];
           const slot = slots[0];
           if (slot !== undefined) {
@@ -742,7 +774,9 @@ describe('deterministic Card Test Lab scenarios — reviewed cards', () => {
     const dragon = spec.battlefield.find((permanent) => permanent.name === 'Hoard-Smelter Dragon');
     expect(dragon?.power).toBe(8);
     expect(dragon?.toughness).toBe(5);
-    expect(spec.battlefield.some((permanent) => permanent.name === 'Wrong-MV Artifact')).toBe(false);
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Wrong-MV Artifact')).toBe(
+      false,
+    );
   });
 
   it('Loaming Shaman: shuffles P2 Lab Ox from the graveyard into the library', () => {
@@ -777,8 +811,7 @@ describe('deterministic Card Test Lab scenarios — reviewed cards', () => {
         const slots =
           (
             activate.interaction as
-              | { targetSlots?: Array<{ slot: number; options: string[] }> }
-              | undefined
+              { targetSlots?: Array<{ slot: number; options: string[] }> } | undefined
           )?.targetSlots ?? [];
         const slot = slots[0];
         if (slot !== undefined) {
@@ -871,9 +904,7 @@ describe('deterministic Card Test Lab scenarios — reviewed cards', () => {
 
   it('Felidar Retreat: playing a Forest makes a Cat Beast', () => {
     const { scenario } = runScenarioWith('felidar-viewer-landfall-cat-beast', (request, sc) => {
-      const cat = request.legalActions.find((action) =>
-        /Beast|Cat/.test(action.description),
-      );
+      const cat = request.legalActions.find((action) => /Beast|Cat/.test(action.description));
       if (cat !== undefined) return { actionId: cat.id };
       const play = chooseWithTarget(request, sc, 'Forest');
       if (play !== null) return play;
@@ -902,5 +933,575 @@ describe('deterministic Card Test Lab scenarios — reviewed cards', () => {
           permanent.keywords.includes('flying') && permanent.keywords.includes('deathtouch'),
       ),
     ).toBe(true);
+  });
+
+  it('Slate of Ancestry: discards two and draws two for your creatures', () => {
+    const { scenario } = runScenarioWith(
+      'slate-viewer-discard-and-draw-for-creatures',
+      (request) => {
+        const discard = request.legalActions.find((action) =>
+          action.description.toLowerCase().includes('discard'),
+        );
+        if (discard !== undefined) return { actionId: discard.id };
+        const activate = request.legalActions.find(
+          (action) =>
+            action.type === 'activateAbility' && action.description.includes('Slate of Ancestry'),
+        );
+        if (activate !== undefined) return { actionId: activate.id };
+        return passChoice(request);
+      },
+    );
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    expect(p1.hand).toHaveLength(2);
+    expect(p1.graveyard.map((card) => card.name).sort()).toEqual([
+      'Eligible Signet',
+      'Eligible Talisman',
+    ]);
+    expect(
+      state.battlefield.find((permanent) => permanent.name === 'Slate of Ancestry')?.tapped,
+    ).toBe(true);
+  });
+
+  it('Canoptek Scarab Swarm: exiles P2 graveyard and makes two flying Insects', () => {
+    const { scenario } = runScenarioWith(
+      'scarab-viewer-exile-graveyard-make-insects',
+      (request, sc) => {
+        const etb = chooseWithTarget(request, sc, 'Canoptek', 'P2');
+        if (etb !== null) return etb;
+        const cast = chooseWithTarget(request, sc, 'Canoptek Scarab Swarm');
+        if (cast !== null) return cast;
+        return passChoice(request);
+      },
+    );
+    const spec = scenario.engine.spectatorState();
+    const state = scenario.engine.getState();
+    const p2 = state.players.find((player) => player.id === 'P2')!;
+    const insects = spec.battlefield.filter((permanent) => permanent.name === 'Insect');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Canoptek Scarab Swarm')).toBe(
+      true,
+    );
+    expect(p2.graveyard).toHaveLength(0);
+    expect(state.exile).toHaveLength(3);
+    expect(insects).toHaveLength(2);
+    expect(insects.every((permanent) => permanent.keywords.includes('flying'))).toBe(true);
+    expect(insects.every((permanent) => !permanent.keywords.includes('deathtouch'))).toBe(true);
+  });
+
+  it('Great Oak Guardian: P2 Lab Ox becomes 6/6 and untaps; Oak stays 4/5', () => {
+    const { scenario } = runScenarioWith(
+      'oak-viewer-pump-and-untap-target-player',
+      (request, sc) => {
+        const etb = chooseWithTarget(request, sc, 'Great Oak', 'P2');
+        if (etb !== null) return etb;
+        const cast = chooseWithTarget(request, sc, 'Great Oak Guardian');
+        if (cast !== null) return cast;
+        return passChoice(request);
+      },
+    );
+    const spec = scenario.engine.spectatorState();
+    const ox = spec.battlefield.find((permanent) => permanent.name === 'Lab Ox');
+    const oak = spec.battlefield.find((permanent) => permanent.name === 'Great Oak Guardian');
+    expect(ox?.power).toBe(6);
+    expect(ox?.toughness).toBe(6);
+    expect(ox?.tapped).toBe(false);
+    expect(oak?.power).toBe(4);
+    expect(oak?.toughness).toBe(5);
+  });
+
+  it('Frostboil Snarl: revealing an Island enters untapped', () => {
+    const { scenario } = runScenarioWith(
+      'frostboil-viewer-reveal-enters-untapped',
+      (request, sc) => {
+        const reveal = request.legalActions.find((action) =>
+          action.description.includes('enters untapped'),
+        );
+        if (reveal !== undefined) return { actionId: reveal.id };
+        const play = chooseWithTarget(request, sc, 'Frostboil Snarl');
+        if (play !== null) return play;
+        return passChoice(request);
+      },
+    );
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const snarl = state.battlefield.find((permanent) => permanent.name === 'Frostboil Snarl');
+    expect(snarl).toBeDefined();
+    expect(snarl?.tapped).toBe(false);
+    expect(p1.hand.map((card) => card.name)).toContain('Island');
+    expect(state.eventLog.some((event) => event.type === 'revealCard')).toBe(true);
+  });
+
+  it('Vineglimmer Snarl: revealing a Forest enters untapped', () => {
+    const { scenario } = runScenarioWith(
+      'vineglimmer-viewer-reveal-enters-untapped',
+      (request, sc) => {
+        const reveal = request.legalActions.find((action) =>
+          action.description.includes('enters untapped'),
+        );
+        if (reveal !== undefined) return { actionId: reveal.id };
+        const play = chooseWithTarget(request, sc, 'Vineglimmer Snarl');
+        if (play !== null) return play;
+        return passChoice(request);
+      },
+    );
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const snarl = state.battlefield.find((permanent) => permanent.name === 'Vineglimmer Snarl');
+    expect(snarl).toBeDefined();
+    expect(snarl?.tapped).toBe(false);
+    expect(p1.hand.map((card) => card.name)).toContain('Forest');
+    expect(state.eventLog.some((event) => event.type === 'revealCard')).toBe(true);
+  });
+
+  it('Stroke of Midnight: destroys Lab Ox and P2 gets a 1/1 Human', () => {
+    const { scenario } = runScenarioWith(
+      'stroke-viewer-destroy-nonland-make-human',
+      (request, sc) => {
+        const cast = chooseWithTarget(request, sc, 'Stroke of Midnight', 'Lab Ox');
+        if (cast !== null) return cast;
+        return passChoice(request);
+      },
+    );
+    const spec = scenario.engine.spectatorState();
+    const human = spec.battlefield.find((permanent) => permanent.name === 'Human');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Lab Ox')).toBe(false);
+    expect(human?.controller).toBe('P2');
+    expect(human?.power).toBe(1);
+    expect(human?.toughness).toBe(1);
+    expect(scenario.engine.getState().eventLog.some((event) => event.type === 'castSpell')).toBe(
+      true,
+    );
+  });
+
+  it('Generous Gift: destroys Lab Ox and P2 gets a 3/3 Elephant', () => {
+    const { scenario } = runScenarioWith('gift-viewer-destroy-and-make-elephant', (request, sc) => {
+      const cast = chooseWithTarget(request, sc, 'Generous Gift', 'Lab Ox');
+      if (cast !== null) return cast;
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    const elephant = spec.battlefield.find((permanent) => permanent.name === 'Elephant');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Lab Ox')).toBe(false);
+    expect(elephant?.controller).toBe('P2');
+    expect(elephant?.power).toBe(3);
+    expect(elephant?.toughness).toBe(3);
+    expect(scenario.engine.getState().eventLog.some((event) => event.type === 'castSpell')).toBe(
+      true,
+    );
+  });
+
+  it('Boros Garrison: bouncing Forest leaves Garrison tapped on the battlefield', () => {
+    const { scenario } = runScenarioWith(
+      'garrison-viewer-bounce-forest-enters-tapped',
+      (request, sc) => {
+        const bounceForest = request.legalActions.find((action) =>
+          /Return Forest/i.test(action.description),
+        );
+        if (bounceForest !== undefined) return { actionId: bounceForest.id };
+        const play = chooseWithTarget(request, sc, 'Boros Garrison');
+        if (play !== null) return play;
+        return passChoice(request);
+      },
+    );
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const garrison = state.battlefield.find((permanent) => permanent.name === 'Boros Garrison');
+    expect(garrison).toBeDefined();
+    expect(garrison?.tapped).toBe(true);
+    expect(p1.hand.map((card) => card.name)).toContain('Forest');
+    expect(state.battlefield.some((permanent) => permanent.name === 'Forest')).toBe(false);
+  });
+
+  it('Orzhov Basilica: bouncing Forest leaves Basilica tapped on the battlefield', () => {
+    const { scenario } = runScenarioWith(
+      'basilica-viewer-bounce-forest-enters-tapped',
+      (request, sc) => {
+        const bounceForest = request.legalActions.find((action) =>
+          /Return Forest/i.test(action.description),
+        );
+        if (bounceForest !== undefined) return { actionId: bounceForest.id };
+        const play = chooseWithTarget(request, sc, 'Orzhov Basilica');
+        if (play !== null) return play;
+        return passChoice(request);
+      },
+    );
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const basilica = state.battlefield.find((permanent) => permanent.name === 'Orzhov Basilica');
+    expect(basilica).toBeDefined();
+    expect(basilica?.tapped).toBe(true);
+    expect(p1.hand.map((card) => card.name)).toContain('Forest');
+    expect(state.battlefield.some((permanent) => permanent.name === 'Forest')).toBe(false);
+  });
+
+  it('Pia and Kiran Nalaar: ETB two 1/1 flying Thopters', () => {
+    const { scenario } = runScenarioWith('pia-kiran-viewer-etb-two-thopters', (request, sc) => {
+      const cast = chooseWithTarget(request, sc, 'Pia and Kiran Nalaar');
+      if (cast !== null) return cast;
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    const thopters = spec.battlefield.filter((permanent) => permanent.name === 'Thopter');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Pia and Kiran Nalaar')).toBe(
+      true,
+    );
+    expect(thopters).toHaveLength(2);
+    expect(thopters.every((permanent) => permanent.power === 1 && permanent.toughness === 1)).toBe(
+      true,
+    );
+    expect(thopters.every((permanent) => permanent.keywords.includes('flying'))).toBe(true);
+    expect(scenario.engine.getState().eventLog.some((event) => event.type === 'castSpell')).toBe(
+      true,
+    );
+  });
+
+  it('Crackling Doom: P2 sacs Lab Ox and each opponent loses 2 life', () => {
+    const { scenario } = runScenarioWith(
+      'crackling-viewer-damage-and-greatest-sacrifice',
+      (request, sc) => {
+        const cast = chooseWithTarget(request, sc, 'Crackling Doom');
+        if (cast !== null) return cast;
+        return passChoice(request);
+      },
+    );
+    const spec = scenario.engine.spectatorState();
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const p2 = state.players.find((player) => player.id === 'P2')!;
+    const p3 = state.players.find((player) => player.id === 'P3')!;
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Lab Ox')).toBe(false);
+    expect(p1.life).toBe(40);
+    expect(p2.life).toBe(38);
+    expect(p3.life).toBe(38);
+    expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
+  });
+
+  it('Rakdos Carnarium: bouncing Forest leaves Carnarium tapped on the battlefield', () => {
+    const { scenario } = runScenarioWith(
+      'carnarium-viewer-bounce-forest-enters-tapped',
+      (request, sc) => {
+        const bounceForest = request.legalActions.find((action) =>
+          /Return Forest/i.test(action.description),
+        );
+        if (bounceForest !== undefined) return { actionId: bounceForest.id };
+        const play = chooseWithTarget(request, sc, 'Rakdos Carnarium');
+        if (play !== null) return play;
+        return passChoice(request);
+      },
+    );
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const carnarium = state.battlefield.find((permanent) => permanent.name === 'Rakdos Carnarium');
+    expect(carnarium).toBeDefined();
+    expect(carnarium?.tapped).toBe(true);
+    expect(p1.hand.map((card) => card.name)).toContain('Forest');
+    expect(state.battlefield.some((permanent) => permanent.name === 'Forest')).toBe(false);
+  });
+
+  it('Whirler Rogue: ETB two 1/1 flying Thopters', () => {
+    const { scenario } = runScenarioWith('whirler-viewer-etb-two-thopters', (request, sc) => {
+      const cast = chooseWithTarget(request, sc, 'Cast Whirler Rogue');
+      if (cast !== null) return cast;
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    const thopters = spec.battlefield.filter((permanent) => permanent.name === 'Thopter');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Whirler Rogue')).toBe(true);
+    expect(thopters).toHaveLength(2);
+    expect(thopters.every((permanent) => permanent.power === 1 && permanent.toughness === 1)).toBe(
+      true,
+    );
+    expect(thopters.every((permanent) => permanent.keywords.includes('flying'))).toBe(true);
+    expect(scenario.engine.getState().eventLog.some((event) => event.type === 'castSpell')).toBe(
+      true,
+    );
+  });
+
+  it('Reckless Fireweaver: artifact ETB deals 1 to each opponent', () => {
+    const { scenario } = runScenarioWith(
+      'weaver-viewer-artifact-etb-pings-opponents',
+      (request, sc) => {
+        const cast = chooseWithTarget(request, sc, 'Eligible Talisman');
+        if (cast !== null) return cast;
+        return passChoice(request);
+      },
+    );
+    const spec = scenario.engine.spectatorState();
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const p2 = state.players.find((player) => player.id === 'P2')!;
+    const p3 = state.players.find((player) => player.id === 'P3')!;
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Eligible Talisman')).toBe(true);
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Reckless Fireweaver')).toBe(
+      true,
+    );
+    expect(p1.life).toBe(40);
+    expect(p2.life).toBe(39);
+    expect(p3.life).toBe(39);
+    expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
+  });
+
+  it('Spit Flame: 4 damage destroys Lab Ox', () => {
+    const { scenario } = runScenarioWith('spit-viewer-four-damage-to-ox', (request, sc) => {
+      const cast = chooseWithTarget(request, sc, 'Spit Flame', 'Lab Ox');
+      if (cast !== null) return cast;
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Lab Ox')).toBe(false);
+    expect(scenario.engine.getState().eventLog.some((event) => event.type === 'castSpell')).toBe(
+      true,
+    );
+  });
+
+  it('Sai, Master Thopterist: casting an artifact makes a flying Thopter', () => {
+    const { scenario } = runScenarioWith(
+      'sai-viewer-cast-artifact-makes-thopter',
+      (request, sc) => {
+        const cast = chooseWithTarget(request, sc, 'Eligible Talisman');
+        if (cast !== null) return cast;
+        return passChoice(request);
+      },
+    );
+    const spec = scenario.engine.spectatorState();
+    const thopter = spec.battlefield.find((permanent) => permanent.name === 'Thopter');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Eligible Talisman')).toBe(true);
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Sai, Master Thopterist')).toBe(
+      true,
+    );
+    expect(thopter).toBeDefined();
+    expect(thopter?.power).toBe(1);
+    expect(thopter?.toughness).toBe(1);
+    expect(thopter?.keywords).toContain('flying');
+    expect(scenario.engine.getState().eventLog.some((event) => event.type === 'castSpell')).toBe(
+      true,
+    );
+  });
+
+  it('Secret Rendezvous: you and P2 each draw three nonlands', () => {
+    const { scenario } = runScenarioWith(
+      'rendezvous-viewer-you-and-opponent-draw-three',
+      (request, sc) => {
+        const cast = chooseWithTarget(request, sc, 'Secret Rendezvous', 'P2');
+        if (cast !== null) return cast;
+        return passChoice(request);
+      },
+    );
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const p2 = state.players.find((player) => player.id === 'P2')!;
+    const p3 = state.players.find((player) => player.id === 'P3')!;
+    expect(p1.hand).toHaveLength(3);
+    expect(p1.hand.every((card) => !card.typeLine.includes('Land'))).toBe(true);
+    expect(p2.hand).toHaveLength(3);
+    expect(p2.hand.every((card) => !card.typeLine.includes('Land'))).toBe(true);
+    expect(p3.hand).toHaveLength(0);
+    expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
+  });
+
+  it('Demanding Dragon: 5 damage when P2 has no creature to sacrifice', () => {
+    const { scenario } = runScenarioWith(
+      'demanding-viewer-five-damage-no-creature',
+      (request, sc) => {
+        const etb = chooseWithTarget(request, sc, 'Demanding', 'P2');
+        if (etb !== null) return etb;
+        const cast = chooseWithTarget(request, sc, 'Cast Demanding Dragon');
+        if (cast !== null) return cast;
+        return passChoice(request);
+      },
+    );
+    const spec = scenario.engine.spectatorState();
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const p2 = spec.seats.find((seat) => seat.seat === 'P2');
+    const p3 = spec.seats.find((seat) => seat.seat === 'P3');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Demanding Dragon')).toBe(true);
+    expect(p1.life).toBe(40);
+    expect(p2?.life).toBe(35);
+    expect(p3?.life).toBe(40);
+    expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
+  });
+
+  it('Cryptothrall: other artifact creatures you control have hexproof', () => {
+    const { scenario } = runScenarioWith(
+      'cryptothrall-viewer-hexproof-other-artifact-creatures',
+      (request, sc) => {
+        const cast = chooseWithTarget(request, sc, 'Cast Cryptothrall');
+        if (cast !== null) return cast;
+        return passChoice(request);
+      },
+    );
+    const spec = scenario.engine.spectatorState();
+    const yours = spec.battlefield.find(
+      (permanent) => permanent.name === 'Lab Servo' && permanent.controller === 'P1',
+    );
+    const ox = spec.battlefield.find((permanent) => permanent.name === 'Lab Ox');
+    const theirs = spec.battlefield.find(
+      (permanent) => permanent.name === 'Lab Servo' && permanent.controller === 'P2',
+    );
+    const self = spec.battlefield.find((permanent) => permanent.name === 'Cryptothrall');
+    expect(yours?.keywords).toContain('hexproof');
+    expect(ox?.keywords ?? []).not.toContain('hexproof');
+    expect(theirs?.keywords ?? []).not.toContain('hexproof');
+    expect(self?.keywords ?? []).not.toContain('hexproof');
+    expect(scenario.engine.getState().eventLog.some((event) => event.type === 'castSpell')).toBe(
+      true,
+    );
+  });
+
+  it('Boros Charm: 4 damage to P2; double strike is not offered', () => {
+    const { scenario } = runScenarioWith(
+      'boros-charm-viewer-four-damage-to-player',
+      (request, sc) => {
+        const damage = chooseWithTarget(request, sc, 'Deal 4 damage', 'P2');
+        if (damage !== null) return damage;
+        return passChoice(request);
+      },
+    );
+    const spec = scenario.engine.spectatorState();
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const p2 = spec.seats.find((seat) => seat.seat === 'P2');
+    const p3 = spec.seats.find((seat) => seat.seat === 'P3');
+    expect(p1.life).toBe(40);
+    expect(p2?.life).toBe(36);
+    expect(p3?.life).toBe(40);
+    expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
+  });
+
+  it('Rakdos Charm: destroy the artifact, not Lab Ox', () => {
+    const { scenario } = runScenarioWith('rakdos-charm-viewer-destroy-artifact', (request, sc) => {
+      const destroy = chooseWithTarget(request, sc, 'Destroy target artifact', 'Wrong-MV Artifact');
+      if (destroy !== null) return destroy;
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Wrong-MV Artifact')).toBe(
+      false,
+    );
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Lab Ox')).toBe(true);
+    expect(scenario.engine.getState().eventLog.some((event) => event.type === 'castSpell')).toBe(
+      true,
+    );
+  });
+
+  it('Steel Hellkite: {2} pumps +1/+0 until end of turn', () => {
+    const { scenario } = runScenarioWith('hellkite-viewer-plus-one-power-until-eot', (request) => {
+      const pump = request.legalActions.find((action) => action.description.includes('+1/+0'));
+      if (pump !== undefined) return { actionId: pump.id };
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    const hellkite = spec.battlefield.find((permanent) => permanent.name === 'Steel Hellkite');
+    expect(hellkite?.power).toBe(6);
+    expect(hellkite?.toughness).toBe(5);
+  });
+
+  it('Rogue Refiner: ETB draws a nonland and grants two energy', () => {
+    const { scenario } = runScenarioWith('refiner-viewer-etb-draw-two-energy', (request, sc) => {
+      const cast = chooseWithTarget(request, sc, 'Cast Rogue Refiner');
+      if (cast !== null) return cast;
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const p2 = state.players.find((player) => player.id === 'P2')!;
+    const you = spec.seats.find((seat) => seat.seat === 'P1');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Rogue Refiner')).toBe(true);
+    expect(p1.hand).toHaveLength(1);
+    expect(p1.hand.every((card) => !card.typeLine.includes('Land'))).toBe(true);
+    expect(p2.hand).toHaveLength(0);
+    expect(you?.energy).toBe(2);
+    expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
+  });
+
+  it('Whirler Virtuoso: three energy makes a flying Thopter', () => {
+    const { scenario } = runScenarioWith('virtuoso-viewer-energy-makes-thopter', (request, sc) => {
+      const thopter = request.legalActions.find((action) => /thopter/i.test(action.description));
+      if (thopter !== undefined) return { actionId: thopter.id };
+      const cast = chooseWithTarget(request, sc, 'Cast Whirler Virtuoso');
+      if (cast !== null) return cast;
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    const you = spec.seats.find((seat) => seat.seat === 'P1');
+    const token = spec.battlefield.find((permanent) => permanent.name === 'Thopter');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Whirler Virtuoso')).toBe(true);
+    expect(token).toBeDefined();
+    expect(token?.power).toBe(1);
+    expect(token?.toughness).toBe(1);
+    expect(token?.keywords).toContain('flying');
+    expect(you?.energy).toBe(0);
+  });
+
+  it('Ajani, Caller of the Pride: +1 puts a counter on Lab Ox', () => {
+    const { scenario } = runScenarioWith('ajani-viewer-plus-one-counter', (request, sc) => {
+      const plus = request.legalActions.find((action) =>
+        action.description.includes('+1: Put a +1/+1 counter'),
+      );
+      if (plus !== undefined) {
+        const names = objectNames(sc);
+        const slot = plus.targets?.[0];
+        const ox = slot?.options.find((id) => names.get(id) === 'Lab Ox');
+        if (slot !== undefined && ox !== undefined) {
+          return { actionId: plus.id, targets: [{ slot: slot.slot, choice: ox }] };
+        }
+        return { actionId: plus.id };
+      }
+      const targeted = chooseWithTarget(request, sc, 'Ajani', 'Lab Ox');
+      if (targeted !== null) return targeted;
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    const ox = spec.battlefield.find((permanent) => permanent.name === 'Lab Ox');
+    const ajani = spec.battlefield.find(
+      (permanent) => permanent.name === 'Ajani, Caller of the Pride',
+    );
+    expect(ox?.power).toBe(5);
+    expect(ox?.toughness).toBe(5);
+    expect(ox?.keywords ?? []).not.toContain('flying');
+    expect(ox?.keywords ?? []).not.toContain('double strike');
+    expect(ajani?.counters['loyalty']).toBe(5);
+  });
+
+  it('Terror of the Peaks: entering Two-Mana Bear deals 2 to P2', () => {
+    const { scenario } = runScenarioWith('terror-viewer-etb-damage-to-player', (request, sc) => {
+      const damage = chooseWithTarget(request, sc, 'Terror', 'P2');
+      if (damage !== null) return damage;
+      const cast = chooseWithTarget(request, sc, 'Cast Two-Mana Bear');
+      if (cast !== null) return cast;
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const p2 = spec.seats.find((seat) => seat.seat === 'P2');
+    const p3 = spec.seats.find((seat) => seat.seat === 'P3');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Terror of the Peaks')).toBe(
+      true,
+    );
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Two-Mana Bear')).toBe(true);
+    expect(p1.life).toBe(40);
+    expect(p2?.life).toBe(38);
+    expect(p3?.life).toBe(40);
+    expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
+  });
+
+  it('Aetherwind Basker: pay one energy to become 8/8 until end of turn', () => {
+    const { scenario } = runScenarioWith('basker-viewer-plus-one-until-eot', (request, sc) => {
+      const pump = request.legalActions.find((action) => action.description.includes('+1/+1'));
+      if (pump !== undefined) return { actionId: pump.id };
+      const cast = chooseWithTarget(request, sc, 'Cast Aetherwind Basker');
+      if (cast !== null) return cast;
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    const basker = spec.battlefield.find((permanent) => permanent.name === 'Aetherwind Basker');
+    const you = spec.seats.find((seat) => seat.seat === 'P1');
+    expect(basker?.power).toBe(8);
+    expect(basker?.toughness).toBe(8);
+    expect(basker?.keywords).toContain('trample');
+    expect(you?.energy).toBe(0);
   });
 });

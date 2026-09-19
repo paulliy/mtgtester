@@ -21,7 +21,13 @@ describe('oracle-text interpreter (brief §6)', () => {
     const cascade = interpretCard(oracle({ name: 'Cascade Creature', oracleText: 'Cascade' }));
     expect(cascade.modeled).toBe(true);
     expect(cascade.keywords).toContain('cascade');
-    const rebound = interpretCard(oracle({ name: 'Rebound Spell', typeLine: 'Sorcery', oracleText: 'Draw a card.' + String.fromCharCode(10) + 'Rebound' }));
+    const rebound = interpretCard(
+      oracle({
+        name: 'Rebound Spell',
+        typeLine: 'Sorcery',
+        oracleText: 'Draw a card.' + String.fromCharCode(10) + 'Rebound',
+      }),
+    );
     expect(rebound.modeled).toBe(true);
     expect(rebound.keywords).toContain('rebound');
   });
@@ -38,10 +44,16 @@ describe('oracle-text interpreter (brief §6)', () => {
   });
 
   it('models no-maximum-hand-size as a rule static', () => {
-    const def = interpretCard(oracle({
-      name: 'Test Tower', typeLine: 'Land', manaCost: null, power: null, toughness: null,
-      oracleText: 'You have no maximum hand size.\n{T}: Add {C}.',
-    }));
+    const def = interpretCard(
+      oracle({
+        name: 'Test Tower',
+        typeLine: 'Land',
+        manaCost: null,
+        power: null,
+        toughness: null,
+        oracleText: 'You have no maximum hand size.\n{T}: Add {C}.',
+      }),
+    );
     expect(def.modeled).toBe(true);
     expect(def.ruleStatics).toContainEqual({ kind: 'noMaximumHandSize' });
   });
@@ -168,7 +180,9 @@ describe('oracle-text interpreter (brief §6)', () => {
       }),
     );
     expect(def.modeled).toBe(true);
-    expect(def.spellAbility?.effects).toEqual([{ op: 'dealDamage', target: 0, amount: { kind: 'const', n: 3 } }]);
+    expect(def.spellAbility?.effects).toEqual([
+      { op: 'dealDamage', target: 0, amount: { kind: 'const', n: 3 } },
+    ]);
   });
 
   it('drops an ability word so the ability it labels still parses (CR 207.2c)', () => {
@@ -226,12 +240,16 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(gg.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
 
     const b = interpretCard(bolt());
-    expect(b.spellAbility?.effects).toEqual([{ op: 'dealDamage', target: 0, amount: { kind: 'const', n: 3 } }]);
+    expect(b.spellAbility?.effects).toEqual([
+      { op: 'dealDamage', target: 0, amount: { kind: 'const', n: 3 } },
+    ]);
     expect(b.spellAbility?.targets).toEqual([{ kind: 'anyTarget' }]);
 
     expect(interpretCard(doom()).spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }]);
     expect(interpretCard(cancel()).spellAbility?.effects).toEqual([{ op: 'counter', target: 0 }]);
-    expect(interpretCard(divination()).spellAbility?.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 2 } }]);
+    expect(interpretCard(divination()).spellAbility?.effects).toEqual([
+      { op: 'draw', count: { kind: 'const', n: 2 } },
+    ]);
     expect(interpretCard(divination()).spellAbility?.targets).toEqual([]);
   });
 
@@ -271,10 +289,11 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(dfc.modeled).toBe(false);
   });
 
-  it('marks unsupported cost symbols as unmodeled', () => {
+  it('models Phyrexian mana costs', () => {
     const def = interpretCard(oracle({ name: 'Phyrexian', manaCost: '{G/P}' }));
-    expect(def.modeled).toBe(false);
-    expect(def.hasUnsupportedCost).toBe(true);
+    expect(def.modeled).toBe(true);
+    expect(def.hasUnsupportedCost).toBe(false);
+    expect(def.manaCost?.phyrexian).toEqual(['G']);
   });
 
   it('models planeswalkers/battles with a readable starting loyalty/defense', () => {
@@ -367,9 +386,7 @@ describe('oracle-text interpreter (brief §6)', () => {
       }),
     );
     expect(vandalblast.modeled).toBe(true);
-    expect(vandalblast.spellAbility?.effects).toEqual([
-      { op: 'destroy', target: 0 },
-    ]);
+    expect(vandalblast.spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }]);
     expect(vandalblast.spellAbility?.targets[0]).toEqual({
       kind: 'artifact',
       controller: 'opponent',
@@ -386,9 +403,7 @@ describe('oracle-text interpreter (brief §6)', () => {
       }),
     );
     expect(vanishingVerse.modeled).toBe(true);
-    expect(vanishingVerse.spellAbility?.effects).toEqual([
-      { op: 'exile', target: 0 },
-    ]);
+    expect(vanishingVerse.spellAbility?.effects).toEqual([{ op: 'exile', target: 0 }]);
     expect(vanishingVerse.spellAbility?.targets[0]).toEqual({
       kind: 'permanent',
       filter: { kind: 'isMonocolored' },
@@ -406,9 +421,7 @@ describe('oracle-text interpreter (brief §6)', () => {
     );
     expect(fracture.modeled).toBe(true);
     expect(fracture.spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }]);
-    expect(fracture.spellAbility?.targets).toEqual([
-      { kind: 'artifactEnchantmentOrPlaneswalker' },
-    ]);
+    expect(fracture.spellAbility?.targets).toEqual([{ kind: 'artifactEnchantmentOrPlaneswalker' }]);
   });
 
   it('models a signet as a mana ability and a ritual as a spell effect', () => {
@@ -463,7 +476,9 @@ describe('oracle-text interpreter (brief §6)', () => {
       }),
     );
     expect(negate.modeled).toBe(true);
-    expect(negate.spellAbility?.targets).toEqual([{ kind: 'noncreatureSpell', controller: 'opponent' }]);
+    expect(negate.spellAbility?.targets).toEqual([
+      { kind: 'noncreatureSpell', controller: 'opponent' },
+    ]);
   });
 
   it('destroys target with an arbitrary permanent-type alternation not in the fixed compound list', () => {
@@ -482,7 +497,13 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(mortify.spellAbility?.targets).toEqual([
       {
         kind: 'permanent',
-        filter: { kind: 'anyOf', of: [{ kind: 'type', value: 'Creature' }, { kind: 'type', value: 'Enchantment' }] },
+        filter: {
+          kind: 'anyOf',
+          of: [
+            { kind: 'type', value: 'Creature' },
+            { kind: 'type', value: 'Enchantment' },
+          ],
+        },
       },
     ]);
   });
@@ -495,7 +516,8 @@ describe('oracle-text interpreter (brief §6)', () => {
         manaCost: '{U}',
         power: null,
         toughness: null,
-        oracleText: "Destroy target creature. It can't be regenerated. Its controller creates a 3/3 green Ape creature token.",
+        oracleText:
+          "Destroy target creature. It can't be regenerated. Its controller creates a 3/3 green Ape creature token.",
       }),
     );
     expect(pongify.modeled).toBe(true);
@@ -529,7 +551,7 @@ describe('oracle-text interpreter (brief §6)', () => {
 
     const whisper = interpretCard(
       oracle({
-        name: "Whisper Test",
+        name: 'Whisper Test',
         typeLine: 'Sorcery',
         manaCost: '{1}{B}',
         power: null,
@@ -602,7 +624,8 @@ describe('oracle-text interpreter (brief §6)', () => {
         manaCost: '{B}',
         power: '0',
         toughness: '1',
-        oracleText: 'Whenever Blood Artist Test or another creature dies, target player loses 1 life and you gain 1 life.',
+        oracleText:
+          'Whenever Blood Artist Test or another creature dies, target player loses 1 life and you gain 1 life.',
       }),
     );
     expect(bloodArtist.modeled).toBe(true);
@@ -619,7 +642,8 @@ describe('oracle-text interpreter (brief §6)', () => {
         manaCost: '{1}{B}',
         power: '1',
         toughness: '1',
-        oracleText: 'Whenever Zulaport Test or another creature you control dies, each opponent loses 1 life and you gain 1 life.',
+        oracleText:
+          'Whenever Zulaport Test or another creature you control dies, each opponent loses 1 life and you gain 1 life.',
       }),
     );
     expect(zulaport.modeled).toBe(true);
@@ -637,7 +661,8 @@ describe('oracle-text interpreter (brief §6)', () => {
         manaCost: '{3}{G}{G}',
         power: null,
         toughness: null,
-        oracleText: 'Choose one —\n• Draw cards equal to the greatest power among non-Human creatures you control.\n• Non-Human creatures you control get +3/+3 until end of turn.',
+        oracleText:
+          'Choose one —\n• Draw cards equal to the greatest power among non-Human creatures you control.\n• Non-Human creatures you control get +3/+3 until end of turn.',
       }),
     );
     expect(wildspeaker.modeled).toBe(true);
@@ -736,7 +761,8 @@ describe('oracle-text interpreter (brief §6)', () => {
         manaCost: '{1}{R}',
         power: null,
         toughness: null,
-        oracleText: 'Whenever a creature you control enters, this enchantment deals 1 damage to each opponent.',
+        oracleText:
+          'Whenever a creature you control enters, this enchantment deals 1 damage to each opponent.',
       }),
     );
     expect(tremors.modeled).toBe(true);
@@ -752,7 +778,8 @@ describe('oracle-text interpreter (brief §6)', () => {
         manaCost: '{2}{U}',
         power: null,
         toughness: null,
-        oracleText: 'Whenever a creature you control enters, exile target creature, then return this creature to its owner\'s hand.',
+        oracleText:
+          "Whenever a creature you control enters, exile target creature, then return this creature to its owner's hand.",
       }),
     );
     expect(backReference.modeled).toBe(false);
@@ -790,7 +817,13 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(instantOrSorcery.triggers?.[0]?.trigger).toMatchObject({
       when: 'castsSpell',
       caster: 'you',
-      filter: { kind: 'anyOf', of: [{ kind: 'type', value: 'Instant' }, { kind: 'type', value: 'Sorcery' }] },
+      filter: {
+        kind: 'anyOf',
+        of: [
+          { kind: 'type', value: 'Instant' },
+          { kind: 'type', value: 'Sorcery' },
+        ],
+      },
     });
   });
 
@@ -806,7 +839,9 @@ describe('oracle-text interpreter (brief §6)', () => {
       }),
     );
     expect(despark.modeled).toBe(true);
-    expect(despark.spellAbility?.targets).toEqual([{ kind: 'permanent', filter: { kind: 'manaValueAtLeast', n: 4 } }]);
+    expect(despark.spellAbility?.targets).toEqual([
+      { kind: 'permanent', filter: { kind: 'manaValueAtLeast', n: 4 } },
+    ]);
     expect(despark.spellAbility?.effects).toEqual([{ op: 'exile', target: 0 }]);
 
     const abruptDecay = interpretCard(
@@ -838,12 +873,18 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(ruinous.spellAbility?.effects).toEqual([
       {
         op: 'destroyEach',
-        selector: { kind: 'allOf', of: [{ kind: 'controller', who: 'opponents' }, { kind: 'not', of: { kind: 'type', value: 'Land' } }] },
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'controller', who: 'opponents' },
+            { kind: 'not', of: { kind: 'type', value: 'Land' } },
+          ],
+        },
       },
     ]);
   });
 
-  it('reads "a creature destroyed this way can\'t be regenerated" as the same no-op rider', () => {
+  it('attaches "a creature destroyed this way can\'t be regenerated" to destruction', () => {
     const damn = interpretCard(
       oracle({
         name: 'Damn Test',
@@ -855,7 +896,9 @@ describe('oracle-text interpreter (brief §6)', () => {
       }),
     );
     expect(damn.modeled).toBe(true);
-    expect(damn.spellAbility?.effects).toEqual([{ op: 'destroy', target: 0 }, { op: 'noOp' }]);
+    expect(damn.spellAbility?.effects).toEqual([
+      { op: 'destroy', target: 0, cantRegenerate: true },
+    ]);
   });
 
   it('reads a plain, unconditional cost reduction by type or by color', () => {
@@ -874,7 +917,13 @@ describe('oracle-text interpreter (brief §6)', () => {
       {
         kind: 'costReduction',
         amount: { kind: 'const', n: 1 },
-        filter: { kind: 'anyOf', of: [{ kind: 'type', value: 'Instant' }, { kind: 'type', value: 'Sorcery' }] },
+        filter: {
+          kind: 'anyOf',
+          of: [
+            { kind: 'type', value: 'Instant' },
+            { kind: 'type', value: 'Sorcery' },
+          ],
+        },
       },
     ]);
 
@@ -893,7 +942,13 @@ describe('oracle-text interpreter (brief §6)', () => {
       {
         kind: 'costReduction',
         amount: { kind: 'const', n: 1 },
-        filter: { kind: 'anyOf', of: [{ kind: 'color', value: 'R' }, { kind: 'color', value: 'G' }] },
+        filter: {
+          kind: 'anyOf',
+          of: [
+            { kind: 'color', value: 'R' },
+            { kind: 'color', value: 'G' },
+          ],
+        },
       },
     ]);
   });
@@ -944,7 +999,13 @@ describe('oracle-text interpreter (brief §6)', () => {
     expect(flawless.spellAbility?.effects).toEqual([
       {
         op: 'grantKeywordEachUntilEot',
-        selector: { kind: 'allOf', of: [{ kind: 'controller', who: 'you' }, { kind: 'type', value: 'Creature' }] },
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'controller', who: 'you' },
+            { kind: 'type', value: 'Creature' },
+          ],
+        },
         keyword: 'indestructible',
       },
     ]);
@@ -974,7 +1035,8 @@ describe('oracle-text interpreter (brief §6)', () => {
         manaCost: '{2}{U}',
         power: null,
         toughness: null,
-        oracleText: "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+        oracleText:
+          "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
       }),
     );
     expect(propaganda.modeled).toBe(true);
@@ -1096,7 +1158,7 @@ describe('oracle-text interpreter (brief §6)', () => {
       oracle({
         name: 'Count Shanna',
         typeLine: 'Legendary Creature',
-        oracleText: "~ gets +1/+1 for each creature you control.",
+        oracleText: '~ gets +1/+1 for each creature you control.',
       }),
     );
     expect(shanna.modeled).toBe(true);
@@ -1142,7 +1204,8 @@ describe('oracle-text interpreter (brief §6)', () => {
       oracle({
         name: 'Count Basandra',
         typeLine: 'Legendary Creature — Angel',
-        oracleText: "Flying\nPlayers can't cast spells during combat.\n{R}: Target creature attacks this turn if able.",
+        oracleText:
+          "Flying\nPlayers can't cast spells during combat.\n{R}: Target creature attacks this turn if able.",
       }),
     );
     expect(basandra.modeled).toBe(true);
@@ -1244,12 +1307,16 @@ describe('oracle-text interpreter (brief §6)', () => {
         typeLine: 'Enchantment — Aura',
         power: null,
         toughness: null,
-        oracleText: 'Enchant creature\nEnchanted creature gets +1/+1, has deathtouch, and is goaded.',
+        oracleText:
+          'Enchant creature\nEnchanted creature gets +1/+1, has deathtouch, and is goaded.',
       }),
     );
     expect(ghoulish.modeled).toBe(true);
     expect(ghoulish.staticEffects).toEqual([
-      { affects: { kind: 'attachedToSource' }, op: { layer: 7, sublayer: 'd', power: 1, toughness: 1 } },
+      {
+        affects: { kind: 'attachedToSource' },
+        op: { layer: 7, sublayer: 'd', power: 1, toughness: 1 },
+      },
       { affects: { kind: 'attachedToSource' }, op: { layer: 6, addKeyword: 'deathtouch' } },
       { affects: { kind: 'attachedToSource' }, op: { layer: 6, addGoad: true } },
     ]);
@@ -1276,7 +1343,8 @@ describe('oracle-text interpreter (brief §6)', () => {
         typeLine: 'Enchantment — Aura',
         power: null,
         toughness: null,
-        oracleText: 'Enchant creature\nEnchanted creature gets +3/+3, must be blocked if able, and is goaded.',
+        oracleText:
+          'Enchant creature\nEnchanted creature gets +3/+3, must be blocked if able, and is goaded.',
       }),
     );
     expect(unreadable.modeled).toBe(false);
@@ -1302,5 +1370,4 @@ describe('oracle-text interpreter (brief §6)', () => {
       of: { kind: 'countPermanents', scope: 'opponents' },
     });
   });
-
 });

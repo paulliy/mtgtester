@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "source": "Scryfall oracle-cards bulk data",
+  "retrievedAt": "2026-09-08",
+  "cards": [
+    {
+      "sha256": "8e7a10c283be40e58a317e2e269067277f9a9f8563c2f557422b9ee72eadf9d2",
+      "card": {
+        "oracleId": "c2b51295-8820-425f-a517-55231123c7de",
+        "scryfallId": "6c180888-6acd-401b-815a-6ed434482681",
+        "name": "Tribute Mage",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": ["U"],
+        "colorIdentity": ["U"],
+        "typeLine": "Creature — Human Wizard",
+        "supertypes": [],
+        "types": ["Creature"],
+        "subtypes": ["Human", "Wizard"],
+        "oracleText": "When this creature enters, you may search your library for an artifact card with mana value 2, reveal that card, put it into your hand, then shuffle.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b88ee58232045a057e42ccdce70c6a115048e5ce37d2dbd00eeb37c87ee36997",
+      "card": {
+        "oracleId": "77b832a8-a3af-44fe-bc67-72510d292667",
+        "scryfallId": "131ea976-289e-4f32-896d-27bbfd423ba9",
+        "name": "Gev, Scaled Scorch",
+        "manaCost": "{B}{R}",
+        "cmc": 2,
+        "colors": ["B", "R"],
+        "colorIdentity": ["B", "R"],
+        "typeLine": "Legendary Creature — Lizard Mercenary",
+        "supertypes": ["Legendary"],
+        "types": ["Creature"],
+        "subtypes": ["Lizard", "Mercenary"],
+        "oracleText": "Ward—Pay 2 life.\nOther creatures you control enter with an additional +1/+1 counter on them for each opponent who lost life this turn.\nWhenever you cast a Lizard spell, Gev deals 1 damage to target opponent.",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": ["Ward"],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "202bcffac838bc123f746413b6a484065753264e624d49a53aba2f51b3b80639",
+      "card": {
+        "oracleId": "57296ea3-3c0d-49b7-bc08-0d0d8414e9ad",
+        "scryfallId": "4cf1918f-ad58-4f62-bd8c-649919de0e75",
+        "name": "Nightscape Familiar",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": ["B"],
+        "colorIdentity": ["B"],
+        "typeLine": "Creature — Zombie",
+        "supertypes": [],
+        "types": ["Creature"],
+        "subtypes": ["Zombie"],
+        "oracleText": "Blue spells and red spells you cast cost {1} less to cast.\n{1}{B}: Regenerate this creature.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": ["Regenerate"],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4681435b0c455851a223742deeff9a29d95407a7824801e31dda9b479173a4ad",
+      "card": {
+        "oracleId": "01c179aa-533e-47e1-b6e5-c35587a39680",
+        "scryfallId": "3faed400-0712-4fc1-b710-144db40a5e11",
+        "name": "Thran Vigil",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": ["B"],
+        "colorIdentity": ["B"],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": ["Enchantment"],
+        "subtypes": [],
+        "oracleText": "Whenever one or more artifact and/or creature cards leave your graveyard during your turn, put a +1/+1 counter on target creature you control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "fe545e2745d11e9dc0bad5601cbd80e3c45b4ad87f0f7ab982ed13eaba7e9b75",
+      "card": {
+        "oracleId": "2e2ace5b-4018-43af-8e72-ebafec1a7739",
+        "scryfallId": "63a565e3-d7a8-469d-898f-49fef634c107",
+        "name": "Harmonic Prodigy",
+        "manaCost": "{1}{R}",
+        "cmc": 2,
+        "colors": ["R"],
+        "colorIdentity": ["R"],
+        "typeLine": "Creature — Human Wizard",
+        "supertypes": [],
+        "types": ["Creature"],
+        "subtypes": ["Human", "Wizard"],
+        "oracleText": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\nIf a triggered ability of a Shaman or another Wizard you control triggers, that ability triggers an additional time.",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": ["Prowess"],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

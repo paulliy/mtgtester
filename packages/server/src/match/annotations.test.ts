@@ -48,7 +48,11 @@ describe('releaseAnnotations — the hidden-information gate', () => {
 
 describe('releaseAnnotations — placement', () => {
   it('attaches an annotation to its own line when that line is visible', () => {
-    const result = releaseAnnotations({ ...SPECTATOR, pending: [note(4)], lines: [line(2), line(4)] });
+    const result = releaseAnnotations({
+      ...SPECTATOR,
+      pending: [note(4)],
+      lines: [line(2), line(4)],
+    });
 
     expect(result.due).toEqual([expect.objectContaining({ sequence: 4 })]);
     expect(result.held).toEqual([]);
@@ -56,13 +60,21 @@ describe('releaseAnnotations — placement', () => {
 
   it('snaps forward to the next visible line when the anchored event produced no log line', () => {
     // A pass logs nothing, so the decision's own sequence is often absent from the batch.
-    const result = releaseAnnotations({ ...SPECTATOR, pending: [note(3)], lines: [line(2), line(7)] });
+    const result = releaseAnnotations({
+      ...SPECTATOR,
+      pending: [note(3)],
+      lines: [line(2), line(7)],
+    });
 
     expect(result.due).toEqual([expect.objectContaining({ sequence: 7 })]);
   });
 
   it('never snaps backward — reasoning must not appear before the play it explains', () => {
-    const result = releaseAnnotations({ ...SPECTATOR, pending: [note(9)], lines: [line(2), line(7)] });
+    const result = releaseAnnotations({
+      ...SPECTATOR,
+      pending: [note(9)],
+      lines: [line(2), line(7)],
+    });
 
     expect(result.due).toEqual([]);
     expect(result.held).toEqual([expect.objectContaining({ sequence: 9 })]);

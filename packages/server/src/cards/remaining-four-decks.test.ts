@@ -74,13 +74,151 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
     const expectedUnmodeled = new Set([
       'Verrak, Warped Sengir',
       'Wandering Archaic // Explore the Vastlands',
-      // Study Hall's `{1}, {T}` cost is charged now (see
-      // `packages/engine/tests/mana-cost-in-mana-ability.test.ts`); what still stops it is the
-      // spend trigger it rides — "when you spend this mana to cast your commander, scry X".
-      'Study Hall',
       // Audit: incomplete mechanics must not silently simulate approximate card text.
-      'Pearl-Ear, Imperial Advisor', 'Killian, Decisive Mentor', "Sage's Reverie",
-      'Spirit Mantle', 'Scriv, the Obligator', "Songbirds' Blessing", 'Promise of Loyalty',
+      'Killian, Decisive Mentor',
+      'Spirit Mantle',
+      'Screams from Within',
+      "Songbirds' Blessing",
+      'Promise of Loyalty',
+      'Land Tax',
+      'Fabled Passage',
+      'Mob Rule',
+      'Caged Sun',
+      'Canoptek Tomb Sentinel',
+      'Forum of Amity',
+      'Plasmancer',
+      'Psychomancer',
+      'Anrakyr the Traveller',
+      'Beacon of Unrest',
+      'Canoptek Wraith',
+      'Convergence of Dominion',
+      'Endless Atlas',
+      'Ghost Ark',
+      'Hexmark Destroyer',
+      'Imotekh the Stormlord',
+      'Myriad Landscape',
+      'Mystic Forge',
+      'Triarch Praetorian',
+      'Triarch Stalker',
+      'Biotransference',
+      'Dread Return',
+      'Illuminor Szeras',
+      'Necron Deathmark',
+      'Sceptre of Eternal Glory',
+      'Shard of the Void Dragon',
+      'The War in Heaven',
+      'Their Number Is Legion',
+      'Cryptek',
+      'Out of the Tombs',
+      'Resurrection Orb',
+      'Shard of the Nightbringer',
+      'Szarekh, the Silent King',
+      'Tomb Fortress',
+      'Mask of Memory',
+      'Sautekh Immortal',
+      'Trazyn the Infinite',
+      'Canoptek Spyder',
+      'Cranial Plating',
+      'Tomb Blade',
+      'Living Death',
+      'Technomancer',
+      // Catalog audit batch 1: retarget authored as copyTargetSpell.
+      'Bolt Bend',
+      'Deflecting Swat',
+      'Body Launderer',
+      'Aether Channeler',
+      'Cytoplast Manipulator',
+      'Flayer of the Hatebound',
+      'Blasphemous Edict',
+      'Flare of Denial',
+      'Flare of Duplication',
+      'Flare of Malice',
+      'River Kelpie',
+      'Twilight Diviner',
+      'Toxic Deluge',
+      'Pensive Professor',
+      'Puppeteer Clique',
+      'Sage of Fables',
+      'Satoru, the Infiltrator',
+      'Siren Stormtamer',
+      'Smokestack',
+      'The Ooze',
+      'Watcher for Tomorrow',
+      'Carrion Feeder',
+      'Dark Confidant',
+      'Gleeful Arsonist',
+      'Glen Elendra Archmage',
+      'Grim Haruspex',
+      'Iron Apprentice',
+      'Kardur, Doomscourge',
+      'Mana Sculpt',
+      'Vindictive Lich',
+      'Vigean Graftmage',
+      "Angel's Grace",
+      'Display of Power',
+      'Nighthawk Scavenger',
+      'Nils, Discipline Enforcer',
+      "Olórin's Searing Light",
+      'Reverberate',
+      "Tibalt's Trickery",
+      'Animate Dead',
+      'Arcane Lighthouse',
+      'Changing Loyalty',
+      'Eldrazi Conscription',
+      'Fallen Ideal',
+      'Firemane Commando',
+      'Hateful Eidolon',
+      "Ajani's Chosen",
+      'Angelic Destiny',
+      'Armored Skyhunter',
+      "Defacing Duskmage // Vandal's Edit",
+      'Eidolon of Countless Battles',
+      'Eiganjo Dynastorian // Replenish',
+      'Eriette of the Charmed Apple',
+      'Forum Filibuster',
+      'Gift of Immortality',
+      'Ghoulish Impetus',
+      'Herald of Amity',
+      'Intermediate Chirography',
+      'Keen Duelist',
+      'Killian, Ink Duelist',
+      'Kor Spiritdancer',
+      'Martial Impetus',
+      "Raffine's Guidance",
+      'Redemption Arc',
+      'Sheltered by Ghosts',
+      'Shielded by Faith',
+      'Tomik, Wielder of Law',
+      'War Room',
+      'Combat Calligrapher',
+      'Comeuppance',
+      'Dream Devourer',
+      'Malakir Rebirth // Malakir Mire',
+      'Mangara, the Diplomat',
+      'Michiko Konda, Truth Seeker',
+      'Mistveil Plains',
+      'Valakut Awakening // Valakut Stoneforge',
+      'Wear // Tear',
+      'Cut a Deal',
+      'Sunforger',
+      'Chaos Warp',
+      'Delirium',
+      "Duelist's Heritage",
+      'Humble Defector',
+      'Selfless Squire',
+      'Smothering Tithe',
+      'Teyo, Geometric Tactician',
+      'Weathered Wayfarer',
+      'Wishclaw Talisman',
+      'Arcbond',
+      'Backlash',
+      'Brash Taunter',
+      'Breena, the Demagogue',
+      'Deflecting Palm',
+      'Loran of the Third Path',
+      'Scheming Symmetry',
+      'Kambal, Consul of Allocation',
+      'Shadrix Silverquill',
     ]);
     const observedUnmodeled = new Set<string>();
     for (const slug of deckSlugs) {
@@ -92,7 +230,10 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
         const def = interpretCard(realCard(name));
         if (!def.modeled) {
           observedUnmodeled.add(name);
-          expect(def.unmodeledReasons.length, `${slug}: ${name} must fail closed with a reason`).toBeGreaterThan(0);
+          expect(
+            def.unmodeledReasons.length,
+            `${slug}: ${name} must fail closed with a reason`,
+          ).toBeGreaterThan(0);
           continue;
         }
         expect(def.unmodeledReasons, `${slug}: ${name} still has parser reasons`).toEqual([]);
@@ -101,46 +242,52 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
     expect(observedUnmodeled).toEqual(expectedUnmodeled);
   });
 
-  it.each(deckSlugs)('starts %s in single-player mode and reaches a human decision', async (slug) => {
-    const deckData = deck(slug);
-    const sent: ServerToClientMessage[] = [];
-    const session = new MatchSession({
-      gameId: `coverage-${slug}-single-player`,
-      seed: `coverage-${slug}-single-player`,
-      seats: ['P1', 'P2', 'P3', 'P4'].map((seatId) => seat(seatId, deckData)),
-      providerKind: 'random',
-      gameMode: 'singlePlayer',
-      humanSeat: 'P1',
-      turnCap: 12,
-      livePaceMs: 0,
-      send: (message) => sent.push(message),
-    });
-    session.start();
+  it.each(deckSlugs)(
+    'starts %s in single-player mode and reaches a human decision',
+    async (slug) => {
+      const deckData = deck(slug);
+      const sent: ServerToClientMessage[] = [];
+      const session = new MatchSession({
+        gameId: `coverage-${slug}-single-player`,
+        seed: `coverage-${slug}-single-player`,
+        seats: ['P1', 'P2', 'P3', 'P4'].map((seatId) => seat(seatId, deckData)),
+        providerKind: 'random',
+        gameMode: 'singlePlayer',
+        humanSeat: 'P1',
+        turnCap: 12,
+        livePaceMs: 0,
+        send: (message) => sent.push(message),
+      });
+      session.start();
 
-    const deadline = Date.now() + 8_000;
-    while (
-      !sent.some((message) => message.type === 'playerActionRequired') &&
-      !sent.some((message) => message.type === 'error') &&
-      Date.now() < deadline
-    ) {
-      await new Promise((resolvePromise) => setTimeout(resolvePromise, 5));
-    }
-    const required = sent.find(
-      (message): message is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>
-        message.type === 'playerActionRequired',
-    );
-    expect(sent.some((message) => message.type === 'error')).toBe(false);
-    expect(required).toBeDefined();
+      const deadline = Date.now() + 8_000;
+      while (
+        !sent.some((message) => message.type === 'playerActionRequired') &&
+        !sent.some((message) => message.type === 'error') &&
+        Date.now() < deadline
+      ) {
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, 5));
+      }
+      const required = sent.find(
+        (message): message is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>
+          message.type === 'playerActionRequired',
+      );
+      expect(sent.some((message) => message.type === 'error')).toBe(false);
+      expect(required).toBeDefined();
 
-    const response = new RandomDecisionProvider(`coverage-${slug}-human-check`).decide(required!.payload.request);
-    session.submitPlayerAction({
-      requestId: response.requestId,
-      actionId: response.actionId,
-      revision: required!.payload.revision,
-      ...(response.targets !== undefined ? { targets: response.targets } : {}),
-    });
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 30));
-    session.abandon();
-    await session.settled();
-  }, 12_000);
+      const response = new RandomDecisionProvider(`coverage-${slug}-human-check`).decide(
+        required!.payload.request,
+      );
+      session.submitPlayerAction({
+        requestId: response.requestId,
+        actionId: response.actionId,
+        revision: required!.payload.revision,
+        ...(response.targets !== undefined ? { targets: response.targets } : {}),
+      });
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 30));
+      session.abandon();
+      await session.settled();
+    },
+    12_000,
+  );
 });

@@ -75,7 +75,10 @@ describe("Akroma's Will", () => {
     // "Choose one … you may choose both instead" — one normally, two with a commander out.
     expect(modes!.minChoices).toBe(1);
     expect(modes!.maxChoices).toBe(1);
-    expect(modes!.maxChoicesIf).toEqual({ condition: { kind: 'controlsYourCommander' }, maxChoices: 2 });
+    expect(modes!.maxChoicesIf).toEqual({
+      condition: { kind: 'controlsYourCommander' },
+      maxChoices: 2,
+    });
 
     // Bullet 1: three keywords, the third of which is the Oxford-list element that used to be
     // read as "and double strike" and rejected.
@@ -106,7 +109,12 @@ describe("Akroma's Will", () => {
     const ability = def.spellAbility as Ability;
     const bullet = ability.modes!.options[1]!;
     pump(
-      executeAbility(ctx, permanentSource(target), { kind: 'spell', targets: [], effects: bullet.effects }, []),
+      executeAbility(
+        ctx,
+        permanentSource(target),
+        { kind: 'spell', targets: [], effects: bullet.effects },
+        [],
+      ),
     );
 
     const chars = computeCharacteristics(ctx, target);
@@ -125,7 +133,12 @@ describe("Akroma's Will", () => {
     const def = interpretCard(akromasWill());
     const bullet = (def.spellAbility as Ability).modes!.options[1]!;
     pump(
-      executeAbility(ctx, permanentSource(early), { kind: 'spell', targets: [], effects: bullet.effects }, []),
+      executeAbility(
+        ctx,
+        permanentSource(early),
+        { kind: 'spell', targets: [], effects: bullet.effects },
+        [],
+      ),
     );
 
     const late = spawn(ctx, 'P1', bear());

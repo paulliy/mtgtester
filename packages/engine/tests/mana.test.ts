@@ -34,12 +34,21 @@ describe('mana cost parsing', () => {
     expect(parseManaCost('').cost?.generic).toBe(0);
   });
 
-  it('reports Phyrexian, generic-hybrid, and snow symbols as unsupported', () => {
-    for (const costStr of ['{2/W}', '{G/P}', '{S}']) {
+  it('reports generic-hybrid and snow symbols as unsupported', () => {
+    for (const costStr of ['{2/W}', '{S}']) {
       const result = parseManaCost(costStr);
       expect(result.cost).toBeNull();
       expect(result.unsupportedSymbols.length).toBeGreaterThan(0);
     }
+  });
+
+  it('parses Phyrexian mana symbols as colored-or-two-life pips', () => {
+    expect(parseManaCost('{1}{W/P}{G/P}').cost).toEqual({
+      generic: 1,
+      colored: { W: 0, U: 0, B: 0, R: 0, G: 0 },
+      colorless: 0,
+      phyrexian: ['W', 'G'],
+    });
   });
 
   it('parses hybrid mana symbols into hybrid pips', () => {
@@ -161,9 +170,17 @@ describe('payment plan produced mana', () => {
   });
 
   it('does not overtap lands: a {G}{U} spell with 3 lands available only taps 2 lands', () => {
-    const haven: ManaSource = { cardId: 'haven', units: [['W', 'U', 'B', 'R', 'G']], costs: TAP_COST };
+    const haven: ManaSource = {
+      cardId: 'haven',
+      units: [['W', 'U', 'B', 'R', 'G']],
+      costs: TAP_COST,
+    };
     const cemetery: ManaSource = { cardId: 'cemetery', units: [['B', 'G']], costs: TAP_COST };
-    const maelstrom: ManaSource = { cardId: 'maelstrom', units: [['W', 'U', 'B', 'R', 'G']], costs: TAP_COST };
+    const maelstrom: ManaSource = {
+      cardId: 'maelstrom',
+      units: [['W', 'U', 'B', 'R', 'G']],
+      costs: TAP_COST,
+    };
 
     const plan = planPayment(parseManaCost('{G}{U}').cost!, pool(), [haven, cemetery, maelstrom]);
     expect(plan).not.toBeNull();
@@ -171,7 +188,11 @@ describe('payment plan produced mana', () => {
   });
 
   it('any-color land + single-color land paying {G}{U}: succeeds in both orderings', () => {
-    const anyColor: ManaSource = { cardId: 'anyColor', units: [['W', 'U', 'B', 'R', 'G']], costs: TAP_COST };
+    const anyColor: ManaSource = {
+      cardId: 'anyColor',
+      units: [['W', 'U', 'B', 'R', 'G']],
+      costs: TAP_COST,
+    };
     const forest: ManaSource = { cardId: 'forest', units: [['G']], costs: TAP_COST };
 
     // Any-color land first

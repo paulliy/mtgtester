@@ -1,30 +1,59 @@
 import fs from 'fs';
 import { resolve } from 'node:path';
-import {
-  makeEngine,
-  RuleBasedProvider,
-  whenChoose,
-} from '../../../engine/tests/fixtures';
+import { makeEngine, RuleBasedProvider, whenChoose } from '../../../engine/tests/fixtures';
+import { interpretCard } from '../../../engine/src/cards/interpret';
 import type { Engine } from '../../../engine/src/engine';
 import { loadScryfallBulkOrNull } from '../cards/scryfall-bulk-fixture';
 import { toOracleCard } from '../cards/scryfall';
 import type { OracleCard } from '@mtg/shared';
 import type { RawScryfallCard } from '../cards/scryfall';
 import { parsePlaintextDeck } from '../decks/plaintext';
+import { type CheckResult, RequiredInputError } from './card-test-reporting';
 
 /**
- * Drive up to `maxSteps` decisions, stopping early on game-over. Unlike `drive()` (which runs
- * to game-over or throws), a two-player free-for-all deck test doesn't reliably reach game-over
- * in a fixed budget — the point here is proving the deck plays without crashing, not finishing
- * the game.
+ * A deterministic, bounded rules-engine smoke. This does not evaluate gameplay AI and does not
+ * prove any individual card: it records only events the engine actually observed.
  */
-function runBoundedMatch(engine: Engine, provider: RuleBasedProvider, maxSteps: number): void {
+export function runBoundedMatch(
+  engine: Engine,
+  provider: RuleBasedProvider,
+  maxSteps: number,
+): {
+  completed: boolean;
+  budgetExhausted: boolean;
+  decisions: number;
+  casts: number;
+  activations: number;
+  resolutions: number;
+  turnReached: number;
+  halted: boolean;
+  haltReason: string | null;
+} {
+  let completed = false;
+  let decisions = 0;
   for (let i = 0; i < maxSteps; i++) {
     const step = engine.advance();
-    if (step.kind === 'gameOver') return;
+    if (step.kind === 'gameOver') {
+      completed = true;
+      break;
+    }
     if (step.kind === 'continue') continue;
     engine.submit(provider.decide(step.request));
+    decisions++;
   }
+  const events = engine.getState().eventLog;
+  const result = engine.getResult();
+  return {
+    completed,
+    budgetExhausted: !completed,
+    decisions,
+    casts: events.filter((event) => event.type === 'castSpell').length,
+    activations: events.filter((event) => event.type === 'activateAbility').length,
+    resolutions: events.filter((event) => event.type === 'resolved').length,
+    turnReached: engine.getState().turnNumber,
+    halted: result?.halted ?? false,
+    haltReason: result?.haltReason ?? null,
+  };
 }
 
 /** The bulk file, loaded on first use. Throws rather than skipping: this is a CLI harness a
@@ -32,7 +61,7 @@ function runBoundedMatch(engine: Engine, provider: RuleBasedProvider, maxSteps: 
 function bulk(): RawScryfallCard[] {
   const cards = loadScryfallBulkOrNull();
   if (cards === null) {
-    throw new Error(
+    throw new RequiredInputError(
       'data/scryfall-oracle-cards.json is required for this harness — see data/README.md.',
     );
   }
@@ -47,7 +76,7 @@ function getOracleCard(name: string): OracleCard {
   return card;
 }
 
-export function loadTokenTriumphDeck(): OracleCard[] {
+export function loadTokenTriumphDeck(): { commander: OracleCard; cards: OracleCard[] } {
   const text = fs.readFileSync(
     resolve('packages/server/fixtures/coverage-decks/token-triumph.txt'),
     'utf8',
@@ -59,6 +88,11 @@ export function loadTokenTriumphDeck(): OracleCard[] {
     if (card) cardMap.set(card.name, card);
   }
 
+  const commanderName = parsed.commanderNames[0];
+  if (commanderName === undefined) throw new Error('Token Triumph deck has no commander');
+  const commander = cardMap.get(commanderName);
+  if (commander === undefined) throw new Error(`Card not found: ${commanderName}`);
+
   const deckCards: OracleCard[] = [];
   for (const entry of parsed.cards) {
     const card = cardMap.get(entry.name);
@@ -66,54 +100,75 @@ export function loadTokenTriumphDeck(): OracleCard[] {
       for (let i = 0; i < entry.quantity; i++) deckCards.push(card);
     }
   }
-  return deckCards;
+  return { commander, cards: deckCards };
 }
 
-export function runL4PracticeMatch(): { success: boolean; cardsTestedCount: number } {
-  console.log('Running L4 CLI Practice Match Harness with Token Triumph Deck...');
-  const deckCards = loadTokenTriumphDeck();
+function runRuleBasedBoundedSmoke(id: string, label: string, seed: string): CheckResult {
+  const { commander, cards: deckCards } = loadTokenTriumphDeck();
   const forestCard = getOracleCard('Forest');
   const plainsCard = getOracleCard('Plains');
 
   const p2Cards: OracleCard[] = Array.from({ length: 100 }, (_, i) =>
     i % 2 === 0 ? forestCard : plainsCard,
   );
+  let replacement = 0;
+  const supportedDeck = deckCards.map((card) =>
+    interpretCard(card).modeled ? card : replacement++ % 2 === 0 ? forestCard : plainsCard,
+  );
 
-  const engine = makeEngine([{ cards: deckCards }, { cards: p2Cards }], {
-    seed: 'l4-practice-seed',
+  const engine = makeEngine([{ commander, cards: supportedDeck }, { cards: p2Cards }], {
+    seed,
   });
-
-  const provider = new RuleBasedProvider([whenChoose({ option: /./ })]);
-
-  runBoundedMatch(engine, provider, 20_000);
-  console.log(`L4 Practice Match complete. Turn reached: ${engine.getState().turnNumber}`);
-  return { success: true, cardsTestedCount: deckCards.length };
+  const provider = new RuleBasedProvider([
+    whenChoose({ option: /^Play /, once: false }),
+    whenChoose({ option: /^Cast /, once: false }),
+  ]);
+  const observed = runBoundedMatch(engine, provider, 20_000);
+  const status =
+    !observed.halted &&
+    observed.decisions > 0 &&
+    observed.turnReached > 1 &&
+    observed.casts > 0 &&
+    observed.resolutions > 0
+      ? ('passed' as const)
+      : ('failed' as const);
+  return {
+    id,
+    label,
+    kind: 'bounded-engine',
+    status,
+    executed: observed.decisions,
+    passed: status === 'passed' ? 1 : 0,
+    failed: status === 'failed' ? 1 : 0,
+    skipped: 0,
+    detail:
+      `${observed.completed ? 'game completed' : 'decision budget exhausted'}; ` +
+      `${observed.decisions} decisions, ${observed.casts} casts, ` +
+      `${observed.activations} activations, ${observed.resolutions} resolutions, ` +
+      `turn ${observed.turnReached}` +
+      (observed.haltReason === null ? '' : `; halted: ${observed.haltReason}`),
+  };
 }
 
-export function runL6SpectatorMatch(): { success: boolean; aiPassCount: number } {
-  console.log('Running L6 Spectator AI-vs-AI Verification Harness with Token Triumph Deck...');
-  const deckCards = loadTokenTriumphDeck();
-  const forestCard = getOracleCard('Forest');
-  const plainsCard = getOracleCard('Plains');
-
-  const p2Cards: OracleCard[] = Array.from({ length: 100 }, (_, i) =>
-    i % 2 === 0 ? forestCard : plainsCard,
+export function runL4PracticeMatch(): CheckResult {
+  return runRuleBasedBoundedSmoke(
+    'l4-bounded-rules',
+    'L4 deterministic bounded rules-engine smoke',
+    'l4-practice-seed',
   );
+}
 
-  const engine = makeEngine([{ cards: deckCards }, { cards: p2Cards }], {
-    seed: 'l6-spectator-seed',
-  });
-
-  const provider = new RuleBasedProvider([whenChoose({ option: /./ })]);
-
-  runBoundedMatch(engine, provider, 20_000);
-  console.log(
-    `L6 Spectator Match complete. Game ended cleanly with turn ${engine.getState().turnNumber}`,
+export function runL6SpectatorMatch(): CheckResult {
+  return runRuleBasedBoundedSmoke(
+    'l6-bounded-policy',
+    'L6 deterministic rule-based-provider bounded smoke',
+    'l6-spectator-seed',
   );
-  return { success: true, aiPassCount: deckCards.length };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  runL4PracticeMatch();
-  runL6SpectatorMatch();
+  for (const result of [runL4PracticeMatch(), runL6SpectatorMatch()]) {
+    console.log(`${result.label}: ${result.status.toUpperCase()} — ${result.detail}`);
+    if (result.status !== 'passed') process.exitCode = 1;
+  }
 }

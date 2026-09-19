@@ -237,8 +237,8 @@ surface they need, rather than by their sentence, produces clusters of 5–15 ca
 
 It was written before Tier 2 landed, and four of its entries are now wrong:
 
-| Old claim                    | Reality (measured)                                                                                                                             |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Old claim                    | Reality (measured)                                                                                                                              |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | cascade (Maelstrom Wanderer) | **Already closed.** `cascade` is an `IMPLEMENTED_KEYWORDS` member with a resolver; Maelstrom Wanderer is `modeled: true`.                       |
 | Avenger of Zendikar          | **Already closed** — `modeled: true`. Landfall parses as `enters` with a land subject.                                                          |
 | Sun Titan                    | **Not Tier 3.** "enters or attacks" already splits into two abilities (`interpret.ts:2330`). It is blocked only on Tier 1 item 1.12's phrasing. |
@@ -253,7 +253,7 @@ Two further findings from the same pass, both of which should be fixed **before*
   623/802 and today's measured **621/802 (77.4%)**.
 - **`tokenCountMultiplier`'s regex misses Anointed Procession**, a top-20 EDH staple. It requires
   `…creates twice that many instead`; Anointed Procession prints `…creates twice that many of
-  those tokens instead`. Doubling Season matches, Anointed Procession does not. One optional group
+those tokens instead`. Doubling Season matches, Anointed Procession does not. One optional group
   in `interpret.ts:3337` — Tier 1 cost, inside Tier 2.7's own family.
 
 ### The principle, restated for the tail
@@ -276,13 +276,13 @@ Ordered by cards-per-unit-work, as everywhere else in this plan.
 of the most common EDH trigger events are simply not in the vocabulary: 7 fixture cards mention a
 sacrifice event, 3 a token-creation event, and the draw event blocks four staples.
 
-| Item | Event                                                        | Where it fires from                                                                                                                                                                                                                                                                                                     | Unlocks                                                              |
-| ---- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 3.A1 | `sacrificed` as an `ObjectTriggerWhen`                       | Needs a chokepoint. Sacrifice is spread across the `sacrifice*` ops and the `sacrificeSelf`/`sacrificeOther` costs, all funnelling into `moveObject` — which does **not** carry a reason. Add a reason to `MoveDestination` (or a thin `sacrificePermanent()` wrapper) and fire from there, once.                        | Mayhem Devil, Korvold, Mirkwood Bats' second half, 7 fixture cards    |
-| 3.A2 | `tokenCreated` as an `ObjectTriggerWhen`                     | `objects.ts::createTokens` is already the single chokepoint — it is where `tokenCountMultiplier` and `applyTokenCreationReplacements` hook. Fire once per creation event, **after** the multiplier, so a doubled creation triggers on the real count.                                                                     | Mirkwood Bats, 3 fixture cards                                        |
-| 3.A3 | `drawsCard` on `queuePlayerTriggersForEvent`                 | Widen the hardcoded `when: 'gainsLife'` parameter to a union and fire from `resolve.ts::drawCards`, already the single draw path (mulligan and turn draw both route through it).                                                                                                                                          | Consecrated Sphinx, Nekusar, Orcish Bowmasters, Notion Thief (partly) |
-| 3.A4 | `except the first one they draw in each of their draw steps` | A per-player, per-turn counter on `EnginePlayerState`, reset in `turn.ts` beside `landsPlayedThisTurn`. Expressed as a `Condition` on the trigger spec, not as a new event.                                                                                                                                               | Orcish Bowmasters, Notion Thief                                       |
-| 3.A5 | `putIntoGraveyardFromAnywhere` / `leavesGraveyard`           | Both are `moveObject` observations. The narrowest useful form is Syr Konrad's three-way head; do not generalize past what parses.                                                                                                                                                                                         | Syr Konrad                                                            |
+| Item | Event                                                        | Where it fires from                                                                                                                                                                                                                                                                               | Unlocks                                                               |
+| ---- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 3.A1 | `sacrificed` as an `ObjectTriggerWhen`                       | Needs a chokepoint. Sacrifice is spread across the `sacrifice*` ops and the `sacrificeSelf`/`sacrificeOther` costs, all funnelling into `moveObject` — which does **not** carry a reason. Add a reason to `MoveDestination` (or a thin `sacrificePermanent()` wrapper) and fire from there, once. | Mayhem Devil, Korvold, Mirkwood Bats' second half, 7 fixture cards    |
+| 3.A2 | `tokenCreated` as an `ObjectTriggerWhen`                     | `objects.ts::createTokens` is already the single chokepoint — it is where `tokenCountMultiplier` and `applyTokenCreationReplacements` hook. Fire once per creation event, **after** the multiplier, so a doubled creation triggers on the real count.                                             | Mirkwood Bats, 3 fixture cards                                        |
+| 3.A3 | `drawsCard` on `queuePlayerTriggersForEvent`                 | Widen the hardcoded `when: 'gainsLife'` parameter to a union and fire from `resolve.ts::drawCards`, already the single draw path (mulligan and turn draw both route through it).                                                                                                                  | Consecrated Sphinx, Nekusar, Orcish Bowmasters, Notion Thief (partly) |
+| 3.A4 | `except the first one they draw in each of their draw steps` | A per-player, per-turn counter on `EnginePlayerState`, reset in `turn.ts` beside `landsPlayedThisTurn`. Expressed as a `Condition` on the trigger spec, not as a new event.                                                                                                                       | Orcish Bowmasters, Notion Thief                                       |
+| 3.A5 | `putIntoGraveyardFromAnywhere` / `leavesGraveyard`           | Both are `moveObject` observations. The narrowest useful form is Syr Konrad's three-way head; do not generalize past what parses.                                                                                                                                                                 | Syr Konrad                                                            |
 
 **Risk.** 3.A1 is the one with teeth: getting the chokepoint wrong means either double-firing (a
 sacrifice that is also a state-based death) or missing cost-paid sacrifices, which are the common
@@ -332,7 +332,7 @@ written before the lift.
 
 - **How many lands may I play?** `legal.ts:577` and `legal.ts:605` both test
   `player.landsPlayedThisTurn < 1` inline.
-- **From which zone?** `RuleStatic` has `castFromZone` with `zone: 'libraryTop'`, for *spells*
+- **From which zone?** `RuleStatic` has `castFromZone` with `zone: 'libraryTop'`, for _spells_
   only. Playing a **land** from anywhere but the hand has no representation at all.
 
 1. **`{ kind: 'additionalLandDrops'; count: Value }` `RuleStatic`**, plus a
@@ -349,7 +349,7 @@ written before the lift.
    **Muldrotha**.
 3. **`Play with the top card of your library revealed`** — a visibility change, not a rules change:
    it belongs in `view.ts`, not in `RuleStatic`. Needed by Oracle and Courser, and the item most
-   likely to be mis-scoped, because the engine must reveal that card to *every* `PlayerView`
+   likely to be mis-scoped, because the engine must reveal that card to _every_ `PlayerView`
    without leaking the rest of the library (brief §7.1). Its own commit, with a view-level test.
 4. **Widen `cantCastSpells` to cover activated abilities.** The static already carries
    `who`/`yourTurnOnly`; Grand Abolisher additionally bars "activate abilities of artifacts,
@@ -369,14 +369,14 @@ What is missing is a `from: 'graveyard'` on `AlternativeCast` and its legality p
 
 1. `AlternativeCast.from?: 'hand' | 'graveyard'` (defaulting to hand), plus "exile it as it
    resolves or is countered" (CR 702.33a) — a post-resolution replacement, not a rider effect.
-2. Parse `Flashback {2}{R}` and `Flashback—{1}{U}, Pay 3 life.` The em-dash form is *already* the
+2. Parse `Flashback {2}{R}` and `Flashback—{1}{U}, Pay 3 life.` The em-dash form is _already_ the
    Tier 2.5 shape: a mana cost plus a typed non-mana cost.
    Unlocks **Faithless Looting**, **Deep Analysis**.
 3. Parse `Escape—{G}{G}{U}{U}, Exile five other cards from your graveyard.` plus the `it escaped`
    condition Uro reads back — which needs a "was cast for its escape cost" flag on the stack
    object, something nothing carries today.
    Unlocks **Uro**, 1 fixture card (`Escape—{2}{R}{G}, Exile three other cards…`).
-4. **Defer** the statics that *grant* flashback or escape to other cards (Past in Flames,
+4. **Defer** the statics that _grant_ flashback or escape to other cards (Past in Flames,
    Underworld Breach) to 3.H. They need a granted-ability-over-a-zone mechanism nothing else needs.
 
 ### 3.E — Library and hand ordering (~7 cards)
@@ -400,7 +400,7 @@ staples in the whole backlog sit here.
 
 **The gap.** `ManaAbilitySpec.dynamic` has three members (`commanderIdentity`,
 `opponentLandColors`, `chosenColor`). The two recurring EDH shapes it lacks are colour-counting,
-and mana produced as a rider on *tapping a land* — an event the engine has no representation for.
+and mana produced as a rider on _tapping a land_ — an event the engine has no representation for.
 
 1. `DynamicManaKind: 'colorsAmongPermanents'` — "For each color among permanents you control, add
    one mana of that color". Pairs with a `colorsAmongPermanents` **`Value`** for the P/T half.
@@ -455,7 +455,7 @@ time. Listed so the backlog stays visible:
   Provisioner, Inspiring Call, Sylvan Library.
 - **Individually cheap; take opportunistically** when a neighbouring sub-tier is already open:
   **Farewell** (needs only `exile all graveyards` — its other three bullets parse today), **Swan
-  Song** and **An Offer You Can't Refuse** (counter, then a token for the *target's* controller),
+  Song** and **An Offer You Can't Refuse** (counter, then a token for the _target's_ controller),
   **Assassin's Trophy** (`searchLibrary` run for another player).
 
 That last bullet is worth reading twice: **three of the "bespoke" cards share one missing
@@ -501,8 +501,8 @@ Phase 4's re-triage is done, and Tier 3 now has its own ordering. The two prereq
 optional: P1 restores two cards the drift guard has already flipped off, and P2 restores the
 instrument the rest of this table is measured with.
 
-| Phase | Content                                                                       | Expected (fixture aggregate) |
-| ----- | ----------------------------------------------------------------------------- | ---------------------------- |
+| Phase | Content                                                                        | Expected (fixture aggregate) |
+| ----- | ------------------------------------------------------------------------------ | ---------------------------- |
 | P1    | Un-strand the two `modal_dfc` overrides; fix the Anointed Procession regex     | 621 → ~623                   |
 | P2    | Commit the 200-staple checker and its card list (see below)                    | —                            |
 | 3.A   | Trigger-event vocabulary — sacrifice, token-created, draw, graveyard-crossing  | ~623 → ~633                  |

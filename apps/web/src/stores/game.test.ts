@@ -10,11 +10,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import type {
-  ClientToServerMessage,
-  ServerToClientMessage,
-  SpectatorLogLine,
-} from '@mtg/shared';
+import type { ClientToServerMessage, ServerToClientMessage, SpectatorLogLine } from '@mtg/shared';
 
 /** Frames the store handed to the socket, newest last. */
 const sent: ClientToServerMessage[] = [];
@@ -64,8 +60,8 @@ function seed(store: Store, viewTurn: number, active: number | null): void {
 /** The `jumpToTurn` payloads the store emitted. */
 function jumps(): Array<{ turn: number; sequence?: number }> {
   return sent
-    .filter((m): m is Extract<ClientToServerMessage, { type: 'jumpToTurn' }> =>
-      m.type === 'jumpToTurn',
+    .filter(
+      (m): m is Extract<ClientToServerMessage, { type: 'jumpToTurn' }> => m.type === 'jumpToTurn',
     )
     .map((m) => m.payload);
 }
@@ -180,7 +176,7 @@ describe('spectator store — server-confirmed position', () => {
     expect(store.activeSequence).toBeNull();
   });
 
-  it('drops the previous game\'s position when a new game starts', () => {
+  it("drops the previous game's position when a new game starts", () => {
     seed(store, 2, 18);
     expect(store.activeSequence).toBe(18);
 

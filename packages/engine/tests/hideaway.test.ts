@@ -23,7 +23,10 @@ const mosswortBridge = () =>
 
 function pod(seed = 'hideaway-test'): GameContext {
   const ctx = createGame(
-    gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;

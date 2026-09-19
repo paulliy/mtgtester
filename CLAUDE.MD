@@ -1,161 +1,101 @@
--# MTG Commander AI Simulator
+# MTG Tester contributor guide
 
-Read [docs/mtg-commander-ai-simulator-brief.md](docs/mtg-commander-ai-simulator-brief.md)
-in full before writing any code. It is the original v1 spec — do not start implementing
-until you've read it. (The brief and this file historically referenced
-`docs/project-brief.md`; the real filename is the link above. See
-[docs/decisions/0001-foundations.md](docs/decisions/0001-foundations.md).)
+## Start here
 
-**v1 shipped and the project has moved past it.** The brief's Phase 0-5 plan is done.
-Single-player mode and direct player controls are live (ADRs 0018/0019); action
-animations are partly built (combat strikes, attack pulses, life-change flashes —
-`apps/web/src/composables/useCombatStrikes.ts`, `PermanentChip.vue`), short of the full
-`docs/plans/phase-8-action-animations.md`;
-the deck-testing lab (`docs/plans/phase-10-deck-testing-lab.md`) and the deferred AI
-features (`docs/plans/phase-11-deferred-ai-features.md`, ADR 0022) are unbuilt plans.
+Read [docs/mtg-commander-ai-simulator-brief.md](docs/mtg-commander-ai-simulator-brief.md) before changing game behavior. It is the original product and architecture brief. Later ADRs supersede it: start with [ADR 0025](docs/decisions/0025-card-template-layer.md), [ADR 0024](docs/decisions/0024-bounded-combat-search.md), and [docs/reviews/](docs/reviews/).
 
-**Numbered brief phases are no longer how work is organized.** Two streams are active:
+The old numbered delivery phases are complete. Current work is organized around card coverage, rules correctness, simulation reliability, and product polish.
 
-- **Card coverage — the main one.** [docs/plans/edh-staple-coverage.md](docs/plans/edh-staple-coverage.md)
-  organizes it as Tiers and Clusters, and recent commits are literally `Tier 2.1`, `Tier 2.2`,
-  `Tier 2.3`. Built on ADR 0025's card template layer. The interesting number is not overall
-  fixture coverage but its split: the precons the engine was built against sit at 97-100%,
-  community decks at 35-40%, and that gap is where every remaining mechanic of consequence lives.
-- **Bot and combat.** ADR 0023 (heuristic bot in `packages/bot`, batched combat) is accepted and
-  built through its Phase 5; ADR 0024 (bounded combat search) is still **Proposed** and is
-  blocked on ADR 0023's item 20 — `PermanentView` has no `keywords` projection, so the
-  `CombatSnapshot` 0024 specifies cannot be built from a `PlayerView` yet.
+## Current state
 
-Read `docs/decisions/` in descending order from **0025** for current state; ADR numbers, not
-this file, are the record. Where this file or the brief conflicts with a numbered ADR, the ADR wins.
+This Bun/TypeScript monorepo contains a working local Commander simulator:
 
-## Current architecture at a glance
+- `packages/engine`: authoritative deterministic rules engine.
+- `packages/bot`: seeded heuristic decision provider and bounded combat search.
+- `packages/server`: human/bot/LLM orchestration, deck import, SQLite, batches, and HTTP/WebSocket APIs.
+- `apps/web`: Vue 3 spectator and single-player UI.
+- `packages/shared`: cross-package game, protocol, view, database, and batch types.
 
-- **Packages:** `packages/shared` (types shared by engine/server/web) →
-  `packages/engine` (pure rules engine, no I/O) → `packages/server` (Bun HTTP+WS server:
-  AI orchestration in `src/ai/`, deck import in `src/decks/`, card pool/coverage in
-  `src/cards/`, SQLite in `src/db/`, match orchestration in `src/match/`, CLI entry
-  points in `src/cli/`) → `apps/web` (Vue 3 spectator **and** player UI).
-  `packages/bot` is the deterministic heuristic bot (ADR 0023) — an alternative to the LLM
-  provider, scoring engine-offered options from a `PlayerView` with a seeded RNG, no I/O.
-- **AI provider:** OpenAI-compatible client (`packages/server/src/ai/client.ts`), not
-  `@google/genai`. **OpenRouter is the default provider**, auto-detected from whichever
-  `*_API_KEY` is set (Groq, Gemini, DeepSeek, and OpenAI are also supported presets) — see
-  `packages/server/src/ai/config.ts` and `.env.example`, and
-  `docs/decisions/0011-openai-compatible-provider.md`.
-- **Two-tier AI: strategist + tactician.** `packages/server/src/ai/strategy-coordinator.ts`
-  runs a **strategist** call once per active turn, on its own request queue, prefetched
-  asynchronously at the previous turn boundary so it overlaps untap/upkeep/draw and never
-  blocks a tactical decision. Each **tactician** decision (the per-menu-pick call) consults
-  the strategist's latest plan if one has landed, and re-plans once if an opponent
-  intervenes. See `docs/decisions/0016-two-tier-ai-planning.md` and
-  `docs/decisions/0021-player-experience-overhaul.md` §1.
-- **Game modes:** spectator (four AI seats) and single-player (one human seat + three AI,
-  `docs/decisions/0018-single-player-mode.md`) are both live, chosen from the web UI's
-  `SetupView.vue`. Decks per seat are either generated from the engine-supported pool
-  (`bun run pool`, default and always-playable) or imported from Moxfield/Archidekt/plaintext
-  (`bun run decks`) — see `packages/shared/src/protocol.ts`'s `SeatSource`/`GameMode` types.
+Spectator play, one-human-versus-three-opponent play, replay, supported-pool decks, imports, batches, and statistics are implemented. The optional LLM provider is OpenAI-compatible; random and heuristic bot providers do not need an API key.
 
+The September 5 remediation completed priority-window, hybrid-payment, face-down visibility, grouped-death, life-payment, local-network, batch-recovery, and Vue validation fixes. Its residual risks are recorded in [audit remediation](docs/reviews/audit-remediation-2026-09-05.md).
 
-### Task Offloading Rules (`agy`)
+The September 5 browser-trial payment regression is covered by focused normal-path tests for an activated ability that combines mana and tap costs, plus `scripts/reproduce-browser-payment.ts` using the original derived seed. The historical generated deck configuration was not captured immutably, so do not describe this as an exact full-game replay. See [browser trial](docs/reviews/browser-experience-2026-09-05.md).
 
-You have access to the `antigravity_delegate` MCP tool. Follow these guidelines for task delegation:
+## Rules-engine constraints
 
-- **Delegate to `agy` when:**
-  - **Easy/Simple Tasks:** Generating standard boilerplate, writing simple scripts, adding straightforward CRUD functions, or making simple/repetitive code edits.
-  - **Research & Planning:** Gathering information, analyzing codebase structure, researching external libraries, or drafting architectural plans.
+- The engine computes every legal action. Providers choose from its options; they never decide legality.
+- Auto-resolve only mathematically forced actions. Strategic filtering belongs in provider policy or explicit player preference, not legal-action generation.
+- Games are fully seeded. Do not use `Math.random()` in engine or bot paths; use the project PRNG/RNG.
+- Providers receive a `PlayerView`, never `GameState`. Protect hidden information in UI, logs, events, action presentation, and AI context.
+- Preserve deterministic replay: timing, wall clocks, and provider/network behavior must not alter fixed-seed engine outcomes.
+- Prefer `unimplemented()` to an approximate card implementation. A modeled card must faithfully implement the semantics it claims.
+- Coverage is evidence, not a general Commander-support claim. Add behavior tests and run coverage tools before reporting a card as modeled.
 
-- **Handle directly in Claude Code when:**
-  - Tasks involve complex business logic, subtle bugs, or deep architectural decision-making.
-  - Multi-step, highly context-sensitive refactoring across interconnected systems.
+## Card model and coverage
 
-- **Execution guidelines:**
-  - Use `mode: "plan"` for research and exploratory planning tasks.
-  - Use `mode: "accept-edits"` for simple coding and boilerplate generation tasks.
-  - Briefly verify or test the output from `agy` once the delegate call finishes.
+The canonical completion standard is
+[Modeling a Card and Testing It](docs/guides/card-modeling-and-testing.md). Follow its
+clause-to-test manifest, offline Oracle fixture, engine-path, real-viewer evidence, and separate
+gameplay-AI requirements. No other checklist may weaken that standard.
 
-## Key constraints (from the brief)
+Use the template layer in `packages/engine/src/cards/` first: reusable grammar, selectors, values, effects, conditions, and rule statics before bespoke overrides. Overrides live in `packages/engine/src/cards/overrides/`; update handled-lines and interpretation fixtures deliberately.
 
-- Engine is authoritative on legality; the AI only chooses among engine-generated options (§1.2).
-- No AI call when there's only one legal action (§5.1) — the biggest cost lever.
-- Every game is fully seeded; **no `Math.random()` in the engine** (§4, §5.9).
-- The AI must never see hidden state — it receives a `PlayerView`, never `GameState` (§7.1).
-- Work in the phases defined in §14; **stop at each phase boundary for approval.**
+The coverage backlog is clustered by shared primitives:
 
-## How to run
+- [EDH staple coverage](docs/plans/edh-staple-coverage.md)
+- [Post-Tier-3 residue](docs/plans/post-tier3-card-coverage.md)
 
-```bash
+Precon coverage is strongest. Community fixtures and the EDH-staples report expose the significant remaining gaps. Use `bun run coverage`, `bun run staples`, and `bun run test:implemented`.
+
+## Commands
+
+```powershell
 bun install
-cp .env.example .env   # then set exactly one provider key, e.g. OPENROUTER_API_KEY
-bun run typecheck       # tsc --build across all packages (full strict)
-bun run typecheck:tests # typecheck engine source + tests separately from the production build
-bun run typecheck:clean # tsc --build --clean
-bun run lint             # eslint (flat config)
-bun run lint:fix
-bun run format           # prettier --write .
+Copy-Item .env.example .env             # provider key only for LLM games
+
+bun run typecheck                       # production TypeScript + Vue templates
+bun run typecheck:tests                 # engine/server test type projects
+bun run lint
 bun run format:check
-bun run test             # vitest run
-bun run test:watch       # vitest (watch mode)
-bun run build            # tsc --build
+bun run test
+bun run test:e2e
 
-# Watch a game — server owns the engine and the AI provider key, web app is a view; one command starts both:
-bun run dev                          # server on :3001 + Vue spectator/player UI on :5173
-# ...or separately, e.g. to restart just one:
-bun run serve [--port N] [--no-db]   # HTTP + /ws on :3001; GET /health for a liveness check
-bun run dev:web                      # Vue UI on :5173, proxying /ws to the server
-# Game mode (spectator vs. single-player) and deck source (pool vs. import) are chosen
-# in the web UI's setup screen, not via CLI flags — see SetupView.vue.
+bun run dev                             # server :3001 and UI :5173
+bun run serve [--port N] [--no-db]
+bun run dev:web
 
-# Deck pipeline (import → resolve → validate → snapshot):
-bun run decks <deckUrlOrFile> [more...]   # Moxfield/Archidekt URL or plaintext file
-bun run decks --no-save <...>             # validate only, skip SQLite
-
-# Archetype tags are inferred at import (ADR 0022); backfill older decks with:
-bun run retag                             # dry run — prints changes, writes nothing
-bun run retag --write [--force]           # apply; --force also re-scores heuristic tags.
-                                          # A 'manual' tag is never touched. Note this regroups
-                                          # the stats "who beats me" view, which keys on the tag.
-
-# Playable decks from the engine-supported card pool (ADR 0009):
-bun run pool                              # what the engine can currently play with
-bun run pool --commanders                 # every commander the pool supports
-bun run pool --play [--seed S] [--ai]     # build 4 decks and play a full game (random or AI-driven)
-bun run pool --write [--seed S]           # commit the 4 decks as fixtures
-
-# Play specific curated decklists against each other (fixtures or URLs):
+bun run decks <deckUrlOrFile> [more...]
+bun run decks --no-save <deckUrlOrFile>
+bun run pool [--commanders]
+bun run pool --play [--seed S] [--ai]
+bun run pool --write [--seed S]
 bun run play-decks <deckA> <deckB> ...
 
-# Bot combat search — multi-seed A/B and bound sweep (ADR 0024 sub-phase 7c).
-# Two seats run the search, two run the Phase 4 static heuristic, in the SAME seeded games.
+bun run retag                           # dry run
+bun run retag --write [--force]
+bun run coverage [--json]
+bun run staples
+bun run coverage:snapshot [url...]
+bun run snapshot:oracle
+bun run modelled-cards
 bun run combat-sweep [--games N] [--seed S] [--json out.json]
-bun run combat-sweep --top-k 1,2,4,16 --max-permanents 12   # sweep one axis at a time
-
-# Real-deck model coverage — the mechanics backlog:
-bun run coverage                          # per-deck + aggregate, ranked blocking mechanics
-bun run coverage --json                   # machine-diffable
-bun run coverage:snapshot [url...]        # refresh/add deck fixtures from live URLs
-bun run snapshot:oracle                   # per-deck OracleCard JSON fixtures for CI-safe engine coverage tests
-bun run modelled-cards                    # list cards the engine currently models
 ```
+
+Combat sweeps compare search and static heuristic seats in the same seeded games. Treat excluded/failing games as reliability findings, not data to silently discard.
+
+## Testing and change discipline
+
+- Add a focused regression for every engine/card correctness fix.
+- Run the smallest relevant test first, then `bun run test`; run type checks, lint, and a web build for affected surfaces.
+- Existing browser smoke tests mock network/AI. The real browser trial confirms desktop spectator completion and replay, but complete human play, mobile interaction, reconnection, and imports need wider end-to-end coverage.
+- Do not silently rewrite historical SQLite data. Document derivations and migrations; legacy mana metrics intentionally display as unavailable rather than guessed.
+- Keep the server on local loopback unless an authenticated remote-sharing design is explicitly approved.
+- Keep `packages/engine` free of I/O, network access, UI logic, and provider policy. Put shared wire types in `packages/shared` and update every consumer for protocol changes.
 
 ## Reference data
 
-- `docs/rules/comprehensive-rules.txt` — Wizards Comprehensive Rules, effective 2026-06-19 (verbatim).
-- `docs/rules/commander-rules.md` — mtgcommander.net construction & play rules.
-- `docs/rules/commander-banned-list.md` — mtgcommander.net banned list (44 individual cards + category bans).
-- `data/scryfall-oracle-cards.json` — Scryfall `oracle-cards` bulk (~180 MB, gitignored; see `data/README.md`).
-- **Never send the Comprehensive Rules to the AI provider** — it is a reference for
-  implementing the engine, not runtime context (§7.4). The compact rules primer is separate.
-
-## Conventions
-
-- TypeScript strict everywhere (`tsconfig.base.json`), plus `noUncheckedIndexedAccess`,
-  `exactOptionalPropertyTypes`, `verbatimModuleSyntax` — use `import type` for type-only imports.
-- Packages resolve each other **by source** (`exports` → `./src/index.ts`); no build step to run
-  code. `dist/` is a typecheck byproduct only and is gitignored.
-- `TODO(phase-N)` markers flag stubs to be fleshed out in a later phase.
-
-
-## TypeScript build and test separation
-
-`packages/engine/tsconfig.json` includes production source only. Engine tests are included by `packages/engine/tsconfig.test.json` and checked with `bun run typecheck:tests`; Vitest execution remains `bun run test`. Keeping tests out of the root project build reduces peak TypeScript memory usage. See `docs/guides/testing-and-typechecking.md` for the workflow.
+- `docs/rules/comprehensive-rules.txt` is the local Comprehensive Rules reference.
+- `docs/rules/commander-rules.md` and `docs/rules/commander-banned-list.md` support Commander validation.
+- `data/scryfall-oracle-cards.json` is gitignored; see [data/README.md](data/README.md).
+- Never send the Comprehensive Rules to an AI provider; they are implementation reference, not runtime prompt context.

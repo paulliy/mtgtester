@@ -93,7 +93,9 @@ const SPEEDS: Array<{ label: string; ms: number }> = [
 <template>
   <div class="controls">
     <div class="row main-row">
-      <button type="button" class="nav-btn" :disabled="!canBack" @click="emit('back')">◀ Turn</button>
+      <button type="button" class="nav-btn" :disabled="!canBack" @click="emit('back')">
+        ◀ Turn
+      </button>
       <button
         type="button"
         class="nav-btn action-step-btn"
@@ -121,7 +123,9 @@ const SPEEDS: Array<{ label: string; ms: number }> = [
       >
         Action ▶
       </button>
-      <button type="button" class="nav-btn" :disabled="!canForward" @click="emit('forward')">Turn ▶</button>
+      <button type="button" class="nav-btn" :disabled="!canForward" @click="emit('forward')">
+        Turn ▶
+      </button>
       <span class="position">
         Round <strong>{{ currentRound }}</strong> (Turn {{ scrubValue }}/{{ frontierTurn }})
       </span>
@@ -178,7 +182,9 @@ const SPEEDS: Array<{ label: string; ms: number }> = [
         <p>Are you sure you want to terminate the current game session?</p>
         <div class="modal-actions">
           <button type="button" class="cancel-btn" @click="showAbandonModal = false">Cancel</button>
-          <button type="button" class="confirm-danger-btn" @click="confirmAbandon">Confirm Abandon</button>
+          <button type="button" class="confirm-danger-btn" @click="confirmAbandon">
+            Confirm Abandon
+          </button>
         </div>
       </div>
     </div>

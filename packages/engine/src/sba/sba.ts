@@ -16,11 +16,8 @@ import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
 import { breakYieldsForStop } from '../turn/stops';
-import { moveObject, movePermanentsToGraveyard } from '../state/objects';
-import {
-  isCreaturePermanent,
-  playersInApnapOrder,
-} from '../state/queries';
+import { consumeRegenerationShield, moveObject, movePermanentsToGraveyard } from '../state/objects';
+import { isCreaturePermanent, playersInApnapOrder } from '../state/queries';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -134,7 +131,17 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     let reason: string | undefined;
     if (chars.types.includes('Creature')) {
       if (chars.toughness <= 0) reason = 'zeroToughness';
-      else if (perm.damageMarked > 0 && (perm.damageMarked >= chars.toughness || perm.damagedByDeathtouch) && !chars.keywords.includes('indestructible')) reason = 'lethalDamage';
+      else if (
+        perm.damageMarked > 0 &&
+        (perm.damageMarked >= chars.toughness || perm.damagedByDeathtouch) &&
+        !chars.keywords.includes('indestructible')
+      ) {
+        if (consumeRegenerationShield(ctx, perm)) {
+          acted = true;
+          continue;
+        }
+        reason = 'lethalDamage';
+      }
     }
     if (reason !== undefined) {
       emit(ctx, 'sbaCreatureDies', { name: perm.name, reason });
@@ -151,6 +158,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     yield* movePermanentsToGraveyard(ctx, dying);
     return true;
   }
+  if (acted) return true;
 
   // --- Other battlefield checks ---
   for (const perm of [...s.battlefield]) {
@@ -344,7 +352,9 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
               })),
             },
           ],
-          ...(trigger.ability.description !== undefined ? { description: trigger.ability.description } : {}),
+          ...(trigger.ability.description !== undefined
+            ? { description: trigger.ability.description }
+            : {}),
         }
       : trigger.ability;
   const specs = ability.targets;
@@ -358,7 +368,13 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   const ordinarySlots: { slot: number; options: ObjectId[] }[] = [];
   for (const [i, spec] of specs.entries()) {
     if (spec.count !== undefined) continue;
-    const options = computeTargetOptions(ctx, spec, trigger.controllerId, undefined, trigger.scope?.eventPlayerId);
+    const options = computeTargetOptions(
+      ctx,
+      spec,
+      trigger.controllerId,
+      undefined,
+      trigger.scope?.eventPlayerId,
+    );
     if (options.length === 0) {
       emit(
         ctx,
@@ -444,9 +460,14 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
 
     const picked: ObjectId[] = [];
     for (let k = 0; k < effectiveMax; k++) {
-      const candidates = computeTargetOptions(ctx, spec, trigger.controllerId, undefined, trigger.scope?.eventPlayerId, chosen).filter(
-        (id) => !alreadyChosen.has(id) && !picked.includes(id),
-      );
+      const candidates = computeTargetOptions(
+        ctx,
+        spec,
+        trigger.controllerId,
+        undefined,
+        trigger.scope?.eventPlayerId,
+        chosen,
+      ).filter((id) => !alreadyChosen.has(id) && !picked.includes(id));
       if (candidates.length === 0) break;
       const canStop = picked.length >= count.min;
       const outcome = yield {

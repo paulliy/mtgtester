@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "bbd12bc97b6ca8de4c616e89ae0f632206c208265bd4078d1b5777ac92c4d412",
+      "card": {
+        "oracleId": "775617cd-7264-4365-94c4-ffae4eb9ec8b",
+        "scryfallId": "dd9ac0f2-2d8f-40fc-97fb-d6e05633405d",
+        "name": "Aetherflux Conduit",
+        "manaCost": "{6}",
+        "cmc": 6,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever you cast a spell, you get an amount of {E} (energy counters) equal to the amount of mana spent to cast that spell.\n{T}, Pay fifty {E}: Draw seven cards. You may cast any number of spells from your hand without paying their mana costs.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c689293cbd30c0af76b8e81ceccb01ee95537277ea217d2ca5e88286b69dfecc",
+      "card": {
+        "oracleId": "d1deba03-b26a-4a0d-b242-24bb3a3f9ea6",
+        "scryfallId": "80b5b7e1-52c2-4453-b3c0-efe2cebad6ce",
+        "name": "Bootleggers' Stash",
+        "manaCost": "{5}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Lands you control have \"{T}: Create a Treasure token.\"",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Treasure"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "068b15927d239455766ad4a2e889486e14b5ee7f6177cd89e57d783eb07f4bc0",
+      "card": {
+        "oracleId": "3494a575-f68e-4e78-9f6b-142cd8a0edea",
+        "scryfallId": "c80e620e-bece-4c48-9dd6-7bcdacabf521",
+        "name": "Combustible Gearhulk",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Artifact Creature — Construct",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Construct"
+        ],
+        "oracleText": "First strike\nWhen this creature enters, target opponent may have you draw three cards. If the player doesn't, you mill three cards, then this creature deals damage to that player equal to the total mana value of those cards.",
+        "power": "6",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "First strike",
+          "Mill"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "fe1e507b3eaa0d46cc47e2dd51bd60a03674ceb3497e0b5aeb759672283bd689",
+      "card": {
+        "oracleId": "76678885-3674-443d-b9a2-2a460cf6aac0",
+        "scryfallId": "998d0cc8-ca2a-41c3-ab65-d05c26ab8278",
+        "name": "Panharmonicon",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "If an artifact or creature entering causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bd8aaaee24eeacf3ddff7ee33db3b672804fa03ad341889d6ca1539c8c3ad39a",
+      "card": {
+        "oracleId": "c68faebc-b2cd-461b-b93e-e1fcd4816810",
+        "scryfallId": "0b3c33b7-5b15-4b61-bfd6-1ffa823eb28a",
+        "name": "Midnight Clock",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {U}.\n{2}{U}: Put an hour counter on this artifact.\nAt the beginning of each upkeep, put an hour counter on this artifact.\nWhen the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -30,7 +30,9 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     !evaluateCondition(ctx, intervening, {
       cardId: top.sourceCardId,
       controllerId: top.controllerId,
-      ...(top.triggerScope?.eventPlayerId === undefined ? {} : { eventPlayerId: top.triggerScope.eventPlayerId }),
+      ...(top.triggerScope?.eventPlayerId === undefined
+        ? {}
+        : { eventPlayerId: top.triggerScope.eventPlayerId }),
     })
   ) {
     emit(ctx, 'triggerConditionFailed', { description: top.description }, top.controllerId);
@@ -65,20 +67,44 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   top.targets.forEach((t, i) => {
     anyChosen = true;
     const kind = specs[i]?.kind;
-    if (kind !== undefined && isTargetStillLegal(ctx, t, specs[i] ?? kind, top.controllerId, undefined, top.triggerScope?.eventPlayerId)) anyLegal = true;
+    if (
+      kind !== undefined &&
+      isTargetStillLegal(
+        ctx,
+        t,
+        specs[i] ?? kind,
+        top.controllerId,
+        undefined,
+        top.triggerScope?.eventPlayerId,
+      )
+    )
+      anyLegal = true;
   });
   for (const [slotKey, ids] of Object.entries(top.countTargets ?? {})) {
     const spec = specs[Number(slotKey)];
     for (const id of ids) {
       anyChosen = true;
-      if (spec !== undefined && isTargetStillLegal(ctx, id, spec, top.controllerId, undefined, top.triggerScope?.eventPlayerId)) anyLegal = true;
+      if (
+        spec !== undefined &&
+        isTargetStillLegal(
+          ctx,
+          id,
+          spec,
+          top.controllerId,
+          undefined,
+          top.triggerScope?.eventPlayerId,
+        )
+      )
+        anyLegal = true;
     }
   }
   if (anyChosen && !anyLegal) {
     emit(ctx, 'fizzle', { description: top.description }, top.controllerId);
     debug(ctx, 'stack', `${top.description} fizzles — all targets illegal`);
     if (top.card !== null) {
-      yield* moveObject(ctx, top.card, { zone: top.exileOnResolution === true ? 'exile' : 'graveyard' });
+      yield* moveObject(ctx, top.card, {
+        zone: top.exileOnResolution === true ? 'exile' : 'graveyard',
+      });
     }
     return;
   }
@@ -91,6 +117,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         name: top.card?.name ?? top.description,
         oracleId: top.sourceOracleId,
         controllerId: top.controllerId,
+        ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
       },
       top.ability,
       top.targets,
@@ -132,7 +159,10 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
   // Permanent spells (creatures, artifacts, enchantments, planeswalkers, battles) enter
   // the battlefield under their caster; instants/sorceries head to the graveyard (CR 608.3).
   if (isPermanentCard(def)) {
-    const moved = yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: spell.controllerId });
+    const moved = yield* moveObject(ctx, card, {
+      zone: 'battlefield',
+      controllerId: spell.controllerId,
+    });
     if (spell.grantHasteOnResolution && moved && moved.zone === 'battlefield') {
       ctx.state.effects.push({
         id: `eff-${ctx.state.nextObjectNum++}`,

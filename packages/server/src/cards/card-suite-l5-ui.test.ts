@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import type { EngineActionOption, PendingDecision } from '../../../engine/src/decisions';
 import { interactionFor } from '../../../engine/src/engine';
+import { interpretCard } from '../../../engine/src/cards/interpret';
 import { executeAbility } from '../../../engine/src/effects/resolve';
 import { createGame } from '../../../engine/src/state/game';
 import type { GameContext } from '../../../engine/src/state/types';
-import { copies, forest, gameConfig, oracle, pump, registerDef, spawn } from '../../../engine/tests/fixtures';
+import {
+  copies,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  registerDef,
+  spawn,
+} from '../../../engine/tests/fixtures';
 import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
 
@@ -21,7 +30,12 @@ function getOracleCard(name: string) {
 }
 
 function pod(seed = 'l5-ui-suite'): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(4, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(4, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.turnNumber = 4;
@@ -75,15 +89,19 @@ function expectAllReachable(ctx: GameContext, decisions: PendingDecision[]): voi
 describe.skipIf(SKIP)('L5: Human UI Reachability Tests', () => {
   it('validates UI decision reachability for Path to Exile', () => {
     const ctx = pod();
-    const target = spawn(ctx, 'P2', oracle({ name: 'Ogre', typeLine: 'Creature', manaCost: '{2}' }));
+    const target = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Ogre', typeLine: 'Creature', manaCost: '{2}' }),
+    );
     const pathCard = getOracleCard('Path to Exile');
     const def = registerDef(ctx, pathCard);
     const perm = spawn(ctx, 'P1', pathCard);
 
-    const { decisions } = pump(
-      executeAbility(ctx, perm, def.spellAbility!, []),
-      () => ({ index: 0, targets: new Map([[0, target.id]]) })
-    );
+    const { decisions } = pump(executeAbility(ctx, perm, def.spellAbility!, []), () => ({
+      index: 0,
+      targets: new Map([[0, target.id]]),
+    }));
 
     expectAllReachable(ctx, decisions);
   });
@@ -96,26 +114,17 @@ describe.skipIf(SKIP)('L5: Human UI Reachability Tests', () => {
 
     const trigger = def.triggers?.[0];
     if (trigger) {
-      const { decisions } = pump(
-        executeAbility(ctx, perm, trigger, []),
-        () => ({ index: 0, targets: new Map() })
-      );
+      const { decisions } = pump(executeAbility(ctx, perm, trigger, []), () => ({
+        index: 0,
+        targets: new Map(),
+      }));
       expectAllReachable(ctx, decisions);
     }
   });
 
-  it('validates UI decision reachability for Sylvan Reclamation targeting', () => {
-    const ctx = pod();
-    const ring = spawn(ctx, 'P2', oracle({ name: 'Sol Ring', typeLine: 'Artifact', manaCost: '{1}' }));
+  it('does not claim Sylvan Reclamation targeting after catalog containment', () => {
     const recCard = getOracleCard('Sylvan Reclamation');
-    const def = registerDef(ctx, recCard);
-    const perm = spawn(ctx, 'P1', recCard);
-
-    const { decisions } = pump(
-      executeAbility(ctx, perm, def.spellAbility!, []),
-      () => ({ index: 0, targets: new Map([[0, ring.id]]) })
-    );
-
-    expectAllReachable(ctx, decisions);
+    const def = interpretCard(recCard);
+    expect(def.modeled).toBe(false);
   });
 });

@@ -32,10 +32,25 @@ import { resolveTopOfStack } from '../src/stack/stack';
 import { moveObject } from '../src/state/objects';
 import { createGame } from '../src/state/game';
 import type { EnginePlayerState, GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, island, mountain, oracle, pump, registerDef } from './fixtures';
+import {
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  island,
+  mountain,
+  oracle,
+  pump,
+  registerDef,
+} from './fixtures';
 
 function pod(seats = 2, seed = 'human-ui'): GameContext {
-  const ctx = createGame(gameConfig(Array.from({ length: seats }, () => ({ cards: copies(2, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      Array.from({ length: seats }, () => ({ cards: copies(2, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.turnNumber = 4;
@@ -121,7 +136,7 @@ function expectAllReachable(ctx: GameContext, decisions: PendingDecision[]): voi
   }
 }
 
-describe('Kodama\'s Reach', () => {
+describe("Kodama's Reach", () => {
   const kodamasReach = () =>
     oracle({
       name: "Kodama's Reach",
@@ -146,7 +161,12 @@ describe('Kodama\'s Reach', () => {
 
     const def = registerDef(ctx, kodamasReach());
     const { decisions } = pump(
-      executeAbility(ctx, { cardId: 'c-reach', name: def.name, oracleId: def.oracleId, controllerId: 'P1' }, def.spellAbility!, []),
+      executeAbility(
+        ctx,
+        { cardId: 'c-reach', name: def.name, oracleId: def.oracleId, controllerId: 'P1' },
+        def.spellAbility!,
+        [],
+      ),
       // Take Mountain for the battlefield destination; whatever's first for the hand destination.
       (d) => {
         const mountainIdx = d.options.findIndex((o) => /Mountain/.test(o.description));
@@ -162,7 +182,10 @@ describe('Kodama\'s Reach', () => {
     expect(player.hand).toHaveLength(1);
     expect(player.library).toHaveLength(1);
     // Everything found ends up in exactly one of {battlefield, hand}; nothing duplicated or lost.
-    expect([...player.hand, ...player.library].map((c) => c.name).sort()).toEqual(['Forest', 'Island']);
+    expect([...player.hand, ...player.library].map((c) => c.name).sort()).toEqual([
+      'Forest',
+      'Island',
+    ]);
   });
 
   it('never obliges the searcher to find (CR 701.19c), and that option is reachable too', () => {
@@ -177,8 +200,16 @@ describe('Kodama\'s Reach', () => {
 
     const def = registerDef(ctx, kodamasReach());
     const { decisions } = pump(
-      executeAbility(ctx, { cardId: 'c-reach', name: def.name, oracleId: def.oracleId, controllerId: 'P1' }, def.spellAbility!, []),
-      (d) => ({ index: d.options.findIndex((o) => /Find nothing/.test(o.description)), targets: new Map() }),
+      executeAbility(
+        ctx,
+        { cardId: 'c-reach', name: def.name, oracleId: def.oracleId, controllerId: 'P1' },
+        def.spellAbility!,
+        [],
+      ),
+      (d) => ({
+        index: d.options.findIndex((o) => /Find nothing/.test(o.description)),
+        targets: new Map(),
+      }),
     );
 
     const search = decisions.filter((d) => d.prompt.includes('search your library'));
@@ -198,16 +229,32 @@ describe('Marang River Regent', () => {
       power: '6',
       toughness: '7',
       keywords: ['Flying'],
-      oracleText: "Flying\nWhen this creature enters, return up to two other target nonland permanents to their owners' hands.",
+      oracleText:
+        "Flying\nWhen this creature enters, return up to two other target nonland permanents to their owners' hands.",
     });
 
   it('"up to two" bounces exactly as many as chosen (2 here), leaving the rest alone — every choice reachable', () => {
     const ctx = pod(3);
-    const foe1 = conjure(ctx, 'P2', oracle({ name: 'Foe One', typeLine: 'Creature — Bear', power: '1', toughness: '1' }), 'hand');
+    const foe1 = conjure(
+      ctx,
+      'P2',
+      oracle({ name: 'Foe One', typeLine: 'Creature — Bear', power: '1', toughness: '1' }),
+      'hand',
+    );
     pump(moveObject(ctx, foe1, { zone: 'battlefield', controllerId: 'P2' }));
-    const foe2 = conjure(ctx, 'P3', oracle({ name: 'Foe Two', typeLine: 'Creature — Bear', power: '1', toughness: '1' }), 'hand');
+    const foe2 = conjure(
+      ctx,
+      'P3',
+      oracle({ name: 'Foe Two', typeLine: 'Creature — Bear', power: '1', toughness: '1' }),
+      'hand',
+    );
     pump(moveObject(ctx, foe2, { zone: 'battlefield', controllerId: 'P3' }));
-    const untouched = conjure(ctx, 'P2', oracle({ name: 'Untouched', typeLine: 'Creature — Bear', power: '1', toughness: '1' }), 'hand');
+    const untouched = conjure(
+      ctx,
+      'P2',
+      oracle({ name: 'Untouched', typeLine: 'Creature — Bear', power: '1', toughness: '1' }),
+      'hand',
+    );
     pump(moveObject(ctx, untouched, { zone: 'battlefield', controllerId: 'P2' }));
 
     registerDef(ctx, marangRiverRegent());
@@ -223,15 +270,27 @@ describe('Marang River Regent', () => {
       }
     }
 
-    expect(ctx.state.players.find((p) => p.id === 'P2')!.hand.map((c) => c.name).sort()).toEqual(['Foe One']);
-    expect(ctx.state.players.find((p) => p.id === 'P3')!.hand.map((c) => c.name)).toEqual(['Foe Two']);
+    expect(
+      ctx.state.players
+        .find((p) => p.id === 'P2')!
+        .hand.map((c) => c.name)
+        .sort(),
+    ).toEqual(['Foe One']);
+    expect(ctx.state.players.find((p) => p.id === 'P3')!.hand.map((c) => c.name)).toEqual([
+      'Foe Two',
+    ]);
     expect(ctx.state.battlefield.some((p) => p.name === 'Untouched')).toBe(true);
     expect(ctx.state.battlefield.some((p) => p.cardId === regent.cardId)).toBe(true); // Regent stays
   });
 
   it('never obliges the controller to bounce anything (0 is legal) — regression for the "up to two" count being silently dropped', () => {
     const ctx = pod(3);
-    const foe = conjure(ctx, 'P2', oracle({ name: 'Foe', typeLine: 'Creature — Bear', power: '1', toughness: '1' }), 'hand');
+    const foe = conjure(
+      ctx,
+      'P2',
+      oracle({ name: 'Foe', typeLine: 'Creature — Bear', power: '1', toughness: '1' }),
+      'hand',
+    );
     pump(moveObject(ctx, foe, { zone: 'battlefield', controllerId: 'P2' }));
 
     registerDef(ctx, marangRiverRegent());
@@ -267,18 +326,12 @@ describe('Caged Sun', () => {
         "As this artifact enters, choose a color.\nCreatures you control of the chosen color get +1/+1.\nWhenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color.",
     });
 
-  it('the color-choice decision is reachable and none of its options are phantom board clicks', () => {
+  it('does not present a color-choice as-enters replacement after catalog containment', () => {
     const ctx = pod();
     const { entryDecisions } = enterBattlefield(ctx, cagedSun());
     const choice = entryDecisions.filter((d) => d.prompt.includes('Choose a color'));
-    expect(choice).toHaveLength(1);
-    for (const option of choice[0]!.options) {
-      // The actual bug: a mode key like "Red" silently became a `subjectId`, which nothing on
-      // the board could ever match.
-      expect(frontendSourceId(option)).toBeNull();
-    }
-    expectAllReachable(ctx, choice);
-    expect(choice[0]!.options.map((o) => o.description)).toEqual(['White', 'Blue', 'Black', 'Red', 'Green']);
+    expect(choice).toHaveLength(0);
+    expect(interpretCard(cagedSun()).modeled).toBe(false);
   });
 });
 
@@ -331,11 +384,18 @@ describe('Ureni of the Unwritten', () => {
     for (let i = 0; i < 7; i++) {
       conjure(ctx, 'P1', oracle({ name: `Filler ${i}`, typeLine: 'Creature — Bear' }), 'library');
     }
-    conjure(ctx, 'P1', oracle({ name: 'Whelp of the Unwritten', typeLine: 'Creature — Dragon' }), 'library');
+    conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Whelp of the Unwritten', typeLine: 'Creature — Dragon' }),
+      'library',
+    );
 
     const { entryDecisions } = enterBattlefield(ctx, ureni());
     const decisions = placeAndResolve(ctx);
-    const lookAt = [...entryDecisions, ...decisions].filter((d) => d.prompt.includes('among the top'));
+    const lookAt = [...entryDecisions, ...decisions].filter((d) =>
+      d.prompt.includes('among the top'),
+    );
     expect(lookAt).toHaveLength(1);
     expectAllReachable(ctx, lookAt);
 
@@ -358,12 +418,13 @@ describe('Kairi, the Swirling Sky', () => {
         "Flying, ward {3}\nWhen Kairi dies, choose one —\n• Return any number of target nonland permanents with total mana value 6 or less to their owners' hands.\n• Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.",
     });
 
-  it('modeled: the dies trigger has a real mode choice, not a dropped no-op', () => {
+  it('dies trigger still carries two modes on leftover IR, but the card is catalog-contained', () => {
     // Regression for `Ability.modes` being a spell-casting-time-only mechanism: a triggered
     // ability built the same way (Kairi's dies trigger) never asked its mode question and
     // never ran either mode's effects — `effects: []` resolved to nothing, silently.
     const def = interpretCard(kairi());
-    expect(def.modeled).toBe(true);
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('\n')).toContain('explicitly unsupported:');
     expect(def.triggers[0]?.effects).toEqual([]); // modes still live in `.modes`, not `.effects`...
     expect(def.triggers[0]?.modes?.options).toHaveLength(2); // ...but a real choice IS declared
   });
@@ -373,7 +434,12 @@ describe('Kairi, the Swirling Sky', () => {
     const player = p1(ctx);
     player.library.length = 0;
     for (let i = 0; i < 6; i++) {
-      conjure(ctx, 'P1', oracle({ name: `Bolt ${i}`, typeLine: 'Instant', manaCost: '{R}' }), 'library');
+      conjure(
+        ctx,
+        'P1',
+        oracle({ name: `Bolt ${i}`, typeLine: 'Instant', manaCost: '{R}' }),
+        'library',
+      );
     }
 
     const kairiCard = kairi();
@@ -392,10 +458,16 @@ describe('Kairi, the Swirling Sky', () => {
 
     const { decisions } = pump(resolveTopOfStack(ctx), (d) => {
       if (d.prompt.toLowerCase().includes('choose one')) {
-        return { index: d.options.findIndex((o) => /Mill/.test(o.description)), targets: new Map() };
+        return {
+          index: d.options.findIndex((o) => /Mill/.test(o.description)),
+          targets: new Map(),
+        };
       }
       if (d.prompt.includes('choose instant/sorcery card from graveyard')) {
-        return { index: d.options.findIndex((o) => /Return/.test(o.description)), targets: new Map() };
+        return {
+          index: d.options.findIndex((o) => /Return/.test(o.description)),
+          targets: new Map(),
+        };
       }
       return { index: 0, targets: new Map() };
     });
@@ -404,7 +476,9 @@ describe('Kairi, the Swirling Sky', () => {
     expect(modeChoice).toHaveLength(1);
     expectAllReachable(ctx, modeChoice);
 
-    const returnChoice = decisions.filter((d) => d.prompt.includes('choose instant/sorcery card from graveyard'));
+    const returnChoice = decisions.filter((d) =>
+      d.prompt.includes('choose instant/sorcery card from graveyard'),
+    );
     expect(returnChoice.length).toBeGreaterThan(0);
     expectAllReachable(ctx, returnChoice);
 
@@ -431,11 +505,26 @@ describe('Drakuseth, Maw of Flames', () => {
 
   it('deals 4 to the fixed target and 3 to each of up to two OTHER targets, all reachable', () => {
     const ctx = pod(4);
-    const t1 = conjure(ctx, 'P2', oracle({ name: 'Target One', typeLine: 'Creature — Bear', power: '1', toughness: '4' }), 'hand');
+    const t1 = conjure(
+      ctx,
+      'P2',
+      oracle({ name: 'Target One', typeLine: 'Creature — Bear', power: '1', toughness: '4' }),
+      'hand',
+    );
     pump(moveObject(ctx, t1, { zone: 'battlefield', controllerId: 'P2' }));
-    const t2 = conjure(ctx, 'P3', oracle({ name: 'Target Two', typeLine: 'Creature — Bear', power: '1', toughness: '4' }), 'hand');
+    const t2 = conjure(
+      ctx,
+      'P3',
+      oracle({ name: 'Target Two', typeLine: 'Creature — Bear', power: '1', toughness: '4' }),
+      'hand',
+    );
     pump(moveObject(ctx, t2, { zone: 'battlefield', controllerId: 'P3' }));
-    const t3 = conjure(ctx, 'P4', oracle({ name: 'Target Three', typeLine: 'Creature — Bear', power: '1', toughness: '4' }), 'hand');
+    const t3 = conjure(
+      ctx,
+      'P4',
+      oracle({ name: 'Target Three', typeLine: 'Creature — Bear', power: '1', toughness: '4' }),
+      'hand',
+    );
     pump(moveObject(ctx, t3, { zone: 'battlefield', controllerId: 'P4' }));
 
     const { perm: drak } = enterBattlefield(ctx, drakuseth());

@@ -14,6 +14,9 @@ import type { Condition } from './condition';
 import type { Selector } from './selector';
 import type { Value } from './value';
 
+/** A ward payment (CR 702.21b). Target legality never depends on ability to pay it. */
+export type WardCost = { kind: 'mana'; cost: ParsedManaCost } | { kind: 'life'; amount: number };
+
 /**
  * One component of an activation cost (CR 602.1b). A cost is a *list* of these, all paid
  * together as one indivisible act at announcement (CR 601.2h) — before the ability goes on the
@@ -109,6 +112,8 @@ export const TAP_COST: readonly AbilityCost[] = [{ kind: 'tap' }];
 export interface ActivatedAbility {
   costs: AbilityCost[];
   ability: Ability;
+  /** An activation restriction checked while legal options are generated and applied. */
+  condition?: Condition;
   /** "Activate only as a sorcery" — main phase, empty stack, your turn (CR 602.5d). */
   timing: 'any' | 'sorcery';
   /**
@@ -161,7 +166,7 @@ export type DynamicManaKind =
  */
 export type PaymentPurpose =
   /** Casting a spell. `card` is the spell's *printed* candidate — it is not on the battlefield. */
-  | { kind: 'castSpell'; oracleId: string }
+  | { kind: 'castSpell'; oracleId: string; isCommander?: boolean }
   /** Activating an ability of a permanent. */
   | { kind: 'activateAbility'; sourceOracleId: string }
   /**
@@ -443,6 +448,8 @@ export type Effect =
   /** Two creatures deal damage equal to their power to each other simultaneously (CR 701.12). */
   | { op: 'fight'; first: EffectRef; second: EffectRef }
   | { op: 'pumpEachUntilEot'; selector: Selector; power: Value | number; toughness: Value | number }
+  /** Snapshot each matching creature's current P/T and add that much again until end of turn. */
+  | { op: 'doublePowerAndToughnessEachUntilEot'; selector: Selector }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
   /**
    * "Creatures you control gain protection from each color until end of turn" (Akroma's Will).
@@ -450,7 +457,7 @@ export type Effect =
    * `KeywordAbility` name, and layer 6 applies it through `addProtection`, not `addKeyword`.
    */
   | { op: 'grantProtectionEachUntilEot'; selector: Selector; colors: Color[] }
-  | { op: 'dealDamage'; target: EffectRef; amount: Value; source?: 'triggerObject' } // to the slot's creature or player
+  | { op: 'dealDamage'; target: EffectRef; amount: Value; source?: EffectRef } // to the slot's creature or player
   /**
    * "deals N damage to target opponent unless that player sacrifices a creature of their
    * choice" (Demanding Dragon, Tomb Blade) — the choice belongs to the TARGET, not the
@@ -458,12 +465,19 @@ export type Effect =
    * which is why it needs its own op rather than composing with an existing one.
    */
   | { op: 'dealDamageUnlessSacrifice'; target: EffectRef; amount: Value }
-  | { op: 'destroy'; target: EffectRef } // target creature
+  | { op: 'destroy'; target: EffectRef; cantRegenerate?: boolean } // target creature
+  /** Create one "next destruction this turn" replacement shield (CR 701.19a). */
+  | { op: 'regenerate'; target: EffectRef }
   | { op: 'destroyAndCreateTokenForController'; target: EffectRef; spec: TokenSpec; count: Value }
   | { op: 'exileAndGainLifeTargetController'; target: EffectRef }
   | { op: 'damageEachCreatureController'; amount: Value }
   | { op: 'sacrificeAndDrawForPower' }
-  | { op: 'sacrificeGreatestEachOpponent'; selector: 'creature' | 'creatureOrPlaneswalker'; metric: 'power' | 'manaValue'; action: 'sacrifice' | 'exile' }
+  | {
+      op: 'sacrificeGreatestEachOpponent';
+      selector: 'creature' | 'creatureOrPlaneswalker';
+      metric: 'power' | 'manaValue';
+      action: 'sacrifice' | 'exile';
+    }
   | { op: 'transferCountersFromTriggerObject'; target: EffectRef }
   | { op: 'mayPayLifeForTriggerPowerAndCounter' }
   | { op: 'vindictiveLichModes' }
@@ -481,9 +495,15 @@ export type Effect =
   | { op: 'millTargetPlayer'; target: EffectRef; count: number }
   | { op: 'millAndChooseArtifact' }
   | { op: 'dealDamageNonbasicLands'; target: EffectRef }
-  | { op: 'sacrificeOneEachOpponent'; filter: 'creature' | 'nonland' }
+  | { op: 'sacrificeOneEachOpponent'; filter: 'creature' | 'nonland' | Selector }
   | { op: 'sacrificeEachPlayer'; count: number; filter: 'creature' | 'any' }
-  | { op: 'putCounterByPermanentType'; target: EffectRef; creatureCounter: string; planeswalkerCounter: string; count: Value | number }
+  | {
+      op: 'putCounterByPermanentType';
+      target: EffectRef;
+      creatureCounter: string;
+      planeswalkerCounter: string;
+      count: Value | number;
+    }
   | { op: 'drawRevealTopLoseManaValue' }
   | { op: 'goadEachOpponent' }
   | { op: 'createTreasureForDeaths' }
@@ -518,9 +538,17 @@ export type Effect =
   /** Counter a spell, then create tokens for that spell's controller (Offer/Swan Song). */
   | { op: 'counterAndCreateTokenForController'; target: number; spec: TokenSpec; count: Value } // target spell — always a real target
   | { op: 'sacrifice'; target: EffectRef }
+  /** Sacrifice one matching controlled permanent, then perform linked effects only if it happened. */
+  | { op: 'sacrificeOneThen'; selector: Selector; then: Effect[] }
   | { op: 'gainControlTarget'; target: EffectRef }
   | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'putCountersEach'; selector: Selector; counter: string; count: Value | number }
+  | {
+      op: 'putCountersOnCreaturesTargetPlayerControls';
+      target: EffectRef;
+      counter: string;
+      count: Value | number;
+    }
   | { op: 'doubleCountersTarget'; target: EffectRef }
   | { op: 'doublePlayerCountersTarget'; target: EffectRef }
   | { op: 'doubleCountersEach'; selector: Selector }
@@ -531,6 +559,8 @@ export type Effect =
   | { op: 'exileEach'; selector: Selector }
   | { op: 'exileEachOpponentGraveyard' }
   | { op: 'exileAllGraveyards' }
+  /** Put the currently resolving spell card on the bottom of its owner's library. */
+  | { op: 'resolvingSpellToLibraryBottom' }
   | { op: 'exileTargetPlayerGraveyard'; target: EffectRef }
   | { op: 'returnToHandEach'; selector: Selector }
   | { op: 'graveyardToBattlefieldEach'; filter: Selector; scope?: 'you' | 'all' }
@@ -570,7 +600,13 @@ export type Effect =
   /** "This land deals 1 damage to you" — damage from the source to its own controller. */
   | { op: 'damageController'; amount: number }
   /** "It deals 5 damage to each creature without flying" — the untargeted mass form. */
-  | { op: 'damageEach'; selector: Selector; amount: Value }
+  | {
+      op: 'damageEach';
+      selector: Selector;
+      amount: Value;
+      source?: EffectRef;
+      exceptSource?: true;
+    }
   /** "~ deals X damage to each creature without flying AND EACH PLAYER" (Earthquake). */
   | { op: 'damageEachPlayer'; amount: Value }
   /**
@@ -580,7 +616,17 @@ export type Effect =
    * `destinations[0]` that many times instead of a fixed-length array, since the number of
    * cards that may be found isn't known until resolution.
    */
-  | { op: 'searchLibrary'; filter: Selector; destinations: SearchDestination[]; count?: Value; differentNames?: boolean }
+  | {
+      op: 'searchLibrary';
+      filter: Selector;
+      destinations: SearchDestination[];
+      count?: Value;
+      differentNames?: boolean;
+    }
+  /** Hunting Wilds: search two Forests and permanently animate only those found this way. */
+  | { op: 'huntingWilds' }
+  /** Etali's linked per-player exile and optional free-cast sequence. */
+  | { op: 'etaliPrimalConqueror' }
   /**
    * "Search your library for a `<filter>` card and cast that card without paying its mana
    * cost" (Sunforger) — like `searchLibrary`, but the found card is cast for free instead of
@@ -588,7 +634,7 @@ export type Effect =
    */
   | { op: 'searchLibraryCastFree'; filter: Selector }
   | { op: 'shuffle' }
-  | { op: 'scry'; count: number }
+  | { op: 'scry'; count: Value | number }
   | { op: 'surveil'; count: number }
   /** Choose any number of eligible players and permanents, then add one of each counter they have. */
   | { op: 'proliferate' }
@@ -597,11 +643,29 @@ export type Effect =
    * controller pays. Not `counter`, which targets — this acts on the object below it on the
    * stack, which ward's own trigger recorded.
    */
-  | { op: 'counterUnlessPays'; cost: ParsedManaCost; stackObjectId: string }
+  | { op: 'counterUnlessPays'; cost: WardCost; stackObjectId: string }
   /** Equip (CR 702.6): attach the ability's source to the target permanent. */
   | { op: 'attachSelfTo'; target: EffectRef }
   /** "Create a 1/1 black and green Pest creature token …" (CR 111.1). */
-  | { op: 'createToken'; spec: TokenSpec; count: Value; powerOverride?: number | Value; toughnessOverride?: number | Value }
+  | {
+      op: 'createToken';
+      spec: TokenSpec;
+      count: Value;
+      powerOverride?: number | Value;
+      toughnessOverride?: number | Value;
+      /** "Create N tapped … tokens" — they enter tapped, not enter then tap. */
+      tapped?: boolean;
+    }
+  /** Create a batch of tokens tapped and attacking a defending player chosen on resolution. */
+  | {
+      op: 'createTokenAttacking';
+      spec: TokenSpec;
+      count: Value;
+      powerOverride?: number | Value;
+      toughnessOverride?: number | Value;
+    }
+  /** Create one token already attached to an announced permanent target. */
+  | { op: 'createAttachedToken'; spec: TokenSpec; target: EffectRef }
   /** Create one token for each opponent, optionally attacking that opponent. */
   | { op: 'createTokenForEachOpponent'; spec: TokenSpec; attacking?: boolean }
   | { op: 'createTokenForPlayer'; target: EffectRef; spec: TokenSpec; count: Value }
@@ -624,8 +688,23 @@ export type Effect =
       sacrificeAt?: 'endStep';
     }
   /** Source permanent becomes a copy of the referent's copiable values (CR 707.2). */
-  | { op: 'becomeCopyOf'; ref: EffectRef; untilEot?: boolean; addTypes?: string[]; addSupertypes?: string[]; nameOverride?: string }
-  | { op: 'becomeCopyOfTarget'; target: EffectRef; ref: EffectRef; untilEot?: boolean; addTypes?: string[]; addSupertypes?: string[]; nameOverride?: string }
+  | {
+      op: 'becomeCopyOf';
+      ref: EffectRef;
+      untilEot?: boolean;
+      addTypes?: string[];
+      addSupertypes?: string[];
+      nameOverride?: string;
+    }
+  | {
+      op: 'becomeCopyOfTarget';
+      target: EffectRef;
+      ref: EffectRef;
+      untilEot?: boolean;
+      addTypes?: string[];
+      addSupertypes?: string[];
+      nameOverride?: string;
+    }
   /** "Untap all lands you control" (Beledros). */
   | { op: 'untapEach'; selector: Selector }
   /**
@@ -686,7 +765,7 @@ export type Effect =
       mayShuffle?: true;
     }
   /** "Destroy all Dragon creatures" (Crux of Fate) — the untargeted mass form of `destroy`. */
-  | { op: 'destroyEach'; selector: Selector }
+  | { op: 'destroyEach'; selector: Selector; cantRegenerate?: boolean }
   /**
    * "3 damage to each of up to two other targets" (Drakuseth, Maw of Flames) — a FIXED amount
    * dealt independently to every object chosen in a variable-count slot (`TargetSpec.count`).
@@ -719,12 +798,22 @@ export type Effect =
     }
   | { op: 'regainControlOfOwnCreatures' }
   | { op: 'exileTargetGraveyardAndBuffIfCreature'; targetSlot: number }
-  | { op: 'pumpTargetPlayerCreaturesUntilEot'; targetSlot: number; power: number; toughness: number }
+  | {
+      op: 'pumpTargetPlayerCreaturesUntilEot';
+      targetSlot: number;
+      power: number;
+      toughness: number;
+    }
   | { op: 'untapTargetPlayerCreatures'; targetSlot: number }
   | { op: 'exileUntilSourceLeaves'; targetSlot: number }
   | { op: 'exileTargetAndControllerMaySearchBasicLandTapped'; targetSlot: number }
   /** Remove a target, then let its controller search for a basic land (Path/Trophy). */
-  | { op: 'removeTargetAndControllerMaySearchBasicLand'; target: EffectRef; action: 'destroy' | 'exile'; entersTapped: boolean }
+  | {
+      op: 'removeTargetAndControllerMaySearchBasicLand';
+      target: EffectRef;
+      action: 'destroy' | 'exile';
+      entersTapped: boolean;
+    }
   | { op: 'populate' }
   | { op: 'untapAttackingPlayerNonlandPermanents' }
   /**
@@ -827,7 +916,12 @@ export type Effect =
   | { op: 'chaosWarp'; target: EffectRef }
   | { op: 'manifestTop'; player: 'you' | 'eventPlayer' }
   | { op: 'manifestTopForTargetController'; target: EffectRef }
-  | { op: 'opponentMayDrawOrMillThenDamage'; target: EffectRef; drawCount: number; millCount: number }
+  | {
+      op: 'opponentMayDrawOrMillThenDamage';
+      target: EffectRef;
+      drawCount: number;
+      millCount: number;
+    }
   | { op: 'lookAtTopNCastOneFree'; count: number }
   | { op: 'castAnyFromHandFree' }
   | { op: 'castOneFromHandFreeUpTo'; maxManaValue: number }
@@ -986,6 +1080,7 @@ export type TriggerWhen =
   | 'dies'
   | 'attacks'
   | 'blocks'
+  | 'becomesBlocked'
   | 'dealsCombatDamageToPlayer'
   | 'becomesTapped'
   | 'fights'
@@ -1013,6 +1108,7 @@ export type ObjectTriggerWhen =
   | 'dies'
   | 'attacks'
   | 'blocks'
+  | 'becomesBlocked'
   | 'dealsCombatDamageToPlayer'
   | 'becomesTapped'
   | 'fights'
@@ -1048,6 +1144,8 @@ export type TriggerHead =
       when: 'castsSpell';
       caster: 'you' | 'opponent' | 'each';
       filter?: Selector;
+      /** At least one announced permanent target must match this selector. */
+      targetFilter?: Selector;
       /** Fire only for this numbered spell by that caster during the current turn. */
       ordinal?: number;
     }
@@ -1055,7 +1153,10 @@ export type TriggerHead =
    * "At the beginning of your/each upkeep|end step" — `player` says whose step counts.
    * `beginningOfCombat` is CR 507.1's begin combat step, queued the same way.
    */
-  | { when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'beginningOfCombat'; player: 'you' | 'each' }
+  | {
+      when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'beginningOfCombat';
+      player: 'you' | 'each';
+    }
   /**
    * "At the beginning of each of your main phases" (Frontier Siege's Khans mode) — fires at
    * BOTH precombat and postcombat main, unlike the single-step triggers above.
@@ -1120,6 +1221,8 @@ export interface Ability {
     repeatable?: boolean;
     /** A state-dependent maximum announced at cast time (for example, two while controlling a commander). */
     maxChoicesIf?: { condition: import('./condition').Condition; maxChoices: number };
+    /** Escalate-style cost paid once for every chosen mode beyond the first. */
+    additionalCostPerChoiceBeyondFirst?: AbilityCost[];
     options: {
       effects: Effect[];
       description?: string;

@@ -10,7 +10,7 @@ They do work differently, and the cause is not where it looks. There is exactly 
 (`effects/resolve.ts::executeAbility`) and no per-card code, so two similar cards behaving
 differently can only mean **divergent authored data**.
 
-ADR 0004 made a card's behavior data. It did not say how that data gets *written*, and the answer
+ADR 0004 made a card's behavior data. It did not say how that data gets _written_, and the answer
 was: by hand, per card, per file. Measured across `overrides/` before this change (14 files, 9,564
 lines, ~880 registration sites, ~430 cards):
 
@@ -52,7 +52,7 @@ token catalog). Every override composes these instead of writing literals.
 The builders are thin — each returns exactly the IR the literal did — so adopting one changes how a
 card is written, never what it does. Coverage is chosen by measured frequency, not completeness:
 there are 182 `Effect` ops and wrapping each would just rename the problem. What is wrapped is the
-*boilerplate* (ability envelopes, trigger heads, costs, tokens, statics, registration); effects stay
+_boilerplate_ (ability envelopes, trigger heads, costs, tokens, statics, registration); effects stay
 literals, because they are already a well-typed discriminated union.
 
 Two invariants are worth stating because they are load-bearing and easy to get wrong by hand:
@@ -71,7 +71,7 @@ only on function hoisting.
 ## Verification
 
 A refactor of the authoring layer needs proof it left the data alone, and nothing existing gives it:
-`docs/modelled-cards.md` compares card *names*, and `determinism.test.ts` compares a run against a
+`docs/modelled-cards.md` compares card _names_, and `determinism.test.ts` compares a run against a
 re-run of itself. So `overrides/snapshot.ts` serializes the registry to canonical JSON (object keys
 sorted, since the merge is key-order-insensitive; array order preserved, since it is the slot index)
 and `tests/override-defs.test.ts` pins it, plus two structural invariants: every card is registered
@@ -151,7 +151,7 @@ real printed type line) while `parseTokenFace` spells it `"Token Creature — Hu
 off" difference already flagged and left alone in two override files' comments
 (`queen-marchesa-queens-gambit.ts`, `draconic-destruction.ts`). Keying on it would make every lookup
 miss on formatting alone rather than on anything a card's text actually says. A hit still replaces
-the *whole* object, `typeLine` included — the substitution is what actually fixes the formatting
+the _whole_ object, `typeLine` included — the substitution is what actually fixes the formatting
 mismatch for any card it applies to, not something the key comparison needed to special-case.
 
 This turned up the same mojibake em-dash bug ADR 0025 fixed across `overrides/` (increment 1), but
@@ -180,7 +180,7 @@ the assertion can't be accidentally passing via a substituted object instead of 
 
 A review of the merged migration (PR #7) surfaced nine issues, all fixed in the same session, all
 covered by new regression tests. None changed a live card's behavior in the shipped pool — the bugs
-were in the *machinery* the migration touched, reachable by any future override, not in a card any
+were in the _machinery_ the migration touched, reachable by any future override, not in a card any
 current deck plays. Grouped by the durable lesson, since the point of this section is prevention,
 not a changelog:
 
@@ -239,7 +239,7 @@ not a changelog:
   gitignored-fixture problem but caught by the same pass; fixed to `resolve(...)` alongside it.)
 
 None of these needed a new increment of the authoring layer itself — the builders' shapes were
-right. What was missing was closer scrutiny of the *composition* code around them (`applyOverride`,
+right. What was missing was closer scrutiny of the _composition_ code around them (`applyOverride`,
 `registerOverride`, `parseCreateTokenSentence`'s post-parse mutation, the registration entry point)
 and of two overrides that had quietly outlived the bug they were written to work around. The rule-4
 and rule-5 additions to `overrides/index.ts` and `tokens.ts` above are the durable artifact: read

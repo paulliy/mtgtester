@@ -53,6 +53,8 @@ export interface ValueScope {
   targets?: readonly string[];
   /** Card id of the object that fired the trigger. */
   triggerObjectCardId?: string;
+  /** Total counters on an activated ability's source, captured before costs are paid. */
+  sourceCountersTotal?: number;
   countPermanents?: (selector: Selector, scope: 'you' | 'opponents' | 'all') => number;
 }
 
@@ -61,7 +63,16 @@ export interface ValueScope {
  * carried through the stack. Everything else in a `ValueScope` is re-derived at resolution;
  * these cannot be, because the event is over by then.
  */
-export type TriggerScope = Pick<ValueScope, 'damageDealt' | 'triggerCount' | 'spellManaValue' | 'manaSpent' | 'eventPlayerId' | 'stationPower'>;
+export type TriggerScope = Pick<
+  ValueScope,
+  | 'damageDealt'
+  | 'triggerCount'
+  | 'spellManaValue'
+  | 'manaSpent'
+  | 'eventPlayerId'
+  | 'stationPower'
+  | 'sourceCountersTotal'
+>;
 
 export type Value =
   | { kind: 'const'; n: number }
@@ -73,6 +84,21 @@ export type Value =
   | { kind: 'times'; of: Value; n: number }
   /** "the number of Dragons you control" / "the number of lands you control". */
   | { kind: 'countPermanents'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
+  /** Number of matching permanents controlled by an announced player target. */
+  | { kind: 'countPermanentsControlledByTarget'; target: EffectRef; selector: Selector }
+  /** Number of Auras you control that are currently attached to creatures. */
+  | { kind: 'aurasYouControlAttachedToCreatures' }
+  /**
+   * Cards matching printed characteristics in a non-battlefield zone. Unlike
+   * `countPermanents`, this deliberately uses card-zone candidates: continuous effects do not
+   * change cards in graveyards, hands, or libraries.
+   */
+  | {
+      kind: 'countCardsInZone';
+      zone: 'graveyard' | 'hand' | 'library';
+      selector: Selector;
+      owner: 'you' | 'opponents' | 'all';
+    }
   /** Number of distinct colors among permanents controlled by the resolving player. */
   | { kind: 'colorsAmongPermanents' }
   /** Colored mana symbols in the mana costs of permanents controlled by the resolving player. */
@@ -87,8 +113,11 @@ export type Value =
   | { kind: 'greatestManaValueAmong'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
   /** "the total power of attacking creatures" (Klauth). */
   | { kind: 'totalPowerOfAttackers' }
+  | { kind: 'totalPowerAmong'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
   /** The X announced for this spell (CR 601.2b). */
   | { kind: 'xValue' }
+  /** Number of times an optional additional cost was paid for the resolving/entering spell. */
+  | { kind: 'optionalCostCount'; mechanic: 'kicker' | 'squad' | 'offspring' }
   /** "that many" / "equal to that damage" — the damage that caused this trigger. */
   | { kind: 'damageDealt' }
   /** "that many" where the trigger aggregated several objects (CR 603.2c). */
@@ -102,6 +131,8 @@ export type Value =
   /** Power of the creature tapped to pay a Station activation cost, captured at announcement. */
   | { kind: 'stationPower' }
   | { kind: 'countersOnSelf'; counter: string }
+  /** Total number of counters of every kind on the source permanent. */
+  | { kind: 'allCountersOnSelf' }
   | { kind: 'countersOnTarget'; target: EffectRef; counter: string }
   /** "Where X is that artifact's mana value" (Hoard-Smelter Dragon) — the target's mana value. */
   | { kind: 'manaValueOfTarget'; target: EffectRef }
@@ -111,6 +142,8 @@ export type Value =
   | { kind: 'creaturesDiedThisTurn' }
   | { kind: 'powerOfSource' }
   | { kind: 'toughnessOfSource' }
+  /** Current power of an announced permanent target at resolution. */
+  | { kind: 'powerOfTarget'; target: EffectRef }
   | { kind: 'opponentsLostLifeThisTurn' }
   | { kind: 'powerOfTriggerObject' }
   | { kind: 'cardsInTargetHand'; target: EffectRef }
@@ -186,7 +219,10 @@ export function cardTypesInAllGraveyards(ctx: GameContext): number {
 export function devotionTo(ctx: GameContext, controllerId: PlayerId, color: Color): number {
   return ctx.state.battlefield
     .filter((perm) => perm.controllerId === controllerId)
-    .reduce((total, perm) => total + (ctx.defs.get(perm.oracleId)?.manaCost?.colored[color] ?? 0), 0);
+    .reduce(
+      (total, perm) => total + (ctx.defs.get(perm.oracleId)?.manaCost?.colored[color] ?? 0),
+      0,
+    );
 }
 
 /**
@@ -198,11 +234,12 @@ export function devotionTo(ctx: GameContext, controllerId: PlayerId, color: Colo
  * `damageDealt`, or `targets`, it is not tied to one resolution and does not go stale between
  * layer passes.
  */
-export function evaluateValue(
-  ctx: GameContext,
-  value: Value,
-  scope?: Pick<ValueScope, 'controllerId' | 'countPermanents'>,
-): number {
+export type LayerValueScope = Pick<ValueScope, 'controllerId' | 'countPermanents'> & {
+  sourceCounters?: Readonly<Record<string, number>>;
+  countAurasYouControlAttachedToCreatures?: () => number;
+};
+
+export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValueScope): number {
   switch (value.kind) {
     case 'const':
       return value.n;
@@ -212,11 +249,21 @@ export function evaluateValue(
       return evaluateValue(ctx, value.of, scope) * value.n;
     case 'cardTypesInAllGraveyards':
       return cardTypesInAllGraveyards(ctx);
+    case 'countersOnSelf':
+      if (scope?.sourceCounters === undefined) {
+        throw new Error('engine bug: source counters need a layer evaluation scope');
+      }
+      return scope.sourceCounters[value.counter] ?? 0;
     case 'countPermanents':
       if (!scope?.countPermanents) {
         throw 'engine bug: value countPermanents needs a layer evaluation scope';
       }
       return scope.countPermanents(value.selector, value.scope);
+    case 'aurasYouControlAttachedToCreatures':
+      if (scope?.countAurasYouControlAttachedToCreatures === undefined) {
+        throw new Error('engine bug: attached Aura count needs a layer evaluation scope');
+      }
+      return scope.countAurasYouControlAttachedToCreatures();
     case 'devotionTo':
       if (scope?.controllerId === undefined) {
         throw new Error(`engine bug: value "devotionTo" needs a source controller`);

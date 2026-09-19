@@ -237,7 +237,10 @@ export class MatchRunner {
    * per-action state was not retained and the turn snapshot was served instead, and the client
    * needs to know that so it does not highlight a log line the board does not match.
    */
-  stateAt(turn: number, sequence?: number): { state: SpectatorState; sequence: number | null } | null {
+  stateAt(
+    turn: number,
+    sequence?: number,
+  ): { state: SpectatorState; sequence: number | null } | null {
     if (sequence !== undefined) {
       const exact = this.sequenceSnapshots.get(sequence);
       if (exact !== undefined) return { state: exact, sequence };
@@ -304,6 +307,9 @@ export class MatchRunner {
     if (this.status !== 'idle') return;
     this.setStatus('running');
     this.opts.recorder?.start(this.opts.seed, this.opts.seats, this.opts.gameMode ?? 'spectator');
+    // A prepared-scenario engine (Card Test Lab) starts mid-game: its first snapshot is already
+    // past turn 0, so a viewer anchored at turn 0 would park compute before the first decision.
+    this.viewTurn = this.opts.engine.getState().turnNumber;
     this.captureSnapshot();
     this.flushEvents();
     this.flushDebug();
@@ -313,7 +319,12 @@ export class MatchRunner {
     } catch (err) {
       this.recordHalt(
         err instanceof ComputeHaltError
-          ? { kind: err.kind, reason: err.message, turn: this.frontierTurn, ...(err.cardName !== undefined && { cardName: err.cardName }) }
+          ? {
+              kind: err.kind,
+              reason: err.message,
+              turn: this.frontierTurn,
+              ...(err.cardName !== undefined && { cardName: err.cardName }),
+            }
           : {
               kind: 'engineError',
               reason: err instanceof Error ? err.message : String(err),
@@ -487,7 +498,11 @@ export class MatchRunner {
         if (event.payload['isLand'] !== true) continue;
         this.landsDrawn.set(seat, (this.landsDrawn.get(seat) ?? 0) + 1);
       }
-      if (event.type === 'damage' && typeof event.payload['target'] === 'string' && typeof event.payload['controller'] === 'string') {
+      if (
+        event.type === 'damage' &&
+        typeof event.payload['target'] === 'string' &&
+        typeof event.payload['controller'] === 'string'
+      ) {
         this.eliminators.set(event.payload['target'], event.payload['controller']);
       }
     }
@@ -500,12 +515,26 @@ export class MatchRunner {
     this.indexMetricEvents(this.opts.engine.eventsSince(this.eventCursor));
     const records: ManaMetricRecord[] = this.opts.engine.getState().players.map((player) => {
       const view = this.opts.engine.view(player.id);
-      const landsInHand = view.hand.filter((card) => card.typeLine?.includes('Land') === true).length;
-      const spellsCastable = view.hand.filter((card) => card.typeLine?.includes('Land') !== true && card.manaCost !== undefined).length;
-      const unspentMana = Object.values(view.availableMana).reduce((total, amount) => total + amount, 0);
-      return { seat: player.id, turn, landsInHand, landsDrawnCumulative: this.landsDrawn.get(player.id) ?? 0,
+      const landsInHand = view.hand.filter(
+        (card) => card.typeLine?.includes('Land') === true,
+      ).length;
+      const spellsCastable = view.hand.filter(
+        (card) => card.typeLine?.includes('Land') !== true && card.manaCost !== undefined,
+      ).length;
+      const unspentMana = Object.values(view.availableMana).reduce(
+        (total, amount) => total + amount,
+        0,
+      );
+      return {
+        seat: player.id,
+        turn,
+        landsInHand,
+        landsDrawnCumulative: this.landsDrawn.get(player.id) ?? 0,
         cardsDrawnCumulative: this.cardsDrawn.get(player.id) ?? 0,
-        spellsCastable, unspentMana, onCurve: player.landsPlayedThisTurn > 0 };
+        spellsCastable,
+        unspentMana,
+        onCurve: player.landsPlayedThisTurn > 0,
+      };
     });
     this.opts.recorder?.saveManaMetrics?.(records);
   }

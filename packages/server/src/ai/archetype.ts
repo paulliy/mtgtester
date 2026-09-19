@@ -117,10 +117,13 @@ export async function refineArchetype(
   try {
     const result = await queue.enqueue(() =>
       client.requestDecision(
-        { messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ], estimatedTokens: Math.ceil((system.length + user.length) / 4) },
+        {
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user },
+          ],
+          estimatedTokens: Math.ceil((system.length + user.length) / 4),
+        },
         {
           requestId: `archetype-${input.commanderNames.join('-') || 'deck'}`,
           gameId: 'archetype-inference',

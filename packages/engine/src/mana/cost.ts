@@ -37,7 +37,9 @@ export interface ParsedManaCost {
    */
   x?: number;
   /** Hybrid pips, e.g. {G/U} → [['G', 'U']]. Payable with any symbol in the tuple. */
-  hybrid?: (Color[])[];
+  hybrid?: Color[][];
+  /** Phyrexian pips, each payable with its color or 2 life (CR 107.4f). */
+  phyrexian?: Color[];
 }
 
 export interface ManaCostParseResult {
@@ -68,6 +70,9 @@ export function parseManaCost(cost: ManaCostString | null): ManaCostParseResult 
         parsed.colorless += 1;
       } else if (sym === 'X') {
         parsed.x = (parsed.x ?? 0) + 1;
+      } else if (/^[WUBRG]\/P$/.test(sym)) {
+        if (!parsed.phyrexian) parsed.phyrexian = [];
+        parsed.phyrexian.push(sym[0] as Color);
       } else if (sym.includes('/')) {
         const parts = sym.split('/');
         const colors = parts.map((p) => p.toUpperCase() as Color);
@@ -134,6 +139,9 @@ export function describeManaCost(cost: ParsedManaCost): string {
   if (cost.hybrid) {
     for (const h of cost.hybrid) parts.push(`{${h.join('/')}}`);
   }
+  if (cost.phyrexian) {
+    for (const color of cost.phyrexian) parts.push(`{${color}/P}`);
+  }
   const out = parts.join('');
   return out === '' ? '{0}' : out;
 }
@@ -149,7 +157,13 @@ export function describeManaCost(cost: ParsedManaCost): string {
 export function manaValueOf(cost: ParsedManaCost | null): number {
   if (cost === null) return 0;
   const colored = ALL_COLORS.reduce((sum, c) => sum + cost.colored[c], 0);
-  return cost.generic + colored + cost.colorless;
+  return (
+    cost.generic +
+    colored +
+    cost.colorless +
+    (cost.hybrid?.length ?? 0) +
+    (cost.phyrexian?.length ?? 0)
+  );
 }
 
 export function totalPips(cost: ParsedManaCost): number {
@@ -157,7 +171,8 @@ export function totalPips(cost: ParsedManaCost): number {
     cost.generic +
     cost.colorless +
     ALL_COLORS.reduce((sum, c) => sum + cost.colored[c], 0) +
-    (cost.hybrid?.length ?? 0)
+    (cost.hybrid?.length ?? 0) +
+    (cost.phyrexian?.length ?? 0)
   );
 }
 
@@ -256,6 +271,10 @@ export interface PaymentPlan {
    * come from the ability that made it — an unattributed count cannot say which.
    */
   produced: ProducedMana[];
+  /** Life used for Phyrexian pips. */
+  lifePaid?: number;
+  /** Concrete mana-only cost after choosing how each Phyrexian pip is paid. */
+  resolvedCost?: ParsedManaCost;
 }
 
 /**
@@ -312,7 +331,38 @@ export function planPayment(
   poolEntries: readonly ManaEntry[],
   sources: readonly ManaSource[],
   allows: ManaAllowance = ALLOW_NOTHING,
+  lifeTotal = 0,
 ): PaymentPlan | null {
+  if ((cost.phyrexian?.length ?? 0) > 0) {
+    const pips = cost.phyrexian as Color[];
+    const expand = (
+      index: number,
+      colored: ParsedManaCost['colored'],
+      lifePaid: number,
+    ): PaymentPlan | null => {
+      if (index === pips.length) {
+        if (lifePaid > lifeTotal) return null;
+        const resolvedCost: ParsedManaCost = {
+          ...cost,
+          colored,
+        };
+        delete resolvedCost.phyrexian;
+        const plan = planPayment(resolvedCost, poolEntries, sources, allows, lifeTotal - lifePaid);
+        return plan === null
+          ? null
+          : {
+              ...plan,
+              lifePaid: (plan.lifePaid ?? 0) + lifePaid,
+              resolvedCost,
+            };
+      }
+      const color = pips[index] as Color;
+      const mana = expand(index + 1, { ...colored, [color]: colored[color] + 1 }, lifePaid);
+      if (mana !== null) return mana;
+      return expand(index + 1, colored, lifePaid + 2);
+    };
+    return expand(0, cost.colored, 0);
+  }
   // Hybrid choices must be solved jointly with the floating pool and sources. Greedy
   // consumption loses legal payments such as {W/U}{W/B} from a W,U pool.
   if ((cost.hybrid?.length ?? 0) > 0) {
@@ -322,7 +372,13 @@ export function planPayment(
         const key = ALL_COLORS.map((c) => colored[c]).join(',');
         if (tried.has(key)) return null;
         tried.add(key);
-        return planPayment({ generic: cost.generic, colorless: cost.colorless, colored }, poolEntries, sources, allows);
+        return planPayment(
+          { generic: cost.generic, colorless: cost.colorless, colored },
+          poolEntries,
+          sources,
+          allows,
+          lifeTotal,
+        );
       }
       for (const color of cost.hybrid![index]!) {
         const result = expand(index + 1, { ...colored, [color]: colored[color] + 1 });
@@ -334,9 +390,7 @@ export function planPayment(
   }
   // Drop everything this payment may not legally spend, then solve the unrestricted problem.
   const usableEntries = poolEntries.filter((e) => entryIsUsable(e, allows));
-  const usableSources = sources.filter(
-    (s) => s.restriction === undefined || allows(s.restriction),
-  );
+  const usableSources = sources.filter((s) => s.restriction === undefined || allows(s.restriction));
 
   // Sources that cost mana to activate are held back for a second pass (see `solveWithCostly`):
   // the first pass is byte-identical to the payment this function has always planned, so every
@@ -389,11 +443,13 @@ function addCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
   const colored = { ...a.colored };
   for (const c of ALL_COLORS) colored[c] += b.colored[c];
   const hybrid = [...(a.hybrid ?? []), ...(b.hybrid ?? [])];
+  const phyrexian = [...(a.phyrexian ?? []), ...(b.phyrexian ?? [])];
   return {
     generic: a.generic + b.generic,
     colored,
     colorless: a.colorless + b.colorless,
     ...(hybrid.length > 0 ? { hybrid } : {}),
+    ...(phyrexian.length > 0 ? { phyrexian } : {}),
   };
 }
 
@@ -417,15 +473,14 @@ function orderForActivation(
 ): PaymentPlan | null {
   const free: ManaSource[] = [];
   const costly: ManaSource[] = [];
-  for (const source of plan.tapSources) (source.manaCost === undefined ? free : costly).push(source);
+  for (const source of plan.tapSources)
+    (source.manaCost === undefined ? free : costly).push(source);
   // Guard against a factorial search. No real board has this many mana-costing sources in one
   // payment; refusing is fail-closed.
   if (costly.length > 6) return null;
 
   const producedBy = (source: ManaSource): ManaEntry[] =>
-    plan.produced
-      .filter((p) => p.cardId === source.cardId)
-      .map(({ symbol }) => ({ symbol }));
+    plan.produced.filter((p) => p.cardId === source.cardId).map(({ symbol }) => ({ symbol }));
 
   const start: ManaEntry[] = [...poolEntries];
   for (const source of free) start.push(...producedBy(source));
@@ -438,7 +493,12 @@ function orderForActivation(
       if (spent === null) continue;
       const next = available.filter((e) => !spent.includes(e));
       order.push(source);
-      if (search([...next, ...producedBy(source)], remaining.filter((s) => s !== source))) {
+      if (
+        search(
+          [...next, ...producedBy(source)],
+          remaining.filter((s) => s !== source),
+        )
+      ) {
         return true;
       }
       order.pop();
@@ -476,7 +536,7 @@ function solveFrom(
     fromPool[c] += take;
   }
   if (remaining.hybrid && remaining.hybrid.length > 0) {
-    const stillNeeded: (Color[])[] = [];
+    const stillNeeded: Color[][] = [];
     for (const h of remaining.hybrid) {
       const availableColor = h.find((c) => poolLeft[c] > 0);
       if (availableColor !== undefined) {
@@ -512,7 +572,12 @@ function solveFrom(
   // source is pure gain. Those only ever reach here on `planPayment`'s second pass, so the fast
   // path still covers every payment it covered before.
   const hasCostly = usableSources.some((s) => s.manaCost !== undefined);
-  if (!hasHybrid && !hasAlternatives && !hasCostly && usableSources.every((s) => s.units.every((u) => u.length === 1))) {
+  if (
+    !hasHybrid &&
+    !hasAlternatives &&
+    !hasCostly &&
+    usableSources.every((s) => s.units.every((u) => u.length === 1))
+  ) {
     return planSingleChoice(need, usableSources, fromPool);
   }
 
@@ -714,6 +779,7 @@ export function canPay(
   poolEntries: readonly ManaEntry[],
   sources: readonly ManaSource[],
   allows: ManaAllowance = ALLOW_NOTHING,
+  lifeTotal = 0,
 ): boolean {
-  return planPayment(cost, poolEntries, sources, allows) !== null;
+  return planPayment(cost, poolEntries, sources, allows, lifeTotal) !== null;
 }

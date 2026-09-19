@@ -80,6 +80,8 @@ describe('runToCompletionAsync', () => {
       },
     };
 
-    await expect(runToCompletionAsync(engine, () => failingProvider)).rejects.toThrow('Async API failure');
+    await expect(runToCompletionAsync(engine, () => failingProvider)).rejects.toThrow(
+      'Async API failure',
+    );
   });
 });

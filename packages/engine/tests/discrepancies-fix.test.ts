@@ -31,7 +31,7 @@ describe('Discrepancy Fixes & CR Compliance', () => {
     });
   });
 
-  describe('Lozhan, Dragons\' Legacy — Non-Commander Target Filter', () => {
+  describe("Lozhan, Dragons' Legacy — Non-Commander Target Filter", () => {
     it('attaches not(IS_COMMANDER) filter to target spec', () => {
       const raw = oracle({
         name: "Lozhan, Dragons' Legacy",
@@ -53,8 +53,9 @@ describe('Discrepancy Fixes & CR Compliance', () => {
   });
 
   describe('Kairi, the Swirling Sky — Modal Death Trigger', () => {
-    it('interprets death trigger options with bounceUpTo6MV and millAndReturnSpells ops', () => {
+    it('is catalog-contained because return-any-number is an untargeted bounce', () => {
       const raw = oracle({
+        oracleId: '85aa53e8-f062-4d02-bc69-1413f7f0dcf1',
         name: 'Kairi, the Swirling Sky',
         manaCost: '{4}{U}{U}',
         typeLine: 'Legendary Creature — Dragon Spirit',
@@ -66,16 +67,17 @@ describe('Discrepancy Fixes & CR Compliance', () => {
       });
 
       const def = interpretCard(raw);
-      expect(def.triggers).toHaveLength(1);
-      const modes = def.triggers[0]?.modes;
-      expect(modes?.options[0]?.effects).toEqual([{ op: 'bounceUpTo6MV' }]);
-      expect(modes?.options[1]?.effects).toEqual([{ op: 'millAndReturnSpells' }]);
+      expect(def.modeled).toBe(false);
+      expect(def.unmodeledReasons.join('\n')).toContain(
+        'Return-any-number targeting with total mana value 6 or less is an untargeted single bounce with no mana-value cap.',
+      );
     });
   });
 
   describe('Firkraag, Cunning Instigator — Forced Combat Intervening-If', () => {
-    it('attaches hadToAttackThisCombat condition to 2nd trigger', () => {
+    it('is catalog-contained because the intervening-if checks Firkraag, not the damaging creature', () => {
       const raw = oracle({
+        oracleId: '81dad7c5-5950-4c45-adb0-cf1a15a74250',
         name: 'Firkraag, Cunning Instigator',
         manaCost: '{1}{U}{R}',
         typeLine: 'Legendary Creature — Dragon Elemental',
@@ -87,17 +89,10 @@ describe('Discrepancy Fixes & CR Compliance', () => {
       });
 
       const def = interpretCard(raw);
-      expect(def.triggers).toHaveLength(2);
-      const secondTrigger = def.triggers[1];
-      expect(secondTrigger?.effects[0]).toEqual({
-        op: 'conditionalEffect',
-        condition: { kind: 'hadToAttackThisCombat' },
-        then: [
-          { op: 'putCountersEach', selector: { kind: 'self' }, counter: '+1/+1', count: 1 },
-          { op: 'draw', count: { kind: 'const', n: 1 } },
-        ],
-        else: [],
-      });
+      expect(def.modeled).toBe(false);
+      expect(def.unmodeledReasons.join('\n')).toContain(
+        'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
+      );
     });
   });
 });

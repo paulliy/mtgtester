@@ -45,14 +45,25 @@ const COMMANDER = card('Test General', {
 });
 
 const FOREST = card('Forest', {
-  typeLine: 'Basic Land — Forest', types: ['Land'], supertypes: ['Basic'], subtypes: ['Forest'],
-  manaCost: null, cmc: 0, colors: [], power: null, toughness: null, isBasicLand: true,
+  typeLine: 'Basic Land — Forest',
+  types: ['Land'],
+  supertypes: ['Basic'],
+  subtypes: ['Forest'],
+  manaCost: null,
+  cmc: 0,
+  colors: [],
+  power: null,
+  toughness: null,
+  isBasicLand: true,
 });
 
 /** 1 commander + 30 Elves + 69 Forests = a legal 100. */
 function decklist(): string {
   return [
-    'Commander', '1 Test General', '', 'Deck',
+    'Commander',
+    '1 Test General',
+    '',
+    'Deck',
     ...Array.from({ length: 30 }, (_, i) => `1 Elf ${i}`),
     '69 Forest',
   ].join('\n');

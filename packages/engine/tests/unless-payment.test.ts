@@ -10,7 +10,8 @@ const rhysticStudy = (): ReturnType<typeof oracle> =>
     name: 'Rhystic Study',
     typeLine: 'Enchantment',
     manaCost: '{2}{U}',
-    oracleText: 'Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.',
+    oracleText:
+      'Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.',
   });
 
 /**
@@ -71,7 +72,11 @@ function queueOpponentCast(ctx: GameContext) {
   return pending;
 }
 
-function resolvePending(ctx: GameContext, pending: ReturnType<typeof queueOpponentCast>, answer?: Parameters<typeof pump>[1]) {
+function resolvePending(
+  ctx: GameContext,
+  pending: ReturnType<typeof queueOpponentCast>,
+  answer?: Parameters<typeof pump>[1],
+) {
   return pump(
     executeAbility(
       ctx,

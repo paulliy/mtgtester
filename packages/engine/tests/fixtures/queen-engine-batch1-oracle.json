@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-10",
+  "cards": [
+    {
+      "sha256": "f14b56be926e1e81c05cbaf38a4bd9be60743969fa30bbdf3c5d0b1444caad98",
+      "card": {
+        "oracleId": "ee81f37b-2a81-46d7-8d2f-9091123846c4",
+        "scryfallId": "a66e5673-e34b-46e8-a0e4-55f3ee20f99a",
+        "name": "Crackling Doom",
+        "manaCost": "{R}{W}{B}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "R",
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Crackling Doom deals 2 damage to each opponent. Each opponent sacrifices a creature with the greatest power among creatures that player controls.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "296644896284bf2ce42d8d8d30f67bce294302c8a00fb555e5bdc240a11b9cc7",
+      "card": {
+        "oracleId": "bc328acc-8521-4581-88c3-99a7cb2c1cdb",
+        "scryfallId": "cdc86e78-8911-4a0d-ba3a-7802f8d991ef",
+        "name": "Flumph",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Jellyfish",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Jellyfish"
+        ],
+        "oracleText": "Defender, flying\nWhenever this creature is dealt damage, you and target opponent each draw a card.",
+        "power": "0",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Defender"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "16c1dce9451da2ecb25d639cb63c337fb095cdaba0ba45a6d04ad71103f0c809",
+      "card": {
+        "oracleId": "66f9f325-5e8e-4ebf-b5b3-c6410d80f2c5",
+        "scryfallId": "900b8908-ba51-472e-ab7a-43bd07f90577",
+        "name": "Gisela, Blade of Goldnight",
+        "manaCost": "{4}{R}{W}{W}",
+        "cmc": 7,
+        "colors": [
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Angel",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Angel"
+        ],
+        "oracleText": "Flying, first strike\nIf a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead.\nIf a source would deal damage to you or a permanent you control, prevent half that damage, rounded up.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "First strike",
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6e33298ebd1167919ed3885c8a15503a3e4d72b25448c44cdfd5ae814d6097ea",
+      "card": {
+        "oracleId": "da93264e-4e04-401a-9809-e4e1056cf604",
+        "scryfallId": "3362ade8-d585-40be-8486-382cad6efaf8",
+        "name": "Inkshield",
+        "manaCost": "{3}{W}{B}",
+        "cmc": 5,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Prevent all combat damage that would be dealt to you this turn. For each 1 damage prevented this way, create a 2/1 white and black Inkling creature token with flying.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "cabc4a1143f29f248d862a1ac9093737b42dcad2eea39cf2dcae3b306f084bc6",
+      "card": {
+        "oracleId": "18ed0c8a-db8f-4247-87c4-544b833f01bd",
+        "scryfallId": "d152cfa8-00b7-4aa0-855e-bbd57a5f4b23",
+        "name": "Master of Ceremonies",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Rhino Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Rhino",
+          "Druid"
+        ],
+        "oracleText": "At the beginning of your upkeep, each opponent chooses money, friends, or secrets. For each player who chose money, you and that player each create a Treasure token. For each player who chose friends, you and that player each create a 1/1 green and white Citizen creature token. For each player who chose secrets, you and that player each draw a card.",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Treasure"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2b94ee0260e05d55e9177cac7d76ac55bb816ed3c2ee00dc9aafab3698fbfa1e",
+      "card": {
+        "oracleId": "34b90d3e-f48c-41ff-b3e4-5cab7a9cd597",
+        "scryfallId": "9be712b3-14ed-4a73-b3d3-5b76b2c5db64",
+        "name": "Secret Rendezvous",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "You and target opponent each draw three cards.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -1,102 +1,78 @@
-# MTG Commander AI Simulator
+# MTG Tester
 
-A local application that plays complete, rules-accurate games of **Magic: The Gathering
-Commander** either between **four AI-controlled players** or with **one human against three
-bots**. Supply four decklists, choose spectator or single-player mode, and play or watch a
-legal four-player game through to one winner — then review per-deck statistics across games.
+MTG Tester is a local, rules-driven **Magic: The Gathering Commander** simulator. It runs seeded four-player games through a deterministic TypeScript engine, as a spectator experience or with one human player against automated opponents.
 
-The deterministic engine remains authoritative in both modes. See the original specification in
-[docs/mtg-commander-ai-simulator-brief.md](docs/mtg-commander-ai-simulator-brief.md).
+The engine is authoritative: it produces legal actions. Humans, the heuristic bot, and OpenAI-compatible providers only choose from those actions; they do not adjudicate Magic rules.
 
-## Architecture (the one decision that matters)
+> **Status:** Functional for supported cards, but not a general-purpose Commander simulator. Card coverage remains incomplete; audited unsupported behavior is kept out of the playable pool.
 
-A **hybrid**: a deterministic TypeScript **engine** is authoritative on all rules — it
-computes the complete set of legal actions at every decision point. The **AI** only
-_chooses_ among engine-offered options; it never adjudicates legality. When there is only
-one legal action, the engine resolves it with no AI call.
+## Implemented capabilities
 
-Any OpenAI-compatible provider works; OpenRouter is the default and the vendor is
-auto-detected from whichever key is present. See
-[docs/decisions/0011-openai-compatible-provider.md](docs/decisions/0011-openai-compatible-provider.md).
+- Seeded four-player Commander games with priority, stack resolution, combat, commander damage, state-based actions, continuous effects, and player/spectator projections.
+- Spectator and single-player modes, replay controls, local history, batches, statistics, and a Vue web application.
+- Generated supported-pool decks; Moxfield, Archidekt, and plaintext imports with validation and model-coverage reporting.
+- A seeded heuristic bot, optional OpenAI-compatible strategist/tactician provider, and bounded combat search with a reproducible A/B sweep harness.
+- A card template/override system, real-deck fixtures, and coverage reports for planning rules support.
 
 ## Repository layout
 
 ```
-packages/
-  shared/   Types shared across engine, server, and web
-  engine/   Pure TS rules engine — no I/O, no network, no framework
-  server/   Bun server: orchestration, AI providers, SQLite, WebSocket
-apps/
-  web/      Vue 3 spectator and player UI
-docs/
-  rules/       Reference material (Comprehensive Rules, Commander rules, banned list)
-  decisions/   ADRs for significant choices
-data/          Card cache + Scryfall bulk data (gitignored)
+apps/web/          Vue 3 player and spectator UI
+packages/shared/   Cross-package game, protocol, view, and persistence types
+packages/engine/   Pure deterministic rules engine; no I/O or network access
+packages/bot/      Seeded heuristic decision provider and combat search
+packages/server/   Bun HTTP/WebSocket server, AI, decks, SQLite, and batches
+docs/decisions/    Architecture decision records
+docs/plans/        Card-coverage and product work plans
+docs/reviews/      Dated review, remediation, and browser-trial evidence
+data/              Gitignored Scryfall bulk data and local application data
 ```
 
 ## Requirements
 
-- [Bun](https://bun.sh) ≥ 1.3 (package manager and runtime)
+- [Bun](https://bun.sh) 1.3 or newer
+- Scryfall Oracle bulk data for card import and coverage workflows; see [data/README.md](data/README.md)
+- A provider key only for LLM games. The random and heuristic-bot paths do not need one.
 
-## Getting started
+## Get started
 
-```bash
+```powershell
 bun install
-cp .env.example .env    # then add one provider API key (OpenRouter by default)
+Copy-Item .env.example .env   # optional for LLM games; add a supported provider key
 bun run typecheck
 bun run lint
 bun run test
+bun run dev
 ```
 
-## Watching a game
+`bun run dev` starts the server at `http://localhost:3001` and the UI at `http://localhost:5173`.
 
-Two processes under the hood — the server owns the engine and the API key, the web app is a
-view — but one command starts both:
-
-```bash
-bun run dev        # server on :3001 + Vue spectator UI on :5173
+```powershell
+bun run serve                 # server only
+bun run dev:web               # web UI only
+bun run pool --play --seed s  # generate and play four supported decks
+bun run decks <url-or-file>   # import and validate a deck
+bun run coverage              # real-deck model coverage
+bun run staples               # coverage of 200 EDH staples
+bun run combat-sweep --games 120 --seed s
+bun run test:e2e              # Playwright browser tests
 ```
 
-Or run them separately (useful for restarting one without the other):
+For the full command reference and contributor guidance, see [CLAUDE.MD](CLAUDE.MD).
 
-```bash
-bun run serve      # http://localhost:3001 — HTTP + /ws, holds the engine
-bun run dev:web    # http://localhost:5173 — Vue spectator UI (proxies /ws)
-```
+## Current limitations
 
-Open the UI, pick four decks, choose spectator or single-player mode, and press start.
-Single-player supports one selected human seat against three AI (or seeded random) bots. The
-human decision provider has no timer; disconnecting pauses new bot work, and reconnecting to
-the running server restores the private board and pending choice.
+- **Rules and cards:** only cards the engine can model are safe to simulate. Original precon fixtures have the strongest coverage; community decks still expose major missing mechanics. Use `bun run coverage` and `bun run staples` as the source of truth.
+- **Product follow-up:** narrow-screen gameplay, failed-import draft preservation, human-abandon confirmation, and statistics presentation/history need more work.
+- **Metrics:** invalid legacy mana rates now display as unavailable; versioned end-of-turn mana observations are not yet implemented.
 
-Decks come from two places:
+## Documentation map
 
-- **Generated from the engine-supported pool** (the default) — always playable.
-- **Imported** from a Moxfield/Archidekt URL or a pasted list. These are **pre-flighted**: any
-  card the engine cannot yet model is reported by name on the setup screen, because a deck must
-  be fully modeled to be simulated. See
-  [docs/decisions/0009-supported-pool-decks.md](docs/decisions/0009-supported-pool-decks.md).
+- [ADRs](docs/decisions/) are the source of truth for major design choices. Start with [card templates](docs/decisions/0025-card-template-layer.md) and [bounded combat search](docs/decisions/0024-bounded-combat-search.md).
+- [Card coverage plans](docs/plans/edh-staple-coverage.md) and [post-Tier-3 work](docs/plans/post-tier3-card-coverage.md) describe the modeling backlog.
+- The [project review](docs/reviews/project-review-2026-09-04.md), [remediation](docs/reviews/audit-remediation-2026-09-05.md), and [browser trial](docs/reviews/browser-experience-2026-09-05.md) contain the latest evidence-backed quality state.
+- [Rules reference](docs/rules/) is implementation material and is never sent to an AI provider.
 
-The provider is selectable per game — `random` needs no API key and is the fast way to exercise
-the UI; `ai` spends real calls.
+## Privacy
 
-## Reference data
-
-- **Reference rules** live in `docs/rules/` as plain text / markdown.
-- **Scryfall bulk data** (`data/scryfall-oracle-cards.json`, ~180 MB) is gitignored;
-  see [data/README.md](data/README.md) to (re)download it.
-
-## Privacy note
-
-Requests go to whichever OpenAI-compatible provider you configure. On free tiers (Google's
-included) requests may be used for model improvement. This tool sends decklists and board
-state; decklists are not sensitive, so this is acceptable — but be aware of it if you use a
-free-tier key. The Comprehensive Rules are **never** sent to the model: they are a reference
-for implementing the engine, not runtime context (brief §7.4).
-
-## Status
-
-**Phase 6 — Single-player Commander.** Implementation complete pending phase-boundary
-approval. Spectator playback, Phase 5 statistics/diagnostics, and the single-player mode are
-available; see the phase log in [CLAUDE.md](CLAUDE.md) and the ADRs in
-[docs/decisions/](docs/decisions/).
+When configured, AI requests go to the selected OpenAI-compatible provider and may include the acting player's legal decision context and visible game state. The engine must never expose hidden game state to a player or model, and it never sends the Comprehensive Rules as prompt context.

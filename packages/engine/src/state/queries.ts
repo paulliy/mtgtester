@@ -4,7 +4,7 @@
  */
 
 import type { Color, ObjectId, OracleId, PlayerId } from '@mtg/shared';
-import type { ManaRestriction, PaymentPurpose } from '../cards/ability';
+import type { ManaRestriction, PaymentPurpose, WardCost } from '../cards/ability';
 import type {
   Ability,
   AbilityCost,
@@ -93,7 +93,7 @@ export function hasKeyword(ctx: GameContext, perm: EnginePermanent, kw: KeywordA
 }
 
 /** Effective ward cost (CR 702.21), or null. */
-export function wardCostOf(ctx: GameContext, perm: EnginePermanent): ParsedManaCost | null {
+export function wardCostOf(ctx: GameContext, perm: EnginePermanent): WardCost | null {
   return computeCharacteristics(ctx, perm).ward;
 }
 
@@ -213,6 +213,7 @@ export function manaRestrictionAllows(
     power: def.power ?? 0,
     keywords: def.keywords,
     isToken: false,
+    isCommander: purpose.kind === 'castSpell' && purpose.isCommander === true,
     enteredThisTurn: false,
   };
   const source: SelectorSource = { cardId: '', controllerId: '' };
@@ -330,7 +331,10 @@ export function resolveDynamicUnits(
       const def = ctx.defs.get(commander.oracleId);
       for (const color of def?.colorIdentity ?? []) add(color);
     }
-  } else if (spec.dynamic === 'colorsAmongPermanents' || spec.dynamic === 'oneColorAmongPermanents') {
+  } else if (
+    spec.dynamic === 'colorsAmongPermanents' ||
+    spec.dynamic === 'oneColorAmongPermanents'
+  ) {
     // The source sees current colors, including color-changing continuous effects.
     for (const permanent of controlledPermanents(ctx, perm.controllerId)) {
       for (const color of computeCharacteristics(ctx, permanent).colors) add(color);
@@ -386,11 +390,12 @@ export function resolveDynamicUnits(
 
   return {
     ...spec,
-    units: symbols.length === 0
-      ? []
-      : spec.dynamic === 'colorsAmongPermanents'
-        ? symbols.map((symbol) => [symbol])
-        : [symbols],
+    units:
+      symbols.length === 0
+        ? []
+        : spec.dynamic === 'colorsAmongPermanents'
+          ? symbols.map((symbol) => [symbol])
+          : [symbols],
   };
 }
 
@@ -425,11 +430,12 @@ export function resolveDynamicAmount(
           // Three Tree City counts creatures "of the chosen type", which is a `chosenSubtype`
           // clause resolved against the SOURCE's own as-enters choice.
           ...(perm.chosenOption !== undefined ? { chosenOption: perm.chosenOption } : {}),
-        }).filter((candidate) =>
-          scope === 'all' ||
-          (scope === 'you'
-            ? candidate.controllerId === perm.controllerId
-            : candidate.controllerId !== perm.controllerId),
+        }).filter(
+          (candidate) =>
+            scope === 'all' ||
+            (scope === 'you'
+              ? candidate.controllerId === perm.controllerId
+              : candidate.controllerId !== perm.controllerId),
         ).length,
     }),
   );
@@ -494,25 +500,42 @@ export function canPayNonManaCosts(
         break;
       case 'sacrificeOther': {
         const count = cost.count ?? 1;
-        const payable = ctx.state.battlefield.filter((candidate) =>
-          (cost.allowSelf === true || candidate.id !== perm.id) && candidate.controllerId === perm.controllerId &&
-          matchesSelector(ctx, candidate, cost.selector, { cardId: perm.cardId, controllerId: perm.controllerId }),
+        const payable = ctx.state.battlefield.filter(
+          (candidate) =>
+            (cost.allowSelf === true || candidate.id !== perm.id) &&
+            candidate.controllerId === perm.controllerId &&
+            matchesSelector(ctx, candidate, cost.selector, {
+              cardId: perm.cardId,
+              controllerId: perm.controllerId,
+            }),
         );
         if (payable.length < count) return false;
         break;
       }
       case 'tapOther': {
-        const payable = ctx.state.battlefield.some((candidate) =>
-          candidate.id !== perm.id && candidate.controllerId === perm.controllerId && !candidate.tapped &&
-          matchesSelector(ctx, candidate, cost.selector, { cardId: perm.cardId, controllerId: perm.controllerId }),
+        const payable = ctx.state.battlefield.some(
+          (candidate) =>
+            candidate.id !== perm.id &&
+            candidate.controllerId === perm.controllerId &&
+            !candidate.tapped &&
+            matchesSelector(ctx, candidate, cost.selector, {
+              cardId: perm.cardId,
+              controllerId: perm.controllerId,
+            }),
         );
         if (!payable) return false;
         break;
       }
       case 'tapOthers': {
-        const payable = ctx.state.battlefield.filter((candidate) =>
-          candidate.id !== perm.id && candidate.controllerId === perm.controllerId && !candidate.tapped &&
-          matchesSelector(ctx, candidate, cost.selector, { cardId: perm.cardId, controllerId: perm.controllerId }),
+        const payable = ctx.state.battlefield.filter(
+          (candidate) =>
+            candidate.id !== perm.id &&
+            candidate.controllerId === perm.controllerId &&
+            !candidate.tapped &&
+            matchesSelector(ctx, candidate, cost.selector, {
+              cardId: perm.cardId,
+              controllerId: perm.controllerId,
+            }),
         );
         if (payable.length < cost.count) return false;
         break;
@@ -520,9 +543,15 @@ export function canPayNonManaCosts(
       case 'tapXOthers': {
         // The first pass happens before X is announced; the per-X pass below supplies it.
         if (announcedX === undefined) break;
-        const payable = ctx.state.battlefield.filter((candidate) =>
-          candidate.id !== perm.id && candidate.controllerId === perm.controllerId && !candidate.tapped &&
-          matchesSelector(ctx, candidate, cost.selector, { cardId: perm.cardId, controllerId: perm.controllerId }),
+        const payable = ctx.state.battlefield.filter(
+          (candidate) =>
+            candidate.id !== perm.id &&
+            candidate.controllerId === perm.controllerId &&
+            !candidate.tapped &&
+            matchesSelector(ctx, candidate, cost.selector, {
+              cardId: perm.cardId,
+              controllerId: perm.controllerId,
+            }),
         );
         if (payable.length < announcedX) return false;
         break;
@@ -547,11 +576,17 @@ export function canPayNonManaCosts(
         if (cost.delta < 0 && (perm.counters['loyalty'] ?? 0) < Math.abs(cost.delta)) return false;
         break;
       case 'tapCreaturesTotalPower': {
-        const available = ctx.state.battlefield.filter((candidate) =>
-          candidate.id !== perm.id && candidate.controllerId === perm.controllerId && !candidate.tapped &&
-          isCreaturePermanent(ctx, candidate),
+        const available = ctx.state.battlefield.filter(
+          (candidate) =>
+            candidate.id !== perm.id &&
+            candidate.controllerId === perm.controllerId &&
+            !candidate.tapped &&
+            isCreaturePermanent(ctx, candidate),
         );
-        const totalPower = available.reduce((sum, candidate) => sum + effectivePT(ctx, candidate).power, 0);
+        const totalPower = available.reduce(
+          (sum, candidate) => sum + effectivePT(ctx, candidate).power,
+          0,
+        );
         if (totalPower < cost.minPower) return false;
         break;
       }
@@ -675,15 +710,22 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
     for (const entry of gatherRuleStatics(ctx)) {
       const rider = entry.static;
       if (rider.kind !== 'manaActivationRider') continue;
-      const riderSource = ctx.state.battlefield.find((candidate) => candidate.cardId === entry.sourceCardId);
-      const attachedToCardId = riderSource?.attachedTo === undefined
-        ? undefined
-        : ctx.state.battlefield.find((candidate) => candidate.id === riderSource.attachedTo)?.cardId;
-      if (!matchesSelector(ctx, perm, rider.source, {
-        cardId: entry.sourceCardId,
-        controllerId: entry.controllerId,
-        ...(attachedToCardId !== undefined ? { attachedToCardId } : {}),
-      })) continue;
+      const riderSource = ctx.state.battlefield.find(
+        (candidate) => candidate.cardId === entry.sourceCardId,
+      );
+      const attachedToCardId =
+        riderSource?.attachedTo === undefined
+          ? undefined
+          : ctx.state.battlefield.find((candidate) => candidate.id === riderSource.attachedTo)
+              ?.cardId;
+      if (
+        !matchesSelector(ctx, perm, rider.source, {
+          cardId: entry.sourceCardId,
+          controllerId: entry.controllerId,
+          ...(attachedToCardId !== undefined ? { attachedToCardId } : {}),
+        })
+      )
+        continue;
 
       abilities = abilities.map((ability) => {
         if (rider.add.kind === 'fixed') {
@@ -694,7 +736,9 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
         return {
           ...ability,
           units: [...ability.units, producedTypes],
-          ...(ability.linked === true || ability.units.length === 1 ? { linked: true as const } : {}),
+          ...(ability.linked === true || ability.units.length === 1
+            ? { linked: true as const }
+            : {}),
         };
       });
     }
@@ -765,7 +809,8 @@ export function previewManaAbilities(
     if (
       ability.condition !== undefined &&
       !evaluateCondition(ctx, ability.condition, { cardId: stub.cardId, controllerId: playerId })
-    ) continue;
+    )
+      continue;
     const resolved = resolveDynamicUnits(ctx, resolveConditionalUnits(ctx, ability, stub), stub);
     for (const unit of resolved.units) for (const sym of unit) add(sym);
   }
@@ -803,9 +848,8 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
     if (perm.faceDown) continue;
     const def = ctx.defs.get(perm.oracleId);
     if (def === undefined) continue;
-    const printedRuleStatics = perm.transformed && def.backFace !== undefined
-      ? def.backFace.ruleStatics
-      : def.ruleStatics;
+    const printedRuleStatics =
+      perm.transformed && def.backFace !== undefined ? def.backFace.ruleStatics : def.ruleStatics;
     for (const rs of printedRuleStatics) {
       if (rs.kind === 'costReduction' && rs.selfOnly === true) continue;
       out.push({
@@ -837,21 +881,29 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
 
 /** Number of land plays available to a player this turn, including the normal play. */
 export function landPlayLimitFor(ctx: GameContext, playerId: PlayerId): number {
-  return 1 + gatherRuleStatics(ctx).reduce(
-    (total, entry) => entry.controllerId === playerId && entry.static.kind === 'additionalLandDrops'
-      ? total + evaluateValue(ctx, entry.static.count, {
-          controllerId: entry.controllerId,
-          countPermanents: (selector, scope) =>
-            selectPermanents(ctx, selector, {
-              cardId: entry.sourceCardId,
+  return (
+    1 +
+    gatherRuleStatics(ctx).reduce(
+      (total, entry) =>
+        entry.controllerId === playerId && entry.static.kind === 'additionalLandDrops'
+          ? total +
+            evaluateValue(ctx, entry.static.count, {
               controllerId: entry.controllerId,
-            }).filter((permanent) =>
-              scope === 'all' ||
-              (scope === 'you' ? permanent.controllerId === entry.controllerId : permanent.controllerId !== entry.controllerId),
-            ).length,
-        })
-      : total,
-    0,
+              countPermanents: (selector, scope) =>
+                selectPermanents(ctx, selector, {
+                  cardId: entry.sourceCardId,
+                  controllerId: entry.controllerId,
+                }).filter(
+                  (permanent) =>
+                    scope === 'all' ||
+                    (scope === 'you'
+                      ? permanent.controllerId === entry.controllerId
+                      : permanent.controllerId !== entry.controllerId),
+                ).length,
+            })
+          : total,
+      0,
+    )
   );
 }
 
@@ -888,7 +940,8 @@ export function activatingAbilitiesBlockedFor(
   return gatherRuleStatics(ctx).some((entry) => {
     if (entry.static.kind !== 'cantActivateAbilities') return false;
     if (entry.static.who !== 'all' && entry.controllerId === playerId) return false;
-    if (entry.static.yourTurnOnly && ctx.state.currentTurnPlayer !== entry.controllerId) return false;
+    if (entry.static.yourTurnOnly && ctx.state.currentTurnPlayer !== entry.controllerId)
+      return false;
     return matchesSelector(ctx, permanent, entry.static.filter, {
       cardId: entry.sourceCardId,
       controllerId: entry.controllerId,
@@ -920,8 +973,7 @@ export function spellProtectedFromCounter(
     // Only the CASTER's own such statics apply — every printed template here reads "you control".
     if (entry.controllerId !== casterId) return false;
     return (
-      entry.static.filter === undefined ||
-      selectMatches(candidate, entry.static.filter, source)
+      entry.static.filter === undefined || selectMatches(candidate, entry.static.filter, source)
     );
   });
 }
@@ -931,7 +983,14 @@ export function spellProtectedFromCounter(
  * Always at most one card — the printed template names the top card specifically, never "a card
  * in your library".
  */
-const PERMANENT_TYPES = ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Land', 'Planeswalker'] as const;
+const PERMANENT_TYPES = [
+  'Artifact',
+  'Battle',
+  'Creature',
+  'Enchantment',
+  'Land',
+  'Planeswalker',
+] as const;
 
 /**
  * The currently available permission for a non-hand play. `budgetTypes` is absent for an
@@ -951,20 +1010,29 @@ export function playFromZonePermission(
   const matching = gatherRuleStatics(ctx).filter((entry) => {
     if (entry.static.kind !== 'playFromZone' || entry.static.zone !== zone) return false;
     if (entry.controllerId !== playerId) return false;
-    if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== playerId) return false;
-    return entry.static.filter === undefined || selectMatches(candidate, entry.static.filter, source);
+    if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== playerId)
+      return false;
+    return (
+      entry.static.filter === undefined || selectMatches(candidate, entry.static.filter, source)
+    );
   });
   if (matching.length === 0) return null;
-  if (matching.some((entry) => entry.static.kind === 'playFromZone' && entry.static.permanentTypeBudget === undefined)) {
+  if (
+    matching.some(
+      (entry) =>
+        entry.static.kind === 'playFromZone' && entry.static.permanentTypeBudget === undefined,
+    )
+  ) {
     return {};
   }
 
   const budgetTypes = PERMANENT_TYPES.filter((type) => {
     if (!candidate.types.includes(type)) return false;
-    return matching.some((entry) =>
-      entry.static.kind === 'playFromZone' &&
-      entry.static.permanentTypeBudget !== undefined &&
-      (player.playFromZoneTypeUsesThisTurn[type] ?? 0) < entry.static.permanentTypeBudget
+    return matching.some(
+      (entry) =>
+        entry.static.kind === 'playFromZone' &&
+        entry.static.permanentTypeBudget !== undefined &&
+        (player.playFromZoneTypeUsesThisTurn[type] ?? 0) < entry.static.permanentTypeBudget,
     );
   });
   return budgetTypes.length > 0 ? { budgetTypes: [...budgetTypes] } : null;
@@ -992,8 +1060,7 @@ export function castFromLibraryTopCandidates(
     if (entry.static.kind !== 'castFromZone' || entry.static.zone !== 'libraryTop') return false;
     if (entry.controllerId !== playerId) return false;
     return (
-      entry.static.filter === undefined ||
-      selectMatches(candidate, entry.static.filter, source)
+      entry.static.filter === undefined || selectMatches(candidate, entry.static.filter, source)
     );
   });
   return eligible ? [top] : [];
@@ -1046,7 +1113,8 @@ export function damageAmountAfterReplacements(
 /** The multiplicative token replacement effects active for tokens created under `controllerId`. */
 export function tokenCreationMultiplierFor(ctx: GameContext, controllerId: PlayerId): number {
   return gatherRuleStatics(ctx).reduce((multiplier, entry) => {
-    if (entry.static.kind !== 'tokenCountMultiplier' || entry.controllerId !== controllerId) return multiplier;
+    if (entry.static.kind !== 'tokenCountMultiplier' || entry.controllerId !== controllerId)
+      return multiplier;
     return multiplier * entry.static.multiplier;
   }, 1);
 }

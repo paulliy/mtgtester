@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "ad29a0f84e279c9b643f987267d4763e5b494943ff31e294d3ec17ca66b60b16",
+      "card": {
+        "oracleId": "355603d1-f62d-407a-8fa9-74e7dca8ecf9",
+        "scryfallId": "5dae3b1f-6a31-4a8a-9e44-063f8f670134",
+        "name": "Era of Innovation",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever an artifact or Artificer you control enters, you may pay {1}. If you do, you get {E}{E} (two energy counters).\nPay six {E}, Sacrifice this enchantment: Draw three cards.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "70d2570b2342312522fe854f39604e4d67f806333b3dfbd5ea5fe011a4ed62a7",
+      "card": {
+        "oracleId": "47c685b1-6e1e-4e08-8a52-9da6902df113",
+        "scryfallId": "55127a25-dc64-4f26-ae50-ed7247c22ae6",
+        "name": "Aethersquall Ancient",
+        "manaCost": "{5}{U}{U}",
+        "cmc": 7,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Leviathan",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Leviathan"
+        ],
+        "oracleText": "Flying\nAt the beginning of your upkeep, you get {E}{E}{E} (three energy counters).\nPay eight {E}: Return all other creatures to their owners' hands. Activate only as a sorcery.",
+        "power": "6",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c82c1275c8d0be73ac8997df8f0d6f954a202abdb6ad59a5345448774eaedea6",
+      "card": {
+        "oracleId": "180e1a7e-890d-477c-80a5-da8a5f2857b3",
+        "scryfallId": "63ffac51-62c4-4170-85b3-a43d7cfae7d7",
+        "name": "Reckless Fireweaver",
+        "manaCost": "{1}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Human Artificer",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Artificer"
+        ],
+        "oracleText": "Whenever an artifact you control enters, this creature deals 1 damage to each opponent.",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "57aac27d7b3db022facf226395d7157d2ccd014efed3a9bd1a7629a38d52e56b",
+      "card": {
+        "oracleId": "7a2484a9-04fd-41a0-8224-610c1c07ed10",
+        "scryfallId": "7d4b1d44-126e-4987-9a9f-f0f9627a09cb",
+        "name": "Blasphemous Act",
+        "manaCost": "{8}{R}",
+        "cmc": 9,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {1} less to cast for each creature on the battlefield.\nBlasphemous Act deals 13 damage to each creature.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "305a425676cf1fe4839c83a30fa4fabcbd3e0163bf4d5cf35f4c38adb97aee8c",
+      "card": {
+        "oracleId": "7137aae6-260d-41de-8b4e-42a8cf752697",
+        "scryfallId": "ae705a26-5371-4236-904c-fe3e58b4721d",
+        "name": "Frostboil Snarl",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "R",
+          "U"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "As this land enters, you may reveal an Island or Mountain card from your hand. If you don't, this land enters tapped.\n{T}: Add {U} or {R}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "48089d4cc1ef9c3fdd40efdcf79807f89945ac8a622878d6e09edcf808a4b04d",
+      "card": {
+        "oracleId": "33f52df8-4b44-4422-8b0a-37fead9c894b",
+        "scryfallId": "445bd162-b523-45f4-83d0-ffc702fc1fac",
+        "name": "Vineglimmer Snarl",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "G",
+          "U"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "As this land enters, you may reveal a Forest or Island card from your hand. If you don't, this land enters tapped.\n{T}: Add {G} or {U}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d2776171034a4c0faa2f9ce7696bccee6f3054705d58b6492ef8bab9eea47017",
+      "card": {
+        "oracleId": "7f268b15-ac92-4e98-821b-78d15d9285d9",
+        "scryfallId": "d4d469ea-824b-4eff-82e8-2a0b9b4c0e2d",
+        "name": "Loyal Apprentice",
+        "manaCost": "{1}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Human Artificer",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Artificer"
+        ],
+        "oracleText": "Haste\nLieutenant — At the beginning of combat on your turn, if you control your commander, create a 1/1 colorless Thopter artifact creature token with flying. That token gains haste until end of turn.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Haste",
+          "Lieutenant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ac75e06b1ac1a593f3c2ea9d827aa234c4854186bd18cc674412c0c2e598a49d",
+      "card": {
+        "oracleId": "88b51e15-6630-4e14-a6b8-db0aa12e34ef",
+        "scryfallId": "25f05814-a5a5-460f-9d29-0ab03efecf4c",
+        "name": "Disallow",
+        "manaCost": "{1}{U}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target spell, activated ability, or triggered ability. (Mana abilities can't be targeted.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

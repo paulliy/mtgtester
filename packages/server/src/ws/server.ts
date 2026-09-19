@@ -22,6 +22,7 @@ import type { BannedList } from '../decks/banned';
 import { MatchSession } from '../match/session';
 import { BatchManager, validateBatch } from '../batch/manager';
 import { setupSeats } from '../match/setup';
+import { createCardTestScenario, listCardTestScenarios } from '../cards/card-test-scenarios';
 
 export interface GameServerDeps {
   pool: SupportedPool;
@@ -29,6 +30,8 @@ export interface GameServerDeps {
   banned: BannedList;
   store?: GameStore | undefined;
   port?: number;
+  /** Explicit opt-in for closed, unpersisted deterministic viewer scenarios. */
+  cardTestLab?: boolean;
 }
 
 /** Four seats in v1; the count is a parameter, but only four is supported and tested (§15). */
@@ -54,8 +57,12 @@ export function isAllowedLocalRequest(request: Request, port: number): boolean {
   if (origin === null) return true; // local CLI / same-origin GET
   try {
     const source = new URL(origin);
-    return source.protocol === 'http:' && local(source) && [String(port), '5173'].includes(source.port);
-  } catch { return false; }
+    return (
+      source.protocol === 'http:' && local(source) && [String(port), '5173'].includes(source.port)
+    );
+  } catch {
+    return false;
+  }
 }
 
 export class GameServer {
@@ -72,7 +79,15 @@ export class GameServer {
   private readonly batchManager: BatchManager | null;
 
   constructor(private readonly deps: GameServerDeps) {
-    this.batchManager = deps.store === undefined ? null : new BatchManager({ pool: deps.pool, index: deps.index, banned: deps.banned, store: deps.store });
+    this.batchManager =
+      deps.store === undefined
+        ? null
+        : new BatchManager({
+            pool: deps.pool,
+            index: deps.index,
+            banned: deps.banned,
+            store: deps.store,
+          });
   }
 
   /** Broadcast to every connected spectator. One game at a time (brief §15). */
@@ -103,7 +118,8 @@ export class GameServer {
       hostname: '127.0.0.1',
       fetch: async (request, srv) => {
         const url = new URL(request.url);
-        if (!isAllowedLocalRequest(request, port)) return new Response('Forbidden origin or host', { status: 403 });
+        if (!isAllowedLocalRequest(request, port))
+          return new Response('Forbidden origin or host', { status: 403 });
         if (url.pathname === '/ws') {
           const upgraded = srv.upgrade(request, { data: { clientId: crypto.randomUUID() } });
           return upgraded ? undefined : new Response('WebSocket upgrade failed', { status: 400 });
@@ -112,46 +128,91 @@ export class GameServer {
           return Response.json({ ok: true, poolSize: this.deps.pool.cards.length });
         }
         if (url.pathname === '/api/known-decks') {
-          return Response.json({ decks: await listKnownDecks(this.deps.index) });
+          return Response.json({ decks: await listKnownDecks(this.deps.index, this.deps.banned) });
+        }
+        if (url.pathname === '/api/card-test-scenarios') {
+          if (this.deps.cardTestLab !== true)
+            return Response.json({ message: 'Card Test Lab is disabled.' }, { status: 404 });
+          return Response.json({ scenarios: listCardTestScenarios() });
         }
         if (url.pathname === '/api/stats') {
-          if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          if (this.deps.store === undefined)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           const batchId = url.searchParams.get('batchId') ?? undefined;
           return Response.json({ decks: this.deps.store.stats().deckStatistics(batchId) });
         }
         if (url.pathname === '/api/batches' && request.method === 'POST') {
-          if (this.batchManager === null) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
-          if (this.session !== null && !['finished', 'halted', 'abandoned'].includes(this.session.runner.getStatus())) return Response.json({ message: 'Finish or abandon the interactive game before starting a batch.' }, { status: 409 });
-          if (this.batchManager.isActive()) return Response.json({ message: 'A batch is already running.' }, { status: 409 });
+          if (this.batchManager === null)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          if (
+            this.session !== null &&
+            !['finished', 'halted', 'abandoned'].includes(this.session.runner.getStatus())
+          )
+            return Response.json(
+              { message: 'Finish or abandon the interactive game before starting a batch.' },
+              { status: 409 },
+            );
+          if (this.batchManager.isActive())
+            return Response.json({ message: 'A batch is already running.' }, { status: 409 });
           let body: unknown;
-          try { body = await request.json(); } catch { return Response.json({ message: 'Malformed JSON body.' }, { status: 400 }); }
+          try {
+            body = await request.json();
+          } catch {
+            return Response.json({ message: 'Malformed JSON body.' }, { status: 400 });
+          }
           const validation = validateBatch(body);
-          if (!validation.ok) return Response.json({ message: validation.message }, { status: 400 });
-          if (this.startingGame || (this.session !== null && !['finished', 'halted', 'abandoned'].includes(this.session.runner.getStatus()))) return Response.json({ message: 'An interactive game is starting or running.' }, { status: 409 });
-          try { const batchId = this.batchManager.start(validation.spec); return Response.json({ batchId }, { status: 202 }); }
-          catch (error) { return Response.json({ message: error instanceof Error ? error.message : String(error) }, { status: 409 }); }
+          if (!validation.ok)
+            return Response.json({ message: validation.message }, { status: 400 });
+          if (
+            this.startingGame ||
+            (this.session !== null &&
+              !['finished', 'halted', 'abandoned'].includes(this.session.runner.getStatus()))
+          )
+            return Response.json(
+              { message: 'An interactive game is starting or running.' },
+              { status: 409 },
+            );
+          try {
+            const batchId = this.batchManager.start(validation.spec);
+            return Response.json({ batchId }, { status: 202 });
+          } catch (error) {
+            return Response.json(
+              { message: error instanceof Error ? error.message : String(error) },
+              { status: 409 },
+            );
+          }
         }
         const batchMatch = /^\/api\/batches\/([^/]+)$/.exec(url.pathname);
         if (batchMatch !== null && request.method === 'GET') {
-          if (this.batchManager === null) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          if (this.batchManager === null)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           const progress = this.batchManager.progress(decodeURIComponent(batchMatch[1] ?? ''));
-          return progress === null ? Response.json({ message: 'Batch not found.' }, { status: 404 }) : Response.json(progress);
+          return progress === null
+            ? Response.json({ message: 'Batch not found.' }, { status: 404 })
+            : Response.json(progress);
         }
         const batchResultsMatch = /^\/api\/batches\/([^/]+)\/results$/.exec(url.pathname);
         if (batchResultsMatch !== null && request.method === 'GET') {
-          if (this.batchManager === null) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          if (this.batchManager === null)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           const results = this.batchManager.results(decodeURIComponent(batchResultsMatch[1] ?? ''));
-          return results === null ? Response.json({ message: 'Batch not found.' }, { status: 404 }) : Response.json(results);
+          return results === null
+            ? Response.json({ message: 'Batch not found.' }, { status: 404 })
+            : Response.json(results);
         }
         const batchCancelMatch = /^\/api\/batches\/([^/]+)\/cancel$/.exec(url.pathname);
         if (batchCancelMatch !== null && request.method === 'POST') {
-          if (this.batchManager === null) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          if (this.batchManager === null)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           const cancelled = this.batchManager.cancel(decodeURIComponent(batchCancelMatch[1] ?? ''));
-          return cancelled ? Response.json({ ok: true }) : Response.json({ message: 'Batch is not running or was not found.' }, { status: 409 });
+          return cancelled
+            ? Response.json({ ok: true })
+            : Response.json({ message: 'Batch is not running or was not found.' }, { status: 409 });
         }
         const annotationMatch = /^\/api\/games\/([^/]+)\/annotations$/.exec(url.pathname);
         if (annotationMatch !== null) {
-          if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          if (this.deps.store === undefined)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           const gameId = decodeURIComponent(annotationMatch[1] ?? '');
           // Same lock as the debug route: in an unfinished player game this would hand the human
           // exactly the opponent reasoning the live stream is withholding (ADR 0022 §3).
@@ -169,7 +230,8 @@ export class GameServer {
         }
         const reflectionMatch = /^\/api\/games\/([^/]+)\/reflections$/.exec(url.pathname);
         if (reflectionMatch !== null) {
-          if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          if (this.deps.store === undefined)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           const gameId = decodeURIComponent(reflectionMatch[1] ?? '');
           // No single-player lock here, unlike the two routes above: a reflection is only ever
           // written after the game has ended, so an unfinished game has nothing to leak.
@@ -177,7 +239,8 @@ export class GameServer {
         }
         const debugMatch = /^\/api\/games\/([^/]+)\/(debug|export)$/.exec(url.pathname);
         if (debugMatch !== null) {
-          if (this.deps.store === undefined) return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          if (this.deps.store === undefined)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           const gameId = decodeURIComponent(debugMatch[1] ?? '');
           if (
             this.startedPayload?.gameId === gameId &&
@@ -190,11 +253,14 @@ export class GameServer {
             );
           }
           const data = this.deps.store.stats().gameDebug(gameId);
-          if (data.game === null) return Response.json({ message: 'Game not found.' }, { status: 404 });
+          if (data.game === null)
+            return Response.json({ message: 'Game not found.' }, { status: 404 });
           return new Response(JSON.stringify(data, null, debugMatch[2] === 'export' ? 2 : 0), {
             headers: {
               'content-type': 'application/json; charset=utf-8',
-              ...(debugMatch[2] === 'export' ? { 'content-disposition': `attachment; filename="${gameId}.json"` } : {}),
+              ...(debugMatch[2] === 'export'
+                ? { 'content-disposition': `attachment; filename="${gameId}.json"` }
+                : {}),
             },
           });
         }
@@ -243,11 +309,26 @@ export class GameServer {
 
     const message: ClientToServerMessage = parsed;
     switch (message.type) {
+      case 'startCardTestScenario':
+        if (this.deps.cardTestLab !== true) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'Card Test Lab is not enabled on this server.' },
+          });
+          return;
+        }
+        if (this.startingGame || this.batchManager?.isActive() === true) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'A game is already starting or a batch is running.' },
+          });
+          return;
+        }
+        this.startCardTestScenario(socket, message.payload.scenarioId);
+        return;
+
       case 'startGame':
-        if (
-          this.session?.getGameMode() === 'singlePlayer' &&
-          socket !== this.playerSocket
-        ) {
+        if (this.session?.getGameMode() === 'singlePlayer' && socket !== this.playerSocket) {
           this.sendTo(socket, {
             type: 'error',
             payload: { message: 'Resume the active player session before replacing it.' },
@@ -255,14 +336,25 @@ export class GameServer {
           return;
         }
         if (this.startingGame || this.batchManager?.isActive()) {
-          this.sendTo(socket, { type: 'error', payload: { message: 'A game is already starting or a batch is running.' } });
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'A game is already starting or a batch is running.' },
+          });
           return;
         }
         this.startingGame = true;
         this.startingSocket = socket;
-        try { await this.startGame(socket, message.payload); }
-        catch (error) { this.sendTo(socket, { type: 'error', payload: { message: error instanceof Error ? error.message : String(error) } }); }
-        finally { this.startingGame = false; this.startingSocket = null; }
+        try {
+          await this.startGame(socket, message.payload);
+        } catch (error) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: error instanceof Error ? error.message : String(error) },
+          });
+        } finally {
+          this.startingGame = false;
+          this.startingSocket = null;
+        }
         return;
 
       case 'jumpToTurn':
@@ -270,10 +362,7 @@ export class GameServer {
         return;
 
       case 'setPlaybackMode':
-        this.requireSession(socket)?.setPlaybackMode(
-          message.payload.mode,
-          message.payload.paceMs,
-        );
+        this.requireSession(socket)?.setPlaybackMode(message.payload.mode, message.payload.paceMs);
         return;
 
       case 'resolveHeldDecision':
@@ -441,10 +530,7 @@ export class GameServer {
     }
     const gameMode = requestedMode ?? 'spectator';
     const humanSeat = gameMode === 'singlePlayer' ? (requestedHumanSeat ?? 'P1') : undefined;
-    if (
-      gameMode === 'singlePlayer' &&
-      !['P1', 'P2', 'P3', 'P4'].includes(humanSeat as string)
-    ) {
+    if (gameMode === 'singlePlayer' && !['P1', 'P2', 'P3', 'P4'].includes(humanSeat as string)) {
       this.sendTo(socket, {
         type: 'error',
         payload: { message: `Human seat must be P1-P4; got ${String(humanSeat)}.` },
@@ -519,6 +605,57 @@ export class GameServer {
     if (gameMode === 'singlePlayer') this.sendTo(socket, startedMessage);
     else this.broadcast(startedMessage);
 
+    session.start();
+  }
+
+  private startCardTestScenario(socket: ServerWebSocket<SocketData>, scenarioId: string): void {
+    const gameId = `card-lab-${this.nextGameNum++}` as GameStartedPayload['gameId'];
+    const scenario = createCardTestScenario(scenarioId, gameId);
+    if (scenario === null) {
+      this.sendTo(socket, {
+        type: 'error',
+        payload: { message: `Unknown Card Test Lab scenario: ${scenarioId}` },
+      });
+      return;
+    }
+
+    const session = new MatchSession({
+      gameId,
+      seed: scenario.seed,
+      seats: scenario.seats,
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      livePaceMs: 0,
+      engine: scenario.engine,
+      // Deliberately no store: lab runs never enter normal game statistics.
+      send: (message) => {
+        if (this.playerSocket !== null) this.sendTo(this.playerSocket, message);
+      },
+    });
+    this.session?.abandon();
+    this.session = session;
+    this.sessionToken = crypto.randomUUID();
+    this.playerSocket = socket;
+
+    const startedPayload: GameStartedPayload = {
+      gameId,
+      seed: scenario.seed,
+      seats: scenario.seats.map((seat) => seat.summary),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      controllers: scenario.seats.map((seat) => ({
+        seat: seat.seat,
+        kind: seat.seat === 'P1' ? 'human' : 'random',
+      })),
+      humanSeat: 'P1',
+      sessionToken: this.sessionToken,
+      paceMs: 0,
+      startedAt: new Date().toISOString(),
+      cardTestScenario: scenario.metadata,
+    };
+    this.startedPayload = startedPayload;
+    this.sendTo(socket, { type: 'gameStarted', payload: startedPayload });
     session.start();
   }
 }

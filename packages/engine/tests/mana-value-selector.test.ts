@@ -15,7 +15,12 @@ import type { GameContext } from '../src/state/types';
 import { gameConfig, copies, forest, oracle, pump, spawn } from './fixtures';
 
 function pod(seed = 'mana-value-selector'): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(3, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(3, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.turnNumber = 4;
@@ -45,21 +50,73 @@ describe('mana value selector on battlefield permanents', () => {
     expect(cheapMode?.effects).toEqual([
       {
         op: 'destroyEach',
-        selector: { kind: 'allOf', of: [{ kind: 'manaValueAtMost', n: 3 }, { kind: 'type', value: 'Creature' }] },
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'manaValueAtMost', n: 3 },
+            { kind: 'type', value: 'Creature' },
+          ],
+        },
       },
     ]);
     expect(expensiveMode?.effects).toEqual([
       {
         op: 'destroyEach',
-        selector: { kind: 'allOf', of: [{ kind: 'manaValueAtLeast', n: 4 }, { kind: 'type', value: 'Creature' }] },
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'manaValueAtLeast', n: 4 },
+            { kind: 'type', value: 'Creature' },
+          ],
+        },
       },
     ]);
 
     const ctx = pod();
-    const source = spawn(ctx, 'P1', oracle({ name: 'Test Caster', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null }));
-    const cheap = spawn(ctx, 'P1', oracle({ name: 'Cheap Creature', typeLine: 'Creature — Bear', manaCost: '{2}', power: '2', toughness: '2' }));
-    const boundary = spawn(ctx, 'P2', oracle({ name: 'Boundary Creature', typeLine: 'Creature — Bear', manaCost: '{3}', power: '3', toughness: '3' }));
-    const expensive = spawn(ctx, 'P2', oracle({ name: 'Expensive Creature', typeLine: 'Creature — Dragon', manaCost: '{4}{R}', power: '5', toughness: '5' }));
+    const source = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Caster',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        power: null,
+        toughness: null,
+      }),
+    );
+    const cheap = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Cheap Creature',
+        typeLine: 'Creature — Bear',
+        manaCost: '{2}',
+        power: '2',
+        toughness: '2',
+      }),
+    );
+    const boundary = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Boundary Creature',
+        typeLine: 'Creature — Bear',
+        manaCost: '{3}',
+        power: '3',
+        toughness: '3',
+      }),
+    );
+    const expensive = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Expensive Creature',
+        typeLine: 'Creature — Dragon',
+        manaCost: '{4}{R}',
+        power: '5',
+        toughness: '5',
+      }),
+    );
 
     // The "3 or less" mode: destroys the {2} and the {3} boundary, spares the {4}{R}.
     pump(
@@ -67,7 +124,12 @@ describe('mana value selector on battlefield permanents', () => {
         ctx,
         source,
         // `description` is optional; under exactOptionalPropertyTypes it must be omitted, not undefined.
-        { kind: 'spell', targets: [], effects: cheapMode!.effects, ...(cheapMode!.description === undefined ? {} : { description: cheapMode!.description }) },
+        {
+          kind: 'spell',
+          targets: [],
+          effects: cheapMode!.effects,
+          ...(cheapMode!.description === undefined ? {} : { description: cheapMode!.description }),
+        },
         [],
       ),
     );

@@ -301,6 +301,41 @@ describe('the event-only selector ban', () => {
     // …and the card's own static ability is a plain anthem, with no power leaf in it.
     expect(JSON.stringify(def.staticEffects)).not.toContain('powerAtLeast');
   });
+
+  it('allows combat-role selectors in continuous effects', () => {
+    const ctx = pod();
+    const anthemCard = oracle({
+      name: 'Attacking Creature Anthem',
+      typeLine: 'Enchantment',
+    });
+    spawn(ctx, 'P1', anthemCard);
+    registerCustomDef(ctx, {
+      ...interpretCard(anthemCard),
+      staticEffects: [
+        {
+          affects: {
+            kind: 'allOf',
+            of: [
+              { kind: 'type', value: 'Creature' },
+              { kind: 'controller', who: 'you' },
+              { kind: 'combatRole', role: 'attacking' },
+            ],
+          },
+          op: { layer: 7, sublayer: 'd', power: 1, toughness: 1 },
+        },
+      ],
+    });
+    const attacker = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Attacking Bear', power: '2', toughness: '2' }),
+    );
+    const idle = spawn(ctx, 'P1', oracle({ name: 'Idle Bear', power: '2', toughness: '2' }));
+    attacker.attacking = 'P2';
+
+    expect(computeCharacteristics(ctx, attacker)).toMatchObject({ power: 3, toughness: 3 });
+    expect(computeCharacteristics(ctx, idle)).toMatchObject({ power: 2, toughness: 2 });
+  });
 });
 
 describe('regression: self-subject triggers still route through the same path', () => {

@@ -26,19 +26,27 @@ const BANNED_PATH = 'docs/rules/commander-banned-list.md';
 interface Args {
   port: number;
   db: boolean;
+  cardTestLab: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { port: 3001, db: true };
+  const args: Args = { port: 3001, db: true, cardTestLab: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--port') args.port = Number.parseInt(argv[++i] ?? '3001', 10);
     else if (arg === '--no-db') args.db = false;
+    else if (arg === '--card-test-lab') {
+      args.cardTestLab = true;
+      args.db = false;
+    }
   }
   return args;
 }
 
-function loadCards(): { pool: SupportedPool; index: OracleIndex } {
+function loadCards(cardTestLab: boolean): { pool: SupportedPool; index: OracleIndex } {
+  if (cardTestLab) {
+    return { pool: buildSupportedPool([]), index: buildOracleIndex([]) };
+  }
   const path = resolve(BULK_PATH);
   if (!existsSync(path)) {
     console.error(
@@ -67,7 +75,7 @@ function loadBanned(): BannedList {
 
 function main(): void {
   const args = parseArgs(process.argv.slice(2));
-  const { pool, index } = loadCards();
+  const { pool, index } = loadCards(args.cardTestLab);
   const banned = loadBanned();
 
   let store: GameStore | undefined;
@@ -76,7 +84,14 @@ function main(): void {
     store = new GameStore(resolve(DB_PATH));
   }
 
-  const server = new GameServer({ pool, index, banned, store, port: args.port });
+  const server = new GameServer({
+    pool,
+    index,
+    banned,
+    store,
+    port: args.port,
+    cardTestLab: args.cardTestLab,
+  });
   const handle = server.listen();
   // Recover only after acquiring the port: a failed second launch must not close live work.
   store?.batches().recoverInterrupted();
@@ -87,6 +102,7 @@ function main(): void {
   console.log(`  Supported pool: ${pool.cards.length.toLocaleString()} cards`);
   console.log(`  Oracle index:   ${index.size.toLocaleString()} cards`);
   console.log(`  Database:       ${args.db ? DB_PATH : '(disabled)'}`);
+  console.log(`  Card Test Lab:  ${args.cardTestLab ? 'enabled' : 'disabled'}`);
   console.log(`\n  Start the UI with: bun run dev:web\n`);
 }
 

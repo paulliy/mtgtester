@@ -41,7 +41,12 @@ const { registerAnchor, setRoot, disposeRoot } = useBoardAnchors();
 const tableRef = ref<HTMLElement | null>(null);
 const dragPointer = ref<{ x: number; y: number } | null>(null);
 onMounted(() => setRoot(tableRef.value));
-onUnmounted(() => disposeRoot());
+onUnmounted(() => {
+  disposeRoot();
+  // Game-over unmounts this view while the cursor may still be over a targeted chip.
+  // Hide the App-level preview so a leftover Lab Ox image cannot outlive the battlefield.
+  cardPreview.hide();
+});
 
 function onBoardDragOver(event: DragEvent): void {
   if (tableRef.value === null || draggedId.value === null) return;
@@ -406,6 +411,21 @@ function chooseTarget(id: ObjectId | string): boolean {
   }
   return false;
 }
+
+/**
+ * Ids the pending action can target that live in a displayed zone strip (graveyard, exile) —
+ * for example "return target artifact card from your graveyard". Battlefield and player
+ * targets already have click affordances; zone cards need one too.
+ */
+const zoneTargetIds = computed(() => {
+  if (selectedAction.value === null) return [];
+  const ids: string[] = [];
+  for (const slot of targetSlots(selectedAction.value)) {
+    if (chosenTargets.value[slot.slot] !== undefined) continue;
+    ids.push(...slot.options);
+  }
+  return ids;
+});
 
 /** During composing, a click assigns to the plan instead of selecting a real engine action. */
 function tryPlanAssign(target: ObjectId | string): boolean {
@@ -1059,8 +1079,18 @@ function abandon(): void {
           </div>
 
           <div v-if="human.graveyard.length > 0 || humanExile.length > 0" class="zones-strip">
-            <ZoneStrip label="Graveyard" :cards="human.graveyard" />
-            <ZoneStrip label="Exile" :cards="humanExile" />
+            <ZoneStrip
+              label="Graveyard"
+              :cards="human.graveyard"
+              :selectable-ids="zoneTargetIds"
+              @select="chooseTarget"
+            />
+            <ZoneStrip
+              label="Exile"
+              :cards="humanExile"
+              :selectable-ids="zoneTargetIds"
+              @select="chooseTarget"
+            />
           </div>
 
           <section

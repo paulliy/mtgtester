@@ -28,7 +28,9 @@ function loadPool() {
 }
 
 function generateMarkdown(pool: SupportedPool): string {
-  const nonLands = pool.cards.filter((c) => !c.isLand).sort((a, b) => a.card.name.localeCompare(b.card.name));
+  const nonLands = pool.cards
+    .filter((c) => !c.isLand)
+    .sort((a, b) => a.card.name.localeCompare(b.card.name));
 
   const lines = [
     '# Modelled Cards by Engine',
@@ -47,7 +49,9 @@ function generateMarkdown(pool: SupportedPool): string {
 }
 
 function generateJson(pool: SupportedPool) {
-  const nonLands = pool.cards.filter((c) => !c.isLand).sort((a, b) => a.card.name.localeCompare(b.card.name));
+  const nonLands = pool.cards
+    .filter((c) => !c.isLand)
+    .sort((a, b) => a.card.name.localeCompare(b.card.name));
   return JSON.stringify(
     {
       generated: new Date().toISOString(),

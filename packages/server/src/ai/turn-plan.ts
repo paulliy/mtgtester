@@ -5,7 +5,14 @@
  * If an opponent takes a non-pass action or a planned action is no longer legal, the plan is invalidated.
  */
 
-import type { DecisionRequest, DecisionResponse, LegalAction, Phase, PlannedAction, Step } from '@mtg/shared';
+import type {
+  DecisionRequest,
+  DecisionResponse,
+  LegalAction,
+  Phase,
+  PlannedAction,
+  Step,
+} from '@mtg/shared';
 import type { DecisionSource } from './logger';
 
 import type { Engine } from '@mtg/engine';

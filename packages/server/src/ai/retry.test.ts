@@ -93,9 +93,9 @@ describe('Error Classification & Retry', () => {
   // Same failure seen from the other side: the provider handed the content back and we could
   // not read it. `fatal` spent the entire decision on one unlucky sample.
   it('treats an unreadable completion as a retryable generation failure', () => {
-    expect(classifyError(new AiResponseValidationError('Invalid JSON format', '{"actionId":'))).toBe(
-      'retryable_generation',
-    );
+    expect(
+      classifyError(new AiResponseValidationError('Invalid JSON format', '{"actionId":')),
+    ).toBe('retryable_generation');
     expect(classifyError(new AiResponseValidationError('Empty content received'))).toBe(
       'retryable_generation',
     );
@@ -174,7 +174,11 @@ describe('Error Classification & Retry', () => {
     };
 
     const dummySleep = vi.fn().mockResolvedValue(undefined);
-    const result = await withRetry(dummyFn, { maxRetries: 5, baseBackoffMs: 10, maxBackoffMs: 100 }, dummySleep);
+    const result = await withRetry(
+      dummyFn,
+      { maxRetries: 5, baseBackoffMs: 10, maxBackoffMs: 100 },
+      dummySleep,
+    );
 
     expect(result).toBe('ok');
     expect(attempts).toBe(3);
@@ -186,9 +190,9 @@ describe('Error Classification & Retry', () => {
       throw { status: 404, message: 'model not found' };
     };
 
-    await expect(withRetry(fn, { maxRetries: 3, baseBackoffMs: 10, maxBackoffMs: 100 })).rejects.toThrow(
-      ModelUnavailableError,
-    );
+    await expect(
+      withRetry(fn, { maxRetries: 3, baseBackoffMs: 10, maxBackoffMs: 100 }),
+    ).rejects.toThrow(ModelUnavailableError);
   });
 
   it('throws RequestCancelledError immediately when signal is already aborted, without calling fn', async () => {
@@ -197,7 +201,12 @@ describe('Error Classification & Retry', () => {
     controller.abort();
 
     await expect(
-      withRetry(fn, { maxRetries: 3, baseBackoffMs: 10, maxBackoffMs: 100 }, undefined, controller.signal),
+      withRetry(
+        fn,
+        { maxRetries: 3, baseBackoffMs: 10, maxBackoffMs: 100 },
+        undefined,
+        controller.signal,
+      ),
     ).rejects.toThrow(RequestCancelledError);
     expect(fn).not.toHaveBeenCalled();
   });
@@ -213,7 +222,12 @@ describe('Error Classification & Retry', () => {
     const sleep = vi.fn().mockResolvedValue(undefined);
 
     await expect(
-      withRetry(fn, { maxRetries: 5, baseBackoffMs: 10, maxBackoffMs: 100 }, sleep, controller.signal),
+      withRetry(
+        fn,
+        { maxRetries: 5, baseBackoffMs: 10, maxBackoffMs: 100 },
+        sleep,
+        controller.signal,
+      ),
     ).rejects.toThrow(RequestCancelledError);
     // One real attempt, then the abort check short-circuits before a second — no backoff sleep,
     // no retries burned chasing a call nobody wants any more.

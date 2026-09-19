@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "packages/server/src/cards/gameplay-ai-evaluation.ts",
+  "liveLlm": "not-run",
+  "note": "Quality observations from arranged lab positions. Scripted engine tests prove rules. Random and heuristic runs record whether those providers chose the available advantageous action. Live LLM is not part of the merge gate.",
+  "observed": [
+    {
+      "card": "Tribute Mage",
+      "subject": "Tribute Mage",
+      "randomUsedSubject": true,
+      "heuristicUsedSubject": true
+    },
+    {
+      "card": "Gev, Scaled Scorch",
+      "subject": "Lab Doom",
+      "randomUsedSubject": true,
+      "heuristicUsedSubject": true
+    },
+    {
+      "card": "Nightscape Familiar",
+      "subject": "Nightscape Familiar",
+      "randomUsedSubject": false,
+      "heuristicUsedSubject": true
+    },
+    {
+      "card": "Thran Vigil",
+      "subject": "Grave Picker",
+      "randomUsedSubject": false,
+      "heuristicUsedSubject": true
+    },
+    {
+      "card": "Harmonic Prodigy",
+      "subject": "Lab Shaman",
+      "randomUsedSubject": true,
+      "heuristicUsedSubject": true
+    }
+  ]
+}

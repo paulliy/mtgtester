@@ -10,6 +10,7 @@
  * permanent-shaped.
  */
 
+import type { Color } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { Selector } from './selector';
 import type { Value } from './value';
@@ -50,7 +51,12 @@ export type RuleStatic =
    */
   | { kind: 'cantBeCountered'; filter?: Selector }
   /** "Your opponents can't cast spells during your turn" (Dragonlord Dromoka). */
-  | { kind: 'cantCastSpells'; who: 'opponents' | 'all'; yourTurnOnly: boolean; duringCombatOnly?: boolean }
+  | {
+      kind: 'cantCastSpells';
+      who: 'opponents' | 'all';
+      yourTurnOnly: boolean;
+      duringCombatOnly?: boolean;
+    }
   /** "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer). */
   | { kind: 'castFromZone'; zone: 'libraryTop'; filter?: Selector }
   /** "You may play lands from the top of your library/your graveyard." */
@@ -74,7 +80,12 @@ export type RuleStatic =
   /** Additional land plays available to the controller each turn. */
   | { kind: 'additionalLandDrops'; count: Value }
   /** Opponents/players cannot activate abilities of matching battlefield sources. */
-  | { kind: 'cantActivateAbilities'; who: 'opponents' | 'all'; yourTurnOnly: boolean; filter: Selector }
+  | {
+      kind: 'cantActivateAbilities';
+      who: 'opponents' | 'all';
+      yourTurnOnly: boolean;
+      filter: Selector;
+    }
   /** "If a creature you control that entered this turn would deal damage, it deals twice that
    * much damage instead" (Neriv, Heart of the Storm) — a damage REPLACEMENT effect (CR 616). */
   | { kind: 'damageDoubled'; sourceFilter: Selector }
@@ -93,10 +104,17 @@ export type RuleStatic =
       addition: number;
     }
   /** "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison). */
-  | { kind: 'attackTax'; amount: number }
+  | { kind: 'attackTax'; amount: number; phyrexianColor?: Color }
+  /** Opposing spells that target this permanent cost life during announcement. */
+  | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }
   | { kind: 'improvise' }
   | { kind: 'kicker'; cost?: ParsedManaCost }
   | { kind: 'noMaximumHandSize' }
   | { kind: 'triggerAdditionalOnArtifactOrCreatureEntry' }
+  /**
+   * Harmonic Prodigy: triggered abilities of Shamans and other Wizards its controller controls
+   * trigger one additional time. Multiple permanents with this static each add one copy.
+   */
+  | { kind: 'triggerAdditionalForShamanOrOtherWizard' }
   | { kind: 'artifactTokenCreatesThopter' };

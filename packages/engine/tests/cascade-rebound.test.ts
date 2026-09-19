@@ -11,7 +11,10 @@ import { conjure, copies, forest, gameConfig, oracle, pump, registerDef } from '
 
 function pod(seed = 'cascade-rebound'): GameContext {
   const ctx = createGame(
-    gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
@@ -75,7 +78,12 @@ describe('Cascade and Rebound', () => {
     const { decisions } = pump(
       executeAbility(
         ctx,
-        { cardId: 'source-card', name: sourceCard.name, oracleId: sourceDef.oracleId, controllerId: 'P1' },
+        {
+          cardId: 'source-card',
+          name: sourceCard.name,
+          oracleId: sourceDef.oracleId,
+          controllerId: 'P1',
+        },
         { kind: 'triggered', targets: [], effects: [{ op: 'cascade' }] },
         [],
         undefined,
@@ -148,7 +156,12 @@ describe('Cascade and Rebound', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: pending.sourceCardId, name: pending.sourceName, oracleId: pending.sourceOracleId, controllerId: pending.controllerId },
+        {
+          cardId: pending.sourceCardId,
+          name: pending.sourceName,
+          oracleId: pending.sourceOracleId,
+          controllerId: pending.controllerId,
+        },
         pending.ability,
         [],
         pending.triggerObjectCardId,
@@ -177,27 +190,34 @@ describe('Cascade and Rebound', () => {
     const card = conjure(ctx, 'P1', reboundCard, 'hand');
     removeFromCurrentZone(ctx, card);
     card.zone = 'stack';
-    pump(finishSpellCard(ctx, {
-      id: 'rebound-stack',
-      sourceId: card.id,
-      controllerId: 'P1',
-      kind: 'spell',
-      description: card.name,
-      targets: [],
-      card,
-      ability: def.spellAbility,
-      sourceOracleId: card.oracleId,
-      sourceCardId: card.cardId,
-      isCommanderCast: false,
-      reboundPending: true,
-    }));
+    pump(
+      finishSpellCard(ctx, {
+        id: 'rebound-stack',
+        sourceId: card.id,
+        controllerId: 'P1',
+        kind: 'spell',
+        description: card.name,
+        targets: [],
+        card,
+        ability: def.spellAbility,
+        sourceOracleId: card.oracleId,
+        sourceCardId: card.cardId,
+        isCommanderCast: false,
+        reboundPending: true,
+      }),
+    );
 
     queueStepTriggers(ctx, 'upkeep');
     const pending = ctx.state.pendingTriggers[0]!;
     pump(
       executeAbility(
         ctx,
-        { cardId: pending.sourceCardId, name: pending.sourceName, oracleId: pending.sourceOracleId, controllerId: pending.controllerId },
+        {
+          cardId: pending.sourceCardId,
+          name: pending.sourceName,
+          oracleId: pending.sourceOracleId,
+          controllerId: pending.controllerId,
+        },
         pending.ability,
         [],
         pending.triggerObjectCardId,
@@ -212,7 +232,9 @@ describe('Cascade and Rebound', () => {
     expect(ctx.state.exile[0]?.reboundCastBy).toBeUndefined();
     expect(ctx.state.stack).toHaveLength(0);
     expect(
-      computePriorityOptions(ctx, player).some((option) => option.description.includes('Rebound Spell')),
+      computePriorityOptions(ctx, player).some((option) =>
+        option.description.includes('Rebound Spell'),
+      ),
     ).toBe(false);
   });
 
@@ -223,7 +245,12 @@ describe('Cascade and Rebound', () => {
     const ctx = pod();
     const player = ctx.state.players.find((candidate) => candidate.id === 'P1')!;
     player.library.length = 0;
-    conjure(ctx, 'P1', oracle({ name: 'Rebound Draw', typeLine: 'Creature — Test', oracleText: '' }), 'library');
+    conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Rebound Draw', typeLine: 'Creature — Test', oracleText: '' }),
+      'library',
+    );
 
     const reboundCard = oracle({
       name: 'Rebound Spell',

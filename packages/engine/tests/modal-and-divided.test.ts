@@ -114,7 +114,7 @@ const stubbornDenial = (): ReturnType<typeof oracle> =>
     power: null,
     toughness: null,
     oracleText:
-      "Counter target noncreature spell unless its controller pays {1}.\nFerocious — If you " +
+      'Counter target noncreature spell unless its controller pays {1}.\nFerocious — If you ' +
       'control a creature with power 4 or greater, counter that spell instead.',
   });
 
@@ -161,7 +161,9 @@ describe('Crux of Fate — modal spell', () => {
 
     pump(runPrioritySequence(ctx), (d) => {
       const match = d.options.find((o) => /Destroy all Dragon creatures/.test(o.description));
-      return match !== undefined ? pick(d, /Destroy all Dragon creatures/) : { index: 0, targets: new Map() };
+      return match !== undefined
+        ? pick(d, /Destroy all Dragon creatures/)
+        : { index: 0, targets: new Map() };
     });
 
     expect(ctx.state.battlefield.some((p) => p.id === dragon.id)).toBe(false);
@@ -302,7 +304,9 @@ describe('Ureni, the Song Unending — damage divided among a variable-count gro
     const chosenA = spawn(ctx, 'P2', bear('2', 'Chosen A'));
     const chosenB = spawn(ctx, 'P2', bear('2', 'Chosen B'));
     const untouched = spawn(ctx, 'P2', bear('2', 'Untouched'));
-    const trigger = interpretCard(ureni()).triggers.find((t) => t.trigger?.when === 'enters') as Ability;
+    const trigger = interpretCard(ureni()).triggers.find(
+      (t) => t.trigger?.when === 'enters',
+    ) as Ability;
 
     const landCount = ctx.state.battlefield.filter(
       (p) => p.controllerId === 'P1' && ctx.defs.get(p.oracleId)?.types.includes('Land') === true,
@@ -343,7 +347,9 @@ describe('Ureni, the Song Unending — damage divided among a variable-count gro
     const ctx = pod();
     const source = spawn(ctx, 'P1', ureni());
     const bystander = spawn(ctx, 'P2', bear('2', 'Untargeted Bystander'));
-    const trigger = interpretCard(ureni()).triggers.find((t) => t.trigger?.when === 'enters') as Ability;
+    const trigger = interpretCard(ureni()).triggers.find(
+      (t) => t.trigger?.when === 'enters',
+    ) as Ability;
 
     ctx.state.pendingTriggers.push({
       controllerId: 'P1',
@@ -386,7 +392,10 @@ describe('Stubborn Denial — Ferocious checked at resolution', () => {
     controllerId: string,
     id = 'o-fake-spell',
   ): void {
-    const def = registerDef(ctx, oracle({ name: 'Test Noncreature Spell', typeLine: 'Sorcery', manaCost: '{2}' }));
+    const def = registerDef(
+      ctx,
+      oracle({ name: 'Test Noncreature Spell', typeLine: 'Sorcery', manaCost: '{2}' }),
+    );
     ctx.state.stack.push({
       id,
       sourceId: 'c-fake-spell',
@@ -402,7 +411,7 @@ describe('Stubborn Denial — Ferocious checked at resolution', () => {
     });
   }
 
-  it('never offers its controller\'s own spell as a counterspell target', () => {
+  it("never offers its controller's own spell as a counterspell target", () => {
     const ctx = pod();
     pushFakeNoncreatureSpell(ctx, 'P1', 'o-own-spell');
     pushFakeNoncreatureSpell(ctx, 'P2', 'o-opponent-spell');
@@ -410,7 +419,8 @@ describe('Stubborn Denial — Ferocious checked at resolution', () => {
     conjure(ctx, 'P1', stubbornDenial(), 'hand');
 
     const action = computePriorityOptions(ctx, p1(ctx)).find(
-      (option) => option.type === 'castSpell' && option.description.startsWith('Cast Stubborn Denial'),
+      (option) =>
+        option.type === 'castSpell' && option.description.startsWith('Cast Stubborn Denial'),
     );
 
     expect(action?.targets).toEqual([{ slot: 0, options: ['o-opponent-spell'] }]);
@@ -425,7 +435,12 @@ describe('Stubborn Denial — Ferocious checked at resolution', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: 'c-denial', name: 'Stubborn Denial', oracleId: 'oracle-stubborn-denial', controllerId: 'P1' },
+        {
+          cardId: 'c-denial',
+          name: 'Stubborn Denial',
+          oracleId: 'oracle-stubborn-denial',
+          controllerId: 'P1',
+        },
         ability,
         ['o-fake-spell'],
       ),
@@ -443,7 +458,12 @@ describe('Stubborn Denial — Ferocious checked at resolution', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: 'c-denial', name: 'Stubborn Denial', oracleId: 'oracle-stubborn-denial', controllerId: 'P1' },
+        {
+          cardId: 'c-denial',
+          name: 'Stubborn Denial',
+          oracleId: 'oracle-stubborn-denial',
+          controllerId: 'P1',
+        },
         ability,
         ['o-fake-spell'],
       ),
@@ -463,7 +483,12 @@ describe('Stubborn Denial — Ferocious checked at resolution', () => {
     const { decisions } = pump(
       executeAbility(
         ctx,
-        { cardId: 'c-denial', name: 'Stubborn Denial', oracleId: 'oracle-stubborn-denial', controllerId: 'P1' },
+        {
+          cardId: 'c-denial',
+          name: 'Stubborn Denial',
+          oracleId: 'oracle-stubborn-denial',
+          controllerId: 'P1',
+        },
         ability,
         ['o-fake-spell'],
       ),

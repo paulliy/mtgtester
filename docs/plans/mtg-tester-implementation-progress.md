@@ -10,6 +10,19 @@ Requirement-by-requirement audit: 2026-09-10. HEAD is still `875346ba`. Plan art
 (CI workflow, PR template, AGENTS.md, ledger, this progress file) remain untracked.
 This audit does **not** mark the overall 15-step goal complete.
 
+## 2026-09-19 local validation
+
+After the catalog containment and counted-target announcement repair, the local gates pass:
+`typecheck`, `typecheck:tests`, `lint`, `format:check`, `test` (224 files, 2215 tests),
+`test:card-gate` (43 files, 816 tests), `test:implemented`, `snapshots:check`, web build, and
+real-browser Playwright (67 scenarios). The September 5 Revelsong Horn failure has focused normal-path
+regression coverage and a deterministic reproduction using the original derived seed; the original
+generated deck configuration was not captured immutably, so no exact full-game replay result is
+claimed. The generated model inventory lists 5790 non-land cards. Coverage reports measure
+506/802 fixture cards, 180/200 staples, and 599/906 deduplicated cards as modeled. These counts
+are inventory only; the 2026-09-10 requirement audit below is a dated finding, and its broader
+viewer and live-LLM evidence gaps are not closed by passing narrow checks.
+
 ## Ordered checklist
 
 - [x] 1. Make test results truthful.
@@ -23,9 +36,9 @@ This audit does **not** mark the overall 15-step goal complete.
 - [x] 9. Fix Harmonic Prodigy's two abilities.
 - [x] 10. Enforce authoring consistency.
 - [x] 11. Build the deterministic Card Test Lab.
-- [x] 12. Automate viewer scenarios with Playwright (34 registered titles driven this tree, including leftover catalog viewers listed in Remaining defects).
+- [x] 12. Automate viewer scenarios with Playwright (59 registered titles driven this tree, including leftover catalog viewers listed in Remaining defects).
 - [x] 13. Make viewer evidence part of the merge gate (repository enforcement limitation below).
-- [x] 14. Audit the remaining catalog in small batches (151 unique implemented-reviewed IDs have pinned Oracle plus catalog engine-path tests; all 151 also have clause-level suites; leftover catalog lab+Playwright viewers: 29 cards listed in Remaining defects; leftover catalog viewer otherwise not-run; Counter-intelligence out of scope).
+- [x] 14. Audit the remaining catalog in small batches (151 unique implemented-reviewed IDs have pinned Oracle plus catalog engine-path tests; all 151 also have clause-level suites; leftover catalog lab+Playwright viewers: 54 cards listed in Remaining defects; leftover catalog viewer otherwise not-run; Counter-intelligence out of scope).
 - [x] 15. Evaluate gameplay-AI quality separately (five repaired cards only; live LLM not-run).
 
 ## 2026-09-10 requirement audit
@@ -36,23 +49,23 @@ passed**. Gameplay-AI tests: **2/2 passed**. `rtk bun run format:check`: **faile
 files). `gh` is not installed. Playwright Card Test Lab was not re-run this audit; no
 `test-results/**/trace.zip` is present in the tree.
 
-| Step | Status | Evidence |
-| --- | --- | --- |
-| 1 Truthful reporting | **Proven** | `card-test-reporting.ts` uses executed Vitest JSON, missing-file `blocked`, zero-exec `failed`, skip/todo not pass. L4/L6 are bounded smokes that count observed casts/activations/resolutions and distinguish completed vs budget exhausted; they cannot claim a win or gameplay-AI pass. Empty required-check list cannot pass. Gate: `card-test-reporting.test.ts` 6/6 in the 78/78 run. |
-| 2 Five-card fixtures | **Proven** | `reviewed-five-oracle.json` pins 5 complete cards with hashes. Containment + pool tests in the 78/78 run. Bulk Token Triumph L1–L5 remain optional/out of the offline gate. |
-| 3 Modeling standard | **Proven**, with a stale-guide note | `docs/guides/card-modeling-and-testing.md` is linked from `CLAUDE.MD`, untracked `AGENTS.md`, and untracked PR template. Path to Exile is the clause-to-test sample. Manifest has no handwritten pass flags. Guide §5 still says there is no single-card sandbox even though the Card Test Lab exists and the completion checklist names it. |
-| 4 Mandatory CI | **Incomplete / unproven enforcement** | `.github/workflows/ci.yml` exists locally with Bun 1.3.14, typecheck, lint, `format:check`, `test`, `test:card-gate`, snapshots, and viewer e2e. It is **untracked** (`git status --short` shows `?? .github/workflows/ci.yml`). No aggregate `needs:` job. No `gh`, so branch protection is unproven. Repo-wide `format:check` failed this audit (362 files), so the Quality job would be red if that workflow ran as written. |
-| 5 Tribute Mage | **Proven** | `tribute-mage.test.ts` 5/5 in 78/78: eligible MV2 artifacts, other MV, nonartifact MV2, decline, no eligible, normal cast. Lab + Playwright spec cover the search. |
-| 6 Gev ward | **Proven** for engine; viewer extra clauses too-weak | `gev-scaled-scorch.test.ts` 10/10 in 78/78 covering pay/decline/insufficient/exact/floor, own-spell no ward, opponent-only lizard, entry counters, normal cast. Manifest also declares `gev-viewer-entry-counters` and `gev-viewer-lizard-target`, which are **not** registered lab scenarios. |
-| 7 Nightscape regeneration | **Proven** for engine; extra viewer clause too-weak | `nightscape-familiar.test.ts` 10/10 in 78/78. Manifest `nightscape-viewer-cost-reduction` is not a lab scenario. |
-| 8 Thran Vigil | **Proven** | `thran-vigil.test.ts` 8/8 in 78/78. Lab scenario registered. |
-| 9 Harmonic Prodigy | **Proven** for engine; extra viewer clause too-weak | `harmonic-prodigy.test.ts` 7/7 in 78/78. Manifest `harmonic-viewer-prowess` is not a lab scenario. |
-| 10 Authoring | **Proven** for the five cards and lint/validation | `authoring-validation.ts` + `card-authoring-validation.test.ts` 4/4. ESLint bans raw `registerOverride`, `noOp`, and reviewed-file raw envelopes. Five repaired cards live in `overrides/reviewed-five.ts`. `replaceCard` exists (5 call sites in `living-energy.ts`). |
-| 11 Card Test Lab | **Proven** | `prepared-scenario.ts`, lab server flag, `/card-test-lab`, five scenarios in `card-test-scenarios.ts`. Engine scenario suite 8/8 in 78/78. Manual screenshots remain under `docs/reviews/card-test-lab-2026-09-08/`. |
-| 12 Playwright | **Too-weak this tree** for retained traces | Spec `apps/web/e2e/card-test-lab.spec.ts` drives all five **registered** titles with no mocked transport. `playwright.config.ts` boots real lab backend and `preserveOutput: 'always'`. `card-test-lab-gate.test.ts` 4/4. **No traces in this tree**; e2e was not re-run this audit. Manifest viewer IDs beyond the five registered scenarios are not exercised. |
-| 13 Viewer merge gate | **Incomplete / unproven enforcement** | CI job `Viewer / Card Test Lab evidence` is defined locally and untracked. Gate rejects missing *registered* lab scenarios and mocked transport. It does **not** fail when the verification manifest lists viewer IDs that are not in `CARD_TEST_SCENARIO_IDS`. No impact analysis that computes affected cards; CI always runs all e2e (conservative, not the planned mapped+broader mechanic set). No CODEOWNERS / self-approve restriction. Branch protection unproven. |
-| 14 Catalog audit | **Not closed at the plan bar**; inspection leftover 0 **proven** | See Step 14 detail below. |
-| 15 Gameplay-AI | **Proven** for the five repaired cards only | `gameplay-ai-evaluation.test.ts` 2/2 this audit. Committed JSON records used-subject booleans; live LLM `not-run`. Committed JSON does not retain the plan’s full casts/activations/target/fallback/missed-opportunity log, but it does show observed decisions rather than deck membership. Grandfathered catalog has no AI evidence. |
+| Step                      | Status                                                           | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Truthful reporting      | **Proven**                                                       | `card-test-reporting.ts` uses executed Vitest JSON, missing-file `blocked`, zero-exec `failed`, skip/todo not pass. L4/L6 are bounded smokes that count observed casts/activations/resolutions and distinguish completed vs budget exhausted; they cannot claim a win or gameplay-AI pass. Empty required-check list cannot pass. Gate: `card-test-reporting.test.ts` 6/6 in the 78/78 run.                                                                                |
+| 2 Five-card fixtures      | **Proven**                                                       | `reviewed-five-oracle.json` pins 5 complete cards with hashes. Containment + pool tests in the 78/78 run. Bulk Token Triumph L1–L5 remain optional/out of the offline gate.                                                                                                                                                                                                                                                                                                |
+| 3 Modeling standard       | **Proven**, with a stale-guide note                              | `docs/guides/card-modeling-and-testing.md` is linked from `CLAUDE.MD`, untracked `AGENTS.md`, and untracked PR template. Path to Exile is the clause-to-test sample. Manifest has no handwritten pass flags. Guide §5 still says there is no single-card sandbox even though the Card Test Lab exists and the completion checklist names it.                                                                                                                               |
+| 4 Mandatory CI            | **Incomplete / unproven enforcement**                            | `.github/workflows/ci.yml` exists locally with Bun 1.3.14, typecheck, lint, `format:check`, `test`, `test:card-gate`, snapshots, and viewer e2e. It is **untracked** (`git status --short` shows `?? .github/workflows/ci.yml`). No aggregate `needs:` job. No `gh`, so branch protection is unproven. Repo-wide `format:check` failed this audit (362 files), so the Quality job would be red if that workflow ran as written.                                            |
+| 5 Tribute Mage            | **Proven**                                                       | `tribute-mage.test.ts` 5/5 in 78/78: eligible MV2 artifacts, other MV, nonartifact MV2, decline, no eligible, normal cast. Lab + Playwright spec cover the search.                                                                                                                                                                                                                                                                                                         |
+| 6 Gev ward                | **Proven** for engine; viewer extra clauses too-weak             | `gev-scaled-scorch.test.ts` 10/10 in 78/78 covering pay/decline/insufficient/exact/floor, own-spell no ward, opponent-only lizard, entry counters, normal cast. Manifest also declares `gev-viewer-entry-counters` and `gev-viewer-lizard-target`, which are **not** registered lab scenarios.                                                                                                                                                                             |
+| 7 Nightscape regeneration | **Proven** for engine; extra viewer clause too-weak              | `nightscape-familiar.test.ts` 10/10 in 78/78. Manifest `nightscape-viewer-cost-reduction` is not a lab scenario.                                                                                                                                                                                                                                                                                                                                                           |
+| 8 Thran Vigil             | **Proven**                                                       | `thran-vigil.test.ts` 8/8 in 78/78. Lab scenario registered.                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 9 Harmonic Prodigy        | **Proven** for engine; extra viewer clause too-weak              | `harmonic-prodigy.test.ts` 7/7 in 78/78. Manifest `harmonic-viewer-prowess` is not a lab scenario.                                                                                                                                                                                                                                                                                                                                                                         |
+| 10 Authoring              | **Proven** for the five cards and lint/validation                | `authoring-validation.ts` + `card-authoring-validation.test.ts` 4/4. ESLint bans raw `registerOverride`, `noOp`, and reviewed-file raw envelopes. Five repaired cards live in `overrides/reviewed-five.ts`. `replaceCard` exists (5 call sites in `living-energy.ts`).                                                                                                                                                                                                     |
+| 11 Card Test Lab          | **Proven**                                                       | `prepared-scenario.ts`, lab server flag, `/card-test-lab`, five scenarios in `card-test-scenarios.ts`. Engine scenario suite 8/8 in 78/78. Manual screenshots remain under `docs/reviews/card-test-lab-2026-09-08/`.                                                                                                                                                                                                                                                       |
+| 12 Playwright             | **Too-weak this tree** for retained traces                       | Spec `apps/web/e2e/card-test-lab.spec.ts` drives all five **registered** titles with no mocked transport. `playwright.config.ts` boots real lab backend and `preserveOutput: 'always'`. `card-test-lab-gate.test.ts` 4/4. **No traces in this tree**; e2e was not re-run this audit. Manifest viewer IDs beyond the five registered scenarios are not exercised.                                                                                                           |
+| 13 Viewer merge gate      | **Incomplete / unproven enforcement**                            | CI job `Viewer / Card Test Lab evidence` is defined locally and untracked. Gate rejects missing _registered_ lab scenarios and mocked transport. It does **not** fail when the verification manifest lists viewer IDs that are not in `CARD_TEST_SCENARIO_IDS`. No impact analysis that computes affected cards; CI always runs all e2e (conservative, not the planned mapped+broader mechanic set). No CODEOWNERS / self-approve restriction. Branch protection unproven. |
+| 14 Catalog audit          | **Not closed at the plan bar**; inspection leftover 0 **proven** | See Step 14 detail below.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 15 Gameplay-AI            | **Proven** for the five repaired cards only                      | `gameplay-ai-evaluation.test.ts` 2/2 this audit. Committed JSON records used-subject booleans; live LLM `not-run`. Committed JSON does not retain the plan’s full casts/activations/target/fallback/missed-opportunity log, but it does show observed decisions rather than deck membership. Grandfathered catalog has no AI evidence.                                                                                                                                     |
 
 ### Step 14 detail (plan bar vs inspection bar)
 
@@ -79,8 +92,8 @@ What this tree actually proves:
   `token-triumph-engine-batch-1` through `3`, `draconic-engine-batch-1` through `3`,
   `urdragon-engine-batch-1`, `w1-remaining-engine-batch-1`,
   `w2-remaining-engine-batch-1` and `2`, and `living-energy-engine-batch-1` through `5`).
-  Swords to Plowshares, Go for the Throat, Blossoming Defense, Bojuka Bog, and Citywide Bust
-  have Card Test Lab scenarios. Other leftover catalog viewer rows remain `not-run`.
+  leftover catalog lab+Playwright viewers listed in Remaining defects. Other leftover
+  catalog viewer rows remain `not-run`.
   Catalog path tests are not full modeling-guide clause coverage and are not viewer
   evidence. Madame Null’s ETB now looks up the trigger object by `cardId`.
 - 73 unique unsupported rows lack `engineEvidence: contained` (mostly leftover-stub /
@@ -473,7 +486,7 @@ the plan’s required-evidence bar.
   by `card-test-scenarios.test.ts`, and passed unmocked Playwright
   (`apps/web/e2e/card-test-lab.spec.ts`). Step 15 AI eval stays on the original five
   scenarios via `REVIEWED_FIVE_SCENARIO_IDS`. Ledger marks Swords `viewerEvidence:
-  playwright`. `rtk bun run test:card-gate` after these batches: **519/519**.
+playwright`. `rtk bun run test:card-gate` after these batches: **519/519**.
 - Engine-evidence Necron remaining leftover batch 1: Canoptek Scarab Swarm, Darkness,
   Lokhust Heavy Destroyer, Necron Monolith, Necron Overlord, Sculpting Steel, Skorpekh
   Destroyer, and Their Name Is Death have pinned Oracle in
@@ -649,6 +662,86 @@ the plan’s required-evidence bar.
   marks these three `viewerEvidence: playwright`.
   `rtk bun run test:card-gate` after this leftover-viewer batch: **782/782**. This does
   not close Step 14.
+- Leftover Card Test Lab viewers for Trostani Discordant, Felidar Retreat, and Hornet Nest
+  (`trostani-viewer-etb-two-lifelink-soldiers`, `felidar-viewer-landfall-cat-beast`,
+  `nest-viewer-damage-makes-insects`) plus Slate of Ancestry, Canoptek Scarab Swarm, and
+  Great Oak Guardian (`slate-viewer-discard-and-draw-for-creatures`,
+  `scarab-viewer-exile-graveyard-make-insects`, `oak-viewer-pump-and-untap-target-player`)
+  are registered, listed in the lab picker (40 scenarios), driven by
+  `card-test-scenarios.test.ts`, and passed unmocked Playwright this tree (**40/40** lab
+  titles). Swords already used the battlefield-only `permanent()` locator; the leftover
+  spectator exile meta-item was replaced with the player-mode log line and P2 life 44
+  because game-over stays in PlayerGameView. Slate discard is a count-slot; the last card
+  auto-forces. Oak P/T is asserted from `spectatorState()`. Step 15 AI eval stays on the
+  original five scenarios. Ledger marks these six `viewerEvidence: playwright` (Canoptek
+  on the necron-remaining winning defineCard; the shadowed necron-main unimplemented row
+  stays inspection-only). `rtk bun run test:card-gate` after this leftover-viewer batch:
+  **788/788**. This does not close Step 14.
+- Leftover Card Test Lab viewers for Frostboil Snarl, Vineglimmer Snarl, Stroke of Midnight,
+  and Generous Gift (`frostboil-viewer-reveal-enters-untapped`,
+  `vineglimmer-viewer-reveal-enters-untapped`, `stroke-viewer-destroy-nonland-make-human`,
+  `gift-viewer-destroy-and-make-elephant`) are registered, listed in the lab picker (44
+  scenarios), driven by `card-test-scenarios.test.ts`, and passed unmocked Playwright this
+  tree (**44/44** lab titles). Snarl labs cover Play land then reveal so the land enters
+  untapped; Plains-does-not-qualify for Vineglimmer stays engine-only. Stroke lab covers
+  destroy-nonland plus P2's 1/1 Human; land targeting stays engine-only. Gift lab covers
+  destroy Lab Ox plus P2's 3/3 Elephant; targeting a land stays engine-only. Step 15 AI
+  eval stays on the original five scenarios. Ledger marks these four
+  `viewerEvidence: playwright`. `rtk bun run test:card-gate` after this leftover-viewer
+  batch: **792/792**. This does not close Step 14.
+- Leftover Card Test Lab viewers for Boros Garrison, Orzhov Basilica, Pia and Kiran Nalaar,
+  and Crackling Doom (`garrison-viewer-bounce-forest-enters-tapped`,
+  `basilica-viewer-bounce-forest-enters-tapped`, `pia-kiran-viewer-etb-two-thopters`,
+  `crackling-viewer-damage-and-greatest-sacrifice`) are registered, listed in the lab picker
+  (48 scenarios), driven by `card-test-scenarios.test.ts`, and passed unmocked Playwright this
+  tree (**48/48** lab titles). Bounce-land labs cover Play land then click Forest so the
+  bounce land stays tapped and Forest returns to hand; bouncing the land itself stays
+  engine-only. Pia and Kiran lab covers two 1/1 flying Thopters on the normal cast path;
+  sacrificing an artifact for damage stays engine-only. Crackling Doom lab covers 2 damage to
+  each opponent and P2 sacrificing Lab Ox; a no-creature opponent still taking 2 stays
+  engine-only. Step 15 AI eval stays on the original five scenarios. Ledger marks these four
+  `viewerEvidence: playwright`. `rtk bun run test:card-gate` after this leftover-viewer
+  batch: **796/796**. This does not close Step 14.
+- Leftover Card Test Lab viewers for Rakdos Carnarium, Whirler Rogue, and Reckless Fireweaver
+  (`carnarium-viewer-bounce-forest-enters-tapped`, `whirler-viewer-etb-two-thopters`,
+  `weaver-viewer-artifact-etb-pings-opponents`) are registered, listed in the lab picker
+  (51 scenarios), driven by `card-test-scenarios.test.ts`, and passed unmocked Playwright this
+  tree (**51/51** lab titles). Carnarium matches the bounce-land Forest return path. Whirler
+  Rogue lab covers two 1/1 flying Thopters on the normal cast path and Pass for leftover
+  unblockable activation. Fireweaver lab covers an artifact ETB pinging each opponent to 39;
+  a creature ETB not pinging stays engine-only. Step 15 AI eval stays on the original five
+  scenarios. Ledger marks these three `viewerEvidence: playwright`. `rtk bun run test:card-gate`
+  after this leftover-viewer batch: **799/799**. This does not close Step 14.
+- Leftover Card Test Lab viewers for Spit Flame, Sai, Master Thopterist, and Secret Rendezvous
+  (`spit-viewer-four-damage-to-ox`, `sai-viewer-cast-artifact-makes-thopter`,
+  `rendezvous-viewer-you-and-opponent-draw-three`) are registered, listed in the lab picker
+  (54 scenarios), driven by `card-test-scenarios.test.ts`, and passed unmocked Playwright this
+  tree (**54/54** lab titles). Spit Flame lab covers 4 damage killing Lab Ox; the Dragon-enter
+  graveyard return stays engine-only. Sai lab covers a flying Thopter from casting Eligible
+  Talisman; casting a creature stays engine-only. Secret Rendezvous lab covers you and P2 each
+  drawing three nonlands; targeting yourself stays engine-only. Darksteel Mutation was skipped
+  because Enchant creature never becomes a `spellAbility` on the normal cast path (the aura
+  enters unattached and dies to SBA). Step 15 AI eval stays on the original five scenarios.
+  Ledger marks these three `viewerEvidence: playwright` (Secret Rendezvous on the Queen
+  leftover engine-batch-1 winning defineCard; the shadowed unimplemented row stays inspection-only).
+  `rtk bun run test:card-gate` after this leftover-viewer batch: **804/804**. This does
+  not close Step 14.
+- Leftover Card Test Lab viewers for Demanding Dragon, Cryptothrall, Boros Charm, Rakdos Charm,
+  and Steel Hellkite (`demanding-viewer-five-damage-no-creature`,
+  `cryptothrall-viewer-hexproof-other-artifact-creatures`,
+  `boros-charm-viewer-four-damage-to-player`, `rakdos-charm-viewer-destroy-artifact`,
+  `hellkite-viewer-plus-one-power-until-eot`) are registered, listed in the lab picker
+  (59 scenarios), driven by `card-test-scenarios.test.ts`, and passed unmocked Playwright this
+  tree (**59/59** lab titles). Demanding Dragon lab covers 5 damage when P2 has no creature;
+  sacrificing to avoid it stays engine-only. Cryptothrall lab covers hexproof on your other
+  artifact creature, not on itself, Lab Ox, or P2's Servo. Boros Charm lab covers the 4-damage
+  mode; indestructible and double strike stay engine-only. Rakdos Charm lab covers destroying
+  Wrong-MV Artifact while sparing Lab Ox; graveyard-exile and creature-ping stay engine-only.
+  Steel Hellkite lab covers the {2} +1/+0 pump to 6/5; mana-value X destroy after combat damage
+  stays engine-only. Step 15 AI eval stays on the original five scenarios.
+  Ledger marks these five `viewerEvidence: playwright`.
+  `rtk bun run test:card-gate` after this leftover-viewer batch: **810/810**. This does
+  not close Step 14.
 
 ### Step 15 — gameplay-AI quality (five reviewed cards)
 
@@ -670,8 +763,15 @@ the plan’s required-evidence bar.
   Chain Reaction, Collective Unconscious, Camaraderie, Shamanic Revelation, Flayed One,
   Night Scythe, Game Trail, Fortified Village, Shineshadow Snarl, Magmaquake, Hunter's Prowess,
   Royal Warden, Provoke the Trolls, Hoard-Smelter Dragon, Loaming Shaman, Chronomancer,
-  Akoum Hellkite, Dawn of Hope, and Rootborn Defenses among leftover
-  catalog cards (29 leftover catalog viewers plus the five repaired cards). W2 remaining and Living Energy leftovers
+  Akoum Hellkite, Dawn of Hope, Rootborn Defenses, Trostani Discordant, Felidar Retreat,
+  Hornet Nest, Slate of Ancestry, Canoptek Scarab Swarm, Great Oak Guardian, Frostboil Snarl,
+  Vineglimmer Snarl, Stroke of Midnight, Generous Gift, Boros Garrison, Orzhov Basilica,
+  Pia and Kiran Nalaar, Crackling Doom, Rakdos Carnarium, Whirler Rogue, Reckless Fireweaver,
+  Spit Flame, Sai, Master Thopterist, Secret Rendezvous, Demanding Dragon, Cryptothrall,
+  Boros Charm, Rakdos Charm, and Steel Hellkite among leftover
+  catalog cards (54 leftover catalog viewers plus the five repaired cards). Remaining leftover
+  `viewerEvidence: not-run` unique IDs: 97 (27 Marchesa must stay not-run; 70 other leftover
+  candidates). W2 remaining and Living Energy leftovers
   and stubs are empty. Clause-level suites are not viewer or gameplay-AI completion.
   `remainingOverrideFiles` still say `in-progress` in the audit narrative (the catalog-audit
   test currently expects `reviewed` for inventoried files). Teyo is registered under two
@@ -686,8 +786,8 @@ the plan’s required-evidence bar.
 - Viewer merge gate does not fail when the verification manifest lists viewer scenario IDs that
   are not in `CARD_TEST_SCENARIO_IDS` (Gev entry/lizard, Nightscape cost-reduction, Harmonic
   prowess, Path to Exile). No affected-card impact analysis; no CODEOWNERS.
-- Playwright traces for the current 34 registered Card Test Lab titles exist under
-  `test-results/` from the 2026-09-11 unmocked run (34/34 lab titles).
+- Playwright traces for the current 59 registered Card Test Lab titles exist under
+  `test-results/` from the unmocked run this tree (59/59 lab titles).
   Manifest viewer IDs beyond those registered scenarios are still not exercised.
 - Gameplay-AI evaluation covers only the five repaired cards. Live LLM is `not-run`.
 - `docs/modelled-cards.md` no longer lists Deflecting Swat or Nullmage Shepherd; a full

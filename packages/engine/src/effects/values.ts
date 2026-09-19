@@ -10,9 +10,10 @@
 import type { Value, ValueScope } from '../cards/value';
 import { cardTypesInAllGraveyards, devotionTo } from '../cards/value';
 import type { Selector } from '../cards/selector';
+import { selectMatches } from '../cards/selector';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { computeCharacteristics, selectPermanents } from './continuous';
-import { effectivePT, getDefByOracleId } from '../state/queries';
+import { cardZoneCandidate, effectivePT, getDefByOracleId } from '../state/queries';
 import { spellManaValue } from '../state/objects';
 
 function scopedPermanents(
@@ -42,6 +43,41 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return cardTypesInAllGraveyards(ctx);
     case 'countPermanents':
       return scopedPermanents(ctx, scope, value.selector, value.scope).length;
+    case 'countPermanentsControlledByTarget': {
+      const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
+      if (targetId === undefined) return 0;
+      const source = { cardId: scope.sourceCardId ?? '', controllerId: scope.controllerId };
+      return selectPermanents(ctx, value.selector, source).filter(
+        (permanent) => permanent.controllerId === targetId,
+      ).length;
+    }
+    case 'aurasYouControlAttachedToCreatures':
+      return ctx.state.battlefield.filter((permanent) => {
+        if (permanent.controllerId !== scope.controllerId || permanent.attachedTo === null) {
+          return false;
+        }
+        if (!computeCharacteristics(ctx, permanent).subtypes.includes('Aura')) return false;
+        const attached = ctx.state.battlefield.find(
+          (candidate) => candidate.id === permanent.attachedTo,
+        );
+        return (
+          attached !== undefined && computeCharacteristics(ctx, attached).types.includes('Creature')
+        );
+      }).length;
+    case 'countCardsInZone': {
+      const source = { cardId: scope.sourceCardId ?? '', controllerId: scope.controllerId };
+      let count = 0;
+      for (const player of ctx.state.players) {
+        if (value.owner === 'you' && player.id !== scope.controllerId) continue;
+        if (value.owner === 'opponents' && player.id === scope.controllerId) continue;
+        for (const card of player[value.zone]) {
+          if (selectMatches(cardZoneCandidate(ctx, card, player.id), value.selector, source)) {
+            count++;
+          }
+        }
+      }
+      return count;
+    }
     case 'colorsAmongPermanents': {
       const colors = new Set<string>();
       for (const perm of ctx.state.battlefield) {
@@ -66,7 +102,16 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       );
     case 'greatestManaValueAmong':
       return scopedPermanents(ctx, scope, value.selector, value.scope).reduce(
-        (best, perm) => Math.max(best, spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined)),
+        (best, perm) =>
+          Math.max(
+            best,
+            spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined),
+          ),
+        0,
+      );
+    case 'totalPowerAmong':
+      return scopedPermanents(ctx, scope, value.selector, value.scope).reduce(
+        (total, perm) => total + effectivePT(ctx, perm).power,
         0,
       );
     case 'totalPowerOfAttackers':
@@ -76,6 +121,19 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'xValue':
       // A spell announced with no X is X=0 (CR 601.2b), which is a legal announcement.
       return scope.x ?? 0;
+    case 'optionalCostCount': {
+      const permanent = ctx.state.battlefield.find(
+        (candidate) => candidate.cardId === scope.sourceCardId,
+      );
+      const stackObject = ctx.state.stack.find(
+        (candidate) => candidate.sourceCardId === scope.sourceCardId,
+      );
+      return (
+        permanent?.optionalCostCounts?.[value.mechanic] ??
+        stackObject?.optionalCostCounts?.[value.mechanic] ??
+        0
+      );
+    }
     case 'damageDealt':
       return scope.damageDealt ?? 0;
     case 'triggerCount':
@@ -98,6 +156,13 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       if (!scope.sourceCardId) return 0;
       const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
       return perm ? (perm.counters[value.counter] ?? 0) : 0;
+    }
+    case 'allCountersOnSelf': {
+      if (!scope.sourceCardId) return 0;
+      const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
+      return perm
+        ? Object.values(perm.counters).reduce((total, count) => total + count, 0)
+        : (scope.sourceCountersTotal ?? 0);
     }
     case 'countersOnTarget': {
       if (value.target === 'triggerObject') {
@@ -128,16 +193,27 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return Object.values(player.commanderCastCount).reduce((sum, n) => sum + n, 0);
     }
     case 'lifeTotal': {
-      const targetPlayerId = value.scope === 'you' ? scope.controllerId : (scope.eventPlayerId ?? scope.controllerId);
+      const targetPlayerId =
+        value.scope === 'you' ? scope.controllerId : (scope.eventPlayerId ?? scope.controllerId);
       const player = ctx.state.players.find((p) => p.id === targetPlayerId);
       return player ? player.life : 0;
     }
     case 'countOpponentsWithFewerCreatures': {
-      const myCreatures = scopedPermanents(ctx, scope, { kind: 'type', value: 'Creature' }, 'you').length;
+      const myCreatures = scopedPermanents(
+        ctx,
+        scope,
+        { kind: 'type', value: 'Creature' },
+        'you',
+      ).length;
       let count = 0;
       for (const p of ctx.state.players) {
         if (p.id !== scope.controllerId) {
-          const oppCreatures = scopedPermanents(ctx, { ...scope, controllerId: p.id }, { kind: 'type', value: 'Creature' }, 'you').length;
+          const oppCreatures = scopedPermanents(
+            ctx,
+            { ...scope, controllerId: p.id },
+            { kind: 'type', value: 'Creature' },
+            'you',
+          ).length;
           if (oppCreatures < myCreatures) count++;
         }
       }
@@ -153,24 +229,37 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
       return perm === undefined ? 0 : effectivePT(ctx, perm).toughness;
     }
+    case 'powerOfTarget': {
+      const targetId =
+        value.target === 'triggerObject'
+          ? scope.triggerObjectCardId
+          : typeof value.target === 'number'
+            ? scope.targets?.[value.target]
+            : undefined;
+      if (targetId === undefined) return 0;
+      const permanent = ctx.state.battlefield.find(
+        (candidate) => candidate.id === targetId || candidate.cardId === targetId,
+      );
+      return permanent === undefined ? 0 : effectivePT(ctx, permanent).power;
+    }
     case 'opponentsLostLifeThisTurn':
       return ctx.state.players.filter(
-        (player) => player.id !== scope.controllerId && ctx.state.lifeLostThisTurn[player.id] === true,
+        (player) =>
+          player.id !== scope.controllerId && ctx.state.lifeLostThisTurn[player.id] === true,
       ).length;
     case 'powerOfTriggerObject': {
-      const perm = scope.triggerObjectCardId === undefined
-        ? undefined
-        : ctx.state.battlefield.find((p) => p.cardId === scope.triggerObjectCardId);
+      const perm =
+        scope.triggerObjectCardId === undefined
+          ? undefined
+          : ctx.state.battlefield.find((p) => p.cardId === scope.triggerObjectCardId);
       return perm === undefined ? 0 : effectivePT(ctx, perm).power;
     }
     case 'cardsInTargetHand': {
-      const targetId =
-        typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
+      const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
       return ctx.state.players.find((player) => player.id === targetId)?.hand.length ?? 0;
     }
     case 'tappedCreaturesControlledByTarget': {
-      const targetId =
-        typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
+      const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
       if (targetId === undefined) return 0;
       return ctx.state.battlefield.filter(
         (permanent) =>
@@ -182,12 +271,18 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'attackingCreatures':
       return ctx.state.battlefield.filter((permanent) => permanent.attacking !== null).length;
     case 'spellsCastThisTurn':
-      return ctx.state.players.find((player) => player.id === scope.controllerId)?.spellsCastThisTurn ?? 0;
+      return (
+        ctx.state.players.find((player) => player.id === scope.controllerId)?.spellsCastThisTurn ??
+        0
+      );
     case 'countersOnTriggerObject': {
-      const object = scope.triggerObjectCardId === undefined
-        ? undefined
-        : ctx.state.battlefield.find((p) => p.cardId === scope.triggerObjectCardId) ??
-          ctx.state.players.flatMap((p) => p.graveyard).find((c) => c.cardId === scope.triggerObjectCardId);
+      const object =
+        scope.triggerObjectCardId === undefined
+          ? undefined
+          : (ctx.state.battlefield.find((p) => p.cardId === scope.triggerObjectCardId) ??
+            ctx.state.players
+              .flatMap((p) => p.graveyard)
+              .find((c) => c.cardId === scope.triggerObjectCardId));
       if (object === undefined) return 0;
       return 'counters' in object
         ? (object.counters[value.counter] ?? 0)

@@ -5,15 +5,41 @@ const seats = Array.from({ length: 4 }, () => ({ kind: 'pool' as const }));
 
 describe('batch validation', () => {
   it('accepts a four-seat scenario and preserves deterministic seed input', () => {
-    const result = validateBatch({ seed: 'fixed', scenarios: [{ id: 'pod', name: 'Pod', seats, providerKind: 'random', games: 2 }] });
-    expect(result).toEqual({ ok: true, spec: { seed: 'fixed', scenarios: [{ id: 'pod', name: 'Pod', seats, providerKind: 'random', games: 2 }] } });
+    const result = validateBatch({
+      seed: 'fixed',
+      scenarios: [{ id: 'pod', name: 'Pod', seats, providerKind: 'random', games: 2 }],
+    });
+    expect(result).toEqual({
+      ok: true,
+      spec: {
+        seed: 'fixed',
+        scenarios: [{ id: 'pod', name: 'Pod', seats, providerKind: 'random', games: 2 }],
+      },
+    });
   });
   it('rejects duplicate scenario ids and over-limit batches', () => {
-    expect(validateBatch({ scenarios: [{ id: 'x', name: 'X', seats, providerKind: 'random', games: 1 }, { id: 'x', name: 'Y', seats, providerKind: 'random', games: 1 }] }).ok).toBe(false);
-    expect(validateBatch({ scenarios: [{ id: 'x', name: 'X', seats, providerKind: 'random', games: MAX_BATCH_GAMES + 1 }] }).ok).toBe(false);
+    expect(
+      validateBatch({
+        scenarios: [
+          { id: 'x', name: 'X', seats, providerKind: 'random', games: 1 },
+          { id: 'x', name: 'Y', seats, providerKind: 'random', games: 1 },
+        ],
+      }).ok,
+    ).toBe(false);
+    expect(
+      validateBatch({
+        scenarios: [
+          { id: 'x', name: 'X', seats, providerKind: 'random', games: MAX_BATCH_GAMES + 1 },
+        ],
+      }).ok,
+    ).toBe(false);
   });
   it('rejects malformed seat lists', () => {
-    expect(validateBatch({ scenarios: [{ id: 'x', name: 'X', seats: [], providerKind: 'random', games: 1 }] }).ok).toBe(false);
+    expect(
+      validateBatch({
+        scenarios: [{ id: 'x', name: 'X', seats: [], providerKind: 'random', games: 1 }],
+      }).ok,
+    ).toBe(false);
   });
 });
 

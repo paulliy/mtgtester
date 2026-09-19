@@ -5,7 +5,12 @@
  * toggle, the graveyard and exile.
  */
 import { computed, ref } from 'vue';
-import type { CommanderDamageEntry, SpectatorCard, SpectatorPermanent, SpectatorSeat } from '@mtg/shared';
+import type {
+  CommanderDamageEntry,
+  SpectatorCard,
+  SpectatorPermanent,
+  SpectatorSeat,
+} from '@mtg/shared';
 import CardImage from './CardImage.vue';
 import GlobalCounters from './GlobalCounters.vue';
 import HandStrip from './HandStrip.vue';
@@ -70,15 +75,26 @@ const flexStyles = computed(() => {
     <header>
       <span class="id-badge">{{ seat.seat }}</span>
       <span class="label">{{ seat.label }}</span>
-      <span v-if="isMonarch" class="monarch-badge" title="This player is the monarch" aria-label="Monarch">MONARCH</span>
+      <span
+        v-if="isMonarch"
+        class="monarch-badge"
+        title="This player is the monarch"
+        aria-label="Monarch"
+        >MONARCH</span
+      >
       <span v-if="hasPriority" class="priority-dot" title="Has priority">
         <span class="dot" />
         <span class="ping" />
       </span>
       <span
         class="life-badge"
-        :class="{ low: seat.life <= 10, 'flash-damage': lifeFlash === 'damage', 'flash-heal': lifeFlash === 'heal' }"
-      >{{ seat.life }}</span>
+        :class="{
+          low: seat.life <= 10,
+          'flash-damage': lifeFlash === 'damage',
+          'flash-heal': lifeFlash === 'heal',
+        }"
+        >{{ seat.life }}</span
+      >
       <span v-if="eliminated" class="dead">DEAD</span>
     </header>
 
@@ -94,7 +110,9 @@ const flexStyles = computed(() => {
       <span class="meta-item"><strong>gy</strong> {{ seat.graveyard.length }}</span>
       <span class="meta-item"><strong>exile</strong> {{ exileCards.length }}</span>
       <span class="meta-item"><strong>lands</strong> {{ untappedLands }}/{{ lands.length }}</span>
-      <span v-if="seat.mulligansTaken > 0" class="meta-item"><strong>mull</strong> {{ seat.mulligansTaken }}</span>
+      <span v-if="seat.mulligansTaken > 0" class="meta-item"
+        ><strong>mull</strong> {{ seat.mulligansTaken }}</span
+      >
     </div>
 
     <div v-if="cmdDamageTaken.length > 0" class="cmd-damage-container">
@@ -179,11 +197,15 @@ const flexStyles = computed(() => {
   max-height: 100%;
   overflow: hidden;
   box-sizing: border-box;
-  transition: border-color 0.25s, box-shadow 0.25s;
+  transition:
+    border-color 0.25s,
+    box-shadow 0.25s;
 }
 .seat.active {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgb(96 165 250 / 0.35), 0 0 14px rgb(96 165 250 / 0.2);
+  box-shadow:
+    0 0 0 1px rgb(96 165 250 / 0.35),
+    0 0 14px rgb(96 165 250 / 0.2);
 }
 .seat.priority {
   border-left: 3px solid var(--warn);
@@ -382,7 +404,9 @@ header {
    an instant appear/disappear. The reduced-motion global override collapses these to ~0s. */
 .chip-enter-active,
 .chip-leave-active {
-  transition: opacity 180ms ease, transform 180ms ease;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
 }
 .chip-enter-from,
 .chip-leave-to {

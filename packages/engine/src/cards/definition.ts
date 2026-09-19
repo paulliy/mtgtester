@@ -8,7 +8,14 @@
 
 import type { Color, OracleId } from '@mtg/shared';
 import type { ParsedManaCost } from '../mana/cost';
-import type { Ability, AbilityCost, ActivatedAbility, KeywordAbility, ManaAbilitySpec } from './ability';
+import type {
+  Ability,
+  AbilityCost,
+  ActivatedAbility,
+  KeywordAbility,
+  ManaAbilitySpec,
+  WardCost,
+} from './ability';
 import type { Condition } from './condition';
 import type { StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
@@ -62,7 +69,7 @@ export interface BackFace {
   /** Interpreted second face for a transforming double-faced permanent. */
   backFace?: BackFace;
   keywords: KeywordAbility[];
-  ward?: ParsedManaCost;
+  ward?: WardCost;
   protectionFrom?: Color[];
   manaAbilities: ManaAbilitySpec[];
   activatedAbilities: ActivatedAbility[];
@@ -110,7 +117,7 @@ export interface CardDefinition {
   backFace?: BackFace;
   keywords: KeywordAbility[];
   /** Printed ward cost (CR 702.21), or absent. Parameterized, so not in `keywords`. */
-  ward?: ParsedManaCost;
+  ward?: WardCost;
   /** Printed "protection from `<colors>`" (CR 702.16). */
   protectionFrom?: Color[];
   manaAbilities: ManaAbilitySpec[];
@@ -149,7 +156,11 @@ export interface CardDefinition {
    */
   entersWithCounters?: Record<string, number | import('./value').Value>;
   /** Additional counters applied by static replacement effects as another permanent enters. */
-  additionalCountersOnEntry?: { affects: import('./selector').Selector; counter: string; count: import('./value').Value }[];
+  additionalCountersOnEntry?: {
+    affects: import('./selector').Selector;
+    counter: string;
+    count: import('./value').Value;
+  }[];
   /** Additional 1/1 token replacement generated whenever a creature token is created. */
   tokenCreationReplacement?: import('./ability').TokenSpec;
   /** Static characteristic behavior for a Duplicant-style last-exiled creature copy. */
@@ -173,6 +184,14 @@ export interface CardDefinition {
   commanderFreeCast?: boolean;
   /** Additional costs paid while announcing a spell (CR 601.2h), apart from its mana cost. */
   spellAdditionalCosts?: AbilityCost[];
+  /** An optional announced additional mana cost such as kicker, squad, or offspring. */
+  optionalAdditionalCost?: {
+    mechanic: 'kicker' | 'squad' | 'offspring';
+    cost: ParsedManaCost;
+    repeatable?: true;
+  };
+  /** Ravenous uses the spell's announced X for entry counters and its X>=5 draw trigger. */
+  ravenous?: true;
   /**
    * "You may have this enter the battlefield as a copy of …" (CR 707.2, as-enters
    * replacement — Dack's Duplicate, Spark Double, Sculpting Steel). `selector` is a

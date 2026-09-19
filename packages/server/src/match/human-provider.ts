@@ -56,7 +56,9 @@ export class PersistentAbilityYieldProvider implements AsyncDecisionProvider {
           Array.isArray(costs) &&
           costs.some(
             (cost) =>
-              typeof cost === 'object' && cost !== null && (cost as { kind?: unknown }).kind === 'sacrificeSelf',
+              typeof cost === 'object' &&
+              cost !== null &&
+              (cost as { kind?: unknown }).kind === 'sacrificeSelf',
           )
         ) {
           this.ignored.add(key);
@@ -81,9 +83,8 @@ export interface PendingHumanDecision {
  * and the board revision can release the engine.
  */
 export class HumanDecisionProvider implements AsyncDecisionProvider {
-  private pending:
-    | (PendingHumanDecision & { resolve(response: DecisionResponse): void })
-    | null = null;
+  private pending: (PendingHumanDecision & { resolve(response: DecisionResponse): void }) | null =
+    null;
 
   constructor(
     private readonly revision: () => number,
@@ -111,7 +112,9 @@ export class HumanDecisionProvider implements AsyncDecisionProvider {
     if (pending === null) return 'No human action is currently required.';
     if (payload.requestId !== pending.request.requestId) return 'That decision is stale.';
     if (payload.revision !== pending.revision) return 'The board changed; choose again.';
-    const action = pending.request.legalActions.find((candidate) => candidate.id === payload.actionId);
+    const action = pending.request.legalActions.find(
+      (candidate) => candidate.id === payload.actionId,
+    );
     if (action === undefined) return 'That action is not on the current legal menu.';
     const slots = action.targets ?? [];
     const suppliedTargets = payload.targets ?? [];
@@ -135,9 +138,7 @@ export class HumanDecisionProvider implements AsyncDecisionProvider {
     const response: DecisionResponse = {
       requestId: payload.requestId,
       actionId: payload.actionId,
-      ...(suppliedTargets.length > 0
-        ? { targets: suppliedTargets }
-        : {}),
+      ...(suppliedTargets.length > 0 ? { targets: suppliedTargets } : {}),
     };
     this.pending = null;
     pending.resolve(response);

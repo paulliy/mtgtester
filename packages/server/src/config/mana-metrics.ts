@@ -10,4 +10,3 @@ export const MANA_METRICS = {
   droughtUncastableCards: 2,
   expectedLandLag: 1,
 } as const;
-

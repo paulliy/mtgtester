@@ -1,0 +1,282 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "95f55e80c896451a88ece1d055c0b4228f2121ec495a4f2250291595e4a409f1",
+      "card": {
+        "oracleId": "71bc69a5-7cec-4abd-b97d-13f8e1f9afac",
+        "scryfallId": "1abc652f-8e9d-4df7-bc4e-d8b515a40fec",
+        "name": "Baxter Building",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{4}, {T}: Add four mana in any combination of colors.\n{4}, {T}: Draw a card. Activate only if you control a creature with toughness 4 or greater.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f72bb8a4a89f161cd159500e7bd4079643e5b9a1fe60f40ce583708a582377bf",
+      "card": {
+        "oracleId": "a97e760a-99c8-47ea-a875-451aca913ee7",
+        "scryfallId": "d9138f86-34dc-46d2-99f4-18eb3b26c253",
+        "name": "Collective Effort",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Escalate—Tap an untapped creature you control. (Pay this cost for each mode chosen beyond the first.)\nChoose one or more —\n• Destroy target creature with power 4 or greater.\n• Destroy target enchantment.\n• Put a +1/+1 counter on each creature target player controls.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Escalate"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e741fdb8f73e2d7f2d05a18b490c38acd4b909c40a349670e29a78c0844fe7ab",
+      "card": {
+        "oracleId": "5a343a5f-3f9b-43c3-8532-8391de7a5443",
+        "scryfallId": "2c695df6-6bf2-4e6b-8500-e3116137ca27",
+        "name": "Jacked Rabbit",
+        "manaCost": "{X}{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Rabbit Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Rabbit",
+          "Warrior"
+        ],
+        "oracleText": "Ravenous (This creature enters with X +1/+1 counters on it. If X is 5 or more, draw a card when it enters.)\nWhenever this creature attacks, create a number of 1/1 white Rabbit creature tokens equal to this creature's power.",
+        "power": "1",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Ravenous"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "42c1fbf39f82baf3db0857ea9d6aba4422d0e213e5abb156bc5830810c5f88a4",
+      "card": {
+        "oracleId": "fe83087d-c6c1-40be-9295-baaa1c6b2db1",
+        "scryfallId": "8296a455-21d5-498e-9029-2bdf0da855a8",
+        "name": "Mondrak, Glory Dominus",
+        "manaCost": "{2}{W}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Phyrexian Horror",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Phyrexian",
+          "Horror"
+        ],
+        "oracleText": "If one or more tokens would be created under your control, twice that many of those tokens are created instead.\n{1}{W/P}{W/P}, Sacrifice two other artifacts and/or creatures: Put an indestructible counter on Mondrak. ({W/P} can be paid with either {W} or 2 life.)",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "303f93ae0b982e6dfe39fd8d9bc23fd3311b53d2937c36d799a31d8fef9c8a48",
+      "card": {
+        "oracleId": "9a1fbe72-4a17-42be-8e23-d7d30a5e59c1",
+        "scryfallId": "d25bbe18-709c-4ed3-a047-5578ecfaaba7",
+        "name": "Norn's Annex",
+        "manaCost": "{3}{W/P}{W/P}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "({W/P} can be paid with either {W} or 2 life.)\nCreatures can't attack you or planeswalkers you control unless their controller pays {W/P} for each of those creatures.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5f3ac586b4069bed4a986d8d9452062a1bb8e7fa6651bec6850b9848a9237dc3",
+      "card": {
+        "oracleId": "9bdc1e63-1cf9-4ddb-a7d5-f2a2eb91bdfd",
+        "scryfallId": "7e8d6bc1-4609-4802-a4b6-7e75fdae186c",
+        "name": "Pearl-Ear, Imperial Advisor",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Fox Advisor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Fox",
+          "Advisor"
+        ],
+        "oracleText": "Lifelink\nEnchantment spells you cast have affinity for Auras. (They cost {1} less to cast for each Aura you control.)\nWhenever you cast an Aura spell that targets a modified permanent you control, draw a card. (Equipment, Auras you control, and counters are modifications.)",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a3813859b5c445ed94ceb4b1dfb93519791800b67a1d1b757f54f58f4a65144b",
+      "card": {
+        "oracleId": "f8e17f4f-080d-4bba-bd05-ca27e94ccecc",
+        "scryfallId": "904ff94a-4db4-44a6-8593-89c32905b3fc",
+        "name": "Terror of the Peaks",
+        "manaCost": "{3}{R}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nSpells your opponents cast that target this creature cost an additional 3 life to cast.\nWhenever another creature you control enters, this creature deals damage equal to that creature's power to any target.",
+        "power": "5",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3fb2373850b97ba8e69853c7ea2f6fdbdc3cd32ea4c88e968bf47bde8436347f",
+      "card": {
+        "oracleId": "b168e4e6-f572-4d9f-b98f-95b2611354cb",
+        "scryfallId": "fb419d9d-e06f-48c8-a4f8-a57f9be39e50",
+        "name": "Zopandrel, Hunger Dominus",
+        "manaCost": "{5}{G}{G}",
+        "cmc": 7,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Phyrexian Horror",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Phyrexian",
+          "Horror"
+        ],
+        "oracleText": "Reach\nAt the beginning of each combat, double the power and toughness of each creature you control until end of turn.\n{G/P}{G/P}, Sacrifice two other creatures: Put an indestructible counter on Zopandrel. ({G/P} can be paid with either {G} or 2 life.)",
+        "power": "4",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach",
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

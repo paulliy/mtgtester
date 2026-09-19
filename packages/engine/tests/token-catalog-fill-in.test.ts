@@ -17,7 +17,8 @@ describe('Night Scythe', () => {
     const def = getOverride('dea9741a-3360-4a17-aeea-a854e2174d25');
     const spec = def?.def.triggers?.[0]?.effects.find((e) => e.op === 'createToken');
     expect(spec).toBeDefined();
-    const token = (spec as { spec: { colors: string[]; subtypes: string[]; typeLine: string } }).spec;
+    const token = (spec as { spec: { colors: string[]; subtypes: string[]; typeLine: string } })
+      .spec;
     expect(token.colors).toEqual(['B']);
     expect(token.subtypes).toEqual(['Necron']);
     expect(token.typeLine).toBe('Artifact Creature — Necron');
@@ -33,21 +34,38 @@ describe('Thopter token catalog entry', () => {
   });
 
   it('is the same token wherever a card creates a Thopter', () => {
-    const ids = [
-      '7f268b15-ac92-4e98-821b-78d15d9285d9', // Loyal Apprentice
-      'aaadfe41-b2be-4183-b45e-a70e53a59d2e', // Retrofitter Foundry
-      'f82da236-e567-4221-a0bc-439a0c7e2b03', // Whirler Virtuoso
-    ];
-    const specs = ids
-      .map((id) => getOverride(id))
-      .flatMap((o) => [...(o?.def.triggers ?? []), ...(o?.def.activatedAbilities?.map((a) => a.ability) ?? [])])
-      .flatMap((a) => a.effects)
-      .filter((e) => e.op === 'createToken' && (e as { spec: { name?: string } }).spec.name === 'Thopter')
-      .map((e) => (e as { spec: unknown }).spec);
+    const cards = [
+      ['7f268b15-ac92-4e98-821b-78d15d9285d9', 'Loyal Apprentice'],
+      ['f82da236-e567-4221-a0bc-439a0c7e2b03', 'Whirler Virtuoso'],
+    ] as const;
+    for (const [id, name] of cards) {
+      const override = getOverride(id);
+      expect(override, name).toBeDefined();
+      const specs = [
+        ...(override?.def.triggers ?? []),
+        ...(override?.def.activatedAbilities?.map((a) => a.ability) ?? []),
+      ]
+        .flatMap((ability) => ability.effects)
+        .filter(
+          (effect) =>
+            effect.op === 'createToken' &&
+            (effect as { spec: { name?: string } }).spec.name === 'Thopter',
+        )
+        .map((effect) => (effect as { spec: unknown }).spec);
 
-    // Loyal Apprentice's Thopter enters hasty (`{ ...THOPTER_1_1_FLYING, grantHasteUntilEot: true }`)
-    // — a legitimate per-card spread, not a divergence — so compare on the catalog's own fields.
-    expect(specs.length).toBeGreaterThanOrEqual(3);
-    for (const spec of specs) expect(spec).toMatchObject(THOPTER_1_1_FLYING);
+      // Loyal Apprentice's Thopter enters hasty (`{ ...THOPTER_1_1_FLYING,
+      // grantHasteUntilEot: true }`) — a legitimate per-card spread, not a divergence — so
+      // compare on the catalog's own fields.
+      expect(specs.length, name).toBeGreaterThan(0);
+      for (const spec of specs) expect(spec, name).toMatchObject(THOPTER_1_1_FLYING);
+    }
+  });
+
+  it('excludes explicitly unsupported Retrofitter Foundry from executable token evidence', () => {
+    const retrofitter = getOverride('aaadfe41-b2be-4183-b45e-a70e53a59d2e');
+    expect(retrofitter?.def).toEqual({});
+    expect(retrofitter?.unsupportedReason).toContain(
+      'The {2}, {T} Servo creation is dropped when activatedAbilities replace the parsed abilities.',
+    );
   });
 });

@@ -83,14 +83,17 @@ describe('Phase 6 player board projection', () => {
     expect(step.kind).toBe('decision');
     if (step.kind !== 'decision') return;
     expect(step.request.legalActions.length).toBeGreaterThan(1);
-    expect(step.request.legalActions.every((action) => action.interaction !== undefined)).toBe(true);
+    expect(step.request.legalActions.every((action) => action.interaction !== undefined)).toBe(
+      true,
+    );
   });
 
   it('includes a command-zone commander object for direct player selection', () => {
     const engine = new Engine(pod());
     engine.advance();
 
-    const commander = engine.playerState('P1').seats.find((seat) => seat.seat === 'P1')?.commanders[0];
+    const commander = engine.playerState('P1').seats.find((seat) => seat.seat === 'P1')
+      ?.commanders[0];
     expect(commander?.zone).toBe('command');
     expect(commander?.objectId).toBeTruthy();
     expect(commander?.scryfallId).not.toBeUndefined();

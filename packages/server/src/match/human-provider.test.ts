@@ -56,7 +56,10 @@ describe('HumanDecisionProvider', () => {
   });
 
   it('rejects missing and illegal targets without releasing the engine', () => {
-    const provider = new HumanDecisionProvider(() => 2, () => {});
+    const provider = new HumanDecisionProvider(
+      () => 2,
+      () => {},
+    );
     void provider.decide(request());
     expect(provider.submit({ requestId: 'r1', actionId: 1, revision: 2 })).toContain(
       'needs a choice',

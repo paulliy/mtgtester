@@ -36,7 +36,7 @@ Auditing the 264-card backlog against the current `Effect`/`AbilityCost`/`RuleSt
 The Warhammer/other UB precons' this-card-only italicized labels (`Wraith Form —`, `Phaeron —`,
 `Multi-threat Eliminator —`, …) render in the exact same "label — " position but aren't in that
 list, and can never be enumerated by name (each occurs on exactly one card) — CR 207.2c says an
-ability word carries no rules meaning regardless of vocabulary, so stripping by *shape* ("leading
+ability word carries no rules meaning regardless of vocabulary, so stripping by _shape_ ("leading
 Title Case phrase, em dash") looked like a safe, broad-multiplier fix. Measured against the actual
 uncommitted baseline (not, as first measured, against a full revert of the prior session's other
 `interpret.ts` work — that comparison was invalid and produced a false +56 reading), the shape-based
@@ -46,7 +46,7 @@ the ORIGINAL unstripped line (ADR 0009's drift guard). Stripping the label befor
 layer sees the line changes what `unmodeledReasons` records, so the override's exact-match check
 fails and the card falls back to unmodeled — trading a working bespoke override for nothing, since
 the stripped remainder still doesn't parse generically either. **This is not pursued as written.**
-A version that strips only for the *generic-parser* pass while leaving `unmodeledReasons`
+A version that strips only for the _generic-parser_ pass while leaving `unmodeledReasons`
 generation keyed to the original line would sidestep the drift-guard interaction, but that's a
 more invasive change to the reason-collection pipeline than one function — deferred, not part of
 Phase 1.
@@ -77,11 +77,12 @@ the backlog, but left `def: {}`, an intentionally-inert stub (`overrides/index.t
 comment at line 106). **`grep -c "def: {}" overrides/*.ts` currently returns 570 stub
 registrations** across the seven deck files. Filling in each stub's `def` — composing the
 already-complete `Effect`/`AbilityCost` primitive set into that specific card's actual behavior —
-*is* Phase 3, and it is nearly the entirety of the remaining work. Phase 1/2 as originally
+_is_ Phase 3, and it is nearly the entirety of the remaining work. Phase 1/2 as originally
 scoped are done; they're kept below only as a record of what was checked and confirmed present,
 not as pending tasks.
 
 **Tier C — out of scope for this plan, tracked separately.**
+
 - **Phyrexian mana** (`{U/P}`, `{B/P}`, …) and **hybrid mana** are cost-parsing gaps in
   `mana/cost.ts`, not card-primitive gaps — `hasUnsupportedCost` already flags them correctly.
   Only 2 backlog cards need it (`Phyrexian Metamorph`, `Tezzeret's Gambit`, `Tekuthal`). Fixing the
@@ -89,20 +90,21 @@ not as pending tasks.
   card-effect one; it belongs to a `mana/` ADR, not this one. Tracked as a follow-up, not blocking
   the primitive work below.
 - **Affinity for artifacts** — a cost-reduction keyword (reduces generic cost by 1 per artifact
-  you control). This *is* in scope (it's `RuleStatic.costReduction` with a `Value` selector-count
+  you control). This _is_ in scope (it's `RuleStatic.costReduction` with a `Value` selector-count
   amount, which already exists) — listed here only to note it's Tier B-adjacent, not Tier C; done
   alongside item 6 below in Phase 1.
 
 ## 2. Phased plan
 
 ### Phase 0 — Fix known-broken behavior in the existing uncommitted work (do first; nothing else is trustworthy until this is clean)
+
 - **Fixed this pass:** `interpret.ts` had two independent code paths producing The Ur-Dragon's
   Eminence cost reduction — a hardcoded `if (card.name === 'The Ur-Dragon')` block (a leftover
   from before the generic `EMINENCE_COST_REDUCTION_RE` parser existed) and the generic parser
   itself, both firing and pushing a duplicate `RuleStatic`. Removed the hardcoded block; the
   generic parser alone now produces the correct single entry. Fixed 3 of 5 failing tests, coverage
   unchanged (274/538, `urdragon.txt` still 93/93) since `modeled` doesn't care about duplicate
-  *correct* entries — this was a silent behavioral bug (Eminence would have double-reduced costs
+  _correct_ entries — this was a silent behavioral bug (Eminence would have double-reduced costs
   at runtime), not a coverage gap.
 - **Resolved as non-reproducing:** the other two failures (Firkraag's "Forced Combat
   Intervening-If" expecting a `conditionalEffect`/`hadToAttackThisCombat` wrapper, and
@@ -115,6 +117,7 @@ not as pending tasks.
   case it recurs, rather than claimed as a deliberate fix.
 
 ### Phase 1 — Core new primitives — **confirmed already present, no work needed**
+
 `fight`, `sacrificeOther`, `doubleCountersEach`/`Target`, `becomeCopyOf`, ranged `chooseOne`,
 `infect`/poison, `Affinity for artifacts` as `costReduction` all exist with executor cases and
 parse sites (grep locations in §1 above). Kept as a checklist entry, not a task.
@@ -126,25 +129,27 @@ becomes `unmodeledReasons` / override `handledLines`. Deferred until it's actual
 right now Phase 3's stub overrides are.
 
 ### Phase 2 — Emblems + Station + Spree — **confirmed already present, no work needed**
+
 Emblem storage, Station's counter-threshold gating, and Spree's per-mode cost payment all exist
 (`ability.ts:361-362`, `state/types.ts:139-152`, `interpret.ts:1074-1108`/`3100`).
 
 ### Phase 3 — Fill in the 570 stub overrides (`def: {}`), deck by deck — **the actual remaining work**
+
 The scaffolding (oracle id lookup, exact `handledLines`) is already done for most of the backlog.
 What's left per card: read its oracle text, compose the already-complete `Effect`/`AbilityCost`
 primitive set into a `def`, verify. Order by remaining-card-count (smallest deck gap first, so a
 deck crosses 100% sooner and its `bun run pool --play` end-to-end game becomes a regression net for
 everything after it):
 
-| Deck | Current (re-measure — moves as stubs fill in) | Modeled |
-| :--- | :---: | :---: |
-| `urdragon.txt` | 93/93 | 100% — done |
-| `draconic-destruction.txt` | 49/72 | smallest real gap |
-| `token-triumph.txt` | 45/73 | |
-| `living-energy.txt` | 44/87 | |
-| `counter-intelligence.txt` | 56/117 | |
-| `silverquill-influence.txt` | 27/86 | |
-| `necron-dynasties.txt` | 27/71 | |
+| Deck                        | Current (re-measure — moves as stubs fill in) |      Modeled      |
+| :-------------------------- | :-------------------------------------------: | :---------------: |
+| `urdragon.txt`              |                     93/93                     |    100% — done    |
+| `draconic-destruction.txt`  |                     49/72                     | smallest real gap |
+| `token-triumph.txt`         |                     45/73                     |                   |
+| `living-energy.txt`         |                     44/87                     |                   |
+| `counter-intelligence.txt`  |                    56/117                     |                   |
+| `silverquill-influence.txt` |                     27/86                     |                   |
+| `necron-dynasties.txt`      |                     27/71                     |                   |
 
 Per card: open the deck's `overrides/<deck>.ts`, find the `def: {}` stub (grep the card name),
 read its `handledLines` (already the exact unrecognized-text the parser reports — no need to
@@ -162,7 +167,7 @@ from existing primitives were mostly already filled in. Sampling ~10 stubs in
 one small, genuinely reusable engine addition each (a new `Condition`/`Effect` case, not a new
 subsystem). Example done this pass: **Akoum Hellkite** ("if that land is a Mountain, deal 2
 instead of 1") needed a `triggerObjectMatches` condition — nothing let a trigger's intervening-if
-check the *entering object's* characteristics against a selector, only fixed things like "had to
+check the _entering object's_ characteristics against a selector, only fixed things like "had to
 attack." Added `Condition.triggerObjectMatches` (`condition.ts`) plus threading
 `triggerObjectCardId` into `conditionalEffect`'s condition evaluation (`resolve.ts`, previously
 only `{ cardId, controllerId }` — a real gap, since `triggerObjectHadToAttackThisCombat` couldn't
@@ -184,6 +189,7 @@ verified addition, at roughly the cost just spent on `triggerObjectMatches` — 
 rather than assuming the remaining ~250 stubs are uniform effort.
 
 ### Phase 4 — Verification
+
 - Full `bun test` pass.
 - `bun run coverage` shows 538/538 (0 unmodeled reasons remaining) or an explicit, documented
   Tier C carve-out (Phyrexian mana cards) if that follow-up hasn't landed yet.

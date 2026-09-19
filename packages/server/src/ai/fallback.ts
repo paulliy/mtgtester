@@ -24,7 +24,9 @@ export function safestFallback(request: DecisionRequest): DecisionResponse {
   }
 
   // 1. Pass priority
-  const passAction = actions.find((a) => a.type === 'pass' || a.description.toLowerCase().includes('pass'));
+  const passAction = actions.find(
+    (a) => a.type === 'pass' || a.description.toLowerCase().includes('pass'),
+  );
   if (passAction !== undefined) {
     return {
       requestId: request.requestId,
@@ -50,7 +52,9 @@ export function safestFallback(request: DecisionRequest): DecisionResponse {
   // 3. Do not attack / do not block
   const noCombatAction = actions.find((a) => {
     const desc = a.description.toLowerCase();
-    return desc.includes('no attackers') || desc.includes('no blockers') || desc.includes('don\'t attack');
+    return (
+      desc.includes('no attackers') || desc.includes('no blockers') || desc.includes("don't attack")
+    );
   });
   if (noCombatAction !== undefined) {
     return {

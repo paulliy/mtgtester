@@ -16,3 +16,11 @@ docs/mtg-commander-ai-simulator-brief.md
 # byte-for-byte by the suites that read them. Reformatting them makes those tests fail with a
 # diff that has no semantic content. Regenerate with the scripts, never with prettier.
 packages/engine/tests/fixtures
+
+# Generated browser and graph analysis artifacts
+graphify-out
+test-results
+playwright-report
+
+# Historical byte-for-byte audit snapshot
+docs/reviews/2026-09-04/override-defs-before-audit-fixes.json

@@ -1,3 +1,4 @@
+import { activationManaSources } from '../mana/activation';
 /**
  * Legal-action generation (brief §1.2 — the engine computes EVERY legal option; the AI
  * only picks). This is the completeness-critical module: an option omitted here can never
@@ -17,7 +18,16 @@ import { selectMatches } from '../cards/selector';
 import type { EngineActionOption } from '../decisions';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
-import { addGeneric, canPay, describeManaCost, emptyCost, planPayment, subtractColored, subtractGeneric, withX } from '../mana/cost';
+import {
+  addGeneric,
+  canPay,
+  describeManaCost,
+  emptyCost,
+  planPayment,
+  subtractColored,
+  subtractGeneric,
+  withX,
+} from '../mana/cost';
 import type { ManaSource, ParsedManaCost } from '../mana/cost';
 import {
   activatingAbilitiesBlockedFor,
@@ -55,7 +65,16 @@ export type PriorityActionPayload =
   | { kind: 'pass' }
   | { kind: 'passAndYieldTurn' }
   | { kind: 'yieldToAbility'; sourceOracleId: OracleId }
-  | { kind: 'playLand'; objectId: ObjectId; alternativeCast?: 'mdfc'; altIndex?: number; fromLibraryTop?: boolean; fromGraveyard?: boolean; fromExile?: boolean; zoneBudgetType?: string }
+  | {
+      kind: 'playLand';
+      objectId: ObjectId;
+      alternativeCast?: 'mdfc';
+      altIndex?: number;
+      fromLibraryTop?: boolean;
+      fromGraveyard?: boolean;
+      fromExile?: boolean;
+      zoneBudgetType?: string;
+    }
   | {
       kind: 'castSpell';
       objectId: ObjectId;
@@ -73,14 +92,25 @@ export type PriorityActionPayload =
       mode?: number;
       /** Chosen modal subset; supersedes mode for ranged modal spells. */
       modes?: number[];
+      /** Number of times the card's optional additional cost was paid. */
+      optionalCostCount?: number;
       alternativeCast?: 'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree';
       altIndex?: number;
     }
   /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
-  | { kind: 'activateAbility'; objectId: ObjectId; index: number; x?: number; fromGraveyard?: boolean; fromHand?: boolean }
+  | {
+      kind: 'activateAbility';
+      objectId: ObjectId;
+      index: number;
+      x?: number;
+      fromGraveyard?: boolean;
+      fromHand?: boolean;
+    }
   | { kind: 'companionToHand' };
 
 function addManaCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
+  const hybrid = [...(a.hybrid ?? []), ...(b.hybrid ?? [])];
+  const phyrexian = [...(a.phyrexian ?? []), ...(b.phyrexian ?? [])];
   return {
     generic: a.generic + b.generic,
     colorless: a.colorless + b.colorless,
@@ -92,9 +122,26 @@ function addManaCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
       G: a.colored.G + b.colored.G,
     },
     ...((a.x ?? 0) + (b.x ?? 0) > 0 ? { x: (a.x ?? 0) + (b.x ?? 0) } : {}),
+    ...(hybrid.length > 0 ? { hybrid } : {}),
+    ...(phyrexian.length > 0 ? { phyrexian } : {}),
   };
 }
-export function selectedModeTargetSlots(def: CardDefinition, selectedModes: number[] | undefined): number[] | undefined {
+
+export function modeAdditionalCosts(
+  def: CardDefinition,
+  selectedModes: number[] | undefined,
+): AbilityCost[] {
+  const modes = def.spellAbility?.modes;
+  if (modes === undefined || selectedModes === undefined) return [];
+  const costs = selectedModes.flatMap((mode) => modes.options[mode]?.additionalCost ?? []);
+  const escalate = modes.additionalCostPerChoiceBeyondFirst ?? [];
+  for (let i = 1; i < selectedModes.length; i++) costs.push(...escalate);
+  return costs;
+}
+export function selectedModeTargetSlots(
+  def: CardDefinition,
+  selectedModes: number[] | undefined,
+): number[] | undefined {
   const modes = def.spellAbility?.modes;
   if (modes === undefined || selectedModes === undefined) return undefined;
   const chosen = selectedModes.map((index) => modes.options[index]);
@@ -103,7 +150,11 @@ export function selectedModeTargetSlots(def: CardDefinition, selectedModes: numb
   return [...new Set(chosen.flatMap((option) => option?.targetSlots ?? []))].sort((a, b) => a - b);
 }
 
-export function maxChoicesFor(ctx: GameContext, def: CardDefinition, source: SelectorSource): number | undefined {
+export function maxChoicesFor(
+  ctx: GameContext,
+  def: CardDefinition,
+  source: SelectorSource,
+): number | undefined {
   const modes = def.spellAbility?.modes;
   if (modes === undefined || modes.maxChoicesIf === undefined) return modes?.maxChoices;
   return evaluateCondition(ctx, modes.maxChoicesIf.condition, source)
@@ -111,7 +162,10 @@ export function maxChoicesFor(ctx: GameContext, def: CardDefinition, source: Sel
     : modes.maxChoices;
 }
 
-export function modalSelections(def: CardDefinition, maxChoices = def.spellAbility?.modes?.maxChoices): (number[] | undefined)[] {
+export function modalSelections(
+  def: CardDefinition,
+  maxChoices = def.spellAbility?.modes?.maxChoices,
+): (number[] | undefined)[] {
   const modes = def.spellAbility?.modes;
   if (modes === undefined) return [undefined];
   if (maxChoices === undefined) return [];
@@ -155,6 +209,12 @@ export function manaPortionOf(costs: readonly AbilityCost[]): ParsedManaCost {
     total.colorless += cost.cost.colorless;
     for (const c of ['W', 'U', 'B', 'R', 'G'] as const) total.colored[c] += cost.cost.colored[c];
     if (cost.cost.x !== undefined) total.x = (total.x ?? 0) + cost.cost.x;
+    if (cost.cost.hybrid !== undefined) {
+      total.hybrid = [...(total.hybrid ?? []), ...cost.cost.hybrid];
+    }
+    if (cost.cost.phyrexian !== undefined) {
+      total.phyrexian = [...(total.phyrexian ?? []), ...cost.cost.phyrexian];
+    }
   }
   return total;
 }
@@ -170,8 +230,16 @@ export function canPaySpellAdditionalCosts(
   sourceCardId: string,
   sourceInHand: boolean,
 ): boolean {
-  let discardAvailable = player.hand.filter((card) => !sourceInHand || card.cardId !== sourceCardId).length;
-  const sacrificeCosts = costs.filter((cost): cost is Extract<AbilityCost, { kind: 'sacrificeOther' }> => cost.kind === 'sacrificeOther');
+  let discardAvailable = player.hand.filter(
+    (card) => !sourceInHand || card.cardId !== sourceCardId,
+  ).length;
+  const sacrificeCosts = costs.filter(
+    (cost): cost is Extract<AbilityCost, { kind: 'sacrificeOther' }> =>
+      cost.kind === 'sacrificeOther',
+  );
+  const tapCosts = costs.filter(
+    (cost): cost is Extract<AbilityCost, { kind: 'tapOther' }> => cost.kind === 'tapOther',
+  );
 
   for (const cost of costs) {
     if (cost.kind === 'discardCard') {
@@ -185,17 +253,44 @@ export function canPaySpellAdditionalCosts(
       if (eligible.length < cost.count) return false;
     } else if (cost.kind === 'exileCardFromHand') {
       const count = cost.count ?? 1;
-      const eligible = player.hand.filter((card) =>
-        (!sourceInHand || card.cardId !== sourceCardId) &&
-        selectMatches(cardZoneCandidate(ctx, card, player.id), cost.selector, {
-          cardId: sourceCardId,
-          controllerId: player.id,
-        }),
+      const eligible = player.hand.filter(
+        (card) =>
+          (!sourceInHand || card.cardId !== sourceCardId) &&
+          selectMatches(cardZoneCandidate(ctx, card, player.id), cost.selector, {
+            cardId: sourceCardId,
+            controllerId: player.id,
+          }),
       );
       if (eligible.length < count) return false;
-    } else if (cost.kind !== 'sacrificeOther' && cost.kind !== 'mana') {
+    } else if (cost.kind !== 'sacrificeOther' && cost.kind !== 'tapOther' && cost.kind !== 'mana') {
       return false;
     }
+  }
+
+  if (tapCosts.length > 0) {
+    const available = ctx.state.battlefield.filter(
+      (permanent) => permanent.controllerId === player.id && !permanent.tapped,
+    );
+    const canAssignTap = (index: number, used: Set<string>): boolean => {
+      const cost = tapCosts[index];
+      if (cost === undefined) return true;
+      for (const candidate of available) {
+        if (used.has(candidate.cardId)) continue;
+        if (
+          !matchesSelector(ctx, candidate, cost.selector, {
+            cardId: sourceCardId,
+            controllerId: player.id,
+          })
+        ) {
+          continue;
+        }
+        const next = new Set(used);
+        next.add(candidate.cardId);
+        if (canAssignTap(index + 1, next)) return true;
+      }
+      return false;
+    };
+    if (!canAssignTap(0, new Set())) return false;
   }
 
   if (sacrificeCosts.length === 0) return true;
@@ -204,9 +299,13 @@ export function canPaySpellAdditionalCosts(
     const cost = sacrificeCosts[costIndex];
     if (cost === undefined) return true;
     const count = cost.count ?? 1;
-    const eligible = candidates.filter((perm) =>
-      !used.has(perm.cardId) &&
-      matchesSelector(ctx, perm, cost.selector, { cardId: sourceCardId, controllerId: player.id }),
+    const eligible = candidates.filter(
+      (perm) =>
+        !used.has(perm.cardId) &&
+        matchesSelector(ctx, perm, cost.selector, {
+          cardId: sourceCardId,
+          controllerId: player.id,
+        }),
     );
     const chooseForCost = (remaining: number, nextUsed: Set<string>): boolean => {
       if (remaining === 0) return canAssign(costIndex + 1, nextUsed);
@@ -233,7 +332,7 @@ function paymentPreview(
   sources: readonly ManaSource[],
   allows: ReturnType<typeof allowanceFor>,
 ): Record<string, unknown> {
-  const plan = planPayment(cost, player.manaEntries, sources, allows);
+  const plan = planPayment(cost, player.manaEntries, sources, allows, player.life);
   if (plan === null || plan.tapCardIds.length === 0) return {};
   const permanents = plan.tapCardIds
     .map((cardId) => ctx.state.battlefield.find((permanent) => permanent.cardId === cardId))
@@ -284,8 +383,9 @@ export function costReductionFor(
   let colored: ParsedManaCost | undefined;
 
   const ownReductions = def.ruleStatics
-    .filter((rule): rule is Extract<(typeof def.ruleStatics)[number], { kind: 'costReduction' }> =>
-      rule.kind === 'costReduction' && rule.selfOnly === true,
+    .filter(
+      (rule): rule is Extract<(typeof def.ruleStatics)[number], { kind: 'costReduction' }> =>
+        rule.kind === 'costReduction' && rule.selfOnly === true,
     )
     .map((rule) => ({
       static: rule,
@@ -311,10 +411,13 @@ export function costReductionFor(
           : source;
       if (!selectMatches(candidate, entry.static.filter, entrySource)) continue;
     }
-    generic += evaluateValueIn(ctx, entry.static.amount, {
-      controllerId: entry.controllerId,
-      sourceCardId: entry.sourceCardId,
-    });
+    generic += Math.max(
+      0,
+      evaluateValueIn(ctx, entry.static.amount, {
+        controllerId: entry.controllerId,
+        sourceCardId: entry.sourceCardId,
+      }),
+    );
     if (entry.static.coloredAmount !== undefined) {
       if (colored === undefined) {
         colored = {
@@ -359,7 +462,10 @@ export function handActivationCost(
   for (const rule of def.ruleStatics) {
     if (rule.kind !== 'costReduction') continue;
     if (rule.appliesTo !== 'activate' || rule.selfOnly !== true) continue;
-    reduction += evaluateValueIn(ctx, rule.amount, { controllerId: playerId, sourceCardId: cardId });
+    reduction += evaluateValueIn(ctx, rule.amount, {
+      controllerId: playerId,
+      sourceCardId: cardId,
+    });
   }
   // CR 601.2f — a reduction can never take a cost below zero, which `subtractGeneric` enforces.
   return reduction > 0 ? subtractGeneric(base, reduction) : base;
@@ -436,7 +542,11 @@ export function permanentMatchesKind(
     case 'artifactOrEnchantment':
       return types.includes('Artifact') || types.includes('Enchantment');
     case 'artifactEnchantmentOrPlaneswalker':
-      return types.includes('Artifact') || types.includes('Enchantment') || types.includes('Planeswalker');
+      return (
+        types.includes('Artifact') ||
+        types.includes('Enchantment') ||
+        types.includes('Planeswalker')
+      );
     case 'nonlandPermanent':
     case 'spellOrNonlandPermanent':
       return !types.includes('Land');
@@ -515,9 +625,26 @@ export function computeTargetOptions(
     return ctx.state.stack.map((entry) => entry.id);
   }
   if (kind === 'spellOrNonlandPermanent') {
-    const permanentSpec = { kind: 'nonlandPermanent' as const, ...(controller !== undefined ? { controller } : {}), ...(filter !== undefined ? { filter } : {}) };
-    const spellSpec = { kind: 'spell' as const, ...(controller !== undefined ? { controller } : {}) };
-    return [...computeTargetOptions(ctx, spellSpec, casterId, sourceColors, eventPlayerId, chosenTargets), ...computeTargetOptions(ctx, permanentSpec, casterId, sourceColors, eventPlayerId, chosenTargets)];
+    const permanentSpec = {
+      kind: 'nonlandPermanent' as const,
+      ...(controller !== undefined ? { controller } : {}),
+      ...(filter !== undefined ? { filter } : {}),
+    };
+    const spellSpec = {
+      kind: 'spell' as const,
+      ...(controller !== undefined ? { controller } : {}),
+    };
+    return [
+      ...computeTargetOptions(ctx, spellSpec, casterId, sourceColors, eventPlayerId, chosenTargets),
+      ...computeTargetOptions(
+        ctx,
+        permanentSpec,
+        casterId,
+        sourceColors,
+        eventPlayerId,
+        chosenTargets,
+      ),
+    ];
   }
   if (kind === 'spell' || kind === 'noncreatureSpell') {
     return ctx.state.stack
@@ -527,7 +654,11 @@ export function computeTargetOptions(
       .filter(
         (s) =>
           controller === undefined ||
-          (controller === 'you' ? s.controllerId === casterId : controller === 'opponent' ? s.controllerId !== casterId : s.controllerId === eventPlayerId),
+          (controller === 'you'
+            ? s.controllerId === casterId
+            : controller === 'opponent'
+              ? s.controllerId !== casterId
+              : s.controllerId === eventPlayerId),
       )
       .map((s) => s.id);
   }
@@ -541,17 +672,26 @@ export function computeTargetOptions(
     const graveyardOwnerSlot = typeof spec === 'object' ? spec.graveyardOwnerSlot : undefined;
     const graveyardOwnerScope = typeof spec === 'object' ? spec.graveyardOwnerScope : undefined;
     if (graveyardOwnerScope === 'any') {
-      return ctx.state.players.flatMap((player) => graveyardTargets(ctx, player.id, filter).map((c) => c.id));
+      return ctx.state.players.flatMap((player) =>
+        graveyardTargets(ctx, player.id, filter).map((c) => c.id),
+      );
     }
     const ownerId =
-      graveyardOwnerSlot === undefined ? casterId : (chosenTargets?.[graveyardOwnerSlot] as PlayerId | undefined) ?? casterId;
+      graveyardOwnerSlot === undefined
+        ? casterId
+        : ((chosenTargets?.[graveyardOwnerSlot] as PlayerId | undefined) ?? casterId);
     return graveyardTargets(ctx, ownerId, filter).map((c) => c.id);
   }
   const players = playersInApnapOrder(ctx).map((p) => p.id);
   if (kind === 'player') {
-    return players.filter((id) =>
-      controller === undefined ||
-      (controller === 'you' ? id === casterId : controller === 'opponent' ? id !== casterId : id === eventPlayerId),
+    return players.filter(
+      (id) =>
+        controller === undefined ||
+        (controller === 'you'
+          ? id === casterId
+          : controller === 'opponent'
+            ? id !== casterId
+            : id === eventPlayerId),
     );
   }
 
@@ -567,14 +707,46 @@ export function computeTargetOptions(
     .filter(
       (p) =>
         controller === undefined ||
-        (controller === 'you' ? p.controllerId === casterId : controller === 'opponent' ? p.controllerId !== casterId : p.controllerId === eventPlayerId),
+        (controller === 'you'
+          ? p.controllerId === casterId
+          : controller === 'opponent'
+            ? p.controllerId !== casterId
+            : p.controllerId === eventPlayerId),
     )
-    .filter((p) => filter === undefined || matchesSelector(ctx, p, filter, { cardId: '', controllerId: casterId }))
+    .filter(
+      (p) =>
+        filter === undefined ||
+        matchesSelector(ctx, p, filter, { cardId: '', controllerId: casterId }),
+    )
     .map((p) => p.id);
 
   // "Any target" is creature-or-player (CR 115.4); "player or planeswalker" is analogous.
   // Players are never hexproof-filtered.
-  return kind === 'anyTarget' || kind === 'playerOrPlaneswalker' ? [...permanents, ...players] : permanents;
+  return kind === 'anyTarget' || kind === 'playerOrPlaneswalker'
+    ? [...permanents, ...players]
+    : permanents;
+}
+
+/** Life owed by an opposing spell for targeting permanents with a target-life-tax static. */
+export function targetLifeTaxFor(
+  ctx: GameContext,
+  casterId: PlayerId,
+  targets: readonly ObjectId[],
+): number {
+  const targetSet = new Set(targets);
+  return gatherRuleStatics(ctx).reduce((total, entry) => {
+    if (entry.static.kind !== 'targetLifeTax' || entry.controllerId === casterId) return total;
+    const permanent = ctx.state.battlefield.find(
+      (candidate) => candidate.cardId === entry.sourceCardId,
+    );
+    if (
+      permanent === undefined ||
+      (!targetSet.has(permanent.id) && !targetSet.has(permanent.cardId as ObjectId))
+    ) {
+      return total;
+    }
+    return total + entry.static.amount;
+  }, 0);
 }
 
 /** Target slots for casting a card, or null when a required slot has zero options. */
@@ -588,6 +760,10 @@ function computeCastTargets(
   for (const [slotNum, spec] of (def.spellAbility?.targets ?? []).entries()) {
     if (activeSlots !== undefined && !activeSlots.includes(slotNum)) continue;
     const options = computeTargetOptions(ctx, spec, casterId);
+    if (spec.count !== undefined) {
+      if (options.length < spec.count.min) return null;
+      continue; // Counted targets are chosen at announcement after the action is selected.
+    }
     if (options.length === 0) return null; // can't cast without a legal target (CR 601.2c)
     slots.push({ slot: slotNum, options });
   }
@@ -653,13 +829,22 @@ export function computePriorityOptions(
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
     requireModeled(
       def,
-      fromLibraryTop ? 'on top of your library' : fromGraveyard ? 'in your graveyard' : fromCommand ? 'in the command zone' : fromExile ? 'in exile' : 'in hand',
+      fromLibraryTop
+        ? 'on top of your library'
+        : fromGraveyard
+          ? 'in your graveyard'
+          : fromCommand
+            ? 'in the command zone'
+            : fromExile
+              ? 'in exile'
+              : 'in hand',
     );
 
     if (def.types.includes('Land')) {
-      const permission = fromLibraryTop || fromGraveyard
-        ? playFromZonePermission(ctx, player.id, obj, fromGraveyard ? 'graveyard' : 'libraryTop')
-        : {};
+      const permission =
+        fromLibraryTop || fromGraveyard
+          ? playFromZonePermission(ctx, player.id, obj, fromGraveyard ? 'graveyard' : 'libraryTop')
+          : {};
       if (permission === null) return;
       // Lands are played, not cast -- one per turn plus active additional-land statics.
       if (sorcerySpeed && player.landsPlayedThisTurn < landPlayLimit) {
@@ -687,7 +872,9 @@ export function computePriorityOptions(
         for (const budgetType of permission.budgetTypes ?? [undefined]) {
           options.push({
             type: 'playLand',
-            description: `Play ${obj.name}` + (budgetType === undefined ? '' : ` (using ${budgetType} permission)`),
+            description:
+              `Play ${obj.name}` +
+              (budgetType === undefined ? '' : ` (using ${budgetType} permission)`),
             payload: {
               kind: 'playLand',
               objectId: obj.id,
@@ -699,30 +886,54 @@ export function computePriorityOptions(
               ...(fromExile ? { fromExile: true } : {}),
               ...(budgetType !== undefined ? { zoneBudgetType: budgetType } : {}),
             },
-            data: { ...baseData, ...(budgetType !== undefined ? { zoneBudgetType: budgetType } : {}) },
+            data: {
+              ...baseData,
+              ...(budgetType !== undefined ? { zoneBudgetType: budgetType } : {}),
+            },
           });
         }
       }
       return;
     }
 
-    const mdfcIndex = def.alternativeCasts?.findIndex((alt) => alt.kind === 'mdfc' && alt.landFace !== undefined) ?? -1;
+    const mdfcIndex =
+      def.alternativeCasts?.findIndex((alt) => alt.kind === 'mdfc' && alt.landFace !== undefined) ??
+      -1;
     const mdfc = mdfcIndex >= 0 ? def.alternativeCasts?.[mdfcIndex] : undefined;
-    if (mdfc?.landFace !== undefined && !fromCommand && !fromLibraryTop && !fromExile && !fromGraveyard && sorcerySpeed && player.landsPlayedThisTurn < landPlayLimit) {
+    if (
+      mdfc?.landFace !== undefined &&
+      !fromCommand &&
+      !fromLibraryTop &&
+      !fromExile &&
+      !fromGraveyard &&
+      sorcerySpeed &&
+      player.landsPlayedThisTurn < landPlayLimit
+    ) {
       const face = mdfc.landFace;
       const data: Record<string, unknown> = {
-        producesMana: previewManaAbilities(ctx, face.manaAbilities, player.id, `preview-${obj.oracleId}-mdfc`),
+        producesMana: previewManaAbilities(
+          ctx,
+          face.manaAbilities,
+          player.id,
+          `preview-${obj.oracleId}-mdfc`,
+        ),
         sourceName: face.name,
         sourceZone: 'hand',
         castVariant: 'mdfc',
       };
-      if (face.entersTappedUnless?.kind === 'mayPayLife') data['payLifeToUntap'] = face.entersTappedUnless.n;
+      if (face.entersTappedUnless?.kind === 'mayPayLife')
+        data['payLifeToUntap'] = face.entersTappedUnless.n;
       else if (face.entersTappedUnless !== undefined) data['entersTappedConditional'] = true;
       else data['entersTapped'] = face.entersTapped;
       options.push({
         type: 'playLand',
         description: `Play ${face.name}`,
-        payload: { kind: 'playLand', objectId: obj.id, alternativeCast: 'mdfc', altIndex: mdfcIndex },
+        payload: {
+          kind: 'playLand',
+          objectId: obj.id,
+          alternativeCast: 'mdfc',
+          altIndex: mdfcIndex,
+        },
         data,
       });
     }
@@ -741,7 +952,8 @@ export function computePriorityOptions(
       fromGraveyard &&
       !(def.alternativeCasts?.some((alt) => alt.from === 'graveyard') ?? false) &&
       !canPlayFromZone(ctx, player.id, obj, 'graveyard')
-    ) return;
+    )
+      return;
     const additionalManaCost = manaPortionOf(spellAdditionalCosts);
     const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
     let base = reboundCast ? emptyCost() : addGeneric(def.manaCost, tax);
@@ -755,14 +967,27 @@ export function computePriorityOptions(
     // the contract: an action offered here must be applicable with no further legality check.
     // Restricted mana ("spend only to cast a Dragon spell") may or may not pay for THIS card,
     // so affordability is asked with the purpose attached — see `mana/cost.ts::ManaAllowance`.
-    const allows = allowanceFor(ctx, player.id, { kind: 'castSpell', oracleId: obj.oracleId });
+    const allows = allowanceFor(ctx, player.id, {
+      kind: 'castSpell',
+      oracleId: obj.oracleId,
+      isCommander: obj.isCommander,
+    });
 
     const xSymbols = reboundCast ? 0 : (def.manaCost.x ?? 0);
     const xChoices: number[] = [];
     if (xSymbols === 0) xChoices.push(0);
     else {
       for (let x = 0; ; x++) {
-        if (!canPay(addManaCosts(withX(base, x), additionalManaCost), player.manaEntries, sources, allows)) break;
+        if (
+          !canPay(
+            addManaCosts(withX(base, x), additionalManaCost),
+            player.manaEntries,
+            sources,
+            allows,
+            player.life,
+          )
+        )
+          break;
         xChoices.push(x);
       }
       if (xChoices.length === 0) return;
@@ -772,64 +997,133 @@ export function computePriorityOptions(
     // so each mode is its own cast option, the same "the option menu is the contract" treatment
     // {X} gets above. A non-modal spell has exactly one "mode" (undefined), so this loop is a
     // single iteration when `modes` is absent.
-    const selections = modalSelections(def, maxChoicesFor(ctx, def, { cardId: obj.cardId, controllerId: player.id }));
+    const selections = modalSelections(
+      def,
+      maxChoicesFor(ctx, def, { cardId: obj.cardId, controllerId: player.id }),
+    );
 
     for (const x of xChoices) {
       const cost = withX(base, x);
-      if (!canPay(cost, player.manaEntries, sources, allows)) continue;
+      if (!canPay(cost, player.manaEntries, sources, allows, player.life)) continue;
 
       for (const selectedModes of selections) {
-        const targets = computeCastTargets(ctx, def, player.id, selectedModeTargetSlots(def, selectedModes));
+        const targets = computeCastTargets(
+          ctx,
+          def,
+          player.id,
+          selectedModeTargetSlots(def, selectedModes),
+        );
         if (targets === null) continue;
-        const modeAdditionalCosts = selectedModes?.flatMap((mode) => def.spellAbility?.modes?.options[mode]?.additionalCost ?? []) ?? [];
-        const additionalCosts = [...spellAdditionalCosts, ...modeAdditionalCosts];
-        const selectionCost = addManaCosts(cost, manaPortionOf(additionalCosts));
-        if (!canPay(selectionCost, player.manaEntries, sources, allows)) continue;
-        if (!canPaySpellAdditionalCosts(ctx, player, additionalCosts, obj.cardId, sourceInHand)) continue;
-        const modeLabel = selectedModes === undefined
-          ? undefined
-          : selectedModes.map((mode) => def.spellAbility?.modes?.options[mode]?.description ?? `mode ${mode + 1}`).join('; ');
-        const option: EngineActionOption = {
-          type: 'castSpell',
-          description:
-            `Cast ${obj.name} (${describeManaCost(selectionCost)})` +
-            (xSymbols > 0 ? ` with X=${x}` : '') +
-            (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
-            (fromCommand ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}` : '') +
-            (fromLibraryTop ? ' from the top of your library' : '') +
-            (fromExile ? ' from exile' : '') +
-            (fromGraveyard ? ' from your graveyard' : '') +
-            (reboundCast ? ' without paying its mana cost' : ''),
-          payload: {
-            kind: 'castSpell',
-            objectId: obj.id,
-            fromCommand,
-            ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
-            ...(fromGraveyard ? { fromGraveyard: true } : {}),
-            ...(fromExile ? { fromExile: true, ...(reboundCast ? { reboundCast: true } : {}) } : {}),
-            ...(xSymbols > 0 ? { x } : {}),
-            ...(selectedModes !== undefined ? { modes: selectedModes, ...(selectedModes.length === 1 ? { mode: selectedModes[0] } : {}) } : {}),
-          },
-          data: {
-            instantSpeed,
-            sourceName: obj.name,
-            sourceZone: fromCommand
-              ? 'command'
-              : fromLibraryTop
-                ? 'library'
-                : fromExile
-                  ? 'exile'
-                  : 'hand',
-            manaCost: describeManaCost(selectionCost),
-            ...paymentPreview(ctx, player, selectionCost, sources, allows),
-            ...(tax > 0 ? { commanderTax: tax } : {}),
-            ...(xSymbols > 0 ? { x } : {}),
-            ...(modeLabel !== undefined ? { modeLabel } : {}),
-            ...(additionalCosts.length > 0 ? { abilityCosts: additionalCosts } : {}),
-          },
-        };
-        if (targets.length > 0) option.targets = targets;
-        options.push(option);
+        const modeCosts = modeAdditionalCosts(def, selectedModes);
+        const optional = def.optionalAdditionalCost;
+        const optionalCounts: number[] = [0];
+        if (optional !== undefined) {
+          const max = optional.repeatable === true ? 100 : 1;
+          for (let count = 1; count <= max; count++) {
+            let prospective = addManaCosts(
+              cost,
+              manaPortionOf([...spellAdditionalCosts, ...modeCosts]),
+            );
+            for (let i = 0; i < count; i++) prospective = addManaCosts(prospective, optional.cost);
+            if (!canPay(prospective, player.manaEntries, sources, allows, player.life)) break;
+            optionalCounts.push(count);
+          }
+        }
+        const modeLabel =
+          selectedModes === undefined
+            ? undefined
+            : selectedModes
+                .map(
+                  (mode) =>
+                    def.spellAbility?.modes?.options[mode]?.description ?? `mode ${mode + 1}`,
+                )
+                .join('; ');
+        for (const optionalCostCount of optionalCounts) {
+          const optionalCosts: AbilityCost[] = [];
+          if (optional !== undefined) {
+            for (let i = 0; i < optionalCostCount; i++) {
+              optionalCosts.push({ kind: 'mana', cost: optional.cost });
+            }
+          }
+          const additionalCosts = [...spellAdditionalCosts, ...modeCosts, ...optionalCosts];
+          const selectionCost = addManaCosts(cost, manaPortionOf(additionalCosts));
+          if (!canPay(selectionCost, player.manaEntries, sources, allows, player.life)) continue;
+          if (!canPaySpellAdditionalCosts(ctx, player, additionalCosts, obj.cardId, sourceInHand))
+            continue;
+          const payableTargets = targets.map((slot) => ({
+            ...slot,
+            options: slot.options.filter((targetId) => {
+              const lifeTax = targetLifeTaxFor(ctx, player.id, [targetId]);
+              return canPay(
+                selectionCost,
+                player.manaEntries,
+                sources,
+                allows,
+                player.life - lifeTax,
+              );
+            }),
+          }));
+          if (payableTargets.some((slot) => slot.options.length === 0)) continue;
+          const optionalLabel =
+            optional !== undefined && optionalCostCount > 0
+              ? ` — ${optional.mechanic} ${optionalCostCount}`
+              : '';
+          const option: EngineActionOption = {
+            type: 'castSpell',
+            description:
+              `Cast ${obj.name} (${describeManaCost(selectionCost)})` +
+              (xSymbols > 0 ? ` with X=${x}` : '') +
+              (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
+              optionalLabel +
+              (fromCommand
+                ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}`
+                : '') +
+              (fromLibraryTop ? ' from the top of your library' : '') +
+              (fromExile ? ' from exile' : '') +
+              (fromGraveyard ? ' from your graveyard' : '') +
+              (reboundCast ? ' without paying its mana cost' : ''),
+            payload: {
+              kind: 'castSpell',
+              objectId: obj.id,
+              fromCommand,
+              ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
+              ...(fromGraveyard ? { fromGraveyard: true } : {}),
+              ...(fromExile
+                ? { fromExile: true, ...(reboundCast ? { reboundCast: true } : {}) }
+                : {}),
+              ...(xSymbols > 0 ? { x } : {}),
+              ...(selectedModes !== undefined
+                ? {
+                    modes: selectedModes,
+                    ...(selectedModes.length === 1 ? { mode: selectedModes[0] } : {}),
+                  }
+                : {}),
+              ...(optionalCostCount > 0 ? { optionalCostCount } : {}),
+            },
+            data: {
+              instantSpeed,
+              sourceName: obj.name,
+              sourceZone: fromCommand
+                ? 'command'
+                : fromLibraryTop
+                  ? 'library'
+                  : fromExile
+                    ? 'exile'
+                    : 'hand',
+              manaCost: describeManaCost(selectionCost),
+              ...paymentPreview(ctx, player, selectionCost, sources, allows),
+              ...(tax > 0 ? { commanderTax: tax } : {}),
+              ...(xSymbols > 0 ? { x } : {}),
+              ...(modeLabel !== undefined ? { modeLabel } : {}),
+              ...(optionalCostCount > 0
+                ? { optionalCostCount, optionalMechanic: optional?.mechanic }
+                : {}),
+              ...(additionalCosts.length > 0 ? { abilityCosts: additionalCosts } : {}),
+            },
+          };
+          if (payableTargets.length > 0) option.targets = payableTargets;
+          options.push(option);
+        }
       }
     }
     const energyAlternativeCost = ctx.state.battlefield
@@ -838,13 +1132,24 @@ export function computePriorityOptions(
       .find((amount): amount is number => amount !== undefined);
     // Lands are permanents, but they are played rather than cast as permanent spells, so Nissa's
     // alternate energy cost must never be offered for a land card.
-    const isPermanentSpell = def.types.some((type) => ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Planeswalker'].includes(type));
-    if (isPermanentSpell && energyAlternativeCost !== undefined && player.energy >= energyAlternativeCost && !fromExile && !fromGraveyard && canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)) {
+    const isPermanentSpell = def.types.some((type) =>
+      ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Planeswalker'].includes(type),
+    );
+    if (
+      isPermanentSpell &&
+      energyAlternativeCost !== undefined &&
+      player.energy >= energyAlternativeCost &&
+      !fromExile &&
+      !fromGraveyard &&
+      canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)
+    ) {
       const targets = computeCastTargets(ctx, def, player.id);
       if (targets !== null) {
         const option: EngineActionOption = {
           type: 'castSpell',
-          description: `Cast ${obj.name} by paying ${energyAlternativeCost} energy` + (fromCommand ? ' from the command zone' : ''),
+          description:
+            `Cast ${obj.name} by paying ${energyAlternativeCost} energy` +
+            (fromCommand ? ' from the command zone' : ''),
           payload: { kind: 'castSpell', objectId: obj.id, fromCommand, alternativeCast: 'energy' },
           data: {
             instantSpeed,
@@ -864,15 +1169,20 @@ export function computePriorityOptions(
       def.commanderFreeCast === true &&
       !fromCommand &&
       !fromGraveyard &&
-      ctx.state.battlefield.some((perm) => perm.controllerId === player.id && perm.isCommander)
-      && canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)
+      ctx.state.battlefield.some((perm) => perm.controllerId === player.id && perm.isCommander) &&
+      canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)
     ) {
       const targets = computeCastTargets(ctx, def, player.id);
       if (targets !== null) {
         options.push({
           type: 'castSpell',
           description: `Cast ${obj.name} without paying its mana cost (you control a commander)`,
-          payload: { kind: 'castSpell', objectId: obj.id, fromCommand, alternativeCast: 'commanderFree' },
+          payload: {
+            kind: 'castSpell',
+            objectId: obj.id,
+            fromCommand,
+            alternativeCast: 'commanderFree',
+          },
           data: {
             instantSpeed,
             sourceName: obj.name,
@@ -886,15 +1196,25 @@ export function computePriorityOptions(
       }
     }
     if (fromGraveyard || fromLibraryTop) {
-      const permission = playFromZonePermission(ctx, player.id, obj, fromGraveyard ? 'graveyard' : 'libraryTop');
-      const separatelyCastableFromTop = fromLibraryTop && castFromLibraryTopCandidates(ctx, player.id).some((card) => card.id === obj.id);
+      const permission = playFromZonePermission(
+        ctx,
+        player.id,
+        obj,
+        fromGraveyard ? 'graveyard' : 'libraryTop',
+      );
+      const separatelyCastableFromTop =
+        fromLibraryTop &&
+        castFromLibraryTopCandidates(ctx, player.id).some((card) => card.id === obj.id);
       if (permission === null && !separatelyCastableFromTop) {
         options.splice(normalOptionsStart);
       } else if (permission?.budgetTypes !== undefined) {
         const generated = options.splice(normalOptionsStart);
         for (const budgetType of permission.budgetTypes) {
           for (const option of generated) {
-            const castPayload = option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>;
+            const castPayload = option.payload as Extract<
+              PriorityActionPayload,
+              { kind: 'castSpell' }
+            >;
             options.push({
               ...option,
               description: `${option.description} (using ${budgetType} permission)`,
@@ -920,15 +1240,21 @@ export function computePriorityOptions(
           const alternativeCosts = [...spellAdditionalCosts, ...(alt.costs ?? [])];
           const cost = addManaCosts(applyRed(alt.manaCost), manaPortionOf(alternativeCosts));
           if (
-            (alt.condition === undefined || evaluateCondition(ctx, alt.condition, { cardId: obj.cardId, controllerId: player.id })) &&
-            canPay(cost, player.manaEntries, sources, allows) &&
+            (alt.condition === undefined ||
+              evaluateCondition(ctx, alt.condition, {
+                cardId: obj.cardId,
+                controllerId: player.id,
+              })) &&
+            canPay(cost, player.manaEntries, sources, allows, player.life) &&
             canPaySpellAdditionalCosts(ctx, player, alternativeCosts, obj.cardId, sourceInHand)
           ) {
             const targets = computeCastTargets(ctx, def, player.id);
             if (targets !== null) {
               options.push({
                 type: 'castSpell',
-                description: fromGraveyard ? `Cast ${obj.name} from your graveyard (${describeManaCost(cost)})` : 'Cast ' + obj.name + ' without paying its mana cost (alternate cost)',
+                description: fromGraveyard
+                  ? `Cast ${obj.name} from your graveyard (${describeManaCost(cost)})`
+                  : 'Cast ' + obj.name + ' without paying its mana cost (alternate cost)',
                 payload: {
                   kind: 'castSpell',
                   objectId: obj.id,
@@ -956,7 +1282,10 @@ export function computePriorityOptions(
           }
         } else if (alt.kind === 'overload') {
           const cost = addManaCosts(applyRed(alt.manaCost), additionalManaCost);
-          if (canPay(cost, player.manaEntries, sources, allows) && canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)) {
+          if (
+            canPay(cost, player.manaEntries, sources, allows, player.life) &&
+            canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)
+          ) {
             options.push({
               type: 'castSpell',
               description: `Cast ${obj.name} via Overload (${describeManaCost(cost)})`,
@@ -979,7 +1308,10 @@ export function computePriorityOptions(
           }
         } else if (alt.kind === 'adventure' || alt.kind === 'omen') {
           const cost = addManaCosts(applyRed(alt.manaCost), additionalManaCost);
-          if (canPay(cost, player.manaEntries, sources, allows) && canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)) {
+          if (
+            canPay(cost, player.manaEntries, sources, allows, player.life) &&
+            canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)
+          ) {
             const altName = alt.name ?? alt.description;
             const note =
               alt.kind === 'omen'
@@ -1013,10 +1345,12 @@ export function computePriorityOptions(
   for (const obj of player.hand) considerCast(obj, false);
   for (const obj of player.commandZone) considerCast(obj, true);
   const libraryTop = player.library[0];
-  if (libraryTop !== undefined && (
-    castFromLibraryTopCandidates(ctx, player.id).some((obj) => obj.id === libraryTop.id) ||
-    canPlayFromZone(ctx, player.id, libraryTop, 'libraryTop')
-  )) considerCast(libraryTop, false, true);
+  if (
+    libraryTop !== undefined &&
+    (castFromLibraryTopCandidates(ctx, player.id).some((obj) => obj.id === libraryTop.id) ||
+      canPlayFromZone(ctx, player.id, libraryTop, 'libraryTop'))
+  )
+    considerCast(libraryTop, false, true);
   for (const obj of player.graveyard) considerCast(obj, false, false, false, true);
   for (const obj of ctx.state.exile) {
     if (obj.ownerId === player.id && obj.onAdventure === true) {
@@ -1064,8 +1398,13 @@ export function computePriorityOptions(
         let cost = addGeneric(baseManaCost, 0);
         if (reduction.colored !== undefined) cost = subtractColored(cost, reduction.colored);
         cost = subtractGeneric(cost, reduction.generic);
-        const allows = allowanceFor(ctx, player.id, { kind: 'castSpell', oracleId: cand.oracleId });
-        if (canPay(cost, player.manaEntries, augmentedSources, allows)) unlocks.push(cand.name);
+        const allows = allowanceFor(ctx, player.id, {
+          kind: 'castSpell',
+          oracleId: cand.oracleId,
+          isCommander: cand.isCommander,
+        });
+        if (canPay(cost, player.manaEntries, augmentedSources, allows, player.life))
+          unlocks.push(cand.name);
       }
       if (unlocks.length > 0) option.data = { ...option.data, unlocks };
     }
@@ -1076,13 +1415,23 @@ export function computePriorityOptions(
     if (perm.controllerId !== player.id) continue;
     if (activatingAbilitiesBlockedFor(ctx, player.id, perm)) continue;
     const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-    const activatedAbilities = computeCharacteristics(ctx, perm).activatedAbilities ?? def.activatedAbilities;
+    const activatedAbilities =
+      computeCharacteristics(ctx, perm).activatedAbilities ?? def.activatedAbilities;
     for (const [index, activated] of activatedAbilities.entries()) {
       // An ability that functions from another zone is NOT activatable from the battlefield
       // (CR 112.6). Without this the loop offered a creature its own cycling ability while it
       // was on the battlefield — and the `discardSelf` cost would then have been paid by a
       // card that is not in hand.
       if ((activated.zone ?? 'battlefield') !== 'battlefield') continue;
+      if (
+        activated.condition !== undefined &&
+        !evaluateCondition(ctx, activated.condition, {
+          cardId: perm.cardId,
+          controllerId: player.id,
+        })
+      ) {
+        continue;
+      }
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
       // CR 602.5f — "activate only once each turn", tracked on the permanent.
       if (activated.oncePerTurn === true && perm.activationsThisTurn.includes(index)) continue;
@@ -1091,7 +1440,8 @@ export function computePriorityOptions(
       // is on the *permanent*, not the specific ability, so any prior activation this turn
       // (including a different loyalty ability) blocks all of them — unlike the oncePerTurn
       // check above, which only blocks that ability from repeating.
-      if (activated.costs.some((c) => c.kind === 'loyalty') && perm.activationsThisTurn.length > 0) continue;
+      if (activated.costs.some((c) => c.kind === 'loyalty') && perm.activationsThisTurn.length > 0)
+        continue;
       // Boast (CR 702.146a): "activate only if this creature attacked this turn."
       if (activated.requiresAttackedThisTurn === true && perm.attackedThisTurn !== true) continue;
       if (!canPayNonManaCosts(ctx, perm, activated.costs)) continue;
@@ -1116,7 +1466,8 @@ export function computePriorityOptions(
       if (xSymbols === 0) xChoices.push(0);
       else {
         for (let x = 0; ; x++) {
-          if (!canPay(withX(baseManaCost, x), player.manaEntries, usable, allows)) break;
+          if (!canPay(withX(baseManaCost, x), player.manaEntries, usable, allows, player.life))
+            break;
           xChoices.push(x);
         }
         if (xChoices.length === 0) continue;
@@ -1124,8 +1475,10 @@ export function computePriorityOptions(
 
       for (const x of xChoices) {
         const manaCost = withX(baseManaCost, x);
-        if (!canPay(manaCost, player.manaEntries, usable, allows)) continue;
+        if (!canPay(manaCost, player.manaEntries, usable, allows, player.life)) continue;
         if (!canPayNonManaCosts(ctx, perm, activated.costs, x)) continue;
+        const jointSources = activationManaSources(ctx, player, perm, activated.costs, manaCost, x);
+        if (jointSources === null) continue;
 
         const slots: { slot: number; options: ObjectId[] }[] = [];
         let slotNum = 0;
@@ -1142,6 +1495,10 @@ export function computePriorityOptions(
           if (isAttachAbility && perm.attachedTo !== null) {
             targetOptions = targetOptions.filter((id) => id !== perm.attachedTo);
           }
+          if (spec.count !== undefined) {
+            if (targetOptions.length < spec.count.min) missingTarget = true;
+            continue;
+          }
           // CR 602.2b: an ability with no legal target for a slot cannot be activated at all.
           if (targetOptions.length === 0) {
             missingTarget = true;
@@ -1156,13 +1513,18 @@ export function computePriorityOptions(
           description:
             `${perm.name}: ${activated.ability.description ?? 'activate ability'}` +
             (xSymbols > 0 ? ` with X=${x}` : ''),
-          payload: { kind: 'activateAbility', objectId: perm.id, index, ...(xSymbols > 0 ? { x } : {}) },
+          payload: {
+            kind: 'activateAbility',
+            objectId: perm.id,
+            index,
+            ...(xSymbols > 0 ? { x } : {}),
+          },
           data: {
             sourceName: perm.name,
             sourceZone: 'battlefield',
             abilityDescription: activated.ability.description ?? 'activate ability',
             manaCost: describeManaCost(manaCost),
-            ...paymentPreview(ctx, player, manaCost, usable, allows),
+            ...paymentPreview(ctx, player, manaCost, jointSources, allows),
             abilityCosts: activated.costs,
             ...(xSymbols > 0 ? { x } : {}),
           },
@@ -1196,7 +1558,7 @@ export function computePriorityOptions(
       // has no payment branch in `apply.ts` and must not be offered.
       if (activated.costs.some((c) => c.kind !== 'mana' && c.kind !== 'discardSelf')) continue;
       const manaCost = handActivationCost(ctx, def, activated.costs, player.id, card.cardId);
-      if (!canPay(manaCost, player.manaEntries, sources, allows)) continue;
+      if (!canPay(manaCost, player.manaEntries, sources, allows, player.life)) continue;
 
       // CR 602.2b — an ability with no legal target for a slot cannot be activated at all.
       // Channel lands (Otawara) target; cycling does not.
@@ -1204,6 +1566,10 @@ export function computePriorityOptions(
       let missingTarget = false;
       for (const [slot, spec] of activated.ability.targets.entries()) {
         const targetOptions = computeTargetOptions(ctx, spec, player.id);
+        if (spec.count !== undefined) {
+          if (targetOptions.length < spec.count.min) missingTarget = true;
+          continue;
+        }
         if (targetOptions.length === 0) {
           missingTarget = true;
           break;
@@ -1224,7 +1590,12 @@ export function computePriorityOptions(
           ...paymentPreview(ctx, player, manaCost, sources, allows),
           abilityCosts: activated.costs,
         },
-        interaction: { kind: 'source', sourceId: card.id, sourceCardId: card.cardId, abilityIndex: index },
+        interaction: {
+          kind: 'source',
+          sourceId: card.id,
+          sourceCardId: card.cardId,
+          abilityIndex: index,
+        },
       };
       if (slots.length > 0) option.targets = slots;
       options.push(option);
@@ -1248,7 +1619,7 @@ export function computePriorityOptions(
         sourceOracleId: card.oracleId,
       });
       const manaCost = manaPortionOf(activated.costs);
-      if (!canPay(manaCost, player.manaEntries, sources, allows)) continue;
+      if (!canPay(manaCost, player.manaEntries, sources, allows, player.life)) continue;
       if (activated.ability.targets.length > 0) continue; // not needed by any card in this pool
 
       options.push({
@@ -1263,7 +1634,12 @@ export function computePriorityOptions(
           ...paymentPreview(ctx, player, manaCost, sources, allows),
           abilityCosts: activated.costs,
         },
-        interaction: { kind: 'source', sourceId: card.id, sourceCardId: card.cardId, abilityIndex: index },
+        interaction: {
+          kind: 'source',
+          sourceId: card.id,
+          sourceCardId: card.cardId,
+          abilityIndex: index,
+        },
       });
     }
   }
@@ -1275,7 +1651,7 @@ export function computePriorityOptions(
     !player.companionMovedToHand &&
     // No purpose: the companion {3} is neither casting nor activating, so restricted mana
     // cannot pay it — which is correct, and is what the default allowance expresses.
-    canPay(COMPANION_COST, player.manaEntries, sources)
+    canPay(COMPANION_COST, player.manaEntries, sources, undefined, player.life)
   ) {
     options.push({
       type: 'companionToHand',
@@ -1299,6 +1675,7 @@ export function validateChosenTargets(
   const targets: ObjectId[] = [];
   for (const [slotNum, spec] of (def.spellAbility?.targets ?? []).entries()) {
     if (activeSlots !== undefined && !activeSlots.includes(slotNum)) continue;
+    if (spec.count !== undefined) continue;
     const choice = chosen.get(slotNum);
     if (choice === undefined) {
       throw new Error(`missing target for slot ${slotNum} of ${def.name}`);

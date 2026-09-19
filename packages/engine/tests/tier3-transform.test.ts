@@ -14,7 +14,12 @@ const dash = String.fromCharCode(0x2014);
 const nl = String.fromCharCode(10);
 
 function pod(seed: string): GameContext {
-  const ctx = createGame(gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(3, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(3, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.turnNumber = 4;
@@ -67,7 +72,12 @@ describe('Tier 3 transforming double-faced permanents', () => {
     const ctx = pod('tier3-transform-characteristics');
     const source = spawn(ctx, 'P1', card);
     const other = spawn(ctx, 'P1', bear());
-    conjure(ctx, 'P1', oracle({ name: 'Transform Draw', typeLine: 'Sorcery', oracleText: 'Draw a card.' }), 'library');
+    conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Transform Draw', typeLine: 'Sorcery', oracleText: 'Draw a card.' }),
+      'library',
+    );
     source.counters['+1/+1'] = 2;
     source.damageMarked = 1;
     source.tapped = true;
@@ -75,12 +85,19 @@ describe('Tier 3 transforming double-faced permanents', () => {
 
     const frontAbility = def.activatedAbilities[0]?.ability;
     expect(frontAbility).toBeDefined();
-    pump(executeAbility(ctx, {
-      cardId: source.cardId,
-      oracleId: source.oracleId,
-      name: source.name,
-      controllerId: source.controllerId,
-    }, frontAbility!, []));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: source.cardId,
+          oracleId: source.oracleId,
+          name: source.name,
+          controllerId: source.controllerId,
+        },
+        frontAbility!,
+        [],
+      ),
+    );
 
     expect(source.transformed).toBe(true);
     expect(source.name).toBe('Test Ravager');
@@ -109,15 +126,24 @@ describe('Tier 3 transforming double-faced permanents', () => {
     const ctx = pod('tier3-transform-zone-reset');
     const source = spawn(ctx, 'P1', transformingCard());
     const def = ctx.defs.get(source.oracleId)!;
-    pump(executeAbility(ctx, {
-      cardId: source.cardId,
-      oracleId: source.oracleId,
-      name: source.name,
-      controllerId: source.controllerId,
-    }, def.activatedAbilities[0]!.ability, []));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: source.cardId,
+          oracleId: source.oracleId,
+          name: source.name,
+          controllerId: source.controllerId,
+        },
+        def.activatedAbilities[0]!.ability,
+        [],
+      ),
+    );
 
     pump(moveObject(ctx, source, { zone: 'graveyard' }));
-    const graveCard = ctx.state.players[0]!.graveyard.find((card) => card.cardId === source.cardId)!;
+    const graveCard = ctx.state.players[0]!.graveyard.find(
+      (card) => card.cardId === source.cardId,
+    )!;
     expect(graveCard.name).toBe('Test Initiate');
     expect(graveCard.oracleText).toBe('{1}{G}: Transform Test Initiate.');
     const { value } = pump(moveObject(ctx, graveCard, { zone: 'battlefield', controllerId: 'P1' }));
@@ -140,7 +166,8 @@ describe('Tier 3 transforming double-faced permanents', () => {
       power: '1',
       toughness: '1',
       layout: 'transform',
-      oracleText: 'At the beginning of your end step, you may pay {G}. If you do, transform Test Tender.',
+      oracleText:
+        'At the beginning of your end step, you may pay {G}. If you do, transform Test Tender.',
       backFace: {
         name: 'Test Beast',
         typeLine: `Creature ${dash} Beast`,
@@ -164,12 +191,19 @@ describe('Tier 3 transforming double-faced permanents', () => {
     const ctx = pod('tier3-transform-payment');
     const source = spawn(ctx, 'P1', card);
     const manaLand = spawn(ctx, 'P1', forest());
-    pump(executeAbility(ctx, {
-      cardId: source.cardId,
-      oracleId: source.oracleId,
-      name: source.name,
-      controllerId: source.controllerId,
-    }, def.triggers[0]!, []));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: source.cardId,
+          oracleId: source.oracleId,
+          name: source.name,
+          controllerId: source.controllerId,
+        },
+        def.triggers[0]!,
+        [],
+      ),
+    );
     expect(source.transformed).toBe(true);
     expect(manaLand.tapped).toBe(true);
   });
@@ -200,7 +234,8 @@ describe('Tier 3 transforming double-faced permanents', () => {
       backFace: {
         name: 'Awoken Horror',
         typeLine: `Creature ${dash} Kraken Horror`,
-        oracleText: "When this creature transforms into Awoken Horror, return all non-Horror creatures to their owners' hands.",
+        oracleText:
+          "When this creature transforms into Awoken Horror, return all non-Horror creatures to their owners' hands.",
         manaCost: null,
         colors: ['U'],
         power: '7',
@@ -228,12 +263,19 @@ describe('Tier 3 transforming double-faced permanents', () => {
 
     const castTrigger = def.triggers[0]!;
     const fire = (): void => {
-      pump(executeAbility(ctx, {
-        cardId: source.cardId,
-        oracleId: source.oracleId,
-        name: source.name,
-        controllerId: source.controllerId,
-      }, castTrigger, []));
+      pump(
+        executeAbility(
+          ctx,
+          {
+            cardId: source.cardId,
+            oracleId: source.oracleId,
+            name: source.name,
+            controllerId: source.controllerId,
+          },
+          castTrigger,
+          [],
+        ),
+      );
     };
 
     // Three instants: counters drain but the creature stays a 0/4 Wall with defender.
@@ -262,12 +304,19 @@ describe('Tier 3 transforming double-faced permanents', () => {
     const bystander = spawn(ctx, 'P2', bear());
     source.counters['ice'] = 1;
 
-    pump(executeAbility(ctx, {
-      cardId: source.cardId,
-      oracleId: source.oracleId,
-      name: source.name,
-      controllerId: source.controllerId,
-    }, ctx.defs.get(source.oracleId)!.triggers[0]!, []));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: source.cardId,
+          oracleId: source.oracleId,
+          name: source.name,
+          controllerId: source.controllerId,
+        },
+        ctx.defs.get(source.oracleId)!.triggers[0]!,
+        [],
+      ),
+    );
 
     expect(source.transformed).toBe(true);
     // The back face's own trigger is queued by the flip, and bounces the non-Horror creature.
@@ -279,31 +328,33 @@ describe('Tier 3 transforming double-faced permanents', () => {
   });
 
   it('parses Westvale Abbey transform-then-untap with its five-creature sacrifice cost', () => {
-    const def = interpretCard(oracle({
-      name: 'Test Abbey // Test Prince',
-      typeLine: 'Land',
-      types: ['Land'],
-      subtypes: [],
-      manaCost: null,
-      power: null,
-      toughness: null,
-      layout: 'transform',
-      oracleText: [
-        '{T}: Add {C}.',
-        '{5}, {T}, Sacrifice five creatures: Transform Test Abbey, then untap it.',
-      ].join(nl),
-      backFace: {
-        name: 'Test Prince',
-        typeLine: `Creature ${dash} Demon`,
-        oracleText: 'Flying',
+    const def = interpretCard(
+      oracle({
+        name: 'Test Abbey // Test Prince',
+        typeLine: 'Land',
+        types: ['Land'],
+        subtypes: [],
         manaCost: null,
-        colors: ['B'],
-        power: '9',
-        toughness: '7',
-        loyalty: null,
-        defense: null,
-      },
-    }));
+        power: null,
+        toughness: null,
+        layout: 'transform',
+        oracleText: [
+          '{T}: Add {C}.',
+          '{5}, {T}, Sacrifice five creatures: Transform Test Abbey, then untap it.',
+        ].join(nl),
+        backFace: {
+          name: 'Test Prince',
+          typeLine: `Creature ${dash} Demon`,
+          oracleText: 'Flying',
+          manaCost: null,
+          colors: ['B'],
+          power: '9',
+          toughness: '7',
+          loyalty: null,
+          defense: null,
+        },
+      }),
+    );
     expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
     const activated = def.activatedAbilities[0]!;
     expect(activated.costs).toContainEqual(

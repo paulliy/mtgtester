@@ -181,7 +181,14 @@ export function onFights(): TriggerHead {
  * three times and draw three each time.
  */
 export function whenPermanent(
-  when: 'enters' | 'dies' | 'attacks' | 'blocks' | 'dealsCombatDamageToPlayer' | 'becomesTapped' | 'dealtDamage',
+  when:
+    | 'enters'
+    | 'dies'
+    | 'attacks'
+    | 'blocks'
+    | 'dealsCombatDamageToPlayer'
+    | 'becomesTapped'
+    | 'dealtDamage',
   selector: Selector,
   opts?: { aggregate?: boolean | 'byEventPlayer' },
 ): TriggerHead {
@@ -189,21 +196,32 @@ export function whenPermanent(
   return opts?.aggregate === undefined ? head : { ...head, aggregate: opts.aggregate };
 }
 
-export function whenEnters(selector: Selector, opts?: { aggregate?: boolean | 'byEventPlayer' }): TriggerHead {
+export function whenEnters(
+  selector: Selector,
+  opts?: { aggregate?: boolean | 'byEventPlayer' },
+): TriggerHead {
   return whenPermanent('enters', selector, opts);
 }
 
-export function whenDies(selector: Selector, opts?: { aggregate?: boolean | 'byEventPlayer' }): TriggerHead {
+export function whenDies(
+  selector: Selector,
+  opts?: { aggregate?: boolean | 'byEventPlayer' },
+): TriggerHead {
   return whenPermanent('dies', selector, opts);
 }
 
-export function whenAttacks(selector: Selector, opts?: { aggregate?: boolean | 'byEventPlayer' }): TriggerHead {
+export function whenAttacks(
+  selector: Selector,
+  opts?: { aggregate?: boolean | 'byEventPlayer' },
+): TriggerHead {
   return whenPermanent('attacks', selector, opts);
 }
 
 /** "Whenever you/an opponent casts a `<filter>` spell". */
 export function onCast(caster: 'you' | 'opponent' | 'each', filter?: Selector): TriggerHead {
-  return filter === undefined ? { when: 'castsSpell', caster } : { when: 'castsSpell', caster, filter };
+  return filter === undefined
+    ? { when: 'castsSpell', caster }
+    : { when: 'castsSpell', caster, filter };
 }
 
 /** "At the beginning of your/each upkeep". */
@@ -255,7 +273,9 @@ export function onGainsLife(player: 'you' | 'each' = 'you'): TriggerHead {
  * - the returned object hands back the indexes by name, so effects reference `slots.creature`
  *   rather than a bare `0` that silently shifts when a slot is inserted ahead of it.
  */
-export function targetSlots<K extends string>(spec: Record<K, TargetSpec>): {
+export function targetSlots<K extends string>(
+  spec: Record<K, TargetSpec>,
+): {
   targets: TargetSpec[];
   slot: Record<K, number>;
 } {
@@ -301,7 +321,10 @@ export function spell(body: AbilityBody): Ability {
  * A triggered ability. `condition` is the CR 603.4 intervening-if clause, checked both when the
  * ability would trigger and again as it resolves — not a targeting restriction.
  */
-export function triggered(head: TriggerHead, body: AbilityBody & { condition?: Condition }): Ability {
+export function triggered(
+  head: TriggerHead,
+  body: AbilityBody & { condition?: Condition },
+): Ability {
   const trigger: TriggerSpec =
     body.condition === undefined ? head : ({ ...head, condition: body.condition } as TriggerSpec);
   return buildAbility('triggered', body, trigger);
@@ -328,7 +351,8 @@ export function activated(
   };
   if (spec.oncePerTurn !== undefined) out.oncePerTurn = spec.oncePerTurn;
   if (spec.zone !== undefined) out.zone = spec.zone;
-  if (spec.requiresAttackedThisTurn !== undefined) out.requiresAttackedThisTurn = spec.requiresAttackedThisTurn;
+  if (spec.requiresAttackedThisTurn !== undefined)
+    out.requiresAttackedThisTurn = spec.requiresAttackedThisTurn;
   return out;
 }
 
@@ -342,7 +366,11 @@ export function loyaltyAbility(delta: number, body: AbilityBody): ActivatedAbili
 // ---------------------------------------------------------------------------
 
 /** "Other creatures you control get +1/+1" and friends — a layer 7d P/T modification. */
-export function lord(affects: Selector, power: number | Value, toughness: number | Value): StaticEffect {
+export function lord(
+  affects: Selector,
+  power: number | Value,
+  toughness: number | Value,
+): StaticEffect {
   return { affects, op: { layer: 7, sublayer: 'd', power, toughness } };
 }
 
@@ -360,7 +388,11 @@ export const ATTACHED: Selector = { kind: 'attachedToSource' };
  * Emits the P/T modification first and then one static per keyword, which is the order the
  * hand-written Auras used; layer order is decided by the layer engine, not by this array.
  */
-export function auraBuff(power: number, toughness: number, keywords: KeywordAbility[] = []): StaticEffect[] {
+export function auraBuff(
+  power: number,
+  toughness: number,
+  keywords: KeywordAbility[] = [],
+): StaticEffect[] {
   return [
     lord(ATTACHED, power, toughness),
     ...keywords.map((keyword) => grantsKeyword(ATTACHED, keyword)),
@@ -383,7 +415,10 @@ export function costReductionFor(filter: Selector | undefined, amount: number | 
 }
 
 /** A mana ability. `costs` defaults to `{T}`, the cost every printed mana ability has unless stated. */
-export function manaAbility(units: (Color | 'C')[][], opts?: { costs?: AbilityCost[] }): ManaAbilitySpec {
+export function manaAbility(
+  units: (Color | 'C')[][],
+  opts?: { costs?: AbilityCost[] },
+): ManaAbilitySpec {
   return { units, costs: opts?.costs ?? [TAP] };
 }
 

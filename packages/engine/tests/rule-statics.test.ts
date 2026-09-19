@@ -115,13 +115,31 @@ const urDragon = (): ReturnType<typeof oracle> =>
   });
 
 const bigDragon = (): ReturnType<typeof oracle> =>
-  oracle({ name: 'Test Big Dragon', typeLine: 'Creature — Dragon', manaCost: '{3}', power: '4', toughness: '4' });
+  oracle({
+    name: 'Test Big Dragon',
+    typeLine: 'Creature — Dragon',
+    manaCost: '{3}',
+    power: '4',
+    toughness: '4',
+  });
 
 const bear = (): ReturnType<typeof oracle> =>
-  oracle({ name: 'Test Bear', typeLine: 'Creature — Bear', manaCost: '{2}', power: '2', toughness: '2' });
+  oracle({
+    name: 'Test Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{2}',
+    power: '2',
+    toughness: '2',
+  });
 
 const freeBear = (): ReturnType<typeof oracle> =>
-  oracle({ name: 'Test Free Bear', typeLine: 'Creature — Bear', manaCost: '{0}', power: '1', toughness: '1' });
+  oracle({
+    name: 'Test Free Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{0}',
+    power: '1',
+    toughness: '1',
+  });
 
 describe('Dragonlord Dromoka', () => {
   it('parses to spellCantBeCountered + a cantCastSpells rule static, even with no spellAbility', () => {
@@ -131,7 +149,9 @@ describe('Dragonlord Dromoka', () => {
     expect(def.spellAbility).toBeNull(); // a creature, not an instant/sorcery
     expect(def.spellCantBeCountered).toBe(true);
     expect(def.keywords).toEqual(expect.arrayContaining(['flying', 'lifelink']));
-    expect(def.ruleStatics).toEqual([{ kind: 'cantCastSpells', who: 'opponents', yourTurnOnly: true }]);
+    expect(def.ruleStatics).toEqual([
+      { kind: 'cantCastSpells', who: 'opponents', yourTurnOnly: true },
+    ]);
   });
 
   it("protects the spell from being countered even though it's a creature, not an instant/sorcery", () => {
@@ -157,7 +177,12 @@ describe('Dragonlord Dromoka', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: 'c-counter', name: 'Test Counter', oracleId: 'oracle-test-counter', controllerId: 'P2' },
+        {
+          cardId: 'c-counter',
+          name: 'Test Counter',
+          oracleId: 'oracle-test-counter',
+          controllerId: 'P2',
+        },
         { kind: 'spell', targets: [{ kind: 'spell' }], effects: [{ op: 'counter', target: 0 }] },
         ['o-dromoka'],
       ),
@@ -245,8 +270,28 @@ describe('Temur Battlecrier', () => {
 
     expect(costReductionFor(ctx, 'P1', bear().oracleId, 'c-any').generic).toBe(0);
 
-    spawn(ctx, 'P1', oracle({ name: 'Test Ogre', typeLine: 'Creature — Ogre', manaCost: '{4}', power: '4', toughness: '4' }));
-    spawn(ctx, 'P1', oracle({ name: 'Test Giant', typeLine: 'Creature — Giant', manaCost: '{4}', power: '5', toughness: '5' }));
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Ogre',
+        typeLine: 'Creature — Ogre',
+        manaCost: '{4}',
+        power: '4',
+        toughness: '4',
+      }),
+    );
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Giant',
+        typeLine: 'Creature — Giant',
+        manaCost: '{4}',
+        power: '5',
+        toughness: '5',
+      }),
+    );
     // Battlecrier itself is power 3 — does not count toward its own reduction.
     expect(crier.power).toBe(3);
     expect(costReductionFor(ctx, 'P1', bear().oracleId, 'c-any').generic).toBe(2);
@@ -256,7 +301,17 @@ describe('Temur Battlecrier', () => {
     const ctx = pod();
     spawn(ctx, 'P1', battlecrier());
     registerDef(ctx, bear());
-    spawn(ctx, 'P1', oracle({ name: 'Test Ogre 2', typeLine: 'Creature — Ogre', manaCost: '{4}', power: '4', toughness: '4' }));
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Ogre 2',
+        typeLine: 'Creature — Ogre',
+        manaCost: '{4}',
+        power: '4',
+        toughness: '4',
+      }),
+    );
 
     ctx.state.currentTurnPlayer = 'P2';
     expect(costReductionFor(ctx, 'P1', bear().oracleId, 'c-any').generic).toBe(0);

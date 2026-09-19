@@ -101,7 +101,9 @@ function jump(turn: number): void {
       <header>
         <h2 id="game-over-title">
           <template v-if="result.halted">⚠️ Game halted</template>
-          <template v-else-if="result.winnerSeat">🏆 {{ seatLabel(result.winnerSeat) }} wins</template>
+          <template v-else-if="result.winnerSeat"
+            >🏆 {{ seatLabel(result.winnerSeat) }} wins</template
+          >
           <template v-else>Game drawn</template>
         </h2>
         <span class="meta">Round {{ roundCount }} · {{ result.turnCount }} turns</span>
@@ -123,7 +125,11 @@ function jump(turn: number): void {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in rankedStandings" :key="row.seat" :class="{ winner: row.seat === result.winnerSeat }">
+          <tr
+            v-for="row in rankedStandings"
+            :key="row.seat"
+            :class="{ winner: row.seat === result.winnerSeat }"
+          >
             <td class="place">{{ ordinal(row.position) }}</td>
             <td class="seat-cell">
               <span class="seat-badge">{{ row.seat }}</span>

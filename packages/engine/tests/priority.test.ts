@@ -223,7 +223,7 @@ describe('MTGO-style yield actions (F6)', () => {
     expect(p2.yieldUntilEndOfTurn).toBe(false);
   });
 
-  it('breaks when a mass effect would hit the yielding player\'s board', () => {
+  it("breaks when a mass effect would hit the yielding player's board", () => {
     const ctx = boltContext();
 
     // Phase 1: P2 yields on an uneventful priority sequence.

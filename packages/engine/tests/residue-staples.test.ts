@@ -72,7 +72,8 @@ describe('Worldly Tutor', () => {
         manaCost: '{G}',
         power: null,
         toughness: null,
-        oracleText: 'Search your library for a creature card, reveal it, then shuffle and put the card on top.',
+        oracleText:
+          'Search your library for a creature card, reveal it, then shuffle and put the card on top.',
       }),
     );
     expect(def.modeled, JSON.stringify(def.unmodeledReasons)).toBe(true);
@@ -142,7 +143,8 @@ describe('Command Beacon', () => {
         manaCost: null,
         power: null,
         toughness: null,
-        oracleText: '{T}: Add {C}.\n{T}, Sacrifice this land: Put your commander into your hand from the command zone.',
+        oracleText:
+          '{T}: Add {C}.\n{T}, Sacrifice this land: Put your commander into your hand from the command zone.',
       }),
     );
     expect(def.modeled, JSON.stringify(def.unmodeledReasons)).toBe(true);
@@ -178,7 +180,8 @@ describe('Tireless Provisioner', () => {
         manaCost: '{2}{G}',
         power: '3',
         toughness: '2',
-        oracleText: 'Landfall — Whenever a land you control enters, create a Food token or a Treasure token.',
+        oracleText:
+          'Landfall — Whenever a land you control enters, create a Food token or a Treasure token.',
       }),
     );
     expect(def.modeled, JSON.stringify(def.unmodeledReasons)).toBe(true);
@@ -206,7 +209,11 @@ describe('Tireless Provisioner', () => {
         oracleText: 'Create a Food token.',
       }),
     );
-    const spec = (def.spellAbility?.effects[0] as { spec: { activatedAbilities?: { costs: { kind: string }[] }[] } }).spec;
+    const spec = (
+      def.spellAbility?.effects[0] as {
+        spec: { activatedAbilities?: { costs: { kind: string }[] }[] };
+      }
+    ).spec;
     const costs = spec.activatedAbilities?.[0]?.costs.map((c) => c.kind);
     expect(costs).toEqual(['mana', 'tap', 'sacrificeSelf']);
   });

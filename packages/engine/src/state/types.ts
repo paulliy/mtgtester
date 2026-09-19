@@ -27,7 +27,12 @@ import type {
   StackObject,
 } from '@mtg/shared';
 import type { ManaEntry, TriggerWhen } from '../cards/ability';
-import type { Ability, ActivatedAbility, CardDefinition, KeywordAbility } from '../cards/definition';
+import type {
+  Ability,
+  ActivatedAbility,
+  CardDefinition,
+  KeywordAbility,
+} from '../cards/definition';
 import type { TriggerScope } from '../cards/value';
 import type { Prng } from '../rng/prng';
 
@@ -65,6 +70,8 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   blockedByOrdered: ObjectId[];
   /** True once a deathtouch source has damaged this creature this turn (CR 704.5h). */
   damagedByDeathtouch: boolean;
+  /** One-shot "next time this would be destroyed this turn" regeneration shields (CR 701.19a). */
+  regenerationShields: number;
   /** Set when this permanent dealt first-strike damage this combat (CR 510.5). */
   dealtFirstStrikeDamage: boolean;
   /** Timestamp assigned on entry (CR 613.7 ordering of continuous effects). */
@@ -100,6 +107,10 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   /** True if this spell/permanent was cast kicked (CR 702.33). */
   wasKicked?: boolean;
   kicked?: boolean;
+  /** Counts of optional additional costs paid while this permanent was cast. */
+  optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring', number>>;
+  /** X announced for the spell that became this permanent (Ravenous). */
+  announcedX?: number;
   /** The `key` chosen for `CardDefinition.entersChoosingOption`, e.g. a color or mode. */
   chosenOption?: string;
   /** Printed identity saved while a layer-1 copy effect is active. */
@@ -139,6 +150,7 @@ export interface EnginePermanent extends PermanentState, EngineObject {
 export interface EngineCardObject extends EngineObject {
   /** X announced when this card was cast, retained while it resolves into a permanent. */
   announcedX?: number;
+  optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring', number>>;
   /** Mana from Treasure permanents spent to cast this card, retained until it enters. */
   treasureManaSpentToCast?: number;
   /** Counters last held while this card was a permanent, for death-triggered effects. */
@@ -179,6 +191,7 @@ export interface EngineStackObject extends StackObject {
   /** Kicker announcement state retained while the spell is on the stack. */
   wasKicked?: boolean;
   kicked?: boolean;
+  optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring', number>>;
   /** The X announced when this spell was cast (CR 601.2b), for its own effects to read. */
   announcedX?: number;
   /**
@@ -270,6 +283,8 @@ export interface EnginePlayerState extends PlayerState {
 
 /** An until-end-of-turn continuous effect (the Phase 2 subset of CR 613). */
 export interface UntilEotEffect extends ContinuousEffect {
+  /** Omitted means cleanup removes it; permanent supports one-shot type-changing effects. */
+  duration?: 'permanent';
   /**
    * The permanents this effect applies to, fixed when the spell or ability that created it
    * resolved (CR 611.2c) and never recomputed. A single-target pump is the one-element case;
@@ -305,6 +320,7 @@ export interface UntilEotEffect extends ContinuousEffect {
     power: number;
     toughness: number;
     addKeywords: KeywordAbility[];
+    setColors?: Color[];
     /** See `Effect.becomeCreatureUntilEot.replaceTypes` — full type-line replacement, not add. */
     replaceTypes?: string[];
   };

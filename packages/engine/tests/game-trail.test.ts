@@ -27,7 +27,12 @@ const gameTrail = (): ReturnType<typeof oracle> =>
   });
 
 function ctxWithSeats(seats: number): GameContext {
-  const ctx = createGame(gameConfig(Array.from({ length: seats }, () => ({ cards: [] })), { seed: 'game-trail' }));
+  const ctx = createGame(
+    gameConfig(
+      Array.from({ length: seats }, () => ({ cards: [] })),
+      { seed: 'game-trail' },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;
@@ -36,7 +41,10 @@ function ctxWithSeats(seats: number): GameContext {
 describe('Game Trail (may-reveal-a-land-from-hand condition)', () => {
   it('parses to a mayRevealCardFromHand condition, not a trigger', () => {
     const def = interpretCard(gameTrail());
-    expect(def.entersTappedUnless).toEqual({ kind: 'mayRevealCardFromHand', subtypes: ['Mountain', 'Forest'] });
+    expect(def.entersTappedUnless).toEqual({
+      kind: 'mayRevealCardFromHand',
+      subtypes: ['Mountain', 'Forest'],
+    });
     expect(def.triggers).toHaveLength(0);
   });
 
@@ -51,7 +59,9 @@ describe('Game Trail (may-reveal-a-land-from-hand condition)', () => {
     const ctx = ctxWithSeats(2);
     conjure(ctx, 'P1', mountain(), 'hand');
     const obj = conjure(ctx, 'P1', gameTrail(), 'hand');
-    const { value: perm } = pump(moveObject(ctx, obj, { zone: 'battlefield' }), (d) => pick(d, 'Reveal'));
+    const { value: perm } = pump(moveObject(ctx, obj, { zone: 'battlefield' }), (d) =>
+      pick(d, 'Reveal'),
+    );
     expect((perm as { tapped: boolean }).tapped).toBe(false);
   });
 
@@ -59,7 +69,9 @@ describe('Game Trail (may-reveal-a-land-from-hand condition)', () => {
     const ctx = ctxWithSeats(2);
     conjure(ctx, 'P1', forest(), 'hand');
     const obj = conjure(ctx, 'P1', gameTrail(), 'hand');
-    const { value: perm } = pump(moveObject(ctx, obj, { zone: 'battlefield' }), (d) => pick(d, "Don't reveal"));
+    const { value: perm } = pump(moveObject(ctx, obj, { zone: 'battlefield' }), (d) =>
+      pick(d, "Don't reveal"),
+    );
     expect((perm as { tapped: boolean }).tapped).toBe(true);
   });
 });

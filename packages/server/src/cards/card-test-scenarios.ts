@@ -74,8 +74,16 @@ const PINNED: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/reviewed-five-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+const QUEEN_BATCH1: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/queen-engine-batch1-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 const QUEEN_BATCH2: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/queen-engine-batch2-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
+const QUEEN_BATCH3: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/queen-engine-batch3-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
 const NECRON_MAIN_BATCH1: PinnedOracleFile = JSON.parse(
@@ -141,9 +149,44 @@ const DRACONIC_BATCH2: PinnedOracleFile = JSON.parse(
   ),
 ) as PinnedOracleFile;
 
+const DRACONIC_BATCH3: PinnedOracleFile = JSON.parse(
+  readFileSync(
+    resolve('packages/engine/tests/fixtures/draconic-engine-batch3-oracle.json'),
+    'utf8',
+  ),
+) as PinnedOracleFile;
+
 const NECRON_MAIN_BATCH2: PinnedOracleFile = JSON.parse(
   readFileSync(
     resolve('packages/engine/tests/fixtures/necron-main-engine-batch2-oracle.json'),
+    'utf8',
+  ),
+) as PinnedOracleFile;
+
+const LIVING_ENERGY_BATCH1: PinnedOracleFile = JSON.parse(
+  readFileSync(
+    resolve('packages/engine/tests/fixtures/living-energy-engine-batch1-oracle.json'),
+    'utf8',
+  ),
+) as PinnedOracleFile;
+
+const LIVING_ENERGY_BATCH2: PinnedOracleFile = JSON.parse(
+  readFileSync(
+    resolve('packages/engine/tests/fixtures/living-energy-engine-batch2-oracle.json'),
+    'utf8',
+  ),
+) as PinnedOracleFile;
+
+const LIVING_ENERGY_BATCH5: PinnedOracleFile = JSON.parse(
+  readFileSync(
+    resolve('packages/engine/tests/fixtures/living-energy-engine-batch5-oracle.json'),
+    'utf8',
+  ),
+) as PinnedOracleFile;
+
+const W2_REMAINING_BATCH1: PinnedOracleFile = JSON.parse(
+  readFileSync(
+    resolve('packages/engine/tests/fixtures/w2-remaining-engine-batch1-oracle.json'),
     'utf8',
   ),
 ) as PinnedOracleFile;
@@ -731,8 +774,7 @@ function blossomingScenario(gameId: GameId): CardTestScenario {
         'Pass priority so the spell resolves.',
         'Pass with the stack empty to finish the scenario.',
       ],
-      expectedOutcome:
-        'Lab Ox gets +2/+2 and hexproof until end of turn, becoming a 6/6.',
+      expectedOutcome: 'Lab Ox gets +2/+2 and hexproof until end of turn, becoming a 6/6.',
       oracleSha256: defense.sha256,
       clauseIds: ['defense-pumps-and-grants-hexproof-to-your-creature'],
     },
@@ -831,8 +873,7 @@ function bustScenario(gameId: GameId): CardTestScenario {
         'The spell has no targets. Pass priority so it resolves.',
         'Pass with the stack empty to finish the scenario.',
       ],
-      expectedOutcome:
-        'Lab Ox (toughness 4) is destroyed. Lab Servo (toughness 1) remains.',
+      expectedOutcome: 'Lab Ox (toughness 4) is destroyed. Lab Servo (toughness 1) remains.',
       oracleSha256: bust.sha256,
       clauseIds: ['bust-destroys-toughness-4-or-greater-and-spares-smaller'],
     },
@@ -1171,7 +1212,16 @@ function unconsciousScenario(gameId: GameId): CardTestScenario {
         battlefield: [
           {
             playerId: 'P1',
-            cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Lab Ox', 'Lab Servo'],
+            cardNames: [
+              'Forest',
+              'Forest',
+              'Forest',
+              'Forest',
+              'Forest',
+              'Forest',
+              'Lab Ox',
+              'Lab Servo',
+            ],
           },
           { playerId: 'P2', cardNames: ['Lab Ox'] },
         ],
@@ -1236,7 +1286,16 @@ function camaraderieScenario(gameId: GameId): CardTestScenario {
         battlefield: [
           {
             playerId: 'P1',
-            cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Plains', 'Lab Ox', 'Lab Servo'],
+            cardNames: [
+              'Forest',
+              'Forest',
+              'Forest',
+              'Forest',
+              'Forest',
+              'Plains',
+              'Lab Ox',
+              'Lab Servo',
+            ],
           },
           { playerId: 'P2', cardNames: ['Lab Ox'] },
         ],
@@ -1611,15 +1670,7 @@ function quakeScenario(gameId: GameId): CardTestScenario {
 
 function prowessScenario(gameId: GameId): CardTestScenario {
   const prowess = pinnedFrom(DRACONIC_BATCH2, "Hunter's Prowess");
-  const p1 = player('P1', [
-    prowess.card,
-    FOREST,
-    FOREST,
-    FOREST,
-    FOREST,
-    FOREST,
-    LAB_OX,
-  ]);
+  const p1 = player('P1', [prowess.card, FOREST, FOREST, FOREST, FOREST, FOREST, LAB_OX]);
   const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
   const seats = [p1.setup, ...others.map(({ setup }) => setup)];
   const seed = 'card-lab-prowess-v1';
@@ -1638,7 +1689,10 @@ function prowessScenario(gameId: GameId): CardTestScenario {
         turnNumber: 1,
         hand: [{ playerId: 'P1', cardNames: ["Hunter's Prowess"] }],
         battlefield: [
-          { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Lab Ox'] },
+          {
+            playerId: 'P1',
+            cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Lab Ox'],
+          },
         ],
       },
     },
@@ -2019,9 +2073,7 @@ function rootbornScenario(gameId: GameId): CardTestScenario {
         step: null,
         turnNumber: 1,
         hand: [{ playerId: 'P1', cardNames: ['Rootborn Defenses'] }],
-        battlefield: [
-          { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Plains', 'Lab Ox'] },
-        ],
+        battlefield: [{ playerId: 'P1', cardNames: ['Forest', 'Forest', 'Plains', 'Lab Ox'] }],
       },
     },
   );
@@ -2048,7 +2100,7 @@ function rootbornScenario(gameId: GameId): CardTestScenario {
 
 function trostaniScenario(gameId: GameId): CardTestScenario {
   const trostani = pinnedFrom(TOKEN_TRIUMPH_BATCH3, 'Trostani Discordant');
-  const p1 = player('P1', [trostani.card, FOREST, FOREST, FOREST, PLAINS]);
+  const p1 = player('P1', [trostani.card, FOREST, FOREST, FOREST, FOREST, PLAINS]);
   const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
   const seats = [p1.setup, ...others.map(({ setup }) => setup)];
   const seed = 'card-lab-trostani-v1';
@@ -2066,7 +2118,9 @@ function trostaniScenario(gameId: GameId): CardTestScenario {
         step: null,
         turnNumber: 1,
         hand: [{ playerId: 'P1', cardNames: ['Trostani Discordant'] }],
-        battlefield: [{ playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Plains'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Plains'] },
+        ],
       },
     },
   );
@@ -2076,7 +2130,7 @@ function trostaniScenario(gameId: GameId): CardTestScenario {
       version: 1,
       title: 'Trostani Discordant: two lifelink Soldiers',
       instructions: [
-        'Cast Trostani Discordant from your hand using three Forests and a Plains.',
+        'Cast Trostani Discordant from your hand using four Forests and a Plains.',
         'Pass priority so it resolves and the enter trigger creates two Soldiers.',
         'Pass with the stack empty to finish the scenario.',
       ],
@@ -2182,6 +2236,1260 @@ function nestScenario(gameId: GameId): CardTestScenario {
   };
 }
 
+function slateScenario(gameId: GameId): CardTestScenario {
+  const slate = pinnedFrom(TOKEN_TRIUMPH_BATCH2, 'Slate of Ancestry');
+  const p1 = player('P1', [
+    slate.card,
+    FOREST,
+    FOREST,
+    FOREST,
+    FOREST,
+    LAB_OX,
+    LAB_SERVO,
+    ELIGIBLE,
+    ELIGIBLE_SIGNET,
+    WRONG_MV,
+    WRONG_TYPE,
+  ]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-slate-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Eligible Talisman', 'Eligible Signet'] }],
+        battlefield: [
+          {
+            playerId: 'P1',
+            cardNames: [
+              'Slate of Ancestry',
+              'Forest',
+              'Forest',
+              'Forest',
+              'Forest',
+              'Lab Ox',
+              'Lab Servo',
+            ],
+          },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'slate-viewer-discard-and-draw-for-creatures',
+      version: 1,
+      title: 'Slate of Ancestry: discard and draw for creatures',
+      instructions: [
+        'Activate Slate of Ancestry using four Forests, tapping it, and discarding your hand.',
+        'Pass priority so the ability draws a card for each creature you control.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Your two hand cards are discarded and you draw two nonlands for Lab Ox and Lab Servo. Opponent creatures stay engine-only.',
+      oracleSha256: slate.sha256,
+      clauseIds: ['slate-discards-hand-and-draws-for-creatures-you-control'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function scarabScenario(gameId: GameId): CardTestScenario {
+  const scarab = pinnedFrom(NECRON_REMAINING_BATCH1, 'Canoptek Scarab Swarm');
+  const p1 = player('P1', [scarab.card, FOREST, FOREST, FOREST, FOREST]);
+  const p2 = player('P2', [ELIGIBLE, FOREST, LAB_OX, FOREST, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-scarab-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Canoptek Scarab Swarm'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest'] }],
+        graveyard: [{ playerId: 'P2', cardNames: ['Eligible Talisman', 'Forest', 'Lab Ox'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'scarab-viewer-exile-graveyard-make-insects',
+      version: 1,
+      title: 'Canoptek Scarab Swarm: exile graveyard, make Insects',
+      instructions: [
+        'Cast Canoptek Scarab Swarm from your hand using four Forests.',
+        'Target opponent P2 with the enter-the-battlefield ability.',
+        'Pass priority so P2\u2019s graveyard is exiled and Insects are created for the artifact and land.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'P2\u2019s graveyard is exiled. Two flying Insect tokens enter for the artifact and land. A creature-only graveyard stays engine-only.',
+      oracleSha256: scarab.sha256,
+      clauseIds: ['scarab-exiles-graveyard-and-makes-insects-for-artifacts-and-lands'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function oakScenario(gameId: GameId): CardTestScenario {
+  const oak = pinnedFrom(TOKEN_TRIUMPH_BATCH1, 'Great Oak Guardian');
+  const p1 = player('P1', [oak.card, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST]);
+  const p2 = player('P2', [LAB_OX, FOREST, FOREST, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-oak-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Great Oak Guardian'] }],
+        battlefield: [
+          {
+            playerId: 'P1',
+            cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+          },
+          { playerId: 'P2', cardNames: ['Lab Ox'], tapped: true },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'oak-viewer-pump-and-untap-target-player',
+      version: 1,
+      title: 'Great Oak Guardian: pump and untap P2 creatures',
+      instructions: [
+        'Cast Great Oak Guardian from your hand using six Forests.',
+        'Target opponent P2 with the enter-the-battlefield ability.',
+        'Pass priority so P2\u2019s Lab Ox gets +2/+2 and untaps.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'P2\u2019s Lab Ox becomes a 6/6 and untaps. Your Great Oak Guardian stays 4/5. Pumping a different player stays engine-only.',
+      oracleSha256: oak.sha256,
+      clauseIds: ['oak-untaps-and-pumps-the-targeted-players-creatures'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function frostboilScenario(gameId: GameId): CardTestScenario {
+  const frostboil = pinnedFrom(LIVING_ENERGY_BATCH2, 'Frostboil Snarl');
+  const p1 = player('P1', [frostboil.card, ISLAND, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-frostboil-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Frostboil Snarl', 'Island'] }],
+        battlefield: [],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'frostboil-viewer-reveal-enters-untapped',
+      version: 1,
+      title: 'Frostboil Snarl: reveal an Island, enter untapped',
+      instructions: [
+        'Play Frostboil Snarl from your hand.',
+        'Reveal the Island in your hand so Frostboil Snarl enters untapped.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Frostboil Snarl is untapped. The revealed Island stays in your hand; you already played a land this turn.',
+      oracleSha256: frostboil.sha256,
+      clauseIds: ['frostboil-enters-untapped-only-if-you-reveal-an-island-or-mountain'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function vineglimmerScenario(gameId: GameId): CardTestScenario {
+  const vineglimmer = pinnedFrom(LIVING_ENERGY_BATCH2, 'Vineglimmer Snarl');
+  const p1 = player('P1', [vineglimmer.card, FOREST, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-vineglimmer-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Vineglimmer Snarl', 'Forest'] }],
+        battlefield: [],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'vineglimmer-viewer-reveal-enters-untapped',
+      version: 1,
+      title: 'Vineglimmer Snarl: reveal a Forest, enter untapped',
+      instructions: [
+        'Play Vineglimmer Snarl from your hand.',
+        'Reveal the Forest in your hand so Vineglimmer Snarl enters untapped.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Vineglimmer Snarl is untapped. The revealed Forest stays in your hand; you already played a land this turn. A Plains would not qualify.',
+      oracleSha256: vineglimmer.sha256,
+      clauseIds: ['vineglimmer-does-not-reveal-a-plains'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function strokeScenario(gameId: GameId): CardTestScenario {
+  const stroke = pinnedFrom(QUEEN_BATCH2, 'Stroke of Midnight');
+  const p1 = player('P1', [stroke.card, PLAINS, FOREST, FOREST]);
+  const p2 = player('P2', [LAB_OX, FOREST, FOREST, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-stroke-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Stroke of Midnight'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Plains', 'Forest', 'Forest'] },
+          { playerId: 'P2', cardNames: ['Lab Ox'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'stroke-viewer-destroy-nonland-make-human',
+      version: 1,
+      title: 'Stroke of Midnight: destroy nonland, make a Human',
+      instructions: [
+        'Cast Stroke of Midnight from your hand using the untapped Plains and Forests.',
+        'Target the opponent\u2019s Lab Ox. Lands are not legal targets.',
+        'Pass priority so the spell resolves.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Lab Ox is destroyed. P2 creates a 1/1 white Human. Targeting a land stays engine-only.',
+      oracleSha256: stroke.sha256,
+      clauseIds: ['stroke-destroys-nonland-and-makes-human'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function giftScenario(gameId: GameId): CardTestScenario {
+  const gift = pinnedFrom(QUEEN_BATCH2, 'Generous Gift');
+  const p1 = player('P1', [gift.card, PLAINS, FOREST, FOREST]);
+  const p2 = player('P2', [LAB_OX, FOREST, FOREST, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-gift-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Generous Gift'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Plains', 'Forest', 'Forest'] },
+          { playerId: 'P2', cardNames: ['Lab Ox'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'gift-viewer-destroy-and-make-elephant',
+      version: 1,
+      title: 'Generous Gift: destroy Lab Ox, make an Elephant',
+      instructions: [
+        'Cast Generous Gift from your hand using the untapped Plains and Forests.',
+        'Target the opponent\u2019s Lab Ox. Lands are also legal; do not choose them.',
+        'Pass priority so the spell resolves.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Lab Ox is destroyed. P2 creates a 3/3 green Elephant. Targeting a land stays engine-only.',
+      oracleSha256: gift.sha256,
+      clauseIds: ['gift-destroys-and-makes-elephant'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function bounceLandScenario(
+  gameId: GameId,
+  land: { card: OracleCard; sha256: string },
+  opts: { id: string; title: string; seed: string; clauseId: string },
+): CardTestScenario {
+  const p1 = player('P1', [land.card, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const engine = new Engine(
+    {
+      gameId,
+      seed: opts.seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: [land.card.name] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Forest'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: opts.id,
+      version: 1,
+      title: opts.title,
+      instructions: [
+        `Play ${land.card.name} from your hand.`,
+        'Return the Forest you control so the bounce land stays on the battlefield.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome: `${land.card.name} is tapped. The Forest is back in your hand. Bouncing the bounce land itself stays engine-only.`,
+      oracleSha256: land.sha256,
+      clauseIds: [opts.clauseId],
+    },
+    seed: opts.seed,
+    seats,
+    engine,
+  };
+}
+
+function garrisonScenario(gameId: GameId): CardTestScenario {
+  return bounceLandScenario(gameId, pinnedFrom(QUEEN_BATCH3, 'Boros Garrison'), {
+    id: 'garrison-viewer-bounce-forest-enters-tapped',
+    title: 'Boros Garrison: bounce Forest, enter tapped',
+    seed: 'card-lab-garrison-v1',
+    clauseId: 'boros-garrison-enters-tapped-and-can-bounce-another-land',
+  });
+}
+
+function basilicaScenario(gameId: GameId): CardTestScenario {
+  return bounceLandScenario(gameId, pinnedFrom(QUEEN_BATCH3, 'Orzhov Basilica'), {
+    id: 'basilica-viewer-bounce-forest-enters-tapped',
+    title: 'Orzhov Basilica: bounce Forest, enter tapped',
+    seed: 'card-lab-basilica-v1',
+    clauseId: 'orzhov-basilica-enters-tapped-and-can-bounce-another-land',
+  });
+}
+
+function carnariumScenario(gameId: GameId): CardTestScenario {
+  return bounceLandScenario(gameId, pinnedFrom(QUEEN_BATCH3, 'Rakdos Carnarium'), {
+    id: 'carnarium-viewer-bounce-forest-enters-tapped',
+    title: 'Rakdos Carnarium: bounce Forest, enter tapped',
+    seed: 'card-lab-carnarium-v1',
+    clauseId: 'rakdos-carnarium-enters-tapped-and-can-bounce-another-land',
+  });
+}
+
+function piaKiranScenario(gameId: GameId): CardTestScenario {
+  const pair = pinnedFrom(LIVING_ENERGY_BATCH5, 'Pia and Kiran Nalaar');
+  const p1 = player('P1', [pair.card, MOUNTAIN, MOUNTAIN, MOUNTAIN, MOUNTAIN]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-pia-kiran-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Pia and Kiran Nalaar'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Mountain', 'Mountain', 'Mountain', 'Mountain'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'pia-kiran-viewer-etb-two-thopters',
+      version: 1,
+      title: 'Pia and Kiran Nalaar: two flying Thopters',
+      instructions: [
+        'Cast Pia and Kiran Nalaar from your hand using four Mountains.',
+        'Pass priority so the enter trigger creates two Thopters.',
+        'Pass leftover activations with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Pia and Kiran Nalaar is on the battlefield with two 1/1 flying Thopter tokens. Sacrificing an artifact for damage stays engine-only.',
+      oracleSha256: pair.sha256,
+      clauseIds: ['pia-kiran-etb-makes-two-thopters-and-sacing-an-artifact-deals-two'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function cracklingScenario(gameId: GameId): CardTestScenario {
+  const doom = pinnedFrom(QUEEN_BATCH1, 'Crackling Doom');
+  const p1 = player('P1', [doom.card, MOUNTAIN, PLAINS, SWAMP]);
+  const p2 = player('P2', [LAB_OX, FOREST, FOREST, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-crackling-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Crackling Doom'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Mountain', 'Plains', 'Swamp'] },
+          { playerId: 'P2', cardNames: ['Lab Ox'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'crackling-viewer-damage-and-greatest-sacrifice',
+      version: 1,
+      title: 'Crackling Doom: opponents take 2, P2 sacs Lab Ox',
+      instructions: [
+        'Cast Crackling Doom from your hand using the Mountain, Plains, and Swamp.',
+        'Pass priority so each opponent takes 2 and P2 sacrifices Lab Ox.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Lab Ox is sacrificed. Each opponent loses 2 life. You do not. An opponent with no creature still taking 2 stays engine-only.',
+      oracleSha256: doom.sha256,
+      clauseIds: ['crackling-opponents-damage-and-greatest-sacrifice'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function whirlerScenario(gameId: GameId): CardTestScenario {
+  const rogue = pinnedFrom(LIVING_ENERGY_BATCH5, 'Whirler Rogue');
+  const p1 = player('P1', [rogue.card, ISLAND, ISLAND, ISLAND, ISLAND]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-whirler-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Whirler Rogue'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Island', 'Island', 'Island', 'Island'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'whirler-viewer-etb-two-thopters',
+      version: 1,
+      title: 'Whirler Rogue: two flying Thopters',
+      instructions: [
+        'Cast Whirler Rogue from your hand using four Islands.',
+        'Pass priority so the enter trigger creates two Thopters.',
+        'Pass leftover activations with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Whirler Rogue is on the battlefield with two 1/1 flying Thopter tokens. Tapping two artifacts for unblockable stays engine-only.',
+      oracleSha256: rogue.sha256,
+      clauseIds: ['rogue-etb-makes-two-thopters-and-tapping-two-artifacts-unblockable'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function weaverScenario(gameId: GameId): CardTestScenario {
+  const weaver = pinnedFrom(LIVING_ENERGY_BATCH2, 'Reckless Fireweaver');
+  const p1 = player('P1', [weaver.card, FOREST, FOREST, ELIGIBLE]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-weaver-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Eligible Talisman'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Reckless Fireweaver', 'Forest', 'Forest'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'weaver-viewer-artifact-etb-pings-opponents',
+      version: 1,
+      title: 'Reckless Fireweaver: artifact ETB pings opponents',
+      instructions: [
+        'Cast Eligible Talisman from your hand using two Forests.',
+        'Pass priority so Reckless Fireweaver deals 1 to each opponent.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Eligible Talisman is on the battlefield. Each opponent loses 1 life. You do not. A nonartifact creature entering stays engine-only.',
+      oracleSha256: weaver.sha256,
+      clauseIds: ['weaver-pings-each-opponent-when-your-artifact-enters-not-a-creature'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function spitFlameScenario(gameId: GameId): CardTestScenario {
+  const spit = pinnedFrom(DRACONIC_BATCH3, 'Spit Flame');
+  const p1 = player('P1', [spit.card, MOUNTAIN, FOREST, FOREST]);
+  const p2 = player('P2', [LAB_OX, FOREST, FOREST, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-spit-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Spit Flame'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Mountain', 'Forest', 'Forest'] },
+          { playerId: 'P2', cardNames: ['Lab Ox'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'spit-viewer-four-damage-to-ox',
+      version: 1,
+      title: 'Spit Flame: 4 damage to Lab Ox',
+      instructions: [
+        'Cast Spit Flame from your hand using the Mountain and Forests.',
+        'Target the opponent\u2019s Lab Ox.',
+        'Pass priority so 4 damage resolves.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Lab Ox dies to 4 damage. Paying {R} to return Spit Flame when a Dragon enters stays engine-only.',
+      oracleSha256: spit.sha256,
+      clauseIds: ['spit-deals-four-to-target-creature'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function saiScenario(gameId: GameId): CardTestScenario {
+  const sai = pinnedFrom(LIVING_ENERGY_BATCH5, 'Sai, Master Thopterist');
+  const p1 = player('P1', [sai.card, FOREST, FOREST, ELIGIBLE]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-sai-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Eligible Talisman'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Sai, Master Thopterist', 'Forest', 'Forest'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'sai-viewer-cast-artifact-makes-thopter',
+      version: 1,
+      title: 'Sai, Master Thopterist: artifact makes a Thopter',
+      instructions: [
+        'Cast Eligible Talisman from your hand using two Forests.',
+        'Pass priority so Sai creates a Thopter.',
+        'Pass leftover activations with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Eligible Talisman is on the battlefield with a 1/1 flying Thopter. Casting a creature does not make a Thopter; that case stays engine-only.',
+      oracleSha256: sai.sha256,
+      clauseIds: ['sai-makes-a-thopter-when-you-cast-an-artifact-not-a-creature'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function rendezvousScenario(gameId: GameId): CardTestScenario {
+  const rendezvous = pinnedFrom(QUEEN_BATCH1, 'Secret Rendezvous');
+  const p1 = player('P1', [
+    rendezvous.card,
+    PLAINS,
+    PLAINS,
+    FOREST,
+    ELIGIBLE,
+    ELIGIBLE_SIGNET,
+    WRONG_MV,
+  ]);
+  const p2 = player('P2', [ELIGIBLE, ELIGIBLE_SIGNET, WRONG_MV, FOREST, FOREST, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-rendezvous-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Secret Rendezvous'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Plains', 'Plains', 'Forest'] },
+          { playerId: 'P2', cardNames: ['Forest', 'Forest', 'Forest'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'rendezvous-viewer-you-and-opponent-draw-three',
+      version: 1,
+      title: 'Secret Rendezvous: you and P2 each draw three',
+      instructions: [
+        'Cast Secret Rendezvous from your hand using two Plains and a Forest.',
+        'Target opponent P2. You cannot target yourself.',
+        'Pass priority so both of you draw three nonlands.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'You and P2 each draw three nonland cards. P3 does not. Targeting yourself stays illegal in engine tests.',
+      oracleSha256: rendezvous.sha256,
+      clauseIds: ['rendezvous-you-and-target-opponent-draw-three'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function demandingDragonScenario(gameId: GameId): CardTestScenario {
+  const dragon = pinnedFrom(DRACONIC_BATCH2, 'Demanding Dragon');
+  const p1 = player('P1', [dragon.card, MOUNTAIN, MOUNTAIN, FOREST, FOREST, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-demanding-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Demanding Dragon'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Mountain', 'Mountain', 'Forest', 'Forest', 'Forest'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'demanding-viewer-five-damage-no-creature',
+      version: 1,
+      title: 'Demanding Dragon: 5 damage when P2 has no creature',
+      instructions: [
+        'Cast Demanding Dragon from your hand using two Mountains and three Forests.',
+        'Target opponent P2 with the enter trigger. P2 has no creature to sacrifice.',
+        'Pass priority so 5 damage resolves.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'P2 loses 5 life. You do not. Sacrificing a creature to avoid the damage stays engine-only.',
+      oracleSha256: dragon.sha256,
+      clauseIds: ['demanding-deals-five-when-the-opponent-has-no-creature'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function cryptothrallScenario(gameId: GameId): CardTestScenario {
+  const cryptothrall = pinnedFrom(NECRON_MAIN_BATCH1, 'Cryptothrall');
+  const p1 = player('P1', [cryptothrall.card, LAB_SERVO, LAB_OX, FOREST, FOREST, FOREST, FOREST]);
+  const p2 = player('P2', [LAB_SERVO, FOREST, FOREST, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-cryptothrall-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Cryptothrall'] }],
+        battlefield: [
+          {
+            playerId: 'P1',
+            cardNames: ['Lab Servo', 'Lab Ox', 'Forest', 'Forest', 'Forest', 'Forest'],
+          },
+          { playerId: 'P2', cardNames: ['Lab Servo'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'cryptothrall-viewer-hexproof-other-artifact-creatures',
+      version: 1,
+      title: 'Cryptothrall: your other artifact creature has hexproof',
+      instructions: [
+        'Cast Cryptothrall from your hand using four Forests.',
+        'Pass priority so Protector applies to your other artifact creatures.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        "Your Lab Servo has hexproof. Cryptothrall itself, your Lab Ox, and P2's Lab Servo do not.",
+      oracleSha256: cryptothrall.sha256,
+      clauseIds: ['cryptothrall-hexproof-other-artifact-creatures-you-control'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function borosCharmScenario(gameId: GameId): CardTestScenario {
+  const charm = pinnedFrom(QUEEN_BATCH3, 'Boros Charm');
+  const p1 = player('P1', [charm.card, MOUNTAIN, PLAINS, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-boros-charm-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Boros Charm'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Mountain', 'Plains', 'Forest'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'boros-charm-viewer-four-damage-to-player',
+      version: 1,
+      title: 'Boros Charm: 4 damage to P2',
+      instructions: [
+        'Cast Boros Charm from your hand using the Mountain and Plains.',
+        'Choose the deal-4-damage mode. Double strike is illegal with no creature.',
+        'Target opponent P2.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'P2 loses 4 life. You do not. Indestructible and double-strike modes stay engine-only.',
+      oracleSha256: charm.sha256,
+      clauseIds: ['boros-charm-damage-player'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function rakdosCharmScenario(gameId: GameId): CardTestScenario {
+  const charm = pinnedFrom(QUEEN_BATCH3, 'Rakdos Charm');
+  const p1 = player('P1', [charm.card, SWAMP, MOUNTAIN, FOREST]);
+  const p2 = player('P2', [WRONG_MV, LAB_OX, FOREST, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-rakdos-charm-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Rakdos Charm'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Swamp', 'Mountain', 'Forest'] },
+          { playerId: 'P2', cardNames: ['Wrong-MV Artifact', 'Lab Ox'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'rakdos-charm-viewer-destroy-artifact',
+      version: 1,
+      title: 'Rakdos Charm: destroy Wrong-MV Artifact',
+      instructions: [
+        'Cast Rakdos Charm from your hand using the Swamp and Mountain.',
+        'Choose the destroy-artifact mode. Lab Ox is an illegal target for that mode.',
+        'Target the opponent\u2019s Wrong-MV Artifact.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Wrong-MV Artifact is destroyed. Lab Ox remains. Graveyard-exile and creature-ping modes stay engine-only.',
+      oracleSha256: charm.sha256,
+      clauseIds: ['rakdos-charm-destroys-artifact-not-creature'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function steelHellkiteScenario(gameId: GameId): CardTestScenario {
+  const hellkite = pinnedFrom(DRACONIC_BATCH3, 'Steel Hellkite');
+  const p1 = player('P1', [hellkite.card, FOREST, FOREST, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-hellkite-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [],
+        battlefield: [{ playerId: 'P1', cardNames: ['Steel Hellkite', 'Forest', 'Forest'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'hellkite-viewer-plus-one-power-until-eot',
+      version: 1,
+      title: 'Steel Hellkite: +1/+0 until end of turn',
+      instructions: [
+        'Activate Steel Hellkite\u2019s {2} ability using two Forests.',
+        'Pass leftover {X} activations with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Steel Hellkite is a 6/5 until end of turn. Destroying mana-value X permanents after combat damage stays engine-only.',
+      oracleSha256: hellkite.sha256,
+      clauseIds: ['hellkite-plus-one-power-until-eot'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function rogueRefinerScenario(gameId: GameId): CardTestScenario {
+  const refiner = pinnedFrom(LIVING_ENERGY_BATCH1, 'Rogue Refiner');
+  const p1 = player('P1', [
+    refiner.card,
+    ISLAND,
+    FOREST,
+    FOREST,
+    ELIGIBLE,
+    ELIGIBLE_SIGNET,
+    WRONG_MV,
+  ]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-refiner-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Rogue Refiner'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Island', 'Forest', 'Forest'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'refiner-viewer-etb-draw-two-energy',
+      version: 1,
+      title: 'Rogue Refiner: draw a nonland and get two energy',
+      instructions: [
+        'Cast Rogue Refiner from your hand using the Island and two Forests.',
+        'Pass priority so the enter trigger draws and grants energy.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome: 'You draw one nonland card and have two energy. Opponents do not draw.',
+      oracleSha256: refiner.sha256,
+      clauseIds: ['refiner-etb-draws-and-gains-two-energy'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function whirlerVirtuosoScenario(gameId: GameId): CardTestScenario {
+  const virtuoso = pinnedFrom(LIVING_ENERGY_BATCH1, 'Whirler Virtuoso');
+  const p1 = player('P1', [virtuoso.card, ISLAND, MOUNTAIN, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-virtuoso-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Whirler Virtuoso'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Island', 'Mountain', 'Forest'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'virtuoso-viewer-energy-makes-thopter',
+      version: 1,
+      title: 'Whirler Virtuoso: three energy makes a Thopter',
+      instructions: [
+        'Cast Whirler Virtuoso from your hand using the Island, Mountain, and Forest.',
+        'Pass priority so the enter trigger grants three energy.',
+        'Activate the energy ability to create a Thopter.',
+        'Pass leftover activations with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'A 1/1 flying Thopter is on the battlefield and you have no energy left. Two energy cannot make a Thopter; that case stays engine-only.',
+      oracleSha256: virtuoso.sha256,
+      clauseIds: ['virtuoso-etb-gains-three-energy-and-pays-three-for-a-thopter'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function ajaniCallerScenario(gameId: GameId): CardTestScenario {
+  const ajani = pinnedFrom(TOKEN_TRIUMPH_BATCH3, 'Ajani, Caller of the Pride');
+  const p1 = player('P1', [ajani.card, LAB_OX, PLAINS, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-ajani-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [],
+        battlefield: [{ playerId: 'P1', cardNames: ['Ajani, Caller of the Pride', 'Lab Ox'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'ajani-viewer-plus-one-counter',
+      version: 1,
+      title: 'Ajani, Caller of the Pride: +1 counter on Lab Ox',
+      instructions: [
+        'Activate Ajani\u2019s +1 ability targeting Lab Ox.',
+        'Pass leftover loyalty activations with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Lab Ox is a 5/5. Flying, double strike, and the Cat ultimate stay engine-only.',
+      oracleSha256: ajani.sha256,
+      clauseIds: ['ajani-plus-one-puts-a-counter-or-can-choose-none'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function terrorOfThePeaksScenario(gameId: GameId): CardTestScenario {
+  const terror = pinnedFrom(W2_REMAINING_BATCH1, 'Terror of the Peaks');
+  const p1 = player('P1', [terror.card, WRONG_TYPE, FOREST, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-terror-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Two-Mana Bear'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Terror of the Peaks', 'Forest', 'Forest'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'terror-viewer-etb-damage-to-player',
+      version: 1,
+      title: 'Terror of the Peaks: entering Bear deals 2 to P2',
+      instructions: [
+        'Cast Two-Mana Bear from your hand using two Forests.',
+        'Target opponent P2 with Terror of the Peaks\u2019 enter trigger.',
+        'Pass priority so 2 damage resolves.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'P2 loses 2 life. Terror itself did not deal damage when it entered; that case stays engine-only.',
+      oracleSha256: terror.sha256,
+      clauseIds: ['terror-deals-the-entering-creature-power-and-ignores-self-entry'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function aetherwindBaskerScenario(gameId: GameId): CardTestScenario {
+  const basker = pinnedFrom(LIVING_ENERGY_BATCH1, 'Aetherwind Basker');
+  const p1 = player('P1', [basker.card, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-basker-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Aetherwind Basker'] }],
+        battlefield: [
+          {
+            playerId: 'P1',
+            cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+          },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'basker-viewer-plus-one-until-eot',
+      version: 1,
+      title: 'Aetherwind Basker: +1/+1 until end of turn',
+      instructions: [
+        'Cast Aetherwind Basker from your hand using seven Forests.',
+        'Pass priority so the enter trigger grants one energy for itself.',
+        'Activate the energy pump once.',
+        'Pass leftover activations with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Aetherwind Basker is an 8/8 until end of turn. Opponent creatures do not grant energy; that case stays engine-only.',
+      oracleSha256: basker.sha256,
+      clauseIds: ['basker-pays-one-energy-to-pump-until-eot'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
 /** Step 15 evaluates only the five repaired cards. Catalog leftover lab scenarios must stay out. */
 export const REVIEWED_FIVE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -2225,6 +3533,33 @@ export const CARD_TEST_SCENARIO_IDS = [
   'trostani-viewer-etb-two-lifelink-soldiers',
   'felidar-viewer-landfall-cat-beast',
   'nest-viewer-damage-makes-insects',
+  'slate-viewer-discard-and-draw-for-creatures',
+  'scarab-viewer-exile-graveyard-make-insects',
+  'oak-viewer-pump-and-untap-target-player',
+  'frostboil-viewer-reveal-enters-untapped',
+  'vineglimmer-viewer-reveal-enters-untapped',
+  'stroke-viewer-destroy-nonland-make-human',
+  'gift-viewer-destroy-and-make-elephant',
+  'garrison-viewer-bounce-forest-enters-tapped',
+  'basilica-viewer-bounce-forest-enters-tapped',
+  'pia-kiran-viewer-etb-two-thopters',
+  'crackling-viewer-damage-and-greatest-sacrifice',
+  'carnarium-viewer-bounce-forest-enters-tapped',
+  'whirler-viewer-etb-two-thopters',
+  'weaver-viewer-artifact-etb-pings-opponents',
+  'spit-viewer-four-damage-to-ox',
+  'sai-viewer-cast-artifact-makes-thopter',
+  'rendezvous-viewer-you-and-opponent-draw-three',
+  'demanding-viewer-five-damage-no-creature',
+  'cryptothrall-viewer-hexproof-other-artifact-creatures',
+  'boros-charm-viewer-four-damage-to-player',
+  'rakdos-charm-viewer-destroy-artifact',
+  'hellkite-viewer-plus-one-power-until-eot',
+  'refiner-viewer-etb-draw-two-energy',
+  'virtuoso-viewer-energy-makes-thopter',
+  'ajani-viewer-plus-one-counter',
+  'terror-viewer-etb-damage-to-player',
+  'basker-viewer-plus-one-until-eot',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -2265,6 +3600,33 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'trostani-viewer-etb-two-lifelink-soldiers': trostaniScenario,
   'felidar-viewer-landfall-cat-beast': felidarScenario,
   'nest-viewer-damage-makes-insects': nestScenario,
+  'slate-viewer-discard-and-draw-for-creatures': slateScenario,
+  'scarab-viewer-exile-graveyard-make-insects': scarabScenario,
+  'oak-viewer-pump-and-untap-target-player': oakScenario,
+  'frostboil-viewer-reveal-enters-untapped': frostboilScenario,
+  'vineglimmer-viewer-reveal-enters-untapped': vineglimmerScenario,
+  'stroke-viewer-destroy-nonland-make-human': strokeScenario,
+  'gift-viewer-destroy-and-make-elephant': giftScenario,
+  'garrison-viewer-bounce-forest-enters-tapped': garrisonScenario,
+  'basilica-viewer-bounce-forest-enters-tapped': basilicaScenario,
+  'pia-kiran-viewer-etb-two-thopters': piaKiranScenario,
+  'crackling-viewer-damage-and-greatest-sacrifice': cracklingScenario,
+  'carnarium-viewer-bounce-forest-enters-tapped': carnariumScenario,
+  'whirler-viewer-etb-two-thopters': whirlerScenario,
+  'weaver-viewer-artifact-etb-pings-opponents': weaverScenario,
+  'spit-viewer-four-damage-to-ox': spitFlameScenario,
+  'sai-viewer-cast-artifact-makes-thopter': saiScenario,
+  'rendezvous-viewer-you-and-opponent-draw-three': rendezvousScenario,
+  'demanding-viewer-five-damage-no-creature': demandingDragonScenario,
+  'cryptothrall-viewer-hexproof-other-artifact-creatures': cryptothrallScenario,
+  'boros-charm-viewer-four-damage-to-player': borosCharmScenario,
+  'rakdos-charm-viewer-destroy-artifact': rakdosCharmScenario,
+  'hellkite-viewer-plus-one-power-until-eot': steelHellkiteScenario,
+  'refiner-viewer-etb-draw-two-energy': rogueRefinerScenario,
+  'virtuoso-viewer-energy-makes-thopter': whirlerVirtuosoScenario,
+  'ajani-viewer-plus-one-counter': ajaniCallerScenario,
+  'terror-viewer-etb-damage-to-player': terrorOfThePeaksScenario,
+  'basker-viewer-plus-one-until-eot': aetherwindBaskerScenario,
 };
 
 export function createCardTestScenario(

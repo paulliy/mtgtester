@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "eb434266ac7e174bfb596bcaf65bedc3e305f5b661553e946f4e3cc80979feca",
+      "card": {
+        "oracleId": "5acff7a3-bc84-4251-bd37-80231396ac38",
+        "scryfallId": "3484b0bb-f305-404b-b4a9-430296061365",
+        "name": "Chains of Custody",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature you control\nWhen this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.\nEnchanted creature has ward {2}. (Whenever it becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ffbd695d4e087c74775a9a50a680773cd8131fbba0422ffff9f49a5d5d9cfffc",
+      "card": {
+        "oracleId": "dbb8a3d9-6b1b-4ad1-b8b9-f92ead03d1d9",
+        "scryfallId": "f98ca390-d2ea-41c8-93ed-57fcd22737d8",
+        "name": "Coercive Impetus",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature gets +1/+1 and is goaded. (It attacks each combat if able and attacks a player other than you if able.)\nWhenever enchanted creature attacks, you draw a card and lose 1 life.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad",
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c3142e5a91bf1b496f08bdbcdde137d32526eeba990163c623229a82a0b39e1a",
+      "card": {
+        "oracleId": "05a4f8ff-49da-42af-add5-6248c4b0644b",
+        "scryfallId": "6e776a1e-266d-4b30-83da-be4721a55ed2",
+        "name": "Darksteel Mutation",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature is an Insect artifact creature with base power and toughness 0/1 and has indestructible, and it loses all other abilities, card types, and creature types.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1742fbafe99c7d35d368c2c966987c38667499ba978dd016a4f52bcf30279209",
+      "card": {
+        "oracleId": "ff3de07d-86c3-49e1-9de0-97c85301ff93",
+        "scryfallId": "1d312b2e-c529-42ac-ad9e-73573e5f1c34",
+        "name": "Parasitic Impetus",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature gets +2/+2 and is goaded. (It attacks each combat if able and attacks a player other than you if able.)\nWhenever enchanted creature attacks, its controller loses 2 life and you gain 2 life.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad",
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "159c3cd0c658ccff35bfa1faea08fc5b4b3eef656470c1b6f82f88c87057de52",
+      "card": {
+        "oracleId": "c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e",
+        "scryfallId": "7a198106-4d31-4e10-884a-bdf2316f8088",
+        "name": "Shineshadow Snarl",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped.\n{T}: Add {W} or {B}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f73bd1b568ebf31699e2ae1cd7549fdf6f3c1442b532f93e2135d35aa90ba890",
+      "card": {
+        "oracleId": "7e00b0cd-d212-4604-ba07-da21f4fe00b0",
+        "scryfallId": "8fbd18ce-0ac3-4b52-9cd0-0af7e0244207",
+        "name": "Sram, Senior Edificer",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Dwarf Advisor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dwarf",
+          "Advisor"
+        ],
+        "oracleText": "Whenever you cast an Aura, Equipment, or Vehicle spell, draw a card.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "75b7efe8d04fe0ea93a10e8ef2eded910fdc8352c63dfdd0ae5d18130de85288",
+      "card": {
+        "oracleId": "2975590d-6a5b-41e5-8a3b-e9325e71226a",
+        "scryfallId": "e8f2fcb4-8d06-49ac-9c70-9c54d77c6d86",
+        "name": "Starfield Mystic",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Cleric",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Cleric"
+        ],
+        "oracleText": "Enchantment spells you cast cost {1} less to cast.\nWhenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

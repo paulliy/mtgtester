@@ -44,7 +44,9 @@ const seconds = computed(() => (remainingMs.value / 1000).toFixed(1));
       {{ pending.request.decidingPlayer }} · {{ pending.request.decisionType }} ·
       {{ pending.request.prompt }}
     </p>
-    <p class="invalid">what the model returned: <code>{{ pending.invalidResponse }}</code></p>
+    <p class="invalid">
+      what the model returned: <code>{{ pending.invalidResponse }}</code>
+    </p>
     <ul>
       <li v-for="action in pending.request.legalActions" :key="action.id">
         <button type="button" @click="emit('choose', action.id)">

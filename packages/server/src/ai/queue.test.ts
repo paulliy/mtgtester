@@ -26,7 +26,12 @@ describe('RequestQueue', () => {
     const queue = new RequestQueue({ rpmLimit: 60, concurrency: 1 });
     let releaseFirst: () => void = () => {};
 
-    const first = queue.enqueue(() => new Promise((resolve) => { releaseFirst = resolve as () => void; }));
+    const first = queue.enqueue(
+      () =>
+        new Promise((resolve) => {
+          releaseFirst = resolve as () => void;
+        }),
+    );
     const second = queue.enqueue(async () => 'second');
 
     expect(queue.depth).toBe(1);
@@ -54,11 +59,17 @@ describe('RequestQueue', () => {
     const queue = new RequestQueue({ rpmLimit: 60, concurrency: 1 });
     let releaseFirst: () => void = () => {};
     const first = queue.enqueue(
-      () => new Promise((resolve) => { releaseFirst = resolve as () => void; }),
+      () =>
+        new Promise((resolve) => {
+          releaseFirst = resolve as () => void;
+        }),
     );
 
     const controller = new AbortController();
-    const second = queue.enqueue(vi.fn().mockResolvedValue('should never happen'), controller.signal);
+    const second = queue.enqueue(
+      vi.fn().mockResolvedValue('should never happen'),
+      controller.signal,
+    );
 
     expect(queue.depth).toBe(1);
     controller.abort();

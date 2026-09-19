@@ -2528,9 +2528,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "fumiko-bushido-x-when-blocking-or-becoming-blocked"
-          ],
+          "engineTestIds": ["fumiko-bushido-x-when-blocking-or-becoming-blocked"],
           "evidenceNote": "Bushido X from attacking-creature count on blocks and becomes-blocked. Opponents must attack each combat. Engine tests only."
         },
         {
@@ -2569,9 +2567,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "reverie-counts-only-your-auras-attached-to-creatures"
-          ],
+          "engineTestIds": ["reverie-counts-only-your-auras-attached-to-creatures"],
           "evidenceNote": "Draw and Aura pump count only your Auras attached to creatures. Engine tests only."
         },
         {
@@ -2930,13 +2926,13 @@
           "oracleSha256": "1c57c66b14b20536014b598ecb9f5d50ed19bbe4747e848d2fa84c8f64710442",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "oak-untaps-and-pumps-the-targeted-players-creatures",
             "oak-does-not-pump-the-untargeted-player"
           ],
-          "evidenceNote": "ETB: target player's creatures +2/+2 and untap. Engine tests only."
+          "evidenceNote": "ETB pumps and untaps P2's Lab Ox to 6/6 in Card Test Lab plus unmocked Playwright. Oak stays 4/5. Pumping a different player stays engine-only."
         },
         {
           "oracleId": "3ac01298-e45b-4ea0-8379-2074279716a4",
@@ -2981,13 +2977,13 @@
           "oracleSha256": "dd54721c087b619a26f981a6135c0a32dcd3864a19bfaa1ce9f7cd525b3be50e",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "nest-makes-insects-equal-to-damage-dealt",
             "nest-does-not-trigger-when-another-creature-is-damaged"
           ],
-          "evidenceNote": "Dealt damage creates that many flying deathtouch Insects. Damage to another creature does not fire. Engine tests only."
+          "evidenceNote": "2 damage makes two flying deathtouch Insects and the Nest dies in Card Test Lab plus unmocked Playwright. Damage to another creature stays engine-only."
         },
         {
           "oracleId": "a07483b4-c04f-42a4-b979-8b77c11fa8f5",
@@ -2995,13 +2991,13 @@
           "oracleSha256": "6398db40c93376df4162c1aecd23f177a4e81cd46f8ddae297fb442e2d8ad2a9",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "slate-discards-hand-and-draws-for-creatures-you-control",
             "slate-draws-zero-without-creatures-you-control"
           ],
-          "evidenceNote": "{4}{T} discard hand draws for creatures you control. Opponent creatures do not count. Engine tests only."
+          "evidenceNote": "{4}{T} discard hand draws for your two creatures in Card Test Lab plus unmocked Playwright. Opponent creatures do not count; that case stays engine-only."
         },
         {
           "oracleId": "04046ae4-5c51-434b-930c-f3b1d348bf4b",
@@ -3088,13 +3084,13 @@
           "oracleSha256": "d5e07d31bb2d19376bcc2f05f38dd272483677d7b8fe351569b26a7527640137",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "trostani-etb-makes-two-lifelink-soldiers-and-anthem-pumps-yours",
             "trostani-end-step-returns-your-stolen-creatures-and-ignores-opponent-end-step"
           ],
-          "evidenceNote": "ETB two lifelink Soldiers; anthem yours; end step returns stolen creatures. Engine tests only."
+          "evidenceNote": "ETB two anthem-pumped lifelink Soldiers in Card Test Lab plus unmocked Playwright. End-step stolen-creature return stays engine-only."
         },
         {
           "oracleId": "16629f59-bae8-4c19-bf50-443eb0ed6856",
@@ -3102,13 +3098,13 @@
           "oracleSha256": "8d586683d15b76bc8ec3f7b3e578b2a1e7501ae5c5a8f53d8e20a809d5276872",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "felidar-landfall-can-make-a-cat-beast-or-pump-with-vigilance",
             "felidar-does-not-trigger-for-an-opponent-land"
           ],
-          "evidenceNote": "Landfall choose-one: Cat Beast or +1/+1 and vigilance. Opponent lands do not fire. Engine tests only."
+          "evidenceNote": "Landfall Cat Beast in Card Test Lab plus unmocked Playwright. The +1/+1 vigilance mode and opponent-land cases stay engine-only."
         }
       ]
     },
@@ -3266,13 +3262,14 @@
           "oracleSha256": "2d9829561249964dc1ee8b12130cd2b00bc27be2e03a63145f7d6de6cf95752a",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "demanding-deals-five-when-the-opponent-has-no-creature",
             "demanding-sacrifice-avoids-damage-and-decline-takes-it"
           ],
-          "evidenceNote": "ETB 5 damage unless the opponent sacrifices a creature. Engine tests only."
+          "viewerScenarioId": "demanding-viewer-five-damage-no-creature",
+          "evidenceNote": "ETB 5 damage to P2 with no creature to sacrifice in Card Test Lab plus unmocked Playwright. Sacrificing a creature to avoid the damage stays engine-only."
         },
         {
           "oracleId": "eab71e4e-27c3-4c41-b95f-259c1d14b97a",
@@ -3386,13 +3383,16 @@
           "oracleSha256": "7941fa4a9f6c55f5c891a52189df99332e387a5c7079e6f0e895e1b397d1198f",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
+            "spit-deals-four-to-target-creature",
+            "spit-does-not-damage-an-untargeted-creature",
             "spit-may-pay-red-to-return-when-your-dragon-enters",
             "spit-does-not-trigger-for-an-opponent-dragon-or-a-non-dragon"
           ],
-          "evidenceNote": "When a Dragon you control enters, you may pay {R} to return this from the graveyard. Engine tests only."
+          "viewerScenarioId": "spit-viewer-four-damage-to-ox",
+          "evidenceNote": "4 damage destroys Lab Ox in Card Test Lab plus unmocked Playwright. Paying {R} to return when a Dragon enters stays engine-only."
         },
         {
           "oracleId": "6e64f1e0-ddd6-4ee7-8797-086e234b02e8",
@@ -3400,13 +3400,15 @@
           "oracleSha256": "ba2cb4d36d1a7140eae384d01ce65fa0367bc6bab383b5132e011c77931e3111",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "hellkite-destroys-mv-x-permanents-of-players-it-damaged",
-            "hellkite-does-not-destroy-permanents-of-an-undamaged-player"
+            "hellkite-does-not-destroy-permanents-of-an-undamaged-player",
+            "hellkite-plus-one-power-until-eot"
           ],
-          "evidenceNote": "{X} destroys MV X nonlands of players this creature dealt combat damage to this turn. Engine tests only."
+          "viewerScenarioId": "hellkite-viewer-plus-one-power-until-eot",
+          "evidenceNote": "{2} pumps Steel Hellkite to 6/5 until end of turn in Card Test Lab plus unmocked Playwright. Destroying mana-value X permanents after combat damage stays engine-only."
         }
       ]
     },
@@ -3474,9 +3476,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "mondrak-doubles-jacked-rabbit-attack-tokens"
-          ],
+          "engineTestIds": ["mondrak-doubles-jacked-rabbit-attack-tokens"],
           "evidenceNote": "Token replacement doubles Jacked Rabbit attack tokens. Engine tests only."
         },
         {
@@ -3487,9 +3487,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "annex-blocks-attacks-at-one-life-and-charges-two-life-when-payable"
-          ],
+          "engineTestIds": ["annex-blocks-attacks-at-one-life-and-charges-two-life-when-payable"],
           "evidenceNote": "Attack tax phyrexian white: unaffordable at 1 life; two life when payable. Engine tests only."
         },
         {
@@ -3578,9 +3576,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "study-hall-scries-only-when-its-mana-casts-your-commander"
-          ],
+          "engineTestIds": ["study-hall-scries-only-when-its-mana-casts-your-commander"],
           "evidenceNote": "Any-color mana scries only when spent to cast your commander. Engine tests only."
         },
         {
@@ -3591,9 +3587,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "wildguide-creates-a-1/1-offspring-copy-only-when-paid"
-          ],
+          "engineTestIds": ["wildguide-creates-a-1/1-offspring-copy-only-when-paid"],
           "evidenceNote": "Offspring 1/1 copy only when the cost is paid. Engine tests only."
         },
         {
@@ -3688,9 +3682,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "refiner-etb-draws-and-gains-two-energy"
-          ],
+          "engineTestIds": ["refiner-etb-draws-and-gains-two-energy"],
           "evidenceNote": "ETB draw and get two energy. Engine tests only."
         },
         {
@@ -3701,9 +3693,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "module-gains-energy-for-your-creature-not-an-enchantment-or-theirs"
-          ],
+          "engineTestIds": ["module-gains-energy-for-your-creature-not-an-enchantment-or-theirs"],
           "evidenceNote": "Your creature ETB 1 energy. Enchantments and opponent creatures do not. Engine tests only."
         },
         {
@@ -3803,12 +3793,11 @@
           "oracleSha256": "c82c1275c8d0be73ac8997df8f0d6f954a202abdb6ad59a5345448774eaedea6",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "weaver-pings-each-opponent-when-your-artifact-enters-not-a-creature"
-          ],
-          "evidenceNote": "Your artifact ETB deals 1 to each opponent. Nonartifact creatures do not. Engine tests only."
+          "engineTestIds": ["weaver-pings-each-opponent-when-your-artifact-enters-not-a-creature"],
+          "viewerScenarioId": "weaver-viewer-artifact-etb-pings-opponents",
+          "evidenceNote": "Your artifact ETB deals 1 to each opponent in Card Test Lab plus unmocked Playwright. Nonartifact creatures do not. Engine tests only for the creature-ETB negative."
         },
         {
           "oracleId": "7a2484a9-04fd-41a0-8224-610c1c07ed10",
@@ -3818,9 +3807,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "act-costs-one-less-per-creature-and-only-for-itself"
-          ],
+          "engineTestIds": ["act-costs-one-less-per-creature-and-only-for-itself"],
           "evidenceNote": "Costs 1 less per creature, self-only. Engine tests only."
         },
         {
@@ -3829,12 +3816,11 @@
           "oracleSha256": "305a425676cf1fe4839c83a30fa4fabcbd3e0163bf4d5cf35f4c38adb97aee8c",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "frostboil-enters-untapped-only-if-you-reveal-an-island-or-mountain"
-          ],
-          "evidenceNote": "Enters tapped unless you reveal Island or Mountain. Engine tests only."
+          "engineTestIds": ["frostboil-enters-untapped-only-if-you-reveal-an-island-or-mountain"],
+          "viewerScenarioId": "frostboil-viewer-reveal-enters-untapped",
+          "evidenceNote": "Enters untapped when you reveal an Island in Card Test Lab plus unmocked Playwright. Declining a reveal or revealing a non-Island/Mountain stays engine-only."
         },
         {
           "oracleId": "33f52df8-4b44-4422-8b0a-37fead9c894b",
@@ -3842,12 +3828,11 @@
           "oracleSha256": "48089d4cc1ef9c3fdd40efdcf79807f89945ac8a622878d6e09edcf808a4b04d",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "vineglimmer-does-not-reveal-a-plains"
-          ],
-          "evidenceNote": "A Plains in hand does not untap Vineglimmer Snarl. Engine tests only."
+          "engineTestIds": ["vineglimmer-does-not-reveal-a-plains"],
+          "viewerScenarioId": "vineglimmer-viewer-reveal-enters-untapped",
+          "evidenceNote": "Enters untapped when you reveal a Forest in Card Test Lab plus unmocked Playwright. A Plains in hand stays engine-only."
         },
         {
           "oracleId": "7f268b15-ac92-4e98-821b-78d15d9285d9",
@@ -3857,9 +3842,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "apprentice-makes-a-hasty-thopter-only-if-you-control-your-commander"
-          ],
+          "engineTestIds": ["apprentice-makes-a-hasty-thopter-only-if-you-control-your-commander"],
           "evidenceNote": "Lieutenant Thopter only if you control your commander. Engine tests only."
         },
         {
@@ -3934,9 +3917,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "stridehangar-adds-a-thopter-only-when-you-create-an-artifact-token"
-          ],
+          "engineTestIds": ["stridehangar-adds-a-thopter-only-when-you-create-an-artifact-token"],
           "evidenceNote": "Extra Thopter when you create an artifact token. Creature tokens do not. Engine tests only."
         },
         {
@@ -3947,9 +3928,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "aetherhood-gains-energy-equal-to-power-then-may-pay-for-counters"
-          ],
+          "engineTestIds": ["aetherhood-gains-energy-equal-to-power-then-may-pay-for-counters"],
           "evidenceNote": "Your upkeep energy equal to power, then may pay that much for +1/+1. Opponent upkeep does not. Engine tests only."
         },
         {
@@ -3960,9 +3939,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "gargaroth-attack-choose-one-does-not-fire-for-another-attacker"
-          ],
+          "engineTestIds": ["gargaroth-attack-choose-one-does-not-fire-for-another-attacker"],
           "evidenceNote": "Attack choose-one can gain 3 life. Other attackers do not fire it. Engine tests only."
         },
         {
@@ -4022,9 +3999,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "stash-gives-your-lands-a-tap-for-treasure-and-is-not-itself-a-land"
-          ],
+          "engineTestIds": ["stash-gives-your-lands-a-tap-for-treasure-and-is-not-itself-a-land"],
           "evidenceNote": "Lands you control gain tap-for-Treasure. The Stash itself is not a land. Engine tests only."
         },
         {
@@ -4035,9 +4010,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "gearhulk-lets-an-opponent-draw-or-mill-and-cannot-target-you"
-          ],
+          "engineTestIds": ["gearhulk-lets-an-opponent-draw-or-mill-and-cannot-target-you"],
           "evidenceNote": "Opponent-only target may have you draw 3. You are illegal. Engine tests only."
         },
         {
@@ -4048,9 +4021,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "panharmonicon-copies-your-creature-etb-not-an-enchantment-etb"
-          ],
+          "engineTestIds": ["panharmonicon-copies-your-creature-etb-not-an-enchantment-etb"],
           "evidenceNote": "Copies your creature ETB. Enchantment ETB does not copy that trigger. Engine tests only."
         },
         {
@@ -4061,9 +4032,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "clock-shuffles-draws-and-exiles-when-the-twelfth-hour-is-placed"
-          ],
+          "engineTestIds": ["clock-shuffles-draws-and-exiles-when-the-twelfth-hour-is-placed"],
           "evidenceNote": "Twelfth hour shuffles, draws 7, and exiles. 11th hour does not. Engine tests only."
         }
       ]
@@ -4082,9 +4051,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "ruins-taps-for-colorless-and-puts-your-graveyard-artifact-on-top"
-          ],
+          "engineTestIds": ["ruins-taps-for-colorless-and-puts-your-graveyard-artifact-on-top"],
           "evidenceNote": "{T} for C. {1}{U}{T} puts your graveyard artifact on top. Creatures and opponent artifacts are illegal. No target cannot activate. Engine tests only."
         },
         {
@@ -4093,12 +4060,11 @@
           "oracleSha256": "0d253dcf6c010e24fbae0ffc483e7390fcf588ea0d8284a855ce0b4f6e84087c",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "pia-kiran-etb-makes-two-thopters-and-sacing-an-artifact-deals-two"
-          ],
-          "evidenceNote": "ETB two Thopters. Sac an artifact deals 2. No artifact cannot activate. Engine tests only."
+          "engineTestIds": ["pia-kiran-etb-makes-two-thopters-and-sacing-an-artifact-deals-two"],
+          "viewerScenarioId": "pia-kiran-viewer-etb-two-thopters",
+          "evidenceNote": "ETB two 1/1 flying Thopters in Card Test Lab plus unmocked Playwright. Sacrificing an artifact for damage stays engine-only."
         },
         {
           "oracleId": "52241b9c-7a69-4176-9234-8bdab09d8e64",
@@ -4106,12 +4072,11 @@
           "oracleSha256": "d9d248d1dd1e9d61bcbe740c8890bb364f35444fd34508bb872241f4a036a056",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "sai-makes-a-thopter-when-you-cast-an-artifact-not-a-creature"
-          ],
-          "evidenceNote": "Cast artifact makes a Thopter. Casting a creature does not. Engine tests only."
+          "engineTestIds": ["sai-makes-a-thopter-when-you-cast-an-artifact-not-a-creature"],
+          "viewerScenarioId": "sai-viewer-cast-artifact-makes-thopter",
+          "evidenceNote": "Casting an artifact makes a 1/1 flying Thopter in Card Test Lab plus unmocked Playwright. Casting a creature does not; that case stays engine-only."
         },
         {
           "oracleId": "49be65fd-3755-410d-b0dc-2e5861ea2552",
@@ -4121,9 +4086,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "network-makes-a-thopter-on-upkeep-only-if-you-control-an-artifact"
-          ],
+          "engineTestIds": ["network-makes-a-thopter-on-upkeep-only-if-you-control-an-artifact"],
           "evidenceNote": "Your upkeep makes a Thopter only if you control an artifact. Engine tests only."
         },
         {
@@ -4132,12 +4095,11 @@
           "oracleSha256": "2b14ae571ce7f3f92b834261ea08fde5a43cdd216453fce1dc8bf326c5fe17c9",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "rogue-etb-makes-two-thopters-and-tapping-two-artifacts-unblockable"
-          ],
-          "evidenceNote": "ETB two Thopters. Tap two artifacts: cannot be blocked. Without two artifacts cannot activate. Engine tests only."
+          "engineTestIds": ["rogue-etb-makes-two-thopters-and-tapping-two-artifacts-unblockable"],
+          "viewerScenarioId": "whirler-viewer-etb-two-thopters",
+          "evidenceNote": "ETB two 1/1 flying Thopters in Card Test Lab plus unmocked Playwright. Tapping two artifacts for unblockable stays engine-only."
         }
       ]
     },
@@ -4160,14 +4122,15 @@
           "oracleSha256": "f14b56be926e1e81c05cbaf38a4bd9be60743969fa30bbdf3c5d0b1444caad98",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "crackling-opponents-damage-and-greatest-sacrifice",
             "crackling-no-creature-still-damages",
             "crackling-normal-cast-from-hand"
           ],
-          "evidenceNote": "Each opponent takes 2 and sacrifices their greatest-power creature. You do not. No-creature opponents still take 2. Normal cast covered. Engine tests only."
+          "viewerScenarioId": "crackling-viewer-damage-and-greatest-sacrifice",
+          "evidenceNote": "Each opponent takes 2 and P2 sacrifices Lab Ox in Card Test Lab plus unmocked Playwright. You do not. No-creature opponents still taking 2 stays engine-only."
         },
         {
           "oracleId": "bc328acc-8521-4581-88c3-99a7cb2c1cdb",
@@ -4232,14 +4195,15 @@
           "oracleSha256": "2b94ee0260e05d55e9177cac7d76ac55bb816ed3c2ee00dc9aafab3698fbfa1e",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "rendezvous-you-and-target-opponent-draw-three",
             "rendezvous-cannot-target-yourself",
             "rendezvous-normal-cast-from-hand"
           ],
-          "evidenceNote": "You and target opponent each draw three. You are not a legal target. Normal cast covered. Engine tests only."
+          "viewerScenarioId": "rendezvous-viewer-you-and-opponent-draw-three",
+          "evidenceNote": "You and P2 each draw three nonlands in Card Test Lab plus unmocked Playwright. Targeting yourself stays engine-only."
         }
       ]
     },
@@ -4273,7 +4237,7 @@
           "oracleSha256": "027cc07998c416b5f58f1d6aea36d3c361ca1f99cbf47a8b1725d94492c29d52",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "boros-charm-is-choose-one",
@@ -4282,7 +4246,8 @@
             "boros-charm-indestructible-yours-only",
             "boros-charm-double-strike-on-creature"
           ],
-          "evidenceNote": "Choose-one: 4 damage, your permanents indestructible, or double strike. Mode 2 is illegal with no creature. Engine tests only."
+          "viewerScenarioId": "boros-charm-viewer-four-damage-to-player",
+          "evidenceNote": "Deal-4-damage mode hits P2 in Card Test Lab plus unmocked Playwright. Double strike is illegal with no creature. Indestructible and double-strike modes stay engine-only."
         },
         {
           "oracleId": "5e62b51d-faec-4aa0-9504-cf2c282d08ea",
@@ -4290,14 +4255,15 @@
           "oracleSha256": "35aaee558a07c35c1f3ca9758fc6108919d401d19c3f0c994ce5bd089d905192",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "rakdos-charm-exiles-target-graveyard",
             "rakdos-charm-destroys-artifact-not-creature",
             "rakdos-charm-each-creature-damages-its-controller"
           ],
-          "evidenceNote": "Choose-one: exile a graveyard, destroy an artifact (not a creature), or each creature damages its controller. Engine tests only."
+          "viewerScenarioId": "rakdos-charm-viewer-destroy-artifact",
+          "evidenceNote": "Destroy-artifact mode removes Wrong-MV Artifact and spares Lab Ox in Card Test Lab plus unmocked Playwright. Graveyard-exile and creature-ping modes stay engine-only."
         },
         {
           "oracleId": "8fa3ac81-3dfe-4565-be99-5554f7597b4b",
@@ -4305,13 +4271,14 @@
           "oracleSha256": "d642ad016928b98c97c2d9a73770c8f613a9592b340b6e3900bac8551223fdab",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "boros-garrison-enters-tapped-and-can-bounce-another-land",
             "boros-garrison-can-bounce-itself"
           ],
-          "evidenceNote": "Enters tapped; ETB returns a land you control, including itself. Opponent lands are not offered. Engine tests only."
+          "viewerScenarioId": "garrison-viewer-bounce-forest-enters-tapped",
+          "evidenceNote": "Enters tapped after bouncing a Forest in Card Test Lab plus unmocked Playwright. Opponent lands are not offered. Bouncing itself stays engine-only."
         },
         {
           "oracleId": "aa00ae0b-7c0f-427e-8102-ce0e2a6af5df",
@@ -4319,13 +4286,14 @@
           "oracleSha256": "a2008903012a1a15542133559cf53bc108e54d2d70826538c34192aa2d49d5f2",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "orzhov-basilica-enters-tapped-and-can-bounce-another-land",
             "orzhov-basilica-can-bounce-itself"
           ],
-          "evidenceNote": "Enters tapped; ETB returns a land you control, including itself. Opponent lands are not offered. Engine tests only."
+          "viewerScenarioId": "basilica-viewer-bounce-forest-enters-tapped",
+          "evidenceNote": "Enters tapped after bouncing a Forest in Card Test Lab plus unmocked Playwright. Opponent lands are not offered. Bouncing itself stays engine-only."
         },
         {
           "oracleId": "0a023964-2905-4928-9c3e-dc63e6ebd218",
@@ -4333,13 +4301,14 @@
           "oracleSha256": "187b183ea332d6e3e983271735778be35bc3a059e36723d0430a309e9a35aacb",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "rakdos-carnarium-enters-tapped-and-can-bounce-another-land",
             "rakdos-carnarium-can-bounce-itself"
           ],
-          "evidenceNote": "Enters tapped; ETB returns a land you control, including itself. Opponent lands are not offered. Engine tests only."
+          "viewerScenarioId": "carnarium-viewer-bounce-forest-enters-tapped",
+          "evidenceNote": "Enters tapped after bouncing a Forest in Card Test Lab plus unmocked Playwright. Opponent lands are not offered. Bouncing itself stays engine-only."
         }
       ]
     },
@@ -4355,13 +4324,11 @@
           "oracleSha256": "26deff86f38527596d5f6cb3eb0baaec1ebc73a116895991a2ccda55d05fe2b4",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "gift-destroys-and-makes-elephant",
-            "gift-can-target-a-land"
-          ],
-          "evidenceNote": "Destroys any permanent, including a land; that permanent’s controller gets a 3/3 Elephant. Engine tests only."
+          "engineTestIds": ["gift-destroys-and-makes-elephant", "gift-can-target-a-land"],
+          "viewerScenarioId": "gift-viewer-destroy-and-make-elephant",
+          "evidenceNote": "Destroys P2's Lab Ox; P2 gets a 3/3 Elephant in Card Test Lab plus unmocked Playwright. Targeting a land stays engine-only."
         },
         {
           "oracleId": "9a107e48-3d50-4941-95b1-10f2b29a4245",
@@ -4369,13 +4336,14 @@
           "oracleSha256": "425d2f14a7efafc268c493db437c98a66212c20a706d994c64e73edf1fd563c5",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "stroke-destroys-nonland-and-makes-human",
             "stroke-cannot-target-a-land"
           ],
-          "evidenceNote": "Destroys a nonland permanent; controller gets a 1/1 Human. Lands are illegal. Engine tests only."
+          "viewerScenarioId": "stroke-viewer-destroy-nonland-make-human",
+          "evidenceNote": "Destroys P2's Lab Ox; P2 gets a 1/1 Human in Card Test Lab plus unmocked Playwright. Lands are illegal and stay engine-only."
         },
         {
           "oracleId": "b1544f21-7e98-461b-aed5-e748b0168c52",
@@ -4607,13 +4575,13 @@
           "oracleSha256": "e45a57ca0d1380258b5f706a533a69314a9ccff5900f33c7fd7da65887a8b722",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
             "scarab-exiles-graveyard-and-makes-insects-for-artifacts-and-lands",
             "scarab-creature-only-graveyard-makes-no-insects"
           ],
-          "evidenceNote": "ETB exiles the targeted graveyard and makes Insects only for artifact or land cards. Engine tests only."
+          "evidenceNote": "ETB exiles P2's graveyard and makes two flying Insects for the artifact and land in Card Test Lab plus unmocked Playwright. A creature-only graveyard stays engine-only."
         },
         {
           "oracleId": "932708ae-9d5c-4561-aa8b-0d2222d37fdc",
@@ -4708,9 +4676,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "death-destroys-nonartifact-creatures-only"
-          ],
+          "engineTestIds": ["death-destroys-nonartifact-creatures-only"],
           "evidenceNote": "Destroys all nonartifact creatures. Card Test Lab plus unmocked Playwright."
         }
       ]
@@ -4734,12 +4700,11 @@
           "oracleSha256": "0b8d6d5c836d1d873c47a683c90b26127ba0c05adc71a7a2faea72815615a225",
           "implementationStatus": "implemented-reviewed",
           "engineEvidence": "engine-tests",
-          "viewerEvidence": "not-run",
+          "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "cryptothrall-hexproof-other-artifact-creatures-you-control"
-          ],
-          "evidenceNote": "Other artifact creatures you control have hexproof. Engine tests only."
+          "engineTestIds": ["cryptothrall-hexproof-other-artifact-creatures-you-control"],
+          "viewerScenarioId": "cryptothrall-viewer-hexproof-other-artifact-creatures",
+          "evidenceNote": "Your other artifact creature has hexproof in Card Test Lab plus unmocked Playwright. Cryptothrall itself, a nonartifact creature, and an opponent artifact creature do not."
         },
         {
           "oracleId": "49dddec0-d958-4810-8c6e-225fc8118c8f",
@@ -4763,9 +4728,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "flayed-etb-mills-three-and-has-lifelink"
-          ],
+          "engineTestIds": ["flayed-etb-mills-three-and-has-lifelink"],
           "evidenceNote": "ETB mills 3; lifelink stays as a keyword. Card Test Lab plus unmocked Playwright."
         },
         {
@@ -4776,9 +4739,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "lotus-makes-three-linked-mana-of-one-color"
-          ],
+          "engineTestIds": ["lotus-makes-three-linked-mana-of-one-color"],
           "evidenceNote": "{T}: three mana of any one color, linked. Engine tests only."
         },
         {
@@ -4819,10 +4780,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "scythe-etb-makes-a-necron-warrior",
-            "scythe-has-crew-2"
-          ],
+          "engineTestIds": ["scythe-etb-makes-a-necron-warrior", "scythe-has-crew-2"],
           "evidenceNote": "ETB Necron Warrior; Crew 2 parses. Card Test Lab plus unmocked Playwright."
         }
       ]
@@ -4841,9 +4799,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "chrono-flies-and-sacs-another-artifact-to-draw-not-itself"
-          ],
+          "engineTestIds": ["chrono-flies-and-sacs-another-artifact-to-draw-not-itself"],
           "evidenceNote": "Sac another artifact to draw in Card Test Lab plus unmocked Playwright. Cannot activate with only itself; Unearth stays engine-only."
         },
         {
@@ -4854,9 +4810,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "tower-removes-your-hand-size-not-theirs-and-taps-for-colorless"
-          ],
+          "engineTestIds": ["tower-removes-your-hand-size-not-theirs-and-taps-for-colorless"],
           "evidenceNote": "You have no maximum hand size; opponents do not. {T} for C. Engine tests only."
         },
         {
@@ -4867,9 +4821,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "playwright",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "warden-etb-makes-two-tapped-warriors-and-unearths-from-the-graveyard"
-          ],
+          "engineTestIds": ["warden-etb-makes-two-tapped-warriors-and-unearths-from-the-graveyard"],
           "evidenceNote": "ETB two tapped Necron Warriors in Card Test Lab plus unmocked Playwright. Unearth stays engine-only."
         },
         {
@@ -4880,9 +4832,7 @@
           "engineEvidence": "engine-tests",
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
-          "engineTestIds": [
-            "vessel-removes-your-hand-size-not-theirs-and-taps-for-colorless"
-          ],
+          "engineTestIds": ["vessel-removes-your-hand-size-not-theirs-and-taps-for-colorless"],
           "evidenceNote": "You have no maximum hand size; opponents and an empty board do not. {T} for C. Engine tests only."
         }
       ]

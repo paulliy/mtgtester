@@ -1,0 +1,328 @@
+[
+  {
+    "batch_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175",
+    "scenario_id": "scenario-1",
+    "game_index": 0,
+    "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+    "seed": "browser-trial-batch-2026-09-05:s1:g1",
+    "status": "halted",
+    "failure_reason": "engine bug: cost for P1 became unpayable at application time",
+    "started_at": "2026-09-05T16:43:22.912Z",
+    "ended_at": "2026-09-05T16:43:23.544Z",
+    "events": [
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 928,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "decision",
+        "payload_json": "{\"requestId\":\"b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1-t28-d64\",\"decisionType\":\"priority\",\"actionId\":2,\"description\":\"Revelsong Horn: {1}, {T}, Tap an untapped creature you control: Target creature gets +1/+1 until end of turn.\",\"targets\":[{\"slot\":0,\"choice\":\"o-501\"}]}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 927,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "resolved",
+        "payload_json": "{\"description\":\"Revelsong Horn\"}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 926,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": null,
+        "event_type": "zoneChange",
+        "payload_json": "{\"cardId\":\"c-98\",\"name\":\"Revelsong Horn\",\"from\":\"stack\",\"to\":\"battlefield\",\"owner\":\"P1\",\"newObjectId\":\"o-580\"}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 925,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "castSpell",
+        "payload_json": "{\"player\":\"P1\",\"name\":\"Revelsong Horn\",\"cardId\":\"c-98\",\"targets\":[],\"fromCommand\":false,\"commanderTax\":0}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 924,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "tapForMana",
+        "payload_json": "{\"name\":\"Forest\",\"cardId\":\"c-6\"}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 923,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "tapForMana",
+        "payload_json": "{\"name\":\"Forest\",\"cardId\":\"c-10\"}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 922,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "decision",
+        "payload_json": "{\"requestId\":\"b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1-t28-d63\",\"decisionType\":\"priority\",\"actionId\":4,\"description\":\"Cast Revelsong Horn ({2})\",\"targets\":[]}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 921,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": null,
+        "event_type": "zoneChange",
+        "payload_json": "{\"cardId\":\"c-6\",\"name\":\"Forest\",\"from\":\"hand\",\"to\":\"battlefield\",\"owner\":\"P1\",\"newObjectId\":\"o-578\"}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 920,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "playLand",
+        "payload_json": "{\"player\":\"P1\",\"name\":\"Forest\",\"cardId\":\"c-6\"}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 919,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "decision",
+        "payload_json": "{\"requestId\":\"b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1-t28-d62\",\"decisionType\":\"priority\",\"actionId\":4,\"description\":\"Play Forest\",\"targets\":[]}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 918,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": null,
+        "event_type": "phaseBegin",
+        "payload_json": "{\"phase\":\"precombatMain\"}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 917,
+        "turn": 28,
+        "phase": "beginning",
+        "step": "draw",
+        "actor_seat": 1,
+        "event_type": "draw",
+        "payload_json": "{\"player\":\"P1\",\"cardId\":\"c-6\",\"name\":\"Forest\",\"isLand\":true}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 916,
+        "turn": 28,
+        "phase": "beginning",
+        "step": "draw",
+        "actor_seat": null,
+        "event_type": "zoneChange",
+        "payload_json": "{\"cardId\":\"c-6\",\"name\":\"Forest\",\"from\":\"library\",\"to\":\"hand\",\"owner\":\"P1\",\"newObjectId\":\"o-577\"}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 915,
+        "turn": 28,
+        "phase": "beginning",
+        "step": "draw",
+        "actor_seat": null,
+        "event_type": "stepBegin",
+        "payload_json": "{\"step\":\"draw\"}"
+      },
+      {
+        "game_id": "b-a2ea7b73-cd71-4b47-9148-2318c494a175-scenario-1-1",
+        "sequence": 914,
+        "turn": 28,
+        "phase": "beginning",
+        "step": "upkeep",
+        "actor_seat": 1,
+        "event_type": "resolved",
+        "payload_json": "{\"description\":\"Crashing Drawbridge \u2014 {T}: Creatures you control gain haste until end of turn.\"}"
+      }
+    ]
+  },
+  {
+    "batch_id": "b-7681bdec-9760-4416-bcac-9b757308eed9",
+    "scenario_id": "scenario-1",
+    "game_index": 0,
+    "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+    "seed": "browser-trial-batch-2026-09-05:s1:g1",
+    "status": "halted",
+    "failure_reason": "engine bug: cost for P1 became unpayable at application time",
+    "started_at": "2026-09-05T16:44:26.384Z",
+    "ended_at": "2026-09-05T16:44:26.999Z",
+    "events": [
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 928,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "decision",
+        "payload_json": "{\"requestId\":\"b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1-t28-d64\",\"decisionType\":\"priority\",\"actionId\":2,\"description\":\"Revelsong Horn: {1}, {T}, Tap an untapped creature you control: Target creature gets +1/+1 until end of turn.\",\"targets\":[{\"slot\":0,\"choice\":\"o-501\"}]}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 927,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "resolved",
+        "payload_json": "{\"description\":\"Revelsong Horn\"}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 926,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": null,
+        "event_type": "zoneChange",
+        "payload_json": "{\"cardId\":\"c-98\",\"name\":\"Revelsong Horn\",\"from\":\"stack\",\"to\":\"battlefield\",\"owner\":\"P1\",\"newObjectId\":\"o-580\"}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 925,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "castSpell",
+        "payload_json": "{\"player\":\"P1\",\"name\":\"Revelsong Horn\",\"cardId\":\"c-98\",\"targets\":[],\"fromCommand\":false,\"commanderTax\":0}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 924,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "tapForMana",
+        "payload_json": "{\"name\":\"Forest\",\"cardId\":\"c-6\"}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 923,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "tapForMana",
+        "payload_json": "{\"name\":\"Forest\",\"cardId\":\"c-10\"}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 922,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "decision",
+        "payload_json": "{\"requestId\":\"b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1-t28-d63\",\"decisionType\":\"priority\",\"actionId\":4,\"description\":\"Cast Revelsong Horn ({2})\",\"targets\":[]}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 921,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": null,
+        "event_type": "zoneChange",
+        "payload_json": "{\"cardId\":\"c-6\",\"name\":\"Forest\",\"from\":\"hand\",\"to\":\"battlefield\",\"owner\":\"P1\",\"newObjectId\":\"o-578\"}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 920,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "playLand",
+        "payload_json": "{\"player\":\"P1\",\"name\":\"Forest\",\"cardId\":\"c-6\"}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 919,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": 1,
+        "event_type": "decision",
+        "payload_json": "{\"requestId\":\"b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1-t28-d62\",\"decisionType\":\"priority\",\"actionId\":4,\"description\":\"Play Forest\",\"targets\":[]}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 918,
+        "turn": 28,
+        "phase": "precombatMain",
+        "step": null,
+        "actor_seat": null,
+        "event_type": "phaseBegin",
+        "payload_json": "{\"phase\":\"precombatMain\"}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 917,
+        "turn": 28,
+        "phase": "beginning",
+        "step": "draw",
+        "actor_seat": 1,
+        "event_type": "draw",
+        "payload_json": "{\"player\":\"P1\",\"cardId\":\"c-6\",\"name\":\"Forest\",\"isLand\":true}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 916,
+        "turn": 28,
+        "phase": "beginning",
+        "step": "draw",
+        "actor_seat": null,
+        "event_type": "zoneChange",
+        "payload_json": "{\"cardId\":\"c-6\",\"name\":\"Forest\",\"from\":\"library\",\"to\":\"hand\",\"owner\":\"P1\",\"newObjectId\":\"o-577\"}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 915,
+        "turn": 28,
+        "phase": "beginning",
+        "step": "draw",
+        "actor_seat": null,
+        "event_type": "stepBegin",
+        "payload_json": "{\"step\":\"draw\"}"
+      },
+      {
+        "game_id": "b-7681bdec-9760-4416-bcac-9b757308eed9-scenario-1-1",
+        "sequence": 914,
+        "turn": 28,
+        "phase": "beginning",
+        "step": "upkeep",
+        "actor_seat": 1,
+        "event_type": "resolved",
+        "payload_json": "{\"description\":\"Crashing Drawbridge \u2014 {T}: Creatures you control gain haste until end of turn.\"}"
+      }
+    ]
+  }
+]

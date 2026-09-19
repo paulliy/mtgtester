@@ -40,7 +40,7 @@ model on:
 - RPM ceiling for that model.
 
 When every model in the chain is RPM-blocked it waits for the bucket to refill rather than
-failing the game. When every model is out of *daily* quota it throws
+failing the game. When every model is out of _daily_ quota it throws
 `DailyQuotaExhaustedError`, which is the §7.5 requirement to distinguish
 recoverable-in-seconds from not-recoverable-today and say so plainly.
 
@@ -65,7 +65,7 @@ first, then Flash, and never Pro.
   single fact. This is a genuine cost of the divergence.
 - **`GET /models` is not an availability check.** It lists `gemini-2.5-flash-lite`, but a
   chat completion against that model returns `404 NOT_FOUND: "no longer available to new
-  users."` The listing reflects the model catalogue, not what this key may call. Only an
+users."` The listing reflects the model catalogue, not what this key may call. Only an
   actual completion answers the question — which is exactly what the cascade does, at a cost
   of one wasted call per dead entry. The chain is effectively two models, not three, and
   should be pruned.

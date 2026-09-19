@@ -9,26 +9,32 @@ describe('Batch 1 card overrides', () => {
       name: 'Emmara, Soul of the Accord',
       typeLine: 'Legendary Creature — Elf Cleric',
       manaCost: '{G}{W}',
-      oracleText: 'Whenever Emmara, Soul of the Accord becomes tapped, create a 1/1 white Soldier creature token with lifelink.',
+      oracleText:
+        'Whenever Emmara, Soul of the Accord becomes tapped, create a 1/1 white Soldier creature token with lifelink.',
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);
     expect(def.triggers).toHaveLength(1);
-    expect(def.triggers?.[0]?.trigger).toEqual({ when: 'becomesTapped', subject: { kind: 'self' } });
+    expect(def.triggers?.[0]?.trigger).toEqual({
+      when: 'becomesTapped',
+      subject: { kind: 'self' },
+    });
   });
 
-  it("models Karametra's Favor with ETB draw and granted mana ability", () => {
+  it('is catalog-contained because +1/+1 is dropped when staticEffects are replaced', () => {
     const card = oracle({
       oracleId: 'fc3e48c9-e303-435c-bdb1-7dc7881a9858',
       name: "Karametra's Favor",
       typeLine: 'Enchantment — Aura',
       manaCost: '{1}{G}',
-      oracleText: 'Enchant creature\nWhen Karametra\'s Favor enters, draw a card.\nEnchanted creature has "{T}: Add one mana of any color."',
+      oracleText:
+        'Enchant creature\nWhen Karametra\'s Favor enters, draw a card.\nEnchanted creature gets +1/+1 and has "{T}: Add one mana of any color."',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(true);
-    expect(def.triggers).toHaveLength(1);
-    expect(def.staticEffects).toHaveLength(1);
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('\n')).toContain(
+      'The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects.',
+    );
   });
 
   it('models Leafkin Druid with conditional mana ability', () => {
@@ -45,38 +51,36 @@ describe('Batch 1 card overrides', () => {
     expect(def.manaAbilities?.[0]?.conditionalUnits).toBeDefined();
   });
 
-  it('models Nullmage Shepherd with tapOthers cost and targeted destruction', () => {
+  it('is catalog-contained because the four creatures cannot include this creature', () => {
     const card = oracle({
       oracleId: '4dcfd397-9d29-420c-8fd8-c7c2a99de122',
       name: 'Nullmage Shepherd',
       typeLine: 'Creature — Elf Shaman',
       manaCost: '{3}{G}',
-      oracleText: 'Tap four untapped creatures you control: Destroy target artifact or enchantment.',
+      oracleText:
+        'Tap four untapped creatures you control: Destroy target artifact or enchantment.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(true);
-    expect(def.activatedAbilities).toHaveLength(1);
-    expect(def.activatedAbilities?.[0]?.costs).toContainEqual({
-      kind: 'tapOthers',
-      selector: { kind: 'allOf', of: [{ kind: 'type', value: 'Creature' }, { kind: 'controller', who: 'you' }] },
-      count: 4,
-    });
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('\n')).toContain(
+      'The four creatures cannot include this creature.',
+    );
   });
 
-  it('models Thunderfoot Baloth with commander lieutenancy statics', () => {
+  it('is catalog-contained because lieutenant buffs all permanents you control', () => {
     const card = oracle({
       oracleId: 'f55334d9-1ec2-4667-bf28-5a0384d6f053',
       name: 'Thunderfoot Baloth',
       typeLine: 'Creature — Beast',
       manaCost: '{4}{G}{G}',
-      oracleText: 'As long as you control your commander, Thunderfoot Baloth gets +2/+2 and other creatures you control get +2/+2 and have trample.',
+      oracleText:
+        'Trample\nLieutenant — As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(true);
-    // One effect buffs every creature you control (self included), the other grants trample
-    // to just the others — the printed text's three clauses collapse to two engine effects
-    // since "this creature gets +2/+2" and "other creatures ... get +2/+2" are the same buff.
-    expect(def.staticEffects).toHaveLength(2);
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('\n')).toContain(
+      'Lieutenant +2/+2 and trample apply to all permanents you control, not just creatures.',
+    );
   });
 
   it('models Fortified Village with reveal condition', () => {
@@ -85,11 +89,15 @@ describe('Batch 1 card overrides', () => {
       name: 'Fortified Village',
       typeLine: 'Land',
       manaCost: '',
-      oracleText: 'As Fortified Village enters, you may reveal a Forest or Plains card from your hand. If you don\'t, Fortified Village enters tapped.',
+      oracleText:
+        "As Fortified Village enters, you may reveal a Forest or Plains card from your hand. If you don't, Fortified Village enters tapped.",
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);
-    expect(def.entersTappedUnless).toEqual({ kind: 'mayRevealCardFromHand', subtypes: ['Forest', 'Plains'] });
+    expect(def.entersTappedUnless).toEqual({
+      kind: 'mayRevealCardFromHand',
+      subtypes: ['Forest', 'Plains'],
+    });
   });
 
   it('models Overwhelming Instinct with attack trigger condition', () => {

@@ -10,20 +10,20 @@ tail, applied to what is left after it.
 
 Executed via the staged plan (Phase A correctness, then Phase B coverage, primitive-first).
 
-| Phase | Item | State |
-| --- | --- | --- |
-| A | A1 kicker → fail closed | done |
-| A | A2+A3 hand-activated abilities | done |
-| A | A4 mana cost in a mana ability → fail closed | done |
-| A | A5 `activationCostReductionFor` chosenOption | done |
-| A | A6 `onActivate` narrowed to the chosen ability | done |
-| A | A7 guard tests (`rule-static-coverage`, `ability-cost-coverage`) | done |
-| B | B1 wording fixes (R.5 counters, R.4 land types) | done |
-| B | B2 R.3 mana riders (Ancient Tomb, City of Brass) | done |
-| B | B3 R.2 counted and conditional mana | done |
-| B | B4 R.6 modal bullets | done |
-| B | B5 R.1 chosen creature type | done |
-| B | B6 R.7 residue | partial — see below |
+| Phase | Item                                                             | State               |
+| ----- | ---------------------------------------------------------------- | ------------------- |
+| A     | A1 kicker → fail closed                                          | done                |
+| A     | A2+A3 hand-activated abilities                                   | done                |
+| A     | A4 mana cost in a mana ability → fail closed                     | done                |
+| A     | A5 `activationCostReductionFor` chosenOption                     | done                |
+| A     | A6 `onActivate` narrowed to the chosen ability                   | done                |
+| A     | A7 guard tests (`rule-static-coverage`, `ability-cost-coverage`) | done                |
+| B     | B1 wording fixes (R.5 counters, R.4 land types)                  | done                |
+| B     | B2 R.3 mana riders (Ancient Tomb, City of Brass)                 | done                |
+| B     | B3 R.2 counted and conditional mana                              | done                |
+| B     | B4 R.6 modal bullets                                             | done                |
+| B     | B5 R.1 chosen creature type                                      | done                |
+| B     | B6 R.7 residue                                                   | partial — see below |
 
 ```
 bun run staples     185/200 modeled (92.5%)   (was 166/200)
@@ -44,7 +44,7 @@ claiming the card is modeled:
   permanently false.
 
 Two cards moved the other way inside A4 without appearing in any metric: Desolate Mire and
-Shadowblood Ridge were *modeled and wrong*, and are now modeled and right — the interpreter's
+Shadowblood Ridge were _modeled and wrong_, and are now modeled and right — the interpreter's
 generic reading of `{1}, {T}: Add {W}{B}` charges the `{1}` correctly, and the override was
 overriding it with a broken one.
 
@@ -90,16 +90,16 @@ correct only in the Ur-Dragon fixture deck it was written for — and now reads 
 Fifteen staples remain. They are not a backlog of near-misses; each needs machinery that does not
 exist:
 
-| Card | Missing |
-| --- | --- |
-| Cabal Coffers, Nykthos, Three Tree City | mana abilities that cost mana (the A4 item, still unscoped) |
-| Boseiju, Who Endures | an opponent's optional library search, plus "nonbasic land" in compound target nouns |
-| Urza's Saga | the saga layout |
-| Teferi's Protection, The One Ring | protection from everything, and phasing |
-| Chrome Mox, Gemstone Caverns | exile-imprint mana; opening-hand starts |
-| Mana Vault, Mystic Remora | "doesn't untap"; cumulative upkeep |
-| Esper Sentinel | "unless that player pays {X}, where X is this creature's power" |
-| Mystic Sanctuary, Victimize, Roaming Throne | conditional enters-tapped; two-target graveyard reanimation; trigger doubling |
+| Card                                        | Missing                                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Cabal Coffers, Nykthos, Three Tree City     | mana abilities that cost mana (the A4 item, still unscoped)                          |
+| Boseiju, Who Endures                        | an opponent's optional library search, plus "nonbasic land" in compound target nouns |
+| Urza's Saga                                 | the saga layout                                                                      |
+| Teferi's Protection, The One Ring           | protection from everything, and phasing                                              |
+| Chrome Mox, Gemstone Caverns                | exile-imprint mana; opening-hand starts                                              |
+| Mana Vault, Mystic Remora                   | "doesn't untap"; cumulative upkeep                                                   |
+| Esper Sentinel                              | "unless that player pays {X}, where X is this creature's power"                      |
+| Mystic Sanctuary, Victimize, Roaming Throne | conditional enters-tapped; two-target graveyard reanimation; trigger doubling        |
 
 **Otawara, Soaring City** did land, and it is the one that proves A2+A3 paid off: hand-zone
 activation, a `discardSelf` cost, targets from hand, and a self-only activation discount that
@@ -128,20 +128,20 @@ The fixture split that [CLAUDE.md](../../CLAUDE.md) calls out still holds and is
 story: the precons the engine was built against sit at 97.8–100%, the four community decks at
 57.5–68.9%.
 
-| Deck                            | Modeled |
-| ------------------------------- | ------- |
-| draconic-destruction            | 100.0%  |
-| living-energy                   | 100.0%  |
-| marchesa-the-black-rose         | 100.0%  |
-| necron-dynasties                | 100.0%  |
-| silverquill-influence           | 100.0%  |
-| token-triumph                   | 100.0%  |
-| urdragon                        | 100.0%  |
-| queen-marchesa-queens-gambit    | 97.8%   |
-| ruby-the-most-daring-of-trackers| 68.9%   |
-| pramikon-sky-rampart            | 58.1%   |
-| brigid-clachans-heart           | 57.9%   |
-| the-fantastic-four              | 57.5%   |
+| Deck                             | Modeled |
+| -------------------------------- | ------- |
+| draconic-destruction             | 100.0%  |
+| living-energy                    | 100.0%  |
+| marchesa-the-black-rose          | 100.0%  |
+| necron-dynasties                 | 100.0%  |
+| silverquill-influence            | 100.0%  |
+| token-triumph                    | 100.0%  |
+| urdragon                         | 100.0%  |
+| queen-marchesa-queens-gambit     | 97.8%   |
+| ruby-the-most-daring-of-trackers | 68.9%   |
+| pramikon-sky-rampart             | 58.1%   |
+| brigid-clachans-heart            | 57.9%   |
+| the-fantastic-four               | 57.5%   |
 
 ## The shape of what is left
 
@@ -157,13 +157,13 @@ The single most useful fact for planning, and the one that separates this plan f
 | 4                  | 3     |
 | 5                  | 1     |
 
-Tier 3's tail was *cards with several missing primitives each*, which is why it grouped by engine
+Tier 3's tail was _cards with several missing primitives each_, which is why it grouped by engine
 surface and why any one change rarely flipped a card. The residue is not that. Most of it is one
 clause away, so here a clause fixed is a card modeled — and the planning unit should be the clause,
 not the subsystem.
 
 The counterweight, and the reason this plan does not simply promise 72 cards: those 72 blockers do
-not cluster. Sorted by shape they are 33 static/spell lines, 29 trigger *bodies*, 6 phase-step
+not cluster. Sorted by shape they are 33 static/spell lines, 29 trigger _bodies_, 6 phase-step
 triggers, 2 activated abilities, 1 back face and 1 mana ability — and the trigger heads are all
 already recognized, so there is no dominant event to widen. The staple list is where the clustering
 still lives, and that is what the sub-plans below are built from.
@@ -196,7 +196,7 @@ creature type") and the three readers below.
    **Patchwork Banner** (`Creatures you control of the chosen type get +1/+1`) and
    **Herald's Horn**'s cost reduction.
 3. `DynamicManaKind: 'chosenTypeRestricted'` — Cavern of Souls' `Add one mana of any color. Spend
-   this mana only to cast a creature spell of the chosen type, and that spell can't be countered.`
+this mana only to cast a creature spell of the chosen type, and that spell can't be countered.`
    Both halves already exist separately: `ManaRestriction` for the spend clause and Delighted
    Halfling's per-spell uncounterable flag for the rider. This is composition, not new machinery.
 
@@ -212,10 +212,10 @@ Mox Amber; Itlimoc (Growing Rites' back face).
 **The gap.** `ManaAbilitySpec.units` is a fixed list of symbol choices. Three shapes it cannot say:
 
 1. **A counted amount** — `Add {B} for each Swamp you control` (Cabal Coffers), `{T}: Add {G} for
-   each creature you control` (Itlimoc). Needs `units` to carry a `Value` multiplier. This is the
+each creature you control` (Itlimoc). Needs `units` to carry a `Value` multiplier. This is the
    single highest-yield item in R.2 and should land first.
 2. **Choose a colour, then count** — `Choose a color. Add an amount of mana of that color equal to
-   your devotion to that color` (Nykthos) and the same shape counting creatures of the chosen type
+your devotion to that color` (Nykthos) and the same shape counting creatures of the chosen type
    (Three Tree City). `devotionTo` already exists as a `Value` **and now parses** from text; the
    missing halves are the amount-carrying `units` from item 1 plus an at-activation colour choice
    (distinct from `chosenColor`, which is an as-enters choice).
@@ -273,12 +273,12 @@ already paid for.
 
 **Cards.** Akroma's Will, Jeska's Will.
 
-**The gap.** The *header* already works — Tier 2.6 built `maxChoicesIf` with a
+**The gap.** The _header_ already works — Tier 2.6 built `maxChoicesIf` with a
 `controlsYourCommander` condition for exactly `Choose one. If you control a commander as you cast
 this spell, you may choose both instead.` Both cards fail on their **bullets**:
 
 - Akroma's Will: `Creatures you control gain flying, vigilance, and double strike until end of
-  turn.` — a mass multi-keyword grant. The single-keyword mass grant already parses.
+turn.` — a mass multi-keyword grant. The single-keyword mass grant already parses.
 - Jeska's Will: `Add {R} for each card in target opponent's hand.` (R.2 item 1 with a targeted
   count) and `Exile the top three cards of your library. You may play them this turn.` (impulse
   draw, which recurs across the fixture decks).
@@ -307,11 +307,11 @@ so this is close to parser-only and buys two staples).
 Three Tier 3 items were built but are not reachable from real card text, and they stay Tier 3's to
 finish rather than moving here:
 
-| Item                    | State                                                                                                                                                             |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3.G transform           | `transformSelf`, `transformPermanent`, `BackFace` and front-face reset all exist and are tested. No printed transform card is modeled: `Whenever this creature transforms into ~` has no parser, and every real card wraps `transform ~` in an intervening-if or a compound body. |
-| 3.B `Return target spell` | Hullbreaker Horror's blocker is not its modal header (fixed this session) but its bullet — targeting a spell on the stack is still a missing `TargetKind`.        |
-| 3.A draw-step counter   | `eventPlayerDrawCount` reads `cardsDrawnThisTurn`, a per-**turn** counter. The printed clause is "except the first one they draw in each of their **draw steps**". Latent — no card reaches it today — but wrong when one does, and a passing test encodes the wrong semantics. |
+| Item                      | State                                                                                                                                                                                                                                                                             |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3.G transform             | `transformSelf`, `transformPermanent`, `BackFace` and front-face reset all exist and are tested. No printed transform card is modeled: `Whenever this creature transforms into ~` has no parser, and every real card wraps `transform ~` in an intervening-if or a compound body. |
+| 3.B `Return target spell` | Hullbreaker Horror's blocker is not its modal header (fixed this session) but its bullet — targeting a spell on the stack is still a missing `TargetKind`.                                                                                                                        |
+| 3.A draw-step counter     | `eventPlayerDrawCount` reads `cardsDrawnThisTurn`, a per-**turn** counter. The printed clause is "except the first one they draw in each of their **draw steps**". Latent — no card reaches it today — but wrong when one does, and a passing test encodes the wrong semantics.   |
 
 ## Verification (every sub-plan, non-negotiable)
 

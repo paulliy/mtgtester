@@ -16,7 +16,12 @@ import type { GameContext } from '../src/state/types';
 import { copies, forest, gameConfig, oracle, pump, registerDef, spawn } from './fixtures';
 
 function pod(seed: string): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;
@@ -62,7 +67,8 @@ describe('Sarkhan, Soul Aflame', () => {
     registerDef(ctx, sarkhanOracle());
     const def = getDefByOracleId(ctx, sarkhan.oracleId, sarkhan.name);
     const trigger = def.triggers.find((t) => t.description === 'Dragon ETB copy');
-    if (trigger === undefined) throw new Error('Sarkhan, Soul Aflame is missing its Dragon ETB copy trigger');
+    if (trigger === undefined)
+      throw new Error('Sarkhan, Soul Aflame is missing its Dragon ETB copy trigger');
 
     const source: EffectSource = {
       cardId: sarkhan.cardId,
