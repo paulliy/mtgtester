@@ -35,7 +35,8 @@ import {
 } from '../effects/resolve';
 import { computeCharacteristics } from '../effects/continuous';
 import { payManaCost } from '../effects/resolve';
-import { canPay, emptyCost } from '../mana/cost';
+import { canPay, emptyCost, totalPips } from '../mana/cost';
+import type { ParsedManaCost } from '../mana/cost';
 import { emit, debug } from '../log/log';
 import { playerById, queueTriggersForEvent, queueTriggersForObject } from '../state/objects';
 import {
@@ -75,10 +76,12 @@ function goaderIdsFor(ctx: GameContext, creature: EnginePermanent): Set<PlayerId
 
 function hasAttackRequirement(ctx: GameContext, creature: EnginePermanent): boolean {
   const chars = computeCharacteristics(ctx, creature);
-  return (creature.goadedBy?.length ?? 0) > 0 ||
+  return (
+    (creature.goadedBy?.length ?? 0) > 0 ||
     (chars.staticGoadedBy?.length ?? 0) > 0 ||
     creature.mustAttackThisTurn === true ||
-    chars.mustAttackEachCombat === true;
+    chars.mustAttackEachCombat === true
+  );
 }
 
 function canAttack(ctx: GameContext, perm: EnginePermanent): boolean {
@@ -95,6 +98,22 @@ function attackTax(ctx: GameContext, defendingPlayerId: PlayerId): number {
   }, 0);
 }
 
+function attackCost(ctx: GameContext, defendingPlayerId: PlayerId, count = 1): ParsedManaCost {
+  const cost = { ...emptyCost(), generic: attackTax(ctx, defendingPlayerId) * count };
+  const phyrexian = gatherRuleStatics(ctx).flatMap((entry) => {
+    if (
+      entry.controllerId !== defendingPlayerId ||
+      entry.static.kind !== 'attackTax' ||
+      entry.static.phyrexianColor === undefined
+    ) {
+      return [];
+    }
+    const color = entry.static.phyrexianColor;
+    return Array.from({ length: count }, () => color);
+  });
+  return phyrexian.length > 0 ? { ...cost, phyrexian } : cost;
+}
+
 /**
  * Can this ONE creature alone afford to attack this defender? Per-creature restriction/cost
  * legality (item 15) — never the whole proposed set's joint cost, which several creatures
@@ -106,14 +125,15 @@ function canPayAttackTax(
   attackingPlayerId: PlayerId,
   defendingPlayerId: PlayerId,
 ): boolean {
-  const amount = attackTax(ctx, defendingPlayerId);
-  if (amount === 0) return true;
+  const cost = attackCost(ctx, defendingPlayerId);
+  if (totalPips(cost) === 0) return true;
   const player = playerById(ctx, attackingPlayerId);
   return canPay(
-    { ...emptyCost(), generic: amount },
+    cost,
     player.manaEntries,
     manaSourcesFor(ctx, attackingPlayerId),
     allowanceFor(ctx, attackingPlayerId, { kind: 'other' }),
+    player.life,
   );
 }
 
@@ -144,7 +164,7 @@ function freeAttackTargetsFor(
   creature: EnginePermanent,
   opponents: readonly EnginePlayerState[],
 ): EnginePlayerState[] {
-  const free = opponents.filter((opp) => attackTax(ctx, opp.id) === 0);
+  const free = opponents.filter((opp) => totalPips(attackCost(ctx, opp.id)) === 0);
   const goaderIds = goaderIdsFor(ctx, creature);
   const preferred = free.filter((opp) => !goaderIds.has(opp.id));
   return preferred.length > 0 ? preferred : free;
@@ -156,14 +176,9 @@ function* payAttackTax(
   defendingPlayerId: PlayerId,
   count: number,
 ): GameGen<void> {
-  const amount = attackTax(ctx, defendingPlayerId) * count;
-  if (amount === 0) return;
-  yield* payManaCost(
-    ctx,
-    playerById(ctx, attackingPlayerId),
-    { ...emptyCost(), generic: amount },
-    { kind: 'other' },
-  );
+  const cost = attackCost(ctx, defendingPlayerId, count);
+  if (totalPips(cost) === 0) return;
+  yield* payManaCost(ctx, playerById(ctx, attackingPlayerId), cost, { kind: 'other' });
 }
 
 /** Evasion check: may `blocker` block `attacker`? (flying/reach, protection — CR 509.1b.) */
@@ -341,22 +356,25 @@ function validateAttackDeclaration(
   assignment: ReadonlyMap<ObjectId, PlayerId | null>,
 ): CombatViolation[] {
   const byDefender = groupByDefender(eligible, assignment);
-  let totalTax = 0;
+  const totalCost = emptyCost();
   for (const [defenderId, creatures] of byDefender) {
-    totalTax += attackTax(ctx, defenderId) * creatures.length;
+    const cost = attackCost(ctx, defenderId, creatures.length);
+    totalCost.generic += cost.generic;
+    totalCost.phyrexian = [...(totalCost.phyrexian ?? []), ...(cost.phyrexian ?? [])];
   }
-  if (totalTax === 0) return [];
+  if (totalPips(totalCost) === 0) return [];
   const player = playerById(ctx, attackingPlayerId);
   const payable = canPay(
-    { ...emptyCost(), generic: totalTax },
+    totalCost,
     player.manaEntries,
     manaSourcesFor(ctx, attackingPlayerId),
     allowanceFor(ctx, attackingPlayerId, { kind: 'other' }),
+    player.life,
   );
   if (payable) return [];
   const violations: CombatViolation[] = [];
   for (const [defenderId, creatures] of byDefender) {
-    if (attackTax(ctx, defenderId) <= 0) continue;
+    if (totalPips(attackCost(ctx, defenderId)) === 0) continue;
     for (const creature of creatures) {
       violations.push({
         subjectId: creature.id,
@@ -514,9 +532,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   const defendingPlayers = [...new Set(declared.map((a) => a.attacking as PlayerId))];
   for (const defId of defendingPlayers) {
     playerById(ctx, defId).yieldUntilEndOfTurn = false;
-    const auras = ctx.state.battlefield.filter(
-      (p) => p.attachedTo === defId,
-    );
+    const auras = ctx.state.battlefield.filter((p) => p.attachedTo === defId);
     for (const aura of auras) {
       queueTriggersForEvent(ctx, 'enchantedPlayerAttacked', [{ permanent: aura, playerId: ap.id }]);
     }
@@ -686,6 +702,9 @@ function applyBlockDeclaration(
       debug(ctx, 'combat', `${blocker.name} blocks ${attacker.name}`);
       queueTriggersForObject(ctx, 'blocks', blocker);
     }
+    // Bushido and similar abilities trigger once when an attacker becomes blocked, regardless
+    // of how many creatures block it (CR 509.1h).
+    queueTriggersForObject(ctx, 'becomesBlocked', attacker);
   }
 }
 

@@ -95,6 +95,8 @@ export interface MatchSessionOptions {
    * Omit to fall back to `AI_REFLECTION_ENABLED`, which is off.
    */
   reflectionEnabled?: boolean;
+  /** Pre-arranged deterministic lab engine; omitted for every ordinary match. */
+  engine?: Engine;
   send(message: ServerToClientMessage): void;
 }
 
@@ -158,12 +160,14 @@ export class MatchSession {
     }
     this.playbackMode = opts.playbackMode ?? 'live';
     this.livePaceMs = opts.livePaceMs ?? LIVE_PACE_MS;
-    this.engine = new Engine({
-      gameId: opts.gameId,
-      seed: opts.seed,
-      players: opts.seats.map((s) => s.config),
-      ...(opts.turnCap !== undefined && { turnCap: opts.turnCap }),
-    });
+    this.engine =
+      opts.engine ??
+      new Engine({
+        gameId: opts.gameId,
+        seed: opts.seed,
+        players: opts.seats.map((s) => s.config),
+        ...(opts.turnCap !== undefined && { turnCap: opts.turnCap }),
+      });
     this.recorder = opts.store?.recorderFor(opts.gameId) ?? null;
     this.logger =
       opts.providerKind === 'ai' ? new AiCallLogger(opts.store?.raw ?? null, opts.gameId) : null;

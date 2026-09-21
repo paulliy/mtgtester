@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "5050186a223ea27e950d03f36cf6a010bd3c7ced7188a7183a5d69dcf16b9502",
+      "card": {
+        "oracleId": "f08f7814-4585-41dd-b82e-ed2ef5e24242",
+        "scryfallId": "363a88de-c9ae-41b8-a8d8-321a1b95a427",
+        "name": "Transcendent Envoy",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment Creature — Griffin",
+        "supertypes": [],
+        "types": [
+          "Enchantment",
+          "Creature"
+        ],
+        "subtypes": [
+          "Griffin"
+        ],
+        "oracleText": "Flying\nAura spells you cast cost {1} less to cast.",
+        "power": "1",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "305fc57d51abc2555fb9428779f299816421c4eda4a7081fa87b823fc5e517f8",
+      "card": {
+        "oracleId": "3e2ae59a-40a1-46ca-8f24-3231ebd4e4eb",
+        "scryfallId": "23fcd6a8-be83-4304-ae32-d3dfc855f596",
+        "name": "Flickering Ward",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nAs this Aura enters, choose a color.\nEnchanted creature has protection from the chosen color. This effect doesn't remove this Aura.\n{W}: Return this Aura to its owner's hand.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c48014acc0c91b0453c44d40a9ce2fd21b05482a96b29b8f100b71bd99433771",
+      "card": {
+        "oracleId": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
+        "scryfallId": "55b5b094-9d2d-4d96-b90c-78fecdae725a",
+        "name": "Bojuka Bog",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "This land enters tapped.\nWhen this land enters, exile target player's graveyard.\n{T}: Add {B}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,276 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "e45a57ca0d1380258b5f706a533a69314a9ccff5900f33c7fd7da65887a8b722",
+      "card": {
+        "oracleId": "5b7f6cc3-8d4e-42e5-a908-7ebe3bccaf1e",
+        "scryfallId": "3ce2021c-1422-4901-a554-2d4fab72c8e4",
+        "name": "Canoptek Scarab Swarm",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Insect",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Insect"
+        ],
+        "oracleText": "Flying\nFeeder Mandibles — When this creature enters, exile target player's graveyard. For each artifact or land card exiled this way, create a 1/1 colorless Insect artifact creature token with flying.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Feeder Mandibles"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "140faac3b5caeb759443296bd830480ac6c7425c50bbe53c6d06f73fc08bac63",
+      "card": {
+        "oracleId": "932708ae-9d5c-4561-aa8b-0d2222d37fdc",
+        "scryfallId": "584834fb-b7b6-40eb-9fec-8df17172ce5f",
+        "name": "Darkness",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Prevent all combat damage that would be dealt this turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "97d01ab42f5bde621bba4599db6458cd3bc162d21091f427ead4a4a550deb12a",
+      "card": {
+        "oracleId": "fd03f20a-d365-48fb-8b2a-ad4b502a0045",
+        "scryfallId": "4665fa5d-37ea-4898-a4a4-7bc5311075de",
+        "name": "Lokhust Heavy Destroyer",
+        "manaCost": "{1}{B}{B}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact Creature — Necron",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron"
+        ],
+        "oracleText": "Flying\nEnmitic Exterminator — When this creature enters, each player sacrifices a creature of their choice.\nUnearth {5}{B}{B}{B} ({5}{B}{B}{B}: Return this card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step or if it would leave the battlefield. Unearth only as a sorcery.)",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Unearth",
+          "Enmitic Exterminator"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6b9315e037c0c331577f1813b30505f1421a71fb4b00a8d67548549fa73e99f7",
+      "card": {
+        "oracleId": "20932bca-52be-4288-9c7d-4154650c5ec9",
+        "scryfallId": "9b1ecad3-8cec-4a18-9401-6eebc7feeacc",
+        "name": "Necron Monolith",
+        "manaCost": "{7}",
+        "cmc": 7,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact — Vehicle",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Vehicle"
+        ],
+        "oracleText": "Flying, indestructible\nEternity Gate — Whenever this Vehicle attacks, mill three cards. For each creature card milled this way, create a 2/2 black Necron Warrior artifact creature token.\nCrew 4 (Tap any number of creatures you control with total power 4 or more: This Vehicle becomes an artifact creature until end of turn.)",
+        "power": "7",
+        "toughness": "7",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Indestructible",
+          "Eternity Gate",
+          "Crew",
+          "Mill"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5f5a6bb132b56cbcf65593faa5fb9d60213d7bcfe62dff21830b34a186ac9a2c",
+      "card": {
+        "oracleId": "2c0de95f-4269-439c-a1bc-faa11348b185",
+        "scryfallId": "62d70fd2-de4e-41c6-b3e5-147fffca8a20",
+        "name": "Necron Overlord",
+        "manaCost": "{2}{B}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact Creature — Necron Noble",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron",
+          "Noble"
+        ],
+        "oracleText": "Relentless March — {X}, {T}, Tap X untapped artifacts you control: Target opponent loses X life.",
+        "power": "2",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Relentless March"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2bcdaca1ead6e2d56bb4b5a15b16fd8c91c42d9c259dd16858196cad07d762d5",
+      "card": {
+        "oracleId": "6c85271c-c711-49b0-a72e-9e576c33714d",
+        "scryfallId": "d1958f01-77e9-4976-b7f8-f9b62aa78edc",
+        "name": "Sculpting Steel",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "You may have this artifact enter as a copy of any artifact on the battlefield.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "04f26d356c1af9be56176cca749fa83ea95d576a878de1571a35ade18ce7c13a",
+      "card": {
+        "oracleId": "f96fcb37-5f17-4231-b1a2-64f5fe45730b",
+        "scryfallId": "b8c69031-588d-44a2-89b3-972a335541e5",
+        "name": "Skorpekh Destroyer",
+        "manaCost": "{2}{B}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact Creature — Necron",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron"
+        ],
+        "oracleText": "Deathtouch\nHyperphase Threshers — Whenever an artifact you control enters, this creature gains first strike until end of turn.",
+        "power": "4",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Hyperphase Threshers",
+          "Deathtouch"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e756e9de7a34bb3657b711714ba1db986249dcbef078d35ed504d7b2dc66f718",
+      "card": {
+        "oracleId": "97f9aa5e-e34d-4029-9213-b32ebaf9859c",
+        "scryfallId": "ea5ddc28-dfc1-4b96-b6e2-590fcb1f83ef",
+        "name": "Their Name Is Death",
+        "manaCost": "{3}{B}{B}{B}",
+        "cmc": 6,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy all nonartifact creatures.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -22,14 +22,14 @@ latency, the yield engine bug, and card-modeling shortcuts (audited separately).
 1. **Strategist runs off the critical path.** `StrategyCoordinator.prepare()` is now
    fire-and-forget instead of awaited; a `prefetch()` call fires at each turn boundary
    (`MatchRunner`'s new `onTurnBoundary` hook) so the reasoning call overlaps the end step,
-   untap, upkeep, and draw of the *previous* turn. It runs on its own `RequestQueue` lane
+   untap, upkeep, and draw of the _previous_ turn. It runs on its own `RequestQueue` lane
    (`strategistConcurrency`, default 1) so it can never contend with tactical calls, which stay
    strictly serial. It is never started for the human seat's turn. One re-plan per turn is
    allowed when an opponent's non-pass action invalidates the cached plan. Strategist and
    tactician latency are now logged separately.
 
 2. **Yield until end of turn breaks on a stop list, not on any action.** `resetOpponentYields`
-   (which cleared every yielding player's flag on *any* cast, activation, or trigger) is replaced
+   (which cleared every yielding player's flag on _any_ cast, activation, or trigger) is replaced
    by `breakYieldsForStop`, which clears the flag only for players the new stack object actually
    threatens: it targets them or something they control, or its effects match a mass removal,
    life-loss, discard, or mill selector against them. Everything else leaves the yield standing.

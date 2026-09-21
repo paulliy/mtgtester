@@ -15,6 +15,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { createGame } from '../src/state/game';
+import { interpretCard } from '../src/cards/interpret';
 import { queueTriggersForEvent } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { gameConfig, oracle, spawn } from './fixtures';
@@ -71,7 +72,7 @@ function ctxWithSeats(seats: number, seed: string): GameContext {
 }
 
 describe('Aura "enchanted creature" triggers are scoped to their own host', () => {
-  it('Parasitic Impetus fires for its own host and drains that host\'s controller', () => {
+  it("Parasitic Impetus fires for its own host and drains that host's controller", () => {
     const ctx = ctxWithSeats(2, 'parasitic-positive');
     const victim = spawn(ctx, 'P2', beast('Goaded Beast'));
     const aura = spawn(ctx, 'P1', parasiticImpetus());
@@ -83,7 +84,7 @@ describe('Aura "enchanted creature" triggers are scoped to their own host', () =
     expect(ctx.state.pendingTriggers[0]?.sourceCardId).toBe(aura.cardId);
   });
 
-  it('Parasitic Impetus does NOT fire for a creature enchanted by somebody else\'s Aura', () => {
+  it("Parasitic Impetus does NOT fire for a creature enchanted by somebody else's Aura", () => {
     const ctx = ctxWithSeats(2, 'parasitic-negative');
     const myHost = spawn(ctx, 'P2', beast('My Goaded Beast'));
     const aura = spawn(ctx, 'P1', parasiticImpetus());
@@ -99,9 +100,7 @@ describe('Aura "enchanted creature" triggers are scoped to their own host', () =
       { permanent: stranger, playerId: stranger.controllerId },
     ]);
 
-    expect(
-      ctx.state.pendingTriggers.filter((t) => t.sourceCardId === aura.cardId),
-    ).toHaveLength(0);
+    expect(ctx.state.pendingTriggers.filter((t) => t.sourceCardId === aura.cardId)).toHaveLength(0);
   });
 
   it('Martial Impetus does not fire for an unrelated enchanted attacker', () => {
@@ -118,41 +117,21 @@ describe('Aura "enchanted creature" triggers are scoped to their own host', () =
       { permanent: stranger, playerId: stranger.controllerId },
     ]);
 
-    expect(
-      ctx.state.pendingTriggers.filter((t) => t.sourceCardId === aura.cardId),
-    ).toHaveLength(0);
+    expect(ctx.state.pendingTriggers.filter((t) => t.sourceCardId === aura.cardId)).toHaveLength(0);
   });
 
-  it('Angelic Destiny returns only when its OWN host dies', () => {
-    const ctx = ctxWithSeats(2, 'destiny-scoping');
-    const myHost = spawn(ctx, 'P1', beast('My Angel Host'));
-    const aura = spawn(ctx, 'P1', angelicDestiny());
-    aura.attachedTo = myHost.id;
-
-    const stranger = spawn(ctx, 'P2', beast('Stranger'));
-    const otherAura = spawn(ctx, 'P2', martialImpetus());
-    otherAura.attachedTo = stranger.id;
-
-    queueTriggersForEvent(ctx, 'dies', [{ permanent: stranger }]);
-    expect(
-      ctx.state.pendingTriggers.filter((t) => t.sourceCardId === aura.cardId),
-    ).toHaveLength(0);
-
-    queueTriggersForEvent(ctx, 'dies', [{ permanent: myHost }]);
-    expect(
-      ctx.state.pendingTriggers.filter((t) => t.sourceCardId === aura.cardId),
-    ).toHaveLength(1);
+  it('keeps Angelic Destiny contained until its Angel type-changing clause is modeled', () => {
+    const def = interpretCard(angelicDestiny());
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join(' ')).toContain('explicitly unsupported:');
   });
 
-  it('Hateful Eidolon is NOT an Aura and keeps the any-enchanted-creature reading', () => {
-    const ctx = ctxWithSeats(2, 'eidolon-scoping');
-    const eidolon = spawn(
-      ctx,
-      'P1',
+  it('keeps Hateful Eidolon contained until its per-Aura draw count is modeled', () => {
+    const def = interpretCard(
       oracle({
         oracleId: 'a3b39590-34b7-4fd0-877f-748e6df30e88',
         name: 'Hateful Eidolon',
-        typeLine: 'Enchantment Creature — Spirit',
+        typeLine: 'Enchantment Creature ? Spirit',
         manaCost: '{B}',
         power: '1',
         toughness: '1',
@@ -160,15 +139,7 @@ describe('Aura "enchanted creature" triggers are scoped to their own host', () =
           'Lifelink\nWhenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it.',
       }),
     );
-
-    // Someone else's creature, someone else's Aura: the Eidolon still cares.
-    const stranger = spawn(ctx, 'P2', beast('Stranger'));
-    const otherAura = spawn(ctx, 'P2', angelicDestiny());
-    otherAura.attachedTo = stranger.id;
-
-    queueTriggersForEvent(ctx, 'dies', [{ permanent: stranger }]);
-    expect(
-      ctx.state.pendingTriggers.filter((t) => t.sourceCardId === eidolon.cardId),
-    ).toHaveLength(1);
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join(' ')).toContain('explicitly unsupported:');
   });
 });

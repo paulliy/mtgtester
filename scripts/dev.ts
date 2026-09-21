@@ -67,7 +67,12 @@ async function waitForServer(port: number, timeoutMs = 30_000): Promise<void> {
 }
 
 const serverPort = parseServerPort(serverArgs);
-const server = spawnTagged('server', ['bun', 'run', 'packages/server/src/cli/serve.ts', ...serverArgs]);
+const server = spawnTagged('server', [
+  'bun',
+  'run',
+  'packages/server/src/cli/serve.ts',
+  ...serverArgs,
+]);
 let web: ReturnType<typeof Bun.spawn> | undefined;
 
 let shuttingDown = false;

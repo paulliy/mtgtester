@@ -124,7 +124,8 @@ describe('Tier 3 residual generic grammar', () => {
     const ctx = pod('tier3-ordinal-casts');
     const watcher = oracle({
       name: 'Second Spell Watcher',
-      oracleText: 'Whenever an opponent casts their second noncreature spell each turn, draw a card.',
+      oracleText:
+        'Whenever an opponent casts their second noncreature spell each turn, draw a card.',
     });
     const def = interpretCard(watcher);
     expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
@@ -221,24 +222,105 @@ describe('Tier 3 residual generic grammar', () => {
 
   it('parses target-relative values, beneficiaries, and remaining threshold forms', () => {
     const cards = [
-      oracle({ name: 'Borrowing Arrows Test', typeLine: 'Sorcery', oracleText: 'Draw a card for each tapped creature target opponent controls.' }),
-      oracle({ name: 'Keep Watch Test', typeLine: 'Instant', oracleText: 'Draw a card for each attacking creature.' }),
-      oracle({ name: 'Recurring Insight Test', typeLine: 'Sorcery', oracleText: "Draw cards equal to the number of cards in target opponent's hand." }),
-      oracle({ name: 'Warstorm Surge Test', typeLine: 'Enchantment', oracleText: 'Whenever a creature you control enters, it deals damage equal to its power to any target.' }),
-      oracle({ name: 'Black Bolt Test', oracleText: 'Lethal Voice \u2014 Whenever this creature becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.' }),
-      oracle({ name: 'Hunted Phantasm Test', oracleText: 'When this creature enters, target opponent creates five 1/1 red Goblin creature tokens.' }),
-      oracle({ name: 'Death by Dragons Test', typeLine: 'Sorcery', oracleText: 'Each player other than target player creates a 5/5 red Dragon creature token with flying.' }),
-      oracle({ name: 'Reach the Horizon Test', typeLine: 'Sorcery', oracleText: 'Search your library for up to two basic land cards and/or Town cards with different names, put them onto the battlefield tapped, then shuffle.' }),
-      oracle({ name: 'Winds of Abandon Test', typeLine: 'Sorcery', oracleText: "Exile target creature you don't control. For each creature exiled this way, its controller searches their library for a basic land card. Those players put those cards onto the battlefield tapped, then shuffle." }),
-      oracle({ name: 'Invisible Force Field Test', typeLine: 'Instant', oracleText: 'Up to four target permanents you control gain indestructible until end of turn.\nRebound' }),
-      oracle({ name: 'Fantastic Elasticity Test', typeLine: 'Instant', oracleText: "Choose one \u2014\n\u2022 Return target nonland permanent to its owner's hand.\n\u2022 Return target instant or sorcery card from your graveyard to your hand.\nRebound" }),
-      oracle({ name: 'Unwind Test', typeLine: 'Instant', oracleText: 'Counter target noncreature spell. Untap up to three lands.' }),
-      oracle({ name: 'Vicious Shadows Test', typeLine: 'Enchantment', oracleText: "Whenever a creature dies, you may have this enchantment deal damage to target player equal to the number of cards in that player's hand." }),
-      oracle({ name: 'Dingus Staff Test', typeLine: 'Artifact', oracleText: "Whenever a creature dies, this artifact deals 2 damage to that creature's controller." }),
-      oracle({ name: 'Cadira Test', oracleText: 'Whenever this creature deals combat damage to a player, for each token you control, create a 1/1 white Rabbit creature token.' }),
-      oracle({ name: 'Noise Marine Test', oracleText: "Sonic Blaster \u2014 When this creature enters, it deals damage equal to the number of spells you've cast this turn to any target." }),
-      oracle({ name: 'Rishkar Expertise Test', typeLine: 'Sorcery', oracleText: 'Draw cards equal to the greatest power among creatures you control.\nYou may cast a spell with mana value 5 or less from your hand without paying its mana cost.' }),
-      oracle({ name: 'Ruby Test', oracleText: 'Whenever this creature attacks while you control a creature with power 4 or greater, this creature gets +2/+2 until end of turn.' }),
+      oracle({
+        name: 'Borrowing Arrows Test',
+        typeLine: 'Sorcery',
+        oracleText: 'Draw a card for each tapped creature target opponent controls.',
+      }),
+      oracle({
+        name: 'Keep Watch Test',
+        typeLine: 'Instant',
+        oracleText: 'Draw a card for each attacking creature.',
+      }),
+      oracle({
+        name: 'Recurring Insight Test',
+        typeLine: 'Sorcery',
+        oracleText: "Draw cards equal to the number of cards in target opponent's hand.",
+      }),
+      oracle({
+        name: 'Warstorm Surge Test',
+        typeLine: 'Enchantment',
+        oracleText:
+          'Whenever a creature you control enters, it deals damage equal to its power to any target.',
+      }),
+      oracle({
+        name: 'Black Bolt Test',
+        oracleText:
+          'Lethal Voice \u2014 Whenever this creature becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.',
+      }),
+      oracle({
+        name: 'Hunted Phantasm Test',
+        oracleText:
+          'When this creature enters, target opponent creates five 1/1 red Goblin creature tokens.',
+      }),
+      oracle({
+        name: 'Death by Dragons Test',
+        typeLine: 'Sorcery',
+        oracleText:
+          'Each player other than target player creates a 5/5 red Dragon creature token with flying.',
+      }),
+      oracle({
+        name: 'Reach the Horizon Test',
+        typeLine: 'Sorcery',
+        oracleText:
+          'Search your library for up to two basic land cards and/or Town cards with different names, put them onto the battlefield tapped, then shuffle.',
+      }),
+      oracle({
+        name: 'Winds of Abandon Test',
+        typeLine: 'Sorcery',
+        oracleText:
+          "Exile target creature you don't control. For each creature exiled this way, its controller searches their library for a basic land card. Those players put those cards onto the battlefield tapped, then shuffle.",
+      }),
+      oracle({
+        name: 'Invisible Force Field Test',
+        typeLine: 'Instant',
+        oracleText:
+          'Up to four target permanents you control gain indestructible until end of turn.\nRebound',
+      }),
+      oracle({
+        name: 'Fantastic Elasticity Test',
+        typeLine: 'Instant',
+        oracleText:
+          "Choose one \u2014\n\u2022 Return target nonland permanent to its owner's hand.\n\u2022 Return target instant or sorcery card from your graveyard to your hand.\nRebound",
+      }),
+      oracle({
+        name: 'Unwind Test',
+        typeLine: 'Instant',
+        oracleText: 'Counter target noncreature spell. Untap up to three lands.',
+      }),
+      oracle({
+        name: 'Vicious Shadows Test',
+        typeLine: 'Enchantment',
+        oracleText:
+          "Whenever a creature dies, you may have this enchantment deal damage to target player equal to the number of cards in that player's hand.",
+      }),
+      oracle({
+        name: 'Dingus Staff Test',
+        typeLine: 'Artifact',
+        oracleText:
+          "Whenever a creature dies, this artifact deals 2 damage to that creature's controller.",
+      }),
+      oracle({
+        name: 'Cadira Test',
+        oracleText:
+          'Whenever this creature deals combat damage to a player, for each token you control, create a 1/1 white Rabbit creature token.',
+      }),
+      oracle({
+        name: 'Noise Marine Test',
+        oracleText:
+          "Sonic Blaster \u2014 When this creature enters, it deals damage equal to the number of spells you've cast this turn to any target.",
+      }),
+      oracle({
+        name: 'Rishkar Expertise Test',
+        typeLine: 'Sorcery',
+        oracleText:
+          'Draw cards equal to the greatest power among creatures you control.\nYou may cast a spell with mana value 5 or less from your hand without paying its mana cost.',
+      }),
+      oracle({
+        name: 'Ruby Test',
+        oracleText:
+          'Whenever this creature attacks while you control a creature with power 4 or greater, this creature gets +2/+2 until end of turn.',
+      }),
     ];
 
     for (const card of cards) {
@@ -253,11 +335,23 @@ describe('Tier 3 residual generic grammar', () => {
     const before = p1.hand.length;
     conjure(ctx, 'P2', forest(), 'hand');
     conjure(ctx, 'P2', forest(), 'hand');
-    pump(executeAbility(ctx, { cardId: 'recurring', oracleId: cards[2]!.oracleId, name: cards[2]!.name, controllerId: 'P1' }, recurring.spellAbility!, [p2.id]));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'recurring',
+          oracleId: cards[2]!.oracleId,
+          name: cards[2]!.name,
+          controllerId: 'P1',
+        },
+        recurring.spellAbility!,
+        [p2.id],
+      ),
+    );
     expect(p1.hand.length).toBe(before + p2.hand.length);
   });
 
-  it('parses variable-count blink and returns a stolen permanent under its owner\'s control', () => {
+  it("parses variable-count blink and returns a stolen permanent under its owner's control", () => {
     const oji = oracle({
       name: 'Oji, the Exquisite Blade',
       oracleText:
@@ -308,9 +402,7 @@ describe('Tier 3 residual generic grammar', () => {
   });
 
   it('parses reusable keyword-cost, compound grant, and bounded tutor forms', () => {
-    const outlast = interpretCard(
-      oracle({ name: 'Outlast Test', oracleText: 'Outlast {1}{W}' }),
-    );
+    const outlast = interpretCard(oracle({ name: 'Outlast Test', oracleText: 'Outlast {1}{W}' }));
     const equipCommander = interpretCard(
       oracle({
         name: 'Commander Equipment Test',

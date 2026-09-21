@@ -13,7 +13,8 @@ const bloomvineRegent = () =>
     typeLine: 'Creature — Dragon // Sorcery — Omen',
     types: ['Creature'],
     subtypes: ['Dragon'],
-    oracleText: 'Flying\nWhenever this creature or another Dragon you control enters, you gain 3 life.',
+    oracleText:
+      'Flying\nWhenever this creature or another Dragon you control enters, you gain 3 life.',
     power: '4',
     toughness: '5',
     keywords: ['Flying'],
@@ -27,7 +28,8 @@ const marangRiverRegent = () =>
     typeLine: 'Creature — Dragon // Instant — Omen',
     types: ['Creature'],
     subtypes: ['Dragon'],
-    oracleText: 'Flying\nWhen this creature enters, return up to two other target nonland permanents to their owners\' hands.',
+    oracleText:
+      "Flying\nWhen this creature enters, return up to two other target nonland permanents to their owners' hands.",
     power: '6',
     toughness: '7',
     keywords: ['Flying'],
@@ -47,7 +49,10 @@ const monsterManual = () =>
 
 function pod(seed = 'adventures-test'): GameContext {
   const ctx = createGame(
-    gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;

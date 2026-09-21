@@ -57,7 +57,8 @@ function cell(victim: string, cardId: string): number {
             :class="{
               self: col.seat === seat.seat,
               danger: cell(seat.seat, col.cardId) >= LETHAL,
-              close: cell(seat.seat, col.cardId) >= LETHAL - 7 && cell(seat.seat, col.cardId) < LETHAL,
+              close:
+                cell(seat.seat, col.cardId) >= LETHAL - 7 && cell(seat.seat, col.cardId) < LETHAL,
             }"
           >
             {{ col.seat === seat.seat ? '—' : cell(seat.seat, col.cardId) }}

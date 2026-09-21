@@ -12,6 +12,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { loadOracleIndexFromFile } from '../cards/oracle-index';
 import { measureCoverage } from '../cards/coverage';
+import { checkCoverageBaseline } from '../cards/coverage-baseline';
+import { assertCompleteCoverage } from '../cards/coverage-contract';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const FIXTURE_PATH = 'packages/server/fixtures/edh-staples-200.txt';
@@ -54,6 +56,8 @@ function main(): void {
     },
   ]);
 
+  checkCoverageBaseline(report, index, 'staples');
+  if (process.argv.includes('--complete')) assertCompleteCoverage(report);
   if (json) {
     console.log(JSON.stringify(report, null, 2));
     return;

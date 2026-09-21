@@ -113,7 +113,13 @@ export function isHardBarrierQuota(text: string): boolean {
 
 export function classifyError(
   err: unknown,
-): 'model_unavailable' | 'daily_quota' | 'rpm_quota' | 'retryable' | 'retryable_generation' | 'fatal' {
+):
+  | 'model_unavailable'
+  | 'daily_quota'
+  | 'rpm_quota'
+  | 'retryable'
+  | 'retryable_generation'
+  | 'fatal' {
   if (err instanceof AuthenticationError) return 'fatal';
   if (err instanceof ModelUnavailableError) return 'model_unavailable';
   if (err instanceof DailyQuotaExhaustedError) return 'daily_quota';
@@ -132,7 +138,12 @@ export function classifyError(
 
   const { status, text } = errorFacts(err);
 
-  if (status === 401 || status === 403 || text.includes('api_key_invalid') || text.includes('unauthenticated')) {
+  if (
+    status === 401 ||
+    status === 403 ||
+    text.includes('api_key_invalid') ||
+    text.includes('unauthenticated')
+  ) {
     return 'fatal';
   }
 
@@ -188,7 +199,8 @@ function isAborted(signal: AbortSignal | undefined): boolean {
 export async function withRetry<T>(
   fn: () => Promise<T>,
   config: Pick<AiConfig, 'maxRetries' | 'baseBackoffMs' | 'maxBackoffMs'>,
-  sleepFn: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  sleepFn: (ms: number) => Promise<void> = (ms) =>
+    new Promise((resolve) => setTimeout(resolve, ms)),
   /** When aborted, stop immediately rather than spend a backoff cycle discovering it via `fn()`. */
   signal?: AbortSignal,
 ): Promise<T> {

@@ -101,7 +101,7 @@ actually names an action over an earlier one that merely parses.
 - The four `challenger-empirical` tests that pinned the old behaviour as "empirically verified
   bugs" now assert the fixed behaviour. Two of them (4.3, 4.4) were documenting exactly these
   defects.
-- A per-decision failure still falls back silently, by design (§7.7 step 3). A *systemic*
+- A per-decision failure still falls back silently, by design (§7.7 step 3). A _systemic_
   failure — bad credentials, a malformed request, a model that does not exist — is still only
   visible as a fallback warning on every decision. Making the provider distinguish "this call
   failed" from "no call can succeed" is left open; the fastest signal remains that a game with

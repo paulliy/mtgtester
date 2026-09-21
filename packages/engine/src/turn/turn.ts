@@ -11,7 +11,12 @@ import type { GameGen } from '../decisions';
 import { drawCards, endUntilEotEffects } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import { priorityCheckpoint } from '../sba/sba';
-import { moveObject, playerById } from '../state/objects';
+import {
+  additionalTypedTriggerCopies,
+  expireRegenerationShields,
+  moveObject,
+  playerById,
+} from '../state/objects';
 import { hasNoMaximumHandSize, triggersOf } from '../state/queries';
 import type { EngineCardObject, GameContext } from '../state/types';
 import { emptyManaPools, runPrioritySequence } from './priority';
@@ -91,7 +96,14 @@ function untapStep(ctx: GameContext): void {
  */
 export function queueStepTriggers(
   ctx: GameContext,
-  when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'mainPhase' | 'precombatMain' | 'beginningOfCombat',
+  when:
+    | 'upkeep'
+    | 'endStep'
+    | 'untapStep'
+    | 'drawStep'
+    | 'mainPhase'
+    | 'precombatMain'
+    | 'beginningOfCombat',
 ): void {
   const apId = ctx.state.currentTurnPlayer;
   for (const perm of [...ctx.state.battlefield]) {
@@ -102,14 +114,17 @@ export function queueStepTriggers(
       const source = { cardId: perm.cardId, controllerId: perm.controllerId };
       // Intervening-if, first check (CR 603.4) — see `queueTriggersForEvent`.
       if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
-      ctx.state.pendingTriggers.push({
-        controllerId: perm.controllerId,
-        sourceCardId: perm.cardId,
-        sourceOracleId: perm.oracleId,
-        sourceName: perm.name,
-        ability,
-      });
-      debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
+      const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
+      for (let copy = 0; copy < copies; copy++) {
+        ctx.state.pendingTriggers.push({
+          controllerId: perm.controllerId,
+          sourceCardId: perm.cardId,
+          sourceOracleId: perm.oracleId,
+          sourceName: perm.name,
+          ability,
+        });
+        debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
+      }
     }
   }
 
@@ -183,6 +198,7 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
       perm.damagedByDeathtouch = false;
       delete perm.mustAttackThisTurn;
     }
+    expireRegenerationShields(ctx);
     endUntilEotEffects(ctx);
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter((dt) => dt.expiry !== 'cleanup');
     // End of TURN: "you don't lose this mana as steps and phases end" runs out here too, so

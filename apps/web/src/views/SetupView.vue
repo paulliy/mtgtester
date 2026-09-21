@@ -54,6 +54,7 @@ interface KnownDeck {
 
 const knownDecks = ref<KnownDeck[]>([]);
 const knownDecksError = ref<string | null>(null);
+const knownDecksLoaded = ref(false);
 const selectedKnown = ref<string[]>(Array.from({ length: SEATS }, () => ''));
 
 onMounted(async () => {
@@ -66,6 +67,8 @@ onMounted(async () => {
     knownDecks.value = ((await response.json()) as { decks: KnownDeck[] }).decks;
   } catch (reason) {
     knownDecksError.value = reason instanceof Error ? reason.message : String(reason);
+  } finally {
+    knownDecksLoaded.value = true;
   }
 });
 
@@ -92,9 +95,9 @@ const canStart = computed(() =>
     ? true
     : mode.value === 'known'
       ? displayedSeats.value.every((index) => selectedKnown.value[index - 1] !== '')
-    : !advancedPodSetup.value
-      ? (inputs.value[activeSeatIndex.value]?.trim().length ?? 0) > 0
-      : inputs.value.every((v) => v.trim().length > 0),
+      : !advancedPodSetup.value
+        ? (inputs.value[activeSeatIndex.value]?.trim().length ?? 0) > 0
+        : inputs.value.every((v) => v.trim().length > 0),
 );
 
 function sourceFor(index: number): SeatSource {
@@ -240,7 +243,11 @@ function start(): void {
           </div>
         </div>
         <p v-if="knownDecks.length === 0 && knownDecksError === null" class="hint">
-          Loading modeled decks...
+          {{
+            knownDecksLoaded
+              ? 'No fully modeled, legal Commander deck fixtures are available yet.'
+              : 'Loading modeled decks...'
+          }}
         </p>
         <label class="advanced-pod">
           <input v-model="advancedPodSetup" type="checkbox" />

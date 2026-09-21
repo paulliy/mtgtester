@@ -125,9 +125,7 @@ describe('per-action spectator snapshots (brief §10.1 — "step forward action 
   it('gives every rendered log line a board to seek to', () => {
     // Every event that produces a spectator line must be seekable; events that do not are
     // deliberately skipped, which is what keeps the retained state bounded.
-    const loggable = new Set(
-      [...snapshots.keys()].map((sequence) => sequence),
-    );
+    const loggable = new Set([...snapshots.keys()].map((sequence) => sequence));
     expect(loggable.size).toBeGreaterThan(20);
     expect(loggable.size).toBeLessThan(events.length);
   });

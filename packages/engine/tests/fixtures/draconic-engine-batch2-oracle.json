@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "93f6e4f92ed9300974ebf7e42289b08518c36334bbbd739be86b93e270c80fd8",
+      "card": {
+        "oracleId": "abcf5e77-88fc-4b76-a1e8-907a5b27d612",
+        "scryfallId": "cc1afafd-d57b-4733-80c8-184947b7c5e6",
+        "name": "Clan Defiance",
+        "manaCost": "{X}{R}{G}",
+        "cmc": 2,
+        "colors": [
+          "G",
+          "R"
+        ],
+        "colorIdentity": [
+          "G",
+          "R"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Choose one or more —\n• Clan Defiance deals X damage to target creature with flying.\n• Clan Defiance deals X damage to target creature without flying.\n• Clan Defiance deals X damage to target player or planeswalker.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2d9829561249964dc1ee8b12130cd2b00bc27be2e03a63145f7d6de6cf95752a",
+      "card": {
+        "oracleId": "c8f1e3bd-bbf0-4750-b054-03553fc61850",
+        "scryfallId": "4d8a5bab-813a-488a-ab65-3286582ef595",
+        "name": "Demanding Dragon",
+        "manaCost": "{3}{R}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhen this creature enters, it deals 5 damage to target opponent unless that player sacrifices a creature of their choice.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0bb600199aa599d40c082a34469cb4c8723ec3f4f03581c3b5c35988ce522e12",
+      "card": {
+        "oracleId": "eab71e4e-27c3-4c41-b95f-259c1d14b97a",
+        "scryfallId": "5525cfde-a92b-4fb5-8f15-a05efebecd3d",
+        "name": "Dragon Mage",
+        "manaCost": "{5}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon",
+          "Wizard"
+        ],
+        "oracleText": "Flying\nWhenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "281a1adb8ce8de435dffdf489b50f6558788d7c93c67face254731aca8e06b82",
+      "card": {
+        "oracleId": "cf9db2be-3c95-45a2-ab85-694e3bd3bf1d",
+        "scryfallId": "2f4c5867-73c4-4e10-bbf5-6a69df879547",
+        "name": "Hoard-Smelter Dragon",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\n{3}{R}: Destroy target artifact. This creature gets +X/+0 until end of turn, where X is that artifact's mana value.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5baf2db6215b7e56f64d903cbd7eef2256974d517b77c7900f2f1564eb59cf1e",
+      "card": {
+        "oracleId": "e1a776d2-fb3a-4215-a14e-4b6e9bda95df",
+        "scryfallId": "64e0f9db-fd82-44d0-9d98-12275e2f05e8",
+        "name": "Hunter's Prowess",
+        "manaCost": "{4}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Until end of turn, target creature gets +3/+3 and gains trample and \"Whenever this creature deals combat damage to a player, draw that many cards.\"",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7ff3f6c7112be35c59665783ffec939f1cefe7a7719d672b2ee08550ec38454d",
+      "card": {
+        "oracleId": "cf7352bf-3971-4bb7-88b9-65ab9a219289",
+        "scryfallId": "f5226787-e2c0-4ce2-903c-6c0797420f99",
+        "name": "Loaming Shaman",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Centaur Shaman",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Centaur",
+          "Shaman"
+        ],
+        "oracleText": "When this creature enters, target player shuffles any number of target cards from their graveyard into their library.",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0620799c075a245bcef521c57f9df4ebca511e5c982afa93809be7c650f31679",
+      "card": {
+        "oracleId": "58d7b8b3-ac47-4805-8259-4ba8e70d7dc3",
+        "scryfallId": "69b3f7b9-9499-4883-b5c5-c5474e470b21",
+        "name": "Primal Might",
+        "manaCost": "{X}{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature you control gets +X/+X until end of turn. Then it fights up to one target creature you don't control. (Each deals damage equal to its power to the other.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Fight"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3d0475e956e9fb9f961c9b3873419dcd0b10aef77e81504c9a97c56e8edad48e",
+      "card": {
+        "oracleId": "ac844303-487b-49e9-9170-02892153ca6a",
+        "scryfallId": "2727b05a-0c86-4c59-b7b4-425bdd8e775d",
+        "name": "Provoke the Trolls",
+        "manaCost": "{3}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Provoke the Trolls deals 3 damage to any target. If a creature is dealt damage this way, it gets +5/+0 until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -91,7 +91,7 @@ describe('audit: manifest entry and visibility', () => {
       options: [{ key: 'red', label: 'Red' }],
     };
     def.ruleStatics = [{ kind: 'additionalLandDrops', count: { kind: 'const', n: 1 } }];
-    def.ward = parseManaCost('{4}').cost!;
+    def.ward = { kind: 'mana', cost: parseManaCost('{4}').cost! };
     const result = pump(
       executeAbility(
         ctx,
@@ -167,10 +167,6 @@ describe('audit: Sram only draws for the printed spell types', () => {
 // These cards must remain visibly unsupported until their missing mechanics are implemented.
 describe('audit: approximate cards fail closed', () => {
   it.each([
-    [
-      'Pearl-Ear, Imperial Advisor',
-      'Enchantment spells you cast have affinity for Auras.\nWhenever you cast an Aura spell that targets a modified permanent you control, draw a card.',
-    ],
     [
       'Killian, Decisive Mentor',
       'Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card.',

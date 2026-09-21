@@ -16,7 +16,12 @@ import type { GameContext } from '../src/state/types';
 import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 function pod(seed = 'reanimate'): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(3, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(3, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.turnNumber = 4;
@@ -26,7 +31,7 @@ function pod(seed = 'reanimate'): GameContext {
 }
 
 describe('reanimation and mana-value-based life loss', () => {
-  it('parses Reanimate\'s shape into one combined effect targeting any graveyard', () => {
+  it("parses Reanimate's shape into one combined effect targeting any graveyard", () => {
     const def = interpretCard(
       oracle({
         name: 'Reanimate Test',
@@ -40,19 +45,39 @@ describe('reanimation and mana-value-based life loss', () => {
     );
     expect(def.modeled).toBe(true);
     expect(def.spellAbility?.targets).toEqual([
-      { kind: 'cardInGraveyard', filter: { kind: 'type', value: 'Creature' }, graveyardOwnerScope: 'any' },
+      {
+        kind: 'cardInGraveyard',
+        filter: { kind: 'type', value: 'Creature' },
+        graveyardOwnerScope: 'any',
+      },
     ]);
     expect(def.spellAbility?.effects).toEqual([{ op: 'reanimateAndLoseLife', target: 0 }]);
   });
 
-  it('reanimates a card from an OPPONENT\'s graveyard under the caster\'s control, and charges life for its real mana value', () => {
+  it("reanimates a card from an OPPONENT's graveyard under the caster's control, and charges life for its real mana value", () => {
     const ctx = pod();
-    const caster = spawn(ctx, 'P1', oracle({ name: 'Test Caster', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null }));
+    const caster = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Caster',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        power: null,
+        toughness: null,
+      }),
+    );
     // A four-mana-value creature sitting in P2's graveyard.
     const corpse = conjure(
       ctx,
       'P2',
-      oracle({ name: 'Test Corpse', typeLine: 'Creature — Zombie', manaCost: '{2}{B}{B}', power: '3', toughness: '3' }),
+      oracle({
+        name: 'Test Corpse',
+        typeLine: 'Creature — Zombie',
+        manaCost: '{2}{B}{B}',
+        power: '3',
+        toughness: '3',
+      }),
       'graveyard',
     );
 
@@ -61,7 +86,11 @@ describe('reanimation and mana-value-based life loss', () => {
       executeAbility(
         ctx,
         caster,
-        { kind: 'spell', targets: [{ kind: 'cardInGraveyard', graveyardOwnerScope: 'any' }], effects: [{ op: 'reanimateAndLoseLife', target: 0 }] },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'cardInGraveyard', graveyardOwnerScope: 'any' }],
+          effects: [{ op: 'reanimateAndLoseLife', target: 0 }],
+        },
         [corpse.id],
       ),
     );
@@ -69,20 +98,38 @@ describe('reanimation and mana-value-based life loss', () => {
     const reanimated = ctx.state.battlefield.find((p) => p.cardId === corpse.cardId);
     expect(reanimated).toBeDefined();
     expect(reanimated?.controllerId).toBe('P1');
-    expect(ctx.state.players.find((p) => p.id === 'P2')!.graveyard.some((c) => c.cardId === corpse.cardId)).toBe(false);
+    expect(
+      ctx.state.players
+        .find((p) => p.id === 'P2')!
+        .graveyard.some((c) => c.cardId === corpse.cardId),
+    ).toBe(false);
     expect(ctx.state.players.find((p) => p.id === 'P1')!.life).toBe(p1BeforeLife - 4);
   });
 
   it('does nothing (no life loss either) if the target already left the graveyard', () => {
     const ctx = pod();
-    const caster = spawn(ctx, 'P1', oracle({ name: 'Test Caster 2', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null }));
+    const caster = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Caster 2',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        power: null,
+        toughness: null,
+      }),
+    );
     const p1BeforeLife = ctx.state.players.find((p) => p.id === 'P1')!.life;
 
     pump(
       executeAbility(
         ctx,
         caster,
-        { kind: 'spell', targets: [{ kind: 'cardInGraveyard', graveyardOwnerScope: 'any' }], effects: [{ op: 'reanimateAndLoseLife', target: 0 }] },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'cardInGraveyard', graveyardOwnerScope: 'any' }],
+          effects: [{ op: 'reanimateAndLoseLife', target: 0 }],
+        },
         ['nonexistent-id'],
       ),
     );
@@ -90,7 +137,7 @@ describe('reanimation and mana-value-based life loss', () => {
     expect(ctx.state.players.find((p) => p.id === 'P1')!.life).toBe(p1BeforeLife);
   });
 
-  it('reads a destroyed target\'s mana value BEFORE destroying it (Feed the Swarm)', () => {
+  it("reads a destroyed target's mana value BEFORE destroying it (Feed the Swarm)", () => {
     const def = interpretCard(
       oracle({
         name: 'Feed the Swarm Test',
@@ -109,8 +156,28 @@ describe('reanimation and mana-value-based life loss', () => {
     ]);
 
     const ctx = pod();
-    const caster = spawn(ctx, 'P1', oracle({ name: 'Test Caster 3', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null }));
-    const target = spawn(ctx, 'P2', oracle({ name: 'Test Target', typeLine: 'Creature — Bear', manaCost: '{3}{B}', power: '3', toughness: '3' }));
+    const caster = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Caster 3',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        power: null,
+        toughness: null,
+      }),
+    );
+    const target = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Test Target',
+        typeLine: 'Creature — Bear',
+        manaCost: '{3}{B}',
+        power: '3',
+        toughness: '3',
+      }),
+    );
 
     const p1BeforeLife = ctx.state.players.find((p) => p.id === 'P1')!.life;
     pump(
@@ -152,7 +219,17 @@ describe('reanimation and mana-value-based life loss', () => {
     ]);
 
     const ctx = pod();
-    const caster = spawn(ctx, 'P1', oracle({ name: 'Test Caster 4', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null }));
+    const caster = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Caster 4',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        power: null,
+        toughness: null,
+      }),
+    );
     conjure(ctx, 'P2', oracle({ name: 'Library Card A' }), 'library');
     conjure(ctx, 'P2', oracle({ name: 'Library Card B' }), 'library');
     const p2 = ctx.state.players.find((p) => p.id === 'P2')!;
@@ -163,7 +240,14 @@ describe('reanimation and mana-value-based life loss', () => {
       executeAbility(
         ctx,
         caster,
-        { kind: 'spell', targets: [{ kind: 'player' }], effects: [{ op: 'drawTarget', target: 0, count: { kind: 'const', n: 2 } }, { op: 'loseLifeTarget', target: 0, amount: { kind: 'const', n: 2 } }] },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'player' }],
+          effects: [
+            { op: 'drawTarget', target: 0, count: { kind: 'const', n: 2 } },
+            { op: 'loseLifeTarget', target: 0, amount: { kind: 'const', n: 2 } },
+          ],
+        },
         ['P2'],
       ),
     );

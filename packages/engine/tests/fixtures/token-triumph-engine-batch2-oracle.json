@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "0f2ceb0abebb655426f702639ff86a5342b8a83c919d693ce164352a9fca9d94",
+      "card": {
+        "oracleId": "d7a38484-2acc-49a6-b32d-d54dddb14d31",
+        "scryfallId": "cf2a9e82-8670-4b7f-b5f0-8e10f8aeff1c",
+        "name": "Dawn of Hope",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever you gain life, you may pay {2}. If you do, draw a card.\n{3}{W}: Create a 1/1 white Soldier creature token with lifelink.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "dd54721c087b619a26f981a6135c0a32dcd3864a19bfaa1ce9f7cd525b3be50e",
+      "card": {
+        "oracleId": "123d2b6e-114e-4767-860d-50790382ca4a",
+        "scryfallId": "cc4693c6-f532-4726-b51a-21b04f820448",
+        "name": "Hornet Nest",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Insect",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Insect"
+        ],
+        "oracleText": "Defender (This creature can't attack.)\nWhenever this creature is dealt damage, create that many 1/1 green Insect creature tokens with flying and deathtouch. (Any amount of damage a creature with deathtouch deals to a creature is enough to destroy it.)",
+        "power": "0",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Defender"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6398db40c93376df4162c1aecd23f177a4e81cd46f8ddae297fb442e2d8ad2a9",
+      "card": {
+        "oracleId": "a07483b4-c04f-42a4-b979-8b77c11fa8f5",
+        "scryfallId": "87809c72-055f-4055-85a7-86d41bd655f1",
+        "name": "Slate of Ancestry",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{4}, {T}, Discard your hand: Draw a card for each creature you control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a98cf91c92490c44a8ac0f0a7c0802c5053d4c8b2113c3c70f1c3b21faad7eb3",
+      "card": {
+        "oracleId": "04046ae4-5c51-434b-930c-f3b1d348bf4b",
+        "scryfallId": "eb3ef4da-27c0-4364-a198-f70bea869d9b",
+        "name": "Rootborn Defenses",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Populate. Creatures you control gain indestructible until end of turn. (To populate, create a token that's a copy of a creature token you control.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Populate"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ea9121a947be1268504b38e1c0e121d6a715a58c8e8827fe9b8d1891f522dfa1",
+      "card": {
+        "oracleId": "19bb51dd-2b93-45f0-927d-bbafddadd0a3",
+        "scryfallId": "7240e52a-e435-46f1-ad68-96d6e12e123c",
+        "name": "Aura Mutation",
+        "manaCost": "{G}{W}",
+        "cmc": 2,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target enchantment. Create X 1/1 green Saproling creature tokens, where X is that enchantment's mana value.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "16e2fdacf6b9da20cdd694402ffd7fe12d60d15bff3b809868c62c4f83a75b0f",
+      "card": {
+        "oracleId": "38abf769-e4ef-4b47-9c79-c8cda0b90f6c",
+        "scryfallId": "3b64755f-1381-4537-a12d-48da274993e6",
+        "name": "Collective Unconscious",
+        "manaCost": "{4}{G}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Draw a card for each creature you control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "88b573bde41ec4f057fb73185d3d13ebaa18f8c62d661f793d6d9bebd029620f",
+      "card": {
+        "oracleId": "9aab386c-d48c-4611-b757-aa69b26cc1b1",
+        "scryfallId": "ca18b625-6767-45b9-bc2c-765f1ba7bd44",
+        "name": "Camaraderie",
+        "manaCost": "{4}{G}{W}",
+        "cmc": 6,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

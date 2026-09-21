@@ -62,7 +62,8 @@ describe('counter placement', () => {
         manaCost: '{2}',
         power: null,
         toughness: null,
-        oracleText: 'When Test Charger enters the battlefield, put two charge counters on target artifact.',
+        oracleText:
+          'When Test Charger enters the battlefield, put two charge counters on target artifact.',
       }),
     );
     expect(def.modeled).toBe(true);
@@ -126,7 +127,8 @@ describe('counter placement', () => {
         typeLine: 'Creature — Test Hydra',
         power: '1',
         toughness: '1',
-        oracleText: 'When Test Grower enters the battlefield, put three +1/+1 counters on Test Grower.',
+        oracleText:
+          'When Test Grower enters the battlefield, put three +1/+1 counters on Test Grower.',
       }),
     );
     queueTriggersForObject(ctx, 'enters', grower);
@@ -153,19 +155,29 @@ describe('proliferate', () => {
     expect(def.spellAbility?.effects).toEqual([{ op: 'proliferate' }]);
 
     const ctx = ctx4();
-    const artifact = spawn(ctx, 'P2', oracle({
-      name: 'Test Battery', typeLine: 'Artifact', manaCost: '{2}', power: null, toughness: null,
-    }));
+    const artifact = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Test Battery',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+      }),
+    );
     artifact.counters['charge'] = 2;
     ctx.state.players[0]!.energy = 2;
     ctx.state.players[1]!.poisonCounters = 3;
 
-    pump(executeAbility(
-      ctx,
-      { cardId: 'progress-card', name: card.name, oracleId: card.oracleId, controllerId: 'P1' },
-      def.spellAbility!,
-      [],
-    ));
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'progress-card', name: card.name, oracleId: card.oracleId, controllerId: 'P1' },
+        def.spellAbility!,
+        [],
+      ),
+    );
 
     expect(artifact.counters['charge']).toBe(3);
     expect(ctx.state.players[0]!.energy).toBe(3);
@@ -208,14 +220,18 @@ describe('enters with counters (CR 614.1c replacement)', () => {
     // flag only in `loseLife` misses combat and burn — which is every way an opponent normally
     // loses life — so Gev's own damage trigger would not even satisfy its own counter clause.
     const ctx = ctx4();
-    const gev = spawn(ctx, 'P1', oracle({
-      name: 'Test Gev',
-      typeLine: 'Legendary Creature — Lizard',
-      power: '3',
-      toughness: '2',
-      oracleText:
-        'Other creatures you control enter with an additional +1/+1 counter on them for each opponent who lost life this turn.',
-    }));
+    const gev = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Gev',
+        typeLine: 'Legendary Creature — Lizard',
+        power: '3',
+        toughness: '2',
+        oracleText:
+          'Other creatures you control enter with an additional +1/+1 counter on them for each opponent who lost life this turn.',
+      }),
+    );
     expect(ctx.state.lifeLostThisTurn['P2']).toBeUndefined();
 
     const victim = ctx.state.players.find((p) => p.id === 'P2');

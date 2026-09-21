@@ -50,7 +50,7 @@ const insignia = (): ReturnType<typeof oracle> =>
   });
 
 describe("Commander's Insignia (engine bug regression)", () => {
-  it('reads the layer engine without throwing, and scales only its controller\'s creatures with commanderCastCount', () => {
+  it("reads the layer engine without throwing, and scales only its controller's creatures with commanderCastCount", () => {
     const def = interpretCard(insignia());
     expect(def.modeled).toBe(true);
 

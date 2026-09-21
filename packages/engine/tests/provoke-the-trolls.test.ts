@@ -12,16 +12,32 @@ import type { GameContext } from '../src/state/types';
 import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 const bear = (): ReturnType<typeof oracle> =>
-  oracle({ name: 'Test Bear', typeLine: 'Creature — Bear', manaCost: '{1}{G}', power: '2', toughness: '2' });
+  oracle({
+    name: 'Test Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{1}{G}',
+    power: '2',
+    toughness: '2',
+  });
 
 function pod(): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(6, forest) })), { seed: 'provoke-the-trolls' }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(6, forest) })),
+      { seed: 'provoke-the-trolls' },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;
 }
 
-const provokeSource = { cardId: 'src', name: 'Provoke the Trolls', oracleId: 'ac844303-487b-49e9-9170-02892153ca6a', controllerId: 'P1' };
+const provokeSource = {
+  cardId: 'src',
+  name: 'Provoke the Trolls',
+  oracleId: 'ac844303-487b-49e9-9170-02892153ca6a',
+  controllerId: 'P1',
+};
 const provokeAbility = {
   kind: 'spell' as const,
   targets: [{ kind: 'anyTarget' as const }],

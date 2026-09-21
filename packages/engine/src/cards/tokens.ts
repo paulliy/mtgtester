@@ -210,6 +210,111 @@ export const BEAST_6_6_ARTIFACT: TokenSpec = creatureToken({
   artifact: true,
 });
 
+/** Ghalta and Mavren freezes this token's printed X/X at creation via effect overrides. */
+export const DINOSAUR_X_X_TRAMPLE_GREEN: TokenSpec = creatureToken({
+  name: 'Dinosaur',
+  subtypes: ['Dinosaur'],
+  colors: ['G'],
+  power: 0,
+  toughness: 0,
+  keywords: ['trample'],
+});
+
+export const VAMPIRE_1_1_LIFELINK_WHITE: TokenSpec = creatureToken({
+  name: 'Vampire',
+  subtypes: ['Vampire'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+  keywords: ['lifelink'],
+});
+
+export const SKELETON_4_1_MENACE_BLACK: TokenSpec = creatureToken({
+  name: 'Skeleton',
+  subtypes: ['Skeleton'],
+  colors: ['B'],
+  power: 4,
+  toughness: 1,
+  keywords: ['menace'],
+});
+
+export const WARRIOR_1_1_RED: TokenSpec = creatureToken({
+  name: 'Warrior',
+  subtypes: ['Warrior'],
+  colors: ['R'],
+  power: 1,
+  toughness: 1,
+});
+
+export const NINJA_1_1_BLACK: TokenSpec = creatureToken({
+  name: 'Ninja',
+  subtypes: ['Ninja'],
+  colors: ['B'],
+  power: 1,
+  toughness: 1,
+});
+
+export const RABBIT_1_1_WHITE: TokenSpec = creatureToken({
+  name: 'Rabbit',
+  subtypes: ['Rabbit'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+});
+
+export const SPIDER_2_2_REACH_GREEN: TokenSpec = creatureToken({
+  name: 'Spider',
+  subtypes: ['Spider'],
+  colors: ['G'],
+  power: 2,
+  toughness: 2,
+  keywords: ['reach'],
+});
+
+/** Scriv's named Aura token, including the ability printed on the token itself. */
+export const CONTRACT_AURA: TokenSpec = {
+  name: 'Contract',
+  typeLine: 'Enchantment — Aura',
+  types: ['Enchantment'],
+  subtypes: ['Aura'],
+  colors: ['W'],
+  power: null,
+  toughness: null,
+  triggers: [
+    {
+      kind: 'triggered',
+      trigger: {
+        when: 'attacks',
+        subject: { kind: 'permanent', selector: { kind: 'attachedToSource' } },
+      },
+      targets: [],
+      effects: [
+        {
+          op: 'conditionalEffect',
+          condition: { kind: 'triggerObjectAttackingOpponent' },
+          then: [
+            {
+              op: 'pumpUntilEot',
+              target: 'triggerObject',
+              power: { kind: 'const', n: 2 },
+              toughness: { kind: 'const', n: 0 },
+            },
+          ],
+          else: [
+            {
+              op: 'loseLifeTarget',
+              target: 'eventPlayer',
+              amount: { kind: 'const', n: 2 },
+            },
+          ],
+        },
+      ],
+      description:
+        'Enchanted creature attacks — pump it if it attacks your opponent; otherwise its controller loses 2 life',
+    },
+  ],
+};
+
 export const CONSTRUCT_4_4: TokenSpec = creatureToken({
   name: 'Construct',
   subtypes: ['Construct'],
@@ -263,7 +368,13 @@ export const HUMAN_1_1_WHITE: TokenSpec = creatureToken({
 /** "Sacrifice this creature: Add {C}." — a colorless 0/1 with the mana ability spelled inline
  * because a sacrifice-for-mana ability is unique per token. */
 export const ELDRAZI_SPAWN_0_1: TokenSpec = {
-  ...creatureToken({ name: 'Eldrazi Spawn', subtypes: ['Eldrazi'], colors: [], power: 0, toughness: 1 }),
+  ...creatureToken({
+    name: 'Eldrazi Spawn',
+    subtypes: ['Eldrazi'],
+    colors: [],
+    power: 0,
+    toughness: 1,
+  }),
   manaAbilities: [{ costs: [{ kind: 'sacrificeSelf' }], units: [['C']] }],
 };
 
@@ -279,11 +390,18 @@ export const NALAAR_AETHERJET: TokenSpec = {
   power: 0,
   toughness: 0,
   keywords: ['flying'],
-  activatedAbilities: [{
-    costs: [{ kind: 'tapCreaturesTotalPower', minPower: 2 }],
-    timing: 'any',
-    ability: { kind: 'activated', targets: [], effects: [{ op: 'crewVehicle', minPower: 2 }], description: 'Crew 2' },
-  }],
+  activatedAbilities: [
+    {
+      costs: [{ kind: 'tapCreaturesTotalPower', minPower: 2 }],
+      timing: 'any',
+      ability: {
+        kind: 'activated',
+        targets: [],
+        effects: [{ op: 'crewVehicle', minPower: 2 }],
+        description: 'Crew 2',
+      },
+    },
+  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -300,7 +418,9 @@ export const NALAAR_AETHERJET: TokenSpec = {
 export const TREASURE: TokenSpec = artifactToken({
   name: 'Treasure',
   subtypes: ['Treasure'],
-  manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']], costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }] }],
+  manaAbilities: [
+    { units: [['W', 'U', 'B', 'R', 'G']], costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }] },
+  ],
 });
 
 /**
@@ -311,20 +431,22 @@ export const TREASURE: TokenSpec = artifactToken({
  */
 export const FOOD: TokenSpec = {
   ...artifactToken({ name: 'Food', subtypes: ['Food'] }),
-  activatedAbilities: [{
-    costs: [
-      { kind: 'mana', cost: parseManaCost('{2}' as ManaCostString).cost as ParsedManaCost },
-      { kind: 'tap' },
-      { kind: 'sacrificeSelf' },
-    ],
-    timing: 'any',
-    ability: {
-      kind: 'activated',
-      targets: [],
-      effects: [{ op: 'gainLife', amount: { kind: 'const', n: 3 } }],
-      description: '{2}, {T}, Sacrifice this token: You gain 3 life.',
+  activatedAbilities: [
+    {
+      costs: [
+        { kind: 'mana', cost: parseManaCost('{2}' as ManaCostString).cost as ParsedManaCost },
+        { kind: 'tap' },
+        { kind: 'sacrificeSelf' },
+      ],
+      timing: 'any',
+      ability: {
+        kind: 'activated',
+        targets: [],
+        effects: [{ op: 'gainLife', amount: { kind: 'const', n: 3 } }],
+        description: '{2}, {T}, Sacrifice this token: You gain 3 life.',
+      },
     },
-  }],
+  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -356,6 +478,14 @@ export const ALL_TOKENS: TokenSpec[] = [
   INSECT_1_1_FLYING,
   INSECT_1_1_FLYING_DEATHTOUCH_GREEN,
   BEAST_6_6_ARTIFACT,
+  DINOSAUR_X_X_TRAMPLE_GREEN,
+  VAMPIRE_1_1_LIFELINK_WHITE,
+  SKELETON_4_1_MENACE_BLACK,
+  WARRIOR_1_1_RED,
+  NINJA_1_1_BLACK,
+  RABBIT_1_1_WHITE,
+  SPIDER_2_2_REACH_GREEN,
+  CONTRACT_AURA,
   CONSTRUCT_4_4,
   ELDRAZI_CONSTRUCT_10_10,
   CAT_BEAST_2_2_WHITE,

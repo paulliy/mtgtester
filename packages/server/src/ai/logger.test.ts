@@ -180,9 +180,27 @@ describe('AiCallLogger', () => {
       rawResponse: '{}',
     });
 
-    logger.log(req, { response: { requestId: 'r1', actionId: 0 }, meta: meta(20000) }, false, false, 'strategist');
-    logger.log(req, { response: { requestId: 'r2', actionId: 0 }, meta: meta(3000) }, false, false, 'primary');
-    logger.log(req, { response: { requestId: 'r3', actionId: 0 }, meta: meta(5000) }, false, false, 'primary');
+    logger.log(
+      req,
+      { response: { requestId: 'r1', actionId: 0 }, meta: meta(20000) },
+      false,
+      false,
+      'strategist',
+    );
+    logger.log(
+      req,
+      { response: { requestId: 'r2', actionId: 0 }, meta: meta(3000) },
+      false,
+      false,
+      'primary',
+    );
+    logger.log(
+      req,
+      { response: { requestId: 'r3', actionId: 0 }, meta: meta(5000) },
+      false,
+      false,
+      'primary',
+    );
 
     expect(logger.summary()).toMatchObject({
       avgStrategistLatencyMs: 20000,

@@ -70,7 +70,9 @@ const p1 = (ctx: GameContext): EnginePlayerState =>
 const channelOption = (ctx: GameContext, player: EnginePlayerState, cardId: string) =>
   computePriorityOptions(ctx, player).find((candidate) => {
     const payload = candidate.payload as PriorityActionPayload;
-    return payload.kind === 'activateAbility' && payload.fromHand === true && payload.objectId === cardId;
+    return (
+      payload.kind === 'activateAbility' && payload.fromHand === true && payload.objectId === cardId
+    );
   });
 
 describe('channel lands', () => {

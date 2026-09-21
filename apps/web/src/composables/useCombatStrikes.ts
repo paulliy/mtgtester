@@ -69,7 +69,8 @@ export function useCombatStrikes() {
       if (victim.blocking !== null) {
         pending.push({ source: victim.blocking, target: victim.id });
       } else if (victim.attacking !== null) {
-        for (const blockerId of victim.blockedBy) pending.push({ source: blockerId, target: victim.id });
+        for (const blockerId of victim.blockedBy)
+          pending.push({ source: blockerId, target: victim.id });
       }
     }
 

@@ -48,8 +48,12 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
     let resolveCall1!: (val: AiCallResult) => void;
     let resolveCall2!: (val: AiCallResult) => void;
 
-    const promise1 = new Promise<AiCallResult>((r) => { resolveCall1 = r; });
-    const promise2 = new Promise<AiCallResult>((r) => { resolveCall2 = r; });
+    const promise1 = new Promise<AiCallResult>((r) => {
+      resolveCall1 = r;
+    });
+    const promise2 = new Promise<AiCallResult>((r) => {
+      resolveCall2 = r;
+    });
 
     let callCount = 0;
     const client: AiClient = {
@@ -99,9 +103,20 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
       response: {
         requestId: 'strategy-1',
         actionId: 0,
-        turnStrategy: { intent: 'Call 1 Intent', plannedActions: [{ type: 'playLand', name: 'Forest' }] },
+        turnStrategy: {
+          intent: 'Call 1 Intent',
+          plannedActions: [{ type: 'playLand', name: 'Forest' }],
+        },
       },
-      meta: { model: 'm', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+      meta: {
+        model: 'm',
+        promptTokens: 10,
+        responseTokens: 10,
+        latencyMs: 5,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
     });
     await promise1;
 
@@ -110,9 +125,20 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
       response: {
         requestId: 'strategy-2',
         actionId: 0,
-        turnStrategy: { intent: 'Call 2 Intent', plannedActions: [{ type: 'playLand', name: 'Forest' }] },
+        turnStrategy: {
+          intent: 'Call 2 Intent',
+          plannedActions: [{ type: 'playLand', name: 'Forest' }],
+        },
       },
-      meta: { model: 'm', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+      meta: {
+        model: 'm',
+        promptTokens: 10,
+        responseTokens: 10,
+        latencyMs: 5,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
     });
     await promise2;
 
@@ -130,7 +156,15 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
           actionId: 0,
           turnStrategy: { intent: 'Strategy intent', plannedActions: [] },
         },
-        meta: { model: 'm', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+        meta: {
+          model: 'm',
+          promptTokens: 10,
+          responseTokens: 10,
+          latencyMs: 5,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{}',
+        },
       }),
     };
     const engine = { view: vi.fn().mockReturnValue(view), addDebug: vi.fn() } as unknown as Engine;
@@ -196,7 +230,15 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
         actionId: 0,
         turnStrategy: { intent: 'Turn 3 Strategy', plannedActions: [] },
       },
-      meta: { model: 'm', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+      meta: {
+        model: 'm',
+        promptTokens: 10,
+        responseTokens: 10,
+        latencyMs: 5,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
     });
 
     await new Promise((r) => setTimeout(r, 10));
@@ -209,7 +251,15 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
         actionId: 0,
         turnStrategy: { intent: 'Turn 1 Strategy', plannedActions: [] },
       },
-      meta: { model: 'm', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+      meta: {
+        model: 'm',
+        promptTokens: 10,
+        responseTokens: 10,
+        latencyMs: 5,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
     });
 
     await new Promise((r) => setTimeout(r, 10));
@@ -222,7 +272,15 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
         actionId: 0,
         turnStrategy: { intent: 'Turn 2 Strategy', plannedActions: [] },
       },
-      meta: { model: 'm', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+      meta: {
+        model: 'm',
+        promptTokens: 10,
+        responseTokens: 10,
+        latencyMs: 5,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
     });
 
     await new Promise((r) => setTimeout(r, 10));
@@ -232,8 +290,12 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
   it('Stress Test 3: Turn change mid-flight rejects turn 1 strategist completion', async () => {
     let resolveTurn1!: (val: AiCallResult) => void;
     let resolveTurn2!: (val: AiCallResult) => void;
-    const promise1 = new Promise<AiCallResult>((r) => { resolveTurn1 = r; });
-    const promise2 = new Promise<AiCallResult>((r) => { resolveTurn2 = r; });
+    const promise1 = new Promise<AiCallResult>((r) => {
+      resolveTurn1 = r;
+    });
+    const promise2 = new Promise<AiCallResult>((r) => {
+      resolveTurn2 = r;
+    });
 
     let count = 0;
     const client: AiClient = {
@@ -262,9 +324,20 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
       response: {
         requestId: 'strat-t1',
         actionId: 0,
-        turnStrategy: { intent: 'Turn 1 Stale Intent', plannedActions: [{ type: 'playLand', name: 'Forest' }] },
+        turnStrategy: {
+          intent: 'Turn 1 Stale Intent',
+          plannedActions: [{ type: 'playLand', name: 'Forest' }],
+        },
       },
-      meta: { model: 'm', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+      meta: {
+        model: 'm',
+        promptTokens: 10,
+        responseTokens: 10,
+        latencyMs: 5,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
     });
 
     await promise1;
@@ -281,7 +354,15 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
         actionId: 0,
         turnStrategy: { intent: 'Turn 2 Fresh Intent', plannedActions: [] },
       },
-      meta: { model: 'm', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+      meta: {
+        model: 'm',
+        promptTokens: 10,
+        responseTokens: 10,
+        latencyMs: 5,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
     });
     await promise2;
 
@@ -303,7 +384,15 @@ describe('Empirical Stress Testing (R1 & R3)', () => {
             ],
           },
         },
-        meta: { model: 'm', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+        meta: {
+          model: 'm',
+          promptTokens: 10,
+          responseTokens: 10,
+          latencyMs: 5,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{}',
+        },
       }),
     };
     const engine = { view: vi.fn().mockReturnValue(view), addDebug: vi.fn() } as unknown as Engine;

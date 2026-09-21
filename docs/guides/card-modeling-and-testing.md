@@ -7,10 +7,46 @@ interaction with combat/SBAs nobody exercised. This guide is the loop that catch
 bug: how a card gets modeled, and the ladder of increasingly-real tests to run before calling it
 done, ending with actually casting it in a game against — and via — the AI.
 
-There is currently **no dedicated single-card sandbox** ("load one card, cast it, see what
-happens"). The closest thing to that is planned but unbuilt — see [§7](#7-the-gap-no-single-card-sandbox-yet).
-Until then, "testing in a client" means assembling a small real decklist around the card and
-running it through the same single-player/spectator UI a real match uses.
+This is the repository's canonical card-completion standard. `CLAUDE.MD`, `AGENTS.md`, pull
+requests, manifests, and CI point here rather than restating weaker variants.
+
+## Completion rule
+
+A card has four independent states:
+
+1. **Implementation** — `unsupported`, `implemented-unreviewed`, or `implemented-reviewed`.
+2. **Engine evidence** — generated results from pinned-fixture interpretation, positive and
+   negative behavior, targeting, costs, timing, zone changes, and the normal cast/activation path.
+3. **Viewer evidence** — generated results and Playwright traces from the real frontend, backend,
+   WebSocket protocol, and production engine, bound to the tested revision and scenario/Oracle
+   hashes.
+4. **Gameplay-AI evidence** — separately reported observations for scripted, heuristic, or live
+   LLM providers. This is quality evidence, never a correctness gate.
+
+`modeled: true`, deck membership, a registry snapshot, a mocked UI test, aggregate coverage, or an
+agent's completion statement proves none of states 2–4. A newly completed card requires reviewed
+implementation plus current engine and viewer evidence. Existing modeled cards remain
+`implemented-unreviewed` until audited to this standard.
+
+For every Oracle clause changed, record this checklist in the verification manifest and pull
+request:
+
+- exact Oracle clause and pinned Oracle hash;
+- implementation primitive or explicit unsupported reason;
+- positive test/scenario ID;
+- negative test/scenario ID;
+- applicable cost, targeting, timing, zone-change, and normal cast/activation scenario IDs;
+- required viewer scenario IDs;
+- separate gameplay-AI scenario IDs, if quality is evaluated.
+
+The manifest declares requirements and mappings. Tools generate pass/fail/skip evidence; humans do
+not handwrite success flags.
+
+The Card Test Lab now runs deterministic prepared scenarios through the production engine and
+WebSocket protocol. Its Playwright suite drives the real frontend and backend and retains traces.
+Use it for reproducible clause-level viewer evidence. A curated 100-card match remains necessary
+when a card depends on deck construction or longer game context; gameplay-AI evidence is evaluated
+separately.
 
 ## 1. How a card becomes "modeled"
 
@@ -38,7 +74,7 @@ needed — it never guesses or falls back to "close enough" (brief §6.3).
    lands, basic keyword lines, "draw two cards") needs no per-card work — see
    `packages/engine/tests/interpret.test.ts:6-23` for a plain vanilla-creature/keyword example.
 2. **A hand-authored override** in `packages/engine/src/cards/overrides/`. Per ADR 0009, ~94% of
-   unparsed Oracle lines occur on exactly *one* card — not worth a permanent grammar rule. Most
+   unparsed Oracle lines occur on exactly _one_ card — not worth a permanent grammar rule. Most
    real-deck cards you'll model go this route.
 
 ### Writing an override
@@ -54,17 +90,22 @@ needed — it never guesses or falls back to "close enough" (brief §6.3).
    [`cards/tokens.ts`](../../packages/engine/src/cards/tokens.ts):
 
    ```ts
-   defineCard('06b77a80-…', 'Dragonkin Berserker', [
-     'Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying.',
-   ], {
-     activatedAbilities: [activated({
-       costs: [mana('{4}{R}')],
-       requiresAttackedThisTurn: true,
-       oncePerTurn: true,
-       effects: [{ op: 'createToken', spec: DRAGON_5_5_FLYING, count: constant(1) }],
-       description: 'Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying',
-     })],
-   });
+   defineCard(
+     '06b77a80-…',
+     'Dragonkin Berserker',
+     ['Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying.'],
+     {
+       activatedAbilities: [
+         activated({
+           costs: [mana('{4}{R}')],
+           requiresAttackedThisTurn: true,
+           oncePerTurn: true,
+           effects: [{ op: 'createToken', spec: DRAGON_5_5_FLYING, count: constant(1) }],
+           description: 'Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying',
+         }),
+       ],
+     },
+   );
    ```
 
    `defineCard` registers the card under **both** its real Scryfall id and the `oracle-<slug>`
@@ -77,6 +118,11 @@ needed — it never guesses or falls back to "close enough" (brief §6.3).
    deliberately refuses to honor — the card stays `modeled: false`, so this is a visible backlog
    marker, never a way to make a card count as handled.
 
+   Use `unsupportedCard(oracleId, name, reason)` when an existing implementation is confirmed
+   incorrect, including when the generic parser would otherwise report it modeled. This explicit
+   containment overrides prior authored behavior and removes the card from the supported pool
+   until a faithful implementation replaces it.
+
    Reach for a builder rather than a literal: `spell` / `triggered` / `activated` for ability
    envelopes, `onEtb()` / `onDies()` / `whenEnters(sel)` / `onUpkeep()` for trigger heads,
    `mana('{2}{R}')` / `TAP` / `SAC_SELF` for costs, `targetSlots` when an ability has more than one
@@ -85,9 +131,12 @@ needed — it never guesses or falls back to "close enough" (brief §6.3).
 
    `def` may **only compose existing, already-tested `Effect`/`Ability` primitives** — a new
    executor primitive is out of scope for an override and belongs in the engine itself. If a card
-   needs a cost or effect that doesn't exist, leave it `unimplemented` rather than approximating:
-   six cards once carried fields that were not in the IR at all, and every one of them silently did
+   needs a cost or effect that doesn't exist, leave it `unimplemented` rather than approximating.
+   A substitute cost, broader target, wrong event, or executable `noOp` is not partial support:
+   contain it with `unsupportedCard`. Six cards once carried fields that were not in the IR at all,
+   and every one of them silently did
    nothing (see `tests/silverquill-malformed-fields.test.ts`).
+
 4. `applyOverride` clears exactly one `unmodeledReasons` entry per `handledLines` string
    (one-for-one, not a filter) and merges `def` over the interpreted definition; `modeled` flips
    true only once every reason is cleared. The merge is a **shallow spread, so arrays are replaced
@@ -113,28 +162,9 @@ keep playing stale behavior. If your override claims a line the card doesn't hav
 errors fail loudly, not silently** — if your override doesn't take effect, check that string
 first.
 
-Example, Dragonkin Berserker (`packages/engine/src/cards/overrides/draconic-destruction.ts:9-38`)
-— a cost-reduction static plus a hand-authored Boast activated ability, with a comment explaining
-that the generic parser's token-creation effect is deliberately carried over unchanged so
-replacing the whole `activatedAbilities` array doesn't silently drop it:
-
-```ts
-const DRAGONKIN_BERSERKER_DEF = {
-  ruleStatics: [{
-    kind: 'costReduction' as const,
-    appliesTo: 'activate' as const,
-    amount: { kind: 'countPermanents' as const, selector: ofSubtype('Dragon'), scope: 'you' as const },
-    filter: SELF,
-  }],
-  activatedAbilities: [{
-    costs: [{ kind: 'mana' as const, cost: parseManaCost('{4}{R}').cost! }],
-    timing: 'any' as const,
-    requiresAttackedThisTurn: true as const,
-    oncePerTurn: true,
-    ability: { kind: 'activated' as const, targets: [], effects: [{ /* create 5/5 flying Dragon */ }] },
-  }],
-};
-```
+Do not copy old literal `CardDefinition` examples from reviews or snapshots. They bypass the
+current builders and quickly become misleading. The `defineCard` example above and executable
+tests in the current tree are authoritative.
 
 ## 2. The testing pyramid
 
@@ -147,7 +177,7 @@ a different class of bug. **Never stop at level 1.**
 expect(interpretCard(myCard()).modeled).toBe(true);
 ```
 
-This only proves every line parsed to *something*. It proves nothing about whether that something
+This only proves every line parsed to _something_. It proves nothing about whether that something
 is correct. The override registry's own rule: **"every override gets a behavioral test, never a
 `modeled === true` test"** (`overrides/index.ts:29`). Treat this as step one of a test, never the
 whole test.
@@ -162,31 +192,44 @@ Pattern (from `packages/engine/tests/delayed-triggers.test.ts:79-150`):
 
 ```ts
 function pod(seed = 'my-card'): GameContext {
-  const ctx = createGame(gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.phase = 'precombatMain';
   return ctx;
 }
 
-it('does the thing the card says', function* () {
+it('does the thing the card says', () => {
   const ctx = pod();
-  const target = spawn(ctx, 'P1', oracle({ name: 'Bear', typeLine: 'Creature — Bear', power: '3', toughness: '3' }));
+  const target = spawn(
+    ctx,
+    'P1',
+    oracle({ name: 'Bear', typeLine: 'Creature — Bear', power: '3', toughness: '3' }),
+  );
   const def = interpretCard(myCard());
 
-  yield* executeAbility(
-    ctx,
-    { cardId: 'c-1', name: def.name, oracleId: def.oracleId, controllerId: 'P1' },
-    def.spellAbility!,
-    [target.id],
+  pump(
+    executeAbility(
+      ctx,
+      { cardId: 'c-1', name: def.name, oracleId: def.oracleId, controllerId: 'P1' },
+      def.spellAbility!,
+      [target.id],
+    ),
   );
 
   expect(/* something in ctx.state */).toBe(/* expected */);
 });
 ```
 
-Test bodies are **generators** (`function* () { ... }`) because ability resolution can pause on
-decisions. Key fixture helpers: `oracle()` (build an `OracleCard`), `spawn()` (permanent straight
+Vitest callbacks are normal functions. Ability resolution is the generator, and `pump()` drives it
+to completion while supplying explicit decisions where choices matter. A generator-bodied Vitest
+callback is not a supported test pattern and may never execute the assertions as intended. Key
+fixture helpers: `oracle()` (build an `OracleCard`), `spawn()` (permanent straight
 onto the battlefield), `conjure()` (card object into hand/graveyard/library/exile/command),
 `registerDef()` / `registerCustomDef()`, `executeAbility()` (resolve one ability directly),
 `queueTriggersForEvent()` (fire an event trigger without playing it out — e.g. simulate combat
@@ -238,8 +281,8 @@ To manually playtest one card:
    (`[Turn N] [P1] (phase) → "<chosen action description>"`) and watch for your card actually
    getting cast, targeted correctly, and resolving as expected. `RandomDecisionProvider` drives
    both seats here (no `--ai` flag on this CLI) — good for a fast, cheap functional pass; it will
-   *not* tell you whether a smart player/AI would actually choose to cast it.
-4. Vary `--seed` across a few runs — a single seed proves the card *can* work, not that it always
+   _not_ tell you whether a smart player/AI would actually choose to cast it.
+4. Vary `--seed` across a few runs — a single seed proves the card _can_ work, not that it always
    does.
 
 ### Level 5 — interactive single-player game (real UI, human-driven)
@@ -265,7 +308,7 @@ client:
 5. An optional `seed` reproduces the shuffle (AI decisions can still vary run to run since the AI
    is a live model call, not seeded).
 
-### Level 6 — spectator mode, AI vs. AI (does the *gameplay AI* use it well?)
+### Level 6 — spectator mode, AI vs. AI (does the _gameplay AI_ use it well?)
 
 Same setup screen, **Game mode → Spectator**, all four seats AI-driven (or use
 `bun run pool --play --ai` / `bun run pool --play --ai --benchmark-json out.json` from the CLI for
@@ -291,10 +334,10 @@ Work through these for every card — most correspond to a real footgun the engi
 explicitly calls out:
 
 - **Zone changes / object identity** — does the card care about "this object" across a zone
-  change? A card becomes a *new object* on zone change (CR 400.7,
+  change? A card becomes a _new object_ on zone change (CR 400.7,
   `packages/engine/src/state/objects.ts:1-2`); a "when this dies, ..." trigger must read
   last-known battlefield state, not the post-move object.
-- **Triggered-ability timing** — does the trigger fire off *current* characteristics at the event,
+- **Triggered-ability timing** — does the trigger fire off _current_ characteristics at the event,
   or does it need last-known info? Do "whenever you cast" triggers correctly fire at announcement,
   before the spell resolves (`queueCastTriggers`), not at resolution?
 - **Targeting legality** — are the offered targets exactly what the card's text allows? Does the
@@ -306,10 +349,10 @@ explicitly calls out:
 - **State-based actions** — does anything about this card interact with SBAs in a way that depends
   on ordering (see previous bullet; also see `sba.test.ts`)?
 - **Mana restrictions/filters** — if the card produces or cares about restricted mana ("spend this
-  mana only to cast..."), remember a restriction is a property of the *whole payment*, not a
+  mana only to cast..."), remember a restriction is a property of the _whole payment_, not a
   single mana symbol; restricted mana must be spent first out of a mixed pool
   (`packages/engine/src/mana/pool.ts:1-4`, CR 106.4/106.6).
-- **Copy effects** — if this card copies something (or gets copied), does it read *printed*
+- **Copy effects** — if this card copies something (or gets copied), does it read _printed_
   (copiable) characteristics, never current/derived state? Picking up temporary buffs or other
   layer effects when copying is the specific bug called out at `objects.ts:405-438`.
 - **Layers / continuous effects** — does a static ability interact correctly with dependency order
@@ -326,9 +369,9 @@ explicitly calls out:
 - **Token creation** — do token ETB triggers fire? Tokens should go through the same
   `makePermanent`/`queueTriggersForObject` path as a normal permanent, not a special case.
 - **Mana value / X on the stack** — if the card reads a spell's mana value mid-resolution, does it
-  correctly read the *announced* `{X}` value (CR 202.3b) rather than re-deriving it after `X` is
+  correctly read the _announced_ `{X}` value (CR 202.3b) rather than re-deriving it after `X` is
   gone from the stack object? (See the pump-before-destroy ordering comment in
-  `draconic-destruction.ts:47-51` for why effect *order* itself can be the bug.)
+  `draconic-destruction.ts:47-51` for why effect _order_ itself can be the bug.)
 
 ## 4. Testing specifically against the gameplay AI
 
@@ -356,17 +399,21 @@ is. `bun run pool --play --ai --benchmark-json out.json` reports AI call/fallbac
 stats for the whole game — useful as a general AI-health signal (e.g. did the AI fail closed and
 fall back a lot this game?), though it's aggregate, not per-card.
 
-## 5. The gap: no single-card sandbox yet
+## 5. Card Test Lab and real-viewer evidence
 
-Everything above assembles single-card testing out of tools built for something else (unit
-fixtures, whole-deck CLIs, the real match UI). A proper "pick a deck, goldfish it, run a scenario
-like commander-cast-by-turn-N" workspace is planned but **not built** — see
-[`docs/plans/phase-10-deck-testing-lab.md`](../plans/phase-10-deck-testing-lab.md) ("Deck Testing
-Lab and Simulation Engine"), explicitly scoped to include saved decks, scenario/goldfish tests,
-and batch simulation with card-level metrics. Until that lands, level 4/5 above (a small curated
-real decklist through `play-decks` or the single-player UI) is the practical substitute — it's
-slower to set up per-card than a true sandbox would be, so don't skip levels 2-3 first; they're
-cheap and catch most correctness bugs before you burn time on a manual playtest.
+`packages/server/src/cards/card-test-scenarios.ts` registers deterministic prepared games with
+pinned Oracle hashes and clause IDs. The scenario must drive the production engine through legal
+actions, payment, priority, the stack, and resolution. Its server test verifies the authoritative
+state and event stream.
+
+`apps/web/e2e/card-test-lab.spec.ts` then drives the real Vue viewer against the real lab backend
+over WebSocket. Assert the actual interaction and result, and retain the Playwright trace. The
+verification manifest names the required scenario IDs; the card gate rejects missing registered
+scenarios. Re-run the browser suite after changing engine action presentation or the viewer.
+
+Prepared lab states are intentionally narrow. Use a legal curated deck and multiple seeds for
+interaction that needs normal game progression. Report gameplay-AI decisions separately from rules
+and viewer correctness.
 
 ## 6. Command cheat sheet
 
@@ -382,13 +429,21 @@ bun run dev                               # levels 5-6: real client (server :300
 
 ## 7. Before calling a card done
 
-- [ ] `modeled: true`, with `unmodeledReasons` empty for the printing you targeted.
-- [ ] Level 2 fixture test(s) for the core effect and each ability, covering the applicable
-      [edge cases](#3-edge-case-checklist).
-- [ ] Level 3 whole-game test proving the ability appears correctly in the legal-action menu and
-      resolves through real priority (not just via direct `executeAbility`).
-- [ ] Level 4 or 5 manual playtest: cast it, use each ability, in a real (or CLI-simulated) game.
-- [ ] Level 6 spectator/AI pass across a couple of seeds: the AI actually uses the card, and its
-      action descriptions read unambiguously.
-- [ ] If it unblocks a real fixture deck, `bun run coverage` shows the improvement and
-      `bun run modelled-cards` lists it.
+- [ ] A pinned offline fixture records the real Oracle ID, full Oracle text/faces, retrieval date,
+      and content hash.
+- [ ] Every Oracle clause maps to an implementation primitive or explicit unsupported status and
+      to positive and negative scenario IDs.
+- [ ] `modeled: true` and empty `unmodeledReasons` hold for both the real Oracle ID and fixture
+      alias. This is a prerequisite, not proof.
+- [ ] Normal Vitest callbacks run fixture behavior tests for every ability and applicable
+      [edge case](#3-edge-case-checklist); decision generators are driven with `pump()`.
+- [ ] Whole-game tests prove costs, targets, timing, and normal cast/activation through legality,
+      priority, the stack, and resolution. Direct `executeAbility` tests alone are insufficient.
+- [ ] The Card Test Lab runs each declared deterministic scenario through the production engine.
+- [ ] Playwright drives the real frontend and backend for each required viewer scenario and
+      retains assertions, trace, revision, Oracle hash, and scenario hash.
+- [ ] Generated engine and viewer evidence is current for the tested revision. Mocked UI checks,
+      screenshots without assertions, and manually written pass flags do not count.
+- [ ] Aggregate coverage and `modelled-cards.md` are refreshed only as inventory.
+- [ ] Gameplay-AI quality, when evaluated, is reported separately and cannot make a rules failure
+      pass or block a correct card solely because a provider made a poor strategic choice.

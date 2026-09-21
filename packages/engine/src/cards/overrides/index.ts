@@ -60,6 +60,9 @@ import { registerNECRON_DYNASTIES_REMAININGOverrides } from './necron-dynasties-
 import { registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides } from './queen-marchesa-queens-gambit';
 import { registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides } from './queen-marchesa-queens-gambit-remaining';
 import { registerMARCHESA_THE_BLACK_ROSEOverrides } from './marchesa-the-black-rose';
+import { registerW1RemainingOverrides } from './w1-remaining';
+import { registerW2RemainingOverrides } from './w2-remaining';
+import { registerReviewedFiveOverrides } from './reviewed-five';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -72,12 +75,26 @@ export interface CardOverride {
   handledLines: string[];
   /** The authored behavior, merged over the interpreted definition. */
   def: Partial<CardDefinition>;
+  /** A confirmed incorrect implementation contained until its faithful replacement lands. */
+  unsupportedReason?: string;
 }
 
 /**
  * Every authored override, keyed by oracle id.
  */
 const OVERRIDES = new Map<OracleId, CardOverride>();
+
+/** Differing duplicate registrations that would otherwise be silently resolved last-write-wins. */
+export const conflictingRegistrations: {
+  oracleId: OracleId;
+  previous: CardOverride;
+  incoming: CardOverride;
+}[] = [];
+export const explicitReplacements: {
+  oracleId: OracleId;
+  name: string;
+  reason: string;
+}[] = [];
 
 /**
  * Deck registrations (`registerXOverrides`) that threw during module init, one entry per failed
@@ -114,8 +131,14 @@ registerDeck('counter-intelligence', registerCOUNTER_INTELLIGENCEOverrides);
 registerDeck('necron-dynasties', registerNECRON_DYNASTIESOverrides);
 registerDeck('necron-dynasties-remaining', registerNECRON_DYNASTIES_REMAININGOverrides);
 registerDeck('queen-marchesa-queens-gambit', registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides);
-registerDeck('queen-marchesa-queens-gambit-remaining', registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides);
+registerDeck(
+  'queen-marchesa-queens-gambit-remaining',
+  registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides,
+);
 registerDeck('marchesa-the-black-rose', registerMARCHESA_THE_BLACK_ROSEOverrides);
+registerDeck('w1-remaining', registerW1RemainingOverrides);
+registerDeck('w2-remaining', registerW2RemainingOverrides);
+registerDeck('reviewed-five', registerReviewedFiveOverrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {
@@ -124,10 +147,30 @@ export function registerOverride(override: CardOverride): void {
   // moved into a later increment. Never let that empty placeholder erase executable behavior.
   // Checked by CONTENT (isEmptyPatch), not by key count: `{ manaAbilities: [] }` has one key but
   // patches in no more behavior than `{}` — the same distinction `applyOverride` makes below.
-  if (existing !== undefined && !isEmptyPatch(existing.def) && isEmptyPatch(override.def)) {
+  if (
+    existing !== undefined &&
+    override.unsupportedReason === undefined &&
+    !isEmptyPatch(existing.def) &&
+    isEmptyPatch(override.def)
+  ) {
     return;
   }
+  if (existing !== undefined && registrationsConflict(existing, override)) {
+    conflictingRegistrations.push({
+      oracleId: override.oracleId,
+      previous: existing,
+      incoming: override,
+    });
+  }
   OVERRIDES.set(override.oracleId, override);
+}
+
+/** Exact duplicate data is harmless; any differing second definition needs explicit resolution. */
+export function registrationsConflict(previous: CardOverride, incoming: CardOverride): boolean {
+  // Backlog placeholders are intentionally superseded by later implementation increments and
+  // executable definitions are already protected from later empty placeholders above.
+  if (isEmptyPatch(previous.def) || isEmptyPatch(incoming.def)) return false;
+  return JSON.stringify(previous) !== JSON.stringify(incoming);
 }
 
 export function getOverride(oracleId: OracleId): CardOverride | undefined {
@@ -143,7 +186,10 @@ export function getOverride(oracleId: OracleId): CardOverride | undefined {
  * behavior under its Scryfall id and an empty patch under its slug.
  */
 export function fixtureOracleId(name: string): string {
-  return `oracle-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+  return `oracle-${name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')}`;
 }
 
 /**
@@ -167,6 +213,30 @@ export function defineCard(
 }
 
 /**
+ * Deliberately supersede an earlier executable registration. This is intentionally noisy and
+ * requires a reason; ordinary `defineCard` calls with differing data are reported as conflicts.
+ */
+export function replaceCard(
+  oracleId: string,
+  name: string,
+  handledLines: string[],
+  def: Partial<CardDefinition>,
+  reason: string,
+): void {
+  const replace = (id: string): void => {
+    const override = { oracleId: id, name, handledLines, def };
+    if (OVERRIDES.has(id)) {
+      explicitReplacements.push({ oracleId: id, name, reason });
+      OVERRIDES.set(id, override);
+    } else {
+      registerOverride(override);
+    }
+  };
+  replace(oracleId);
+  replace(fixtureOracleId(name));
+}
+
+/**
  * A card whose unparsed lines are catalogued but whose behavior is not authored yet.
  *
  * This registers an empty patch, which `applyOverride` deliberately refuses to honor: the card
@@ -176,6 +246,24 @@ export function defineCard(
  */
 export function unimplemented(oracleId: string, name: string, handledLines: string[]): void {
   defineCard(oracleId, name, handledLines, {});
+}
+
+/**
+ * Contain behavior known to be wrong even when the generic parser would otherwise call the card
+ * modeled. Unlike `unimplemented`, this is an explicit negative support declaration and therefore
+ * takes precedence over an older executable registration for the same Oracle/fixture ids.
+ */
+export function unsupportedCard(oracleId: string, name: string, reason: string): void {
+  const register = (id: string): void =>
+    registerOverride({
+      oracleId: id,
+      name,
+      handledLines: [],
+      def: {},
+      unsupportedReason: reason,
+    });
+  register(oracleId);
+  register(fixtureOracleId(name));
 }
 
 /**
@@ -222,7 +310,10 @@ function normalizeLine(line: string): string {
  * Every other boolean field (`commanderFreeCast`, `cantBlock`, …) is optional and `false`-shaped
  * when absent, so an explicit `false` there really does patch in nothing beyond the default.
  */
-const REQUIRED_BOOLEAN_FIELDS: ReadonlySet<string> = new Set(['entersTapped', 'hasUnsupportedCost']);
+const REQUIRED_BOOLEAN_FIELDS: ReadonlySet<string> = new Set([
+  'entersTapped',
+  'hasUnsupportedCost',
+]);
 
 /**
  * Does this patch actually change anything the executor reads? `{}` obviously doesn't, but
@@ -253,6 +344,17 @@ function isEmptyPatch(patch: Partial<CardDefinition>): boolean {
 export function applyOverride(def: CardDefinition): CardDefinition {
   const override = getOverride(def.oracleId);
   if (override === undefined) return def;
+
+  if (override.unsupportedReason !== undefined) {
+    return {
+      ...def,
+      modeled: false,
+      unmodeledReasons: [
+        ...def.unmodeledReasons,
+        `explicitly unsupported: ${override.unsupportedReason}`,
+      ],
+    };
+  }
 
   // A registration must add executable card behavior. An empty patch is ignored so it cannot
   // clear an unsupported-rule reason and turn missing rules into a silent no-op.

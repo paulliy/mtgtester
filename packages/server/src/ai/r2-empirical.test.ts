@@ -256,7 +256,12 @@ describe('Empirical Stress Tests — R2: Turn Plan Queue Expiration Resync', () 
       const manager = new TurnPlanManager();
 
       // Setup turn plan for full turn
-      const reqStart = makeRequest({ turn: 2, activePlayer: 'P1', phase: 'beginning', step: 'upkeep' });
+      const reqStart = makeRequest({
+        turn: 2,
+        activePlayer: 'P1',
+        phase: 'beginning',
+        step: 'upkeep',
+      });
       const fullTurnPlan: PlannedAction[] = [
         { type: 'pass', phase: 'beginning', step: 'upkeep' },
         { type: 'pass', phase: 'beginning', step: 'draw' },

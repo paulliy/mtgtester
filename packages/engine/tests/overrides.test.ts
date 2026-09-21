@@ -9,7 +9,12 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
-import { failedRegistrations, getOverride, registerOverride, unregisterOverride } from '../src/cards/overrides';
+import {
+  failedRegistrations,
+  getOverride,
+  registerOverride,
+  unregisterOverride,
+} from '../src/cards/overrides';
 import { oracle } from './fixtures';
 
 const ORACLE_ID = 'oracle-test-override-card';
@@ -59,7 +64,6 @@ describe('authored-override registry', () => {
     const overridden = interpretCard(bespoke());
     expect(overridden.modeled).toBe(false);
     expect(overridden.unmodeledReasons).toContain(def.unmodeledReasons[0]);
-
   });
   it('clears exactly the reasons an override names, and merges its authored behavior', () => {
     const def = interpretCard(bespoke());
@@ -97,7 +101,9 @@ describe('authored-override registry', () => {
 
     const overridden = interpretCard(bespoke());
     expect(overridden.modeled).toBe(false);
-    expect(overridden.unmodeledReasons.some((r) => r.includes('has no executable behavior'))).toBe(true);
+    expect(overridden.unmodeledReasons.some((r) => r.includes('has no executable behavior'))).toBe(
+      true,
+    );
   });
 
   it('does NOT treat `entersTapped: false` as an empty patch, even alone', () => {
@@ -117,7 +123,9 @@ describe('authored-override registry', () => {
     });
 
     const overridden = interpretCard(bespoke());
-    expect(overridden.unmodeledReasons.some((r) => r.includes('has no executable behavior'))).toBe(false);
+    expect(overridden.unmodeledReasons.some((r) => r.includes('has no executable behavior'))).toBe(
+      false,
+    );
     expect(overridden.entersTapped).toBe(false);
   });
 

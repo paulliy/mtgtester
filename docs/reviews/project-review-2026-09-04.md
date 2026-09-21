@@ -16,15 +16,15 @@ This was an architecture-wide review with detailed inspection of the engine, man
 
 Files changed concurrently during this review. An initial test-type error in `state/queries.ts` disappeared in later source; both final type-check commands passed. The full suite result below describes the earlier run, not an atomic snapshot of all subsequent edits. Source hashes and raw outputs are retained in the evidence directory. No application source was changed by this review; additions are this report and its reproduction/evidence files. Build checks generated normal ignored outputs.
 
-| Check | Observed result |
-|---|---|
-| `bun run test` | 158 files / 1,249 tests passed; 32.57 seconds elapsed |
-| `bun run typecheck` | Passed, including final recheck |
-| `bun run typecheck:tests` | Initial error during concurrent edits; final recheck passed |
-| `bun run lint` | Passed; Vue files are explicitly excluded |
-| `bun run --cwd apps/web build` | Passed; JS 206.63 kB / 71.73 kB gzip; CSS 53.02 kB / 10.00 kB gzip |
-| `bunx playwright test --list` | No tests found |
-| Review reproduction harness | Eight targeted behavior probes demonstrate the issues described below |
+| Check                          | Observed result                                                       |
+| ------------------------------ | --------------------------------------------------------------------- |
+| `bun run test`                 | 158 files / 1,249 tests passed; 32.57 seconds elapsed                 |
+| `bun run typecheck`            | Passed, including final recheck                                       |
+| `bun run typecheck:tests`      | Initial error during concurrent edits; final recheck passed           |
+| `bun run lint`                 | Passed; Vue files are explicitly excluded                             |
+| `bun run --cwd apps/web build` | Passed; JS 206.63 kB / 71.73 kB gzip; CSS 53.02 kB / 10.00 kB gzip    |
+| `bunx playwright test --list`  | No tests found                                                        |
+| Review reproduction harness    | Eight targeted behavior probes demonstrate the issues described below |
 
 No paid AI calls, live deck imports, production database modifications, or network penetration testing were performed. Real-card behavioral coverage and production-scale heap profiling remain outside the measurements here.
 
@@ -86,11 +86,11 @@ Add color feasibility and suffix production bounds, memoize impossible residual 
 
 Source inspection found multiple discrepancies in [silverquill-influence-remaining.ts:97](C:/Users/paulf/OneDrive/Documents/GitHub/mtgtester/packages/engine/src/cards/overrides/silverquill-influence-remaining.ts:97):
 
-| Card | Encoded behavior | Required distinction missing from its own handled text |
-|---|---|---|
-| Land Tax | Opponents collectively have at least one land | An individual opponent must have more lands than you |
-| Parasitic Impetus | Any enchanted creature attacking triggers; `loseLife` affects the ability controller | The particular enchanted creature attacks; that creature's controller loses life |
-| Pearl-Ear, Imperial Advisor | Fixed generic reduction of one; draw on Aura casts | Affinity depends on Aura count; draw requires targeting a modified permanent you control |
+| Card                        | Encoded behavior                                                                     | Required distinction missing from its own handled text                                   |
+| --------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Land Tax                    | Opponents collectively have at least one land                                        | An individual opponent must have more lands than you                                     |
+| Parasitic Impetus           | Any enchanted creature attacking triggers; `loseLife` affects the ability controller | The particular enchanted creature attacks; that creature's controller loses life         |
+| Pearl-Ear, Imperial Advisor | Fixed generic reduction of one; draw on Aura casts                                   | Affinity depends on Aura count; draw requires targeting a modified permanent you control |
 
 These are source-level findings, not three additional executed card scenarios. They demonstrate why “text recognized,” “executor arm exists,” and “modeled=true” must not be treated as equivalent to correct card behavior.
 
@@ -146,17 +146,17 @@ Add Vue-aware type checking and linting, and a small Playwright suite for start,
 
 Bun 1.3.14 on this Windows workspace. Synthetic stable boards, no network or SQLite. Each operation is warmed up; results are medians of five repeats, except difficult mana cases, which use three. These are microbenchmarks, not whole-game speedups or service-level latency guarantees. Data below is from the saved `review-checks.log` run; the final portable harness run is also retained and may differ with machine load.
 
-| Workload | Current path | Comparison / implication |
-|---|---:|---|
-| 100 full-board read passes, 20 permanents | 7.83 ms | One characteristics map per pass: 0.50 ms |
-| Same, 80 permanents | 34.44 ms | One map per pass: 0.40 ms |
-| Same, 160 permanents | 130.12 ms | One map per pass: 0.79 ms |
-| Impossible payment, 8 G/W sources, `{4}{U}` | 1.80 ms/check | No source can satisfy U |
-| Impossible payment, 12 G/W sources, `{6}{U}` | 30.43 ms/check | Strong combinatorial growth |
-| Impossible payment, 16 G/W sources, `{8}{U}` | 2,363.07 ms/check | Ordinary menus can multiply this cost |
-| 1,000 empty event polls, history 1,000 | 3.20 ms | Full history scanned for no new events |
-| Same, history 10,000 | 32.57 ms | Linear cost per poll |
-| Same, history 100,000 | 499.59 ms | Cumulative polling becomes quadratic as history grows |
+| Workload                                     |      Current path | Comparison / implication                              |
+| -------------------------------------------- | ----------------: | ----------------------------------------------------- |
+| 100 full-board read passes, 20 permanents    |           7.83 ms | One characteristics map per pass: 0.50 ms             |
+| Same, 80 permanents                          |          34.44 ms | One map per pass: 0.40 ms                             |
+| Same, 160 permanents                         |         130.12 ms | One map per pass: 0.79 ms                             |
+| Impossible payment, 8 G/W sources, `{4}{U}`  |     1.80 ms/check | No source can satisfy U                               |
+| Impossible payment, 12 G/W sources, `{6}{U}` |    30.43 ms/check | Strong combinatorial growth                           |
+| Impossible payment, 16 G/W sources, `{8}{U}` | 2,363.07 ms/check | Ordinary menus can multiply this cost                 |
+| 1,000 empty event polls, history 1,000       |           3.20 ms | Full history scanned for no new events                |
+| Same, history 10,000                         |          32.57 ms | Linear cost per poll                                  |
+| Same, history 100,000                        |         499.59 ms | Cumulative polling becomes quadratic as history grows |
 
 ### Recommended changes, in value order
 
@@ -213,12 +213,12 @@ Make root build/typecheck/test commands explicit about what they cover. Add sepa
 
 ## Recommended delivery order
 
-| Stage | Work | Exit criteria |
-|---|---|---|
-| 1 — Correctness and exposure | F01–F05, F07, F10, F12; quarantine inaccurate overrides | Reproductions become passing regression tests; visibility and legal-action invariants hold |
-| 2 — Exact fast queries | F06, evaluated-board scopes, payment reuse, event cursors | Identical outcomes across seeded fixtures; bounded pathological mana work; measured before/after profiles |
-| 3 — Reliable orchestration and metrics | F08, F09, F11; headless runner, operation budgets/workers | Recoverable cancellation/restarts; one owner per session; accurate versioned metrics |
-| 4 — Maintainability and coverage | F13, parser/executor/UI extraction, CI, support provenance | Vue checks and browser flow pass; module boundaries enforced; card claims tied to behavior tests |
+| Stage                                  | Work                                                       | Exit criteria                                                                                             |
+| -------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1 — Correctness and exposure           | F01–F05, F07, F10, F12; quarantine inaccurate overrides    | Reproductions become passing regression tests; visibility and legal-action invariants hold                |
+| 2 — Exact fast queries                 | F06, evaluated-board scopes, payment reuse, event cursors  | Identical outcomes across seeded fixtures; bounded pathological mana work; measured before/after profiles |
+| 3 — Reliable orchestration and metrics | F08, F09, F11; headless runner, operation budgets/workers  | Recoverable cancellation/restarts; one owner per session; accurate versioned metrics                      |
+| 4 — Maintainability and coverage       | F13, parser/executor/UI extraction, CI, support provenance | Vue checks and browser flow pass; module boundaries enforced; card claims tied to behavior tests          |
 
 Use small, reviewable changes with fixture parity between old and new paths. A language/runtime rewrite, framework migration, general ECS conversion, distributed services, and a complete parser replacement are not justified by the evidence. Focus selective rewrites on mana assignment, simultaneous-event processing, and session lifecycle, where current abstractions are directly causing failures.
 

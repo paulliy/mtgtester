@@ -16,9 +16,9 @@ A logged 30-turn four-player game surfaced 320 decisions. Reading them, the over
 majority were not choices at all:
 
 - An idle player was asked "pass priority?" at every step of every turn for ten straight turns.
-  `isForced` (brief §5.1) never fired, because a pump instant that can legally target *any*
+  `isForced` (brief §5.1) never fired, because a pump instant that can legally target _any_
   creature stays a legal `castSpell` forever — so the menu is permanently `[pass, Cast
-  Predator's Strike]` and never has exactly one option.
+Predator's Strike]` and never has exactly one option.
 - A 0-power creature was asked "does it attack?" every single combat.
 - Combat asked one call **per creature**, every turn, for both attackers and blockers.
 
@@ -28,11 +28,11 @@ Measured over three full games from the supported pool, combat declarations alon
 ## Decision
 
 1. **Local answers upstream of the rate limiter.** `tryHeuristic` and a per-game decision
-   cache run in `OpenAiDecisionProvider.decide()` *before* `queue.enqueue()`, so a locally
+   cache run in `OpenAiDecisionProvider.decide()` _before_ `queue.enqueue()`, so a locally
    answered decision costs nothing against the RPM budget. Both are env-toggleable
    (`AI_HEURISTICS_ENABLED`, `AI_DECISION_CACHE_ENABLED`) and default on.
 
-   Every heuristic must be *unambiguous* — dominated options only, never board judgment. A
+   Every heuristic must be _unambiguous_ — dominated options only, never board judgment. A
    heuristic that misfires degrades play quality in a way the turn log will not obviously show,
    so the rules are deliberately narrow and leave savings on the table.
 

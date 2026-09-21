@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "a6f1105327ad6ae87d4555c5eb08b47ea823b697404b27c3dbd53ce14ece3b49",
+      "card": {
+        "oracleId": "a3da7d5b-2c2b-45fe-b9c5-413b8c8fc0a2",
+        "scryfallId": "a95b7645-154f-4904-bf71-db7eb24d4df2",
+        "name": "Academy Ruins",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Land",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{1}{U}, {T}: Put target artifact card from your graveyard on top of your library.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0d253dcf6c010e24fbae0ffc483e7390fcf588ea0d8284a855ce0b4f6e84087c",
+      "card": {
+        "oracleId": "86084ed9-b8bb-4289-9579-6056194787bc",
+        "scryfallId": "5aab5a55-0aee-4d8e-92b7-92b057a00509",
+        "name": "Pia and Kiran Nalaar",
+        "manaCost": "{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Human Artificer",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Artificer"
+        ],
+        "oracleText": "When Pia and Kiran Nalaar enters, create two 1/1 colorless Thopter artifact creature tokens with flying.\n{2}{R}, Sacrifice an artifact: Pia and Kiran Nalaar deals 2 damage to any target.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d9d248d1dd1e9d61bcbe740c8890bb364f35444fd34508bb872241f4a036a056",
+      "card": {
+        "oracleId": "52241b9c-7a69-4176-9234-8bdab09d8e64",
+        "scryfallId": "ad0b5c09-5075-408e-84c5-1095354ac53e",
+        "name": "Sai, Master Thopterist",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Human Artificer",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Artificer"
+        ],
+        "oracleText": "Whenever you cast an artifact spell, create a 1/1 colorless Thopter artifact creature token with flying.\n{1}{U}, Sacrifice two artifacts: Draw a card.",
+        "power": "1",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "049360e96093054318ad784aee75ad8e8a02b50a5c621170d60b263a4133a9be",
+      "card": {
+        "oracleId": "49be65fd-3755-410d-b0dc-2e5861ea2552",
+        "scryfallId": "babc5799-31f3-452e-a61d-5c11f9f81bf9",
+        "name": "Thopter Spy Network",
+        "manaCost": "{2}{U}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "At the beginning of your upkeep, if you control an artifact, create a 1/1 colorless Thopter artifact creature token with flying.\nWhenever one or more artifact creatures you control deal combat damage to a player, draw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2b14ae571ce7f3f92b834261ea08fde5a43cdd216453fce1dc8bf326c5fe17c9",
+      "card": {
+        "oracleId": "7060f2c8-fca0-4b7a-bddf-37682f434596",
+        "scryfallId": "d1054d2b-a424-466d-8ec6-36f014849e43",
+        "name": "Whirler Rogue",
+        "manaCost": "{2}{U}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Human Rogue Artificer",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Rogue",
+          "Artificer"
+        ],
+        "oracleText": "When this creature enters, create two 1/1 colorless Thopter artifact creature tokens with flying.\nTap two untapped artifacts you control: Target creature can't be blocked this turn.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

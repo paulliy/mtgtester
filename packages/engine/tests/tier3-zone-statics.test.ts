@@ -8,7 +8,12 @@ import type { GameContext } from '../src/state/types';
 import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 function pod(seed: string): GameContext {
-  const ctx = createGame(gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.turnNumber = 4;
@@ -30,7 +35,8 @@ const grandAbolisher = oracle({
   manaCost: '{W}{W}',
   power: '2',
   toughness: '2',
-  oracleText: "During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments.",
+  oracleText:
+    "During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments.",
 });
 
 const songOfTheDryads = oracle({
@@ -54,7 +60,12 @@ describe('Tier 3 zone and rule statics', () => {
       return payload.kind === 'playLand' && payload.objectId === first.id;
     });
     expect(firstOption).toBeDefined();
-    pump(applyPriorityAction(ctx, player, firstOption!.payload as PriorityActionPayload, { index: 0, targets: new Map() }));
+    pump(
+      applyPriorityAction(ctx, player, firstOption!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
 
     const secondOption = computePriorityOptions(ctx, player).find((option) => {
       const payload = option.payload as PriorityActionPayload;
@@ -67,36 +78,52 @@ describe('Tier 3 zone and rule statics', () => {
   it('blocks matching opponent activations only during the source controller turn', () => {
     const ctx = pod('tier3-activation-lock');
     spawn(ctx, 'P1', grandAbolisher);
-    const source = spawn(ctx, 'P2', oracle({
-      name: 'Test Drawing Idol',
-      typeLine: 'Artifact',
-      manaCost: '{1}',
-      oracleText: '{T}: Draw a card.',
-    }));
+    const source = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Test Drawing Idol',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        oracleText: '{T}: Draw a card.',
+      }),
+    );
     const opponent = ctx.state.players.find((candidate) => candidate.id === 'P2')!;
 
-    expect(computePriorityOptions(ctx, opponent).some((option) =>
-      option.type === 'activateAbility' &&
-      (option.payload as PriorityActionPayload).kind === 'activateAbility' &&
-      (option.payload as Extract<PriorityActionPayload, { kind: 'activateAbility' }>).objectId === source.id,
-    )).toBe(false);
+    expect(
+      computePriorityOptions(ctx, opponent).some(
+        (option) =>
+          option.type === 'activateAbility' &&
+          (option.payload as PriorityActionPayload).kind === 'activateAbility' &&
+          (option.payload as Extract<PriorityActionPayload, { kind: 'activateAbility' }>)
+            .objectId === source.id,
+      ),
+    ).toBe(false);
 
     ctx.state.currentTurnPlayer = 'P2';
-    expect(computePriorityOptions(ctx, opponent).some((option) =>
-      option.type === 'activateAbility' &&
-      (option.payload as PriorityActionPayload).kind === 'activateAbility' &&
-      (option.payload as Extract<PriorityActionPayload, { kind: 'activateAbility' }>).objectId === source.id,
-    )).toBe(true);
+    expect(
+      computePriorityOptions(ctx, opponent).some(
+        (option) =>
+          option.type === 'activateAbility' &&
+          (option.payload as PriorityActionPayload).kind === 'activateAbility' &&
+          (option.payload as Extract<PriorityActionPayload, { kind: 'activateAbility' }>)
+            .objectId === source.id,
+      ),
+    ).toBe(true);
   });
 
   it('sets the enchanted permanent to a colorless Forest and derives green mana', () => {
     const ctx = pod('tier3-basic-land-type');
-    const target = spawn(ctx, 'P2', oracle({
-      name: 'Test Relic',
-      typeLine: 'Artifact',
-      manaCost: '{2}',
-      oracleText: '{T}: Add {C}.',
-    }));
+    const target = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Test Relic',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        oracleText: '{T}: Add {C}.',
+      }),
+    );
     const aura = spawn(ctx, 'P1', songOfTheDryads);
     aura.attachedTo = target.id;
 
@@ -105,7 +132,9 @@ describe('Tier 3 zone and rule statics', () => {
     expect(chars.subtypes).toEqual(['Forest']);
     expect(chars.colors).toEqual([]);
     expect(chars.manaAbilities).toEqual([{ units: [['G']] }]);
-    expect(manaSourcesFor(ctx, 'P2').find((source) => source.cardId === target.cardId)?.units).toEqual([['G']]);
+    expect(
+      manaSourcesFor(ctx, 'P2').find((source) => source.cardId === target.cardId)?.units,
+    ).toEqual([['G']]);
   });
 
   it('tracks Muldrotha permission once per permanent type and preserves multitype choice', () => {
@@ -116,69 +145,110 @@ describe('Tier 3 zone and rule statics', () => {
       manaCost: '{3}{B}{G}{U}',
       power: '6',
       toughness: '6',
-      oracleText: 'During each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard.',
+      oracleText:
+        'During each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard.',
     });
     const muldrothaPermanent = spawn(ctx, 'P1', muldrotha);
-    expect(ctx.defs.get(muldrothaPermanent.oracleId)?.ruleStatics).toEqual([expect.objectContaining({
-      kind: 'playFromZone',
-      zone: 'graveyard',
-      yourTurnOnly: true,
-      permanentTypeBudget: 1,
-    })]);
+    expect(ctx.defs.get(muldrothaPermanent.oracleId)?.ruleStatics).toEqual([
+      expect.objectContaining({
+        kind: 'playFromZone',
+        zone: 'graveyard',
+        yourTurnOnly: true,
+        permanentTypeBudget: 1,
+      }),
+    ]);
     const player = ctx.state.players.find((candidate) => candidate.id === 'P1')!;
-    const hybrid = conjure(ctx, 'P1', oracle({
-      name: 'Test Hybrid Relic',
-      typeLine: 'Artifact Creature \u2014 Construct',
-      manaCost: '{0}',
-      power: '1',
-      toughness: '1',
-      oracleText: '',
-    }), 'graveyard');
-    const artifact = conjure(ctx, 'P1', oracle({
-      name: 'Test Spare Relic',
-      typeLine: 'Artifact',
-      manaCost: '{0}',
-      oracleText: '',
-    }), 'graveyard');
-    const creature = conjure(ctx, 'P1', oracle({
-      name: 'Test Spare Creature',
-      typeLine: 'Creature \u2014 Bear',
-      manaCost: '{0}',
-      power: '2',
-      toughness: '2',
-      oracleText: '',
-    }), 'graveyard');
+    const hybrid = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Hybrid Relic',
+        typeLine: 'Artifact Creature \u2014 Construct',
+        manaCost: '{0}',
+        power: '1',
+        toughness: '1',
+        oracleText: '',
+      }),
+      'graveyard',
+    );
+    const artifact = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Spare Relic',
+        typeLine: 'Artifact',
+        manaCost: '{0}',
+        oracleText: '',
+      }),
+      'graveyard',
+    );
+    const creature = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Spare Creature',
+        typeLine: 'Creature \u2014 Bear',
+        manaCost: '{0}',
+        power: '2',
+        toughness: '2',
+        oracleText: '',
+      }),
+      'graveyard',
+    );
 
     const hybridOptions = computePriorityOptions(ctx, player).filter((option) => {
       const payload = option.payload as PriorityActionPayload;
       return payload.kind === 'castSpell' && payload.objectId === hybrid.id;
     });
-    expect(hybridOptions.map((option) =>
-      (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).zoneBudgetType,
-    )).toEqual(['Artifact', 'Creature']);
+    expect(
+      hybridOptions.map(
+        (option) =>
+          (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).zoneBudgetType,
+      ),
+    ).toEqual(['Artifact', 'Creature']);
 
-    const artifactChoice = hybridOptions.find((option) =>
-      (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).zoneBudgetType === 'Artifact',
+    const artifactChoice = hybridOptions.find(
+      (option) =>
+        (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).zoneBudgetType ===
+        'Artifact',
     )!;
-    pump(applyPriorityAction(ctx, player, artifactChoice.payload as PriorityActionPayload, { index: 0, targets: new Map() }));
+    pump(
+      applyPriorityAction(ctx, player, artifactChoice.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
     expect(player.playFromZoneTypeUsesThisTurn).toEqual({ Artifact: 1 });
 
     ctx.state.stack = [];
     const remaining = computePriorityOptions(ctx, player);
-    expect(remaining.some((option) => {
-      const payload = option.payload as PriorityActionPayload;
-      return payload.kind === 'castSpell' && payload.objectId === artifact.id;
-    })).toBe(false);
-    expect(remaining.some((option) => {
-      const payload = option.payload as PriorityActionPayload;
-      return payload.kind === 'castSpell' && payload.objectId === creature.id && payload.zoneBudgetType === 'Creature';
-    })).toBe(true);
+    expect(
+      remaining.some((option) => {
+        const payload = option.payload as PriorityActionPayload;
+        return payload.kind === 'castSpell' && payload.objectId === artifact.id;
+      }),
+    ).toBe(false);
+    expect(
+      remaining.some((option) => {
+        const payload = option.payload as PriorityActionPayload;
+        return (
+          payload.kind === 'castSpell' &&
+          payload.objectId === creature.id &&
+          payload.zoneBudgetType === 'Creature'
+        );
+      }),
+    ).toBe(true);
 
     ctx.state.currentTurnPlayer = 'P2';
-    expect(computePriorityOptions(ctx, player).some((option) => {
-      const payload = option.payload as PriorityActionPayload;
-      return payload.kind === 'castSpell' && payload.fromGraveyard === true && payload.alternativeCast === undefined;
-    })).toBe(false);
+    expect(
+      computePriorityOptions(ctx, player).some((option) => {
+        const payload = option.payload as PriorityActionPayload;
+        return (
+          payload.kind === 'castSpell' &&
+          payload.fromGraveyard === true &&
+          payload.alternativeCast === undefined
+        );
+      }),
+    ).toBe(false);
   });
-
 });

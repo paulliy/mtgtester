@@ -88,6 +88,7 @@ export type Condition =
   | { kind: 'totalCreaturePower'; scope: 'you' | 'opponents' | 'all'; cmp: '>=' | '<='; n: number }
   | { kind: 'isUntapped' }
   | { kind: 'wasKicked' }
+  | { kind: 'announcedXAtLeast'; n: number }
   | { kind: 'escaped' }
   | { kind: 'hasCounters'; selector: Selector; counter: string; cmp: '>=' | '<='; n: number }
   | { kind: 'enteredThisTurn' }
@@ -118,8 +119,13 @@ export type Condition =
   | { kind: 'opponentIsMonarch' }
   /** A non-your-turn restriction, as on Force of Negation. */
   | { kind: 'notYourTurn' }
+  /** "During your turn" — checked against the trigger source's controller. */
+  | { kind: 'yourTurn' }
   /** Attack trigger condition: the defending player has more life than the attacker’s controller. */
   | { kind: 'attackingPlayerHasMoreLife' }
+  | { kind: 'attackingPlayerHasMoreLifeThanYou' }
+  /** The attack-trigger object is attacking an opponent of the ability's controller. */
+  | { kind: 'triggerObjectAttackingOpponent' }
   | { kind: 'allOf'; of: Condition[] }
   | { kind: 'anyOf'; of: Condition[] }
   | { kind: 'eventPlayerDrawCount'; cmp: Comparison; n: number }
@@ -191,9 +197,10 @@ export function evaluateCondition(
     case 'castSpellThisTurn': {
       const player = ctx.state.players.find((candidate) => candidate.id === source.controllerId);
       if (player === undefined) return false;
-      const cast = condition.category === 'noncreature'
-        ? player.noncreatureSpellsCastThisTurn
-        : player.spellsCastThisTurn;
+      const cast =
+        condition.category === 'noncreature'
+          ? player.noncreatureSpellsCastThisTurn
+          : player.spellsCastThisTurn;
       return compare(cast, condition.cmp, condition.n);
     }
     case 'cardsInYourGraveyard': {
@@ -215,14 +222,19 @@ export function evaluateCondition(
       if (player === undefined) return false;
       // The draw has already been counted by the time the trigger is checked, so the draw being
       // exempted is the one that made the step counter 1.
-      const isOwnDrawStep = ctx.state.step === 'draw' && ctx.state.currentTurnPlayer === eventPlayer;
+      const isOwnDrawStep =
+        ctx.state.step === 'draw' && ctx.state.currentTurnPlayer === eventPlayer;
       return !(isOwnDrawStep && player.cardsDrawnThisDrawStep === 1);
     }
     case 'eventPlayerDrawCount': {
-      const eventPlayer = source.eventPlayerId === undefined
-        ? undefined
-        : ctx.state.players.find((player) => player.id === source.eventPlayerId);
-      return eventPlayer !== undefined && compare(eventPlayer.cardsDrawnThisTurn, condition.cmp, condition.n);
+      const eventPlayer =
+        source.eventPlayerId === undefined
+          ? undefined
+          : ctx.state.players.find((player) => player.id === source.eventPlayerId);
+      return (
+        eventPlayer !== undefined &&
+        compare(eventPlayer.cardsDrawnThisTurn, condition.cmp, condition.n)
+      );
     }
     case 'countPermanents': {
       // `selectPermanents` judges on CURRENT characteristics (ADR 0007), so a land Blood Moon
@@ -248,6 +260,19 @@ export function evaluateCondition(
     }
     case 'notYourTurn':
       return ctx.state.currentTurnPlayer !== source.controllerId;
+    case 'yourTurn':
+      return ctx.state.currentTurnPlayer === source.controllerId;
+    case 'triggerObjectAttackingOpponent': {
+      if (source.triggerObjectCardId === undefined) return false;
+      const attacker = ctx.state.battlefield.find(
+        (permanent) => permanent.cardId === source.triggerObjectCardId,
+      );
+      return (
+        attacker !== undefined &&
+        attacker.attacking !== null &&
+        attacker.attacking !== source.controllerId
+      );
+    }
     case 'opponentCount':
       return compare(opponentsOf(ctx, source.controllerId).length, condition.cmp, condition.n);
     case 'excessDamageDealtTo': {
@@ -257,7 +282,8 @@ export function evaluateCondition(
     case 'opponentDealtDamageThisTurn': {
       const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
       return Object.entries(ctx.state.damageDealtToPlayersThisTurn).some(
-        ([playerId, amount]) => opponentIds.has(playerId as PlayerId) && amount >= condition.minDamage,
+        ([playerId, amount]) =>
+          opponentIds.has(playerId as PlayerId) && amount >= condition.minDamage,
       );
     }
     case 'totalCreaturePower': {
@@ -309,7 +335,7 @@ export function evaluateCondition(
         (p) =>
           p.isCommander &&
           p.ownerId === source.controllerId &&
-        p.controllerId === source.controllerId,
+          p.controllerId === source.controllerId,
       );
     case 'opponentIsMonarch':
       return (
@@ -317,13 +343,26 @@ export function evaluateCondition(
         opponentsOf(ctx, source.controllerId).some((p) => p.id === ctx.state.monarchPlayerId)
       );
     case 'attackingPlayerHasMoreLife': {
-      const attacker = source.triggerObjectCardId === undefined
-        ? ctx.state.battlefield.find((p) => p.cardId === source.cardId)
-        : ctx.state.battlefield.find((p) => p.cardId === source.triggerObjectCardId);
+      // Printed dethrone: "attacks the player with the most life or tied for most life".
+      const attacker =
+        source.triggerObjectCardId === undefined
+          ? ctx.state.battlefield.find((p) => p.cardId === source.cardId)
+          : ctx.state.battlefield.find((p) => p.cardId === source.triggerObjectCardId);
       if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
       const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
-      const attackerController = ctx.state.players.find((p) => p.id === attacker.controllerId);
-      return defender !== undefined && attackerController !== undefined && defender.life > attackerController.life;
+      if (defender === undefined) return false;
+      const lives = ctx.state.players
+        .filter((player) => !player.hasLost)
+        .map((player) => player.life);
+      const mostLife = lives.length === 0 ? 0 : Math.max(...lives);
+      return defender.life === mostLife;
+    }
+    case 'attackingPlayerHasMoreLifeThanYou': {
+      const attacker = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
+      const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
+      const controller = ctx.state.players.find((p) => p.id === source.controllerId);
+      return defender !== undefined && controller !== undefined && defender.life > controller.life;
     }
     case 'createdTokenThisTurn':
       return ctx.state.createdTokenThisTurn?.[source.controllerId] === true;
@@ -336,9 +375,21 @@ export function evaluateCondition(
       );
       return stackObj !== undefined && (stackObj.wasKicked === true || stackObj.kicked === true);
     }
+    case 'announcedXAtLeast': {
+      if (source.cardId === undefined) return false;
+      const permanent = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      if (permanent !== undefined) return (permanent.announcedX ?? 0) >= condition.n;
+      const stackObject = ctx.state.stack.find(
+        (candidate) =>
+          candidate.sourceCardId === source.cardId || candidate.card?.cardId === source.cardId,
+      );
+      return (stackObject?.announcedX ?? 0) >= condition.n;
+    }
     case 'escaped': {
       if (source.cardId === undefined) return false;
-      const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === source.cardId);
+      const permanent = ctx.state.battlefield.find(
+        (candidate) => candidate.cardId === source.cardId,
+      );
       if (permanent !== undefined) return permanent.escaped === true;
       return ctx.state.stack.some(
         (candidate) =>
@@ -349,9 +400,10 @@ export function evaluateCondition(
     case 'hasCounters': {
       // SELF is used by Station's continuous threshold. Resolving it through selectPermanents
       // would recursively recompute the very characteristics whose condition is being checked.
-      const matched = condition.selector.kind === 'self'
-        ? ctx.state.battlefield.filter((perm) => perm.cardId === source?.cardId)
-        : selectPermanents(ctx, condition.selector, source);
+      const matched =
+        condition.selector.kind === 'self'
+          ? ctx.state.battlefield.filter((perm) => perm.cardId === source?.cardId)
+          : selectPermanents(ctx, condition.selector, source);
       return matched.some((perm) => {
         const count = condition.counter
           ? (perm.counters[condition.counter] ?? 0)
@@ -444,7 +496,7 @@ export function* resolveCondition(
       if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
       const sources = manaSourcesFor(ctx, player.id);
       const allows = allowanceFor(ctx, player.id, { kind: 'other' });
-      if (!canPay(condition.cost, player.manaEntries, sources, allows)) return false;
+      if (!canPay(condition.cost, player.manaEntries, sources, allows, player.life)) return false;
       const outcome = yield {
         decisionType: 'general',
         player: player.id,

@@ -115,7 +115,14 @@ describe('StrategyCoordinator', () => {
       addDebug: vi.fn(),
     } as unknown as Engine;
     const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
-    const coordinator = new StrategyCoordinator(client, queue, engine, DEFAULT_AI_CONFIG, undefined, 'P1');
+    const coordinator = new StrategyCoordinator(
+      client,
+      queue,
+      engine,
+      DEFAULT_AI_CONFIG,
+      undefined,
+      'P1',
+    );
     const req = request();
 
     coordinator.prepare(req);
@@ -265,7 +272,15 @@ describe('StrategyCoordinator', () => {
           plannedActions: [{ type: 'playLand', name: 'Forest', phase: 'precombatMain' }],
         },
       },
-      meta: { model: 'test', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+      meta: {
+        model: 'test',
+        promptTokens: 10,
+        responseTokens: 10,
+        latencyMs: 5,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
     });
 
     await coordinator.settled();
@@ -278,8 +293,12 @@ describe('StrategyCoordinator', () => {
     let resolveFirst!: (val: AiCallResult) => void;
     let resolveSecond!: (val: AiCallResult) => void;
 
-    const promise1 = new Promise<AiCallResult>((resolve) => { resolveFirst = resolve; });
-    const promise2 = new Promise<AiCallResult>((resolve) => { resolveSecond = resolve; });
+    const promise1 = new Promise<AiCallResult>((resolve) => {
+      resolveFirst = resolve;
+    });
+    const promise2 = new Promise<AiCallResult>((resolve) => {
+      resolveSecond = resolve;
+    });
 
     let callCount = 0;
     const client: AiClient = {
@@ -326,7 +345,15 @@ describe('StrategyCoordinator', () => {
           plannedActions: [],
         },
       },
-      meta: { model: 'test', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+      meta: {
+        model: 'test',
+        promptTokens: 10,
+        responseTokens: 10,
+        latencyMs: 5,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
     });
 
     await coordinator.settled();
@@ -342,7 +369,15 @@ describe('StrategyCoordinator', () => {
           plannedActions: [],
         },
       },
-      meta: { model: 'test', promptTokens: 10, responseTokens: 10, latencyMs: 5, wasRetry: false, wasFallback: false, rawResponse: '{}' },
+      meta: {
+        model: 'test',
+        promptTokens: 10,
+        responseTokens: 10,
+        latencyMs: 5,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
     });
 
     // The fresh strategy intent should NOT be overwritten by stale intent
@@ -540,9 +575,18 @@ describe('StrategyCoordinator', () => {
       { ...DEFAULT_AI_CONFIG, strategyRecentDecisionLimit: 2 },
     );
 
-    const r1 = request({ turn: 1, legalActions: [{ id: 10, type: 'pass', description: 'Action 1' }] });
-    const r2 = request({ turn: 1, legalActions: [{ id: 20, type: 'pass', description: 'Action 2' }] });
-    const r3 = request({ turn: 1, legalActions: [{ id: 30, type: 'pass', description: 'Action 3' }] });
+    const r1 = request({
+      turn: 1,
+      legalActions: [{ id: 10, type: 'pass', description: 'Action 1' }],
+    });
+    const r2 = request({
+      turn: 1,
+      legalActions: [{ id: 20, type: 'pass', description: 'Action 2' }],
+    });
+    const r3 = request({
+      turn: 1,
+      legalActions: [{ id: 30, type: 'pass', description: 'Action 3' }],
+    });
 
     coordinator.recordDecision(r1, { requestId: r1.requestId, actionId: 10 }, 'primary');
     coordinator.recordDecision(r2, { requestId: r2.requestId, actionId: 20 }, 'primary');
@@ -555,7 +599,6 @@ describe('StrategyCoordinator', () => {
   });
 });
 
-
 /**
  * The whole-game decision digest (ADR 0022 §7). Distinct from `recentDecisions`, which is capped
  * at 8 because a tactician only needs the last few moves. A post-game review needs the *arc* of
@@ -567,7 +610,7 @@ describe('StrategyCoordinator — whole-game decision digest', () => {
     const engine = { view: () => view, addDebug: () => {} } as unknown as Engine;
     return new StrategyCoordinator(
       null,
-      { enqueue: <T,>(fn: () => Promise<T>) => fn() },
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
       engine,
       DEFAULT_AI_CONFIG,
     );
@@ -590,7 +633,10 @@ describe('StrategyCoordinator — whole-game decision digest', () => {
 
     record(coordinator, { turn: 1, phase: 'precombatMain', type: 'pass', description: 'Pass' });
     record(coordinator, {
-      turn: 1, phase: 'precombatMain', type: 'passAndYieldTurn', description: 'Yield',
+      turn: 1,
+      phase: 'precombatMain',
+      type: 'passAndYieldTurn',
+      description: 'Yield',
     });
 
     expect(coordinator.digestFor('P1')).toHaveLength(0);
@@ -601,12 +647,18 @@ describe('StrategyCoordinator — whole-game decision digest', () => {
 
     for (const n of [1, 2, 3]) {
       record(coordinator, {
-        turn: 1, phase: 'precombatMain', type: 'castSpell', description: `main ${n}`,
+        turn: 1,
+        phase: 'precombatMain',
+        type: 'castSpell',
+        description: `main ${n}`,
       });
     }
     for (const n of [1, 2, 3, 4, 5]) {
       record(coordinator, {
-        turn: 1, phase: 'combat', type: 'declareAttackers', description: `attack ${n}`,
+        turn: 1,
+        phase: 'combat',
+        type: 'declareAttackers',
+        description: `attack ${n}`,
       });
     }
 
@@ -622,7 +674,10 @@ describe('StrategyCoordinator — whole-game decision digest', () => {
     });
 
     record(coordinator, {
-      turn: 1, phase: 'precombatMain', type: 'castSpell', description: 'P1 casts',
+      turn: 1,
+      phase: 'precombatMain',
+      type: 'castSpell',
+      description: 'P1 casts',
     });
     coordinator.recordDecision(p2, { requestId: p2.requestId, actionId: 1 }, 'primary');
 
@@ -636,7 +691,10 @@ describe('StrategyCoordinator — whole-game decision digest', () => {
     const coordinator = coordinatorForDigest();
     for (let turn = 1; turn <= 200; turn++) {
       record(coordinator, {
-        turn, phase: 'precombatMain', type: 'castSpell', description: `turn ${turn}`,
+        turn,
+        phase: 'precombatMain',
+        type: 'castSpell',
+        description: `turn ${turn}`,
       });
     }
 

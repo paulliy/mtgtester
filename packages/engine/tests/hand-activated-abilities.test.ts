@@ -80,11 +80,20 @@ describe('hand-activated abilities', () => {
     const handBefore = player.hand.length;
     const option = computePriorityOptions(ctx, player).find((candidate) => {
       const payload = candidate.payload as PriorityActionPayload;
-      return payload.kind === 'activateAbility' && payload.fromHand === true && payload.objectId === card.id;
+      return (
+        payload.kind === 'activateAbility' &&
+        payload.fromHand === true &&
+        payload.objectId === card.id
+      );
     });
     expect(option).toBeDefined();
 
-    pump(applyPriorityAction(ctx, player, option!.payload as PriorityActionPayload, { index: 0, targets: new Map() }));
+    pump(
+      applyPriorityAction(ctx, player, option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
 
     // The cost is paid at announcement (CR 601.2h): the card is in the graveyard while the
     // ability is still on the stack, not after it resolves.
@@ -103,7 +112,11 @@ describe('hand-activated abilities', () => {
 
     const offered = computePriorityOptions(ctx, player).some((candidate) => {
       const payload = candidate.payload as PriorityActionPayload;
-      return payload.kind === 'activateAbility' && payload.fromHand === true && payload.objectId === card.id;
+      return (
+        payload.kind === 'activateAbility' &&
+        payload.fromHand === true &&
+        payload.objectId === card.id
+      );
     });
     expect(offered).toBe(false);
   });

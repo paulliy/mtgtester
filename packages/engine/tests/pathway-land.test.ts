@@ -39,7 +39,12 @@ const blightstepPathway = (): ReturnType<typeof oracle> =>
   });
 
 function ctxWithSeats(seats: number): GameContext {
-  const ctx = createGame(gameConfig(Array.from({ length: seats }, () => ({ cards: [] })), { seed: 'pathway' }));
+  const ctx = createGame(
+    gameConfig(
+      Array.from({ length: seats }, () => ({ cards: [] })),
+      { seed: 'pathway' },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;
@@ -66,7 +71,10 @@ describe('Pathway-shaped modal DFC lands', () => {
     const gen = moveObject(ctx, obj, { zone: 'battlefield' });
     const step = gen.next();
     if (step.done === true) throw new Error('expected a decision');
-    expect(step.value.options.map((o) => o.description)).toEqual(['Blightstep Pathway', 'Searstep Pathway']);
+    expect(step.value.options.map((o) => o.description)).toEqual([
+      'Blightstep Pathway',
+      'Searstep Pathway',
+    ]);
   });
 
   it('choosing the front face produces black and only black', () => {

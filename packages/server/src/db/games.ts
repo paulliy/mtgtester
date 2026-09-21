@@ -99,12 +99,7 @@ export class GameRecorder {
              deck_snapshot_id = excluded.deck_snapshot_id,
              controller_kind = excluded.controller_kind`,
         )
-        .run(
-          this.gameId,
-          seatIndex(seat.seat),
-          seat.deckSnapshotId,
-          seat.controllerKind ?? 'ai',
-        );
+        .run(this.gameId, seatIndex(seat.seat), seat.deckSnapshotId, seat.controllerKind ?? 'ai');
     }
   }
 
@@ -148,8 +143,14 @@ export class GameRecorder {
     const write = (): void => {
       for (const entry of entries) {
         this.debugSequence += 1;
-        stmt.run(this.gameId, this.debugSequence, entry.turn, entry.category, entry.message,
-          entry.data === undefined ? null : JSON.stringify(entry.data));
+        stmt.run(
+          this.gameId,
+          this.debugSequence,
+          entry.turn,
+          entry.category,
+          entry.message,
+          entry.data === undefined ? null : JSON.stringify(entry.data),
+        );
       }
     };
     if (this.db.transaction !== undefined) this.db.transaction(write)();
@@ -167,9 +168,17 @@ export class GameRecorder {
     );
     const write = (): void => {
       for (const record of records) {
-        stmt.run(this.gameId, seatIndex(record.seat), record.turn, record.landsInHand,
-          record.landsDrawnCumulative, record.cardsDrawnCumulative, record.spellsCastable,
-          record.unspentMana, record.onCurve ? 1 : 0);
+        stmt.run(
+          this.gameId,
+          seatIndex(record.seat),
+          record.turn,
+          record.landsInHand,
+          record.landsDrawnCumulative,
+          record.cardsDrawnCumulative,
+          record.spellsCastable,
+          record.unspentMana,
+          record.onCurve ? 1 : 0,
+        );
       }
     };
     if (this.db.transaction !== undefined) this.db.transaction(write)();

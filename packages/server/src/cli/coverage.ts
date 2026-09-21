@@ -19,6 +19,8 @@ import { resolve, join, basename } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
 import { loadOracleIndexFromFile } from '../cards/oracle-index';
 import { measureCoverage, type DeckCards } from '../cards/coverage';
+import { checkCoverageBaseline } from '../cards/coverage-baseline';
+import { assertCompleteCoverage } from '../cards/coverage-contract';
 import { importDeck } from '../decks/source';
 import { resolveDeck } from '../decks/resolve';
 import { validateDeck } from '../decks/validate';
@@ -26,13 +28,16 @@ import { loadBannedList } from '../decks/banned';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const FIXTURE_DIR = 'packages/server/fixtures/coverage-decks';
+/** Precon/catalog leftovers that must not re-enter required coverage counts. */
+const EXCLUDED_COVERAGE_DECKS = new Set(['counter-intelligence.txt']);
 
 function parseArgs(argv: string[]): { inputs: string[]; json: boolean; strict: boolean } {
   const inputs: string[] = [];
   let json = false;
   let strict = false;
   for (const arg of argv) {
-    if (arg === '--json') json = true;
+    if (arg === '--complete') continue;
+    else if (arg === '--json') json = true;
     else if (arg === '--strict') strict = true;
     else inputs.push(arg);
   }
@@ -45,7 +50,7 @@ function parseArgs(argv: string[]): { inputs: string[]; json: boolean; strict: b
  */
 function defaultInputs(): string[] {
   return readdirSync(resolve(FIXTURE_DIR))
-    .filter((f) => f.endsWith('.txt'))
+    .filter((f) => f.endsWith('.txt') && !EXCLUDED_COVERAGE_DECKS.has(f))
     .sort()
     .map((f) => join(FIXTURE_DIR, f));
 }
@@ -75,12 +80,14 @@ async function main(): Promise<void> {
   const banned = loadBannedList(resolve('docs/rules/commander-banned-list.md'));
 
   const decks: DeckCards[] = [];
+  let inputFailures = 0;
   for (const arg of inputs) {
     let raw: string;
     try {
       raw = readInput(arg);
     } catch (err) {
       console.error(`  ✗ could not read "${arg}": ${(err as Error).message}`);
+      inputFailures++;
       continue;
     }
 
@@ -89,12 +96,14 @@ async function main(): Promise<void> {
       parsed = await importDeck(raw);
     } catch (err) {
       console.error(`  ✗ import failed for "${arg}": ${(err as Error).message}`);
+      inputFailures++;
       continue;
     }
 
     const { resolved, unresolvedNames } = resolveDeck(parsed, index);
     if (resolved === null) {
       console.error(`  ✗ unresolved names in "${arg}": ${unresolvedNames.join(', ')}`);
+      inputFailures++;
       continue;
     }
 
@@ -118,7 +127,15 @@ async function main(): Promise<void> {
     decks.push({ name: resolved.name ?? parsed.name ?? basename(arg), cards });
   }
 
+  if (inputFailures > 0)
+    throw new Error(`coverage failed: ${inputFailures} input(s) could not be measured`);
   const report = measureCoverage(decks);
+  if (userInputs.length === 0 && !strict) checkCoverageBaseline(report, index, 'fixtures');
+  if (process.argv.includes('--complete')) {
+    if (userInputs.length > 0 || strict)
+      throw new Error('--complete requires the entire default fixture population');
+    assertCompleteCoverage(report);
+  }
 
   if (json) {
     console.log(JSON.stringify(report, null, 2));

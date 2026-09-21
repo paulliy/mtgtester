@@ -23,7 +23,12 @@ import type {
 } from '@mtg/shared';
 import { computeCharacteristics } from '../effects/continuous';
 import { scryfallIdOf } from '../state/queries';
-import type { EngineCardObject, EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
+import type {
+  EngineCardObject,
+  EnginePermanent,
+  EnginePlayerState,
+  GameContext,
+} from '../state/types';
 
 function cardView(ctx: GameContext, obj: EngineCardObject): SpectatorCard {
   return {
@@ -228,10 +233,7 @@ export function buildSpectatorState(ctx: GameContext): SpectatorState {
  * Active-player browser projection. Build it inside the engine so hidden cards never cross the
  * server/browser boundary and face-down objects are redacted before serialization.
  */
-export function buildPlayerBoardState(
-  ctx: GameContext,
-  playerId: string,
-): PlayerBoardState {
+export function buildPlayerBoardState(ctx: GameContext, playerId: string): PlayerBoardState {
   const spectator = buildSpectatorState(ctx);
   return {
     ...spectator,
@@ -382,6 +384,12 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
         text: `${str(p, 'target') ?? 'a permanent'} is destroyed by ${str(p, 'source') ?? 'an effect'}`,
       };
 
+    case 'regenerated':
+      return {
+        ...base,
+        text: `${str(p, 'permanent') ?? 'a permanent'} regenerates instead of being destroyed`,
+      };
+
     case 'sacrifice':
       return { ...base, text: `sacrifices ${str(p, 'name') ?? 'a permanent'}` };
 
@@ -458,9 +466,7 @@ export function formatPlayerLog(
       if (event.type !== 'decision') return true;
       const decisionType = event.payload['decisionType'];
       return (
-        decisionType !== 'mulligan' &&
-        decisionType !== 'bottomCards' &&
-        decisionType !== 'general'
+        decisionType !== 'mulligan' && decisionType !== 'bottomCards' && decisionType !== 'general'
       );
     }),
   );

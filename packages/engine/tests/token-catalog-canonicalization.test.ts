@@ -10,7 +10,12 @@
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
 import { oracle } from './fixtures';
-import { BEAST_3_3_GREEN, ELEPHANT_3_3_GREEN, HUMAN_1_1_WHITE, SOLDIER_1_1_LIFELINK } from '../src/cards/tokens';
+import {
+  BEAST_3_3_GREEN,
+  ELEPHANT_3_3_GREEN,
+  HUMAN_1_1_WHITE,
+  SOLDIER_1_1_LIFELINK,
+} from '../src/cards/tokens';
 
 function tokenSpecOf(text: string) {
   const def = interpretCard(
@@ -32,7 +37,9 @@ describe('parseTokenFace canonicalizes against the shared token catalog', () => 
   });
 
   it('holds for a token with a color and a different subtype too', () => {
-    const spec = tokenSpecOf('When this creature enters, create a 3/3 green Elephant creature token.');
+    const spec = tokenSpecOf(
+      'When this creature enters, create a 3/3 green Elephant creature token.',
+    );
     expect(spec).toBe(ELEPHANT_3_3_GREEN);
   });
 
@@ -81,14 +88,19 @@ describe('parseTokenFace canonicalizes against the shared token catalog', () => 
         name: 'Test Destroy And Create',
         typeLine: 'Instant',
         manaCost: '{2}{G}',
-        oracleText: "Destroy target permanent. Its controller creates a 3/3 green Beast creature token.",
+        oracleText:
+          'Destroy target permanent. Its controller creates a 3/3 green Beast creature token.',
       }),
     );
     expect(def.modeled).toBe(true);
-    const effect = def.spellAbility?.effects.find((e) => e.op === 'destroyAndCreateTokenForController');
-    expect(effect !== undefined && effect.op === 'destroyAndCreateTokenForController' ? effect.spec : undefined).toBe(
-      BEAST_3_3_GREEN,
+    const effect = def.spellAbility?.effects.find(
+      (e) => e.op === 'destroyAndCreateTokenForController',
     );
+    expect(
+      effect !== undefined && effect.op === 'destroyAndCreateTokenForController'
+        ? effect.spec
+        : undefined,
+    ).toBe(BEAST_3_3_GREEN);
   });
 
   it('the mojibake em-dash regression: a non-cataloged token still gets a correctly-encoded typeLine', () => {

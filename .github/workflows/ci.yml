@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality / Typecheck, lint, format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run typecheck:tests
+      - run: bun run lint
+      - run: bun run format:check
+      - run: bun run --cwd apps/web build
+
+  engine-tests:
+    name: Engine / Full test suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run test
+
+  card-verification:
+    name: Cards / Offline verification gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run test:card-gate
+      - run: bun run snapshots:check
+
+  viewer-evidence:
+    name: Viewer / Card Test Lab evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      # Real frontend + real lab backend, no mocked transport. The config boots both servers.
+      - run: bun run test:e2e
+      # Traces are the retained viewer evidence (trace: 'on', preserveOutput: 'always').
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: card-test-lab-traces
+          path: test-results/
+          if-no-files-found: error

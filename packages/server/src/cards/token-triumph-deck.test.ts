@@ -8,6 +8,7 @@ import { toOracleCard } from './scryfall';
 import type { OracleCard } from '@mtg/shared';
 import { parsePlaintextDeck } from '../decks/plaintext';
 import { registerTOKEN_TRIUMPHOverrides } from '../../../engine/src/cards/overrides/token-triumph';
+import { EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS } from './token-triumph-support';
 
 registerTOKEN_TRIUMPHOverrides();
 
@@ -52,47 +53,60 @@ describe.skipIf(SKIP)('Token Triumph Deck — L1-L7 Test Suite', () => {
   const { commanderCard, deckCards } = loadTokenTriumphDeckCards();
   const allUniqueCards = Array.from(new Set([commanderCard, ...deckCards]));
 
-  it('L1: Modeled cards in Token Triumph deck pass L1 smoke check with no unmodeled reasons', () => {
-    const modeledCards = allUniqueCards.filter((card) => interpretCard(card).modeled);
-    expect(modeledCards.length).toBeGreaterThanOrEqual(65);
-    for (const card of modeledCards) {
-      const def = interpretCard(card);
-      expect(def.unmodeledReasons, `Card ${card.name} has unmodeled reasons`).toEqual([]);
+  const expectedUnsupported = new Set(EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS);
+
+  it('records every unsupported card explicitly instead of claiming full-deck coverage', () => {
+    const unsupported = allUniqueCards.filter((card) => !interpretCard(card).modeled);
+    expect(new Set(unsupported.map((card) => card.name))).toEqual(expectedUnsupported);
+    for (const card of unsupported) {
+      expect(interpretCard(card).unmodeledReasons.join('\n'), card.name).toContain(
+        'explicitly unsupported:',
+      );
     }
   });
 
-  it('L2 & L3: Full 100-card Token Triumph deck runs through engine priority and legality pipeline', () => {
-    const forestCard = allUniqueCards.find((c) => c.name === 'Forest')!;
-    const plainsCard = allUniqueCards.find((c) => c.name === 'Plains')!;
-    const opponentDeck = Array.from({ length: 100 }, (_, i) => (i % 2 === 0 ? forestCard : plainsCard));
-
-    const engine = makeEngine([
-      { cards: deckCards },
-      { cards: opponentDeck },
-    ], { seed: 'token-triumph-l3-seed' });
-
-    const provider = new RuleBasedProvider([
-      whenChoose({ option: /./ }),
-    ]);
-
-    // Bounded drive: this two-player free-for-all doesn't reliably reach game-over in a fixed
-    // step budget, so run enough decisions to prove the deck plays several turns without
-    // crashing rather than waiting for `drive()`'s unbounded run-to-gameOver.
+  it('halts the original deck when an unsupported card is reached', () => {
+    const forestCard = allUniqueCards.find((card) => card.name === 'Forest')!;
+    const plainsCard = allUniqueCards.find((card) => card.name === 'Plains')!;
+    const opponentDeck = Array.from({ length: 100 }, (_, i) =>
+      i % 2 === 0 ? forestCard : plainsCard,
+    );
+    const engine = makeEngine([{ cards: deckCards }, { cards: opponentDeck }], {
+      seed: 'token-triumph-l3-seed',
+    });
+    const provider = new RuleBasedProvider([whenChoose({ option: /./ })]);
     for (let i = 0; i < 20_000; i++) {
       const step = engine.advance();
       if (step.kind === 'gameOver') break;
       if (step.kind === 'continue') continue;
       engine.submit(provider.decide(step.request));
     }
-    expect(engine.getState().turnNumber).toBeGreaterThan(1);
+    expect(engine.getResult()?.halted).toBe(true);
+    expect(engine.getResult()?.haltReason).toMatch(/unmodeled|unsupported/i);
   });
 
-  it('L7: Confirm deck coverage signal for Token Triumph deck', () => {
-    let modeledCount = 0;
-    for (const card of allUniqueCards) {
-      const def = interpretCard(card);
-      if (def.modeled) modeledCount++;
+  it('plays several turns with a 100-card supported subset', () => {
+    const forestCard = allUniqueCards.find((card) => card.name === 'Forest')!;
+    const plainsCard = allUniqueCards.find((card) => card.name === 'Plains')!;
+    let replacement = 0;
+    const playableDeck = deckCards.map((card) =>
+      interpretCard(card).modeled ? card : replacement++ % 2 === 0 ? forestCard : plainsCard,
+    );
+    const opponentDeck = Array.from({ length: 100 }, (_, i) =>
+      i % 2 === 0 ? forestCard : plainsCard,
+    );
+    const engine = makeEngine([{ cards: playableDeck }, { cards: opponentDeck }], {
+      seed: 'token-triumph-supported-subset',
+    });
+    const provider = new RuleBasedProvider([whenChoose({ option: /./ })]);
+    for (let i = 0; i < 20_000; i++) {
+      const step = engine.advance();
+      if (step.kind === 'gameOver') break;
+      if (step.kind === 'continue') continue;
+      engine.submit(provider.decide(step.request));
+      if (engine.getState().turnNumber > 1) break;
     }
-    expect(modeledCount).toBeGreaterThanOrEqual(67);
+    expect(engine.getResult()?.halted ?? false).toBe(false);
+    expect(engine.getState().turnNumber).toBeGreaterThan(1);
   });
 });

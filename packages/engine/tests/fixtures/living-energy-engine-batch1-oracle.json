@@ -1,0 +1,280 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "a4a3770c7d47e41ad416718c69ede9729cbbf590956bbb9b98b36943c5e19337",
+      "card": {
+        "oracleId": "b9c58cfb-b7d5-4e86-a5d3-efb07192aa22",
+        "scryfallId": "19f1673d-c92c-43be-8648-af7fbc790421",
+        "name": "Glimmer of Genius",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Scry 2, then draw two cards. You get {E}{E} (two energy counters).",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Scry"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "170a42579804a7d915753324a09ab5c47fad949e82dae4feca0ef3c0f8795215",
+      "card": {
+        "oracleId": "53b2c8f2-db9a-4ab0-a4e8-17385b2fa3bd",
+        "scryfallId": "38722c25-13a7-47af-a4cd-90722f289499",
+        "name": "Aethertide Whale",
+        "manaCost": "{4}{U}{U}",
+        "cmc": 6,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Whale",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Whale"
+        ],
+        "oracleText": "Flying\nWhen this creature enters, you get six {E} (energy counters).\nPay {E}{E}{E}{E}: Return this creature to its owner's hand.",
+        "power": "6",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7d4b7f22d3cc762ac103b3d9f03a3b2cd8e9ec72c50d644f61ab0cb8891b8125",
+      "card": {
+        "oracleId": "b2f09e41-0a91-4fb6-8804-874b3a5166b0",
+        "scryfallId": "618652b4-7ce9-4994-9d16-68d2cc8644ef",
+        "name": "Rogue Refiner",
+        "manaCost": "{1}{G}{U}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "U"
+        ],
+        "typeLine": "Creature — Human Rogue",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Rogue"
+        ],
+        "oracleText": "When this creature enters, draw a card and you get {E}{E} (two energy counters).",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f7b108d2406d4bd40aae455deaaf60783420cd350b371066b3d93361bce8f6af",
+      "card": {
+        "oracleId": "1daba4f6-2a7d-426a-97d1-0298a7100c45",
+        "scryfallId": "b08ae769-0070-47a6-aae0-1a3bcfd40d07",
+        "name": "Decoction Module",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever a creature you control enters, you get {E} (an energy counter).\n{4}, {T}: Return target creature you control to its owner's hand.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6c51eb8acc746c9538efc86abdbf052bea6f29b29f804a8c7ee4c4f5b2cb208f",
+      "card": {
+        "oracleId": "be6cab52-b3ae-46a2-a581-2468a49bff25",
+        "scryfallId": "7bc540f5-96a1-44d8-910d-914b9e61b2a5",
+        "name": "Architect of the Untamed",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elf Artificer Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Artificer",
+          "Druid"
+        ],
+        "oracleText": "Landfall — Whenever a land you control enters, you get {E} (an energy counter).\nPay eight {E}: Create a 6/6 colorless Beast artifact creature token.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Landfall"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3036122b7829e325f243e79ad9d01e5fbe6ab20410b7fd71c140792f5f0f6c3a",
+      "card": {
+        "oracleId": "f82da236-e567-4221-a0bc-439a0c7e2b03",
+        "scryfallId": "ae429806-28b5-4bee-b0e1-1bd876f282c2",
+        "name": "Whirler Virtuoso",
+        "manaCost": "{1}{U}{R}",
+        "cmc": 3,
+        "colors": [
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "R",
+          "U"
+        ],
+        "typeLine": "Creature — Vedalken Artificer",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Vedalken",
+          "Artificer"
+        ],
+        "oracleText": "When this creature enters, you get {E}{E}{E} (three energy counters).\nPay {E}{E}{E}: Create a 1/1 colorless Thopter artifact creature token with flying.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6dce624306594f15fd120926b1acbb0d1c1e7f170eeaf423de8b9fee116d8e5d",
+      "card": {
+        "oracleId": "df1a8846-b4da-4e9b-8cf3-ee687e4c606b",
+        "scryfallId": "9ce9cf30-4baa-4f28-84e8-b9b1168a40e0",
+        "name": "Servant of the Conduit",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elf Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Druid"
+        ],
+        "oracleText": "When this creature enters, you get {E}{E} (two energy counters).\n{T}, Pay {E}: Add one mana of any color.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "11e3a7a797d7b8372effa097d2e2e684008fffc559cd3d8b146c8cb6e3af725b",
+      "card": {
+        "oracleId": "d9ec9a4f-0644-47c5-bc09-1201d5251bde",
+        "scryfallId": "fa04d5fa-6ba2-4833-8ea0-1941a03bd3e9",
+        "name": "Aetherwind Basker",
+        "manaCost": "{4}{G}{G}{G}",
+        "cmc": 7,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Lizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Lizard"
+        ],
+        "oracleText": "Trample\nWhenever this creature enters or attacks, you get {E} (an energy counter) for each creature you control.\nPay {E}: This creature gets +1/+1 until end of turn.",
+        "power": "7",
+        "toughness": "7",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Trample"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

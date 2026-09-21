@@ -21,7 +21,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { runCombatPhase } from '../src/combat/combat'
+import { runCombatPhase } from '../src/combat/combat';
 import { SOLDIER_1_1 } from '../src/cards/tokens';
 import { interpretCard } from '../src/cards/interpret';
 import { computeCharacteristics } from '../src/effects/continuous';

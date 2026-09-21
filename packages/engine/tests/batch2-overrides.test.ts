@@ -3,18 +3,20 @@ import { interpretCard } from '../src/cards/interpret';
 import { oracle } from './fixtures';
 
 describe('Batch 2 card overrides', () => {
-  it('models Rishkar, Peema Renegade', () => {
+  it('is catalog-contained because up-to-two requires at least one target', () => {
     const card = oracle({
       oracleId: '761021ce-4559-464e-aa03-85c2fe78e267',
       name: 'Rishkar, Peema Renegade',
       typeLine: 'Legendary Creature — Elf Druid',
       manaCost: '{2}{G}',
-      oracleText: 'When Rishkar, Peema Renegade enters, put a +1/+1 counter on each of up to two target creatures.\nEach creature you control with a counter on it has "{T}: Add {G}."',
+      oracleText:
+        'When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.\nEach creature you control with a counter on it has "{T}: Add {G}."',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(true);
-    expect(def.triggers).toHaveLength(1);
-    expect(def.staticEffects).toHaveLength(1);
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('\n')).toContain(
+      'Up-to-two +1/+1 counters require at least one target.',
+    );
   });
 
   it('models Ajani, Caller of the Pride', () => {
@@ -24,14 +26,15 @@ describe('Batch 2 card overrides', () => {
       typeLine: 'Legendary Planeswalker — Ajani',
       manaCost: '{1}{W}{W}',
       loyalty: '4',
-      oracleText: '+1: Put a +1/+1 counter on up to one target creature.\n−3: Target creature gains flying and double strike until end of turn.\n−8: Create X 2/2 white Cat creature tokens, where X is your life total.',
+      oracleText:
+        '+1: Put a +1/+1 counter on up to one target creature.\n−3: Target creature gains flying and double strike until end of turn.\n−8: Create X 2/2 white Cat creature tokens, where X is your life total.',
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);
     expect(def.activatedAbilities).toHaveLength(3);
   });
 
-  it('models Sylvan Reclamation', () => {
+  it('contains Sylvan Reclamation', () => {
     const card = oracle({
       oracleId: 'aeec8e85-6571-4da6-8a48-f5d3985ca10b',
       name: 'Sylvan Reclamation',
@@ -40,8 +43,10 @@ describe('Batch 2 card overrides', () => {
       oracleText: 'Exile up to two target artifacts and/or enchantments.\nBasic landcycling {2}',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(true);
-    expect(def.spellAbility).toBeDefined();
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('\n')).toContain(
+      'Up-to-two exile requires at least one target.',
+    );
   });
 
   it('models Mentor of the Meek', () => {
@@ -50,7 +55,8 @@ describe('Batch 2 card overrides', () => {
       name: 'Mentor of the Meek',
       typeLine: 'Creature — Human Soldier',
       manaCost: '{2}{W}',
-      oracleText: 'Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card.',
+      oracleText:
+        'Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card.',
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);
@@ -63,24 +69,28 @@ describe('Batch 2 card overrides', () => {
       name: "Commander's Insignia",
       typeLine: 'Enchantment',
       manaCost: '{2}{W}',
-      oracleText: "Creatures you control get +1/+1 for each time you've cast your commander from the command zone this game.",
+      oracleText:
+        "Creatures you control get +1/+1 for each time you've cast your commander from the command zone this game.",
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);
     expect(def.staticEffects).toHaveLength(1);
   });
 
-  it('models Voice of Many', () => {
+  it('contains Voice of Many', () => {
     const card = oracle({
       oracleId: '9b40faad-1b96-4461-89d8-9a207b58e832',
       name: 'Voice of Many',
       typeLine: 'Creature — Elf Archon',
       manaCost: '{2}{G}',
-      oracleText: 'When Voice of Many enters, draw a card for each opponent who controls fewer creatures than you.',
+      oracleText:
+        'When Voice of Many enters, draw a card for each opponent who controls fewer creatures than you.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(true);
-    expect(def.triggers).toHaveLength(1);
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('\n')).toContain(
+      'Eliminated players still count as opponents who control fewer creatures.',
+    );
   });
 
   it('models Loyal Guardian', () => {
@@ -89,7 +99,8 @@ describe('Batch 2 card overrides', () => {
       name: 'Loyal Guardian',
       typeLine: 'Creature — Bear',
       manaCost: '{4}{G}',
-      oracleText: 'At the beginning of combat on your turn, if you control your commander, put a +1/+1 counter on each creature you control.',
+      oracleText:
+        'At the beginning of combat on your turn, if you control your commander, put a +1/+1 counter on each creature you control.',
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);
@@ -115,14 +126,15 @@ describe('Batch 2 card overrides', () => {
       name: 'Hornet Nest',
       typeLine: 'Creature — Insect',
       manaCost: '{2}{G}',
-      oracleText: 'Whenever Hornet Nest is dealt damage, create that many 1/1 green Insect creature tokens with flying and deathtouch.',
+      oracleText:
+        'Whenever Hornet Nest is dealt damage, create that many 1/1 green Insect creature tokens with flying and deathtouch.',
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);
     expect(def.triggers).toHaveLength(1);
   });
 
-  it('models Idol of Oblivion', () => {
+  it('contains Idol of Oblivion', () => {
     const card = oracle({
       oracleId: 'c232d974-9c65-4bce-b045-e5a7cc0c62e0',
       name: 'Idol of Oblivion',
@@ -131,8 +143,10 @@ describe('Batch 2 card overrides', () => {
       oracleText: '{T}: Draw a card. Activate only if you created a token this turn.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(true);
-    expect(def.activatedAbilities).toHaveLength(2);
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('\n')).toContain(
+      'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
+    );
   });
 
   it('models Trostani Discordant', () => {
@@ -141,24 +155,28 @@ describe('Batch 2 card overrides', () => {
       name: 'Trostani Discordant',
       typeLine: 'Legendary Creature — Dryad',
       manaCost: '{3}{G}{W}',
-      oracleText: 'When Trostani enters, create two 1/1 white Soldier creature tokens with lifelink.\nAt the beginning of your end step, each player gains control of all creatures they own.',
+      oracleText:
+        'When Trostani enters, create two 1/1 white Soldier creature tokens with lifelink.\nAt the beginning of your end step, each player gains control of all creatures they own.',
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);
     expect(def.triggers).toHaveLength(2);
   });
 
-  it('models Harvest Season', () => {
+  it('contains Harvest Season', () => {
     const card = oracle({
       oracleId: 'ec6d52f9-1c8f-48da-951c-be8d7813c7be',
       name: 'Harvest Season',
       typeLine: 'Sorcery',
       manaCost: '{2}{G}',
-      oracleText: 'Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.',
+      oracleText:
+        'Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(true);
-    expect(def.spellAbility).toBeDefined();
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('\n')).toContain(
+      'X counts all creatures you control rather than tapped creatures.',
+    );
   });
 
   it('models Slate of Ancestry', () => {
@@ -174,17 +192,20 @@ describe('Batch 2 card overrides', () => {
     expect(def.activatedAbilities).toHaveLength(1);
   });
 
-  it('models Scavenging Ooze', () => {
+  it('contains Scavenging Ooze', () => {
     const card = oracle({
       oracleId: '1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67',
       name: 'Scavenging Ooze',
       typeLine: 'Creature — Ooze',
       manaCost: '{1}{G}',
-      oracleText: '{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on Scavenging Ooze and you gain 1 life.',
+      oracleText:
+        '{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on Scavenging Ooze and you gain 1 life.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(true);
-    expect(def.activatedAbilities).toHaveLength(1);
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('\n')).toContain(
+      'Exile splices the card without a zone-change, so leave-graveyard events are skipped.',
+    );
   });
 
   it('models Felidar Retreat', () => {
@@ -193,7 +214,8 @@ describe('Batch 2 card overrides', () => {
       name: 'Felidar Retreat',
       typeLine: 'Enchantment',
       manaCost: '{3}{W}',
-      oracleText: 'Whenever a land you control enters, choose one —\n• Create a 2/2 white Cat Beast creature token.\n• Put a +1/+1 counter on each creature you control. Those creatures gain vigilance until end of turn.',
+      oracleText:
+        'Whenever a land you control enters, choose one —\n• Create a 2/2 white Cat Beast creature token.\n• Put a +1/+1 counter on each creature you control. Those creatures gain vigilance until end of turn.',
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);
@@ -206,7 +228,8 @@ describe('Batch 2 card overrides', () => {
       name: 'Great Oak Guardian',
       typeLine: 'Creature — Treefolk',
       manaCost: '{5}{G}',
-      oracleText: 'When Great Oak Guardian enters, creatures target player controls get +2/+2 until end of turn. Untap them.',
+      oracleText:
+        'When Great Oak Guardian enters, creatures target player controls get +2/+2 until end of turn. Untap them.',
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);

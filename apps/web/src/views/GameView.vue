@@ -67,6 +67,11 @@ function abandon(): void {
   void router.push('/');
 }
 
+function resetLab(): void {
+  const scenario = store.cardTestScenario;
+  if (scenario !== null) store.startCardTestScenario(scenario.id);
+}
+
 const phaseLabel = computed(() => {
   const s = state.value;
   if (s === null) return '';
@@ -114,6 +119,13 @@ const roundLabel = computed(() => {
 </script>
 
 <template>
+  <aside v-if="store.cardTestScenario" class="lab-banner">
+    <div>
+      <strong>{{ store.cardTestScenario.title }}</strong>
+      <span>{{ store.cardTestScenario.expectedOutcome }}</span>
+    </div>
+    <button type="button" @click="resetLab">Reset scenario</button>
+  </aside>
   <PlayerGameView v-if="store.gameMode === 'singlePlayer' && !store.gameOver" />
   <div v-else class="game">
     <header class="bar">
@@ -121,8 +133,15 @@ const roundLabel = computed(() => {
       <span v-if="state" class="phase-badge">
         {{ roundLabel }}
       </span>
-      <span v-if="store.gameOver" class="game-over-badge" :title="store.gameOver.result.haltReason ?? ''">
-        🏆 Game Over: Winner {{ store.gameOver.result.winnerSeat ?? '(Draw)' }} ({{ store.gameOver.result.turnCount }} turns)
+      <span
+        v-if="store.gameOver"
+        class="game-over-badge"
+        :title="store.gameOver.result.haltReason ?? ''"
+      >
+        🏆 Game Over: Winner {{ store.gameOver.result.winnerSeat ?? '(Draw)' }} ({{
+          store.gameOver.result.turnCount
+        }}
+        turns)
       </span>
       <button
         v-if="store.gameOver && !resultsOpen"
@@ -231,6 +250,23 @@ const roundLabel = computed(() => {
 </template>
 
 <style scoped>
+.lab-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 88%, #7256d8);
+}
+.lab-banner div {
+  display: grid;
+  gap: 0.2rem;
+}
+.lab-banner span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
 .game {
   display: flex;
   flex-direction: column;

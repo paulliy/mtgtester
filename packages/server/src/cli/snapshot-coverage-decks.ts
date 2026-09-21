@@ -39,10 +39,7 @@ const OUT_DIR = 'packages/server/fixtures/coverage-decks';
 const DEFAULT_DECKS: { slug: string; url: string; lenient?: boolean }[] = [
   { slug: 'silverquill-influence', url: 'https://moxfield.com/decks/OFOsgdmYqEuQKkJwsOmrpQ' },
   { slug: 'living-energy', url: 'https://moxfield.com/decks/jWSmSfkdGEijTfTX_d8qNQ' },
-  {
-    slug: 'counter-intelligence',
-    url: 'https://archidekt.com/decks/14921159/counter_intelligence_edge_of_eternities_commander_precon_decklist',
-  },
+  // Counter-intelligence is out of coverage scope; do not re-snapshot it as a baseline deck.
   {
     slug: 'necron-dynasties',
     url: 'https://archidekt.com/decks/15372331/necron_dynasties_warhammer_40000_commander_precon_decklist',

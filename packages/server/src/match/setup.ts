@@ -58,9 +58,7 @@ export interface SeatSetup {
   deckSnapshotId: string | null;
 }
 
-export type SetupResult =
-  | { ok: true; seats: SeatSetup[] }
-  | { ok: false; problems: SeatProblem[] };
+export type SetupResult = { ok: true; seats: SeatSetup[] } | { ok: false; problems: SeatProblem[] };
 
 /** Distinct names in `cards` that `interpretCard` cannot model (brief §6.3, ADR 0009). */
 export function unmodeledCardNames(cards: readonly OracleCard[]): string[] {
@@ -97,11 +95,7 @@ function problem(seat: PlayerId, message: string, extra?: Partial<SeatProblem>):
  * `deck_snapshots`, and `game_players.deck_snapshot_id` is a foreign key into it, so a
  * generated deck that skipped the table could not be recorded as having played at all.
  */
-function setupPoolSeat(
-  seat: PlayerId,
-  deps: SeatSetupDeps,
-  seed: string,
-): SeatSetup | SeatProblem {
+function setupPoolSeat(seat: PlayerId, deps: SeatSetupDeps, seed: string): SeatSetup | SeatProblem {
   let deck;
   try {
     deck = generateCommanderDeck(deps.pool, { seed });
@@ -215,7 +209,8 @@ async function setupImportedSeat(
     return problem(seat, 'Commander could not be resolved.', { unresolvedNames: missing });
   }
 
-  const snapshotCards = result.snapshotId === null ? null : deps.store?.snapshotCards(result.snapshotId);
+  const snapshotCards =
+    result.snapshotId === null ? null : deps.store?.snapshotCards(result.snapshotId);
   if (snapshotCards === null || snapshotCards === undefined) {
     return problem(
       seat,

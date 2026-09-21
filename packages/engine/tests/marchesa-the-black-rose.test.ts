@@ -18,7 +18,12 @@ import type { GameContext } from '../src/state/types';
 import { bear, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 function pod(seed: string): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;
@@ -61,7 +66,11 @@ describe('Marchesa, the Black Rose', () => {
     pump(runPrioritySequence(ctx));
 
     expect(ctx.state.battlefield.some((p) => p.cardId === victim.cardId)).toBe(true);
-    expect(ctx.state.players.find((p) => p.id === 'P1')!.graveyard.some((c) => c.cardId === victim.cardId)).toBe(false);
+    expect(
+      ctx.state.players
+        .find((p) => p.id === 'P1')!
+        .graveyard.some((c) => c.cardId === victim.cardId),
+    ).toBe(false);
     expect(ctx.state.delayedTriggers).toHaveLength(0);
   });
 
@@ -84,7 +93,11 @@ describe('Marchesa, the Black Rose', () => {
     pump(runPrioritySequence(ctx));
 
     expect(ctx.state.battlefield.some((p) => p.cardId === victim.cardId)).toBe(false);
-    expect(ctx.state.players.find((p) => p.id === 'P1')!.graveyard.some((c) => c.cardId === victim.cardId)).toBe(true);
+    expect(
+      ctx.state.players
+        .find((p) => p.id === 'P1')!
+        .graveyard.some((c) => c.cardId === victim.cardId),
+    ).toBe(true);
   });
 
   it('still returns a creature that died with a +1/+1 counter among other counters', () => {

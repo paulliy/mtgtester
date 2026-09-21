@@ -410,8 +410,6 @@ describe('MatchSession — post-game reflection stays out of the way when off', 
     return message?.payload;
   }
 
-
-
   // `finishedGame()` plays a full random-fuzzed 4-player game (`providerKind: 'random'`, brief
   // §5.9's fuzzer, not the live bot/AI opponent). Batched combat declarations (ADR 0023 items
   // 13/14) occasionally add an extra decision — a rejected proposal's one informed retry — which

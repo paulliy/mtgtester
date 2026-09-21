@@ -1,0 +1,138 @@
+[
+  {
+    "id": "g2-b138474d",
+    "seed": "b138474d",
+    "winner_seat": 1,
+    "seat": 1,
+    "loss_reason": null,
+    "eliminated_by_seat": 3
+  },
+  {
+    "id": "g1-d0518eed",
+    "seed": "d0518eed",
+    "winner_seat": 3,
+    "seat": 3,
+    "loss_reason": null,
+    "eliminated_by_seat": 4
+  },
+  {
+    "id": "g3-de5a4b9e",
+    "seed": "de5a4b9e",
+    "winner_seat": 4,
+    "seat": 4,
+    "loss_reason": null,
+    "eliminated_by_seat": 1
+  },
+  {
+    "id": "g1-5c3923fe",
+    "seed": "5c3923fe",
+    "winner_seat": 3,
+    "seat": 3,
+    "loss_reason": null,
+    "eliminated_by_seat": 2
+  },
+  {
+    "id": "g1-c598f327",
+    "seed": "c598f327",
+    "winner_seat": 1,
+    "seat": 1,
+    "loss_reason": null,
+    "eliminated_by_seat": 4
+  },
+  {
+    "id": "g3-64c1e3c3",
+    "seed": "64c1e3c3",
+    "winner_seat": 1,
+    "seat": 1,
+    "loss_reason": null,
+    "eliminated_by_seat": 3
+  },
+  {
+    "id": "g1-c3aca539",
+    "seed": "c3aca539",
+    "winner_seat": 1,
+    "seat": 1,
+    "loss_reason": null,
+    "eliminated_by_seat": 1
+  },
+  {
+    "id": "g3-c6a1447c",
+    "seed": "c6a1447c",
+    "winner_seat": 4,
+    "seat": 4,
+    "loss_reason": null,
+    "eliminated_by_seat": 3
+  },
+  {
+    "id": "g5-73709a79",
+    "seed": "73709a79",
+    "winner_seat": 2,
+    "seat": 2,
+    "loss_reason": null,
+    "eliminated_by_seat": 3
+  },
+  {
+    "id": "g6-348d3abb",
+    "seed": "348d3abb",
+    "winner_seat": 2,
+    "seat": 2,
+    "loss_reason": null,
+    "eliminated_by_seat": 2
+  },
+  {
+    "id": "g1-65c9735e",
+    "seed": "65c9735e",
+    "winner_seat": 1,
+    "seat": 1,
+    "loss_reason": null,
+    "eliminated_by_seat": 1
+  },
+  {
+    "id": "g2-1a82ce42",
+    "seed": "1a82ce42",
+    "winner_seat": 1,
+    "seat": 1,
+    "loss_reason": null,
+    "eliminated_by_seat": 1
+  },
+  {
+    "id": "g1-9847b486",
+    "seed": "9847b486",
+    "winner_seat": 3,
+    "seat": 3,
+    "loss_reason": null,
+    "eliminated_by_seat": 4
+  },
+  {
+    "id": "g1-799fda57",
+    "seed": "799fda57",
+    "winner_seat": 3,
+    "seat": 3,
+    "loss_reason": null,
+    "eliminated_by_seat": 4
+  },
+  {
+    "id": "g1-ef19f150",
+    "seed": "ef19f150",
+    "winner_seat": 4,
+    "seat": 4,
+    "loss_reason": null,
+    "eliminated_by_seat": 2
+  },
+  {
+    "id": "g3-197cab58",
+    "seed": "197cab58",
+    "winner_seat": 1,
+    "seat": 1,
+    "loss_reason": null,
+    "eliminated_by_seat": 2
+  },
+  {
+    "id": "g1-5035d166",
+    "seed": "5035d166",
+    "winner_seat": 4,
+    "seat": 4,
+    "loss_reason": null,
+    "eliminated_by_seat": 3
+  }
+]

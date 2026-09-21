@@ -66,6 +66,10 @@ export interface SelectorCandidate {
   isEquipped?: boolean;
   /** EVENT-ONLY: currently attacking or blocking. */
   inCombat?: boolean;
+  /** Combat status is independent of layers, so continuous statics may read it. */
+  combatRole?: 'attacking' | 'blocking' | null;
+  /** The player or planeswalker this permanent is attacking, when it is an attacker. */
+  attackingDefenderId?: string | null;
   /** Does this permanent have any counter of any kind on it (Rishkar, Peema Renegade)? */
   hasAnyCounter?: boolean;
   /**
@@ -155,6 +159,9 @@ export type Selector =
   | { kind: 'isEnchanted' }
   | { kind: 'isEquipped' }
   | { kind: 'inCombat' }
+  | { kind: 'combatRole'; role: 'attacking' | 'blocking' }
+  /** A resolving attack trigger's "that player": compare against the event's defender. */
+  | { kind: 'attackingEventPlayer' }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -214,12 +221,17 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'toughnessAtLeast':
     case 'hasKeyword':
     case 'inCombat':
+    case 'attackingEventPlayer':
       return true;
     case 'allOf':
     case 'anyOf':
       return selector.of.some(selectorIsEventOnly);
     case 'not':
       return selectorIsEventOnly(selector.of);
+    case 'combatRole':
+      // Attack/block assignment is game state, not output from a continuous-effect layer.
+      // Static effects such as attacking-creature anthems may therefore use this selector.
+      return false;
     default:
       return false;
   }
@@ -249,7 +261,9 @@ export function selectMatches(
     case 'color':
       return candidate.colors.includes(selector.value);
     case 'chosenColor':
-      return source.chosenOption !== undefined && candidate.colors.includes(source.chosenOption as Color);
+      return (
+        source.chosenOption !== undefined && candidate.colors.includes(source.chosenOption as Color)
+      );
     case 'chosenType':
       return source.chosenOption !== undefined && candidate.types.includes(source.chosenOption);
     case 'chosenSubtype':
@@ -290,6 +304,12 @@ export function selectMatches(
       return candidate.isEquipped === true;
     case 'inCombat':
       return candidate.inCombat === true;
+    case 'combatRole':
+      return candidate.combatRole === selector.role;
+    case 'attackingEventPlayer':
+      return (
+        source.eventPlayerId !== undefined && candidate.attackingDefenderId === source.eventPlayerId
+      );
     case 'allOf':
       return selector.of.every((s) => selectMatches(candidate, s, source));
     case 'anyOf':

@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "431f138835ad71117dd9200a36f6fa35959f62de73ac65c7889b08bd430ca8c5",
+      "card": {
+        "oracleId": "77ccafd9-6d76-4658-81ab-bde0454fcc15",
+        "scryfallId": "387f6f60-69da-4965-9ab9-57bdb763a013",
+        "name": "Endless Foot Assault",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Squad {1}{W} (As an additional cost to cast this spell, you may pay {1}{W} any number of times. When this enchantment enters, create that many tokens that are copies of it.)\nWhenever you attack, for each opponent, create a 1/1 black Ninja creature token that's tapped and attacking that player.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Squad"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a895755da95de0180f59cd220e9505e9248e8c2c08106d6c13e442ce1cd16a70",
+      "card": {
+        "oracleId": "96312b75-3110-4506-9f95-0c6c17d9da11",
+        "scryfallId": "b689a206-aec3-4a31-95cf-3d4b840db04c",
+        "name": "Securitron Squadron",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Artifact Creature — Robot",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Robot"
+        ],
+        "oracleText": "Squad {3} (As an additional cost to cast this spell, you may pay {3} any number of times. When this creature enters, create that many tokens that are copies of it.)\nVigilance\nWhenever a creature token you control enters, put a +1/+1 counter on it.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Vigilance",
+          "Squad"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ef8ff539ecca8d4b5db665949dab6335f561715657b1c4cbc8e911dbf85c8038",
+      "card": {
+        "oracleId": "eb735501-19e7-4910-aa6a-6667fff6f4e5",
+        "scryfallId": "93f812bc-7663-4504-b566-79e2c0a0f845",
+        "name": "Study Hall",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{1}, {T}: Add one mana of any color. When you spend this mana to cast your commander, scry X, where X is the number of times it's been cast from the command zone this game.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Scry"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "acbc7d22eb46cba2711c395cd8b5846fd83e679f9df5e836e43359959001740a",
+      "card": {
+        "oracleId": "74868bc0-6081-4f46-a2c6-9521cd5465aa",
+        "scryfallId": "6b8bfa91-adb0-4596-8c16-d8bb64fdb26d",
+        "name": "Tender Wildguide",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Possum Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Possum",
+          "Druid"
+        ],
+        "oracleText": "Offspring {2} (You may pay an additional {2} as you cast this spell. If you do, when this creature enters, create a 1/1 token copy of it.)\n{T}: Add one mana of any color.\n{T}: Put a +1/+1 counter on this creature.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Offspring"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "878f4014a84c68cad006965069101c0d783cec8d1728952152b424a2defb5d09",
+      "card": {
+        "oracleId": "fd6e1967-237a-41f6-bbf4-2c869f9447c8",
+        "scryfallId": "416c025b-e40e-4d95-a774-ba3961f43808",
+        "name": "Twitching Doll",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Artifact Creature — Spider Toy",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Spider",
+          "Toy"
+        ],
+        "oracleText": "{T}: Add one mana of any color. Put a nest counter on this creature.\n{T}, Sacrifice this creature: Create a 2/2 green Spider creature token with reach for each counter on this creature. Activate only as a sorcery.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5171912ea6d25ab8a1e4e3441354f546c064d48f6391d8081d12d1dc3d9fed0b",
+      "card": {
+        "oracleId": "2fe0ebf5-52ed-4e92-9b93-81e9ae564439",
+        "scryfallId": "3c27ca1c-8f2d-4ac8-aef1-bb6201763392",
+        "name": "Ultimate Nullification",
+        "manaCost": "{4}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "As an additional cost to cast this spell, sacrifice a legendary creature.\nExile all creatures and graveyards. Put Ultimate Nullification on the bottom of its owner's library.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2bde6330df94f0e0381cda4f38876793333da5d0e2b4d451bc5c04541830b032",
+      "card": {
+        "oracleId": "d7315b3b-6e5d-4d28-a503-bfae1daf6c43",
+        "scryfallId": "5d951996-3379-431d-bbb0-a7d099e72e4e",
+        "name": "Verix Bladewing",
+        "manaCost": "{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Dragon",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Kicker {3} (You may pay an additional {3} as you cast this spell.)\nFlying\nWhen Verix Bladewing enters, if it was kicked, create Karox Bladewing, a legendary 4/4 red Dragon creature token with flying.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Kicker",
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

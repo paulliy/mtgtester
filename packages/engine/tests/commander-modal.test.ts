@@ -7,7 +7,8 @@ import { createGame } from '../src/state/game';
 import type { EnginePlayerState, GameContext } from '../src/state/types';
 import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
-const modalHeader = 'Choose one. If you control a commander as you cast this spell, you may choose both instead.';
+const modalHeader =
+  'Choose one. If you control a commander as you cast this spell, you may choose both instead.';
 const conditionalModal = () =>
   oracle({
     name: 'Commander Conditional Modal',
@@ -24,7 +25,10 @@ const conditionalModal = () =>
 
 function pod(seed = 'commander-modal'): GameContext {
   const ctx = createGame(
-    gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
@@ -60,10 +64,12 @@ describe('commander-conditional modal headers', () => {
     conjure(withoutCommander, 'P1', card, 'hand');
     const noCommanderOptions = castOptions(withoutCommander, p1(withoutCommander));
     expect(noCommanderOptions).toHaveLength(2);
-    expect(noCommanderOptions.every((option) => {
-      const payload = option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>;
-      return payload.modes?.length === 1;
-    })).toBe(true);
+    expect(
+      noCommanderOptions.every((option) => {
+        const payload = option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>;
+        return payload.modes?.length === 1;
+      }),
+    ).toBe(true);
 
     const withCommander = pod('modal-with-commander');
     spawn(
@@ -80,10 +86,12 @@ describe('commander-conditional modal headers', () => {
     conjure(withCommander, 'P1', card, 'hand');
     const commanderOptions = castOptions(withCommander, p1(withCommander));
     expect(commanderOptions).toHaveLength(3);
-    expect(commanderOptions.some((option) => {
-      const payload = option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>;
-      return payload.modes?.join(',') === '0,1';
-    })).toBe(true);
+    expect(
+      commanderOptions.some((option) => {
+        const payload = option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>;
+        return payload.modes?.join(',') === '0,1';
+      }),
+    ).toBe(true);
   });
 
   it('executes both selected modes when the commander condition is true', () => {
@@ -102,7 +110,16 @@ describe('commander-conditional modal headers', () => {
     );
     const card = conditionalModal();
     conjure(ctx, 'P1', card, 'hand');
-    conjure(ctx, 'P1', oracle({ name: 'Card Drawn by Modal', typeLine: 'Creature ' + String.fromCharCode(0x2014) + ' Test', manaCost: '{1}' }), 'library');
+    conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Card Drawn by Modal',
+        typeLine: 'Creature ' + String.fromCharCode(0x2014) + ' Test',
+        manaCost: '{1}',
+      }),
+      'library',
+    );
 
     const option = castOptions(ctx, player).find((candidate) => {
       const payload = candidate.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>;

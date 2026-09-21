@@ -27,10 +27,12 @@ import type {
 import type { DecisionOutcome, GameGen, PendingDecision } from './decisions';
 import { forcedOutcome, isForced } from './decisions';
 import { EngineUsageError, IllegalDecisionError, UnmodeledCardError } from './errors';
-import { playGame } from './flow/game';
+import { playGame, playPreparedScenario } from './flow/game';
 import { debug, emit, settleSpectatorSnapshot } from './log/log';
 import { createGame } from './state/game';
 import type { DebugEntry, GameConfig, GameContext } from './state/types';
+import type { PreparedScenarioSpec } from './testing/prepared-scenario';
+import { prepareScenario } from './testing/prepared-scenario';
 import { buildSpectatorState } from './view/spectator';
 import { buildPlayerBoardState } from './view/spectator';
 import { buildPlayerView } from './view/view';
@@ -102,6 +104,11 @@ export interface EngineDriver {
   addDebug(category: DebugEntry['category'], message: string, data?: Record<string, unknown>): void;
 }
 
+export interface EngineOptions {
+  /** Closed server/test fixture initialization; never populated from arbitrary client state. */
+  preparedScenario?: PreparedScenarioSpec;
+}
+
 export class Engine implements EngineDriver {
   private readonly ctx: GameContext;
   private readonly gen: GameGen<GameResult>;
@@ -112,9 +119,14 @@ export class Engine implements EngineDriver {
   private finished: GameResult | null = null;
   private debugCursor = 0;
 
-  constructor(config: GameConfig) {
+  constructor(config: GameConfig, options: EngineOptions = {}) {
     this.ctx = createGame(config);
-    this.gen = playGame(this.ctx);
+    if (options.preparedScenario !== undefined) {
+      prepareScenario(this.ctx, options.preparedScenario);
+      this.gen = playPreparedScenario(this.ctx);
+    } else {
+      this.gen = playGame(this.ctx);
+    }
   }
 
   advance(): EngineStep {

@@ -112,7 +112,6 @@ const MODELED = [
   'Ureni, the Song Unending',
   // Inc 15 â€” damage-doubling replacement (CR 616), gain-control-of-a-set + a control-change
   // timestamp, and turn-scoped excess-damage tracking feeding an intervening-if.
-  'Firkraag, Cunning Instigator',
   'Karrthus, Tyrant of Jund',
   'Neriv, Heart of the Storm',
   'Rith, Liberated Primeval',
@@ -132,9 +131,7 @@ const MODELED = [
   'Marang River Regent // Coil and Catch',
   'Monster Manual // Zoological Study',
   // Inc 19 â€” remaining bespoke Dragon cards (100% coverage milestone).
-  'Dragon Tempest',
   'Iymrith, Desert Doom',
-  'Kairi, the Swirling Sky',
   "Lozhan, Dragons' Legacy",
   'Morophon, the Boundless',
   'Rivaz of the Claw',

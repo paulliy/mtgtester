@@ -10,7 +10,12 @@ const dash = String.fromCharCode(0x2014);
 const bullet = String.fromCharCode(0x2022);
 
 function pod(seed: string): GameContext {
-  const ctx = createGame(gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(3, forest) })), { seed }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(3, forest) })),
+      { seed },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.turnNumber = 4;
@@ -24,37 +29,55 @@ const p1 = (ctx: GameContext): EnginePlayerState =>
 
 describe('Tier 3 modal triggered and activated abilities', () => {
   it('parses and resolves an activated modal block', () => {
-    const def = interpretCard(oracle({
-      name: 'Test Modal Relic',
-      typeLine: 'Artifact',
-      manaCost: '{2}',
-      oracleText: `{2}: Choose one ${dash}${nl}${bullet} You gain 3 life.${nl}${bullet} Draw a card.`,
-    }));
+    const def = interpretCard(
+      oracle({
+        name: 'Test Modal Relic',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        oracleText: `{2}: Choose one ${dash}${nl}${bullet} You gain 3 life.${nl}${bullet} Draw a card.`,
+      }),
+    );
     expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
-    expect(def.activatedAbilities[0]?.ability.modes).toMatchObject({ minChoices: 1, maxChoices: 1 });
+    expect(def.activatedAbilities[0]?.ability.modes).toMatchObject({
+      minChoices: 1,
+      maxChoices: 1,
+    });
 
     const ctx = pod('tier3-activated-modal');
     const player = p1(ctx);
     const lifeBefore = player.life;
-    pump(executeAbility(ctx, {
-      cardId: 'c-modal-relic',
-      oracleId: def.oracleId,
-      name: def.name,
-      controllerId: 'P1',
-    }, def.activatedAbilities[0]!.ability, []), (decision) => ({
-      index: Math.max(0, decision.options.findIndex((option) => option.description.includes('gain 3 life'))),
-      targets: new Map(),
-    }));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'c-modal-relic',
+          oracleId: def.oracleId,
+          name: def.name,
+          controllerId: 'P1',
+        },
+        def.activatedAbilities[0]!.ability,
+        [],
+      ),
+      (decision) => ({
+        index: Math.max(
+          0,
+          decision.options.findIndex((option) => option.description.includes('gain 3 life')),
+        ),
+        targets: new Map(),
+      }),
+    );
     expect(player.life).toBe(lifeBefore + 3);
   });
 
   it('supports named repeatable modes and executes the same mode three times', () => {
-    const def = interpretCard(oracle({
-      name: 'Test Repeatable Engine',
-      typeLine: 'Artifact',
-      manaCost: '{3}',
-      oracleText: `{3}: Choose three. You may choose the same mode more than once.${nl}${bullet} Insight ${dash} Draw a card.${nl}${bullet} Vitality ${dash} You gain 1 life.`,
-    }));
+    const def = interpretCard(
+      oracle({
+        name: 'Test Repeatable Engine',
+        typeLine: 'Artifact',
+        manaCost: '{3}',
+        oracleText: `{3}: Choose three. You may choose the same mode more than once.${nl}${bullet} Insight ${dash} Draw a card.${nl}${bullet} Vitality ${dash} You gain 1 life.`,
+      }),
+    );
     const modes = def.activatedAbilities[0]?.ability.modes;
     expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
     expect(modes).toMatchObject({ minChoices: 3, maxChoices: 3, repeatable: true });
@@ -63,38 +86,50 @@ describe('Tier 3 modal triggered and activated abilities', () => {
     const ctx = pod('tier3-repeatable-modal');
     const player = p1(ctx);
     const lifeBefore = player.life;
-    pump(executeAbility(ctx, {
-      cardId: 'c-repeatable',
-      oracleId: def.oracleId,
-      name: def.name,
-      controllerId: 'P1',
-    }, def.activatedAbilities[0]!.ability, []), (decision) => {
-      const index = decision.options.findIndex((option) =>
-        option.description.split('vitality').length - 1 === 3,
-      );
-      return { index: Math.max(0, index), targets: new Map() };
-    });
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'c-repeatable',
+          oracleId: def.oracleId,
+          name: def.name,
+          controllerId: 'P1',
+        },
+        def.activatedAbilities[0]!.ability,
+        [],
+      ),
+      (decision) => {
+        const index = decision.options.findIndex(
+          (option) => option.description.split('vitality').length - 1 === 3,
+        );
+        return { index: Math.max(0, index), targets: new Map() };
+      },
+    );
     expect(player.life).toBe(lifeBefore + 3);
   });
 
   it('supports choose up to one on triggers and fails closed if any bullet is unknown', () => {
-    const optional = interpretCard(oracle({
-      name: 'Test Optional Sage',
-      typeLine: `Creature ${dash} Human Wizard`,
-      manaCost: '{1}{U}',
-      power: '2',
-      toughness: '2',
-      oracleText: `At the beginning of your upkeep, choose up to one ${dash}${nl}${bullet} Draw a card.${nl}${bullet} You gain 2 life.`,
-    }));
+    const optional = interpretCard(
+      oracle({
+        name: 'Test Optional Sage',
+        typeLine: `Creature ${dash} Human Wizard`,
+        manaCost: '{1}{U}',
+        power: '2',
+        toughness: '2',
+        oracleText: `At the beginning of your upkeep, choose up to one ${dash}${nl}${bullet} Draw a card.${nl}${bullet} You gain 2 life.`,
+      }),
+    );
     expect(optional.modeled, optional.unmodeledReasons.join('; ')).toBe(true);
     expect(optional.triggers[0]?.modes).toMatchObject({ minChoices: 0, maxChoices: 1 });
 
-    const invalid = interpretCard(oracle({
-      name: 'Test Broken Modal Relic',
-      typeLine: 'Artifact',
-      manaCost: '{2}',
-      oracleText: `{2}: Choose one ${dash}${nl}${bullet} Draw a card.${nl}${bullet} Reverse the polarity of the moon.`,
-    }));
+    const invalid = interpretCard(
+      oracle({
+        name: 'Test Broken Modal Relic',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        oracleText: `{2}: Choose one ${dash}${nl}${bullet} Draw a card.${nl}${bullet} Reverse the polarity of the moon.`,
+      }),
+    );
     expect(invalid.modeled).toBe(false);
     expect(invalid.activatedAbilities).toHaveLength(0);
   });
@@ -106,20 +141,22 @@ describe('Tier 3 modal triggered and activated abilities', () => {
    * phrasing was missing, so this drives the whole path end to end.
    */
   it("returns a spell from the stack to its owner's hand", () => {
-    const def = interpretCard(oracle({
-      name: 'Test Hullbreaker',
-      typeLine: `Creature ${dash} Kraken Horror`,
-      manaCost: '{5}{U}{U}',
-      power: '7',
-      toughness: '8',
-      oracleText: [
-        'Flash',
-        "This spell can't be countered.",
-        `Whenever you cast a spell, choose up to one ${dash}`,
-        `${bullet} Return target spell you don't control to its owner's hand.`,
-        `${bullet} Return target nonland permanent to its owner's hand.`,
-      ].join(nl),
-    }));
+    const def = interpretCard(
+      oracle({
+        name: 'Test Hullbreaker',
+        typeLine: `Creature ${dash} Kraken Horror`,
+        manaCost: '{5}{U}{U}',
+        power: '7',
+        toughness: '8',
+        oracleText: [
+          'Flash',
+          "This spell can't be countered.",
+          `Whenever you cast a spell, choose up to one ${dash}`,
+          `${bullet} Return target spell you don't control to its owner's hand.`,
+          `${bullet} Return target nonland permanent to its owner's hand.`,
+        ].join(nl),
+      }),
+    );
     expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
     const trigger = def.triggers[0]!;
     expect(trigger.targets[0]).toEqual({ kind: 'spell', controller: 'opponent' });
@@ -128,18 +165,25 @@ describe('Tier 3 modal triggered and activated abilities', () => {
     const ctx = pod('tier3-bounce-spell');
     // An opponent's sorcery waiting on the stack, with its card object attached the way a real
     // cast leaves it — that card is what has to end up in hand.
-    const spellCard = conjure(ctx, 'P2', oracle({
-      name: 'Test Opposing Bolt',
-      typeLine: 'Sorcery',
-      manaCost: '{R}',
-      oracleText: 'Draw a card.',
-    }), 'hand');
-    const spellDef = interpretCard(oracle({
-      name: 'Test Opposing Bolt',
-      typeLine: 'Sorcery',
-      manaCost: '{R}',
-      oracleText: 'Draw a card.',
-    }));
+    const spellCard = conjure(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Test Opposing Bolt',
+        typeLine: 'Sorcery',
+        manaCost: '{R}',
+        oracleText: 'Draw a card.',
+      }),
+      'hand',
+    );
+    const spellDef = interpretCard(
+      oracle({
+        name: 'Test Opposing Bolt',
+        typeLine: 'Sorcery',
+        manaCost: '{R}',
+        oracleText: 'Draw a card.',
+      }),
+    );
     ctx.state.stack.push({
       id: 'o-stack-bolt',
       kind: 'spell',
@@ -158,12 +202,19 @@ describe('Tier 3 modal triggered and activated abilities', () => {
     // Resolve the first mode directly: `exactOptionalPropertyTypes` forbids spreading
     // `modes: undefined`, so the key is dropped rather than set.
     const { modes: _modes, ...withoutModes } = trigger;
-    pump(executeAbility(ctx, {
-      cardId: 'c-hullbreaker',
-      oracleId: def.oracleId,
-      name: def.name,
-      controllerId: 'P1',
-    }, { ...withoutModes, effects: trigger.modes!.options[0]!.effects }, ['o-stack-bolt' as never]));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'c-hullbreaker',
+          oracleId: def.oracleId,
+          name: def.name,
+          controllerId: 'P1',
+        },
+        { ...withoutModes, effects: trigger.modes!.options[0]!.effects },
+        ['o-stack-bolt' as never],
+      ),
+    );
 
     expect(ctx.state.stack).toHaveLength(0);
     const opponent = ctx.state.players.find((player) => player.id === 'P2')!;

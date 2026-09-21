@@ -15,11 +15,11 @@ We built a coverage instrument (`bun run coverage`) over seven real Commander de
 precons plus a user-supplied Ur-Dragon list — and measured what raising coverage would actually
 buy. The results killed the plan we were executing:
 
-| work | cards it unblocks | resulting coverage |
-| ---- | ----------------- | ------------------ |
-| activated abilities (non-mana) | +14 | 6.0% → 9.0% |
-| ＋ token creation              | +25 | 6.0% → 11.3% |
-| all 14 top mechanic families   | +302 | → 70.5% |
+| work                           | cards it unblocks | resulting coverage |
+| ------------------------------ | ----------------- | ------------------ |
+| activated abilities (non-mana) | +14               | 6.0% → 9.0%        |
+| ＋ token creation              | +25               | 6.0% → 11.3%       |
+| all 14 top mechanic families   | +302              | → 70.5%            |
 
 The per-mechanic counts we had been ranking work by (activated abilities "blocks 128 cards")
 are **upper bounds**, not yields. An unmodeled card carries **2.25 blocking mechanics on
@@ -59,12 +59,12 @@ decks play end to end**, which went from 0 to 4.
 
 Good:
 
-- The simulator runs *now*: 1,412 modeled cards, 49 usable commanders, every color identity
+- The simulator runs _now_: 1,412 modeled cards, 49 usable commanders, every color identity
   except colorless deep enough for a legal deck. A verification game plays 72 turns to a single
   winner across 2,821 events, byte-identical on re-run with the same seed.
 - Phase 3 is unblocked. The AI can be built and evaluated against real games while card
   coverage grows underneath it, instead of waiting on it.
-- Coverage work is now *optional and incremental* rather than a gate. Each newly modeled
+- Coverage work is now _optional and incremental_ rather than a gate. Each newly modeled
   mechanic widens the pool and makes generated decks more interesting; nothing is blocked on
   reaching a threshold.
 
@@ -74,7 +74,7 @@ Costs, stated plainly:
   mechanically thin — no activated abilities, no tokens, few interactions. They exercise the
   rules engine, not deck strategy, and an AI tuned only against them would be tuned against a
   weak distribution.
-- Simulating a *specific* real decklist remains out of reach and stays the long-term goal. The
+- Simulating a _specific_ real decklist remains out of reach and stays the long-term goal. The
   tractable route there is per-deck: pick one list and model its ~70 unmodeled cards
   deliberately — a closed set, where the authored-override registry (ADR 0004's increment 2)
   is the right tool. That is the opposite of what overrides are useless for, which is chasing

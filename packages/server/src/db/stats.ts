@@ -19,7 +19,12 @@ export interface DeckStatistic {
   averageMulligans: number;
   mulliganDistribution: Array<{ mulligans: number; games: number }>;
   eliminationCauses: Array<{ reason: string; count: number }>;
-  lossesTo: Array<{ commanders: string[]; colorIdentity: string[]; archetypeTag: string; count: number }>;
+  lossesTo: Array<{
+    commanders: string[];
+    colorIdentity: string[];
+    archetypeTag: string;
+    count: number;
+  }>;
   manaFloodRate: number | null;
   manaDroughtRate: number | null;
 }
@@ -51,7 +56,9 @@ function rows(db: SqliteLike, sql: string, ...args: unknown[]): Row[] {
 }
 
 /** A stored `DecisionResponse`, narrowed to the two fields annotations are built from. */
-function parseResponse(value: unknown): { note?: unknown; turnStrategy?: { intent?: unknown } } | null {
+function parseResponse(
+  value: unknown,
+): { note?: unknown; turnStrategy?: { intent?: unknown } } | null {
   if (typeof value !== 'string') return null;
   try {
     const parsed: unknown = JSON.parse(value);
@@ -89,7 +96,9 @@ export class StatsRepository {
   }
 
   private batchDeckStatistics(batchId: string): DeckStatistic[] {
-    const base = rows(this.db, `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag,
+    const base = rows(
+      this.db,
+      `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag,
               ds.commander_names, ds.color_identity, COUNT(g.id) AS games_played,
               SUM(CASE WHEN gp.finished_position = 1 THEN 1 ELSE 0 END) AS wins,
               AVG(gp.finished_position) AS average_finish, AVG(g.turn_count) AS average_game_length,
@@ -98,19 +107,50 @@ export class StatsRepository {
          JOIN game_players gp ON gp.deck_snapshot_id = ds.id
          JOIN games g ON g.id = gp.game_id AND g.status = 'finished'
          JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ?
-        GROUP BY ds.id ORDER BY games_played DESC, name ASC`, batchId);
+        GROUP BY ds.id ORDER BY games_played DESC, name ASC`,
+      batchId,
+    );
     return base.map((row) => {
-      const snapshotId = String(row['snapshot_id']); const gamesPlayed = number(row['games_played']); const mana = this.manaRates(snapshotId, batchId);
+      const snapshotId = String(row['snapshot_id']);
+      const gamesPlayed = number(row['games_played']);
+      const mana = this.manaRates(snapshotId, batchId);
       return {
-        deckSnapshotId: snapshotId, name: String(row['name'] ?? snapshotId), commanders: jsonArray(row['commander_names']),
-        colorIdentity: jsonArray(row['color_identity']), archetypeTag: String(row['archetype_tag'] ?? ''), gamesPlayed,
-        wins: number(row['wins']), winRate: gamesPlayed === 0 ? 0 : number(row['wins']) / gamesPlayed,
-        averageFinish: gamesPlayed === 0 ? null : number(row['average_finish']), averageGameLength: gamesPlayed === 0 ? null : number(row['average_game_length']),
+        deckSnapshotId: snapshotId,
+        name: String(row['name'] ?? snapshotId),
+        commanders: jsonArray(row['commander_names']),
+        colorIdentity: jsonArray(row['color_identity']),
+        archetypeTag: String(row['archetype_tag'] ?? ''),
+        gamesPlayed,
+        wins: number(row['wins']),
+        winRate: gamesPlayed === 0 ? 0 : number(row['wins']) / gamesPlayed,
+        averageFinish: gamesPlayed === 0 ? null : number(row['average_finish']),
+        averageGameLength: gamesPlayed === 0 ? null : number(row['average_game_length']),
         averageMulligans: gamesPlayed === 0 ? 0 : number(row['average_mulligans']),
-        mulliganDistribution: rows(this.db, `SELECT gp.mulligans_taken AS mulligans, COUNT(*) AS games FROM game_players gp JOIN games g ON g.id = gp.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' GROUP BY gp.mulligans_taken ORDER BY gp.mulligans_taken`, batchId, snapshotId).map((item) => ({ mulligans: number(item['mulligans']), games: number(item['games']) })),
-        eliminationCauses: rows(this.db, `SELECT gp.loss_reason AS reason, COUNT(*) AS count FROM game_players gp JOIN games g ON g.id = gp.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND gp.loss_reason IS NOT NULL GROUP BY gp.loss_reason`, batchId, snapshotId).map((item) => ({ reason: String(item['reason']), count: number(item['count']) })),
-        lossesTo: rows(this.db, `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count FROM game_players victim JOIN games g ON g.id = victim.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id JOIN decks killer_d ON killer_d.id = killer_ds.deck_id WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND victim.eliminated_by_seat IS NOT NULL GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`, batchId, snapshotId).map((item) => ({ commanders: jsonArray(item['commander_names']), colorIdentity: jsonArray(item['color_identity']), archetypeTag: String(item['archetype_tag'] ?? ''), count: number(item['count']) })),
-        manaFloodRate: mana.floodRate, manaDroughtRate: mana.droughtRate,
+        mulliganDistribution: rows(
+          this.db,
+          `SELECT gp.mulligans_taken AS mulligans, COUNT(*) AS games FROM game_players gp JOIN games g ON g.id = gp.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' GROUP BY gp.mulligans_taken ORDER BY gp.mulligans_taken`,
+          batchId,
+          snapshotId,
+        ).map((item) => ({ mulligans: number(item['mulligans']), games: number(item['games']) })),
+        eliminationCauses: rows(
+          this.db,
+          `SELECT gp.loss_reason AS reason, COUNT(*) AS count FROM game_players gp JOIN games g ON g.id = gp.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND gp.loss_reason IS NOT NULL GROUP BY gp.loss_reason`,
+          batchId,
+          snapshotId,
+        ).map((item) => ({ reason: String(item['reason']), count: number(item['count']) })),
+        lossesTo: rows(
+          this.db,
+          `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count FROM game_players victim JOIN games g ON g.id = victim.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id JOIN decks killer_d ON killer_d.id = killer_ds.deck_id WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND victim.eliminated_by_seat IS NOT NULL GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
+          batchId,
+          snapshotId,
+        ).map((item) => ({
+          commanders: jsonArray(item['commander_names']),
+          colorIdentity: jsonArray(item['color_identity']),
+          archetypeTag: String(item['archetype_tag'] ?? ''),
+          count: number(item['count']),
+        })),
+        manaFloodRate: mana.floodRate,
+        manaDroughtRate: mana.droughtRate,
       };
     });
   }
@@ -130,15 +170,20 @@ export class StatsRepository {
       averageFinish: gamesPlayed === 0 ? null : number(row['average_finish']),
       averageGameLength: gamesPlayed === 0 ? null : number(row['average_game_length']),
       averageMulligans: gamesPlayed === 0 ? 0 : number(row['average_mulligans']),
-      mulliganDistribution: rows(this.db,
+      mulliganDistribution: rows(
+        this.db,
         `SELECT mulligans_taken AS mulligans, COUNT(*) AS games FROM game_players gp JOIN games g ON g.id = gp.game_id
-         WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' GROUP BY mulligans_taken ORDER BY mulligans_taken`, snapshotId)
-        .map((item) => ({ mulligans: number(item['mulligans']), games: number(item['games']) })),
-      eliminationCauses: rows(this.db,
+         WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' GROUP BY mulligans_taken ORDER BY mulligans_taken`,
+        snapshotId,
+      ).map((item) => ({ mulligans: number(item['mulligans']), games: number(item['games']) })),
+      eliminationCauses: rows(
+        this.db,
         `SELECT loss_reason AS reason, COUNT(*) AS count FROM game_players gp JOIN games g ON g.id = gp.game_id
-         WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND loss_reason IS NOT NULL GROUP BY loss_reason`, snapshotId)
-        .map((item) => ({ reason: String(item['reason']), count: number(item['count']) })),
-      lossesTo: rows(this.db,
+         WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND loss_reason IS NOT NULL GROUP BY loss_reason`,
+        snapshotId,
+      ).map((item) => ({ reason: String(item['reason']), count: number(item['count']) })),
+      lossesTo: rows(
+        this.db,
         `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count
            FROM game_players victim
            JOIN games g ON g.id = victim.game_id
@@ -146,15 +191,23 @@ export class StatsRepository {
            JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id
            JOIN decks killer_d ON killer_d.id = killer_ds.deck_id
           WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND victim.eliminated_by_seat IS NOT NULL
-          GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`, snapshotId)
-        .map((item) => ({ commanders: jsonArray(item['commander_names']), colorIdentity: jsonArray(item['color_identity']),
-          archetypeTag: String(item['archetype_tag'] ?? ''), count: number(item['count']) })),
+          GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
+        snapshotId,
+      ).map((item) => ({
+        commanders: jsonArray(item['commander_names']),
+        colorIdentity: jsonArray(item['color_identity']),
+        archetypeTag: String(item['archetype_tag'] ?? ''),
+        count: number(item['count']),
+      })),
       manaFloodRate: mana.floodRate,
       manaDroughtRate: mana.droughtRate,
     };
   }
 
-  private manaRates(_snapshotId: string, _batchId?: string): { floodRate: null; droughtRate: null } {
+  private manaRates(
+    _snapshotId: string,
+    _batchId?: string,
+  ): { floodRate: null; droughtRate: null } {
     // Legacy observations do not record actual affordability, the last five draws,
     // battlefield land counts, or the player's end-turn land drop. They cannot support
     // the advertised heuristic. Never present invented percentages from these rows.
@@ -164,10 +217,22 @@ export class StatsRepository {
   gameDebug(gameId: string): DebugGameData {
     return {
       game: first(this.db, `SELECT * FROM games WHERE id = ?`, gameId),
-      events: rows(this.db, `SELECT * FROM game_events WHERE game_id = ? ORDER BY sequence`, gameId),
-      debugEvents: rows(this.db, `SELECT * FROM game_debug_events WHERE game_id = ? ORDER BY sequence`, gameId),
+      events: rows(
+        this.db,
+        `SELECT * FROM game_events WHERE game_id = ? ORDER BY sequence`,
+        gameId,
+      ),
+      debugEvents: rows(
+        this.db,
+        `SELECT * FROM game_debug_events WHERE game_id = ? ORDER BY sequence`,
+        gameId,
+      ),
       aiCalls: rows(this.db, `SELECT * FROM ai_calls WHERE game_id = ? ORDER BY sequence`, gameId),
-      manaMetrics: rows(this.db, `SELECT * FROM mana_metrics WHERE game_id = ? ORDER BY seat, turn`, gameId),
+      manaMetrics: rows(
+        this.db,
+        `SELECT * FROM mana_metrics WHERE game_id = ? ORDER BY seat, turn`,
+        gameId,
+      ),
     };
   }
 

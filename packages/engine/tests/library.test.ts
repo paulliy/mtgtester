@@ -120,7 +120,9 @@ function castSpell(
 /** Pick the first option whose description matches. */
 const choose =
   (pattern: RegExp) =>
-  (d: Parameters<NonNullable<Parameters<typeof pump>[1]>>[0]): { index: number; targets: Map<number, string> } => {
+  (
+    d: Parameters<NonNullable<Parameters<typeof pump>[1]>>[0],
+  ): { index: number; targets: Map<number, string> } => {
     const i = d.options.findIndex((o) => pattern.test(o.description));
     return { index: i >= 0 ? i : 0, targets: new Map() };
   };
@@ -222,7 +224,8 @@ describe('library search', () => {
           manaCost: '{B}',
           power: null,
           toughness: null,
-          oracleText: 'Search your library for a card, then shuffle and put that card on top. You lose 2 life.',
+          oracleText:
+            'Search your library for a card, then shuffle and put that card on top. You lose 2 life.',
         }),
         target: oracle({ name: 'Tutor Any Card' }),
         other: oracle({ name: 'Tutor Another Card' }),
@@ -237,11 +240,7 @@ describe('library search', () => {
       conjure(ctx, 'P1', testCase.target, 'library');
       conjure(ctx, 'P1', testCase.other, 'library');
 
-      const { decisions } = castSpell(
-        ctx,
-        testCase.card,
-        choose(new RegExp(testCase.target.name)),
-      );
+      const { decisions } = castSpell(ctx, testCase.card, choose(new RegExp(testCase.target.name)));
 
       expect(decisions.filter((d) => d.prompt.includes('search your library'))).toHaveLength(1);
       expect(player.library[0]?.name).toBe(testCase.target.name);
@@ -393,14 +392,22 @@ describe('scry', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: 'c-scry-two', name: 'Test Scry Two', oracleId: 'oracle-test-scry-two', controllerId: 'P1' },
+        {
+          cardId: 'c-scry-two',
+          name: 'Test Scry Two',
+          oracleId: 'oracle-test-scry-two',
+          controllerId: 'P1',
+        },
         ability,
         [],
       ),
       (decision) => {
         if (decision.prompt.includes('reorder the cards')) return { index: 1, targets: new Map() };
         if (decision.prompt.includes('choose the next card')) {
-          return { index: decision.options.findIndex((option) => option.description.includes('Mountain')), targets: new Map() };
+          return {
+            index: decision.options.findIndex((option) => option.description.includes('Mountain')),
+            targets: new Map(),
+          };
         }
         return { index: 0, targets: new Map() };
       },
@@ -455,7 +462,12 @@ describe('draw, discard, mill, and surveil', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: 'c-pull', name: drawDiscard.name, oracleId: drawDiscard.oracleId, controllerId: 'P1' },
+        {
+          cardId: 'c-pull',
+          name: drawDiscard.name,
+          oracleId: drawDiscard.oracleId,
+          controllerId: 'P1',
+        },
         drawDiscard.spellAbility as never,
         [],
         undefined,

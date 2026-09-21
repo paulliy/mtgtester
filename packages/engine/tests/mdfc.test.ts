@@ -20,12 +20,14 @@ const mdfcCards = [
     colorIdentity: ['U'],
     power: null,
     toughness: null,
-    oracleText: "Return target spell or nonland permanent an opponent controls to its owner's hand.",
+    oracleText:
+      "Return target spell or nonland permanent an opponent controls to its owner's hand.",
     layout: 'modal_dfc',
     backFace: {
       name: 'Soporific Springs',
       typeLine: 'Land',
-      oracleText: "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {U}.",
+      oracleText:
+        "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {U}.",
       manaCost: null,
       colors: [],
       power: null,
@@ -48,7 +50,8 @@ const mdfcCards = [
     backFace: {
       name: 'Fell Mire',
       typeLine: 'Land',
-      oracleText: "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {B}.",
+      oracleText:
+        "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {B}.",
       manaCost: null,
       colors: [],
       power: null,
@@ -66,7 +69,8 @@ const mdfcCards = [
     colorIdentity: ['B', 'G'],
     power: null,
     toughness: null,
-    oracleText: 'Put a +1/+1 counter on target creature. It gains indestructible until end of turn.',
+    oracleText:
+      'Put a +1/+1 counter on target creature. It gains indestructible until end of turn.',
     layout: 'modal_dfc',
     backFace: {
       name: 'Old-Growth Grove',
@@ -81,7 +85,12 @@ const mdfcCards = [
 ] as const;
 
 function pod(card: (typeof mdfcCards)[number]): { ctx: GameContext; objectId: string } {
-  const ctx = createGame(gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed: card.name }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed: card.name },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.turnNumber = 4;
@@ -121,7 +130,8 @@ describe('MDFC spell // land layout', () => {
     );
 
     const payload = landOption?.payload as PriorityActionPayload | undefined;
-    if (payload === undefined || payload.kind !== 'playLand') throw new Error('missing MDFC land action');
+    if (payload === undefined || payload.kind !== 'playLand')
+      throw new Error('missing MDFC land action');
     pump(
       applyPriorityAction(ctx, player, payload, { index: 0, targets: new Map() }),
       (decision) => {
@@ -130,13 +140,20 @@ describe('MDFC spell // land layout', () => {
       },
     );
 
-    const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === player.hand[0]?.cardId || candidate.name === card.backFace?.name);
+    const permanent = ctx.state.battlefield.find(
+      (candidate) =>
+        candidate.cardId === player.hand[0]?.cardId || candidate.name === card.backFace?.name,
+    );
     expect(permanent?.name).toBe(card.backFace?.name);
     expect(permanent?.face).toBe('back');
     expect(computeCharacteristics(ctx, permanent!).types).toContain('Land');
     expect(permanent?.tapped).toBe(card.name.startsWith('Revitalizing Repast'));
     expect(player.life).toBe(card.name.startsWith('Revitalizing Repast') ? 40 : 37);
-    expect(computeCharacteristics(ctx, permanent!).manaAbilities.some((ability) => ability.units.some((unit) => unit.includes(card.colors[0]!)))).toBe(true);
+    expect(
+      computeCharacteristics(ctx, permanent!).manaAbilities.some((ability) =>
+        ability.units.some((unit) => unit.includes(card.colors[0]!)),
+      ),
+    ).toBe(true);
     expect(player.hand.some((object) => object.id === objectId)).toBe(false);
     expect(player.landsPlayedThisTurn).toBe(1);
 
@@ -154,7 +171,16 @@ describe('MDFC spell // land layout', () => {
     const player = ctx.state.players[0]!;
     spawn(ctx, 'P1', bear());
     const options = computePriorityOptions(ctx, player);
-    expect(options.some((option) => option.type === 'castSpell' && option.description.startsWith('Cast Revitalizing Repast'))).toBe(true);
-    expect(options.some((option) => option.type === 'playLand' && option.description === 'Play Old-Growth Grove')).toBe(true);
+    expect(
+      options.some(
+        (option) =>
+          option.type === 'castSpell' && option.description.startsWith('Cast Revitalizing Repast'),
+      ),
+    ).toBe(true);
+    expect(
+      options.some(
+        (option) => option.type === 'playLand' && option.description === 'Play Old-Growth Grove',
+      ),
+    ).toBe(true);
   });
 });

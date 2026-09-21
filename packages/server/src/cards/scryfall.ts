@@ -145,7 +145,10 @@ export function toOracleCard(card: RawScryfallCard): OracleCard | null {
             name: back.name ?? '',
             typeLine: back.type_line ?? '',
             oracleText: back.oracle_text ?? '',
-            manaCost: back.mana_cost === undefined || back.mana_cost === '' ? null : (back.mana_cost as OracleCard['manaCost']),
+            manaCost:
+              back.mana_cost === undefined || back.mana_cost === ''
+                ? null
+                : (back.mana_cost as OracleCard['manaCost']),
             colors: toColors(back.colors),
             power: back.power ?? null,
             toughness: back.toughness ?? null,

@@ -48,7 +48,7 @@ const p1 = (ctx: GameContext): EnginePlayerState =>
 /** Dragon's Hoard, verbatim: a trigger, a counter-costed draw, and a mana ability. */
 const dragonsHoard = (): ReturnType<typeof oracle> =>
   oracle({
-    name: "Test Hoard",
+    name: 'Test Hoard',
     typeLine: 'Artifact',
     manaCost: '{3}',
     power: null,
@@ -69,7 +69,13 @@ const recklessBarbarian = (): ReturnType<typeof oracle> =>
   });
 
 const dragon = (): ReturnType<typeof oracle> =>
-  oracle({ name: 'Test Whelp', typeLine: 'Creature — Dragon', manaCost: '{4}{R}', power: '5', toughness: '5' });
+  oracle({
+    name: 'Test Whelp',
+    typeLine: 'Creature — Dragon',
+    manaCost: '{4}{R}',
+    power: '5',
+    toughness: '5',
+  });
 
 const optionsFor = (ctx: GameContext): string[] =>
   computePriorityOptions(ctx, p1(ctx)).map((o) => o.description);
@@ -93,39 +99,121 @@ describe('parsing costs', () => {
       { kind: 'tap' },
       { kind: 'removeCounters', counter: 'gold', count: 1 },
     ]);
-    expect(hoard.activatedAbilities[0]?.ability.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+    expect(hoard.activatedAbilities[0]?.ability.effects).toEqual([
+      { op: 'draw', count: { kind: 'const', n: 1 } },
+    ]);
   });
 
   it('parses a controlled-creature tap as an additional activation cost', () => {
-    const def = interpretCard(oracle({
-      name: 'Test Drum', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null,
-      oracleText: '{T}, Tap an untapped creature you control: Add one mana of any color.',
-    }));
+    const def = interpretCard(
+      oracle({
+        name: 'Test Drum',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        power: null,
+        toughness: null,
+        oracleText: '{T}, Tap an untapped creature you control: Add one mana of any color.',
+      }),
+    );
     expect(def.modeled).toBe(true);
     expect(def.manaAbilities[0]?.costs).toEqual([
       { kind: 'tap' },
-      { kind: 'tapOther', selector: { kind: 'allOf', of: [{ kind: 'type', value: 'Creature' }, { kind: 'controller', who: 'you' }] } },
+      {
+        kind: 'tapOther',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'type', value: 'Creature' },
+            { kind: 'controller', who: 'you' },
+          ],
+        },
+      },
     ]);
   });
   it('requires distinct controlled permanents for a fixed-count tap cost', () => {
-    const def = interpretCard(oracle({
-      name: 'Test Clock', typeLine: 'Artifact', manaCost: '{4}', power: null, toughness: null,
-      oracleText: 'Tap two untapped artifacts you control: Untap target artifact.',
-    }));
+    const def = interpretCard(
+      oracle({
+        name: 'Test Clock',
+        typeLine: 'Artifact',
+        manaCost: '{4}',
+        power: null,
+        toughness: null,
+        oracleText: 'Tap two untapped artifacts you control: Untap target artifact.',
+      }),
+    );
     expect(def.modeled).toBe(true);
-    expect(def.activatedAbilities[0]?.costs).toEqual([{ kind: 'tapOthers', count: 2, selector: { kind: 'allOf', of: [{ kind: 'type', value: 'Artifact' }, { kind: 'controller', who: 'you' }] } }]);
+    expect(def.activatedAbilities[0]?.costs).toEqual([
+      {
+        kind: 'tapOthers',
+        count: 2,
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'type', value: 'Artifact' },
+            { kind: 'controller', who: 'you' },
+          ],
+        },
+      },
+    ]);
     expect(def.activatedAbilities[0]?.ability.targets).toEqual([{ kind: 'artifact' }]);
     expect(def.activatedAbilities[0]?.ability.effects).toEqual([{ op: 'untapTarget', target: 0 }]);
-    expect(interpretCard(oracle({
-      name: 'Test Key', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null,
-      oracleText: '{1}, {T}: Untap another target artifact.\n{3}, {T}: Target creature can\'t be blocked this turn.',
-    })).modeled).toBe(true);
+    expect(
+      interpretCard(
+        oracle({
+          name: 'Test Key',
+          typeLine: 'Artifact',
+          manaCost: '{1}',
+          power: null,
+          toughness: null,
+          oracleText:
+            "{1}, {T}: Untap another target artifact.\n{3}, {T}: Target creature can't be blocked this turn.",
+        }),
+      ).modeled,
+    ).toBe(true);
 
     const ctx = pod('multi-tap-cost');
-    const clock = spawn(ctx, 'P1', oracle({ name: 'Test Clock Source', typeLine: 'Artifact', manaCost: '{4}', power: null, toughness: null }));
-    const first = spawn(ctx, 'P1', oracle({ name: 'Test Battery A', typeLine: 'Artifact', manaCost: '{0}', power: null, toughness: null }));
-    const second = spawn(ctx, 'P1', oracle({ name: 'Test Battery B', typeLine: 'Artifact', manaCost: '{0}', power: null, toughness: null }));
-    pump(payAbilityCosts(ctx, p1(ctx), clock, [{ kind: 'tapOthers', count: 2, selector: { kind: 'type', value: 'Artifact' } }], 'tap'));
+    const clock = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Clock Source',
+        typeLine: 'Artifact',
+        manaCost: '{4}',
+        power: null,
+        toughness: null,
+      }),
+    );
+    const first = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Battery A',
+        typeLine: 'Artifact',
+        manaCost: '{0}',
+        power: null,
+        toughness: null,
+      }),
+    );
+    const second = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Battery B',
+        typeLine: 'Artifact',
+        manaCost: '{0}',
+        power: null,
+        toughness: null,
+      }),
+    );
+    pump(
+      payAbilityCosts(
+        ctx,
+        p1(ctx),
+        clock,
+        [{ kind: 'tapOthers', count: 2, selector: { kind: 'type', value: 'Artifact' } }],
+        'tap',
+      ),
+    );
     expect(first.tapped).toBe(true);
     expect(second.tapped).toBe(true);
   });
@@ -166,12 +254,39 @@ describe('parsing costs', () => {
 
 describe('combat-restricted targets', () => {
   it('allows exile only for an attacking or blocking creature', () => {
-    const light = oracle({ name: 'Test Light', typeLine: 'Instant', manaCost: '{1}{W}{W}', power: null, toughness: null, oracleText: 'Exile target attacking or blocking creature.' });
+    const light = oracle({
+      name: 'Test Light',
+      typeLine: 'Instant',
+      manaCost: '{1}{W}{W}',
+      power: null,
+      toughness: null,
+      oracleText: 'Exile target attacking or blocking creature.',
+    });
     const def = interpretCard(light);
     expect(def.modeled).toBe(true);
     const ctx = pod('combat-target');
-    const source = spawn(ctx, 'P1', oracle({ name: 'Test Source', typeLine: 'Creature — Cleric', manaCost: '{1}', power: '1', toughness: '1' }));
-    const attacker = spawn(ctx, 'P2', oracle({ name: 'Test Attacker', typeLine: 'Creature — Human', manaCost: '{1}', power: '2', toughness: '2' }));
+    const source = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Source',
+        typeLine: 'Creature — Cleric',
+        manaCost: '{1}',
+        power: '1',
+        toughness: '1',
+      }),
+    );
+    const attacker = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Test Attacker',
+        typeLine: 'Creature — Human',
+        manaCost: '{1}',
+        power: '2',
+        toughness: '2',
+      }),
+    );
     attacker.attacking = 'P1';
     pump(executeAbility(ctx, source, def.spellAbility!, [attacker.id]));
     expect(ctx.state.exile.some((card) => card.cardId === attacker.cardId)).toBe(true);
@@ -179,12 +294,31 @@ describe('combat-restricted targets', () => {
 });
 describe('graveyard-to-library activation', () => {
   it('puts a targeted artifact card from its controller’s graveyard on top of the library', () => {
-    const ruins = oracle({ name: 'Test Ruins', typeLine: 'Land', manaCost: null, power: null, toughness: null, oracleText: '{1}{U}, {T}: Put target artifact card from your graveyard on top of your library.' });
+    const ruins = oracle({
+      name: 'Test Ruins',
+      typeLine: 'Land',
+      manaCost: null,
+      power: null,
+      toughness: null,
+      oracleText:
+        '{1}{U}, {T}: Put target artifact card from your graveyard on top of your library.',
+    });
     const def = interpretCard(ruins);
     expect(def.modeled).toBe(true);
     const ctx = pod('academy-ruins');
     const source = spawn(ctx, 'P1', ruins);
-    const artifact = conjure(ctx, 'P1', oracle({ name: 'Test Relic', typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null }), 'graveyard');
+    const artifact = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Relic',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        power: null,
+        toughness: null,
+      }),
+      'graveyard',
+    );
     pump(executeAbility(ctx, source, def.activatedAbilities[0]!.ability, [artifact.id]));
     expect(p1(ctx).library[0]?.cardId).toBe(artifact.cardId);
     expect(p1(ctx).graveyard.some((card) => card.cardId === artifact.cardId)).toBe(false);
@@ -193,44 +327,86 @@ describe('graveyard-to-library activation', () => {
 describe('temporary combat restrictions', () => {
   it("models a target creature that can't be blocked this turn", () => {
     const card = oracle({
-      name: 'Test Grid', typeLine: 'Artifact', manaCost: '{2}', power: null, toughness: null,
-      oracleText: '{3}: Target creature can\'t be blocked this turn.',
+      name: 'Test Grid',
+      typeLine: 'Artifact',
+      manaCost: '{2}',
+      power: null,
+      toughness: null,
+      oracleText: "{3}: Target creature can't be blocked this turn.",
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(true);
-    expect(def.activatedAbilities[0]?.ability.effects).toEqual([{ op: 'cantBeBlockedUntilEot', target: 0 }]);
+    expect(def.activatedAbilities[0]?.ability.effects).toEqual([
+      { op: 'cantBeBlockedUntilEot', target: 0 },
+    ]);
 
     const ctx = pod('unblockable');
     const source = spawn(ctx, 'P1', card);
-    const target = spawn(ctx, 'P1', oracle({ name: 'Test Attacker', typeLine: 'Creature — Human', manaCost: '{1}', power: '2', toughness: '2' }));
+    const target = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Attacker',
+        typeLine: 'Creature — Human',
+        manaCost: '{1}',
+        power: '2',
+        toughness: '2',
+      }),
+    );
     pump(executeAbility(ctx, source, def.activatedAbilities[0]!.ability, [target.id]));
-    expect(ctx.state.effects).toContainEqual(expect.objectContaining({ kind: 'cantBeBlocked', targetCardIds: [target.cardId] }));
+    expect(ctx.state.effects).toContainEqual(
+      expect.objectContaining({ kind: 'cantBeBlocked', targetCardIds: [target.cardId] }),
+    );
   });
 });
 describe('attachment-aware activated effects', () => {
-  const pemminsAura = () => oracle({
-    name: "Pemmin's Aura",
-    typeLine: 'Enchantment — Aura',
-    manaCost: '{2}{U}',
-    power: null,
-    toughness: null,
-    oracleText: 'Enchant creature\n{U}: Untap enchanted creature.\n{U}: Enchanted creature gains flying until end of turn.\n{U}: Enchanted creature gains shroud until end of turn.\n{1}: Enchanted creature gets +1/-1 or -1/+1 until end of turn.',
-  });
+  const pemminsAura = () =>
+    oracle({
+      name: "Pemmin's Aura",
+      typeLine: 'Enchantment — Aura',
+      manaCost: '{2}{U}',
+      power: null,
+      toughness: null,
+      oracleText:
+        'Enchant creature\n{U}: Untap enchanted creature.\n{U}: Enchanted creature gains flying until end of turn.\n{U}: Enchanted creature gains shroud until end of turn.\n{1}: Enchanted creature gets +1/-1 or -1/+1 until end of turn.',
+    });
 
   it('resolves Aura effects against the current attached creature and asks for its stat mode', () => {
     const ctx = pod('pemmins-aura');
     const aura = spawn(ctx, 'P1', pemminsAura());
-    const creature = spawn(ctx, 'P1', oracle({ name: 'Test Host', typeLine: 'Creature — Human', manaCost: '{1}', power: '2', toughness: '2' }), { tapped: true });
+    const creature = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Host',
+        typeLine: 'Creature — Human',
+        manaCost: '{1}',
+        power: '2',
+        toughness: '2',
+      }),
+      { tapped: true },
+    );
     aura.attachedTo = creature.id;
     const def = interpretCard(pemminsAura());
 
     expect(def.modeled).toBe(true);
     expect(def.activatedAbilities).toHaveLength(4);
-    expect(def.activatedAbilities[0]?.ability.effects).toEqual([{ op: 'untapTarget', target: 'attachedToSource' }]);
-    expect(interpretCard(oracle({
-      name: 'Freed from the Real', typeLine: 'Enchantment — Aura', manaCost: '{2}{U}', power: null, toughness: null,
-      oracleText: 'Enchant creature\n{U}: Tap enchanted creature.\n{U}: Untap enchanted creature.',
-    })).modeled).toBe(true);
+    expect(def.activatedAbilities[0]?.ability.effects).toEqual([
+      { op: 'untapTarget', target: 'attachedToSource' },
+    ]);
+    expect(
+      interpretCard(
+        oracle({
+          name: 'Freed from the Real',
+          typeLine: 'Enchantment — Aura',
+          manaCost: '{2}{U}',
+          power: null,
+          toughness: null,
+          oracleText:
+            'Enchant creature\n{U}: Tap enchanted creature.\n{U}: Untap enchanted creature.',
+        }),
+      ).modeled,
+    ).toBe(true);
 
     pump(executeAbility(ctx, aura, def.activatedAbilities[3]!.ability, []), (decision) => {
       expect(decision.decisionType).toBe('general');
@@ -253,17 +429,15 @@ describe('cost availability', () => {
     hoard.counters['gold'] = 1;
 
     const option = computePriorityOptions(ctx, p1(ctx)).find(
-      (candidate) => candidate.type === 'activateAbility' && candidate.description.includes('Draw a card'),
+      (candidate) =>
+        candidate.type === 'activateAbility' && candidate.description.includes('Draw a card'),
     );
 
     expect(option?.data).toMatchObject({
       sourceName: 'Test Hoard',
       sourceZone: 'battlefield',
       manaCost: '{0}',
-      abilityCosts: [
-        { kind: 'tap' },
-        { kind: 'removeCounters', counter: 'gold', count: 1 },
-      ],
+      abilityCosts: [{ kind: 'tap' }, { kind: 'removeCounters', counter: 'gold', count: 1 }],
     });
   });
 
@@ -333,17 +507,25 @@ describe('crewing a vehicle', () => {
     // Activating it anyway (bypassing the legality gate) must not silently succeed for free —
     // this is the exact shape of the infinite-crew bug: an uncosted, no-op activation that a
     // player or bot can select forever without ever changing game state.
-    expect(() =>
-      pump(payAbilityCosts(ctx, p1(ctx), chariot, ability.costs, 'tap')),
-    ).toThrow(/unpayable/);
+    expect(() => pump(payAbilityCosts(ctx, p1(ctx), chariot, ability.costs, 'tap'))).toThrow(
+      /unpayable/,
+    );
   });
 
   it('taps enough creature power and turns the vehicle into a creature until end of turn', () => {
     const ctx = pod('crew-payable');
     const chariot = spawn(ctx, 'P1', vehicle());
-    const crewer = spawn(ctx, 'P1', oracle({
-      name: 'Test Crewman', typeLine: 'Creature — Human', manaCost: '{1}', power: '1', toughness: '1',
-    }));
+    const crewer = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Crewman',
+        typeLine: 'Creature — Human',
+        manaCost: '{1}',
+        power: '1',
+        toughness: '1',
+      }),
+    );
     const def = interpretCard(vehicle());
     const ability = def.activatedAbilities[0]!;
 
@@ -467,8 +649,6 @@ describe('automatic mana payment preference', () => {
 
     const sources = manaSourcesFor(ctx, 'P1');
     expect(sources.map((source) => source.cardId)).toEqual([land.cardId, elf.cardId]);
-    expect(planPayment(parseManaCost('{G}').cost!, [], sources)?.tapCardIds).toEqual([
-      land.cardId,
-    ]);
+    expect(planPayment(parseManaCost('{G}').cost!, [], sources)?.tapCardIds).toEqual([land.cardId]);
   });
 });

@@ -4,7 +4,11 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { CLIENT_TO_SERVER_TYPES, SERVER_TO_CLIENT_TYPES, isClientToServerMessage } from './protocol';
+import {
+  CLIENT_TO_SERVER_TYPES,
+  SERVER_TO_CLIENT_TYPES,
+  isClientToServerMessage,
+} from './protocol';
 
 describe('protocol message names', () => {
   it('includes the Phase 5 debug-stream extension alongside the brief §11 messages', () => {
@@ -28,6 +32,7 @@ describe('protocol message names', () => {
     ]);
     expect([...CLIENT_TO_SERVER_TYPES]).toEqual([
       'startGame',
+      'startCardTestScenario',
       'jumpToTurn',
       'setPlaybackMode',
       'resolveHeldDecision',
@@ -46,6 +51,10 @@ describe('isClientToServerMessage', () => {
   it('accepts every declared client message', () => {
     const messages = [
       { type: 'startGame', payload: { seats: [{ kind: 'pool' }], providerKind: 'random' } },
+      {
+        type: 'startCardTestScenario',
+        payload: { scenarioId: 'tribute-viewer-cast-search-select-resolve' },
+      },
       { type: 'jumpToTurn', payload: { turn: 2 } },
       { type: 'setPlaybackMode', payload: { mode: 'live' } },
       { type: 'resolveHeldDecision', payload: { requestId: 'r1', actionId: 0 } },
@@ -76,9 +85,7 @@ describe('isClientToServerMessage', () => {
       { type: 'cancelYield', payload: {} },
       { type: 'resumeGame', payload: { sessionToken: 'opaque-token' } },
     ];
-    expect(messages.map(isClientToServerMessage)).toEqual(
-      CLIENT_TO_SERVER_TYPES.map(() => true),
-    );
+    expect(messages.map(isClientToServerMessage)).toEqual(CLIENT_TO_SERVER_TYPES.map(() => true));
   });
 
   it('rejects malformed player submissions and resume attempts', () => {

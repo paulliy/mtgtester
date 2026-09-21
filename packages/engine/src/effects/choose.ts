@@ -10,25 +10,27 @@ import type { GameGen } from '../decisions';
 import { cardOption, plainOption } from '../present';
 import type { EngineCardObject, EnginePermanent, GameContext } from '../state/types';
 
-export interface ChooseCardSpec {
+export interface ChooseCardSpec<
+  T extends EngineCardObject | EnginePermanent = EngineCardObject | EnginePermanent,
+> {
   player: string;
   prompt: string;
-  cards: readonly (EngineCardObject | EnginePermanent)[];
+  cards: readonly T[];
   /** Coarse `LegalAction.type` for the pick options, e.g. `'discard'`, `'returnToHand'`. */
   type: string;
   /** Player-facing verb: "Discard", "Return to hand", "Keep on top". */
   verb: string;
   /** Per-card description; defaults to `"${verb} ${card.name}"`. */
-  describe?: (card: EngineCardObject | EnginePermanent) => string;
+  describe?: (card: T) => string;
   /** When present, adds a "none of these" option and the generator may return `null`. */
   decline?: { type: string; description: string; verb: string };
 }
 
 /** Yields a `general` decision offering one option per card (plus an optional decline). */
-export function* chooseCard(
+export function* chooseCard<T extends EngineCardObject | EnginePermanent>(
   ctx: GameContext,
-  spec: ChooseCardSpec,
-): GameGen<EngineCardObject | EnginePermanent | null> {
+  spec: ChooseCardSpec<T>,
+): GameGen<T | null> {
   if (spec.cards.length === 0) return null;
 
   // No `payload` here deliberately: the outcome is read back by index (`spec.cards[outcome.index]`

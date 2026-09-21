@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "82949ae85eb00b3983dc65c7f544732aff25c76353d3f34056e76e3b3a3e8881",
+      "card": {
+        "oracleId": "cba58942-b98c-45aa-8651-7dc666e31c93",
+        "scryfallId": "d3ee3011-3d17-435d-a483-79b0419b589b",
+        "name": "Fumiko the Lowblood",
+        "manaCost": "{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Human Samurai",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Samurai"
+        ],
+        "oracleText": "Fumiko has bushido X, where X is the number of attacking creatures. (Whenever this creature blocks or becomes blocked, it gets +X/+X until end of turn.)\nCreatures your opponents control attack each combat if able.",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "668112d0f9f374cb7fe237f3f3ff43616c7b5318ddfb8ec24af666200266b019",
+      "card": {
+        "oracleId": "756042c5-e444-45d7-8dc6-ae7c83c98438",
+        "scryfallId": "a9ec900f-1e31-4440-a75a-20b256734d5b",
+        "name": "Ghalta and Mavren",
+        "manaCost": "{3}{G}{G}{W}{W}",
+        "cmc": 7,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Dinosaur Vampire",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dinosaur",
+          "Vampire"
+        ],
+        "oracleText": "Trample\nWhenever you attack, choose one —\n• Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other attacking creatures.\n• Create X 1/1 white Vampire creature tokens with lifelink, where X is the number of other attacking creatures.",
+        "power": "12",
+        "toughness": "12",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Trample"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9b94bea40b4487a60ae431b12df311ff94880d97eb94a0bcc1aa777e73197933",
+      "card": {
+        "oracleId": "f4310dfd-52eb-4c1f-b1ad-bfbc9b50fe7b",
+        "scryfallId": "1b5f713f-6ad9-445e-ae4c-56250bb3aecb",
+        "name": "Nova Flame",
+        "manaCost": "{X}{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Put X +1/+1 counters on target creature you control. It deals damage equal to its power to each other creature.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1bda89ceb1a30c20f1af324debe333b833de9405fd7d87adc09007baea35289e",
+      "card": {
+        "oracleId": "bd92cacd-c7d8-43a2-a261-ea4754fefdc5",
+        "scryfallId": "5515393a-7d4d-454f-a550-156862ab02f1",
+        "name": "Sage's Reverie",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nWhen this Aura enters, draw a card for each Aura you control that's attached to a creature.\nEnchanted creature gets +1/+1 for each Aura you control that's attached to a creature.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bb80ffa79b51873447ccef3c818757d2f8d0bc762219d24aaaab6b7666b132a7",
+      "card": {
+        "oracleId": "64c986f0-e786-419c-9b51-8c316c8fae0e",
+        "scryfallId": "c133a860-7b8d-485d-b9a2-bf8ae3a68f47",
+        "name": "Scriv, the Obligator",
+        "manaCost": "{2}{W}{B}",
+        "cmc": 4,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Inkling Bird",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Inkling",
+          "Bird"
+        ],
+        "oracleText": "Flying, deathtouch\nWhenever Scriv enters or attacks, create a white Aura enchantment token named Contract attached to target creature an opponent controls. The token has enchant creature and \"Whenever enchanted creature attacks, it gets +2/+0 until end of turn if it's attacking one of your opponents. Otherwise, its controller loses 2 life.\"",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Deathtouch",
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

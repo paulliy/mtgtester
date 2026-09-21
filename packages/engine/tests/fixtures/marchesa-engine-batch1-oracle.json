@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-10",
+  "cards": [
+    {
+      "sha256": "95b1368f1aaf0c60f22dc006f5ffaf16c914c304264770543b7f60cd522b105a",
+      "card": {
+        "oracleId": "6f4ac4a4-53ec-4bc9-8f5c-d4b801d867b2",
+        "scryfallId": "f5a4970b-2ba6-4c91-a301-369369cdf360",
+        "name": "Grave Pact",
+        "manaCost": "{1}{B}{B}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever a creature you control dies, each other player sacrifices a creature of their choice.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6b4d444a6d00b905def277af0d239e2d03b82ed76db22978a02e438eee9d2e0b",
+      "card": {
+        "oracleId": "366a218e-84d3-4cf9-bbc8-f2f8ecce92a3",
+        "scryfallId": "e6e1f2ab-e437-444e-9edb-73278d9c7616",
+        "name": "Herald of Secret Streams",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Merfolk Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Merfolk",
+          "Warrior"
+        ],
+        "oracleText": "Creatures you control with +1/+1 counters on them can't be blocked.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "af8acd17fe57bdd54672595ecfec07557ed5fec55cc3c9d15a2a1ff578d67358",
+      "card": {
+        "oracleId": "9bcaf141-1f1f-491f-aced-13dc093b9e2c",
+        "scryfallId": "c1b0377c-efd6-4fab-89f0-b219ca2c4c22",
+        "name": "Pawn of Ulamog",
+        "manaCost": "{1}{B}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Vampire Shaman",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Vampire",
+          "Shaman"
+        ],
+        "oracleText": "Whenever this creature or another nontoken creature you control dies, you may create a 0/1 colorless Eldrazi Spawn creature token. It has \"Sacrifice this token: Add {C}.\"",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "42603dca151e396650ee21016f594ff5c057e3ae73566f0cc93eef72de30c548",
+      "card": {
+        "oracleId": "d1d171de-1c6d-4fb9-817a-9c689c709f3d",
+        "scryfallId": "b3784eff-ab7b-4fd4-9a07-fbc852d116bf",
+        "name": "Shamanic Revelation",
+        "manaCost": "{3}{G}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Draw a card for each creature you control.\nFerocious — You gain 4 life for each creature you control with power 4 or greater.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Ferocious"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "551568638070d7592efe4e6c49c614bd4790e7b11aae3db1dbdb0305a508c4aa",
+      "card": {
+        "oracleId": "05b6f9e3-9acd-43a6-acff-caa811aaf0a1",
+        "scryfallId": "f6ba0c10-6707-40f4-8f01-387532df9958",
+        "name": "Akoum Hellkite",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nLandfall — Whenever a land you control enters, this creature deals 1 damage to any target. If that land is a Mountain, this creature deals 2 damage instead.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Landfall",
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6039554f24bddc0679e5d0ce9097b5b6099e5144e981052365875e1398ee4aec",
+      "card": {
+        "oracleId": "5a851367-1c4a-4cc9-a9c3-3d2775986b4c",
+        "scryfallId": "3cce80d0-b937-4325-a603-1278c110f244",
+        "name": "Blossoming Defense",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature you control gets +2/+2 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bde7936faa54c083f5833352c29a78940331164c25d9109a0daba07af73436bd",
+      "card": {
+        "oracleId": "086b2564-9114-4ba2-94fd-b490f98f38a7",
+        "scryfallId": "6f34d11e-8452-448f-be4f-838e0ace9904",
+        "name": "Chain Reaction",
+        "manaCost": "{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Chain Reaction deals X damage to each creature, where X is the number of creatures on the battlefield.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "827aac972f38c6cbbebb14705bf7055da398222e1abe0ea53bc85c69d1fa8e22",
+      "card": {
+        "oracleId": "00de57d2-7cb6-4337-9bc6-f6711e4dfabf",
+        "scryfallId": "2a84a604-7b05-4716-bcd8-40d2acdb76e8",
+        "name": "Game Trail",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "G",
+          "R"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "As this land enters, you may reveal a Mountain or Forest card from your hand. If you don't, this land enters tapped.\n{T}: Add {R} or {G}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3af11f9f188c4336ecaeba98b0c6084a09e5dc132d4e07004adc5a0bfdfd2587",
+      "card": {
+        "oracleId": "a52037df-0be1-4c99-b9eb-b033157af203",
+        "scryfallId": "8a8945b4-d2e1-4779-9c33-a8b062637fa6",
+        "name": "Magmaquake",
+        "manaCost": "{X}{R}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Magmaquake deals X damage to each creature without flying and each planeswalker.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0cf16d4467a1f62b4b98bfb25374f86389fd028758a4f56beaa4c9a9be483a96",
+      "card": {
+        "oracleId": "f743d85f-754e-4e70-9907-af54acb9e8d4",
+        "scryfallId": "50027d69-8bb0-444c-8e9b-4c9afd91cbda",
+        "name": "Savage Ventmaw",
+        "manaCost": "{4}{R}{G}",
+        "cmc": 6,
+        "colors": [
+          "G",
+          "R"
+        ],
+        "colorIdentity": [
+          "G",
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever this creature attacks, add {R}{R}{R}{G}{G}{G}. Until end of turn, you don't lose this mana as steps and phases end.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "23e2da659371ffeb20db6e3039299235c63716f6d1247bc8a1f686111ca72f89",
+      "card": {
+        "oracleId": "4eaa100c-f1ef-4a2b-9370-5dad7f3a95f2",
+        "scryfallId": "e854e6a3-8684-43fa-9560-ef4c3b62c935",
+        "name": "Unleash Fury",
+        "manaCost": "{1}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Double the power of target creature until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

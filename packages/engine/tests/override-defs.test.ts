@@ -37,7 +37,10 @@ describe('authored override data', () => {
     const missing: string[] = [];
     for (const override of byId.values()) {
       if (override.oracleId.startsWith('oracle-')) continue;
-      const slug = `oracle-${override.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+      const slug = `oracle-${override.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')}`;
       if (!byId.has(slug)) missing.push(`${override.name} (${override.oracleId})`);
     }
     expect(missing).toEqual([]);
@@ -50,7 +53,10 @@ describe('authored override data', () => {
     const diverged: string[] = [];
     for (const override of byId.values()) {
       if (override.oracleId.startsWith('oracle-')) continue;
-      const slug = `oracle-${override.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+      const slug = `oracle-${override.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')}`;
       const twin = byId.get(slug);
       if (twin === undefined) continue;
       const a = Object.keys(override.def).length > 0;

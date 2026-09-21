@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "3e115049f35d1fb717c96619117e6439a983610e22ca03b1ac18b35121603489",
+      "card": {
+        "oracleId": "31cb87bf-1020-4fd5-95f7-8ecb197d823b",
+        "scryfallId": "f4b46b1f-0cfe-42cc-aac5-e6912b2f9fd2",
+        "name": "Pia Nalaar, Chief Mechanic",
+        "manaCost": "{G}{U}{R}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Human Artificer",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Artificer"
+        ],
+        "oracleText": "Whenever one or more artifact creatures you control deal combat damage to a player, you get {E}{E} (two energy counters).\nAt the beginning of your end step, you may pay one or more {E}. If you do, create an X/X colorless Vehicle artifact token named Nalaar Aetherjet with flying and crew 2, where X is the amount of {E} paid this way.",
+        "power": "2",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b4114ee8559fe12c25c1b9e7ade28ebc27dad6a27f2393ec60cacd07565ea792",
+      "card": {
+        "oracleId": "c246cdb4-2fd8-487e-944e-3e52fbd1bbaa",
+        "scryfallId": "6daf453f-54be-4346-831d-a0434aa086fe",
+        "name": "Confiscation Coup",
+        "manaCost": "{3}{U}{U}",
+        "cmc": 5,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Choose target artifact or creature. You get {E}{E}{E}{E} (four energy counters), then you may pay an amount of {E} equal to that permanent's mana value. If you do, gain control of it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "49da717ac2174c3b903b190844da128bb87b7ccfab08f64ecf4e9964d00fe8d8",
+      "card": {
+        "oracleId": "00037840-6089-42ec-8c5c-281f9f474504",
+        "scryfallId": "a471b306-4941-4e46-a0cb-d92895c16f8a",
+        "name": "Nissa, Worldsoul Speaker",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Elf Druid",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Druid"
+        ],
+        "oracleText": "Landfall — Whenever a land you control enters, you get {E}{E} (two energy counters).\nYou may pay eight {E} rather than pay the mana cost for permanent spells you cast.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Landfall"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7bce59364fa35f2897fbb28693c8ad6b419d5a5a60dd4bfb7ee74b60e9e4d5f5",
+      "card": {
+        "oracleId": "9070c98b-fd01-4eeb-a4ec-fc464946c7c0",
+        "scryfallId": "4c398d11-a2fc-43e2-96e9-7f3383e1a43c",
+        "name": "Stridehangar Automaton",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Construct",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Construct"
+        ],
+        "oracleText": "Thopters you control get +1/+1.\nIf one or more artifact tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead.",
+        "power": "1",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "47fcf4784d27c7eab5bccc1add3aa6271def6dffa7f54b9ed66fd2717343f2db",
+      "card": {
+        "oracleId": "9b1f0780-072a-4fe6-91d8-e546a8aaea20",
+        "scryfallId": "bd923b84-067b-4041-a0f8-e2083e0debe9",
+        "name": "Rampaging Aetherhood",
+        "manaCost": "{4}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Snake Hydra",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Snake",
+          "Hydra"
+        ],
+        "oracleText": "Trample, ward {2}\nAt the beginning of your upkeep, you get an amount of {E} (energy counters) equal to this creature's power. Then you may pay one or more {E}. If you do, put that many +1/+1 counters on this creature.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Trample",
+          "Ward"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "11bb9bf3be871e0276e9bed22576f67a394781a53b892f190fde028c35dc758a",
+      "card": {
+        "oracleId": "397b9dcf-690a-4a58-8637-bb9baab7cc2f",
+        "scryfallId": "d51269cf-a333-4a64-94cd-245798d840d2",
+        "name": "Elder Gargaroth",
+        "manaCost": "{3}{G}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Beast",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Beast"
+        ],
+        "oracleText": "Reach, vigilance, trample\nWhenever this creature attacks or blocks, choose one —\n• Create a 3/3 green Beast creature token.\n• You gain 3 life.\n• Draw a card.",
+        "power": "6",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach",
+          "Vigilance",
+          "Trample"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "dff22b0b43ccd41e54c7ccac64038085c9f626de13ad31a8ddae26ad89178686",
+      "card": {
+        "oracleId": "4a00f56e-e558-4239-bc75-fb0af7639042",
+        "scryfallId": "fe1bc709-2157-4711-a027-c0ff00ff2728",
+        "name": "Peema Aether-Seer",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elf Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Druid"
+        ],
+        "oracleText": "When this creature enters, you get an amount of {E} (energy counters) equal to the greatest power among creatures you control.\nPay {E}{E}{E}: Target creature blocks this turn if able.",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ae28456283116171d84a9e8300f1d4644c2acfc7a6930b5d47b7789662a100c9",
+      "card": {
+        "oracleId": "757eadac-dd29-4a7f-8683-5bc823168326",
+        "scryfallId": "17f2aaf5-6c1f-4663-865f-6cdd5640485a",
+        "name": "One with the Machine",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Draw cards equal to the greatest mana value among artifacts you control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

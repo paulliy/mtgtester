@@ -1,0 +1,41 @@
+/**
+ * Audited Token Triumph support contract shared by the card suites and CLI gates.
+ *
+ * Keep these lists explicit. A card moves from EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS only
+ * after it meets docs/guides/card-modeling-and-testing.md; aggregate parser coverage alone is
+ * not enough.
+ */
+export const VERIFIED_TOKEN_TRIUMPH_CARDS = [
+  'Emmara, Soul of the Accord',
+  'Leafkin Druid',
+  'Fortified Village',
+  'Overwhelming Instinct',
+  'Ajani, Caller of the Pride',
+  'Mentor of the Meek',
+  "Commander's Insignia",
+  'Loyal Guardian',
+  'Dawn of Hope',
+  'Hornet Nest',
+  'Trostani Discordant',
+  'Slate of Ancestry',
+  'Felidar Retreat',
+  'Great Oak Guardian',
+  'Path to Exile',
+  'Rootborn Defenses',
+] as const;
+
+export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = [
+  'Champion of Lambholt',
+  'Scavenging Ooze',
+  'Conclave Tribunal',
+  'Curse of Bounty',
+  'Harvest Season',
+  'Hour of Reckoning',
+  'Idol of Oblivion',
+  "Karametra's Favor",
+  'Nullmage Shepherd',
+  'Rishkar, Peema Renegade',
+  'Sylvan Reclamation',
+  'Thunderfoot Baloth',
+  'Voice of Many',
+] as const;

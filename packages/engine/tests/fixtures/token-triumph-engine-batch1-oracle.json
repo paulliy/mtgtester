@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "8be30197cc3d4b28676aaf8e619ed8a030be7ea3be60979451211ce31ec5f737",
+      "card": {
+        "oracleId": "55eb9310-f24b-410b-850b-a7d0d5117946",
+        "scryfallId": "9dc9111f-1ca6-4953-9f1e-cca55fa8c569",
+        "name": "Leafkin Druid",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elemental Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elemental",
+          "Druid"
+        ],
+        "oracleText": "{T}: Add {G}. If you control four or more creatures, add {G}{G} instead.",
+        "power": "0",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9fefd7f82122bc25feca7470b0d98ce702c962e4bedf22c60a6f4316e7f103df",
+      "card": {
+        "oracleId": "56f1a16a-9f41-41fb-b580-c200bca27cd6",
+        "scryfallId": "15f81ac6-a550-4782-a3a9-22d7fef1c206",
+        "name": "Fortified Village",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "As this land enters, you may reveal a Forest or Plains card from your hand. If you don't, this land enters tapped.\n{T}: Add {G} or {W}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d59ba04e352c8265850ac524e0aca3f8d3492057aecc8c73cdafc10024360d53",
+      "card": {
+        "oracleId": "9ba89c25-5302-414f-a2ec-436b8981999d",
+        "scryfallId": "2d9e3793-7ddc-45c5-b25d-acd5cb96026f",
+        "name": "Overwhelming Instinct",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever you attack with three or more creatures, draw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b3cf21d142fd2abb0476c1eeccbf48152b17db88710703b5caa80e38a909a8ca",
+      "card": {
+        "oracleId": "b9f4f96b-6e54-4fe6-8df7-623e0fc72409",
+        "scryfallId": "05b6a101-4d12-4f50-8f02-5c778e08b149",
+        "name": "Mentor of the Meek",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Soldier",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Soldier"
+        ],
+        "oracleText": "Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5d548d1b53fea96f2dfa416df8eb5f3162f15776166e9e5fb763e4b3a0b49889",
+      "card": {
+        "oracleId": "979a5d92-1c67-4fa4-b932-638b0cc1adcd",
+        "scryfallId": "8a800591-04a9-40d9-acfe-eebc04e8291b",
+        "name": "Commander's Insignia",
+        "manaCost": "{2}{W}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Creatures you control get +1/+1 for each time you've cast your commander from the command zone this game.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c3c2279e340616f9e428cbe06de23c6f5a7c3972b7f84e55f54fc3141c9fb284",
+      "card": {
+        "oracleId": "de1cfa83-2049-48ab-b093-2f120a3ef4f2",
+        "scryfallId": "6d81eda0-2520-4531-815a-8dea27306776",
+        "name": "Loyal Guardian",
+        "manaCost": "{4}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Rhino",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Rhino"
+        ],
+        "oracleText": "Trample\nLieutenant — At the beginning of combat on your turn, if you control your commander, put a +1/+1 counter on each creature you control.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Trample",
+          "Lieutenant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1c57c66b14b20536014b598ecb9f5d50ed19bbe4747e848d2fa84c8f64710442",
+      "card": {
+        "oracleId": "5dba7746-c087-4ec1-92ca-ab9882dea24d",
+        "scryfallId": "65d36326-897e-4207-909a-8d1323d6c8e7",
+        "name": "Great Oak Guardian",
+        "manaCost": "{5}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Treefolk",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Treefolk"
+        ],
+        "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nReach\nWhen this creature enters, creatures target player controls get +2/+2 until end of turn. Untap them.",
+        "power": "4",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach",
+          "Flash"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f91d590d164f8d6d05ea8aeaaaad7220e3911d95f9db81374b0c85f59c62c12b",
+      "card": {
+        "oracleId": "3ac01298-e45b-4ea0-8379-2074279716a4",
+        "scryfallId": "33d1a51a-abf0-458c-98ae-98fcf4063fd9",
+        "name": "Citywide Bust",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy all creatures with toughness 4 or greater.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -54,7 +54,12 @@ const nameOf = computed(() => {
         @mouseleave="onLeave"
         @click="emit('select', obj.id)"
       >
-        <CardImage :scryfall-id="obj.scryfallId" :name="obj.description" size="small" class="thumb" />
+        <CardImage
+          :scryfall-id="obj.scryfallId"
+          :name="obj.description"
+          size="small"
+          class="thumb"
+        />
         <span class="pos">{{ index === 0 ? 'top' : index + 1 }}</span>
         <span class="who">{{ obj.controller }}</span>
         <span class="desc">{{ obj.description }}</span>
@@ -132,7 +137,9 @@ li.chosen-target {
 /* Stack push/resolve feedback (§9.8.2). Reduced-motion global override collapses this to ~0s. */
 .stack-item-enter-active,
 .stack-item-leave-active {
-  transition: opacity 180ms ease, transform 180ms ease;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
 }
 .stack-item-enter-from,
 .stack-item-leave-to {

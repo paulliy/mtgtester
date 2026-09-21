@@ -121,15 +121,23 @@ export function digestOf(
     // a layer input like any other. Omitting it meant a query before tapping and a query after
     // it returned the same cached characteristics, and ward is read during targeting/payment.
     h = mix(h, perm.tapped ? 1 : 0);
+    // Combat-dependent statics must expire even if no other characteristic input changes.
+    h = mix(h, perm.attacking !== null ? 1 : perm.blocking !== null ? 2 : 0);
     // `?? []` would allocate a throwaway array on every digest call for the overwhelming
     // majority of permanents, which never set any of these — an `undefined` guard keeps the
     // fast path (this function runs on every characteristics query) allocation-free.
-    if (perm.copyAddTypes !== undefined) for (const type of perm.copyAddTypes) h = mix(h, hashString(type));
-    if (perm.copyAddKeywords !== undefined) for (const kw of perm.copyAddKeywords) h = mix(h, hashString(kw));
-    if (perm.copyRemoveSupertypes !== undefined) for (const st of perm.copyRemoveSupertypes) h = mix(h, hashString(st));
-    if (perm.copyAddSupertypes !== undefined) for (const st of perm.copyAddSupertypes) h = mix(h, hashString(st));
-    if (perm.copyAddTriggers !== undefined) for (const tr of perm.copyAddTriggers) h = mix(h, hashString(tr.description ?? ''));
-    if (perm.exiledCardIds !== undefined) for (const cardId of perm.exiledCardIds) h = mix(h, hashString(cardId));
+    if (perm.copyAddTypes !== undefined)
+      for (const type of perm.copyAddTypes) h = mix(h, hashString(type));
+    if (perm.copyAddKeywords !== undefined)
+      for (const kw of perm.copyAddKeywords) h = mix(h, hashString(kw));
+    if (perm.copyRemoveSupertypes !== undefined)
+      for (const st of perm.copyRemoveSupertypes) h = mix(h, hashString(st));
+    if (perm.copyAddSupertypes !== undefined)
+      for (const st of perm.copyAddSupertypes) h = mix(h, hashString(st));
+    if (perm.copyAddTriggers !== undefined)
+      for (const tr of perm.copyAddTriggers) h = mix(h, hashString(tr.description ?? ''));
+    if (perm.exiledCardIds !== undefined)
+      for (const cardId of perm.exiledCardIds) h = mix(h, hashString(cardId));
     h = foldCounters(h, perm);
     // `attachedToSource`/`isEnchanted`/`isEquipped` read this; attaching/detaching changes
     // none of the fields above, so it must be folded in explicitly (ADR 0007).

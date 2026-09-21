@@ -131,12 +131,15 @@ describe('graveyard alternative casts', () => {
     ]);
   });
 });
-  it('offers and resolves Escape from the graveyard, exiling its other-card cost and the spell', () => {
-    const ctx = pod('escape-cast');
-    const spell = conjure(ctx, 'P1', escapeSpell, 'graveyard');
-    const fodderA = conjure(ctx, 'P1', forest(), 'graveyard');
-    const fodderB = conjure(ctx, 'P1', forest(), 'graveyard');
-    spawn(ctx, 'P1', oracle({
+it('offers and resolves Escape from the graveyard, exiling its other-card cost and the spell', () => {
+  const ctx = pod('escape-cast');
+  const spell = conjure(ctx, 'P1', escapeSpell, 'graveyard');
+  const fodderA = conjure(ctx, 'P1', forest(), 'graveyard');
+  const fodderB = conjure(ctx, 'P1', forest(), 'graveyard');
+  spawn(
+    ctx,
+    'P1',
+    oracle({
       name: 'White Mana Source',
       typeLine: 'Land',
       manaCost: null,
@@ -146,36 +149,51 @@ describe('graveyard alternative casts', () => {
       oracleText: '{T}: Add {W}.',
       power: null,
       toughness: null,
-    }));
+    }),
+  );
 
-    const player = ctx.state.players.find((candidate) => candidate.id === 'P1')!;
-    const option = computePriorityOptions(ctx, player).find((candidate) => {
-      if (candidate.type !== 'castSpell') return false;
-      const payload = candidate.payload as PriorityActionPayload;
-      return payload.kind === 'castSpell' && payload.objectId === spell.id && payload.fromGraveyard === true;
-    });
-    expect(option).toBeDefined();
-    const escapeOptions = computePriorityOptions(ctx, player).filter((candidate) => {
-      if (candidate.type !== 'castSpell') return false;
-      const payload = candidate.payload as PriorityActionPayload;
-      return payload.kind === 'castSpell' && payload.objectId === spell.id;
-    });
-    expect(escapeOptions).toHaveLength(1);
-    expect((escapeOptions[0]!.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).alternativeCast).toBe('nonMana');
-
-    pump(
-      applyPriorityAction(ctx, player, option!.payload as PriorityActionPayload, { index: 0, targets: new Map() }),
+  const player = ctx.state.players.find((candidate) => candidate.id === 'P1')!;
+  const option = computePriorityOptions(ctx, player).find((candidate) => {
+    if (candidate.type !== 'castSpell') return false;
+    const payload = candidate.payload as PriorityActionPayload;
+    return (
+      payload.kind === 'castSpell' &&
+      payload.objectId === spell.id &&
+      payload.fromGraveyard === true
     );
-    expect(player.graveyard.some((card) => card.cardId === fodderA.cardId)).toBe(false);
-    expect(player.graveyard.some((card) => card.cardId === fodderB.cardId)).toBe(false);
-    expect(player.graveyard.some((card) => card.cardId === spell.cardId)).toBe(false);
-    expect(ctx.state.exile.filter((card) => card.cardId === fodderA.cardId || card.cardId === fodderB.cardId)).toHaveLength(2);
-
-    pump(resolveTopOfStack(ctx));
-
-    expect(ctx.state.exile.some((card) => card.cardId === spell.cardId)).toBe(true);
-    expect(ctx.state.stack).toHaveLength(0);
   });
+  expect(option).toBeDefined();
+  const escapeOptions = computePriorityOptions(ctx, player).filter((candidate) => {
+    if (candidate.type !== 'castSpell') return false;
+    const payload = candidate.payload as PriorityActionPayload;
+    return payload.kind === 'castSpell' && payload.objectId === spell.id;
+  });
+  expect(escapeOptions).toHaveLength(1);
+  expect(
+    (escapeOptions[0]!.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>)
+      .alternativeCast,
+  ).toBe('nonMana');
+
+  pump(
+    applyPriorityAction(ctx, player, option!.payload as PriorityActionPayload, {
+      index: 0,
+      targets: new Map(),
+    }),
+  );
+  expect(player.graveyard.some((card) => card.cardId === fodderA.cardId)).toBe(false);
+  expect(player.graveyard.some((card) => card.cardId === fodderB.cardId)).toBe(false);
+  expect(player.graveyard.some((card) => card.cardId === spell.cardId)).toBe(false);
+  expect(
+    ctx.state.exile.filter(
+      (card) => card.cardId === fodderA.cardId || card.cardId === fodderB.cardId,
+    ),
+  ).toHaveLength(2);
+
+  pump(resolveTopOfStack(ctx));
+
+  expect(ctx.state.exile.some((card) => card.cardId === spell.cardId)).toBe(true);
+  expect(ctx.state.stack).toHaveLength(0);
+});
 describe('non-mana alternative casts', () => {
   it.each(forceCards)('parses $name with its exact pitch alternative cost', (card) => {
     const def = interpretCard(card);
@@ -184,12 +202,13 @@ describe('non-mana alternative casts', () => {
       expect.objectContaining({
         kind: 'nonMana',
         manaCost: expect.objectContaining({ generic: 0 }),
-        costs: card.name === 'Force of Will'
-          ? [
-              { kind: 'payLife', amount: 1 },
-              { kind: 'exileCardFromHand', selector: { kind: 'color', value: 'U' } },
-            ]
-          : [{ kind: 'exileCardFromHand', selector: { kind: 'color', value: 'U' } }],
+        costs:
+          card.name === 'Force of Will'
+            ? [
+                { kind: 'payLife', amount: 1 },
+                { kind: 'exileCardFromHand', selector: { kind: 'color', value: 'U' } },
+              ]
+            : [{ kind: 'exileCardFromHand', selector: { kind: 'color', value: 'U' } }],
       }),
     ]);
   });

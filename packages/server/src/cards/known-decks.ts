@@ -18,8 +18,12 @@ import { measureCoverage } from './coverage';
 import { importDeck } from '../decks/source';
 import { resolveDeck } from '../decks/resolve';
 import { inferArchetype } from '../decks/archetype';
+import type { BannedList } from '../decks/banned';
+import { validateDeck } from '../decks/validate';
 
 const FIXTURE_DIR = 'packages/server/fixtures/coverage-decks';
+/** Precon leftovers that are not coverage/play-list targets. Implemented cards remain in overrides. */
+const EXCLUDED_COVERAGE_DECKS = new Set(['counter-intelligence.txt']);
 
 export interface KnownDeckSummary {
   slug: string;
@@ -34,11 +38,21 @@ export interface KnownDeckSummary {
   text: string;
 }
 
-/** List every committed coverage-deck fixture with its model coverage, for a "known decks" pick list. */
-export async function listKnownDecks(index: OracleIndex): Promise<KnownDeckSummary[]> {
-  const dir = resolve(FIXTURE_DIR);
+/**
+ * List the committed coverage fixtures that are actually playable.
+ *
+ * Coverage fixtures may intentionally preserve illegal or partially modeled source lists, so the
+ * UI catalog must apply the same legality and ADR 0009 gates as match setup before calling one a
+ * modeled deck.
+ */
+export async function listKnownDecks(
+  index: OracleIndex,
+  banned: BannedList,
+  fixtureDir = FIXTURE_DIR,
+): Promise<KnownDeckSummary[]> {
+  const dir = resolve(fixtureDir);
   const files = readdirSync(dir)
-    .filter((f) => f.endsWith('.txt'))
+    .filter((f) => f.endsWith('.txt') && !EXCLUDED_COVERAGE_DECKS.has(f))
     .sort();
 
   const out: KnownDeckSummary[] = [];
@@ -54,6 +68,7 @@ export async function listKnownDecks(index: OracleIndex): Promise<KnownDeckSumma
     }
     const { resolved } = resolveDeck(parsed, index);
     if (resolved === null) continue;
+    if (!validateDeck(resolved, banned).valid) continue;
 
     const cards: OracleCard[] = [
       ...resolved.commanders,
@@ -63,6 +78,7 @@ export async function listKnownDecks(index: OracleIndex): Promise<KnownDeckSumma
     const name = resolved.name ?? parsed.name ?? slug;
     const report = measureCoverage([{ name, cards }]);
     const summary = report.decks[0];
+    if (summary === undefined || summary.modeled !== summary.uniqueCards) continue;
     const colorIdentity = [...new Set(resolved.commanders.flatMap((c) => c.colorIdentity))];
 
     out.push({

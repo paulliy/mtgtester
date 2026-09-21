@@ -2,37 +2,63 @@
 
 import type { CardDefinition } from '../definition';
 import type { KeywordAbility } from '../ability';
-import { ATTACHED, TAP, auraBuff as auraBuffStatics, mana } from '../templates';
-import { allOf, IN_COMBAT, IS_ENCHANTED, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
+import { ATTACHED, auraBuff as auraBuffStatics } from '../templates';
+import { allOf, ofSubtype, ofType, YOURS } from '../selector';
 import { constant } from '../value';
-import { defineCard as defineCardImpl, unimplemented } from './index';
-import { creatureToken, INKLING_2_1_FLYING as INKLING_TOKEN } from '../tokens';
+import { defineCard as defineCardImpl, unimplemented, unsupportedCard } from './index';
 
-const CREATURE = ofType('Creature');
 const AURA_TYPE = ofSubtype('Aura');
 const ENCHANTMENTS = ofType('Enchantment');
 // These aliases track normalized Oracle wording. They do not justify approximate
 // behavior: cards with missing semantics must remain unimplemented.
 const HANDLED_LINE_FIXES: Record<string, string[]> = {
   'c22e5fc6-9b4e-4197-b472-70d168eb4330': ['{1}{W}: Exile enchanted creature.'],
-  'bd92cacd-c7d8-43a2-a261-ea4754fefdc5': ['When this Aura enters, draw a card for each Aura you control that\'s attached to a creature.', 'Enchanted creature gets +1/+1 for each Aura you control that\'s attached to a creature.'],
-  'a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50': ['When enchanted creature dies, return this card from your graveyard to the battlefield.'],
-  '64c986f0-e786-419c-9b51-8c316c8fae0e': ['Whenever ~ enters or attacks, create a white Aura enchantment token named Contract attached to target creature an opponent controls. The token has enchant creature and "Whenever enchanted creature attacks, it gets +2/+0 until end of turn if it\'s attacking one of your opponents. Otherwise, its controller loses 2 life."'],
-  '0a7d6489-b239-4ce8-aea3-7b5d0e436f70': ['unrecognized rules text: "Enchanted creature gets +1/+1 and has vigilance."'],
-  'd13fc657-c6fc-4394-bc70-691050550226': ['When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.', 'Enchanted creature gets +1/+0 and has lifelink and ward {2}.'],
-  '79085dea-8daa-41c0-a975-61e3e6da2e26': ['Whenever a creature enters, you may attach this Aura to that creature.'],
-  'c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e': ['As this land enters, you may reveal a Plains or Swamp card from your hand. If you don\'t, this land enters tapped.'],
-  '2598294c-a9a7-4bef-a562-23f297a80536': ['Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don\'t, put it into your hand. Put the rest on the bottom of your library in a random order.'],
+  'bd92cacd-c7d8-43a2-a261-ea4754fefdc5': [
+    "When this Aura enters, draw a card for each Aura you control that's attached to a creature.",
+    "Enchanted creature gets +1/+1 for each Aura you control that's attached to a creature.",
+  ],
+  '64c986f0-e786-419c-9b51-8c316c8fae0e': [
+    'Whenever ~ enters or attacks, create a white Aura enchantment token named Contract attached to target creature an opponent controls. The token has enchant creature and "Whenever enchanted creature attacks, it gets +2/+0 until end of turn if it\'s attacking one of your opponents. Otherwise, its controller loses 2 life."',
+  ],
+  '0a7d6489-b239-4ce8-aea3-7b5d0e436f70': [
+    'unrecognized rules text: "Enchanted creature gets +1/+1 and has vigilance."',
+  ],
+  'd13fc657-c6fc-4394-bc70-691050550226': [
+    'When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.',
+    'Enchanted creature gets +1/+0 and has lifelink and ward {2}.',
+  ],
+  '79085dea-8daa-41c0-a975-61e3e6da2e26': [
+    'Whenever a creature enters, you may attach this Aura to that creature.',
+  ],
+  'c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e': [
+    "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped.",
+  ],
+  '2598294c-a9a7-4bef-a562-23f297a80536': [
+    "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
+  ],
   // "Enchantment spells you cast cost {1} less to cast." now parses generically; only the
   // dies-trigger line is still something the raw parser can't do on its own.
-  '2975590d-6a5b-41e5-8a3b-e9325e71226a': ['Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature.'],
-  'eb735501-19e7-4910-aa6a-6667fff6f4e5': ['unsupported mana production: "{1}, {T}: Add one mana of any color. When you spend this mana to cast your commander, scry X, where X is the number of times it\'s been cast from the command zone this game."'],
-  '2ef0961a-0543-4371-8c2a-333881b735e5': ['Affinity for planeswalkers', 'Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card.'],
-  '71c52bf5-2a5d-488e-8b15-7ef290e4b77d': ['unrecognized rules text: "{3}, {T}, Pay life equal to the number of colors in your commanders\' color identity: Draw a card."'],
+  '2975590d-6a5b-41e5-8a3b-e9325e71226a': [
+    'Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature.',
+  ],
+  'eb735501-19e7-4910-aa6a-6667fff6f4e5': [
+    'unsupported mana production: "{1}, {T}: Add one mana of any color. When you spend this mana to cast your commander, scry X, where X is the number of times it\'s been cast from the command zone this game."',
+  ],
+  '2ef0961a-0543-4371-8c2a-333881b735e5': [
+    'Affinity for planeswalkers',
+    'Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card.',
+  ],
+  '71c52bf5-2a5d-488e-8b15-7ef290e4b77d': [
+    'unrecognized rules text: "{3}, {T}, Pay life equal to the number of colors in your commanders\' color identity: Draw a card."',
+  ],
 };
 // Keep authored patches type-checked against the engine definition.
-const defineCard = (oracleId: string, name: string, handledLines: string[], def: Partial<CardDefinition>) =>
-  defineCardImpl(oracleId, name, HANDLED_LINE_FIXES[oracleId] ?? handledLines, def);
+const defineCard = (
+  oracleId: string,
+  name: string,
+  handledLines: string[],
+  def: Partial<CardDefinition>,
+) => defineCardImpl(oracleId, name, HANDLED_LINE_FIXES[oracleId] ?? handledLines, def);
 /**
  * `def` REPLACES the interpreted `staticEffects` wholesale (`applyOverride` is a shallow spread),
  * so an override for an Aura whose printed line ends "and is goaded" has to carry the goad here
@@ -49,20 +75,104 @@ const auraBuff = (
     ...(goaded ? [{ affects: ATTACHED, op: { layer: 6 as const, addGoad: true as const } }] : []),
   ],
 });
-const CAT = creatureToken({ name: 'Cat', subtypes: ['Cat'], colors: ['W'], power: 2, toughness: 2 });
-
 
 export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
-  defineCard('9c77eb0a-543a-41db-ba1f-aa0163837ae0', "Ajani's Chosen", ['unrecognized rules text: "Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token."'], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: allOf(ENCHANTMENTS, YOURS) } }, targets: [], effects: [{ op: 'createToken', spec: CAT, count: constant(1) }], description: 'An enchantment enters — create a Cat' }] });
-  defineCard('8ba36878-0816-44c7-b543-8ebfc28c2ecd', 'Angelic Destiny', ['unrecognized rules text: "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types."', 'unrecognized rules text: "When enchanted creature dies, return this card to its owner\'s hand."'], { ...auraBuff(4, 4, ['flying', 'first strike']), triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: ATTACHED } }, targets: [], effects: [{ op: 'returnSelfFromGraveyardToHand' }], description: 'When the enchanted creature dies, return Angelic Destiny to hand' }] });
-  defineCard('c0d8fef4-65f4-4769-982d-b397d2b7e977', 'Animate Dead', ['unrecognized rules text: "Enchant creature card in a graveyard"', 'unrecognized rules text: "When this Aura enters, if it\'s on the battlefield, it loses "enchant creature card in a graveyard" and gains "enchant creature put onto the battlefield with this Aura." Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature\'s controller sacrifices it."'], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [{ kind: 'cardInGraveyard', filter: CREATURE }], effects: [{ op: 'graveyardToBattlefield', target: 0 }], description: 'Return a creature card from a graveyard and attach Animate Dead' }] });
-  defineCard('30ac68e6-160a-41f9-9f0f-0e0eef383150', 'Arcane Lighthouse', ['unrecognized rules text: "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can\'t have hexproof or shroud."'], { activatedAbilities: [{ costs: [mana('{1}'), TAP], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'grantKeywordEachUntilEot', selector: { kind: 'controller', who: 'opponents' }, keyword: 'menace' }], description: 'Opposing creatures lose their protective abilities this turn' } }] });
-  defineCard('b4dbbf56-d7df-4183-bb48-cfc6b4d0468f', 'Armored Skyhunter', ['unrecognized rules text: "Whenever this creature attacks, look at the top six cards of your library. You may put an Aura or Equipment card from among them onto the battlefield. If an Equipment is put onto the battlefield this way, you may attach it to a creature you control. Put the rest of those cards on the bottom of your library in a random order."'], { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'lookAtTopN', count: 6, mayPut: { filter: { kind: 'anyOf', of: [AURA_TYPE, ofType('Artifact')] }, destination: { zone: 'battlefield' } }, rest: 'bottomRandom' }], description: 'Attack — look at six cards and put an Aura or Equipment onto the battlefield' }] });
-  defineCard('5acff7a3-bc84-4251-bd37-80231396ac38', 'Chains of Custody', ['unrecognized rules text: "When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield."'], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [{ kind: 'nonlandPermanent', controller: 'opponent' }], effects: [{ op: 'exileUntilSourceLeaves', targetSlot: 0 }], description: 'Exile target opposing nonland permanent until Chains of Custody leaves' }] });
-  defineCard('cdfa9de4-7d7d-4638-8ac4-793ece6372dd', 'Changing Loyalty', ['unrecognized rules text: "Replicate {2}"', 'unrecognized rules text: "When enchanted creature dies, return it to the battlefield under your control."'], { triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: ATTACHED } }, targets: [], effects: [{ op: 'graveyardToBattlefield', target: 'triggerObject' }], description: 'When enchanted creature dies, return it under your control' }] });
-  defineCard('dbb8a3d9-6b1b-4ad1-b8b9-f92ead03d1d9', 'Coercive Impetus', [], { ...auraBuff(1, 1, [], true), triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: ATTACHED } }, targets: [], effects: [{ op: 'draw', count: constant(1) }, { op: 'loseLife', amount: constant(1) }], description: 'When the enchanted creature attacks, draw and lose 1 life' }] });
-  defineCard('05a4f8ff-49da-42af-add5-6248c4b0644b', 'Darksteel Mutation', ['unrecognized rules text: "Enchanted creature is an Insect artifact creature with base power and toughness 0/1 and has indestructible, and it loses all other abilities, card types, and creature types."'], { staticEffects: [{ affects: ATTACHED, op: { layer: 4, setTypes: ['Artifact', 'Creature'], setSubtypes: ['Insect'] } }, { affects: ATTACHED, op: { layer: 6, loseAllAbilities: true } }, { affects: ATTACHED, op: { layer: 6, addKeyword: 'indestructible' } }, { affects: ATTACHED, op: { layer: 7, sublayer: 'b', power: constant(0), toughness: constant(1) } }] });
-  defineCard('27c366cf-00d7-47d4-9577-736bfc4a3b81', "Defacing Duskmage // Vandal's Edit", ['unsupported layout "prepare"', 'unrecognized rules text: "Whenever an opponent draws their second card each turn, this creature becomes prepared."'], { triggers: [{ kind: 'triggered', trigger: { when: 'drawStep', player: 'each' }, targets: [], effects: [{ op: 'pumpUntilEot', target: 'source', power: 1, toughness: 1 }], description: 'Prepare after an opponent draws their second card' }] });
+  // Catalog audit silverquill-remaining-batch-2: Aura attach-to-token omitted.
+  unsupportedCard(
+    '9c77eb0a-543a-41db-ba1f-aa0163837ae0',
+    "Ajani's Chosen",
+    'Aura-enters attach-to-token is omitted from the Cat trigger.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: Angel type-changing claimed without a static.
+  unsupportedCard(
+    '8ba36878-0816-44c7-b543-8ebfc28c2ecd',
+    'Angelic Destiny',
+    'Angel type-changing is claimed without a type-changing static.',
+  );
+  // Catalog audit silverquill-remaining-batch-1: graveyard Aura attach and leave-sacrifice omitted.
+  unsupportedCard(
+    'c0d8fef4-65f4-4769-982d-b397d2b7e977',
+    'Animate Dead',
+    'Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.',
+  );
+  // Catalog audit silverquill-remaining-batch-1: hexproof/shroud strip authored as menace.
+  unsupportedCard(
+    '30ac68e6-160a-41f9-9f0f-0e0eef383150',
+    'Arcane Lighthouse',
+    'Hexproof/shroud removal is implemented as granting menace.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: any artifact, attach omitted.
+  unsupportedCard(
+    'b4dbbf56-d7df-4183-bb48-cfc6b4d0468f',
+    'Armored Skyhunter',
+    'Equipment filter is any artifact, and attach is omitted.',
+  );
+  defineCard(
+    '5acff7a3-bc84-4251-bd37-80231396ac38',
+    'Chains of Custody',
+    [
+      'unrecognized rules text: "When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield."',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [{ kind: 'nonlandPermanent', controller: 'opponent' }],
+          effects: [{ op: 'exileUntilSourceLeaves', targetSlot: 0 }],
+          description: 'Exile target opposing nonland permanent until Chains of Custody leaves',
+        },
+      ],
+    },
+  );
+  // Catalog audit silverquill-remaining-batch-1: Replicate claimed without an implementation.
+  unsupportedCard(
+    'cdfa9de4-7d7d-4638-8ac4-793ece6372dd',
+    'Changing Loyalty',
+    'Replicate is claimed without a replicate implementation.',
+  );
+  defineCard('dbb8a3d9-6b1b-4ad1-b8b9-f92ead03d1d9', 'Coercive Impetus', [], {
+    ...auraBuff(1, 1, [], true),
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: { when: 'attacks', subject: { kind: 'permanent', selector: ATTACHED } },
+        targets: [],
+        effects: [
+          { op: 'draw', count: constant(1) },
+          { op: 'loseLife', amount: constant(1) },
+        ],
+        description: 'When the enchanted creature attacks, draw and lose 1 life',
+      },
+    ],
+  });
+  defineCard(
+    '05a4f8ff-49da-42af-add5-6248c4b0644b',
+    'Darksteel Mutation',
+    [
+      'unrecognized rules text: "Enchanted creature is an Insect artifact creature with base power and toughness 0/1 and has indestructible, and it loses all other abilities, card types, and creature types."',
+    ],
+    {
+      staticEffects: [
+        {
+          affects: ATTACHED,
+          op: { layer: 4, setTypes: ['Artifact', 'Creature'], setSubtypes: ['Insect'] },
+        },
+        { affects: ATTACHED, op: { layer: 6, loseAllAbilities: true } },
+        { affects: ATTACHED, op: { layer: 6, addKeyword: 'indestructible' } },
+        {
+          affects: ATTACHED,
+          op: { layer: 7, sublayer: 'b', power: constant(0), toughness: constant(1) },
+        },
+      ],
+    },
+  );
+  // Catalog audit silverquill-remaining-batch-2: Prepare claimed as a pump on any draw step.
+  unsupportedCard(
+    '27c366cf-00d7-47d4-9577-736bfc4a3b81',
+    "Defacing Duskmage // Vandal's Edit",
+    'Prepare is implemented as a pump trigger on any draw step.',
+  );
   // The line now parses generically too, but as a stack-based ACTIVATED ability
   // (`interpret.ts`'s `MANA_ABILITY_RE` case in `parseEffectSentence` — a mana ability's cost
   // can't include mana, CR 605.1a), not the `manaAbilities` (never-uses-the-stack) shape this
@@ -73,52 +183,257 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // without it, `applyOverride`'s shallow merge leaves the interpreted activated ability sitting
   // alongside this override's mana ability, offering the land's mana twice (once uncounterable,
   // once respondable) for one printed line.
-  defineCard('441b51b0-ecd0-466d-9ca8-e754eb563aec', 'Eidolon of Countless Battles', ['unrecognized rules text: "Bestow {2}{W}{W}"', 'unrecognized rules text: "~ and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control."'], { ...auraBuff(1, 1), staticEffects: [{ affects: { kind: 'self' }, op: { layer: 7, sublayer: 'd', power: { kind: 'countPermanents', selector: CREATURE, scope: 'you' }, toughness: { kind: 'countPermanents', selector: CREATURE, scope: 'you' } } }] });
-  defineCard('09b7ea91-2620-4c45-af3c-60bbeab89966', 'Eiganjo Dynastorian // Replenish', ['unsupported layout "prepare"', 'unrecognized rules text: "Whenever you attack with two or more creatures, this creature becomes prepared."'], { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'pumpUntilEot', target: 'source', power: 2, toughness: 2 }], description: 'Prepare when attacking with two or more creatures' }] });
-  defineCard('3635e4e5-e655-45f4-a444-39756f55129a', 'Eldrazi Conscription', ['unsupported card type "Kindred"', 'unrecognized rules text: "Enchanted creature gets +10/+10 and has trample and annihilator 2."'], auraBuff(10, 10, ['trample']));
-  defineCard('f43f5855-f297-4433-984b-18263b734cfc', 'Eriette of the Charmed Apple', ['unrecognized rules text: "Each creature that\'s enchanted by an Aura you control can\'t attack you or planeswalkers you control."', 'unrecognized rules text: "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control."'], { triggers: [{ kind: 'triggered', trigger: { when: 'endStep', player: 'you' }, targets: [], effects: [{ op: 'eachOpponentLosesLife', amount: { kind: 'countPermanents', selector: AURA_TYPE, scope: 'you' } }, { op: 'gainLife', amount: { kind: 'countPermanents', selector: AURA_TYPE, scope: 'you' } }], description: 'End step — each opponent loses life equal to your Auras and you gain that much' }] });
-  defineCard('4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3', 'Fallen Ideal', ['unrecognized rules text: "Enchanted creature has flying and "Sacrifice a creature: ~ gets +2/+1 until end of turn.""', 'unrecognized rules text: "When this Aura is put into a graveyard from the battlefield, return it to its owner\'s hand."'], { ...auraBuff(0, 0, ['flying']), activatedAbilities: [{ costs: [{ kind: 'sacrificeOther', selector: CREATURE }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'pumpUntilEot', target: 'attachedToSource', power: 2, toughness: 1 }], description: 'Sacrifice a creature — enchanted creature gets +2/+1' } }], triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'returnSelfFromGraveyardToHand' }], description: 'Return Fallen Ideal to hand' }] });
-  defineCard('ac675899-25bb-4f06-9c8c-bf188024495f', 'Firemane Commando', ['unrecognized rules text: "Whenever you attack with two or more creatures, draw a card."', 'unrecognized rules text: "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you."'], { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: IN_COMBAT } }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Whenever a player attacks with two or more creatures, draw a card' }] });
-  defineCard('6a9cc11b-a223-46f0-bf58-c1e08ad1253d', 'Forum Filibuster', ['unrecognized rules text: "At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying. When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token."'], { triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'you' }, targets: [], effects: [{ op: 'createToken', spec: INKLING_TOKEN, count: constant(1) }], description: 'Upkeep — create an Inkling and return an Aura or Equipment' }] });
-  defineCard('276eccd6-4a76-46e8-b604-94472e618115', 'Ghoulish Impetus', ['unrecognized rules text: "When enchanted creature dies, return this card to the battlefield at the beginning of the next end step."'], { ...auraBuff(1, 1, ['deathtouch'], true), triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: ATTACHED } }, targets: [], effects: [{ op: 'registerDelayedTrigger', when: 'endStep', expiry: 'endStep', ability: { kind: 'triggered', targets: [], effects: [{ op: 'graveyardToBattlefield', target: 'source' }], description: 'Return Ghoulish Impetus' } }], description: 'When enchanted creature dies, return this Aura next end step' }] });
-  defineCard('2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b', 'Gift of Immortality', ['unrecognized rules text: "When enchanted creature dies, return that card to the battlefield under its owner\'s control. Return this card to the battlefield attached to that creature at the beginning of the next end step."'], { triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: ATTACHED } }, targets: [], effects: [{ op: 'graveyardToBattlefield', target: 'triggerObject' }], description: 'Return the enchanted creature and Gift of Immortality next end step' }] });
-  defineCard('a3b39590-34b7-4fd0-877f-748e6df30e88', 'Hateful Eidolon', ['unrecognized rules text: "Whenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it."'], { triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: IS_ENCHANTED } }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'When an enchanted creature dies, draw for Auras attached to it' }] });
-  defineCard('6c25c6b5-d98c-4eb4-aacd-b6960a8779a9', 'Herald of Amity', ['unrecognized rules text: "When this creature enters, exile the top eight cards of your library. You may cast an Aura spell from among them without paying its mana cost. Then put the rest on the bottom of your library in a random order."', 'unrecognized rules text: "Whenever this creature attacks, it gets +X/+X until end of turn, where X is the number of Auras you control."'], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'lookAtTopN', count: 8, mayPut: { filter: AURA_TYPE, destination: { zone: 'battlefield' } }, rest: 'bottomRandom' }], description: 'Enter — look at eight cards for an Aura' }, { kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'pumpUntilEot', target: 'source', power: { kind: 'countPermanents', selector: AURA_TYPE, scope: 'you' }, toughness: { kind: 'countPermanents', selector: AURA_TYPE, scope: 'you' } }], description: 'Attack — gets +X/+X for your Auras' }] });
-  defineCard('6c948f71-5c86-450c-8828-df4d8deaf1dd', 'Intermediate Chirography', ['unsupported layout "class"', 'unrecognized rules text: "When this Class enters, create a 2/1 white and black Inkling creature token with flying."', 'unrecognized rules text: "{1}{B}: Level 2"', 'unrecognized rules text: "Whenever you lose life for the first time each turn, put a +1/+1 counter on target creature you control."', 'unrecognized rules text: "{2}{B}: Level 3"', 'unrecognized rules text: "At the beginning of each end step, if a modified creature died under your control this turn, create a 2/1 white and black Inkling creature token with flying."'], { triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'createToken', spec: INKLING_TOKEN, count: constant(1) }], description: 'Class enters — create an Inkling' }] });
-  defineCard('b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2', 'Keen Duelist', ['unrecognized rules text: "At the beginning of your upkeep, you and target opponent each reveal the top card of your library. You each lose life equal to the mana value of the card revealed by the other player. You each put the card you revealed into your hand."'], { triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'you' }, targets: [{ kind: 'player', controller: 'opponent' }], effects: [{ op: 'drawRevealTopLoseManaValue' }], description: 'Upkeep — reveal top cards, lose life equal to the other mana value, then draw' }] });
-  // Needs an aggregate attack trigger scoped to creatures enchanted by your Auras.
-  unimplemented('9c54bd34-667d-415c-ad26-82e0eb0ff409', 'Killian, Decisive Mentor', []);
-  defineCard('e233cb5b-7237-4271-8157-9179cc897b6c', 'Killian, Ink Duelist', ['unrecognized rules text: "Spells you cast that target a creature cost {2} less to cast."'], { ruleStatics: [{ kind: 'costReduction', amount: constant(2), filter: CREATURE }] });
-  defineCard('2bfc7467-1316-43d3-9ca6-ff36cc2de607', 'Kor Spiritdancer', ['unrecognized rules text: "~ gets +2/+2 for each Aura attached to it."', 'unrecognized rules text: "Whenever you cast an Aura spell, you may draw a card."'], { staticEffects: [{ affects: { kind: 'self' }, op: { layer: 7, sublayer: 'd', power: { kind: 'countPermanents', selector: AURA_TYPE, scope: 'you' }, toughness: { kind: 'countPermanents', selector: AURA_TYPE, scope: 'you' } } }], triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'you', filter: AURA_TYPE }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Cast an Aura — draw a card' }] });
-  defineCard('d2d9ecea-7925-420e-98b9-2f87f41f387c', 'Land Tax', ['unrecognized rules text: "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle."'], { triggers: [{ kind: 'triggered', trigger: { when: 'upkeep', player: 'you', condition: { kind: 'opponentControlsMore', selector: ofType('Land') } }, targets: [], effects: [{ op: 'searchLibrary', filter: ofSupertype('Basic'), destinations: [{ zone: 'hand' }, { zone: 'hand' }, { zone: 'hand' }] }, { op: 'shuffle' }], description: 'Upkeep — search for up to three basic lands' }] });
-  defineCard('c8decfdf-1421-4649-acde-5215e7f08bb9', 'Martial Impetus', ['unrecognized rules text: "Whenever enchanted creature attacks, each other creature that\'s attacking one of your opponents gets +1/+1 until end of turn."'], { ...auraBuff(1, 1, [], true), triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: ATTACHED } }, targets: [], effects: [{ op: 'pumpEachUntilEot', selector: IN_COMBAT, power: 1, toughness: 1 }], description: 'When the enchanted creature attacks, other attackers get +1/+1' }] });
-  defineCard('ff3de07d-86c3-49e1-9de0-97c85301ff93', 'Parasitic Impetus', ['unrecognized rules text: "Whenever enchanted creature attacks, its controller loses 2 life and you gain 2 life."'], { ...auraBuff(2, 2, [], true), triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'permanent', selector: ATTACHED } }, targets: [], effects: [{ op: 'loseLifeTarget', target: 'eventPlayer', amount: constant(2) }, { op: 'gainLife', amount: constant(2) }], description: 'When the enchanted creature attacks, its controller loses 2 and you gain 2' }] });
+  // Catalog audit silverquill-remaining-batch-2: Bestow claimed; Aura-count buff overwritten.
+  unsupportedCard(
+    '441b51b0-ecd0-466d-9ca8-e754eb563aec',
+    'Eidolon of Countless Battles',
+    'Bestow is claimed, and the Aura-count buff is overwritten by a creature-count self pump.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: Prepare claimed as a self-attack pump.
+  unsupportedCard(
+    '09b7ea91-2620-4c45-af3c-60bbeab89966',
+    'Eiganjo Dynastorian // Replenish',
+    'Prepare is implemented as a pump trigger when this creature attacks.',
+  );
+  // Catalog audit silverquill-remaining-batch-1: annihilator claimed as a trample aura only.
+  unsupportedCard(
+    '3635e4e5-e655-45f4-a444-39756f55129a',
+    'Eldrazi Conscription',
+    'Annihilator 2 is claimed without an annihilator implementation.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: cannot-attack-you static omitted.
+  unsupportedCard(
+    'f43f5855-f297-4433-984b-18263b734cfc',
+    'Eriette of the Charmed Apple',
+    'Cannot-attack-you static is claimed without an implementation.',
+  );
+  // Catalog audit silverquill-remaining-batch-1: granted sac ability authored on the Aura.
+  unsupportedCard(
+    '4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3',
+    'Fallen Ideal',
+    'Granted sacrifice ability is authored on the Aura, and sacrificeOther cannot sacrifice the enchanted creature.',
+  );
+  // Catalog audit silverquill-remaining-batch-1: both triggers make you draw.
+  unsupportedCard(
+    'ac675899-25bb-4f06-9c8c-bf188024495f',
+    'Firemane Commando',
+    'Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: reflexive attach-from-graveyard omitted.
+  unsupportedCard(
+    '6a9cc11b-a223-46f0-bf58-c1e08ad1253d',
+    'Forum Filibuster',
+    'Reflexive Aura/Equipment return attached to the token is omitted.',
+  );
+  // Catalog audit silverquill-remaining-batch-5: delayed Aura return does not attach.
+  unsupportedCard(
+    '276eccd6-4a76-46e8-b604-94472e618115',
+    'Ghoulish Impetus',
+    'Delayed Aura return does not attach, so SBA immediately puts it into the graveyard.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: delayed Aura return omitted.
+  unsupportedCard(
+    '2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b',
+    'Gift of Immortality',
+    'Delayed Aura return attached to the creature is omitted.',
+  );
+  // Catalog audit silverquill-remaining-batch-1: draws one instead of one per attached Aura.
+  unsupportedCard(
+    'a3b39590-34b7-4fd0-877f-748e6df30e88',
+    'Hateful Eidolon',
+    'Draws one card instead of one per Aura that was attached.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: exile-and-cast authored as look-and-put.
+  unsupportedCard(
+    '6c25c6b5-d98c-4eb4-aacd-b6960a8779a9',
+    'Herald of Amity',
+    'Exile-and-cast-Aura is implemented as lookAtTopN putting an Aura onto the battlefield.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: class levels claimed without an implementation.
+  unsupportedCard(
+    '6c948f71-5c86-450c-8828-df4d8deaf1dd',
+    'Intermediate Chirography',
+    'Class levels and later abilities are claimed without an implementation.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: mutual reveal authored as Dark Confidant.
+  unsupportedCard(
+    'b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2',
+    'Keen Duelist',
+    'Mutual reveal is implemented as drawRevealTopLoseManaValue on you only.',
+  );
+  // Catalog audit silverquill-remaining-batch-3: Aura-enchanted attack trigger is unimplemented.
+  unsupportedCard(
+    '9c54bd34-667d-415c-ad26-82e0eb0ff409',
+    'Killian, Decisive Mentor',
+    'Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: targeting reduction authored as creature spells.
+  unsupportedCard(
+    'e233cb5b-7237-4271-8157-9179cc897b6c',
+    'Killian, Ink Duelist',
+    'Spells-that-target-a-creature reduction is implemented as creature-spell reduction.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: attached-Aura pump counts all Auras you control.
+  unsupportedCard(
+    '2bfc7467-1316-43d3-9ca6-ff36cc2de607',
+    'Kor Spiritdancer',
+    'Attached-Aura pump counts all Auras you control.',
+  );
+  // Catalog audit silverquill-remaining-batch-3: "you may" and reveal are omitted.
+  unsupportedCard(
+    'd2d9ecea-7925-420e-98b9-2f87f41f387c',
+    'Land Tax',
+    'The upkeep search is mandatory and omits revealing the found cards.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: pumps every creature in combat.
+  unsupportedCard(
+    'c8decfdf-1421-4649-acde-5215e7f08bb9',
+    'Martial Impetus',
+    'Other-attacking-your-opponents pump is implemented as all creatures in combat.',
+  );
+  defineCard(
+    'ff3de07d-86c3-49e1-9de0-97c85301ff93',
+    'Parasitic Impetus',
+    [
+      'unrecognized rules text: "Whenever enchanted creature attacks, its controller loses 2 life and you gain 2 life."',
+    ],
+    {
+      ...auraBuff(2, 2, [], true),
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'attacks', subject: { kind: 'permanent', selector: ATTACHED } },
+          targets: [],
+          effects: [
+            { op: 'loseLifeTarget', target: 'eventPlayer', amount: constant(2) },
+            { op: 'gainLife', amount: constant(2) },
+          ],
+          description: 'When the enchanted creature attacks, its controller loses 2 and you gain 2',
+        },
+      ],
+    },
+  );
   // Affinity plus targeting a modified permanent is not fully modeled.
   unimplemented('9bdc1e63-1cf9-4ddb-a7d5-f2a2eb91bdfd', 'Pearl-Ear, Imperial Advisor', []);
-  // Needs keep-one sacrifice choices, vow counters, and their source-relative attack restriction.
-  unimplemented('e1d294e8-67b1-4a4a-86b8-f98f28a327d9', 'Promise of Loyalty', []);
-  defineCard('ad3bf726-e0c2-4038-a66e-9a9dff439563', "Raffine's Guidance", ['unrecognized rules text: "You may cast this card from your graveyard by paying {2}{W} rather than paying its mana cost."'], { activatedAbilities: [{ costs: [mana('{2}{W}')], timing: 'sorcery', zone: 'graveyard', ability: { kind: 'activated', targets: [], effects: [{ op: 'returnSelfFromGraveyardToHand' }], description: 'Pay {2}{W}: return Raffine’s Guidance to hand' } }] });
-  // The printed card is "Enchanted creature has indestructible and is goaded." plus
-  // "{1}{W}: Exile enchanted creature." — no P/T buff and no attack trigger. The def used to
-  // grant both, because it was authored against an older printing and `HANDLED_LINE_FIXES`
-  // silenced the claim mismatch that would otherwise have reported the drift.
-  defineCard('c22e5fc6-9b4e-4197-b472-70d168eb4330', 'Redemption Arc', [], auraBuff(0, 0, ['indestructible'], true));
+  // Catalog audit silverquill-remaining-batch-3: keep-one sacrifice and vow attack restriction.
+  unsupportedCard(
+    'e1d294e8-67b1-4a4a-86b8-f98f28a327d9',
+    'Promise of Loyalty',
+    'Keep-one sacrifice, vow counters, and attack restriction are unimplemented.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: graveyard recast authored as return to hand.
+  unsupportedCard(
+    'ad3bf726-e0c2-4038-a66e-9a9dff439563',
+    "Raffine's Guidance",
+    'Graveyard recast is implemented as a return-to-hand activated ability.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: exile activated ability claimed without a def.
+  unsupportedCard(
+    'c22e5fc6-9b4e-4197-b472-70d168eb4330',
+    'Redemption Arc',
+    'Exile-enchanted-creature activated ability is claimed without an implementation.',
+  );
   // Needs counts of your Auras attached to creatures for both draw and continuous power.
   unimplemented('bd92cacd-c7d8-43a2-a261-ea4754fefdc5', 'Sage’s Reverie', []);
-  defineCard('a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50', 'Screams from Within', ['unrecognized rules text: "Enchanted creature gets -1/-1."', 'unrecognized rules text: "When enchanted creature dies, return Screams from Within from your graveyard to the battlefield attached to any creature."'], { ...auraBuff(-1, -1), triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: ATTACHED } }, targets: [{ kind: 'creature' }], effects: [{ op: 'graveyardToBattlefield', target: 'source' }, { op: 'attachSelfTo', target: 0 }], description: 'When the enchanted creature dies, return Screams from Within attached to a creature' }] });
+  // Catalog audit silverquill-remaining-batch-4: attach target is not on current Oracle.
+  unsupportedCard(
+    'a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50',
+    'Screams from Within',
+    'Return is a required attach target; current Oracle returns this Aura untargeted.',
+  );
   // Current Oracle text creates Contract Auras; the Inkling approximation is incorrect.
   unimplemented('64c986f0-e786-419c-9b51-8c316c8fae0e', 'Scriv, the Obligator', []);
-  defineCard('d13fc657-c6fc-4394-bc70-691050550226', 'Sheltered by Ghosts', ['unrecognized rules text: "Enchanted creature gets +1/+0 and has lifelink and ward {2}.', 'unrecognized rules text: "When this Aura enters, exile up to one target nonland permanent an opponent controls until this Aura leaves the battlefield."'], { ...auraBuff(1, 0, ['lifelink']), triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'self' } }, targets: [{ kind: 'nonlandPermanent', controller: 'opponent' }], effects: [{ op: 'exileUntilSourceLeaves', targetSlot: 0 }], description: 'Enter — exile an opposing nonland permanent until Sheltered by Ghosts leaves' }] });
-  defineCard('79085dea-8daa-41c0-a975-61e3e6da2e26', 'Shielded by Faith', ['unrecognized rules text: "Enchanted creature has indestructible."', 'unrecognized rules text: "Whenever a creature enters the battlefield, you may attach Shielded by Faith to that creature."'], { ...auraBuff(0, 0, ['indestructible']), triggers: [{ kind: 'triggered', trigger: { when: 'enters', subject: { kind: 'permanent', selector: CREATURE } }, targets: [], effects: [{ op: 'attachSelfTo', target: 'triggerObject' }], description: 'Whenever a creature enters, attach Shielded by Faith to it' }] });
-  defineCard('c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e', 'Shineshadow Snarl', ['unrecognized rules text: "Shineshadow Snarl enters the battlefield tapped unless you reveal a Plains or Swamp card from your hand."'], { entersTappedUnless: { kind: 'mayRevealCardFromHand', subtypes: ['Plains', 'Swamp'] } });
-  // Needs reveal-until-Aura, optional battlefield placement, and a hand fallback.
-  unimplemented('2598294c-a9a7-4bef-a562-23f297a80536', 'Songbirds’ Blessing', []);
-  // Protection from creatures requires damage, enchanting, blocking, and targeting support.
-  unimplemented('81a51328-b995-4f3b-90bc-a20ae21dd254', 'Spirit Mantle', []);
-  defineCard('7e00b0cd-d212-4604-ba07-da21f4fe00b0', 'Sram, Senior Edificer', ['unrecognized rules text: "Whenever you cast an Aura, Equipment, or Vehicle spell, draw a card."'], { triggers: [{ kind: 'triggered', trigger: { when: 'castsSpell', caster: 'you', filter: { kind: 'anyOf', of: [AURA_TYPE, ofSubtype('Equipment'), ofSubtype('Vehicle')] } }, targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Cast an Aura, Equipment, or Vehicle — draw a card' }] });
+  // Catalog audit silverquill-remaining-batch-2: Ward {2} claimed without a ward static.
+  unsupportedCard(
+    'd13fc657-c6fc-4394-bc70-691050550226',
+    'Sheltered by Ghosts',
+    'Ward {2} is claimed without a ward static.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: optional attach is mandatory.
+  unsupportedCard(
+    '79085dea-8daa-41c0-a975-61e3e6da2e26',
+    'Shielded by Faith',
+    'Optional attach is implemented as mandatory attach.',
+  );
+  defineCard(
+    'c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e',
+    'Shineshadow Snarl',
+    [
+      'unrecognized rules text: "Shineshadow Snarl enters the battlefield tapped unless you reveal a Plains or Swamp card from your hand."',
+    ],
+    { entersTappedUnless: { kind: 'mayRevealCardFromHand', subtypes: ['Plains', 'Swamp'] } },
+  );
+  // Catalog audit silverquill-remaining-batch-3: reveal-until-Aura is unimplemented.
+  unsupportedCard(
+    '2598294c-a9a7-4bef-a562-23f297a80536',
+    "Songbirds' Blessing",
+    'Reveal-until-Aura with optional battlefield and hand fallback is unimplemented.',
+  );
+  // Catalog audit silverquill-remaining-batch-3: protection from creatures is unimplemented.
+  unsupportedCard(
+    '81a51328-b995-4f3b-90bc-a20ae21dd254',
+    'Spirit Mantle',
+    'Protection from creatures is unimplemented.',
+  );
+  defineCard(
+    '7e00b0cd-d212-4604-ba07-da21f4fe00b0',
+    'Sram, Senior Edificer',
+    [
+      'unrecognized rules text: "Whenever you cast an Aura, Equipment, or Vehicle spell, draw a card."',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'castsSpell',
+            caster: 'you',
+            filter: {
+              kind: 'anyOf',
+              of: [AURA_TYPE, ofSubtype('Equipment'), ofSubtype('Vehicle')],
+            },
+          },
+          targets: [],
+          effects: [{ op: 'draw', count: constant(1) }],
+          description: 'Cast an Aura, Equipment, or Vehicle — draw a card',
+        },
+      ],
+    },
+  );
   // "Enchantment spells you cast cost {1} less to cast." now parses generically; only the
   // dies-trigger line is still something the raw parser can't do on its own.
-  defineCard('2975590d-6a5b-41e5-8a3b-e9325e71226a', 'Starfield Mystic', ['unrecognized rules text: "Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on Starfield Mystic."'], { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ENCHANTMENTS }], triggers: [{ kind: 'triggered', trigger: { when: 'dies', subject: { kind: 'permanent', selector: allOf(ENCHANTMENTS, YOURS) } }, targets: [], effects: [{ op: 'putCounters', counter: '+1/+1', count: constant(1), target: 'source' }], description: 'When your enchantment dies, put a +1/+1 counter on Starfield Mystic' }] });
-  defineCard('2ef0961a-0543-4371-8c2a-333881b735e5', 'Tomik, Wielder of Law', ['unrecognized rules text: "Whenever Tomik, Wielder of Law attacks, each opponent loses 3 life and you draw a card."'], { triggers: [{ kind: 'triggered', trigger: { when: 'attacks', subject: { kind: 'self' } }, targets: [], effects: [{ op: 'eachOpponentLosesLife', amount: constant(3) }, { op: 'draw', count: constant(1) }], description: 'Attack — each opponent loses 3 life and you draw' }] });
-  defineCard('71c52bf5-2a5d-488e-8b15-7ef290e4b77d', 'War Room', ['unrecognized rules text: "{3}, {T}, Pay 1 life: Draw a card."'], { activatedAbilities: [{ costs: [mana('{3}'), TAP, { kind: 'payLife', amount: 1 }], timing: 'any', ability: { kind: 'activated', targets: [], effects: [{ op: 'draw', count: constant(1) }], description: 'Pay {3} and 1 life: draw a card' } }] });
+  defineCard(
+    '2975590d-6a5b-41e5-8a3b-e9325e71226a',
+    'Starfield Mystic',
+    [
+      'unrecognized rules text: "Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on Starfield Mystic."',
+    ],
+    {
+      ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ENCHANTMENTS }],
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'dies',
+            subject: { kind: 'permanent', selector: allOf(ENCHANTMENTS, YOURS) },
+          },
+          targets: [],
+          effects: [{ op: 'putCounters', counter: '+1/+1', count: constant(1), target: 'source' }],
+          description: 'When your enchantment dies, put a +1/+1 counter on Starfield Mystic',
+        },
+      ],
+    },
+  );
+  // Catalog audit silverquill-remaining-batch-2: current Oracle is affinity + opponent-attacks.
+  unsupportedCard(
+    '2ef0961a-0543-4371-8c2a-333881b735e5',
+    'Tomik, Wielder of Law',
+    'Affinity and opponent-attacks trigger are implemented as a self-attack drain.',
+  );
+  // Catalog audit silverquill-remaining-batch-2: commander-identity life is pay 1.
+  unsupportedCard(
+    '71c52bf5-2a5d-488e-8b15-7ef290e4b77d',
+    'War Room',
+    'Commander-identity life payment is implemented as pay 1 life.',
+  );
 }

@@ -112,18 +112,21 @@ const TEXT_FAMILIES: [MechanicFamily, RegExp][] = [
   ['combat trigger', /\bwhenever\b[^.]*\b(attacks|blocks|deals combat damage)\b/],
   ['draw/discard', /\b(draws?|discards?|mills?)\b/],
   ['aura statics', /^(enchanted|enchant) /],
-  [
-    'counter manipulation',
-    /\bproliferate\b|\bput\b[^.]*\bcounters?\b|\bcounters?\b[^.]*\bon\b/,
-  ],
+  ['counter manipulation', /\bproliferate\b|\bput\b[^.]*\bcounters?\b|\bcounters?\b[^.]*\bon\b/],
   // "Creatures you control get +1/+1", "Other Dragons you control have flying" — a static
   // buff whose subject or amount the anthem grammar cannot resolve.
-  ['anthem / static buff', /\b(get|gets|have|has)\b[^.]*([+-]\d+\/[+-]\d+|\b(flying|haste|hexproof|trample|vigilance|lifelink|deathtouch|shroud|indestructible)\b)/],
+  [
+    'anthem / static buff',
+    /\b(get|gets|have|has)\b[^.]*([+-]\d+\/[+-]\d+|\b(flying|haste|hexproof|trample|vigilance|lifelink|deathtouch|shroud|indestructible)\b)/,
+  ],
   // "Destroy target artifact, enchantment, or planeswalker", "Tap target creature" — a
   // one-shot targeted effect whose verb or target phrase the sentence grammar misses.
   ['targeted spell effect', /\btarget\b/],
   ['phase/step trigger', /\bat the beginning of\b/],
-  ['ETB trigger (another permanent)', /\bwhenever\b[^.]*\b(another|a|one or more)\b[^.]*\benters\b/],
+  [
+    'ETB trigger (another permanent)',
+    /\bwhenever\b[^.]*\b(another|a|one or more)\b[^.]*\benters\b/,
+  ],
   ['targeted trigger', /^when(ever)? ~ (enters|dies)\b[^.]*\btarget\b/],
   ['choice-of-color mana', /^\{t\}[^:]*: add\b[^.]*(\bor\b|one mana of any)/],
   ['conditional enters-tapped', /\benters\b[^.]*\btapped unless\b/],
@@ -161,8 +164,7 @@ export function classifyReason(reason: string): MechanicFamily[] {
   const families = TEXT_FAMILIES.filter(([, re]) => re.test(text))
     .map(([family]) => family)
     .filter(
-      (family) =>
-        !(family === 'activated ability (non-mana)' && PLAIN_MANA_ABILITY_RE.test(text)),
+      (family) => !(family === 'activated ability (non-mana)' && PLAIN_MANA_ABILITY_RE.test(text)),
     );
   if (families.length > 0) return families;
 

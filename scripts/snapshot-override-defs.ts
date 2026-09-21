@@ -18,7 +18,9 @@ const current = overrideSnapshot();
 
 if (!check) {
   writeFileSync(SNAPSHOT_PATH, current);
-  console.log(`wrote ${SNAPSHOT_PATH} (${(JSON.parse(current) as unknown[]).length} registrations)`);
+  console.log(
+    `wrote ${SNAPSHOT_PATH} (${(JSON.parse(current) as unknown[]).length} registrations)`,
+  );
   process.exit(0);
 }
 
@@ -29,7 +31,9 @@ if (!existsSync(SNAPSHOT_PATH)) {
 
 const baseline = readFileSync(SNAPSHOT_PATH, 'utf8');
 if (baseline === current) {
-  console.log(`override defs unchanged (${(JSON.parse(current) as unknown[]).length} registrations)`);
+  console.log(
+    `override defs unchanged (${(JSON.parse(current) as unknown[]).length} registrations)`,
+  );
   process.exit(0);
 }
 

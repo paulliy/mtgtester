@@ -5,8 +5,13 @@
  */
 
 import type { Color } from '@mtg/shared';
-import type { ParsedManaCost } from '../mana/cost';
-import type { Ability, ActivatedAbility, KeywordAbility, ManaAbilitySpec } from './ability';
+import type {
+  Ability,
+  ActivatedAbility,
+  KeywordAbility,
+  ManaAbilitySpec,
+  WardCost,
+} from './ability';
 import type { Condition } from './condition';
 import type { Selector } from './selector';
 import type { Value } from './value';
@@ -49,7 +54,7 @@ export type ContinuousOp =
   /** A static effect that goads each affected creature. */
   | { layer: 6; addGoad: true }
   /** "Other Dragons you control have ward {2}" — parameterized, so not an `addKeyword`. */
-  | { layer: 6; addWard: ParsedManaCost }
+  | { layer: 6; addWard: WardCost }
   /** "Protection from white and from black" (CR 702.16). */
   | { layer: 6; addProtection: Color[] }
   /**
@@ -109,7 +114,7 @@ export interface Characteristics {
    * permanent has at most one ward here — the cheapest is not merged, because no card in the
    * pool grants a second one, and silently combining them would be a guess.
    */
-  ward: ParsedManaCost | null;
+  ward: WardCost | null;
   /** Colors this permanent has protection from (CR 702.16). */
   protectionFrom: Color[];
   /** Computed evasion from a layer-6 effect, separate from printed characteristics. */

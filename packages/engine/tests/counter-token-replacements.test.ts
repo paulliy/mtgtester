@@ -98,7 +98,9 @@ describe('token and counter replacement statics', () => {
     const target = spawn(ctx, 'P1', bear());
 
     for (let i = 0; i < 3; i++) createToken(ctx, SOLDIER_1_1, 'P1');
-    expect(ctx.state.battlefield.filter((perm) => perm.isToken && perm.name === 'Soldier')).toHaveLength(6);
+    expect(
+      ctx.state.battlefield.filter((perm) => perm.isToken && perm.name === 'Soldier'),
+    ).toHaveLength(6);
 
     pump(executeAbility(ctx, permanentSource(target), oneCounterOnSource, []));
     expect(target.counters['+1/+1']).toBe(2);
@@ -110,7 +112,9 @@ describe('token and counter replacement statics', () => {
     const target = spawn(ctx, 'P2', bear());
 
     for (let i = 0; i < 3; i++) createToken(ctx, SOLDIER_1_1, 'P2');
-    expect(ctx.state.battlefield.filter((perm) => perm.isToken && perm.name === 'Soldier')).toHaveLength(3);
+    expect(
+      ctx.state.battlefield.filter((perm) => perm.isToken && perm.name === 'Soldier'),
+    ).toHaveLength(3);
 
     pump(executeAbility(ctx, permanentSource(target), oneCounterOnSource, []));
     expect(target.counters['+1/+1']).toBe(1);

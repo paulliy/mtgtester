@@ -108,12 +108,24 @@ function onLeave(): void {
     :ref="setTileEl"
     class="tile"
     :class="{ creature: isCreature, tapped: permanent.tapped, attacking: isAttacking, striking }"
-    :style="strike ? { '--strike-dx': strike.dx + 'px', '--strike-dy': strike.dy + 'px', '--strike-ms': `${STRIKE_MS}ms` } : undefined"
+    :style="
+      strike
+        ? {
+            '--strike-dx': strike.dx + 'px',
+            '--strike-dy': strike.dy + 'px',
+            '--strike-ms': `${STRIKE_MS}ms`,
+          }
+        : undefined
+    "
     @mouseenter="onEnter"
     @mousemove="onMove"
     @mouseleave="onLeave"
   >
-    <div v-if="count && count > 1" class="stack-count-badge" :title="`${count} copies of ${permanent.name}`">
+    <div
+      v-if="count && count > 1"
+      class="stack-count-badge"
+      :title="`${count} copies of ${permanent.name}`"
+    >
       ×{{ count }}
     </div>
     <div v-if="permanent.tapped" class="tap-badge" title="Tapped">TAP</div>
@@ -124,7 +136,11 @@ function onLeave(): void {
       size="small"
       :tapped="permanent.tapped"
     />
-    <div v-if="permanent.keywords.length > 0" class="keywords" :title="permanent.keywords.join(', ')">
+    <div
+      v-if="permanent.keywords.length > 0"
+      class="keywords"
+      :title="permanent.keywords.join(', ')"
+    >
       {{ permanent.keywords.join(' · ') }}
     </div>
     <div class="overlay">
@@ -142,7 +158,10 @@ function onLeave(): void {
 .tile {
   position: relative;
   width: var(--chip-w, 108px);
-  transition: transform 120ms ease, width 150ms ease, opacity 200ms ease;
+  transition:
+    transform 120ms ease,
+    width 150ms ease,
+    opacity 200ms ease;
 }
 .tile.creature {
   box-shadow: 0 0 0 2px var(--accent);

@@ -86,7 +86,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
       continue;
     }
 
-    const entries = parseJson<Array<{ oracleId: string; quantity: number }>>(row.card_list_json, []);
+    const entries = parseJson<Array<{ oracleId: string; quantity: number }>>(
+      row.card_list_json,
+      [],
+    );
     const commanderNames = new Set(parseJson<string[]>(row.commander_names, []));
 
     const commanders: OracleCard[] = [];

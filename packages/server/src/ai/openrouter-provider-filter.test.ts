@@ -12,7 +12,9 @@ describe('openrouter-provider-filter', () => {
 
   describe('supportsCaching', () => {
     it('returns true when supports_implicit_caching is true', () => {
-      expect(supportsCaching({ provider_name: 'DeepSeek', supports_implicit_caching: true })).toBe(true);
+      expect(supportsCaching({ provider_name: 'DeepSeek', supports_implicit_caching: true })).toBe(
+        true,
+      );
     });
 
     it('returns true when pricing.input_cache_read is a positive string number', () => {
@@ -48,10 +50,22 @@ describe('openrouter-provider-filter', () => {
       const mockEndpointsResponse = {
         data: {
           endpoints: [
-            { provider_name: 'NextBit', supports_implicit_caching: false, pricing: { input_cache_read: '0.00000005' } },
-            { provider_name: 'DeepSeek', supports_implicit_caching: true, pricing: { input_cache_read: '0.00000001' } },
+            {
+              provider_name: 'NextBit',
+              supports_implicit_caching: false,
+              pricing: { input_cache_read: '0.00000005' },
+            },
+            {
+              provider_name: 'DeepSeek',
+              supports_implicit_caching: true,
+              pricing: { input_cache_read: '0.00000001' },
+            },
             { provider_name: 'Morph', supports_implicit_caching: false },
-            { provider_name: 'DeepInfra', supports_implicit_caching: false, pricing: { prompt: '0.0000001' } },
+            {
+              provider_name: 'DeepInfra',
+              supports_implicit_caching: false,
+              pricing: { prompt: '0.0000001' },
+            },
           ],
         },
       };
@@ -79,8 +93,12 @@ describe('openrouter-provider-filter', () => {
     it('caches a failed lookup so it is not re-attempted on every decision', async () => {
       const mockFetch = vi.fn().mockResolvedValue({ ok: false, status: 404 });
 
-      expect(await getNonCachingProviders('vendor/gone', mockFetch as unknown as typeof fetch)).toEqual([]);
-      expect(await getNonCachingProviders('vendor/gone', mockFetch as unknown as typeof fetch)).toEqual([]);
+      expect(
+        await getNonCachingProviders('vendor/gone', mockFetch as unknown as typeof fetch),
+      ).toEqual([]);
+      expect(
+        await getNonCachingProviders('vendor/gone', mockFetch as unknown as typeof fetch),
+      ).toEqual([]);
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
@@ -91,7 +109,11 @@ describe('openrouter-provider-filter', () => {
         json: async () => ({
           data: {
             endpoints: [
-              { provider_name: 'NextBit', supports_implicit_caching: false, pricing: { input_cache_read: '0.00000005' } },
+              {
+                provider_name: 'NextBit',
+                supports_implicit_caching: false,
+                pricing: { input_cache_read: '0.00000005' },
+              },
               { provider_name: 'Morph', supports_implicit_caching: false },
             ],
           },
@@ -112,7 +134,10 @@ describe('openrouter-provider-filter', () => {
         status: 500,
       });
 
-      const result = await getNonCachingProviders('model-error', mockFetch as unknown as typeof fetch);
+      const result = await getNonCachingProviders(
+        'model-error',
+        mockFetch as unknown as typeof fetch,
+      );
       expect(result).toEqual([]);
     });
 
@@ -129,7 +154,10 @@ describe('openrouter-provider-filter', () => {
         }),
       });
 
-      const result = await getNonCachingProviders('no-cache-model', mockFetch as unknown as typeof fetch);
+      const result = await getNonCachingProviders(
+        'no-cache-model',
+        mockFetch as unknown as typeof fetch,
+      );
       expect(result).toEqual([]);
     });
   });

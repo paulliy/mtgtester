@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "49f78a7a7b6bc1e5fda43e4ac51ded48a145eac11c318d112931b6e54f9cae55",
+      "card": {
+        "oracleId": "d5efba91-8400-41a3-91c6-cb5e81f07976",
+        "scryfallId": "c3e6025d-d273-4ae4-9929-5e588612f1b3",
+        "name": "Iymrith, Desert Doom",
+        "manaCost": "{3}{U}{U}",
+        "cmc": 5,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Dragon",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nIymrith has ward {4} as long as it's untapped.\nWhenever Iymrith deals combat damage to a player, draw a card. Then if you have fewer than three cards in hand, draw cards equal to the difference.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f938e43149561ad8424fdca56d99fe3c84e34998dc430acb166f5b29edb93865",
+      "card": {
+        "oracleId": "be2075af-1cd8-42fe-a29b-a0fd2b047a44",
+        "scryfallId": "fe604232-19da-4331-a6f2-ddb004f1dd90",
+        "name": "Lozhan, Dragons' Legacy",
+        "manaCost": "{3}{U}{R}",
+        "cmc": 5,
+        "colors": [
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "R",
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Dragon Shaman",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon",
+          "Shaman"
+        ],
+        "oracleText": "Flying\nWhenever you cast an Adventure or Dragon spell, Lozhan deals damage equal to that spell's mana value to any target that isn't a commander.",
+        "power": "4",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e38990af293a55a3a2d67201ad3b801bd2236821a42ec8fd1676bf2223c8ddfd",
+      "card": {
+        "oracleId": "f7cd7ede-51c1-4117-99b5-484d0d80c95f",
+        "scryfallId": "2255d1e4-f387-4187-8c10-7d0009f6ec79",
+        "name": "Thrakkus the Butcher",
+        "manaCost": "{3}{R}{G}",
+        "cmc": 5,
+        "colors": [
+          "G",
+          "R"
+        ],
+        "colorIdentity": [
+          "G",
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Dragon Peasant",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon",
+          "Peasant"
+        ],
+        "oracleText": "Trample\nWhenever Thrakkus attacks, double the power of each Dragon you control until end of turn.",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Trample",
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

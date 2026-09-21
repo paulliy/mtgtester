@@ -86,7 +86,11 @@ function hidePreview(): void {
           @mousemove="movePreview"
           @mouseleave="hidePreview"
         >
-          <CardImage :scryfall-id="group.subject.card.scryfallId" :name="group.subject.card.name" size="small" />
+          <CardImage
+            :scryfall-id="group.subject.card.scryfallId"
+            :name="group.subject.card.name"
+            size="small"
+          />
           <span>{{ group.subject.card.name }}</span>
         </div>
         <div v-else-if="group.subject?.kind === 'player'" class="group-player">
@@ -112,17 +116,72 @@ function hidePreview(): void {
 </template>
 
 <style scoped>
-.decision-panel { border: 2px solid var(--accent); background: var(--surface); border-radius: 6px; padding: .55rem; }
-.panel-source { display: flex; align-items: center; gap: .4rem; margin-bottom: .3rem; }
-.panel-source :deep(.card-image) { width: 28px; }
-.panel-prompt { margin: .15rem 0 .5rem; color: var(--muted); font-size: .75rem; line-height: 1.35; }
-.panel-groups { display: flex; flex-direction: column; gap: .5rem; }
-.panel-group { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-.group-card { display: flex; align-items: center; gap: .3rem; width: 90px; flex: 0 0 auto; font-size: .65rem; text-align: left; }
-.group-card :deep(.card-image) { width: 60px; }
-.group-card span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.group-player, .group-value { font-size: .72rem; color: var(--muted); min-width: 3.5rem; }
-.group-actions { display: flex; flex-wrap: wrap; gap: .3rem; }
-button.primary { background: var(--accent); color: #08111f; font-weight: 700; }
-button.muted { color: var(--muted); }
+.decision-panel {
+  border: 2px solid var(--accent);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 0.55rem;
+}
+.panel-source {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+}
+.panel-source :deep(.card-image) {
+  width: 28px;
+}
+.panel-prompt {
+  margin: 0.15rem 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+.panel-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.panel-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.group-card {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: 90px;
+  flex: 0 0 auto;
+  font-size: 0.65rem;
+  text-align: left;
+}
+.group-card :deep(.card-image) {
+  width: 60px;
+}
+.group-card span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.group-player,
+.group-value {
+  font-size: 0.72rem;
+  color: var(--muted);
+  min-width: 3.5rem;
+}
+.group-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+button.primary {
+  background: var(--accent);
+  color: #08111f;
+  font-weight: 700;
+}
+button.muted {
+  color: var(--muted);
+}
 </style>

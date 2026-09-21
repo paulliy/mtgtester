@@ -29,10 +29,21 @@ const bolt = (): ReturnType<typeof oracle> =>
   oracle({ name: 'Test Bolt', typeLine: 'Instant', manaCost: '{R}', power: null, toughness: null });
 
 const bear = (): ReturnType<typeof oracle> =>
-  oracle({ name: 'Test Bear', typeLine: 'Creature — Bear', manaCost: '{1}{G}', power: '2', toughness: '2' });
+  oracle({
+    name: 'Test Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{1}{G}',
+    power: '2',
+    toughness: '2',
+  });
 
 function pod(): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(6, forest) })), { seed: 'cloud-key' }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(6, forest) })),
+      { seed: 'cloud-key' },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;

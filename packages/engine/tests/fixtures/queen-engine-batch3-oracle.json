@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "027cc07998c416b5f58f1d6aea36d3c361ca1f99cbf47a8b1725d94492c29d52",
+      "card": {
+        "oracleId": "2679d0dd-ba30-4a1c-b6a0-b3ac6c790496",
+        "scryfallId": "e0d8c9f6-cbbd-4694-b100-01cfb81036cc",
+        "name": "Boros Charm",
+        "manaCost": "{R}{W}",
+        "cmc": 2,
+        "colors": [
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Choose one —\n• Boros Charm deals 4 damage to target player or planeswalker.\n• Permanents you control gain indestructible until end of turn.\n• Target creature gains double strike until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "35aaee558a07c35c1f3ca9758fc6108919d401d19c3f0c994ce5bd089d905192",
+      "card": {
+        "oracleId": "5e62b51d-faec-4aa0-9504-cf2c282d08ea",
+        "scryfallId": "64b67170-1602-4050-80c0-ade2a6cac211",
+        "name": "Rakdos Charm",
+        "manaCost": "{B}{R}",
+        "cmc": 2,
+        "colors": [
+          "B",
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Choose one —\n• Exile target player's graveyard.\n• Destroy target artifact.\n• Each creature deals 1 damage to its controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d642ad016928b98c97c2d9a73770c8f613a9592b340b6e3900bac8551223fdab",
+      "card": {
+        "oracleId": "8fa3ac81-3dfe-4565-be99-5554f7597b4b",
+        "scryfallId": "76ec3366-98f3-4903-8f7b-cfcdd60e3be1",
+        "name": "Boros Garrison",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "This land enters tapped.\nWhen this land enters, return a land you control to its owner's hand.\n{T}: Add {R}{W}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a2008903012a1a15542133559cf53bc108e54d2d70826538c34192aa2d49d5f2",
+      "card": {
+        "oracleId": "aa00ae0b-7c0f-427e-8102-ce0e2a6af5df",
+        "scryfallId": "9c7c08fc-b6ee-498c-8ab6-fd6be27c9d97",
+        "name": "Orzhov Basilica",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "This land enters tapped.\nWhen this land enters, return a land you control to its owner's hand.\n{T}: Add {W}{B}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "187b183ea332d6e3e983271735778be35bc3a059e36723d0430a309e9a35aacb",
+      "card": {
+        "oracleId": "0a023964-2905-4928-9c3e-dc63e6ebd218",
+        "scryfallId": "20c799a9-ab94-46e6-9111-00505e071c41",
+        "name": "Rakdos Carnarium",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "This land enters tapped.\nWhen this land enters, return a land you control to its owner's hand.\n{T}: Add {B}{R}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -51,7 +51,11 @@ function targetsPlayer(ctx: GameContext, stackEntry: EngineStackObject, playerId
 }
 
 /** True if any (possibly nested) mass effect would hit a permanent this player controls. */
-function threatensBoard(ctx: GameContext, stackEntry: EngineStackObject, playerId: string): boolean {
+function threatensBoard(
+  ctx: GameContext,
+  stackEntry: EngineStackObject,
+  playerId: string,
+): boolean {
   const effects = stackEntry.ability?.effects;
   if (effects === undefined) return false;
   const source = { cardId: stackEntry.sourceCardId, controllerId: stackEntry.controllerId };
@@ -78,9 +82,13 @@ function threatensLifeOrHand(stackEntry: EngineStackObject, playerId: string): b
 
   for (const effect of flattenEffects(effects)) {
     // Hits every player, including the controller.
-    if (effect.op === 'damageEachPlayer' || effect.op === 'eachPlayerDiscardHandThenDraw') return true;
+    if (effect.op === 'damageEachPlayer' || effect.op === 'eachPlayerDiscardHandThenDraw')
+      return true;
     // Hits every opponent of the controller.
-    if (isOpponent && (effect.op === 'eachOpponentDamage' || effect.op === 'eachOpponentLosesLife')) {
+    if (
+      isOpponent &&
+      (effect.op === 'eachOpponentDamage' || effect.op === 'eachOpponentLosesLife')
+    ) {
       return true;
     }
   }

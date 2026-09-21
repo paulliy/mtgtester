@@ -1,0 +1,3344 @@
+{
+  "schemaVersion": 1,
+  "resultPolicy": "Requirements only. Verification tools generate results; this file contains no handwritten pass flags.",
+  "cards": {
+    "d683d985-9888-4d21-8b5f-69e69ce4a03b": {
+      "name": "Path to Exile",
+      "oracleSha256": "d921af5ed86c1f56a28c317d632e2b1131b926715a387eda965ec3cecda40fda",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Exile target creature. Its controller may search their library for a basic land card, put that card onto the battlefield tapped, then shuffle.",
+          "implementation": [
+            "targeted exile",
+            "controller-scoped optional basic-land search",
+            "enters tapped",
+            "shuffle"
+          ],
+          "engineTestIds": ["path-engine-optional-search", "path-engine-normal-cast"],
+          "viewerScenarioIds": ["path-viewer-cast-target-resolve"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["path-ai-target-quality"]
+    },
+    "c2b51295-8820-425f-a517-55231123c7de": {
+      "name": "Tribute Mage",
+      "oracleSha256": "8e7a10c283be40e58a317e2e269067277f9a9f8563c2f557422b9ee72eadf9d2",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, you may search your library for an artifact card with mana value 2, reveal that card, put it into your hand, then shuffle.",
+          "implementation": [
+            "self enters trigger",
+            "artifact and exact mana-value selector",
+            "optional hidden-zone search",
+            "move selected card to hand",
+            "seeded shuffle"
+          ],
+          "engineTestIds": [
+            "tribute-eligible-artifact-mv2",
+            "tribute-reject-artifact-other-mv",
+            "tribute-reject-nonartifact-mv2",
+            "tribute-decline-search",
+            "tribute-no-eligible-card",
+            "tribute-normal-cast-etb"
+          ],
+          "viewerScenarioIds": ["tribute-viewer-cast-search-select-resolve"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["tribute-ai-search-quality"]
+    },
+    "77b832a8-a3af-44fe-bc67-72510d292667": {
+      "name": "Gev, Scaled Scorch",
+      "oracleSha256": "b88ee58232045a057e42ccdce70c6a115048e5ce37d2dbd00eeb37c87ee36997",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "Ward—Pay 2 life.",
+          "implementation": ["structured life-payment ward cost"],
+          "engineTestIds": [
+            "gev-ward-pay-life",
+            "gev-ward-decline",
+            "gev-ward-insufficient-life",
+            "gev-ward-pay-exact-life",
+            "gev-ward-protected-life-floor",
+            "gev-own-spell-no-ward"
+          ],
+          "viewerScenarioIds": ["gev-viewer-opponent-targets-ward"]
+        },
+        {
+          "oracleText": "Other creatures you control enter with an additional +1/+1 counter on them for each opponent who lost life this turn.",
+          "implementation": [
+            "other-you-control entry replacement",
+            "opponents-lost-life-this-turn value"
+          ],
+          "engineTestIds": ["gev-entry-counters-opponents-lost-life"],
+          "viewerScenarioIds": ["gev-viewer-entry-counters"]
+        },
+        {
+          "oracleText": "Whenever you cast a Lizard spell, Gev deals 1 damage to target opponent.",
+          "implementation": [
+            "controller Lizard cast trigger",
+            "opponent-only player target",
+            "one damage"
+          ],
+          "engineTestIds": ["gev-lizard-opponent-target-only"],
+          "viewerScenarioIds": ["gev-viewer-lizard-target"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["gev-ai-lizard-target-quality"]
+    },
+    "57296ea3-3c0d-49b7-bc08-0d0d8414e9ad": {
+      "name": "Nightscape Familiar",
+      "oracleSha256": "202bcffac838bc123f746413b6a484065753264e624d49a53aba2f51b3b80639",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "Blue spells and red spells you cast cost {1} less to cast.",
+          "implementation": [
+            "controller spell cost reduction",
+            "blue-or-red selector",
+            "generic reduction by one"
+          ],
+          "engineTestIds": ["nightscape-blue-red-cost-reduction"],
+          "viewerScenarioIds": ["nightscape-viewer-cost-reduction"]
+        },
+        {
+          "oracleText": "{1}{B}: Regenerate this creature.",
+          "implementation": [
+            "mana-paid activated ability",
+            "one-shot current-turn regeneration shield",
+            "destruction replacement",
+            "tap, remove damage, and remove from combat"
+          ],
+          "engineTestIds": [
+            "nightscape-regenerate-next-destroy",
+            "nightscape-regeneration-consumed",
+            "nightscape-regeneration-expires",
+            "nightscape-sacrifice-not-prevented",
+            "nightscape-exile-not-prevented",
+            "nightscape-zero-toughness-not-prevented",
+            "nightscape-cant-regenerate",
+            "nightscape-normal-activation"
+          ],
+          "viewerScenarioIds": ["nightscape-viewer-activate-regenerate-destroy"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["nightscape-ai-regeneration-timing"]
+    },
+    "01c179aa-533e-47e1-b6e5-c35587a39680": {
+      "name": "Thran Vigil",
+      "oracleSha256": "4681435b0c455851a223742deeff9a29d95407a7824801e31dda9b479173a4ad",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever one or more artifact and/or creature cards leave your graveyard during your turn, put a +1/+1 counter on target creature you control.",
+          "implementation": [
+            "graveyard departure event",
+            "one trigger per simultaneous event",
+            "artifact-or-creature and owner filtering",
+            "source controller turn restriction",
+            "mandatory own creature target"
+          ],
+          "engineTestIds": [
+            "thran-vigil-own-turn-aggregate",
+            "thran-separate-events-separate-triggers",
+            "thran-single-and-entry",
+            "thran-event-restrictions",
+            "thran-mandatory-own-creature",
+            "thran-invalidated-target",
+            "thran-normal-cast"
+          ],
+          "viewerScenarioIds": ["thran-viewer-graveyard-departure-trigger"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2e2ace5b-4018-43af-8e72-ebafec1a7739": {
+      "name": "Harmonic Prodigy",
+      "oracleSha256": "fe545e2745d11e9dc0bad5601cbd80e3c45b4ad87f0f7ab982ed13eaba7e9b75",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)",
+          "implementation": [
+            "controller-only noncreature cast trigger",
+            "source +1/+1 until end of turn"
+          ],
+          "engineTestIds": [
+            "harmonic-prowess-noncreature-only",
+            "harmonic-other-own-wizard-trigger-doubled"
+          ],
+          "viewerScenarioIds": ["harmonic-viewer-prowess"]
+        },
+        {
+          "oracleText": "If a triggered ability of a Shaman or another Wizard you control triggers, that ability triggers an additional time.",
+          "implementation": [
+            "shared trigger-copy static",
+            "controller and Shaman/other-Wizard source filtering",
+            "one additive copy per applicable Prodigy",
+            "nonrecursive copy calculation"
+          ],
+          "engineTestIds": [
+            "harmonic-own-shaman-trigger-doubled",
+            "harmonic-other-own-wizard-trigger-doubled",
+            "harmonic-ineligible-and-opponent-sources",
+            "harmonic-multiple-effects-exact-count",
+            "harmonic-normal-cast"
+          ],
+          "viewerScenarioIds": ["harmonic-viewer-cast-and-double-trigger"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["harmonic-ai-sequencing-quality"]
+    },
+    "c20a96f7-aa5a-4c15-b8b1-806685c99b27": {
+      "name": "Bolt Bend",
+      "oracleSha256": "991a63702cbdcb9ba33de60fd845455d691ba2783677a2ab6d6591da9314d4b5",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {3} less to cast if you control a creature with power 4 or greater.",
+          "implementation": ["explicitly unsupported pending a retarget primitive"],
+          "engineTestIds": ["marchesa-batch1-bolt-bend-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Change the target of target spell or ability with a single target.",
+          "implementation": ["explicitly unsupported; copyTargetSpell is not a retarget"],
+          "engineTestIds": ["marchesa-batch1-bolt-bend-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ae120613-97d6-4393-b39d-c3e6c076f5d6": {
+      "name": "Deflecting Swat",
+      "oracleSha256": "59d61f13ab689ea2b364e26bf4c2216a6038b75fbbd09c680af867abd759feac",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "If you control a commander, you may cast this spell without paying its mana cost.",
+          "implementation": ["explicitly unsupported pending a retarget primitive"],
+          "engineTestIds": ["marchesa-batch1-deflecting-swat-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "You may choose new targets for target spell or ability.",
+          "implementation": ["explicitly unsupported; copyTargetSpell is not a retarget"],
+          "engineTestIds": ["marchesa-batch1-deflecting-swat-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "eaca2576-020b-4af4-b348-6d1b56116c41": {
+      "name": "Body Launderer",
+      "oracleSha256": "f44de0fbad37339ec628a08e13433d825b21fd8bf9721e5cccd3725082d7a92e",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever another nontoken creature you control dies, this creature connives.",
+          "implementation": ["explicitly unsupported; connive is not unconditional +1/+1"],
+          "engineTestIds": ["marchesa-batch1-body-launderer-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "When this creature dies, return another target non-Rogue creature card with equal or lesser power from your graveyard to the battlefield.",
+          "implementation": ["explicitly unsupported; power filter omitted"],
+          "engineTestIds": ["marchesa-batch1-body-launderer-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fb220f46-f8b8-4804-baa4-e7d50b4871f7": {
+      "name": "Aether Channeler",
+      "oracleSha256": "340f9c527f82807166ad11f5929dc8ddc727045317a5039a8bdaa6848d967ec1",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, choose one —\n• Create a 1/1 white Bird creature token with flying.\n• Return another target nonland permanent to its owner's hand.\n• Draw a card.",
+          "implementation": ["explicitly unsupported; bounce mode is untargeted returnOneToHand"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37": {
+      "name": "Cytoplast Manipulator",
+      "oracleSha256": "faac653c0a227cf33a3c44758770b9fed072d8d1fab969d7def6eb9d8c19f642",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{U}, {T}: Gain control of target creature with a +1/+1 counter on it for as long as this creature remains on the battlefield.",
+          "implementation": ["explicitly unsupported; gainControlTarget is a permanent steal"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ba9f3c5d-556f-48d1-8d87-723f7893cfcd": {
+      "name": "Flayer of the Hatebound",
+      "oracleSha256": "83e8fbc4e2f4fd410df3e650ed4506fd40c65570897c3e5d7af777e88d35c7bc",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature or another creature enters from your graveyard, that creature deals damage equal to its power to any target.",
+          "implementation": ["explicitly unsupported; graveyard origin omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e": {
+      "name": "Blasphemous Edict",
+      "oracleSha256": "6994bb591cb20faee9759d2070892083e2cea7b20e36ece110b5cc740790b4d3",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield.",
+          "implementation": ["explicitly unsupported; alternativeCast omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Each player sacrifices thirteen creatures of their choice.",
+          "implementation": ["explicitly unsupported pending a faithful alternative cost"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "437cfd16-94bc-43ba-afd8-e9e9d028a4ca": {
+      "name": "Flare of Denial",
+      "oracleSha256": "bf7016907d2dd85f89b718bc7cb81fa45db2423f52bfee50eff788eab5d3ac34",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may sacrifice a nontoken blue creature rather than pay this spell's mana cost.",
+          "implementation": ["explicitly unsupported; alternativeCast omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Counter target spell.",
+          "implementation": ["explicitly unsupported pending a faithful alternative cost"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f586ecb8-310c-4f40-a766-6a7ca46a254d": {
+      "name": "Flare of Duplication",
+      "oracleSha256": "42fad81d0b0efc5b4ce467d29301a30d4ad4c6790d84c06549000a7dd2dfec55",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may sacrifice a nontoken red creature rather than pay this spell's mana cost.",
+          "implementation": ["explicitly unsupported; alternativeCast omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Copy target instant or sorcery spell. You may choose new targets for the copy.",
+          "implementation": ["explicitly unsupported; copyTargetSpell copies original targets"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4ce156f8-6b0b-41ce-9e8f-b2735c757406": {
+      "name": "Flare of Malice",
+      "oracleSha256": "d358e361fe29eb5d7bb7a2b7150da42213f3ec722749868738013cf835d87ec0",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may sacrifice a nontoken black creature rather than pay this spell's mana cost.",
+          "implementation": ["explicitly unsupported; alternativeCast omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Each opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control.",
+          "implementation": ["explicitly unsupported pending a faithful alternative cost"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "afaef788-34d1-460b-b884-9d7ae6ddeb18": {
+      "name": "Toxic Deluge",
+      "oracleSha256": "8d4c686fcd606a82ad2a0dbba2ab363d1b5ca67300bf21b0a3de199ec277cad9",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "As an additional cost to cast this spell, pay X life.",
+          "implementation": [
+            "explicitly unsupported; additional cost authored as resolution loseLife"
+          ],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "All creatures get -X/-X until end of turn.",
+          "implementation": ["explicitly unsupported pending a faithful additional cost"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8": {
+      "name": "River Kelpie",
+      "oracleSha256": "d37cb44668d016bedab1375e97e13f1a178fadacc72ce65b5d17bc0509048c2c",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature or another permanent enters from a graveyard, draw a card.",
+          "implementation": ["explicitly unsupported; graveyard origin omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Whenever a player casts a spell from a graveyard, draw a card.",
+          "implementation": ["explicitly unsupported; graveyard origin omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "05d7222b-cc08-4f1f-8e35-6058599572ba": {
+      "name": "Twilight Diviner",
+      "oracleSha256": "974f403c489c84c5ea45ed5afaf9dc63cb5aea548c77a149546b2805ace309c5",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever one or more other creatures you control enter, if they entered or were cast from a graveyard, create a token that's a copy of one of them. This ability triggers only once each turn.",
+          "implementation": ["explicitly unsupported; graveyard origin and once-each-turn omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4b8736e2-fc41-4a25-bb6c-7351afc40981": {
+      "name": "Pensive Professor",
+      "oracleSha256": "d1bbff061cf9949664fef0a0f27c26aae1413e512e17fc6b85db90ca429500e8",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)",
+          "implementation": ["explicitly unsupported; Increment is claimed without a keyword"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Whenever one or more +1/+1 counters are put on this creature, draw a card.",
+          "implementation": ["explicitly unsupported; authored as a dealtDamage trigger"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "00e0b103-892c-49b3-836d-867fff197bbd": {
+      "name": "Puppeteer Clique",
+      "oracleSha256": "6cc92266c44c063db23abbdaf1b36dd0d9059367a482a19352ffa09749abb939",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. At the beginning of your next end step, exile it.",
+          "implementation": ["explicitly unsupported; delayed exile omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f53da056-97be-41ad-8cfc-0d92e17dcd7b": {
+      "name": "Sage of Fables",
+      "oracleSha256": "1423e05e7e7fc5bf74c33c20c1f368ebd1f4224c9c5112df484d654181aeb382",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{2}, Remove a +1/+1 counter from a creature you control: Draw a card.",
+          "implementation": ["explicitly unsupported; removeCounters cost is paid from the source"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7555c429-5f2d-4171-b6b0-8e3c8da7f314": {
+      "name": "Satoru, the Infiltrator",
+      "oracleSha256": "61506504750f785352e9318aa606928d134418fd60f7036ea0a1c5c971b5b564",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever Satoru and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card.",
+          "implementation": ["explicitly unsupported; uncast/no-mana-spent restriction omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "59c7496b-19a2-478b-b28f-6f153c2458ae": {
+      "name": "Siren Stormtamer",
+      "oracleSha256": "6541f912b62d1948fa6971683d405089a7c6dda6add27ed295670b4e215d50a1",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control.",
+          "implementation": ["explicitly unsupported; targeting restriction omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fda61506-ed79-47fd-badd-639185297913": {
+      "name": "Smokestack",
+      "oracleSha256": "2bdc6fec7da5e5a92acd731ef57470524053e530af1824f0ac1e1775a7c0e95b",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your upkeep, you may put a soot counter on this artifact.",
+          "implementation": ["explicitly unsupported; soot-adding upkeep omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "At the beginning of each player's upkeep, that player sacrifices a permanent of their choice for each soot counter on this artifact.",
+          "implementation": ["explicitly unsupported; sacrificeEachPlayer count 1 on each upkeep"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "82a6fa6f-13c2-4ea3-bec2-c51b56b2783b": {
+      "name": "The Ooze",
+      "oracleSha256": "b62bfacc5e4d0b4478a1a3f5f84b9e78cdc6f381d6ad8ce42fa9b7da74521387",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever a creature you control with a +1/+1 counter on it leaves the battlefield, create a Mutagen token for each +1/+1 counter on it.",
+          "implementation": ["explicitly unsupported; leaves implemented as dies"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "277aafa6-4270-4d24-a888-cf9e8e635d4b": {
+      "name": "Watcher for Tomorrow",
+      "oracleSha256": "02360583993a6941a09046d20aefacec8e53d3acaa1cc092eee1f67eff3f2e57",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature leaves the battlefield, put the exiled card into its owner's hand.",
+          "implementation": ["explicitly unsupported; leaves implemented as dies"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425": {
+      "name": "Carrion Feeder",
+      "oracleSha256": "7fb3a771052de7acaa2d3eaebe9c39509ae68522bd344b4bd2491f77e6a3e069",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Sacrifice a creature: Put a +1/+1 counter on this creature.",
+          "implementation": [
+            "explicitly unsupported; sacrificeOther cannot sacrifice this creature"
+          ],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8": {
+      "name": "Gleeful Arsonist",
+      "oracleSha256": "b4a3ce9d3e4fe7ed7f998c785be7bba031639225544a3a577952cd0bfe875143",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Undying",
+          "implementation": ["explicitly unsupported; Undying is not an implemented keyword"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5f3f68b5-8c6a-4181-bb8a-9c73967d198a": {
+      "name": "Glen Elendra Archmage",
+      "oracleSha256": "13ec34cf29e69f3cc44cf9c8d95e931ce380bfb01361c0e6778e12daf91a9578",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Persist",
+          "implementation": ["explicitly unsupported; Persist is not an implemented keyword"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "72aef1d8-11df-4bc2-af83-907b05df73a8": {
+      "name": "Grim Haruspex",
+      "oracleSha256": "a82c1aeef591b7eaeb584f94d66076ac45cfafde3a65de88cdb36f4ae14866ef",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Morph {B}",
+          "implementation": ["explicitly unsupported; morphCost is never offered as a cast"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bc14356c-3a1a-47af-9a6e-2b449de0331f": {
+      "name": "Kardur, Doomscourge",
+      "oracleSha256": "72604f8eb1df87c4020f3d5029549aca480358b6e0ebbb6e680f72dae76bcaa7",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.",
+          "implementation": ["explicitly unsupported; goad snapshots current creatures"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life.",
+          "implementation": ["explicitly unsupported; inCombat includes blockers"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "35e2f82e-7ca3-4a92-9134-b7999eef5337": {
+      "name": "Mana Sculpt",
+      "oracleSha256": "0b2d95dd1b6129ea13122d2493cb1b94b5f20d66a2848532a52aa2f805a15e4e",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase.",
+          "implementation": ["explicitly unsupported; Wizard if and captured manaSpent omitted"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6dc7f837-158f-4ccf-86a5-a07a20891ec5": {
+      "name": "Vindictive Lich",
+      "oracleSha256": "d04dc4ea8e3fb88bf5c805e6882677aba7418b9d72ee93aa585c7bab085f08a6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, choose one or more. Each mode must target a different player.",
+          "implementation": ["explicitly unsupported; choose-one, one opponent"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4c209165-a159-4cd7-8e99-1e533d3a22a6": {
+      "name": "Vigean Graftmage",
+      "oracleSha256": "dd42fa4af6fe68996fc19d54535d43d6ef28cc4915fe353b5d36a6451a592e9b",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Graft 2",
+          "implementation": ["explicitly unsupported; Graft is not an implemented keyword"],
+          "engineTestIds": ["marchesa-catalog-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "66ca8a60-e028-4a5f-8177-860b888cb9d1": {
+      "name": "Angel's Grace",
+      "oracleSha256": "8b82f887e6a6fd32cbf163b59bfa27e99378188a63dd77af33a539967c6e349d",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Split second",
+          "implementation": ["explicitly unsupported; Split second is omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "You can't lose the game this turn and your opponents can't win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead.",
+          "implementation": ["explicitly unsupported; damage life floor is not cannot-lose"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "99140891-face-4015-aacd-1309e87d8f9f": {
+      "name": "Display of Power",
+      "oracleSha256": "7467b0fdbbc96a79b05aeadc8074b241be93294abbe71b53ede15f0c35889261",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "This spell can't be copied.",
+          "implementation": ["explicitly unsupported; cannot-be-copied is omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies.",
+          "implementation": ["explicitly unsupported; copies keep original targets"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "60e7130a-d321-4e50-93a4-999013c76054": {
+      "name": "Gut, True Soul Zealot",
+      "oracleSha256": "57884a8cc2affe2969b44d18992777b721cf770833daba51bcb7f280627563d2",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Choose a Background",
+          "implementation": ["explicitly unsupported; background companion is not implemented"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "379ed4ec-8f2e-448b-9ed2-a3181e2f877e": {
+      "name": "Nighthawk Scavenger",
+      "oracleSha256": "03f3cabd2fa87632395fa1d079c4f04adb73da4ed90c84fd0f9f1c598c05f40e",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Nighthawk Scavenger's power is equal to 1 plus the number of card types among cards in your opponents' graveyards.",
+          "implementation": ["explicitly unsupported; counts all graveyards"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ff6b52b7-ae3c-465b-b10e-901160e5230e": {
+      "name": "Nils, Discipline Enforcer",
+      "oracleSha256": "4b08785cec3c0e9c1c5e4aea30160faebdf81b037e7f82fb75675151bb8a002e",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.",
+          "implementation": ["explicitly unsupported; counters every creature"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Each creature with one or more counters on it can't attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature.",
+          "implementation": ["explicitly unsupported; attack-tax static omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe": {
+      "name": "Olórin's Searing Light",
+      "oracleSha256": "74b48c19f85169bedb91b2a35f8d7d0315725b1c5e5f74d820366ace70a43641",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "If there are two or more instant and/or sorcery cards in your graveyard, Olórin's Searing Light deals damage to each opponent equal to the power of the creature they exiled.",
+          "implementation": ["explicitly unsupported; threshold damage omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca": {
+      "name": "Reverberate",
+      "oracleSha256": "1fe3b372294daf708f9e6604546cfa7880fe1dfaff5a8754ab240477d99a4546",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Copy target instant or sorcery spell. You may choose new targets for the copy.",
+          "implementation": ["explicitly unsupported; copyTargetSpell is not a retarget"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6623cb85-fb1e-4561-8b21-0977c25096c2": {
+      "name": "Tibalt's Trickery",
+      "oracleSha256": "33ea9115ee3c1585cb09300e4cdcbec9a6aef6a31e65d0a621be61b8310b1cfd",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell. They may cast that card without paying its mana cost. Then they put the exiled cards on the bottom of their library in a random order.",
+          "implementation": ["explicitly unsupported; authored as counter only"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c0d8fef4-65f4-4769-982d-b397d2b7e977": {
+      "name": "Animate Dead",
+      "oracleSha256": "236b4dd096186ecbd0e421e9ae7ac0bc91fa81347974d77bcc3dad4d4a6bbfcd",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Enchant creature card in a graveyard",
+          "implementation": ["explicitly unsupported; graveyard Aura attach omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "30ac68e6-160a-41f9-9f0f-0e0eef383150": {
+      "name": "Arcane Lighthouse",
+      "oracleSha256": "5d0f333485598adcd887dce6a6c0b98fbdad8048daad6957b159185448ff8410",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have hexproof or shroud.",
+          "implementation": ["explicitly unsupported; authored as granting menace"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cdfa9de4-7d7d-4638-8ac4-793ece6372dd": {
+      "name": "Changing Loyalty",
+      "oracleSha256": "c57a249316e0f083aae223224957ca14c9fd90badb941b38c27ed6c6cab578d0",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Replicate {2}",
+          "implementation": ["explicitly unsupported; Replicate is not implemented"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3635e4e5-e655-45f4-a444-39756f55129a": {
+      "name": "Eldrazi Conscription",
+      "oracleSha256": "89260b61c79de7bbe5a6665d51c5798add420bea6cf7b8eb3510220bb8baeebe",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Enchanted creature gets +10/+10 and has trample and annihilator 2.",
+          "implementation": ["explicitly unsupported; Annihilator is omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3": {
+      "name": "Fallen Ideal",
+      "oracleSha256": "3ba13764d452400831541e37c2b7a16dca91265614e3b979c6d5f27f229e0950",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Enchanted creature has flying and \"Sacrifice a creature: this creature gets +2/+1 until end of turn.\"",
+          "implementation": [
+            "explicitly unsupported; granted sacrifice ability authored on the Aura"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ac675899-25bb-4f06-9c8c-bf188024495f": {
+      "name": "Firemane Commando",
+      "oracleSha256": "20c0287a3dd96d72f6a5f557813f972125a91a6506ed4b957cf022bf32a2437a",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
+          "implementation": ["explicitly unsupported; both triggers make you draw"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a3b39590-34b7-4fd0-877f-748e6df30e88": {
+      "name": "Hateful Eidolon",
+      "oracleSha256": "e7a12e590277e4c921c0476669518070e7a0b69b7d0050cdac1b521499b42c72",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it.",
+          "implementation": ["explicitly unsupported; draws one instead of one per Aura"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9c77eb0a-543a-41db-ba1f-aa0163837ae0": {
+      "name": "Ajani's Chosen",
+      "oracleSha256": "a9b42ae4f91ea135006bd138f386a48952784159d1076b7493c83a96daef2d48",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.",
+          "implementation": ["explicitly unsupported; Aura attach omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8ba36878-0816-44c7-b543-8ebfc28c2ecd": {
+      "name": "Angelic Destiny",
+      "oracleSha256": "3673b01c86f2953d46be78a773f7905753470278bcea100a46bec827bba77496",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.",
+          "implementation": ["explicitly unsupported; Angel type-changing omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f": {
+      "name": "Armored Skyhunter",
+      "oracleSha256": "beb1dfe1be14052bd80303cec032231511ea295c455b75da9cbb7c83ab73edeb",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature attacks, look at the top six cards of your library. You may put an Aura or Equipment card from among them onto the battlefield.",
+          "implementation": ["explicitly unsupported; any artifact, attach omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "27c366cf-00d7-47d4-9577-736bfc4a3b81": {
+      "name": "Defacing Duskmage // Vandal's Edit",
+      "oracleSha256": "90033991a5fb2a8372e6e32389d181b51b2e8c299176797700ab465a0590d165",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent draws their second card each turn, this creature becomes prepared.",
+          "implementation": ["explicitly unsupported; Prepare authored as a pump"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "441b51b0-ecd0-466d-9ca8-e754eb563aec": {
+      "name": "Eidolon of Countless Battles",
+      "oracleSha256": "9521b9cb47cf5c1b8466cdae9cf1cc77d457c42d819d64e88186423acd12a756",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Bestow {2}{W}{W}",
+          "implementation": ["explicitly unsupported; Bestow and Aura-count buff omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "09b7ea91-2620-4c45-af3c-60bbeab89966": {
+      "name": "Eiganjo Dynastorian // Replenish",
+      "oracleSha256": "23d1962201101f39e58a700ef72285eecce3a7f2b89adf3f352dc928a5a04762",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever you attack with two or more creatures, this creature becomes prepared.",
+          "implementation": ["explicitly unsupported; Prepare authored as a self-attack pump"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f43f5855-f297-4433-984b-18263b734cfc": {
+      "name": "Eriette of the Charmed Apple",
+      "oracleSha256": "427382fa2460cff57a7df369156701a3a2c58178f0cec4ef5d1bf7909f937023",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control.",
+          "implementation": ["explicitly unsupported; cannot-attack-you static omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6a9cc11b-a223-46f0-bf58-c1e08ad1253d": {
+      "name": "Forum Filibuster",
+      "oracleSha256": "0ba03edb28796d0bf9c9db05a772b35e3a219d24ff8a81648d9a440a2fd35cb2",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token.",
+          "implementation": ["explicitly unsupported; reflexive attach omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b": {
+      "name": "Gift of Immortality",
+      "oracleSha256": "668461ed4abe26b27771a49c7c5347b67dc7fddf9aa4e4ff49d3373b1936c781",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Return this card to the battlefield attached to that creature at the beginning of the next end step.",
+          "implementation": ["explicitly unsupported; delayed Aura return omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9": {
+      "name": "Herald of Amity",
+      "oracleSha256": "78af5d1e821b93ea3ab2185cba96cf7a9c7e8edeec2ce5789fb55537d20aa57f",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, exile the top eight cards of your library. You may cast an Aura spell from among them without paying its mana cost.",
+          "implementation": ["explicitly unsupported; lookAtTopN put onto battlefield"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6c948f71-5c86-450c-8828-df4d8deaf1dd": {
+      "name": "Intermediate Chirography",
+      "oracleSha256": "36103619e7b7020c960f42dadebdba74528c7ab39cbb5731dd80304bbe114b3f",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{1}{B}: Level 2",
+          "implementation": ["explicitly unsupported; class levels omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2": {
+      "name": "Keen Duelist",
+      "oracleSha256": "88c79237d10554689a619bcf06886276fa6c0baa5281ff28d9172a17136f21d2",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your upkeep, you and target opponent each reveal the top card of your library.",
+          "implementation": ["explicitly unsupported; Dark Confidant substitute"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e233cb5b-7237-4271-8157-9179cc897b6c": {
+      "name": "Killian, Ink Duelist",
+      "oracleSha256": "dc5a598c8b1bda5db8590ef9abe9f717f4d02dd5b97c0900aeec62a96e21e1e2",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Spells you cast that target a creature cost {2} less to cast.",
+          "implementation": ["explicitly unsupported; creature-spell reduction"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2bfc7467-1316-43d3-9ca6-ff36cc2de607": {
+      "name": "Kor Spiritdancer",
+      "oracleSha256": "fe2d712f87caa1e7143e351b698500710b9180a57c03e37f5ae721b2e19aeb35",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "This creature gets +2/+2 for each Aura attached to it.",
+          "implementation": ["explicitly unsupported; counts all Auras you control"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c8decfdf-1421-4649-acde-5215e7f08bb9": {
+      "name": "Martial Impetus",
+      "oracleSha256": "f5f5804b77e8b1cb8029448db2255e3c2f8173bc1f1d8e31df8262b14c8036c6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever enchanted creature attacks, each other creature that's attacking one of your opponents gets +1/+1 until end of turn.",
+          "implementation": ["explicitly unsupported; pumps all creatures in combat"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ad3bf726-e0c2-4038-a66e-9a9dff439563": {
+      "name": "Raffine's Guidance",
+      "oracleSha256": "44bdca5ef478f6340f60ac4c911274747431dab346b34c92e2d3c2c092759823",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may cast this card from your graveyard by paying {2}{W} rather than paying its mana cost.",
+          "implementation": ["explicitly unsupported; return-to-hand activation"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c22e5fc6-9b4e-4197-b472-70d168eb4330": {
+      "name": "Redemption Arc",
+      "oracleSha256": "c7576127ac9961bc64db1cf2b1cb4072c6d6e9944b6fa4c88f77c01e96d67638",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{1}{W}: Exile enchanted creature.",
+          "implementation": ["explicitly unsupported; exile activation omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d13fc657-c6fc-4394-bc70-691050550226": {
+      "name": "Sheltered by Ghosts",
+      "oracleSha256": "0f47521a0404408a94ad60265ffa991a08488638a84a911663414fa1e2796d31",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Enchanted creature gets +1/+0 and has lifelink and ward {2}.",
+          "implementation": ["explicitly unsupported; Ward omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "79085dea-8daa-41c0-a975-61e3e6da2e26": {
+      "name": "Shielded by Faith",
+      "oracleSha256": "d2578f1927629d5684b6da7702f4465f5a18d70f92da7acb414b894f52510fc7",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever a creature enters, you may attach this Aura to that creature.",
+          "implementation": ["explicitly unsupported; attach is mandatory"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2ef0961a-0543-4371-8c2a-333881b735e5": {
+      "name": "Tomik, Wielder of Law",
+      "oracleSha256": "aa74d762952c526ea0bbb4b56566782832d8946544c2c236d52f6dfc069548dc",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card.",
+          "implementation": ["explicitly unsupported; self-attack drain; Affinity omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "71c52bf5-2a5d-488e-8b15-7ef290e4b77d": {
+      "name": "War Room",
+      "oracleSha256": "7014d3a7b8e20db7e2a12576165361775173e73cb28f1106afa40a659d6d0c74",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{3}, {T}, Pay life equal to the number of colors in your commanders' color identity: Draw a card.",
+          "implementation": ["explicitly unsupported; pay 1 life"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ee7ebbc1-2f9e-4867-a522-424869b6d772": {
+      "name": "Combat Calligrapher",
+      "oracleSha256": "14ed62e99aefd29f2bdb7438445b5787d32bdb14c528e3a05d8e02154c55bc25",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Inklings can't attack you or planeswalkers you control.",
+          "implementation": ["explicitly unsupported; cannot-attack-you omitted; trigger unscoped"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "01f29158-2dc9-4b9d-b726-add5d3fd5782": {
+      "name": "Comeuppance",
+      "oracleSha256": "c51d55e7df204a7b74f5ccfe5f5a58b4349adecad02f0c0fe15b2b1940059d75",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control.",
+          "implementation": ["explicitly unsupported; combat-damage prevention only"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0ff7440b-b831-40a9-81c4-99d77bf93b8d": {
+      "name": "Dream Devourer",
+      "oracleSha256": "daf65f95778453b46ca292c449635ae2451bb6a70b5133f712dc759774a74fc0",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever you foretell a card, this creature gets +2/+0 until end of turn.",
+          "implementation": ["explicitly unsupported; Foretell omitted; pumps on any spell"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a731e87b-8d99-4b64-8ee3-8e540d652366": {
+      "name": "Malakir Rebirth // Malakir Mire",
+      "oracleSha256": "dd7265539660a0e48ff683b0eff60130edb7370e10e9d5d44315a6c3daee6743",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Choose target creature. You lose 2 life. Until end of turn, that creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control.\"",
+          "implementation": ["explicitly unsupported; spell face claimed; only land authored"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cbcb6d9a-6ae5-4bcd-8013-2b657553764a": {
+      "name": "Mangara, the Diplomat",
+      "oracleSha256": "23cad2e1c9fb1f941dc492639a8b70d798f9f8dd018480d3bb38c767a1ed3a0a",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card.",
+          "implementation": [
+            "explicitly unsupported; any combat attack; extra second-spell trigger"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fbe190eb-fd4b-40e7-9a17-48c96b60f653": {
+      "name": "Michiko Konda, Truth Seeker",
+      "oracleSha256": "cb2ada5b8d71925822fca64f34bed81777cfff96d71c183470213cb575282a47",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice.",
+          "implementation": ["explicitly unsupported; damage to permanents you control"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bb5c1817-ac22-4779-9005-251bc354f181": {
+      "name": "Mistveil Plains",
+      "oracleSha256": "ba245c46e7ecea52425fded3beb73f5bba3666af9f1c85e8234df1a5a3430791",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{W}, {T}: Put target card from your graveyard on the bottom of your library. Activate only if you control two or more white permanents.",
+          "implementation": ["explicitly unsupported; graveyardToLibraryTop"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ff0ab867-b710-4b1a-baed-95fc3cf68f79": {
+      "name": "Valakut Awakening // Valakut Stoneforge",
+      "oracleSha256": "e05cfd39ee3588b870dad5d06b10581f57c0513fe175233c8c0c47ade8672b90",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one.",
+          "implementation": ["explicitly unsupported; spell face claimed; only land authored"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9842734c-1eac-4509-a731-4c22017ae586": {
+      "name": "Wear // Tear",
+      "oracleSha256": "0ab03040cece0181c7b948f48ef7acca7b54b47affbee2e523c37b1d59bff6b8",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Fuse (You may cast one or both halves of this card from your hand.)",
+          "implementation": ["explicitly unsupported; Fuse authored as a third extra-cost mode"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7": {
+      "name": "Delirium",
+      "oracleSha256": "7f67096386be6374ad6079171689a2ceec128353a3e0e2abe544784ad5181573",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Cast this spell only during an opponent's turn.",
+          "implementation": ["explicitly unsupported; opponent-turn restriction omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb": {
+      "name": "Duelist's Heritage",
+      "oracleSha256": "908b2f6e15d136d51dd920e704ec04d5f396d1af17eada7bb6afe7f346439f6d",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.",
+          "implementation": ["explicitly unsupported; per-attacker grant on any creature"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1582e16d-4825-4cc5-b12c-449c45e4e449": {
+      "name": "Humble Defector",
+      "oracleSha256": "ab20c63164ea397b563967afac0fda59a57eedf602b7e4ecc3845c3cb092a3dc",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Activate only during your turn.",
+          "implementation": ["explicitly unsupported; timing any"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7d079c78-b2a9-444f-ab54-c61c041baa6d": {
+      "name": "Selfless Squire",
+      "oracleSha256": "debd579414a52e7e7cc408bd06d4bf3f3862f42f108196365a37c3f6d72dc6a6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, prevent all damage that would be dealt to you this turn.",
+          "implementation": ["explicitly unsupported; combat prevention only; counters omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "153376c9-dffd-458c-8ce3-a4c8269bc4e9": {
+      "name": "Smothering Tithe",
+      "oracleSha256": "38346bcc71227873ac4c358bd89d277f9d1f94a65e7778392c5e0aefeb7ab2c4",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent draws a card, that player may pay {2}. If the player doesn't, you create a Treasure token.",
+          "implementation": ["explicitly unsupported; unconditional Treasure on every draw step"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785": {
+      "name": "Teyo, Geometric Tactician",
+      "oracleSha256": "c6459f9ac45f2d5ad423b289921a8f98cc6ca5336aaf4fdd57ed8d564de23ade",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent.",
+          "implementation": ["explicitly unsupported; −2 directional restriction omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f": {
+      "name": "Weathered Wayfarer",
+      "oracleSha256": "42ef11f806b155602ccdd9ce54d2cd2e123a4df1d42d90c83dcedad110cfaafd",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Activate only if an opponent controls more lands than you.",
+          "implementation": ["explicitly unsupported; more-lands restriction omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "81c70ae7-3c18-4c9b-8505-e4db9e0e6518": {
+      "name": "Wishclaw Talisman",
+      "oracleSha256": "446292abbc221b8f58e0346f35354508e4d3b7866c29c7f51c91c80a046f1c33",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "An opponent gains control of this artifact. Activate only during your turn.",
+          "implementation": ["explicitly unsupported; opponent-gains-control omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "01790829-cc03-430f-a899-2f274b7dbf62": {
+      "name": "Arcbond",
+      "oracleSha256": "c9f9a7fd462c5e9860928053ebcbc0d98b77f2fe5342f50eef740c4aa7fd24c3",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player.",
+          "implementation": ["explicitly unsupported; damage source is Arcbond"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c": {
+      "name": "Backlash",
+      "oracleSha256": "116b1ea7f57a9a829f03d7c0a6ffeafd34ece8beb23320dcd9b13668659a9ae5",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Tap target untapped creature.",
+          "implementation": ["explicitly unsupported; any creature"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3e41648f-c5a9-4b26-b97e-8176fe5e9c85": {
+      "name": "Brash Taunter",
+      "oracleSha256": "811ca00fb845c5c1d6c5a9e1e67d6114c45a9af8f482ad5de6d04549f9dd130c",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{2}{R}, {T}: This creature fights another target creature.",
+          "implementation": ["explicitly unsupported; can target this creature"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d11e627b-8a48-411d-a261-2c9a02a758ba": {
+      "name": "Breena, the Demagogue",
+      "oracleSha256": "1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.",
+          "implementation": ["explicitly unsupported; defender vs attacker life"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be": {
+      "name": "Deflecting Palm",
+      "oracleSha256": "3993eb90435f19d48756dd73a5c98c1f311389efee795e82a5f8aa58277b936a",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller.",
+          "implementation": ["explicitly unsupported; unscoped combat prevention"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b3d81980-76f2-44e2-b1c9-01e30c726312": {
+      "name": "Loran of the Third Path",
+      "oracleSha256": "1113e09d5ae37057a26a4ed71a643206eb4ca8bb572b7116b0107ff2ebdd3454",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When Loran enters, destroy up to one target artifact or enchantment.",
+          "implementation": ["explicitly unsupported; required target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6dfb50d7-359b-4644-90e3-7ecdacee7c12": {
+      "name": "Scheming Symmetry",
+      "oracleSha256": "9e799e443627ee3054fa6cf4b389234fd499ffe819f291da1d3e566ba6ad4ed7",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Each of them searches their library for a card, then shuffles and puts that card on top.",
+          "implementation": ["explicitly unsupported; move to top without shuffle"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4987c458-604a-4727-b360-170616e91e67": {
+      "name": "Kambal, Consul of Allocation",
+      "oracleSha256": "803082206730781d6c0b080302b0679ed14e54b7d5b3f0096d15d7bc0d2edf71",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life.",
+          "implementation": ["explicitly unsupported; caster each includes you"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2143f413-7baa-4fd6-a7ca-32f52bfa553f": {
+      "name": "Shadrix Silverquill",
+      "oracleSha256": "b3b27d30058d4a228950317e549d90e7bef45703c68c5015257378827bebfd5a",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of combat on your turn, you may choose two. Each mode must target a different player.",
+          "implementation": ["explicitly unsupported; mandatory choose-two; duplicate modes"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6556c4c0-b10d-4208-821b-0c0a49abd188": {
+      "name": "Wandering Archaic // Explore the Vastlands",
+      "oracleSha256": "efd5a189a30c5361e8f8a26916921ec44ed3c1dd5b9edbc9dfb02d1d809d5339",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don't, you may copy that spell. You may choose new targets for the copy.",
+          "implementation": ["explicitly unsupported; modal DFC copy-on-cast unimplemented"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "04853f06-3fd2-445d-9b0d-d68d0f116635": {
+      "name": "Verrak, Warped Sengir",
+      "oracleSha256": "34f21854909995c8c060c539603e6749c1787218aac9656276f26bc73954e731",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy.",
+          "implementation": ["explicitly unsupported; copy activated ability unimplemented"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9c54bd34-667d-415c-ad26-82e0eb0ff409": {
+      "name": "Killian, Decisive Mentor",
+      "oracleSha256": "9fb904773a37d5dfc96613bda4ee5769f97846fda7dc3370f6e501fdf12d4b0f",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card.",
+          "implementation": ["explicitly unsupported; Aura-enchanted attack trigger unimplemented"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d2d9ecea-7925-420e-98b9-2f87f41f387c": {
+      "name": "Land Tax",
+      "oracleSha256": "4b365fab95d5ae332e404759f054d57169911d769d44ef0cbf6890e83ac0d4a7",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.",
+          "implementation": ["explicitly unsupported; mandatory search omits reveal"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e1d294e8-67b1-4a4a-86b8-f98f28a327d9": {
+      "name": "Promise of Loyalty",
+      "oracleSha256": "2c168d95b98fc29bee9fb1d7a562d50070400c32fe9b4476196eb820d301b472",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.",
+          "implementation": [
+            "explicitly unsupported; keep-one sacrifice and vow attack restriction unimplemented"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2598294c-a9a7-4bef-a562-23f297a80536": {
+      "name": "Songbirds' Blessing",
+      "oracleSha256": "851e8ce40aa9b09f46e4da79b52d82b41c8833f15d4e8e27bba9cc90fa2727ce",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
+          "implementation": ["explicitly unsupported; reveal-until-Aura unimplemented"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "81a51328-b995-4f3b-90bc-a20ae21dd254": {
+      "name": "Spirit Mantle",
+      "oracleSha256": "d7ed1ab4d0b9878a98e1f604086d8f926c94da175da9f6f92e1c044757fd5351",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Enchanted creature gets +1/+1 and has protection from creatures.",
+          "implementation": ["explicitly unsupported; protection from creatures unimplemented"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce": {
+      "name": "Mob Rule",
+      "oracleSha256": "f34b00942fd781e1187f12ee0f9754a3d1ea743e739fa323a27558ad9e647828",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures. They gain haste until end of turn.",
+          "implementation": [
+            "explicitly unsupported; until-end-of-turn steal is permanent gainControl"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0c85b8f7-0bd0-4680-9ec5-d4b110460a54": {
+      "name": "Fabled Passage",
+      "oracleSha256": "fd064f3f1c8289f7cd3a05433a31b03a8676ba4ce9035cd6706bd37087c9a7ef",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land.",
+          "implementation": ["explicitly unsupported; four-or-more-lands untap omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "09b895ff-e729-48d1-bfc1-ea5fd7adda6a": {
+      "name": "Caged Sun",
+      "oracleSha256": "b34bfaf7fbd92c16e3925213c0c013a876096c33e682d99c4eadcad9508982b3",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color.",
+          "implementation": [
+            "explicitly unsupported; additional chosen-color mana claimed without a trigger"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b3ff8da4-f2cc-41c3-8950-9cc531854b78": {
+      "name": "Plasmancer",
+      "oracleSha256": "0aedfcf7611280dfaf130e91c553dbc2a0bce3d94f087201255ccd6db34ea22e",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle.",
+          "implementation": ["explicitly unsupported; Swamp search omits reveal"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "589b742c-fee5-413a-a56c-4d4ffaf0f73d": {
+      "name": "Psychomancer",
+      "oracleSha256": "a9688ee818cfe44f6d23dd346d4e998a40205b0c24397080ecd37f21f26c481c",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature or another nontoken artifact you control is put into a graveyard from the battlefield or is put into exile from the battlefield, target opponent loses 1 life and you gain 1 life.",
+          "implementation": [
+            "explicitly unsupported; exile origin omitted; loseLife hits controller"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "678b3fb5-aa9f-4268-9433-2a89dd37b927": {
+      "name": "Canoptek Tomb Sentinel",
+      "oracleSha256": "8b3b2b8d9dc4c7bc3c7dfa002de18cdd021d265cd16a45096e01e7e9ae29b87a",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters from a graveyard, exile up to one target nonland permanent.",
+          "implementation": ["explicitly unsupported; any enter; required target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "349ea6c7-6b3e-417f-b082-b712e2b1635b": {
+      "name": "Forum of Amity",
+      "oracleSha256": "b49800b6e3d748f53ad05c73cbf239e4c57e16fac1e8288c5fdf8d1f36b384ee",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{2}{W}{B}, {T}: Surveil 1.",
+          "implementation": ["explicitly unsupported; surveil claimed without implementation"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "32476743-c9d4-49ca-bec2-0669c215841b": {
+      "name": "Anrakyr the Traveller",
+      "oracleSha256": "1f11aa229db25bcdc8cb4b657fc98252b59975ad92a97811bae330033a79dcf9",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever Anrakyr the Traveller attacks, you may cast an artifact spell from your hand or graveyard by paying life equal to its mana value rather than paying its mana cost.",
+          "implementation": [
+            "explicitly unsupported; life-from-hand-or-graveyard is free hand casts"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "aef874fa-93c0-4f86-8b0d-dc24ec51467d": {
+      "name": "Beacon of Unrest",
+      "oracleSha256": "e8e9347132f2e3a9e1529d4ac633e47efaa45a78780e6efb21226d155a7c58d4",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Shuffle Beacon of Unrest into its owner's library.",
+          "implementation": ["explicitly unsupported; shuffleLibrary does not return this spell"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "61849685-b407-4ed0-aafc-ec3a003200b9": {
+      "name": "Canoptek Wraith",
+      "oracleSha256": "04d5efb7388c9a8185ee2000da27e3c1fe20e8da9a1061abff8f431729d2e4b2",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+          "implementation": [
+            "explicitly unsupported; any two basics instead of same name as chosen land"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "655aece2-f33a-46e0-8f80-112ae8a457fe": {
+      "name": "Convergence of Dominion",
+      "oracleSha256": "d6f51e80f201a57dad225bd9f055c7d41727a5a5e286652550d2825dd828acdc",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "As long as you control your commander, activated abilities of cards in your graveyard cost {2} less to activate. This effect can't reduce the mana in that ability's activation cost to less than one mana.",
+          "implementation": [
+            "explicitly unsupported; graveyard activation discount claimed without a static"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cb923c4d-1d2e-4039-90bb-72d1981b9738": {
+      "name": "Endless Atlas",
+      "oracleSha256": "e1d31dc2c8118f97fe833d58fce9caf77240ad6f11bae0a80cb066638303a610",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{2}, {T}: Draw a card. Activate only if you control three or more lands with the same name.",
+          "implementation": ["explicitly unsupported; same-name land restriction omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bb1b4786-3804-486b-9fd9-85848d24d362": {
+      "name": "Ghost Ark",
+      "oracleSha256": "bd5d0a53132a9b86c3ced3f9f31a6856b362023b2b014b354c27ffdf92d12ffc",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this Vehicle becomes crewed, each artifact creature card in your graveyard gains unearth {3} until end of turn.",
+          "implementation": ["explicitly unsupported; becomes-crewed implemented as becomesTapped"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b3329240-c812-45ea-a7f8-4d79cd4ed515": {
+      "name": "Hexmark Destroyer",
+      "oracleSha256": "f588c035d61896dcd748e00c9f6ce673da4d8356f8230ec0a7e42394223a4470",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked except by six or more creatures.",
+          "implementation": [
+            "explicitly unsupported; except-six-or-more implemented as cantBeBlocked"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "425fea06-76ec-4cd9-bd3b-750504fd7fd2": {
+      "name": "Imotekh the Stormlord",
+      "oracleSha256": "389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever one or more artifact cards leave your graveyard, create two 2/2 black Necron Warrior artifact creature tokens.",
+          "implementation": [
+            "explicitly unsupported; leave-graveyard trigger claimed without implementation"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2549bc57-9ffb-4053-9f10-f2a5f792b845": {
+      "name": "Myriad Landscape",
+      "oracleSha256": "696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle.",
+          "implementation": [
+            "explicitly unsupported; share-a-land-type implemented as any two basics"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "994bc16d-fdc6-475c-96df-beeb4d5aa03e": {
+      "name": "Mystic Forge",
+      "oracleSha256": "5e8354b233eff99979ff0dd2d28246a320fd9c38c6c7f7b4467c7072ec2065cc",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may cast artifact spells and colorless spells from the top of your library.\n{T}, Pay 1 life: Exile the top card of your library.",
+          "implementation": [
+            "explicitly unsupported; colorless omitted; exile-top implemented as mill"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "52aa5a79-db0e-4eaa-b2df-e41674c47794": {
+      "name": "Triarch Praetorian",
+      "oracleSha256": "19702457c7e73d501b2509808cee1350b8f3944fc392e738b8f0080924578c9d",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters from a graveyard, you draw two cards and you lose 2 life.",
+          "implementation": [
+            "explicitly unsupported; graveyard-origin enter implemented as any enter"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3": {
+      "name": "Triarch Stalker",
+      "oracleSha256": "7042199aac64458d8a1613d741ff94a5cb545ca6b184502770943558e69ea338",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Creatures attacking the last chosen player have menace.",
+          "implementation": [
+            "explicitly unsupported; chosen-opponent attackers implemented as all in combat"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5443557e-440f-4fdd-a29b-7740d7cec085": {
+      "name": "Biotransference",
+      "oracleSha256": "d693464368e3d8093da14fd32051868cfd0cf034ecd0340c38d9623cff10ef3c",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren't on the battlefield.",
+          "implementation": ["explicitly unsupported; type change omits spells and other zones"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "352b64d2-2ae5-44ee-a64f-94932ef545d3": {
+      "name": "Dread Return",
+      "oracleSha256": "bda6e9277a015c56401c6b4f23fca3e7258d3aaeb53a6f234f3610f44b650553",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Flashback—Sacrifice three creatures.",
+          "implementation": [
+            "explicitly unsupported; flashback claimed without a flashback alternative"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "10f274f9-9044-447b-81c9-d4906ad9e6be": {
+      "name": "Illuminor Szeras",
+      "oracleSha256": "7b83ca63d63f5b6abb39060bab1bc0dd086714872059ed3c0db58a8edb205486",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
+          "implementation": ["explicitly unsupported; sacrifice is an effect, not a cost"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "45866598-4ee4-46b6-ade2-ffcdbe98e58f": {
+      "name": "Necron Deathmark",
+      "oracleSha256": "9ea0d5feb506abd7f1b877e3898f5a1aa655060699a83b69ca1753ef2eb20ae6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, destroy up to one target creature and target player mills three cards.",
+          "implementation": ["explicitly unsupported; up-to-one is a required target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ce08aff3-efe6-4186-9557-274e00a7ca38": {
+      "name": "Sceptre of Eternal Glory",
+      "oracleSha256": "51ed0fa70d837b566989f2a57ef7b70bf50985d3c5c84b9d713f04a501aac2f5",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{T}: Add three mana of any one color. Activate only if you control three or more lands with the same name.",
+          "implementation": ["explicitly unsupported; same-name land restriction omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d04d2434-121e-4420-abfc-fa21ad5577c3": {
+      "name": "Shard of the Void Dragon",
+      "oracleSha256": "fd95a3c55790914954c24c7f1db5acb38bf6d3721993864206f3541446b7f389",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever an artifact is put into a graveyard from the battlefield or is put into exile from the battlefield, put two +1/+1 counters on this creature.",
+          "implementation": ["explicitly unsupported; exile-from-battlefield omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5924cbb0-19b5-449c-a7c5-722e744a54f8": {
+      "name": "The War in Heaven",
+      "oracleSha256": "88d4102eb65da82a8c6d1619a81105566ca397c2832e97435b7ba4c5e7ba6c93",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "I — You draw three cards and you lose 3 life.",
+          "implementation": [
+            "explicitly unsupported; saga chapters implemented as enter/upkeep/end-step"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8cd45064-2ad9-4247-902e-aefaf3bc1a43": {
+      "name": "Their Number Is Legion",
+      "oracleSha256": "41b6712d088b044a1c75a4ef825006b3774b32f673850f48bb207b10e00e24a6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Create X tapped 2/2 black Necron Warrior artifact creature tokens, then you gain life equal to the number of artifacts you control. Exile this spell.\nYou may cast this card from your graveyard.",
+          "implementation": ["explicitly unsupported; tokens not tapped; graveyard cast omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "27a4b633-5a62-4d8c-8cc6-44959c311de9": {
+      "name": "Cryptek",
+      "oracleSha256": "0e2e938f02e241942dfec466a4126d540bde0e05bf063a6dcfadfec206b85666",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When that creature dies this turn, return it to the battlefield tapped under your control.",
+          "implementation": ["explicitly unsupported; delayed return omits entering tapped"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "473a7998-669d-4181-83fe-f178a2e781f0": {
+      "name": "Out of the Tombs",
+      "oracleSha256": "92a08ff6d3a9267818cc43e08dfba9d1ee239824bc0c12d14cc8fa60d4d15c0b",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it.",
+          "implementation": ["explicitly unsupported; enters-with two eon counters is authored"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b410f294-cbb6-4016-981f-808fd9b7bbae": {
+      "name": "Resurrection Orb",
+      "oracleSha256": "ef8c39d782702899614fb8e31035302042c3f3f55ddf16c655dce339079c2734",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever equipped creature dies, return that card to the battlefield under its owner's control at the beginning of the next end step.",
+          "implementation": [
+            "explicitly unsupported; return is under equipment controller not owner"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "eedd5a17-d0fe-4a13-8f2c-f343bfa43f92": {
+      "name": "Shard of the Nightbringer",
+      "oracleSha256": "4c7f7779f494bcf3ef533a08cb6e5c2569a29f7845c354e2d31bb827a925ae3a",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, if you cast it, target opponent loses half their life, rounded up.",
+          "implementation": ["explicitly unsupported; if-you-cast-it intervening if omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9a63f950-2e8a-4617-896c-1d0af538dbc7": {
+      "name": "Szarekh, the Silent King",
+      "oracleSha256": "7e4537aad0a0f57b009017436728f0440b1359bbfd15b6dd33c5e3715ded8cee",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may put an artifact creature card or Vehicle card from among the cards milled this way into your hand.",
+          "implementation": [
+            "explicitly unsupported; any graveyard artifact creature; Vehicle omitted"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "986f510c-e2ec-423e-a443-51a169939558": {
+      "name": "Tomb Fortress",
+      "oracleSha256": "65ac436976204aa19616a5462be74a04d8081dd30adaddfeedfe8b3fcaef5329",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Mill four cards, then return a creature card from your graveyard to the battlefield.",
+          "implementation": ["explicitly unsupported; return is a target chosen before mill"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d6b2c998-a226-426c-a40d-6e6007041bfe": {
+      "name": "Mask of Memory",
+      "oracleSha256": "cb2782319793f55a873e6e3173ae3b04e5bf04806f7b0eb4b96a490a338f0310",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever equipped creature deals combat damage to a player, you may draw two cards. If you do, discard a card.",
+          "implementation": [
+            "explicitly unsupported; any equipped creature, not this Equipment's creature"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7388a797-d40d-4783-a281-d17bc159b856": {
+      "name": "Sautekh Immortal",
+      "oracleSha256": "26aff26dc163a5d13ad98195d74dcfd5d2260ab0cfad68928b3ac90c457ec21a",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "This creature enters with a +1/+1 counter on it for each creature that died this turn.",
+          "implementation": [
+            "explicitly unsupported; enters-with implemented as an enters trigger"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1ef3b48a-55ef-422e-ac7f-e1c1057eec2c": {
+      "name": "Trazyn the Infinite",
+      "oracleSha256": "b76fab614968b5aa8e1655657cdcf4697853f3da4159a3e1c682929b226dd812",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "As long as Trazyn is on the battlefield, it has all activated abilities of all artifact cards in your graveyard.",
+          "implementation": ["explicitly unsupported; graveyard artifact mana abilities omitted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2f82b232-21ff-44cc-bc35-0999a1d1c52f": {
+      "name": "Lightning Runner",
+      "oracleSha256": "3c1a95336f34a682447de952888e4e51c9a8490195569c715edf15cbba6b2b43",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature attacks, you get {E}{E} (two energy counters), then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase.",
+          "implementation": ["explicitly unsupported; untapEach of all permanents you control"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ab1cc360-b9de-48d9-9983-4dfe4a7d2a37": {
+      "name": "Arcane Denial",
+      "oracleSha256": "7d764e957064fa08627fd48a85e1ea9aa50de341ffa09a88c2d36d0598156746",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell. Its controller may draw up to two cards at the beginning of the next turn's upkeep.\nYou draw a card at the beginning of the next turn's upkeep.",
+          "implementation": [
+            "explicitly unsupported; next-turn upkeep delayed trigger expires at this cleanup"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "295cd8e1-0830-46c1-9957-556afd4bcee6": {
+      "name": "Aetheric Amplifier",
+      "oracleSha256": "22243544923ec334e7ae37b5b5e30c9d3ba8372ba0dea881bcd3f07387177be6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{4}, {T}: Choose one. Activate only as a sorcery.",
+          "implementation": [
+            "explicitly unsupported; choose-one authored as two independent activations"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bcad5b83-5513-4455-a9c9-716281505eaa": {
+      "name": "Canoptek Spyder",
+      "oracleSha256": "53b215a10a556d1e72d4f977805f0cb972b18a035e0e0e3e8d4a9e928b9c5e20",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.",
+          "implementation": [
+            "explicitly unsupported; Vehicle selected as a type rather than a subtype"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "88600bd4-4dcc-4788-bba4-78b6cf5ad8f8": {
+      "name": "Peema Trailblazer",
+      "oracleSha256": "ac39b4f00910602a5d4f2038f9ed5a9c13f09de367d4c89bc66eaa8efc823f51",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control. (Activate each exhaust ability only once.)",
+          "implementation": ["explicitly unsupported; Exhaust omitted and extra tap cost"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "20f602b3-814f-406c-b7eb-2d1fc98f8cf1": {
+      "name": "Saheeli, Radiant Creator",
+      "oracleSha256": "c3c52f8f4ae7aef91f0fda26d391ddcb45e58756f6b37adfb85e48c84f27af06",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of combat on your turn, you may pay {E}{E}{E}. When you do, create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature in addition to its other types and has haste. Sacrifice it at the beginning of the next end step.",
+          "implementation": ["explicitly unsupported; copy target chosen before energy payment"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ab655810-f67e-4576-9174-35b16f5e3235": {
+      "name": "Saheeli, Sublime Artificer",
+      "oracleSha256": "6fd798237894874887cb134162018d34caaf1c7f9c4a7727abf76f02bc33f456",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.\n−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types.",
+          "implementation": ["explicitly unsupported; extra +1 loyalty ability not on the card"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b337c241-f2c4-48e3-a303-371b172fcd18": {
+      "name": "Attune with Aether",
+      "oracleSha256": "e1dc515b653e7e3f91dda25d2ed30a27208e28a623ab2be3604d643119e57c94",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} (two energy counters).",
+          "implementation": ["explicitly unsupported; search omits reveal"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "470ec98e-120c-446d-ade6-7d80aa836b55": {
+      "name": "Aetherworks Marvel",
+      "oracleSha256": "63bc77d8e82fbf5626d65d9995dabe5e599b43fc9327ab23c0074fc1ebbb8860",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{T}, Pay six {E}: Look at the top six cards of your library. You may cast a spell from among them without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+          "implementation": [
+            "explicitly unsupported; rest not random and skipped when none are castable"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4f63d306-cc14-405c-8424-d8990c670c74": {
+      "name": "Territorial Aetherkite",
+      "oracleSha256": "3106859a80bb17a69b816832c0e8eb6d49655fb09979542f8aee58130180f893",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, you get {E}{E} (two energy counters). Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature.",
+          "implementation": [
+            "explicitly unsupported; reflexive damage implemented as same-resolution then"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ea86abfa-6cab-4ef0-8463-34136fc25b59": {
+      "name": "Duplicant",
+      "oracleSha256": "bf22f39612d4a3841449f71d86cb6d9cce1a9a8fd8fdd5bfada28452772aa129",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Imprint — When this creature enters, you may exile target nontoken creature.",
+          "implementation": ["explicitly unsupported; optional exile is a required target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cd1eda60-53e4-44d0-9b2c-7a57395e291f": {
+      "name": "Conjurer's Closet",
+      "oracleSha256": "d80cdb0f2c13939c9ac36f2137931ba2cd340fb6e524f8906c038be6c7818b2c",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control.",
+          "implementation": [
+            "explicitly unsupported; untargeted blink among creatures you control"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1b5e6560-ff2e-4475-96cb-63f64c8a86db": {
+      "name": "Soul-Guide Lantern",
+      "oracleSha256": "93d00eeabc06f7b9cfb8d6d1ca01b8a6cce4ba7b83905a680d591c3aa5fb93ec",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{T}, Sacrifice this artifact: Exile each opponent's graveyard.\n{1}, {T}, Sacrifice this artifact: Draw a card.",
+          "implementation": ["explicitly unsupported; graveyard exile mashed with a free draw"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e91240bc-4a13-4131-9379-5ddac6555f4a": {
+      "name": "Adaptive Omnitool",
+      "oracleSha256": "9aa86291de387a49e0871732b0554f206016b51c875f1a00d90657b3af8b88c2",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever equipped creature attacks, look at the top six cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+          "implementation": ["explicitly unsupported; artifact put into hand without revealing"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0": {
+      "name": "Bespoke Battlewagon",
+      "oracleSha256": "17244fc3e0a51b50c27c6b7583124bd9d6773c9a102cea36f4055792ea885d21",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.\nCrew 4",
+          "implementation": [
+            "explicitly unsupported; Crew 4 dropped by replacement activatedAbilities"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8ba2a7ad-a09b-4f52-9c76-c70510dc4feb": {
+      "name": "Vastwood Surge",
+      "oracleSha256": "5922182fae289ab48ae49f025ac55977e4bf45975284d4d5b0663666de3fd5f5",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control.",
+          "implementation": ["explicitly unsupported; search omits reveal"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b9bacb46-fd1d-459b-81c2-d7d08fe73848": {
+      "name": "Dragon Tempest",
+      "oracleSha256": "cb94ffadd9ec7da7b016f68309f21ef28565cd589b728d83d2c5d33f41f84e13",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
+          "implementation": ["explicitly unsupported; damage source is this enchantment"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "85aa53e8-f062-4d02-bc69-1413f7f0dcf1": {
+      "name": "Kairi, the Swirling Sky",
+      "oracleSha256": "c157c1c01986c4c86651ae7c3cb70dfd09daf80ea13f016e3b0b1a351a020bcf",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Return any number of target nonland permanents with total mana value 6 or less to their owners' hands.",
+          "implementation": [
+            "explicitly unsupported; untargeted single bounce with no mana-value cap"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e9bc324e-c200-45ef-8b9b-52a61d0f7374": {
+      "name": "Hunting Wilds",
+      "oracleSha256": "b673b9cfa9797a896494a8d2751fe9cce08e1787a1e866d6b8b23ce3b3ba5804",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Search your library for up to two Forest cards, put them onto the battlefield tapped, then shuffle.",
+          "implementation": ["explicitly unsupported; search omits reveal"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ec6d52f9-1c8f-48da-951c-be8d7813c7be": {
+      "name": "Harvest Season",
+      "oracleSha256": "3f013020bdf1351d15c88eff85e1030be7f07537aff30256a911ba95125b7c9f",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.",
+          "implementation": ["explicitly unsupported; X counts all creatures you control"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c232d974-9c65-4bce-b045-e5a7cc0c62e0": {
+      "name": "Idol of Oblivion",
+      "oracleSha256": "3baa23cd967df7e2c0549ab91ce4f57a51d53fd1282487e1236073936643962b",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{T}: Draw a card. Activate only if you created a token this turn.\n{8}, {T}, Sacrifice this artifact: Create a 10/10 colorless Eldrazi creature token.",
+          "implementation": [
+            "explicitly unsupported; restriction is a resolution no-op; wrong Eldrazi token"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "aeec8e85-6571-4da6-8a48-f5d3985ca10b": {
+      "name": "Sylvan Reclamation",
+      "oracleSha256": "5682177705c6c6ef5b2dccfc5926514a68168bac41623daea143bf738b440274",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Exile up to two target artifacts and/or enchantments.",
+          "implementation": ["explicitly unsupported; up-to-two requires at least one target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3180ee4f-66d7-4b73-bc10-9ee0c790ec18": {
+      "name": "Flameblast Dragon",
+      "oracleSha256": "0e43fcdddaf97a13d2c8c714da6e70accf69f025681541279f217f29b9327663",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target.",
+          "implementation": ["explicitly unsupported; target chosen before pay X"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bb04f927-0348-4a14-9e74-381f18083f6a": {
+      "name": "Thunderbreak Regent",
+      "oracleSha256": "474f43d9d886bf106e263b10dd214cd579f62aa9dcd1e0e47df42c69b5a14657",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player.",
+          "implementation": ["explicitly unsupported; eventPlayer unset on becomes-targeted"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "63394e24-a456-4cc6-9885-8c62447b050a": {
+      "name": "Tyrant's Familiar",
+      "oracleSha256": "c5d073e500e8090f478e0095df9dde5215600f5bcb347d0fbdbbe526b8c020c4",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature attacks, it deals 7 damage to target creature defending player controls.",
+          "implementation": ["explicitly unsupported; eventPlayer is the attacking player"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "06b77a80-4968-4385-960a-fb66bb4faa94": {
+      "name": "Dragonkin Berserker",
+      "oracleSha256": "2ad5ad892794762553614df0cd73da106fe1c7e09c0aee7106dd925e95f1dab6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Boast abilities you activate cost {1} less to activate for each Dragon you control.",
+          "implementation": ["explicitly unsupported; reduction applies only to this creature"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "eb287c04-97f5-4e47-beb1-66cc7d15e748": {
+      "name": "Atarka Monument",
+      "oracleSha256": "da64902790a2ef3abc2b683d1d6a1cc6614dba635b4f543a4961885d6407785e",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{4}{R}{G}: This artifact becomes a 4/4 red and green Dragon artifact creature with flying until end of turn.",
+          "implementation": ["explicitly unsupported; animation omits red and green"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7": {
+      "name": "Mordant Dragon",
+      "oracleSha256": "5f4a39ae0545bf5d50bac488bb58ac3101bb6ac10eeb19f289e2159a39d40552",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls.",
+          "implementation": ["explicitly unsupported; optional rider is a required target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0a147009-a57c-4ac1-ab81-d8bd8b737631": {
+      "name": "Scourge of Valkas",
+      "oracleSha256": "b870fa6ef4866f453377d14c044c5ebdd8d5a336d798e8f6b63846df5bac377c",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
+          "implementation": [
+            "explicitly unsupported; damage source is this creature not the entering Dragon"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fc3e48c9-e303-435c-bdb1-7dc7881a9858": {
+      "name": "Karametra's Favor",
+      "oracleSha256": "fe49fa4bdb3ce143c1061103384fabaa3040916d9ca134f94284c26687062683",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Enchanted creature gets +1/+1 and has \"{T}: Add one mana of any color.\"",
+          "implementation": [
+            "explicitly unsupported; +1/+1 dropped when staticEffects are replaced"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "777b8ec4-a783-4297-96b7-4f200d0eb734": {
+      "name": "Return to Nature",
+      "oracleSha256": "fabfad3d3c71353543dc51eba22fda33136e020c811fd4d553b2dcace2fa28a0",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Choose one —\n• Destroy target artifact.\n• Destroy target enchantment.\n• Exile target card from a graveyard.",
+          "implementation": ["explicitly unsupported; choose-one still requires every mode target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f": {
+      "name": "Foe-Razer Regent",
+      "oracleSha256": "538901867581226afa96f2206428146725bae81b91a1120ce5a42696a415e4ea",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, you may have it fight target creature you don't control.",
+          "implementation": ["explicitly unsupported; optional fight still requires a target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1": {
+      "name": "Frontier Siege",
+      "oracleSha256": "1b195bc9d7e3f03e803eb4ad56d689fbd073b725d5ce8076b9998e0740982641",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
+          "implementation": ["explicitly unsupported; optional fight still requires a target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "80c26f58-04b0-4db0-b84e-9b136609abe0": {
+      "name": "Sarkhan, the Dragonspeaker",
+      "oracleSha256": "cf7a04d5ae77d44c11f0f771d031583a08bc13c5a3c0718a57561040fe967b40",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "+1: Until end of turn, Sarkhan, the Dragonspeaker becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.",
+          "implementation": ["explicitly unsupported; +1 omits legendary and red"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b6689782-08d8-48e1-a05d-cd040dfe85bc": {
+      "name": "Curse of Bounty",
+      "oracleSha256": "138e84680c701ef319c07022067fb1476e248e7bde9df9becb5039cf835a0e18",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever enchanted player is attacked, untap all nonland permanents you control. Each opponent attacking that player untaps all nonland permanents they control.",
+          "implementation": ["explicitly unsupported; only the attacking player untaps"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "761021ce-4559-464e-aa03-85c2fe78e267": {
+      "name": "Rishkar, Peema Renegade",
+      "oracleSha256": "d0ebd951555eaeb46229fdf0a02a614e3752b215aeafd80d90078ec75008f758",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.",
+          "implementation": ["explicitly unsupported; up-to-two requires at least one target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f55334d9-1ec2-4667-bf28-5a0384d6f053": {
+      "name": "Thunderfoot Baloth",
+      "oracleSha256": "ad245d778eb6fdf24778c3037b47c0b0bb89e80346f64557ce250b39123fb23f",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Lieutenant — As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.",
+          "implementation": [
+            "explicitly unsupported; lieutenant applies to all permanents you control"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5bb32efd-9e58-4021-bbda-4ffccfa1d601": {
+      "name": "Druid of Purification",
+      "oracleSha256": "ad0aec5a820bd47f7731dc2f6350d35f77a1277ebb5a26936dd47d863df62633",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, starting with you, each player may choose an artifact or enchantment you don't control. Destroy each permanent chosen this way.",
+          "implementation": [
+            "explicitly unsupported; each player chooses a permanent they do not control"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "61c89b11-65c9-4fda-bbcd-d84de25df801": {
+      "name": "Aether Hub",
+      "oracleSha256": "a6641d8a589b60feec25b6da189a097707da60158d6196778bc6365bcccf88ec",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{T}: Add {C}.\n{T}, Pay {E}: Add one mana of any color.",
+          "implementation": [
+            "explicitly unsupported; colorless mana is dropped when energy mana replaces manaAbilities"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cb377c27-39a6-42b4-8c89-80a9a2350e81": {
+      "name": "Solar Transformer",
+      "oracleSha256": "2a416da6016481cde18645f08b0a9c28b2da620d08fe234bb82abcf7ef8719a3",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{T}: Add {C}.\n{T}, Pay {E}: Add one mana of any color.",
+          "implementation": [
+            "explicitly unsupported; colorless mana is dropped when energy mana replaces manaAbilities"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4dcfd397-9d29-420c-8fd8-c7c2a99de122": {
+      "name": "Nullmage Shepherd",
+      "oracleSha256": "9778d0c0a47ec527656f5c9551f1708cfbf65ce71b0636143efe86c288b3ba1a",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Tap four untapped creatures you control: Destroy target artifact or enchantment.",
+          "implementation": [
+            "explicitly unsupported; the four creatures cannot include this creature"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "aaadfe41-b2be-4183-b45e-a70e53a59d2e": {
+      "name": "Retrofitter Foundry",
+      "oracleSha256": "39cf3707dcf66c91dc222d73e8ee28cb898c9969c597ae3c12a916d1b7537bc3",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{3}: Untap this artifact.\n{2}, {T}: Create a 1/1 colorless Servo artifact creature token.\n{1}, {T}, Sacrifice a Servo: Create a 1/1 colorless Thopter artifact creature token with flying.\n{T}, Sacrifice a Thopter: Create a 4/4 colorless Construct artifact creature token.",
+          "implementation": [
+            "explicitly unsupported; Servo creation is dropped when activatedAbilities are replaced"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "75564721-e4e9-463a-b49e-f0c7cd6f53a7": {
+      "name": "Cranial Plating",
+      "oracleSha256": "839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature gets +1/+0 for each artifact you control.\n{B}{B}: Attach this Equipment to target creature you control.\nEquip {1}",
+          "implementation": [
+            "explicitly unsupported; Equip {1} is dropped when attach replaces activatedAbilities"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c857de66-f4e0-4e97-ad01-fac623af8225": {
+      "name": "Tomb Blade",
+      "oracleSha256": "ff9a089b1474562a1dc75e86a4175fb3eaf92fffb089e5e1207ed1b2a90089cf",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice.",
+          "implementation": ["explicitly unsupported; combat-damage life loss targets any player"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2068185c-1b50-47d0-aa3f-bf505d199428": {
+      "name": "Dark Confidant",
+      "oracleSha256": "610cc74590705c15607689e64dd4afcb3eb4b411e256c58d99f39baa350377c2",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.",
+          "implementation": [
+            "explicitly unsupported; reveal-and-put-into-hand is implemented as a draw"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef": {
+      "name": "Living Death",
+      "oracleSha256": "9fdd5ecd5f37f4bd7362e93fbe6039b728aff07668f041473a208860ece1a1e5",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Each player exiles all creature cards from their graveyard, then sacrifices all creatures they control, then puts all cards they exiled this way onto the battlefield.",
+          "implementation": ["explicitly unsupported; battlefield creatures are not sacrificed"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e958144e-01bc-46ff-8f56-ddf2eb098630": {
+      "name": "Thundermaw Hellkite",
+      "oracleSha256": "6e4aa521c27b28fb2861e03abdda06a0e8b850bce340e5e4950ad313afe845f4",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures.",
+          "implementation": [
+            "explicitly unsupported; tap applies to all opposing fliers not the damaged set"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8b5cffd5-5db3-4151-9275-d91387554412": {
+      "name": "Cut a Deal",
+      "oracleSha256": "ebb114b6bfc41cef8114727a540ffd8b6f277c16b451d9652f5e2e1025a29b2d",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Each opponent draws a card, then you draw a card for each opponent who drew a card this way.",
+          "implementation": [
+            "explicitly unsupported; you draw for each opponent not those who drew"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50": {
+      "name": "Screams from Within",
+      "oracleSha256": "603a5285b42120672628369f049af0996b854d4928aab8bbaed3f809d63324a3",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When enchanted creature dies, return this card from your graveyard to the battlefield.",
+          "implementation": ["explicitly unsupported; return still requires an attach target"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33": {
+      "name": "Technomancer",
+      "oracleSha256": "19cbe3b23619d09af13644931417b1c3ab40deb1d3663febc590fcae248dd0f7",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, mill three cards, then return any number of artifact creature cards with total mana value 6 or less from your graveyard to the battlefield.",
+          "implementation": [
+            "explicitly unsupported; 0-mana cards are blocked after remaining hits 0"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d1421070-a3cc-4af3-bf91-0f97372f4161": {
+      "name": "Sunforger",
+      "oracleSha256": "0ae447b31437ff4e3964e1bf8803b551ef7725ee95a31e9d6b168e860bb57b0e",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature gets +4/+0.\n{R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost. Then shuffle.\nEquip {3}",
+          "implementation": ["explicitly unsupported; Equip {2} is authored against Equip {3}"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9b40faad-1b96-4461-89d8-9a207b58e832": {
+      "name": "Voice of Many",
+      "oracleSha256": "63a689cdc880b92b9c729e38b25e18cdb455d1c284bbd306e20cdb6e8fa787c7",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, draw a card for each opponent who controls fewer creatures than you.",
+          "implementation": ["explicitly unsupported; eliminated players still count as opponents"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67": {
+      "name": "Scavenging Ooze",
+      "oracleSha256": "5e3b74f8d24d0bbc052267d35ec3e142201a4101036888a29689867fbf42b971",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this creature and you gain 1 life.",
+          "implementation": ["explicitly unsupported; exile splices without a zone-change"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7514e401-7aa1-405d-9f7a-312b4e630cc2": {
+      "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
+      "oracleSha256": "b9acb862459f79265bf5d1f6f98bc3738698231ac1dfe57d4c8d83d74c0a7e54",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When Etali enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonland cards exiled this way without paying their mana costs.",
+          "implementation": ["explicitly unsupported; exile splices without a zone-change"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8": {
+      "name": "Chaos Warp",
+      "oracleSha256": "91d1633155fb401878a9c262aec1695bc6c94cf12b7c014d358242dac30f55d7",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "The owner of target permanent shuffles it into their library, then reveals the top card of their library. If it's a permanent card, they put it onto the battlefield.",
+          "implementation": ["explicitly unsupported; top card is not revealed"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "81dad7c5-5950-4c45-adb0-cf1a15a74250": {
+      "name": "Firkraag, Cunning Instigator",
+      "oracleSha256": "c4087982a8080ccc5e5214a58683928378c732ba9e32679700dd7e87a7299579",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card.",
+          "implementation": [
+            "explicitly unsupported; intervening-if checks Firkraag not the damaging creature"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "276eccd6-4a76-46e8-b604-94472e618115": {
+      "name": "Ghoulish Impetus",
+      "oracleSha256": "b0089bf388f7bbd729e9d11a028905de8849348049dff454e450cbd4183d9fdd",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "When enchanted creature dies, return this card to the battlefield at the beginning of the next end step.",
+          "implementation": ["explicitly unsupported; delayed Aura return does not attach"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "504cc26d-3fd5-4391-9d30-f0614e5c8bbc": {
+      "name": "Dream Pillager",
+      "oracleSha256": "c77de1b52cd703b40e1015265602902c371995eb96966056106bd5927ac5a998",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards.",
+          "implementation": ["explicitly unsupported; exiled lands can be played"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c549b0fd-1e08-4873-952e-a14dc45a0fd2": {
+      "name": "Champion of Lambholt",
+      "oracleSha256": "7ae06980c1fe8ea421f90e6a5b8485a93182c677e9ea37a94ab5511d11012f63",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Creatures with power less than this creature's power can't block creatures you control.\nWhenever another creature you control enters, put a +1/+1 counter on this creature.",
+          "implementation": ["explicitly unsupported; can't-block is hardcoded by card name"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e938ee4c-d5df-4d93-bd61-9e518fb1dc30": {
+      "name": "Conclave Tribunal",
+      "oracleSha256": "bead25eae71e919428001104ee03ad6fe6261144a909897511225298eb235fb9",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nWhen this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.",
+          "implementation": ["explicitly unsupported; convoke is never offered as a payment"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c": {
+      "name": "Hour of Reckoning",
+      "oracleSha256": "5eb44a788bb619b66c8ba3006f639178af53b512c0aedf77cbbbcee0c0e8c135",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nDestroy all nontoken creatures.",
+          "implementation": ["explicitly unsupported; convoke is never offered as a payment"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "70dc830e-d05b-4fc7-88dd-879e140b3fbf": {
+      "name": "Reality Shift",
+      "oracleSha256": "f5f201dcbde7712b8decf3ca31230879fb9c4d62218f3b033bba26c007c28439",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Exile target creature. Its controller manifests the top card of their library. (That player puts the top card of their library onto the battlefield face down as a 2/2 creature. If it's a creature card, it can be turned face up any time for its mana cost.)",
+          "implementation": ["explicitly unsupported; manifest never offers turn-face-up"],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cd0c8db0-67ee-483b-8298-455cce35fef7": {
+      "name": "Iron Apprentice",
+      "oracleSha256": "46fcccb41b003c4e811243f737759ceade7e071cb7fc8852b48df71a94e0d680",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "This creature enters with a +1/+1 counter on it.\nWhen this creature dies, if it had counters on it, put those counters on target creature you control.",
+          "implementation": [
+            "explicitly unsupported; dies intervening-if checks the battlefield after this creature has left"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d8df9813-0376-4d30-8cdc-30451fb67726": {
+      "name": "Will of the Mardu",
+      "oracleSha256": "282fc2b19d0d9b74ca39e2fdeeaee0e14de5314c02b3dba2cde7f55bfc813e5e",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Choose one. If you control a commander as you cast this spell, you may choose both instead.",
+          "implementation": [
+            "explicitly unsupported; choose-both requires owning and controlling your commander"
+          ],
+          "engineTestIds": ["catalog-audit-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6f4ac4a4-53ec-4bc9-8f5c-d4b801d867b2": {
+      "name": "Grave Pact",
+      "oracleSha256": "95b1368f1aaf0c60f22dc006f5ffaf16c914c304264770543b7f60cd522b105a",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever a creature you control dies, each other player sacrifices a creature of their choice.",
+          "implementation": [
+            "dies trigger on creatures you control",
+            "sacrificeOneEachOpponent creature"
+          ],
+          "engineTestIds": [
+            "grave-pact-your-creature-dies-opponents-sacrifice",
+            "grave-pact-opponent-creature-dies-no-trigger",
+            "grave-pact-no-creature-to-sacrifice"
+          ],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "366a218e-84d3-4cf9-bbc8-f2f8ecce92a3": {
+      "name": "Herald of Secret Streams",
+      "oracleSha256": "6b4d444a6d00b905def277af0d239e2d03b82ed76db22978a02e438eee9d2e0b",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures you control with +1/+1 counters on them can't be blocked.",
+          "implementation": ["layer-6 setCantBeBlocked on your creatures with +1/+1"],
+          "engineTestIds": [
+            "herald-plus-one-cant-be-blocked",
+            "herald-no-counter-can-be-blocked",
+            "herald-opponent-plus-one-can-be-blocked",
+            "herald-combat-block-menu"
+          ],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9bcaf141-1f1f-491f-aced-13dc093b9e2c": {
+      "name": "Pawn of Ulamog",
+      "oracleSha256": "af8acd17fe57bdd54672595ecfec07557ed5fec55cc3c9d15a2a1ff578d67358",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature or another nontoken creature you control dies, you may create a 0/1 colorless Eldrazi Spawn creature token. It has \"Sacrifice this token: Add {C}.\"",
+          "implementation": [
+            "optional nontoken-you-control dies trigger",
+            "ELDRAZI_SPAWN_0_1 sacrificeSelf for {C}"
+          ],
+          "engineTestIds": [
+            "pawn-nontoken-dies-accept-spawn",
+            "pawn-nontoken-dies-decline",
+            "pawn-token-dies-no-trigger",
+            "pawn-opponent-dies-no-trigger",
+            "pawn-self-dies-may-spawn",
+            "pawn-spawn-sac-for-colorless"
+          ],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "137b5708-50a9-4f4c-84e6-9043be9f1989": {
+      "name": "Anathemancer",
+      "oracleSha256": "a604568f3e0a07b568182481d569107549e6b1071631584e8f661e4eb616081f",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, it deals damage to target player equal to the number of nonbasic lands that player controls.",
+          "implementation": ["dealDamageNonbasicLands targeting a player"],
+          "engineTestIds": [
+            "anathemancer-etb-nonbasic-damage",
+            "anathemancer-basics-deal-zero",
+            "anathemancer-normal-etb-targets-player"
+          ],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Unearth {5}{B}{R}",
+          "implementation": ["interpreted graveyard activated ability, sorcery timing"],
+          "engineTestIds": ["anathemancer-unearth-stays-interpreted"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8f2c8498-5b10-4ec7-8678-598c90987556": {
+      "name": "Disciple of Bolas",
+      "oracleSha256": "92ab227dd89d69ae9d3d94f70245c3c2db6cee90216cb6a39c10fdda47324338",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, sacrifice another creature. You gain X life and draw X cards, where X is that creature's power.",
+          "implementation": ["sacrificeAndDrawForPower another creature"],
+          "engineTestIds": [
+            "disciple-sacrifice-other-draw-life",
+            "disciple-cannot-sacrifice-self",
+            "disciple-normal-etb-sacrifices-other"
+          ],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d09c9cba-fdd2-479b-ad5d-d05181c3e3f9": {
+      "name": "Fierce Guardianship",
+      "oracleSha256": "bed73877ab5abe9f0e996cfb5dcd30da8730631557ce1d42b9238e6660be1a7c",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target noncreature spell.",
+          "implementation": ["counter noncreatureSpell without opponent restriction"],
+          "engineTestIds": [
+            "fierce-models-any-noncreature-and-commander-free-cast",
+            "fierce-counters-noncreature-including-own",
+            "fierce-normal-cast-counters-stack-spell"
+          ],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "If you control a commander, you may cast this spell without paying its mana cost.",
+          "implementation": ["commanderFreeCast"],
+          "engineTestIds": ["fierce-free-cast-requires-controlling-a-commander"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "77807103-bcd5-479f-bedd-f5d97aa6d3d2": {
+      "name": "Forge of Heroes",
+      "oracleSha256": "b3c938ef77cde5231aae8b1bdd9f449aac40013646206f61171c16679c2885c5",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}: Add {C}.",
+          "implementation": ["manaAbilities {C}"],
+          "engineTestIds": ["forge-mana-ability-kept"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "{T}: Choose target commander that entered this turn. Put a +1/+1 counter on it if it's a creature and a loyalty counter on it if it's a planeswalker.",
+          "implementation": ["putCounterByPermanentType on isCommander enteredThisTurn"],
+          "engineTestIds": [
+            "forge-counters-commander-entered-this-turn",
+            "forge-rejects-stale-commander-and-noncommander"
+          ],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "73413bd5-8c40-4d45-8f05-c20c39ee4017": {
+      "name": "Madame Null, Power Broker",
+      "oracleSha256": "ecce90e398a9e1b95406e24aef4c745d0798766a21b1477bcda9253a7bdda293",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever another creature you control enters, you may pay life equal to its power. If you do, put that many +1/+1 counters on it.",
+          "implementation": [
+            "mayPayLifeForTriggerPowerAndCounter looking up the entering creature by cardId"
+          ],
+          "engineTestIds": [
+            "madame-null-pay-life-for-counters",
+            "madame-null-decline",
+            "madame-null-not-self-or-opponent"
+          ],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1b3e841e-0f8f-467d-9983-f9b8d081a67f": {
+      "name": "Mahadi, Emporium Master",
+      "oracleSha256": "a30b4eb0457c37784311162d42413ea17546cc3f1b4ac7864fecb5e721713fd2",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your end step, create a Treasure token for each creature that died this turn.",
+          "implementation": ["createToken TREASURE count creaturesDiedThisTurn on your end step"],
+          "engineTestIds": [
+            "mahadi-end-step-treasures-for-deaths",
+            "mahadi-no-deaths-no-treasures",
+            "mahadi-not-on-opponent-end-step"
+          ],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    }
+  }
+}

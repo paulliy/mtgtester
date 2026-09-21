@@ -351,7 +351,10 @@ describe('what still fails closed', () => {
     // committed snapshot of those, and the CI-safe stand-in for the bulk cache.
     const snapshot = JSON.parse(
       readFileSync(join(import.meta.dirname, 'fixtures', 'interpret-defs.json'), 'utf8'),
-    ) as { name: string; manaAbilities?: { costs?: { kind: string; cost?: { x?: number } }[] }[] }[];
+    ) as {
+      name: string;
+      manaAbilities?: { costs?: { kind: string; cost?: { x?: number } }[] }[];
+    }[];
     const offenders = snapshot
       .filter((def) =>
         (def.manaAbilities ?? []).some((a) =>

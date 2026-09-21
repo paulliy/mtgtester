@@ -39,7 +39,11 @@ describe('OpenAiCompatibleClient', () => {
         choices: [
           {
             message: {
-              content: JSON.stringify({ requestId: 'req-1', actionId: 0, note: 'Passing priority' }),
+              content: JSON.stringify({
+                requestId: 'req-1',
+                actionId: 0,
+                note: 'Passing priority',
+              }),
             },
           },
         ],
@@ -47,7 +51,10 @@ describe('OpenAiCompatibleClient', () => {
       }),
     });
 
-    const client = new OpenAiCompatibleClient(DEFAULT_AI_CONFIG, mockFetch as unknown as typeof fetch);
+    const client = new OpenAiCompatibleClient(
+      DEFAULT_AI_CONFIG,
+      mockFetch as unknown as typeof fetch,
+    );
     const { response, meta } = await client.requestDecision(fixturePrompt(), fixtureRequest());
 
     expect(response.actionId).toBe(0);
@@ -73,7 +80,9 @@ describe('OpenAiCompatibleClient', () => {
     );
 
     await client.requestDecision(fixturePrompt(), fixtureRequest());
-    const call = mockFetch.mock.calls.find((entry) => (entry[0] as string).includes('/chat/completions'))!;
+    const call = mockFetch.mock.calls.find((entry) =>
+      (entry[0] as string).includes('/chat/completions'),
+    )!;
     const body = JSON.parse((call[1] as RequestInit).body as string);
     expect(body.provider).toMatchObject({
       preferred_max_latency: 7,
@@ -88,14 +97,18 @@ describe('OpenAiCompatibleClient', () => {
         choices: [
           {
             message: {
-              content: 'Sure! Here is the JSON response:\n```json\n{\n  "action_id": 1,\n  "note": "Casting spell"\n}\n```\nHope that helps!',
+              content:
+                'Sure! Here is the JSON response:\n```json\n{\n  "action_id": 1,\n  "note": "Casting spell"\n}\n```\nHope that helps!',
             },
           },
         ],
       }),
     });
 
-    const client = new OpenAiCompatibleClient(DEFAULT_AI_CONFIG, mockFetch as unknown as typeof fetch);
+    const client = new OpenAiCompatibleClient(
+      DEFAULT_AI_CONFIG,
+      mockFetch as unknown as typeof fetch,
+    );
     const { response } = await client.requestDecision(fixturePrompt(), fixtureRequest());
 
     expect(response.actionId).toBe(1);
@@ -137,7 +150,9 @@ describe('OpenAiCompatibleClient', () => {
           code: 429,
           message: 'You exceeded your current quota, limit: 500, model: model-a',
           status: 'RESOURCE_EXHAUSTED',
-          details: [{ violations: [{ quotaId: 'GenerateRequestsPerDayPerProjectPerModel-FreeTier' }] }],
+          details: [
+            { violations: [{ quotaId: 'GenerateRequestsPerDayPerProjectPerModel-FreeTier' }] },
+          ],
         },
       },
     ]);
@@ -149,7 +164,9 @@ describe('OpenAiCompatibleClient', () => {
       }
       return {
         ok: true,
-        json: async () => ({ choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }] }),
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }],
+        }),
       };
     });
 
@@ -206,7 +223,9 @@ describe('OpenAiCompatibleClient', () => {
           code: 429,
           message: 'Quota exceeded for metric: requests, limit: 15',
           status: 'RESOURCE_EXHAUSTED',
-          details: [{ violations: [{ quotaId: 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier' }] }],
+          details: [
+            { violations: [{ quotaId: 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier' }] },
+          ],
         },
       },
     ]);
@@ -218,7 +237,9 @@ describe('OpenAiCompatibleClient', () => {
       }
       return {
         ok: true,
-        json: async () => ({ choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }] }),
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }],
+        }),
       };
     });
 
@@ -246,7 +267,9 @@ describe('OpenAiCompatibleClient', () => {
       }
       return {
         ok: true,
-        json: async () => ({ choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }] }),
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }],
+        }),
       };
     });
 
@@ -270,21 +293,30 @@ describe('OpenAiCompatibleClient', () => {
    */
   describe('reasoning parameters', () => {
     function bodyOf(mockFetch: ReturnType<typeof vi.fn>): Record<string, unknown> {
-      const chatCall = mockFetch.mock.calls.find((c) => (c[0] as string).includes('/chat/completions'));
+      const chatCall = mockFetch.mock.calls.find((c) =>
+        (c[0] as string).includes('/chat/completions'),
+      );
       return JSON.parse((chatCall![1] as RequestInit).body as string) as Record<string, unknown>;
     }
 
     function okFetch() {
       return vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }] }),
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }],
+        }),
       });
     }
 
     async function send(overrides: Partial<AiConfig>): Promise<Record<string, unknown>> {
       const mockFetch = okFetch();
       const client = new OpenAiCompatibleClient(
-        { ...DEFAULT_AI_CONFIG, models: ['vendor/model'], filterNonCachingProviders: false, ...overrides },
+        {
+          ...DEFAULT_AI_CONFIG,
+          models: ['vendor/model'],
+          filterNonCachingProviders: false,
+          ...overrides,
+        },
         mockFetch as unknown as typeof fetch,
       );
       await client.requestDecision(fixturePrompt(), fixtureRequest());
@@ -321,7 +353,7 @@ describe('OpenAiCompatibleClient', () => {
       expect(body['reasoning']).toEqual({ effort: 'high', exclude: true });
     });
 
-    it('uses OpenAI\'s reasoning_effort — and omits it entirely when off — off OpenRouter', async () => {
+    it("uses OpenAI's reasoning_effort — and omits it entirely when off — off OpenRouter", async () => {
       const groq = { baseUrl: 'https://api.groq.com/openai/v1', models: ['openai/gpt-oss-120b'] };
 
       const on = await send({ ...groq, reasoningEnabled: true, reasoningEffort: 'low' });
@@ -422,10 +454,11 @@ describe('OpenAiCompatibleClient', () => {
 
     await client.requestDecision(fixturePrompt(), fixtureRequest());
 
-    const chatCall = mockFetch.mock.calls.find((c) => (c[0] as string).includes('/chat/completions'));
+    const chatCall = mockFetch.mock.calls.find((c) =>
+      (c[0] as string).includes('/chat/completions'),
+    );
     expect(chatCall).toBeDefined();
     const sentBody = JSON.parse((chatCall![1] as RequestInit).body as string);
     expect(sentBody.provider).toEqual({ ignore: ['NonCachingProvider'] });
   });
 });
-

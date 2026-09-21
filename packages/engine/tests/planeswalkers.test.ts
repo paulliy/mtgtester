@@ -38,7 +38,10 @@ const sivitri = () =>
 
 function pod(seed = 'planeswalkers-test'): GameContext {
   const ctx = createGame(
-    gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
@@ -116,7 +119,12 @@ describe('Increment 17: Planeswalkers & Hybrid Mana', () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: kioraPerm.cardId, name: kioraPerm.name, oracleId: kioraPerm.oracleId, controllerId: 'P1' },
+        {
+          cardId: kioraPerm.cardId,
+          name: kioraPerm.name,
+          oracleId: kioraPerm.oracleId,
+          controllerId: 'P1',
+        },
         pending.ability,
         [],
       ),
@@ -177,14 +185,20 @@ describe('CR 606.3: loyalty ability activation is once per PERMANENT per turn', 
         loyalty: '3',
       }),
     );
-    const creature = spawn(ctx, 'P1', oracle({ name: 'Bear', typeLine: 'Creature — Bear', power: '2', toughness: '2' }));
+    const creature = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Bear', typeLine: 'Creature — Bear', power: '2', toughness: '2' }),
+    );
 
     const before = computePriorityOptions(ctx, p1Of(ctx));
     expect(before.some((o) => o.description.includes('+1/+1 counter'))).toBe(true);
 
     let activated = false;
     pump(runPrioritySequence(ctx), (d) => {
-      const i = !activated ? d.options.findIndex((o) => o.description.includes('+1/+1 counter')) : -1;
+      const i = !activated
+        ? d.options.findIndex((o) => o.description.includes('+1/+1 counter'))
+        : -1;
       if (i >= 0) {
         activated = true;
         return { index: i, targets: new Map([[0, creature.id]]) };

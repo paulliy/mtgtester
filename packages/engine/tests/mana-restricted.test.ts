@@ -156,10 +156,7 @@ describe('the restriction is a property of the payment, not the pip', () => {
   it('spends the restricted mana first out of a mixed pool', () => {
     // Restricted mana is strictly less useful than unrestricted mana of the same symbol, so
     // spending it first can never lose a payment the player could otherwise have made.
-    const mixed: ManaEntry[] = [
-      { symbol: 'G' },
-      { symbol: 'G', restriction: dragonsOnly },
-    ];
+    const mixed: ManaEntry[] = [{ symbol: 'G' }, { symbol: 'G', restriction: dragonsOnly }];
     const spent = selectEntriesToSpend(mixed, parseManaCost('{G}').cost!);
 
     expect(spent).toHaveLength(1);
@@ -241,7 +238,9 @@ describe('mana spend triggers', () => {
     const { queued } = spendOn(dragon());
 
     expect(queued).toHaveLength(1);
-    expect(queued[0]?.ability.effects).toEqual([{ op: 'gainLife', amount: { kind: 'const', n: 2 } }]);
+    expect(queued[0]?.ability.effects).toEqual([
+      { op: 'gainLife', amount: { kind: 'const', n: 2 } },
+    ]);
   });
 
   it('does NOT fire when the same mana pays for something else', () => {
@@ -330,10 +329,7 @@ describe('persistent mana (CR 500.4 exception)', () => {
   it('survives the end of a step but not the end of the turn', () => {
     const ctx = pod();
     const player = p1(ctx);
-    addMana(player, [
-      { symbol: 'R', persistent: true },
-      { symbol: 'G' },
-    ]);
+    addMana(player, [{ symbol: 'R', persistent: true }, { symbol: 'G' }]);
     expect(player.manaPool).toEqual({ W: 0, U: 0, B: 0, R: 1, G: 1, C: 0 });
 
     // End of a step: ordinary mana drains, persistent mana stays.

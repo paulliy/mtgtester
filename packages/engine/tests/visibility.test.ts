@@ -121,7 +121,7 @@ describe('PlayerView visibility (brief §7.1)', () => {
     expect(JSON.stringify(view)).not.toContain('Deep Secret');
   });
 
-  it('exposes battlefield rules text, but never a face-down permanent\'s (§7.1, §7.4)', () => {
+  it("exposes battlefield rules text, but never a face-down permanent's (§7.1, §7.4)", () => {
     const ctx = createGame(secretPod());
     const menace = oracle({
       name: 'Public Threat',

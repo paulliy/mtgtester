@@ -65,7 +65,8 @@ describe('anthems and lords (ADR 0008)', () => {
       manaCost: '{2}{W}{W}',
       power: '2',
       toughness: '2',
-      oracleText: 'Other creatures you control get +1/+1.\n{1}{W}: Creatures you control gain flying until end of turn.',
+      oracleText:
+        'Other creatures you control get +1/+1.\n{1}{W}: Creatures you control gain flying until end of turn.',
     });
     const def = interpretCard(kongming);
     expect(def.modeled).toBe(true);
@@ -421,14 +422,11 @@ describe('verbatim oracle text from printed cards (ADR 0008)', () => {
         manaCost: '{1}{G}{G}',
         power: '2',
         toughness: '2',
-        oracleText:
-          'Other Elves you control get +1/+1.\nCumulative upkeep {1}',
+        oracleText: 'Other Elves you control get +1/+1.\nCumulative upkeep {1}',
       }),
     );
     expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons).toEqual([
-      'unrecognized rules text: "Cumulative upkeep {1}"',
-    ]);
+    expect(def.unmodeledReasons).toEqual(['unrecognized rules text: "Cumulative upkeep {1}"']);
     expect(def.staticEffects).toHaveLength(1);
   });
 

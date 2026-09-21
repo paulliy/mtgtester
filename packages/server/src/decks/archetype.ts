@@ -16,13 +16,7 @@ import { ALL_COLORS } from '@mtg/shared';
 import type { Color, OracleCard } from '@mtg/shared';
 
 /** Broad plan the deck executes. `midrange` is the honest answer when nothing else stands out. */
-export type ArchetypeStrategy =
-  | 'aggro'
-  | 'midrange'
-  | 'control'
-  | 'combo'
-  | 'ramp'
-  | 'stax';
+export type ArchetypeStrategy = 'aggro' | 'midrange' | 'control' | 'combo' | 'ramp' | 'stax';
 
 /** What the deck is built around, when one signal is clearly dominant. */
 export type ArchetypeTheme =
@@ -93,21 +87,45 @@ export interface ArchetypeInput {
 // ── Colour identity names ────────────────────────────────────────────────────────────────────
 
 const MONO: Record<string, string> = {
-  W: 'Mono-White', U: 'Mono-Blue', B: 'Mono-Black', R: 'Mono-Red', G: 'Mono-Green',
+  W: 'Mono-White',
+  U: 'Mono-Blue',
+  B: 'Mono-Black',
+  R: 'Mono-Red',
+  G: 'Mono-Green',
 };
 
 const PAIRS: Record<string, string> = {
-  WU: 'Azorius', WB: 'Orzhov', WR: 'Boros', WG: 'Selesnya', UB: 'Dimir',
-  UR: 'Izzet', UG: 'Simic', BR: 'Rakdos', BG: 'Golgari', RG: 'Gruul',
+  WU: 'Azorius',
+  WB: 'Orzhov',
+  WR: 'Boros',
+  WG: 'Selesnya',
+  UB: 'Dimir',
+  UR: 'Izzet',
+  UG: 'Simic',
+  BR: 'Rakdos',
+  BG: 'Golgari',
+  RG: 'Gruul',
 };
 
 const TRIPLES: Record<string, string> = {
-  WUB: 'Esper', WUR: 'Jeskai', WUG: 'Bant', WBR: 'Mardu', WBG: 'Abzan',
-  WRG: 'Naya', UBR: 'Grixis', UBG: 'Sultai', URG: 'Temur', BRG: 'Jund',
+  WUB: 'Esper',
+  WUR: 'Jeskai',
+  WUG: 'Bant',
+  WBR: 'Mardu',
+  WBG: 'Abzan',
+  WRG: 'Naya',
+  UBR: 'Grixis',
+  UBG: 'Sultai',
+  URG: 'Temur',
+  BRG: 'Jund',
 };
 
 const COLOR_WORD: Record<string, string> = {
-  W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green',
+  W: 'White',
+  U: 'Blue',
+  B: 'Black',
+  R: 'Red',
+  G: 'Green',
 };
 
 /**
@@ -130,17 +148,21 @@ export function identityName(identity: readonly Color[]): string {
 
 // ── Oracle-text signals ──────────────────────────────────────────────────────────────────────
 
-const RAMP = /\badd\s\{|\badd (one|two|three|\w+) mana\b|search your library for (a|an|up to \w+)[^.]{0,40}\bland/i;
+const RAMP =
+  /\badd\s\{|\badd (one|two|three|\w+) mana\b|search your library for (a|an|up to \w+)[^.]{0,40}\bland/i;
 // "any target" is the modern templating and by far the more common of the two; matching only
 // "to target" silently scores a burn-heavy deck as having no removal at all.
-const SPOT_REMOVAL = /\b(destroy|exile) target\b|target creature gets -|deals? (\d+|X) damage to (any target|target)/i;
+const SPOT_REMOVAL =
+  /\b(destroy|exile) target\b|target creature gets -|deals? (\d+|X) damage to (any target|target)/i;
 const BOARD_WIPE = /\b(destroy|exile) all\b|each (creature|player sacrifices)|all creatures get -/i;
 const CARD_DRAW = /\bdraw (a|one|two|three|four|five|\d+) cards?\b/i;
-const TUTOR = /search your library for (a|an|up to \w+)[^.]{0,60}\b(card|creature|artifact|enchantment|instant|sorcery)\b/i;
+const TUTOR =
+  /search your library for (a|an|up to \w+)[^.]{0,60}\b(card|creature|artifact|enchantment|instant|sorcery)\b/i;
 const COUNTERSPELL = /\bcounter target\b/i;
 const RECURSION = /return .{0,40}from (your|a) graveyard/i;
 const SAC_OUTLET = /\bsacrifice (a|an|another)\b/i;
-const STAX = /\b(don't|doesn't) untap\b|can't (attack|block|be cast|draw)|unless (that player|they|its controller) pays|costs \{\d+\} more/i;
+const STAX =
+  /\b(don't|doesn't) untap\b|can't (attack|block|be cast|draw)|unless (that player|they|its controller) pays|costs \{\d+\} more/i;
 
 const AGGRESSIVE = ['haste', 'trample', 'double strike', 'menace', 'first strike'];
 
@@ -200,10 +222,27 @@ function has(pattern: RegExp, text: string): boolean {
 
 export function extractFeatures(input: ArchetypeInput): ArchetypeFeatures {
   const features: ArchetypeFeatures = {
-    totalCards: 0, lands: 0, creatures: 0, instants: 0, sorceries: 0, artifacts: 0,
-    enchantments: 0, planeswalkers: 0, averageManaValue: 0, ramp: 0, spotRemoval: 0,
-    boardWipes: 0, cardDraw: 0, tutors: 0, counterspells: 0, recursion: 0, sacOutlets: 0,
-    stax: 0, aggressiveKeywords: 0, themeScores: {}, topSubtype: null,
+    totalCards: 0,
+    lands: 0,
+    creatures: 0,
+    instants: 0,
+    sorceries: 0,
+    artifacts: 0,
+    enchantments: 0,
+    planeswalkers: 0,
+    averageManaValue: 0,
+    ramp: 0,
+    spotRemoval: 0,
+    boardWipes: 0,
+    cardDraw: 0,
+    tutors: 0,
+    counterspells: 0,
+    recursion: 0,
+    sacOutlets: 0,
+    stax: 0,
+    aggressiveKeywords: 0,
+    themeScores: {},
+    topSubtype: null,
     commanderSharesTopSubtype: false,
   };
 

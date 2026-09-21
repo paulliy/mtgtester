@@ -28,10 +28,21 @@ const huntersProwess = (): ReturnType<typeof oracle> =>
   });
 
 const bear = (): ReturnType<typeof oracle> =>
-  oracle({ name: 'Test Bear', typeLine: 'Creature — Bear', manaCost: '{1}{G}', power: '2', toughness: '2' });
+  oracle({
+    name: 'Test Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{1}{G}',
+    power: '2',
+    toughness: '2',
+  });
 
 function pod(): GameContext {
-  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(6, forest) })), { seed: 'hunters-prowess' }));
+  const ctx = createGame(
+    gameConfig(
+      [0, 1].map(() => ({ cards: copies(6, forest) })),
+      { seed: 'hunters-prowess' },
+    ),
+  );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   return ctx;
@@ -49,7 +60,12 @@ describe("Hunter's Prowess", () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: 'prowess-1', name: "Hunter's Prowess", oracleId: def.oracleId, controllerId: 'P1' },
+        {
+          cardId: 'prowess-1',
+          name: "Hunter's Prowess",
+          oracleId: def.oracleId,
+          controllerId: 'P1',
+        },
         def.spellAbility!,
         [bearPerm.id],
       ),
@@ -67,7 +83,12 @@ describe("Hunter's Prowess", () => {
     pump(
       executeAbility(
         ctx,
-        { cardId: pending.sourceCardId, name: pending.sourceName, oracleId: pending.sourceOracleId, controllerId: pending.controllerId },
+        {
+          cardId: pending.sourceCardId,
+          name: pending.sourceName,
+          oracleId: pending.sourceOracleId,
+          controllerId: pending.controllerId,
+        },
         pending.ability,
         [],
         pending.triggerObjectCardId,

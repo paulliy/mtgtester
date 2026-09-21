@@ -226,7 +226,8 @@ describe('Engine Auto-Passing & Decision Optimizations', () => {
         name: 'Test Ramp',
         typeLine: 'Sorcery',
         manaCost: '{1}{G}',
-        oracleText: 'Search your library for a basic land card, put it onto the battlefield tapped.',
+        oracleText:
+          'Search your library for a basic land card, put it onto the battlefield tapped.',
       });
 
       const def = registerDef(ctx, rampCard);

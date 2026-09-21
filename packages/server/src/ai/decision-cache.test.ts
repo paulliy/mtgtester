@@ -56,14 +56,25 @@ describe('digestDecision', () => {
     ['available mana', () => makeView({ availableMana: { G: 3 } })],
     [
       'mana sources',
-      () => makeView({ manaSources: [{ name: 'Command Tower', symbols: ['W', 'U', 'B', 'R', 'G'], count: 1 }] }),
+      () =>
+        makeView({
+          manaSources: [{ name: 'Command Tower', symbols: ['W', 'U', 'B', 'R', 'G'], count: 1 }],
+        }),
     ],
     [
       'the battlefield',
       () =>
         makeView({
           battlefield: [
-            { id: 'p1', controller: 'P2', name: 'Tor Giant', power: 3, toughness: 3, tapped: false, status: [] },
+            {
+              id: 'p1',
+              controller: 'P2',
+              name: 'Tor Giant',
+              power: 3,
+              toughness: 3,
+              tapped: false,
+              status: [],
+            },
           ],
         }),
     ],

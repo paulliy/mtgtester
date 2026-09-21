@@ -7,6 +7,7 @@ import { useGameStore } from './stores/game';
 
 const cardPreview = useCardPreviewStore();
 const game = useGameStore();
+const showCardTestLab = import.meta.env['DEV'] === true;
 
 /**
  * Alt held while hovering a card = the "look closer" zoom. `window.blur` covers Alt-tabbing
@@ -42,6 +43,7 @@ onUnmounted(() => {
       <RouterLink to="/stats">Stats</RouterLink>
       <RouterLink to="/debug">Debug</RouterLink>
       <RouterLink to="/batch">Batch</RouterLink>
+      <RouterLink v-if="showCardTestLab" to="/card-test-lab">Card Test Lab</RouterLink>
       <span class="brand">MTG Commander AI Simulator</span>
     </nav>
     <main class="view">

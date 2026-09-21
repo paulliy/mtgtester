@@ -82,7 +82,9 @@ function runRealCombat(
 
   pump(runCombatPhase(ctx), (decision) => {
     if (decision.decisionType === 'declareAttackers') {
-      return declareAttacks(decision, (subjectId) => (attackerIds.includes(subjectId) ? 'P2' : null));
+      return declareAttacks(decision, (subjectId) =>
+        attackerIds.includes(subjectId) ? 'P2' : null,
+      );
     }
     if (decision.decisionType === 'declareBlockers') {
       return declareBlocks(decision, (subjectId) => blocks.get(subjectId) ?? null);
@@ -140,78 +142,49 @@ describe('CombatSnapshot parity with the engine (ADR 0024 Phase 7a)', () => {
     });
     const blocker = spawn(ctx, 'P2', keywordCreature('Wall', '', '{1}{W}', '3/3'));
     const snapshot: CombatSnapshot = {
-      attackers: [
-        { ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] },
-      ],
+      attackers: [{ ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] }],
       blockers: [{ ...snapshotOf(ctx, blocker), blocking: attacker.id }],
     };
-    expectParity(
-      runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])),
-      snapshot,
-    );
+    expectParity(runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])), snapshot);
   });
 
   it('first strike kills before the blocker can answer', () => {
     const ctx = pod('parity-first-strike');
-    const attacker = spawn(
-      ctx,
-      'P1',
-      keywordCreature('Duelist', 'First strike', '{1}{W}', '2/2'),
-      { summoningSick: false },
-    );
+    const attacker = spawn(ctx, 'P1', keywordCreature('Duelist', 'First strike', '{1}{W}', '2/2'), {
+      summoningSick: false,
+    });
     const blocker = spawn(ctx, 'P2', keywordCreature('Footman', '', '{1}{W}', '2/2'));
     const snapshot: CombatSnapshot = {
-      attackers: [
-        { ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] },
-      ],
+      attackers: [{ ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] }],
       blockers: [{ ...snapshotOf(ctx, blocker), blocking: attacker.id }],
     };
-    expectParity(
-      runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])),
-      snapshot,
-    );
+    expectParity(runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])), snapshot);
   });
 
   it('deathtouch kills a bigger blocker and survives it', () => {
     const ctx = pod('parity-deathtouch');
-    const attacker = spawn(
-      ctx,
-      'P1',
-      keywordCreature('Adder', 'Deathtouch', '{1}{W}', '1/4'),
-      { summoningSick: false },
-    );
+    const attacker = spawn(ctx, 'P1', keywordCreature('Adder', 'Deathtouch', '{1}{W}', '1/4'), {
+      summoningSick: false,
+    });
     const blocker = spawn(ctx, 'P2', keywordCreature('Ogre', '', '{1}{W}', '3/3'));
     const snapshot: CombatSnapshot = {
-      attackers: [
-        { ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] },
-      ],
+      attackers: [{ ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] }],
       blockers: [{ ...snapshotOf(ctx, blocker), blocking: attacker.id }],
     };
-    expectParity(
-      runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])),
-      snapshot,
-    );
+    expectParity(runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])), snapshot);
   });
 
   it('trample sends the excess over a single blocker (CR 702.19b)', () => {
     const ctx = pod('parity-trample');
-    const attacker = spawn(
-      ctx,
-      'P1',
-      keywordCreature('Behemoth', 'Trample', '{1}{W}', '5/5'),
-      { summoningSick: false },
-    );
+    const attacker = spawn(ctx, 'P1', keywordCreature('Behemoth', 'Trample', '{1}{W}', '5/5'), {
+      summoningSick: false,
+    });
     const blocker = spawn(ctx, 'P2', keywordCreature('Chump', '', '{1}{W}', '1/1'));
     const snapshot: CombatSnapshot = {
-      attackers: [
-        { ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] },
-      ],
+      attackers: [{ ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] }],
       blockers: [{ ...snapshotOf(ctx, blocker), blocking: attacker.id }],
     };
-    expectParity(
-      runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])),
-      snapshot,
-    );
+    expectParity(runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])), snapshot);
   });
 
   it('deathtouch plus trample: 1 is lethal, the rest tramples over', () => {
@@ -224,15 +197,10 @@ describe('CombatSnapshot parity with the engine (ADR 0024 Phase 7a)', () => {
     );
     const blocker = spawn(ctx, 'P2', keywordCreature('Guard', '', '{1}{W}', '4/4'));
     const snapshot: CombatSnapshot = {
-      attackers: [
-        { ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] },
-      ],
+      attackers: [{ ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] }],
       blockers: [{ ...snapshotOf(ctx, blocker), blocking: attacker.id }],
     };
-    expectParity(
-      runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])),
-      snapshot,
-    );
+    expectParity(runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])), snapshot);
   });
 
   it('indestructible survives lethal damage', () => {
@@ -240,42 +208,25 @@ describe('CombatSnapshot parity with the engine (ADR 0024 Phase 7a)', () => {
     const attacker = spawn(ctx, 'P1', keywordCreature('Smasher', '', '{1}{W}', '6/6'), {
       summoningSick: false,
     });
-    const blocker = spawn(
-      ctx,
-      'P2',
-      keywordCreature('Statue', 'Indestructible', '{1}{W}', '2/2'),
-    );
+    const blocker = spawn(ctx, 'P2', keywordCreature('Statue', 'Indestructible', '{1}{W}', '2/2'));
     const snapshot: CombatSnapshot = {
-      attackers: [
-        { ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] },
-      ],
+      attackers: [{ ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] }],
       blockers: [{ ...snapshotOf(ctx, blocker), blocking: attacker.id }],
     };
-    expectParity(
-      runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])),
-      snapshot,
-    );
+    expectParity(runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])), snapshot);
   });
 
   it('lifelink credits the attacker for damage dealt to a blocker', () => {
     const ctx = pod('parity-lifelink');
-    const attacker = spawn(
-      ctx,
-      'P1',
-      keywordCreature('Cleric', 'Lifelink', '{1}{W}', '3/3'),
-      { summoningSick: false },
-    );
+    const attacker = spawn(ctx, 'P1', keywordCreature('Cleric', 'Lifelink', '{1}{W}', '3/3'), {
+      summoningSick: false,
+    });
     const blocker = spawn(ctx, 'P2', keywordCreature('Shield', '', '{1}{W}', '1/5'));
     const snapshot: CombatSnapshot = {
-      attackers: [
-        { ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] },
-      ],
+      attackers: [{ ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] }],
       blockers: [{ ...snapshotOf(ctx, blocker), blocking: attacker.id }],
     };
-    expectParity(
-      runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])),
-      snapshot,
-    );
+    expectParity(runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]])), snapshot);
   });
 
   it('multi-block honours the attacker chosen damage division (CR 510.1c-d)', () => {
@@ -324,9 +275,7 @@ describe('CombatSnapshot parity with the engine (ADR 0024 Phase 7a)', () => {
     );
     const blocker = spawn(ctx, 'P2', keywordCreature('Sapling', '', '{1}{W}', '1/1'));
     const snapshot: CombatSnapshot = {
-      attackers: [
-        { ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] },
-      ],
+      attackers: [{ ...snapshotOf(ctx, attacker), defendingPlayer: 'P2', blockedBy: [blocker.id] }],
       blockers: [{ ...snapshotOf(ctx, blocker), blocking: attacker.id }],
     };
     const observed = runRealCombat(ctx, [attacker.id], new Map([[blocker.id, attacker.id]]));

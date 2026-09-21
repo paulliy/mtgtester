@@ -39,7 +39,7 @@ import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selec
 import { selectMatches, selectorIsEventOnly } from '../cards/selector';
 import { CREATURE_TYPES } from '../cards/creature-types';
 import { evaluateValue, isDynamicValue } from '../cards/value';
-import type { ValueScope } from '../cards/value';
+import type { LayerValueScope } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
 import { manaValueOf } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
@@ -98,9 +98,10 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
     if (source.faceDown) continue;
     const def = ctx.defs.get(source.oracleId);
     if (def === undefined) continue;
-    const printedStatics = source.transformed && def.backFace !== undefined
-      ? def.backFace.staticEffects
-      : def.staticEffects;
+    const printedStatics =
+      source.transformed && def.backFace !== undefined
+        ? def.backFace.staticEffects
+        : def.staticEffects;
     for (const s of printedStatics as StaticEffect[]) {
       // A selector that reads power cannot be a continuous effect's affected set: it would make
       // one 7d effect able to change another's, reinstating the dependency analysis `applyGroup`
@@ -195,6 +196,9 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       out.push({ applies, op: { layer: 6, addTrigger: eff.ability }, timestamp: eff.timestamp });
     } else if (eff.kind === 'becomeCreature' && eff.becomeCreature !== undefined) {
       const bc = eff.becomeCreature;
+      if (bc.setColors !== undefined) {
+        out.push({ applies, op: { layer: 5, setColors: bc.setColors }, timestamp: eff.timestamp });
+      }
       out.push({
         applies,
         op:
@@ -205,7 +209,12 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       });
       out.push({
         applies,
-        op: { layer: 7, sublayer: 'b', power: { kind: 'const', n: bc.power }, toughness: { kind: 'const', n: bc.toughness } },
+        op: {
+          layer: 7,
+          sublayer: 'b',
+          power: { kind: 'const', n: bc.power },
+          toughness: { kind: 'const', n: bc.toughness },
+        },
         timestamp: eff.timestamp,
       });
       for (const keyword of bc.addKeywords) {
@@ -257,7 +266,8 @@ export function candidateOf(
   // found, so `manaValueAtMost`/`manaValueAtLeast` correctly never match rather than matching
   // everything as mana value 0.
   const ownDef = ctx.defs.get(perm.oracleId);
-  const manaValue = ownDef === undefined ? undefined : perm.face === 'back' ? 0 : manaValueOf(ownDef.manaCost);
+  const manaValue =
+    ownDef === undefined ? undefined : perm.face === 'back' ? 0 : manaValueOf(ownDef.manaCost);
 
   return {
     cardId: perm.cardId,
@@ -276,6 +286,8 @@ export function candidateOf(
     isEnchanted,
     isEquipped,
     inCombat: perm.attacking !== null || perm.blocking !== null,
+    combatRole: perm.attacking !== null ? 'attacking' : perm.blocking !== null ? 'blocking' : null,
+    attackingDefenderId: perm.attacking,
     hasAnyCounter: Object.values(perm.counters).some((c) => c > 0),
     counters: perm.counters,
   };
@@ -310,11 +322,12 @@ function scopeOf(
   ctx: GameContext,
   work: WorkMap,
   effect: LayerEffect,
-): Pick<ValueScope, 'controllerId' | 'countPermanents'> | undefined {
+): LayerValueScope | undefined {
   if (effect.applies.kind !== 'selector') return undefined;
   const source = effect.applies.source;
   return {
     controllerId: source.controllerId,
+    sourceCounters: work.get(source.cardId)?.perm.counters ?? {},
     countPermanents: (selector, who) => {
       let count = 0;
       for (const entry of work.values()) {
@@ -325,13 +338,26 @@ function scopeOf(
       }
       return count;
     },
+    countAurasYouControlAttachedToCreatures: () => {
+      let count = 0;
+      for (const entry of work.values()) {
+        if (entry.perm.controllerId !== source.controllerId) continue;
+        if (!entry.chars.subtypes.includes('Aura')) continue;
+        if (entry.perm.attachedTo === null) continue;
+        const attached = [...work.values()].find(
+          (candidate) => candidate.perm.id === entry.perm.attachedTo,
+        );
+        if (attached?.chars.types.includes('Creature') === true) count += 1;
+      }
+      return count;
+    },
   };
 }
 function applyOpTo(
   ctx: GameContext,
   chars: Characteristics,
   op: ContinuousOp,
-  scope: Pick<ValueScope, 'controllerId' | 'countPermanents'> | undefined,
+  scope: LayerValueScope | undefined,
 ): void {
   switch (op.layer) {
     case 4:
@@ -370,9 +396,10 @@ function applyOpTo(
       } else if ('addWard' in op) {
         chars.ward = op.addWard;
       } else if ('addProtection' in op) {
-        for (const c of op.addProtection) if (!chars.protectionFrom.includes(c)) {
-          chars.protectionFrom.push(c);
-        }
+        for (const c of op.addProtection)
+          if (!chars.protectionFrom.includes(c)) {
+            chars.protectionFrom.push(c);
+          }
       } else if ('addTrigger' in op) {
         chars.triggers.push(op.addTrigger);
       } else if ('addKeyword' in op) {
@@ -392,8 +419,10 @@ function applyOpTo(
       break;
     case 7:
       if (op.sublayer === 'd') {
-        const pDelta = typeof op.power === 'number' ? op.power : evaluateValue(ctx, op.power, scope);
-        const tDelta = typeof op.toughness === 'number' ? op.toughness : evaluateValue(ctx, op.toughness, scope);
+        const pDelta =
+          typeof op.power === 'number' ? op.power : evaluateValue(ctx, op.power, scope);
+        const tDelta =
+          typeof op.toughness === 'number' ? op.toughness : evaluateValue(ctx, op.toughness, scope);
         chars.power += pDelta;
         chars.toughness += tDelta;
       } else {
@@ -589,7 +618,10 @@ function runLayers(
   for (const perm of perms) {
     const def = ctx.defs.get(perm.oracleId);
     if (def === undefined) throw new Error(`engine bug: no def for ${perm.name}`);
-    const landFace = perm.face === 'back' ? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace : undefined;
+    const landFace =
+      perm.face === 'back'
+        ? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace
+        : undefined;
     const transformFace = perm.transformed ? def.backFace : undefined;
     const activeFace = transformFace ?? landFace;
     let types = [...(activeFace?.types ?? def.types)];
@@ -612,13 +644,16 @@ function runLayers(
       triggers = [];
       manaAbilities = [];
     } else {
-      if (perm.copyAddTypes !== undefined) for (const type of perm.copyAddTypes) if (!types.includes(type)) types.push(type);
-      if (perm.copyAddKeywords !== undefined) for (const kw of perm.copyAddKeywords) if (!keywords.includes(kw)) keywords.push(kw);
+      if (perm.copyAddTypes !== undefined)
+        for (const type of perm.copyAddTypes) if (!types.includes(type)) types.push(type);
+      if (perm.copyAddKeywords !== undefined)
+        for (const kw of perm.copyAddKeywords) if (!keywords.includes(kw)) keywords.push(kw);
       if (perm.copyRemoveSupertypes !== undefined && perm.copyRemoveSupertypes.length > 0) {
         const removed = perm.copyRemoveSupertypes;
         supertypes = supertypes.filter((st) => !removed.includes(st));
       }
-      if (perm.copyAddSupertypes !== undefined) for (const st of perm.copyAddSupertypes) if (!supertypes.includes(st)) supertypes.push(st);
+      if (perm.copyAddSupertypes !== undefined)
+        for (const st of perm.copyAddSupertypes) if (!supertypes.includes(st)) supertypes.push(st);
       if (perm.copyAddTriggers !== undefined) triggers = [...triggers, ...perm.copyAddTriggers];
       if (def.copyLastExiledCreature === true && (perm.exiledCardIds?.length ?? 0) > 0) {
         const lastId = perm.exiledCardIds?.[perm.exiledCardIds.length - 1];
@@ -640,14 +675,30 @@ function runLayers(
         // Layer 5 is not implemented — printed color, read from here so it has one home.
         colors,
         keywords,
-        ward: !perm.faceDown && landFace === undefined
-          ? transformFace !== undefined ? transformFace.ward ?? null : def.ward ?? null
-          : null,
-        protectionFrom: !perm.faceDown && landFace === undefined
-          ? [...(transformFace !== undefined ? transformFace.protectionFrom ?? [] : def.protectionFrom ?? [])]
-          : [],
-        cantBeBlocked: !perm.faceDown && landFace === undefined && (transformFace !== undefined ? transformFace.cantBeBlocked === true : def.cantBeBlocked === true),
-        activatedAbilities: !perm.faceDown && landFace === undefined ? [...(transformFace?.activatedAbilities ?? def.activatedAbilities)] : [],
+        ward:
+          !perm.faceDown && landFace === undefined
+            ? transformFace !== undefined
+              ? (transformFace.ward ?? null)
+              : (def.ward ?? null)
+            : null,
+        protectionFrom:
+          !perm.faceDown && landFace === undefined
+            ? [
+                ...(transformFace !== undefined
+                  ? (transformFace.protectionFrom ?? [])
+                  : (def.protectionFrom ?? [])),
+              ]
+            : [],
+        cantBeBlocked:
+          !perm.faceDown &&
+          landFace === undefined &&
+          (transformFace !== undefined
+            ? transformFace.cantBeBlocked === true
+            : def.cantBeBlocked === true),
+        activatedAbilities:
+          !perm.faceDown && landFace === undefined
+            ? [...(transformFace?.activatedAbilities ?? def.activatedAbilities)]
+            : [],
         triggers,
         manaAbilities,
         // Base P/T comes from the permanent (a copy effect would set it there — layer 1).
@@ -664,7 +715,9 @@ function runLayers(
   // entering or leaving the graveyard immediately changes the computed ability list.
   const usedGraveyards =
     readsGameState(effects) ||
-    ctx.state.battlefield.some((perm) => ctx.defs.get(perm.oracleId)?.artifactGraveyardAbilities === true);
+    ctx.state.battlefield.some(
+      (perm) => ctx.defs.get(perm.oracleId)?.artifactGraveyardAbilities === true,
+    );
   const group = (key: string): LayerEffect[] => effects.filter((e) => groupOf(e.op) === key);
 
   applyGroup(ctx, work, group('4'));
@@ -682,7 +735,10 @@ function runLayers(
 }
 
 /** Set `MTG_VERIFY_LAYER_CACHE=1` to recompute on every cache hit and assert they agree. */
-const VERIFY_CACHE = ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.['MTG_VERIFY_LAYER_CACHE']) === '1';
+const VERIFY_CACHE =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[
+    'MTG_VERIFY_LAYER_CACHE'
+  ] === '1';
 
 /**
  * Serialize characteristics for the verification oracle with SET-LIKE fields order-normalized.

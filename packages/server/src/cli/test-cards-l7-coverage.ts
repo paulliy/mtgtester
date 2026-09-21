@@ -2,85 +2,95 @@ import fs from 'fs';
 import { resolve } from 'node:path';
 import { loadScryfallBulkOrNull } from '../cards/scryfall-bulk-fixture';
 import { toOracleCard } from '../cards/scryfall';
+import {
+  EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS,
+  VERIFIED_TOKEN_TRIUMPH_CARDS,
+} from '../cards/token-triumph-support';
 import { interpretCard } from '../../../engine/src/cards/interpret';
+import { buildSupportedPool } from '../cards/pool';
+import type { CheckResult } from './card-test-reporting';
+import { RequiredInputError } from './card-test-reporting';
 
-const IMPLEMENTED_CARDS = [
-  'Emmara, Soul of the Accord',
-  "Karametra's Favor",
-  'Leafkin Druid',
-  'Nullmage Shepherd',
-  'Thunderfoot Baloth',
-  'Fortified Village',
-  'Overwhelming Instinct',
-  'Rishkar, Peema Renegade',
-  'Ajani, Caller of the Pride',
-  'Sylvan Reclamation',
-  'Mentor of the Meek',
-  "Commander's Insignia",
-  'Voice of Many',
-  'Loyal Guardian',
-  'Dawn of Hope',
-  'Hornet Nest',
-  'Idol of Oblivion',
-  'Trostani Discordant',
-  'Harvest Season',
-  'Slate of Ancestry',
-  'Scavenging Ooze',
-  'Felidar Retreat',
-  'Great Oak Guardian',
-  'Conclave Tribunal',
-  'Champion of Lambholt',
-  'Curse of Bounty',
-  'Path to Exile',
-  'Rootborn Defenses',
-];
-
-export function runL7CoverageCheck(): {
-  success: boolean;
-  totalModeled: number;
-  verifiedCount: number;
-} {
-  console.log('Running L7 Aggregate Signal Check...');
-
+export function runL7CoverageCheck(): CheckResult {
   const scryfallCards = loadScryfallBulkOrNull();
   if (scryfallCards === null) {
-    throw new Error(
-      'data/scryfall-oracle-cards.json is required for the L7 check — see data/README.md.',
+    throw new RequiredInputError(
+      'data/scryfall-oracle-cards.json is required for the L7 check - see data/README.md.',
     );
+  }
+
+  const oracleCards = scryfallCards.flatMap((raw) => {
+    const card = toOracleCard(raw);
+    return card === null ? [] : [card];
+  });
+  const cardsByName = new Map(oracleCards.map((card) => [card.name, card]));
+  const supportedPool = buildSupportedPool(oracleCards);
+  const supportedNames = new Set(supportedPool.cards.map(({ card }) => card.name));
+
+  let verifiedCount = 0;
+  for (const name of VERIFIED_TOKEN_TRIUMPH_CARDS) {
+    if (supportedNames.has(name)) {
+      verifiedCount++;
+    } else {
+      console.warn(`L7 inventory warning: verified card ${name} is absent from the supported pool`);
+    }
+  }
+
+  let containedCount = 0;
+  for (const name of EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS) {
+    const card = cardsByName.get(name);
+    const definition = card === undefined ? undefined : interpretCard(card);
+    if (
+      definition !== undefined &&
+      !definition.modeled &&
+      definition.unmodeledReasons.some((reason) => reason.includes('explicitly unsupported:'))
+    ) {
+      containedCount++;
+    } else {
+      console.warn(`L7 containment warning: ${name} is not explicitly unsupported`);
+    }
   }
 
   const mdPath = resolve('docs/modelled-cards.md');
   const mdContent = fs.readFileSync(mdPath, 'utf8');
-
-  let verifiedCount = 0;
-  for (const name of IMPLEMENTED_CARDS) {
-    const raw = scryfallCards.find((c) => c.name === name);
-    const oracleCard = raw ? toOracleCard(raw) : null;
-    const isLand = oracleCard?.types.includes('Land') ?? false;
-
-    if (mdContent.includes(name) || (isLand && oracleCard && interpretCard(oracleCard).modeled)) {
-      verifiedCount++;
-    } else {
-      console.warn(`L7 warning: ${name} not verified in modeled cards check`);
-    }
-  }
-
-  let totalModeled = 0;
-  for (const raw of scryfallCards) {
-    const oracleCard = toOracleCard(raw);
-    if (!oracleCard || oracleCard.types.includes('Land')) continue;
-    const def = interpretCard(oracleCard);
-    if (def.modeled) totalModeled++;
-  }
-
-  console.log(
-    `L7 Coverage Signal: ${verifiedCount}/${IMPLEMENTED_CARDS.length} implemented cards confirmed in modeled cards check.`,
+  const totalModeled = supportedPool.cards.filter(({ isLand }) => !isLand).length;
+  const documentedTotal = Number(
+    mdContent.match(/\*\*Total\*\*: (\d+) modeled non-land cards/)?.[1] ?? Number.NaN,
   );
-  console.log(`Total non-land modeled pool size: ${totalModeled} cards.`);
+  const inventoryMatches = documentedTotal === totalModeled;
+  if (!inventoryMatches) {
+    console.warn(
+      `L7 inventory warning: docs/modelled-cards.md reports ${documentedTotal}, expected ${totalModeled}`,
+    );
+  }
 
-  return { success: verifiedCount === IMPLEMENTED_CARDS.length, totalModeled, verifiedCount };
+  const totalChecks =
+    VERIFIED_TOKEN_TRIUMPH_CARDS.length + EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS.length + 1;
+  const passedChecks = verifiedCount + containedCount + (inventoryMatches ? 1 : 0);
+  const complete = passedChecks === totalChecks;
+  return {
+    id: 'l7-inventory',
+    label: 'L7 audited support and aggregate inventory',
+    kind: 'inventory',
+    status: complete ? 'passed' : 'failed',
+    executed: totalChecks,
+    passed: passedChecks,
+    failed: totalChecks - passedChecks,
+    skipped: 0,
+    detail:
+      `${verifiedCount}/${VERIFIED_TOKEN_TRIUMPH_CARDS.length} verified names supported; ` +
+      `${containedCount}/${EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS.length} audited unsupported names contained; ` +
+      `${totalModeled} modeled non-land cards match the generated inventory`,
+  };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  runL7CoverageCheck();
+  try {
+    const result = runL7CoverageCheck();
+    console.log(`${result.label}: ${result.status.toUpperCase()} — ${result.detail}`);
+    if (result.status !== 'passed') process.exitCode = 1;
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  }
 }

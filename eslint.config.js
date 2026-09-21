@@ -68,6 +68,31 @@ export default tseslint.config(
           selector: TOKEN_SPEC_LITERAL_SELECTOR,
           message: TOKEN_SPEC_LITERAL_MESSAGE,
         },
+        {
+          selector: "Property[key.name='op'][value.value='noOp']",
+          message:
+            'Executable noOp effects are prohibited in authored card data. Keep the card explicitly unsupported until its behavior is implemented.',
+        },
+      ],
+    },
+  },
+  {
+    files: ['packages/engine/src/cards/overrides/reviewed-*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "ObjectExpression:has(Property[key.name='kind'][value.value=/^(spell|triggered|activated)$/])",
+          message:
+            'Use spell(), triggered(), or activated() from cards/templates.ts for reviewed card ability envelopes.',
+        },
+        {
+          selector:
+            "Property:matches([key.name='target'], [key.name='targetSlot'], [key.name='cardsSlot'], [key.name='playerSlot'])[value.type='Literal'][value.value>=0]",
+          message:
+            'Use targetSlots() named indexes in reviewed card definitions instead of bare numeric target references.',
+        },
       ],
     },
   },
@@ -91,10 +116,15 @@ export default tseslint.config(
   {
     files: ['**/*.test.ts', '**/*.spec.ts'],
     rules: {
-      'no-restricted-syntax': ['error', {
-        selector: "CallExpression:matches([callee.name='it'], [callee.name='test'], [callee.object.name='it'], [callee.object.name='test']) > FunctionExpression[generator=true]",
-        message: 'Vitest does not execute generator test bodies. Use a normal callback and drive the generator with pump().',
-      }],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression:matches([callee.name='it'], [callee.name='test'], [callee.object.name='it'], [callee.object.name='test']) > FunctionExpression[generator=true]",
+          message:
+            'Vitest does not execute generator test bodies. Use a normal callback and drive the generator with pump().',
+        },
+      ],
     },
   },
   ...vue.configs['flat/essential'],

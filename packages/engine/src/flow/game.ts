@@ -11,6 +11,7 @@ import { GameOverSignal, TurnAbortedSignal } from '../signals';
 import { playerById } from '../state/objects';
 import type { GameContext } from '../state/types';
 import { runOpeningHands } from '../turn/mulligan';
+import { runPrioritySequence } from '../turn/priority';
 import { runTurn } from '../turn/turn';
 
 function advanceToNextTurnPlayer(ctx: GameContext): void {
@@ -99,6 +100,33 @@ export function* playGame(ctx: GameContext): GameGen<GameResult> {
     }
     throw err;
   }
+}
+
+/**
+ * A finite deterministic lab run from an already arranged priority window. It ends after every
+ * player passes with an empty stack; all intervening actions still use production engine paths.
+ */
+export function* playPreparedScenario(ctx: GameContext): GameGen<GameResult> {
+  const state = ctx.state;
+  emit(ctx, 'gameStart', { seed: state.seed, players: state.seating });
+  emit(ctx, 'startingPlayer', { player: state.currentTurnPlayer });
+  yield* runPrioritySequence(ctx);
+  const result: GameResult = {
+    gameId: state.gameId,
+    winnerSeat: null,
+    finishingOrder: [],
+    turnCount: state.turnNumber,
+    halted: false,
+    haltReason: null,
+  };
+  emit(ctx, 'gameOver', {
+    winner: null,
+    finishingOrder: [],
+    turns: state.turnNumber,
+    halted: false,
+    haltReason: null,
+  });
+  return result;
 }
 
 export { playerById };

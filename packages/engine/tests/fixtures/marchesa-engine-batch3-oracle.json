@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-10",
+  "cards": [
+    {
+      "sha256": "34fedc39d245b45c892ba5e287cee8585d9b433e24ec1755a7f4f913816b84d2",
+      "card": {
+        "oracleId": "724767ca-bd84-4137-9133-4ad2e96b8428",
+        "scryfallId": "439ad8e0-575b-43cc-95fd-53ddd14e65c2",
+        "name": "Dack's Duplicate",
+        "manaCost": "{2}{U}{R}",
+        "cmc": 4,
+        "colors": [
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "R",
+          "U"
+        ],
+        "typeLine": "Creature — Shapeshifter",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Shapeshifter"
+        ],
+        "oracleText": "You may have this creature enter as a copy of any creature on the battlefield, except it has haste and dethrone. (Whenever it attacks the player with the most life or tied for most life, put a +1/+1 counter on it.)",
+        "power": "0",
+        "toughness": "0",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "79f6afbd0d9131252698fbb2dd9645d3ddd6c09c806cb173c6035ded79447490",
+      "card": {
+        "oracleId": "4fca09ac-8134-43d9-a84b-686db5e2bf69",
+        "scryfallId": "e45e9552-7737-4c61-89b0-5a3bec3c8f34",
+        "name": "Kalain, Reclusive Painter",
+        "manaCost": "{B}{R}",
+        "cmc": 2,
+        "colors": [
+          "B",
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Human Elf Bard",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Elf",
+          "Bard"
+        ],
+        "oracleText": "When Kalain enters, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")\nOther creatures you control enter with an additional +1/+1 counter on them for each mana from a Treasure spent to cast them.",
+        "power": "1",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Treasure"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "eddccb84bbb4037ab5f2f60e0b4b4ee5fc82000373ef7c1ed381101cd32ec097",
+      "card": {
+        "oracleId": "17a59d3d-9e01-48cd-bb4a-3eaaa077751c",
+        "scryfallId": "3242a9f0-2ba3-4852-ac8f-366772ac1c62",
+        "name": "Marchesa, the Black Rose",
+        "manaCost": "{1}{U}{B}{R}",
+        "cmc": 4,
+        "colors": [
+          "B",
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "B",
+          "R",
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Human Wizard",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Wizard"
+        ],
+        "oracleText": "Dethrone (Whenever this creature attacks the player with the most life or tied for most life, put a +1/+1 counter on it.)\nOther creatures you control have dethrone.\nWhenever a creature you control with a +1/+1 counter on it dies, return that card to the battlefield under your control at the beginning of the next end step.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Dethrone"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e1d6ea84dd6e91f9d13dc9b765ad5b63d2a40dbce24bb46d753c0c0baf095614",
+      "card": {
+        "oracleId": "8dcb35e5-ae44-455f-86e3-4a77d496ff34",
+        "scryfallId": "c41b9ba2-0006-4d8e-b600-efe81ff5e0cc",
+        "name": "Spark Double",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Illusion",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Illusion"
+        ],
+        "oracleText": "You may have this creature enter as a copy of a creature or planeswalker you control, except it enters with an additional +1/+1 counter on it if it's a creature, it enters with an additional loyalty counter on it if it's a planeswalker, and it isn't legendary.",
+        "power": "0",
+        "toughness": "0",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

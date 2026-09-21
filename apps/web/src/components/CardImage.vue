@@ -65,7 +65,7 @@ const placeholderLabel = computed(() =>
       decoding="async"
       @error="failed = true"
     />
-    <div v-else class="fallback">
+    <div v-else class="fallback" role="img" :aria-label="name">
       <span class="fallback-label">{{ placeholderLabel }}</span>
     </div>
   </div>
@@ -97,7 +97,10 @@ const placeholderLabel = computed(() =>
   object-fit: cover;
   display: block;
   transform: translate(-50%, -50%);
-  transition: transform 120ms ease, width 120ms ease, height 120ms ease;
+  transition:
+    transform 120ms ease,
+    width 120ms ease,
+    height 120ms ease;
 }
 .card-image.tapped img {
   width: 140%;

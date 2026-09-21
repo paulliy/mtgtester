@@ -234,7 +234,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     preferredMinThroughput: 100,
   },
   tactician: {
-    models: ['qwen/qwen3.7-flash','sao10k/l3-lunaris-8b:nitro', 'poolside/laguna-s-2.1'],
+    models: ['qwen/qwen3.7-flash', 'sao10k/l3-lunaris-8b:nitro', 'poolside/laguna-s-2.1'],
     reasoningEnabled: false,
     reasoningEffort: 'none',
     maxOutputTokens: 85,
@@ -403,7 +403,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_STRATEGIST_REQUEST_TIMEOUT_MS'],
       DEFAULT_AI_CONFIG.strategist.requestTimeoutMs,
     ),
-    maxRetries: parseNumber(env['AI_STRATEGIST_MAX_RETRIES'], DEFAULT_AI_CONFIG.strategist.maxRetries),
+    maxRetries: parseNumber(
+      env['AI_STRATEGIST_MAX_RETRIES'],
+      DEFAULT_AI_CONFIG.strategist.maxRetries,
+    ),
     preferredMaxLatencySeconds: parseNumber(
       env['AI_STRATEGIST_PREFERRED_MAX_LATENCY_SECONDS'],
       DEFAULT_AI_CONFIG.strategist.preferredMaxLatencySeconds,
@@ -436,7 +439,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_TACTICIAN_REQUEST_TIMEOUT_MS'],
       DEFAULT_AI_CONFIG.tactician.requestTimeoutMs,
     ),
-    maxRetries: parseNumber(env['AI_TACTICIAN_MAX_RETRIES'], DEFAULT_AI_CONFIG.tactician.maxRetries),
+    maxRetries: parseNumber(
+      env['AI_TACTICIAN_MAX_RETRIES'],
+      DEFAULT_AI_CONFIG.tactician.maxRetries,
+    ),
     preferredMaxLatencySeconds: parseNumber(
       env['AI_TACTICIAN_PREFERRED_MAX_LATENCY_SECONDS'],
       DEFAULT_AI_CONFIG.tactician.preferredMaxLatencySeconds,

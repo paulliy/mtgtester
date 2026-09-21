@@ -36,7 +36,9 @@ describe('effect IR op coverage', () => {
     );
     expect(declared.size).toBeGreaterThan(150);
 
-    const executors = EXECUTOR_FILES.map((file) => readFileSync(join(ENGINE_SRC, file), 'utf8')).join('\n');
+    const executors = EXECUTOR_FILES.map((file) =>
+      readFileSync(join(ENGINE_SRC, file), 'utf8'),
+    ).join('\n');
     const handled = new Set(
       [...executors.matchAll(/case\s+'([A-Za-z0-9_]+)'/g)].map((match) => match[1] as string),
     );

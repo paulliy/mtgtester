@@ -20,7 +20,15 @@ const playerOf = (ctx: GameContext, id: PlayerId): EnginePlayerState =>
   ctx.state.players.find((p) => p.id === id) as EnginePlayerState;
 
 const land = (name: string, oracleText: string): ReturnType<typeof oracle> =>
-  oracle({ name, typeLine: 'Land', oracleText, manaCost: null, cmc: 0, power: null, toughness: null });
+  oracle({
+    name,
+    typeLine: 'Land',
+    oracleText,
+    manaCost: null,
+    cmc: 0,
+    power: null,
+    toughness: null,
+  });
 
 const commandTower = (): ReturnType<typeof oracle> =>
   land('Test Tower', "{T}: Add one mana of any color in your commander's color identity.");
@@ -67,7 +75,7 @@ describe('PlayerView mana reporting (ADR 0010, Tier 0 fix)', () => {
     }
   });
 
-  it('manaSources groups a permanent\'s several abilities into one entry with the union of symbols', () => {
+  it("manaSources groups a permanent's several abilities into one entry with the union of symbols", () => {
     const ctx = ctxWithCommander(['G']);
     spawn(ctx, 'P1', painlandFilter());
 
@@ -80,7 +88,7 @@ describe('PlayerView mana reporting (ADR 0010, Tier 0 fix)', () => {
     expect(coast?.count).toBe(2);
   });
 
-  it('manaSources reports a Command Tower\'s full commander identity, not just one color', () => {
+  it("manaSources reports a Command Tower's full commander identity, not just one color", () => {
     const ctx = ctxWithCommander(['B', 'G', 'R']);
     spawn(ctx, 'P1', commandTower());
 
@@ -100,7 +108,7 @@ describe('previewLandManaSymbols — what a hand land would produce if played (T
     expect(symbols.sort()).toEqual(['R', 'U']);
   });
 
-  it('resolves a static multi-ability land\'s full symbol set for a land still in hand', () => {
+  it("resolves a static multi-ability land's full symbol set for a land still in hand", () => {
     const ctx = ctxWithCommander(['G']);
     const def = interpretCard(painlandFilter());
     ctx.defs.set(def.oracleId, def);
@@ -116,8 +124,9 @@ describe('playLand legal actions carry mana/tapped data (Tier 0 fix)', () => {
     const first = conjure(ctx, 'P1', forest(), 'hand');
     const second = conjure(ctx, 'P1', forest(), 'hand');
 
-    const options = computePriorityOptions(ctx, playerOf(ctx, 'P1'))
-      .filter((option) => option.type === 'playLand' && option.description === 'Play Forest');
+    const options = computePriorityOptions(ctx, playerOf(ctx, 'P1')).filter(
+      (option) => option.type === 'playLand' && option.description === 'Play Forest',
+    );
 
     expect(options.map((option) => option.payload)).toEqual([
       { kind: 'playLand', objectId: first.id },
@@ -130,7 +139,9 @@ describe('playLand legal actions carry mana/tapped data (Tier 0 fix)', () => {
     conjure(ctx, 'P1', forest(), 'hand');
 
     const options = computePriorityOptions(ctx, playerOf(ctx, 'P1'));
-    const playForest = options.find((o) => o.type === 'playLand' && o.description === 'Play Forest');
+    const playForest = options.find(
+      (o) => o.type === 'playLand' && o.description === 'Play Forest',
+    );
     expect(playForest?.data?.['producesMana']).toEqual(['G']);
     expect(playForest?.data?.['entersTapped']).toBe(false);
   });
@@ -144,7 +155,9 @@ describe('playLand legal actions carry mana/tapped data (Tier 0 fix)', () => {
     conjure(ctx, 'P1', shock, 'hand');
 
     const options = computePriorityOptions(ctx, playerOf(ctx, 'P1'));
-    const playShock = options.find((o) => o.type === 'playLand' && o.description === 'Play Test Shock');
+    const playShock = options.find(
+      (o) => o.type === 'playLand' && o.description === 'Play Test Shock',
+    );
     expect(playShock?.data?.['payLifeToUntap']).toBe(2);
     expect(playShock?.data?.['entersTapped']).toBeUndefined();
   });
@@ -181,7 +194,7 @@ describe('playLand legal actions carry mana/tapped data (Tier 0 fix)', () => {
     });
   });
 
-  it('unlocks lists a hand card that becomes castable once this land\'s mana is added', () => {
+  it("unlocks lists a hand card that becomes castable once this land's mana is added", () => {
     const ctx = ctxWithCommander(['G']);
     // Hand has exactly one Forest (untapped, producing {G}) already on the battlefield is not
     // the point — the land in HAND is what should unlock a {G}{G} spell needing a second source.
@@ -202,7 +215,9 @@ describe('playLand legal actions carry mana/tapped data (Tier 0 fix)', () => {
     );
 
     const options = computePriorityOptions(ctx, playerOf(ctx, 'P1'));
-    const playForest = options.find((o) => o.type === 'playLand' && o.description === 'Play Forest');
+    const playForest = options.find(
+      (o) => o.type === 'playLand' && o.description === 'Play Forest',
+    );
     expect(playForest?.data?.['unlocks']).toContain('Test Double Green');
   });
 });
@@ -227,7 +242,9 @@ describe('Equip no-op suppression (Tier 0 fix)', () => {
     spawn(ctx, 'P1', bear());
 
     const options = computePriorityOptions(ctx, playerOf(ctx, 'P1'));
-    const equip = options.find((o) => o.type === 'activateAbility' && o.description.includes('Equip'));
+    const equip = options.find(
+      (o) => o.type === 'activateAbility' && o.description.includes('Equip'),
+    );
     expect(equip).toBeDefined();
     expect(equip?.targets?.[0]?.options).toHaveLength(1);
   });
@@ -239,7 +256,9 @@ describe('Equip no-op suppression (Tier 0 fix)', () => {
     eq.attachedTo = creature.id;
 
     const options = computePriorityOptions(ctx, playerOf(ctx, 'P1'));
-    const equip = options.find((o) => o.type === 'activateAbility' && o.description.includes('Equip'));
+    const equip = options.find(
+      (o) => o.type === 'activateAbility' && o.description.includes('Equip'),
+    );
     // The only legal creature target is the one it's already attached to, so the ability
     // is not offered at all (CR 602.2b treatment, extended to "no MEANINGFUL target").
     expect(equip).toBeUndefined();
@@ -253,7 +272,9 @@ describe('Equip no-op suppression (Tier 0 fix)', () => {
     eq.attachedTo = creatureA.id;
 
     const options = computePriorityOptions(ctx, playerOf(ctx, 'P1'));
-    const equip = options.find((o) => o.type === 'activateAbility' && o.description.includes('Equip'));
+    const equip = options.find(
+      (o) => o.type === 'activateAbility' && o.description.includes('Equip'),
+    );
     expect(equip?.targets?.[0]?.options).toEqual([creatureB.id]);
   });
 });
