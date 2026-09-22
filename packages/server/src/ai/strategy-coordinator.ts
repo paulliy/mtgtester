@@ -1,3 +1,5 @@
+import { ThreatTracker, type ThreatAssessment } from './threat';
+import type { PlayerView } from '@mtg/shared';
 import type { Engine } from '@mtg/engine';
 import type {
   DecisionRequest,
@@ -129,6 +131,7 @@ function cleanPlan(raw: TurnStrategy | undefined): TurnStrategy | null {
  */
 export class StrategyCoordinator {
   private readonly turnPlan = new TurnPlanManager();
+  private readonly threats = new ThreatTracker();
   private readonly recentBySeat = new Map<string, RecentSeatDecision[]>();
   /** Whole-game sampled decision history per seat, for the post-game review (ADR 0022 §7). */
   private readonly digestBySeat = new Map<string, RecentSeatDecision[]>();
@@ -280,6 +283,7 @@ export class StrategyCoordinator {
       view,
       recent,
       this.deckArchetypes?.get(activePlayer),
+      this.assessThreats(strategyRequest, view),
     );
 
     try {
@@ -323,6 +327,25 @@ export class StrategyCoordinator {
         `strategist call failed for ${activePlayer}: ${(error as Error).message}`,
       );
     }
+  }
+
+  /** Shadow and context share precisely the same computation; only context reaches prompts. */
+  assessThreats(request: DecisionRequest, view: PlayerView): ThreatAssessment | undefined {
+    if (
+      this.config.threatAssessmentMode === 'off' ||
+      this.config.threatAssessmentMode === undefined
+    )
+      return undefined;
+    const started = performance.now();
+    const result = this.threats.assess(view, request);
+    if (!result.cached)
+      this.engine.addDebug?.('decision', `threat assessment for ${view.seat}`, {
+        requestId: request.requestId,
+        mode: this.config.threatAssessmentMode,
+        latencyMs: performance.now() - started,
+        assessment: result.assessment,
+      });
+    return this.config.threatAssessmentMode === 'context' ? result.assessment : undefined;
   }
 
   guidanceFor(playerId: string): TacticalGuidance {

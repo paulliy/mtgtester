@@ -1,3 +1,4 @@
+import { POISON_LOSS, COMMANDER_DAMAGE_LOSS } from './thresholds';
 /**
  * State-based actions (CR 704, brief §5.6) and the "checkpoint" every player passes
  * through before receiving priority: repeat SBA checks until none apply, then put waiting
@@ -108,10 +109,12 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     } else if (player.attemptedDrawFromEmptyLibrary) {
       markLoss(ctx, player, 'emptyLibraryDraw');
       acted = true;
-    } else if (player.poisonCounters >= 10) {
+    } else if (player.poisonCounters >= POISON_LOSS) {
       markLoss(ctx, player, 'poisonCounters');
       acted = true;
-    } else if (Object.values(player.commanderDamageTaken).some((dmg) => dmg >= 21)) {
+    } else if (
+      Object.values(player.commanderDamageTaken).some((dmg) => dmg >= COMMANDER_DAMAGE_LOSS)
+    ) {
       markLoss(ctx, player, 'commanderDamage');
       acted = true;
     }

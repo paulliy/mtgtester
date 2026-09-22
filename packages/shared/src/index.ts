@@ -168,3 +168,10 @@ export type {
   BatchSpec,
   BatchStatus,
 } from './batch';
+
+export type {
+  PublicThreatFacts,
+  PublicPressureEvent,
+  PublicPermanentCapabilities,
+  PublicStackImpact,
+} from './threat';

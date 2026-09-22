@@ -1,3 +1,5 @@
+import { summarizeThreats } from './threat/explain';
+import type { ThreatAssessment } from './threat/types';
 /**
  * Context assembler (§7.4).
  * Optimized to produce minified, token-compact OpenAI-compatible messages.
@@ -25,6 +27,7 @@ export interface RecentSeatDecision {
 }
 
 export interface TacticalGuidance {
+  threatAssessment?: ThreatAssessment;
   strategy: TurnStrategy | null;
   recentDecisions: readonly RecentSeatDecision[];
 }
@@ -114,7 +117,12 @@ export function assemblePrompt(
       ...(perm.status.length > 0 ? { status: perm.status } : {}),
       ...battlefieldText(perm.name, perm.oracleText),
     })),
-    stack: view.stack,
+    stack: view.stack.map(({ id, controller, description, targets }) => ({
+      id,
+      controller,
+      description,
+      targets,
+    })),
     // §7.4 specifies a trimmed log of ~15 entries; the engine already trims to exactly that,
     // so re-slicing here only threw away context the view had deliberately kept.
     recentLog: view.recentLog,
@@ -124,6 +132,9 @@ export function assemblePrompt(
           turnStrategy: guidance.strategy,
           yourRecentDecisions: guidance.recentDecisions,
         }),
+    ...(guidance?.threatAssessment === undefined
+      ? {}
+      : { threatAssessment: summarizeThreats(guidance.threatAssessment) }),
     legalActions: request.legalActions,
   };
 
@@ -161,10 +172,13 @@ export function assembleStrategistPrompt(
   view: PlayerView,
   recentDecisions: readonly RecentSeatDecision[],
   deckArchetype?: string,
+  threatAssessment?: ThreatAssessment,
 ): AiPrompt {
   const base = assemblePrompt(request, view);
   const payload = JSON.parse(base.messages[1]!.content) as Record<string, unknown>;
   payload['yourRecentDecisions'] = recentDecisions;
+  if (threatAssessment !== undefined)
+    payload['threatAssessment'] = summarizeThreats(threatAssessment);
   if (deckArchetype !== undefined && deckArchetype.length > 0) {
     payload['yourDeckArchetype'] = deckArchetype;
   }

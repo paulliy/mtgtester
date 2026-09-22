@@ -92,7 +92,6 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     // 1. Obtain hidden-information-safe view (brief §7.1 anti-cheat boundary). Local and
     //    cheap, and both short-circuits below read it, so it is built first either way.
     const view = this.engine.view(request.decidingPlayer);
-
     const local = this.tryLocalAnswer(request, view);
     if (local !== null) return local;
 
@@ -165,7 +164,11 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
    * returning it rather than throwing, so the caller decides between escalation and fallback.
    */
   private async decideViaModel(request: DecisionRequest, view: PlayerView): Promise<ModelOutcome> {
-    const prompt = assemblePrompt(request, view, this.strategy.guidanceFor(request.decidingPlayer));
+    const assessment = this.strategy.assessThreats(request, view);
+    const prompt = assemblePrompt(request, view, {
+      ...this.strategy.guidanceFor(request.decidingPlayer),
+      ...(assessment === undefined ? {} : { threatAssessment: assessment }),
+    });
 
     this.engine.addDebug?.(
       'decision',
@@ -273,6 +276,10 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
    * Returns `null` when the decision is a real one and must be sent to the model.
    */
   private tryLocalAnswer(request: DecisionRequest, view: PlayerView): DecisionResponse | null {
+    // In the experimental context arm, new urgent evidence must reach the tactician rather
+    // than be bypassed by an old plan or cached/static answer. Shadow retains the old path.
+    const threats = this.strategy.assessThreats(request, view);
+    if (threats?.opponents.some((o) => o.urgency < 4)) return null;
     // Check pre-planned turn actions first
     const planned = this.strategy.tryExecutePlan(request);
     if (planned !== null) {
@@ -295,7 +302,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
       }
     }
 
-    if (this.config.decisionCacheEnabled) {
+    if (this.config.decisionCacheEnabled && this.config.threatAssessmentMode !== 'context') {
       const cached = this.cache.get(request, view);
       if (cached !== null) {
         this.engine.addDebug?.(
@@ -317,6 +324,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     view: PlayerView,
     response: DecisionResponse,
   ): void {
-    if (this.config.decisionCacheEnabled) this.cache.set(request, view, response);
+    if (this.config.decisionCacheEnabled && this.config.threatAssessmentMode !== 'context')
+      this.cache.set(request, view, response);
   }
 }

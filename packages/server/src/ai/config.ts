@@ -25,6 +25,8 @@ export interface AiModelProfile {
 }
 
 export interface AiConfig {
+  /** off preserves existing policy; shadow logs only; context is an opt-in experiment. */
+  threatAssessmentMode: 'off' | 'shadow' | 'context';
   /** API Base URL (OpenAI-compatible). */
   baseUrl: string;
   /** API Key for authentication. */
@@ -203,6 +205,7 @@ export const DEFAULT_PROVIDER = 'openrouter';
 export const DEFAULT_MODEL_CHAIN = OPENROUTER.models;
 
 export const DEFAULT_AI_CONFIG: AiConfig = {
+  threatAssessmentMode: 'off',
   baseUrl: OPENROUTER.baseUrl,
   apiKey: '',
   models: OPENROUTER.models,
@@ -481,6 +484,12 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
 
   return {
     ...DEFAULT_AI_CONFIG,
+    threatAssessmentMode:
+      env['AI_THREAT_ASSESSMENT_MODE'] === 'context'
+        ? 'context'
+        : env['AI_THREAT_ASSESSMENT_MODE'] === 'shadow'
+          ? 'shadow'
+          : 'off',
     baseUrl,
     apiKey,
     models,

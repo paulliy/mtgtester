@@ -1,3 +1,4 @@
+import { permanentCapabilities, publicThreatFacts, stackImpacts } from './threat';
 /**
  * `PlayerView` projection (brief §7.1) — the anti-cheat boundary. Everything the AI will
  * ever see about the game goes through this function; it is built ONLY from information
@@ -98,6 +99,7 @@ function permanentViews(ctx: GameContext): PermanentView[] {
         ...(perm.summoningSick && isCreaturePermanent(ctx, perm) ? ['summoningSick'] : []),
       ],
     };
+    view.capabilities = permanentCapabilities(ctx, perm, computeCharacteristics(ctx, perm));
     // A battlefield is public information, and §7.4 lists battlefield permanents among the
     // zones whose oracle text is relevant. The projection is faithful; trimming redundant
     // text (basic lands, repeats) is the context assembler's job, as it already is for hand.
@@ -218,6 +220,7 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
     controller: so.controllerId,
     description: so.description,
     targets: [...so.targets],
+    impacts: stackImpacts(ctx, so),
   }));
 
   const recentLog = s.eventLog
@@ -235,6 +238,7 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
   });
 
   return {
+    threatFacts: publicThreatFacts(ctx),
     seat: playerId,
     life: viewer.life,
     hand: viewer.hand.map((o) => fullCardView(o, ctx)),

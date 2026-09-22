@@ -1,3 +1,4 @@
+import type { PublicThreatFacts, PublicPermanentCapabilities, PublicStackImpact } from './threat';
 import type { ObjectId, PlayerId } from './ids';
 
 /**
@@ -25,6 +26,7 @@ export interface CommanderView {
 
 /** A permanent as seen on any battlefield — all public state (brief §7.1, §7.3). */
 export interface PermanentView {
+  capabilities?: PublicPermanentCapabilities;
   id: ObjectId;
   controller: PlayerId;
   name: string;
@@ -61,6 +63,7 @@ export interface PermanentView {
 }
 
 export interface StackObjectView {
+  impacts?: PublicStackImpact[];
   id: ObjectId;
   controller: PlayerId;
   description: string;
@@ -87,6 +90,7 @@ export interface OpponentView {
  * library order (including the viewer's own), or another player's decklist (brief §7.1, §12).
  */
 export interface PlayerView {
+  threatFacts?: PublicThreatFacts;
   seat: PlayerId;
   life: number;
   /** The viewing player's OWN hand. */
