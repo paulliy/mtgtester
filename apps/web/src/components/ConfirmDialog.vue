@@ -1,16 +1,27 @@
 <script setup lang="ts">
 /**
- * The one confirmation shown before a game is abandoned, in spectator and player mode alike.
- * Cancel takes focus, so Enter or an accidental second click never confirms; Escape cancels.
+ * A modal yes/no question: abandoning a game, passing with a land drop unused. Cancel takes
+ * focus, so Enter or an accidental second click never confirms; Escape cancels.
  */
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, useId } from 'vue';
 
-defineProps<{ message: string }>();
+withDefaults(
+  defineProps<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    cancelLabel?: string;
+    /** `danger` for destructive confirmations such as abandoning a game. */
+    tone?: 'danger' | 'primary';
+  }>(),
+  { cancelLabel: 'Cancel', tone: 'danger' },
+);
 const emit = defineEmits<{
   (event: 'confirm'): void;
   (event: 'cancel'): void;
 }>();
 
+const id = useId();
 const cancelButton = ref<HTMLButtonElement | null>(null);
 onMounted(() => cancelButton.value?.focus());
 </script>
@@ -19,19 +30,20 @@ onMounted(() => cancelButton.value?.focus());
   <div class="modal-backdrop" @keydown.esc="emit('cancel')">
     <div
       class="modal-card"
+      :class="tone"
       role="alertdialog"
       aria-modal="true"
-      aria-labelledby="abandon-title"
-      aria-describedby="abandon-message"
+      :aria-labelledby="`${id}-title`"
+      :aria-describedby="`${id}-message`"
     >
-      <h3 id="abandon-title">Abandon match?</h3>
-      <p id="abandon-message">{{ message }}</p>
+      <h3 :id="`${id}-title`">{{ title }}</h3>
+      <p :id="`${id}-message`">{{ message }}</p>
       <div class="modal-actions">
         <button ref="cancelButton" type="button" class="cancel-btn" @click="emit('cancel')">
-          Cancel
+          {{ cancelLabel }}
         </button>
-        <button type="button" class="confirm-danger-btn" @click="emit('confirm')">
-          Confirm Abandon
+        <button type="button" class="confirm-btn" @click="emit('confirm')">
+          {{ confirmLabel }}
         </button>
       </div>
     </div>
@@ -64,6 +76,8 @@ onMounted(() => cancelButton.value?.focus());
 .modal-card h3 {
   margin: 0;
   font-size: 1.1rem;
+}
+.modal-card.danger h3 {
   color: var(--danger);
 }
 .modal-card p {
@@ -83,10 +97,14 @@ onMounted(() => cancelButton.value?.focus());
   border: 1px solid var(--line);
   color: var(--text);
 }
-.confirm-danger-btn {
-  background: var(--danger);
-  border: 1px solid var(--danger);
+.confirm-btn {
+  background: var(--accent);
+  border: 1px solid var(--accent);
   color: #fff;
   font-weight: 700;
+}
+.danger .confirm-btn {
+  background: var(--danger);
+  border-color: var(--danger);
 }
 </style>

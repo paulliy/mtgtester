@@ -1546,6 +1546,52 @@ test.describe('land confirmation', () => {
     await assertLandPlayedOnce(page);
   });
 
+  test('the playable list names the land and plays it like its hand card', async ({ page }) => {
+    await runLandScenario(page);
+    const landscape = page.locator('.hand-card', { hasText: 'Myriad Landscape' });
+    await expect(landscape.locator('.play-tag')).toHaveText('Play');
+    const listed = page.locator('.playable-now').getByRole('button', {
+      name: 'Play Myriad Landscape',
+    });
+    await expect(listed).toBeVisible();
+    await listed.click();
+
+    await assertLandPlayedOnce(page);
+  });
+
+  test('passing with a playable land asks before passing', async ({ page }) => {
+    await runLandScenario(page);
+    const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+    const reminder = page.getByRole('alertdialog', { name: /haven't played a land/ });
+
+    await pass.click();
+    await expect(reminder).toBeVisible();
+    await page.getByRole('button', { name: 'Play a land' }).click();
+    await expect(reminder).toBeHidden();
+    expect(await submissionCount(page)).toBe(0);
+
+    // Space on the dialog's focused button answers the dialog; it must not also pass priority.
+    await pass.click();
+    await expect(reminder).toBeVisible();
+    await page.keyboard.press('Space');
+    await expect(reminder).toBeHidden();
+    expect(await submissionCount(page)).toBe(0);
+
+    await pass.click();
+    await page.getByRole('button', { name: 'Pass anyway' }).click();
+    await expect(reminder).toBeHidden();
+    await expect.poll(() => submissionCount(page)).toBe(1);
+  });
+
+  test('the land drop reminder can be turned off', async ({ page }) => {
+    await runLandScenario(page);
+    await page.getByLabel('Land drop reminder').uncheck();
+    await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
+    await expect.poll(() => submissionCount(page)).toBe(1);
+  });
+
   test('confirm passes and lands still reviews when skip confirm is also on', async ({ page }) => {
     await runLandScenario(page);
     await page.getByLabel('Confirm passes & lands').check();

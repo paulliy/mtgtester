@@ -90,6 +90,11 @@ export const useGameStore = defineStore('game', () => {
     typeof localStorage !== 'undefined' &&
       localStorage.getItem('mtg-player-confirm-routine') === 'true',
   );
+  /** Ask once per turn before passing a main phase with a playable land still in hand. */
+  const remindUnplayedLand = ref(
+    typeof localStorage === 'undefined' ||
+      localStorage.getItem('mtg-player-remind-land') !== 'false',
+  );
   /** Opt-in: skip the manual "Confirm" click on the tray once every target slot is filled. */
   const autoConfirmActions = ref(
     typeof localStorage !== 'undefined' &&
@@ -552,6 +557,12 @@ export const useGameStore = defineStore('game', () => {
       localStorage.setItem('mtg-player-confirm-routine', String(value));
   }
 
+  function setRemindUnplayedLand(value: boolean): void {
+    remindUnplayedLand.value = value;
+    if (typeof localStorage !== 'undefined')
+      localStorage.setItem('mtg-player-remind-land', String(value));
+  }
+
   function setAutoConfirmActions(value: boolean): void {
     autoConfirmActions.value = value;
     if (typeof localStorage !== 'undefined')
@@ -654,6 +665,7 @@ export const useGameStore = defineStore('game', () => {
     playbackMode,
     paceMs,
     confirmRoutineActions,
+    remindUnplayedLand,
     autoConfirmActions,
     reducedMotion,
     halt,
@@ -685,6 +697,7 @@ export const useGameStore = defineStore('game', () => {
     setPlaybackMode,
     setPace,
     setConfirmRoutineActions,
+    setRemindUnplayedLand,
     setAutoConfirmActions,
     setReducedMotion,
     resolveHeldDecision,

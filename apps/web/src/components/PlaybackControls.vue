@@ -9,7 +9,7 @@
  */
 import { computed, ref, watch } from 'vue';
 import type { PlaybackMode } from '@mtg/shared';
-import ConfirmAbandonDialog from './ConfirmAbandonDialog.vue';
+import ConfirmDialog from './ConfirmDialog.vue';
 
 const props = defineProps<{
   viewTurn: number;
@@ -176,9 +176,11 @@ const SPEEDS: Array<{ label: string; ms: number }> = [
       </button>
     </div>
 
-    <ConfirmAbandonDialog
+    <ConfirmDialog
       v-if="showAbandonModal"
+      title="Abandon match?"
       message="Are you sure you want to terminate the current game session?"
+      confirm-label="Confirm Abandon"
       @cancel="showAbandonModal = false"
       @confirm="confirmAbandon"
     />

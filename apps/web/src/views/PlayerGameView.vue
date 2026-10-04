@@ -13,7 +13,7 @@ import type {
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
-import ConfirmAbandonDialog from '../components/ConfirmAbandonDialog.vue';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
@@ -122,6 +122,7 @@ watch(
     selectedActionId.value = null;
     focusedSourceId.value = null;
     chosenTargets.value = {};
+    pendingPass.value = null;
     const req = request.value;
     if (req?.decisionType === 'chooseTargets' && req.legalActions.length === 1) {
       const [only] = req.legalActions;
@@ -348,6 +349,67 @@ const fallbackRequest = computed<DecisionRequest | null>(() => {
 const actionableSourceIds = computed(
   () => new Set(sourceActions.value.map(sourceId).filter(Boolean)),
 );
+
+/** The ordinary things a source can do right now, best first: a land plays, a spell casts. */
+const PLAYABLE_VERBS = ['playLand', 'castSpell', 'activateAbility'] as const;
+const VERB_LABELS: Record<(typeof PLAYABLE_VERBS)[number], string> = {
+  playLand: 'Play',
+  castSpell: 'Cast',
+  activateAbility: 'Activate',
+};
+
+/**
+ * One entry per card or permanent the engine currently offers to play, cast, or activate, with
+ * the verb for its best action. Drives the "Playable now" list and the tags on hand cards; both
+ * select the source exactly as clicking the card does, so nothing here decides legality.
+ */
+const playableSources = computed(() => {
+  const best = new Map<string, number>();
+  for (const action of sourceActions.value) {
+    if (action.interaction?.kind !== 'source') continue;
+    const rank = (PLAYABLE_VERBS as readonly string[]).indexOf(action.type);
+    if (rank < 0) continue;
+    const id = action.interaction.sourceId;
+    const current = best.get(id);
+    if (current === undefined || rank < current) best.set(id, rank);
+  }
+  return [...best].map(([id, rank]) => ({
+    id,
+    verb: VERB_LABELS[PLAYABLE_VERBS[rank] ?? 'activateAbility'],
+    name: nameById.value.get(id) ?? id,
+  }));
+});
+const playableVerbById = computed(
+  () => new Map(playableSources.value.map((source) => [source.id, source.verb])),
+);
+
+/**
+ * Passing a main phase with a land drop unused is an easy mistake: the engine only offers
+ * `playLand` while the drop is available and a land can be played, so its presence is the whole
+ * test. Ask once per turn; "Pass anyway" is remembered until the next turn.
+ */
+const PASS_ACTION_TYPES = new Set(['pass', 'passAndYieldTurn']);
+const pendingPass = ref<LegalAction | null>(null);
+const landReminderDismissedTurn = ref<number | null>(null);
+
+function needsLandReminder(action: LegalAction): boolean {
+  return (
+    store.remindUnplayedLand &&
+    PASS_ACTION_TYPES.has(action.type) &&
+    isYourTurn.value &&
+    landReminderDismissedTurn.value !== state.value?.turnNumber &&
+    (request.value?.legalActions ?? []).some((candidate) => candidate.type === 'playLand')
+  );
+}
+
+function passAnyway(): void {
+  const action = pendingPass.value;
+  pendingPass.value = null;
+  landReminderDismissedTurn.value = state.value?.turnNumber ?? null;
+  if (action !== null && request.value?.legalActions.some((a) => a.id === action.id)) {
+    chooseAction(action);
+  }
+}
 const selectedSourceName = computed(() =>
   focusedSourceId.value === null ? null : (nameById.value.get(focusedSourceId.value) ?? null),
 );
@@ -394,6 +456,10 @@ function isRoutineAction(action: LegalAction): boolean {
 }
 
 function chooseAction(action: LegalAction): void {
+  if (needsLandReminder(action)) {
+    pendingPass.value = action;
+    return;
+  }
   if (
     action.type === 'playLand' &&
     !store.confirmRoutineActions &&
@@ -546,6 +612,8 @@ watch(selectedAction, (action) => {
 function onKeyDown(event: KeyboardEvent): void {
   const target = event.target;
   if (target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(target.tagName)) return;
+  // An open dialog owns the keyboard: Space on its focused button must not also pass priority.
+  if (confirmingAbandon.value || pendingPass.value !== null) return;
 
   if (event.key === 'Enter') {
     if (selectedAction.value !== null && canConfirm.value) {
@@ -852,6 +920,14 @@ function abandon(): void {
       </label>
       <label class="routine-confirm">
         <input
+          :checked="store.remindUnplayedLand"
+          type="checkbox"
+          @change="store.setRemindUnplayedLand(($event.target as HTMLInputElement).checked)"
+        />
+        Land drop reminder
+      </label>
+      <label class="routine-confirm">
+        <input
           :checked="store.autoConfirmActions"
           type="checkbox"
           @change="store.setAutoConfirmActions(($event.target as HTMLInputElement).checked)"
@@ -1078,7 +1154,10 @@ function abandon(): void {
             </div>
           </div>
 
-          <div class="hand">
+          <div
+            class="hand"
+            :class="{ 'has-playable': playableSources.length > 0 && selectedAction === null }"
+          >
             <button
               v-for="card in human.hand ?? []"
               :key="card.id"
@@ -1104,6 +1183,9 @@ function abandon(): void {
                 :is-token="isTokenTypeLine(card.typeLine)"
                 size="small"
               />
+              <span v-if="playableVerbById.get(card.id)" class="play-tag">{{
+                playableVerbById.get(card.id)
+              }}</span>
               <span>{{ card.name }}</span>
             </button>
           </div>
@@ -1318,6 +1400,27 @@ function abandon(): void {
                   {{ action.description }}
                 </button>
               </div>
+              <div
+                v-if="
+                  playableSources.length > 0 &&
+                  selectedAction === null &&
+                  combatPlan.mode === 'idle'
+                "
+                class="playable-now"
+              >
+                <strong>Playable now</strong>
+                <div class="playable-list">
+                  <button
+                    v-for="source in playableSources"
+                    :key="source.id"
+                    type="button"
+                    :class="{ focused: focusedSourceId === source.id }"
+                    @click="selectSource(source.id)"
+                  >
+                    <span class="verb">{{ source.verb }}</span> {{ source.name }}
+                  </button>
+                </div>
+              </div>
               <p
                 v-if="hasOnlyImmediateActions && store.ignoredAbilities.length > 0"
                 class="yield-explanation"
@@ -1374,9 +1477,21 @@ function abandon(): void {
       </aside>
     </main>
     <p v-else class="waiting">Waiting for the player-safe board…</p>
-    <ConfirmAbandonDialog
+    <ConfirmDialog
+      v-if="pendingPass"
+      title="You haven't played a land this turn"
+      message="You still have a land drop and a land you can play. Pass anyway?"
+      confirm-label="Pass anyway"
+      cancel-label="Play a land"
+      tone="primary"
+      @cancel="pendingPass = null"
+      @confirm="passAnyway"
+    />
+    <ConfirmDialog
       v-if="confirmingAbandon"
+      title="Abandon match?"
       message="Your current game will end and cannot be resumed."
+      confirm-label="Confirm Abandon"
       @cancel="confirmingAbandon = false"
       @confirm="abandon"
     />
@@ -1642,8 +1757,10 @@ button.selected,
   width: 100%;
 }
 .actionable {
-  border-color: rgb(96 165 250 / 0.75) !important;
-  box-shadow: 0 0 0 1px rgb(96 165 250 / 0.28);
+  border-color: var(--accent) !important;
+  box-shadow:
+    0 0 0 2px rgb(96 165 250 / 0.45),
+    0 0 14px rgb(96 165 250 / 0.35);
 }
 .actionable:hover {
   transform: translateY(-2px);
@@ -1686,6 +1803,7 @@ button.selected,
   border-top: 1px solid var(--line);
 }
 .hand-card {
+  position: relative;
   flex: 0 0 auto;
   padding: 0.2rem;
   display: flex;
@@ -1911,6 +2029,48 @@ button.selected,
   display: flex;
   gap: 0.3rem;
   margin: 0.45rem 0;
+}
+/* While something is playable, cards that are not recede so the playable ones read first. */
+.hand.has-playable .hand-card:not(.actionable):not(.focused):not(.chosen-target) {
+  opacity: 0.7;
+}
+.play-tag {
+  position: absolute;
+  top: 0.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+.playable-now {
+  margin: 0.45rem 0;
+  font-size: 0.75rem;
+}
+.playable-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+.playable-list button {
+  border-color: var(--accent);
+}
+.playable-list button.focused {
+  background: var(--accent);
+  color: #fff;
+}
+.playable-list .verb {
+  font-weight: 700;
+  color: var(--accent);
+}
+.playable-list button.focused .verb {
+  color: inherit;
 }
 .yield-explanation {
   color: var(--muted);
