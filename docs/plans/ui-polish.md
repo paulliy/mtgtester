@@ -1,7 +1,7 @@
 # UI polish plan
 
-Prepared 2026-10-04 for review. Status: **proposed**. Desktop first; narrow-screen layout is
-deliberately deferred.
+Prepared 2026-10-04 for review. Status: **in progress** — U1 and U2 are done; U3–U5 are proposed.
+Desktop first; narrow-screen layout is deliberately deferred.
 
 This plan covers the larger UI work found in a live walkthrough of the app on 2026-10-04 (setup,
 one player game, one spectator game, statistics, and a batch at 1440×1000) and the still-open
@@ -24,14 +24,14 @@ These small fixes shipped separately and are not repeated below:
 
 ## Recommended order
 
-| Order | Item                                     | Size   | Why this position                                            |
-| ----- | ---------------------------------------- | ------ | ------------------------------------------------------------ |
-| 1     | U1 Recover an orphaned player session    | Small  | A dead end today: the only way out is restarting the server  |
-| 2     | U2 Make playable actions obvious         | Medium | Highest everyday value; a turn can pass with a land unplayed |
-| 3     | U3 Correct "Who beats me" and tidy stats | Medium | Statistics currently contradict themselves                   |
-| 4     | U4 Player board hierarchy and density    | Large  | Biggest visual change; needs a design review first           |
-| —     | U5 Test coverage for the player flow     | Medium | Runs alongside U2–U4, not after them                         |
-| Later | U6 Narrow-screen layout                  | Large  | Deferred by decision on 2026-10-04                           |
+| Order | Item                                     | Size   | Why this position                                  |
+| ----- | ---------------------------------------- | ------ | -------------------------------------------------- |
+| 1     | U1 Recover an orphaned player session    | Small  | Done 2026-10-04 (idle expiry only, by decision)    |
+| 2     | U2 Make playable actions obvious         | Medium | Done 2026-10-04, including the land-drop reminder  |
+| 3     | U3 Correct "Who beats me" and tidy stats | Medium | Statistics currently contradict themselves         |
+| 4     | U4 Player board hierarchy and density    | Large  | Biggest visual change; needs a design review first |
+| —     | U5 Test coverage for the player flow     | Medium | Runs alongside U2–U4, not after them               |
+| Later | U6 Narrow-screen layout                  | Large  | Deferred by decision on 2026-10-04                 |
 
 ## U1 Recover an orphaned player session
 
@@ -42,29 +42,15 @@ session before replacing it." If the original browser is gone (closed private wi
 storage, another machine profile), nothing can start or abandon that game until the server
 restarts. Reproduced on 2026-10-04 with two browser contexts.
 
-**Proposal.**
+**Decision (2026-10-04).** Another browser may **not** take over a disconnected game. Only the
+idle expiry ships.
 
-1. When the player socket is _disconnected_, allow another local socket to claim the session with
-   an explicit `claimPlayerSession` message. While the player socket is connected, keep refusing.
-2. Expose session status on Setup: when a start is refused for this reason, show the game's turn
-   and commander with **Continue that game here** and **Abandon it** buttons, instead of the
-   current text-only explanation.
-3. Optional: expire a disconnected player session after a long idle period (for example 30
-   minutes) using the existing orphan-timer mechanism.
-
-**Decision needed.** The server is loopback-only, so the trust boundary is the local machine.
-Is claiming a disconnected session from another browser on the same machine acceptable? The
-recommended answer is yes, with the claim requiring the explicit button press above. If not, ship
-only the idle expiry (3).
-
-**Files.** `packages/server/src/ws/server.ts`, `packages/shared/src/protocol.ts` (new message and
-a refusal payload carrying turn/commander), `apps/web/src/stores/game.ts`,
-`apps/web/src/composables/useConfirmedStart.ts`.
-
-**Verification.** Lifecycle tests beside `packages/server/src/ws/audit-lifecycle.test.ts`: claim
-refused while the player is connected; claim succeeds after disconnect; the old token no longer
-controls the game; concurrent claims; abandon via claim. Projection tests that the claim reveals no
-more than the player view already does.
+**Done.** `PLAYER_IDLE_GRACE_MS` (30 minutes, in `packages/shared/src/protocol.ts`) starts when the
+player socket closes; resuming cancels it, and each disconnect starts a fresh one. On expiry the
+server abandons the game, which frees the seat for a new start. The Setup refusal message says
+when the seat clears instead of advising a restart. Regressions are in
+`packages/server/src/ws/audit-lifecycle.test.ts` (expiry frees the seat, resume cancels, a later
+disconnect does not inherit an earlier timer).
 
 ## U2 Make playable actions obvious
 
@@ -74,27 +60,26 @@ hand card, but the cue is a 1px, 75%-opacity blue border (`.actionable` in
 `PlayerGameView.vue`) plus a grey hint line at the bottom of the board. In the walkthrough a
 whole turn passed with a land in hand and the land drop unused.
 
-**Proposal** (a slice of Phase 9.2/9.3):
+**Decision (2026-10-04).** Ship all three parts, including the land-drop reminder.
 
-1. A clearly stronger actionable state for hand cards and permanents: raised card, accent glow,
-   and a small "Play"/"Cast"/"Activate" tag derived from the offered action's type. Non-actionable
-   hand cards are visually quieter while you have priority. Equivalent non-animated states when
-   reduced motion is on.
-2. A compact **Playable now** row in the action panel listing each offered play/cast/activate
-   source. Selecting one uses the existing card-selection path; it never submits directly.
-3. A land-drop reminder: when you pass from a main phase with a land drop available and a
-   playable land in hand, the pass asks once ("You haven't played a land this turn"). This
-   follows Phase 9's "confirm risk" rule and is suppressed when a player turns it off.
+**Done** (a slice of Phase 9.2/9.3):
 
-**Decision needed.** Is the land-drop reminder (3) wanted, or would you rather rely on (1) and (2)?
+1. Playable cards and permanents have an accent outline and glow; hand cards carry a
+   Play/Cast/Activate tag from the best offered action; unplayable hand cards recede while
+   something is playable. Nothing here animates, so reduced motion needs no separate state.
+2. A **Playable now** list in the action panel names each source the engine offers to play, cast,
+   or activate. Selecting one behaves exactly like clicking the card (a land plays in one click
+   unless "Confirm passes & lands" is on).
+3. Passing or passing-and-yielding while the engine still offers a `playLand` asks once per turn
+   ("Play a land" / "Pass anyway"). The "Land drop reminder" setting turns it off. Keyboard
+   shortcuts are ignored while any dialog is open.
 
-**Constraints.** Engine-offered actions remain the only source of truth; nothing is inferred
-client-side. Hidden information is unchanged because only the viewer's own offered actions are
-used.
+Engine-offered actions remain the only source of truth, and only the viewer's own offered actions
+are used, so hidden information is unchanged. Card Test Lab Playwright tests cover the tag and
+list, the reminder (including Space on the dialog not passing), and turning it off.
 
-**Verification.** Card Test Lab Playwright scenarios for: a land shows as playable and plays from
-the list; an uncastable card is not marked; the reminder appears once and respects its setting;
-reduced-motion state. Screenshot review at desktop width with real card art.
+**Still to check.** A screenshot review with real card art: the glow was only seen over
+placeholder art in a sandbox that cannot reach Scryfall.
 
 ## U3 Correct "Who beats me" and tidy statistics
 
