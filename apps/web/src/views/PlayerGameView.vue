@@ -13,6 +13,7 @@ import type {
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
+import ConfirmAbandonDialog from '../components/ConfirmAbandonDialog.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
@@ -801,7 +802,10 @@ function dropOn(target: ObjectId | string): void {
   if (slot !== undefined) chosenTargets.value = { [slot.slot]: target };
 }
 
+const confirmingAbandon = ref(false);
+
 function abandon(): void {
+  confirmingAbandon.value = false;
   store.abandonGame();
   void router.push('/');
 }
@@ -862,7 +866,7 @@ function abandon(): void {
         />
         Reduce motion
       </label>
-      <button type="button" @click="abandon">Abandon</button>
+      <button type="button" @click="confirmingAbandon = true">Abandon</button>
     </header>
 
     <div v-if="store.connection !== 'open'" class="paused">
@@ -1364,6 +1368,12 @@ function abandon(): void {
       </aside>
     </main>
     <p v-else class="waiting">Waiting for the player-safe board…</p>
+    <ConfirmAbandonDialog
+      v-if="confirmingAbandon"
+      message="Your current game will end and cannot be resumed."
+      @cancel="confirmingAbandon = false"
+      @confirm="abandon"
+    />
   </div>
 </template>
 
