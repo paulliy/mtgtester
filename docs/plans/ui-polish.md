@@ -1,6 +1,7 @@
 # UI polish plan
 
-Prepared 2026-10-04 for review. Status: **in progress** — U1–U3 are done; U4 and U5 are proposed.
+Prepared 2026-10-04 for review. Status: **done** — U1–U5 shipped on 2026-10-04; U6 (narrow screens) stays deferred. The
+[2026-10-04 review](../reviews/ui-polish-2026-10-04.md) has the before/after screenshots.
 Desktop first; narrow-screen layout is deliberately deferred.
 
 This plan covers the larger UI work found in a live walkthrough of the app on 2026-10-04 (setup,
@@ -24,14 +25,14 @@ These small fixes shipped separately and are not repeated below:
 
 ## Recommended order
 
-| Order | Item                                     | Size   | Why this position                                  |
-| ----- | ---------------------------------------- | ------ | -------------------------------------------------- |
-| 1     | U1 Recover an orphaned player session    | Small  | Done 2026-10-04 (idle expiry only, by decision)    |
-| 2     | U2 Make playable actions obvious         | Medium | Done 2026-10-04, including the land-drop reminder  |
-| 3     | U3 Correct "Who beats me" and tidy stats | Medium | Done 2026-10-04                                    |
-| 4     | U4 Player board hierarchy and density    | Large  | Biggest visual change; needs a design review first |
-| —     | U5 Test coverage for the player flow     | Medium | Runs alongside U2–U4, not after them               |
-| Later | U6 Narrow-screen layout                  | Large  | Deferred by decision on 2026-10-04                 |
+| Order | Item                                     | Size   | Why this position                                        |
+| ----- | ---------------------------------------- | ------ | -------------------------------------------------------- |
+| 1     | U1 Recover an orphaned player session    | Small  | Done 2026-10-04 (idle expiry only, by decision)          |
+| 2     | U2 Make playable actions obvious         | Medium | Done 2026-10-04, including the land-drop reminder        |
+| 3     | U3 Correct "Who beats me" and tidy stats | Medium | Done 2026-10-04                                          |
+| 4     | U4 Player board hierarchy and density    | Large  | Done 2026-10-04 (built directly, at the owner's request) |
+| —     | U5 Test coverage for the player flow     | Medium | Done 2026-10-04                                          |
+| Later | U6 Narrow-screen layout                  | Large  | Deferred by decision on 2026-10-04                       |
 
 ## U1 Recover an orphaned player session
 
@@ -115,36 +116,40 @@ opponent panels that are mostly blank early in the game, a large empty battlefie
 column taller than the decision panel. The current decision does not dominate the screen, and
 labels are small and abbreviated.
 
-**Proposal** (a slice of Phase 9.2 and 9.5):
+**Done** (a slice of Phase 9.2 and 9.5). The owner asked to build this directly rather than
+review a mock first.
 
-1. Opponent panels sized by content, with an expanded state for the active, attacking, or
-   targeted seat.
-2. A persistent resource strip for the human seat: life, mana available by color, land drop,
-   commander tax, graveyard/exile counts.
-3. Make the decision panel the visual anchor: larger prompt, the U2 playable list, and a
-   bot-turn summary ("P2 played Forest, cast Llanowar Elves") replacing the four-line recent
-   actions list.
-4. Let the log collapse to a smaller height by default on the player board.
+1. Opponent panels size to their boards, capped at 40% of the table height, and the active
+   opponent's column is wider. Labels read "7 in hand · 92 in library".
+2. A resource strip for your seat: land drop, **Mana ready** with colors, floating mana, commander
+   tax, hand, library, graveyard, and exile. Mana ready comes from a new engine projection,
+   `PlayerBoardState.viewerMana`: floating mana plus mana from sources that need no mana to
+   activate and whose mana has no spending restriction, so it never overstates what is freely
+   spendable. The AI view's `availableMana` was not reused because it credits a flexible source to
+   every color at once.
+3. "Since your last action" groups each opponent's log lines since you last did something other
+   than pass (latest three per seat, plus a count), replacing the flat four-line list. The "Playable
+   now" list collapses identical entries ("Play Swamp ×3").
+4. The decision panel takes priority over the log in the rail, with a larger prompt.
 
-**Process.** Because this is the largest visual change, produce a static mock (or a screenshot
-of a branch prototype with real card art) for review before implementation, then land it in
-steps: strip, panels, decision anchor, log.
-
-**Verification.** Existing Card Test Lab Playwright suite (layout changes must not break its
-locators), plus screenshot comparison at 1280, 1440, and 1920 widths.
+Found along the way: a finished single-player game kept refusing starts from other browsers; the
+server now lets any local browser replace a game that is over.
 
 ## U5 Test coverage for the player flow
 
-- **A real human-play e2e.** Nothing drives a player game past the opening hand. Add one seeded
-  Playwright flow: keep, play a land, cast a spell with auto-pay, attack, pass, abandon with
-  confirmation. Use built-in bots for determinism.
-- **Wire `test:e2e:setup` into CI.** It covers Play my deck against a real database but is not
-  run in CI because CI lacks the gitignored Scryfall bulk file. A committed small Oracle fixture
-  (the `coverage-oracle.json` population is enough) would let it run.
-- **Stop depending on remote card art.** Many Card Test Lab assertions use `getByAltText(card
-name)`. `CardImage` removes the `<img>` when the art fails to load, so the suite fails offline
-  or when Scryfall is slow. Add a stable `data-card-name` (or `aria-label`) to the card wrapper and
-  assert on that instead.
+**Done.**
+
+- **Real player-game e2e.** `apps/web/e2e/player-game.spec.ts` plays seed `e2e-6` against built-in
+  bots: keep, the land-drop reminder, a land from "Playable now", a spell paid by auto-pay, the
+  opponent summary on the next turn, "Pass anyway", and abandoning with confirmation. Combat from
+  the player board and a full game to victory are still not covered.
+- **`test:e2e:setup` runs in CI.** `serve --oracle-fixture` loads the committed
+  `packages/server/fixtures/coverage-oracle.json`, so the DB-backed specs no longer need the
+  gitignored Scryfall bulk file. `player-setup.spec.ts` now abandons its game so the specs do not
+  depend on order.
+- **No dependency on remote card art.** The three `getByAltText` assertions now match
+  `role="img"` by name, which the art placeholder already exposes. The full Card Test Lab suite
+  passes with Scryfall unreachable.
 
 ## U6 Narrow-screen layout (deferred)
 
