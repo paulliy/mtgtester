@@ -1335,7 +1335,13 @@ function abandon(): void {
           <p v-else class="thinking">Bots are deciding…</p>
           <div v-if="recentBotActions.length > 0" class="bot-summary">
             <strong>Recent opponent actions</strong>
-            <p v-for="line in recentBotActions" :key="line.sequence">{{ line.text }}</p>
+            <p
+              v-for="line in recentBotActions"
+              :key="line.sequence"
+              :title="seatLabel(line.actorSeat ?? '')"
+            >
+              <span class="actor">{{ line.actorSeat }}</span> {{ line.text }}
+            </p>
           </div>
           <div v-if="store.ignoredAbilities.length > 0" class="ignored-abilities">
             <strong>Yielded abilities</strong>
@@ -1969,6 +1975,10 @@ button.primary {
 .bot-summary p {
   margin: 0.2rem 0 0;
   color: var(--muted);
+}
+.bot-summary .actor {
+  font-weight: 700;
+  color: var(--accent);
 }
 .rail :deep(.log) {
   flex: 1;
