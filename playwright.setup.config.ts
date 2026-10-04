@@ -29,14 +29,15 @@ const dbPath = join(runDirectory(), 'setup.sqlite');
 
 export default defineConfig({
   testDir: './apps/web/e2e',
-  testMatch: 'player-setup.spec.ts',
+  testMatch: /player-(setup|game)\.spec\.ts$/,
   globalTeardown: './apps/web/e2e/setup-teardown.ts',
   workers: 1,
   timeout: 120_000,
   use: { baseURL: 'http://127.0.0.1:5173' },
   webServer: [
     {
-      command: `bun run packages/server/src/cli/serve.ts --port ${port} --db-path "${dbPath}"`,
+      // The committed Oracle fixture, not the gitignored Scryfall bulk file, so this runs in CI.
+      command: `bun run packages/server/src/cli/serve.ts --port ${port} --db-path "${dbPath}" --oracle-fixture packages/server/fixtures/coverage-oracle.json`,
       url: `http://127.0.0.1:${port}/health`,
       reuseExistingServer: false,
       timeout: 120_000,

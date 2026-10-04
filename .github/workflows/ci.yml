@@ -93,6 +93,9 @@ jobs:
       - run: bunx playwright install --with-deps chromium
       # Real frontend + real lab backend, no mocked transport. The config boots both servers.
       - run: bun run test:e2e
+      # Real frontend + real DB-backed server on the committed Oracle fixture: Play my deck setup
+      # and a seeded player game against built-in bots.
+      - run: bun run test:e2e:setup
       # Traces are the retained viewer evidence (trace: 'on', preserveOutput: 'always').
       - uses: actions/upload-artifact@v4
         if: always()

@@ -61,10 +61,11 @@ bun run test                            # full Vitest suite
 bun run test <path-or-filter>           # one test file or pattern
 bun run test:card-gate                  # offline card verification gate
 bun run snapshots:check                 # interpretation/override snapshot drift
-bun run test:e2e                        # Playwright
+bun run test:e2e                        # Playwright (Card Test Lab + mocked smoke)
+bun run test:e2e:setup                  # Playwright: Play my deck + a seeded player game (DB-backed)
 
 bun run dev                             # server :3001 and UI :5173
-bun run serve [--port N] [--no-db]
+bun run serve [--port N] [--no-db] [--oracle-fixture packages/server/fixtures/coverage-oracle.json]
 bun run dev:web
 
 bun run decks <deckUrlOrFile> [more...]
@@ -99,9 +100,9 @@ single-player flow, not another way to run a game — see
 ## Testing and change discipline
 
 - Add a focused regression for every engine/card correctness fix.
-- Run the smallest relevant test first (`bun run test <path>`), then `bun run test`. For affected surfaces, also run what CI runs: `typecheck`, `typecheck:tests`, `lint`, `format:check`, and the web build; `test:card-gate` and `snapshots:check` for card changes; `test:e2e` for viewer changes.
+- Run the smallest relevant test first (`bun run test <path>`), then `bun run test`. For affected surfaces, also run what CI runs: `typecheck`, `typecheck:tests`, `lint`, `format:check`, and the web build; `test:card-gate` and `snapshots:check` for card changes; `test:e2e` and `test:e2e:setup` for viewer changes.
 - CI has no provider key, so AI tests must be deterministic and must not make live model calls.
-- The audit smoke spec mocks network/AI; the Card Test Lab spec drives the real frontend and server. Complete human play, mobile interaction, reconnection, and imports still lack end-to-end coverage.
+- The audit smoke spec mocks network/AI; the Card Test Lab spec drives the real frontend and server. `player-game.spec.ts` plays a seeded game through the player board (land, cast, pass, abandon) against a server on the committed Oracle fixture. A full game to victory, combat from the player board, mobile interaction, reconnection, and imports still lack end-to-end coverage.
 - Do not silently rewrite historical SQLite data. Document derivations and migrations; legacy mana metrics intentionally display as unavailable rather than guessed.
 - Keep the server on local loopback unless an authenticated remote-sharing design is explicitly approved.
 - Keep `packages/engine` free of I/O, network access, UI logic, and provider policy. Put shared wire types in `packages/shared` and update every consumer for protocol changes.

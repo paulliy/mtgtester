@@ -27,6 +27,19 @@ export interface OracleIndex {
  * with a handful of fixtures instead of the 180 MB file.
  */
 export function buildOracleIndex(rawCards: RawScryfallCard[]): OracleIndex {
+  const cards: OracleCard[] = [];
+  for (const raw of rawCards) {
+    const card = toOracleCard(raw);
+    if (card !== null) cards.push(card);
+  }
+  return buildOracleIndexFromCards(cards);
+}
+
+/**
+ * Build an index from cards already in engine form — a committed Oracle fixture such as
+ * `packages/server/fixtures/coverage-oracle.json`, which lets a server run without the bulk file.
+ */
+export function buildOracleIndexFromCards(cards: readonly OracleCard[]): OracleIndex {
   const byOracleId = new Map<string, OracleCard>();
   const byStrict = new Map<string, OracleCard>();
   const byLoose = new Map<string, OracleCard | null>(); // null marks an ambiguous loose key
@@ -52,9 +65,7 @@ export function buildOracleIndex(rawCards: RawScryfallCard[]): OracleIndex {
     else if (byLoose.get(key) !== card) byLoose.set(key, null); // collision → ambiguous
   };
 
-  for (const raw of rawCards) {
-    const card = toOracleCard(raw);
-    if (!card) continue;
+  for (const card of cards) {
     if (byOracleId.has(card.oracleId)) continue; // oracle-cards is one-per-id; keep the first
     byOracleId.set(card.oracleId, card);
 
