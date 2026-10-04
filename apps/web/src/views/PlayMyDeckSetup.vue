@@ -174,11 +174,15 @@ function play(): void {
   );
 }
 
-/** The server's refusal when another browser still holds the player seat, in player terms. */
+/**
+ * The server's refusal when another browser holds the player seat, in player terms. The same
+ * browser resumes its own game automatically, so this always means a different browser, window
+ * profile, or cleared storage — and the server keeps that game until it is abandoned there.
+ */
 const ACTIVE_SESSION_REFUSAL = 'Resume the active player session before replacing it.';
 function describeStartError(message: string): string {
   return message === ACTIVE_SESSION_REFUSAL
-    ? 'A player game is still open in another tab or window. Continue or abandon it there, then try again.'
+    ? 'Another player game is still in progress on this server, started from a different browser or window. Continue or abandon it there, then try again. If that browser is no longer available, restart the server.'
     : message;
 }
 </script>
