@@ -22,6 +22,8 @@ import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useCombatStrikes } from '../composables/useCombatStrikes';
 import { useLifeFlash, useLifeFlashBySeat } from '../composables/useLifeFlash';
 import { isTokenTypeLine } from '../lib/card';
+import { CONNECTION_LABELS } from '../lib/socket';
+import { playerFacingPrompt, turnPositionLabel } from '../lib/turnLabels';
 import { groupPermanents } from '../lib/stackPermanents';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useCombatPlanStore } from '../stores/combatPlan';
@@ -736,6 +738,13 @@ function paymentSourceNames(action: LegalAction): string[] {
     : [];
 }
 
+/** "Forest ×2, Sol Ring" — repeated sources counted rather than listed again. */
+function paymentSourceSummary(action: LegalAction): string {
+  const counts = new Map<string, number>();
+  for (const name of paymentSourceNames(action)) counts.set(name, (counts.get(name) ?? 0) + 1);
+  return [...counts].map(([name, count]) => (count > 1 ? `${name} ×${count}` : name)).join(', ');
+}
+
 function selectedTargetLabel(slot: string, choice: ObjectId): string {
   return `Target ${Number(slot) + 1}: ${nameById.value.get(choice) ?? choice}`;
 }
@@ -805,14 +814,14 @@ function abandon(): void {
       <span v-if="state" class="turn-badge" :class="{ 'your-turn': isYourTurn }">
         Turn {{ state.turnNumber }} · {{ isYourTurn ? 'Your turn' : state.activePlayer }}
       </span>
-      <span v-if="state"
-        >{{ state.phase }}<template v-if="state.step"> · {{ state.step }}</template></span
-      >
+      <span v-if="state">{{ turnPositionLabel(state.phase, state.step) }}</span>
       <span v-if="state?.priorityPlayer"
         >Priority:
         {{ state.priorityPlayer === state.viewerSeat ? 'You' : state.priorityPlayer }}</span
       >
-      <span :class="['connection', store.connection]">{{ store.connection }}</span>
+      <span :class="['connection', store.connection]">{{
+        CONNECTION_LABELS[store.connection]
+      }}</span>
       <div class="pace">
         Bot turns
         <button type="button" :class="{ active: store.paceMs === 0 }" @click="store.setPace(0)">
@@ -1131,7 +1140,7 @@ function abandon(): void {
                 <strong>{{ pendingSummary(selectedAction) }}</strong>
               </div>
               <p v-if="paymentSourceNames(selectedAction).length > 0" class="payment-preview">
-                Auto-pay: {{ paymentSourceNames(selectedAction).join(' ? ') }}
+                Auto-pay: {{ paymentSourceSummary(selectedAction) }}
               </p>
               <p v-if="targetSlots(selectedAction).length > 0" class="target-instruction">
                 {{
@@ -1293,7 +1302,7 @@ function abandon(): void {
             />
             <template v-else>
               <h3>Your action</h3>
-              <p>{{ request.prompt }}</p>
+              <p>{{ playerFacingPrompt(request.prompt) }}</p>
               <div v-if="immediateActions.length > 0" class="quick-actions">
                 <button
                   v-for="action in immediateActions"

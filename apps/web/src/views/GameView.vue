@@ -9,6 +9,8 @@ import { useRouter } from 'vue-router';
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
 import type { SpectatorCard, SpectatorPermanent } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
+import { CONNECTION_LABELS } from '../lib/socket';
+import { turnPositionLabel } from '../lib/turnLabels';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import GameOverPanel from '../components/GameOverPanel.vue';
 import HeldDecision from '../components/HeldDecision.vue';
@@ -75,7 +77,7 @@ function resetLab(): void {
 const phaseLabel = computed(() => {
   const s = state.value;
   if (s === null) return '';
-  return s.step === null ? s.phase : `${s.phase} · ${s.step}`;
+  return turnPositionLabel(s.phase, s.step);
 });
 
 /**
@@ -165,7 +167,7 @@ const roundLabel = computed(() => {
         }}
         tok
       </span>
-      <span class="conn" :class="store.connection">{{ store.connection }}</span>
+      <span class="conn" :class="store.connection">{{ CONNECTION_LABELS[store.connection] }}</span>
     </header>
 
     <HeldDecision
