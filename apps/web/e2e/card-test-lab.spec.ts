@@ -120,7 +120,7 @@ test('Gev, Scaled Scorch: ward — pay 2 life', async ({ page }) => {
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/is countered/i).first()).toBeVisible();
-  await expect(page.getByAltText('Gev, Scaled Scorch')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Gev, Scaled Scorch', exact: true })).toBeVisible();
 });
 
 test('Nightscape Familiar: regenerate survives destruction', async ({ page }) => {
@@ -147,7 +147,9 @@ test('Nightscape Familiar: regenerate survives destruction', async ({ page }) =>
   await expect(
     page.getByText('Nightscape Familiar regenerates instead of being destroyed'),
   ).toBeVisible();
-  await expect(page.getByAltText('Nightscape Familiar').first()).toBeVisible();
+  await expect(
+    page.getByRole('img', { name: 'Nightscape Familiar', exact: true }).first(),
+  ).toBeVisible();
 });
 
 test('Thran Vigil: artifact leaves your graveyard', async ({ page }) => {
@@ -158,7 +160,7 @@ test('Thran Vigil: artifact leaves your graveyard', async ({ page }) => {
   await picker.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   const talisman = page.locator('.zone-card-thumb.targetable').filter({
-    has: page.getByAltText('Eligible Talisman'),
+    has: page.getByRole('img', { name: 'Eligible Talisman', exact: true }),
   });
   await expect(talisman).toBeVisible();
   await talisman.click();
