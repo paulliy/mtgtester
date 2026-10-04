@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/generate-myriad-landscape-evidence.ts",
+  "oracleId": "2549bc57-9ffb-4053-9f10-f2a5f792b845",
+  "oracleSha256": "696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b",
+  "workspaceRevision": {
+    "gitHead": "5b9f5f52332266e7f2b8c0b07d30b918dd22173f",
+    "sourceSha256": "5fb418c9c9889f759358998315650e1ba031993f73a668382cbc91f4ebc5daf1",
+    "files": {
+      "docs/plans/fail-closed-card-restoration.md": "29cb11a20b41a271b78f51ec699cf4236aa0a904888b26446643a697e2f0e7dc",
+      "packages/engine/src/cards/overrides/necron-dynasties.ts": "3ff41eb746fded768ae68c7a681c10c5f97998f5cfecd2bf9710373c7c2c02e4",
+      "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts": "b88e678d52b99a06745af0c4f43107392bf9fdeabfdc29e7cfcc72b12cdb9fb3",
+      "packages/engine/src/effects/resolve.ts": "97e4667ff74546aa7abc3b8c119d411d80d8ead0de8a4d2566850f24136946c2",
+      "packages/engine/src/index.ts": "cfd7a6216e8607e11856dedd1ff5a6b84f530220fad1ce355a167b2159e25148",
+      "packages/engine/src/testing/candidate-definition.ts": "517e08510ef95c1a07346cc79f9dfe877dbee16e904a05ed404e9c4a3ead3608",
+      "packages/engine/tests/fail-closed-restoration.test.ts": "74686c630bb7f86ce5bf0e725f594b3e4ba057b7584666b62ca86e335953d2f5",
+      "packages/engine/tests/myriad-landscape.test.ts": "82980fb946a7c8f0fb36b07f9927e3cff1ba98f1c29cf00bdb04263a50012e76",
+      "packages/server/src/cards/card-test-scenarios.ts": "6d567d1df0e083821cb18a4b7fea4c1c0b3803be1f943828be0c459811b448a4",
+      "packages/server/src/cards/card-test-scenarios.test.ts": "d417ce8c923ca7f23cbf29bae68361a9a1fcc8987066d54c8bf9782fad358fd0",
+      "packages/server/src/cards/gameplay-ai-evaluation.ts": "6b5299b36d2d817c588f394cdc372f7a0d2307d9ee9bf373c094af2a00bf8f8e",
+      "packages/server/src/cards/gameplay-ai-evaluation.test.ts": "dd0cb9b0747ee1a0f520965a11fc77a5e0a1afed9f8623c7f9f5e8b23508ee89",
+      "packages/server/fixtures/card-verification-manifest.json": "dd106e951e167bb75b801f5b99340aace55c7d1ffdc11cd089617b32600d6297",
+      "apps/web/e2e/card-test-lab.spec.ts": "66e6fe1ac0c81a8e261033aefea176ff60a0796f70515f9a615f9fd03b39fcd6",
+      "scripts/generate-myriad-landscape-evidence.ts": "5c1d896431b8a9b4e5dcf501717fb825259dfbada7ec37a10e49250f64733552"
+    }
+  },
+  "scenarios": [
+    {
+      "id": "myriad-landscape-viewer-enters-tapped",
+      "seed": "card-lab-myriad-landscape-viewer-enters-tapped-v1",
+      "oracleSha256": "696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b",
+      "clauseIds": ["myriad-landscape-enters-tapped"],
+      "scenarioSha256": "dd9b9fc494252778bcd762917f6433f43776658faecae363c8b6e8b4c7090f78",
+      "finalStateSha256": "d19749182325e30e5c49e54b7b636ff2698ce76511c9560ef35ca92f52952da3",
+      "replayFinalStateSha256": "d19749182325e30e5c49e54b7b636ff2698ce76511c9560ef35ca92f52952da3",
+      "eventLogSha256": "4b5a62ce12dc5e41e6edf15d2a5b08337791dd0e0f3cea8e6fe5e77115fe2719",
+      "replayEventLogSha256": "4b5a62ce12dc5e41e6edf15d2a5b08337791dd0e0f3cea8e6fe5e77115fe2719",
+      "decisions": 1,
+      "observations": {
+        "landscapeTapped": true,
+        "foundNames": [],
+        "p1Graveyard": [],
+        "p2ViewLeaksPrivateName": false
+      },
+      "viewerTrace": {
+        "path": "test-results/card-test-lab-Myriad-Lands-bbca7-mal-land-play-enters-tapped/trace.zip",
+        "sha256": "bfcc214f2b0ccf9ed8d6f3f77e9b801e6b6c2edb9d06d1a8afd9a1071383a4a9"
+      }
+    },
+    {
+      "id": "myriad-landscape-viewer-colorless-mana",
+      "seed": "card-lab-myriad-landscape-viewer-colorless-mana-v1",
+      "oracleSha256": "696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b",
+      "clauseIds": ["myriad-landscape-colorless-mana"],
+      "scenarioSha256": "ac5de2c172e6efd84aeb5b47fd95a29f342ab86fb8d60bb7b8047b4b06276bea",
+      "finalStateSha256": "b7f266f13a6acf93dd6aa7d3be86231d682f0915ee46892cec8028baa0a5ff1f",
+      "replayFinalStateSha256": "b7f266f13a6acf93dd6aa7d3be86231d682f0915ee46892cec8028baa0a5ff1f",
+      "eventLogSha256": "d82c803af6801922792222177a8f6d4d841f8bde1d1fc62949663293829d01ba",
+      "replayEventLogSha256": "d82c803af6801922792222177a8f6d4d841f8bde1d1fc62949663293829d01ba",
+      "decisions": 1,
+      "observations": {
+        "landscapeTapped": true,
+        "foundNames": [],
+        "p1Graveyard": [],
+        "p2ViewLeaksPrivateName": false
+      },
+      "viewerTrace": {
+        "path": "test-results/card-test-lab-Myriad-Lands-72cee-less-mana-pays-a-spell-cost/trace.zip",
+        "sha256": "15c3870ba665ad6aeea21c258771c4bc410c7aac050c8807cc5bb6ba3e0255ac"
+      }
+    },
+    {
+      "id": "myriad-landscape-viewer-shared-type-search",
+      "seed": "card-lab-myriad-landscape-viewer-shared-type-search-v1",
+      "oracleSha256": "696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b",
+      "clauseIds": ["myriad-landscape-colorless-mana", "myriad-landscape-shared-land-type-search"],
+      "scenarioSha256": "f94df52a6e5998ddff7bf0a53f4d3336e63949eeebd0fd6467e5e75cfc76bf9c",
+      "finalStateSha256": "800d0a1d6be3223d4c3d47aea44a15ad519d6a4b3876a721211f098ec140299d",
+      "replayFinalStateSha256": "800d0a1d6be3223d4c3d47aea44a15ad519d6a4b3876a721211f098ec140299d",
+      "eventLogSha256": "8c003d62b5737a7aaf0534d20907cfb56b4181cf92d3c490ee392cefe95868f2",
+      "replayEventLogSha256": "8c003d62b5737a7aaf0534d20907cfb56b4181cf92d3c490ee392cefe95868f2",
+      "decisions": 2,
+      "observations": {
+        "landscapeTapped": null,
+        "foundNames": ["Island", "Myriad Shared Dual"],
+        "p1Graveyard": ["Myriad Landscape"],
+        "p2ViewLeaksPrivateName": false
+      },
+      "viewerTrace": {
+        "path": "test-results/card-test-lab-Myriad-Lands-c692e-enforces-a-shared-land-type/trace.zip",
+        "sha256": "6c30d5c8d57cb8978442c75891d7342f69a6bc6cd2713fd943ea4ef658725fa4"
+      }
+    }
+  ]
+}

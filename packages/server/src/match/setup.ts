@@ -32,6 +32,7 @@ import type { BannedList } from '../decks/banned';
 import { inferArchetype } from '../decks/archetype';
 import { generateCommanderDeck } from '../decks/generate';
 import { runDeckPipeline } from '../decks/pipeline';
+import { resolveSavedSeat } from './preview';
 
 export interface SeatSetupDeps {
   pool: SupportedPool;
@@ -287,6 +288,10 @@ export async function setupSeats(
     const seat: PlayerId = `P${index + 1}`;
     if (source.kind === 'pool') {
       results.push(setupPoolSeat(seat, deps, source.seed ?? `${gameSeed}-seat${index + 1}`));
+    } else if (source.kind === 'snapshot') {
+      results.push(resolveSavedSeat(seat, source.snapshotId, deps));
+    } else if (deps.store === undefined) {
+      results.push(problem(seat, 'Imported decks are disabled without a database.'));
     } else {
       results.push(await setupImportedSeat(seat, source, deps));
     }

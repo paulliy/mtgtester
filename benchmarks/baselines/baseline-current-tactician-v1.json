@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "baselineId": "baseline-current-tactician-v1",
+  "role": "tactician",
+  "artifactStatus": "uncaptured",
+  "reason": "Live baseline capture requires an explicit bounded provider run; this identity is immutable and is not an alias."
+}

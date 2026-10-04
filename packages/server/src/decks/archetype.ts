@@ -180,6 +180,37 @@ const THEMES: ReadonlyArray<{ theme: ArchetypeTheme; pattern: RegExp }> = [
   { theme: 'spellslinger', pattern: /whenever you cast (an instant|a sorcery|your first)/i },
 ];
 
+export const CARD_ROLES = [
+  'ramp',
+  'spotRemoval',
+  'boardWipe',
+  'cardDraw',
+  'tutor',
+  'counterspell',
+  'recursion',
+  'sacrificeOutlet',
+  'stax',
+] as const;
+export type CardRole = (typeof CARD_ROLES)[number];
+
+/** Reusable conservative multi-label role evidence for profiles and archetype features. */
+export function detectCardRoles(card: OracleCard): CardRole[] {
+  const roles: CardRole[] = [];
+  const text = card.oracleText;
+  if (!isLand(card)) {
+    if (has(RAMP, text)) roles.push('ramp');
+    if (has(SPOT_REMOVAL, text)) roles.push('spotRemoval');
+    if (has(BOARD_WIPE, text)) roles.push('boardWipe');
+    if (has(CARD_DRAW, text)) roles.push('cardDraw');
+    if (has(TUTOR, text)) roles.push('tutor');
+    if (has(COUNTERSPELL, text)) roles.push('counterspell');
+    if (has(RECURSION, text)) roles.push('recursion');
+    if (has(SAC_OUTLET, text)) roles.push('sacrificeOutlet');
+  }
+  if (has(STAX, text)) roles.push('stax');
+  return roles;
+}
+
 /**
  * How much more a commander's text counts than a single main-deck card's. A 99-card deck can
  * mention "graveyard" incidentally a dozen times; a commander that says it means it.
@@ -277,17 +308,16 @@ export function extractFeatures(input: ArchetypeInput): ArchetypeFeatures {
 
     // Functional counts are nonland-only. A land that taps for mana is not ramp — counting it as
     // such scored this deck's manabase as half its ramp and called every deck a ramp deck.
-    if (!isLand(card)) {
-      if (has(RAMP, text)) features.ramp += quantity;
-      if (has(SPOT_REMOVAL, text)) features.spotRemoval += quantity;
-      if (has(BOARD_WIPE, text)) features.boardWipes += quantity;
-      if (has(CARD_DRAW, text)) features.cardDraw += quantity;
-      if (has(TUTOR, text)) features.tutors += quantity;
-      if (has(COUNTERSPELL, text)) features.counterspells += quantity;
-      if (has(RECURSION, text)) features.recursion += quantity;
-      if (has(SAC_OUTLET, text)) features.sacOutlets += quantity;
-    }
-    if (has(STAX, text)) features.stax += quantity;
+    const roles = detectCardRoles(card);
+    if (roles.includes('ramp')) features.ramp += quantity;
+    if (roles.includes('spotRemoval')) features.spotRemoval += quantity;
+    if (roles.includes('boardWipe')) features.boardWipes += quantity;
+    if (roles.includes('cardDraw')) features.cardDraw += quantity;
+    if (roles.includes('tutor')) features.tutors += quantity;
+    if (roles.includes('counterspell')) features.counterspells += quantity;
+    if (roles.includes('recursion')) features.recursion += quantity;
+    if (roles.includes('sacrificeOutlet')) features.sacOutlets += quantity;
+    if (roles.includes('stax')) features.stax += quantity;
 
     const keywords = card.keywords.map((keyword) => keyword.toLowerCase());
     if (keywords.some((keyword) => AGGRESSIVE.includes(keyword))) {

@@ -3,7 +3,7 @@
  */
 
 import { constant } from '../value';
-import { SAC_SELF, TAP, mana, manaCost } from '../templates';
+import { SAC_SELF, TAP, mana, manaCost, spell, targetSlots } from '../templates';
 import {
   BEAST_3_3_GREEN,
   BEAST_6_6_ARTIFACT,
@@ -19,6 +19,44 @@ import type { CardDefinition } from '../definition';
 
 const ARTIFACT_OR_ARTIFICER = anyOf(ofType('Artifact'), ofSubtype('Artificer'));
 const ARTIFACT_CREATURES_YOU_CONTROL = allOf(ofType('Artifact'), ofType('Creature'), YOURS);
+
+/** Exported for clause-level tests and the reviewed Arcane Denial registration below. */
+const ARCANE_DENIAL_TARGETS = targetSlots({ spell: { kind: 'spell' } });
+export const ARCANE_DENIAL_DEF: Partial<CardDefinition> = {
+  spellAbility: spell({
+    targets: ARCANE_DENIAL_TARGETS.targets,
+    effects: [
+      { op: 'counter', target: ARCANE_DENIAL_TARGETS.slot.spell },
+      {
+        op: 'registerDelayedTrigger',
+        target: ARCANE_DENIAL_TARGETS.slot.spell,
+        when: 'upkeep',
+        expiry: 'onFire',
+        affectedPlayer: 'targetController',
+        ability: {
+          kind: 'triggered',
+          targets: [],
+          effects: [{ op: 'drawUpToN', count: 2, player: 'eventPlayer' }],
+          description: 'The targeted spell controller may draw up to two cards',
+        },
+      },
+      {
+        op: 'registerDelayedTrigger',
+        when: 'upkeep',
+        expiry: 'onFire',
+        affectedPlayer: 'sourceController',
+        ability: {
+          kind: 'triggered',
+          targets: [],
+          effects: [{ op: 'draw', count: constant(1), player: 'eventPlayer' }],
+          description: 'Arcane Denial controller draws a card',
+        },
+      },
+    ],
+    description:
+      "Counter target spell; at the beginning of the next turn's upkeep its controller may draw up to two cards and you draw a card",
+  }),
+};
 
 const AETHERSQUALL_ANCIENT_DEF: Partial<CardDefinition> = {
   triggers: [
@@ -785,11 +823,14 @@ export function registerLIVING_ENERGYOverrides(): void {
     'Artifact-from-library is put into hand without revealing.',
   );
 
-  // Catalog audit living-energy-batch-1: next-turn upkeep draws expire at this cleanup.
-  unsupportedCard(
+  defineCard(
     'ab1cc360-b9de-48d9-9983-4dfe4a7d2a37',
     'Arcane Denial',
-    "Next-turn upkeep draws expire at this turn's cleanup.",
+    [
+      "Counter target spell. Its controller may draw up to two cards at the beginning of the next turn's upkeep.",
+      "You draw a card at the beginning of the next turn's upkeep.",
+    ],
+    ARCANE_DENIAL_DEF,
   );
 
   defineCard(

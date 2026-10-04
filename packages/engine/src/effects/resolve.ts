@@ -570,6 +570,7 @@ export function* paySpellAdditionalCosts(
   costs: readonly AbilityCost[],
   sourceCardId: string,
   sourceInHand: boolean,
+  announcedX = 0,
 ): GameGen<void> {
   for (const cost of costs) {
     switch (cost.kind) {
@@ -641,6 +642,17 @@ export function* paySpellAdditionalCosts(
       }
       case 'payLife':
         loseLife(ctx, player, cost.amount);
+        break;
+      case 'payLifeValue':
+        loseLife(
+          ctx,
+          player,
+          evaluateValueIn(ctx, cost.amount, {
+            controllerId: player.id,
+            sourceCardId,
+            x: announcedX,
+          }),
+        );
         break;
       case 'tapOther': {
         const options = ctx.state.battlefield.filter(
@@ -1243,6 +1255,14 @@ export function* executeAbility(
   /** Evaluate an effect's `Value` amount in this ability's scope. */
   const amountOf = (value: Value | number): number =>
     typeof value === 'number' ? value : evaluateValueIn(ctx, value, scope);
+  /** Resolve an explicitly routed draw recipient without silently falling back to the controller. */
+  const drawRecipient = (player: 'controller' | 'eventPlayer' | undefined) => {
+    if (player !== 'eventPlayer') return controller;
+    if (scope.eventPlayerId === undefined) {
+      throw new Error(`engine bug: ${source.name} used eventPlayer draw without an event player`);
+    }
+    return playerById(ctx, scope.eventPlayerId);
+  };
   /**
    * Life actually lost by opponents during THIS resolution, for a following "you gain life
    * equal to the life lost this way" clause (CR 118.3 — the gain tracks the real loss, not the
@@ -1250,6 +1270,8 @@ export function* executeAbility(
    * over at 0.
    */
   let lifeLostThisWay = 0;
+  /** Stable card identities captured by one effect for later effects in this resolution. */
+  const effectBindings = new Map<string, string[]>();
 
   // CR 608.2b: a target's legality is checked once per resolution, not re-derived from
   // `ability.targets[r]`'s original zone/kind on every later reference to the same slot. Doing
@@ -1262,6 +1284,8 @@ export function* executeAbility(
   // slot resolves, and re-located via `findObjectByCardId` on every later call, following it
   // through zone changes the same way `triggerObjectCardId` does.
   const refCardIdCache = new Map<number, string | null>();
+  /** Controller captured when a target slot is first resolved, before an earlier effect moves it. */
+  const refControllerCache = new Map<number, PlayerId | undefined>();
 
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */
   const ref = (r: EffectRef): ObjectId | null => {
@@ -1303,6 +1327,13 @@ export function* executeAbility(
       refCardIdCache.set(r, null);
       return null;
     }
+    const targetPlayer = ctx.state.players.find((player) => player.id === id);
+    const targetStack = ctx.state.stack.find((entry) => entry.id === id);
+    const targetObject = findObjectById(ctx, id) as { controllerId?: PlayerId } | undefined;
+    refControllerCache.set(
+      r,
+      targetPlayer?.id ?? targetStack?.controllerId ?? targetObject?.controllerId,
+    );
     // Stack objects and players do not have a battlefield cardId to re-resolve through zone
     // changes -- a stack object's identity is only stable for this resolution (Arcane Denial's
     // delayed draw plus counter both need the same stack item), and a player's id needs no
@@ -2347,9 +2378,11 @@ export function* executeAbility(
         }
         break;
       }
-      case 'draw':
-        yield* drawCards(ctx, controller, amountOf(effect.count));
+      case 'draw': {
+        const drawingPlayer = drawRecipient(effect.player);
+        yield* drawCards(ctx, drawingPlayer, amountOf(effect.count));
         break;
+      }
       case 'discard':
         yield* discardCards(ctx, controller, effect.count);
         break;
@@ -3504,14 +3537,21 @@ export function* executeAbility(
                 () => effect.destinations[0] as SearchDestination,
               )
             : effect.destinations;
-        yield* searchLibrary(
+        const foundCardIds = yield* searchLibrary(
           ctx,
           source,
           controller,
           effect.filter,
           destinations,
           effect.differentNames === true,
+          effect.allowFailToFind === true,
         );
+        if (effect.bind !== undefined) effectBindings.set(effect.bind, foundCardIds);
+        break;
+      }
+      case 'searchLibraryGroup': {
+        const foundCardIds = yield* searchLibraryGroup(ctx, source, controller, effect);
+        if (effect.bind !== undefined) effectBindings.set(effect.bind, foundCardIds);
         break;
       }
       case 'huntingWilds': {
@@ -3939,6 +3979,14 @@ export function* executeAbility(
           perm.tapped = false;
         }
         break;
+      case 'untapBoundIf': {
+        if (!evaluateCondition(ctx, effect.condition, source)) break;
+        for (const cardId of effectBindings.get(effect.binding) ?? []) {
+          const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === cardId);
+          if (permanent !== undefined) permanent.tapped = false;
+        }
+        break;
+      }
       case 'gainControl':
         for (const perm of affectedBy(ctx, source, effect.selector)) {
           if (perm.controllerId === source.controllerId) continue;
@@ -4141,8 +4189,10 @@ export function* executeAbility(
         break;
       }
       case 'drawUpToN': {
-        const max = Math.min(effect.count, controller.library.length);
-        const options = Array.from({ length: max + 1 }, (_, amount) =>
+        const drawingPlayer = drawRecipient(effect.player);
+        // A player may choose any permitted number even when their library has fewer cards.
+        // Drawing from an empty library is a legal attempt whose loss is handled by the next SBA.
+        const options = Array.from({ length: effect.count + 1 }, (_, amount) =>
           valueOption(amount, `Draw ${amount} card${amount === 1 ? '' : 's'}`, {
             type: 'drawUpTo',
             description: `Draw ${amount} card${amount === 1 ? '' : 's'}`,
@@ -4151,11 +4201,11 @@ export function* executeAbility(
         );
         const outcome = yield {
           decisionType: 'general',
-          player: controller.id,
+          player: drawingPlayer.id,
           prompt: `${source.name}: draw up to ${effect.count} cards. Choose an amount.`,
           options,
         };
-        yield* drawCards(ctx, controller, outcome.index);
+        yield* drawCards(ctx, drawingPlayer, outcome.index);
         break;
       }
       case 'mayPayEnergyUpTo': {
@@ -4260,6 +4310,12 @@ export function* executeAbility(
         ctx.rng.shuffle(owner.library);
         const revealed = owner.library[0];
         if (revealed !== undefined) {
+          emit(
+            ctx,
+            'revealCard',
+            { player: owner.id, cardId: revealed.cardId, name: revealed.name, revealed: true },
+            null,
+          );
           const revealedDef = getDefByOracleId(ctx, revealed.oracleId, revealed.name);
           if (
             revealedDef.types.some((type) =>
@@ -4520,6 +4576,7 @@ export function* executeAbility(
         const costDescription = describeManaCost(owed);
         const canAfford = canPay(owed, payer.manaEntries, manaSourcesFor(ctx, payer.id));
         let paid = false;
+        let notPaidReason: 'declined' | 'unable' = 'unable';
         if (canAfford) {
           const outcome = yield {
             decisionType: 'general' as const,
@@ -4539,9 +4596,22 @@ export function* executeAbility(
               payer.id,
             );
             paid = true;
+          } else {
+            notPaidReason = 'declined';
           }
         }
         if (!paid) {
+          emit(
+            ctx,
+            'unlessNotPaid',
+            {
+              source: source.name,
+              player: payer.id,
+              cost: costDescription,
+              reason: notPaidReason,
+            },
+            payer.id,
+          );
           yield* executeAbility(
             ctx,
             source,
@@ -4874,6 +4944,12 @@ export function* executeAbility(
         const targetStack =
           t === null ? undefined : ctx.state.stack.find((entry) => entry.id === t);
         const targetObject = t === null ? undefined : findObjectById(ctx, t);
+        const capturedTargetController =
+          typeof effect.target === 'number' && refControllerCache.has(effect.target)
+            ? refControllerCache.get(effect.target)
+            : (targetPlayer?.id ??
+              targetStack?.controllerId ??
+              (targetObject as unknown as { controllerId?: PlayerId } | undefined)?.controllerId);
         const targetId =
           t === null
             ? undefined
@@ -4887,6 +4963,17 @@ export function* executeAbility(
               (targetObject as unknown as { controllerId?: PlayerId } | undefined)?.controllerId ??
               source.controllerId)
             : source.controllerId;
+        const affectedPlayerId =
+          effect.affectedPlayer === 'sourceController'
+            ? source.controllerId
+            : effect.affectedPlayer === 'targetController'
+              ? capturedTargetController
+              : undefined;
+        if (effect.affectedPlayer === 'targetController' && affectedPlayerId === undefined) {
+          throw new Error(
+            `engine bug: ${source.name} affected target controller could not be captured`,
+          );
+        }
         ctx.state.delayedTriggers.push({
           id: `dt-${ctx.state.nextObjectNum++}`,
           sourceCardId: source.cardId,
@@ -4896,6 +4983,7 @@ export function* executeAbility(
           when: effect.when,
           ability: effect.ability,
           expiry: effect.expiry,
+          ...(affectedPlayerId !== undefined ? { affectedPlayerId } : {}),
         });
         break;
       }
@@ -5449,9 +5537,11 @@ function* searchLibrary(
   filter: Selector,
   destinations: readonly SearchDestination[],
   differentNames = false,
-): GameGen<void> {
+  allowFailToFind = false,
+): GameGen<string[]> {
   const selectorSource = { cardId: source.cardId, controllerId: player.id };
   const chosenNames = new Set<string>();
+  const foundCardIds: string[] = [];
   for (const destination of destinations) {
     const matches = player.library.filter(
       (card) =>
@@ -5470,8 +5560,9 @@ function* searchLibrary(
     // Auto-select when all matching cards share the same name (e.g., mono-color basic
     // land search): the choice is meaningless and would waste an AI call.
     const distinctNames = new Set(matches.map((c) => c.name));
-    if (distinctNames.size === 1) {
+    if (!allowFailToFind && distinctNames.size === 1) {
       const card = matches[0] as EngineCardObject;
+      foundCardIds.push(card.cardId);
       if (destination.zone === 'libraryTop') {
         player.library.splice(player.library.indexOf(card), 1);
         shuffleLibrary(ctx, player);
@@ -5520,6 +5611,7 @@ function* searchLibrary(
     if (outcome.index >= matches.length) break;
 
     const card = matches[outcome.index] as EngineCardObject;
+    foundCardIds.push(card.cardId);
     if (destination.zone === 'libraryTop') {
       player.library.splice(player.library.indexOf(card), 1);
       shuffleLibrary(ctx, player);
@@ -5543,6 +5635,111 @@ function* searchLibrary(
   }
   // The searcher saw their library; shuffling is part of every printed search we model, and the
   // effect list carries an explicit `shuffle` op for it, so nothing is done here.
+  return foundCardIds;
+}
+
+function* searchLibraryGroup(
+  ctx: GameContext,
+  source: EffectSource,
+  player: EnginePlayerState,
+  effect: Extract<Effect, { op: 'searchLibraryGroup' }>,
+): GameGen<string[]> {
+  if (effect.min < 0 || effect.max < effect.min) {
+    throw new UnmodeledCardError(
+      source.name,
+      [`invalid grouped library search bounds ${effect.min}..${effect.max}`],
+      'resolving a grouped library search',
+    );
+  }
+  const selectorSource = { cardId: source.cardId, controllerId: player.id };
+  const matches = player.library
+    .filter((card) =>
+      selectMatches(cardZoneCandidate(ctx, card, player.id), effect.filter, selectorSource),
+    )
+    .sort((a, b) => a.name.localeCompare(b.name) || a.cardId.localeCompare(b.cardId));
+
+  const selections: EngineCardObject[][] = [];
+  const selected: EngineCardObject[] = [];
+  const relationHolds = (cards: readonly EngineCardObject[]): boolean => {
+    if (effect.relation === undefined || cards.length < 2) return true;
+    const subtypeSets = cards.map(
+      (card) => new Set(cardZoneCandidate(ctx, card, player.id).subtypes),
+    );
+    return [...subtypeSets[0]!].some((subtype) =>
+      subtypeSets.slice(1).every((subtypes) => subtypes.has(subtype)),
+    );
+  };
+  const buildSelections = (start: number, size: number): void => {
+    if (selected.length === size) {
+      if (relationHolds(selected)) selections.push([...selected]);
+      return;
+    }
+    for (let index = start; index < matches.length; index++) {
+      selected.push(matches[index]!);
+      buildSelections(index + 1, size);
+      selected.pop();
+    }
+  };
+  for (let size = effect.min; size <= Math.min(effect.max, matches.length); size++) {
+    buildSelections(0, size);
+  }
+  if (selections.length === 0) return [];
+
+  const where =
+    effect.destination.zone === 'battlefield'
+      ? `onto the battlefield${effect.destination.tapped === true ? ' tapped' : ''}`
+      : effect.destination.zone === 'libraryTop'
+        ? 'on top of your library'
+        : `into your ${effect.destination.zone}`;
+  const outcome = yield {
+    decisionType: 'general',
+    player: player.id,
+    prompt: `${source.name}: search your library for ${effect.min === 0 ? 'up to ' : ''}${effect.max} cards to put ${where}.`,
+    presentationSource: presentedSource(ctx, source),
+    options: selections.map((cards) =>
+      cards.length === 0
+        ? plainOption({
+            type: 'findNothing',
+            description: 'Find nothing',
+            verb: 'Find nothing',
+            role: 'decline',
+          })
+        : plainOption({
+            type: 'findCards',
+            description: `Put ${cards.map((card) => card.name).join(' and ')} ${where}`,
+            verb: `Put ${where}`,
+            data: { cardCount: cards.length, cardNames: cards.map((card) => card.name) },
+          }),
+    ),
+  };
+  const chosen = selections[outcome.index] ?? [];
+  const foundCardIds: string[] = [];
+  for (const card of chosen) {
+    foundCardIds.push(card.cardId);
+    emit(ctx, 'searchFound', {
+      player: player.id,
+      name: card.name,
+      to: effect.destination.zone,
+    });
+    if (effect.destination.zone === 'libraryTop') {
+      player.library.splice(player.library.indexOf(card), 1);
+      shuffleLibrary(ctx, player);
+      player.library.unshift(card);
+      continue;
+    }
+    yield* moveObject(
+      ctx,
+      card,
+      effect.destination.zone === 'battlefield'
+        ? {
+            zone: 'battlefield',
+            controllerId: player.id,
+            ...(effect.destination.tapped === true ? { entersTapped: true } : {}),
+          }
+        : { zone: effect.destination.zone },
+    );
+  }
+  return foundCardIds;
 }
 
 /** "Search your library for a `<filter>` card and cast that card without paying its mana cost"
@@ -6152,6 +6349,16 @@ export function* payAbilityCosts(
         // CR 118.8: paying life is legal at any life total ≥ the amount, and the payment is not
         // damage — nothing replaces or prevents it.
         loseLife(ctx, player, cost.amount);
+        break;
+      case 'payLifeValue':
+        loseLife(
+          ctx,
+          player,
+          evaluateValueIn(ctx, cost.amount, {
+            controllerId: player.id,
+            sourceCardId: perm.cardId,
+          }),
+        );
         break;
       case 'payEnergy':
         if (player.energy < cost.amount)

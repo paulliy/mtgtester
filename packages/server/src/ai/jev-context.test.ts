@@ -1,0 +1,170 @@
+import type { DecisionRequest, PlayerView } from '@mtg/shared';
+import { describe, expect, it } from 'vitest';
+import { adaptJevActionAnswer, buildJevActionRequest } from './jev-context';
+import { classifyTacticalDecision, JEV_MAX_CHOICE_OPTIONS } from './tactical-decision-shape';
+
+function request(overrides: Partial<DecisionRequest> = {}): DecisionRequest {
+  return {
+    requestId: 'request-1',
+    gameId: 'game-1',
+    turn: 3,
+    activePlayer: 'P1',
+    decidingPlayer: 'P1',
+    phase: 'precombatMain',
+    step: null,
+    decisionType: 'priority',
+    prompt: 'Choose an action.',
+    legalActions: [
+      { id: 3, type: 'pass', description: 'Pass priority' },
+      { id: 9, type: 'castSpell', description: 'Cast removal' },
+    ],
+    ...overrides,
+  };
+}
+
+function view(): PlayerView {
+  return {
+    seat: 'P1',
+    life: 20,
+    hand: [],
+    deck: [],
+    graveyard: [],
+    commanders: [],
+    availableMana: {},
+    manaSources: [],
+    opponents: [],
+    revealedLibraryTops: [],
+    battlefield: [],
+    exile: [],
+    stack: [],
+    recentLog: [],
+  };
+}
+
+describe('Jev tactician decision contract', () => {
+  it('round-trips non-contiguous action ids without a chat primer', () => {
+    const built = buildJevActionRequest('typesafe/jev-1.13', request(), view());
+    expect(built.kind).toBe('ready');
+    if (built.kind !== 'ready') return;
+
+    expect(built.optionToActionId).toEqual({ action_3: 3, action_9: 9 });
+    expect(built.request.state).not.toHaveProperty('legalActions');
+    expect(JSON.stringify(built.request)).not.toContain('REQUIRED JSON OUTPUT FORMAT');
+    expect(
+      adaptJevActionAnswer(built, request(), {
+        type: 'choice',
+        choice: 'action_9',
+        confidence: 0.8,
+        probabilities: { action_3: 0.1, action_9: 0.9 },
+      }),
+    ).toMatchObject({
+      kind: 'accepted',
+      response: { requestId: 'request-1', actionId: 9 },
+      topTwoMargin: 0.8,
+    });
+  });
+
+  it('fills only mechanically forced targets', () => {
+    const targeted = request({
+      legalActions: [
+        { id: 0, type: 'pass', description: 'Pass priority' },
+        {
+          id: 4,
+          type: 'castSpell',
+          description: 'Cast removal',
+          targets: [{ slot: 0, options: ['only-target'] }],
+        },
+      ],
+    });
+    const built = buildJevActionRequest('typesafe/jev-1.13', targeted, view());
+    expect(built.kind).toBe('ready');
+    if (built.kind !== 'ready') return;
+
+    expect(
+      adaptJevActionAnswer(built, targeted, {
+        type: 'choice',
+        choice: 'action_4',
+        confidence: 1,
+        probabilities: { action_0: 0, action_4: 1 },
+      }),
+    ).toMatchObject({
+      kind: 'accepted',
+      response: {
+        requestId: 'request-1',
+        actionId: 4,
+        targets: [{ slot: 0, choice: 'only-target' }],
+      },
+    });
+  });
+
+  it('bypasses Jev for ambiguous and coupled response shapes', () => {
+    expect(
+      classifyTacticalDecision(
+        request({
+          legalActions: [
+            {
+              id: 1,
+              type: 'castSpell',
+              description: 'Cast removal',
+              targets: [{ slot: 0, options: ['a', 'b'] }],
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({ shape: 'ambiguous_targets', jevSupported: false });
+    expect(classifyTacticalDecision(request({ decisionType: 'declareAttackers' }))).toMatchObject({
+      shape: 'coupled_assignment',
+      jevSupported: false,
+    });
+    expect(
+      classifyTacticalDecision(request({ manaSplit: { amount: 3, colors: ['R', 'G'] } })),
+    ).toMatchObject({ shape: 'distribution', jevSupported: false });
+  });
+
+  it('rejects menus beyond the Choice option limit', () => {
+    const legalActions = Array.from({ length: JEV_MAX_CHOICE_OPTIONS + 1 }, (_, id) => ({
+      id,
+      type: 'choice',
+      description: `Choice ${id}`,
+    }));
+    expect(classifyTacticalDecision(request({ legalActions }))).toMatchObject({
+      shape: 'too_many_actions',
+      jevSupported: false,
+    });
+  });
+
+  it('honors a stricter configured action limit', () => {
+    const original = request();
+    original.legalActions.push({ id: 10, type: 'pass', description: 'Another pass' });
+    expect(
+      buildJevActionRequest('typesafe/jev-1.13', original, view(), undefined, {}, 2),
+    ).toMatchObject({
+      kind: 'unsupported',
+      classification: { shape: 'too_many_actions' },
+    });
+  });
+
+  it('rejects stale choices and malformed probability distributions', () => {
+    const original = request();
+    const built = buildJevActionRequest('typesafe/jev-1.13', original, view());
+    expect(built.kind).toBe('ready');
+    if (built.kind !== 'ready') return;
+
+    expect(
+      adaptJevActionAnswer(built, original, {
+        type: 'choice',
+        choice: 'action_99',
+        confidence: 0.9,
+        probabilities: { action_3: 0.1, action_9: 0.9 },
+      }),
+    ).toEqual({ kind: 'invalid', reason: 'choice is not a legal action key' });
+    expect(
+      adaptJevActionAnswer(built, original, {
+        type: 'choice',
+        choice: 'action_9',
+        confidence: 0.9,
+        probabilities: { action_3: 0.1, action_9: 0.7 },
+      }),
+    ).toEqual({ kind: 'invalid', reason: 'probabilities must sum to 1' });
+  });
+});

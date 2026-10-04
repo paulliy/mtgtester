@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DecisionRequest, PlayerView } from '@mtg/shared';
-import { assemblePrompt, assembleStrategistPrompt } from './context';
+import { assemblePrompt } from './context';
+import { assembleStrategistPrompt } from './strategy-context';
 
 function fixtureView(): PlayerView {
   return {
@@ -218,10 +219,37 @@ describe('Context Assembler', () => {
     expect(prompt.messages[0]!.content).toContain('TACTICIAN ROLE');
   });
 
+  it('restores permitted public zones, poison, types, keywords, and revealed tops', () => {
+    const view = fixtureView();
+    view.exile = [{ id: 'ex1', name: 'Public Exile Card' }];
+    view.revealedLibraryTops = [{ player: 'P2', card: { id: 'top', name: 'Revealed Top' } }];
+    view.opponents[0]!.poisonCounters = 4;
+    view.battlefield[0]!.typeLine = 'Basic Land — Forest';
+    view.battlefield[0]!.keywords = ['Indestructible'];
+    const payload = JSON.parse(assemblePrompt(fixtureRequest(), view).messages[1]!.content);
+
+    expect(payload.you.graveyard[0].name).toBe('Giant Growth');
+    expect(payload.opponents[0].graveyard[0].name).toBe('Sol Ring');
+    expect(payload.opponents[0].poison).toBe(4);
+    expect(payload.publicExile[0].name).toBe('Public Exile Card');
+    expect(payload.revealedLibraryTops[0].card.name).toBe('Revealed Top');
+    expect(payload.battlefield[0].keywords).toEqual(['Indestructible']);
+  });
+
+  it('keeps a frozen v1 strategist payload without restored-zone fields', () => {
+    const prompt = assembleStrategistPrompt(fixtureRequest(), fixtureView(), [], undefined, {
+      version: 'v1',
+    });
+    const payload = JSON.parse(prompt.messages[1]!.content);
+    expect(prompt.messages[0]!.content.toLowerCase()).toContain('strategist');
+    expect(payload).not.toHaveProperty('publicExile');
+    expect(payload.you).not.toHaveProperty('graveyard');
+  });
+
   it('builds strategist context from the same hidden-information-safe PlayerView', () => {
     const prompt = assembleStrategistPrompt(fixtureRequest(), fixtureView(), []);
     const payload = JSON.parse(prompt.messages[1]!.content);
-    expect(prompt.messages[0]!.content).toContain('STRATEGIST ROLE');
+    expect(prompt.messages[0]!.content.toLowerCase()).toContain('strategist');
     expect(payload.opponents[0]).not.toHaveProperty('handCards');
     expect(payload).not.toHaveProperty('gameState');
   });
@@ -242,8 +270,8 @@ describe('strategist deck archetype', () => {
     );
     const payload = JSON.parse(prompt.messages[1]!.content);
 
-    expect(payload.yourDeckArchetype).toBe('Gruul dragon tribal aggro');
-    expect(payload.strategyTask.requirements[0]).toContain('yourDeckArchetype');
+    expect(payload.yourStrategyProfile.archetype).toBe('Gruul dragon tribal aggro');
+    expect(payload.strategyTask.requirements[0]).toContain('yourStrategyProfile');
   });
 
   it('omits the field entirely when no archetype is known, rather than sending a placeholder', () => {
@@ -271,6 +299,6 @@ describe('strategist deck archetype', () => {
       expect(opponent).not.toHaveProperty('archetype');
       expect(opponent).not.toHaveProperty('deckArchetype');
     }
-    expect(prompt.messages[0]!.content).toContain('yourDeckArchetype describes YOUR deck only');
+    expect(prompt.messages[0]!.content).toContain('yourStrategyProfile describes YOUR deck only');
   });
 });

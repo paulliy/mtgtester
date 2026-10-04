@@ -3,6 +3,8 @@ import type {
   DecisionRequest,
   DecisionResponse,
   GameId,
+  PlanPrecondition,
+  PlannedSourceReference,
   PlayerId,
   Phase,
   PlannedAction,
@@ -11,14 +13,17 @@ import type {
 } from '@mtg/shared';
 import type { AiClient } from './client';
 import type { AiConfig } from './config';
-import {
-  assembleStrategistPrompt,
-  type RecentSeatDecision,
-  type TacticalGuidance,
-} from './context';
+import { type RecentSeatDecision, type TacticalGuidance } from './context';
+import { assembleStrategistPrompt } from './strategy-context';
 import { RequestCancelledError } from './errors';
 import type { AiCallLogger, DecisionSource } from './logger';
+import type { StrategyProfile } from '../decks/strategy-profile';
+import { PublicMemoryTracker } from './public-memory';
+import { observationHash, type PlanArtifactMetadata } from './plan-lifecycle';
+import { extractStateFeatures } from './state-features';
 import { TurnPlanManager } from './turn-plan';
+import { AI_VERSIONS } from './versions';
+import { preparePromptForCaching } from './prompt-cache';
 
 interface QueueLike {
   enqueue<T>(fn: () => Promise<T>, signal?: AbortSignal): Promise<T>;
@@ -101,6 +106,41 @@ function cleanPlan(raw: TurnStrategy | undefined): TurnStrategy | null {
           typeof target.choice === 'string',
       );
     }
+    if (typeof candidate.id === 'string' && candidate.id.length > 0) action.id = candidate.id;
+    if (typeof candidate.source === 'object' && candidate.source !== null) {
+      const source: PlannedSourceReference = {};
+      if (typeof candidate.source.objectId === 'string')
+        source.objectId = candidate.source.objectId;
+      if (typeof candidate.source.cardId === 'string') source.cardId = candidate.source.cardId;
+      if (typeof candidate.source.name === 'string') source.name = candidate.source.name;
+      if (Object.keys(source).length > 0) action.source = source;
+    }
+    if (Array.isArray(candidate.dependencies)) {
+      action.dependencies = candidate.dependencies.filter(
+        (dependency): dependency is string => typeof dependency === 'string',
+      );
+    }
+    if (Array.isArray(candidate.preconditions)) {
+      action.preconditions = candidate.preconditions.filter(
+        (precondition): precondition is PlanPrecondition =>
+          typeof precondition === 'object' &&
+          precondition !== null &&
+          typeof precondition.kind === 'string' &&
+          [
+            'phaseReached',
+            'actionCompleted',
+            'sourceAvailable',
+            'targetAvailable',
+            'legalActionAvailable',
+          ].includes(precondition.kind),
+      );
+    }
+    if (typeof candidate.expectedEffect === 'string')
+      action.expectedEffect = candidate.expectedEffect.slice(0, 500);
+    if (typeof candidate.objective === 'string')
+      action.objective = candidate.objective.slice(0, 500);
+    if (typeof candidate.alternative === 'string')
+      action.alternative = candidate.alternative.slice(0, 500);
     plannedActions.push(action);
   }
 
@@ -128,12 +168,13 @@ function cleanPlan(raw: TurnStrategy | undefined): TurnStrategy | null {
  * decision.
  */
 export class StrategyCoordinator {
-  private readonly turnPlan = new TurnPlanManager();
+  private readonly turnPlan: TurnPlanManager;
   private readonly recentBySeat = new Map<string, RecentSeatDecision[]>();
   /** Whole-game sampled decision history per seat, for the post-game review (ADR 0022 §7). */
   private readonly digestBySeat = new Map<string, RecentSeatDecision[]>();
   /** How many digest entries a `seat:turn:phase` has already contributed. */
   private readonly digestCounts = new Map<string, number>();
+  private readonly publicMemory = new PublicMemoryTracker();
   private plannedTurn = -1;
   private plannedPlayer: string | null = null;
   private strategy: TurnStrategy | null = null;
@@ -169,9 +210,18 @@ export class StrategyCoordinator {
      * a full decklist, so handing one seat another's would leak hidden information (brief §7.1).
      */
     private readonly deckArchetypes?: ReadonlyMap<PlayerId, string>,
+    /** Versioned own-deck profiles, keyed by seat. Never populated from an opponent lookup. */
+    private readonly deckProfiles?: ReadonlyMap<PlayerId, StrategyProfile>,
   ) {
+    this.turnPlan = new TurnPlanManager(config.planLifecycleScopedInvalidationEnabled);
     this.turnPlan.onInvalidated = () => {
       this.strategy = null;
+      if (!this.config.planLifecycleScopedInvalidationEnabled) return;
+      this.activeGeneration = 0;
+      if (!this.replanned) {
+        this.replanned = true;
+        this.strategyAttempted = false;
+      }
     };
   }
 
@@ -181,12 +231,14 @@ export class StrategyCoordinator {
    * upkeep, and draw of the incoming turn, plus every other seat's tactical calls.
    */
   prefetch(gameId: GameId, turn: number, activePlayer: PlayerId): void {
+    this.syncPublicMemory();
     this.resetIfNewTurn(turn, activePlayer);
     this.startStrategist(gameId, turn, activePlayer, 'precombatMain', null);
   }
 
   /** Called on every decision; starts the strategist at most once per (turn, activePlayer). */
   prepare(request: DecisionRequest): void {
+    this.syncPublicMemory();
     this.resetIfNewTurn(request.turn, request.activePlayer);
     if (request.phase === 'beginning') return;
     this.startStrategist(
@@ -274,13 +326,43 @@ export class StrategyCoordinator {
   ): Promise<void> {
     const activePlayer = strategyRequest.activePlayer;
     const view = this.engine.view(activePlayer);
+    const sourceEvents =
+      typeof this.engine.eventsSince === 'function' ? this.engine.eventsSince(0) : [];
+    const sourceSequence = sourceEvents.at(-1)?.sequence ?? 0;
+    const generationStartedAt = new Date().toISOString();
     const recent = this.recentFor(activePlayer);
-    const prompt = assembleStrategistPrompt(
+    const assembledPrompt = assembleStrategistPrompt(
       strategyRequest,
       view,
       recent,
       this.deckArchetypes?.get(activePlayer),
+      {
+        ...(this.deckProfiles?.get(activePlayer) === undefined
+          ? {}
+          : { profile: this.deckProfiles.get(activePlayer)! }),
+        context: {
+          includeMemory: this.config.contextMemoryEnabled,
+          includeFeatures: this.config.contextFeaturesEnabled,
+          useBudgeter: this.config.contextBudgeterEnabled,
+          useCardSummaries: this.config.contextCardSummariesEnabled,
+          inputTokenBudget: this.config.contextInputTokenBudget,
+          ...(this.config.contextMemoryEnabled
+            ? { publicMemory: this.publicMemory.snapshot() }
+            : {}),
+          ...(this.config.contextFeaturesEnabled
+            ? { stateFeatures: extractStateFeatures(strategyRequest, view) }
+            : {}),
+        },
+      },
     );
+    const profile = this.deckProfiles?.get(activePlayer);
+    const prompt = this.config.providerPromptCacheLayoutEnabled
+      ? preparePromptForCaching(assembledPrompt, {
+          role: 'strategist',
+          ...(profile === undefined ? {} : { staticContext: { yourStrategyProfile: profile } }),
+          removeDynamicKeys: ['yourStrategyProfile'],
+        })
+      : assembledPrompt;
 
     try {
       const result = await this.queue.enqueue(
@@ -302,7 +384,30 @@ export class StrategyCoordinator {
         return;
       }
       this.strategy = strategy;
-      this.turnPlan.recordPlan(strategyRequest, strategy.plannedActions, this.engine);
+      const metadata: PlanArtifactMetadata = {
+        planId: `${strategyRequest.requestId}:g${generation}`,
+        generationId: generation,
+        observerSeat: activePlayer,
+        source: {
+          eventSequence: sourceSequence,
+          hash: observationHash({ request: strategyRequest, view }),
+          turn: strategyRequest.turn,
+          phase: strategyRequest.phase,
+          step: strategyRequest.step,
+        },
+        promptVersion: AI_VERSIONS.prompt,
+        configVersion: AI_VERSIONS.policy,
+        generationStartedAt,
+        generationCompletedAt: new Date().toISOString(),
+        installationSequence:
+          typeof this.engine.eventsSince === 'function'
+            ? (this.engine.eventsSince(0).at(-1)?.sequence ?? 0)
+            : 0,
+      };
+      this.turnPlan.recordPlan(strategyRequest, strategy.plannedActions, this.engine, {
+        metadata,
+        sourceView: view,
+      });
       this.logger?.log(strategyRequest, result, false, false, 'strategist');
       this.onStrategy?.(strategyRequest.turn, activePlayer, strategy.intent, result.meta.model);
       this.engine.addDebug(
@@ -325,15 +430,32 @@ export class StrategyCoordinator {
     }
   }
 
-  guidanceFor(playerId: string): TacticalGuidance {
+  guidanceFor(
+    playerId: string,
+    request?: DecisionRequest,
+    view?: ReturnType<Engine['view']>,
+  ): TacticalGuidance {
+    this.syncPublicMemory();
     return {
       strategy: playerId === this.plannedPlayer ? this.strategy : null,
       recentDecisions: this.recentFor(playerId),
+      ...(this.config.contextMemoryEnabled ? { publicMemory: this.publicMemory.snapshot() } : {}),
+      ...(this.config.contextFeaturesEnabled && request !== undefined && view !== undefined
+        ? { stateFeatures: extractStateFeatures(request, view) }
+        : {}),
     };
   }
 
   tryExecutePlan(request: DecisionRequest): DecisionResponse | null {
     return this.turnPlan.tryExecutePlan(request, this.engine);
+  }
+
+  recordAcceptedDecision(request: DecisionRequest, response: DecisionResponse): void {
+    this.turnPlan.recordAccepted(request, response, this.engine);
+  }
+
+  planLifecycle() {
+    return this.turnPlan.getLifecycleEvents();
   }
 
   recordDecision(
@@ -351,14 +473,13 @@ export class StrategyCoordinator {
       this.recentBySeat.set(request.decidingPlayer, recent);
 
       if (
+        !this.config.planLifecycleScopedInvalidationEnabled &&
         request.decidingPlayer !== request.activePlayer &&
         request.turn === this.plannedTurn &&
         !['pass', 'passAndYieldTurn', 'yieldToAbility'].includes(chosen.type)
       ) {
         this.strategy = null;
         this.activeGeneration = 0;
-        // Off the critical path, a re-plan is affordable — but only once per turn, so a
-        // contested board can't turn into a strategist call on every single intervention.
         if (!this.replanned) {
           this.replanned = true;
           this.strategyAttempted = false;
@@ -384,6 +505,12 @@ export class StrategyCoordinator {
 
   private recentFor(playerId: string): readonly RecentSeatDecision[] {
     return this.recentBySeat.get(playerId) ?? [];
+  }
+
+  private syncPublicMemory(): void {
+    if (typeof this.engine.eventsSince !== 'function') return;
+    const nextSequence = this.publicMemory.snapshot().throughEventSequence + 1;
+    this.publicMemory.observe(this.engine.eventsSince(nextSequence));
   }
 
   /**

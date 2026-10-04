@@ -11,16 +11,23 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import type { ClientToServerMessage, ServerToClientMessage, SpectatorLogLine } from '@mtg/shared';
+import type { ConnectionState } from '../lib/socket';
 
 /** Frames the store handed to the socket, newest last. */
 const sent: ClientToServerMessage[] = [];
 /** The store's own inbound handler, captured when it constructs its socket. */
 let inbound: ((message: ServerToClientMessage) => void) | null = null;
+/** The store's own connection-state handler, so a test can drop the connection. */
+let connectionChanged: ((state: ConnectionState) => void) | null = null;
 
 vi.mock('../lib/socket', () => ({
   GameSocket: class {
-    constructor(onMessage: (message: ServerToClientMessage) => void) {
+    constructor(
+      onMessage: (message: ServerToClientMessage) => void,
+      onStateChange: (state: ConnectionState) => void,
+    ) {
       inbound = onMessage;
+      connectionChanged = onStateChange;
     }
     connect(): void {}
     send(message: ClientToServerMessage): void {
@@ -46,6 +53,36 @@ const LOG: SpectatorLogLine[] = [
 ];
 
 type Store = ReturnType<typeof useGameStore>;
+
+/** The `Play my deck` start: a generated human deck, three pod seats, and the pod's own name. */
+function startWithPod(store: Store, pod: string): void {
+  store.startGame(
+    Array.from({ length: 4 }, () => ({ kind: 'pool' as const })),
+    'random',
+    'pod-seed',
+    'singlePlayer',
+    'P1',
+    false,
+    'preview-1',
+    pod,
+  );
+}
+
+/** A start the server accepted, as it answers it. */
+function podGameStarted(gameId: string): Extract<ServerToClientMessage, { type: 'gameStarted' }> {
+  return {
+    type: 'gameStarted',
+    payload: {
+      gameId,
+      seed: 'pod-seed',
+      seats: [],
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      startedAt: new Date().toISOString(),
+    },
+  };
+}
 
 /** Put the viewer at a position without going through the wire. */
 function seed(store: Store, viewTurn: number, active: number | null): void {
@@ -73,6 +110,7 @@ describe('spectator store — where am I in the action log', () => {
     setActivePinia(createPinia());
     sent.length = 0;
     inbound = null;
+    connectionChanged = null;
     store = useGameStore();
     store.connect();
   });
@@ -227,4 +265,155 @@ describe('spectator store — server-confirmed position', () => {
     });
     expect(sent.map((message) => message.type)).toEqual(['startGame']);
   });
+
+  it('remembers a newly imported player deck by the snapshot ID returned at start', () => {
+    const values = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+    try {
+      store.startGame(
+        [
+          { kind: 'plaintext', text: 'deck' },
+          ...Array.from({ length: 3 }, () => ({ kind: 'pool' as const })),
+        ],
+        'random',
+        'seed',
+        'singlePlayer',
+        'P1',
+      );
+      inbound?.({
+        type: 'gameStarted',
+        payload: {
+          gameId: 'imported',
+          seed: 'seed',
+          providerKind: 'random',
+          gameMode: 'singlePlayer',
+          humanSeat: 'P1',
+          startedAt: new Date().toISOString(),
+          seats: [
+            {
+              seat: 'P1',
+              deckId: 'snapshot-stable',
+              label: 'Deck',
+              commanderNames: ['Commander'],
+              colorIdentity: ['G'],
+              archetypeTag: 'Test',
+            },
+          ],
+        },
+      });
+      expect(JSON.parse(values.get('mtg-recent-deck-ids') ?? '[]')).toEqual(['snapshot-stable']);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('remembers the chosen bot pod only once the server has confirmed the start', () => {
+    const values = new Map<string, string>([['mtg-recent-pod-ids', JSON.stringify(['cascade'])]]);
+    const podWrites: string[] = [];
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        if (key === 'mtg-recent-pod-ids') podWrites.push(value);
+        values.set(key, value);
+      },
+      removeItem: (key: string) => values.delete(key),
+    });
+    const pods = (): string[] => JSON.parse(values.get('mtg-recent-pod-ids') ?? '[]') as string[];
+    try {
+      // Asking to start is not playing it: the pod stays unwritten until the server answers.
+      startWithPod(store, 'orbit');
+      expect(podWrites).toEqual([]);
+      expect(pods()).toEqual(['cascade']);
+
+      // A rejected start leaves the stored history exactly as it was...
+      inbound?.({ type: 'error', payload: { message: 'P2 cannot be played — unmodeled.' } });
+      expect(podWrites).toEqual([]);
+      expect(pods()).toEqual(['cascade']);
+
+      // ...and cannot be written later by the next game that does start.
+      inbound?.(podGameStarted('g-unrelated'));
+      expect(podWrites).toEqual([]);
+      expect(pods()).toEqual(['cascade']);
+
+      // A connection dropped between the request and the answer is the same story.
+      startWithPod(store, 'orbit');
+      connectionChanged?.('closed');
+      inbound?.(podGameStarted('g-dropped'));
+      expect(podWrites).toEqual([]);
+      expect(pods()).toEqual(['cascade']);
+
+      // Only a start the server confirmed puts the pod at the head of the history.
+      startWithPod(store, 'orbit');
+      inbound?.(podGameStarted('g-played'));
+      expect(pods()).toEqual(['orbit', 'cascade']);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it.each(['deck', 'pod'] as const)(
+    'starts a confirmed game when recent %s storage rejects a write',
+    (recent) => {
+      const values = new Map<string, string>();
+      const recentKey = `mtg-recent-${recent}-ids`;
+      const setItem = vi.fn((key: string, value: string) => {
+        if (key === recentKey) throw new Error('Recent storage unavailable');
+        values.set(key, value);
+      });
+      vi.stubGlobal('localStorage', {
+        getItem: (key: string) => values.get(key) ?? null,
+        setItem,
+        removeItem: (key: string) => values.delete(key),
+      });
+      try {
+        seed(store, 2, 18);
+        if (recent === 'deck') {
+          store.startGame(
+            [
+              { kind: 'plaintext', text: 'deck' },
+              ...Array.from({ length: 3 }, () => ({ kind: 'pool' as const })),
+            ],
+            'random',
+            'confirmed-seed',
+            'singlePlayer',
+            'P1',
+          );
+        } else {
+          startWithPod(store, 'orbit');
+        }
+
+        const confirmed = podGameStarted('confirmed-game');
+        confirmed.payload.seed = 'confirmed-seed';
+        confirmed.payload.seats = [
+          {
+            seat: 'P1',
+            deckId: 'snapshot-stable',
+            label: 'Deck',
+            commanderNames: ['Commander'],
+            colorIdentity: ['G'],
+            archetypeTag: 'Test',
+          },
+        ];
+        confirmed.payload.sessionToken = 'resume-token';
+        inbound?.(confirmed);
+
+        expect(setItem).toHaveBeenCalledWith(recentKey, expect.any(String));
+        expect(store.gameId).toBe('confirmed-game');
+        expect(store.seed).toBe('confirmed-seed');
+        expect(store.gameMode).toBe('singlePlayer');
+        expect(store.sessionToken).toBe('resume-token');
+        expect(values.get('mtg-player-session')).toBe('resume-token');
+        expect(store.isRunning).toBe(true);
+        expect(store.activeSequence).toBeNull();
+        expect(store.log).toEqual([]);
+        expect(store.viewTurn).toBe(0);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
 });

@@ -15,9 +15,15 @@ export {
   SERVER_TO_CLIENT_TYPES,
   CLIENT_TO_SERVER_TYPES,
   LOOKAHEAD_TURNS,
+  PLAYER_SEAT_IDS,
   isClientToServerMessage,
+  isPlayerSeatId,
 } from './protocol';
 export { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from './engine';
+export { parseStrictJson, STRICT_JSON_MAX_DEPTH } from './json';
+
+// --- Strict inbound JSON (duplicate-key rejection ahead of the native parse) ---
+export type { StrictJsonFailure, StrictJsonResult } from './json';
 
 // --- Identifier types ---
 export type { PlayerId, ObjectId, OracleId, DeckId, DeckSnapshotId, GameId } from './ids';
@@ -64,6 +70,8 @@ export type {
   DecisionRequest,
   DecisionResponse,
   PlannedAction,
+  PlannedSourceReference,
+  PlanPrecondition,
   TurnStrategy,
   LegalAction,
   ActionInteraction,
@@ -124,6 +132,9 @@ export type {
   PlaybackMode,
   SeatSource,
   SeatSummary,
+  SetupPreview,
+  SetupPreviewSeat,
+  SavedDeckOption,
   HaltKind,
   GameStartedPayload,
   CardTestScenarioMetadata,

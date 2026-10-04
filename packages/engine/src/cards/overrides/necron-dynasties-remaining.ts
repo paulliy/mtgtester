@@ -160,12 +160,6 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Mask of Memory',
     'Equipped-creature combat damage is implemented as any equipped creature.',
   );
-  // Catalog audit necron-remaining-batch-3: share-a-land-type omitted.
-  unsupportedCard(
-    '2549bc57-9ffb-4053-9f10-f2a5f792b845',
-    'Myriad Landscape',
-    'Share-a-land-type search is implemented as any two basics.',
-  );
   // Catalog audit necron-remaining-batch-3: colorless omitted; exile-top is mill.
   unsupportedCard(
     '994bc16d-fdc6-475c-96df-beeb4d5aa03e',

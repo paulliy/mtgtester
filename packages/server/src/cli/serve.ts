@@ -27,13 +27,15 @@ interface Args {
   port: number;
   db: boolean;
   cardTestLab: boolean;
+  dbPath: string;
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { port: 3001, db: true, cardTestLab: false };
+  const args: Args = { port: 3001, db: true, cardTestLab: false, dbPath: DB_PATH };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--port') args.port = Number.parseInt(argv[++i] ?? '3001', 10);
+    else if (arg === '--db-path') args.dbPath = argv[++i] ?? DB_PATH;
     else if (arg === '--no-db') args.db = false;
     else if (arg === '--card-test-lab') {
       args.cardTestLab = true;
@@ -80,8 +82,8 @@ function main(): void {
 
   let store: GameStore | undefined;
   if (args.db) {
-    mkdirSync(dirname(resolve(DB_PATH)), { recursive: true });
-    store = new GameStore(resolve(DB_PATH));
+    mkdirSync(dirname(resolve(args.dbPath)), { recursive: true });
+    store = new GameStore(resolve(args.dbPath));
   }
 
   const server = new GameServer({
@@ -101,7 +103,7 @@ function main(): void {
   console.log(`  HTTP/WS:        http://localhost:${handle.port}  (WebSocket at /ws)`);
   console.log(`  Supported pool: ${pool.cards.length.toLocaleString()} cards`);
   console.log(`  Oracle index:   ${index.size.toLocaleString()} cards`);
-  console.log(`  Database:       ${args.db ? DB_PATH : '(disabled)'}`);
+  console.log(`  Database:       ${args.db ? args.dbPath : '(disabled)'}`);
   console.log(`  Card Test Lab:  ${args.cardTestLab ? 'enabled' : 'disabled'}`);
   console.log(`\n  Start the UI with: bun run dev:web\n`);
 }

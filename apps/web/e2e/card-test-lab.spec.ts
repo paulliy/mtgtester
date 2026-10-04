@@ -253,17 +253,15 @@ test('Blossoming Defense: pump and hexproof', async ({ page }) => {
 test('Bojuka Bog: exile the targeted graveyard', async ({ page }) => {
   await runScenario(page, 'Bojuka Bog: exile the targeted graveyard');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const bog = handCard(page, 'Bojuka Bog');
   await expect(bog).toHaveClass(/actionable/);
   await bog.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
-  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(page.locator('.target-instruction')).toHaveText(
+    'Target 1 of 1: click a highlighted card or player.',
+  );
   await page.locator('.opponent').filter({ hasText: 'P2' }).click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
@@ -489,15 +487,11 @@ test('Night Scythe: create a Necron Warrior', async ({ page }) => {
 test('Game Trail: reveal a Forest, enter untapped', async ({ page }) => {
   await runScenario(page, 'Game Trail: reveal a Forest, enter untapped');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const trail = handCard(page, 'Game Trail');
   await expect(trail).toHaveClass(/actionable/);
   await trail.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
   await expect(
     page.getByRole('button', { name: /Reveal a Mountain or Forest card \(enters untapped\)/i }),
@@ -515,15 +509,11 @@ test('Game Trail: reveal a Forest, enter untapped', async ({ page }) => {
 test('Fortified Village: reveal a Plains, enter untapped', async ({ page }) => {
   await runScenario(page, 'Fortified Village: reveal a Plains, enter untapped');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const village = handCard(page, 'Fortified Village');
   await expect(village).toHaveClass(/actionable/);
   await village.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
   await expect(
     page.getByRole('button', { name: /Reveal a Forest or Plains card \(enters untapped\)/i }),
@@ -541,15 +531,11 @@ test('Fortified Village: reveal a Plains, enter untapped', async ({ page }) => {
 test('Shineshadow Snarl: reveal a Swamp, enter untapped', async ({ page }) => {
   await runScenario(page, 'Shineshadow Snarl: reveal a Swamp, enter untapped');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const snarl = handCard(page, 'Shineshadow Snarl');
   await expect(snarl).toHaveClass(/actionable/);
   await snarl.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
   await expect(
     page.getByRole('button', { name: /Reveal a Plains or Swamp card \(enters untapped\)/i }),
@@ -702,17 +688,15 @@ test('Chronomancer: sacrifice an artifact, draw', async ({ page }) => {
 test('Akoum Hellkite: Mountain landfall deals 2', async ({ page }) => {
   await runScenario(page, 'Akoum Hellkite: Mountain landfall deals 2');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const mountain = handCard(page, 'Mountain');
   await expect(mountain).toHaveClass(/actionable/);
   await mountain.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
-  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(page.locator('.target-instruction')).toHaveText(
+    'Target 1 of 1: click a highlighted card or player.',
+  );
   await page.locator('.opponent').filter({ hasText: 'P2' }).click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
@@ -771,16 +755,13 @@ test('Trostani Discordant: two lifelink Soldiers', async ({ page }) => {
 test('Felidar Retreat: landfall Cat Beast', async ({ page }) => {
   await runScenario(page, 'Felidar Retreat: landfall Cat Beast');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const forest = handCard(page, 'Forest');
   await expect(forest).toHaveClass(/actionable/);
   await forest.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
+  await expect(page.getByRole('button', { name: /Beast/i })).toBeVisible();
   await page.getByRole('button', { name: /Beast/i }).click();
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
@@ -878,15 +859,11 @@ test('Great Oak Guardian: pump and untap P2 creatures', async ({ page }) => {
 test('Frostboil Snarl: reveal an Island, enter untapped', async ({ page }) => {
   await runScenario(page, 'Frostboil Snarl: reveal an Island, enter untapped');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const snarl = handCard(page, 'Frostboil Snarl');
   await expect(snarl).toHaveClass(/actionable/);
   await snarl.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
   await expect(
     page.getByRole('button', { name: /Reveal a Island or Mountain card \(enters untapped\)/i }),
@@ -904,15 +881,11 @@ test('Frostboil Snarl: reveal an Island, enter untapped', async ({ page }) => {
 test('Vineglimmer Snarl: reveal a Forest, enter untapped', async ({ page }) => {
   await runScenario(page, 'Vineglimmer Snarl: reveal a Forest, enter untapped');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const snarl = handCard(page, 'Vineglimmer Snarl');
   await expect(snarl).toHaveClass(/actionable/);
   await snarl.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
   await expect(
     page.getByRole('button', { name: /Reveal a Forest or Island card \(enters untapped\)/i }),
@@ -966,22 +939,17 @@ test('Generous Gift: destroy Lab Ox, make an Elephant', async ({ page }) => {
 test('Boros Garrison: bounce Forest, enter tapped', async ({ page }) => {
   await runScenario(page, 'Boros Garrison: bounce Forest, enter tapped');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const garrison = handCard(page, 'Boros Garrison');
   await expect(garrison).toHaveClass(/actionable/);
   await garrison.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
   await expect(page.getByText(/choose a permanent to return/i)).toBeVisible();
   await permanent(page, 'Forest').click();
   const bounceConfirm = page.getByRole('button', { name: 'Confirm' });
-  if (await bounceConfirm.isVisible()) {
-    await bounceConfirm.click();
-  }
+  await expect(bounceConfirm).toBeVisible();
+  await bounceConfirm.click();
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Boros Garrison')).toBeVisible();
@@ -993,22 +961,17 @@ test('Boros Garrison: bounce Forest, enter tapped', async ({ page }) => {
 test('Orzhov Basilica: bounce Forest, enter tapped', async ({ page }) => {
   await runScenario(page, 'Orzhov Basilica: bounce Forest, enter tapped');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const basilica = handCard(page, 'Orzhov Basilica');
   await expect(basilica).toHaveClass(/actionable/);
   await basilica.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
   await expect(page.getByText(/choose a permanent to return/i)).toBeVisible();
   await permanent(page, 'Forest').click();
   const bounceConfirm = page.getByRole('button', { name: 'Confirm' });
-  if (await bounceConfirm.isVisible()) {
-    await bounceConfirm.click();
-  }
+  await expect(bounceConfirm).toBeVisible();
+  await bounceConfirm.click();
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Orzhov Basilica')).toBeVisible();
@@ -1052,22 +1015,17 @@ test('Crackling Doom: opponents take 2, P2 sacs Lab Ox', async ({ page }) => {
 test('Rakdos Carnarium: bounce Forest, enter tapped', async ({ page }) => {
   await runScenario(page, 'Rakdos Carnarium: bounce Forest, enter tapped');
 
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
   const carnarium = handCard(page, 'Rakdos Carnarium');
   await expect(carnarium).toHaveClass(/actionable/);
   await carnarium.click();
-  const playLand = page.getByRole('button', { name: 'Play land' });
-  if (await playLand.isVisible()) {
-    await playLand.click();
-  } else {
-    await confirm(page);
-  }
 
   await expect(page.getByText(/choose a permanent to return/i)).toBeVisible();
   await permanent(page, 'Forest').click();
   const bounceConfirm = page.getByRole('button', { name: 'Confirm' });
-  if (await bounceConfirm.isVisible()) {
-    await bounceConfirm.click();
-  }
+  await expect(bounceConfirm).toBeVisible();
+  await bounceConfirm.click();
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Rakdos Carnarium')).toBeVisible();
@@ -1373,4 +1331,363 @@ test('Aetherwind Basker: +1/+1 until end of turn', async ({ page }) => {
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Aetherwind Basker')).toContainText('8/8');
+});
+
+test('Zopandrel: indestructible counter grants indestructible', async ({ page }) => {
+  await runScenario(page, 'Zopandrel: indestructible counter grants indestructible');
+
+  const zopandrel = permanent(page, 'Zopandrel, Hunger Dominus');
+  await expect(zopandrel).toHaveClass(/actionable/);
+  await zopandrel.click();
+  await expect(page.getByText('Activate Zopandrel, Hunger Dominus')).toBeVisible();
+  await confirm(page);
+  await permanent(page, 'Two-Mana Bear').click();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Two-Mana Bear')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Shaman')).toHaveCount(0);
+  const resolvedZopandrel = permanent(page, 'Zopandrel, Hunger Dominus');
+  await expect(resolvedZopandrel.locator('.counters')).toContainText(/indestructible.*1/i);
+  await expect(resolvedZopandrel.locator('.keywords')).toHaveAttribute('title', /indestructible/i);
+});
+
+async function runArcaneDenial(page: Page, drawCount: 0 | 2): Promise<void> {
+  await runScenario(page, `Arcane Denial: next-upkeep draw ${drawCount}`);
+
+  const arcane = handCard(page, 'Arcane Denial');
+  await expect(arcane).toHaveClass(/actionable/);
+  await arcane.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const pending = page.locator('.stack li').filter({ hasText: 'Lab Pending Spell' });
+  await expect(pending).toHaveClass(/targetable/);
+  await pending.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  const optionalFirst = page.getByRole('button', { name: /targeted spell controller may draw/i });
+  await expect(optionalFirst).toBeVisible({ timeout: 15_000 });
+  await optionalFirst.click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(handCard(page, 'Caster Secret Draw')).toBeVisible();
+  const p4 = page.locator('.opponent').filter({ hasText: 'P4' });
+  await expect(p4).toContainText(`${drawCount} cards`);
+  await expect(page.getByText('Target Secret Alpha')).toHaveCount(0);
+  await expect(page.getByText('Target Secret Beta')).toHaveCount(0);
+  await expect(page.getByText(/Lab Pending Spell is countered by Arcane Denial/i)).toBeVisible();
+}
+
+test('Arcane Denial: next-upkeep draw 0', async ({ page }) => {
+  await runArcaneDenial(page, 0);
+});
+
+test('Arcane Denial: next-upkeep draw 2', async ({ page }) => {
+  await runArcaneDenial(page, 2);
+});
+
+async function runSmotheringTithe(page: Page, outcome: 'pay' | 'decline'): Promise<void> {
+  await runScenario(
+    page,
+    `Smothering Tithe: opponent draws and ${outcome === 'pay' ? 'pays' : 'declines'}`,
+  );
+
+  const drawSpell = handCard(page, 'Lab Pending Spell');
+  await expect(drawSpell).toHaveClass(/actionable/);
+  await drawSpell.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/Smothering Tithe.*pay \{2\}/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await page
+    .getByRole('button', { name: outcome === 'pay' ? 'Pay {2}' : "Don't pay {2}", exact: true })
+    .click();
+
+  // The optional-payment decision resolves the trigger, then the human receives the normal
+  // post-resolution priority window. Passing it lets the finite prepared scenario conclude.
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(
+    handCard(page, `Tithe Secret ${outcome === 'pay' ? 'Pay' : 'Decline'}`),
+  ).toBeVisible();
+  await expect(permanent(page, 'Smothering Tithe')).toBeVisible();
+  await expect(permanent(page, 'Treasure')).toHaveCount(outcome === 'pay' ? 0 : 1);
+  await expect(
+    page
+      .getByText(
+        outcome === 'pay'
+          ? /pays \{2\} for Smothering Tithe/i
+          : /doesn't pay \{2\} for Smothering Tithe/i,
+      )
+      .first(),
+  ).toBeVisible();
+}
+
+test('Smothering Tithe: opponent draws and pays', async ({ page }) => {
+  await runSmotheringTithe(page, 'pay');
+});
+
+test('Smothering Tithe: opponent draws and declines', async ({ page }) => {
+  await runSmotheringTithe(page, 'decline');
+});
+
+test('Fabled Passage: search, tapped entry, and fourth-land untap', async ({ page }) => {
+  await runScenario(page, 'Fabled Passage: search, tapped entry, and fourth-land untap');
+
+  const passage = permanent(page, 'Fabled Passage');
+  await expect(passage).toHaveClass(/actionable/);
+  await passage.click();
+  await expect(page.getByText('Activate Fabled Passage')).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/search your library/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('Island').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Find nothing' })).toBeVisible();
+  await page.getByRole('button', { name: 'Put onto the battlefield tapped' }).click();
+
+  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  if (await pass.isVisible()) await pass.click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Fabled Passage')).toHaveCount(0);
+  const island = permanent(page, 'Island');
+  await expect(island).toBeVisible();
+  await expect(island).not.toHaveClass(/tapped/);
+  const forests = permanent(page, 'Forest');
+  await expect(forests).toHaveCount(1);
+  await expect(forests).toContainText('×3');
+  await expect(page.getByText(/Put Island onto the battlefield tapped/i).first()).toBeVisible();
+  await expect(page.getByText('Fabled Private Library Secret')).toHaveCount(0);
+});
+
+test('Myriad Landscape: normal land play enters tapped', async ({ page }) => {
+  await runScenario(page, 'Myriad Landscape: normal land play enters tapped');
+
+  await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+  await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
+  const landscape = handCard(page, 'Myriad Landscape');
+  await expect(landscape).toHaveClass(/actionable/);
+  await landscape.click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Myriad Landscape').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.getByText(/plays Myriad Landscape/i).first()).toBeVisible();
+});
+
+test.describe('land confirmation', () => {
+  async function runLandScenario(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+      const sent: Array<{ type: string }> = [];
+      (window as typeof window & { __sentActions: typeof sent }).__sentActions = sent;
+      const originalSend = WebSocket.prototype.send;
+      WebSocket.prototype.send = function (data) {
+        if (typeof data === 'string') {
+          const message = JSON.parse(data) as { type: string };
+          if (message.type === 'submitPlayerAction') sent.push(message);
+        }
+        originalSend.call(this, data);
+      };
+    });
+    await page.goto('/card-test-lab');
+    await page.locator('#scenario-select').selectOption({
+      label: 'Myriad Landscape: normal land play enters tapped',
+    });
+    await page.getByRole('button', { name: 'Run scenario' }).click();
+    await expect(page).toHaveURL(/\/game$/);
+  }
+
+  async function submissionCount(page: Page): Promise<number> {
+    return page.evaluate(
+      () =>
+        (window as typeof window & { __sentActions: Array<{ type: string }> }).__sentActions.length,
+    );
+  }
+
+  async function assertLandPlayedOnce(page: Page): Promise<void> {
+    await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/plays Myriad Landscape/i).first()).toBeVisible();
+    expect(await submissionCount(page)).toBe(1);
+  }
+
+  test('a single legal land submits from its hand card when both confirm settings are off', async ({
+    page,
+  }) => {
+    await runLandScenario(page);
+
+    await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+    await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
+    const landscape = page.locator('.hand-card', { hasText: 'Myriad Landscape' });
+    await expect(landscape).toHaveClass(/actionable/);
+    await landscape.click();
+
+    await assertLandPlayedOnce(page);
+  });
+
+  test('confirm passes and lands keeps the review step', async ({ page }) => {
+    await runLandScenario(page);
+    await page.getByLabel('Confirm passes & lands').check();
+    await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
+    await page.locator('.hand-card', { hasText: 'Myriad Landscape' }).click();
+
+    await expect(page.getByRole('button', { name: 'Play land', exact: true })).toBeVisible();
+    expect(await submissionCount(page)).toBe(0);
+    await page.getByRole('button', { name: 'Play land', exact: true }).click();
+    await assertLandPlayedOnce(page);
+  });
+
+  test('skip confirm submits the land once', async ({ page }) => {
+    await runLandScenario(page);
+    await page.getByLabel('Skip confirm step').check();
+    await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
+    await page.locator('.hand-card', { hasText: 'Myriad Landscape' }).click();
+
+    await assertLandPlayedOnce(page);
+  });
+
+  test('confirm passes and lands still reviews when skip confirm is also on', async ({ page }) => {
+    await runLandScenario(page);
+    await page.getByLabel('Confirm passes & lands').check();
+    await page.getByLabel('Skip confirm step').check();
+    await page.locator('.hand-card', { hasText: 'Myriad Landscape' }).click();
+
+    await expect(page.getByRole('button', { name: 'Play land', exact: true })).toBeVisible();
+    expect(await submissionCount(page)).toBe(0);
+    await page.getByRole('button', { name: 'Play land', exact: true }).click();
+    await assertLandPlayedOnce(page);
+  });
+});
+
+test('Myriad Landscape: colorless mana pays a spell cost', async ({ page }) => {
+  await runScenario(page, 'Myriad Landscape: colorless mana pays a spell cost');
+
+  const sink = handCard(page, 'Myriad Mana Sink');
+  await expect(sink).toHaveClass(/actionable/);
+  await sink.click();
+  await expect(page.getByText(/Auto-pay: Myriad Landscape/i)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Myriad Landscape').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Myriad Mana Sink')).toBeVisible();
+  await expect(page.getByText(/Cast Myriad Mana Sink/i).first()).toBeVisible();
+});
+
+test('Myriad Landscape: grouped search enforces a shared land type', async ({ page }) => {
+  await runScenario(page, 'Myriad Landscape: shared land type grouped search');
+
+  const landscape = permanent(page, 'Myriad Landscape');
+  await expect(landscape).toHaveClass(/actionable/);
+  await landscape.click();
+  await expect(page.getByText('Activate Myriad Landscape')).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/search for up to two basic lands/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: /Find nothing/i })).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Put onto the battlefield tapped', exact: true })
+    .last()
+    .click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Myriad Landscape')).toHaveCount(0);
+  await expect(permanent(page, 'Island').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Myriad Shared Dual').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.getByText('Myriad Private Library Secret')).toHaveCount(0);
+  await expect(
+    page.getByText(/Put Island and Myriad Shared Dual onto the battlefield tapped/i).first(),
+  ).toBeVisible();
+});
+
+function ownDrawLines(page: Page) {
+  return page
+    .locator('.player-game .log .line')
+    .filter({ has: page.locator('.actor', { hasText: /^P1$/ }) })
+    .filter({ has: page.locator('.text', { hasText: /^draws / }) });
+}
+
+test('War Room: dynamic commander identity life activation', async ({ page }) => {
+  await runScenario(page, 'War Room: dynamic commander-identity life activation');
+  const life = page.locator('.human-zone .life-badge');
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(life).toHaveText('40');
+  await expect(hand).toHaveCount(2);
+  await expect(handCard(page, 'War Room Mana Sink')).toBeVisible();
+  await expect(handCard(page, 'War Room Action Witness')).toBeVisible();
+  const room = permanent(page, 'War Room');
+  await expect(room).toHaveClass(/actionable/);
+  await room.click();
+  await expect(page.getByText('Activate War Room')).toBeVisible();
+  await confirm(page);
+
+  await expect(life).toHaveText('37');
+  await expect(room.locator('.tap-badge')).toHaveText('TAP');
+  const forests = page
+    .locator('.human-zone .object')
+    .filter({ has: page.getByRole('img', { name: 'Forest', exact: true }) });
+  await expect(forests).toHaveCount(1);
+  await expect(forests).toBeVisible();
+  await expect(forests.locator('.stack-count-badge')).toHaveText('×3');
+  await expect(forests.locator('.stack-count-badge')).toHaveAttribute(
+    'title',
+    '3 copies of Forest',
+  );
+  await expect(forests.locator('.tap-badge')).toHaveText('TAP');
+  await expect(hand).toHaveCount(3);
+  await expect(handCard(page, 'War Room Action Witness')).toHaveClass(/actionable/);
+  await expect(handCard(page, 'War Room Mana Sink')).toBeVisible();
+  await expect(handCard(page, 'Three Color Commander')).toBeVisible();
+  await expect(life).toHaveText('37');
+  await expect(ownDrawLines(page)).toHaveCount(1);
+  await expect(ownDrawLines(page).locator('.text')).toHaveText('draws Three Color Commander');
+  await expect(
+    page.locator('.player-game .log .line .text').filter({ hasText: /Pay life.*resolves/ }),
+  ).toHaveCount(1);
+  await expect(page.locator('.stack .empty')).toBeVisible();
+  await expect(page.getByText(/game over/i)).toHaveCount(0);
+  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  await expect(pass).toBeEnabled();
+  await pass.click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});
+
+test('War Room: colorless mana pays a spell cost', async ({ page }) => {
+  await runScenario(page, 'War Room: colorless mana pays a spell cost');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(page.locator('.human-zone .hand-card')).toHaveCount(1);
+  const sink = handCard(page, 'War Room Mana Sink');
+  await expect(sink).toHaveClass(/actionable/);
+  await sink.click();
+  await expect(page.getByText(/Auto-pay: War Room/i)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  // The turn cap ends this lab game with no winner, which the runner reports as a draw halt
+  // rather than `gameOver`, so the view usually stays in player mode with no results panel.
+  const closeResults = page.getByRole('button', { name: 'Close results' });
+  if (await closeResults.isVisible()) {
+    await closeResults.click();
+  }
+  await expect(permanent(page, 'War Room').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'War Room Mana Sink')).toBeVisible();
+  await expect(
+    page.locator('.human-zone .life-badge, .seat[data-seat="P1"] .life-badge'),
+  ).toHaveText('40');
+  await expect(
+    page
+      .locator('.log .line')
+      .filter({ has: page.locator('.actor', { hasText: /^P1$/ }) })
+      .locator('.text')
+      .filter({ hasText: /^War Room Mana Sink resolves$/ }),
+  ).toHaveCount(1);
+  await expect(
+    page
+      .locator('.log .line')
+      .filter({ has: page.locator('.actor', { hasText: /^P1$/ }) })
+      .filter({ has: page.locator('.text', { hasText: /^draws / }) }),
+  ).toHaveCount(0);
+  await expect(page.locator('.stack .empty')).toBeVisible();
 });

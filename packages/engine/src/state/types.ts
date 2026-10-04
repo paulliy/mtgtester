@@ -253,6 +253,12 @@ export interface EnginePlayerState extends PlayerState {
    * eliminated owner (CR 800.4a), so it cannot be named by searching the zones.
    */
   commanderNames: Record<CardId, string>;
+  /**
+   * Union of this player's commanders' color identities, fixed at game creation. Color identity
+   * is a characteristic of the card, not of its current zone (CR 903.4), so it must not be read
+   * from wherever the commander happens to be now.
+   */
+  commanderColorIdentity: Color[];
   /** Set when a draw was attempted from an empty library (loss at next SBA check). */
   attemptedDrawFromEmptyLibrary: boolean;
   /** Number of cards this player has drawn during the current turn. */
@@ -374,10 +380,12 @@ export interface DelayedTrigger {
    * (Rebound's "at the beginning of your next upkeep") needs.
    */
   expiry: 'endStep' | 'cleanup' | 'onFire';
+  /** Player affected by/deciding the delayed effect, independent of controller and step owner. */
+  affectedPlayerId?: PlayerId;
   /**
    * `'you'` restricts firing to the controller's own step. Without it a `when: 'upkeep'` delayed
-   * trigger fires at the next upkeep in turn order, whoever's it is — right for "the next end
-   * step", wrong for "your next upkeep".
+   * trigger fires at the next matching step in turn order, whoever's it is — right for "the next
+   * turn's upkeep" or "the next end step", wrong for "your next upkeep".
    */
   player?: 'you';
 }

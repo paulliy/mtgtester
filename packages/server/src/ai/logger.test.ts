@@ -51,7 +51,7 @@ describe('AiCallLogger', () => {
       0,
       0,
       150,
-      0,
+      null,
       'primary',
       // The request's turn, denormalised onto the row so rebuilding ADR 0022 annotations does
       // not have to parse every stored request payload.
@@ -206,6 +206,83 @@ describe('AiCallLogger', () => {
       avgStrategistLatencyMs: 20000,
       avgTacticianLatencyMs: 4000,
     });
+  });
+
+  it('aggregates physical attempt cost and exposes unknown accounting coverage', () => {
+    const logger = new AiCallLogger(null, 'g-attempts');
+    const base = {
+      schemaVersion: 1 as const,
+      logicalRequestId: 'r1',
+      requestedModel: 'm1',
+      status: 'accepted' as const,
+      startedAt: '2026-09-20T00:00:00.000Z',
+      endedAt: '2026-09-20T00:00:00.100Z',
+      durationMs: 100,
+      messages: [],
+      effectiveConfig: {},
+    };
+    logger.recordAttempt({
+      ...base,
+      attemptIndex: 0,
+      usage: {
+        costUsd: 0.002,
+        promptTokenSource: 'reported',
+        responseTokenSource: 'reported',
+        costSource: 'reported',
+      },
+    });
+    logger.recordAttempt({
+      ...base,
+      attemptIndex: 1,
+      status: 'transport_error',
+      usage: {
+        promptTokenSource: 'unknown',
+        responseTokenSource: 'unknown',
+        costSource: 'unknown',
+      },
+    });
+
+    expect(logger.summary()).toMatchObject({
+      networkAttempts: 2,
+      unknownCostAttempts: 1,
+      costAccountingCoverage: 0.5,
+      totalCostUsd: 0.002,
+    });
+  });
+});
+
+describe('AiCallLogger Jev traces', () => {
+  it('retains policy evidence and marks an active selection engine-accepted at its anchor', () => {
+    const logger = new AiCallLogger(null, 'g-jev');
+    logger.recordJevTrace({
+      schemaVersion: 1,
+      logicalRequestId: 'r-jev',
+      recordedAt: '2026-09-22T00:00:00.000Z',
+      mode: 'active',
+      classification: {
+        shape: 'action_only',
+        jevSupported: true,
+        reason: 'supported_action_only',
+        actionCount: 2,
+        targetSlotCount: 0,
+      },
+      outcome: 'accepted',
+      validationResult: 'valid',
+      networkAttempted: true,
+      confidence: 0.9,
+      topTwoMargin: 0.8,
+      probabilities: { action_0: 0.1, action_1: 0.9 },
+      selectedActionId: 1,
+      engineAcceptance: 'not_checked',
+    });
+
+    logger.recordAnchor('r-jev', 42);
+    expect(logger.capturedJevTraces()).toEqual([
+      expect.objectContaining({
+        logicalRequestId: 'r-jev',
+        engineAcceptance: 'accepted',
+      }),
+    ]);
   });
 });
 

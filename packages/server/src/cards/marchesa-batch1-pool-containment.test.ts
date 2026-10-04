@@ -16,9 +16,15 @@ const fixture = JSON.parse(
 ) as PinnedFixture;
 
 describe('Marchesa catalog audit supported-pool containment', () => {
-  it('excludes contained cards from the supported pool', () => {
+  it('includes the independently restored Arcane Denial, Fabled Passage, and Smothering Tithe slices', () => {
     const pool = buildSupportedPool(fixture.cards.map(({ card }) => card));
     expect(pool.considered).toBe(198);
-    expect(pool.cards).toEqual([]);
+    expect(pool.cards.map(({ card }) => card.name)).toEqual([
+      'Arcane Denial',
+      'Fabled Passage',
+      'Myriad Landscape',
+      'Smothering Tithe',
+      'War Room',
+    ]);
   });
 });

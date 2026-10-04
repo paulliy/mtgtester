@@ -18,7 +18,9 @@ import { runCombatPhase } from '../src/combat/combat';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { createGame } from '../src/state/game';
+import { buildPlayerView } from '../src/view/view';
 import { makePermanent, queueCastTriggers, queueTriggersForObject } from '../src/state/objects';
 import type { EngineCardObject, EngineStackObject, GameContext } from '../src/state/types';
 import {
@@ -463,7 +465,7 @@ describe('Zopandrel, Hunger Dominus', () => {
     expect(computeCharacteristics(ctx, bear).toughness).toBe(4);
   });
 
-  it('zopandrel-pays-phyrexian-pips-with-life-and-needs-two-other-creatures', () => {
+  it('zopandrel-indestructible-counter-grants-keyword-and-survives-lethal', () => {
     const missing = pod('zopandrel-missing');
     playerOf(missing, 'P1').life = 4;
     const alone = spawn(missing, 'P1', card);
@@ -472,7 +474,7 @@ describe('Zopandrel, Hunger Dominus', () => {
 
     const ctx = pod('zopandrel-activation');
     const player = playerOf(ctx, 'P1');
-    player.life = 4;
+    player.life = 8;
     const zopandrel = spawn(ctx, 'P1', card);
     const first = spawn(ctx, 'P1', oracle({ name: 'Zopandrel Cost A' }));
     const second = spawn(ctx, 'P1', oracle({ name: 'Zopandrel Cost B' }));
@@ -487,10 +489,24 @@ describe('Zopandrel, Hunger Dominus', () => {
         },
       ),
     );
-    expect(player.life).toBe(0);
+    expect(player.life).toBe(4);
     expect(ctx.state.battlefield).not.toContain(first);
     expect(ctx.state.battlefield).not.toContain(second);
     pump(resolveTopOfStack(ctx));
     expect(zopandrel.counters['indestructible']).toBe(1);
+    expect(computeCharacteristics(ctx, zopandrel).keywords).toContain('indestructible');
+    expect(
+      buildPlayerView(ctx, 'P2').battlefield.find((permanent) => permanent.id === zopandrel.id)
+        ?.keywords,
+    ).toContain('indestructible');
+
+    zopandrel.damageMarked = 99;
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.battlefield).toContain(zopandrel);
+
+    zopandrel.counters['indestructible'] = 0;
+    expect(computeCharacteristics(ctx, zopandrel).keywords).not.toContain('indestructible');
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.battlefield).not.toContain(zopandrel);
   });
 });

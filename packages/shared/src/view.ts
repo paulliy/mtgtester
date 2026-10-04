@@ -21,6 +21,10 @@ export interface CommanderView {
   zone: string;
   /** Times cast from the command zone → drives tax (brief §5.7). */
   castCount: number;
+  /** Public printed characteristics of the known commander card. */
+  manaCost?: string;
+  typeLine?: string;
+  oracleText?: string;
 }
 
 /** A permanent as seen on any battlefield — all public state (brief §7.1, §7.3). */

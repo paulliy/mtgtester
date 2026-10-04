@@ -1,0 +1,86 @@
+name: AI candidate promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_variant:
+        description: Version-controlled benchmark variant id
+        required: true
+        type: string
+      trials:
+        description: Repeats per case
+        required: true
+        default: '3'
+        type: string
+      spend_cap_usd:
+        description: Maximum known spend for each role run
+        required: true
+        default: '1'
+        type: string
+      active_turn_cost_usd:
+        description: Measured candidate cost per AI seat active turn
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  live-candidate:
+    name: AI / Trusted live candidate gate
+    runs-on: ubuntu-latest
+    environment: ai-promotion
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      CANDIDATE_VARIANT: ${{ inputs.candidate_variant }}
+      TRIALS: ${{ inputs.trials }}
+      SPEND_CAP: ${{ inputs.spend_cap_usd }}
+      ACTIVE_TURN_COST: ${{ inputs.active_turn_cost_usd }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - name: Deterministic contracts first
+        run: >-
+          bun run test
+          packages/server/src/ai/router-cache.test.ts
+          packages/server/src/benchmark/h-k.test.ts
+          packages/server/src/benchmark/replay.test.ts
+      - name: Tactician live comparison
+        run: >-
+          bun run ai-bench eval --suite core-fast --role tactician
+          --variants "current,$CANDIDATE_VARIANT" --trials "$TRIALS"
+          --mode production --spend-cap "$SPEND_CAP"
+          --output benchmark-output/promotion/tactician
+      - name: Strategist live comparison
+        run: >-
+          bun run ai-bench eval --suite core-fast --role strategist
+          --variants "current,$CANDIDATE_VARIANT" --trials "$TRIALS"
+          --mode production --spend-cap "$SPEND_CAP"
+          --output benchmark-output/promotion/strategist
+      - name: Apply frozen tactician policy
+        run: >-
+          bun run ai-bench promote
+          --policy benchmarks/release-policy.json
+          --baseline benchmark-output/promotion/tactician/current/report.json
+          --candidate "benchmark-output/promotion/tactician/$CANDIDATE_VARIANT/report.json"
+          --active-turn-cost "$ACTIVE_TURN_COST"
+          --critical-blunders 0 --privacy-leaks 0 --illegal-actions 0
+          --comparable-workload true --deterministic-gates-passed true --require-pass
+      - name: Apply frozen strategist policy
+        run: >-
+          bun run ai-bench promote
+          --policy benchmarks/release-policy.json
+          --baseline benchmark-output/promotion/strategist/current/report.json
+          --candidate "benchmark-output/promotion/strategist/$CANDIDATE_VARIANT/report.json"
+          --active-turn-cost "$ACTIVE_TURN_COST"
+          --critical-blunders 0 --privacy-leaks 0 --illegal-actions 0
+          --comparable-workload true --deterministic-gates-passed true --require-pass
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-promotion-${{ github.run_id }}
+          path: benchmark-output/promotion/
+          if-no-files-found: error

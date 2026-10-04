@@ -666,6 +666,12 @@ function runLayers(
         }
       }
     }
+    // Ability counters modify the current object after copiable/face-down characteristics are
+    // established. In particular, turning a permanent face down must not erase an existing
+    // indestructible counter's rules effect.
+    if ((perm.counters['indestructible'] ?? 0) > 0 && !keywords.includes('indestructible')) {
+      keywords.push('indestructible');
+    }
     work.set(perm.cardId, {
       perm,
       chars: {

@@ -179,4 +179,49 @@ describe('AI Config', () => {
       'poolside/laguna-s-2.1',
     ]);
   });
+
+  it('keeps Jev pinned and disabled until explicitly configured', () => {
+    const config = loadAiConfig({});
+    expect(config).toMatchObject({
+      jevEnabled: false,
+      jevShadowEnabled: false,
+      jevModel: 'typesafe/jev-1.13',
+      jevRequestTimeoutMs: 2000,
+      jevMaxActions: 255,
+      jevMinConfidence: null,
+      jevMinTopTwoMargin: null,
+    });
+  });
+
+  it('loads independent Jev rollout and calibration settings', () => {
+    const config = loadAiConfig({
+      AI_JEV_ENABLED: 'true',
+      AI_JEV_SHADOW_ENABLED: 'true',
+      AI_JEV_MODEL: 'typesafe/jev-1.13',
+      AI_JEV_REQUEST_TIMEOUT_MS: '3500',
+      AI_JEV_MAX_ACTIONS: '48',
+      AI_JEV_MIN_CONFIDENCE: '0.78',
+      AI_JEV_MIN_TOP_TWO_MARGIN: '0.15',
+    });
+    expect(config).toMatchObject({
+      jevEnabled: true,
+      jevShadowEnabled: true,
+      jevRequestTimeoutMs: 3500,
+      jevMaxActions: 48,
+      jevMinConfidence: 0.78,
+      jevMinTopTwoMargin: 0.15,
+    });
+    expect(configForRole(config, 'tactician').jevMinConfidence).toBe(0.78);
+  });
+
+  it('fails closed to unset Jev thresholds and caps the Choice limit', () => {
+    const config = loadAiConfig({
+      AI_JEV_MAX_ACTIONS: '999',
+      AI_JEV_MIN_CONFIDENCE: 'not-a-probability',
+      AI_JEV_MIN_TOP_TWO_MARGIN: '2',
+    });
+    expect(config.jevMaxActions).toBe(255);
+    expect(config.jevMinConfidence).toBeNull();
+    expect(config.jevMinTopTwoMargin).toBeNull();
+  });
 });

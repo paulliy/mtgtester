@@ -149,6 +149,11 @@ export function queueStepTriggers(
   for (const delayed of ctx.state.delayedTriggers) {
     // "your next upkeep" is not "the next upkeep": a player-scoped delayed trigger waits for its
     // own controller's step, the same `player === 'you'` filter the permanent loop above applies.
+    // Only that explicit `player` restriction gates WHEN a delayed trigger fires.
+    // `affectedPlayerId` is a resolution-recipient scope (who `eventPlayer` means once the
+    // ability resolves), never an implicit step restriction: Arcane Denial's two draws both say
+    // "at the beginning of the next turn's upkeep", so they fire together at the first upkeep
+    // that comes around, whoever the active player is — not at each recipient's own upkeep.
     const scoped = delayed.player === 'you' && delayed.controllerId !== apId;
     if (delayed.when === when && !scoped) {
       ctx.state.pendingTriggers.push({
@@ -158,6 +163,9 @@ export function queueStepTriggers(
         sourceName: 'Delayed Trigger',
         ability: delayed.ability,
         ...(delayed.targetId !== undefined ? { triggerObjectCardId: delayed.targetId } : {}),
+        ...(delayed.affectedPlayerId !== undefined
+          ? { scope: { eventPlayerId: delayed.affectedPlayerId } }
+          : {}),
       });
       debug(ctx, 'stack', `delayed ${when} trigger queued: ${delayed.id}`);
       if (delayed.expiry === 'endStep' || delayed.expiry === 'onFire') {

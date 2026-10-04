@@ -295,11 +295,14 @@ function* placePendingTriggers(ctx: GameContext): GameGen<boolean> {
           player: player.id,
           prompt:
             'Multiple of your abilities triggered simultaneously. Choose which to put on the stack next (the last one placed resolves first).',
-          options: mine.map((t) => ({
-            type: 'placeTrigger',
-            description: `${t.sourceName}: ${t.ability.description ?? ''}`,
-            interaction: { kind: 'order' as const, subjectIds: [t.sourceCardId] },
-          })),
+          options: mine.map((t) => {
+            const affected = t.scope?.eventPlayerId;
+            return {
+              type: 'placeTrigger',
+              description: `${t.sourceName}: ${t.ability.description ?? ''}${affected === undefined ? '' : ` (event player: ${affected})`}`,
+              interaction: { kind: 'order' as const, subjectIds: [t.sourceCardId] },
+            };
+          }),
         };
         pick = outcome.index;
       }

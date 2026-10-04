@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "description": "Evidence-scoped executor invalidation and lifecycle attribution.",
+  "strategyContextVersion": "v2",
+  "env": { "AI_PLAN_SCOPED_INVALIDATION_ENABLED": "true" }
+}

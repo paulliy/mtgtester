@@ -358,6 +358,18 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
     case 'lifeGain':
       return { ...base, text: `gains ${num(p, 'amount') ?? 0} life` };
 
+    case 'unlessPaid':
+      return {
+        ...base,
+        text: `pays ${str(p, 'cost') ?? 'the cost'} for ${str(p, 'source') ?? 'an effect'}`,
+      };
+
+    case 'unlessNotPaid':
+      return {
+        ...base,
+        text: `${p['reason'] === 'unable' ? "can't pay" : "doesn't pay"} ${str(p, 'cost') ?? 'the cost'} for ${str(p, 'source') ?? 'an effect'}`,
+      };
+
     case 'draw':
       return { ...base, text: `draws ${str(p, 'name') ?? 'a card'}` };
 

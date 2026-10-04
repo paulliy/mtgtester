@@ -7,8 +7,10 @@ interaction with combat/SBAs nobody exercised. This guide is the loop that catch
 bug: how a card gets modeled, and the ladder of increasingly-real tests to run before calling it
 done, ending with actually casting it in a game against — and via — the AI.
 
-This is the repository's canonical card-completion standard. `CLAUDE.MD`, `AGENTS.md`, pull
+This is the repository's canonical card-completion standard. `CLAUDE.md`, `AGENTS.md`, pull
 requests, manifests, and CI point here rather than restating weaker variants.
+
+The viewer privacy boundary must never return opponent decklists or private card data.
 
 ## Completion rule
 

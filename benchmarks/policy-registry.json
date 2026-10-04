@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "registryId": "jev-shadow-registry-v1",
+  "measuredAt": null,
+  "candidates": [
+    {
+      "id": "deterministic-forced-choice-v1",
+      "handler": "deterministic",
+      "provider": "local",
+      "model": "engine-forced-choice",
+      "roles": ["tactician"],
+      "supportedDecisionTypes": "*",
+      "reasoning": { "enabled": false, "effort": "none" },
+      "limits": {},
+      "evidenceStatus": "eligible",
+      "implementationRevision": "interpretable-router-v1"
+    },
+    {
+      "id": "jev-action-selector-1.13-v1",
+      "handler": "economical",
+      "provider": "openrouter",
+      "model": "typesafe/jev-1.13",
+      "roles": ["tactician"],
+      "supportedDecisionTypes": [
+        "priority",
+        "mulligan",
+        "optionalTrigger",
+        "commanderReplacement",
+        "legendRule",
+        "general"
+      ],
+      "reasoning": { "enabled": false, "effort": "none" },
+      "limits": { "contextTokens": 32768 },
+      "evidenceStatus": "unmeasured",
+      "implementationRevision": "jev-action-selector-v1"
+    },
+    {
+      "id": "configured-stronger-shadow-v1",
+      "handler": "stronger",
+      "provider": "configured-at-runtime",
+      "model": "configured-strategist-chain",
+      "roles": ["tactician", "strategist"],
+      "supportedDecisionTypes": "*",
+      "reasoning": { "enabled": true, "effort": "configured" },
+      "limits": {},
+      "evidenceStatus": "unmeasured"
+    }
+  ]
+}

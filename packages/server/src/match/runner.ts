@@ -372,6 +372,20 @@ export class MatchRunner {
       }
 
       const request = step.request;
+      // Bookkeep and flush *before* the provider, not after it. `advance()` has already run this
+      // decision's whole forced tail — payments, forced passes, resolutions, draws — and the
+      // board it surfaced the request against is settled. Flushing afterwards held those outcome
+      // events behind the cursor for as long as the provider took, which on a human seat is
+      // indefinitely: the player was asked to act on a board whose log did not explain it.
+      // Bookkeeping leads so the frontier, snapshot and mana metrics the flush reports belong to
+      // that same settled board rather than to the turn before it.
+      this.onTurnAdvanced();
+      this.flushEvents();
+      this.flushDebug();
+      // Those hooks are synchronous and reach the socket, so a disconnect can `abandon()` the
+      // match from inside them. The post-await guard below still covers the provider itself.
+      if (this.isAbandoned()) return;
+
       const response = await this.opts.providerFor(request.decidingPlayer).decide(request);
       if (this.isAbandoned()) return;
 

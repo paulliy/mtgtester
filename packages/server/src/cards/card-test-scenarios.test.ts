@@ -110,6 +110,17 @@ describe('deterministic Card Test Lab scenarios', () => {
       'ajani-viewer-plus-one-counter',
       'terror-viewer-etb-damage-to-player',
       'basker-viewer-plus-one-until-eot',
+      'zopandrel-viewer-indestructible-counter',
+      'arcane-denial-viewer-draw-zero',
+      'arcane-denial-viewer-draw-two',
+      'smothering-tithe-viewer-pay',
+      'smothering-tithe-viewer-decline',
+      'fabled-passage-viewer-search-entry-untap',
+      'myriad-landscape-viewer-enters-tapped',
+      'myriad-landscape-viewer-colorless-mana',
+      'myriad-landscape-viewer-shared-type-search',
+      'war-room-viewer-dynamic-life-activation',
+      'war-room-viewer-colorless-mana',
     ]);
   });
 
@@ -152,6 +163,7 @@ function objectNames(scenario: CardTestScenario): Map<string, string> {
     for (const card of player.graveyard) names.set(card.id, card.name);
     for (const card of player.hand) names.set(card.id, card.name);
   }
+  for (const entry of state.stack) names.set(entry.id, entry.description);
   return names;
 }
 
@@ -206,7 +218,129 @@ function runScenarioWith(scenarioId: string, chooser: Chooser) {
   return { scenario: scenario!, decisions };
 }
 
-describe('deterministic Card Test Lab scenarios — reviewed cards', () => {
+function arcaneDenialChoice(drawCount: 0 | 2): Chooser {
+  return (request, scenario) => {
+    const cast = chooseWithTarget(request, scenario, 'Cast Arcane Denial', 'Lab Pending Spell');
+    if (cast !== null) return cast;
+    const order = request.legalActions.find((action) =>
+      action.description.includes('targeted spell controller'),
+    );
+    if (order !== undefined) return { actionId: order.id };
+    const draw = request.legalActions.find(
+      (action) => action.description === `Draw ${drawCount} cards`,
+    );
+    if (draw !== undefined) return { actionId: draw.id };
+    return passChoice(request);
+  };
+}
+
+function smotheringTitheChoice(outcome: 'pay' | 'decline'): Chooser {
+  return (request, scenario) => {
+    const cast = chooseWithTarget(request, scenario, 'Cast Lab Pending Spell');
+    if (cast !== null) return cast;
+    const payment = request.legalActions.find((action) =>
+      outcome === 'pay' ? action.description === 'Pay {2}' : action.description === "Don't pay {2}",
+    );
+    if (payment !== undefined) return { actionId: payment.id };
+    return passChoice(request);
+  };
+}
+
+function fabledPassageChoice(request: DecisionRequest): Choice {
+  const activate = request.legalActions.find((action) =>
+    action.description.includes('Search for a basic land'),
+  );
+  if (activate !== undefined) return { actionId: activate.id };
+  const island = request.legalActions.find((action) =>
+    action.description.includes('Put Island onto the battlefield tapped'),
+  );
+  if (island !== undefined) return { actionId: island.id };
+  return passChoice(request);
+}
+
+function myriadLandscapeEntryChoice(request: DecisionRequest): Choice {
+  const play = request.legalActions.find((action) =>
+    action.description.includes('Play Myriad Landscape'),
+  );
+  if (play !== undefined) return { actionId: play.id };
+  return passChoice(request);
+}
+
+function myriadLandscapeSearchChoice(request: DecisionRequest): Choice {
+  const activate = request.legalActions.find((action) =>
+    action.description.includes('Search for up to two basic lands'),
+  );
+  if (activate !== undefined) return { actionId: activate.id };
+  const pair = request.legalActions.find(
+    (action) =>
+      action.description.includes('Island') && action.description.includes('Myriad Shared Dual'),
+  );
+  if (pair !== undefined) return { actionId: pair.id };
+  return passChoice(request);
+}
+
+function myriadLandscapeManaChoice(request: DecisionRequest): Choice {
+  const cast = request.legalActions.find((action) =>
+    action.description.includes('Cast Myriad Mana Sink'),
+  );
+  if (cast !== undefined) return { actionId: cast.id };
+  return passChoice(request);
+}
+
+/**
+ * Activates War Room's draw ability and nothing else. The sink stays in hand on purpose: paying
+ * {3} taps every Forest, so casting it afterwards could not demonstrate the mana clause.
+ */
+function warRoomDrawChoice(request: DecisionRequest): Choice {
+  const activate = request.legalActions.find((action) =>
+    action.description.startsWith('War Room: Pay life'),
+  );
+  if (activate !== undefined) return { actionId: activate.id };
+  return passChoice(request);
+}
+
+function warRoomManaChoice(request: DecisionRequest): Choice {
+  const cast = request.legalActions.find((action) =>
+    action.description.includes('Cast War Room Mana Sink'),
+  );
+  if (cast !== undefined) return { actionId: cast.id };
+  return passChoice(request);
+}
+
+function assertWarRoomProjections(scenario: CardTestScenario) {
+  const state = scenario.engine.getState();
+  for (const viewer of ['P1', 'P2', 'P3', 'P4'] as const) {
+    const projection = scenario.engine.playerState(viewer);
+    expect(projection.viewerSeat).toBe(viewer);
+    expect(projection.seats).toHaveLength(4);
+    for (const player of state.players) {
+      const seat = projection.seats.find((seat) => seat.seat === player.id)!;
+      expect(seat.life).toBe(player.life);
+      expect(seat.handSize).toBe(player.hand.length);
+      if (player.id === viewer) {
+        expect(seat.hand?.map((card) => card.name)).toEqual(player.hand.map((card) => card.name));
+      } else {
+        expect(seat.hand).toBeNull();
+        for (const card of player.hand) {
+          expect(JSON.stringify(projection)).not.toContain(card.id);
+        }
+      }
+    }
+    expect(
+      projection.battlefield.map((permanent) => ({
+        name: permanent.name,
+        tapped: permanent.tapped,
+      })),
+    ).toEqual(
+      state.battlefield.map((permanent) => ({ name: permanent.name, tapped: permanent.tapped })),
+    );
+    expect(projection.stack.map((entry) => entry.description)).toEqual(
+      state.stack.map((entry) => entry.description),
+    );
+  }
+}
+
+describe('deterministic Card Test Lab scenarios — registered card scenarios', () => {
   it("Gev: an opponent's spell targeting Gev triggers ward — pay 2 life, countered when declined", () => {
     const { scenario } = runScenarioWith('gev-viewer-opponent-targets-ward', (request, sc) => {
       const descriptions = request.legalActions.map((action) => action.description);
@@ -1503,5 +1637,381 @@ describe('deterministic Card Test Lab scenarios — reviewed cards', () => {
     expect(basker?.toughness).toBe(8);
     expect(basker?.keywords).toContain('trample');
     expect(you?.energy).toBe(0);
+  });
+
+  it('Zopandrel: normal activation exposes the indestructible counter as a keyword', () => {
+    const { scenario } = runScenarioWith('zopandrel-viewer-indestructible-counter', (request) => {
+      const activate = request.legalActions.find((action) =>
+        action.description.includes('indestructible counter'),
+      );
+      if (activate !== undefined) return { actionId: activate.id };
+      return passChoice(request);
+    });
+    const spec = scenario.engine.spectatorState();
+    const zopandrel = spec.battlefield.find(
+      (permanent) => permanent.name === 'Zopandrel, Hunger Dominus',
+    );
+    expect(zopandrel?.counters['indestructible']).toBe(1);
+    expect(zopandrel?.keywords).toContain('indestructible');
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Two-Mana Bear')).toBe(false);
+    expect(spec.battlefield.some((permanent) => permanent.name === 'Lab Shaman')).toBe(false);
+  });
+
+  it.each([0, 2] as const)(
+    'Arcane Denial: normal cast routes draw-%i at the immediately next upkeep',
+    (drawCount) => {
+      const { scenario } = runScenarioWith(
+        `arcane-denial-viewer-draw-${drawCount === 0 ? 'zero' : 'two'}`,
+        arcaneDenialChoice(drawCount),
+      );
+      const state = scenario.engine.getState();
+      const p1 = state.players.find((player) => player.id === 'P1')!;
+      const p4 = state.players.find((player) => player.id === 'P4')!;
+      expect(state.turnNumber).toBe(2);
+      expect(scenario.engine.spectatorState().activePlayer).toBe('P2');
+      expect(p1.hand.map((card) => card.name)).toEqual(['Caster Secret Draw']);
+      expect(p4.hand).toHaveLength(drawCount);
+      expect(p4.hand.every((card) => card.name.startsWith('Target Secret'))).toBe(true);
+      expect(p4.graveyard.map((card) => card.name)).toContain('Lab Pending Spell');
+      expect(state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(drawCount + 1);
+    },
+  );
+
+  it('arcane-denial-prepared-scenario-deterministic-replay — reproduces state and events', () => {
+    const first = runScenarioWith(
+      'arcane-denial-viewer-draw-two',
+      arcaneDenialChoice(2),
+    ).scenario.engine.getState();
+    const second = runScenarioWith(
+      'arcane-denial-viewer-draw-two',
+      arcaneDenialChoice(2),
+    ).scenario.engine.getState();
+
+    expect(structuredClone(second)).toEqual(structuredClone(first));
+    expect(second.eventLog).toEqual(first.eventLog);
+  });
+
+  it.each(['pay', 'decline'] as const)(
+    'smothering-tithe-prepared-scenarios-pay-decline — opponent draw %s path uses normal engine actions',
+    (outcome) => {
+      const { scenario } = runScenarioWith(
+        `smothering-tithe-viewer-${outcome}`,
+        smotheringTitheChoice(outcome),
+      );
+      const state = scenario.engine.getState();
+      const p1 = state.players.find((player) => player.id === 'P1')!;
+      const treasures = state.battlefield.filter(
+        (permanent) => permanent.name === 'Treasure' && permanent.controllerId === 'P2',
+      );
+      expect(p1.hand.map((card) => card.name)).toEqual([
+        `Tithe Secret ${outcome === 'pay' ? 'Pay' : 'Decline'}`,
+      ]);
+      expect(treasures).toHaveLength(outcome === 'pay' ? 0 : 1);
+      expect(
+        state.battlefield
+          .filter((permanent) => permanent.name === 'Forest' && permanent.controllerId === 'P1')
+          .filter((permanent) => permanent.tapped),
+      ).toHaveLength(outcome === 'pay' ? 3 : 1);
+      expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
+      expect(state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(1);
+      expect(state.eventLog.some((event) => event.type === 'unlessPaid')).toBe(outcome === 'pay');
+      expect(
+        state.eventLog.some(
+          (event) =>
+            event.type === 'decision' &&
+            event.payload['description'] === (outcome === 'pay' ? 'Pay {2}' : "Don't pay {2}"),
+        ),
+      ).toBe(true);
+    },
+  );
+
+  it('smothering-tithe-prepared-scenario-deterministic-replay — reproduces state and events', () => {
+    const run = () =>
+      runScenarioWith(
+        'smothering-tithe-viewer-decline',
+        smotheringTitheChoice('decline'),
+      ).scenario.engine.getState();
+    const first = run();
+    const second = run();
+    expect(structuredClone(second)).toEqual(structuredClone(first));
+    expect(second.eventLog).toEqual(first.eventLog);
+  });
+
+  it('fabled-passage-prepared-scenario — activates, searches privately, and untaps the bound fourth land', () => {
+    const { scenario } = runScenarioWith(
+      'fabled-passage-viewer-search-entry-untap',
+      fabledPassageChoice,
+    );
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const island = state.battlefield.find(
+      (permanent) => permanent.controllerId === 'P1' && permanent.name === 'Island',
+    );
+    expect(p1.graveyard.map((card) => card.name)).toContain('Fabled Passage');
+    expect(island?.tapped).toBe(false);
+    expect(
+      state.battlefield.filter(
+        (permanent) => permanent.controllerId === 'P1' && permanent.typeLine.includes('Land'),
+      ),
+    ).toHaveLength(4);
+    expect(state.eventLog.some((event) => event.type === 'activateAbility')).toBe(true);
+    expect(
+      state.eventLog.some(
+        (event) => event.type === 'searchFound' && event.payload['name'] === 'Island',
+      ),
+    ).toBe(true);
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    expect(JSON.stringify(scenario.engine.view('P2'))).not.toContain(
+      'Fabled Private Library Secret',
+    );
+  });
+
+  it('fabled-passage-prepared-scenario-deterministic-replay — reproduces state and events', () => {
+    const run = () =>
+      runScenarioWith(
+        'fabled-passage-viewer-search-entry-untap',
+        fabledPassageChoice,
+      ).scenario.engine.getState();
+    const first = run();
+    const second = run();
+    expect(structuredClone(second)).toEqual(structuredClone(first));
+    expect(second.eventLog).toEqual(first.eventLog);
+  });
+
+  it('myriad-landscape-entry-scenario — normal land play applies the tapped replacement', () => {
+    const { scenario } = runScenarioWith(
+      'myriad-landscape-viewer-enters-tapped',
+      myriadLandscapeEntryChoice,
+    );
+    const state = scenario.engine.getState();
+    const landscape = state.battlefield.find(
+      (permanent) => permanent.controllerId === 'P1' && permanent.name === 'Myriad Landscape',
+    );
+    expect(landscape?.tapped).toBe(true);
+    expect(state.eventLog.some((event) => event.type === 'playLand')).toBe(true);
+    expect(state.stack).toHaveLength(0);
+  });
+
+  it('myriad-landscape-search-scenario — pays, sacrifices, and finds a legal shared-type pair', () => {
+    const { scenario } = runScenarioWith(
+      'myriad-landscape-viewer-shared-type-search',
+      myriadLandscapeSearchChoice,
+    );
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const found = state.battlefield.filter(
+      (permanent) =>
+        permanent.controllerId === 'P1' &&
+        ['Island', 'Myriad Shared Dual'].includes(permanent.name),
+    );
+    expect(p1.graveyard.map((card) => card.name)).toContain('Myriad Landscape');
+    expect(found).toHaveLength(2);
+    expect(found.every((permanent) => permanent.tapped)).toBe(true);
+    expect(
+      state.battlefield
+        .filter((permanent) => permanent.controllerId === 'P1' && permanent.name === 'Forest')
+        .filter((permanent) => permanent.tapped),
+    ).toHaveLength(2);
+    expect(state.eventLog.some((event) => event.type === 'activateAbility')).toBe(true);
+    expect(state.eventLog.filter((event) => event.type === 'searchFound')).toHaveLength(2);
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    expect(JSON.stringify(scenario.engine.view('P2'))).not.toContain(
+      'Myriad Private Library Secret',
+    );
+  });
+
+  it('myriad-landscape-mana-scenario — pays a normal spell cost with the colorless mana ability', () => {
+    const { scenario } = runScenarioWith(
+      'myriad-landscape-viewer-colorless-mana',
+      myriadLandscapeManaChoice,
+    );
+    const state = scenario.engine.getState();
+    const landscape = state.battlefield.find(
+      (permanent) => permanent.controllerId === 'P1' && permanent.name === 'Myriad Landscape',
+    );
+    expect(landscape?.tapped).toBe(true);
+    expect(state.battlefield.map((permanent) => permanent.name)).toContain('Myriad Mana Sink');
+    expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
+  });
+
+  it('myriad-landscape-search-scenario-deterministic-replay — reproduces state and events', () => {
+    const run = () =>
+      runScenarioWith(
+        'myriad-landscape-viewer-shared-type-search',
+        myriadLandscapeSearchChoice,
+      ).scenario.engine.getState();
+    const first = run();
+    const second = run();
+    expect(structuredClone(second)).toEqual(structuredClone(first));
+    expect(second.eventLog).toEqual(first.eventLog);
+  });
+
+  it('war-room-retained-action - returns a genuine P1 cast after the forced draw resolution', () => {
+    const scenario = createCardTestScenario(
+      'war-room-viewer-dynamic-life-activation',
+      'war-room-retained-action',
+    )!;
+    const first = scenario.engine.advance();
+    expect(first.kind).toBe('decision');
+    if (first.kind !== 'decision') throw new Error('Missing activation request');
+    scenario.engine.submit({
+      requestId: first.request.requestId,
+      ...warRoomDrawChoice(first.request),
+    });
+    const settled = scenario.engine.advance();
+    expect(settled.kind).toBe('decision');
+    if (settled.kind !== 'decision') throw new Error('Missing retained P1 request');
+    expect(settled.request.decidingPlayer).toBe('P1');
+    expect(
+      settled.request.legalActions.some(
+        (action) =>
+          action.type === 'castSpell' &&
+          action.description === 'Cast War Room Action Witness ({0})',
+      ),
+    ).toBe(true);
+    const state = scenario.engine.getState();
+    expect(state.players[0]!.life).toBe(37);
+    expect(state.players[0]!.hand).toHaveLength(3);
+    expect(state.stack).toHaveLength(0);
+  });
+
+  it('war-room-draw-scenario — pays three life for the three-color identity and draws exactly once', () => {
+    let activated = false;
+    const { scenario } = runScenarioWith(
+      'war-room-viewer-dynamic-life-activation',
+      (request, sc) => {
+        const state = sc.engine.getState();
+        const p1 = state.players.find((player) => player.id === 'P1')!;
+        if (!activated) {
+          assertWarRoomProjections(sc);
+          expect(p1.life).toBe(40);
+          expect(p1.hand.map((card) => card.name)).toEqual([
+            'War Room Mana Sink',
+            'War Room Action Witness',
+          ]);
+          const choice = warRoomDrawChoice(request);
+          expect(request.legalActions.find((action) => action.id === choice.actionId)?.type).toBe(
+            'activateAbility',
+          );
+          activated = true;
+          return choice;
+        }
+        expect(request.decidingPlayer).toBe('P1');
+        expect(p1.life).toBe(37);
+        expect(p1.hand).toHaveLength(3);
+        expect(state.stack).toHaveLength(0);
+        expect(
+          request.legalActions.some(
+            (action) =>
+              action.type === 'castSpell' &&
+              action.description === 'Cast War Room Action Witness ({0})',
+          ),
+        ).toBe(true);
+        const choice = warRoomDrawChoice(request);
+        expect(request.legalActions.find((action) => action.id === choice.actionId)?.type).toBe(
+          'pass',
+        );
+        return choice;
+      },
+    );
+    expect(activated).toBe(true);
+    assertWarRoomProjections(scenario);
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const lands = state.battlefield.filter(
+      (permanent) => permanent.controllerId === 'P1' && permanent.typeLine.includes('Land'),
+    );
+
+    expect(p1.life).toBe(37);
+    expect(lands.map((permanent) => permanent.name).sort()).toEqual([
+      'Forest',
+      'Forest',
+      'Forest',
+      'War Room',
+    ]);
+    expect(lands.every((permanent) => permanent.tapped)).toBe(true);
+    // Hand 2 -> 3: the sink stays, and the only library card is drawn.
+    expect(p1.hand.map((card) => card.name).sort()).toEqual([
+      'Three Color Commander',
+      'War Room Action Witness',
+      'War Room Mana Sink',
+    ]);
+    expect(state.eventLog.some((event) => event.type === 'activateAbility')).toBe(true);
+    expect(
+      state.eventLog.filter((event) => event.type === 'draw' && event.actorSeat === 'P1'),
+    ).toHaveLength(1);
+    expect(
+      state.eventLog.find((event) => event.type === 'draw' && event.actorSeat === 'P1')?.payload[
+        'name'
+      ],
+    ).toBe('Three Color Commander');
+    expect(state.stack).toHaveLength(0);
+  });
+
+  it('war-room-mana-scenario — pays a normal spell cost with the colorless mana ability', () => {
+    let cast = false;
+    const { scenario } = runScenarioWith('war-room-viewer-colorless-mana', (request, sc) => {
+      const state = sc.engine.getState();
+      const p1 = state.players.find((player) => player.id === 'P1')!;
+      if (!cast) {
+        assertWarRoomProjections(sc);
+        expect(state.players).toHaveLength(4);
+        expect(state.phase).toBe('precombatMain');
+        expect(p1.life).toBe(40);
+        expect(Object.values(p1.manaPool).every((amount) => amount === 0)).toBe(true);
+        expect(p1.hand.map((card) => card.name)).toEqual(['War Room Mana Sink']);
+        expect(state.battlefield.map((permanent) => permanent.name)).toEqual(['War Room']);
+        expect(state.battlefield[0]?.tapped).toBe(false);
+        cast = true;
+      }
+      return warRoomManaChoice(request);
+    });
+    expect(cast).toBe(true);
+    assertWarRoomProjections(scenario);
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    const warRoom = state.battlefield.find(
+      (permanent) => permanent.controllerId === 'P1' && permanent.name === 'War Room',
+    );
+
+    expect(warRoom?.tapped).toBe(true);
+    expect(p1.hand).toHaveLength(0);
+    expect(Object.values(p1.manaPool).every((amount) => amount === 0)).toBe(true);
+    expect(state.battlefield.map((permanent) => permanent.name)).toContain('War Room Mana Sink');
+    expect(
+      state.eventLog.some(
+        (event) => event.type === 'castSpell' && event.payload['name'] === 'War Room Mana Sink',
+      ),
+    ).toBe(true);
+    // The mana clause must not borrow the draw clause's evidence: no life is paid, nothing is drawn.
+    expect(p1.life).toBe(40);
+    expect(
+      state.eventLog.filter((event) => event.type === 'draw' && event.actorSeat === 'P1'),
+    ).toHaveLength(0);
+    expect(state.stack).toHaveLength(0);
+  });
+
+  it('war-room-draw-scenario-deterministic-replay - reproduces state and events', () => {
+    const run = () =>
+      runScenarioWith(
+        'war-room-viewer-dynamic-life-activation',
+        warRoomDrawChoice,
+      ).scenario.engine.getState();
+    const first = run();
+    const second = run();
+    expect(structuredClone(second)).toEqual(structuredClone(first));
+    expect(second.eventLog).toEqual(first.eventLog);
+  });
+
+  it('war-room-mana-scenario-deterministic-replay — reproduces state and events', () => {
+    const run = () =>
+      runScenarioWith(
+        'war-room-viewer-colorless-mana',
+        warRoomManaChoice,
+      ).scenario.engine.getState();
+    const first = run();
+    const second = run();
+    expect(structuredClone(second)).toEqual(structuredClone(first));
+    expect(second.eventLog).toEqual(first.eventLog);
   });
 });

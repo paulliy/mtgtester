@@ -4,7 +4,12 @@
  */
 
 import type { DecisionRequest, PlayerId, PlayerView, TurnStrategy } from '@mtg/shared';
-import { RULES_PRIMER } from './primer';
+import { summarizeHandCard, summarizePermanent } from './card-summary';
+import { budgetContext, type ContextBudgetReport } from './context-budget';
+import { RULES_PRIMER, tacticianPrimerFor } from './primer';
+import type { PublicMemorySnapshot } from './public-memory';
+import type { StateFeatures } from './state-features';
+import type { PromptCacheMetadata } from './prompt-cache';
 
 export interface OpenAiMessage {
   role: 'system' | 'user' | 'assistant';
@@ -14,6 +19,8 @@ export interface OpenAiMessage {
 export interface AiPrompt {
   messages: OpenAiMessage[];
   estimatedTokens: number;
+  contextReport?: ContextBudgetReport;
+  promptCache?: PromptCacheMetadata;
 }
 
 const BASIC_LAND_NAMES = new Set(['Forest', 'Plains', 'Island', 'Swamp', 'Mountain']);
@@ -27,6 +34,22 @@ export interface RecentSeatDecision {
 export interface TacticalGuidance {
   strategy: TurnStrategy | null;
   recentDecisions: readonly RecentSeatDecision[];
+  publicMemory?: PublicMemorySnapshot;
+  stateFeatures?: StateFeatures;
+}
+
+export interface ContextOptions {
+  /** Frozen v1 benchmark prompts set this false; current prompts restore permitted public data. */
+  includePublicZones?: boolean;
+  includeMemory?: boolean;
+  includeFeatures?: boolean;
+  useCardSummaries?: boolean;
+  useBudgeter?: boolean;
+  inputTokenBudget?: number;
+  publicMemory?: PublicMemorySnapshot;
+  stateFeatures?: StateFeatures;
+  /** Frozen pre-split prompt used only for historical benchmark comparability. */
+  useLegacyTacticianPrimer?: boolean;
 }
 
 /**
@@ -36,7 +59,10 @@ export function assemblePrompt(
   request: DecisionRequest,
   view: PlayerView,
   guidance?: TacticalGuidance,
+  options: ContextOptions = {},
 ): AiPrompt {
+  const includePublicZones = options.includePublicZones ?? true;
+  const useCardSummaries = options.useCardSummaries ?? false;
   /**
    * Rules text for a battlefield permanent, sent at most ONCE per distinct card name.
    * A Commander board repeats heavily — eight Thopter tokens, forty basics — and the text
@@ -52,7 +78,7 @@ export function assemblePrompt(
     return { text: oracleText };
   };
 
-  const userPayload = {
+  const rawPayload = {
     ctx: {
       reqId: request.requestId,
       turn: request.turn,
@@ -80,7 +106,9 @@ export function assemblePrompt(
       mana: view.availableMana,
       manaSources: view.manaSources,
       commanders: view.commanders,
+      ...(includePublicZones ? { graveyard: view.graveyard } : {}),
       hand: view.hand.map((card) => {
+        if (useCardSummaries) return summarizeHandCard(card, request, true);
         const isBasic = BASIC_LAND_NAMES.has(card.name);
         return {
           id: card.id,
@@ -104,17 +132,38 @@ export function assemblePrompt(
       library: opp.librarySize,
       cmdrDmg: opp.commanderDamageDealtToYou,
       commanders: opp.commanders,
+      ...(includePublicZones ? { poison: opp.poisonCounters, graveyard: opp.graveyard } : {}),
     })),
-    battlefield: view.battlefield.map((perm) => ({
-      id: perm.id,
-      controller: perm.controller,
-      name: perm.name,
-      tapped: perm.tapped,
-      ...(perm.power !== undefined ? { p: perm.power, t: perm.toughness } : {}),
-      ...(perm.status.length > 0 ? { status: perm.status } : {}),
-      ...battlefieldText(perm.name, perm.oracleText),
-    })),
+    battlefield: view.battlefield.map((perm) =>
+      useCardSummaries
+        ? summarizePermanent(perm, request, view, true)
+        : {
+            id: perm.id,
+            controller: perm.controller,
+            name: perm.name,
+            tapped: perm.tapped,
+            ...(includePublicZones && perm.typeLine !== undefined ? { type: perm.typeLine } : {}),
+            ...(includePublicZones && perm.keywords !== undefined
+              ? { keywords: perm.keywords }
+              : {}),
+            ...(perm.power !== undefined ? { p: perm.power, t: perm.toughness } : {}),
+            ...(perm.status.length > 0 ? { status: perm.status } : {}),
+            ...battlefieldText(perm.name, perm.oracleText),
+          },
+    ),
     stack: view.stack,
+    ...(includePublicZones
+      ? {
+          publicExile: view.exile,
+          revealedLibraryTops: view.revealedLibraryTops ?? [],
+        }
+      : {}),
+    ...(options.includeMemory === true && options.publicMemory !== undefined
+      ? { publicMemory: options.publicMemory }
+      : {}),
+    ...(options.includeFeatures === true && options.stateFeatures !== undefined
+      ? { stateFeatures: options.stateFeatures }
+      : {}),
     // §7.4 specifies a trimmed log of ~15 entries; the engine already trims to exactly that,
     // so re-slicing here only threw away context the view had deliberately kept.
     recentLog: view.recentLog,
@@ -123,9 +172,47 @@ export function assemblePrompt(
       : {
           turnStrategy: guidance.strategy,
           yourRecentDecisions: guidance.recentDecisions,
+          ...(options.publicMemory === undefined &&
+          options.includeMemory === true &&
+          guidance.publicMemory !== undefined
+            ? { publicMemory: guidance.publicMemory }
+            : {}),
+          ...(options.stateFeatures === undefined &&
+          options.includeFeatures === true &&
+          guidance.stateFeatures !== undefined
+            ? { stateFeatures: guidance.stateFeatures }
+            : {}),
         }),
     legalActions: request.legalActions,
   };
+
+  const budgeted =
+    options.useBudgeter === true
+      ? budgetContext(rawPayload, options.inputTokenBudget ?? 6_000)
+      : null;
+  if (budgeted !== null && useCardSummaries) {
+    const summarizedCards = [
+      ...((rawPayload.you.hand as Array<{ id: string; tier?: string }>) ?? []),
+      ...((rawPayload.battlefield as Array<{ id: string; tier?: string }>) ?? []),
+    ];
+    budgeted.report.tierChanges.push(
+      ...summarizedCards
+        .filter(
+          (card): card is { id: string; tier: string } =>
+            card.tier !== undefined && card.tier !== 'immediate',
+        )
+        .map((card) => ({ cardId: card.id, from: 'full', to: card.tier })),
+    );
+  }
+  const userPayload = budgeted?.payload ?? rawPayload;
+  if (budgeted?.report.exceeded === true) {
+    (userPayload as Record<string, unknown>)['contextBudget'] = {
+      exceeded: true,
+      requiredRoute: budgeted.report.route,
+      estimatedTokens: budgeted.report.estimatedTokensAfter,
+      limitTokens: budgeted.report.limitTokens,
+    };
+  }
 
   // Minified JSON output (no indentation whitespace)
   const userJson = JSON.stringify(userPayload);
@@ -134,65 +221,21 @@ export function assemblePrompt(
     guidance === undefined
       ? ''
       : `\n\nTACTICIAN ROLE: The strategist's turnStrategy is advice, never authority. Apply it to the current legalActions and choose only the best next actionId. If the board changed, adapt. Do not create a new plan and do not return plannedActions or turnStrategy. Reasoning is disabled, so answer with compact JSON immediately.`;
+  const systemPrimer = options.useLegacyTacticianPrimer
+    ? RULES_PRIMER
+    : tacticianPrimerFor(request);
   const messages: OpenAiMessage[] = [
-    { role: 'system', content: RULES_PRIMER + tacticalInstruction },
+    { role: 'system', content: systemPrimer + tacticalInstruction },
     { role: 'user', content: userJson },
   ];
 
-  const totalChars = RULES_PRIMER.length + tacticalInstruction.length + userJson.length;
+  const totalChars = systemPrimer.length + tacticalInstruction.length + userJson.length;
   const estimatedTokens = Math.ceil(totalChars / 4);
 
   return {
     messages,
     estimatedTokens,
-  };
-}
-
-/**
- * Build the once-per-turn strategist prompt while preserving the PlayerView anti-cheat boundary.
- *
- * `deckArchetype` is the deciding seat's **own** inferred archetype (ADR 0022 §5) — what its deck
- * is trying to do. Only its own: an archetype is derived from a full 99-card list, which is hidden
- * information for every other seat (brief §7.1). Passing an opponent's tag here would leak their
- * decklist just as surely as showing their hand.
- */
-export function assembleStrategistPrompt(
-  request: DecisionRequest,
-  view: PlayerView,
-  recentDecisions: readonly RecentSeatDecision[],
-  deckArchetype?: string,
-): AiPrompt {
-  const base = assemblePrompt(request, view);
-  const payload = JSON.parse(base.messages[1]!.content) as Record<string, unknown>;
-  payload['yourRecentDecisions'] = recentDecisions;
-  if (deckArchetype !== undefined && deckArchetype.length > 0) {
-    payload['yourDeckArchetype'] = deckArchetype;
-  }
-  payload['strategyTask'] = {
-    horizon: 'the active player full turn, from precombat main through ending',
-    requirements: [
-      ...(deckArchetype !== undefined && deckArchetype.length > 0
-        ? ['play to yourDeckArchetype — it is what this deck is built to do']
-        : []),
-      'think ahead about land and spell sequencing',
-      'rank public threats and choose attack targets',
-      'decide what mana or interaction to hold up',
-      'include only plausible actions; the engine will re-check every action against legal menus',
-      'scope each planned action with phase and step when known',
-    ],
-  };
-  const userJson = JSON.stringify(payload);
-  const instruction = `${RULES_PRIMER}
-
-STRATEGIST ROLE: Think carefully across the whole active turn before answering. You are not choosing an engine action. Return exactly:
-{"actionId":0,"turnStrategy":{"intent":"one concise standing intent","threatOrder":["P2"],"manaPlan":"concise sequencing and held-mana plan","plannedActions":[{"type":"playLand","name":"Card name","phase":"precombatMain","step":null}]}}
-Use only information in this PlayerView. Other players' hidden cards, decklists, and reasoning are unknown — yourDeckArchetype describes YOUR deck only, never theirs. plannedActions are non-authoritative intentions and will execute only if an exact engine-generated legal option exists.`;
-  return {
-    messages: [
-      { role: 'system', content: instruction },
-      { role: 'user', content: userJson },
-    ],
-    estimatedTokens: Math.ceil((instruction.length + userJson.length) / 4),
+    ...(budgeted === null ? {} : { contextReport: budgeted.report }),
   };
 }
 

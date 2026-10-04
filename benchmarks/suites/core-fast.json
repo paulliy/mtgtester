@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "suiteId": "core-fast",
+  "description": "Starter contract suite. Expand toward 50 tactical and 25 strategic cases from captured failures and coverage gaps.",
+  "caseFiles": [
+    "../tactician/dev/priority-removal-001.json",
+    "../strategist/dev/public-recursion-001.json"
+  ]
+}

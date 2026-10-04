@@ -12,7 +12,9 @@ import { playerById } from '../state/objects';
 import type { GameContext } from '../state/types';
 import { runOpeningHands } from '../turn/mulligan';
 import { runPrioritySequence } from '../turn/priority';
-import { runTurn } from '../turn/turn';
+import { priorityCheckpoint } from '../sba/sba';
+import type { PreparedScenarioSpec } from '../testing/prepared-scenario';
+import { queueStepTriggers, runTurn } from '../turn/turn';
 
 function advanceToNextTurnPlayer(ctx: GameContext): void {
   const s = ctx.state;
@@ -106,11 +108,23 @@ export function* playGame(ctx: GameContext): GameGen<GameResult> {
  * A finite deterministic lab run from an already arranged priority window. It ends after every
  * player passes with an empty stack; all intervening actions still use production engine paths.
  */
-export function* playPreparedScenario(ctx: GameContext): GameGen<GameResult> {
+export function* playPreparedScenario(
+  ctx: GameContext,
+  spec: PreparedScenarioSpec,
+): GameGen<GameResult> {
   const state = ctx.state;
   emit(ctx, 'gameStart', { seed: state.seed, players: state.seating });
   emit(ctx, 'startingPlayer', { player: state.currentTurnPlayer });
   yield* runPrioritySequence(ctx);
+  if (spec.continueToNextUpkeep === true) {
+    advanceToNextTurnPlayer(ctx);
+    state.turnNumber += 1;
+    state.phase = 'beginning';
+    state.step = 'upkeep';
+    queueStepTriggers(ctx, 'upkeep');
+    yield* priorityCheckpoint(ctx);
+    yield* runPrioritySequence(ctx);
+  }
   const result: GameResult = {
     gameId: state.gameId,
     winnerSeat: null,

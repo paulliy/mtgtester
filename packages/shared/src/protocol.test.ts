@@ -48,6 +48,29 @@ describe('protocol message names', () => {
 });
 
 describe('isClientToServerMessage', () => {
+  it('accepts saved snapshots and a preview-bound start, rejecting malformed IDs', () => {
+    const payload = {
+      seats: [
+        { kind: 'snapshot', snapshotId: 'stable-id' },
+        ...Array.from({ length: 3 }, () => ({ kind: 'pool' })),
+      ],
+      providerKind: 'random',
+      seed: 'fixed',
+      previewId: 'preview-id',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+    };
+    expect(isClientToServerMessage({ type: 'startGame', payload })).toBe(true);
+    expect(
+      isClientToServerMessage({
+        type: 'startGame',
+        payload: { ...payload, seats: [{ kind: 'snapshot', snapshotId: '' }] },
+      }),
+    ).toBe(false);
+    expect(
+      isClientToServerMessage({ type: 'startGame', payload: { ...payload, previewId: 42 } }),
+    ).toBe(false);
+  });
   it('accepts every declared client message', () => {
     const messages = [
       { type: 'startGame', payload: { seats: [{ kind: 'pool' }], providerKind: 'random' } },
@@ -109,6 +132,34 @@ describe('isClientToServerMessage', () => {
         },
       }),
     ).toBe(false);
+  });
+
+  it.each([
+    ['submitPlayerAction', { requestId: 'request-1', revision: 3, actionId: 2 }],
+    ['yieldPlayerAbility', { requestId: 'request-1', revision: 3, actionId: 2 }],
+    ['resolveHeldDecision', { requestId: 'request-1', actionId: 2 }],
+  ])('rejects an empty requestId for %s', (type, payload) => {
+    expect(isClientToServerMessage({ type, payload })).toBe(true);
+    expect(isClientToServerMessage({ type, payload: { ...payload, requestId: '' } })).toBe(false);
+    expect(isClientToServerMessage({ type, payload: { ...payload, requestId: ' ' } })).toBe(true);
+  });
+
+  it('accepts only declared submitPlayerAction payload and target fields', () => {
+    const payload = {
+      requestId: 'request-1',
+      revision: 3,
+      actionId: 2,
+      targets: [{ slot: 0, choice: 'P2' }],
+    };
+    const submission = (value: unknown) =>
+      isClientToServerMessage({ type: 'submitPlayerAction', payload: value });
+
+    expect(submission(payload)).toBe(true);
+    expect(submission({ requestId: 'request-1', revision: 3, actionId: 2 })).toBe(true);
+    expect(submission({ ...payload, unexpected: true })).toBe(false);
+    expect(submission({ ...payload, manaSplit: { G: 1 } })).toBe(false);
+    expect(submission({ ...payload, combatDamageSplit: { P2: 1 } })).toBe(false);
+    expect(submission({ ...payload, targets: [{ slot: 0, choice: 'P2', amount: 1 }] })).toBe(false);
   });
 
   it('validates nested and optional payload fields, not only message discriminants', () => {
@@ -196,5 +247,39 @@ describe('isClientToServerMessage', () => {
     expect(isClientToServerMessage({ type: 'startGame' })).toBe(false);
     expect(isClientToServerMessage({ type: 'startGame', payload: null })).toBe(false);
     expect(isClientToServerMessage({ payload: {} })).toBe(false);
+  });
+});
+
+describe('single-player seat identity', () => {
+  function startGame(humanSeat: unknown): unknown {
+    return {
+      type: 'startGame',
+      payload: {
+        seats: [{ kind: 'pool' }, { kind: 'pool' }, { kind: 'pool' }, { kind: 'pool' }],
+        providerKind: 'random',
+        gameMode: 'singlePlayer',
+        humanSeat,
+      },
+    };
+  }
+
+  it.each(['P1', 'P2', 'P3', 'P4'])('accepts %s as the human seat', (seat) => {
+    expect(isClientToServerMessage(startGame(seat))).toBe(true);
+  });
+
+  // The seat is the single-player authorization identity: everything the server will treat as
+  // "the requester's own deck" keys on it. A value that only *stringifies* to a seat is not one.
+  it.each([
+    ['a single-element array', ['P1']],
+    ['a nested array', [['P1']]],
+    ['an object with a matching toString', { toString: () => 'P1' }],
+    ['the number one', 1],
+    ['a padded string', ' P1'],
+    ['a lowercase seat', 'p1'],
+    ['null', null],
+    ['undefined', undefined],
+    ['a seat-like object', { seat: 'P1' }],
+  ])('rejects %s as the human seat', (_case, seat) => {
+    expect(isClientToServerMessage(startGame(seat))).toBe(false);
   });
 });

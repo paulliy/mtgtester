@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "caseId": "public-recursion-001",
+  "contentHash": "ad873fb9bd110075bd190e24cc9df8e372dac7308c79c7f0c26d60a1f1f689cf",
+  "role": "strategist",
+  "categories": ["threat-assessment", "graveyard", "resource-reservation"],
+  "sourceGroup": "starter-synthetic-002",
+  "observerSeat": "P1",
+  "turn": 8,
+  "phase": "precombatMain",
+  "step": null,
+  "eventSequence": 77,
+  "supportedEngineVersion": "754f42240f2411a096dddbf123f21b0dd2f9941304e39214994b082a7e8ba08a",
+  "supportedCardDefinitionHash": "16788a4e88b3e7e5f68812c7f0da07dab0202d1e4f9ad809343d540f54d6b451",
+  "input": {
+    "request": {
+      "requestId": "starter-strategy-001",
+      "gameId": "starter",
+      "turn": 8,
+      "activePlayer": "P1",
+      "decidingPlayer": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "decisionType": "general",
+      "prompt": "Create the active player turn strategy.",
+      "legalActions": [{ "id": 0, "type": "planTurn", "description": "Return the turn strategy" }]
+    },
+    "view": {
+      "seat": "P1",
+      "life": 24,
+      "hand": [
+        {
+          "id": "counter",
+          "name": "Counterspell",
+          "manaCost": "{U}{U}",
+          "typeLine": "Instant",
+          "oracleText": "Counter target spell."
+        }
+      ],
+      "deck": [{ "id": "deck-0", "name": "Island" }],
+      "graveyard": [{ "id": "own-g1", "name": "Fact or Fiction" }],
+      "commanders": [
+        {
+          "name": "Control Commander",
+          "zone": "battlefield",
+          "castCount": 1,
+          "oracleText": "Whenever you draw your second card each turn, create a token."
+        }
+      ],
+      "availableMana": { "U": 4 },
+      "manaSources": [{ "name": "Island", "symbols": ["U"], "count": 4 }],
+      "opponents": [
+        {
+          "seat": "P2",
+          "life": 35,
+          "handSize": 5,
+          "librarySize": 62,
+          "graveyard": [{ "id": "combo", "name": "Visible Combo Piece" }],
+          "commanders": [
+            {
+              "name": "Recursion Commander",
+              "zone": "command",
+              "castCount": 2,
+              "oracleText": "You may cast a permanent spell from your graveyard each turn."
+            }
+          ],
+          "poisonCounters": 0,
+          "commanderDamageDealtToYou": 0
+        },
+        {
+          "seat": "P3",
+          "life": 12,
+          "handSize": 1,
+          "librarySize": 65,
+          "graveyard": [],
+          "commanders": [{ "name": "Creature Commander", "zone": "battlefield", "castCount": 0 }],
+          "poisonCounters": 0,
+          "commanderDamageDealtToYou": 0
+        }
+      ],
+      "revealedLibraryTops": [
+        {
+          "player": "P2",
+          "card": {
+            "id": "top",
+            "name": "Reanimate",
+            "manaCost": "{B}",
+            "typeLine": "Sorcery",
+            "oracleText": "Put target creature card from a graveyard onto the battlefield under your control."
+          }
+        }
+      ],
+      "battlefield": [],
+      "exile": [{ "id": "exiled-wipe", "name": "Wrath of God" }],
+      "stack": [],
+      "recentLog": ["T7 P2 zoneChange from=battlefield to=graveyard name=Visible Combo Piece"]
+    },
+    "recentDecisions": [],
+    "deckArchetype": "Azorius control"
+  },
+  "gold": {
+    "labelVersion": "starter-label-v1",
+    "acceptableTopThreats": ["P2"],
+    "criticalThreats": ["P2"],
+    "requiredObjectives": ["hold"],
+    "forbiddenObjectives": ["tap out"],
+    "rationale": "P2 has a public recursion engine, a visible graveyard piece, and a revealed recursion spell.",
+    "evidence": ["P2 commander text", "P2 graveyard", "revealed library top"],
+    "confidence": "high",
+    "reviewer": "starter-fixture",
+    "reviewedAt": "2026-09-20",
+    "engineSupport": "supported"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "description": "Bounded live-evidence variant using one inexpensive OpenRouter model; never a production default.",
+  "strategyContextVersion": "v2",
+  "env": {
+    "AI_PROVIDER": "openrouter",
+    "AI_STRATEGIST_MODELS": "deepseek/deepseek-v4-flash",
+    "AI_TACTICIAN_MODELS": "deepseek/deepseek-v4-flash",
+    "AI_STRATEGIST_REASONING_ENABLED": "false",
+    "AI_TACTICIAN_REASONING_ENABLED": "false",
+    "AI_STRATEGIST_MAX_OUTPUT_TOKENS": "500",
+    "AI_TACTICIAN_MAX_OUTPUT_TOKENS": "120",
+    "AI_STRATEGIST_MAX_RETRIES": "1",
+    "AI_TACTICIAN_MAX_RETRIES": "1",
+    "AI_CONTEXT_MEMORY_ENABLED": "true",
+    "AI_CONTEXT_FEATURES_ENABLED": "true",
+    "AI_CONTEXT_BUDGETER_ENABLED": "true",
+    "AI_CONTEXT_CARD_SUMMARIES_ENABLED": "true",
+    "AI_PROVIDER_PROMPT_CACHE_LAYOUT_ENABLED": "true",
+    "AI_DECISION_CACHE_ENABLED": "false"
+  }
+}

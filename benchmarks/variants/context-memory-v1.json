@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "description": "Public structured memory only.",
+  "strategyContextVersion": "v2",
+  "env": { "AI_CONTEXT_MEMORY_ENABLED": "true" }
+}

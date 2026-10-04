@@ -23,6 +23,10 @@ import { tryHeuristic } from './heuristics';
 import { localCallMeta, type AiCallLogger, type DecisionSource } from './logger';
 import { validateResponse } from './validate';
 import { StrategyCoordinator } from './strategy-coordinator';
+import { preparePromptForCaching } from './prompt-cache';
+import { routeStrategy } from './strategy-router';
+import { DEFAULT_POLICY_REGISTRY, type PolicyRegistry } from './policy-registry';
+import type { JevPolicyBinding, JevPolicyOutcome } from './jev-policy';
 
 /**
  * Errors where falling back per-decision would be dishonest: the budget or the credentials
@@ -72,6 +76,8 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     private readonly logger?: AiCallLogger,
     private readonly escalation?: DecisionEscalation,
     coordinator?: StrategyCoordinator,
+    private readonly jev?: JevPolicyBinding,
+    private readonly policyRegistry: PolicyRegistry = DEFAULT_POLICY_REGISTRY,
   ) {
     this.strategy = coordinator ?? new StrategyCoordinator(null, queue, engine, config, logger);
   }
@@ -93,8 +99,59 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     //    cheap, and both short-circuits below read it, so it is built first either way.
     const view = this.engine.view(request.decidingPlayer);
 
+    if (this.config.strategyRouterShadowEnabled) {
+      const route = routeStrategy({
+        role: 'tactician',
+        request,
+        view,
+        registry: this.policyRegistry,
+        shadowOnly: true,
+      });
+      this.engine.addDebug?.('decision', `shadow route: ${route.initialHandler}`, {
+        routerVersion: route.version,
+        initialHandler: route.initialHandler,
+        finalHandler: route.finalHandler,
+        reasons: route.reasons,
+        featureDurationMs: route.featureDurationMs,
+      });
+    }
+
     const local = this.tryLocalAnswer(request, view);
     if (local !== null) return local;
+
+    if (this.jev !== undefined) {
+      const decision = this.jev.policy.decide(
+        request,
+        view,
+        this.strategy.guidanceFor(request.decidingPlayer, request, view),
+      );
+      if (this.jev.mode === 'shadow') {
+        void decision
+          .then((outcome) => this.recordJevDebug(request, outcome, true))
+          .catch((error: unknown) => {
+            this.engine.addDebug?.('decision', `Jev shadow failed for ${request.requestId}`, {
+              mode: 'shadow',
+              detail: error instanceof Error ? error.message : String(error),
+            });
+          });
+      } else {
+        const jev = await decision;
+        this.recordJevDebug(request, jev, false);
+        if (jev.kind === 'answered') {
+          this.logger?.log(
+            request,
+            { response: jev.response, meta: jev.meta },
+            false,
+            false,
+            'jev',
+          );
+          this.rememberAnswer(request, view, jev.response);
+          this.strategy.recordDecision(request, jev.response, 'jev');
+          return jev.response;
+        }
+        if (jev.reason === 'cancelled') throw new Error('Jev request cancelled');
+      }
+    }
 
     let failure: ModelFailure;
     try {
@@ -116,6 +173,28 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     // compute-ahead, halt the match" by throwing, and that throw must reach the caller rather
     // than be caught above and quietly downgraded into the fallback it exists to prevent.
     return await this.escalateOrFallback(request, view, failure);
+  }
+
+  private recordJevDebug(
+    request: DecisionRequest,
+    outcome: JevPolicyOutcome,
+    shadow: boolean,
+  ): void {
+    this.engine.addDebug?.(
+      'decision',
+      `Jev ${outcome.kind === 'answered' ? 'action accepted' : 'fell through'} for ${request.requestId}${shadow ? ' (shadow)' : ''}`,
+      {
+        mode: shadow ? 'shadow' : 'active',
+        shape: outcome.classification.shape,
+        ...(outcome.kind === 'answered'
+          ? {
+              confidence: outcome.confidence,
+              topTwoMargin: outcome.topTwoMargin,
+              probabilities: outcome.probabilities,
+            }
+          : { reason: outcome.reason, detail: outcome.detail }),
+      },
+    );
   }
 
   /**
@@ -165,7 +244,21 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
    * returning it rather than throwing, so the caller decides between escalation and fallback.
    */
   private async decideViaModel(request: DecisionRequest, view: PlayerView): Promise<ModelOutcome> {
-    const prompt = assemblePrompt(request, view, this.strategy.guidanceFor(request.decidingPlayer));
+    const assembledPrompt = assemblePrompt(
+      request,
+      view,
+      this.strategy.guidanceFor(request.decidingPlayer, request, view),
+      {
+        includeMemory: this.config.contextMemoryEnabled,
+        includeFeatures: this.config.contextFeaturesEnabled,
+        useBudgeter: this.config.contextBudgeterEnabled,
+        useCardSummaries: this.config.contextCardSummariesEnabled,
+        inputTokenBudget: this.config.contextInputTokenBudget,
+      },
+    );
+    const prompt = this.config.providerPromptCacheLayoutEnabled
+      ? preparePromptForCaching(assembledPrompt, { role: 'tactician' })
+      : assembledPrompt;
 
     this.engine.addDebug?.(
       'decision',

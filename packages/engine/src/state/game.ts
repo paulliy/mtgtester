@@ -4,7 +4,7 @@
  * the game PRNG so the call order is deterministic, brief §5.9).
  */
 
-import type { OracleCard, PlayerId } from '@mtg/shared';
+import type { Color, OracleCard, PlayerId } from '@mtg/shared';
 import { interpretCard } from '../cards/interpret';
 import type { CardDefinition } from '../cards/definition';
 import { emptyPool } from '../mana/cost';
@@ -44,6 +44,7 @@ export function createGame(config: GameConfig): GameContext {
   const players: EnginePlayerState[] = config.players.map((pc) => {
     const commanderCardIds: string[] = [];
     const commanderNames: Record<string, string> = {};
+    const commanderColorIdentity = new Set<Color>();
     const makeObject = (
       card: OracleCard,
       zone: EngineCardObject['zone'],
@@ -53,6 +54,7 @@ export function createGame(config: GameConfig): GameContext {
       if (isCommander) {
         commanderCardIds.push(cardId);
         commanderNames[cardId] = card.name;
+        for (const color of card.colorIdentity) commanderColorIdentity.add(color);
       }
       return {
         id: `o-${nextObjectNum++}`,
@@ -97,6 +99,7 @@ export function createGame(config: GameConfig): GameContext {
       emblems: [],
       commanderCardIds,
       commanderNames,
+      commanderColorIdentity: [...commanderColorIdentity],
       attemptedDrawFromEmptyLibrary: false,
       cardsDrawnThisTurn: 0,
       cardsDrawnThisDrawStep: 0,

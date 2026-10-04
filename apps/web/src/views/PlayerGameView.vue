@@ -391,6 +391,15 @@ function isRoutineAction(action: LegalAction): boolean {
 }
 
 function chooseAction(action: LegalAction): void {
+  if (
+    action.type === 'playLand' &&
+    !store.confirmRoutineActions &&
+    targetSlots(action).length === 0 &&
+    sourceActions.value.filter((candidate) => sourceId(candidate) === sourceId(action)).length === 1
+  ) {
+    store.submitPlayerAction(action.id);
+    return;
+  }
   selectedActionId.value = action.id;
   chosenTargets.value = {};
   if (isRoutineAction(action)) {
@@ -490,12 +499,20 @@ function cancel(): void {
 
 /**
  * Opt-in ("Skip confirm step"): once every target slot on the open tray is filled, submit right
- * away instead of waiting for the explicit Confirm click. Watches `canConfirm` rather than calling
- * from `chooseTarget`/`chooseAction` directly so it also fires for zero-target actions, whose tray
- * opens already "confirmable".
+ * away instead of waiting for the explicit Confirm click. This watcher handles target completion;
+ * a targetless land uses the direct path in `chooseAction`. The routine-confirm preference keeps
+ * the review step for lands even when auto-confirm is enabled.
  */
 watch(canConfirm, (ready) => {
-  if (ready && store.autoConfirmActions && selectedAction.value !== null) confirm();
+  const action = selectedAction.value;
+  if (
+    ready &&
+    store.autoConfirmActions &&
+    action !== null &&
+    !(action.type === 'playLand' && store.confirmRoutineActions)
+  ) {
+    confirm();
+  }
 });
 
 /**

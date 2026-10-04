@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "description": "Dynamic effect-preserving card summaries only.",
+  "strategyContextVersion": "v2",
+  "env": { "AI_CONTEXT_CARD_SUMMARIES_ENABLED": "true" }
+}

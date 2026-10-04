@@ -39,6 +39,36 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run test
 
+  ai-benchmark-contracts:
+    name: AI / Benchmark contracts and privacy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      # Deterministic only: no provider key and no live model calls are available to PR code.
+      - run: >-
+          bun run test
+          packages/server/src/benchmark/hash.test.ts
+          packages/server/src/benchmark/source-hash.test.ts
+          packages/server/src/benchmark/refresh.test.ts
+          packages/server/src/benchmark/capture.test.ts
+          packages/server/src/benchmark/promotion.test.ts
+          packages/server/src/benchmark/contracts.test.ts
+          packages/server/src/benchmark/paths.test.ts
+          packages/server/src/benchmark/cases.test.ts
+          packages/server/src/benchmark/replay.test.ts
+          packages/server/src/benchmark/score.test.ts
+          packages/server/src/ai/context.test.ts
+          packages/server/src/ai/context-components.test.ts
+          packages/server/src/ai/client.test.ts
+          packages/server/src/ai/plan-lifecycle.test.ts
+          packages/server/src/ai/router-cache.test.ts
+          packages/server/src/benchmark/h-k.test.ts
+          packages/server/src/decks/strategy-profile.test.ts
+
   card-verification:
     name: Cards / Offline verification gate
     runs-on: ubuntu-latest

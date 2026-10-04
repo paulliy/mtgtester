@@ -51,6 +51,8 @@ export type AbilityCost =
   | { kind: 'removeCounters'; counter: string; count: Value | number }
   /** "Pay 10 life" (CR 118.8) — payable only if the controller's life is at least this much. */
   | { kind: 'payLife'; amount: number }
+  /** Pay a state-derived amount of life, evaluated when the cost is checked and paid. */
+  | { kind: 'payLifeValue'; amount: Value }
   /** Pay energy counters (CR 122.8). */
   | { kind: 'payEnergy'; amount: number }
   | { kind: 'loyalty'; delta: number }
@@ -568,7 +570,7 @@ export type Effect =
   | { op: 'unearth' }
   | { op: 'grantUnearthToArtifactCreaturesInGraveyard'; cost: ParsedManaCost }
   | { op: 'exileSource' }
-  | { op: 'draw'; count: Value } // controller draws
+  | { op: 'draw'; count: Value; player?: 'controller' | 'eventPlayer' }
   | { op: 'discard'; count: number } // controller chooses cards to discard
   /** Put a chosen number of cards from hand on top of the library, optionally ordering them. */
   | { op: 'putFromHandOnLibraryTop'; count: Value; anyOrder: boolean }
@@ -622,6 +624,24 @@ export type Effect =
       destinations: SearchDestination[];
       count?: Value;
       differentNames?: boolean;
+      /** Preserve the found cards' stable identities for later effects in this resolution. */
+      bind?: string;
+      /** Surface CR 701.19c's legal failure-to-find choice even for one distinct card name. */
+      allowFailToFind?: boolean;
+    }
+  /**
+   * Choose a set of cards in one private-library decision, then validate the set as a whole.
+   * This is distinct from repeated `searchLibrary` destinations: relations such as “share a
+   * land type” constrain the final group, not each card independently.
+   */
+  | {
+      op: 'searchLibraryGroup';
+      filter: Selector;
+      min: number;
+      max: number;
+      relation?: 'shareLandType';
+      destination: SearchDestination;
+      bind?: string;
     }
   /** Hunting Wilds: search two Forests and permanently animate only those found this way. */
   | { op: 'huntingWilds' }
@@ -707,6 +727,8 @@ export type Effect =
     }
   /** "Untap all lands you control" (Beledros). */
   | { op: 'untapEach'; selector: Selector }
+  /** Untap the exact permanents stored by an earlier bound effect if the condition is true. */
+  | { op: 'untapBoundIf'; binding: string; condition: Condition }
   /**
    * "Gain control of all Dragons" (Karrthus, Tyrant of Jund) — CR 613.7's control-change
    * timestamp is a real rules event, so the affected permanents' `timestamp` is bumped too, the
@@ -886,9 +908,11 @@ export type Effect =
       op: 'registerDelayedTrigger';
       when: TriggerWhen;
       ability: Ability;
-      expiry: 'endStep' | 'cleanup';
+      expiry: 'endStep' | 'cleanup' | 'onFire';
       target?: EffectRef;
       controller?: 'source' | 'targetController';
+      /** Player referenced as `eventPlayer` when the delayed ability resolves. */
+      affectedPlayer?: 'sourceController' | 'targetController';
     }
   | { op: 'commandZoneToBattlefield'; target: EffectRef; entersHaste?: boolean }
   /**
@@ -908,7 +932,8 @@ export type Effect =
   | { op: 'doublePower'; selector: Selector }
   | { op: 'doublePowerTarget'; target: EffectRef }
   | { op: 'drawUpTo'; count: number }
-  | { op: 'drawUpToN'; count: number }
+  /** The routed player chooses an integer from zero through count, then draws that many cards. */
+  | { op: 'drawUpToN'; count: number; player?: 'controller' | 'eventPlayer' }
   | { op: 'mayPayEnergyUpTo'; min: number; max: Value; then?: Effect[] }
   | { op: 'mayPayEnergy'; amount: Value; then?: Effect[] }
   | { op: 'doublePlayerCounters' }

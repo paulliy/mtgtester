@@ -121,6 +121,24 @@ describe('PlayerView visibility (brief §7.1)', () => {
     expect(JSON.stringify(view)).not.toContain('Deep Secret');
   });
 
+  it('redacts an unrevealed tutor result from opponents while preserving the public search', () => {
+    const ctx = createGame(secretPod());
+    ctx.state.eventLog.push({
+      sequence: ctx.state.nextEventSequence++,
+      turn: 1,
+      phase: 'precombatMain',
+      step: null,
+      actorSeat: 'P2',
+      type: 'searchFound',
+      payload: { player: 'P2', name: 'Private Tutor Result', to: 'hand' },
+    });
+
+    const opponentLog = buildPlayerView(ctx, 'P1').recentLog.join('\n');
+    expect(opponentLog).toContain('searchFound');
+    expect(opponentLog).not.toContain('Private Tutor Result');
+    expect(buildPlayerView(ctx, 'P2').recentLog.join('\n')).toContain('Private Tutor Result');
+  });
+
   it("exposes battlefield rules text, but never a face-down permanent's (§7.1, §7.4)", () => {
     const ctx = createGame(secretPod());
     const menace = oracle({

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "description": "Combined Milestone-4 candidate for incremental and leave-one-out evaluation.",
+  "strategyContextVersion": "v2",
+  "env": {
+    "AI_CONTEXT_MEMORY_ENABLED": "true",
+    "AI_CONTEXT_FEATURES_ENABLED": "true",
+    "AI_CONTEXT_BUDGETER_ENABLED": "true",
+    "AI_CONTEXT_CARD_SUMMARIES_ENABLED": "true"
+  }
+}

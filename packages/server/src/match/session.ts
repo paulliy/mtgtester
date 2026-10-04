@@ -30,6 +30,7 @@ import {
   AiCallLogger,
   condenseSeatLog,
   configForRole,
+  createConfiguredJevPolicy,
   loadAiConfig,
   OpenAiCompatibleClient,
   OpenAiDecisionProvider,
@@ -39,6 +40,7 @@ import {
   StrategyCoordinator,
   type AiClient,
   type AiConfig,
+  type JevPolicyBinding,
   type ReflectionContext,
 } from '../ai';
 import type { GameStore } from '../db';
@@ -97,6 +99,8 @@ export interface MatchSessionOptions {
   reflectionEnabled?: boolean;
   /** Pre-arranged deterministic lab engine; omitted for every ordinary match. */
   engine?: Engine;
+  /** Deterministic non-human decisions for Card Test Lab evidence; omitted for ordinary matches. */
+  decisionProviderOverrides?: Partial<Record<PlayerId, DecisionProvider>>;
   send(message: ServerToClientMessage): void;
 }
 
@@ -116,6 +120,8 @@ export class MatchSession {
   /** The strategist's own queue lane — see `AiConfig.strategistConcurrency`. */
   private aiStrategistQueue: RequestQueue | null = null;
   private aiCoordinator: StrategyCoordinator | null = null;
+  /** Undefined until configured, null when explicitly disabled, otherwise the session's Jev lane. */
+  private aiJev: JevPolicyBinding | null | undefined;
   private aiReflectionClient: AiClient | null = null;
   private debugFlags: DebugFlags = { ...DEFAULT_DEBUG_FLAGS };
   private readonly gameMode: GameMode;
@@ -153,6 +159,9 @@ export class MatchSession {
   private reflectionRun: Promise<void> | null = null;
 
   constructor(private readonly opts: MatchSessionOptions) {
+    if (opts.decisionProviderOverrides !== undefined && opts.engine === undefined) {
+      throw new Error('decision provider overrides require a prepared Card Test Lab engine');
+    }
     this.gameMode = opts.gameMode ?? 'spectator';
     this.humanSeat = this.gameMode === 'singlePlayer' ? (opts.humanSeat ?? null) : null;
     if (this.gameMode === 'singlePlayer' && this.humanSeat === null) {
@@ -253,6 +262,7 @@ export class MatchSession {
         // game that just stopped. Reflections deliberately reuse this lane after game-over, so
         // this must only stop the coordinator's own in-flight/queued calls, not the queue itself.
         this.aiCoordinator?.cancel();
+        this.aiJev?.cancel?.();
         this.publishFinalState();
         opts.send({
           type: 'computeHalted',
@@ -274,6 +284,7 @@ export class MatchSession {
         this.publishGameOver(result);
       },
       onDecision: (request, response, anchorSequence) => {
+        this.aiCoordinator?.recordAcceptedDecision(request, response);
         if (request.decidingPlayer === this.humanSeat && this.opts.providerKind === 'ai') {
           this.ensureAiCoordinator().recordDecision(request, response, 'human');
         }
@@ -595,13 +606,25 @@ export class MatchSession {
     }
   }
 
+  /**
+   * Every rejection here echoes the submission's `requestId`/`revision` (`ErrorPayload`), because
+   * these are the only errors that say anything about an in-flight player action. A client cannot
+   * tell a rejection from an unrelated server error by message text, and guessing either drops the
+   * decision or resubmits it.
+   */
   submitPlayerAction(payload: SubmitPlayerActionPayload): void {
+    const rejected = (message: string): void => {
+      this.opts.send({
+        type: 'error',
+        payload: { message, requestId: payload.requestId, revision: payload.revision },
+      });
+    };
     if (this.humanProvider === null) {
-      this.opts.send({ type: 'error', payload: { message: 'This is not a single-player game.' } });
+      rejected('This is not a single-player game.');
       return;
     }
     const error = this.humanProvider.submit(payload);
-    if (error !== null) this.opts.send({ type: 'error', payload: { message: error } });
+    if (error !== null) rejected(error);
   }
 
   yieldPlayerAbility(payload: YieldPlayerAbilityPayload): void {
@@ -699,6 +722,7 @@ export class MatchSession {
   abandon(): void {
     this.stopPresenting();
     this.aiCoordinator?.cancel();
+    this.aiJev?.cancel?.();
     this.runner.abandon();
     this.humanProvider?.releaseForAbandon();
     this.connectionGate.release();
@@ -877,6 +901,7 @@ export class MatchSession {
 
     const config = this.aiConfig as AiConfig;
     this.aiReflectionClient ??= new OpenAiCompatibleClient(configForRole(config, 'reflection'));
+    this.aiReflectionClient.setAttemptObserver?.(this.logger?.attemptObserver());
     // The strategist lane, reused: no tactical decision can exist any more, so there is nothing
     // left for these to block.
     const queue = (this.aiStrategistQueue ??= new RequestQueue({
@@ -960,6 +985,13 @@ export class MatchSession {
       return this.humanProvider;
     }
 
+    const decisionProviderOverride = this.opts.decisionProviderOverrides?.[playerId];
+    if (decisionProviderOverride !== undefined) {
+      const provider = new AsyncAdapter(decisionProviderOverride);
+      this.providers.set(playerId, provider);
+      return provider;
+    }
+
     const inner: AsyncDecisionProvider =
       this.opts.providerKind === 'ai'
         ? this.buildAiProvider()
@@ -1006,6 +1038,7 @@ export class MatchSession {
       // Never surface an opponent's failed legal menu to the active player.
       this.gameMode === 'singlePlayer' ? undefined : this.runner.escalation(),
       coordinator,
+      this.aiJev ?? undefined,
     );
   }
 
@@ -1013,6 +1046,17 @@ export class MatchSession {
     const config = (this.aiConfig ??= loadAiConfig(process.env));
     this.aiStrategistClient ??= new OpenAiCompatibleClient(configForRole(config, 'strategist'));
     this.aiTacticianClient ??= new OpenAiCompatibleClient(configForRole(config, 'tactician'));
+    this.aiStrategistClient.setAttemptObserver(this.logger?.attemptObserver());
+    this.aiTacticianClient.setAttemptObserver(this.logger?.attemptObserver());
+    if (this.aiJev === undefined) {
+      this.aiJev =
+        createConfiguredJevPolicy(
+          config,
+          process.env,
+          this.logger?.attemptObserver(),
+          this.logger?.jevTraceObserver(),
+        ) ?? null;
+    }
     this.aiQueue ??= new RequestQueue(config);
     // A separate queue instance, not just a separate call: a strategist call must never queue
     // behind a tactical one (or vice versa), which sharing `aiQueue` would force under its
@@ -1032,6 +1076,16 @@ export class MatchSession {
         // Each bot is told what its *own* deck is built to do (ADR 0022 §5). The map is keyed by
         // seat and read only for the seat being planned, so no seat ever sees another's.
         new Map(this.opts.seats.map((seat) => [seat.seat, seat.summary.archetypeTag])),
+        new Map(
+          this.opts.seats.flatMap((seat) => {
+            const snapshotId = seat.deckSnapshotId;
+            const profile =
+              snapshotId === null || snapshotId === undefined
+                ? null
+                : (this.opts.store?.strategyProfile(snapshotId) ?? null);
+            return profile === null ? [] : [[seat.seat, profile]];
+          }),
+        ),
       );
       // A strategist plan has no decision of its own and lands asynchronously, so it anchors to
       // wherever the log has reached — which is the point it actually started steering play.

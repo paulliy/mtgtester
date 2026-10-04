@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "description": "Observation-safe deterministic state features only.",
+  "strategyContextVersion": "v2",
+  "env": { "AI_CONTEXT_FEATURES_ENABLED": "true" }
+}

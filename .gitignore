@@ -12,6 +12,7 @@ coverage/
 test-results/
 playwright-report/
 .playwright/
+benchmark-output/
 
 # Local card cache & Scryfall bulk data (brief §3 — 100MB+, gitignored)
 data/
@@ -33,3 +34,4 @@ data/
 # OS / editor
 .DS_Store
 Thumbs.db
+/graphify-out/

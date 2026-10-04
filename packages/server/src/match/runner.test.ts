@@ -8,7 +8,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { Engine, RandomDecisionProvider } from '@mtg/engine';
-import type { AsyncDecisionProvider } from '@mtg/engine';
+import type { AsyncDecisionProvider, DebugEntry } from '@mtg/engine';
 import type { DecisionRequest, OracleCard } from '@mtg/shared';
 import { ComputeHaltError, MatchRunner } from './runner';
 
@@ -494,5 +494,165 @@ describe('MatchRunner — decision anchor sequences (ADR 0022)', () => {
     expect(firstOfEachRun.slice(1).filter(([anchor, first]) => first !== anchor)).toEqual([]);
     // A repeated or decreasing anchor would silently stack every seat's reasoning onto one line.
     expect(anchors).toEqual([...anchors].sort((a, b) => a - b));
+  });
+});
+
+/**
+ * The pump used to await the provider before flushing what `advance()` had already produced.
+ * `advance()` runs a decision's whole forced tail before surfacing the next request, so those
+ * events stayed behind the cursor for as long as the provider took — indefinitely, for a human
+ * seat. These two cover the ordering itself and the race the earlier hooks introduce; the
+ * player-facing consequence is covered in `session.test.ts` on the prepared War Room scenario.
+ */
+describe('MatchRunner — the pump flushes before it awaits a provider', () => {
+  /** Far enough in to be past a turn boundary, so the gated decision has a real tail behind it. */
+  const GATED_DECISION = 6;
+
+  it('leaves nothing behind the cursor at any provider invocation, and holds that flush while one is pending', async () => {
+    const engine = makeEngine();
+    /** Every event sequence handed to the recorder, in delivery order. */
+    const appended: number[] = [];
+    let recordedDebug = 0;
+    /** Identity of every debug entry the live hook saw — a re-delivery would repeat a reference. */
+    const deliveredDebug = new Set<object>();
+    const anchors: number[] = [];
+    /** How many events were still unflushed at each provider invocation. Must be all zeroes. */
+    const behind: number[] = [];
+    let invocations = 0;
+    /** The gated provider's resolver, parked here so the test can let the pump go on. */
+    const releases: Array<() => void> = [];
+    let runner: MatchRunner | null = null;
+
+    const recorder = {
+      start: vi.fn(),
+      appendEvents: vi.fn((events: Array<{ sequence: number }>) => {
+        appended.push(...events.map((event) => event.sequence));
+      }),
+      appendDebug: vi.fn((entries: DebugEntry[]) => {
+        recordedDebug += entries.length;
+      }),
+      saveTurnSnapshot: vi.fn(),
+      loadTurnSnapshot: vi.fn(() => null),
+      snapshotTurns: vi.fn(() => []),
+      loadEvents: vi.fn(() => []),
+      markStatus: vi.fn(),
+      finish: vi.fn(),
+    };
+
+    const inner = randomProviders();
+    runner = new MatchRunner({
+      engine,
+      gameId: 'g-test',
+      seed: 'runner-test',
+      seats: SEATS,
+      recorder: recorder as never,
+      // High enough that the compute-ahead cap never parks the pump — this is about the flush.
+      lookaheadTurns: 60,
+      providerFor: (playerId) => ({
+        decide: async (request) => {
+          // `nextSequence()` is the cursor: anything at or past it has not been flushed. The
+          // whole point of the fix is that this is empty every single time.
+          behind.push(engine.eventsSince(runner!.nextSequence()).length);
+          if (++invocations === GATED_DECISION) {
+            await new Promise<void>((resolve) => {
+              releases.push(resolve);
+            });
+          }
+          return inner(playerId).decide(request);
+        },
+      }),
+      onDecision: (_request, _response, anchorSequence) => {
+        anchors.push(anchorSequence);
+      },
+      onDebug: (entries) => {
+        for (const entry of entries) deliveredDebug.add(entry);
+      },
+    });
+
+    const run = runner.run();
+    // The gated provider never resolves on its own, so this is the runner parked mid-decision
+    // exactly as it is parked on a human seat.
+    await waitFor(() => {
+      expect(releases).toHaveLength(1);
+    });
+
+    expect(invocations).toBe(GATED_DECISION);
+    expect(behind).toHaveLength(GATED_DECISION);
+    expect(behind.filter((count) => count > 0)).toEqual([]);
+    // Nothing is waiting on the pending decision: every event the engine has produced is out.
+    expect(appended).toHaveLength(engine.eventsSince(0).length);
+    const pendingAnchors = anchors.length;
+
+    releases[0]?.();
+    await waitFor(() => {
+      expect(anchors.length).toBeGreaterThan(pendingAnchors);
+    });
+    runner.abandon();
+    await run;
+
+    // Post-submit flushing is unchanged: each sequence still leaves once, in order.
+    expect(appended).toEqual([...appended].sort((a, b) => a - b));
+    expect(new Set(appended).size).toBe(appended.length);
+    expect(behind.filter((count) => count > 0)).toEqual([]);
+    // Anchors still partition the stream — a flush moved earlier must not repeat or reorder one.
+    expect(anchors).toEqual([...anchors].sort((a, b) => a - b));
+    expect(new Set(anchors).size).toBe(anchors.length);
+    // Debug drains reach the recorder and the live hook once each, not twice.
+    expect(deliveredDebug.size).toBe(recordedDebug);
+  });
+
+  it('abandons from a synchronous early hook without invoking or submitting that decision', async () => {
+    const engine = makeEngine();
+    const submit = vi.spyOn(engine, 'submit');
+    const advance = engine.advance.bind(engine);
+    let surfaced = 0;
+    vi.spyOn(engine, 'advance').mockImplementation(() => {
+      const step = advance();
+      if (step.kind === 'decision') surfaced += 1;
+      return step;
+    });
+
+    let prefetches = 0;
+    let cancelled = 0;
+    let invocations = 0;
+    let runner: MatchRunner | null = null;
+
+    const inner = randomProviders();
+    runner = new MatchRunner({
+      engine,
+      gameId: 'g-test',
+      seed: 'runner-test',
+      seats: SEATS,
+      lookaheadTurns: 60,
+      providerFor: (playerId) => ({
+        decide: (request) => {
+          invocations += 1;
+          return inner(playerId).decide(request);
+        },
+      }),
+      // The strategist prefetch seam. It now runs during the pre-provider bookkeeping, so an
+      // in-flight prefetch can exist before this decision's provider has been chosen.
+      onTurnBoundary: () => {
+        prefetches += 1;
+      },
+      onEvents: () => {
+        // `MatchSession.abandon()` in miniature — cancel the coordinator, then stop the runner —
+        // reached synchronously from inside the runner's own flush. Skipped for `run()`'s
+        // opening flush, which happens before any turn boundary.
+        if (prefetches === 0 || cancelled > 0) return;
+        cancelled += 1;
+        runner!.abandon();
+      },
+    });
+
+    await runner.run();
+
+    expect(prefetches).toBeGreaterThan(0);
+    expect(cancelled).toBe(1);
+    expect(runner.getStatus()).toBe('abandoned');
+    // The decision surfaced by the `advance()` whose bookkeeping abandoned the run is left
+    // untouched: no provider was asked for it, and nothing was submitted for it.
+    expect(surfaced).toBe(invocations + 1);
+    expect(submit).toHaveBeenCalledTimes(invocations);
   });
 });

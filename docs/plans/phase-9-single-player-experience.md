@@ -103,6 +103,15 @@ pass only when there is nothing else to do.
   `choose deck → choose pod → play`, not four repeated imports.
 - Keep the advanced four-deck configuration under an `Advanced pod setup` disclosure.
 
+**Progress/evidence — Monday, September 28, 2026.** Saved/imported human deck snapshot IDs
+remain remembered after `gameStarted`; a no-DB recent-ID preservation regression is covered.
+Matchup preview is read-only and was checked against real SQLite with no table changes. The
+TMPDIR-first unique SQLite E2E directory and sidecar teardown passed. Five focused Vitest files
+passed (25 tests), `bun run test:e2e:setup` passed one DB-backed setup test, and `git diff --check`
+exited 0 with line-ending warnings only. CI still has a gap: the default `test:e2e` config ignores
+`player-setup.spec.ts`, and hosted CI lacks the gitignored Scryfall Oracle data file, so the
+dedicated real-DB E2E is not wired to CI. Phase 9.1 and Phase 9 remain incomplete.
+
 ### 9.2 Establish a clear player-board hierarchy
 
 - Make the human hand the primary, fanned/scrollable interaction surface at the bottom of the

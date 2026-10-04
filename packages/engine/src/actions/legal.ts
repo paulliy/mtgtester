@@ -229,6 +229,7 @@ export function canPaySpellAdditionalCosts(
   costs: readonly AbilityCost[],
   sourceCardId: string,
   sourceInHand: boolean,
+  announcedX = 0,
 ): boolean {
   let discardAvailable = player.hand.filter(
     (card) => !sourceInHand || card.cardId !== sourceCardId,
@@ -248,6 +249,12 @@ export function canPaySpellAdditionalCosts(
       discardAvailable -= count;
     } else if (cost.kind === 'payLife') {
       if (player.life < cost.amount) return false;
+    } else if (cost.kind === 'payLifeValue') {
+      if (
+        player.life <
+        evaluateValueIn(ctx, cost.amount, { controllerId: player.id, sourceCardId, x: announcedX })
+      )
+        return false;
     } else if (cost.kind === 'exileOtherCardsFromGraveyard') {
       const eligible = player.graveyard.filter((card) => card.cardId !== sourceCardId);
       if (eligible.length < cost.count) return false;
@@ -974,9 +981,12 @@ export function computePriorityOptions(
     });
 
     const xSymbols = reboundCast ? 0 : (def.manaCost.x ?? 0);
+    const announcesAdditionalX = def.announcesX === true;
     const xChoices: number[] = [];
-    if (xSymbols === 0) xChoices.push(0);
-    else {
+    if (xSymbols === 0 && !announcesAdditionalX) xChoices.push(0);
+    else if (announcesAdditionalX) {
+      for (let x = 0; x <= player.life; x++) xChoices.push(x);
+    } else {
       for (let x = 0; ; x++) {
         if (
           !canPay(
@@ -1048,7 +1058,9 @@ export function computePriorityOptions(
           const additionalCosts = [...spellAdditionalCosts, ...modeCosts, ...optionalCosts];
           const selectionCost = addManaCosts(cost, manaPortionOf(additionalCosts));
           if (!canPay(selectionCost, player.manaEntries, sources, allows, player.life)) continue;
-          if (!canPaySpellAdditionalCosts(ctx, player, additionalCosts, obj.cardId, sourceInHand))
+          if (
+            !canPaySpellAdditionalCosts(ctx, player, additionalCosts, obj.cardId, sourceInHand, x)
+          )
             continue;
           const payableTargets = targets.map((slot) => ({
             ...slot,
@@ -1072,7 +1084,7 @@ export function computePriorityOptions(
             type: 'castSpell',
             description:
               `Cast ${obj.name} (${describeManaCost(selectionCost)})` +
-              (xSymbols > 0 ? ` with X=${x}` : '') +
+              (xSymbols > 0 || announcesAdditionalX ? ` with X=${x}` : '') +
               (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
               optionalLabel +
               (fromCommand
@@ -1091,7 +1103,7 @@ export function computePriorityOptions(
               ...(fromExile
                 ? { fromExile: true, ...(reboundCast ? { reboundCast: true } : {}) }
                 : {}),
-              ...(xSymbols > 0 ? { x } : {}),
+              ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
               ...(selectedModes !== undefined
                 ? {
                     modes: selectedModes,
@@ -1113,7 +1125,7 @@ export function computePriorityOptions(
               manaCost: describeManaCost(selectionCost),
               ...paymentPreview(ctx, player, selectionCost, sources, allows),
               ...(tax > 0 ? { commanderTax: tax } : {}),
-              ...(xSymbols > 0 ? { x } : {}),
+              ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
               ...(modeLabel !== undefined ? { modeLabel } : {}),
               ...(optionalCostCount > 0
                 ? { optionalCostCount, optionalMechanic: optional?.mechanic }

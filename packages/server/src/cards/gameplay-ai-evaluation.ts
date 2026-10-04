@@ -8,8 +8,8 @@
  */
 import { HeuristicDecisionProvider } from '@mtg/bot';
 import { RandomDecisionProvider } from '@mtg/engine';
-import type { DecisionResponse, LegalAction } from '@mtg/shared';
-import { REVIEWED_FIVE_SCENARIO_IDS, createCardTestScenario } from './card-test-scenarios';
+import type { DecisionResponse, LegalAction, PlayerId } from '@mtg/shared';
+import { REVIEWED_BASELINE_SCENARIO_IDS, createCardTestScenario } from './card-test-scenarios';
 
 export type ProviderKind = 'random' | 'heuristic';
 
@@ -45,6 +45,26 @@ export interface GameplayAiReport {
 }
 
 const SUBJECT_BY_SCENARIO: Record<string, { card: string; subject: string }> = {
+  'myriad-landscape-viewer-shared-type-search': {
+    card: 'Myriad Landscape',
+    subject: 'Myriad Landscape',
+  },
+  'fabled-passage-viewer-search-entry-untap': {
+    card: 'Fabled Passage',
+    subject: 'Fabled Passage',
+  },
+  'war-room-viewer-dynamic-life-activation': {
+    card: 'War Room',
+    subject: 'War Room',
+  },
+  'smothering-tithe-viewer-pay': {
+    card: 'Smothering Tithe',
+    subject: 'Lab Pending Spell',
+  },
+  'arcane-denial-viewer-draw-two': {
+    card: 'Arcane Denial',
+    subject: 'Arcane Denial',
+  },
   'tribute-viewer-cast-search-select-resolve': {
     card: 'Tribute Mage',
     subject: 'Tribute Mage',
@@ -78,13 +98,29 @@ function usedSubject(observations: DecisionObservation[], subject: string): bool
   );
 }
 
-function runWithP1Provider(scenarioId: string, kind: ProviderKind): ProviderRun {
-  const scenario = createCardTestScenario(scenarioId, `ai-eval-${kind}-${scenarioId}`);
+function runWithProvider(
+  scenarioId: string,
+  kind: ProviderKind,
+  runTag?: string,
+  options: { heuristicAllPlayers?: boolean; observeAllPlayers?: boolean } = {},
+): ProviderRun {
+  const suffix = runTag === undefined ? '' : `-${runTag}`;
+  const scenario = createCardTestScenario(scenarioId, `ai-eval-${kind}${suffix}-${scenarioId}`);
   if (scenario === null) throw new Error(`unknown scenario ${scenarioId}`);
   const engine = scenario.engine;
-  const seed = `${scenario.seed}-${kind}`;
+  const seed = `${scenario.seed}-${kind}${suffix}`;
   const random = new RandomDecisionProvider(`${seed}-random`);
-  const heuristic = new HeuristicDecisionProvider(`${seed}-heuristic`, () => engine.view('P1'));
+  const heuristics = new Map<PlayerId, HeuristicDecisionProvider>();
+  const heuristicFor = (playerId: PlayerId) => {
+    let provider = heuristics.get(playerId);
+    if (provider === undefined) {
+      provider = new HeuristicDecisionProvider(`${seed}-heuristic-${playerId}`, () =>
+        engine.view(playerId),
+      );
+      heuristics.set(playerId, provider);
+    }
+    return provider;
+  };
   const observations: DecisionObservation[] = [];
   let decisions = 0;
   for (;;) {
@@ -94,8 +130,9 @@ function runWithP1Provider(scenarioId: string, kind: ProviderKind): ProviderRun 
     decisions += 1;
     const request = step.request;
     const response: DecisionResponse =
-      request.decidingPlayer === 'P1' && kind === 'heuristic'
-        ? heuristic.decide(request)
+      kind === 'heuristic' &&
+      (request.decidingPlayer === 'P1' || options.heuristicAllPlayers === true)
+        ? heuristicFor(request.decidingPlayer).decide(request)
         : random.decide(request);
     const chosen: LegalAction | undefined = request.legalActions.find(
       (action) => action.id === response.actionId,
@@ -122,20 +159,189 @@ function runWithP1Provider(scenarioId: string, kind: ProviderKind): ProviderRun 
     decisions,
     casts: p1.filter((entry) => entry.actionType === 'castSpell').length,
     activations: p1.filter((entry) => entry.actionType === 'activateAbility').length,
-    observations: p1,
+    observations: options.observeAllPlayers === true ? observations : p1,
     usedSubjectCard: usedSubject(p1, subject),
   };
 }
 
+export interface ArcaneDenialAiEvaluation {
+  evidenceId: 'arcane-denial-ai-counter-and-draw-choice';
+  generatedAt: string;
+  liveLlm: 'not-run';
+  note: string;
+  scenarioId: string;
+  card: 'Arcane Denial';
+  subject: 'Arcane Denial';
+  runs: ProviderRun[];
+}
+
+/** Separate quality evidence: these observations never certify the card's rules behavior. */
+export function evaluateArcaneDenialGameplayAi(): ArcaneDenialAiEvaluation {
+  const scenarioId = 'arcane-denial-viewer-draw-two';
+  const runs = (['run-1', 'run-2', 'run-3'] as const).flatMap((runTag) =>
+    (['random', 'heuristic'] as const).map((kind) =>
+      runWithProvider(scenarioId, kind, runTag, {
+        heuristicAllPlayers: true,
+        observeAllPlayers: true,
+      }),
+    ),
+  );
+  return {
+    evidenceId: 'arcane-denial-ai-counter-and-draw-choice',
+    generatedAt: 'generated-by-evaluateArcaneDenialGameplayAi',
+    liveLlm: 'not-run',
+    note: 'Quality-only observations from an arranged tactical position. Deterministic engine and viewer evidence independently prove rules behavior; live LLM was not run.',
+    scenarioId,
+    card: 'Arcane Denial',
+    subject: 'Arcane Denial',
+    runs,
+  };
+}
+
+export interface SmotheringTitheAiEvaluation {
+  evidenceId: 'smothering-tithe-ai-payment-quality';
+  generatedAt: string;
+  liveLlm: 'not-run';
+  note: string;
+  scenarioId: string;
+  card: 'Smothering Tithe';
+  subject: 'Lab Pending Spell';
+  runs: ProviderRun[];
+}
+
+/** Quality-only evidence for whether local providers create the draw and answer the tax. */
+export function evaluateSmotheringTitheGameplayAi(): SmotheringTitheAiEvaluation {
+  const scenarioId = 'smothering-tithe-viewer-pay';
+  const runs = (['run-1', 'run-2', 'run-3'] as const).flatMap((runTag) =>
+    (['random', 'heuristic'] as const).map((kind) =>
+      runWithProvider(scenarioId, kind, runTag, {
+        heuristicAllPlayers: true,
+        observeAllPlayers: true,
+      }),
+    ),
+  );
+  return {
+    evidenceId: 'smothering-tithe-ai-payment-quality',
+    generatedAt: 'generated-by-evaluateSmotheringTitheGameplayAi',
+    liveLlm: 'not-run',
+    note: 'Quality-only observations from an arranged opponent-draw and optional-payment position. Deterministic engine and viewer evidence independently prove rules behavior; live LLM was not run.',
+    scenarioId,
+    card: 'Smothering Tithe',
+    subject: 'Lab Pending Spell',
+    runs,
+  };
+}
+
+export interface FabledPassageAiEvaluation {
+  evidenceId: 'fabled-passage-ai-search-quality';
+  generatedAt: string;
+  liveLlm: 'not-run';
+  note: string;
+  scenarioId: string;
+  card: 'Fabled Passage';
+  subject: 'Fabled Passage';
+  runs: ProviderRun[];
+}
+
+export interface MyriadLandscapeAiEvaluation {
+  evidenceId: 'myriad-landscape-ai-search-quality';
+  generatedAt: string;
+  liveLlm: 'not-run';
+  note: string;
+  scenarioId: string;
+  card: 'Myriad Landscape';
+  subject: 'Myriad Landscape';
+  runs: ProviderRun[];
+}
+
+export interface WarRoomAiEvaluation {
+  evidenceId: 'war-room-ai-activation-quality';
+  generatedAt: string;
+  liveLlm: 'not-run';
+  note: string;
+  scenarioId: string;
+  card: 'War Room';
+  subject: 'War Room';
+  runs: ProviderRun[];
+}
+
+/** Quality-only evidence for local-provider activation and grouped-search choices. */
+export function evaluateMyriadLandscapeGameplayAi(): MyriadLandscapeAiEvaluation {
+  const scenarioId = 'myriad-landscape-viewer-shared-type-search';
+  const runs = (['run-1', 'run-2', 'run-3'] as const).flatMap((runTag) =>
+    (['random', 'heuristic'] as const).map((kind) =>
+      runWithProvider(scenarioId, kind, runTag, {
+        heuristicAllPlayers: true,
+        observeAllPlayers: true,
+      }),
+    ),
+  );
+  return {
+    evidenceId: 'myriad-landscape-ai-search-quality',
+    generatedAt: 'generated-by-evaluateMyriadLandscapeGameplayAi',
+    liveLlm: 'not-run',
+    note: 'Quality-only observations from an arranged grouped basic-land search position. Deterministic engine and viewer evidence independently prove rules behavior; live LLM was not run.',
+    scenarioId,
+    card: 'Myriad Landscape',
+    subject: 'Myriad Landscape',
+    runs,
+  };
+}
+
+export function evaluateWarRoomGameplayAi(): WarRoomAiEvaluation {
+  const scenarioId = 'war-room-viewer-dynamic-life-activation';
+  const runs = (['run-1', 'run-2', 'run-3'] as const).flatMap((runTag) =>
+    (['random', 'heuristic'] as const).map((kind) =>
+      runWithProvider(scenarioId, kind, runTag, {
+        heuristicAllPlayers: true,
+        observeAllPlayers: true,
+      }),
+    ),
+  );
+  return {
+    evidenceId: 'war-room-ai-activation-quality',
+    generatedAt: 'generated-by-evaluateWarRoomGameplayAi',
+    liveLlm: 'not-run',
+    note: 'Quality-only observations from a three-color commander identity activation position. Deterministic engine and viewer evidence independently prove the dynamic life payment; live LLM was not run.',
+    scenarioId,
+    card: 'War Room',
+    subject: 'War Room',
+    runs,
+  };
+}
+
+/** Quality-only evidence for whether local providers activate the arranged land-search line. */
+export function evaluateFabledPassageGameplayAi(): FabledPassageAiEvaluation {
+  const scenarioId = 'fabled-passage-viewer-search-entry-untap';
+  const runs = (['run-1', 'run-2', 'run-3'] as const).flatMap((runTag) =>
+    (['random', 'heuristic'] as const).map((kind) =>
+      runWithProvider(scenarioId, kind, runTag, {
+        heuristicAllPlayers: true,
+        observeAllPlayers: true,
+      }),
+    ),
+  );
+  return {
+    evidenceId: 'fabled-passage-ai-search-quality',
+    generatedAt: 'generated-by-evaluateFabledPassageGameplayAi',
+    liveLlm: 'not-run',
+    note: 'Quality-only observations from an arranged fourth-land search position. Deterministic engine and viewer evidence independently prove rules behavior; live LLM was not run.',
+    scenarioId,
+    card: 'Fabled Passage',
+    subject: 'Fabled Passage',
+    runs,
+  };
+}
+
 export function evaluateReviewedFiveGameplayAi(): GameplayAiReport {
-  const cards: CardAiEvaluation[] = REVIEWED_FIVE_SCENARIO_IDS.map((scenarioId) => {
+  const cards: CardAiEvaluation[] = REVIEWED_BASELINE_SCENARIO_IDS.map((scenarioId) => {
     const meta = SUBJECT_BY_SCENARIO[scenarioId]!;
     return {
       scenarioId,
       card: meta.card,
       subject: meta.subject,
-      random: runWithP1Provider(scenarioId, 'random'),
-      heuristic: runWithP1Provider(scenarioId, 'heuristic'),
+      random: runWithProvider(scenarioId, 'random'),
+      heuristic: runWithProvider(scenarioId, 'heuristic'),
     };
   });
   return {

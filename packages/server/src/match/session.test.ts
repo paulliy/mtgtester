@@ -7,8 +7,15 @@
  * sent actually belongs to.
  */
 
-import { describe, expect, it } from 'vitest';
-import type { OracleCard, ServerToClientMessage, StateSnapshotPayload } from '@mtg/shared';
+import { describe, expect, it, vi } from 'vitest';
+import type {
+  DecisionRequest,
+  GameId,
+  OracleCard,
+  ServerToClientMessage,
+  SpectatorLogLine,
+  StateSnapshotPayload,
+} from '@mtg/shared';
 
 async function waitFor(
   fn: () => void | Promise<void>,
@@ -27,8 +34,16 @@ async function waitFor(
   await fn();
 }
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
-import { RandomDecisionProvider } from '@mtg/engine';
+import { RandomDecisionProvider, type AsyncDecisionProvider } from '@mtg/engine';
+import {
+  DEFAULT_AI_CONFIG,
+  RequestCancelledError,
+  RequestQueue,
+  StrategyCoordinator,
+  type AiClient,
+} from '../ai';
 import { MatchSession } from './session';
+import { createCardTestScenario } from '../cards/card-test-scenarios';
 import type { SeatSetup } from './setup';
 
 function forest(n: number): OracleCard {
@@ -128,6 +143,192 @@ function harness(options: { livePaceMs?: number; playbackMode?: 'live' | 'manual
 }
 
 describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)', () => {
+  it('aborts the pending turn-boundary strategist inside an early eventBatch abandonment', async () => {
+    const sent: ServerToClientMessage[] = [];
+    const order: string[] = [];
+    const transport: { request?: DecisionRequest; signal?: AbortSignal; aborted?: AbortSignal } =
+      {};
+    let surfaced: DecisionRequest | undefined;
+    let abandonedInSend = false;
+    const session = new MatchSession({
+      gameId: 'g-strategist-event-abandon',
+      seed: 'strategist-event-abandon',
+      seats: seats(),
+      providerKind: 'ai',
+      gameMode: 'spectator',
+      livePaceMs: 0,
+      reflectionEnabled: false,
+      send: (message) => {
+        sent.push(message);
+        if (message.type !== 'eventBatch' || transport.signal === undefined) return;
+        order.push('eventBatch');
+        expect(abandonedInSend).toBe(false);
+        expect(transport.signal.aborted).toBe(false);
+        expect(message.payload.frontierTurn).toBe(transport.request!.turn);
+        expect(message.payload.snapshotTurns).toContain(transport.request!.turn);
+        expect(session.runner.stateAt(transport.request!.turn)?.state).toEqual(
+          session.engine.spectatorState(),
+        );
+        session.abandon();
+        // Observe the transport's actual signal before this synchronous socket hook returns.
+        expect(transport.signal.aborted).toBe(true);
+        expect(transport.aborted).toBe(transport.signal);
+        abandonedInSend = true;
+        order.push('send-return');
+      },
+    });
+    // Keep all four opening hands through the ordinary engine path, stopping at turn zero.
+    // The runner's first advance (not this setup) must surface turn one's genuine decision and
+    // trigger its new-turn bookkeeping. Monitor submissions only after these pre-game choices.
+    for (let seat = 0; seat < 4; seat++) {
+      const opening = session.engine.advance();
+      if (opening.kind !== 'decision' || opening.request.decisionType !== 'mulligan') {
+        throw new Error('expected an ordinary turn-zero opening-hand choice');
+      }
+      expect(opening.request.turn).toBe(0);
+      const keep = opening.request.legalActions.find((action) => action.type === 'keep');
+      if (keep === undefined) throw new Error('opening hand has no keep choice');
+      session.engine.submit({ requestId: opening.request.requestId, actionId: keep.id });
+    }
+    const requestDecision = vi.fn<AiClient['requestDecision']>((_prompt, request, signal) => {
+      transport.request = request;
+      order.push('transport-start');
+      if (signal === undefined) throw new Error('strategist transport must receive a real signal');
+      transport.signal = signal;
+      expect(signal.aborted).toBe(false);
+      expect(surfaced?.turn).toBe(request.turn);
+      expect(surfaced?.activePlayer).toBe(request.activePlayer);
+      expect(session.runner.getFrontierTurn()).toBe(request.turn);
+      expect(session.runner.getSnapshotTurns()).toContain(request.turn);
+      expect(session.runner.stateAt(request.turn)?.state).toEqual(session.engine.spectatorState());
+      return new Promise((_resolve, reject) => {
+        signal.addEventListener(
+          'abort',
+          () => {
+            transport.aborted = signal;
+            order.push('transport-abort');
+            reject(new RequestCancelledError());
+          },
+          { once: true },
+        );
+      });
+    });
+    const coordinator = new StrategyCoordinator(
+      { activeModel: 'fake-strategist', requestDecision },
+      new RequestQueue({ concurrency: 1, rpmLimit: 10000 }),
+      session.engine,
+      { ...DEFAULT_AI_CONFIG, strategistEnabled: true },
+    );
+    const onStrategy = vi.fn();
+    coordinator.onStrategy = onStrategy;
+    // Replace only private factory/lookup boundaries. Even a failing ordering regression cannot
+    // load environment configuration, construct configured clients/Jev, or reach a live provider.
+    const internals = session as unknown as {
+      aiCoordinator: StrategyCoordinator | null;
+      ensureAiCoordinator(): StrategyCoordinator;
+      buildAiProvider(): AsyncDecisionProvider;
+      providerFor(playerId: string): AsyncDecisionProvider;
+    };
+    internals.aiCoordinator = coordinator;
+    const ensureCoordinator = vi
+      .spyOn(internals, 'ensureAiCoordinator')
+      .mockReturnValue(coordinator);
+    const buildProvider = vi.spyOn(internals, 'buildAiProvider').mockImplementation(() => {
+      throw new Error('real AI provider factory forbidden');
+    });
+    const decide = vi.fn<AsyncDecisionProvider['decide']>(() => {
+      throw new Error('provider decision forbidden after early abandonment');
+    });
+    const providerFor = vi.spyOn(internals, 'providerFor').mockReturnValue({ decide });
+    const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(() => {
+      throw new Error('network transport forbidden');
+    });
+    const advance = session.engine.advance.bind(session.engine);
+    const advanceSpy = vi.spyOn(session.engine, 'advance').mockImplementation(() => {
+      const step = advance();
+      if (step.kind === 'decision') {
+        surfaced = step.request;
+        order.push('decision-surfaced');
+      }
+      return step;
+    });
+    const submit = vi.spyOn(session.engine, 'submit');
+    try {
+      expect(session.engine.getState().turnNumber).toBe(0);
+      session.start();
+      await session.settled();
+      await coordinator.settled();
+      expect(sent.filter((message) => message.type === 'error')).toEqual([]);
+      expect(abandonedInSend).toBe(true);
+      expect(order).toEqual([
+        'decision-surfaced',
+        'transport-start',
+        'eventBatch',
+        'transport-abort',
+        'send-return',
+      ]);
+      expect(transport.signal).toBeDefined();
+      expect(transport.signal!.aborted).toBe(true);
+      expect(transport.aborted).toBe(transport.signal);
+      expect(transport.request!.turn).toBe(1);
+      expect(transport.request!.decidingPlayer).toBe(surfaced!.activePlayer);
+      expect(ensureCoordinator).toHaveBeenCalledTimes(1);
+      expect(requestDecision).toHaveBeenCalledTimes(1);
+      expect(session.runner.getStatus()).toBe('abandoned');
+      expect(providerFor).not.toHaveBeenCalled();
+      expect(decide).not.toHaveBeenCalled();
+      expect(submit).not.toHaveBeenCalled();
+      expect(buildProvider).not.toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+      expect(
+        sent.some((message) => message.type === 'error' || message.type === 'computeHalted'),
+      ).toBe(false);
+      expect(onStrategy).not.toHaveBeenCalled();
+      expect(coordinator.guidanceFor(transport.request!.activePlayer).strategy).toBeNull();
+      coordinator.prepare(surfaced!);
+      coordinator.prefetch(transport.request!.gameId, transport.request!.turn + 1, 'P2');
+      await coordinator.settled();
+      expect(requestDecision).toHaveBeenCalledTimes(1);
+      expect(onStrategy).not.toHaveBeenCalled();
+      expect(
+        session.engine
+          .getDebugLog()
+          .some((entry) => /strategist call (failed|completed)/.test(entry.message)),
+      ).toBe(false);
+    } finally {
+      session.abandon();
+      await session.settled();
+      await coordinator.settled();
+      for (const spy of [
+        submit,
+        advanceSpy,
+        fetch,
+        providerFor,
+        buildProvider,
+        ensureCoordinator,
+      ]) {
+        spy.mockRestore();
+      }
+    }
+  });
+
+  it('rejects Card Test Lab provider overrides on an ordinary match engine', () => {
+    expect(
+      () =>
+        new MatchSession({
+          gameId: 'ordinary-match-provider-override',
+          seed: 'ordinary-match-provider-override',
+          seats: seats(),
+          providerKind: 'random',
+          turnCap: 2,
+          decisionProviderOverrides: {
+            P4: new RandomDecisionProvider('lab-only-provider'),
+          },
+          send: () => undefined,
+        }),
+    ).toThrow(/prepared Card Test Lab engine/i);
+  });
+
   it('keeps compute within the lookahead of the *presented* turn, not the frontier', async () => {
     // A pace means the viewer walks forward on a clock, so the frontier can legitimately be
     // ahead of them — which is the only configuration in which the cap can bind at all.
@@ -191,6 +392,43 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
 });
 
 describe('MatchSession - Phase 6 single-player control', () => {
+  it('echoes the rejected submission request and revision to the player', async () => {
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      gameId: 'g-player-rejection',
+      seed: 'player-rejection',
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      turnCap: 20,
+      livePaceMs: 0,
+      send: (message) => sent.push(message),
+    });
+    session.start();
+    await waitFor(() => {
+      expect(sent.some((message) => message.type === 'playerActionRequired')).toBe(true);
+    });
+    const request = sent.find((message) => message.type === 'playerActionRequired');
+    if (request?.type !== 'playerActionRequired') throw new Error('player decision missing');
+    const rejected = {
+      requestId: request.payload.request.requestId,
+      revision: request.payload.revision,
+      actionId: 999_999,
+    };
+    session.submitPlayerAction(rejected);
+    expect(sent.at(-1)).toEqual({
+      type: 'error',
+      payload: {
+        message: 'That action is not on the current legal menu.',
+        requestId: rejected.requestId,
+        revision: rejected.revision,
+      },
+    });
+    session.abandon();
+    await session.settled();
+  });
+
   it('waits without a timeout for the human and advances only after submission', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
@@ -490,5 +728,120 @@ describe('MatchSession — presentation survives a gap in turn numbering', () =>
     // that was never snapshotted.
     expect(lastPresented?.turn).toBe(gameOver?.payload.result.turnCount);
     expect(lastPresented?.atFrontier).toBe(true);
+  });
+});
+
+/**
+ * Regression for the flush-ordering defect the Card Test Lab's War Room trace exposed.
+ *
+ * `MatchRunner.loop` used to await the human provider *before* flushing what `advance()` had
+ * already produced. `advance()` runs a decision's whole forced tail — payment, forced passes,
+ * the ability resolving, the draw — and only then surfaces the next genuine request, so those
+ * outcome events sat behind the runner's event cursor while the provider waited. A human
+ * provider waits indefinitely, which turned "until the next decision is answered" into "never":
+ * the player was asked to act on a board holding a card the log never said they drew.
+ *
+ * Driven through the real `MatchSession` on the prepared scenario, submitting by the normal
+ * human path, with the request that follows deliberately left unanswered.
+ */
+describe('MatchSession — a prepared scenario flushes its own outcome before the next request', () => {
+  const ACTIVATION =
+    "War Room: Pay life equal to your commanders' color identity colors: draw a card";
+
+  function labSession(gameId: GameId) {
+    const scenario = createCardTestScenario('war-room-viewer-dynamic-life-activation', gameId);
+    if (scenario === null) throw new Error('missing War Room lab scenario');
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      gameId,
+      seed: scenario.seed,
+      seats: scenario.seats,
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      livePaceMs: 0,
+      engine: scenario.engine,
+      // Deliberately no store, exactly as the real lab session is built.
+      send: (message) => sent.push(message),
+    });
+    const requests = () =>
+      sent.filter(
+        (m): m is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>
+          m.type === 'playerActionRequired',
+      );
+    /** Every log line the client had received by the time message `index` was sent. */
+    const linesBefore = (index: number): SpectatorLogLine[] =>
+      sent
+        .slice(0, index)
+        .flatMap((m) => (m.type === 'eventBatch' ? m.payload.lines : ([] as SpectatorLogLine[])));
+    return { session, sent, requests, linesBefore };
+  }
+
+  it('delivers its own draw and resolution before the next playerActionRequired', async () => {
+    const { session, sent, requests, linesBefore } = labSession('g-war-room-flush' as GameId);
+    session.start();
+
+    await waitFor(() => {
+      expect(requests().length).toBeGreaterThanOrEqual(1);
+    });
+    const opening = requests()[0]!.payload;
+    const openingSeat = opening.state.seats.find((seat) => seat.seat === 'P1');
+    expect(openingSeat?.life).toBe(40);
+    expect(openingSeat?.handSize).toBe(2);
+
+    const activation = opening.request.legalActions.find(
+      (action) => action.type === 'activateAbility' && action.description === ACTIVATION,
+    );
+    expect(activation).toBeDefined();
+    session.submitPlayerAction({
+      requestId: opening.request.requestId,
+      actionId: activation!.id,
+      revision: opening.revision,
+    });
+
+    // The next request is a genuine P1 priority decision and is never answered — the exact
+    // state the defect left the player in.
+    await waitFor(() => {
+      expect(requests().length).toBeGreaterThanOrEqual(2);
+    });
+    const secondIndex = sent.findIndex(
+      (m, index) =>
+        m.type === 'playerActionRequired' &&
+        sent.slice(0, index).filter((earlier) => earlier.type === 'playerActionRequired').length ===
+          1,
+    );
+    expect(secondIndex).toBeGreaterThan(-1);
+
+    const delivered = linesBefore(secondIndex);
+    expect(delivered.filter((line) => line.text === 'draws Three Color Commander')).toHaveLength(1);
+    expect(
+      delivered.filter((line) => /Pay life.*resolves/.test(line.text)).map((line) => line.text),
+    ).toEqual([
+      "War Room — Pay life equal to your commanders' color identity colors: draw a card resolves",
+    ]);
+
+    const settled = requests()[1]!.payload.state;
+    const p1 = settled.seats.find((seat) => seat.seat === 'P1');
+    expect(p1?.life).toBe(37);
+    expect(p1?.handSize).toBe(3);
+    expect(p1?.hand?.map((card) => card.name).sort()).toEqual([
+      'Three Color Commander',
+      'War Room Action Witness',
+      'War Room Mana Sink',
+    ]);
+    expect(settled.battlefield.filter((permanent) => permanent.tapped)).toHaveLength(4);
+    expect(settled.stack).toEqual([]);
+
+    // Flushing earlier must not widen the projection: an opponent's draw is filtered out of the
+    // player log entirely, and no opponent hand is ever materialised.
+    expect(
+      delivered.filter((line) => line.actorSeat !== 'P1' && /^draws /.test(line.text)),
+    ).toEqual([]);
+    for (const seat of settled.seats.filter((candidate) => candidate.seat !== 'P1')) {
+      expect(seat.hand).toBeNull();
+    }
+
+    session.abandon();
+    await session.settled();
   });
 });

@@ -2,6 +2,25 @@
   "schemaVersion": 1,
   "resultPolicy": "Requirements only. Verification tools generate results; this file contains no handwritten pass flags.",
   "cards": {
+    "b168e4e6-f572-4d9f-b98f-95b2611354cb": {
+      "name": "Zopandrel, Hunger Dominus",
+      "oracleSha256": "3fb2373850b97ba8e69853c7ea2f6fdbdc3cd32ea4c88e968bf47bde8436347f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{G/P}{G/P}, Sacrifice two other creatures: Put an indestructible counter on Zopandrel. ({G/P} can be paid with either {G} or 2 life.)",
+          "implementation": [
+            "normal activated-ability cost and sacrifice path",
+            "indestructible ability counter in layer 6",
+            "public keyword projection",
+            "destruction and lethal-damage prevention through the shared indestructible keyword"
+          ],
+          "engineTestIds": ["zopandrel-indestructible-counter-grants-keyword-and-survives-lethal"],
+          "viewerScenarioIds": ["zopandrel-viewer-indestructible-counter"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
     "d683d985-9888-4d21-8b5f-69e69ce4a03b": {
       "name": "Path to Exile",
       "oracleSha256": "d921af5ed86c1f56a28c317d632e2b1131b926715a387eda965ec3cecda40fda",
@@ -194,7 +213,7 @@
     "c20a96f7-aa5a-4c15-b8b1-806685c99b27": {
       "name": "Bolt Bend",
       "oracleSha256": "991a63702cbdcb9ba33de60fd845455d691ba2783677a2ab6d6591da9314d4b5",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "oracleText": "This spell costs {3} less to cast if you control a creature with power 4 or greater.",
@@ -1186,16 +1205,38 @@
     "71c52bf5-2a5d-488e-8b15-7ef290e4b77d": {
       "name": "War Room",
       "oracleSha256": "7014d3a7b8e20db7e2a12576165361775173e73cb28f1106afa40a659d6d0c74",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "war-room-colorless-mana",
+          "oracleText": "{T}: Add {C}.",
+          "implementation": ["generic colorless mana ability"],
+          "engineTestIds": [
+            "war-room-production-registry-definition",
+            "war-room-colorless-mana-ability-definition",
+            "war-room-colorless-mana-normal-activation",
+            "war-room-colorless-mana-tapped-source-cannot-pay"
+          ],
+          "viewerScenarioIds": ["war-room-viewer-colorless-mana"]
+        },
+        {
+          "id": "war-room-dynamic-life-draw",
           "oracleText": "{3}, {T}, Pay life equal to the number of colors in your commanders' color identity: Draw a card.",
-          "implementation": ["explicitly unsupported; pay 1 life"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": ["dynamic commander color-identity life payment"],
+          "engineTestIds": [
+            "war-room-commander-identity-life-cost",
+            "war-room-dynamic-life-identity-matrix",
+            "war-room-dynamic-life-partner-identity-union",
+            "war-room-dynamic-life-commander-zone-independent",
+            "war-room-dynamic-life-insufficient-life",
+            "war-room-dynamic-life-colorless-identity-zero",
+            "war-room-dynamic-life-requires-mana-and-untapped-source",
+            "war-room-dynamic-life-countered-ability-keeps-costs"
+          ],
+          "viewerScenarioIds": ["war-room-viewer-dynamic-life-activation"]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": ["war-room-ai-activation-quality"]
     },
     "ee7ebbc1-2f9e-4867-a522-424869b6d772": {
       "name": "Combat Calligrapher",
@@ -1384,16 +1425,36 @@
     "153376c9-dffd-458c-8ce3-a4c8269bc4e9": {
       "name": "Smothering Tithe",
       "oracleSha256": "38346bcc71227873ac4c358bd89d277f9d1f94a65e7778392c5e0aefeb7ab2c4",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Whenever an opponent draws a card, that player may pay {2}. If the player doesn't, you create a Treasure token.",
-          "implementation": ["explicitly unsupported; unconditional Treasure on every draw step"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "smothering-tithe-opponent-draw-tax",
+          "oracleText": "Whenever an opponent draws a card, that player may pay {2}. If the player doesn't, you create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+          "implementation": [
+            "drawsCard opponent trigger captures the drawing event player",
+            "unlessPays routes the optional {2} payment through the normal mana solver",
+            "decline or inability creates one canonical Treasure for the captured trigger controller"
+          ],
+          "engineTestIds": [
+            "smothering-tithe-pinned-oracle-supported",
+            "smothering-tithe-opponent-draw-pay",
+            "smothering-tithe-opponent-draw-decline",
+            "smothering-tithe-opponent-unable-to-pay",
+            "smothering-tithe-restricted-mana-cannot-pay",
+            "smothering-tithe-controller-draw-does-not-trigger",
+            "smothering-tithe-failed-draw-does-not-trigger",
+            "smothering-tithe-one-trigger-per-card-drawn",
+            "smothering-tithe-source-leaves",
+            "smothering-tithe-source-changes-controller",
+            "smothering-tithe-countered-trigger",
+            "smothering-tithe-pending-routing-clone-hash-and-hidden-info",
+            "smothering-tithe-normal-cast-priority-stack",
+            "smothering-tithe-prepared-scenario-deterministic-replay"
+          ],
+          "viewerScenarioIds": ["smothering-tithe-viewer-pay", "smothering-tithe-viewer-decline"]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": ["smothering-tithe-ai-payment-quality"]
     },
     "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785": {
       "name": "Teyo, Geometric Tactician",
@@ -1682,16 +1743,31 @@
     "0c85b8f7-0bd0-4680-9ec5-d4b110460a54": {
       "name": "Fabled Passage",
       "oracleSha256": "fd064f3f1c8289f7cd3a05433a31b03a8676ba4ce9035cd6706bd37087c9a7ef",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "fabled-passage-search-entry-untap",
           "oracleText": "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land.",
-          "implementation": ["explicitly unsupported; four-or-more-lands untap omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "searchLibrary(filter=Basic Land, destination=battlefield tapped, allowFailToFind=true, bind=foundLand)",
+            "shuffle",
+            "untapBoundIf(binding=foundLand, condition=countPermanents(Land, you)>=4)"
+          ],
+          "engineTestIds": [
+            "fabled-passage-pinned-oracle-supported",
+            "fabled-passage-bound-found-land",
+            "fabled-passage-three-lands-stays-tapped",
+            "fabled-passage-fail-to-find",
+            "fabled-passage-stable-binding",
+            "fabled-passage-normal-activation",
+            "fabled-passage-countered-ability",
+            "fabled-passage-search-privacy",
+            "fabled-passage-seeded-search-replay"
+          ],
+          "viewerScenarioIds": ["fabled-passage-viewer-search-entry-untap"]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": ["fabled-passage-ai-search-quality"]
     },
     "09b895ff-e729-48d1-bfc1-ea5fd7adda6a": {
       "name": "Caged Sun",
@@ -1892,18 +1968,42 @@
     "2549bc57-9ffb-4053-9f10-f2a5f792b845": {
       "name": "Myriad Landscape",
       "oracleSha256": "696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle.",
+          "id": "myriad-landscape-enters-tapped",
+          "oracleText": "This land enters tapped.",
+          "implementation": ["generic enters-tapped replacement"],
+          "engineTestIds": ["myriad-landscape-enters-tapped"],
+          "viewerScenarioIds": ["myriad-landscape-viewer-enters-tapped"]
+        },
+        {
+          "id": "myriad-landscape-colorless-mana",
+          "oracleText": "{T}: Add {C}.",
+          "implementation": ["generic colorless mana ability"],
+          "engineTestIds": ["myriad-landscape-colorless-mana-normal-activation"],
+          "viewerScenarioIds": ["myriad-landscape-viewer-colorless-mana"]
+        },
+        {
+          "id": "myriad-landscape-shared-land-type-search",
+          "oracleText": "{2}, {T}, Sacrifice this land: Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle.",
           "implementation": [
-            "explicitly unsupported; share-a-land-type implemented as any two basics"
+            "grouped basic-land search enforces a shared land type and permits up to two results"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "myriad-landscape-shared-land-type-search — offers exactly the legal zero-, one-, and two-card grouped choices",
+            "myriad-landscape-search-zero",
+            "myriad-landscape-search-one",
+            "myriad-landscape-search-two",
+            "does not offer the activation when mana is short or the source is tapped",
+            "keeps mana and sacrifice costs paid when the ability is countered",
+            "publicly reports found cards without exposing other private library cards",
+            "replays the grouped choice deterministically"
+          ],
+          "viewerScenarioIds": ["myriad-landscape-viewer-shared-type-search"]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": ["myriad-landscape-ai-search-quality"]
     },
     "994bc16d-fdc6-475c-96df-beeb4d5aa03e": {
       "name": "Mystic Forge",
@@ -2220,18 +2320,51 @@
     "ab1cc360-b9de-48d9-9983-4dfe4a7d2a37": {
       "name": "Arcane Denial",
       "oracleSha256": "7d764e957064fa08627fd48a85e1ea9aa50de341ffa09a88c2d36d0598156746",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Counter target spell. Its controller may draw up to two cards at the beginning of the next turn's upkeep.\nYou draw a card at the beginning of the next turn's upkeep.",
+          "id": "arcane-denial-counter-and-affected-player-draw",
+          "oracleText": "Counter target spell. Its controller may draw up to two cards at the beginning of the next turn's upkeep.",
           "implementation": [
-            "explicitly unsupported; next-turn upkeep delayed trigger expires at this cleanup"
+            "counter target spell",
+            "next-occurrence upkeep delayed trigger with onFire lifetime",
+            "target spell controller captured as affected and deciding player",
+            "affected player drawUpToN zero, one, or two"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "arcane-denial-pinned-oracle-and-alias",
+            "arcane-denial-normal-cast-priority-stack",
+            "arcane-denial-both-draws-fire-at-first-next-upkeep",
+            "arcane-denial-fires-once-at-the-first-upkeep-only",
+            "arcane-denial-affected-player-chooses-zero-one-or-two",
+            "arcane-denial-short-library-retains-zero-one-two-choice",
+            "arcane-denial-illegal-target-schedules-nothing",
+            "arcane-denial-uncounterable-target-still-schedules-draws",
+            "arcane-denial-simultaneous-trigger-order",
+            "arcane-denial-delayed-routing-clone-hash-hidden-info",
+            "arcane-denial-prepared-scenario-deterministic-replay"
+          ],
+          "viewerScenarioIds": ["arcane-denial-viewer-draw-zero", "arcane-denial-viewer-draw-two"]
+        },
+        {
+          "id": "arcane-denial-caster-mandatory-draw",
+          "oracleText": "You draw a card at the beginning of the next turn's upkeep.",
+          "implementation": [
+            "same next-occurrence upkeep delayed trigger with onFire lifetime",
+            "Arcane Denial controller captured as affected player",
+            "mandatory one-card affected-player draw"
+          ],
+          "engineTestIds": [
+            "arcane-denial-schedules-same-next-upkeep-caster-mandatory-draw",
+            "arcane-denial-both-draws-fire-at-first-next-upkeep",
+            "arcane-denial-fires-once-at-the-first-upkeep-only",
+            "arcane-denial-delayed-routing-clone-hash-hidden-info",
+            "arcane-denial-prepared-scenario-deterministic-replay"
+          ],
+          "viewerScenarioIds": ["arcane-denial-viewer-draw-two"]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": ["arcane-denial-ai-counter-and-draw-choice"]
     },
     "295cd8e1-0830-46c1-9957-556afd4bcee6": {
       "name": "Aetheric Amplifier",

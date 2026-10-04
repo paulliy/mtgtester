@@ -58,6 +58,17 @@ describe('mandatory card CI gate', () => {
     expect(command).toContain('living-energy-engine-batch4.test.ts');
     expect(command).toContain('living-energy-engine-batch5.test.ts');
     expect(command).toContain('catalog-engine-evidence.test.ts');
+    // The fail-closed restoration workstream: the five restored cards and the three still
+    // contained by unsupportedCard() must both be gated offline, or a containment guard can
+    // be dropped without any required check noticing.
+    expect(command).toContain('fail-closed-restoration.test.ts');
+    expect(command).toContain('arcane-denial.test.ts');
+    expect(command).toContain('fabled-passage.test.ts');
+    expect(command).toContain('myriad-landscape.test.ts');
+    expect(command).toContain('smothering-tithe.test.ts');
+    expect(command).toContain('war-room.test.ts');
+    expect(command).toContain('toxic-deluge.test.ts');
+    expect(command).toContain('chaos-warp.test.ts');
     expect(command).not.toContain('token-triumph-deck.test.ts');
     expect(command).not.toContain('data/scryfall-oracle-cards.json');
   });

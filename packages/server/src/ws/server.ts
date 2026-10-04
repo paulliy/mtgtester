@@ -6,10 +6,16 @@
  * It holds the AI key and is the only place with network I/O, per brief §2.
  */
 
-import { isClientToServerMessage } from '@mtg/shared';
+import {
+  isClientToServerMessage,
+  isPlayerSeatId,
+  parseStrictJson,
+  type StrictJsonFailure,
+} from '@mtg/shared';
 import type {
   ClientToServerMessage,
   GameStartedPayload,
+  PlayerId,
   ServerToClientMessage,
   StartGamePayload,
 } from '@mtg/shared';
@@ -22,7 +28,9 @@ import type { BannedList } from '../decks/banned';
 import { MatchSession } from '../match/session';
 import { BatchManager, validateBatch } from '../batch/manager';
 import { setupSeats } from '../match/setup';
+import { previewMatchup, type PreviewRequest } from '../match/preview';
 import { createCardTestScenario, listCardTestScenarios } from '../cards/card-test-scenarios';
+import { projectSetupProblems, SETUP_REFUSED_MESSAGE } from './setup-privacy';
 
 export interface GameServerDeps {
   pool: SupportedPool;
@@ -43,6 +51,27 @@ const SEAT_COUNT = 4;
  * engine and a `games` row that reads `running` forever.
  */
 export const ORPHAN_GRACE_MS = 30_000;
+
+/**
+ * The fixed reply to a frame that could not be read unambiguously. One sentence per verdict, with
+ * nothing quoted back from the text: a frame whose keys repeat cannot be said to *have* a
+ * `requestId`, so echoing one would invent a correlation the client could act on.
+ *
+ * No byte cap is applied to inbound frames here — a `startGame` frame carries four plaintext
+ * decklists — but nesting is bounded by `STRICT_JSON_MAX_DEPTH`.
+ */
+const INBOUND_FRAME_REJECTIONS: Record<StrictJsonFailure, string> = {
+  duplicateKey: 'Ambiguous JSON frame: an object in it repeats a key. Send each field once.',
+  tooDeep: 'JSON frame nests too deeply.',
+  malformed: 'Malformed JSON frame.',
+};
+
+/**
+ * The fixed reply to a `/api/setup-preview` body that could not be read unambiguously. One message
+ * for every verdict, quoting nothing: the disputed values of a repeated key must not come back out.
+ */
+const SETUP_PREVIEW_BODY_REJECTION =
+  'Unreadable JSON body. Send well-formed JSON, each field once.';
 
 interface SocketData {
   clientId: string;
@@ -77,6 +106,10 @@ export class GameServer {
   private sessionToken: string | null = null;
   private startedPayload: GameStartedPayload | null = null;
   private readonly batchManager: BatchManager | null;
+  private readonly setupPreviews = new Map<
+    string,
+    { request: PreviewRequest; createdAt: number }
+  >();
 
   constructor(private readonly deps: GameServerDeps) {
     this.batchManager =
@@ -129,6 +162,15 @@ export class GameServer {
         }
         if (url.pathname === '/api/known-decks') {
           return Response.json({ decks: await listKnownDecks(this.deps.index, this.deps.banned) });
+        }
+        if (url.pathname === '/api/saved-decks' && request.method === 'GET') {
+          return Response.json({
+            enabled: this.deps.store !== undefined,
+            decks: this.deps.store?.savedDeckOptions() ?? [],
+          });
+        }
+        if (url.pathname === '/api/setup-preview' && request.method === 'POST') {
+          return await this.handleSetupPreview(request);
         }
         if (url.pathname === '/api/card-test-scenarios') {
           if (this.deps.cardTestLab !== true)
@@ -289,21 +331,94 @@ export class GameServer {
     return server;
   }
 
+  /**
+   * `POST /api/setup-preview`. The only setup entry point that does not arrive as a `/ws` frame,
+   * so it needs the same strict read: `request.json()` resolves a repeated key by last-wins, and a
+   * body carrying two different `humanSeat` values would otherwise be previewed — and cached as a
+   * startable token — under whichever half the native parser kept. The raw text is therefore read
+   * once and handed to `parseStrictJson` before any shape validation.
+   *
+   * A body that could not be read unambiguously gets one fixed message for every verdict: nothing
+   * from an ambiguous text may be quoted back, and the caller is a local UI that only needs to
+   * know the body was refused. The schema and seat-count refusals, the 200 shape, the preview
+   * cache and the seed default below are unchanged.
+   */
+  private async handleSetupPreview(request: Request): Promise<Response> {
+    let text: string;
+    try {
+      text = await request.text();
+    } catch {
+      return Response.json({ message: SETUP_PREVIEW_BODY_REJECTION }, { status: 400 });
+    }
+    const strict = parseStrictJson(text);
+    if (!strict.ok)
+      return Response.json({ message: SETUP_PREVIEW_BODY_REJECTION }, { status: 400 });
+    const body: unknown = strict.value;
+    if (!isClientToServerMessage({ type: 'startGame', payload: body }))
+      return Response.json({ message: 'Invalid setup selections.' }, { status: 400 });
+    const selected = body as StartGamePayload;
+    if (selected.seats.length !== SEAT_COUNT)
+      return Response.json({ message: 'Exactly four seats are required.' }, { status: 400 });
+    const previewRequest: PreviewRequest = {
+      seats: selected.seats,
+      seed: selected.seed?.trim() || crypto.randomUUID().slice(0, 8),
+      providerKind: selected.providerKind,
+      gameMode: selected.gameMode ?? 'spectator',
+      ...(selected.gameMode === 'singlePlayer' && { humanSeat: selected.humanSeat }),
+    };
+    const preview = await previewMatchup(previewRequest, this.deps);
+    const previewId = crypto.randomUUID();
+    for (const [id, entry] of this.setupPreviews)
+      if (Date.now() - entry.createdAt > 600_000) this.setupPreviews.delete(id);
+    if (this.setupPreviews.size >= 32)
+      this.setupPreviews.delete(this.setupPreviews.keys().next().value as string);
+    this.setupPreviews.set(previewId, { request: previewRequest, createdAt: Date.now() });
+    return Response.json({ ...preview, previewId });
+  }
+
   private async handleMessage(
     socket: ServerWebSocket<SocketData>,
     raw: string | Buffer,
   ): Promise<void> {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(typeof raw === 'string' ? raw : raw.toString('utf8'));
-    } catch {
-      this.sendTo(socket, { type: 'error', payload: { message: 'Malformed JSON frame.' } });
+    // Every inbound frame is read strictly, before its `type` is known: choosing a parsing
+    // policy from the discriminant of an already ambiguous text would be circular. A frame that
+    // repeats a key has no single meaning, so nothing in it — not even `requestId` — may be
+    // treated as correlation (`INBOUND_FRAME_REJECTIONS`).
+    const strict = parseStrictJson(typeof raw === 'string' ? raw : raw.toString('utf8'));
+    if (!strict.ok) {
+      this.sendTo(socket, {
+        type: 'error',
+        payload: { message: INBOUND_FRAME_REJECTIONS[strict.reason] },
+      });
       return;
     }
+    const parsed: unknown = strict.value;
 
     // A socket frame is never trusted; the union is erased at runtime (brief §11).
     if (!isClientToServerMessage(parsed)) {
-      this.sendTo(socket, { type: 'error', payload: { message: 'Unrecognised message.' } });
+      const candidate =
+        typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+          ? (parsed as Record<string, unknown>)
+          : null;
+      const payload =
+        candidate?.['type'] === 'submitPlayerAction' &&
+        typeof candidate['payload'] === 'object' &&
+        candidate['payload'] !== null &&
+        !Array.isArray(candidate['payload'])
+          ? (candidate['payload'] as Record<string, unknown>)
+          : null;
+      const correlation =
+        payload !== null &&
+        typeof payload['requestId'] === 'string' &&
+        payload['requestId'].length > 0 &&
+        Number.isInteger(payload['revision']) &&
+        (payload['revision'] as number) >= 0
+          ? { requestId: payload['requestId'], revision: payload['revision'] as number }
+          : {};
+      this.sendTo(socket, {
+        type: 'error',
+        payload: { message: 'Unrecognised message.', ...correlation },
+      });
       return;
     }
 
@@ -314,6 +429,19 @@ export class GameServer {
           this.sendTo(socket, {
             type: 'error',
             payload: { message: 'Card Test Lab is not enabled on this server.' },
+          });
+          return;
+        }
+        // A disconnected lab viewer must be able to replace the completed scenario. Keep the
+        // takeover guard only while another browser is still attached as the active player.
+        if (
+          this.session?.getGameMode() === 'singlePlayer' &&
+          this.playerSocket !== null &&
+          socket !== this.playerSocket
+        ) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'Resume the active player session before replacing it.' },
           });
           return;
         }
@@ -347,9 +475,19 @@ export class GameServer {
         try {
           await this.startGame(socket, message.payload);
         } catch (error) {
+          // A thrown setup error is the one path that never reached the single-player
+          // projection, and its message is upstream free text (a failed snapshot load names
+          // the cards it could not load). A requester holding one seat gets the fixed line.
           this.sendTo(socket, {
             type: 'error',
-            payload: { message: error instanceof Error ? error.message : String(error) },
+            payload: {
+              message:
+                message.payload.gameMode === 'singlePlayer'
+                  ? SETUP_REFUSED_MESSAGE
+                  : error instanceof Error
+                    ? error.message
+                    : String(error),
+            },
           });
         } finally {
           this.startingGame = false;
@@ -516,10 +654,58 @@ export class GameServer {
     payload: StartGamePayload,
   ): Promise<void> {
     const { seats, providerKind, playbackMode, paceMs } = payload;
-    const requestedMode = payload.gameMode;
-    const requestedHumanSeat = payload.humanSeat;
+    const gameMode = payload.gameMode ?? 'spectator';
     // Reruns use a fresh seed; the old one is still stored with its game (brief §4).
     const seed = payload.seed ?? crypto.randomUUID().slice(0, 8);
+
+    // The seat is settled before anything can fail, because it is the authorization identity
+    // for every refusal below: which diagnostics this requester may see is a function of it.
+    // There is no `?? 'P1'` fallback -- inferring an identity would authorize a seat nobody
+    // claimed -- and no `String()` coercion, which `isPlayerSeatId` exists to avoid.
+    const singlePlayer = gameMode === 'singlePlayer';
+    if (singlePlayer && !isPlayerSeatId(payload.humanSeat)) {
+      this.sendTo(socket, {
+        type: 'error',
+        payload: { message: 'Human seat must be P1, P2, P3 or P4.' },
+      });
+      return;
+    }
+    const humanSeat: PlayerId | undefined = singlePlayer ? payload.humanSeat : undefined;
+
+    if (payload.previewId !== undefined) {
+      const entry = this.setupPreviews.get(payload.previewId);
+      const requested = {
+        seats,
+        seed,
+        providerKind,
+        gameMode: payload.gameMode ?? 'spectator',
+        ...(payload.gameMode === 'singlePlayer' && { humanSeat: payload.humanSeat }),
+      };
+      if (
+        !entry ||
+        Date.now() - entry.createdAt > 600_000 ||
+        JSON.stringify(entry.request) !== JSON.stringify(requested)
+      ) {
+        this.sendTo(socket, {
+          type: 'error',
+          payload: {
+            message: 'Setup preview expired or selections changed. Preview the matchup again.',
+          },
+        });
+        return;
+      }
+      const fresh = await previewMatchup(entry.request, this.deps);
+      if (fresh.blockers.length > 0) {
+        // A blocker is per-seat free text and names unmodeled cards, so it leaves setup by
+        // the same private-data path a `SeatProblem` does. Only a spectator sees the list.
+        this.sendTo(socket, {
+          type: 'error',
+          payload: { message: singlePlayer ? SETUP_REFUSED_MESSAGE : fresh.blockers.join('\n') },
+        });
+        return;
+      }
+      this.setupPreviews.delete(payload.previewId);
+    }
 
     if (seats.length !== SEAT_COUNT) {
       this.sendTo(socket, {
@@ -528,32 +714,27 @@ export class GameServer {
       });
       return;
     }
-    const gameMode = requestedMode ?? 'spectator';
-    const humanSeat = gameMode === 'singlePlayer' ? (requestedHumanSeat ?? 'P1') : undefined;
-    if (gameMode === 'singlePlayer' && !['P1', 'P2', 'P3', 'P4'].includes(humanSeat as string)) {
-      this.sendTo(socket, {
-        type: 'error',
-        payload: { message: `Human seat must be P1-P4; got ${String(humanSeat)}.` },
-      });
-      return;
-    }
-
     // Prepare the replacement before abandoning the current game.
     const generation = this.startGeneration;
     const setup = await setupSeats(seats, this.deps, seed);
     if (generation !== this.startGeneration) return;
     if (!setup.ok) {
+      // A spectator watches every seat, so a spectator refusal may name every failing deck.
+      // A single-player requester holds one: `projectSetupProblems` rebuilds the payload from
+      // an allowlist keyed on that seat instead of forwarding the other three seats.
       this.sendTo(socket, {
         type: 'error',
-        payload: {
-          message: setup.problems.map((p) => `${p.seat}: ${p.message}`).join('\n'),
-          deckIssues: setup.problems
-            .filter((p) => p.issues.length > 0)
-            .map((p) => ({ seat: p.seat, issues: p.issues })),
-          unmodeledCards: setup.problems
-            .filter((p) => p.unmodeledCards.length > 0)
-            .map((p) => ({ seat: p.seat, cards: p.unmodeledCards })),
-        },
+        payload: singlePlayer
+          ? projectSetupProblems(setup.problems, humanSeat)
+          : {
+              message: setup.problems.map((p) => `${p.seat}: ${p.message}`).join('\n'),
+              deckIssues: setup.problems
+                .filter((p) => p.issues.length > 0)
+                .map((p) => ({ seat: p.seat, issues: p.issues })),
+              unmodeledCards: setup.problems
+                .filter((p) => p.unmodeledCards.length > 0)
+                .map((p) => ({ seat: p.seat, cards: p.unmodeledCards })),
+            },
       });
       return;
     }
@@ -628,6 +809,9 @@ export class GameServer {
       humanSeat: 'P1',
       livePaceMs: 0,
       engine: scenario.engine,
+      ...(scenario.decisionProviderOverrides !== undefined
+        ? { decisionProviderOverrides: scenario.decisionProviderOverrides }
+        : {}),
       // Deliberately no store: lab runs never enter normal game statistics.
       send: (message) => {
         if (this.playerSocket !== null) this.sendTo(this.playerSocket, message);

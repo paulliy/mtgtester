@@ -1,0 +1,142 @@
+{
+  "evidenceId": "myriad-landscape-ai-search-quality",
+  "generatedAt": "generated-by-evaluateMyriadLandscapeGameplayAi",
+  "liveLlm": "not-run",
+  "note": "Quality-only observations from an arranged grouped basic-land search position. Deterministic engine and viewer evidence independently prove rules behavior; live LLM was not run.",
+  "scenarioId": "myriad-landscape-viewer-shared-type-search",
+  "card": "Myriad Landscape",
+  "subject": "Myriad Landscape",
+  "runs": [
+    {
+      "providerKind": "random",
+      "seed": "card-lab-myriad-landscape-viewer-shared-type-search-v1-random-run-1",
+      "decisions": 2,
+      "casts": 0,
+      "activations": 1,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "activateAbility",
+          "description": "Myriad Landscape: Search for up to two basic lands that share a land type"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "findNothing",
+          "description": "Find nothing"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-myriad-landscape-viewer-shared-type-search-v1-heuristic-run-1",
+      "decisions": 2,
+      "casts": 0,
+      "activations": 1,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "activateAbility",
+          "description": "Myriad Landscape: Search for up to two basic lands that share a land type"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "findCards",
+          "description": "Put Island and Myriad Shared Dual onto the battlefield tapped"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "random",
+      "seed": "card-lab-myriad-landscape-viewer-shared-type-search-v1-random-run-2",
+      "decisions": 1,
+      "casts": 0,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "passAndYieldTurn",
+          "description": "Pass and yield until end of turn"
+        }
+      ],
+      "usedSubjectCard": false
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-myriad-landscape-viewer-shared-type-search-v1-heuristic-run-2",
+      "decisions": 2,
+      "casts": 0,
+      "activations": 1,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "activateAbility",
+          "description": "Myriad Landscape: Search for up to two basic lands that share a land type"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "findCards",
+          "description": "Put Island and Myriad Shared Dual onto the battlefield tapped"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "random",
+      "seed": "card-lab-myriad-landscape-viewer-shared-type-search-v1-random-run-3",
+      "decisions": 1,
+      "casts": 0,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        }
+      ],
+      "usedSubjectCard": false
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-myriad-landscape-viewer-shared-type-search-v1-heuristic-run-3",
+      "decisions": 2,
+      "casts": 0,
+      "activations": 1,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "activateAbility",
+          "description": "Myriad Landscape: Search for up to two basic lands that share a land type"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "findCards",
+          "description": "Put Island and Myriad Shared Dual onto the battlefield tapped"
+        }
+      ],
+      "usedSubjectCard": true
+    }
+  ],
+  "workspaceRevision": {
+    "gitHead": "5b9f5f52332266e7f2b8c0b07d30b918dd22173f",
+    "sourceSha256": "5fb418c9c9889f759358998315650e1ba031993f73a668382cbc91f4ebc5daf1",
+    "files": {
+      "docs/plans/fail-closed-card-restoration.md": "29cb11a20b41a271b78f51ec699cf4236aa0a904888b26446643a697e2f0e7dc",
+      "packages/engine/src/cards/overrides/necron-dynasties.ts": "3ff41eb746fded768ae68c7a681c10c5f97998f5cfecd2bf9710373c7c2c02e4",
+      "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts": "b88e678d52b99a06745af0c4f43107392bf9fdeabfdc29e7cfcc72b12cdb9fb3",
+      "packages/engine/src/effects/resolve.ts": "97e4667ff74546aa7abc3b8c119d411d80d8ead0de8a4d2566850f24136946c2",
+      "packages/engine/src/index.ts": "cfd7a6216e8607e11856dedd1ff5a6b84f530220fad1ce355a167b2159e25148",
+      "packages/engine/src/testing/candidate-definition.ts": "517e08510ef95c1a07346cc79f9dfe877dbee16e904a05ed404e9c4a3ead3608",
+      "packages/engine/tests/fail-closed-restoration.test.ts": "74686c630bb7f86ce5bf0e725f594b3e4ba057b7584666b62ca86e335953d2f5",
+      "packages/engine/tests/myriad-landscape.test.ts": "82980fb946a7c8f0fb36b07f9927e3cff1ba98f1c29cf00bdb04263a50012e76",
+      "packages/server/src/cards/card-test-scenarios.ts": "6d567d1df0e083821cb18a4b7fea4c1c0b3803be1f943828be0c459811b448a4",
+      "packages/server/src/cards/card-test-scenarios.test.ts": "d417ce8c923ca7f23cbf29bae68361a9a1fcc8987066d54c8bf9782fad358fd0",
+      "packages/server/src/cards/gameplay-ai-evaluation.ts": "6b5299b36d2d817c588f394cdc372f7a0d2307d9ee9bf373c094af2a00bf8f8e",
+      "packages/server/src/cards/gameplay-ai-evaluation.test.ts": "dd0cb9b0747ee1a0f520965a11fc77a5e0a1afed9f8623c7f9f5e8b23508ee89",
+      "packages/server/fixtures/card-verification-manifest.json": "dd106e951e167bb75b801f5b99340aace55c7d1ffdc11cd089617b32600d6297",
+      "apps/web/e2e/card-test-lab.spec.ts": "66e6fe1ac0c81a8e261033aefea176ff60a0796f70515f9a615f9fd03b39fcd6",
+      "scripts/generate-myriad-landscape-evidence.ts": "5c1d896431b8a9b4e5dcf501717fb825259dfbada7ec37a10e49250f64733552"
+    }
+  }
+}

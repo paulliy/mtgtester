@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "description": "Mandatory-first deterministic context budgeter only.",
+  "strategyContextVersion": "v2",
+  "env": { "AI_CONTEXT_BUDGETER_ENABLED": "true" }
+}

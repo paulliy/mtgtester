@@ -5,7 +5,8 @@
  */
 
 import type { DecisionRequest, DecisionResponse } from '@mtg/shared';
-import type { CallMeta } from './client';
+import type { AiAttemptObserver, AiNetworkAttempt, CallMeta } from './client';
+import type { JevDecisionTrace, JevTraceObserver } from './jev-policy';
 
 export interface CallResult {
   response: DecisionResponse;
@@ -32,7 +33,8 @@ export type DecisionSource =
   | 'plan'
   | 'strategist'
   | 'human'
-  | 'reflection';
+  | 'reflection'
+  | 'jev';
 
 /** Sources answered locally: recorded, but never billed and never rate-limited. */
 const SKIPPED_SOURCES: ReadonlySet<DecisionSource> = new Set<DecisionSource>([
@@ -52,6 +54,9 @@ export function localCallMeta(): CallMeta {
     wasFallback: false,
     rawResponse: '',
     costUsd: 0,
+    promptTokenSource: 'reported',
+    responseTokenSource: 'reported',
+    costSource: 'not_applicable',
   };
 }
 
@@ -79,6 +84,10 @@ export class AiCallLogger {
   private readonly sourcesByRequestId = new Map<string, DecisionSource>();
   /** Row `sequence` by request, so a later anchor can find the row it belongs to. */
   private readonly rowByRequestId = new Map<string, number>();
+  private attemptSequence = 0;
+  private readonly networkAttempts: AiNetworkAttempt[] = [];
+  private attemptKnownCostUsd = 0;
+  private readonly jevDecisionTraces: JevDecisionTrace[] = [];
 
   constructor(
     private readonly db: SqliteDb | null,
@@ -99,7 +108,7 @@ export class AiCallLogger {
     this.promptTokens += result.meta.promptTokens;
     this.responseTokens += result.meta.responseTokens;
     this.totalLatencyMs += result.meta.latencyMs;
-    this.totalCostUsd += result.meta.costUsd ?? 0;
+    if (result.meta.costUsd !== undefined) this.totalCostUsd += result.meta.costUsd;
     this.sourceCounts.set(source, (this.sourceCounts.get(source) ?? 0) + 1);
     this.sourcesByRequestId.set(request.requestId, source);
     this.rowByRequestId.set(request.requestId, this.sequence);
@@ -133,13 +142,93 @@ export class AiCallLogger {
           wasRetry ? 1 : 0,
           wasFallback ? 1 : 0,
           result.meta.latencyMs,
-          result.meta.costUsd ?? 0,
+          result.meta.costUsd ?? null,
           source,
           request.turn,
         );
     } catch {
       // Ignore database insert errors in loggers
     }
+  }
+
+  /** Observer passed to clients so failed and superseded physical requests remain attributable. */
+  attemptObserver(): AiAttemptObserver {
+    return (attempt) => this.recordAttempt(attempt);
+  }
+
+  recordAttempt(attempt: AiNetworkAttempt): void {
+    this.attemptSequence++;
+    this.networkAttempts.push(attempt);
+    if (attempt.usage.costUsd !== undefined) this.attemptKnownCostUsd += attempt.usage.costUsd;
+    if (this.db === null) return;
+    // Benchmark writers intentionally fail loudly. Production persistence remains best-effort,
+    // matching the existing ai_calls logger contract.
+    try {
+      this.db
+        .query(
+          `INSERT INTO ai_attempts (
+             game_id, sequence, logical_request_id, client_attempt, requested_model,
+             response_model, backend, provider_request_id, status, started_at, ended_at,
+             duration_ms, attempt_json, cost_usd
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          this.gameId,
+          this.attemptSequence,
+          attempt.logicalRequestId,
+          attempt.attemptIndex,
+          attempt.requestedModel,
+          attempt.responseModel ?? null,
+          attempt.backend ?? null,
+          attempt.providerRequestId ?? null,
+          attempt.status,
+          attempt.startedAt,
+          attempt.endedAt,
+          attempt.durationMs,
+          JSON.stringify(attempt),
+          attempt.usage.costUsd ?? null,
+        );
+    } catch {
+      // The live debug logger must never stop a match because diagnostics could not persist.
+    }
+  }
+
+  capturedAttempts(): readonly AiNetworkAttempt[] {
+    return this.networkAttempts;
+  }
+
+  jevTraceObserver(): JevTraceObserver {
+    return (trace) => this.recordJevTrace(trace);
+  }
+
+  recordJevTrace(trace: JevDecisionTrace): void {
+    this.jevDecisionTraces.push({ ...trace });
+    if (this.db === null) return;
+    try {
+      this.db
+        .query(
+          `INSERT INTO jev_decision_traces (
+             game_id, logical_request_id, recorded_at, mode, outcome,
+             fallback_reason, engine_acceptance, trace_json
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          this.gameId,
+          trace.logicalRequestId,
+          trace.recordedAt,
+          trace.mode,
+          trace.outcome,
+          trace.fallbackReason ?? null,
+          trace.engineAcceptance,
+          JSON.stringify(trace),
+        );
+    } catch {
+      // Diagnostics remain best-effort in live play.
+    }
+  }
+
+  capturedJevTraces(): readonly JevDecisionTrace[] {
+    return this.jevDecisionTraces;
   }
 
   /** Resolution source for a surfaced decision, if it was recorded by this logger. */
@@ -153,7 +242,29 @@ export class AiCallLogger {
    * after the call itself was recorded.
    */
   recordAnchor(requestId: string, anchorSequence: number): void {
+    for (const trace of this.jevDecisionTraces) {
+      if (
+        trace.logicalRequestId === requestId &&
+        trace.mode === 'active' &&
+        trace.outcome === 'accepted'
+      ) {
+        trace.engineAcceptance = 'accepted';
+      }
+    }
     const row = this.rowByRequestId.get(requestId);
+    if (this.db !== null) {
+      try {
+        this.db
+          .query(
+            `UPDATE jev_decision_traces
+             SET engine_acceptance = 'accepted'
+             WHERE game_id = ? AND logical_request_id = ? AND mode = 'active' AND outcome = 'accepted'`,
+          )
+          .run(this.gameId, requestId);
+      } catch {
+        // Best-effort diagnostics.
+      }
+    }
     if (row === undefined || this.db === null) return;
     try {
       this.db
@@ -181,6 +292,9 @@ export class AiCallLogger {
     totalCostUsd: number;
     strategistCalls: number;
     planExecutions: number;
+    networkAttempts: number;
+    unknownCostAttempts: number;
+    costAccountingCoverage: number;
   } {
     if (this.db === null) {
       const totalCalls = this.sequence - this.skipped;
@@ -190,7 +304,7 @@ export class AiCallLogger {
       const reflectionLatency = this.latencyBySource.get('reflection');
       const decidingCalls = totalCalls - (reflectionLatency?.count ?? 0);
       const decidingLatencyMs = this.totalLatencyMs - (reflectionLatency?.sum ?? 0);
-      const tacticianSources: DecisionSource[] = ['primary', 'retry', 'fallback'];
+      const tacticianSources: DecisionSource[] = ['primary', 'retry', 'fallback', 'jev'];
       let tacticianSum = 0;
       let tacticianCount = 0;
       for (const source of tacticianSources) {
@@ -213,9 +327,19 @@ export class AiCallLogger {
             ? Math.round(strategistLatency.sum / strategistLatency.count)
             : 0,
         avgTacticianLatencyMs: tacticianCount > 0 ? Math.round(tacticianSum / tacticianCount) : 0,
-        totalCostUsd: this.totalCostUsd,
+        totalCostUsd:
+          this.networkAttempts.length > 0 ? this.attemptKnownCostUsd : this.totalCostUsd,
         strategistCalls: this.sourceCounts.get('strategist') ?? 0,
         planExecutions: this.sourceCounts.get('plan') ?? 0,
+        networkAttempts: this.networkAttempts.length,
+        unknownCostAttempts: this.networkAttempts.filter(
+          (attempt) => attempt.usage.costSource === 'unknown',
+        ).length,
+        costAccountingCoverage:
+          this.networkAttempts.length === 0
+            ? 1
+            : this.networkAttempts.filter((attempt) => attempt.usage.costSource !== 'unknown')
+                .length / this.networkAttempts.length,
       };
     }
 
@@ -233,7 +357,7 @@ export class AiCallLogger {
           SUM(CASE WHEN source = 'plan' THEN 1 ELSE 0 END) as planExecutions,
           AVG(CASE WHEN source IS NULL OR source <> 'reflection' THEN latency_ms END) as avgLatencyMs,
           AVG(CASE WHEN source = 'strategist' THEN latency_ms END) as avgStrategistLatencyMs,
-          AVG(CASE WHEN source IN ('primary', 'retry', 'fallback') THEN latency_ms END) as avgTacticianLatencyMs
+          AVG(CASE WHEN source IN ('primary', 'retry', 'fallback', 'jev') THEN latency_ms END) as avgTacticianLatencyMs
         FROM ai_calls WHERE game_id = ?`,
       )
       .all(this.gameId) as Array<{
@@ -265,9 +389,19 @@ export class AiCallLogger {
       avgLatencyMs: Math.round(row?.avgLatencyMs ?? 0),
       avgStrategistLatencyMs: Math.round(row?.avgStrategistLatencyMs ?? 0),
       avgTacticianLatencyMs: Math.round(row?.avgTacticianLatencyMs ?? 0),
-      totalCostUsd: row?.totalCostUsd ?? 0,
+      totalCostUsd:
+        this.networkAttempts.length > 0 ? this.attemptKnownCostUsd : (row?.totalCostUsd ?? 0),
       strategistCalls: row?.strategistCalls ?? 0,
       planExecutions: row?.planExecutions ?? 0,
+      networkAttempts: this.networkAttempts.length,
+      unknownCostAttempts: this.networkAttempts.filter(
+        (attempt) => attempt.usage.costSource === 'unknown',
+      ).length,
+      costAccountingCoverage:
+        this.networkAttempts.length === 0
+          ? 1
+          : this.networkAttempts.filter((attempt) => attempt.usage.costSource !== 'unknown')
+              .length / this.networkAttempts.length,
     };
   }
 }

@@ -13,9 +13,19 @@ import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
-import type { GameContext } from '../src/state/types';
+import type { EngineStackObject, GameContext } from '../src/state/types';
 import { queueTriggersForEvent } from '../src/state/objects';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { queueStepTriggers, runTurn } from '../src/turn/turn';
+import {
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  registerCustomDef,
+  spawn,
+} from './fixtures';
 
 const huntersInsight = () =>
   oracle({
@@ -92,6 +102,343 @@ function pod(seed = 'delayed-triggers'): GameContext {
 }
 
 describe('Increment 16: Delayed triggers and granted abilities', () => {
+  it('fires an unscoped onFire delayed trigger at the next upkeep, whoever owns that turn', () => {
+    const ctx = pod('next-upkeep-occurrence');
+    ctx.state.delayedTriggers.push({
+      id: 'dt-explicit-p4',
+      sourceCardId: 'source-card',
+      sourceOracleId: 'source-oracle',
+      controllerId: 'P1',
+      affectedPlayerId: 'P4',
+      when: 'upkeep',
+      expiry: 'onFire',
+      ability: {
+        kind: 'triggered',
+        targets: [],
+        effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+      },
+    });
+
+    // The cleanup that ends the scheduling turn must not sweep an onFire trigger.
+    ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter(
+      (delayed) => delayed.expiry === 'onFire',
+    );
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+
+    ctx.state.currentTurnPlayer = 'P2';
+    queueStepTriggers(ctx, 'upkeep');
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    expect(ctx.state.pendingTriggers[0]?.controllerId).toBe('P1');
+    expect(ctx.state.pendingTriggers[0]?.scope?.eventPlayerId).toBe('P4');
+    expect(ctx.state.delayedTriggers).toHaveLength(0);
+  });
+
+  it('survives the real cleanup step before firing at the next player upkeep', () => {
+    const ctx = pod('next-upkeep-real-cleanup');
+    const schedulerCard = oracle({
+      oracleId: 'delayed-scheduler',
+      name: 'Delayed Scheduler',
+      typeLine: 'Creature — Test',
+      power: '1',
+      toughness: '1',
+    });
+    const base = interpretCard(schedulerCard);
+    registerCustomDef(ctx, {
+      ...base,
+      modeled: true,
+      unmodeledReasons: [],
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'endStep', player: 'you' },
+          targets: [],
+          effects: [
+            {
+              op: 'registerDelayedTrigger',
+              when: 'upkeep',
+              expiry: 'onFire',
+              affectedPlayer: 'sourceController',
+              ability: { kind: 'triggered', targets: [], effects: [] },
+            },
+          ],
+        },
+      ],
+    });
+    spawn(ctx, 'P1', schedulerCard);
+
+    pump(runTurn(ctx));
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    expect(ctx.state.delayedTriggers[0]).toMatchObject({
+      controllerId: 'P1',
+      affectedPlayerId: 'P1',
+      when: 'upkeep',
+      expiry: 'onFire',
+    });
+
+    ctx.state.currentTurnPlayer = 'P2';
+    queueStepTriggers(ctx, 'upkeep');
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    expect(ctx.state.pendingTriggers[0]?.scope?.eventPlayerId).toBe('P1');
+    expect(ctx.state.delayedTriggers).toHaveLength(0);
+  });
+
+  it('captures an affected target player without changing trigger controller or step owner', () => {
+    const ctx = pod('register-affected-player');
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'source-card',
+          name: 'Delayed Source',
+          oracleId: 'source-oracle',
+          controllerId: 'P1',
+        },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'player' }],
+          effects: [
+            {
+              op: 'registerDelayedTrigger',
+              target: 0,
+              when: 'upkeep',
+              expiry: 'onFire',
+              affectedPlayer: 'targetController',
+              ability: {
+                kind: 'triggered',
+                targets: [],
+                effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+              },
+            },
+          ],
+        },
+        ['P4'],
+      ),
+    );
+
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    expect(ctx.state.delayedTriggers[0]).toMatchObject({
+      controllerId: 'P1',
+      affectedPlayerId: 'P4',
+      expiry: 'onFire',
+    });
+    expect('stepPlayerId' in ctx.state.delayedTriggers[0]!).toBe(false);
+  });
+
+  it('lets the affected event player choose zero, one, or two cards to draw', () => {
+    for (const chosen of [0, 1, 2]) {
+      const ctx = pod(`affected-draw-${chosen}`);
+      const caster = ctx.state.players[0]!;
+      const affected = ctx.state.players[3]!;
+      const casterHandBefore = caster.hand.length;
+      const affectedHandBefore = affected.hand.length;
+      const result = pump(
+        executeAbility(
+          ctx,
+          {
+            cardId: 'source-card',
+            name: 'Affected Draw Source',
+            oracleId: 'source-oracle',
+            controllerId: 'P1',
+          },
+          {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'drawUpToN', count: 2, player: 'eventPlayer' }],
+          },
+          [],
+          undefined,
+          { eventPlayerId: 'P4' },
+        ),
+        (decision) => {
+          expect(decision.player).toBe('P4');
+          expect(decision.options.map((option) => option.description)).toEqual([
+            'Draw 0 cards',
+            'Draw 1 card',
+            'Draw 2 cards',
+          ]);
+          return { index: chosen, targets: new Map() };
+        },
+      );
+
+      expect(result.decisions).toHaveLength(1);
+      expect(affected.hand).toHaveLength(affectedHandBefore + chosen);
+      expect(caster.hand).toHaveLength(casterHandBefore);
+    }
+  });
+
+  it('fails closed when an event-player draw is missing its captured player scope', () => {
+    const ctx = pod('missing-event-player-scope');
+    expect(() =>
+      pump(
+        executeAbility(
+          ctx,
+          {
+            cardId: 'source-card',
+            name: 'Affected Draw Source',
+            oracleId: 'source-oracle',
+            controllerId: 'P1',
+          },
+          {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'drawUpToN', count: 2, player: 'eventPlayer' }],
+          },
+          [],
+        ),
+      ),
+    ).toThrow(/eventPlayer.*without.*event player/i);
+  });
+
+  it('fails closed when an affected target controller cannot be captured', () => {
+    const ctx = pod('missing-affected-player');
+    expect(() =>
+      pump(
+        executeAbility(
+          ctx,
+          {
+            cardId: 'source-card',
+            name: 'Delayed Source',
+            oracleId: 'source-oracle',
+            controllerId: 'P1',
+          },
+          {
+            kind: 'spell',
+            targets: [{ kind: 'player' }],
+            effects: [
+              {
+                op: 'registerDelayedTrigger',
+                target: 0,
+                when: 'upkeep',
+                expiry: 'onFire',
+                affectedPlayer: 'targetController',
+                ability: { kind: 'triggered', targets: [], effects: [] },
+              },
+            ],
+          },
+          [],
+        ),
+      ),
+    ).toThrow(/affected target controller.*could not be captured/i);
+  });
+
+  it('preserves the affected player from delayed-trigger registration through resolution', () => {
+    const ctx = pod('delayed-affected-player-scope');
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'source-card',
+          name: 'Delayed Source',
+          oracleId: 'source-oracle',
+          controllerId: 'P1',
+        },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'player' }],
+          effects: [
+            {
+              op: 'registerDelayedTrigger',
+              target: 0,
+              when: 'upkeep',
+              expiry: 'onFire',
+              affectedPlayer: 'targetController',
+              ability: {
+                kind: 'triggered',
+                targets: [],
+                effects: [{ op: 'drawUpToN', count: 2, player: 'eventPlayer' }],
+              },
+            },
+          ],
+        },
+        ['P4'],
+      ),
+    );
+    expect(ctx.state.delayedTriggers[0]?.affectedPlayerId).toBe('P4');
+
+    ctx.state.currentTurnPlayer = 'P2';
+    queueStepTriggers(ctx, 'upkeep');
+    const pending = ctx.state.pendingTriggers[0]!;
+    expect(pending.scope?.eventPlayerId).toBe('P4');
+    const result = pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: pending.sourceCardId,
+          name: pending.sourceName,
+          oracleId: pending.sourceOracleId,
+          controllerId: pending.controllerId,
+        },
+        pending.ability,
+        [],
+        pending.triggerObjectCardId,
+        pending.scope,
+      ),
+      (decision) => {
+        expect(decision.player).toBe('P4');
+        return { index: 1, targets: new Map() };
+      },
+    );
+    expect(result.decisions).toHaveLength(1);
+  });
+
+  it('captures a targeted spell controller before an earlier effect removes it from the stack', () => {
+    const ctx = pod('capture-stack-controller');
+    ctx.defs.set(
+      'target-oracle',
+      interpretCard(
+        oracle({ oracleId: 'target-oracle', name: 'Target Spell', typeLine: 'Instant' }),
+      ),
+    );
+    const targetedSpell: EngineStackObject = {
+      id: 'target-spell',
+      sourceId: 'target-spell',
+      sourceCardId: 'target-card',
+      sourceOracleId: 'target-oracle',
+      controllerId: 'P4',
+      kind: 'spell',
+      description: 'Target Spell',
+      card: null,
+      ability: { kind: 'spell', targets: [], effects: [] },
+      targets: [],
+      isCommanderCast: false,
+    };
+    ctx.state.stack.push(targetedSpell);
+
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'source-card',
+          name: 'Counter and Delay',
+          oracleId: 'source-oracle',
+          controllerId: 'P1',
+        },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'spell' }],
+          effects: [
+            { op: 'counter', target: 0 },
+            {
+              op: 'registerDelayedTrigger',
+              target: 0,
+              when: 'upkeep',
+              expiry: 'onFire',
+              affectedPlayer: 'targetController',
+              ability: { kind: 'triggered', targets: [], effects: [] },
+            },
+          ],
+        },
+        [targetedSpell.id],
+      ),
+    );
+
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(ctx.state.delayedTriggers[0]).toMatchObject({
+      controllerId: 'P1',
+      affectedPlayerId: 'P4',
+    });
+  });
+
   it('correctly models all four cards in the interpreter', () => {
     expect(interpretCard(huntersInsight()).modeled).toBe(true);
     expect(interpretCard(hellkiteCourser()).modeled).toBe(true);

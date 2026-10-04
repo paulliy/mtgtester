@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { Engine } from '@mtg/engine';
-import type { EnginePlayerConfig } from '@mtg/engine';
+import { choose, Engine, ScriptedDecisionProvider } from '@mtg/engine';
+import type { DecisionProvider, EnginePlayerConfig } from '@mtg/engine';
 import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } from '@mtg/shared';
 import type { SeatSetup } from '../match/setup';
 
@@ -10,6 +10,8 @@ export interface CardTestScenario {
   seed: string;
   seats: SeatSetup[];
   engine: Engine;
+  /** Optional deterministic bot choices used only by the real Card Test Lab session. */
+  decisionProviderOverrides?: Partial<Record<PlayerId, DecisionProvider>>;
 }
 
 interface CardInput {
@@ -191,6 +193,10 @@ const W2_REMAINING_BATCH1: PinnedOracleFile = JSON.parse(
   ),
 ) as PinnedOracleFile;
 
+const MARCHESA_BATCH1: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/marchesa-batch1-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 function pinnedFrom(file: PinnedOracleFile, name: string): { card: OracleCard; sha256: string } {
   const entry = file.cards.find((candidate) => candidate.card.name === name);
   if (entry === undefined) throw new Error(`No pinned Oracle fixture for ${name}`);
@@ -319,6 +325,33 @@ const GRAVE_PICKER = card({
   power: '1',
   toughness: '1',
   oracleText: '{1}, {T}: Return target artifact card from your graveyard to your hand.',
+});
+
+const ARCANE_PENDING_SPELL = card({
+  oracleId: 'lab-arcane-pending-spell',
+  name: 'Lab Pending Spell',
+  typeLine: 'Instant',
+  manaCost: '{1}',
+  cmc: 1,
+  oracleText: 'Draw a card.',
+});
+
+const ARCANE_CASTER_SECRET = card({
+  oracleId: 'lab-arcane-caster-secret',
+  name: 'Caster Secret Draw',
+  typeLine: 'Creature — Secret',
+});
+
+const ARCANE_TARGET_SECRET_A = card({
+  oracleId: 'lab-arcane-target-secret-a',
+  name: 'Target Secret Alpha',
+  typeLine: 'Creature — Secret',
+});
+
+const ARCANE_TARGET_SECRET_B = card({
+  oracleId: 'lab-arcane-target-secret-b',
+  name: 'Target Secret Beta',
+  typeLine: 'Creature — Secret',
 });
 
 function player(
@@ -3490,8 +3523,528 @@ function aetherwindBaskerScenario(gameId: GameId): CardTestScenario {
   };
 }
 
-/** Step 15 evaluates only the five repaired cards. Catalog leftover lab scenarios must stay out. */
-export const REVIEWED_FIVE_SCENARIO_IDS = [
+function zopandrelIndestructibleCounterScenario(gameId: GameId): CardTestScenario {
+  const zopandrel = pinnedFrom(W2_REMAINING_BATCH1, 'Zopandrel, Hunger Dominus');
+  const p1 = player('P1', [zopandrel.card, WRONG_TYPE, LAB_SHAMAN, FOREST, FOREST]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-zopandrel-indestructible-counter-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [],
+        battlefield: [
+          {
+            playerId: 'P1',
+            cardNames: [
+              'Zopandrel, Hunger Dominus',
+              'Two-Mana Bear',
+              'Lab Shaman',
+              'Forest',
+              'Forest',
+            ],
+          },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'zopandrel-viewer-indestructible-counter',
+      version: 1,
+      title: 'Zopandrel: indestructible counter grants indestructible',
+      instructions: [
+        'Activate Zopandrel using two Forests and sacrifice the two other creatures.',
+        'Pass priority so the activated ability resolves.',
+        'Confirm that Zopandrel shows one indestructible counter and the indestructible keyword.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        'Zopandrel remains on the battlefield with one indestructible counter and indestructible in its public characteristics.',
+      oracleSha256: zopandrel.sha256,
+      clauseIds: ['zopandrel-indestructible-counter-grants-keyword-and-survives-lethal'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function arcaneDenialScenario(gameId: GameId, drawCount: 0 | 2): CardTestScenario {
+  const arcane = pinnedFrom(MARCHESA_BATCH1, 'Arcane Denial');
+  const p1 = player('P1', [arcane.card, ISLAND, FOREST, ARCANE_CASTER_SECRET]);
+  const p2 = player('P2', [FOREST, FOREST]);
+  const p3 = player('P3', [FOREST, FOREST]);
+  const p4 = player('P4', [ARCANE_PENDING_SPELL, ARCANE_TARGET_SECRET_A, ARCANE_TARGET_SECRET_B]);
+  const seats = [p1.setup, p2.setup, p3.setup, p4.setup];
+  const id = `arcane-denial-viewer-draw-${drawCount === 0 ? 'zero' : 'two'}`;
+  const seed = `card-lab-${id}-v1`;
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, p3.config, p4.config],
+      turnCap: 3,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Arcane Denial'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Island', 'Forest'] }],
+        graveyard: [],
+        stack: [{ playerId: 'P4', cardNames: ['Lab Pending Spell'] }],
+        continueToNextUpkeep: true,
+      },
+    },
+  );
+  return {
+    metadata: {
+      id,
+      version: 1,
+      title: `Arcane Denial: next-upkeep draw ${drawCount}`,
+      instructions: [
+        'Cast Arcane Denial targeting the prepared P4 spell and pay with Island and Forest.',
+        'Pass priority so Arcane Denial resolves and counters the spell.',
+        "At P2's immediately next upkeep, order the two simultaneous delayed triggers.",
+        `As P4, choose to draw ${drawCount} cards; confirm P1 also draws one mandatory card.`,
+      ],
+      expectedOutcome: `Both delayed triggers fire at P2's upkeep; P4 draws ${drawCount} and P1 draws one without revealing card identities to other players.`,
+      oracleSha256: arcane.sha256,
+      clauseIds: [
+        'arcane-denial-counter-and-affected-player-draw',
+        'arcane-denial-caster-mandatory-draw',
+      ],
+    },
+    seed,
+    seats,
+    engine,
+    decisionProviderOverrides: {
+      P4: new ScriptedDecisionProvider([choose(`Draw ${drawCount} cards`)]),
+    },
+  };
+}
+
+const arcaneDenialDrawZeroScenario = (gameId: GameId): CardTestScenario =>
+  arcaneDenialScenario(gameId, 0);
+const arcaneDenialDrawTwoScenario = (gameId: GameId): CardTestScenario =>
+  arcaneDenialScenario(gameId, 2);
+
+function smotheringTitheScenario(gameId: GameId, outcome: 'pay' | 'decline'): CardTestScenario {
+  const tithe = pinnedFrom(MARCHESA_BATCH1, 'Smothering Tithe');
+  const secret = card({
+    oracleId: `lab-tithe-secret-${outcome}`,
+    name: `Tithe Secret ${outcome === 'pay' ? 'Pay' : 'Decline'}`,
+    typeLine: 'Creature — Secret',
+  });
+  const p1 = player('P1', [ARCANE_PENDING_SPELL, FOREST, FOREST, FOREST, secret]);
+  const p2 = player('P2', [tithe.card, FOREST, FOREST]);
+  const p3 = player('P3', [FOREST, FOREST]);
+  const p4 = player('P4', [FOREST, FOREST]);
+  const seats = [p1.setup, p2.setup, p3.setup, p4.setup];
+  const id = `smothering-tithe-viewer-${outcome}`;
+  const seed = `card-lab-${id}-v1`;
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, p3.config, p4.config],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Lab Pending Spell'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest'] },
+          { playerId: 'P2', cardNames: ['Smothering Tithe'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id,
+      version: 1,
+      title: `Smothering Tithe: opponent draws and ${outcome === 'pay' ? 'pays' : 'declines'}`,
+      instructions: [
+        'Cast Lab Pending Spell with one Forest and pass priority so it draws one card.',
+        `When P2's Smothering Tithe trigger resolves, ${outcome === 'pay' ? 'pay {2} with the remaining Forests' : 'decline to pay {2}'}.`,
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        outcome === 'pay'
+          ? 'P1 draws one card and pays {2}; P2 creates no Treasure.'
+          : 'P1 draws one card and declines {2}; P2 creates exactly one Treasure.',
+      oracleSha256: tithe.sha256,
+      clauseIds: ['smothering-tithe-opponent-draw-tax'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+const smotheringTithePayScenario = (gameId: GameId): CardTestScenario =>
+  smotheringTitheScenario(gameId, 'pay');
+const smotheringTitheDeclineScenario = (gameId: GameId): CardTestScenario =>
+  smotheringTitheScenario(gameId, 'decline');
+
+function fabledPassageScenario(gameId: GameId): CardTestScenario {
+  const passage = pinnedFrom(MARCHESA_BATCH1, 'Fabled Passage');
+  const secret = card({
+    oracleId: 'lab-fabled-secret',
+    name: 'Fabled Private Library Secret',
+    typeLine: 'Creature — Secret',
+  });
+  const p1 = player('P1', [passage.card, FOREST, FOREST, FOREST, ISLAND, secret]);
+  const p2 = player('P2', [FOREST, FOREST]);
+  const p3 = player('P3', [FOREST, FOREST]);
+  const p4 = player('P4', [FOREST, FOREST]);
+  const seats = [p1.setup, p2.setup, p3.setup, p4.setup];
+  const id = 'fabled-passage-viewer-search-entry-untap';
+  const seed = `card-lab-${id}-v1`;
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, p3.config, p4.config],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Fabled Passage', 'Forest', 'Forest', 'Forest'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id,
+      version: 1,
+      title: 'Fabled Passage: search, tapped entry, and fourth-land untap',
+      instructions: [
+        'Activate Fabled Passage through the normal action menu, paying tap and sacrifice.',
+        'Choose Island from the private library search and let the ability resolve.',
+        'Verify the found Island enters and is untapped because it is your fourth land.',
+      ],
+      expectedOutcome:
+        'Fabled Passage is in the graveyard, the searched Island is the fourth land and untapped, and other library cards remain private.',
+      oracleSha256: passage.sha256,
+      clauseIds: ['fabled-passage-search-entry-untap'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function myriadLandscapeEntryScenario(gameId: GameId): CardTestScenario {
+  const landscape = pinnedFrom(MARCHESA_BATCH1, 'Myriad Landscape');
+  const p1 = player('P1', [landscape.card, FOREST]);
+  const p2 = player('P2', [FOREST, FOREST]);
+  const p3 = player('P3', [FOREST, FOREST]);
+  const p4 = player('P4', [FOREST, FOREST]);
+  const seats = [p1.setup, p2.setup, p3.setup, p4.setup];
+  const id = 'myriad-landscape-viewer-enters-tapped';
+  const seed = `card-lab-${id}-v1`;
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, p3.config, p4.config],
+      turnCap: 1,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Myriad Landscape'] }],
+        battlefield: [],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id,
+      version: 1,
+      title: 'Myriad Landscape: normal land play enters tapped',
+      instructions: [
+        'Play Myriad Landscape from hand through the normal land action.',
+        'Verify it enters tapped rather than creating a stack object.',
+      ],
+      expectedOutcome: 'Myriad Landscape is on the battlefield tapped after the normal land play.',
+      oracleSha256: landscape.sha256,
+      clauseIds: ['myriad-landscape-enters-tapped'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function myriadLandscapeSearchScenario(gameId: GameId): CardTestScenario {
+  const landscape = pinnedFrom(MARCHESA_BATCH1, 'Myriad Landscape');
+  const sharedDual = card({
+    oracleId: 'lab-myriad-shared-dual',
+    name: 'Myriad Shared Dual',
+    typeLine: 'Basic Land — Plains Island',
+  });
+  const secret = card({
+    oracleId: 'lab-myriad-secret',
+    name: 'Myriad Private Library Secret',
+    typeLine: 'Creature — Secret',
+  });
+  const p1 = player('P1', [landscape.card, FOREST, FOREST, ISLAND, sharedDual, secret]);
+  const p2 = player('P2', [FOREST, FOREST]);
+  const p3 = player('P3', [FOREST, FOREST]);
+  const p4 = player('P4', [FOREST, FOREST]);
+  const seats = [p1.setup, p2.setup, p3.setup, p4.setup];
+  const id = 'myriad-landscape-viewer-shared-type-search';
+  const seed = `card-lab-${id}-v1`;
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, p3.config, p4.config],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [],
+        battlefield: [{ playerId: 'P1', cardNames: ['Myriad Landscape', 'Forest', 'Forest'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id,
+      version: 1,
+      title: 'Myriad Landscape: shared land type grouped search',
+      instructions: [
+        'Activate Myriad Landscape through the normal action menu and pay {2} with both Forests.',
+        'Choose Island and Myriad Shared Dual together from the private grouped search.',
+        'Verify both found lands enter tapped and the unrelated private card remains hidden.',
+      ],
+      expectedOutcome:
+        'Myriad Landscape is sacrificed, both mana lands are tapped, and the two Island-sharing basics enter tapped.',
+      oracleSha256: landscape.sha256,
+      clauseIds: ['myriad-landscape-colorless-mana', 'myriad-landscape-shared-land-type-search'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function myriadLandscapeManaScenario(gameId: GameId): CardTestScenario {
+  const landscape = pinnedFrom(MARCHESA_BATCH1, 'Myriad Landscape');
+  const manaSink = card({
+    oracleId: 'lab-myriad-mana-sink',
+    name: 'Myriad Mana Sink',
+    typeLine: 'Artifact',
+    manaCost: '{1}',
+    cmc: 1,
+  });
+  const p1 = player('P1', [landscape.card, manaSink]);
+  const p2 = player('P2', [FOREST, FOREST]);
+  const p3 = player('P3', [FOREST, FOREST]);
+  const p4 = player('P4', [FOREST, FOREST]);
+  const seats = [p1.setup, p2.setup, p3.setup, p4.setup];
+  const id = 'myriad-landscape-viewer-colorless-mana';
+  const seed = `card-lab-${id}-v1`;
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, p3.config, p4.config],
+      turnCap: 1,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Myriad Mana Sink'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Myriad Landscape'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id,
+      version: 1,
+      title: 'Myriad Landscape: colorless mana pays a spell cost',
+      instructions: [
+        'Cast Myriad Mana Sink from hand through the normal spell action.',
+        'Verify the mana solver taps Myriad Landscape for {C} to pay the generic cost.',
+      ],
+      expectedOutcome:
+        'Myriad Landscape is tapped for mana and Myriad Mana Sink resolves onto the battlefield.',
+      oracleSha256: landscape.sha256,
+      clauseIds: ['myriad-landscape-colorless-mana'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function warRoomManaScenario(gameId: GameId): CardTestScenario {
+  const warRoom = pinnedFrom(MARCHESA_BATCH1, 'War Room');
+  const manaSink = card({
+    oracleId: 'lab-war-room-mana-sink',
+    name: 'War Room Mana Sink',
+    typeLine: 'Artifact',
+    manaCost: '{1}',
+    cmc: 1,
+  });
+  const p1 = player('P1', [warRoom.card, manaSink]);
+  const others = (['P2', 'P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST]));
+  const seats = [p1.setup, ...others.map(({ setup }) => setup)];
+  const id = 'war-room-viewer-colorless-mana';
+  const seed = `card-lab-${id}-v1`;
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, ...others.map(({ config }) => config)],
+      turnCap: 1,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['War Room Mana Sink'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['War Room'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id,
+      version: 1,
+      title: 'War Room: colorless mana pays a spell cost',
+      instructions: [
+        'Cast War Room Mana Sink from hand through the normal spell action.',
+        'Verify the mana solver taps War Room for {C} to pay the generic {1} cost.',
+        'After forced passes resolve the artifact, close results and confirm life stays 40 and no card is drawn.',
+      ],
+      expectedOutcome:
+        'War Room is tapped, War Room Mana Sink resolves onto the battlefield, life stays 40, and no card is drawn.',
+      oracleSha256: warRoom.sha256,
+      clauseIds: ['war-room-colorless-mana'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function warRoomScenario(gameId: GameId): CardTestScenario {
+  const warRoom = pinnedFrom(MARCHESA_BATCH1, 'War Room');
+  const commander = card({
+    oracleId: 'lab-war-room-commander',
+    name: 'Three Color Commander',
+    typeLine: 'Legendary Creature — Test Captain',
+    colorIdentity: ['W', 'U', 'B'],
+    colors: ['W', 'U', 'B'],
+  });
+  const sink = card({
+    oracleId: 'lab-war-room-sink',
+    name: 'War Room Mana Sink',
+    typeLine: 'Artifact',
+    manaCost: '{1}',
+    cmc: 1,
+  });
+  const witness = card({
+    oracleId: 'lab-war-room-action-witness',
+    name: 'War Room Action Witness',
+    typeLine: 'Artifact',
+    manaCost: '{0}',
+    cmc: 0,
+  });
+  const p1 = player('P1', [warRoom.card, sink, witness, commander, FOREST, FOREST, FOREST]);
+  p1.config.commanders = [commander];
+  const p2 = player('P2', [FOREST, FOREST]);
+  const p3 = player('P3', [FOREST, FOREST]);
+  const p4 = player('P4', [FOREST, FOREST]);
+  const seats = [p1.setup, p2.setup, p3.setup, p4.setup];
+  const id = 'war-room-viewer-dynamic-life-activation';
+  const seed = `card-lab-${id}-v1`;
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, p3.config, p4.config],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['War Room Mana Sink', 'War Room Action Witness'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['War Room', 'Forest', 'Forest', 'Forest'] }],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id,
+      version: 1,
+      title: 'War Room: dynamic commander-identity life activation',
+      instructions: [
+        'Activate War Room through the normal action menu, paying {3} with the three Forests.',
+        'Verify the cost shows three life for the three-color commander identity and resolve the draw.',
+        'Pass only when offered a legal priority action; confirm the resolved draw with the zero-cost witness still in hand.',
+      ],
+      expectedOutcome:
+        'War Room and all three Forests tap, its controller pays exactly three life, and draws Three Color Commander.',
+      oracleSha256: warRoom.sha256,
+      // Paying {3} taps every Forest AND War Room, so this scenario cannot also demonstrate the
+      // mana clause — `war-room-viewer-colorless-mana` carries that evidence.
+      clauseIds: ['war-room-dynamic-life-draw'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+/** Historical five-card review batch; later independently reviewed cards use separate evidence. */
+export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
   'gev-viewer-opponent-targets-ward',
   'nightscape-viewer-activate-regenerate-destroy',
@@ -3500,7 +4053,7 @@ export const REVIEWED_FIVE_SCENARIO_IDS = [
 ] as const;
 
 export const CARD_TEST_SCENARIO_IDS = [
-  ...REVIEWED_FIVE_SCENARIO_IDS,
+  ...REVIEWED_BASELINE_SCENARIO_IDS,
   'swords-viewer-exile-and-gain-life',
   'throat-viewer-destroy-nonartifact',
   'defense-viewer-pump-and-hexproof',
@@ -3560,6 +4113,17 @@ export const CARD_TEST_SCENARIO_IDS = [
   'ajani-viewer-plus-one-counter',
   'terror-viewer-etb-damage-to-player',
   'basker-viewer-plus-one-until-eot',
+  'zopandrel-viewer-indestructible-counter',
+  'arcane-denial-viewer-draw-zero',
+  'arcane-denial-viewer-draw-two',
+  'smothering-tithe-viewer-pay',
+  'smothering-tithe-viewer-decline',
+  'fabled-passage-viewer-search-entry-untap',
+  'myriad-landscape-viewer-enters-tapped',
+  'myriad-landscape-viewer-colorless-mana',
+  'myriad-landscape-viewer-shared-type-search',
+  'war-room-viewer-dynamic-life-activation',
+  'war-room-viewer-colorless-mana',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -3627,6 +4191,17 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'ajani-viewer-plus-one-counter': ajaniCallerScenario,
   'terror-viewer-etb-damage-to-player': terrorOfThePeaksScenario,
   'basker-viewer-plus-one-until-eot': aetherwindBaskerScenario,
+  'zopandrel-viewer-indestructible-counter': zopandrelIndestructibleCounterScenario,
+  'arcane-denial-viewer-draw-zero': arcaneDenialDrawZeroScenario,
+  'arcane-denial-viewer-draw-two': arcaneDenialDrawTwoScenario,
+  'smothering-tithe-viewer-pay': smotheringTithePayScenario,
+  'smothering-tithe-viewer-decline': smotheringTitheDeclineScenario,
+  'fabled-passage-viewer-search-entry-untap': fabledPassageScenario,
+  'myriad-landscape-viewer-enters-tapped': myriadLandscapeEntryScenario,
+  'myriad-landscape-viewer-colorless-mana': myriadLandscapeManaScenario,
+  'myriad-landscape-viewer-shared-type-search': myriadLandscapeSearchScenario,
+  'war-room-viewer-dynamic-life-activation': warRoomScenario,
+  'war-room-viewer-colorless-mana': warRoomManaScenario,
 };
 
 export function createCardTestScenario(

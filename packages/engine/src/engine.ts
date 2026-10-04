@@ -123,7 +123,7 @@ export class Engine implements EngineDriver {
     this.ctx = createGame(config);
     if (options.preparedScenario !== undefined) {
       prepareScenario(this.ctx, options.preparedScenario);
-      this.gen = playPreparedScenario(this.ctx);
+      this.gen = playPreparedScenario(this.ctx, options.preparedScenario);
     } else {
       this.gen = playGame(this.ctx);
     }
@@ -242,6 +242,25 @@ export class Engine implements EngineDriver {
         actionId: action.id,
         description: action.description,
         targets: [...targets.entries()].map(([slot, choice]) => ({ slot, choice })),
+        // Preserve the exact wire response as submitted. The targets field above is the
+        // normalized engine outcome (including forced single-option slots); replay needs both.
+        submittedResponse: {
+          requestId: response.requestId,
+          actionId: response.actionId,
+          ...(response.targets !== undefined ? { targets: response.targets } : {}),
+          ...(response.modes !== undefined ? { modes: response.modes } : {}),
+          ...(response.xValue !== undefined ? { xValue: response.xValue } : {}),
+          ...(response.manaSplit !== undefined ? { manaSplit: response.manaSplit } : {}),
+          ...(response.combatDamageSplit !== undefined
+            ? { combatDamageSplit: response.combatDamageSplit }
+            : {}),
+          ...(response.order !== undefined ? { order: response.order } : {}),
+          ...(response.plannedActions !== undefined
+            ? { plannedActions: response.plannedActions }
+            : {}),
+          ...(response.turnStrategy !== undefined ? { turnStrategy: response.turnStrategy } : {}),
+          ...(response.note !== undefined ? { note: response.note } : {}),
+        },
       },
       request.decidingPlayer,
     );

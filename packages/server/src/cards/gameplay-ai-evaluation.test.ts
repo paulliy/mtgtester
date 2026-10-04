@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { evaluateReviewedFiveGameplayAi } from './gameplay-ai-evaluation';
+import {
+  evaluateArcaneDenialGameplayAi,
+  evaluateFabledPassageGameplayAi,
+  evaluateMyriadLandscapeGameplayAi,
+  evaluateReviewedFiveGameplayAi,
+  evaluateSmotheringTitheGameplayAi,
+} from './gameplay-ai-evaluation';
 
 interface CommittedObservation {
   card: string;
@@ -43,5 +49,80 @@ describe('gameplay-AI quality evaluation (step 15)', () => {
     const report = evaluateReviewedFiveGameplayAi();
     expect(report.liveLlm).toBe('not-run');
     expect(report.note).toContain('not part of the merge gate');
+  });
+
+  it('records Arcane Denial decisions separately for the caster and affected player', () => {
+    const report = evaluateArcaneDenialGameplayAi();
+    expect(report.liveLlm).toBe('not-run');
+    expect(report.runs).toHaveLength(6);
+    expect(report.runs.every((run) => run.decisions > 0)).toBe(true);
+    expect(
+      report.runs
+        .filter((run) => run.providerKind === 'heuristic')
+        .every((run) =>
+          run.observations.some(
+            (observation) =>
+              observation.decidingPlayer === 'P4' && observation.description.startsWith('Draw '),
+          ),
+        ),
+    ).toBe(true);
+    expect(report.note).toContain('Quality-only');
+  });
+
+  it('smothering-tithe-ai-payment-quality — records local-provider draw and tax decisions', () => {
+    const report = evaluateSmotheringTitheGameplayAi();
+    expect(report.liveLlm).toBe('not-run');
+    expect(report.runs).toHaveLength(6);
+    expect(report.runs.every((run) => run.decisions > 0)).toBe(true);
+    const heuristic = report.runs.filter((run) => run.providerKind === 'heuristic');
+    expect(heuristic.every((run) => run.usedSubjectCard)).toBe(true);
+    expect(
+      heuristic.every((run) =>
+        run.observations.some(
+          (observation) =>
+            observation.decidingPlayer === 'P1' &&
+            ['Pay {2}', "Don't pay {2}"].includes(observation.description),
+        ),
+      ),
+    ).toBe(true);
+    expect(report.note).toContain('Quality-only');
+  });
+
+  it('fabled-passage-ai-search-quality — records local-provider activation and search decisions', () => {
+    const report = evaluateFabledPassageGameplayAi();
+    expect(report.liveLlm).toBe('not-run');
+    expect(report.runs).toHaveLength(6);
+    expect(report.runs.every((run) => run.decisions > 0)).toBe(true);
+    const heuristic = report.runs.filter((run) => run.providerKind === 'heuristic');
+    expect(heuristic.every((run) => run.usedSubjectCard)).toBe(true);
+    expect(
+      heuristic.every((run) =>
+        run.observations.some(
+          (observation) =>
+            observation.decidingPlayer === 'P1' &&
+            ['findCard', 'findNothing'].includes(observation.actionType),
+        ),
+      ),
+    ).toBe(true);
+    expect(report.note).toContain('Quality-only');
+  });
+
+  it('myriad-landscape-ai-search-quality — records local-provider activation and grouped-search decisions', () => {
+    const report = evaluateMyriadLandscapeGameplayAi();
+    expect(report.liveLlm).toBe('not-run');
+    expect(report.runs).toHaveLength(6);
+    expect(report.runs.every((run) => run.decisions > 0)).toBe(true);
+    const heuristic = report.runs.filter((run) => run.providerKind === 'heuristic');
+    expect(heuristic.every((run) => run.usedSubjectCard)).toBe(true);
+    expect(
+      heuristic.every((run) =>
+        run.observations.some(
+          (observation) =>
+            observation.decidingPlayer === 'P1' &&
+            ['findCards', 'findNothing'].includes(observation.actionType),
+        ),
+      ),
+    ).toBe(true);
+    expect(report.note).toContain('Quality-only');
   });
 });

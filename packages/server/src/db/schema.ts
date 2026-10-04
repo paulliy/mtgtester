@@ -22,6 +22,8 @@ export const MIGRATIONS_SQL: readonly string[] = [
   // must never overwrite a tag a person may have typed, and it cannot tell them apart later.
   `ALTER TABLE decks ADD COLUMN archetype_source TEXT NOT NULL DEFAULT 'manual'`,
   `ALTER TABLE decks ADD COLUMN archetype_features_json TEXT`,
+  `ALTER TABLE deck_snapshots ADD COLUMN companion_oracle_id TEXT`,
+  `ALTER TABLE deck_snapshots ADD COLUMN commander_oracle_ids TEXT`,
 ];
 
 export const SCHEMA_SQL = `
@@ -58,9 +60,29 @@ CREATE TABLE IF NOT EXISTS deck_snapshots (
   commander_names   TEXT NOT NULL,   -- JSON array
   color_identity    TEXT NOT NULL,   -- JSON array of colors
   card_list_json    TEXT NOT NULL,   -- JSON array of { oracleId, name, quantity }
+  companion_oracle_id TEXT,
+  commander_oracle_ids TEXT,
   imported_at       TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_deck_snapshots_deck ON deck_snapshots(deck_id);
+
+-- Versioned deterministic strategic profiles. Historical rows are immutable; the separate
+-- pointer selects a current profile without rewriting artifacts used by earlier experiments.
+CREATE TABLE IF NOT EXISTS deck_strategy_profiles (
+  deck_snapshot_id       TEXT NOT NULL REFERENCES deck_snapshots(id),
+  profile_version        TEXT NOT NULL,
+  source_definition_hash TEXT NOT NULL,
+  profile_json           TEXT NOT NULL,
+  created_at             TEXT NOT NULL,
+  PRIMARY KEY (deck_snapshot_id, profile_version, source_definition_hash)
+);
+CREATE TABLE IF NOT EXISTS deck_strategy_profile_current (
+  deck_snapshot_id       TEXT PRIMARY KEY REFERENCES deck_snapshots(id),
+  profile_version        TEXT NOT NULL,
+  source_definition_hash TEXT NOT NULL,
+  FOREIGN KEY (deck_snapshot_id, profile_version, source_definition_hash)
+    REFERENCES deck_strategy_profiles(deck_snapshot_id, profile_version, source_definition_hash)
+);
 
 -- ── Written in later phases (created now to settle the schema) ──────────────────────────────
 
@@ -135,6 +157,43 @@ CREATE TABLE IF NOT EXISTS ai_calls (
   turn            INTEGER,
   PRIMARY KEY (game_id, sequence)
 );
+
+-- Physical provider attempts. Unlike ai_calls, this retains rejected, timed-out, cancelled and
+-- model-fallback requests even when a later attempt or local recovery answers the decision.
+CREATE TABLE IF NOT EXISTS ai_attempts (
+  game_id            TEXT NOT NULL REFERENCES games(id),
+  sequence           INTEGER NOT NULL,
+  logical_request_id TEXT NOT NULL,
+  client_attempt     INTEGER NOT NULL,
+  requested_model    TEXT NOT NULL,
+  response_model     TEXT,
+  backend             TEXT,
+  provider_request_id TEXT,
+  status              TEXT NOT NULL,
+  started_at          TEXT NOT NULL,
+  ended_at            TEXT NOT NULL,
+  duration_ms         INTEGER NOT NULL,
+  attempt_json        TEXT NOT NULL,
+  cost_usd            REAL,
+  PRIMARY KEY (game_id, sequence)
+);
+CREATE INDEX IF NOT EXISTS idx_ai_attempts_request
+  ON ai_attempts(game_id, logical_request_id, client_attempt);
+
+-- Policy-level Jev outcomes. This complements ai_attempts: an accepted HTTP response may still
+-- fall through because its shape, probability contract, or calibrated confidence was unsuitable.
+CREATE TABLE IF NOT EXISTS jev_decision_traces (
+  game_id             TEXT NOT NULL REFERENCES games(id),
+  logical_request_id  TEXT NOT NULL,
+  recorded_at         TEXT NOT NULL,
+  mode                TEXT NOT NULL,
+  outcome             TEXT NOT NULL,
+  fallback_reason     TEXT,
+  engine_acceptance   TEXT NOT NULL,
+  trace_json          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_jev_decision_traces_request
+  ON jev_decision_traces(game_id, logical_request_id);
 
 -- One AI seat's post-game review of the game it played (ADR 0022 §7). Keyed by (game, seat)
 -- because a seat reviews once; a re-run replaces rather than accumulates. Separate from

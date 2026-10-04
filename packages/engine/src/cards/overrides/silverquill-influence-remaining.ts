@@ -2,7 +2,7 @@
 
 import type { CardDefinition } from '../definition';
 import type { KeywordAbility } from '../ability';
-import { ATTACHED, auraBuff as auraBuffStatics } from '../templates';
+import { ATTACHED, auraBuff as auraBuffStatics, mana, TAP } from '../templates';
 import { allOf, ofSubtype, ofType, YOURS } from '../selector';
 import { constant } from '../value';
 import { defineCard as defineCardImpl, unimplemented, unsupportedCard } from './index';
@@ -430,10 +430,27 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Tomik, Wielder of Law',
     'Affinity and opponent-attacks trigger are implemented as a self-attack drain.',
   );
-  // Catalog audit silverquill-remaining-batch-2: commander-identity life is pay 1.
-  unsupportedCard(
+  defineCard(
     '71c52bf5-2a5d-488e-8b15-7ef290e4b77d',
     'War Room',
-    'Commander-identity life payment is implemented as pay 1 life.',
+    [HANDLED_LINE_FIXES['71c52bf5-2a5d-488e-8b15-7ef290e4b77d']![0]!],
+    {
+      activatedAbilities: [
+        {
+          costs: [
+            mana('{3}'),
+            TAP,
+            { kind: 'payLifeValue', amount: { kind: 'commanderIdentityColorCount' } },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [{ op: 'draw', count: constant(1) }],
+            description: "Pay life equal to your commanders' color identity colors: draw a card",
+          },
+        },
+      ],
+    },
   );
 }

@@ -16,6 +16,7 @@ import type {
 import type { OracleIndex } from '../cards/oracle-index';
 import type { ArchetypeSource, GameStore } from '../db';
 import { inferArchetype, type ArchetypeResult } from './archetype';
+import { buildStrategyProfile } from './strategy-profile';
 import type { BannedList } from './banned';
 import { importDeck } from './source';
 import { DeckImportError } from './errors';
@@ -197,6 +198,15 @@ export async function runDeckPipeline(
       })),
     };
     const saved = store.insertSnapshot(snapshot);
+    store.insertStrategyProfile(
+      saved.id,
+      buildStrategyProfile({
+        commanders: resolved.commanders,
+        companion: resolved.companion,
+        cards: resolved.cards.map((entry) => ({ card: entry.card, quantity: entry.quantity })),
+        colorIdentity: identity,
+      }),
+    );
     return { ...withValidation, snapshotId: saved.id };
   }
 

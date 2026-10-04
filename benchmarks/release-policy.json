@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "status": "proposed",
+  "quality": {
+    "maximumAcceptableRateDropPoints": 2,
+    "newConfirmedCriticalBlundersAllowed": 0
+  },
+  "latency": { "maximumComparableP95IncreasePercent": 15 },
+  "reliability": { "maximumFailureRate": 0.05 },
+  "cost": {
+    "unit": "ai-seat-active-turn",
+    "proposedCeilingUsd": 0.003,
+    "requireCompleteAccountingForUnqualifiedPass": true,
+    "spendCapUsd": 10
+  },
+  "sampleExpansion": { "onInconclusive": true, "maximumMultiplier": 2 },
+  "criticalCaseIds": [],
+  "verdicts": ["pass", "fail", "inconclusive"]
+}

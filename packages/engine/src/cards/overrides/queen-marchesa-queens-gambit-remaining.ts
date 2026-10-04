@@ -1,7 +1,37 @@
 /** Remaining authored overrides for queen-marchesa-queens-gambit.txt. */
 
 import type { CardDefinition } from '../definition';
+import { manaCost, triggered } from '../templates';
+import { TREASURE } from '../tokens';
+import { constant } from '../value';
 import { defineCard, unsupportedCard } from './index';
+
+const SMOTHERING_TITHE_HANDLED_LINES = [
+  'unrecognized rules text: "Whenever an opponent draws a card, that player may pay {2}. If the player doesn\'t, you create a Treasure token."',
+];
+
+/**
+ * One trigger is queued for each opponent card draw. The drawing opponent may pay through the
+ * normal mana solver; only decline or inability creates the controller's Treasure.
+ */
+const SMOTHERING_TITHE_DEFINITION: Partial<CardDefinition> = {
+  triggers: [
+    triggered(
+      { when: 'drawsCard', player: 'opponent' },
+      {
+        effects: [
+          {
+            op: 'unlessPays',
+            payer: 'eventPlayer',
+            cost: manaCost('{2}'),
+            then: [{ op: 'createToken', spec: TREASURE, count: constant(1) }],
+          },
+        ],
+        description: 'Whenever an opponent draws, create a Treasure unless they pay {2}',
+      },
+    ),
+  ],
+};
 
 const CRACKLING_DOOM: Partial<CardDefinition> = {
   spellAbility: {
@@ -298,11 +328,11 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Shadrix Silverquill',
     'Optional choose-two is mandatory, and the same mode can be chosen twice.',
   );
-  // Catalog audit queen-batch-3: {2} tax omitted; trigger is every draw step.
-  unsupportedCard(
+  defineCard(
     '153376c9-dffd-458c-8ce3-a4c8269bc4e9',
     'Smothering Tithe',
-    'Opponent-draw with a {2} tax is implemented as an unconditional Treasure on every draw step.',
+    SMOTHERING_TITHE_HANDLED_LINES,
+    SMOTHERING_TITHE_DEFINITION,
   );
   // Catalog audit queen-batch-7: Equip {2} is authored; current Oracle is Equip {3}.
   unsupportedCard(

@@ -33,6 +33,7 @@ function canonical(value: unknown): string {
 }
 
 const REASONS: Record<string, string> = {
+  'Toxic Deluge': 'Pay-X-life additional cost is implemented as loseLife on resolution.',
   'Aether Channeler': 'Return-another-target bounce is implemented as untargeted returnOneToHand.',
   'Blasphemous Edict':
     'The thirteen-creature {B} alternative cost is claimed without an alternativeCast.',
@@ -74,7 +75,6 @@ const REASONS: Record<string, string> = {
     'Counter target is any stack object, not only spells or abilities that target you or your creature.',
   Smokestack: 'Upkeep sacrifice hits every player for 1 and enters with a soot counter.',
   'The Ooze': 'Leaves-the-battlefield is implemented as dies.',
-  'Toxic Deluge': 'Pay-X-life additional cost is implemented as loseLife on resolution.',
   'Twilight Diviner':
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
   'Vigean Graftmage': 'Graft is claimed without enters-with-counters or move-counter behavior.',
@@ -136,7 +136,6 @@ const REASONS: Record<string, string> = {
   'Shielded by Faith': 'Optional attach is implemented as mandatory attach.',
   'Tomik, Wielder of Law':
     'Affinity and opponent-attacks trigger are implemented as a self-attack drain.',
-  'War Room': 'Commander-identity life payment is implemented as pay 1 life.',
   'Combat Calligrapher':
     'Inklings-cannot-attack-you is omitted, and the token trigger is unscoped.',
   Comeuppance:
@@ -158,8 +157,6 @@ const REASONS: Record<string, string> = {
   'Humble Defector': 'Activate-only-during-your-turn is implemented as timing any.',
   'Selfless Squire':
     'All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.',
-  'Smothering Tithe':
-    'Opponent-draw with a {2} tax is implemented as an unconditional Treasure on every draw step.',
   'Teyo, Geometric Tactician':
     'The −2 directional attack restriction is claimed without an implementation.',
   'Weathered Wayfarer':
@@ -189,7 +186,6 @@ const REASONS: Record<string, string> = {
   "Songbirds' Blessing":
     'Reveal-until-Aura with optional battlefield and hand fallback is unimplemented.',
   'Spirit Mantle': 'Protection from creatures is unimplemented.',
-  'Fabled Passage': 'The four-or-more-lands untap is omitted from the basic-land search.',
   'Mob Rule': 'Until-end-of-turn steal is implemented as permanent gainControl.',
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
   'Canoptek Tomb Sentinel':
@@ -210,7 +206,6 @@ const REASONS: Record<string, string> = {
   'Hexmark Destroyer': 'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
   'Imotekh the Stormlord':
     'The artifact-cards-leave-graveyard trigger is claimed without an implementation.',
-  'Myriad Landscape': 'Share-a-land-type search is implemented as any two basics.',
   'Mystic Forge':
     'Top-of-library cast omits colorless spells, and exile-top is implemented as mill.',
   'Triarch Praetorian': 'Enters-from-graveyard is implemented as any enter.',
@@ -238,7 +233,6 @@ const REASONS: Record<string, string> = {
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
   'Lightning Runner':
     'Untap all creatures you control is implemented as untapEach of all permanents you control.',
-  'Arcane Denial': "Next-turn upkeep draws expire at this turn's cleanup.",
   'Aetheric Amplifier': 'Choose-one is implemented as two independent activated abilities.',
   'Canoptek Spyder':
     'Vehicle is selected as a type rather than a subtype, so Vehicles do not trigger the draw.',
@@ -328,17 +322,27 @@ const REASONS: Record<string, string> = {
 };
 
 describe('Marchesa catalog audit containment', () => {
+  const restoredCards = new Set([
+    'Arcane Denial',
+    'Fabled Passage',
+    'Myriad Landscape',
+    'Smothering Tithe',
+    'War Room',
+  ]);
+
   // catalog-audit-contained — required id for contained-catalog manifest traces.
 
   it('pins complete Oracle records for the reviewed cards', () => {
-    expect(fixture.cards.map(({ card }) => card.name).sort()).toEqual(Object.keys(REASONS).sort());
+    expect(fixture.cards.map(({ card }) => card.name).sort()).toEqual(
+      [...Object.keys(REASONS), ...restoredCards].sort(),
+    );
     for (const { sha256, card } of fixture.cards) {
       expect(createHash('sha256').update(canonical(card)).digest('hex'), card.name).toBe(sha256);
     }
   });
 
   it('marks both real IDs and fixture aliases explicitly unsupported', () => {
-    for (const { card } of fixture.cards) {
+    for (const { card } of fixture.cards.filter(({ card }) => !restoredCards.has(card.name))) {
       const reason = REASONS[card.name]!;
       const real = interpretCard(card);
       const alias = interpretCard({ ...card, oracleId: fixtureOracleId(card.name) });
@@ -353,7 +357,7 @@ describe('Marchesa catalog audit containment', () => {
   });
 
   it('does not leave an executable substitute for the contained cards', () => {
-    for (const { card } of fixture.cards) {
+    for (const { card } of fixture.cards.filter(({ card }) => !restoredCards.has(card.name))) {
       const override = getOverride(card.oracleId)!;
       expect(override.unsupportedReason, card.name).toBeDefined();
       expect(JSON.stringify(override.def), card.name).toBe('{}');

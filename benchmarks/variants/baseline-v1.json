@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "description": "Frozen shared-primer strategist context used before the v2 split.",
+  "strategyContextVersion": "v1",
+  "tacticianPromptVersion": "legacy-v1",
+  "env": {}
+}

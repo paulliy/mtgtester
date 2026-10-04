@@ -33,6 +33,7 @@ import type {
 import { GameSocket, type ConnectionState } from '../lib/socket';
 import { resetBoardAnchors } from '../composables/useBoardAnchors';
 import { resetCombatStrikes } from '../composables/useCombatStrikes';
+import { pushRecentId, readRecentIds, saveRecentIds } from '../lib/recentSetup';
 
 /** Log lines kept in memory. A long game emits thousands; the scroller only shows the tail. */
 const MAX_LOG_LINES = 4_000;
@@ -190,10 +191,41 @@ export const useGameStore = defineStore('game', () => {
   );
 
   let socket: GameSocket | null = null;
+  let pendingRecentDeckSeat: PlayerId | null = null;
+  /**
+   * The named bot pod a start was requested with, held until the server confirms that start.
+   * Recents must describe games the player actually played, so this is written on `gameStarted`
+   * for the same reason an imported deck is written from the snapshot ID that answer returns
+   * rather than from what the setup form asked for. A rejected or dropped start clears it, so a
+   * failure can never write a pod into the history later.
+   */
+  let pendingRecentPodId: string | null = null;
+
+  /** Forget an unconfirmed start's recents, so a failed or superseded one can never write. */
+  function clearPendingRecents(): void {
+    pendingRecentDeckSeat = null;
+    pendingRecentPodId = null;
+  }
+
+  /** Put a confirmed ID at the head of one local recents list. */
+  function rememberRecentId(key: string, id: string): void {
+    if (typeof localStorage === 'undefined') return;
+    saveRecentIds(key, pushRecentId(readRecentIds(key), id));
+  }
 
   function handle(message: ServerToClientMessage): void {
     switch (message.type) {
       case 'gameStarted': {
+        if (pendingRecentDeckSeat !== null) {
+          const selected = message.payload.seats.find(
+            (seat) => seat.seat === pendingRecentDeckSeat,
+          );
+          if (selected) rememberRecentId('mtg-recent-deck-ids', selected.deckId);
+        }
+        if (pendingRecentPodId !== null) {
+          rememberRecentId('mtg-recent-pod-ids', pendingRecentPodId);
+        }
+        clearPendingRecents();
         const resuming = gameId.value === message.payload.gameId;
         gameId.value = message.payload.gameId;
         seed.value = message.payload.seed;
@@ -338,6 +370,8 @@ export const useGameStore = defineStore('game', () => {
         break;
 
       case 'error': {
+        // A rejected start never happened, so nothing it asked to be remembered may be written.
+        clearPendingRecents();
         const detail = [
           message.payload.message,
           ...(message.payload.unmodeledCards ?? []).map(
@@ -356,6 +390,8 @@ export const useGameStore = defineStore('game', () => {
   function connect(): void {
     socket ??= new GameSocket(handle, (next) => {
       connection.value = next;
+      // A start whose answer never arrived is not a start either.
+      if (next === 'closed') clearPendingRecents();
       if (next === 'open' && sessionToken.value !== null && gameMode.value === 'singlePlayer') {
         socket?.send({
           type: 'resumeGame',
@@ -373,9 +409,21 @@ export const useGameStore = defineStore('game', () => {
     mode: GameMode = 'spectator',
     selectedHumanSeat?: PlayerId,
     reflectionEnabled = false,
+    previewId?: string,
+    /** A named bot pod to remember, but only once the server confirms this start. */
+    recentPodId?: string,
   ): void {
     connect();
     errors.value = [];
+    const chosenSeat = selectedHumanSeat ?? 'P1';
+    pendingRecentDeckSeat =
+      mode === 'singlePlayer' && sources[Number(chosenSeat.slice(1)) - 1]?.kind !== 'pool'
+        ? chosenSeat
+        : null;
+    pendingRecentPodId =
+      mode === 'singlePlayer' && recentPodId !== undefined && recentPodId !== ''
+        ? recentPodId
+        : null;
     // A player game should run to the next meaningful human decision by default, rather than
     // making a new player watch a 1.2s delay for every bot choice.
     if (mode === 'singlePlayer' && paceMs.value === DEFAULT_PACE_MS) paceMs.value = 0;
@@ -388,6 +436,7 @@ export const useGameStore = defineStore('game', () => {
       // `AI_REFLECTION_ENABLED` default in charge.
       ...(reflectionEnabled && kind === 'ai' && { reflectionEnabled: true }),
       ...(requestedSeed !== undefined && requestedSeed !== '' && { seed: requestedSeed }),
+      ...(previewId !== undefined && { previewId }),
     };
     socket?.send({
       type: 'startGame',

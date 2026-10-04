@@ -1310,16 +1310,6 @@
           "gameplayAiEvidence": "not-evaluated"
         },
         {
-          "oracleId": "2549bc57-9ffb-4053-9f10-f2a5f792b845",
-          "name": "Myriad Landscape",
-          "oracleSha256": "696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b",
-          "implementationStatus": "unsupported",
-          "unsupportedReason": "Share-a-land-type search is implemented as any two basics.",
-          "engineEvidence": "contained",
-          "viewerEvidence": "not-applicable",
-          "gameplayAiEvidence": "not-evaluated"
-        },
-        {
           "oracleId": "994bc16d-fdc6-475c-96df-beeb4d5aa03e",
           "name": "Mystic Forge",
           "oracleSha256": "5e8354b233eff99979ff0dd2d28246a320fd9c38c6c7f7b4467c7072ec2065cc",
@@ -5055,12 +5045,6 @@
           "evidenceNote": "Last-write-wins remains modeled:false. Equipped-creature combat damage is implemented as any equipped creature."
         },
         {
-          "oracleId": "2549bc57-9ffb-4053-9f10-f2a5f792b845",
-          "name": "Myriad Landscape",
-          "implementationStatus": "unsupported",
-          "evidenceNote": "Last-write-wins remains modeled:false. Share-a-land-type search is implemented as any two basics."
-        },
-        {
           "oracleId": "994bc16d-fdc6-475c-96df-beeb4d5aa03e",
           "name": "Mystic Forge",
           "implementationStatus": "unsupported",
@@ -5595,16 +5579,16 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 43,
-      "reviewedOracleIds": 43,
+      "uniqueOracleIds": 42,
+      "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "uniqueOracleIds": 55,
-      "reviewedOracleIds": 55,
-      "grandfatheredOracleIds": 0,
+      "reviewedOracleIds": 54,
+      "grandfatheredOracleIds": 1,
       "status": "reviewed"
     },
     {

@@ -14,6 +14,15 @@ export const ENGINE_VERSION = '0.2.0-phase2';
 export { Engine } from './engine';
 export type { EngineDriver, EngineOptions } from './engine';
 export type { PreparedScenarioSpec } from './testing/prepared-scenario';
+export { buildGuardedCandidateDefinition } from './testing/candidate-definition';
+export {
+  FABLED_PASSAGE_CANDIDATE,
+  FABLED_PASSAGE_HANDLED_LINES,
+} from './cards/overrides/queen-marchesa-queens-gambit';
+export {
+  MYRIAD_LANDSCAPE_CANDIDATE,
+  MYRIAD_LANDSCAPE_HANDLED_LINES,
+} from './cards/overrides/necron-dynasties';
 
 // Game construction.
 export { createGame } from './state/game';

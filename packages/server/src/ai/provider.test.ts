@@ -11,6 +11,7 @@ import {
 import { DEFAULT_AI_CONFIG } from './config';
 import { AiCallLogger } from './logger';
 import type { Engine } from '@mtg/engine';
+import type { JevTacticalPolicy } from './jev-policy';
 
 describe('OpenAiDecisionProvider', () => {
   const mockEngine = {
@@ -81,6 +82,159 @@ describe('OpenAiDecisionProvider', () => {
 
     expect(res.actionId).toBe(0);
     expect(mockEngine.view).toHaveBeenCalledWith('P1');
+    expect(mockClient.requestDecision).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses a validated Jev answer without calling the chat tactician', async () => {
+    const mockClient: AiClient = {
+      activeModel: 'chat-model',
+      requestDecision: vi.fn(),
+    };
+    const jevPolicy: JevTacticalPolicy = {
+      decide: vi.fn().mockResolvedValue({
+        kind: 'answered',
+        response: { requestId: 'req-1', actionId: 1 },
+        meta: {
+          model: 'typesafe/jev-1.13',
+          requestedModel: 'typesafe/jev-1.13',
+          responseModel: 'typesafe/jev-1.13',
+          promptTokens: 100,
+          responseTokens: 5,
+          latencyMs: 200,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{}',
+          costSource: 'unknown',
+        },
+        classification: {
+          shape: 'action_only',
+          jevSupported: true,
+          reason: 'supported_action_only',
+          actionCount: 2,
+          targetSlotCount: 0,
+        },
+        confidence: 0.9,
+        topTwoMargin: 0.8,
+        probabilities: { action_0: 0.1, action_1: 0.9 },
+      }),
+    };
+    const logger = new AiCallLogger(null, 'g1');
+    const provider = new OpenAiDecisionProvider(
+      mockClient,
+      mockQueue,
+      mockEngine,
+      DEFAULT_AI_CONFIG,
+      logger,
+      undefined,
+      undefined,
+      { policy: jevPolicy, mode: 'active' },
+    );
+
+    await expect(provider.decide(fixtureReq)).resolves.toMatchObject({ actionId: 1 });
+    expect(mockClient.requestDecision).not.toHaveBeenCalled();
+    expect(logger.sourceFor('req-1')).toBe('jev');
+  });
+
+  it('falls through from Jev to the original chat tactician', async () => {
+    const mockClient: AiClient = {
+      activeModel: 'chat-model',
+      requestDecision: vi.fn().mockResolvedValue({
+        response: { requestId: 'req-1', actionId: 0 },
+        meta: {
+          model: 'chat-model',
+          promptTokens: 10,
+          responseTokens: 5,
+          latencyMs: 100,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{"actionId":0}',
+        },
+      }),
+    };
+    const jevPolicy: JevTacticalPolicy = {
+      decide: vi.fn().mockResolvedValue({
+        kind: 'fallthrough',
+        reason: 'low_confidence',
+        detail: 'confidence=0.2, margin=0.1',
+        classification: {
+          shape: 'action_only',
+          jevSupported: true,
+          reason: 'supported_action_only',
+          actionCount: 2,
+          targetSlotCount: 0,
+        },
+      }),
+    };
+    const provider = new OpenAiDecisionProvider(
+      mockClient,
+      mockQueue,
+      mockEngine,
+      DEFAULT_AI_CONFIG,
+      undefined,
+      undefined,
+      undefined,
+      { policy: jevPolicy, mode: 'active' },
+    );
+
+    await expect(provider.decide(fixtureReq)).resolves.toMatchObject({ actionId: 0 });
+    expect(jevPolicy.decide).toHaveBeenCalledTimes(1);
+    expect(mockClient.requestDecision).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs Jev shadow evidence without changing the chat tactician answer', async () => {
+    const mockClient: AiClient = {
+      activeModel: 'chat-model',
+      requestDecision: vi.fn().mockResolvedValue({
+        response: { requestId: 'req-1', actionId: 0 },
+        meta: {
+          model: 'chat-model',
+          promptTokens: 10,
+          responseTokens: 5,
+          latencyMs: 100,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{"actionId":0}',
+        },
+      }),
+    };
+    const jevPolicy: JevTacticalPolicy = {
+      decide: vi.fn().mockResolvedValue({
+        kind: 'answered',
+        response: { requestId: 'req-1', actionId: 1 },
+        meta: {
+          model: 'typesafe/jev-1.13',
+          promptTokens: 10,
+          responseTokens: 1,
+          latencyMs: 10,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{}',
+        },
+        classification: {
+          shape: 'action_only',
+          jevSupported: true,
+          reason: 'supported_action_only',
+          actionCount: 2,
+          targetSlotCount: 0,
+        },
+        confidence: 0.99,
+        topTwoMargin: 0.98,
+        probabilities: { action_0: 0.01, action_1: 0.99 },
+      }),
+    };
+    const provider = new OpenAiDecisionProvider(
+      mockClient,
+      mockQueue,
+      mockEngine,
+      DEFAULT_AI_CONFIG,
+      undefined,
+      undefined,
+      undefined,
+      { policy: jevPolicy, mode: 'shadow' },
+    );
+
+    await expect(provider.decide(fixtureReq)).resolves.toMatchObject({ actionId: 0 });
+    expect(jevPolicy.decide).toHaveBeenCalledTimes(1);
     expect(mockClient.requestDecision).toHaveBeenCalledTimes(1);
   });
 

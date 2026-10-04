@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "caseId": "priority-removal-001",
+  "contentHash": "085134150a0d44600ad33156572f51caa5810c00b927f1aa47772c6d8d49ca33",
+  "role": "tactician",
+  "categories": ["interaction", "targeting", "small-board"],
+  "sourceGroup": "starter-synthetic-001",
+  "observerSeat": "P1",
+  "turn": 6,
+  "phase": "precombatMain",
+  "step": null,
+  "eventSequence": 42,
+  "supportedEngineVersion": "754f42240f2411a096dddbf123f21b0dd2f9941304e39214994b082a7e8ba08a",
+  "supportedCardDefinitionHash": "16788a4e88b3e7e5f68812c7f0da07dab0202d1e4f9ad809343d540f54d6b451",
+  "input": {
+    "request": {
+      "requestId": "starter-tactical-001",
+      "gameId": "starter",
+      "turn": 6,
+      "activePlayer": "P2",
+      "decidingPlayer": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "decisionType": "priority",
+      "prompt": "Opponent presents a lethal public attacker. Choose an action.",
+      "legalActions": [
+        { "id": 0, "type": "pass", "description": "Pass priority" },
+        {
+          "id": 1,
+          "type": "castSpell",
+          "description": "Cast Swords to Plowshares targeting threat",
+          "targets": [{ "slot": 0, "options": ["threat"] }]
+        }
+      ]
+    },
+    "view": {
+      "seat": "P1",
+      "life": 5,
+      "hand": [
+        {
+          "id": "swords",
+          "name": "Swords to Plowshares",
+          "manaCost": "{W}",
+          "typeLine": "Instant",
+          "oracleText": "Exile target creature. Its controller gains life equal to its power."
+        }
+      ],
+      "deck": [{ "id": "deck-0", "name": "Plains" }],
+      "graveyard": [],
+      "commanders": [{ "name": "Test Commander", "zone": "command", "castCount": 1 }],
+      "availableMana": { "W": 1 },
+      "manaSources": [{ "name": "Plains", "symbols": ["W"], "count": 1 }],
+      "opponents": [
+        {
+          "seat": "P2",
+          "life": 30,
+          "handSize": 3,
+          "librarySize": 70,
+          "graveyard": [],
+          "commanders": [{ "name": "Threat Commander", "zone": "battlefield", "castCount": 1 }],
+          "poisonCounters": 0,
+          "commanderDamageDealtToYou": 18
+        }
+      ],
+      "revealedLibraryTops": [],
+      "battlefield": [
+        {
+          "id": "threat",
+          "controller": "P2",
+          "name": "Threat Commander",
+          "typeLine": "Legendary Creature",
+          "oracleText": "Trample",
+          "power": 6,
+          "toughness": 6,
+          "keywords": ["Trample"],
+          "tapped": false,
+          "status": []
+        }
+      ],
+      "exile": [],
+      "stack": [],
+      "recentLog": ["T6 P2 phaseBegin phase=precombatMain"]
+    },
+    "guidance": { "strategy": null, "recentDecisions": [] }
+  },
+  "gold": {
+    "labelVersion": "starter-label-v2",
+    "acceptable": [{ "actionId": 1, "targets": [{ "slot": 0, "choice": "threat" }] }],
+    "exhaustive": true,
+    "tier": "critical",
+    "rationale": "The visible commander represents lethal commander damage and removal is available.",
+    "evidence": [
+      "18 commander damage already received",
+      "6-power visible commander",
+      "one white mana available"
+    ],
+    "confidence": "high",
+    "reviewer": "starter-fixture",
+    "reviewedAt": "2026-09-20",
+    "engineSupport": "supported"
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "evidenceId": "smothering-tithe-ai-payment-quality",
+  "generatedAt": "generated-by-evaluateSmotheringTitheGameplayAi",
+  "liveLlm": "not-run",
+  "note": "Quality-only observations from an arranged opponent-draw and optional-payment position. Deterministic engine and viewer evidence independently prove rules behavior; live LLM was not run.",
+  "scenarioId": "smothering-tithe-viewer-pay",
+  "card": "Smothering Tithe",
+  "subject": "Lab Pending Spell",
+  "runs": [
+    {
+      "providerKind": "random",
+      "seed": "card-lab-smothering-tithe-viewer-pay-v1-random-run-1",
+      "decisions": 1,
+      "casts": 0,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        }
+      ],
+      "usedSubjectCard": false
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-smothering-tithe-viewer-pay-v1-heuristic-run-1",
+      "decisions": 3,
+      "casts": 2,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Lab Pending Spell ({1})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "decline",
+          "description": "Don't pay {2}"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Tithe Secret Pay ({0})"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "random",
+      "seed": "card-lab-smothering-tithe-viewer-pay-v1-random-run-2",
+      "decisions": 1,
+      "casts": 0,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "passAndYieldTurn",
+          "description": "Pass and yield until end of turn"
+        }
+      ],
+      "usedSubjectCard": false
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-smothering-tithe-viewer-pay-v1-heuristic-run-2",
+      "decisions": 3,
+      "casts": 2,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Lab Pending Spell ({1})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "payCost",
+          "description": "Pay {2}"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Tithe Secret Pay ({0})"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "random",
+      "seed": "card-lab-smothering-tithe-viewer-pay-v1-random-run-3",
+      "decisions": 3,
+      "casts": 2,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Lab Pending Spell ({1})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "payCost",
+          "description": "Pay {2}"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Tithe Secret Pay ({0})"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-smothering-tithe-viewer-pay-v1-heuristic-run-3",
+      "decisions": 3,
+      "casts": 2,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Lab Pending Spell ({1})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "decline",
+          "description": "Don't pay {2}"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Tithe Secret Pay ({0})"
+        }
+      ],
+      "usedSubjectCard": true
+    }
+  ],
+  "workspaceRevision": {
+    "gitHead": "5b9f5f52332266e7f2b8c0b07d30b918dd22173f",
+    "sourceSha256": "10c71bf9dfc973d7a3e9b3df7dd9aa4d71e9ae0c04448e2e1f0295ccbea03ecc",
+    "files": {
+      "docs/plans/fail-closed-card-restoration.md": "29cb11a20b41a271b78f51ec699cf4236aa0a904888b26446643a697e2f0e7dc",
+      "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts": "1da25c928fcb9acd216baf330d9027660e3b33f6e4ecd31340a0832064a77c73",
+      "packages/engine/src/effects/resolve.ts": "97e4667ff74546aa7abc3b8c119d411d80d8ead0de8a4d2566850f24136946c2",
+      "packages/engine/src/index.ts": "cfd7a6216e8607e11856dedd1ff5a6b84f530220fad1ce355a167b2159e25148",
+      "packages/engine/src/sba/sba.ts": "200cc6a945957b714788d4fbd199831d0af29605756703aa043c6640e05f7f22",
+      "packages/engine/src/state/types.ts": "57e5b3979dce9d8e56b7ccdd67d4ec2b32757ba1fdf3783cdfc31dbffbe7b01a",
+      "packages/engine/src/view/spectator.ts": "7948e1b04d8e678856b1c7ac7cc6f5ac475af0856f3a7a0d3ade632979598b7b",
+      "packages/engine/tests/fail-closed-restoration.test.ts": "74686c630bb7f86ce5bf0e725f594b3e4ba057b7584666b62ca86e335953d2f5",
+      "packages/engine/tests/smothering-tithe.test.ts": "10f93ae96ba6095cc455756209ea0fb3e02edba191a3a9124b1b9d5d183ff222",
+      "packages/server/src/cards/card-test-scenarios.ts": "6d567d1df0e083821cb18a4b7fea4c1c0b3803be1f943828be0c459811b448a4",
+      "packages/server/src/cards/card-test-scenarios.test.ts": "d417ce8c923ca7f23cbf29bae68361a9a1fcc8987066d54c8bf9782fad358fd0",
+      "packages/server/src/cards/gameplay-ai-evaluation.ts": "6b5299b36d2d817c588f394cdc372f7a0d2307d9ee9bf373c094af2a00bf8f8e",
+      "packages/server/src/cards/gameplay-ai-evaluation.test.ts": "dd0cb9b0747ee1a0f520965a11fc77a5e0a1afed9f8623c7f9f5e8b23508ee89",
+      "packages/server/fixtures/card-verification-manifest.json": "dd106e951e167bb75b801f5b99340aace55c7d1ffdc11cd089617b32600d6297",
+      "apps/web/e2e/card-test-lab.spec.ts": "66e6fe1ac0c81a8e261033aefea176ff60a0796f70515f9a615f9fd03b39fcd6",
+      "scripts/generate-smothering-tithe-evidence.ts": "594207e0377f7720f6969d53ce9bcb135fb24943babf900a4c151b6f38140857"
+    }
+  }
+}

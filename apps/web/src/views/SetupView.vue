@@ -8,10 +8,11 @@
  * every deck a user owns. Imported decks are still supported and are pre-flighted, so the
  * blocking card names come back here rather than as a mid-game halt.
  */
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import type { Color, GameMode, ProviderKind, SeatSource } from '@mtg/shared';
+import type { Color, GameMode, ProviderKind, SeatSource, SetupPreview } from '@mtg/shared';
 import { useGameStore } from '../stores/game';
+import PlayMyDeckSetup from './PlayMyDeckSetup.vue';
 
 const store = useGameStore();
 const router = useRouter();
@@ -34,6 +35,10 @@ const reflectionEnabled = ref(false);
 const seed = ref('');
 const inputs = ref<string[]>(Array.from({ length: SEATS }, () => ''));
 const tags = ref<string[]>(Array.from({ length: SEATS }, () => ''));
+const persistence = ref(false);
+const advancedPreview = ref<SetupPreview | null>(null);
+const previewError = ref('');
+const previewBusy = ref(false);
 
 /**
  * Decks that have already been imported and measured for engine model coverage (`bun run
@@ -59,6 +64,12 @@ const selectedKnown = ref<string[]>(Array.from({ length: SEATS }, () => ''));
 
 onMounted(async () => {
   try {
+    const response = await fetch('/api/saved-decks');
+    if (response.ok) persistence.value = ((await response.json()) as { enabled: boolean }).enabled;
+  } catch {
+    persistence.value = false;
+  }
+  try {
     const response = await fetch('/api/known-decks');
     if (!response.ok)
       throw new Error(
@@ -71,6 +82,14 @@ onMounted(async () => {
     knownDecksLoaded.value = true;
   }
 });
+
+watch(
+  [mode, gameMode, humanSeat, advancedPodSetup, providerKind, seed, inputs, tags, selectedKnown],
+  () => {
+    advancedPreview.value = null;
+  },
+  { deep: true },
+);
 
 function pickKnown(index: number, slug: string): void {
   selectedKnown.value[index] = slug;
@@ -112,15 +131,43 @@ function sourceFor(index: number): SeatSource {
   return { kind: 'plaintext', text: raw, ...(tag !== '' && { archetypeTag: tag }) };
 }
 
+async function inspectAdvanced(): Promise<void> {
+  previewBusy.value = true;
+  previewError.value = '';
+  const sources = Array.from({ length: SEATS }, (_, i) => sourceFor(i));
+  try {
+    const response = await fetch('/api/setup-preview', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        seats: sources,
+        providerKind: providerKind.value,
+        seed: seed.value.trim(),
+        gameMode: gameMode.value,
+        ...(gameMode.value === 'singlePlayer' && { humanSeat: humanSeat.value }),
+      }),
+    });
+    const result = (await response.json()) as SetupPreview & { message?: string };
+    if (!response.ok) throw new Error(result.message ?? 'Preview failed.');
+    advancedPreview.value = result;
+  } catch (reason) {
+    previewError.value = reason instanceof Error ? reason.message : String(reason);
+  } finally {
+    previewBusy.value = false;
+  }
+}
+
 function start(): void {
+  if (!advancedPreview.value || advancedPreview.value.blockers.length > 0) return;
   const sources = Array.from({ length: SEATS }, (_, i) => sourceFor(i));
   store.startGame(
     sources,
     providerKind.value,
-    seed.value.trim(),
+    advancedPreview.value.seed,
     gameMode.value,
     humanSeat.value,
     reflectionEnabled.value,
+    advancedPreview.value.previewId,
   );
   void router.push('/game');
 }
@@ -137,251 +184,299 @@ function start(): void {
       <span class="header-mark" aria-hidden="true">SETUP</span>
     </header>
 
-    <section class="panel" aria-labelledby="game-mode-label">
-      <h2 id="game-mode-label" class="panel-label">Game mode</h2>
-      <div class="choice-grid">
-        <label class="choice-card" :class="{ selected: gameMode === 'spectator' }">
-          <input v-model="gameMode" class="choice-input" type="radio" value="spectator" />
-          <span class="choice-indicator" aria-hidden="true"></span>
-          <span class="choice-copy">
-            <strong>Spectator simulation</strong>
-            <em>Four bots play while you watch, scrub, and inspect every hand.</em>
-          </span>
-        </label>
-        <label class="choice-card" :class="{ selected: gameMode === 'singlePlayer' }">
-          <input v-model="gameMode" class="choice-input" type="radio" value="singlePlayer" />
-          <span class="choice-indicator" aria-hidden="true"></span>
-          <span class="choice-copy">
-            <strong>Play against three bots</strong>
-            <em>Your choices pause indefinitely; opponents' hidden cards stay hidden.</em>
-          </span>
-        </label>
-      </div>
+    <PlayMyDeckSetup />
 
-      <div v-if="gameMode === 'singlePlayer'" class="seat-picker">
-        <span class="field-label">Your seat</span>
-        <div class="seat-options" role="radiogroup" aria-label="Your seat">
-          <button
-            v-for="index in SEATS"
-            :key="index"
-            type="button"
-            class="seat-pill"
-            :class="{ active: humanSeat === `P${index}` }"
-            :aria-checked="humanSeat === `P${index}`"
-            role="radio"
-            @click="humanSeat = `P${index}`"
-          >
-            P{{ index }}
-          </button>
-        </div>
-      </div>
-    </section>
+    <details class="advanced-setup">
+      <summary>Advanced pod setup</summary>
 
-    <section class="panel" aria-labelledby="decks-label">
-      <h2 id="decks-label" class="panel-label">Decks</h2>
-      <div class="choice-grid">
-        <label class="choice-card" :class="{ selected: mode === 'pool' }">
-          <input v-model="mode" class="choice-input" type="radio" value="pool" />
-          <span class="choice-indicator" aria-hidden="true"></span>
-          <span class="choice-copy">
-            <strong>Generate from the engine-supported pool</strong>
-            <em>Always playable. Generated decks use cards the engine can model reliably.</em>
-          </span>
-        </label>
-        <label class="choice-card" :class="{ selected: mode === 'import' }">
-          <input v-model="mode" class="choice-input" type="radio" value="import" />
-          <span class="choice-indicator" aria-hidden="true"></span>
-          <span class="choice-copy">
-            <strong>Import decklists</strong>
-            <em>Paste a Moxfield / Archidekt URL or a plaintext decklist to pre-flight.</em>
-          </span>
-        </label>
-        <label class="choice-card" :class="{ selected: mode === 'known' }">
-          <input v-model="mode" class="choice-input" type="radio" value="known" />
-          <span class="choice-indicator" aria-hidden="true"></span>
-          <span class="choice-copy">
-            <strong>Choose a modeled deck</strong>
-            <em>Start with a committed deck whose unique cards are fully modeled by the engine.</em>
-          </span>
-        </label>
-      </div>
-
-      <div v-if="mode === 'known'" class="import-panel known-panel">
-        <p v-if="knownDecksError !== null" class="fetch-error">
-          Modeled decks unavailable: {{ knownDecksError }}
-        </p>
-        <p v-else class="hint">
-          Choose a modeled deck for {{ advancedPodSetup ? 'each seat' : 'your seat' }}. The other
-          seats use generated, engine-supported opponents unless you enable all four decks.
-        </p>
-        <div v-for="index in displayedSeats" :key="index" class="deck-row">
-          <span class="seat-badge">P{{ index }}</span>
-          <div class="deck-inputs">
-            <span class="field-label">Modeled deck</span>
-            <div v-if="knownDecks.length > 0" class="known-decks">
-              <button
-                v-for="deck in knownDecks"
-                :key="deck.slug"
-                type="button"
-                class="known-deck"
-                :class="{ selected: selectedKnown[index - 1] === deck.slug }"
-                :aria-pressed="selectedKnown[index - 1] === deck.slug"
-                @click="pickKnown(index - 1, deck.slug)"
-              >
-                <span class="deck-avatar" aria-hidden="true">{{
-                  deck.name.slice(0, 1).toUpperCase()
-                }}</span>
-                <span class="deck-chip-copy">
-                  <span class="deck-chip-name">{{ deck.name }}</span>
-                  <span class="deck-chip-meta">
-                    <span class="deck-chip-archetype">{{ deck.archetypeTag }}</span>
-                    {{ deck.modeledCards }}/{{ deck.uniqueCards }} modeled
-                  </span>
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-        <p v-if="knownDecks.length === 0 && knownDecksError === null" class="hint">
-          {{
-            knownDecksLoaded
-              ? 'No fully modeled, legal Commander deck fixtures are available yet.'
-              : 'Loading modeled decks...'
-          }}
-        </p>
-        <label class="advanced-pod">
-          <input v-model="advancedPodSetup" type="checkbox" />
-          <span>Choose all four decks instead</span>
-        </label>
-      </div>
-
-      <div v-if="mode === 'import'" class="import-panel">
-        <p v-if="!advancedPodSetup" class="hint">
-          Import your deck; the other three seats use generated, engine-supported opponents.
-        </p>
-        <p v-if="knownDecksError !== null" class="fetch-error">
-          Known decks unavailable: {{ knownDecksError }}
-        </p>
-
-        <div v-for="index in displayedSeats" :key="index" class="deck-row">
-          <span class="seat-badge">P{{ index }}</span>
-          <div class="deck-inputs">
-            <span v-if="knownDecks.length > 0" class="field-label">Known deck quick picks</span>
-            <div v-if="knownDecks.length > 0" class="known-decks">
-              <button
-                v-for="deck in knownDecks"
-                :key="deck.slug"
-                type="button"
-                class="known-deck"
-                :class="{ selected: selectedKnown[index - 1] === deck.slug }"
-                :aria-pressed="selectedKnown[index - 1] === deck.slug"
-                @click="pickKnown(index - 1, deck.slug)"
-              >
-                <span class="deck-avatar" aria-hidden="true">{{
-                  deck.name.slice(0, 1).toUpperCase()
-                }}</span>
-                <span class="deck-chip-copy">
-                  <span class="deck-chip-name">{{ deck.name }}</span>
-                  <span class="deck-chip-meta">
-                    <span class="deck-chip-archetype">{{ deck.archetypeTag }}</span>
-                    {{ deck.modeledCards }}/{{ deck.uniqueCards }} modeled
-                  </span>
-                </span>
-              </button>
-            </div>
-            <textarea
-              v-model="inputs[index - 1]"
-              class="deck-textarea"
-              rows="3"
-              placeholder="https://moxfield.com/decks/… or a pasted decklist"
-              @input="selectedKnown[index - 1] = ''"
-            ></textarea>
-          </div>
-          <label class="tag-field">
-            <span>Archetype tag</span>
-            <!-- Leaving this blank is the normal path: the server classifies the resolved list
-                 (ADR 0022 §5). Anything typed here wins outright and is never overwritten. -->
-            <input
-              v-model="tags[index - 1]"
-              type="text"
-              placeholder="auto-detected if blank"
-              title="Leave blank to have the archetype inferred from the decklist."
-            />
+      <section class="panel" aria-labelledby="game-mode-label">
+        <h2 id="game-mode-label" class="panel-label">Game mode</h2>
+        <div class="choice-grid">
+          <label class="choice-card" :class="{ selected: gameMode === 'spectator' }">
+            <input v-model="gameMode" class="choice-input" type="radio" value="spectator" />
+            <span class="choice-indicator" aria-hidden="true"></span>
+            <span class="choice-copy">
+              <strong>Spectator simulation</strong>
+              <em>Four bots play while you watch, scrub, and inspect every hand.</em>
+            </span>
+          </label>
+          <label class="choice-card" :class="{ selected: gameMode === 'singlePlayer' }">
+            <input v-model="gameMode" class="choice-input" type="radio" value="singlePlayer" />
+            <span class="choice-indicator" aria-hidden="true"></span>
+            <span class="choice-copy">
+              <strong>Play against three bots</strong>
+              <em>Your choices pause indefinitely; opponents' hidden cards stay hidden.</em>
+            </span>
           </label>
         </div>
 
-        <label class="advanced-pod">
-          <input v-model="advancedPodSetup" type="checkbox" />
-          <span>Choose all four decks instead</span>
-        </label>
-      </div>
-    </section>
+        <div v-if="gameMode === 'singlePlayer'" class="seat-picker">
+          <span class="field-label">Your seat</span>
+          <div class="seat-options" role="radiogroup" aria-label="Your seat">
+            <button
+              v-for="index in SEATS"
+              :key="index"
+              type="button"
+              class="seat-pill"
+              :class="{ active: humanSeat === `P${index}` }"
+              :aria-checked="humanSeat === `P${index}`"
+              role="radio"
+              @click="humanSeat = `P${index}`"
+            >
+              P{{ index }}
+            </button>
+          </div>
+        </div>
+      </section>
 
-    <section class="panel" aria-labelledby="players-label">
-      <h2 id="players-label" class="panel-label">
-        {{ gameMode === 'singlePlayer' ? 'Bot opponents' : 'Players' }}
-      </h2>
-      <div class="choice-grid">
-        <label class="choice-card" :class="{ selected: providerKind === 'random' }">
-          <input v-model="providerKind" class="choice-input" type="radio" value="random" />
-          <span class="choice-indicator" aria-hidden="true"></span>
-          <span class="choice-copy">
-            <strong>Random bots</strong>
-            <em>Fast, free, and fully seeded. Best for learning the controls or a quick game.</em>
-          </span>
-        </label>
-        <label class="choice-card" :class="{ selected: providerKind === 'ai' }">
-          <input v-model="providerKind" class="choice-input" type="radio" value="ai" />
-          <span class="choice-indicator" aria-hidden="true"></span>
-          <span class="choice-copy">
-            <strong>AI bots</strong>
-            <em>Uses strategic bot decisions and may spend API budget.</em>
-          </span>
-        </label>
-      </div>
-
-      <div v-if="providerKind === 'ai'" class="extra-option">
-        <label class="advanced-pod">
-          <input v-model="reflectionEnabled" type="checkbox" />
-          <span>Post-game commentary</span>
-        </label>
-        <p class="hint">
-          After the game ends, each bot reviews its own play — what it was trying to do, the turns
-          it got wrong, and who it should have treated as the threat. Costs one extra call per bot,
-          spent only once the game is already over.
+      <section class="panel" aria-labelledby="decks-label">
+        <h2 id="decks-label" class="panel-label">Decks</h2>
+        <div class="choice-grid">
+          <label class="choice-card" :class="{ selected: mode === 'pool' }">
+            <input v-model="mode" class="choice-input" type="radio" value="pool" />
+            <span class="choice-indicator" aria-hidden="true"></span>
+            <span class="choice-copy">
+              <strong>Generate from the engine-supported pool</strong>
+              <em>Always playable. Generated decks use cards the engine can model reliably.</em>
+            </span>
+          </label>
+          <label class="choice-card" :class="{ selected: mode === 'import' }">
+            <input
+              v-model="mode"
+              class="choice-input"
+              type="radio"
+              value="import"
+              :disabled="!persistence"
+            />
+            <span class="choice-indicator" aria-hidden="true"></span>
+            <span class="choice-copy">
+              <strong>Import decklists</strong>
+              <em>Paste a Moxfield / Archidekt URL or a plaintext decklist to pre-flight.</em>
+            </span>
+          </label>
+          <label class="choice-card" :class="{ selected: mode === 'known' }">
+            <input
+              v-model="mode"
+              class="choice-input"
+              type="radio"
+              value="known"
+              :disabled="!persistence"
+            />
+            <span class="choice-indicator" aria-hidden="true"></span>
+            <span class="choice-copy">
+              <strong>Choose a modeled deck</strong>
+              <em
+                >Start with a committed deck whose unique cards are fully modeled by the engine.</em
+              >
+            </span>
+          </label>
+        </div>
+        <p v-if="!persistence" class="hint">
+          Saved and imported decks are disabled without a database. Supported pool play remains
+          available.
         </p>
+
+        <div v-if="mode === 'known'" class="import-panel known-panel">
+          <p v-if="knownDecksError !== null" class="fetch-error">
+            Modeled decks unavailable: {{ knownDecksError }}
+          </p>
+          <p v-else class="hint">
+            Choose a modeled deck for {{ advancedPodSetup ? 'each seat' : 'your seat' }}. The other
+            seats use generated, engine-supported opponents unless you enable all four decks.
+          </p>
+          <div v-for="index in displayedSeats" :key="index" class="deck-row">
+            <span class="seat-badge">P{{ index }}</span>
+            <div class="deck-inputs">
+              <span class="field-label">Modeled deck</span>
+              <div v-if="knownDecks.length > 0" class="known-decks">
+                <button
+                  v-for="deck in knownDecks"
+                  :key="deck.slug"
+                  type="button"
+                  class="known-deck"
+                  :class="{ selected: selectedKnown[index - 1] === deck.slug }"
+                  :aria-pressed="selectedKnown[index - 1] === deck.slug"
+                  @click="pickKnown(index - 1, deck.slug)"
+                >
+                  <span class="deck-avatar" aria-hidden="true">{{
+                    deck.name.slice(0, 1).toUpperCase()
+                  }}</span>
+                  <span class="deck-chip-copy">
+                    <span class="deck-chip-name">{{ deck.name }}</span>
+                    <span class="deck-chip-meta">
+                      <span class="deck-chip-archetype">{{ deck.archetypeTag }}</span>
+                      {{ deck.modeledCards }}/{{ deck.uniqueCards }} modeled
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <p v-if="knownDecks.length === 0 && knownDecksError === null" class="hint">
+            {{
+              knownDecksLoaded
+                ? 'No fully modeled, legal Commander deck fixtures are available yet.'
+                : 'Loading modeled decks...'
+            }}
+          </p>
+          <label class="advanced-pod">
+            <input v-model="advancedPodSetup" type="checkbox" />
+            <span>Choose all four decks instead</span>
+          </label>
+        </div>
+
+        <div v-if="mode === 'import'" class="import-panel">
+          <p v-if="!advancedPodSetup" class="hint">
+            Import your deck; the other three seats use generated, engine-supported opponents.
+          </p>
+          <p v-if="knownDecksError !== null" class="fetch-error">
+            Known decks unavailable: {{ knownDecksError }}
+          </p>
+
+          <div v-for="index in displayedSeats" :key="index" class="deck-row">
+            <span class="seat-badge">P{{ index }}</span>
+            <div class="deck-inputs">
+              <span v-if="knownDecks.length > 0" class="field-label">Known deck quick picks</span>
+              <div v-if="knownDecks.length > 0" class="known-decks">
+                <button
+                  v-for="deck in knownDecks"
+                  :key="deck.slug"
+                  type="button"
+                  class="known-deck"
+                  :class="{ selected: selectedKnown[index - 1] === deck.slug }"
+                  :aria-pressed="selectedKnown[index - 1] === deck.slug"
+                  @click="pickKnown(index - 1, deck.slug)"
+                >
+                  <span class="deck-avatar" aria-hidden="true">{{
+                    deck.name.slice(0, 1).toUpperCase()
+                  }}</span>
+                  <span class="deck-chip-copy">
+                    <span class="deck-chip-name">{{ deck.name }}</span>
+                    <span class="deck-chip-meta">
+                      <span class="deck-chip-archetype">{{ deck.archetypeTag }}</span>
+                      {{ deck.modeledCards }}/{{ deck.uniqueCards }} modeled
+                    </span>
+                  </span>
+                </button>
+              </div>
+              <textarea
+                v-model="inputs[index - 1]"
+                class="deck-textarea"
+                rows="3"
+                placeholder="https://moxfield.com/decks/… or a pasted decklist"
+                @input="selectedKnown[index - 1] = ''"
+              ></textarea>
+            </div>
+            <label class="tag-field">
+              <span>Archetype tag</span>
+              <!-- Leaving this blank is the normal path: the server classifies the resolved list
+                 (ADR 0022 §5). Anything typed here wins outright and is never overwritten. -->
+              <input
+                v-model="tags[index - 1]"
+                type="text"
+                placeholder="auto-detected if blank"
+                title="Leave blank to have the archetype inferred from the decklist."
+              />
+            </label>
+          </div>
+
+          <label class="advanced-pod">
+            <input v-model="advancedPodSetup" type="checkbox" />
+            <span>Choose all four decks instead</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="players-label">
+        <h2 id="players-label" class="panel-label">
+          {{ gameMode === 'singlePlayer' ? 'Bot opponents' : 'Players' }}
+        </h2>
+        <div class="choice-grid">
+          <label class="choice-card" :class="{ selected: providerKind === 'random' }">
+            <input v-model="providerKind" class="choice-input" type="radio" value="random" />
+            <span class="choice-indicator" aria-hidden="true"></span>
+            <span class="choice-copy">
+              <strong>Random bots</strong>
+              <em>Fast, free, and fully seeded. Best for learning the controls or a quick game.</em>
+            </span>
+          </label>
+          <label class="choice-card" :class="{ selected: providerKind === 'ai' }">
+            <input v-model="providerKind" class="choice-input" type="radio" value="ai" />
+            <span class="choice-indicator" aria-hidden="true"></span>
+            <span class="choice-copy">
+              <strong>AI bots</strong>
+              <em>Uses strategic bot decisions and may spend API budget.</em>
+            </span>
+          </label>
+        </div>
+
+        <div v-if="providerKind === 'ai'" class="extra-option">
+          <label class="advanced-pod">
+            <input v-model="reflectionEnabled" type="checkbox" />
+            <span>Post-game commentary</span>
+          </label>
+          <p class="hint">
+            After the game ends, each bot reviews its own play — what it was trying to do, the turns
+            it got wrong, and who it should have treated as the threat. Costs one extra call per
+            bot, spent only once the game is already over.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="seed-label">
+        <h2 id="seed-label" class="panel-label">
+          Replay seed <span class="optional">Optional</span>
+        </h2>
+        <input
+          v-model="seed"
+          class="seed-input"
+          type="text"
+          placeholder="leave blank for a fresh seed"
+        />
+        <p class="hint">
+          Leave this blank for a fresh game. Use a seed when you want to repeat a known shuffle; AI
+          decisions may still vary.
+        </p>
+      </section>
+
+      <div v-if="store.errors.length > 0" class="errors">
+        <h3>Setup failed</h3>
+        <ul>
+          <li v-for="(error, index) in store.errors" :key="index">{{ error }}</li>
+        </ul>
       </div>
-    </section>
 
-    <section class="panel" aria-labelledby="seed-label">
-      <h2 id="seed-label" class="panel-label">
-        Replay seed <span class="optional">Optional</span>
-      </h2>
-      <input
-        v-model="seed"
-        class="seed-input"
-        type="text"
-        placeholder="leave blank for a fresh seed"
-      />
-      <p class="hint">
-        Leave this blank for a fresh game. Use a seed when you want to repeat a known shuffle; AI
-        decisions may still vary.
-      </p>
-    </section>
-
-    <div v-if="store.errors.length > 0" class="errors">
-      <h3>Setup failed</h3>
-      <ul>
-        <li v-for="(error, index) in store.errors" :key="index">{{ error }}</li>
-      </ul>
-    </div>
-
-    <div class="actions">
-      <button type="button" class="primary" :disabled="!canStart" @click="start">
-        <span>Start game</span>
-        <span aria-hidden="true" class="button-arrow">→</span>
-      </button>
-    </div>
+      <div class="actions">
+        <button type="button" :disabled="!canStart || previewBusy" @click="inspectAdvanced">
+          Preview matchup
+        </button>
+        <p v-if="previewError" role="alert">{{ previewError }}</p>
+        <div v-if="advancedPreview" aria-label="Advanced matchup preview">
+          <p>Seed: {{ advancedPreview.seed }}</p>
+          <ul>
+            <li v-for="seat in advancedPreview.seats" :key="seat.seat">
+              {{ seat.seat }} {{ seat.controller }} —
+              {{ seat.commanderNames.join(' & ') || 'Unavailable' }} ·
+              {{ seat.colorIdentity.join('') || 'C' }} ·
+              {{ seat.archetypeTag || 'Unknown archetype' }} ·
+              {{ seat.modeled ? 'Fully modeled' : 'Blocked' }}
+            </li>
+          </ul>
+          <ul v-if="advancedPreview.blockers.length" role="alert">
+            <li v-for="blocker in advancedPreview.blockers" :key="blocker">{{ blocker }}</li>
+          </ul>
+        </div>
+        <button
+          type="button"
+          class="primary"
+          :disabled="!canStart || !advancedPreview || advancedPreview.blockers.length > 0"
+          @click="start"
+        >
+          <span>Start game</span>
+          <span aria-hidden="true" class="button-arrow">→</span>
+        </button>
+      </div>
+    </details>
   </div>
 </template>
 
@@ -394,6 +489,20 @@ function start(): void {
   flex-direction: column;
   gap: 0.75rem;
   font-size: 13px;
+}
+.advanced-setup {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.8rem;
+}
+.advanced-setup > summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.advanced-setup[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 .setup-header,
 .panel {

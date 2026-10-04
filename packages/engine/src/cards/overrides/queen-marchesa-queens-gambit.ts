@@ -2,7 +2,7 @@
 
 import type { CardDefinition } from '../definition';
 import { constant } from '../value';
-import { allOf, ofType, YOURS } from '../selector';
+import { allOf, ofSupertype, ofType, YOURS } from '../selector';
 import { defineCard, unsupportedCard } from './index';
 import { ASSASSIN_1_1 as ASSASSIN_TOKEN, ELEPHANT_3_3_GREEN, HUMAN_1_1_WHITE } from '../tokens';
 
@@ -126,6 +126,45 @@ const SWORDS_TO_PLOWSHARES: Partial<CardDefinition> = {
   },
 };
 
+export const FABLED_PASSAGE_HANDLED_LINES: string[] = [
+  'unrecognized rules text: "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land."',
+];
+
+export const FABLED_PASSAGE_CANDIDATE: Partial<CardDefinition> = {
+  activatedAbilities: [
+    {
+      costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }],
+      timing: 'any',
+      ability: {
+        kind: 'activated',
+        targets: [],
+        effects: [
+          {
+            op: 'searchLibrary',
+            filter: allOf(ofSupertype('Basic'), ofType('Land')),
+            destinations: [{ zone: 'battlefield', tapped: true }],
+            bind: 'foundLand',
+            allowFailToFind: true,
+          },
+          { op: 'shuffle' },
+          {
+            op: 'untapBoundIf',
+            binding: 'foundLand',
+            condition: {
+              kind: 'countPermanents',
+              selector: ofType('Land'),
+              scope: 'you',
+              cmp: '>=',
+              n: 4,
+            },
+          },
+        ],
+        description: 'Search for a basic land; untap it if you control four or more lands',
+      },
+    },
+  ],
+};
+
 export function registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides(): void {
   // Blightstep/Brightclimb/Needleverge Pathway: a modal-DFC "choose a color as it enters" land
   // now parses generically (`buildPathwayLand` in interpret.ts) -- no override needed at all.
@@ -193,11 +232,11 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides(): void {
     ],
     SWORDS_TO_PLOWSHARES,
   );
-  // Catalog audit queen-main-batch-1: four-or-more-lands untap is omitted.
-  unsupportedCard(
+  defineCard(
     '0c85b8f7-0bd0-4680-9ec5-d4b110460a54',
     'Fabled Passage',
-    'The four-or-more-lands untap is omitted from the basic-land search.',
+    FABLED_PASSAGE_HANDLED_LINES,
+    FABLED_PASSAGE_CANDIDATE,
   );
   // Boros/Orzhov/Rakdos Signet: no override needed at all now — a "{1}, {T}: Add {X}{Y}." line
   // parses generically as a stack-based activated ability (`interpret.ts`'s `MANA_ABILITY_RE`

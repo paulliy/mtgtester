@@ -1,0 +1,149 @@
+{
+  "evidenceId": "war-room-ai-activation-quality",
+  "generatedAt": "generated-by-evaluateWarRoomGameplayAi",
+  "liveLlm": "not-run",
+  "note": "Quality-only observations from a three-color commander identity activation position. Deterministic engine and viewer evidence independently prove the dynamic life payment; live LLM was not run.",
+  "scenarioId": "war-room-viewer-dynamic-life-activation",
+  "card": "War Room",
+  "subject": "War Room",
+  "runs": [
+    {
+      "providerKind": "random",
+      "seed": "card-lab-war-room-viewer-dynamic-life-activation-v1-random-run-1",
+      "decisions": 1,
+      "casts": 0,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        }
+      ],
+      "usedSubjectCard": false
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-war-room-viewer-dynamic-life-activation-v1-heuristic-run-1",
+      "decisions": 3,
+      "casts": 2,
+      "activations": 1,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "activateAbility",
+          "description": "War Room: Pay life equal to your commanders' color identity colors: draw a card"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Three Color Commander ({0})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Three Color Commander ({0}) from the command zone"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "random",
+      "seed": "card-lab-war-room-viewer-dynamic-life-activation-v1-random-run-2",
+      "decisions": 1,
+      "casts": 0,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "passAndYieldTurn",
+          "description": "Pass and yield until end of turn"
+        }
+      ],
+      "usedSubjectCard": false
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-war-room-viewer-dynamic-life-activation-v1-heuristic-run-2",
+      "decisions": 3,
+      "casts": 2,
+      "activations": 1,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "activateAbility",
+          "description": "War Room: Pay life equal to your commanders' color identity colors: draw a card"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Three Color Commander ({0})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Three Color Commander ({0}) from the command zone"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "random",
+      "seed": "card-lab-war-room-viewer-dynamic-life-activation-v1-random-run-3",
+      "decisions": 1,
+      "casts": 0,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        }
+      ],
+      "usedSubjectCard": false
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-war-room-viewer-dynamic-life-activation-v1-heuristic-run-3",
+      "decisions": 3,
+      "casts": 2,
+      "activations": 1,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "activateAbility",
+          "description": "War Room: Pay life equal to your commanders' color identity colors: draw a card"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Three Color Commander ({0}) from the command zone"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Three Color Commander ({0})"
+        }
+      ],
+      "usedSubjectCard": true
+    }
+  ],
+  "workspaceRevision": {
+    "gitHead": "5b9f5f52332266e7f2b8c0b07d30b918dd22173f",
+    "sourceSha256": "2722fd52adf558d1ccc80139b9bbf6e0d7e6ffb960ed627ec20223050cd15192",
+    "files": {
+      "packages/engine/src/cards/ability.ts": "8da6df61434a6168daf54b307430774b6d10f541c7cfb4e11c7873d6c43ea86a",
+      "packages/engine/src/cards/value.ts": "1979b1b4cb34181cc434a6b2151dcb6a103b7a9da85936b03efc71f902915c5a",
+      "packages/engine/src/effects/values.ts": "3d75812772b52c863ef9a9e11257c7a974413c7a1ffff6abe3aa3ec13c2d7de8",
+      "packages/engine/src/effects/resolve.ts": "97e4667ff74546aa7abc3b8c119d411d80d8ead0de8a4d2566850f24136946c2",
+      "packages/engine/src/state/queries.ts": "74766abe0c3172c55578c7e1773ed65ef20910e2a74532d2559f0df82b55536b",
+      "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts": "699ef65ec12dce374eef83bec269f1cb4102b3eeede3acae21d5094443c1b8b4",
+      "packages/engine/tests/war-room.test.ts": "ce8c5dd9dd9a73ae2ccf0e3f64299e9be098a03dded5fa167c104bd4b98a1dd3",
+      "packages/server/src/cards/card-test-scenarios.ts": "6d567d1df0e083821cb18a4b7fea4c1c0b3803be1f943828be0c459811b448a4",
+      "packages/server/src/cards/gameplay-ai-evaluation.ts": "6b5299b36d2d817c588f394cdc372f7a0d2307d9ee9bf373c094af2a00bf8f8e",
+      "packages/server/fixtures/card-verification-manifest.json": "dd106e951e167bb75b801f5b99340aace55c7d1ffdc11cd089617b32600d6297",
+      "apps/web/e2e/card-test-lab.spec.ts": "66e6fe1ac0c81a8e261033aefea176ff60a0796f70515f9a615f9fd03b39fcd6",
+      "scripts/generate-war-room-evidence.ts": "f8ce0adcaa016236be6f197479011074fa935b843ff03ab727ab1a956cce7dbb"
+    }
+  }
+}

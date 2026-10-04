@@ -15,6 +15,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import type { Ability } from '../src/cards/definition';
 import { interpretCard } from '../src/cards/interpret';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { executeAbility } from '../src/effects/resolve';
@@ -128,6 +129,215 @@ const choose =
   };
 
 describe('library search', () => {
+  const groupedBasicSearch = {
+    kind: 'spell',
+    targets: [],
+    effects: [
+      {
+        op: 'searchLibraryGroup',
+        filter: {
+          kind: 'allOf',
+          of: [
+            { kind: 'supertype', value: 'Basic' },
+            { kind: 'type', value: 'Land' },
+          ],
+        },
+        min: 0,
+        max: 2,
+        relation: 'shareLandType',
+        destination: { zone: 'battlefield', tapped: true },
+      },
+    ],
+  } as unknown as Ability;
+
+  it('offers simultaneous grouped searches only for selections satisfying the relation', () => {
+    const ctx = pod('grouped-search-shared-type');
+    const player = p1(ctx);
+    player.library.length = 0;
+    const forestCard = conjure(ctx, 'P1', forest(), 'library');
+    const islandCard = conjure(ctx, 'P1', island(), 'library');
+    const dual = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Snowfield Expanse',
+        manaCost: null,
+        typeLine: 'Basic Snow Land — Plains Island',
+        supertypes: ['Basic', 'Snow'],
+        types: ['Land'],
+        subtypes: ['Plains', 'Island'],
+      }),
+      'library',
+    );
+    conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Prairie Stream',
+        manaCost: null,
+        typeLine: 'Land — Plains Island',
+        supertypes: [],
+        types: ['Land'],
+        subtypes: ['Plains', 'Island'],
+      }),
+      'library',
+    );
+
+    const { decisions } = pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'grouped-search-source',
+          oracleId: 'grouped-search-source',
+          name: 'Grouped Search',
+          controllerId: 'P1',
+        },
+        groupedBasicSearch,
+        [],
+      ),
+      choose(/Put Island and Test Snowfield Expanse onto the battlefield tapped/),
+    );
+
+    const descriptions = decisions[0]?.options.map((option) => option.description) ?? [];
+    expect(descriptions).toContain('Find nothing');
+    expect(descriptions).toContain('Put Forest onto the battlefield tapped');
+    expect(descriptions).toContain(
+      'Put Island and Test Snowfield Expanse onto the battlefield tapped',
+    );
+    expect(descriptions).not.toContain('Put Forest and Island onto the battlefield tapped');
+    expect(descriptions.every((description) => !description.includes('Test Prairie Stream'))).toBe(
+      true,
+    );
+    expect(
+      ctx.state.battlefield.find((permanent) => permanent.cardId === islandCard.cardId)?.tapped,
+    ).toBe(true);
+    expect(
+      ctx.state.battlefield.find((permanent) => permanent.cardId === dual.cardId)?.tapped,
+    ).toBe(true);
+    expect(player.library.some((card) => card.cardId === forestCard.cardId)).toBe(true);
+  });
+
+  it('allows zero or one card when a grouped search says up to two', () => {
+    const ctx = pod('grouped-search-up-to-two');
+    const hidden = conjure(ctx, 'P1', forest(), 'library');
+    p1(ctx).library = [hidden];
+
+    const { decisions } = pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'grouped-search-source',
+          oracleId: 'grouped-search-source',
+          name: 'Grouped Search',
+          controllerId: 'P1',
+        },
+        groupedBasicSearch,
+        [],
+      ),
+      choose(/Find nothing/),
+    );
+
+    expect(decisions[0]?.options.map((option) => option.description)).toEqual([
+      'Find nothing',
+      'Put Forest onto the battlefield tapped',
+    ]);
+    expect(p1(ctx).library.some((card) => card.cardId === hidden.cardId)).toBe(true);
+    expect(ctx.state.battlefield).toHaveLength(0);
+  });
+
+  const boundBasicSearch: Ability = {
+    kind: 'spell',
+    targets: [],
+    effects: [
+      {
+        op: 'searchLibrary',
+        filter: {
+          kind: 'allOf',
+          of: [
+            { kind: 'supertype', value: 'Basic' },
+            { kind: 'type', value: 'Land' },
+          ],
+        },
+        destinations: [{ zone: 'battlefield', tapped: true }],
+        bind: 'searchedLand',
+        allowFailToFind: true,
+      },
+      {
+        op: 'untapBoundIf',
+        binding: 'searchedLand',
+        condition: {
+          kind: 'countPermanents',
+          selector: { kind: 'type', value: 'Land' },
+          scope: 'you',
+          cmp: '>=',
+          n: 4,
+        },
+      },
+    ],
+  };
+
+  it('binds a found object by stable card identity for a later conditional effect', () => {
+    const ctx = pod('bound-search');
+    const existing = spawn(ctx, 'P1', forest());
+    existing.tapped = true;
+    spawn(ctx, 'P1', forest());
+    spawn(ctx, 'P1', island());
+    const found = conjure(ctx, 'P1', forest(), 'library');
+    p1(ctx).library = [found];
+
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'bound-search-source',
+          oracleId: 'bound-search-source',
+          name: 'Bound Search',
+          controllerId: 'P1',
+        },
+        boundBasicSearch,
+        [],
+      ),
+      choose(/Put Forest onto the battlefield tapped/),
+    );
+
+    expect(existing.tapped).toBe(true);
+    expect(
+      ctx.state.battlefield.find((permanent) => permanent.cardId === found.cardId)?.tapped,
+    ).toBe(false);
+  });
+
+  it('can surface failure to find even when every matching card has the same name', () => {
+    const ctx = pod('bound-search-fail');
+    const existing = spawn(ctx, 'P1', forest());
+    existing.tapped = true;
+    spawn(ctx, 'P1', forest());
+    spawn(ctx, 'P1', island());
+    const hidden = conjure(ctx, 'P1', forest(), 'library');
+    p1(ctx).library = [hidden];
+
+    const { decisions } = pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'bound-search-source',
+          oracleId: 'bound-search-source',
+          name: 'Bound Search',
+          controllerId: 'P1',
+        },
+        boundBasicSearch,
+        [],
+      ),
+      choose(/Find nothing/),
+    );
+
+    expect(decisions[0]?.options.map((option) => option.description)).toEqual([
+      'Put Forest onto the battlefield tapped',
+      'Find nothing',
+    ]);
+    expect(existing.tapped).toBe(true);
+    expect(p1(ctx).library.some((card) => card.cardId === hidden.cardId)).toBe(true);
+  });
+
   it('offers only cards matching the filter, and puts the choice where the card says', () => {
     const ctx = pod();
     const player = p1(ctx);

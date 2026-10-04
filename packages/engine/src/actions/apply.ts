@@ -640,6 +640,7 @@ export function* applyPriorityAction(
           payload.fromLibraryTop !== true &&
           payload.fromExile !== true &&
           payload.fromGraveyard !== true,
+        payload.x ?? 0,
       );
       if (consumeZonePermission !== undefined) {
         consumePlayFromZonePermission(

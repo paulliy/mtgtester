@@ -5,7 +5,14 @@
  */
 
 import { Database } from 'bun:sqlite';
-import type { DeckCardEntry, DeckSnapshot, DeckSourceType, OracleCard } from '@mtg/shared';
+import type {
+  DeckCardEntry,
+  DeckSnapshot,
+  DeckSourceType,
+  OracleCard,
+  SavedDeckOption,
+} from '@mtg/shared';
+import type { StrategyProfile } from '../decks/strategy-profile';
 import { GameRecorder, type SqliteLike } from './games';
 import { BatchRepository } from './batches';
 import { StatsRepository } from './stats';
@@ -120,8 +127,8 @@ export class GameStore {
     this.db
       .query(
         `INSERT INTO deck_snapshots
-           (id, deck_id, commander_names, color_identity, card_list_json, imported_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+           (id, deck_id, commander_names, color_identity, card_list_json, imported_at, companion_oracle_id, commander_oracle_ids)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         id,
@@ -130,6 +137,8 @@ export class GameStore {
         JSON.stringify(snapshot.colorIdentity),
         JSON.stringify(snapshot.cards),
         importedAt,
+        snapshot.companionOracleId,
+        JSON.stringify(snapshot.commanderOracleIds),
       );
     return { ...snapshot, id, importedAt };
   }
@@ -145,6 +154,133 @@ export class GameStore {
       )
       .get(snapshotId);
     return row ? (JSON.parse(row.card_list_json) as DeckCardEntry[]) : null;
+  }
+
+  savedDeckOptions(): SavedDeckOption[] {
+    const rows = this.db
+      .query<
+        {
+          snapshot_id: string;
+          name: string | null;
+          commander_names: string;
+          color_identity: string;
+          archetype_tag: string;
+        },
+        []
+      >(
+        `SELECT s.id AS snapshot_id, d.name, s.commander_names, s.color_identity, d.archetype_tag
+         FROM deck_snapshots s JOIN decks d ON d.id = s.deck_id
+        WHERE d.source_type <> 'generated' ORDER BY s.imported_at DESC, s.id DESC`,
+      )
+      .all();
+    return rows.map((row) => ({
+      snapshotId: row.snapshot_id,
+      name: row.name ?? (JSON.parse(row.commander_names) as string[]).join(' & '),
+      commanderNames: JSON.parse(row.commander_names) as string[],
+      colorIdentity: JSON.parse(row.color_identity) as string[],
+      archetypeTag: row.archetype_tag,
+    }));
+  }
+
+  savedSnapshot(snapshotId: string):
+    | (SavedDeckOption & {
+        cards: DeckCardEntry[];
+        companionOracleId: string | null;
+        commanderOracleIds: string[] | null;
+      })
+    | null {
+    const row = this.db
+      .query<
+        {
+          snapshot_id: string;
+          name: string | null;
+          commander_names: string;
+          color_identity: string;
+          archetype_tag: string;
+          card_list_json: string;
+          companion_oracle_id: string | null;
+          commander_oracle_ids: string | null;
+        },
+        [string]
+      >(
+        `SELECT s.id AS snapshot_id, d.name, s.commander_names, s.color_identity, d.archetype_tag,
+              s.card_list_json, s.companion_oracle_id, s.commander_oracle_ids FROM deck_snapshots s
+         JOIN decks d ON d.id = s.deck_id WHERE s.id = ? AND d.source_type <> 'generated'`,
+      )
+      .get(snapshotId);
+    if (row === null) return null;
+    const commanderNames = JSON.parse(row.commander_names) as string[];
+    return {
+      snapshotId: row.snapshot_id,
+      name: row.name ?? commanderNames.join(' & '),
+      commanderNames,
+      colorIdentity: JSON.parse(row.color_identity) as string[],
+      archetypeTag: row.archetype_tag,
+      cards: JSON.parse(row.card_list_json) as DeckCardEntry[],
+      companionOracleId: row.companion_oracle_id,
+      commanderOracleIds:
+        row.commander_oracle_ids === null
+          ? null
+          : (JSON.parse(row.commander_oracle_ids) as string[]),
+    };
+  }
+
+  /** Append an immutable profile version and move only the explicit current pointer. */
+  insertStrategyProfile(snapshotId: string, profile: StrategyProfile): void {
+    const createdAt = new Date().toISOString();
+    const tx = this.db.transaction(() => {
+      this.db
+        .query(
+          `INSERT OR IGNORE INTO deck_strategy_profiles
+             (deck_snapshot_id, profile_version, source_definition_hash, profile_json, created_at)
+           VALUES (?, ?, ?, ?, ?)`,
+        )
+        .run(
+          snapshotId,
+          profile.profileVersion,
+          profile.sourceDefinitionHash,
+          JSON.stringify(profile),
+          createdAt,
+        );
+      this.db
+        .query(
+          `INSERT INTO deck_strategy_profile_current
+             (deck_snapshot_id, profile_version, source_definition_hash)
+           VALUES (?, ?, ?)
+           ON CONFLICT(deck_snapshot_id) DO UPDATE SET
+             profile_version = excluded.profile_version,
+             source_definition_hash = excluded.source_definition_hash`,
+        )
+        .run(snapshotId, profile.profileVersion, profile.sourceDefinitionHash);
+    });
+    tx();
+  }
+
+  strategyProfile(
+    snapshotId: string,
+    profileVersion?: string,
+    sourceDefinitionHash?: string,
+  ): StrategyProfile | null {
+    const row =
+      profileVersion === undefined || sourceDefinitionHash === undefined
+        ? this.db
+            .query<{ profile_json: string }, [string]>(
+              `SELECT p.profile_json
+                 FROM deck_strategy_profile_current c
+                 JOIN deck_strategy_profiles p
+                   ON p.deck_snapshot_id = c.deck_snapshot_id
+                  AND p.profile_version = c.profile_version
+                  AND p.source_definition_hash = c.source_definition_hash
+                WHERE c.deck_snapshot_id = ?`,
+            )
+            .get(snapshotId)
+        : this.db
+            .query<{ profile_json: string }, [string, string, string]>(
+              `SELECT profile_json FROM deck_strategy_profiles
+                WHERE deck_snapshot_id = ? AND profile_version = ? AND source_definition_hash = ?`,
+            )
+            .get(snapshotId, profileVersion, sourceDefinitionHash);
+    return row === null ? null : (JSON.parse(row.profile_json) as StrategyProfile);
   }
 
   // --- Phase 4: game recording (brief §9, ADR 0012) -----------------------------------------

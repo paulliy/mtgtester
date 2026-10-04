@@ -462,3 +462,88 @@ describe('OpenAiCompatibleClient', () => {
     expect(sentBody.provider).toEqual({ ignore: ['NonCachingProvider'] });
   });
 });
+
+describe('OpenAiCompatibleClient attempt capture', () => {
+  it('records requested/reported model, exact messages, usage provenance, and raw output', async () => {
+    const attempts: import('./client').AiNetworkAttempt[] = [];
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'provider-request-1',
+        model: 'resolved/model',
+        provider: 'backend-a',
+        choices: [{ finish_reason: 'stop', message: { content: '{"actionId":0}' } }],
+        usage: {
+          prompt_tokens: 11,
+          completion_tokens: 3,
+          cost: 0.001,
+          prompt_tokens_details: { cached_tokens: 7 },
+          cache_write_input_tokens: 4,
+        },
+      }),
+    });
+    const client = new OpenAiCompatibleClient(
+      DEFAULT_AI_CONFIG,
+      mockFetch as unknown as typeof fetch,
+      async () => {},
+      (attempt) => {
+        attempts.push(attempt);
+      },
+    );
+
+    await client.requestDecision(fixturePrompt(), fixtureRequest());
+    expect(attempts).toHaveLength(1);
+    expect(attempts[0]).toMatchObject({
+      logicalRequestId: 'req-1',
+      requestedModel: DEFAULT_AI_CONFIG.models[0],
+      responseModel: 'resolved/model',
+      backend: 'backend-a',
+      providerRequestId: 'provider-request-1',
+      status: 'accepted',
+      rawResponse: '{"actionId":0}',
+      usage: {
+        promptTokenSource: 'reported',
+        responseTokenSource: 'reported',
+        costSource: 'reported',
+        cacheReadTokens: 7,
+        cacheWriteTokens: 4,
+        cacheStatus: 'observed_hit',
+      },
+    });
+    expect(attempts[0]?.messages).toEqual(fixturePrompt().messages);
+  });
+
+  it('retains reported usage and raw output when parsing rejects a generation', async () => {
+    const attempts: import('./client').AiNetworkAttempt[] = [];
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'rejected-1',
+        model: 'resolved/model',
+        choices: [{ finish_reason: 'stop', message: { content: 'not json' } }],
+        usage: { prompt_tokens: 9, completion_tokens: 2, cost: 0.0004 },
+      }),
+    });
+    const client = new OpenAiCompatibleClient(
+      { ...DEFAULT_AI_CONFIG, maxRetries: 0 },
+      mockFetch as unknown as typeof fetch,
+      async () => {},
+      (attempt) => {
+        attempts.push(attempt);
+      },
+    );
+
+    await expect(client.requestDecision(fixturePrompt(), fixtureRequest())).rejects.toThrow();
+    expect(attempts[0]).toMatchObject({
+      status: 'rejected',
+      rawResponse: 'not json',
+      responseModel: 'resolved/model',
+      usage: {
+        promptTokens: 9,
+        responseTokens: 2,
+        costUsd: 0.0004,
+        costSource: 'reported',
+      },
+    });
+  });
+});

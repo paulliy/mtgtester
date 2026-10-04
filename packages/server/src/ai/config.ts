@@ -114,8 +114,34 @@ export interface AiConfig {
   reflectionEnabled: boolean;
   /** Number of the seat's own recent decisions included in strategy/tactical context. */
   strategyRecentDecisionLimit: number;
+  /** Independent Milestone-4 context experiments. Off until benchmark promotion. */
+  contextMemoryEnabled: boolean;
+  contextFeaturesEnabled: boolean;
+  contextBudgeterEnabled: boolean;
+  contextCardSummariesEnabled: boolean;
+  /** Input estimate at which the budgeter requests a larger-context route. */
+  contextInputTokenBudget: number;
+  /** Evidence-scoped plan invalidation. Legacy blanket invalidation remains the rollout default. */
+  planLifecycleScopedInvalidationEnabled: boolean;
+  /** Log an interpretable route while retaining the fixed production policy. */
+  strategyRouterShadowEnabled: boolean;
+  /** Use the stable-prefix prompt layout. Off until measured cache experiments pass. */
+  providerPromptCacheLayoutEnabled: boolean;
   /** Reserved feature flag for exact engine-derived combat previews. */
   combatRolloutsEnabled: boolean;
+  /** Allow Jev to answer supported tactical choices. Off until benchmark promotion. */
+  jevEnabled: boolean;
+  /** Run Jev non-authoritatively beside the chat tactician for evidence collection. */
+  jevShadowEnabled: boolean;
+  /** Reproducible pinned decision-model id. */
+  jevModel: string;
+  /** Per-request deadline for the typed Decisions endpoint. */
+  jevRequestTimeoutMs: number;
+  /** Maximum menu size admitted to Jev, capped by the model's Choice limit. */
+  jevMaxActions: number;
+  /** Calibrated acceptance thresholds. Required before authoritative Jev is enabled. */
+  jevMinConfidence: number | null;
+  jevMinTopTwoMargin: number | null;
 }
 
 /** A vendor: its endpoint, its default chain, and the env var holding its key. */
@@ -275,7 +301,22 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   archetypeInferenceEnabled: false,
   reflectionEnabled: false,
   strategyRecentDecisionLimit: 8,
+  contextMemoryEnabled: false,
+  contextFeaturesEnabled: false,
+  contextBudgeterEnabled: false,
+  contextCardSummariesEnabled: false,
+  contextInputTokenBudget: 6_000,
+  planLifecycleScopedInvalidationEnabled: false,
+  strategyRouterShadowEnabled: false,
+  providerPromptCacheLayoutEnabled: false,
   combatRolloutsEnabled: false,
+  jevEnabled: false,
+  jevShadowEnabled: false,
+  jevModel: 'typesafe/jev-1.13',
+  jevRequestTimeoutMs: 2_000,
+  jevMaxActions: 255,
+  jevMinConfidence: null,
+  jevMinTopTwoMargin: null,
 };
 
 /** Env booleans are opt-OUT: anything but an explicit falsey word leaves the default alone. */
@@ -291,6 +332,12 @@ function parseNumber(val: string | undefined, fallback: number): number {
   if (val === undefined) return fallback;
   const parsed = Number.parseInt(val, 10);
   return Number.isNaN(parsed) || parsed <= 0 ? fallback : parsed;
+}
+
+function parseOptionalProbability(val: string | undefined, fallback: number | null): number | null {
+  if (val === undefined || val.trim() === '') return fallback;
+  const parsed = Number(val);
+  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 1 ? parsed : fallback;
 }
 
 function parseModels(raw: string | undefined): string[] | null {
@@ -547,9 +594,63 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_STRATEGY_RECENT_DECISIONS'],
       DEFAULT_AI_CONFIG.strategyRecentDecisionLimit,
     ),
+    contextMemoryEnabled: parseBoolean(
+      env['AI_CONTEXT_MEMORY_ENABLED'],
+      DEFAULT_AI_CONFIG.contextMemoryEnabled,
+    ),
+    contextFeaturesEnabled: parseBoolean(
+      env['AI_CONTEXT_FEATURES_ENABLED'],
+      DEFAULT_AI_CONFIG.contextFeaturesEnabled,
+    ),
+    contextBudgeterEnabled: parseBoolean(
+      env['AI_CONTEXT_BUDGETER_ENABLED'],
+      DEFAULT_AI_CONFIG.contextBudgeterEnabled,
+    ),
+    contextCardSummariesEnabled: parseBoolean(
+      env['AI_CONTEXT_CARD_SUMMARIES_ENABLED'],
+      DEFAULT_AI_CONFIG.contextCardSummariesEnabled,
+    ),
+    contextInputTokenBudget: parseNumber(
+      env['AI_CONTEXT_INPUT_TOKEN_BUDGET'],
+      DEFAULT_AI_CONFIG.contextInputTokenBudget,
+    ),
+    planLifecycleScopedInvalidationEnabled: parseBoolean(
+      env['AI_PLAN_SCOPED_INVALIDATION_ENABLED'],
+      DEFAULT_AI_CONFIG.planLifecycleScopedInvalidationEnabled,
+    ),
+    strategyRouterShadowEnabled: parseBoolean(
+      env['AI_STRATEGY_ROUTER_SHADOW_ENABLED'],
+      DEFAULT_AI_CONFIG.strategyRouterShadowEnabled,
+    ),
+    providerPromptCacheLayoutEnabled: parseBoolean(
+      env['AI_PROVIDER_PROMPT_CACHE_LAYOUT_ENABLED'],
+      DEFAULT_AI_CONFIG.providerPromptCacheLayoutEnabled,
+    ),
     combatRolloutsEnabled: parseBoolean(
       env['AI_COMBAT_ROLLOUTS_ENABLED'],
       DEFAULT_AI_CONFIG.combatRolloutsEnabled,
+    ),
+    jevEnabled: parseBoolean(env['AI_JEV_ENABLED'], DEFAULT_AI_CONFIG.jevEnabled),
+    jevShadowEnabled: parseBoolean(
+      env['AI_JEV_SHADOW_ENABLED'],
+      DEFAULT_AI_CONFIG.jevShadowEnabled,
+    ),
+    jevModel: env['AI_JEV_MODEL']?.trim() || DEFAULT_AI_CONFIG.jevModel,
+    jevRequestTimeoutMs: parseNumber(
+      env['AI_JEV_REQUEST_TIMEOUT_MS'],
+      DEFAULT_AI_CONFIG.jevRequestTimeoutMs,
+    ),
+    jevMaxActions: Math.min(
+      255,
+      parseNumber(env['AI_JEV_MAX_ACTIONS'], DEFAULT_AI_CONFIG.jevMaxActions),
+    ),
+    jevMinConfidence: parseOptionalProbability(
+      env['AI_JEV_MIN_CONFIDENCE'],
+      DEFAULT_AI_CONFIG.jevMinConfidence,
+    ),
+    jevMinTopTwoMargin: parseOptionalProbability(
+      env['AI_JEV_MIN_TOP_TWO_MARGIN'],
+      DEFAULT_AI_CONFIG.jevMinTopTwoMargin,
     ),
   };
 }

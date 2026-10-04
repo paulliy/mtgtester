@@ -31,6 +31,7 @@ import { generateCommanderDeck, toPlaintext, type GeneratedDeck } from '../decks
 import {
   AiCallLogger,
   configForRole,
+  createConfiguredJevPolicy,
   DailyQuotaExhaustedError,
   loadAiConfig,
   NoAvailableModelError,
@@ -267,6 +268,11 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
   const tacticianClient = new OpenAiCompatibleClient(configForRole(config, 'tactician'));
   const queue = new RequestQueue(config);
   const logger = new AiCallLogger(null, 'pool-ai-demo');
+  strategistClient.setAttemptObserver(logger.attemptObserver());
+  tacticianClient.setAttemptObserver(logger.attemptObserver());
+  const jev =
+    createConfiguredJevPolicy(config, env, logger.attemptObserver(), logger.jevTraceObserver()) ??
+    undefined;
   const coordinator = new StrategyCoordinator(strategistClient, queue, engine, config, logger);
 
   const providers = new Map<string, OpenAiDecisionProvider>();
@@ -281,6 +287,7 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
         logger,
         undefined,
         coordinator,
+        jev,
       );
       providers.set(playerId, p);
     }

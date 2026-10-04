@@ -14,6 +14,10 @@ export interface PreparedScenarioSpec {
     tapped?: boolean;
   }>;
   graveyard?: Array<{ playerId: PlayerId; cardNames: string[] }>;
+  /** Arrange already-cast spells below the tested response. */
+  stack?: Array<{ playerId: PlayerId; cardNames: string[] }>;
+  /** Lab-only finite continuation used to exercise next-upkeep delayed triggers. */
+  continueToNextUpkeep?: boolean;
 }
 
 function takeNamedCard(ctx: GameContext, playerId: PlayerId, name: string): EngineCardObject {
@@ -67,6 +71,30 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
       const card = takeNamedCard(ctx, entry.playerId, name);
       card.zone = 'graveyard';
       player.graveyard.push(card);
+    }
+  }
+
+  for (const entry of spec.stack ?? []) {
+    for (const name of entry.cardNames) {
+      const card = takeNamedCard(ctx, entry.playerId, name);
+      const def = ctx.defs.get(card.oracleId);
+      if (def?.spellAbility === null || def?.spellAbility === undefined) {
+        throw new Error(`prepared scenario stack card ${name} has no spell ability`);
+      }
+      card.zone = 'stack';
+      ctx.state.stack.push({
+        id: card.id,
+        sourceId: card.id,
+        controllerId: entry.playerId,
+        kind: 'spell',
+        description: card.name,
+        targets: [],
+        card,
+        ability: def.spellAbility,
+        sourceOracleId: card.oracleId,
+        sourceCardId: card.cardId,
+        isCommanderCast: false,
+      });
     }
   }
 }

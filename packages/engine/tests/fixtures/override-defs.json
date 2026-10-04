@@ -470,8 +470,72 @@
   {
     "oracleId": "0c85b8f7-0bd0-4680-9ec5-d4b110460a54",
     "name": "Fabled Passage",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Search for a basic land; untap it if you control four or more lands",
+            "effects": [
+              {
+                "allowFailToFind": true,
+                "bind": "foundLand",
+                "destinations": [
+                  {
+                    "tapped": true,
+                    "zone": "battlefield"
+                  }
+                ],
+                "filter": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "supertype",
+                      "value": "Basic"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                },
+                "op": "searchLibrary"
+              },
+              {
+                "op": "shuffle"
+              },
+              {
+                "binding": "foundLand",
+                "condition": {
+                  "cmp": ">=",
+                  "kind": "countPermanents",
+                  "n": 4,
+                  "scope": "you",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                },
+                "op": "untapBoundIf"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "0dfdf1a1-3a9a-490f-bd9d-dcba088c6785",
@@ -632,8 +696,82 @@
   {
     "oracleId": "153376c9-dffd-458c-8ce3-a4c8269bc4e9",
     "name": "Smothering Tithe",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent draws a card, that player may pay {2}. If the player doesn't, you create a Treasure token.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent draws, create a Treasure unless they pay {2}",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "op": "unlessPays",
+              "payer": "eventPlayer",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [],
+                    "manaAbilities": [
+                      {
+                        "costs": [
+                          {
+                            "kind": "tap"
+                          },
+                          {
+                            "kind": "sacrificeSelf"
+                          }
+                        ],
+                        "units": [
+                          [
+                            "W",
+                            "U",
+                            "B",
+                            "R",
+                            "G"
+                          ]
+                        ]
+                      }
+                    ],
+                    "name": "Treasure",
+                    "power": null,
+                    "subtypes": [
+                      "Treasure"
+                    ],
+                    "toughness": null,
+                    "typeLine": "Artifact — Treasure",
+                    "types": [
+                      "Artifact"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "drawsCard"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "1582e16d-4825-4cc5-b12c-449c45e4e449",
@@ -1289,8 +1427,71 @@
   {
     "oracleId": "2549bc57-9ffb-4053-9f10-f2a5f792b845",
     "name": "Myriad Landscape",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"{2}, {T}, Sacrifice this land: Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Search for up to two basic lands that share a land type",
+            "effects": [
+              {
+                "destination": {
+                  "tapped": true,
+                  "zone": "battlefield"
+                },
+                "filter": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "supertype",
+                      "value": "Basic"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                },
+                "max": 2,
+                "min": 0,
+                "op": "searchLibraryGroup",
+                "relation": "shareLandType"
+              },
+              {
+                "op": "shuffle"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "2598294c-a9a7-4bef-a562-23f297a80536",
@@ -3967,8 +4168,55 @@
   {
     "oracleId": "71c52bf5-2a5d-488e-8b15-7ef290e4b77d",
     "name": "War Room",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"{3}, {T}, Pay life equal to the number of colors in your commanders' color identity: Draw a card.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Pay life equal to your commanders' color identity colors: draw a card",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": {
+                "kind": "commanderIdentityColorCount"
+              },
+              "kind": "payLifeValue"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "724767ca-bd84-4137-9133-4ad2e96b8428",
@@ -6073,8 +6321,67 @@
   {
     "oracleId": "ab1cc360-b9de-48d9-9983-4dfe4a7d2a37",
     "name": "Arcane Denial",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Counter target spell. Its controller may draw up to two cards at the beginning of the next turn's upkeep.",
+      "You draw a card at the beginning of the next turn's upkeep."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell; at the beginning of the next turn's upkeep its controller may draw up to two cards and you draw a card",
+        "effects": [
+          {
+            "op": "counter",
+            "target": 0
+          },
+          {
+            "ability": {
+              "description": "The targeted spell controller may draw up to two cards",
+              "effects": [
+                {
+                  "count": 2,
+                  "op": "drawUpToN",
+                  "player": "eventPlayer"
+                }
+              ],
+              "kind": "triggered",
+              "targets": []
+            },
+            "affectedPlayer": "targetController",
+            "expiry": "onFire",
+            "op": "registerDelayedTrigger",
+            "target": 0,
+            "when": "upkeep"
+          },
+          {
+            "ability": {
+              "description": "Arcane Denial controller draws a card",
+              "effects": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "draw",
+                  "player": "eventPlayer"
+                }
+              ],
+              "kind": "triggered",
+              "targets": []
+            },
+            "affectedPlayer": "sourceController",
+            "expiry": "onFire",
+            "op": "registerDelayedTrigger",
+            "when": "upkeep"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "ab655810-f67e-4576-9174-35b16f5e3235",
@@ -9696,8 +10003,67 @@
   {
     "oracleId": "oracle-arcane-denial",
     "name": "Arcane Denial",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Counter target spell. Its controller may draw up to two cards at the beginning of the next turn's upkeep.",
+      "You draw a card at the beginning of the next turn's upkeep."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell; at the beginning of the next turn's upkeep its controller may draw up to two cards and you draw a card",
+        "effects": [
+          {
+            "op": "counter",
+            "target": 0
+          },
+          {
+            "ability": {
+              "description": "The targeted spell controller may draw up to two cards",
+              "effects": [
+                {
+                  "count": 2,
+                  "op": "drawUpToN",
+                  "player": "eventPlayer"
+                }
+              ],
+              "kind": "triggered",
+              "targets": []
+            },
+            "affectedPlayer": "targetController",
+            "expiry": "onFire",
+            "op": "registerDelayedTrigger",
+            "target": 0,
+            "when": "upkeep"
+          },
+          {
+            "ability": {
+              "description": "Arcane Denial controller draws a card",
+              "effects": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "draw",
+                  "player": "eventPlayer"
+                }
+              ],
+              "kind": "triggered",
+              "targets": []
+            },
+            "affectedPlayer": "sourceController",
+            "expiry": "onFire",
+            "op": "registerDelayedTrigger",
+            "when": "upkeep"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-arcane-lighthouse",
@@ -12123,8 +12489,72 @@
   {
     "oracleId": "oracle-fabled-passage",
     "name": "Fabled Passage",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Search for a basic land; untap it if you control four or more lands",
+            "effects": [
+              {
+                "allowFailToFind": true,
+                "bind": "foundLand",
+                "destinations": [
+                  {
+                    "tapped": true,
+                    "zone": "battlefield"
+                  }
+                ],
+                "filter": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "supertype",
+                      "value": "Basic"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                },
+                "op": "searchLibrary"
+              },
+              {
+                "op": "shuffle"
+              },
+              {
+                "binding": "foundLand",
+                "condition": {
+                  "cmp": ">=",
+                  "kind": "countPermanents",
+                  "n": 4,
+                  "scope": "you",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                },
+                "op": "untapBoundIf"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-fallen-ideal",
@@ -14542,8 +14972,71 @@
   {
     "oracleId": "oracle-myriad-landscape",
     "name": "Myriad Landscape",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"{2}, {T}, Sacrifice this land: Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Search for up to two basic lands that share a land type",
+            "effects": [
+              {
+                "destination": {
+                  "tapped": true,
+                  "zone": "battlefield"
+                },
+                "filter": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "supertype",
+                      "value": "Basic"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                },
+                "max": 2,
+                "min": 0,
+                "op": "searchLibraryGroup",
+                "relation": "shareLandType"
+              },
+              {
+                "op": "shuffle"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-mystic-forge",
@@ -16852,8 +17345,82 @@
   {
     "oracleId": "oracle-smothering-tithe",
     "name": "Smothering Tithe",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent draws a card, that player may pay {2}. If the player doesn't, you create a Treasure token.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent draws, create a Treasure unless they pay {2}",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "op": "unlessPays",
+              "payer": "eventPlayer",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [],
+                    "manaAbilities": [
+                      {
+                        "costs": [
+                          {
+                            "kind": "tap"
+                          },
+                          {
+                            "kind": "sacrificeSelf"
+                          }
+                        ],
+                        "units": [
+                          [
+                            "W",
+                            "U",
+                            "B",
+                            "R",
+                            "G"
+                          ]
+                        ]
+                      }
+                    ],
+                    "name": "Treasure",
+                    "power": null,
+                    "subtypes": [
+                      "Treasure"
+                    ],
+                    "toughness": null,
+                    "typeLine": "Artifact — Treasure",
+                    "types": [
+                      "Artifact"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "drawsCard"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-solar-transformer",
@@ -18087,8 +18654,55 @@
   {
     "oracleId": "oracle-war-room",
     "name": "War Room",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"{3}, {T}, Pay life equal to the number of colors in your commanders' color identity: Draw a card.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Pay life equal to your commanders' color identity colors: draw a card",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": {
+                "kind": "commanderIdentityColorCount"
+              },
+              "kind": "payLifeValue"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-watcher-for-tomorrow",

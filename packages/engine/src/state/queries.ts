@@ -567,6 +567,12 @@ export function canPayNonManaCosts(
         if (controller === undefined || controller.life < cost.amount) return false;
         break;
       }
+      case 'payLifeValue': {
+        const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
+        const amount = evaluateValue(ctx, cost.amount, { controllerId: perm.controllerId });
+        if (controller === undefined || controller.life < amount) return false;
+        break;
+      }
       case 'payEnergy': {
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
         if (controller === undefined || controller.energy < cost.amount) return false;

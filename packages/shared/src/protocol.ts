@@ -75,6 +75,7 @@ export const LOOKAHEAD_TURNS = 5;
 /** How the four seats get their decks. */
 export type SeatSource =
   | { kind: 'pool'; seed?: string }
+  | { kind: 'snapshot'; snapshotId: string }
   | { kind: 'url'; url: string; archetypeTag?: string }
   | { kind: 'plaintext'; text: string; name?: string; archetypeTag?: string };
 
@@ -86,6 +87,31 @@ export interface SeatSummary {
   seat: PlayerId;
   deckId: string;
   label: string;
+  commanderNames: string[];
+  colorIdentity: string[];
+  archetypeTag: string;
+}
+
+/** Public setup metadata. No card list or private card data crosses this boundary. */
+export interface SetupPreviewSeat {
+  seat: PlayerId;
+  commanderNames: string[];
+  colorIdentity: string[];
+  archetypeTag: string;
+  controller: SeatControllerKind;
+  modeled: boolean;
+}
+
+export interface SetupPreview {
+  previewId: string;
+  seed: string;
+  seats: SetupPreviewSeat[];
+  blockers: string[];
+}
+
+export interface SavedDeckOption {
+  snapshotId: string;
+  name: string;
   commanderNames: string[];
   colorIdentity: string[];
   archetypeTag: string;
@@ -281,6 +307,16 @@ export interface ErrorPayload {
   deckIssues?: Array<{ seat: PlayerId; issues: ValidationIssue[] }>;
   /** Cards the engine cannot model, when setup pre-flight rejected a deck (ADR 0009/0012). */
   unmodeledCards?: Array<{ seat: PlayerId; cards: string[] }>;
+  /**
+   * The rejected `submitPlayerAction`, echoed back so a client knows *which* submission failed.
+   * Rides on this payload rather than a new message type (ADR 0012). Present together and only
+   * when the error is that submission's rejection: an error carrying neither is uncorrelated and
+   * says nothing about any in-flight action. A client that clears its in-flight guard on an
+   * uncorrelated error either duplicates a submission or waits forever for a decision the server
+   * never re-asked.
+   */
+  requestId?: string;
+  revision?: number;
 }
 
 export type ServerToClientMessage =
@@ -313,6 +349,8 @@ interface StartGameCommon {
   providerKind: ProviderKind;
   /** Omit to have the server generate a fresh one (brief §4 — reruns use a new seed). */
   seed?: string;
+  /** Token from the read-only setup preview. Required by the player-first flow. */
+  previewId?: string;
   playbackMode?: PlaybackMode;
   paceMs?: number;
   /**
@@ -434,6 +472,8 @@ function isSeatSource(value: unknown): value is SeatSource {
   switch (value['kind']) {
     case 'pool':
       return isOptionalString(value['seed']);
+    case 'snapshot':
+      return typeof value['snapshotId'] === 'string' && value['snapshotId'].length > 0;
     case 'url':
       return typeof value['url'] === 'string' && isOptionalString(value['archetypeTag']);
     case 'plaintext':
@@ -460,6 +500,21 @@ function isDebugFlags(value: unknown): value is DebugFlags {
   );
 }
 
+/** The four seats of a v1 game, as runtime values. */
+export const PLAYER_SEAT_IDS = ['P1', 'P2', 'P3', 'P4'] as const;
+
+/**
+ * True only for an actual seat string.
+ *
+ * This is the single-player authorization identity — the server decides whose deck diagnostics a
+ * requester may see by comparing against it — so it is checked, never coerced. `String(value)`
+ * would accept `['P1']` and any object with a matching `toString`, handing a caller a seat it
+ * never named.
+ */
+export function isPlayerSeatId(value: unknown): value is PlayerId {
+  return typeof value === 'string' && (PLAYER_SEAT_IDS as readonly string[]).includes(value);
+}
+
 /**
  * Runtime guard for the client→server direction. The server must never trust a socket frame,
  * and the union above is erased at runtime, so the `type` discriminant is checked here.
@@ -481,9 +536,10 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
           payload['gameMode'] === 'spectator' ||
           payload['gameMode'] === 'singlePlayer') &&
         (payload['gameMode'] === 'singlePlayer'
-          ? ['P1', 'P2', 'P3', 'P4'].includes(String(payload['humanSeat']))
+          ? isPlayerSeatId(payload['humanSeat'])
           : payload['humanSeat'] === undefined) &&
         isOptionalString(payload['seed']) &&
+        isOptionalString(payload['previewId']) &&
         (payload['playbackMode'] === undefined ||
           payload['playbackMode'] === 'live' ||
           payload['playbackMode'] === 'manual') &&
@@ -510,22 +566,33 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
     case 'resolveHeldDecision':
       return (
         typeof payload['requestId'] === 'string' &&
+        payload['requestId'].length > 0 &&
         Number.isInteger(payload['actionId']) &&
         (payload['actionId'] as number) >= 0 &&
         isTargets(payload['targets'])
       );
     case 'submitPlayerAction':
       return (
+        Object.keys(payload).every((key) =>
+          ['requestId', 'revision', 'actionId', 'targets'].includes(key),
+        ) &&
         typeof payload['requestId'] === 'string' &&
+        payload['requestId'].length > 0 &&
         Number.isInteger(payload['actionId']) &&
         (payload['actionId'] as number) >= 0 &&
         Number.isInteger(payload['revision']) &&
         (payload['revision'] as number) >= 0 &&
-        isTargets(payload['targets'])
+        isTargets(payload['targets']) &&
+        (payload['targets'] === undefined ||
+          (Array.isArray(payload['targets']) &&
+            payload['targets'].every((target) =>
+              Object.keys(target).every((key) => ['slot', 'choice'].includes(key)),
+            )))
       );
     case 'yieldPlayerAbility':
       return (
         typeof payload['requestId'] === 'string' &&
+        payload['requestId'].length > 0 &&
         Number.isInteger(payload['actionId']) &&
         (payload['actionId'] as number) >= 0 &&
         Number.isInteger(payload['revision']) &&

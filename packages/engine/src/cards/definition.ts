@@ -184,6 +184,8 @@ export interface CardDefinition {
   commanderFreeCast?: boolean;
   /** Additional costs paid while announcing a spell (CR 601.2h), apart from its mana cost. */
   spellAdditionalCosts?: AbilityCost[];
+  /** The spell announces an X used by an additional cost even though its mana cost has no X. */
+  announcesX?: boolean;
   /** An optional announced additional mana cost such as kicker, squad, or offspring. */
   optionalAdditionalCost?: {
     mechanic: 'kicker' | 'squad' | 'offspring';

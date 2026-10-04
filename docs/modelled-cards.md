@@ -2,7 +2,7 @@
 
 Generated from the engine-supported card pool.
 
-**Total**: 5790 modeled non-land cards
+**Total**: 5791 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -208,6 +208,7 @@ Generated from the engine-supported card pool.
 - Arborea Pegasus
 - Arboretum Elemental
 - Arc Reactor
+- Arcane Denial
 - Arcane Encyclopedia
 - Arcane Flight
 - Arcane Signet

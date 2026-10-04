@@ -4,8 +4,39 @@
 
 import { NECRON_WARRIOR_2_2 } from '../tokens';
 import { defineCard, unimplemented, unsupportedCard } from './index';
-import { allOf, not, OTHER, ofSubtype, ofType, YOURS } from '../selector';
+import type { CardDefinition } from '../definition';
+import { allOf, not, OTHER, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
+import { mana, SAC_SELF, TAP } from '../templates';
 import { constant } from '../value';
+
+export const MYRIAD_LANDSCAPE_HANDLED_LINES: string[] = [
+  'unrecognized rules text: "{2}, {T}, Sacrifice this land: Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle."',
+];
+
+export const MYRIAD_LANDSCAPE_CANDIDATE: Partial<CardDefinition> = {
+  activatedAbilities: [
+    {
+      costs: [mana('{2}'), TAP, SAC_SELF],
+      timing: 'any',
+      ability: {
+        kind: 'activated',
+        targets: [],
+        effects: [
+          {
+            op: 'searchLibraryGroup',
+            filter: allOf(ofSupertype('Basic'), ofType('Land')),
+            min: 0,
+            max: 2,
+            relation: 'shareLandType',
+            destination: { zone: 'battlefield', tapped: true },
+          },
+          { op: 'shuffle' },
+        ],
+        description: 'Search for up to two basic lands that share a land type',
+      },
+    },
+  ],
+};
 
 export function registerNECRON_DYNASTIESOverrides(): void {
   unimplemented('9a63f950-2e8a-4617-896c-1d0af538dbc7', 'Szarekh, the Silent King', [
@@ -222,9 +253,12 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  unimplemented('2549bc57-9ffb-4053-9f10-f2a5f792b845', 'Myriad Landscape', [
-    '{2}, {T}, Sacrifice this land: Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle.',
-  ]);
+  defineCard(
+    '2549bc57-9ffb-4053-9f10-f2a5f792b845',
+    'Myriad Landscape',
+    MYRIAD_LANDSCAPE_HANDLED_LINES,
+    MYRIAD_LANDSCAPE_CANDIDATE,
+  );
 
   unimplemented('994bc16d-fdc6-475c-96df-beeb4d5aa03e', 'Mystic Forge', [
     'You may cast artifact spells and colorless spells from the top of your library.',

@@ -1,0 +1,170 @@
+{
+  "evidenceId": "arcane-denial-ai-counter-and-draw-choice",
+  "generatedAt": "generated-by-evaluateArcaneDenialGameplayAi",
+  "liveLlm": "not-run",
+  "note": "Quality-only observations from an arranged tactical position. Deterministic engine and viewer evidence independently prove rules behavior; live LLM was not run.",
+  "scenarioId": "arcane-denial-viewer-draw-two",
+  "card": "Arcane Denial",
+  "subject": "Arcane Denial",
+  "runs": [
+    {
+      "providerKind": "random",
+      "seed": "card-lab-arcane-denial-viewer-draw-two-v1-random-run-1",
+      "decisions": 1,
+      "casts": 0,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "passAndYieldTurn",
+          "description": "Pass and yield until end of turn"
+        }
+      ],
+      "usedSubjectCard": false
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-arcane-denial-viewer-draw-two-v1-heuristic-run-1",
+      "decisions": 3,
+      "casts": 1,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Arcane Denial ({1}{U})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "placeTrigger",
+          "description": "Delayed Trigger: The targeted spell controller may draw up to two cards (event player: P4)"
+        },
+        {
+          "decidingPlayer": "P4",
+          "actionType": "drawUpTo",
+          "description": "Draw 2 cards"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "random",
+      "seed": "card-lab-arcane-denial-viewer-draw-two-v1-random-run-2",
+      "decisions": 1,
+      "casts": 0,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        }
+      ],
+      "usedSubjectCard": false
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-arcane-denial-viewer-draw-two-v1-heuristic-run-2",
+      "decisions": 3,
+      "casts": 1,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Arcane Denial ({1}{U})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "placeTrigger",
+          "description": "Delayed Trigger: The targeted spell controller may draw up to two cards (event player: P4)"
+        },
+        {
+          "decidingPlayer": "P4",
+          "actionType": "drawUpTo",
+          "description": "Draw 2 cards"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "random",
+      "seed": "card-lab-arcane-denial-viewer-draw-two-v1-random-run-3",
+      "decisions": 3,
+      "casts": 1,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Arcane Denial ({1}{U})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "placeTrigger",
+          "description": "Delayed Trigger: Arcane Denial controller draws a card (event player: P1)"
+        },
+        {
+          "decidingPlayer": "P4",
+          "actionType": "drawUpTo",
+          "description": "Draw 0 cards"
+        }
+      ],
+      "usedSubjectCard": true
+    },
+    {
+      "providerKind": "heuristic",
+      "seed": "card-lab-arcane-denial-viewer-draw-two-v1-heuristic-run-3",
+      "decisions": 3,
+      "casts": 1,
+      "activations": 0,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Arcane Denial ({1}{U})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "placeTrigger",
+          "description": "Delayed Trigger: The targeted spell controller may draw up to two cards (event player: P4)"
+        },
+        {
+          "decidingPlayer": "P4",
+          "actionType": "drawUpTo",
+          "description": "Draw 2 cards"
+        }
+      ],
+      "usedSubjectCard": true
+    }
+  ],
+  "workspaceRevision": {
+    "gitHead": "5b9f5f52332266e7f2b8c0b07d30b918dd22173f",
+    "sourceSha256": "28c883c0ec996ddf36eaeb80e22e1bfb2cb4444dd4b68887945e467821ce28de",
+    "files": {
+      "docs/plans/fail-closed-card-restoration.md": "29cb11a20b41a271b78f51ec699cf4236aa0a904888b26446643a697e2f0e7dc",
+      "packages/engine/src/cards/ability.ts": "8da6df61434a6168daf54b307430774b6d10f541c7cfb4e11c7873d6c43ea86a",
+      "packages/engine/src/cards/overrides/living-energy.ts": "5986626c75cc7fb6594b25ee9a4b9d69ce59e5fcf790aa82560844bf3d77bf87",
+      "packages/engine/src/effects/resolve.ts": "97e4667ff74546aa7abc3b8c119d411d80d8ead0de8a4d2566850f24136946c2",
+      "packages/engine/src/state/types.ts": "57e5b3979dce9d8e56b7ccdd67d4ec2b32757ba1fdf3783cdfc31dbffbe7b01a",
+      "packages/engine/src/turn/turn.ts": "9a19680f95c19166bf8996902ba7a417a597a9c653c5320f462e3be03ff1b0d1",
+      "packages/engine/src/view/view.ts": "7cc895ca368c5e4525a3372a37f9885b3ddaf52b278d5f426d93a59ca52c4439",
+      "packages/engine/src/testing/prepared-scenario.ts": "a3fab7bb646d98569299f074808433ccfb38805609974f7688f3650db474fc05",
+      "packages/engine/src/flow/game.ts": "99893fd725fd58ff35c59f9808bc00a94273a3173cffd98aa2819935d7611c1a",
+      "packages/engine/src/engine.ts": "13e344d65ed3e348db926703f6c8ab4da5065120c4fb733442f2e2e08c867617",
+      "packages/engine/tests/delayed-triggers.test.ts": "90ce26dbfc6d9e2e7ad39b133ab42af3b693b03dc74305776908a0f1c61cbdff",
+      "packages/engine/tests/arcane-denial.test.ts": "9e02e608980cc73037eb1dbe98d667ad126b1df6308d337915e5b86100226d14",
+      "packages/server/src/cards/card-test-scenarios.ts": "6d567d1df0e083821cb18a4b7fea4c1c0b3803be1f943828be0c459811b448a4",
+      "packages/server/src/cards/card-test-scenarios.test.ts": "d417ce8c923ca7f23cbf29bae68361a9a1fcc8987066d54c8bf9782fad358fd0",
+      "packages/server/src/cards/gameplay-ai-evaluation.ts": "6b5299b36d2d817c588f394cdc372f7a0d2307d9ee9bf373c094af2a00bf8f8e",
+      "packages/server/src/cards/gameplay-ai-evaluation.test.ts": "dd0cb9b0747ee1a0f520965a11fc77a5e0a1afed9f8623c7f9f5e8b23508ee89",
+      "packages/server/src/match/session.ts": "b9e93043dfc6e8c2cb16e6796431060c65a16a17728fcb09078c2654c4954eb7",
+      "packages/server/src/match/session.test.ts": "73808a5a27b0da270b6ef3bf9de827a88f79ec2b31aecd618a6748f4a9e6ebde",
+      "packages/server/src/ws/server.ts": "9845ddd85836990e04e9747b6e37a18eb11fe67348b9091698200b160c00ca77",
+      "packages/server/fixtures/card-verification-manifest.json": "dd106e951e167bb75b801f5b99340aace55c7d1ffdc11cd089617b32600d6297",
+      "apps/web/e2e/card-test-lab.spec.ts": "66e6fe1ac0c81a8e261033aefea176ff60a0796f70515f9a615f9fd03b39fcd6",
+      "apps/web/src/views/CardTestLabView.vue": "9d13b719628d46a537faed3366674c6166b123cd7001e00d6ecb3f33b5e2a873",
+      "scripts/generate-arcane-denial-evidence.ts": "ac92a2231147e982f2684f0360f6e938fc8d91761cc435829f0aaf6430f32a4c"
+    }
+  }
+}

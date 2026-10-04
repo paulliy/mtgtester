@@ -64,25 +64,39 @@ function commanderViews(ctx: GameContext, player: EnginePlayerState): CommanderV
     ];
     let zone = 'command';
     let name = battlefield?.name ?? '';
+    let commanderObject: EngineCardObject | typeof battlefield;
     if (battlefield !== undefined) {
       zone = 'battlefield';
+      commanderObject = battlefield;
     } else {
       const onStack = ctx.state.stack.find((s) => s.card?.cardId === cardId);
       if (onStack !== undefined) {
         zone = 'stack';
         name = onStack.card?.name ?? name;
+        commanderObject = onStack.card ?? undefined;
       } else {
         for (const [zoneName, arr] of zones) {
           const found = arr.find((o) => o.cardId === cardId);
           if (found !== undefined) {
             zone = zoneName;
             name = found.name;
+            commanderObject = found;
             break;
           }
         }
       }
     }
-    return { name, zone, castCount: player.commanderCastCount[cardId] ?? 0 };
+    return {
+      name,
+      zone,
+      castCount: player.commanderCastCount[cardId] ?? 0,
+      ...(commanderObject?.manaCost !== null && commanderObject?.manaCost !== undefined
+        ? { manaCost: commanderObject.manaCost }
+        : {}),
+      ...(commanderObject !== undefined
+        ? { typeLine: commanderObject.typeLine, oracleText: commanderObject.oracleText }
+        : {}),
+    };
   });
 }
 
@@ -150,14 +164,26 @@ function formatEvent(e: GameEvent): string {
  * decision records (mulligan bottoms, discard picks carry card names), draw identities,
  * and any zone change touching a library (draws, bottoms, tucks).
  */
-function isPrivateEvent(e: GameEvent): boolean {
-  if (e.type === 'draw' || e.type === 'decision') return true;
+function visibleEvent(e: GameEvent, viewer: PlayerId): GameEvent | null {
+  if (e.type === 'draw' || e.type === 'decision') return null;
   if (e.type === 'zoneChange') {
     const from = e.payload['from'];
     const to = e.payload['to'];
-    return from === 'library' || to === 'library';
+    if (from === 'library' || to === 'library') return null;
   }
-  return false;
+  if (e.type === 'searchFound') {
+    const searcher = e.payload['player'];
+    const destination = e.payload['to'];
+    const publicDestination = ['battlefield', 'graveyard', 'exile', 'stack'].includes(
+      typeof destination === 'string' ? destination : '',
+    );
+    const explicitlyRevealed = e.payload['revealed'] === true;
+    if (searcher !== viewer && !publicDestination && !explicitlyRevealed) {
+      const { name: _privateName, ...publicPayload } = e.payload;
+      return { ...e, payload: publicPayload };
+    }
+  }
+  return e;
 }
 
 /**
@@ -221,7 +247,8 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
   }));
 
   const recentLog = s.eventLog
-    .filter((e) => !isPrivateEvent(e))
+    .map((event) => visibleEvent(event, playerId))
+    .filter((event): event is GameEvent => event !== null)
     .slice(-15)
     .map(formatEvent);
   const revealedLibraryTops = s.players.flatMap((player) => {

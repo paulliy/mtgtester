@@ -1,9 +1,8 @@
-/**
- * Compact MTG Commander Rules Primer (§7.4).
- * Terse static system instruction included with every AI request.
- */
+import type { DecisionRequest } from '@mtg/shared';
 
-export const RULES_PRIMER = `You are an AI player in a 4-player Commander (EDH) Magic: The Gathering game.
+/** Compact and legacy MTG Commander tactical primers (§7.4). */
+
+export const TACTICIAN_PRIMER = `You are an AI player in a 4-player Commander (EDH) Magic: The Gathering game.
 Rules engine is authoritative for rules, continuous effects, and mana. Choose the best actionId from legalActions menu.
 
 Rules: 40 life, 21 cmdr damage, command zone, commander tax +{2}. Stack: LIFO. Priority: APNAP.
@@ -33,3 +32,67 @@ Dividing combat damage: when one of your attackers is blocked by two or more cre
 
 REQUIRED JSON OUTPUT FORMAT (Respond with ONLY this raw JSON object, no markdown fences):
 {"requestId":"<id>","actionId":0,"targets":[{"slot":0,"choice":"<id>"}],"note":"<one short sentence rationale>"}`;
+
+/** Frozen compatibility name for the pre-split primer. */
+export const RULES_PRIMER = TACTICIAN_PRIMER;
+
+export const TACTICIAN_COMMON_PRIMER = `You are an AI player in a 4-player Commander game.
+The rules engine is authoritative. Choose only from legalActions and return compact JSON immediately.
+Develop your board, play lands on curve, preserve useful interaction, and pressure the player closest to winning. Treat life as a resource, avoid repeating no-op actions, and adapt any strategist advice to the current board.
+When no action is worthwhile, use an offered yield or pass action.
+
+Return ONLY one raw JSON object with requestId and actionId. Include supplemental response fields only when the current request requires them. Never invent an unavailable action or choice.`;
+
+const LAND_AND_MANA_PRIMER = `Land and mana data are authoritative. A source listing several colors normally produces one of them per tap. Prefer land plays that unlock the current turn while preserving needed colors and interaction.`;
+
+const TARGETING_PRIMER = `Targeted actions expose numbered target slots. Fill every required slot with an offered choice for that slot; do not copy ids from another slot or invent a target.`;
+
+const ATTACK_PRIMER = `This is one batched attack declaration. Fill every creature target slot with an offered defending seat or __no_attack__. Different creatures may attack different opponents; obey forced-attack options and any attack-tax correction.`;
+
+const BLOCK_PRIMER = `This is one batched block declaration. Fill every blocker target slot with an offered attacker id or __no_block__. Several blockers may block one attacker; menace requires a legal multi-block assignment.`;
+
+const COMBAT_DAMAGE_PRIMER = `Return combatDamageSplit counts summing exactly to the stated amount. With trample, damage may reach the defending seat only after every blocker has at least lethal damage assigned.`;
+
+const MANA_SPLIT_PRIMER = `Return manaSplit counts summing exactly to the stated amount and use only offered mana categories.`;
+
+const ORDER_OR_VALUE_PRIMER = `Return every supplemental field required by this request (modes, xValue, order, or selected cards) using only offered values and the requested cardinality.`;
+
+/** Build only the tactical instructions this decision can consume. */
+export function tacticianPrimerFor(request: DecisionRequest): string {
+  const fragments = [TACTICIAN_COMMON_PRIMER];
+  if (request.legalActions.some((action) => action.type === 'playLand')) {
+    fragments.push(LAND_AND_MANA_PRIMER);
+  }
+  if (request.legalActions.some((action) => (action.targets?.length ?? 0) > 0)) {
+    fragments.push(TARGETING_PRIMER);
+  }
+  if (request.decisionType === 'declareAttackers') fragments.push(ATTACK_PRIMER);
+  if (request.decisionType === 'declareBlockers') fragments.push(BLOCK_PRIMER);
+  if (request.combatDamageSplit !== undefined || request.decisionType === 'assignCombatDamage') {
+    fragments.push(COMBAT_DAMAGE_PRIMER);
+  }
+  if (request.manaSplit !== undefined) fragments.push(MANA_SPLIT_PRIMER);
+  if (['chooseModes', 'chooseX', 'orderTriggers', 'bottomCards'].includes(request.decisionType)) {
+    fragments.push(ORDER_OR_VALUE_PRIMER);
+  }
+  return fragments.join('\n\n');
+}
+
+/** Strategist-only instructions; tactical serialization stays in `TACTICIAN_PRIMER`. */
+export const STRATEGIST_PRIMER = `You are the strategist for one seat in a four-player Commander (EDH) game.
+The rules engine is authoritative. Your plan is advisory: every action still has to match a legal
+engine menu when the tactician reaches it.
+
+Plan the active player's turn from the information that player may observe. Never assume hidden
+hands, library order, opponent decklists, future draws, or private reasoning. Evaluate public
+graveyards, exile, revealed library tops, commanders, current battlefield characteristics, the
+stack, life, poison, commander damage, and recent public actions.
+yourStrategyProfile describes YOUR deck only; it never describes an opponent's hidden decklist.
+
+Set a concise objective, identify the public threats that can win or stop the plan, sequence lands
+and spells, reserve interaction or protection when justified, and adapt the line to likely
+opponent responses. Prefer conditional intentions over pretending an uncertain action will remain
+available. Do not adjudicate legality and do not invent card text.
+
+Return ONLY this JSON envelope, preserving actionId 0 for parser compatibility:
+{"actionId":0,"turnStrategy":{"intent":"concise objective","threatOrder":["P2"],"manaPlan":"sequencing and reservation plan","plannedActions":[{"id":"a1","type":"playLand","name":"Card name","source":{"objectId":"visible object id","name":"Card name"},"phase":"precombatMain","step":null,"preconditions":[{"kind":"phaseReached","phase":"precombatMain","step":null}],"dependencies":[],"objective":"why this advances the plan","expectedEffect":"what public state should change","alternative":"what to do if unavailable"}]}}`;

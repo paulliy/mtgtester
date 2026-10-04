@@ -55,10 +55,11 @@ bun run decks <url-or-file>   # import and validate a deck
 bun run coverage              # real-deck model coverage
 bun run staples               # coverage of 200 EDH staples
 bun run combat-sweep --games 120 --seed s
+bun run agent-client          # play one seat from a program over the running server
 bun run test:e2e              # Playwright browser tests
 ```
 
-For the full command reference and contributor guidance, see [CLAUDE.MD](CLAUDE.MD).
+For the full command reference and contributor guidance, see [CLAUDE.md](CLAUDE.md).
 
 ## Current limitations
 
@@ -68,7 +69,7 @@ For the full command reference and contributor guidance, see [CLAUDE.MD](CLAUDE.
 
 ## Documentation map
 
-- [ADRs](docs/decisions/) are the source of truth for major design choices. Start with [card templates](docs/decisions/0025-card-template-layer.md) and [bounded combat search](docs/decisions/0024-bounded-combat-search.md).
+- [ADRs](docs/decisions/) are the source of truth for major design choices. Start with [card templates](docs/decisions/0025-card-template-layer.md) and [bounded combat search](docs/decisions/0024-bounded-combat-search.md); ADRs 0026 through 0028 cover the LLM provider.
 - [Card coverage plans](docs/plans/edh-staple-coverage.md) and [post-Tier-3 work](docs/plans/post-tier3-card-coverage.md) describe the modeling backlog.
 - The [project review](docs/reviews/project-review-2026-09-04.md), [remediation](docs/reviews/audit-remediation-2026-09-05.md), and [browser trial](docs/reviews/browser-experience-2026-09-05.md) contain the latest evidence-backed quality state.
 - [Rules reference](docs/rules/) is implementation material and is never sent to an AI provider.

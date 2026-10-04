@@ -34,9 +34,9 @@ onMounted(async () => {
 });
 
 watch(
-  () => store.cardTestScenario?.id,
-  (id) => {
-    if (id !== undefined && id !== null) void router.push('/game');
+  () => store.gameId,
+  (gameId) => {
+    if (gameId !== null) void router.push('/game');
   },
 );
 

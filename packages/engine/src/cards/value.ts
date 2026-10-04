@@ -80,6 +80,7 @@ export type Value =
   | { kind: 'cardTypesInAllGraveyards' }
   /** `of` plus a constant, e.g. Tarmogoyf's toughness = types + 1. */
   | { kind: 'plus'; of: Value; n: number }
+  | { kind: 'negate'; of: Value }
   /** `of` multiplied — Thrakkus's "double the power of each Dragon". */
   | { kind: 'times'; of: Value; n: number }
   /** "the number of Dragons you control" / "the number of lands you control". */
@@ -137,6 +138,8 @@ export type Value =
   /** "Where X is that artifact's mana value" (Hoard-Smelter Dragon) — the target's mana value. */
   | { kind: 'manaValueOfTarget'; target: EffectRef }
   | { kind: 'commanderCastCount'; player?: 'you' }
+  /** Number of distinct colors in the controller's commanders' color identity. */
+  | { kind: 'commanderIdentityColorCount' }
   | { kind: 'lifeTotal'; scope?: 'you' | 'eventPlayer' }
   | { kind: 'countOpponentsWithFewerCreatures' }
   | { kind: 'creaturesDiedThisTurn' }
@@ -175,6 +178,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'const':
       return false;
     case 'plus':
+    case 'negate':
     case 'times':
       return isDynamicValue(value.of);
     default:
@@ -189,6 +193,7 @@ export function needsScope(value: Value): boolean {
     case 'cardTypesInAllGraveyards':
       return false;
     case 'plus':
+    case 'negate':
     case 'times':
       return needsScope(value.of);
     default:
@@ -245,6 +250,8 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       return value.n;
     case 'plus':
       return evaluateValue(ctx, value.of, scope) + value.n;
+    case 'negate':
+      return -evaluateValue(ctx, value.of, scope);
     case 'times':
       return evaluateValue(ctx, value.of, scope) * value.n;
     case 'cardTypesInAllGraveyards':
@@ -278,6 +285,15 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       const player = ctx.state.players.find((p) => p.id === scope.controllerId);
       if (!player) return 0;
       return Object.values(player.commanderCastCount).reduce((sum, n) => sum + n, 0);
+    }
+    case 'commanderIdentityColorCount': {
+      if (scope?.controllerId === undefined) {
+        throw new Error(
+          'engine bug: value "commanderIdentityColorCount" needs a source controller',
+        );
+      }
+      const player = ctx.state.players.find((p) => p.id === scope.controllerId);
+      return player?.commanderColorIdentity.length ?? 0;
     }
     default:
       throw new Error(

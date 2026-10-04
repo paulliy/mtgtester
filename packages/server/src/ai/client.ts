@@ -6,6 +6,8 @@
 import type { DecisionRequest, DecisionResponse } from '@mtg/shared';
 import type { AiConfig } from './config';
 import type { AiPrompt } from './context';
+import type { ContextBudgetReport } from './context-budget';
+import type { PromptCacheMetadata } from './prompt-cache';
 import {
   AiResponseValidationError,
   AuthenticationError,
@@ -22,15 +24,77 @@ import { withRetry } from './retry';
 
 export interface CallMeta {
   model: string;
+  /** Model requested on the successful attempt; kept separate from response-reported identity. */
+  requestedModel?: string;
+  responseModel?: string;
+  backend?: string;
+  providerRequestId?: string;
+  finishReason?: string;
   promptTokens: number;
   responseTokens: number;
+  promptTokenSource?: 'reported' | 'estimated' | 'unknown';
+  responseTokenSource?: 'reported' | 'estimated' | 'unknown';
   latencyMs: number;
   wasRetry: boolean;
   wasFallback: boolean;
   rawResponse: string;
   /** Provider-reported request cost when the OpenAI-compatible endpoint supplies it. */
   costUsd?: number;
+  costSource?: 'reported' | 'estimated' | 'unknown' | 'not_applicable';
+  contextReport?: ContextBudgetReport;
+  promptCache?: PromptCacheMetadata;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  cacheStatus?: 'observed_hit' | 'observed_miss' | 'unknown';
 }
+
+export type AiAttemptStatus = 'accepted' | 'rejected' | 'http_error' | 'transport_error';
+
+/** One physical provider request. Corrective retries and transport retries are separate rows. */
+export interface AiNetworkAttempt {
+  schemaVersion: 1;
+  kind?: 'chat' | 'decision';
+  logicalRequestId: string;
+  attemptIndex: number;
+  requestedModel: string;
+  responseModel?: string;
+  backend?: string;
+  providerRequestId?: string;
+  status: AiAttemptStatus;
+  startedAt: string;
+  endedAt: string;
+  durationMs: number;
+  messages: AiPrompt['messages'];
+  decisionRequest?: unknown;
+  effectiveConfig: Record<string, unknown>;
+  contextReport?: ContextBudgetReport;
+  promptCache?: PromptCacheMetadata;
+  rawResponse?: string;
+  finishReason?: string;
+  error?: string;
+  usage: {
+    promptTokens?: number;
+    responseTokens?: number;
+    costUsd?: number;
+    promptTokenSource: 'reported' | 'estimated' | 'unknown';
+    responseTokenSource: 'reported' | 'estimated' | 'unknown';
+    costSource: 'reported' | 'estimated' | 'unknown';
+    cacheReadTokens?: number;
+    cacheWriteTokens?: number;
+    cacheStatus?: 'observed_hit' | 'observed_miss' | 'unknown';
+  };
+  /** Present only for benchmark artifacts so combined reports can attribute physical attempts. */
+  benchmark?: {
+    runId: string;
+    variantId: string;
+    caseId: string;
+    trial: number;
+    role: 'tactician' | 'strategist';
+    mode: 'raw' | 'production';
+  };
+}
+
+export type AiAttemptObserver = (attempt: AiNetworkAttempt) => void | Promise<void>;
 
 /**
  * Effort levels the wire accepts. `max` is this project's vocabulary, not the API's — the
@@ -76,6 +140,7 @@ export function reasoningParams(
 
 export interface AiClient {
   readonly activeModel: string;
+  setAttemptObserver?(observer: AiAttemptObserver | undefined): void;
   requestDecision(
     prompt: AiPrompt,
     request: DecisionRequest,
@@ -87,13 +152,22 @@ export interface AiClient {
 export class OpenAiCompatibleClient implements AiClient {
   private modelIndex = 0;
   private readonly hardBarrierModels = new Set<string>();
+  private readonly attemptCountsByRequest = new Map<string, number>();
+  private attemptObserver: AiAttemptObserver | undefined;
 
   constructor(
     private readonly config: AiConfig,
     private readonly fetchImpl: typeof fetch = fetch,
     private readonly sleepImpl: (ms: number) => Promise<void> = (ms) =>
       new Promise((resolve) => setTimeout(resolve, ms)),
-  ) {}
+    attemptObserver?: AiAttemptObserver,
+  ) {
+    this.attemptObserver = attemptObserver;
+  }
+
+  setAttemptObserver(observer: AiAttemptObserver | undefined): void {
+    this.attemptObserver = observer;
+  }
 
   get activeModel(): string {
     return this.config.models[this.modelIndex] ?? 'gemini-3.5-flash-lite';
@@ -169,6 +243,22 @@ export class OpenAiCompatibleClient implements AiClient {
       try {
         const metaResult = await withRetry(
           async () => {
+            const thisAttempt = this.attemptCountsByRequest.get(request.requestId) ?? 0;
+            this.attemptCountsByRequest.set(request.requestId, thisAttempt + 1);
+            const attemptStartedMs = Date.now();
+            const startedAt = new Date(attemptStartedMs).toISOString();
+            let attemptRecorded = false;
+            let attemptRawResponse: string | undefined;
+            let attemptResponseModel: string | undefined;
+            let attemptBackend: string | undefined;
+            let attemptProviderRequestId: string | undefined;
+            let attemptFinishReason: string | undefined;
+            let attemptUsage: AiNetworkAttempt['usage'] = {
+              promptTokenSource: 'unknown',
+              responseTokenSource: 'unknown',
+              costSource: 'unknown',
+              cacheStatus: 'unknown',
+            };
             const reasoningOn =
               this.config.reasoningEnabled === true && this.config.reasoningEffort !== 'none';
             const answerTokens = this.config.maxOutputTokens ?? DEFAULT_AI_CONFIG.maxOutputTokens;
@@ -194,91 +284,238 @@ export class OpenAiCompatibleClient implements AiClient {
               }
               if (Object.keys(provider).length > 0) bodyPayload['provider'] = provider;
             }
+            const effectiveConfig = {
+              endpoint,
+              model: currentModel,
+              temperature: bodyPayload['temperature'],
+              maxTokens: bodyPayload['max_tokens'],
+              responseFormat: bodyPayload['response_format'],
+              reasoning: bodyPayload['reasoning'] ?? bodyPayload['reasoning_effort'] ?? 'omitted',
+              provider: bodyPayload['provider'] ?? 'default',
+              promptCache: prompt.promptCache ?? 'disabled',
+              timeoutMs: this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
+            };
+            const recordAttempt = async (
+              attempt: Omit<
+                AiNetworkAttempt,
+                | 'schemaVersion'
+                | 'logicalRequestId'
+                | 'attemptIndex'
+                | 'requestedModel'
+                | 'startedAt'
+                | 'endedAt'
+                | 'durationMs'
+                | 'messages'
+                | 'effectiveConfig'
+              >,
+            ): Promise<void> => {
+              if (attemptRecorded) return;
+              attemptRecorded = true;
+              if (this.attemptObserver === undefined) return;
+              const endedMs = Date.now();
+              await this.attemptObserver({
+                schemaVersion: 1,
+                logicalRequestId: request.requestId,
+                attemptIndex: thisAttempt,
+                requestedModel: currentModel,
+                startedAt,
+                endedAt: new Date(endedMs).toISOString(),
+                durationMs: endedMs - attemptStartedMs,
+                messages: prompt.messages,
+                effectiveConfig,
+                ...(prompt.contextReport === undefined
+                  ? {}
+                  : { contextReport: prompt.contextReport }),
+                ...(prompt.promptCache === undefined ? {} : { promptCache: prompt.promptCache }),
+                ...attempt,
+              });
+            };
 
-            const timeoutSignal = AbortSignal.timeout(
-              this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
-            );
-            const res = await this.fetchImpl(endpoint, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                ...(this.config.apiKey ? { Authorization: `Bearer ${this.config.apiKey}` } : {}),
-              },
-              body: JSON.stringify(bodyPayload),
-              // A caller-supplied signal aborts the in-flight HTTP call itself, not just the wait
-              // that precedes it — the whole reason this exists (a halted match's strategist call
-              // was otherwise unstoppable once it started; see queue.ts).
-              signal:
-                signal !== undefined ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal,
-            });
+            try {
+              const timeoutSignal = AbortSignal.timeout(
+                this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
+              );
+              const res = await this.fetchImpl(endpoint, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(this.config.apiKey ? { Authorization: `Bearer ${this.config.apiKey}` } : {}),
+                },
+                body: JSON.stringify(bodyPayload),
+                signal:
+                  signal !== undefined ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal,
+              });
 
-            if (!res.ok) {
-              const errorText = await res.text();
-              if (
-                res.status === 401 ||
-                res.status === 403 ||
-                errorText.includes('API_KEY_INVALID') ||
-                errorText.includes('UNAUTHENTICATED') ||
-                errorText.includes('invalid_api_key')
-              ) {
-                throw new AuthenticationError(
-                  `API authentication failed (HTTP ${res.status}): ${errorText}`,
+              if (!res.ok) {
+                const errorText = await res.text();
+                attemptRawResponse = errorText;
+                await recordAttempt({
+                  status: 'http_error',
+                  rawResponse: errorText,
+                  error: `HTTP ${res.status}`,
+                  usage: {
+                    promptTokenSource: 'unknown',
+                    responseTokenSource: 'unknown',
+                    costSource: 'unknown',
+                    cacheStatus: 'unknown',
+                  },
+                });
+                if (
+                  res.status === 401 ||
+                  res.status === 403 ||
+                  errorText.includes('API_KEY_INVALID') ||
+                  errorText.includes('UNAUTHENTICATED') ||
+                  errorText.includes('invalid_api_key')
+                ) {
+                  throw new AuthenticationError(
+                    `API authentication failed (HTTP ${res.status}): ${errorText}`,
+                  );
+                }
+                if (
+                  res.status === 404 ||
+                  errorText.includes('model_not_found') ||
+                  errorText.includes('NOT_FOUND')
+                ) {
+                  throw new ModelUnavailableError(currentModel, errorText);
+                }
+                throw new HttpError(res.status, errorText);
+              }
+
+              const data = (await res.json()) as {
+                id?: string;
+                model?: string;
+                provider?: string;
+                choices?: Array<{
+                  finish_reason?: string;
+                  message?: { content?: string; reasoning?: string; reasoning_content?: string };
+                }>;
+                usage?: {
+                  prompt_tokens?: number;
+                  completion_tokens?: number;
+                  cost?: number;
+                  prompt_tokens_details?: { cached_tokens?: number };
+                  cache_read_input_tokens?: number;
+                  cache_write_input_tokens?: number;
+                };
+              };
+
+              const choice = data.choices?.[0];
+              const message = choice?.message;
+              attemptResponseModel = data.model;
+              attemptBackend = data.provider;
+              attemptProviderRequestId = data.id;
+              attemptFinishReason = choice?.finish_reason;
+              /**
+               * A thinking model that runs out of budget mid-thought returns empty `content` with
+               * everything it wrote in `reasoning` — and the decision JSON is usually in there.
+               * Reading it back is free and turns a dead call into an answered one.
+               */
+              const rawContent =
+                (message?.content ?? '').trim().length > 0
+                  ? (message?.content as string)
+                  : (message?.reasoning ?? message?.reasoning_content ?? '');
+
+              attemptRawResponse = rawContent;
+              const promptTokenSource =
+                typeof data.usage?.prompt_tokens === 'number' ? 'reported' : 'estimated';
+              const responseTokenSource =
+                typeof data.usage?.completion_tokens === 'number' ? 'reported' : 'estimated';
+              const cacheReadTokens =
+                data.usage?.cache_read_input_tokens ??
+                data.usage?.prompt_tokens_details?.cached_tokens;
+              const cacheWriteTokens = data.usage?.cache_write_input_tokens;
+              const cacheStatus =
+                cacheReadTokens === undefined && cacheWriteTokens === undefined
+                  ? 'unknown'
+                  : (cacheReadTokens ?? 0) > 0
+                    ? 'observed_hit'
+                    : 'observed_miss';
+              attemptUsage = {
+                promptTokens: data.usage?.prompt_tokens ?? prompt.estimatedTokens,
+                responseTokens: data.usage?.completion_tokens ?? Math.ceil(rawContent.length / 4),
+                ...(typeof data.usage?.cost === 'number' ? { costUsd: data.usage.cost } : {}),
+                promptTokenSource,
+                responseTokenSource,
+                costSource: typeof data.usage?.cost === 'number' ? 'reported' : 'unknown',
+                ...(cacheReadTokens === undefined ? {} : { cacheReadTokens }),
+                ...(cacheWriteTokens === undefined ? {} : { cacheWriteTokens }),
+                cacheStatus,
+              };
+              if (!rawContent.trim()) {
+                const finish = choice?.finish_reason;
+                throw new AiResponseValidationError(
+                  `Empty content received from AI provider` +
+                    (finish !== undefined ? ` (finish_reason: ${finish})` : ''),
+                  rawContent,
                 );
               }
-              if (
-                res.status === 404 ||
-                errorText.includes('model_not_found') ||
-                errorText.includes('NOT_FOUND')
-              ) {
-                throw new ModelUnavailableError(currentModel, errorText);
-              }
-              throw new HttpError(res.status, errorText);
+
+              const latencyMs = Date.now() - startTime;
+              const parsed = parseJsonResponse(rawContent, request);
+              await recordAttempt({
+                status: 'accepted',
+                ...(data.model !== undefined ? { responseModel: data.model } : {}),
+                ...(data.provider !== undefined ? { backend: data.provider } : {}),
+                ...(data.id !== undefined ? { providerRequestId: data.id } : {}),
+                rawResponse: rawContent,
+                ...(choice?.finish_reason !== undefined
+                  ? { finishReason: choice.finish_reason }
+                  : {}),
+                usage: attemptUsage,
+              });
+
+              const meta: CallMeta = {
+                model: currentModel,
+                requestedModel: currentModel,
+                ...(data.model !== undefined ? { responseModel: data.model } : {}),
+                ...(data.provider !== undefined ? { backend: data.provider } : {}),
+                ...(data.id !== undefined ? { providerRequestId: data.id } : {}),
+                ...(choice?.finish_reason !== undefined
+                  ? { finishReason: choice.finish_reason }
+                  : {}),
+                promptTokens: data.usage?.prompt_tokens ?? prompt.estimatedTokens,
+                responseTokens: data.usage?.completion_tokens ?? Math.ceil(rawContent.length / 4),
+                promptTokenSource,
+                responseTokenSource,
+                latencyMs,
+                wasRetry: false,
+                wasFallback: false,
+                rawResponse: rawContent,
+                ...(typeof data.usage?.cost === 'number' ? { costUsd: data.usage.cost } : {}),
+                costSource: typeof data.usage?.cost === 'number' ? 'reported' : 'unknown',
+                ...(cacheReadTokens === undefined ? {} : { cacheReadTokens }),
+                ...(cacheWriteTokens === undefined ? {} : { cacheWriteTokens }),
+                cacheStatus,
+                ...(prompt.contextReport === undefined
+                  ? {}
+                  : { contextReport: prompt.contextReport }),
+                ...(prompt.promptCache === undefined ? {} : { promptCache: prompt.promptCache }),
+              };
+
+              return { response: parsed, meta };
+            } catch (error) {
+              const status: AiAttemptStatus =
+                error instanceof HttpError
+                  ? 'http_error'
+                  : error instanceof AiResponseValidationError
+                    ? 'rejected'
+                    : 'transport_error';
+              await recordAttempt({
+                status,
+                ...(attemptResponseModel !== undefined
+                  ? { responseModel: attemptResponseModel }
+                  : {}),
+                ...(attemptBackend !== undefined ? { backend: attemptBackend } : {}),
+                ...(attemptProviderRequestId !== undefined
+                  ? { providerRequestId: attemptProviderRequestId }
+                  : {}),
+                ...(attemptFinishReason !== undefined ? { finishReason: attemptFinishReason } : {}),
+                ...(attemptRawResponse !== undefined ? { rawResponse: attemptRawResponse } : {}),
+                error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+                usage: attemptUsage,
+              });
+              throw error;
             }
-
-            const data = (await res.json()) as {
-              choices?: Array<{
-                finish_reason?: string;
-                message?: { content?: string; reasoning?: string; reasoning_content?: string };
-              }>;
-              usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number };
-            };
-
-            const choice = data.choices?.[0];
-            const message = choice?.message;
-            /**
-             * A thinking model that runs out of budget mid-thought returns empty `content` with
-             * everything it wrote in `reasoning` — and the decision JSON is usually in there.
-             * Reading it back is free and turns a dead call into an answered one.
-             */
-            const rawContent =
-              (message?.content ?? '').trim().length > 0
-                ? (message?.content as string)
-                : (message?.reasoning ?? message?.reasoning_content ?? '');
-
-            if (!rawContent.trim()) {
-              const finish = choice?.finish_reason;
-              throw new AiResponseValidationError(
-                `Empty content received from AI provider` +
-                  (finish !== undefined ? ` (finish_reason: ${finish})` : ''),
-                rawContent,
-              );
-            }
-
-            const latencyMs = Date.now() - startTime;
-            const parsed = parseJsonResponse(rawContent, request);
-
-            const meta: CallMeta = {
-              model: currentModel,
-              promptTokens: data.usage?.prompt_tokens ?? prompt.estimatedTokens,
-              responseTokens: data.usage?.completion_tokens ?? Math.ceil(rawContent.length / 4),
-              latencyMs,
-              wasRetry: false,
-              wasFallback: false,
-              rawResponse: rawContent,
-              ...(typeof data.usage?.cost === 'number' ? { costUsd: data.usage.cost } : {}),
-            };
-
-            return { response: parsed, meta };
           },
           this.config,
           undefined,

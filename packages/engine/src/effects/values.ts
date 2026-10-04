@@ -37,6 +37,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return value.n;
     case 'plus':
       return evaluateValueIn(ctx, value.of, scope) + value.n;
+    case 'negate':
+      return -evaluateValueIn(ctx, value.of, scope);
     case 'times':
       return evaluateValueIn(ctx, value.of, scope) * value.n;
     case 'cardTypesInAllGraveyards':
@@ -191,6 +193,10 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       const player = ctx.state.players.find((p) => p.id === scope.controllerId);
       if (!player || !player.commanderCastCount) return 0;
       return Object.values(player.commanderCastCount).reduce((sum, n) => sum + n, 0);
+    }
+    case 'commanderIdentityColorCount': {
+      const player = ctx.state.players.find((p) => p.id === scope.controllerId);
+      return player?.commanderColorIdentity.length ?? 0;
     }
     case 'lifeTotal': {
       const targetPlayerId =
