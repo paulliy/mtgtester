@@ -1,6 +1,6 @@
 # UI polish plan
 
-Prepared 2026-10-04 for review. Status: **in progress** — U1 and U2 are done; U3–U5 are proposed.
+Prepared 2026-10-04 for review. Status: **in progress** — U1–U3 are done; U4 and U5 are proposed.
 Desktop first; narrow-screen layout is deliberately deferred.
 
 This plan covers the larger UI work found in a live walkthrough of the app on 2026-10-04 (setup,
@@ -28,7 +28,7 @@ These small fixes shipped separately and are not repeated below:
 | ----- | ---------------------------------------- | ------ | -------------------------------------------------- |
 | 1     | U1 Recover an orphaned player session    | Small  | Done 2026-10-04 (idle expiry only, by decision)    |
 | 2     | U2 Make playable actions obvious         | Medium | Done 2026-10-04, including the land-drop reminder  |
-| 3     | U3 Correct "Who beats me" and tidy stats | Medium | Statistics currently contradict themselves         |
+| 3     | U3 Correct "Who beats me" and tidy stats | Medium | Done 2026-10-04                                    |
 | 4     | U4 Player board hierarchy and density    | Large  | Biggest visual change; needs a design review first |
 | —     | U5 Test coverage for the player flow     | Medium | Runs alongside U2–U4, not after them               |
 | Later | U6 Narrow-screen layout                  | Large  | Deferred by decision on 2026-10-04                 |
@@ -91,16 +91,22 @@ opponents under "Who beats me", and a deck can "beat itself". Separately, unname
 decks, repeated snapshots of the same commander, and two "Unavailable" mana rows per deck make the
 page hard to scan.
 
-**Proposal.**
+**Done.**
 
-1. Record an eliminator only for seats that actually lost, and never the seat itself.
-2. Filter `lossesTo` to genuine losses (`loss_reason IS NOT NULL`), so existing rows display
-   correctly without rewriting them. Per the contributor guide, historical rows are not changed.
-3. Group statistics by deck with snapshots as a secondary breakdown, and collapse mana metrics
-   into one "Mana rates unavailable for these games" note when both are null.
+1. The runner credits an eliminator (`eliminatorFor` in `match/runner.ts`) only for a player who
+   lost, not by drawing from an empty library, to another seat. It is still "last seat to deal
+   damage", so a life-loss effect after that damage is not seen.
+2. Both "Who beats me" queries apply the same rule, so rows written before the change display
+   correctly without being rewritten.
+3. Saved and imported decks are listed first; pool-generated decks are folded into a collapsed
+   "Generated decks (N)" section. They are not merged by commander, because each generated deck
+   has its own random list. One "Flood / drought: Unavailable" tile replaces the two mana tiles
+   when neither rate can be calculated.
 
-**Verification.** Focused regressions in `packages/server/src/db/stats.test.ts` (a winner with
-an attribution, a self-attribution) and a runner test that a winner records no eliminator.
+Regressions: `packages/server/src/db/stats-attribution.test.ts` (real SQLite with the old row
+shapes: a winner, a self-attribution, a decked player; plus the `generated` flag), `eliminatorFor`
+unit tests and a full seeded game in `match/runner.test.ts`, and a mocked stats page test in
+`apps/web/e2e/audit-smoke.spec.ts`.
 
 ## U4 Player board hierarchy and density
 
