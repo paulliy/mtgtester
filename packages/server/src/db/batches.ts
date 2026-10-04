@@ -301,7 +301,12 @@ export class BatchRepository {
             scenarioId,
           );
     const requested = n(requestedRow?.['total'] ?? requestedRow?.['games']);
-    const all = rows(this.db, `SELECT bg.game_id FROM batch_games bg WHERE ${clause}`, ...args);
+    // Games that have ended; a game still running is not yet finished or failed.
+    const all = rows(
+      this.db,
+      `SELECT bg.game_id FROM batch_games bg WHERE ${clause} AND bg.status NOT IN ('running', 'queued')`,
+      ...args,
+    );
     const turns = finished.map((row) => n(row['turn_count']));
     const wins = new Map<PlayerId, number>();
     const places = new Map<PlayerId, number[]>();

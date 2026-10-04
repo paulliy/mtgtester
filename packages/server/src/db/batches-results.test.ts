@@ -26,6 +26,9 @@ it('reports how far a failed batch game got from its recorded events', () => {
     repo.createGame('batch', 'pod', 1, 'finished', 's2');
     db.query("INSERT INTO games (id, seed, status, turn_count) VALUES ('finished', 's2', 'finished', 36)").run();
     event.run('finished', 0, 36);
+    db.query("INSERT INTO decks (id, name, source_type, archetype_tag, created_at) VALUES ('deck', 'Deck', 'generated', 'tag', 'now')").run();
+    db.query("INSERT INTO deck_snapshots (id, deck_id, commander_names, color_identity, card_list_json, imported_at) VALUES ('snapshot', 'deck', '[]', '[]', '[]', 'now')").run();
+    db.query("INSERT INTO game_players (game_id, seat, deck_snapshot_id, finished_position) VALUES ('finished', 1, 'snapshot', 1)").run();
     repo.markGame('finished', 'finished');
     repo.createGame('batch', 'pod', 2, 'queued', 's3');
     const running = repo.progress('batch');
@@ -34,6 +37,7 @@ it('reports how far a failed batch game got from its recorded events', () => {
       finished: running.finishedGames,
       failed: running.failedGames,
       scenario: [running.scenarios[0].completedGames, running.scenarios[0].status],
+      aggregateFailed: repo.results('batch').aggregate.gamesFailed,
     };
     const games = repo.results('batch').games.map((game) => ({
       id: game.gameId,
@@ -65,5 +69,6 @@ it('reports how far a failed batch game got from its recorded events', () => {
     finished: 1,
     failed: 1,
     scenario: [2, 'failed'],
+    aggregateFailed: 1,
   });
 });
