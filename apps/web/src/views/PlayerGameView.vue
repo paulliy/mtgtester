@@ -379,6 +379,18 @@ const playableSources = computed(() => {
     name: nameById.value.get(id) ?? id,
   }));
 });
+/** The "Playable now" list: identical entries (three Swamps) collapse to one with a count. */
+const playableList = computed(() => {
+  const groups = new Map<string, { key: string; ids: string[]; verb: string; name: string }>();
+  for (const source of playableSources.value) {
+    const key = `${source.verb}|${source.name}`;
+    const group = groups.get(key);
+    if (group === undefined)
+      groups.set(key, { key, ids: [source.id], verb: source.verb, name: source.name });
+    else group.ids.push(source.id);
+  }
+  return [...groups.values()];
+});
 const playableVerbById = computed(
   () => new Map(playableSources.value.map((source) => [source.id, source.verb])),
 );
@@ -428,10 +440,38 @@ const canConfirm = computed(() =>
 );
 const selectedTargetCount = computed(() => Object.keys(chosenTargets.value).length);
 const targetCount = computed(() => targetSlots(selectedAction.value).length);
-const recentBotActions = computed(() =>
-  store.log
-    .filter((line) => line.actorSeat !== null && line.actorSeat !== state.value?.viewerSeat)
-    .slice(-4),
+/**
+ * What each opponent did since you last did something other than pass, grouped by seat so "takes mulligan"
+ * four times reads as who did what. Turn markers are skipped; each seat shows its latest few
+ * lines and how many more there were.
+ */
+const BOT_LINES_PER_SEAT = 3;
+const opponentActivity = computed(() => {
+  const viewer = state.value?.viewerSeat;
+  const since = store.lastPlayerActionSequence;
+  const bySeat = new Map<string, Array<{ sequence: number; text: string }>>();
+  for (const line of store.log) {
+    if (since !== null && line.sequence <= since) continue;
+    if (line.actorSeat === null || line.actorSeat === viewer || line.emphasis === 'turn') continue;
+    const lines = bySeat.get(line.actorSeat) ?? [];
+    lines.push({ sequence: line.sequence, text: line.text });
+    bySeat.set(line.actorSeat, lines);
+  }
+  return [...bySeat].map(([seat, lines]) => ({
+    seat,
+    label: seatLabel(seat),
+    lines: lines.slice(-BOT_LINES_PER_SEAT),
+    more: Math.max(0, lines.length - BOT_LINES_PER_SEAT),
+  }));
+});
+
+/** The active opponent's column is wider, so the seat whose turn it is reads first. */
+const opponentColumns = computed(() =>
+  opponents.value
+    .map((opponent) =>
+      opponent.seat === state.value?.activePlayer ? 'minmax(0, 1.5fr)' : 'minmax(0, 1fr)',
+    )
+    .join(' '),
 );
 
 function isImmediate(action: LegalAction): boolean {
@@ -749,6 +789,11 @@ function hideCardPreview(): void {
   cardPreview.hide();
 }
 
+/** The highest tax on any of your commanders — what recasting the next one adds. */
+const commanderTax = computed(() =>
+  Math.max(0, ...(human.value?.commanders ?? []).map((commander) => commander.taxGeneric)),
+);
+
 function resourceSummary(pool: ManaPool): string {
   const entries = Object.entries(pool).filter(([, amount]) => amount > 0);
   return entries.length === 0
@@ -960,7 +1005,7 @@ function abandon(): void {
     <main v-if="state" class="player-layout">
       <section ref="tableRef" class="table" @dragover="onBoardDragOver">
         <CombatOverlay :drag-source-id="draggedId" :pointer="dragPointer" />
-        <div class="opponents">
+        <div class="opponents" :style="{ gridTemplateColumns: opponentColumns }">
           <article
             v-for="opponent in opponents"
             :key="opponent.seat"
@@ -1008,7 +1053,7 @@ function abandon(): void {
                   size="small"
                 />
               </div>
-              <span>{{ opponent.handSize }} cards · {{ opponent.librarySize }} lib</span>
+              <span>{{ opponent.handSize }} in hand · {{ opponent.librarySize }} in library</span>
             </div>
             <div class="permanents">
               <div
@@ -1070,17 +1115,41 @@ function abandon(): void {
               title="You are the monarch"
               >MONARCH</span
             >
-            <span class="lib-note">{{ human.librarySize }} library</span>
           </header>
           <GlobalCounters
             :energy="human.energy"
             :poison-counters="human.poisonCounters"
             :counters="human.counters"
           />
-          <div class="resource-strip">
-            {{ human.landsPlayedThisTurn === 0 ? 'Land available' : 'Land played'
-            }}<template v-if="resourceSummary(human.manaPool)">
-              ? Pool {{ resourceSummary(human.manaPool) }}</template
+          <div class="resource-strip" aria-label="Your resources">
+            <span class="resource" :class="{ ready: human.landsPlayedThisTurn === 0 }">{{
+              human.landsPlayedThisTurn === 0 ? 'Land drop available' : 'Land played'
+            }}</span>
+            <span
+              class="resource"
+              title="Mana you can make right now: floating mana plus untapped sources that need no mana to activate."
+              >Mana ready <strong>{{ state.viewerMana.units }}</strong
+              ><template v-if="state.viewerMana.colors.length > 0">
+                · {{ state.viewerMana.colors.join(' ') }}</template
+              ></span
+            >
+            <span v-if="resourceSummary(human.manaPool)" class="resource"
+              >Floating <strong>{{ resourceSummary(human.manaPool) }}</strong></span
+            >
+            <span v-if="commanderTax > 0" class="resource"
+              >Commander tax <strong>+{{ commanderTax }}</strong></span
+            >
+            <span class="resource"
+              >Hand <strong>{{ human.hand?.length ?? human.handSize }}</strong></span
+            >
+            <span class="resource"
+              >Library <strong>{{ human.librarySize }}</strong></span
+            >
+            <span class="resource"
+              >Graveyard <strong>{{ human.graveyard.length }}</strong></span
+            >
+            <span v-if="humanExile.length > 0" class="resource"
+              >Exile <strong>{{ humanExile.length }}</strong></span
             >
           </div>
           <div class="battle-row">
@@ -1388,7 +1457,7 @@ function abandon(): void {
             />
             <template v-else>
               <h3>Your action</h3>
-              <p>{{ playerFacingPrompt(request.prompt) }}</p>
+              <p class="prompt">{{ playerFacingPrompt(request.prompt) }}</p>
               <div v-if="immediateActions.length > 0" class="quick-actions">
                 <button
                   v-for="action in immediateActions"
@@ -1411,13 +1480,16 @@ function abandon(): void {
                 <strong>Playable now</strong>
                 <div class="playable-list">
                   <button
-                    v-for="source in playableSources"
-                    :key="source.id"
+                    v-for="entry in playableList"
+                    :key="entry.key"
                     type="button"
-                    :class="{ focused: focusedSourceId === source.id }"
-                    @click="selectSource(source.id)"
+                    :class="{ focused: entry.ids.includes(focusedSourceId ?? '') }"
+                    @click="selectSource(entry.ids[0] ?? '')"
                   >
-                    <span class="verb">{{ source.verb }}</span> {{ source.name }}
+                    <span class="verb">{{ entry.verb }}</span> {{ entry.name
+                    }}<span v-if="entry.ids.length > 1" class="count">
+                      ×{{ entry.ids.length }}</span
+                    >
                   </button>
                 </div>
               </div>
@@ -1436,15 +1508,17 @@ function abandon(): void {
             </template>
           </template>
           <p v-else class="thinking">Bots are deciding…</p>
-          <div v-if="recentBotActions.length > 0" class="bot-summary">
-            <strong>Recent opponent actions</strong>
-            <p
-              v-for="line in recentBotActions"
-              :key="line.sequence"
-              :title="seatLabel(line.actorSeat ?? '')"
+          <div v-if="opponentActivity.length > 0" class="bot-summary">
+            <strong title="Passing priority doesn't count as an action here."
+              >Since your last action</strong
             >
-              <span class="actor">{{ line.actorSeat }}</span> {{ line.text }}
-            </p>
+            <div v-for="seat in opponentActivity" :key="seat.seat" class="bot-seat">
+              <span class="actor" :title="seat.label">{{ seat.seat }}</span>
+              <ul>
+                <li v-for="line in seat.lines" :key="line.sequence">{{ line.text }}</li>
+                <li v-if="seat.more > 0" class="more">and {{ seat.more }} more in the log</li>
+              </ul>
+            </div>
           </div>
           <div v-if="store.ignoredAbilities.length > 0" class="ignored-abilities">
             <strong>Yielded abilities</strong>
@@ -1593,7 +1667,8 @@ button.selected,
   position: relative;
   min-height: 0;
   display: grid;
-  grid-template-rows: minmax(0, 0.6fr) minmax(0, 1.9fr);
+  /* Opponents take what their boards need, up to a cap; your side gets the rest. */
+  grid-template-rows: fit-content(40%) minmax(0, 1fr);
   gap: 0.6rem;
 }
 .opponents {
@@ -1671,7 +1746,7 @@ button.selected,
   align-items: center;
   gap: 0.3rem;
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   flex-shrink: 0;
 }
 .opp-cmdr-thumb {
@@ -1723,10 +1798,6 @@ button.selected,
 .life-badge.flash-heal {
   animation: flashOk 0.9s ease-out;
 }
-.lib-note {
-  color: var(--muted);
-  font-size: 0.68rem;
-}
 .permanents {
   flex: 1;
   min-height: 0;
@@ -1774,13 +1845,26 @@ button.selected,
   box-shadow: 0 0 10px rgb(110 168 254 / 0.25);
 }
 .resource-strip {
-  display: inline-flex;
-  align-self: flex-start;
-  padding: 0.16rem 0.38rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.15rem 0 0.25rem;
+}
+.resource {
+  padding: 0.14rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 999px;
+  background: var(--surface-2);
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+}
+.resource strong {
+  color: var(--text);
+}
+.resource.ready {
+  border-color: var(--ok);
+  color: var(--ok);
+  font-weight: 600;
 }
 .battle-row {
   flex: 1;
@@ -2014,7 +2098,8 @@ button.selected,
   gap: 0.5rem;
 }
 .decision {
-  max-height: 46%;
+  flex: 0 1 auto;
+  max-height: 62%;
   overflow: auto;
   border: 2px solid var(--accent);
   background: var(--surface);
@@ -2024,6 +2109,11 @@ button.selected,
 .decision h3,
 .decision p {
   margin: 0.15rem 0 0.45rem;
+}
+.decision .prompt {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
 }
 .quick-actions {
   display: flex;
@@ -2132,9 +2222,23 @@ button.primary {
   border-top: 1px solid var(--line);
   font-size: 0.72rem;
 }
-.bot-summary p {
-  margin: 0.2rem 0 0;
+.bot-seat {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+.bot-seat ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   color: var(--muted);
+  min-width: 0;
+}
+.bot-seat li {
+  overflow-wrap: anywhere;
+}
+.bot-seat .more {
+  font-style: italic;
 }
 .bot-summary .actor {
   font-weight: 700;
@@ -2142,7 +2246,7 @@ button.primary {
 }
 .rail :deep(.log) {
   flex: 1;
-  min-height: 0;
+  min-height: 7rem;
 }
 @media (max-width: 900px) {
   .player-layout {

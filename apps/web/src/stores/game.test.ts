@@ -237,6 +237,41 @@ describe('spectator store — server-confirmed position', () => {
     expect(store.canStepAction(1)).toBe(false);
   });
 
+  it('remembers where the log stood when the player last acted, until the next game', () => {
+    store.log = LOG.slice(0, 3);
+    store.playerAction = {
+      request: {
+        requestId: 'r1',
+        legalActions: [
+          { id: 0, type: 'playLand', description: 'Play Forest' },
+          { id: 1, type: 'pass', description: 'Pass priority' },
+        ],
+      },
+      revision: 1,
+    } as never;
+    expect(store.lastPlayerActionSequence).toBeNull();
+
+    store.submitPlayerAction(0);
+    expect(store.lastPlayerActionSequence).toBe(14);
+
+    // Passing is not acting: bot lines since the land play stay summarised.
+    store.log = [...LOG];
+    store.submitPlayerAction(1);
+    expect(store.lastPlayerActionSequence).toBe(14);
+
+    inbound?.({
+      type: 'gameStarted',
+      payload: {
+        gameId: 'g2',
+        seed: 'abc',
+        seats: [],
+        providerKind: 'random',
+        startedAt: new Date().toISOString(),
+      },
+    });
+    expect(store.lastPlayerActionSequence).toBeNull();
+  });
+
   it('starts a player game at the next meaningful choice without racing a second frame', () => {
     sent.length = 0;
     store.startGame(

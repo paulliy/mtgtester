@@ -1371,7 +1371,7 @@ async function runArcaneDenial(page: Page, drawCount: 0 | 2): Promise<void> {
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(handCard(page, 'Caster Secret Draw')).toBeVisible();
   const p4 = page.locator('.opponent').filter({ hasText: 'P4' });
-  await expect(p4).toContainText(`${drawCount} cards`);
+  await expect(p4).toContainText(`${drawCount} in hand`);
   await expect(page.getByText('Target Secret Alpha')).toHaveCount(0);
   await expect(page.getByText('Target Secret Beta')).toHaveCount(0);
   await expect(page.getByText(/Lab Pending Spell is countered by Arcane Denial/i)).toBeVisible();

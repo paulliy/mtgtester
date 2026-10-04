@@ -78,6 +78,13 @@ export const useGameStore = defineStore('game', () => {
   const playerRevision = ref(0);
   const ignoredAbilities = ref<IgnoredPlayerAbility[]>([]);
   const log = ref<SpectatorLogLine[]>([]);
+  /**
+   * The newest log sequence the player had seen when they last made a choice other than passing,
+   * so the board can summarise what the bots did since. Passing does not count: a player with an
+   * always-available ability stops at nearly every priority window, and resetting on each pass
+   * would leave only the latest bot action. Null until the player first acts.
+   */
+  const lastPlayerActionSequence = ref<number | null>(null);
 
   const viewTurn = ref(0);
   const frontierTurn = ref(0);
@@ -253,6 +260,7 @@ export const useGameStore = defineStore('game', () => {
         }
         if (resuming) break;
         log.value = [];
+        lastPlayerActionSequence.value = null;
         halt.value = null;
         gameOver.value = null;
         errors.value = [];
@@ -588,6 +596,10 @@ export const useGameStore = defineStore('game', () => {
   function submitPlayerAction(actionId: number, targets?: TargetChoice[]): void {
     const pending = playerAction.value;
     if (pending === null) return;
+    const type = pending.request.legalActions.find((action) => action.id === actionId)?.type;
+    if (type !== 'pass' && type !== 'passAndYieldTurn') {
+      lastPlayerActionSequence.value = log.value.at(-1)?.sequence ?? null;
+    }
     socket?.send({
       type: 'submitPlayerAction',
       payload: {
@@ -659,6 +671,7 @@ export const useGameStore = defineStore('game', () => {
     playerRevision,
     ignoredAbilities,
     log,
+    lastPlayerActionSequence,
     viewTurn,
     frontierTurn,
     snapshotTurns,
