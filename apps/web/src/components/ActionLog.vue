@@ -9,6 +9,7 @@
  */
 import { computed, nextTick, ref, watch } from 'vue';
 import type { AiAnnotation, SpectatorLogLine } from '@mtg/shared';
+import { playerFacingLogText } from '../lib/lossReasons';
 
 const props = defineProps<{
   lines: SpectatorLogLine[];
@@ -82,7 +83,7 @@ watch(
         >
           <span class="turn">T{{ line.turn }}</span>
           <span class="actor">{{ line.actorSeat ?? '--' }}</span>
-          <span class="text">{{ line.text }}</span>
+          <span class="text">{{ playerFacingLogText(line) }}</span>
         </p>
         <p
           v-for="(note, index) in notesFor(line.sequence)"
