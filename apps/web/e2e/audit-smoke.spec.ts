@@ -45,8 +45,47 @@ test('unreliable mana metrics are unavailable while valid statistics remain visi
   );
   await page.goto('/stats');
   await expect(page.getByText('50% wins')).toBeVisible();
-  await expect(page.getByText('Unavailable', { exact: true })).toHaveCount(2);
+  // One tile covers both rates when neither can be calculated.
+  await expect(page.getByText('Flood / drought', { exact: true })).toBeVisible();
+  await expect(page.getByText('Unavailable', { exact: true })).toHaveCount(1);
   await expect(page.getByText('Mana rates unavailable.', { exact: true })).toBeVisible();
+});
+
+test('statistics list saved decks first and fold generated decks away', async ({ page }) => {
+  const deck = (id: string, name: string, generated: boolean) => ({
+    deckSnapshotId: id,
+    name,
+    generated,
+    commanders: ['Test Commander'],
+    colorIdentity: ['G'],
+    archetypeTag: 'Test',
+    gamesPlayed: 1,
+    wins: 1,
+    winRate: 1,
+    averageFinish: 1,
+    averageGameLength: 12,
+    averageMulligans: 0,
+    mulliganDistribution: [],
+    eliminationCauses: [],
+    lossesTo: [],
+    manaFloodRate: null,
+    manaDroughtRate: null,
+  });
+  await page.route('**/api/stats', (route) =>
+    route.fulfill({
+      json: {
+        decks: [deck('gen', 'Test Commander (generated)', true), deck('mine', 'My Deck', false)],
+      },
+    }),
+  );
+  await page.goto('/stats');
+  await expect(page.getByRole('heading', { name: 'Saved and imported decks' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'My Deck' })).toBeVisible();
+  const generated = page.locator('details', { hasText: 'Generated decks (1)' });
+  await expect(generated).not.toHaveAttribute('open');
+  await expect(page.getByRole('heading', { name: 'Test Commander (generated)' })).toBeHidden();
+  await generated.locator('summary').click();
+  await expect(page.getByRole('heading', { name: 'Test Commander (generated)' })).toBeVisible();
 });
 
 test('statistics can recover from a failed request by refreshing', async ({ page }) => {

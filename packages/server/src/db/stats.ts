@@ -8,6 +8,8 @@ type Row = Record<string, unknown>;
 export interface DeckStatistic {
   deckSnapshotId: string;
   name: string;
+  /** A deck generated from the supported pool for one game; each has its own random list. */
+  generated: boolean;
   commanders: string[];
   colorIdentity: string[];
   archetypeTag: string;
@@ -88,7 +90,7 @@ export class StatsRepository {
     if (batchId !== undefined) return this.batchDeckStatistics(batchId);
     const base = rows(
       this.db,
-      `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag,
+      `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag, d.source_type,
               ds.commander_names, ds.color_identity, COUNT(g.id) AS games_played,
               SUM(CASE WHEN g.id IS NOT NULL AND gp.finished_position = 1 THEN 1 ELSE 0 END) AS wins,
               AVG(CASE WHEN g.id IS NOT NULL THEN gp.finished_position END) AS average_finish,
@@ -106,7 +108,7 @@ export class StatsRepository {
   private batchDeckStatistics(batchId: string): DeckStatistic[] {
     const base = rows(
       this.db,
-      `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag,
+      `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag, d.source_type,
               ds.commander_names, ds.color_identity, COUNT(g.id) AS games_played,
               SUM(CASE WHEN gp.finished_position = 1 THEN 1 ELSE 0 END) AS wins,
               AVG(gp.finished_position) AS average_finish, AVG(g.turn_count) AS average_game_length,
@@ -125,6 +127,7 @@ export class StatsRepository {
       return {
         deckSnapshotId: snapshotId,
         name: String(row['name'] ?? snapshotId),
+        generated: row['source_type'] === 'generated',
         commanders: jsonArray(row['commander_names']),
         colorIdentity: jsonArray(row['color_identity']),
         archetypeTag: String(row['archetype_tag'] ?? ''),
@@ -169,6 +172,7 @@ export class StatsRepository {
     return {
       deckSnapshotId: snapshotId,
       name: String(row['name'] ?? snapshotId),
+      generated: row['source_type'] === 'generated',
       commanders: jsonArray(row['commander_names']),
       colorIdentity: jsonArray(row['color_identity']),
       archetypeTag: String(row['archetype_tag'] ?? ''),

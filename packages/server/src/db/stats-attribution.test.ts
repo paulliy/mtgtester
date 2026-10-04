@@ -19,8 +19,8 @@ it('counts only genuine losses to another seat in "Who beats me"', () => {
     const db = new Database(':memory:');
     db.exec(SCHEMA_SQL);
     const now = new Date().toISOString();
-    for (const [deck, commander] of [['a', 'Alpha'], ['b', 'Beta'], ['c', 'Gamma']]) {
-      db.query("INSERT INTO decks (id, name, source_type, archetype_tag, created_at) VALUES (?, ?, 'plaintext', 'tag', ?)").run(deck, deck, now);
+    for (const [deck, commander, source] of [['a', 'Alpha', 'plaintext'], ['b', 'Beta', 'plaintext'], ['c', 'Gamma', 'generated']]) {
+      db.query("INSERT INTO decks (id, name, source_type, archetype_tag, created_at) VALUES (?, ?, ?, 'tag', ?)").run(deck, deck, source, now);
       db.query("INSERT INTO deck_snapshots (id, deck_id, commander_names, color_identity, card_list_json, imported_at) VALUES (?, ?, ?, '[]', '[]', ?)").run('s' + deck, deck, JSON.stringify([commander]), now);
     }
     const batches = new BatchRepository(db);
@@ -43,12 +43,17 @@ it('counts only genuine losses to another seat in "Who beats me"', () => {
     const stats = new StatsRepository(db);
     const lossesTo = (all) => all.find((deck) => deck.deckSnapshotId === 'sa').lossesTo
       .map((entry) => ({ commanders: entry.commanders, count: entry.count }));
-    console.log(JSON.stringify({ all: lossesTo(stats.deckStatistics()), batch: lossesTo(stats.deckStatistics('batch')) }));
+    const generated = Object.fromEntries(stats.deckStatistics().map((deck) => [deck.deckSnapshotId, deck.generated]));
+    console.log(JSON.stringify({ all: lossesTo(stats.deckStatistics()), batch: lossesTo(stats.deckStatistics('batch')), generated }));
     db.close();
   `,
     ],
     { encoding: 'utf8' },
   );
   const expected = [{ commanders: ['Gamma'], count: 1 }];
-  expect(JSON.parse(result)).toEqual({ all: expected, batch: expected });
+  expect(JSON.parse(result)).toEqual({
+    all: expected,
+    batch: expected,
+    generated: { sa: false, sb: false, sc: true },
+  });
 });

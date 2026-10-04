@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { lossReasonLabel } from '../lib/lossReasons';
 
 interface DeckStatistic {
   deckSnapshotId: string;
   name: string;
+  generated: boolean;
   commanders: string[];
   colorIdentity: string[];
   archetypeTag: string;
@@ -42,6 +43,26 @@ function deckHeading(deck: DeckStatistic): string {
   if (!isUnnamed(deck)) return deck.name;
   return deck.commanders.length > 0 ? deck.commanders.join(' / ') : 'Unnamed deck';
 }
+
+/**
+ * Every pool-generated game makes a new deck with its own random list, so a long history is
+ * mostly one-game generated entries that bury the decks a player saved or imported. Show those
+ * first and fold the generated ones away; they stay distinct because their lists differ.
+ */
+const sections = computed(() => {
+  const own = decks.value.filter((deck) => !deck.generated);
+  const generated = decks.value.filter((deck) => deck.generated);
+  return [
+    { key: 'own', title: 'Saved and imported decks', decks: own, collapsible: false, open: true },
+    {
+      key: 'generated',
+      title: `Generated decks (${generated.length})`,
+      decks: generated,
+      collapsible: true,
+      open: own.length === 0,
+    },
+  ].filter((section) => section.decks.length > 0);
+});
 
 function percent(value: number | null): string {
   if (value === null) return 'Unavailable';
@@ -84,82 +105,99 @@ onMounted(() => void load());
     <p v-else-if="error" class="error">{{ error }}</p>
     <p v-else-if="decks.length === 0">No finished recorded games yet.</p>
 
-    <article v-for="deck in decks" :key="deck.deckSnapshotId" class="deck">
-      <header>
-        <div>
-          <h2>{{ deckHeading(deck) }}</h2>
-          <p>
-            <template v-if="!isUnnamed(deck)">{{ deck.commanders.join(' / ') }} · </template>
-            {{ deck.colorIdentity.join('') || 'Colorless' }} · {{ deck.archetypeTag }}
-          </p>
+    <component
+      :is="section.collapsible ? 'details' : 'section'"
+      v-for="section in sections"
+      :key="section.key"
+      class="deck-section"
+      :open="section.open"
+    >
+      <summary v-if="section.collapsible">{{ section.title }}</summary>
+      <h2 v-else class="section-title">{{ section.title }}</h2>
+      <article v-for="deck in section.decks" :key="deck.deckSnapshotId" class="deck">
+        <header>
+          <div>
+            <h2>{{ deckHeading(deck) }}</h2>
+            <p>
+              <template v-if="!isUnnamed(deck)">{{ deck.commanders.join(' / ') }} · </template>
+              {{ deck.colorIdentity.join('') || 'Colorless' }} · {{ deck.archetypeTag }}
+            </p>
+          </div>
+          <strong>{{ percent(deck.winRate) }} wins</strong>
+        </header>
+        <dl class="summary">
+          <div>
+            <dt>Games</dt>
+            <dd>{{ deck.gamesPlayed }}</dd>
+          </div>
+          <div>
+            <dt>Wins</dt>
+            <dd>{{ deck.wins }}</dd>
+          </div>
+          <div>
+            <dt>Avg. finish</dt>
+            <dd>{{ deck.averageFinish?.toFixed(2) ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt>Avg. length</dt>
+            <dd>{{ deck.averageGameLength?.toFixed(1) ?? '—' }} turns</dd>
+          </div>
+          <div>
+            <dt>Avg. mulligans</dt>
+            <dd>{{ deck.averageMulligans.toFixed(2) }}</dd>
+          </div>
+          <!-- Legacy recordings cannot support either rate (see the note below); one tile says so. -->
+          <div v-if="deck.manaFloodRate === null && deck.manaDroughtRate === null">
+            <dt>Flood / drought</dt>
+            <dd>Unavailable</dd>
+          </div>
+          <template v-else>
+            <div>
+              <dt>Flood rate</dt>
+              <dd>{{ percent(deck.manaFloodRate) }}</dd>
+            </div>
+            <div>
+              <dt>Drought rate</dt>
+              <dd>{{ percent(deck.manaDroughtRate) }}</dd>
+            </div>
+          </template>
+        </dl>
+        <div class="breakdowns">
+          <section>
+            <h3>Elimination causes</h3>
+            <p v-if="deck.eliminationCauses.length === 0">No losses recorded.</p>
+            <ul v-else>
+              <li v-for="entry in deck.eliminationCauses" :key="entry.reason">
+                {{ lossReasonLabel(entry.reason) }}: {{ entry.count }}
+              </li>
+            </ul>
+          </section>
+          <section>
+            <h3>Who beats me</h3>
+            <p v-if="deck.lossesTo.length === 0">No attributable eliminations recorded.</p>
+            <ul v-else>
+              <li
+                v-for="entry in deck.lossesTo"
+                :key="`${entry.commanders.join()}${entry.archetypeTag}`"
+              >
+                {{ entry.commanders.join(' / ') }} ({{ entry.colorIdentity.join('') }},
+                {{ entry.archetypeTag }}): {{ entry.count }}
+              </li>
+            </ul>
+          </section>
+          <section>
+            <h3>Mulligans</h3>
+            <p>
+              {{
+                deck.mulliganDistribution
+                  .map((item) => `${item.mulligans}: ${item.games}`)
+                  .join(' · ') || '—'
+              }}
+            </p>
+          </section>
         </div>
-        <strong>{{ percent(deck.winRate) }} wins</strong>
-      </header>
-      <dl class="summary">
-        <div>
-          <dt>Games</dt>
-          <dd>{{ deck.gamesPlayed }}</dd>
-        </div>
-        <div>
-          <dt>Wins</dt>
-          <dd>{{ deck.wins }}</dd>
-        </div>
-        <div>
-          <dt>Avg. finish</dt>
-          <dd>{{ deck.averageFinish?.toFixed(2) ?? '—' }}</dd>
-        </div>
-        <div>
-          <dt>Avg. length</dt>
-          <dd>{{ deck.averageGameLength?.toFixed(1) ?? '—' }} turns</dd>
-        </div>
-        <div>
-          <dt>Avg. mulligans</dt>
-          <dd>{{ deck.averageMulligans.toFixed(2) }}</dd>
-        </div>
-        <div>
-          <dt>Flood rate</dt>
-          <dd>{{ percent(deck.manaFloodRate) }}</dd>
-        </div>
-        <div>
-          <dt>Drought rate</dt>
-          <dd>{{ percent(deck.manaDroughtRate) }}</dd>
-        </div>
-      </dl>
-      <div class="breakdowns">
-        <section>
-          <h3>Elimination causes</h3>
-          <p v-if="deck.eliminationCauses.length === 0">No losses recorded.</p>
-          <ul v-else>
-            <li v-for="entry in deck.eliminationCauses" :key="entry.reason">
-              {{ lossReasonLabel(entry.reason) }}: {{ entry.count }}
-            </li>
-          </ul>
-        </section>
-        <section>
-          <h3>Who beats me</h3>
-          <p v-if="deck.lossesTo.length === 0">No attributable eliminations recorded.</p>
-          <ul v-else>
-            <li
-              v-for="entry in deck.lossesTo"
-              :key="`${entry.commanders.join()}${entry.archetypeTag}`"
-            >
-              {{ entry.commanders.join(' / ') }} ({{ entry.colorIdentity.join('') }},
-              {{ entry.archetypeTag }}): {{ entry.count }}
-            </li>
-          </ul>
-        </section>
-        <section>
-          <h3>Mulligans</h3>
-          <p>
-            {{
-              deck.mulliganDistribution
-                .map((item) => `${item.mulligans}: ${item.games}`)
-                .join(' · ') || '—'
-            }}
-          </p>
-        </section>
-      </div>
-    </article>
+      </article>
+    </component>
 
     <aside class="method">
       <strong>Mana rates unavailable.</strong> Earlier recordings lack the draw history and
@@ -189,6 +227,17 @@ p {
 p {
   color: var(--muted);
   margin-top: 0.25rem;
+}
+.deck-section {
+  margin-top: 1rem;
+}
+.deck-section > summary,
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.deck-section > summary {
+  cursor: pointer;
 }
 .deck {
   border: 1px solid var(--line);
