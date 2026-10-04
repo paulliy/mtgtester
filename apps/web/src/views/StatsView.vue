@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { lossReasonLabel } from '../lib/lossReasons';
 
 interface DeckStatistic {
   deckSnapshotId: string;
@@ -29,6 +30,18 @@ const decks = ref<DeckStatistic[]>([]);
 const batchId = new URLSearchParams(window.location.search).get('batchId');
 const error = ref<string | null>(null);
 const loading = ref(true);
+
+/**
+ * An unnamed deck (every generated one) comes back named by its snapshot id — a UUID that tells
+ * a reader nothing. Head those with their commanders instead.
+ */
+function isUnnamed(deck: DeckStatistic): boolean {
+  return deck.name === deck.deckSnapshotId || deck.name.trim() === '';
+}
+function deckHeading(deck: DeckStatistic): string {
+  if (!isUnnamed(deck)) return deck.name;
+  return deck.commanders.length > 0 ? deck.commanders.join(' / ') : 'Unnamed deck';
+}
 
 function percent(value: number | null): string {
   if (value === null) return 'Unavailable';
@@ -74,10 +87,10 @@ onMounted(() => void load());
     <article v-for="deck in decks" :key="deck.deckSnapshotId" class="deck">
       <header>
         <div>
-          <h2>{{ deck.name }}</h2>
+          <h2>{{ deckHeading(deck) }}</h2>
           <p>
-            {{ deck.commanders.join(' / ') }} · {{ deck.colorIdentity.join('') || 'Colorless' }} ·
-            {{ deck.archetypeTag }}
+            <template v-if="!isUnnamed(deck)">{{ deck.commanders.join(' / ') }} · </template>
+            {{ deck.colorIdentity.join('') || 'Colorless' }} · {{ deck.archetypeTag }}
           </p>
         </div>
         <strong>{{ percent(deck.winRate) }} wins</strong>
@@ -118,7 +131,7 @@ onMounted(() => void load());
           <p v-if="deck.eliminationCauses.length === 0">No losses recorded.</p>
           <ul v-else>
             <li v-for="entry in deck.eliminationCauses" :key="entry.reason">
-              {{ entry.reason }}: {{ entry.count }}
+              {{ lossReasonLabel(entry.reason) }}: {{ entry.count }}
             </li>
           </ul>
         </section>
