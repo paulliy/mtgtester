@@ -28,19 +28,27 @@ it('reports how far a failed batch game got from its recorded events', () => {
     event.run('finished', 0, 36);
     repo.markGame('finished', 'finished');
     repo.createGame('batch', 'pod', 2, 'queued', 's3');
+    const running = repo.progress('batch');
+    const progress = {
+      completed: running.completedGames,
+      finished: running.finishedGames,
+      failed: running.failedGames,
+      scenario: [running.scenarios[0].completedGames, running.scenarios[0].status],
+    };
     const games = repo.results('batch').games.map((game) => ({
       id: game.gameId,
       turnCount: game.turnCount,
       lastRecordedTurn: game.lastRecordedTurn,
       failureReason: game.failureReason,
     }));
-    console.log(JSON.stringify(games));
+    console.log(JSON.stringify({ games, progress }));
     db.close();
   `,
     ],
     { encoding: 'utf8' },
   );
-  expect(JSON.parse(result)).toEqual([
+  const parsed = JSON.parse(result);
+  expect(parsed.games).toEqual([
     {
       id: 'failed',
       turnCount: null,
@@ -50,4 +58,12 @@ it('reports how far a failed batch game got from its recorded events', () => {
     { id: 'finished', turnCount: 36, lastRecordedTurn: 36, failureReason: null },
     { id: 'queued', turnCount: null, lastRecordedTurn: null, failureReason: null },
   ]);
+  // The third game is still running (its row exists from the moment it starts): it is neither
+  // processed nor failed yet.
+  expect(parsed.progress).toEqual({
+    completed: 2,
+    finished: 1,
+    failed: 1,
+    scenario: [2, 'failed'],
+  });
 });

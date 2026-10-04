@@ -169,14 +169,24 @@ export class BatchRepository {
       `SELECT scenario_id, status FROM batch_games WHERE batch_id = ?`,
       id,
     );
+    // Only games that have ended count as processed. A game row exists from the moment its game
+    // starts (status `running`), and counting it then reported the game in progress as failed.
+    const ended = gameRows.filter(
+      (row) => row['status'] !== 'running' && row['status'] !== 'queued',
+    );
     const counts = new Map<string, { done: number; failed: number }>();
-    for (const row of gameRows) {
+    for (const row of ended) {
       const key = String(row['scenario_id']);
       const value = counts.get(key) ?? { done: 0, failed: 0 };
       value.done++;
       if (row['status'] !== 'finished') value.failed++;
       counts.set(key, value);
     }
+    const inProgress = new Set(
+      gameRows
+        .filter((row) => row['status'] === 'running')
+        .map((row) => String(row['scenario_id'])),
+    );
     const scenarios: BatchScenarioProgress[] = scenarioRows.map((row) => {
       const count = counts.get(String(row['scenario_id'])) ?? { done: 0, failed: 0 };
       const games = n(row['games']);
@@ -185,7 +195,7 @@ export class BatchRepository {
           ? 'failed'
           : count.done >= games
             ? 'completed'
-            : count.done > 0
+            : count.done > 0 || inProgress.has(String(row['scenario_id']))
               ? 'running'
               : 'queued';
       return {
@@ -196,15 +206,15 @@ export class BatchRepository {
         status,
       };
     });
-    const finishedGames = gameRows.filter((row) => row['status'] === 'finished').length;
+    const finishedGames = ended.filter((row) => row['status'] === 'finished').length;
     return {
       batchId: id,
       seed: batch.seed,
       status: batch.status,
       totalGames: scenarioRows.reduce((sum, row) => sum + n(row['games']), 0),
-      completedGames: gameRows.length,
+      completedGames: ended.length,
       finishedGames,
-      failedGames: gameRows.length - finishedGames,
+      failedGames: ended.length - finishedGames,
       scenarios,
       failure: batch.failure,
       createdAt: batch.createdAt,
