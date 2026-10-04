@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import type { SavedDeckOption, SeatSource, SetupPreview, ProviderKind } from '@mtg/shared';
+import { useConfirmedStart } from '../composables/useConfirmedStart';
 import { useGameStore } from '../stores/game';
 import {
   pruneRecentIds,
@@ -11,7 +11,6 @@ import {
 } from '../lib/recentSetup';
 
 const store = useGameStore();
-const router = useRouter();
 const PODS = [
   { id: 'constellation', name: 'Constellation pod' },
   { id: 'orbit', name: 'Orbit pod' },
@@ -28,9 +27,7 @@ const persistence = ref(false);
 const loading = ref(false);
 const error = ref('');
 const preview = ref<SetupPreview | null>(null);
-/** Set from Play until the server answers; the view stays here so a refusal can be shown. */
-const starting = ref(false);
-const startErrors = ref<string[]>([]);
+const { starting, startErrors, begin, clearStartErrors } = useConfirmedStart();
 const recentDecks = ref<string[]>(readRecentIds('mtg-recent-deck-ids'));
 const recentPods = ref<string[]>(readRecentIds('mtg-recent-pod-ids'));
 
@@ -59,38 +56,8 @@ onMounted(async () => {
 
 watch([deckKind, savedId, importText, podId, provider, seed], () => {
   preview.value = null;
-  startErrors.value = [];
+  clearStartErrors();
 });
-
-// Navigate only once the server confirms the start. Pushing to the board straight away hid a
-// refused start: the board bounced back here with the preview gone and the server's reason shown
-// only inside the collapsed advanced setup.
-watch(
-  () => store.gameId,
-  (id, previous) => {
-    if (!starting.value || id === null || id === previous) return;
-    starting.value = false;
-    void router.push('/game');
-  },
-);
-watch(
-  () => store.errors,
-  (errors) => {
-    if (!starting.value || errors.length === 0) return;
-    starting.value = false;
-    startErrors.value = [...errors];
-  },
-);
-watch(
-  () => store.connection,
-  (connection) => {
-    if (!starting.value || connection !== 'closed') return;
-    starting.value = false;
-    startErrors.value = [
-      'Lost the connection to the game server before the game started. Check that it is running, then try again.',
-    ];
-  },
-);
 
 const orderedDecks = computed(() =>
   [...saved.value].sort((a, b) => {
@@ -155,35 +122,24 @@ async function inspect(): Promise<void> {
 }
 
 function play(): void {
-  if (!preview.value || preview.value.blockers.length > 0 || starting.value) return;
-  startErrors.value = [];
-  starting.value = true;
+  const ready = preview.value;
+  if (!ready || ready.blockers.length > 0) return;
   // The pod is handed to the store rather than written here, so it joins the recents only if the
   // server answers `gameStarted` — the same rule the human deck already follows, which is
   // remembered from the snapshot ID that answer returns. Writing it now would record a pod that
   // a rejected or dropped start never played.
-  store.startGame(
-    selections(),
-    provider.value,
-    preview.value.seed,
-    'singlePlayer',
-    'P1',
-    false,
-    preview.value.previewId,
-    podId.value,
+  begin(() =>
+    store.startGame(
+      selections(),
+      provider.value,
+      ready.seed,
+      'singlePlayer',
+      'P1',
+      false,
+      ready.previewId,
+      podId.value,
+    ),
   );
-}
-
-/**
- * The server's refusal when another browser holds the player seat, in player terms. The same
- * browser resumes its own game automatically, so this always means a different browser, window
- * profile, or cleared storage — and the server keeps that game until it is abandoned there.
- */
-const ACTIVE_SESSION_REFUSAL = 'Resume the active player session before replacing it.';
-function describeStartError(message: string): string {
-  return message === ACTIVE_SESSION_REFUSAL
-    ? 'Another player game is still in progress on this server, started from a different browser or window. Continue or abandon it there, then try again. If that browser is no longer available, restart the server.'
-    : message;
 }
 </script>
 
@@ -266,7 +222,7 @@ function describeStartError(message: string): string {
         <strong>The game did not start.</strong>
         <ul>
           <li v-for="(message, index) in startErrors" :key="index">
-            {{ describeStartError(message) }}
+            {{ message }}
           </li>
         </ul>
       </div>

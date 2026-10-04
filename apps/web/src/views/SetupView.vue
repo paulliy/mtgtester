@@ -9,13 +9,13 @@
  * blocking card names come back here rather than as a mid-game halt.
  */
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import type { Color, GameMode, ProviderKind, SeatSource, SetupPreview } from '@mtg/shared';
+import { useConfirmedStart } from '../composables/useConfirmedStart';
 import { useGameStore } from '../stores/game';
 import PlayMyDeckSetup from './PlayMyDeckSetup.vue';
 
 const store = useGameStore();
-const router = useRouter();
+const { starting, startErrors, begin, clearStartErrors } = useConfirmedStart();
 
 const SEATS = 4;
 
@@ -87,6 +87,7 @@ watch(
   [mode, gameMode, humanSeat, advancedPodSetup, providerKind, seed, inputs, tags, selectedKnown],
   () => {
     advancedPreview.value = null;
+    clearStartErrors();
   },
   { deep: true },
 );
@@ -158,18 +159,20 @@ async function inspectAdvanced(): Promise<void> {
 }
 
 function start(): void {
-  if (!advancedPreview.value || advancedPreview.value.blockers.length > 0) return;
+  const ready = advancedPreview.value;
+  if (!ready || ready.blockers.length > 0) return;
   const sources = Array.from({ length: SEATS }, (_, i) => sourceFor(i));
-  store.startGame(
-    sources,
-    providerKind.value,
-    advancedPreview.value.seed,
-    gameMode.value,
-    humanSeat.value,
-    reflectionEnabled.value,
-    advancedPreview.value.previewId,
+  begin(() =>
+    store.startGame(
+      sources,
+      providerKind.value,
+      ready.seed,
+      gameMode.value,
+      humanSeat.value,
+      reflectionEnabled.value,
+      ready.previewId,
+    ),
   );
-  void router.push('/game');
 }
 </script>
 
@@ -439,13 +442,6 @@ function start(): void {
         </p>
       </section>
 
-      <div v-if="store.errors.length > 0" class="errors">
-        <h3>Setup failed</h3>
-        <ul>
-          <li v-for="(error, index) in store.errors" :key="index">{{ error }}</li>
-        </ul>
-      </div>
-
       <div class="actions">
         <button type="button" :disabled="!canStart || previewBusy" @click="inspectAdvanced">
           Preview matchup
@@ -466,13 +462,21 @@ function start(): void {
             <li v-for="blocker in advancedPreview.blockers" :key="blocker">{{ blocker }}</li>
           </ul>
         </div>
+        <div v-if="startErrors.length > 0" class="errors" role="alert">
+          <h3>The game did not start</h3>
+          <ul>
+            <li v-for="(error, index) in startErrors" :key="index">{{ error }}</li>
+          </ul>
+        </div>
         <button
           type="button"
           class="primary"
-          :disabled="!canStart || !advancedPreview || advancedPreview.blockers.length > 0"
+          :disabled="
+            !canStart || !advancedPreview || advancedPreview.blockers.length > 0 || starting
+          "
           @click="start"
         >
-          <span>Start game</span>
+          <span>{{ starting ? 'Starting…' : 'Start game' }}</span>
           <span aria-hidden="true" class="button-arrow">→</span>
         </button>
       </div>
@@ -831,8 +835,17 @@ p {
 }
 .actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: center;
+  gap: 0.6rem;
   padding-top: 0.1rem;
+}
+/* The preview, its error, and a refused start each take a full row between the two buttons. */
+.actions > div,
+.actions > p {
+  flex: 1 1 100%;
+  margin: 0;
 }
 button.primary {
   display: inline-flex;
