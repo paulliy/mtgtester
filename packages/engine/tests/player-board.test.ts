@@ -66,16 +66,27 @@ describe('Phase 6 player board projection', () => {
     spawn(ctx, 'P1', plains(), { tapped: true });
     spawn(ctx, 'P1', land('Azorius Test Gate', '{T}: Add {W} or {U}.'));
     const costly = spawn(ctx, 'P1', land('Test Vault', '{1}, {T}: Add {B}{B}.'));
+    const restricted = spawn(
+      ctx,
+      'P1',
+      land(
+        'Test Haven',
+        '{T}: Add one mana of any color. Spend this mana only to cast a Dragon creature spell.',
+      ),
+    );
     spawn(ctx, 'P2', forest());
     const player = ctx.state.players.find((candidate) => candidate.id === 'P1');
     if (player === undefined) throw new Error('missing P1');
     player.manaPool.R = 1;
 
-    // The costly source is a real, activatable mana source — it is excluded on purpose.
+    // The costly and restricted sources are real, activatable mana sources — excluded on purpose.
     const sources = manaSourcesFor(ctx, 'P1');
     expect(sources.find((source) => source.cardId === costly.cardId)?.manaCost).toBeDefined();
+    expect(
+      sources.find((source) => source.cardId === restricted.cardId)?.restriction,
+    ).toBeDefined();
     // Forest, Island, the gate's one unit, and the floating red; not the tapped Plains, the
-    // costly source, or P2's Forest.
+    // costly or restricted sources, or P2's Forest.
     expect(buildPlayerBoardState(ctx, 'P1').viewerMana).toEqual({
       units: 4,
       colors: ['W', 'U', 'R', 'G'],

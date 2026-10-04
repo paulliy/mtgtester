@@ -19,9 +19,10 @@ export interface PlayerBoardState extends Omit<SpectatorState, 'seats' | 'battle
   /**
    * The viewer's ready mana, for the player's resource strip: floating mana plus one unit per
    * mana a currently activatable source makes without itself costing mana, and the colors those
-   * units can be. Sources that need mana to activate (Cabal Coffers, filter lands) are left out,
-   * so this never claims more than is free to make. Descriptive only — payment legality stays
-   * with the engine's payment planner.
+   * units can be. Sources that need mana to activate (Cabal Coffers, filter lands) or whose mana
+   * may only be spent on some spells (Delighted Halfling, Haven of the Spirit Dragon) are left
+   * out, so this never claims more than is freely spendable. Descriptive only — payment legality
+   * stays with the engine's payment planner.
    */
   viewerMana: { units: number; colors: Color[] };
 }

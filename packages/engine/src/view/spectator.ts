@@ -242,7 +242,7 @@ function viewerMana(ctx: GameContext, playerId: string): PlayerBoardState['viewe
     if (symbol !== 'C' && pool[symbol] > 0) colors.add(symbol);
   }
   for (const source of manaSourcesFor(ctx, playerId)) {
-    if (source.manaCost !== undefined) continue;
+    if (source.manaCost !== undefined || source.restriction !== undefined) continue;
     for (const unit of source.units) {
       units += 1;
       for (const symbol of unit) colors.add(symbol);

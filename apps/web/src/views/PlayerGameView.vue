@@ -1127,7 +1127,7 @@ function abandon(): void {
             }}</span>
             <span
               class="resource"
-              title="Mana you can make right now: floating mana plus untapped sources that need no mana to activate."
+              title="Mana you can spend on anything right now: floating mana plus sources that need no mana to activate and whose mana has no spending restriction."
               >Mana ready <strong>{{ state.viewerMana.units }}</strong
               ><template v-if="state.viewerMana.colors.length > 0">
                 · {{ state.viewerMana.colors.join(' ') }}</template
