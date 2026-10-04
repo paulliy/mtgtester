@@ -424,11 +424,7 @@ export class GameServer {
         }
         // A disconnected lab viewer must be able to replace the completed scenario. Keep the
         // takeover guard only while another browser is still attached as the active player.
-        if (
-          this.session?.getGameMode() === 'singlePlayer' &&
-          this.playerSocket !== null &&
-          socket !== this.playerSocket
-        ) {
+        if (this.holdsPlayerSeat(socket) && this.playerSocket !== null) {
           this.sendTo(socket, {
             type: 'error',
             payload: { message: 'Resume the active player session before replacing it.' },
@@ -446,7 +442,7 @@ export class GameServer {
         return;
 
       case 'startGame':
-        if (this.session?.getGameMode() === 'singlePlayer' && socket !== this.playerSocket) {
+        if (this.holdsPlayerSeat(socket)) {
           this.sendTo(socket, {
             type: 'error',
             payload: { message: 'Resume the active player session before replacing it.' },
@@ -595,6 +591,21 @@ export class GameServer {
         this.session.setPlayerConnected(true);
         return;
     }
+  }
+
+  /**
+   * Whether a single-player game in progress belongs to a connection other than `socket`. Only
+   * its own player may replace it; once the game is over there is nothing left to protect, so
+   * any local connection may start the next one.
+   */
+  private holdsPlayerSeat(socket: ServerWebSocket<SocketData>): boolean {
+    const session = this.session;
+    return (
+      session !== null &&
+      session.getGameMode() === 'singlePlayer' &&
+      !session.isOver() &&
+      socket !== this.playerSocket
+    );
   }
 
   private onSocketOpen(socket: ServerWebSocket<SocketData>): void {

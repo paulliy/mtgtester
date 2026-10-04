@@ -385,6 +385,12 @@ export class MatchSession {
     return this.gameMode;
   }
 
+  /** The game can no longer change: it finished, halted, or was abandoned. */
+  isOver(): boolean {
+    const status = this.runner.getStatus();
+    return status === 'finished' || status === 'halted' || status === 'abandoned';
+  }
+
   getHumanSeat(): PlayerId | null {
     return this.humanSeat;
   }

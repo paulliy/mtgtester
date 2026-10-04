@@ -97,6 +97,7 @@ describe('disconnected player session', () => {
     const session = {
       abandon: vi.fn(),
       getGameMode: () => 'singlePlayer',
+      isOver: vi.fn(() => false),
       setPlayerConnected: vi.fn(),
       getLivePaceMs: () => 0,
     };
@@ -139,6 +140,21 @@ describe('disconnected player session', () => {
 
     await seam.handleMessage(other, start);
     expect(mocks.setup).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets any local connection replace a single-player game once it is over', async () => {
+    const { seam, session, player } = playerGame();
+    mocks.setup.mockResolvedValue({ ok: false, problems: [] });
+    const other = { send: vi.fn() };
+    seam.onSocketClose(player);
+
+    await seam.handleMessage(other, start);
+    expect(mocks.setup).not.toHaveBeenCalled();
+
+    session.isOver.mockReturnValue(true);
+    await seam.handleMessage(other, start);
+    expect(mocks.setup).toHaveBeenCalledTimes(1);
+    expect(other.send).not.toHaveBeenCalledWith(expect.stringContaining('already starting'));
   });
 
   it('keeps the game when its player resumes before the grace period ends', async () => {
