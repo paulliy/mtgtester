@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { BatchSpec, ProviderKind, SeatSource } from '@mtg/shared';
+import { PROVIDER_LABELS } from '../lib/providerLabels';
 
 interface DraftScenario {
   id: string;
@@ -114,8 +115,8 @@ async function start(): Promise<void> {
           >Games<input v-model.number="scenario.games" type="number" min="1" max="100" /></label
         ><label class="field-label"
           >Provider<select v-model="scenario.providerKind">
-            <option value="random">Random</option>
-            <option value="ai">AI</option>
+            <option value="random">{{ PROVIDER_LABELS.random }}</option>
+            <option value="ai">{{ PROVIDER_LABELS.ai }}</option>
           </select></label
         ><label class="check"
           ><input

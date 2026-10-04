@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import type { SavedDeckOption, SeatSource, SetupPreview, ProviderKind } from '@mtg/shared';
 import { useConfirmedStart } from '../composables/useConfirmedStart';
+import { PROVIDER_LABELS, controllerLabel } from '../lib/providerLabels';
 import { useGameStore } from '../stores/game';
 import {
   pruneRecentIds,
@@ -190,8 +191,8 @@ function play(): void {
         <label class="vertical"
           >Bot controller
           <select v-model="provider">
-            <option value="random">Random bots</option>
-            <option value="ai">AI bots</option>
+            <option value="random">{{ PROVIDER_LABELS.random }}</option>
+            <option value="ai">{{ PROVIDER_LABELS.ai }}</option>
           </select>
         </label>
         <label class="vertical"
@@ -208,7 +209,7 @@ function play(): void {
       <p><strong>Seed:</strong> {{ preview.seed }}</p>
       <ul>
         <li v-for="seat in preview.seats" :key="seat.seat">
-          <strong>{{ seat.seat }} {{ seat.controller }}</strong> —
+          <strong>{{ seat.seat }} {{ controllerLabel(seat.controller) }}</strong> —
           {{ seat.commanderNames.join(' & ') || 'Unavailable' }} ·
           {{ seat.colorIdentity.join('') || 'C' }} ·
           {{ seat.archetypeTag || 'Unknown archetype' }} ·

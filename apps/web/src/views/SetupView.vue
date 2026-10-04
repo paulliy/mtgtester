@@ -11,6 +11,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import type { Color, GameMode, ProviderKind, SeatSource, SetupPreview } from '@mtg/shared';
 import { useConfirmedStart } from '../composables/useConfirmedStart';
+import { PROVIDER_LABELS, controllerLabel } from '../lib/providerLabels';
 import { useGameStore } from '../stores/game';
 import PlayMyDeckSetup from './PlayMyDeckSetup.vue';
 
@@ -399,15 +400,18 @@ function start(): void {
             <input v-model="providerKind" class="choice-input" type="radio" value="random" />
             <span class="choice-indicator" aria-hidden="true"></span>
             <span class="choice-copy">
-              <strong>Random bots</strong>
-              <em>Fast, free, and fully seeded. Best for learning the controls or a quick game.</em>
+              <strong>{{ PROVIDER_LABELS.random }}</strong>
+              <em
+                >Rule-based opponents: fast, free, and fully seeded. Best for learning the controls
+                or a quick game.</em
+              >
             </span>
           </label>
           <label class="choice-card" :class="{ selected: providerKind === 'ai' }">
             <input v-model="providerKind" class="choice-input" type="radio" value="ai" />
             <span class="choice-indicator" aria-hidden="true"></span>
             <span class="choice-copy">
-              <strong>AI bots</strong>
+              <strong>{{ PROVIDER_LABELS.ai }}</strong>
               <em>Uses strategic bot decisions and may spend API budget.</em>
             </span>
           </label>
@@ -451,7 +455,7 @@ function start(): void {
           <p>Seed: {{ advancedPreview.seed }}</p>
           <ul>
             <li v-for="seat in advancedPreview.seats" :key="seat.seat">
-              {{ seat.seat }} {{ seat.controller }} —
+              {{ seat.seat }} {{ controllerLabel(seat.controller) }} —
               {{ seat.commanderNames.join(' & ') || 'Unavailable' }} ·
               {{ seat.colorIdentity.join('') || 'C' }} ·
               {{ seat.archetypeTag || 'Unknown archetype' }} ·
