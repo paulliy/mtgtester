@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { Engine, buildPlayerBoardState } from '../src';
 import { createGame } from '../src/state/game';
-import { commanderFor, copies, forest, gameConfig, oracle, spawn } from './fixtures';
+import { manaSourcesFor } from '../src/state/queries';
+import {
+  commanderFor,
+  copies,
+  forest,
+  gameConfig,
+  island,
+  oracle,
+  plains,
+  spawn,
+} from './fixtures';
 
 function pod() {
   const secret = (name: string) =>
@@ -37,6 +47,39 @@ describe('Phase 6 player board projection', () => {
     expect(json).not.toContain('Secret 2');
     expect(json).not.toContain('Secret 3');
     expect(json).not.toContain('Secret 4');
+  });
+
+  it("summarises the viewer's ready mana without counting tapped or mana-costing sources", () => {
+    const ctx = createGame(pod());
+    const land = (name: string, oracleText: string) =>
+      oracle({
+        name,
+        typeLine: 'Land',
+        manaCost: null,
+        cmc: 0,
+        power: null,
+        toughness: null,
+        oracleText,
+      });
+    spawn(ctx, 'P1', forest());
+    spawn(ctx, 'P1', island());
+    spawn(ctx, 'P1', plains(), { tapped: true });
+    spawn(ctx, 'P1', land('Azorius Test Gate', '{T}: Add {W} or {U}.'));
+    const costly = spawn(ctx, 'P1', land('Test Vault', '{1}, {T}: Add {B}{B}.'));
+    spawn(ctx, 'P2', forest());
+    const player = ctx.state.players.find((candidate) => candidate.id === 'P1');
+    if (player === undefined) throw new Error('missing P1');
+    player.manaPool.R = 1;
+
+    // The costly source is a real, activatable mana source — it is excluded on purpose.
+    const sources = manaSourcesFor(ctx, 'P1');
+    expect(sources.find((source) => source.cardId === costly.cardId)?.manaCost).toBeDefined();
+    // Forest, Island, the gate's one unit, and the floating red; not the tapped Plains, the
+    // costly source, or P2's Forest.
+    expect(buildPlayerBoardState(ctx, 'P1').viewerMana).toEqual({
+      units: 4,
+      colors: ['W', 'U', 'R', 'G'],
+    });
   });
 
   it('redacts an opponent face-down permanent before serialization', () => {
