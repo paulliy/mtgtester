@@ -72,6 +72,14 @@ function first(db: SqliteLike, sql: string, ...args: unknown[]): Row | null {
   return (db.query(sql).get(...args) as Row | null) ?? null;
 }
 
+/**
+ * A row that may count toward "Who beats me": the victim genuinely lost, not by decking, to a
+ * different seat. Older rows recorded the last damaging seat for every player — winners,
+ * survivors, decked players, and players hurt by their own spells — so the filter also keeps
+ * that history honest without rewriting it (see `eliminatorFor` in `match/runner.ts`).
+ */
+const ATTRIBUTED_LOSS = `victim.loss_reason IS NOT NULL AND victim.loss_reason <> 'emptyLibraryDraw' AND victim.eliminated_by_seat IS NOT NULL AND victim.eliminated_by_seat <> victim.seat`;
+
 /** Read-only repository; it deliberately works with the testable narrow SQLite interface. */
 export class StatsRepository {
   constructor(private readonly db: SqliteLike) {}
@@ -140,7 +148,7 @@ export class StatsRepository {
         ).map((item) => ({ reason: String(item['reason']), count: number(item['count']) })),
         lossesTo: rows(
           this.db,
-          `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count FROM game_players victim JOIN games g ON g.id = victim.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id JOIN decks killer_d ON killer_d.id = killer_ds.deck_id WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND victim.eliminated_by_seat IS NOT NULL GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
+          `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count FROM game_players victim JOIN games g ON g.id = victim.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id JOIN decks killer_d ON killer_d.id = killer_ds.deck_id WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND ${ATTRIBUTED_LOSS} GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
           batchId,
           snapshotId,
         ).map((item) => ({
@@ -190,7 +198,7 @@ export class StatsRepository {
            JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat
            JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id
            JOIN decks killer_d ON killer_d.id = killer_ds.deck_id
-          WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND victim.eliminated_by_seat IS NOT NULL
+          WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND ${ATTRIBUTED_LOSS}
           GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
         snapshotId,
       ).map((item) => ({
