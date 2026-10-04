@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PLAYER_IDLE_GRACE_MS } from '@mtg/shared';
 const mocks = vi.hoisted(() => ({ setup: vi.fn(), construct: vi.fn() }));
 vi.mock('../match/setup', () => ({ setupSeats: mocks.setup }));
 vi.mock('../match/session', () => ({
@@ -87,6 +88,91 @@ describe('game startup lifecycle', () => {
     await seam.handleMessage(socket, start);
     expect(mocks.setup).toHaveBeenCalledTimes(2);
     expect(socket.send).toHaveBeenCalledWith(expect.stringContaining('fixture setup failure'));
+  });
+});
+
+describe('disconnected player session', () => {
+  function playerGame() {
+    const server = new GameServer({} as GameServerDeps);
+    const session = {
+      abandon: vi.fn(),
+      getGameMode: () => 'singlePlayer',
+      setPlayerConnected: vi.fn(),
+      getLivePaceMs: () => 0,
+    };
+    const seam = server as unknown as {
+      session: typeof session | null;
+      sessionToken: string | null;
+      playerSocket: unknown;
+      onSocketClose(socket: unknown): void;
+      handleMessage(socket: unknown, raw: string): Promise<void>;
+    };
+    const player = { send: vi.fn() };
+    seam.session = session;
+    seam.sessionToken = 'token';
+    seam.playerSocket = player;
+    return { seam, session, player };
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('abandons a game whose player never returns, freeing the seat for a new start', async () => {
+    vi.useFakeTimers();
+    const { seam, session, player } = playerGame();
+    mocks.setup.mockResolvedValue({ ok: false, problems: [] });
+    const other = { send: vi.fn() };
+
+    seam.onSocketClose(player);
+    expect(session.setPlayerConnected).toHaveBeenCalledWith(false);
+    await seam.handleMessage(other, start);
+    expect(other.send).toHaveBeenCalledWith(expect.stringContaining('Resume the active player'));
+    expect(mocks.setup).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(PLAYER_IDLE_GRACE_MS - 1);
+    expect(session.abandon).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(session.abandon).toHaveBeenCalledTimes(1);
+    expect(seam.session).toBeNull();
+    expect(seam.sessionToken).toBeNull();
+
+    await seam.handleMessage(other, start);
+    expect(mocks.setup).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the game when its player resumes before the grace period ends', async () => {
+    vi.useFakeTimers();
+    const { seam, session, player } = playerGame();
+    seam.onSocketClose(player);
+    vi.advanceTimersByTime(PLAYER_IDLE_GRACE_MS / 2);
+
+    const returning = { send: vi.fn() };
+    await seam.handleMessage(
+      returning,
+      JSON.stringify({ type: 'resumeGame', payload: { sessionToken: 'token' } }),
+    );
+    expect(seam.playerSocket).toBe(returning);
+    vi.advanceTimersByTime(PLAYER_IDLE_GRACE_MS);
+    expect(session.abandon).not.toHaveBeenCalled();
+    expect(seam.session).toBe(session);
+  });
+
+  it('does not let a later disconnect inherit an earlier timer', async () => {
+    vi.useFakeTimers();
+    const { seam, session, player } = playerGame();
+    seam.onSocketClose(player);
+    vi.advanceTimersByTime(PLAYER_IDLE_GRACE_MS - 10);
+    const returning = { send: vi.fn() };
+    await seam.handleMessage(
+      returning,
+      JSON.stringify({ type: 'resumeGame', payload: { sessionToken: 'token' } }),
+    );
+    seam.onSocketClose(returning);
+    vi.advanceTimersByTime(PLAYER_IDLE_GRACE_MS - 1);
+    expect(session.abandon).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(session.abandon).toHaveBeenCalledTimes(1);
   });
 });
 

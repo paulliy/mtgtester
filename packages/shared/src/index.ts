@@ -15,6 +15,7 @@ export {
   SERVER_TO_CLIENT_TYPES,
   CLIENT_TO_SERVER_TYPES,
   LOOKAHEAD_TURNS,
+  PLAYER_IDLE_GRACE_MS,
   PLAYER_SEAT_IDS,
   isClientToServerMessage,
   isPlayerSeatId,

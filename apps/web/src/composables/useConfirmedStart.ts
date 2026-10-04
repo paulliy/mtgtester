@@ -1,17 +1,19 @@
 import { ref, watch, type Ref } from 'vue';
+import { PLAYER_IDLE_GRACE_MS } from '@mtg/shared';
 import { useRouter } from 'vue-router';
 import { useGameStore } from '../stores/game';
 
 /**
  * The server's refusal when another browser holds the player seat, in player terms. The same
  * browser resumes its own game automatically, so this always means a different browser, window
- * profile, or cleared storage — and the server keeps that game until it is abandoned there.
+ * profile, or cleared storage. The server abandons that game once its player has been away for
+ * `PLAYER_IDLE_GRACE_MS`.
  */
 const ACTIVE_SESSION_REFUSAL = 'Resume the active player session before replacing it.';
 
 function describeStartError(message: string): string {
   return message === ACTIVE_SESSION_REFUSAL
-    ? 'Another player game is still in progress on this server, started from a different browser or window. Continue or abandon it there, then try again. If that browser is no longer available, restart the server.'
+    ? `Another player game is still in progress on this server, started from a different browser or window. Continue or abandon it there, then try again. If that browser is gone, the game ends on its own ${PLAYER_IDLE_GRACE_MS / 60_000} minutes after it disconnected.`
     : message;
 }
 
