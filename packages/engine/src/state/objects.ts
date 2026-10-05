@@ -120,6 +120,7 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
   const frontDef = ctx.defs.get(obj.oracleId);
   const landFace = mdfcLandFaceFor(ctx, obj);
   const transformFace = frontDef?.backFace;
+  const castFromStack = obj.zone === 'stack' && zone === 'battlefield';
   return {
     id: newObjectId(ctx),
     cardId: obj.cardId,
@@ -150,10 +151,13 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
     zone,
     ...(zone === 'battlefield' && obj.face !== undefined ? { face: obj.face } : {}),
     ...(zone === 'battlefield' && obj.escaped === true ? { escaped: true } : {}),
-    ...((obj as EngineCardObject).announcedX !== undefined
+    // How a spell was cast — its X and any kicker-style payments — describes the permanent that
+    // spell becomes (CR 107.3m, 702.33d), and nothing after: a kicked creature that dies and is
+    // reanimated was not kicked, and an X creature put onto the battlefield later has X = 0.
+    ...(castFromStack && (obj as EngineCardObject).announcedX !== undefined
       ? { announcedX: (obj as EngineCardObject).announcedX }
       : {}),
-    ...((obj as EngineCardObject).optionalCostCounts !== undefined
+    ...(castFromStack && (obj as EngineCardObject).optionalCostCounts !== undefined
       ? { optionalCostCounts: { ...(obj as EngineCardObject).optionalCostCounts } }
       : {}),
   };

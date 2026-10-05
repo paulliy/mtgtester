@@ -15,6 +15,8 @@ import { priorityCheckpoint } from '../src/sba/sba';
 import { createGame } from '../src/state/game';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { runTurn } from '../src/turn/turn';
+import { moveObject } from '../src/state/objects';
+import type { EngineCardObject, EngineStackObject } from '../src/state/types';
 import {
   conjure,
   copies,
@@ -332,5 +334,169 @@ describe('cost reductions and {X} (CR 601.2f)', () => {
       .map((o) => (o.payload as { x?: number }).x);
     // One Mountain plus the {1} reduction: X=1 costs {1}{R} − {1} = {R}.
     expect(xValues).toEqual([0, 1]);
+  });
+});
+
+/** A spell card sitting on the stack, as `applyPriorityAction` leaves it after casting. */
+function spellOnStack(
+  ctx: GameContext,
+  controllerId: 'P1' | 'P2',
+  card: ReturnType<typeof oracle>,
+  extra: Partial<EngineStackObject> = {},
+  cardExtra: Partial<EngineCardObject> = {},
+): EngineStackObject {
+  const def = registerDef(ctx, card);
+  const n = ctx.state.nextObjectNum++;
+  const cardObj: EngineCardObject = {
+    id: `o-${n}` as ObjectId,
+    cardId: `sweep-card-${n}`,
+    oracleId: def.oracleId,
+    ownerId: controllerId,
+    name: card.name,
+    typeLine: card.typeLine,
+    oracleText: card.oracleText,
+    manaCost: card.manaCost,
+    isToken: false,
+    isCommander: false,
+    zone: 'stack',
+    ...cardExtra,
+  };
+  const entry: EngineStackObject = {
+    id: cardObj.id,
+    sourceId: cardObj.id,
+    controllerId,
+    kind: 'spell',
+    description: card.name,
+    targets: [],
+    card: cardObj,
+    ability: def.spellAbility ?? { kind: 'spell', targets: [], effects: [] },
+    sourceOracleId: def.oracleId,
+    sourceCardId: cardObj.cardId,
+    isCommanderCast: false,
+    ...extra,
+  };
+  ctx.state.stack.push(entry);
+  return entry;
+}
+
+const sweepCounterspell = (ctx: GameContext, target: EngineStackObject, controllerId = 'P1') =>
+  pump(
+    executeAbility(
+      ctx,
+      { cardId: 'sweep-cancel', name: 'Sweep Cancel', oracleId: 'sweep-cancel', controllerId },
+      { kind: 'spell', targets: [{ kind: 'spell' }], effects: [{ op: 'counter', target: 0 }] },
+      [target.id],
+    ),
+  );
+
+describe('how a spell was cast stays with the permanent it became (CR 107.3m, 702.33d)', () => {
+  it('a kicked creature that dies and is reanimated is not kicked, and has X = 0', () => {
+    const ctx = pod();
+    const card = keywordCreature('Sweep Kicked Beast', '', '{X}{G}', '2/2');
+    const spell = spellOnStack(
+      ctx,
+      'P1',
+      card,
+      {},
+      { announcedX: 3, optionalCostCounts: { kicker: 1 } },
+    );
+    const first = pump(moveObject(ctx, spell.card!, { zone: 'battlefield', controllerId: 'P1' }))
+      .value as EnginePermanent;
+    ctx.state.stack.pop();
+    expect(first.wasKicked).toBe(true);
+    const dead = pump(moveObject(ctx, first, { zone: 'graveyard' })).value as EngineCardObject;
+    expect(dead.optionalCostCounts).toBeUndefined();
+    expect(dead.announcedX).toBeUndefined();
+    const back = pump(moveObject(ctx, dead, { zone: 'battlefield', controllerId: 'P1' }))
+      .value as EnginePermanent;
+    expect(back.wasKicked).toBeUndefined();
+    expect(back.announcedX).toBeUndefined();
+  });
+});
+
+describe('flashback leaves the stack only to exile (CR 702.34a)', () => {
+  const flashbackSpell = () =>
+    oracle({ name: 'Sweep Flashback Spell', typeLine: 'Sorcery', manaCost: '{1}{R}' });
+
+  it('a countered flashback spell is exiled, not put into the graveyard', () => {
+    const ctx = pod();
+    const spell = spellOnStack(ctx, 'P2', flashbackSpell(), { exileOnResolution: true });
+    sweepCounterspell(ctx, spell);
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(ctx.state.exile.some((c) => c.cardId === spell.sourceCardId)).toBe(true);
+    expect(ctx.state.players[1]!.graveyard.some((c) => c.cardId === spell.sourceCardId)).toBe(
+      false,
+    );
+  });
+
+  it('a flashback spell bounced off the stack is exiled, not returned to hand', () => {
+    const ctx = pod();
+    const spell = spellOnStack(ctx, 'P2', flashbackSpell(), { exileOnResolution: true });
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'sweep-remand',
+          name: 'Sweep Remand',
+          oracleId: 'sweep-remand',
+          controllerId: 'P1',
+        },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'spell' }],
+          effects: [{ op: 'returnToHand', target: 0 }],
+        },
+        [spell.id],
+      ),
+    );
+    expect(ctx.state.exile.some((c) => c.cardId === spell.sourceCardId)).toBe(true);
+    expect(ctx.state.players[1]!.hand.some((c) => c.cardId === spell.sourceCardId)).toBe(false);
+  });
+});
+
+describe('"each player sacrifices" (CR 101.4)', () => {
+  it('asks in APNAP order and sacrifices everything chosen at once', () => {
+    const ctx = pod();
+    ctx.state.currentTurnPlayer = 'P3';
+    ctx.state.activePlayerIndex = 2;
+    for (const id of ['P1', 'P2', 'P3', 'P4'] as const) {
+      spawn(ctx, id, keywordCreature(`Sweep ${id} Bear A`, '', '{1}{G}'));
+      spawn(ctx, id, keywordCreature(`Sweep ${id} Bear B`, '', '{1}{G}'));
+    }
+    const askedOrder: string[] = [];
+    let creaturesWhenLastAsked = -1;
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'sweep-edict', name: 'Sweep Edict', oracleId: 'sweep-edict', controllerId: 'P1' },
+        {
+          kind: 'spell',
+          targets: [],
+          effects: [{ op: 'sacrificeOneCreatureEachPlayer' }],
+        },
+        [],
+      ),
+      (d) => {
+        askedOrder.push(d.player);
+        creaturesWhenLastAsked = ctx.state.battlefield.length;
+        return { index: 0, targets: new Map() };
+      },
+    );
+    expect(askedOrder).toEqual(['P3', 'P4', 'P1', 'P2']);
+    // Nothing left the battlefield until every player had chosen.
+    expect(creaturesWhenLastAsked).toBe(8);
+    expect(ctx.state.battlefield).toHaveLength(4);
+  });
+});
+
+describe('a player leaving the game (CR 800.4a)', () => {
+  it("returns permanents they controlled but didn't own to their owners", () => {
+    const ctx = pod();
+    const stolen = spawn(ctx, 'P1', keywordCreature('Sweep Stolen Bear', '', '{1}{G}'));
+    stolen.controllerId = 'P2';
+    ctx.state.players[1]!.life = 0;
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.eliminatedPlayers).toContain('P2');
+    expect(ctx.state.battlefield.find((p) => p.cardId === stolen.cardId)?.controllerId).toBe('P1');
   });
 });

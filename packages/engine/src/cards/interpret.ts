@@ -6059,8 +6059,12 @@ export function interpretCard(card: OracleCard): CardDefinition {
             from: 'graveyard',
             manaCost: cost.cost,
             ...(additionalCosts.length > 0 ? { costs: additionalCosts } : {}),
-            exileOnResolution: true,
-            ...(graveyardAlternative[1] === 'escape' ? { escaped: true } : {}),
+            // Flashback exiles the card whenever it would leave the stack (CR 702.34a). Escape
+            // has no such rider (CR 702.138): an escaped instant or sorcery returns to the
+            // graveyard and can escape again.
+            ...(graveyardAlternative[1] === 'flashback'
+              ? { exileOnResolution: true }
+              : { escaped: true }),
             description: line,
           });
           continue;

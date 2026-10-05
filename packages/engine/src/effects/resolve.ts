@@ -94,6 +94,7 @@ import {
   manaRestrictionAllows,
   manaSourcesFor,
   opponentsOf,
+  playersInApnapOrder,
   sourceColorsOf,
   spellProtectedFromCounter,
   requireModeled,
@@ -2119,7 +2120,7 @@ export function* executeAbility(
           emit(ctx, 'counterSpell', { countered: countered.description, by: source.name });
           debug(ctx, 'stack', `${countered.description} countered by ${source.name}`);
           if (countered.card !== null)
-            yield* moveObject(ctx, countered.card, { zone: 'graveyard' });
+            yield* moveObject(ctx, countered.card, { zone: counteredCardZone(countered) });
         }
         createTokens(ctx, effect.spec, amountOf(effect.count), beneficiary);
         break;
@@ -2172,7 +2173,7 @@ export function* executeAbility(
           debug(ctx, 'stack', `${countered.description} countered by ${source.name}`);
           if (countered.card !== null) {
             yield* moveObject(ctx, countered.card, {
-              zone: effect.exileIfCountered === true ? 'exile' : 'graveyard',
+              zone: effect.exileIfCountered === true ? 'exile' : counteredCardZone(countered),
             });
           }
         }
@@ -2958,12 +2959,16 @@ export function* executeAbility(
         }
         break;
       }
-      case 'sacrificeEachPlayer':
-        for (const player of ctx.state.players.filter((p) => !p.hasLost)) {
+      case 'sacrificeEachPlayer': {
+        // CR 101.4: each player chooses in APNAP order, then everything chosen is sacrificed at
+        // once — the same shape as `sacrificeOneEachOpponent`.
+        const selected: EnginePermanent[] = [];
+        for (const player of playersInApnapOrder(ctx)) {
           for (let i = 0; i < effect.count; i++) {
             const candidates = ctx.state.battlefield.filter(
               (perm) =>
                 perm.controllerId === player.id &&
+                !selected.includes(perm) &&
                 (effect.filter === 'any' ||
                   computeCharacteristics(ctx, perm).types.includes('Creature')),
             );
@@ -2976,10 +2981,12 @@ export function* executeAbility(
               verb: 'Sacrifice',
             });
             if (chosen === null) break;
-            yield* moveObject(ctx, chosen, { zone: 'graveyard', reason: 'sacrifice' });
+            selected.push(chosen);
           }
         }
+        yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
+      }
       case 'sacrificeAndDrawForPower': {
         const candidates = ctx.state.battlefield.filter(
           (perm) =>
@@ -3145,8 +3152,10 @@ export function* executeAbility(
         }
         break;
       }
-      case 'sacrificeOneCreatureEachPlayer':
-        for (const player of ctx.state.players.filter((p) => !p.hasLost)) {
+      case 'sacrificeOneCreatureEachPlayer': {
+        // CR 101.4: choices in APNAP order, then one simultaneous sacrifice.
+        const selected: EnginePermanent[] = [];
+        for (const player of playersInApnapOrder(ctx)) {
           const creatures = ctx.state.battlefield.filter(
             (perm) =>
               perm.controllerId === player.id &&
@@ -3159,10 +3168,11 @@ export function* executeAbility(
             type: 'sacrifice',
             verb: 'Sacrifice',
           });
-          if (chosen !== null)
-            yield* moveObject(ctx, chosen, { zone: 'graveyard', reason: 'sacrifice' });
+          if (chosen !== null) selected.push(chosen);
         }
+        yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
+      }
       case 'sacrificeOtherForMana': {
         const candidates = ctx.state.battlefield.filter(
           (perm) =>
@@ -4117,7 +4127,10 @@ export function* executeAbility(
         if (stackEntry?.card === null || stackEntry?.card === undefined) break;
         ctx.state.stack.splice(stackIndex, 1);
         emit(ctx, 'returnToHand', { target: stackEntry.card.name, source: source.name });
-        yield* moveObject(ctx, stackEntry.card, { zone: 'hand' });
+        // A flashback spell is exiled whenever it would leave the stack (CR 702.34a).
+        yield* moveObject(ctx, stackEntry.card, {
+          zone: stackEntry.exileOnResolution === true ? 'exile' : 'hand',
+        });
         break;
       }
       case 'returnOneToHand': {
@@ -5555,7 +5568,16 @@ function* counterUnlessPays(
   ctx.state.stack.splice(index, 1);
   emit(ctx, 'counterSpell', { countered: entry.description, by: source.name });
   debug(ctx, 'stack', `${entry.description} countered by ${source.name} (unpaid)`);
-  if (entry.card !== null) yield* moveObject(ctx, entry.card, { zone: 'graveyard' });
+  if (entry.card !== null) yield* moveObject(ctx, entry.card, { zone: counteredCardZone(entry) });
+}
+
+/**
+ * Where a countered spell's card goes: its owner's graveyard, unless it was cast with flashback,
+ * which exiles it instead "any time it would leave the stack" (CR 702.34a) — countered included,
+ * exactly as the fizzle path in `stack.ts` already does.
+ */
+function counteredCardZone(entry: EngineStackObject): 'exile' | 'graveyard' {
+  return entry.exileOnResolution === true ? 'exile' : 'graveyard';
 }
 
 /** Shuffle a library with the game's seeded PRNG — never `Math.random` (brief §4/§5.9). */

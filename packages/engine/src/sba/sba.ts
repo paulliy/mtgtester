@@ -53,6 +53,20 @@ function processEliminations(ctx: GameContext): void {
     for (const perm of leaving) {
       debug(ctx, 'zoneChange', `${perm.name} leaves the game with its owner ${player.id}`);
     }
+    // Effects giving the leaving player control of other players' permanents end (CR 800.4a),
+    // so each returns to its owner — removed from combat and newly controlled (CR 302.6) —
+    // rather than lingering on the battlefield under a player who is no longer in the game.
+    for (const perm of s.battlefield) {
+      if (perm.controllerId !== player.id) continue;
+      perm.controllerId = perm.ownerId;
+      perm.timestamp = s.nextTimestamp++;
+      perm.summoningSick = true;
+      perm.attacking = null;
+      perm.blocking = null;
+      perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
+      debug(ctx, 'zoneChange', `${perm.name} returns to its owner ${perm.ownerId}`);
+    }
+    s.delayedTriggers = s.delayedTriggers.filter((t) => t.controllerId !== player.id);
     s.stack = s.stack.filter(
       (so) => so.controllerId !== player.id && so.card?.ownerId !== player.id,
     );
