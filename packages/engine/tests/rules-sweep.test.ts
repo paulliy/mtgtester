@@ -9,6 +9,8 @@
 import { describe, expect, it } from 'vitest';
 import type { ObjectId } from '@mtg/shared';
 import { computePriorityOptions, computeTargetOptions } from '../src/actions/legal';
+import type { PriorityActionPayload } from '../src/actions/legal';
+import { applyPriorityAction } from '../src/actions/apply';
 import { runCombatPhase } from '../src/combat/combat';
 import { executeAbility } from '../src/effects/resolve';
 import { priorityCheckpoint } from '../src/sba/sba';
@@ -16,6 +18,7 @@ import { createGame } from '../src/state/game';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { runTurn } from '../src/turn/turn';
 import { createToken, moveObject } from '../src/state/objects';
+import { ofSubtype } from '../src/cards/selector';
 import { evaluateValueIn } from '../src/effects/values';
 import { cardTypesInAllGraveyards } from '../src/cards/value';
 import { evaluateCondition } from '../src/cards/condition';
@@ -631,5 +634,164 @@ describe('a target referenced twice in one resolution', () => {
           e.targetCardIds.includes(bear.cardId),
       ),
     ).toBe(true);
+  });
+});
+
+describe('graveyard-activated abilities', () => {
+  const artifactBeast = () =>
+    oracle({
+      name: 'Sweep Thopter Beast',
+      typeLine: 'Artifact Creature — Construct',
+      manaCost: '{3}',
+      power: '3',
+      toughness: '3',
+    });
+
+  it('granted unearth is sorcery-speed (CR 702.84a)', () => {
+    const ctx = pod();
+    conjure(ctx, 'P1', artifactBeast(), 'graveyard');
+    spawn(ctx, 'P1', forest());
+    spawn(ctx, 'P1', forest());
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'sweep-grant', name: 'Sweep Grant', oracleId: 'sweep-grant', controllerId: 'P1' },
+        {
+          kind: 'spell',
+          targets: [],
+          effects: [
+            {
+              op: 'grantUnearthToArtifactCreaturesInGraveyard',
+              cost: { generic: 2, colored: { W: 0, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },
+            },
+          ],
+        },
+        [],
+      ),
+    );
+    const unearthOffered = () =>
+      computePriorityOptions(ctx, ctx.state.players[0]!).some((o) =>
+        o.description.includes('(graveyard): Unearth'),
+      );
+    ctx.state.phase = 'precombatMain';
+    expect(unearthOffered()).toBe(true);
+    // Not at instant speed: on an opponent's turn, or with something on the stack.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(unearthOffered()).toBe(false);
+  });
+
+  it('pays with mana restricted to activating abilities, as legality priced it', () => {
+    const ctx = pod();
+    ctx.state.phase = 'precombatMain';
+    const beast = conjure(ctx, 'P1', artifactBeast(), 'graveyard');
+    const p1 = ctx.state.players[0]!;
+    const restriction = { purposes: ['activateAbility' as const], description: 'abilities only' };
+    p1.manaEntries = [
+      { symbol: 'C', restriction },
+      { symbol: 'C', restriction },
+    ];
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'sweep-grant', name: 'Sweep Grant', oracleId: 'sweep-grant', controllerId: 'P1' },
+        {
+          kind: 'spell',
+          targets: [],
+          effects: [
+            {
+              op: 'grantUnearthToArtifactCreaturesInGraveyard',
+              cost: { generic: 2, colored: { W: 0, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },
+            },
+          ],
+        },
+        [],
+      ),
+    );
+    const option = computePriorityOptions(ctx, p1).find((o) =>
+      o.description.includes('(graveyard): Unearth'),
+    );
+    expect(option).toBeDefined();
+    pump(
+      applyPriorityAction(ctx, p1, option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
+    expect(p1.manaEntries).toHaveLength(0);
+    expect(ctx.state.stack.at(-1)?.sourceCardId).toBe(beast.cardId);
+  });
+});
+
+describe('casting from exile', () => {
+  it('offers a card with two exile permissions once, not twice', () => {
+    const ctx = pod();
+    ctx.state.phase = 'precombatMain';
+    spawn(ctx, 'P1', mountain());
+    const card = conjure(ctx, 'P1', redBolt(), 'exile');
+    card.onAdventure = true;
+    card.playableUntilEotBy = 'P1';
+    const casts = computePriorityOptions(ctx, ctx.state.players[0]!).filter(
+      (o) => o.type === 'castSpell' && (o.payload as { objectId: string }).objectId === card.id,
+    );
+    expect(casts).toHaveLength(1);
+  });
+});
+
+describe('casting from the top of the library (fuzz: Omen card)', () => {
+  // The real name: the Omen half comes from this card's registered override.
+  const bloomvineRegent = () =>
+    oracle({
+      name: 'Bloomvine Regent // Claim Territory',
+      manaCost: '{3}{G}{G} // {2}{G}',
+      typeLine: 'Creature — Dragon // Sorcery — Omen',
+      types: ['Creature'],
+      subtypes: ['Dragon'],
+      oracleText:
+        'Flying\nWhenever this creature or another Dragon you control enters, you gain 3 life.',
+      power: '4',
+      toughness: '5',
+      keywords: ['Flying'],
+      layout: 'adventure',
+    });
+
+  function topOfLibraryCtx(): { ctx: GameContext; cardId: string } {
+    const ctx = pod();
+    ctx.state.phase = 'precombatMain';
+    for (let i = 0; i < 5; i++) spawn(ctx, 'P1', forest());
+    // Korlessa, Scale Singer's shape: "you may cast Dragon spells from the top of your library".
+    const def = registerDef(
+      ctx,
+      oracle({ name: 'Sweep Dragon Seer', typeLine: 'Enchantment', manaCost: '{2}{U}' }),
+    );
+    def.ruleStatics = [{ kind: 'castFromZone', zone: 'libraryTop', filter: ofSubtype('Dragon') }];
+    spawn(ctx, 'P1', oracle({ name: 'Sweep Dragon Seer', typeLine: 'Enchantment' }));
+    const card = conjure(ctx, 'P1', bloomvineRegent(), 'library');
+    return { ctx, cardId: card.id };
+  }
+
+  const castsOf = (ctx: GameContext, cardId: string) =>
+    computePriorityOptions(ctx, ctx.state.players[0]!).filter(
+      (o) => o.type === 'castSpell' && (o.payload as { objectId: string }).objectId === cardId,
+    );
+
+  it('offers only casts that can actually be applied', () => {
+    const { ctx, cardId } = topOfLibraryCtx();
+    const offered = castsOf(ctx, cardId);
+    expect(offered.some((o) => o.description.includes('Bloomvine Regent'))).toBe(true);
+    for (const [i] of offered.entries()) {
+      const fresh = topOfLibraryCtx();
+      const option = castsOf(fresh.ctx, fresh.cardId)[i]!;
+      expect(() =>
+        pump(
+          applyPriorityAction(
+            fresh.ctx,
+            fresh.ctx.state.players[0]!,
+            option.payload as PriorityActionPayload,
+            { index: 0, targets: new Map() },
+          ),
+        ),
+      ).not.toThrow();
+    }
   });
 });

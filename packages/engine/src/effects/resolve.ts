@@ -3365,7 +3365,8 @@ export function* executeAbility(
           ctx.state.temporaryGraveyardAbilities[card.cardId] = [
             {
               costs: [{ kind: 'mana', cost: effect.cost }],
-              timing: 'any',
+              // Unearth is always "activate only as a sorcery" (CR 702.84a), granted or printed.
+              timing: 'sorcery',
               zone: 'graveyard',
               ability: {
                 kind: 'activated',

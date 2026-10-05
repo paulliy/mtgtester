@@ -1253,7 +1253,11 @@ export function computePriorityOptions(
       return subtractGeneric(b, reduction.generic);
     };
 
-    if (def.alternativeCasts && def.alternativeCasts.length > 0 && !fromExile) {
+    // Alternative casts from the top of the library are not offered: their payloads cannot say
+    // where the card is, and a top-of-library permission ("cast creature spells from the top")
+    // has not been checked against them — offering one made `applyPriorityAction` look in hand
+    // and throw (found by fuzzing an Omen card). Fail closed until both are modeled.
+    if (def.alternativeCasts && def.alternativeCasts.length > 0 && !fromExile && !fromLibraryTop) {
       for (const [index, alt] of def.alternativeCasts.entries()) {
         if (fromGraveyard ? alt.from !== 'graveyard' : alt.from === 'graveyard') continue;
         if (alt.kind === 'nonMana') {
@@ -1327,6 +1331,10 @@ export function computePriorityOptions(
             });
           }
         } else if (alt.kind === 'adventure' || alt.kind === 'omen') {
+          // The payload below is hand-only (no commander tax, `fromCommand: false`), so a
+          // commander's Adventure/Omen half is not offered from the command zone rather than
+          // offered at the wrong price and then looked for in hand.
+          if (fromCommand) continue;
           const cost = addManaCosts(applyRed(alt.manaCost), additionalManaCost);
           if (
             canPay(cost, player.manaEntries, sources, allows, player.life) &&
@@ -1373,10 +1381,11 @@ export function computePriorityOptions(
     considerCast(libraryTop, false, true);
   for (const obj of player.graveyard) considerCast(obj, false, false, false, true);
   for (const obj of ctx.state.exile) {
-    if (obj.ownerId === player.id && obj.onAdventure === true) {
-      considerCast(obj, false, false, true);
-    }
-    if (obj.playableUntilEotBy === player.id) {
+    // One pass per card even when both permissions apply, or every option is offered twice.
+    if (
+      (obj.ownerId === player.id && obj.onAdventure === true) ||
+      obj.playableUntilEotBy === player.id
+    ) {
       considerCast(obj, false, false, true);
     }
   }
@@ -1640,6 +1649,11 @@ export function computePriorityOptions(
         kind: 'activateAbility',
         sourceOracleId: card.oracleId,
       });
+      // Mana and exiling the card itself are the only costs the graveyard payment path pays;
+      // anything else must not be offered rather than offered for free (fail closed, like the
+      // hand path above).
+      if (activated.costs.some((c) => c.kind !== 'mana' && c.kind !== 'exileSelfFromGraveyard'))
+        continue;
       const manaCost = manaPortionOf(activated.costs);
       if (!canPay(manaCost, player.manaEntries, sources, allows, player.life)) continue;
       if (activated.ability.targets.length > 0) continue; // not needed by any card in this pool

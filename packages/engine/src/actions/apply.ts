@@ -858,10 +858,15 @@ export function* applyPriorityAction(
         ][payload.index];
         if (activated === undefined) throw new Error('engine bug: activated ability index invalid');
 
-        const manaCost = activated.costs.find(
-          (c): c is Extract<AbilityCost, { kind: 'mana' }> => c.kind === 'mana',
-        );
-        if (manaCost !== undefined) yield* payManaCost(ctx, player, manaCost.cost);
+        // Every mana component, for the same purpose `computePriorityOptions` priced it with —
+        // otherwise mana that may only pay for activations would make an offered action unpayable.
+        const manaCost = manaPortionOf(activated.costs);
+        if (totalPips(manaCost) > 0) {
+          yield* payManaCost(ctx, player, manaCost, {
+            kind: 'activateAbility',
+            sourceOracleId: card.oracleId,
+          });
+        }
         if (activated.costs.some((c) => c.kind === 'exileSelfFromGraveyard')) {
           yield* moveObject(ctx, card, { zone: 'exile' });
         }
