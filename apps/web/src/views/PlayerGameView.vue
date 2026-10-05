@@ -1897,8 +1897,13 @@ button.selected,
   color: var(--muted);
   flex-shrink: 0;
 }
+/*
+ * Natural card size, shrinking only when the battle row is shorter than the card. `flex: 1`
+ * here (and on the image) stretched the commander to the full height of an empty battlefield —
+ * a strip hundreds of pixels tall with the art cropped to a sliver (browser trial, Turn 4).
+ */
 .commander-card {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -1910,7 +1915,7 @@ button.selected,
 }
 .commander-card :deep(.card-image) {
   width: 100%;
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
 }
 .commander-card small {
