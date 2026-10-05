@@ -775,6 +775,7 @@ describe('combat-damage division in the replay log (browser trial, Turn 49/55)',
     for (let i = 0; i < 20_000; i += 1) {
       const step = engine.advance();
       if (step.kind === 'gameOver') break;
+      if (step.kind !== 'decision') continue;
       const request = step.request;
       if (request.combatDamageSplit !== undefined) {
         // Everything onto the LAST target: option 0 always names the first one, so a log that
