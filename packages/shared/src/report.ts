@@ -81,7 +81,7 @@ export interface GameReportSeat {
 }
 
 export interface GameReport {
-  schemaVersion: 1;
+  schemaVersion: 2;
   generatedAt: string;
   build: GameReportBuild;
   cardData: GameReportCardData;

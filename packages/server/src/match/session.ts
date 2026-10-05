@@ -444,7 +444,7 @@ export class MatchSession {
       board.battlefield.find((permanent) => permanent.id === id)?.name ?? id;
 
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       generatedAt: new Date().toISOString(),
       build: context.build,
       cardData: context.cardData,

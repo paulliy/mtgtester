@@ -4,7 +4,7 @@ import { formatGameReport } from './gameReport';
 
 function report(over: Partial<GameReport> = {}): GameReport {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     generatedAt: '2026-10-05T02:00:00.000Z',
     build: { commit: 'ca22469', branch: 'claude/feature', dirty: false },
     cardData: { source: 'data/scryfall-oracle-cards.json', sha256: 'f00d', entries: 38705 },
