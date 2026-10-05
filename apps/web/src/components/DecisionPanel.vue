@@ -12,6 +12,7 @@
 import { computed } from 'vue';
 import type { ActionSubject, DecisionRequest, LegalAction } from '@mtg/shared';
 import CardImage from './CardImage.vue';
+import { playerFacingPrompt } from '../lib/turnLabels';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
 const props = defineProps<{ request: DecisionRequest }>();
@@ -76,7 +77,7 @@ function hidePreview(): void {
       <CardImage :scryfall-id="sourceScryfallId" :name="sourceLabel" size="small" />
       <strong>{{ sourceLabel }}</strong>
     </div>
-    <p class="panel-prompt">{{ request.prompt }}</p>
+    <p class="panel-prompt">{{ playerFacingPrompt(request.prompt) }}</p>
     <div class="panel-groups">
       <div v-for="group in groups" :key="group.key" class="panel-group">
         <div

@@ -120,7 +120,7 @@ test('Gev, Scaled Scorch: ward — pay 2 life', async ({ page }) => {
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/is countered/i).first()).toBeVisible();
-  await expect(page.getByAltText('Gev, Scaled Scorch')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Gev, Scaled Scorch', exact: true })).toBeVisible();
 });
 
 test('Nightscape Familiar: regenerate survives destruction', async ({ page }) => {
@@ -147,7 +147,9 @@ test('Nightscape Familiar: regenerate survives destruction', async ({ page }) =>
   await expect(
     page.getByText('Nightscape Familiar regenerates instead of being destroyed'),
   ).toBeVisible();
-  await expect(page.getByAltText('Nightscape Familiar').first()).toBeVisible();
+  await expect(
+    page.getByRole('img', { name: 'Nightscape Familiar', exact: true }).first(),
+  ).toBeVisible();
 });
 
 test('Thran Vigil: artifact leaves your graveyard', async ({ page }) => {
@@ -158,7 +160,7 @@ test('Thran Vigil: artifact leaves your graveyard', async ({ page }) => {
   await picker.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   const talisman = page.locator('.zone-card-thumb.targetable').filter({
-    has: page.getByAltText('Eligible Talisman'),
+    has: page.getByRole('img', { name: 'Eligible Talisman', exact: true }),
   });
   await expect(talisman).toBeVisible();
   await talisman.click();
@@ -1371,7 +1373,7 @@ async function runArcaneDenial(page: Page, drawCount: 0 | 2): Promise<void> {
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(handCard(page, 'Caster Secret Draw')).toBeVisible();
   const p4 = page.locator('.opponent').filter({ hasText: 'P4' });
-  await expect(p4).toContainText(`${drawCount} cards`);
+  await expect(p4).toContainText(`${drawCount} in hand`);
   await expect(page.getByText('Target Secret Alpha')).toHaveCount(0);
   await expect(page.getByText('Target Secret Beta')).toHaveCount(0);
   await expect(page.getByText(/Lab Pending Spell is countered by Arcane Denial/i)).toBeVisible();
@@ -1544,6 +1546,52 @@ test.describe('land confirmation', () => {
     await page.locator('.hand-card', { hasText: 'Myriad Landscape' }).click();
 
     await assertLandPlayedOnce(page);
+  });
+
+  test('the playable list names the land and plays it like its hand card', async ({ page }) => {
+    await runLandScenario(page);
+    const landscape = page.locator('.hand-card', { hasText: 'Myriad Landscape' });
+    await expect(landscape.locator('.play-tag')).toHaveText('Play');
+    const listed = page.locator('.playable-now').getByRole('button', {
+      name: 'Play Myriad Landscape',
+    });
+    await expect(listed).toBeVisible();
+    await listed.click();
+
+    await assertLandPlayedOnce(page);
+  });
+
+  test('passing with a playable land asks before passing', async ({ page }) => {
+    await runLandScenario(page);
+    const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+    const reminder = page.getByRole('alertdialog', { name: /haven't played a land/ });
+
+    await pass.click();
+    await expect(reminder).toBeVisible();
+    await page.getByRole('button', { name: 'Play a land' }).click();
+    await expect(reminder).toBeHidden();
+    expect(await submissionCount(page)).toBe(0);
+
+    // Space on the dialog's focused button answers the dialog; it must not also pass priority.
+    await pass.click();
+    await expect(reminder).toBeVisible();
+    await page.keyboard.press('Space');
+    await expect(reminder).toBeHidden();
+    expect(await submissionCount(page)).toBe(0);
+
+    await pass.click();
+    await page.getByRole('button', { name: 'Pass anyway' }).click();
+    await expect(reminder).toBeHidden();
+    await expect.poll(() => submissionCount(page)).toBe(1);
+  });
+
+  test('the land drop reminder can be turned off', async ({ page }) => {
+    await runLandScenario(page);
+    await page.getByLabel('Land drop reminder').uncheck();
+    await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
+    await expect.poll(() => submissionCount(page)).toBe(1);
   });
 
   test('confirm passes and lands still reviews when skip confirm is also on', async ({ page }) => {

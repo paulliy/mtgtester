@@ -15,6 +15,7 @@
  */
 import { computed } from 'vue';
 import type { AiReflection, GameResult, PlayerId, SeatSummary } from '@mtg/shared';
+import { lossReasonLabel } from '../lib/lossReasons';
 
 const props = defineProps<{
   seats: SeatSummary[];
@@ -48,18 +49,10 @@ const roundCount = computed(() => {
   return Math.ceil(props.result.turnCount / numSeats);
 });
 
-const LOSS_LABELS: Record<string, string> = {
-  lifeZeroOrLess: 'Life total reached 0',
-  emptyLibraryDraw: 'Drew from an empty library',
-  poisonCounters: '10+ poison counters',
-  commanderDamage: '21+ commander damage from one commander',
-  other: 'Eliminated',
-};
-
 function outcomeLabel(row: { seat: PlayerId; lossReason: string | null }): string {
   if (row.seat === props.result.winnerSeat) return 'Winner';
   if (row.lossReason === null) return props.result.halted ? 'Still standing' : '—';
-  return LOSS_LABELS[row.lossReason] ?? row.lossReason;
+  return lossReasonLabel(row.lossReason);
 }
 
 /** Standings arrive unsorted; 1st belongs at the top of the results table. */

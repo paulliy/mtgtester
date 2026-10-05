@@ -1428,7 +1428,7 @@ sys.stdout.buffer.write(data)
   it('pins exact complete file/title paths to independent current spec declarations', () => {
     const key = (s: CatalogSpec) => JSON.stringify([s.file, ...s.titlePath]);
     expect(VIEWER_CATALOG.map(key).sort()).toEqual(sourceCatalog().map(key).sort());
-    expect(sourceCatalog().filter((s) => s.titlePath[0] === 'land confirmation')).toHaveLength(4);
+    expect(sourceCatalog().filter((s) => s.titlePath[0] === 'land confirmation')).toHaveLength(7);
   });
   it.each([
     'corrupt',

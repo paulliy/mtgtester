@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import type { SavedDeckOption, SeatSource, SetupPreview, ProviderKind } from '@mtg/shared';
+import { useConfirmedStart } from '../composables/useConfirmedStart';
+import { PROVIDER_LABELS, controllerLabel } from '../lib/providerLabels';
 import { useGameStore } from '../stores/game';
 import {
   pruneRecentIds,
@@ -11,7 +12,6 @@ import {
 } from '../lib/recentSetup';
 
 const store = useGameStore();
-const router = useRouter();
 const PODS = [
   { id: 'constellation', name: 'Constellation pod' },
   { id: 'orbit', name: 'Orbit pod' },
@@ -28,6 +28,7 @@ const persistence = ref(false);
 const loading = ref(false);
 const error = ref('');
 const preview = ref<SetupPreview | null>(null);
+const { starting, startErrors, begin, clearStartErrors } = useConfirmedStart();
 const recentDecks = ref<string[]>(readRecentIds('mtg-recent-deck-ids'));
 const recentPods = ref<string[]>(readRecentIds('mtg-recent-pod-ids'));
 
@@ -56,6 +57,7 @@ onMounted(async () => {
 
 watch([deckKind, savedId, importText, podId, provider, seed], () => {
   preview.value = null;
+  clearStartErrors();
 });
 
 const orderedDecks = computed(() =>
@@ -121,22 +123,24 @@ async function inspect(): Promise<void> {
 }
 
 function play(): void {
-  if (!preview.value || preview.value.blockers.length > 0) return;
+  const ready = preview.value;
+  if (!ready || ready.blockers.length > 0) return;
   // The pod is handed to the store rather than written here, so it joins the recents only if the
   // server answers `gameStarted` — the same rule the human deck already follows, which is
   // remembered from the snapshot ID that answer returns. Writing it now would record a pod that
   // a rejected or dropped start never played.
-  store.startGame(
-    selections(),
-    provider.value,
-    preview.value.seed,
-    'singlePlayer',
-    'P1',
-    false,
-    preview.value.previewId,
-    podId.value,
+  begin(() =>
+    store.startGame(
+      selections(),
+      provider.value,
+      ready.seed,
+      'singlePlayer',
+      'P1',
+      false,
+      ready.previewId,
+      podId.value,
+    ),
   );
-  void router.push('/game');
 }
 </script>
 
@@ -187,8 +191,8 @@ function play(): void {
         <label class="vertical"
           >Bot controller
           <select v-model="provider">
-            <option value="random">Random bots</option>
-            <option value="ai">AI bots</option>
+            <option value="random">{{ PROVIDER_LABELS.random }}</option>
+            <option value="ai">{{ PROVIDER_LABELS.ai }}</option>
           </select>
         </label>
         <label class="vertical"
@@ -205,7 +209,7 @@ function play(): void {
       <p><strong>Seed:</strong> {{ preview.seed }}</p>
       <ul>
         <li v-for="seat in preview.seats" :key="seat.seat">
-          <strong>{{ seat.seat }} {{ seat.controller }}</strong> —
+          <strong>{{ seat.seat }} {{ controllerLabel(seat.controller) }}</strong> —
           {{ seat.commanderNames.join(' & ') || 'Unavailable' }} ·
           {{ seat.colorIdentity.join('') || 'C' }} ·
           {{ seat.archetypeTag || 'Unknown archetype' }} ·
@@ -215,7 +219,17 @@ function play(): void {
       <ul v-if="preview.blockers.length" role="alert">
         <li v-for="blocker in preview.blockers" :key="blocker">{{ blocker }}</li>
       </ul>
-      <button type="button" :disabled="preview.blockers.length > 0" @click="play">Play</button>
+      <div v-if="startErrors.length" class="start-errors" role="alert">
+        <strong>The game did not start.</strong>
+        <ul>
+          <li v-for="(message, index) in startErrors" :key="index">
+            {{ message }}
+          </li>
+        </ul>
+      </div>
+      <button type="button" :disabled="preview.blockers.length > 0 || starting" @click="play">
+        {{ starting ? 'Starting…' : 'Play' }}
+      </button>
     </div>
   </section>
 </template>
@@ -285,6 +299,17 @@ button:disabled {
 .matchup ul {
   padding-left: 1.2rem;
   line-height: 1.8;
+}
+.start-errors {
+  margin: 0 0 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  color: var(--danger);
+}
+.start-errors ul {
+  margin: 0.3rem 0 0;
+  line-height: 1.5;
 }
 @media (max-width: 600px) {
   .fields {

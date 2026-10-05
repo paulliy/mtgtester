@@ -1142,6 +1142,21 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: [
       'land confirmation',
+      'the playable list names the land and plays it like its hand card',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['land confirmation', 'passing with a playable land asks before passing'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['land confirmation', 'the land drop reminder can be turned off'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'land confirmation',
       'confirm passes and lands still reviews when skip confirm is also on',
     ],
   },

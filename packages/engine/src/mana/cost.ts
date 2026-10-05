@@ -598,9 +598,32 @@ function solveFrom(
       for (const symbol of new Set(unit)) suffix[i]![symbol]++;
     }
   }
+  // Failed states, remembered. Whether `solve` can finish depends only on where it starts, what
+  // is still needed, and which multi-ability permanents are already tapped, and a failed attempt
+  // undoes its `chosen`/`produced` pushes. Without this, a payment that cannot be made revisits
+  // the same dead ends exponentially: every symbol of an any-color unit covers a generic pip the
+  // same way, so a dozen Treasures against a large cost never return. Only failures are cached,
+  // so the first plan found, and therefore every tap choice, is unchanged.
+  const sharedIds = new Set(
+    usableSources.map((s) => s.cardId).filter((id, i, ids) => ids.indexOf(id) !== i),
+  );
+  const failed = new Set<string>();
+  const stateKey = (srcIdx: number, need2: ParsedManaCost): string =>
+    `${srcIdx}|${needKey(need2)}|${chosen
+      .filter((s) => sharedIds.has(s.cardId))
+      .map((s) => s.cardId)
+      .join(',')}`;
+
   const solve = (srcIdx: number, need2: ParsedManaCost): boolean => {
     if (totalPips(need2) === 0) return true;
     if (srcIdx >= usableSources.length) return false;
+    const key = stateKey(srcIdx, need2);
+    if (failed.has(key)) return false;
+    if (solveAt(srcIdx, need2)) return true;
+    failed.add(key);
+    return false;
+  };
+  const solveAt = (srcIdx: number, need2: ParsedManaCost): boolean => {
     for (const color of ALL_COLORS) {
       if (need2.colored[color] > suffix[srcIdx]![color]) return false;
     }
@@ -688,6 +711,16 @@ function solveFrom(
 
   if (!solve(0, need)) return null;
   return { tapCardIds: chosen.map((s) => s.cardId), tapSources: [...chosen], fromPool, produced };
+}
+
+/**
+ * A cost's pips as a string, for remembering solver states. Hybrid pips keep their order, because
+ * the solver tries them in order.
+ */
+function needKey(need: ParsedManaCost): string {
+  const colored = ALL_COLORS.map((c) => need.colored[c]).join(',');
+  const hybrid = (need.hybrid ?? []).map((h) => h.join('')).join('/');
+  return `${need.generic};${colored};${need.colorless};${hybrid}`;
 }
 
 /**

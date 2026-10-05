@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Engine, RandomDecisionProvider } from '@mtg/engine';
 import type { AsyncDecisionProvider, DebugEntry } from '@mtg/engine';
 import type { DecisionRequest, OracleCard } from '@mtg/shared';
-import { ComputeHaltError, MatchRunner } from './runner';
+import { ComputeHaltError, MatchRunner, eliminatorFor } from './runner';
 
 async function waitFor(
   fn: () => void | Promise<void>,
@@ -439,6 +439,63 @@ describe('MatchRunner — persistence hooks', () => {
     runner.abandon();
     await run;
     expect(recorder.markStatus).toHaveBeenCalledWith('abandoned');
+  });
+});
+
+describe('eliminatorFor', () => {
+  const lost = { id: 'P1', hasLost: true, lossReason: 'lifeZeroOrLess' } as const;
+
+  it('credits the last damaging seat for a genuine loss', () => {
+    expect(eliminatorFor(lost, 'P3')).toBe('P3');
+    expect(eliminatorFor({ ...lost, lossReason: 'commanderDamage' }, 'P2')).toBe('P2');
+  });
+
+  it('credits nobody for a survivor, a decked player, or self-inflicted damage', () => {
+    expect(eliminatorFor({ id: 'P1', hasLost: false, lossReason: null }, 'P2')).toBeNull();
+    expect(eliminatorFor({ ...lost, lossReason: 'emptyLibraryDraw' }, 'P2')).toBeNull();
+    expect(eliminatorFor(lost, 'P1')).toBeNull();
+    expect(eliminatorFor(lost, null)).toBeNull();
+  });
+
+  it('records eliminators only for genuine losses in a full game', async () => {
+    const finish = vi.fn();
+    const recorder = {
+      start: vi.fn(),
+      appendEvents: vi.fn(),
+      saveTurnSnapshot: vi.fn(),
+      loadTurnSnapshot: vi.fn(() => null),
+      snapshotTurns: vi.fn(() => []),
+      loadEvents: vi.fn(() => []),
+      markStatus: vi.fn(),
+      finish,
+    };
+    const runner = new MatchRunner({
+      engine: makeEngine(),
+      gameId: 'g-test',
+      seed: 'runner-test',
+      seats: SEATS,
+      providerFor: randomProviders(),
+      recorder: recorder as never,
+      onSnapshot: (turn) => {
+        runner.setViewTurn(turn);
+      },
+    });
+
+    await runner.run();
+
+    expect(finish).toHaveBeenCalledTimes(1);
+    const seats = finish.mock.calls[0]?.[2] as Array<{
+      seat: string;
+      lossReason: string | null;
+      eliminatedBySeat: string | null;
+    }>;
+    expect(seats).toHaveLength(SEATS.length);
+    for (const seat of seats) {
+      if (seat.eliminatedBySeat === null) continue;
+      expect(seat.lossReason).not.toBeNull();
+      expect(seat.lossReason).not.toBe('emptyLibraryDraw');
+      expect(seat.eliminatedBySeat).not.toBe(seat.seat);
+    }
   });
 });
 

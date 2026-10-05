@@ -169,14 +169,24 @@ export class BatchRepository {
       `SELECT scenario_id, status FROM batch_games WHERE batch_id = ?`,
       id,
     );
+    // Only games that have ended count as processed. A game row exists from the moment its game
+    // starts (status `running`), and counting it then reported the game in progress as failed.
+    const ended = gameRows.filter(
+      (row) => row['status'] !== 'running' && row['status'] !== 'queued',
+    );
     const counts = new Map<string, { done: number; failed: number }>();
-    for (const row of gameRows) {
+    for (const row of ended) {
       const key = String(row['scenario_id']);
       const value = counts.get(key) ?? { done: 0, failed: 0 };
       value.done++;
       if (row['status'] !== 'finished') value.failed++;
       counts.set(key, value);
     }
+    const inProgress = new Set(
+      gameRows
+        .filter((row) => row['status'] === 'running')
+        .map((row) => String(row['scenario_id'])),
+    );
     const scenarios: BatchScenarioProgress[] = scenarioRows.map((row) => {
       const count = counts.get(String(row['scenario_id'])) ?? { done: 0, failed: 0 };
       const games = n(row['games']);
@@ -185,7 +195,7 @@ export class BatchRepository {
           ? 'failed'
           : count.done >= games
             ? 'completed'
-            : count.done > 0
+            : count.done > 0 || inProgress.has(String(row['scenario_id']))
               ? 'running'
               : 'queued';
       return {
@@ -196,15 +206,15 @@ export class BatchRepository {
         status,
       };
     });
-    const finishedGames = gameRows.filter((row) => row['status'] === 'finished').length;
+    const finishedGames = ended.filter((row) => row['status'] === 'finished').length;
     return {
       batchId: id,
       seed: batch.seed,
       status: batch.status,
       totalGames: scenarioRows.reduce((sum, row) => sum + n(row['games']), 0),
-      completedGames: gameRows.length,
+      completedGames: ended.length,
       finishedGames,
-      failedGames: gameRows.length - finishedGames,
+      failedGames: ended.length - finishedGames,
       scenarios,
       failure: batch.failure,
       createdAt: batch.createdAt,
@@ -218,7 +228,7 @@ export class BatchRepository {
     if (progress === null) return null;
     const raw = rows(
       this.db,
-      `SELECT bg.game_id, bg.scenario_id, bs.name AS scenario_name, bg.game_index, bg.seed, bg.status AS batch_status, bg.failure_reason, bg.started_at AS batch_started_at, bg.ended_at AS batch_ended_at, g.winner_seat, g.turn_count, g.started_at, g.ended_at, gp.seat, gp.finished_position, gp.loss_reason, COALESCE(d.name, ds.id) AS deck_name FROM batch_games bg JOIN batch_scenarios bs ON bs.batch_id = bg.batch_id AND bs.scenario_id = bg.scenario_id LEFT JOIN games g ON g.id = bg.game_id LEFT JOIN game_players gp ON gp.game_id = bg.game_id LEFT JOIN deck_snapshots ds ON ds.id = gp.deck_snapshot_id LEFT JOIN decks d ON d.id = ds.deck_id WHERE bg.batch_id = ? ORDER BY bs.scenario_index, bg.game_index, gp.seat`,
+      `SELECT bg.game_id, bg.scenario_id, bs.name AS scenario_name, bg.game_index, bg.seed, bg.status AS batch_status, bg.failure_reason, bg.started_at AS batch_started_at, bg.ended_at AS batch_ended_at, g.winner_seat, g.turn_count, (SELECT MAX(e.turn) FROM game_events e WHERE e.game_id = bg.game_id) AS last_recorded_turn, g.started_at, g.ended_at, gp.seat, gp.finished_position, gp.loss_reason, COALESCE(d.name, ds.id) AS deck_name FROM batch_games bg JOIN batch_scenarios bs ON bs.batch_id = bg.batch_id AND bs.scenario_id = bg.scenario_id LEFT JOIN games g ON g.id = bg.game_id LEFT JOIN game_players gp ON gp.game_id = bg.game_id LEFT JOIN deck_snapshots ds ON ds.id = gp.deck_snapshot_id LEFT JOIN decks d ON d.id = ds.deck_id WHERE bg.batch_id = ? ORDER BY bs.scenario_index, bg.game_index, gp.seat`,
       id,
     );
     const games: BatchGameSummary[] = [];
@@ -234,6 +244,7 @@ export class BatchRepository {
           status: String(row['batch_status']) as BatchGameStatus,
           winnerSeat: player(row['winner_seat']),
           turnCount: nullable(row['turn_count']),
+          lastRecordedTurn: nullable(row['last_recorded_turn']),
           standings: [],
           failureReason: str(row['failure_reason']),
           startedAt: str(row['started_at'] ?? row['batch_started_at']),
@@ -290,7 +301,12 @@ export class BatchRepository {
             scenarioId,
           );
     const requested = n(requestedRow?.['total'] ?? requestedRow?.['games']);
-    const all = rows(this.db, `SELECT bg.game_id FROM batch_games bg WHERE ${clause}`, ...args);
+    // Games that have ended; a game still running is not yet finished or failed.
+    const all = rows(
+      this.db,
+      `SELECT bg.game_id FROM batch_games bg WHERE ${clause} AND bg.status NOT IN ('running', 'queued')`,
+      ...args,
+    );
     const turns = finished.map((row) => n(row['turn_count']));
     const wins = new Map<PlayerId, number>();
     const places = new Map<PlayerId, number[]>();

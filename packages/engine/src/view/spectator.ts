@@ -22,7 +22,8 @@ import type {
   SpectatorState,
 } from '@mtg/shared';
 import { computeCharacteristics } from '../effects/continuous';
-import { scryfallIdOf } from '../state/queries';
+import { manaSourcesFor, scryfallIdOf } from '../state/queries';
+import { playerById } from '../state/objects';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -229,6 +230,32 @@ export function buildSpectatorState(ctx: GameContext): SpectatorState {
   };
 }
 
+const COLOR_ORDER = ['W', 'U', 'B', 'R', 'G'] as const;
+
+/** See `PlayerBoardState.viewerMana`. */
+function viewerMana(ctx: GameContext, playerId: string): PlayerBoardState['viewerMana'] {
+  const pool = playerById(ctx, playerId).manaPool;
+  const colors = new Set<string>();
+  let units = 0;
+  for (const symbol of [...COLOR_ORDER, 'C'] as const) {
+    units += pool[symbol];
+    if (symbol !== 'C' && pool[symbol] > 0) colors.add(symbol);
+  }
+  // A permanent with several mana abilities is one source per ability, all sharing its card id,
+  // and tapping it activates only one of them: count its largest one, not their sum.
+  const bestByCard = new Map<string, number>();
+  for (const source of manaSourcesFor(ctx, playerId)) {
+    if (source.manaCost !== undefined || source.restriction !== undefined) continue;
+    bestByCard.set(
+      source.cardId,
+      Math.max(bestByCard.get(source.cardId) ?? 0, source.units.length),
+    );
+    for (const unit of source.units) for (const symbol of unit) colors.add(symbol);
+  }
+  for (const best of bestByCard.values()) units += best;
+  return { units, colors: COLOR_ORDER.filter((color) => colors.has(color)) };
+}
+
 /**
  * Active-player browser projection. Build it inside the engine so hidden cards never cross the
  * server/browser boundary and face-down objects are redacted before serialization.
@@ -238,6 +265,7 @@ export function buildPlayerBoardState(ctx: GameContext, playerId: string): Playe
   return {
     ...spectator,
     viewerSeat: playerId,
+    viewerMana: viewerMana(ctx, playerId),
     seats: spectator.seats.map((seat) => ({
       ...seat,
       handSize: seat.hand.length,

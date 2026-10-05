@@ -25,6 +25,7 @@ import type {
   GameMode,
   GameResult,
   HaltKind,
+  LossReason,
   PlayerId,
   SpectatorLogLine,
   SpectatorState,
@@ -625,9 +626,7 @@ export class MatchRunner {
         seat: player.id,
         lossReason: player.lossReason,
         eliminatedOnTurn: player.hasLost ? result.turnCount : null,
-        // TODO(phase-5): attributing the killing blow needs the damage events walked back;
-        // the stats screen is what consumes it, so it lands with the rest of §9.1.
-        eliminatedBySeat: this.eliminators.get(player.id) ?? null,
+        eliminatedBySeat: eliminatorFor(player, this.eliminators.get(player.id) ?? null),
         mulligansTaken: mulligansOf(player),
         openingHandSize: 7,
       })),
@@ -639,6 +638,23 @@ export class MatchRunner {
     this.status = status;
     this.opts.onStatusChange?.(status);
   }
+}
+
+/**
+ * Who to credit with a player's elimination in statistics ("Who beats me"). The runner only knows
+ * the last seat that dealt each player damage, so credit it only where that can be the cause: the
+ * player actually lost, by something other than drawing from an empty library, to another seat.
+ * Recording it for every seat credited winners and survivors with a "loss", and players with
+ * beating themselves. Still a heuristic: a life-loss effect after the last damage is not seen.
+ */
+export function eliminatorFor(
+  player: { id: PlayerId; hasLost: boolean; lossReason: LossReason | null },
+  lastDamagedBy: PlayerId | null,
+): PlayerId | null {
+  if (!player.hasLost || player.lossReason === null || player.lossReason === 'emptyLibraryDraw') {
+    return null;
+  }
+  return lastDamagedBy === player.id ? null : lastDamagedBy;
 }
 
 /** `mulligansTaken` is engine-internal; read it defensively so the shared type stays clean. */

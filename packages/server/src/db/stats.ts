@@ -8,6 +8,8 @@ type Row = Record<string, unknown>;
 export interface DeckStatistic {
   deckSnapshotId: string;
   name: string;
+  /** A deck generated from the supported pool for one game; each has its own random list. */
+  generated: boolean;
   commanders: string[];
   colorIdentity: string[];
   archetypeTag: string;
@@ -72,6 +74,14 @@ function first(db: SqliteLike, sql: string, ...args: unknown[]): Row | null {
   return (db.query(sql).get(...args) as Row | null) ?? null;
 }
 
+/**
+ * A row that may count toward "Who beats me": the victim genuinely lost, not by decking, to a
+ * different seat. Older rows recorded the last damaging seat for every player — winners,
+ * survivors, decked players, and players hurt by their own spells — so the filter also keeps
+ * that history honest without rewriting it (see `eliminatorFor` in `match/runner.ts`).
+ */
+const ATTRIBUTED_LOSS = `victim.loss_reason IS NOT NULL AND victim.loss_reason <> 'emptyLibraryDraw' AND victim.eliminated_by_seat IS NOT NULL AND victim.eliminated_by_seat <> victim.seat`;
+
 /** Read-only repository; it deliberately works with the testable narrow SQLite interface. */
 export class StatsRepository {
   constructor(private readonly db: SqliteLike) {}
@@ -80,7 +90,7 @@ export class StatsRepository {
     if (batchId !== undefined) return this.batchDeckStatistics(batchId);
     const base = rows(
       this.db,
-      `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag,
+      `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag, d.source_type,
               ds.commander_names, ds.color_identity, COUNT(g.id) AS games_played,
               SUM(CASE WHEN g.id IS NOT NULL AND gp.finished_position = 1 THEN 1 ELSE 0 END) AS wins,
               AVG(CASE WHEN g.id IS NOT NULL THEN gp.finished_position END) AS average_finish,
@@ -98,7 +108,7 @@ export class StatsRepository {
   private batchDeckStatistics(batchId: string): DeckStatistic[] {
     const base = rows(
       this.db,
-      `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag,
+      `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag, d.source_type,
               ds.commander_names, ds.color_identity, COUNT(g.id) AS games_played,
               SUM(CASE WHEN gp.finished_position = 1 THEN 1 ELSE 0 END) AS wins,
               AVG(gp.finished_position) AS average_finish, AVG(g.turn_count) AS average_game_length,
@@ -117,6 +127,7 @@ export class StatsRepository {
       return {
         deckSnapshotId: snapshotId,
         name: String(row['name'] ?? snapshotId),
+        generated: row['source_type'] === 'generated',
         commanders: jsonArray(row['commander_names']),
         colorIdentity: jsonArray(row['color_identity']),
         archetypeTag: String(row['archetype_tag'] ?? ''),
@@ -140,7 +151,7 @@ export class StatsRepository {
         ).map((item) => ({ reason: String(item['reason']), count: number(item['count']) })),
         lossesTo: rows(
           this.db,
-          `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count FROM game_players victim JOIN games g ON g.id = victim.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id JOIN decks killer_d ON killer_d.id = killer_ds.deck_id WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND victim.eliminated_by_seat IS NOT NULL GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
+          `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count FROM game_players victim JOIN games g ON g.id = victim.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id JOIN decks killer_d ON killer_d.id = killer_ds.deck_id WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND ${ATTRIBUTED_LOSS} GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
           batchId,
           snapshotId,
         ).map((item) => ({
@@ -161,6 +172,7 @@ export class StatsRepository {
     return {
       deckSnapshotId: snapshotId,
       name: String(row['name'] ?? snapshotId),
+      generated: row['source_type'] === 'generated',
       commanders: jsonArray(row['commander_names']),
       colorIdentity: jsonArray(row['color_identity']),
       archetypeTag: String(row['archetype_tag'] ?? ''),
@@ -190,7 +202,7 @@ export class StatsRepository {
            JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat
            JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id
            JOIN decks killer_d ON killer_d.id = killer_ds.deck_id
-          WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND victim.eliminated_by_seat IS NOT NULL
+          WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND ${ATTRIBUTED_LOSS}
           GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
         snapshotId,
       ).map((item) => ({

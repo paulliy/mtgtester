@@ -237,6 +237,41 @@ describe('spectator store — server-confirmed position', () => {
     expect(store.canStepAction(1)).toBe(false);
   });
 
+  it('remembers where the log stood when the player last acted, until the next game', () => {
+    store.log = LOG.slice(0, 3);
+    store.playerAction = {
+      request: {
+        requestId: 'r1',
+        legalActions: [
+          { id: 0, type: 'playLand', description: 'Play Forest' },
+          { id: 1, type: 'pass', description: 'Pass priority' },
+        ],
+      },
+      revision: 1,
+    } as never;
+    expect(store.lastPlayerActionSequence).toBeNull();
+
+    store.submitPlayerAction(0);
+    expect(store.lastPlayerActionSequence).toBe(14);
+
+    // Passing is not acting: bot lines since the land play stay summarised.
+    store.log = [...LOG];
+    store.submitPlayerAction(1);
+    expect(store.lastPlayerActionSequence).toBe(14);
+
+    inbound?.({
+      type: 'gameStarted',
+      payload: {
+        gameId: 'g2',
+        seed: 'abc',
+        seats: [],
+        providerKind: 'random',
+        startedAt: new Date().toISOString(),
+      },
+    });
+    expect(store.lastPlayerActionSequence).toBeNull();
+  });
+
   it('starts a player game at the next meaningful choice without racing a second frame', () => {
     sent.length = 0;
     store.startGame(
@@ -350,6 +385,47 @@ describe('spectator store — server-confirmed position', () => {
       startWithPod(store, 'orbit');
       inbound?.(podGameStarted('g-played'));
       expect(pods()).toEqual(['orbit', 'cascade']);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("does not mistake a stale session's refused resume for a refused start", () => {
+    const values = new Map<string, string>([['mtg-player-session', 'stale-token']]);
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+    try {
+      // A browser left with the token of a game the server no longer has.
+      store.sessionToken = 'stale-token';
+      store.gameMode = 'singlePlayer';
+      startWithPod(store, 'orbit');
+      // The connection opens: the resume goes out first, ahead of the queued start.
+      connectionChanged?.('open');
+      expect(sent.map((m) => m.type)).toContain('resumeGame');
+
+      inbound?.({
+        type: 'error',
+        payload: { message: 'That single-player session is unavailable.' },
+      });
+      // Not an answer to the start: nothing is reported, and the dead token is forgotten.
+      expect(store.errors).toEqual([]);
+      expect(store.sessionToken).toBeNull();
+      expect(values.has('mtg-player-session')).toBe(false);
+
+      // The start's own answer still lands, and still records what it was asked to remember.
+      const started = podGameStarted('fresh-game');
+      started.payload.sessionToken = 'fresh-token';
+      inbound?.(started);
+      expect(store.gameId).toBe('fresh-game');
+      expect(store.sessionToken).toBe('fresh-token');
+      expect(JSON.parse(values.get('mtg-recent-pod-ids') ?? '[]')).toEqual(['orbit']);
+
+      // A later error is a real one again.
+      inbound?.({ type: 'error', payload: { message: 'Not your decision.' } });
+      expect(store.errors).toEqual(['Not your decision.']);
     } finally {
       vi.unstubAllGlobals();
     }

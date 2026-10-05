@@ -10,6 +10,7 @@ import {
   isClientToServerMessage,
   isPlayerSeatId,
   parseStrictJson,
+  PLAYER_IDLE_GRACE_MS,
   type StrictJsonFailure,
 } from '@mtg/shared';
 import type {
@@ -102,6 +103,7 @@ export class GameServer {
   private startingSocket: ServerWebSocket<SocketData> | null = null;
   private startGeneration = 0;
   private orphanTimer: ReturnType<typeof setTimeout> | null = null;
+  private playerIdleTimer: ReturnType<typeof setTimeout> | null = null;
   private playerSocket: ServerWebSocket<SocketData> | null = null;
   private sessionToken: string | null = null;
   private startedPayload: GameStartedPayload | null = null;
@@ -309,20 +311,8 @@ export class GameServer {
         return new Response('Not found', { status: 404 });
       },
       websocket: {
-        open: (socket) => {
-          this.sockets.add(socket);
-          this.cancelOrphanTimer();
-        },
-        close: (socket) => {
-          this.sockets.delete(socket);
-          if (socket === this.startingSocket) this.startGeneration++;
-          if (socket === this.playerSocket) {
-            this.playerSocket = null;
-            this.session?.setPlayerConnected(false);
-          }
-          if (this.session?.getGameMode() === 'singlePlayer') return;
-          if (this.sockets.size === 0) this.startOrphanTimer();
-        },
+        open: (socket) => this.onSocketOpen(socket),
+        close: (socket) => this.onSocketClose(socket),
         message: (socket, raw) => {
           void this.handleMessage(socket, raw);
         },
@@ -434,11 +424,7 @@ export class GameServer {
         }
         // A disconnected lab viewer must be able to replace the completed scenario. Keep the
         // takeover guard only while another browser is still attached as the active player.
-        if (
-          this.session?.getGameMode() === 'singlePlayer' &&
-          this.playerSocket !== null &&
-          socket !== this.playerSocket
-        ) {
+        if (this.holdsPlayerSeat(socket) && this.playerSocket !== null) {
           this.sendTo(socket, {
             type: 'error',
             payload: { message: 'Resume the active player session before replacing it.' },
@@ -456,7 +442,7 @@ export class GameServer {
         return;
 
       case 'startGame':
-        if (this.session?.getGameMode() === 'singlePlayer' && socket !== this.playerSocket) {
+        if (this.holdsPlayerSeat(socket)) {
           this.sendTo(socket, {
             type: 'error',
             payload: { message: 'Resume the active player session before replacing it.' },
@@ -519,6 +505,7 @@ export class GameServer {
         this.cancelOrphanTimer();
         {
           const session = this.requireSession(socket);
+          if (session !== null) this.cancelPlayerIdleTimer();
           if (session === null) return;
           this.startGeneration++;
           session.abandon();
@@ -591,6 +578,7 @@ export class GameServer {
           return;
         }
         this.playerSocket = socket;
+        this.cancelPlayerIdleTimer();
         if (this.startedPayload !== null) {
           this.sendTo(socket, {
             type: 'gameStarted',
@@ -603,6 +591,65 @@ export class GameServer {
         this.session.setPlayerConnected(true);
         return;
     }
+  }
+
+  /**
+   * Whether a single-player game in progress belongs to a connection other than `socket`. Only
+   * its own player may replace it; once the game is over there is nothing left to protect, so
+   * any local connection may start the next one.
+   */
+  private holdsPlayerSeat(socket: ServerWebSocket<SocketData>): boolean {
+    const session = this.session;
+    return (
+      session !== null &&
+      session.getGameMode() === 'singlePlayer' &&
+      !session.isOver() &&
+      socket !== this.playerSocket
+    );
+  }
+
+  private onSocketOpen(socket: ServerWebSocket<SocketData>): void {
+    this.sockets.add(socket);
+    this.cancelOrphanTimer();
+  }
+
+  private onSocketClose(socket: ServerWebSocket<SocketData>): void {
+    this.sockets.delete(socket);
+    if (socket === this.startingSocket) this.startGeneration++;
+    if (socket === this.playerSocket) {
+      this.playerSocket = null;
+      this.session?.setPlayerConnected(false);
+      this.startPlayerIdleTimer();
+    }
+    if (this.session?.getGameMode() === 'singlePlayer') return;
+    if (this.sockets.size === 0) this.startOrphanTimer();
+  }
+
+  /**
+   * The player's browser went away. A single-player game is kept so that browser can resume it,
+   * and meanwhile every other connection is refused the seat — so if the player never returns
+   * (a closed private window, cleared storage), nothing could start a new game until a restart.
+   * Abandon it after `PLAYER_IDLE_GRACE_MS` without a player. Resuming cancels this.
+   */
+  private startPlayerIdleTimer(): void {
+    this.cancelPlayerIdleTimer();
+    const session = this.session;
+    if (session === null || session.getGameMode() !== 'singlePlayer') return;
+    this.playerIdleTimer = setTimeout(() => {
+      this.playerIdleTimer = null;
+      if (this.session !== session || this.playerSocket !== null) return;
+      session.abandon();
+      this.session = null;
+      this.sessionToken = null;
+      this.startedPayload = null;
+    }, PLAYER_IDLE_GRACE_MS);
+    this.playerIdleTimer.unref?.();
+  }
+
+  private cancelPlayerIdleTimer(): void {
+    if (this.playerIdleTimer === null) return;
+    clearTimeout(this.playerIdleTimer);
+    this.playerIdleTimer = null;
   }
 
   /**
@@ -762,6 +809,7 @@ export class GameServer {
       },
     });
     this.session?.abandon();
+    this.cancelPlayerIdleTimer();
     this.session = session;
     this.sessionToken = gameMode === 'singlePlayer' ? crypto.randomUUID() : null;
     this.playerSocket = gameMode === 'singlePlayer' ? socket : null;
@@ -818,6 +866,7 @@ export class GameServer {
       },
     });
     this.session?.abandon();
+    this.cancelPlayerIdleTimer();
     this.session = session;
     this.sessionToken = crypto.randomUUID();
     this.playerSocket = socket;

@@ -13,6 +13,7 @@ import type {
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
@@ -22,6 +23,8 @@ import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useCombatStrikes } from '../composables/useCombatStrikes';
 import { useLifeFlash, useLifeFlashBySeat } from '../composables/useLifeFlash';
 import { isTokenTypeLine } from '../lib/card';
+import { CONNECTION_LABELS } from '../lib/socket';
+import { playerFacingPrompt, turnPositionLabel } from '../lib/turnLabels';
 import { groupPermanents } from '../lib/stackPermanents';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useCombatPlanStore } from '../stores/combatPlan';
@@ -119,6 +122,7 @@ watch(
     selectedActionId.value = null;
     focusedSourceId.value = null;
     chosenTargets.value = {};
+    pendingPass.value = null;
     const req = request.value;
     if (req?.decisionType === 'chooseTargets' && req.legalActions.length === 1) {
       const [only] = req.legalActions;
@@ -345,6 +349,79 @@ const fallbackRequest = computed<DecisionRequest | null>(() => {
 const actionableSourceIds = computed(
   () => new Set(sourceActions.value.map(sourceId).filter(Boolean)),
 );
+
+/** The ordinary things a source can do right now, best first: a land plays, a spell casts. */
+const PLAYABLE_VERBS = ['playLand', 'castSpell', 'activateAbility'] as const;
+const VERB_LABELS: Record<(typeof PLAYABLE_VERBS)[number], string> = {
+  playLand: 'Play',
+  castSpell: 'Cast',
+  activateAbility: 'Activate',
+};
+
+/**
+ * One entry per card or permanent the engine currently offers to play, cast, or activate, with
+ * the verb for its best action. Drives the "Playable now" list and the tags on hand cards; both
+ * select the source exactly as clicking the card does, so nothing here decides legality.
+ */
+const playableSources = computed(() => {
+  const best = new Map<string, number>();
+  for (const action of sourceActions.value) {
+    if (action.interaction?.kind !== 'source') continue;
+    const rank = (PLAYABLE_VERBS as readonly string[]).indexOf(action.type);
+    if (rank < 0) continue;
+    const id = action.interaction.sourceId;
+    const current = best.get(id);
+    if (current === undefined || rank < current) best.set(id, rank);
+  }
+  return [...best].map(([id, rank]) => ({
+    id,
+    verb: VERB_LABELS[PLAYABLE_VERBS[rank] ?? 'activateAbility'],
+    name: nameById.value.get(id) ?? id,
+  }));
+});
+/** The "Playable now" list: identical entries (three Swamps) collapse to one with a count. */
+const playableList = computed(() => {
+  const groups = new Map<string, { key: string; ids: string[]; verb: string; name: string }>();
+  for (const source of playableSources.value) {
+    const key = `${source.verb}|${source.name}`;
+    const group = groups.get(key);
+    if (group === undefined)
+      groups.set(key, { key, ids: [source.id], verb: source.verb, name: source.name });
+    else group.ids.push(source.id);
+  }
+  return [...groups.values()];
+});
+const playableVerbById = computed(
+  () => new Map(playableSources.value.map((source) => [source.id, source.verb])),
+);
+
+/**
+ * Passing a main phase with a land drop unused is an easy mistake: the engine only offers
+ * `playLand` while the drop is available and a land can be played, so its presence is the whole
+ * test. Ask once per turn; "Pass anyway" is remembered until the next turn.
+ */
+const PASS_ACTION_TYPES = new Set(['pass', 'passAndYieldTurn']);
+const pendingPass = ref<LegalAction | null>(null);
+const landReminderDismissedTurn = ref<number | null>(null);
+
+function needsLandReminder(action: LegalAction): boolean {
+  return (
+    store.remindUnplayedLand &&
+    PASS_ACTION_TYPES.has(action.type) &&
+    isYourTurn.value &&
+    landReminderDismissedTurn.value !== state.value?.turnNumber &&
+    (request.value?.legalActions ?? []).some((candidate) => candidate.type === 'playLand')
+  );
+}
+
+function passAnyway(): void {
+  const action = pendingPass.value;
+  pendingPass.value = null;
+  landReminderDismissedTurn.value = state.value?.turnNumber ?? null;
+  if (action !== null && request.value?.legalActions.some((a) => a.id === action.id)) {
+    chooseAction(action);
+  }
+}
 const selectedSourceName = computed(() =>
   focusedSourceId.value === null ? null : (nameById.value.get(focusedSourceId.value) ?? null),
 );
@@ -363,10 +440,38 @@ const canConfirm = computed(() =>
 );
 const selectedTargetCount = computed(() => Object.keys(chosenTargets.value).length);
 const targetCount = computed(() => targetSlots(selectedAction.value).length);
-const recentBotActions = computed(() =>
-  store.log
-    .filter((line) => line.actorSeat !== null && line.actorSeat !== state.value?.viewerSeat)
-    .slice(-4),
+/**
+ * What each opponent did since you last did something other than pass, grouped by seat so "takes mulligan"
+ * four times reads as who did what. Turn markers are skipped; each seat shows its latest few
+ * lines and how many more there were.
+ */
+const BOT_LINES_PER_SEAT = 3;
+const opponentActivity = computed(() => {
+  const viewer = state.value?.viewerSeat;
+  const since = store.lastPlayerActionSequence;
+  const bySeat = new Map<string, Array<{ sequence: number; text: string }>>();
+  for (const line of store.log) {
+    if (since !== null && line.sequence <= since) continue;
+    if (line.actorSeat === null || line.actorSeat === viewer || line.emphasis === 'turn') continue;
+    const lines = bySeat.get(line.actorSeat) ?? [];
+    lines.push({ sequence: line.sequence, text: line.text });
+    bySeat.set(line.actorSeat, lines);
+  }
+  return [...bySeat].map(([seat, lines]) => ({
+    seat,
+    label: seatLabel(seat),
+    lines: lines.slice(-BOT_LINES_PER_SEAT),
+    more: Math.max(0, lines.length - BOT_LINES_PER_SEAT),
+  }));
+});
+
+/** The active opponent's column is wider, so the seat whose turn it is reads first. */
+const opponentColumns = computed(() =>
+  opponents.value
+    .map((opponent) =>
+      opponent.seat === state.value?.activePlayer ? 'minmax(0, 1.5fr)' : 'minmax(0, 1fr)',
+    )
+    .join(' '),
 );
 
 function isImmediate(action: LegalAction): boolean {
@@ -391,6 +496,10 @@ function isRoutineAction(action: LegalAction): boolean {
 }
 
 function chooseAction(action: LegalAction): void {
+  if (needsLandReminder(action)) {
+    pendingPass.value = action;
+    return;
+  }
   if (
     action.type === 'playLand' &&
     !store.confirmRoutineActions &&
@@ -543,6 +652,8 @@ watch(selectedAction, (action) => {
 function onKeyDown(event: KeyboardEvent): void {
   const target = event.target;
   if (target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(target.tagName)) return;
+  // An open dialog owns the keyboard: Space on its focused button must not also pass priority.
+  if (confirmingAbandon.value || pendingPass.value !== null) return;
 
   if (event.key === 'Enter') {
     if (selectedAction.value !== null && canConfirm.value) {
@@ -678,6 +789,11 @@ function hideCardPreview(): void {
   cardPreview.hide();
 }
 
+/** The highest tax on any of your commanders — what recasting the next one adds. */
+const commanderTax = computed(() =>
+  Math.max(0, ...(human.value?.commanders ?? []).map((commander) => commander.taxGeneric)),
+);
+
 function resourceSummary(pool: ManaPool): string {
   const entries = Object.entries(pool).filter(([, amount]) => amount > 0);
   return entries.length === 0
@@ -736,6 +852,13 @@ function paymentSourceNames(action: LegalAction): string[] {
     : [];
 }
 
+/** "Forest ×2, Sol Ring" — repeated sources counted rather than listed again. */
+function paymentSourceSummary(action: LegalAction): string {
+  const counts = new Map<string, number>();
+  for (const name of paymentSourceNames(action)) counts.set(name, (counts.get(name) ?? 0) + 1);
+  return [...counts].map(([name, count]) => (count > 1 ? `${name} ×${count}` : name)).join(', ');
+}
+
 function selectedTargetLabel(slot: string, choice: ObjectId): string {
   return `Target ${Number(slot) + 1}: ${nameById.value.get(choice) ?? choice}`;
 }
@@ -792,7 +915,10 @@ function dropOn(target: ObjectId | string): void {
   if (slot !== undefined) chosenTargets.value = { [slot.slot]: target };
 }
 
+const confirmingAbandon = ref(false);
+
 function abandon(): void {
+  confirmingAbandon.value = false;
   store.abandonGame();
   void router.push('/');
 }
@@ -805,14 +931,14 @@ function abandon(): void {
       <span v-if="state" class="turn-badge" :class="{ 'your-turn': isYourTurn }">
         Turn {{ state.turnNumber }} · {{ isYourTurn ? 'Your turn' : state.activePlayer }}
       </span>
-      <span v-if="state"
-        >{{ state.phase }}<template v-if="state.step"> · {{ state.step }}</template></span
-      >
+      <span v-if="state">{{ turnPositionLabel(state.phase, state.step) }}</span>
       <span v-if="state?.priorityPlayer"
         >Priority:
         {{ state.priorityPlayer === state.viewerSeat ? 'You' : state.priorityPlayer }}</span
       >
-      <span :class="['connection', store.connection]">{{ store.connection }}</span>
+      <span :class="['connection', store.connection]">{{
+        CONNECTION_LABELS[store.connection]
+      }}</span>
       <div class="pace">
         Bot turns
         <button type="button" :class="{ active: store.paceMs === 0 }" @click="store.setPace(0)">
@@ -839,6 +965,14 @@ function abandon(): void {
       </label>
       <label class="routine-confirm">
         <input
+          :checked="store.remindUnplayedLand"
+          type="checkbox"
+          @change="store.setRemindUnplayedLand(($event.target as HTMLInputElement).checked)"
+        />
+        Land drop reminder
+      </label>
+      <label class="routine-confirm">
+        <input
           :checked="store.autoConfirmActions"
           type="checkbox"
           @change="store.setAutoConfirmActions(($event.target as HTMLInputElement).checked)"
@@ -853,7 +987,7 @@ function abandon(): void {
         />
         Reduce motion
       </label>
-      <button type="button" @click="abandon">Abandon</button>
+      <button type="button" @click="confirmingAbandon = true">Abandon</button>
     </header>
 
     <div v-if="store.connection !== 'open'" class="paused">
@@ -871,7 +1005,7 @@ function abandon(): void {
     <main v-if="state" class="player-layout">
       <section ref="tableRef" class="table" @dragover="onBoardDragOver">
         <CombatOverlay :drag-source-id="draggedId" :pointer="dragPointer" />
-        <div class="opponents">
+        <div class="opponents" :style="{ gridTemplateColumns: opponentColumns }">
           <article
             v-for="opponent in opponents"
             :key="opponent.seat"
@@ -919,7 +1053,7 @@ function abandon(): void {
                   size="small"
                 />
               </div>
-              <span>{{ opponent.handSize }} cards · {{ opponent.librarySize }} lib</span>
+              <span>{{ opponent.handSize }} in hand · {{ opponent.librarySize }} in library</span>
             </div>
             <div class="permanents">
               <div
@@ -981,17 +1115,41 @@ function abandon(): void {
               title="You are the monarch"
               >MONARCH</span
             >
-            <span class="lib-note">{{ human.librarySize }} library</span>
           </header>
           <GlobalCounters
             :energy="human.energy"
             :poison-counters="human.poisonCounters"
             :counters="human.counters"
           />
-          <div class="resource-strip">
-            {{ human.landsPlayedThisTurn === 0 ? 'Land available' : 'Land played'
-            }}<template v-if="resourceSummary(human.manaPool)">
-              ? Pool {{ resourceSummary(human.manaPool) }}</template
+          <div class="resource-strip" aria-label="Your resources">
+            <span class="resource" :class="{ ready: human.landsPlayedThisTurn === 0 }">{{
+              human.landsPlayedThisTurn === 0 ? 'Land drop available' : 'Land played'
+            }}</span>
+            <span
+              class="resource"
+              title="Mana you can spend on anything right now: floating mana plus sources that need no mana to activate and whose mana has no spending restriction."
+              >Mana ready <strong>{{ state.viewerMana.units }}</strong
+              ><template v-if="state.viewerMana.colors.length > 0">
+                · {{ state.viewerMana.colors.join(' ') }}</template
+              ></span
+            >
+            <span v-if="resourceSummary(human.manaPool)" class="resource"
+              >Floating <strong>{{ resourceSummary(human.manaPool) }}</strong></span
+            >
+            <span v-if="commanderTax > 0" class="resource"
+              >Commander tax <strong>+{{ commanderTax }}</strong></span
+            >
+            <span class="resource"
+              >Hand <strong>{{ human.hand?.length ?? human.handSize }}</strong></span
+            >
+            <span class="resource"
+              >Library <strong>{{ human.librarySize }}</strong></span
+            >
+            <span class="resource"
+              >Graveyard <strong>{{ human.graveyard.length }}</strong></span
+            >
+            <span v-if="humanExile.length > 0" class="resource"
+              >Exile <strong>{{ humanExile.length }}</strong></span
             >
           </div>
           <div class="battle-row">
@@ -1065,7 +1223,10 @@ function abandon(): void {
             </div>
           </div>
 
-          <div class="hand">
+          <div
+            class="hand"
+            :class="{ 'has-playable': playableSources.length > 0 && selectedAction === null }"
+          >
             <button
               v-for="card in human.hand ?? []"
               :key="card.id"
@@ -1091,6 +1252,9 @@ function abandon(): void {
                 :is-token="isTokenTypeLine(card.typeLine)"
                 size="small"
               />
+              <span v-if="playableVerbById.get(card.id)" class="play-tag">{{
+                playableVerbById.get(card.id)
+              }}</span>
               <span>{{ card.name }}</span>
             </button>
           </div>
@@ -1131,7 +1295,7 @@ function abandon(): void {
                 <strong>{{ pendingSummary(selectedAction) }}</strong>
               </div>
               <p v-if="paymentSourceNames(selectedAction).length > 0" class="payment-preview">
-                Auto-pay: {{ paymentSourceNames(selectedAction).join(' ? ') }}
+                Auto-pay: {{ paymentSourceSummary(selectedAction) }}
               </p>
               <p v-if="targetSlots(selectedAction).length > 0" class="target-instruction">
                 {{
@@ -1293,7 +1457,7 @@ function abandon(): void {
             />
             <template v-else>
               <h3>Your action</h3>
-              <p>{{ request.prompt }}</p>
+              <p class="prompt">{{ playerFacingPrompt(request.prompt) }}</p>
               <div v-if="immediateActions.length > 0" class="quick-actions">
                 <button
                   v-for="action in immediateActions"
@@ -1304,6 +1468,30 @@ function abandon(): void {
                 >
                   {{ action.description }}
                 </button>
+              </div>
+              <div
+                v-if="
+                  playableSources.length > 0 &&
+                  selectedAction === null &&
+                  combatPlan.mode === 'idle'
+                "
+                class="playable-now"
+              >
+                <strong>Playable now</strong>
+                <div class="playable-list">
+                  <button
+                    v-for="entry in playableList"
+                    :key="entry.key"
+                    type="button"
+                    :class="{ focused: entry.ids.includes(focusedSourceId ?? '') }"
+                    @click="selectSource(entry.ids[0] ?? '')"
+                  >
+                    <span class="verb">{{ entry.verb }}</span> {{ entry.name
+                    }}<span v-if="entry.ids.length > 1" class="count">
+                      ×{{ entry.ids.length }}</span
+                    >
+                  </button>
+                </div>
               </div>
               <p
                 v-if="hasOnlyImmediateActions && store.ignoredAbilities.length > 0"
@@ -1320,9 +1508,17 @@ function abandon(): void {
             </template>
           </template>
           <p v-else class="thinking">Bots are deciding…</p>
-          <div v-if="recentBotActions.length > 0" class="bot-summary">
-            <strong>Recent opponent actions</strong>
-            <p v-for="line in recentBotActions" :key="line.sequence">{{ line.text }}</p>
+          <div v-if="opponentActivity.length > 0" class="bot-summary">
+            <strong title="Passing priority doesn't count as an action here."
+              >Since your last action</strong
+            >
+            <div v-for="seat in opponentActivity" :key="seat.seat" class="bot-seat">
+              <span class="actor" :title="seat.label">{{ seat.seat }}</span>
+              <ul>
+                <li v-for="line in seat.lines" :key="line.sequence">{{ line.text }}</li>
+                <li v-if="seat.more > 0" class="more">and {{ seat.more }} more in the log</li>
+              </ul>
+            </div>
           </div>
           <div v-if="store.ignoredAbilities.length > 0" class="ignored-abilities">
             <strong>Yielded abilities</strong>
@@ -1355,6 +1551,24 @@ function abandon(): void {
       </aside>
     </main>
     <p v-else class="waiting">Waiting for the player-safe board…</p>
+    <ConfirmDialog
+      v-if="pendingPass"
+      title="You haven't played a land this turn"
+      message="You still have a land drop and a land you can play. Pass anyway?"
+      confirm-label="Pass anyway"
+      cancel-label="Play a land"
+      tone="primary"
+      @cancel="pendingPass = null"
+      @confirm="passAnyway"
+    />
+    <ConfirmDialog
+      v-if="confirmingAbandon"
+      title="Abandon match?"
+      message="Your current game will end and cannot be resumed."
+      confirm-label="Confirm Abandon"
+      @cancel="confirmingAbandon = false"
+      @confirm="abandon"
+    />
   </div>
 </template>
 
@@ -1453,7 +1667,8 @@ button.selected,
   position: relative;
   min-height: 0;
   display: grid;
-  grid-template-rows: minmax(0, 0.6fr) minmax(0, 1.9fr);
+  /* Opponents take what their boards need, up to a cap; your side gets the rest. */
+  grid-template-rows: fit-content(40%) minmax(0, 1fr);
   gap: 0.6rem;
 }
 .opponents {
@@ -1531,7 +1746,7 @@ button.selected,
   align-items: center;
   gap: 0.3rem;
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   flex-shrink: 0;
 }
 .opp-cmdr-thumb {
@@ -1583,10 +1798,6 @@ button.selected,
 .life-badge.flash-heal {
   animation: flashOk 0.9s ease-out;
 }
-.lib-note {
-  color: var(--muted);
-  font-size: 0.68rem;
-}
 .permanents {
   flex: 1;
   min-height: 0;
@@ -1617,8 +1828,10 @@ button.selected,
   width: 100%;
 }
 .actionable {
-  border-color: rgb(96 165 250 / 0.75) !important;
-  box-shadow: 0 0 0 1px rgb(96 165 250 / 0.28);
+  border-color: var(--accent) !important;
+  box-shadow:
+    0 0 0 2px rgb(96 165 250 / 0.45),
+    0 0 14px rgb(96 165 250 / 0.35);
 }
 .actionable:hover {
   transform: translateY(-2px);
@@ -1632,13 +1845,26 @@ button.selected,
   box-shadow: 0 0 10px rgb(110 168 254 / 0.25);
 }
 .resource-strip {
-  display: inline-flex;
-  align-self: flex-start;
-  padding: 0.16rem 0.38rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.15rem 0 0.25rem;
+}
+.resource {
+  padding: 0.14rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 999px;
+  background: var(--surface-2);
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+}
+.resource strong {
+  color: var(--text);
+}
+.resource.ready {
+  border-color: var(--ok);
+  color: var(--ok);
+  font-weight: 600;
 }
 .battle-row {
   flex: 1;
@@ -1661,6 +1887,7 @@ button.selected,
   border-top: 1px solid var(--line);
 }
 .hand-card {
+  position: relative;
   flex: 0 0 auto;
   padding: 0.2rem;
   display: flex;
@@ -1871,7 +2098,8 @@ button.selected,
   gap: 0.5rem;
 }
 .decision {
-  max-height: 46%;
+  flex: 0 1 auto;
+  max-height: 62%;
   overflow: auto;
   border: 2px solid var(--accent);
   background: var(--surface);
@@ -1882,10 +2110,57 @@ button.selected,
 .decision p {
   margin: 0.15rem 0 0.45rem;
 }
+.decision .prompt {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
 .quick-actions {
   display: flex;
   gap: 0.3rem;
   margin: 0.45rem 0;
+}
+/* While something is playable, cards that are not recede so the playable ones read first. */
+.hand.has-playable .hand-card:not(.actionable):not(.focused):not(.chosen-target) {
+  opacity: 0.7;
+}
+.play-tag {
+  position: absolute;
+  top: 0.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+.playable-now {
+  margin: 0.45rem 0;
+  font-size: 0.75rem;
+}
+.playable-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+.playable-list button {
+  border-color: var(--accent);
+}
+.playable-list button.focused {
+  background: var(--accent);
+  color: #fff;
+}
+.playable-list .verb {
+  font-weight: 700;
+  color: var(--accent);
+}
+.playable-list button.focused .verb {
+  color: inherit;
 }
 .yield-explanation {
   color: var(--muted);
@@ -1947,13 +2222,31 @@ button.primary {
   border-top: 1px solid var(--line);
   font-size: 0.72rem;
 }
-.bot-summary p {
-  margin: 0.2rem 0 0;
+.bot-seat {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+.bot-seat ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   color: var(--muted);
+  min-width: 0;
+}
+.bot-seat li {
+  overflow-wrap: anywhere;
+}
+.bot-seat .more {
+  font-style: italic;
+}
+.bot-summary .actor {
+  font-weight: 700;
+  color: var(--accent);
 }
 .rail :deep(.log) {
   flex: 1;
-  min-height: 0;
+  min-height: 7rem;
 }
 @media (max-width: 900px) {
   .player-layout {

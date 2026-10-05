@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
-import type { BatchResults } from '@mtg/shared';
+import type { BatchGameSummary, BatchResults } from '@mtg/shared';
 const route = useRoute();
 const batchId = String(route.params['id']);
 const data = ref<BatchResults | null>(null);
@@ -32,6 +32,15 @@ async function cancel(): Promise<void> {
   await fetch(`/api/batches/${encodeURIComponent(batchId)}/cancel`, { method: 'POST' });
   await load();
 }
+/** A finished game's length; otherwise how far it got before it stopped, if it recorded any. */
+function turnsLabel(game: BatchGameSummary): string {
+  if (game.turnCount !== null) return String(game.turnCount);
+  if (game.lastRecordedTurn === null) return '—';
+  return game.status === 'running'
+    ? `${game.lastRecordedTurn} so far`
+    : `stopped on ${game.lastRecordedTurn}`;
+}
+
 function percent(done: number, total: number): string {
   return total === 0 ? '0%' : `${Math.round((done / total) * 100)}%`;
 }
@@ -110,9 +119,14 @@ onUnmounted(() => {
                 <td>
                   <code>{{ game.seed }}</code>
                 </td>
-                <td>{{ game.status }}</td>
+                <td>
+                  {{ game.status }}
+                  <span v-if="game.failureReason" class="failure-reason">{{
+                    game.failureReason
+                  }}</span>
+                </td>
                 <td>{{ game.winnerSeat ?? '—' }}</td>
-                <td>{{ game.turnCount ?? '—' }}</td>
+                <td>{{ turnsLabel(game) }}</td>
               </tr>
             </tbody>
           </table>
@@ -234,5 +248,12 @@ td {
   .actions {
     margin-top: 0.6rem;
   }
+}
+.failure-reason {
+  display: block;
+  max-width: 28rem;
+  color: var(--danger);
+  font-size: 0.8em;
+  white-space: normal;
 }
 </style>

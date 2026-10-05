@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { Engine, buildPlayerBoardState } from '../src';
 import { createGame } from '../src/state/game';
-import { commanderFor, copies, forest, gameConfig, oracle, spawn } from './fixtures';
+import { manaSourcesFor } from '../src/state/queries';
+import {
+  commanderFor,
+  copies,
+  forest,
+  gameConfig,
+  island,
+  oracle,
+  plains,
+  spawn,
+} from './fixtures';
 
 function pod() {
   const secret = (name: string) =>
@@ -37,6 +47,79 @@ describe('Phase 6 player board projection', () => {
     expect(json).not.toContain('Secret 2');
     expect(json).not.toContain('Secret 3');
     expect(json).not.toContain('Secret 4');
+  });
+
+  it("summarises the viewer's ready mana without counting tapped or mana-costing sources", () => {
+    const ctx = createGame(pod());
+    const land = (name: string, oracleText: string) =>
+      oracle({
+        name,
+        typeLine: 'Land',
+        manaCost: null,
+        cmc: 0,
+        power: null,
+        toughness: null,
+        oracleText,
+      });
+    spawn(ctx, 'P1', forest());
+    spawn(ctx, 'P1', island());
+    spawn(ctx, 'P1', plains(), { tapped: true });
+    spawn(ctx, 'P1', land('Azorius Test Gate', '{T}: Add {W} or {U}.'));
+    const costly = spawn(ctx, 'P1', land('Test Vault', '{1}, {T}: Add {B}{B}.'));
+    const restricted = spawn(
+      ctx,
+      'P1',
+      land(
+        'Test Haven',
+        '{T}: Add one mana of any color. Spend this mana only to cast a Dragon creature spell.',
+      ),
+    );
+    spawn(ctx, 'P2', forest());
+    const player = ctx.state.players.find((candidate) => candidate.id === 'P1');
+    if (player === undefined) throw new Error('missing P1');
+    player.manaPool.R = 1;
+
+    // The costly and restricted sources are real, activatable mana sources — excluded on purpose.
+    const sources = manaSourcesFor(ctx, 'P1');
+    expect(sources.find((source) => source.cardId === costly.cardId)?.manaCost).toBeDefined();
+    expect(
+      sources.find((source) => source.cardId === restricted.cardId)?.restriction,
+    ).toBeDefined();
+    // Forest, Island, the gate's one unit, and the floating red; not the tapped Plains, the
+    // costly or restricted sources, or P2's Forest.
+    expect(buildPlayerBoardState(ctx, 'P1').viewerMana).toEqual({
+      units: 4,
+      colors: ['W', 'U', 'R', 'G'],
+    });
+  });
+
+  it('counts a permanent with several mana abilities once, at its largest ability', () => {
+    const ctx = createGame(pod());
+    const land = (name: string, oracleText: string) =>
+      oracle({
+        name,
+        typeLine: 'Land',
+        manaCost: null,
+        cmc: 0,
+        power: null,
+        toughness: null,
+        oracleText,
+      });
+    // Same-cost abilities that differ only in color merge into one source; a life cost or a
+    // different amount keeps them apart, the way a pain land's two abilities are.
+    const split = spawn(
+      ctx,
+      'P1',
+      land('Test Pain Land', '{T}: Add {C}.\n{T}, Pay 1 life: Add {G}.'),
+    );
+    const pair = spawn(ctx, 'P1', land('Test Pair Land', '{T}: Add {C}.\n{T}: Add {C}{C}.'));
+
+    // Each is one source per ability, sharing a card id; tapping it activates only one.
+    const sources = manaSourcesFor(ctx, 'P1');
+    expect(sources.filter((source) => source.cardId === split.cardId)).toHaveLength(2);
+    expect(sources.filter((source) => source.cardId === pair.cardId)).toHaveLength(2);
+    // One from the pain land and two from the pair land, not 2 + 3.
+    expect(buildPlayerBoardState(ctx, 'P1').viewerMana).toEqual({ units: 3, colors: ['G'] });
   });
 
   it('redacts an opponent face-down permanent before serialization', () => {

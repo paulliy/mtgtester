@@ -5,7 +5,8 @@ const LAB_SERVER_PORT = 3101;
 
 export default defineConfig({
   testDir: './apps/web/e2e',
-  testIgnore: 'player-setup.spec.ts', // runs against its own DB-backed backend via playwright.setup.config.ts
+  // These run against their own DB-backed backend via playwright.setup.config.ts.
+  testIgnore: /player-(setup|game)\.spec\.ts$/,
   fullyParallel: true,
   retries: 0,
   // Card Test Lab traces are viewer-verification evidence (docs/guides/card-modeling-and-testing.md):

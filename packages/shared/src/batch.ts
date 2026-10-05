@@ -68,6 +68,11 @@ export interface BatchGameSummary {
   status: BatchGameStatus;
   winnerSeat: PlayerId | null;
   turnCount: number | null;
+  /**
+   * The highest turn with a recorded event. Set for every game that recorded any event, so a
+   * failed or halted game (whose `turnCount` stays null) still shows how far it got.
+   */
+  lastRecordedTurn: number | null;
   standings: BatchSeatResult[];
   failureReason: string | null;
   startedAt: string | null;

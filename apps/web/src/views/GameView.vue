@@ -9,6 +9,9 @@ import { useRouter } from 'vue-router';
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
 import type { SpectatorCard, SpectatorPermanent } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
+import { PROVIDER_LABELS } from '../lib/providerLabels';
+import { CONNECTION_LABELS } from '../lib/socket';
+import { turnPositionLabel } from '../lib/turnLabels';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import GameOverPanel from '../components/GameOverPanel.vue';
 import HeldDecision from '../components/HeldDecision.vue';
@@ -75,7 +78,7 @@ function resetLab(): void {
 const phaseLabel = computed(() => {
   const s = state.value;
   if (s === null) return '';
-  return s.step === null ? s.phase : `${s.phase} · ${s.step}`;
+  return turnPositionLabel(s.phase, s.step);
 });
 
 /**
@@ -158,14 +161,14 @@ const roundLabel = computed(() => {
         <span class="priority-dot"><span class="dot" /><span class="ping" /></span>
         Priority: {{ state.priorityPlayer }}
       </span>
-      <span class="provider-tag">{{ store.providerKind }}</span>
+      <span class="provider-tag">{{ PROVIDER_LABELS[store.providerKind] }}</span>
       <span v-if="store.apiCost" class="cost">
         {{ store.apiCost.calls }} calls · {{ store.apiCost.promptTokens.toLocaleString() }}+{{
           store.apiCost.responseTokens.toLocaleString()
         }}
         tok
       </span>
-      <span class="conn" :class="store.connection">{{ store.connection }}</span>
+      <span class="conn" :class="store.connection">{{ CONNECTION_LABELS[store.connection] }}</span>
     </header>
 
     <HeldDecision

@@ -17,6 +17,13 @@ function defaultUrl(): string {
 
 export type ConnectionState = 'connecting' | 'open' | 'closed';
 
+/** How each connection state reads in the UI. */
+export const CONNECTION_LABELS: Record<ConnectionState, string> = {
+  connecting: 'Connecting…',
+  open: 'Connected',
+  closed: 'Disconnected',
+};
+
 export class GameSocket {
   private socket: WebSocket | null = null;
   private readonly queued: ClientToServerMessage[] = [];

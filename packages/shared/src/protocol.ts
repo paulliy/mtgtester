@@ -72,6 +72,14 @@ export type PlaybackMode = 'live' | 'manual';
  */
 export const LOOKAHEAD_TURNS = 5;
 
+/**
+ * How long a single-player game survives with its player disconnected. Long enough to come back
+ * from a closed tab or a break; short enough that a game whose browser is gone for good (a closed
+ * private window, cleared storage) stops refusing every new start. Shared so the UI can say when
+ * a refused start will clear.
+ */
+export const PLAYER_IDLE_GRACE_MS = 30 * 60_000;
+
 /** How the four seats get their decks. */
 export type SeatSource =
   | { kind: 'pool'; seed?: string }

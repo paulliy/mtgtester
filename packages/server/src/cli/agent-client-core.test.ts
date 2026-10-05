@@ -33,6 +33,7 @@ function boardState(): PlayerBoardState {
     phase: 'precombatMain',
     step: null,
     viewerSeat: 'P1',
+    viewerMana: { units: 0, colors: [] },
     seats: [],
     battlefield: [],
     exile: [],

@@ -78,6 +78,13 @@ export const useGameStore = defineStore('game', () => {
   const playerRevision = ref(0);
   const ignoredAbilities = ref<IgnoredPlayerAbility[]>([]);
   const log = ref<SpectatorLogLine[]>([]);
+  /**
+   * The newest log sequence the player had seen when they last made a choice other than passing,
+   * so the board can summarise what the bots did since. Passing does not count: a player with an
+   * always-available ability stops at nearly every priority window, and resetting on each pass
+   * would leave only the latest bot action. Null until the player first acts.
+   */
+  const lastPlayerActionSequence = ref<number | null>(null);
 
   const viewTurn = ref(0);
   const frontierTurn = ref(0);
@@ -89,6 +96,11 @@ export const useGameStore = defineStore('game', () => {
   const confirmRoutineActions = ref(
     typeof localStorage !== 'undefined' &&
       localStorage.getItem('mtg-player-confirm-routine') === 'true',
+  );
+  /** Ask once per turn before passing a main phase with a playable land still in hand. */
+  const remindUnplayedLand = ref(
+    typeof localStorage === 'undefined' ||
+      localStorage.getItem('mtg-player-remind-land') !== 'false',
   );
   /** Opt-in: skip the manual "Confirm" click on the tray once every target slot is filled. */
   const autoConfirmActions = ref(
@@ -201,6 +213,20 @@ export const useGameStore = defineStore('game', () => {
    */
   let pendingRecentPodId: string | null = null;
 
+  /**
+   * A `resumeGame` sent on connect that the server has not answered yet. The server answers in
+   * order, so the next `gameStarted` or `error` is its reply. Without this, a stale token's
+   * refusal read as the answer to a `startGame` queued behind it: Setup stopped waiting, ignored
+   * the `gameStarted` that followed, and the new game ran with nobody on the board.
+   */
+  let resumePending = false;
+
+  /** Drop a player session the server no longer has, so it is not offered again on reconnect. */
+  function forgetSession(): void {
+    sessionToken.value = null;
+    if (typeof localStorage !== 'undefined') localStorage.removeItem('mtg-player-session');
+  }
+
   /** Forget an unconfirmed start's recents, so a failed or superseded one can never write. */
   function clearPendingRecents(): void {
     pendingRecentDeckSeat = null;
@@ -216,6 +242,7 @@ export const useGameStore = defineStore('game', () => {
   function handle(message: ServerToClientMessage): void {
     switch (message.type) {
       case 'gameStarted': {
+        resumePending = false;
         if (pendingRecentDeckSeat !== null) {
           const selected = message.payload.seats.find(
             (seat) => seat.seat === pendingRecentDeckSeat,
@@ -248,6 +275,7 @@ export const useGameStore = defineStore('game', () => {
         }
         if (resuming) break;
         log.value = [];
+        lastPlayerActionSequence.value = null;
         halt.value = null;
         gameOver.value = null;
         errors.value = [];
@@ -370,6 +398,14 @@ export const useGameStore = defineStore('game', () => {
         break;
 
       case 'error': {
+        if (resumePending) {
+          // The stored session is gone (the game ended, or the server restarted). That is not a
+          // failure of anything the player asked for, and a start queued behind the resume is
+          // still waiting for its own answer.
+          resumePending = false;
+          forgetSession();
+          break;
+        }
         // A rejected start never happened, so nothing it asked to be remembered may be written.
         clearPendingRecents();
         const detail = [
@@ -391,8 +427,12 @@ export const useGameStore = defineStore('game', () => {
     socket ??= new GameSocket(handle, (next) => {
       connection.value = next;
       // A start whose answer never arrived is not a start either.
-      if (next === 'closed') clearPendingRecents();
+      if (next === 'closed') {
+        clearPendingRecents();
+        resumePending = false;
+      }
       if (next === 'open' && sessionToken.value !== null && gameMode.value === 'singlePlayer') {
+        resumePending = true;
         socket?.send({
           type: 'resumeGame',
           payload: { sessionToken: sessionToken.value },
@@ -552,6 +592,12 @@ export const useGameStore = defineStore('game', () => {
       localStorage.setItem('mtg-player-confirm-routine', String(value));
   }
 
+  function setRemindUnplayedLand(value: boolean): void {
+    remindUnplayedLand.value = value;
+    if (typeof localStorage !== 'undefined')
+      localStorage.setItem('mtg-player-remind-land', String(value));
+  }
+
   function setAutoConfirmActions(value: boolean): void {
     autoConfirmActions.value = value;
     if (typeof localStorage !== 'undefined')
@@ -577,6 +623,10 @@ export const useGameStore = defineStore('game', () => {
   function submitPlayerAction(actionId: number, targets?: TargetChoice[]): void {
     const pending = playerAction.value;
     if (pending === null) return;
+    const type = pending.request.legalActions.find((action) => action.id === actionId)?.type;
+    if (type !== 'pass' && type !== 'passAndYieldTurn') {
+      lastPlayerActionSequence.value = log.value.at(-1)?.sequence ?? null;
+    }
     socket?.send({
       type: 'submitPlayerAction',
       payload: {
@@ -627,9 +677,8 @@ export const useGameStore = defineStore('game', () => {
     playerAction.value = null;
     activeSequence.value = null;
     heldDecision.value = null;
-    sessionToken.value = null;
     cardTestScenario.value = null;
-    if (typeof localStorage !== 'undefined') localStorage.removeItem('mtg-player-session');
+    forgetSession();
   }
 
   return {
@@ -648,12 +697,14 @@ export const useGameStore = defineStore('game', () => {
     playerRevision,
     ignoredAbilities,
     log,
+    lastPlayerActionSequence,
     viewTurn,
     frontierTurn,
     snapshotTurns,
     playbackMode,
     paceMs,
     confirmRoutineActions,
+    remindUnplayedLand,
     autoConfirmActions,
     reducedMotion,
     halt,
@@ -685,6 +736,7 @@ export const useGameStore = defineStore('game', () => {
     setPlaybackMode,
     setPace,
     setConfirmRoutineActions,
+    setRemindUnplayedLand,
     setAutoConfirmActions,
     setReducedMotion,
     resolveHeldDecision,
