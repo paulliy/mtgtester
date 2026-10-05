@@ -1358,7 +1358,16 @@ export function* executeAbility(
     }
     const cachedCardId = refCardIdCache.get(r);
     if (cachedCardId !== undefined) {
-      return cachedCardId === null ? null : (findObjectByCardId(ctx, cachedCardId)?.id ?? null);
+      if (cachedCardId === null) return null;
+      // The card itself, wherever it now is — NOT a triggered ability on the stack that merely
+      // shares its source card id (Snakeskin Veil's "it gains hexproof" after its counter, aimed
+      // at a creature whose own ETB trigger is still waiting on the stack). Only a target that is
+      // itself a spell on the stack falls through to the stack lookup.
+      return (
+        findPhysicalObjectByCardId(ctx, cachedCardId)?.id ??
+        findObjectByCardId(ctx, cachedCardId)?.id ??
+        null
+      );
     }
     const id = targets[r];
     const spec = ability.targets[r];
@@ -1464,7 +1473,8 @@ export function* executeAbility(
       case 'pumpUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         const power = amountOf(effect.power);
         const toughness = amountOf(effect.toughness);
         ctx.state.effects.push({
@@ -1491,7 +1501,8 @@ export function* executeAbility(
       case 'cantBeBlockedUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
@@ -1505,7 +1516,8 @@ export function* executeAbility(
       case 'grantKeywordUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
@@ -1993,7 +2005,8 @@ export function* executeAbility(
       case 'destroy': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         yield* destroyPermanent(ctx, source, perm, effect.cantRegenerate === true);
         break;
       }
@@ -2092,7 +2105,8 @@ export function* executeAbility(
       case 'exile': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         emit(ctx, 'exile', { target: perm.name, source: source.name });
         yield* moveObject(ctx, perm, { zone: 'exile' });
         break;
@@ -2204,14 +2218,16 @@ export function* executeAbility(
       case 'putCounters': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         addCounters(ctx, source, perm, effect.counter, amountOf(effect.count));
         break;
       }
       case 'putCounterByPermanentType': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         const isPlaneswalker = computeCharacteristics(ctx, perm).types.includes('Planeswalker');
         addCounters(
           ctx,
@@ -4682,24 +4698,23 @@ export function* executeAbility(
       case 'grantAbilityUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
-        if (perm) {
-          ctx.state.effects.push({
-            id: `eff-${ctx.state.nextObjectNum++}`,
-            sourceId: source.cardId,
-            description: `${perm.name} gains ability until end of turn`,
-            targetCardIds: [perm.cardId],
-            kind: 'grantAbility',
-            ability: effect.ability,
-            timestamp: ctx.state.nextTimestamp++,
-          });
-        }
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${perm.name} gains ability until end of turn`,
+          targetCardIds: [perm.cardId],
+          kind: 'grantAbility',
+          ability: effect.ability,
+          timestamp: ctx.state.nextTimestamp++,
+        });
         break;
       }
       case 'becomeCreatureUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent | undefined;
+        const perm = findPermanent(ctx, t);
         if (perm === undefined) break;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
@@ -4722,7 +4737,7 @@ export function* executeAbility(
       case 'crewVehicle': {
         const t = ref('source');
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent | undefined;
+        const perm = findPermanent(ctx, t);
         if (perm === undefined) break;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,

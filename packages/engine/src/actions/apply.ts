@@ -187,7 +187,7 @@ function* payActivationCosts(
  * anything. As a trigger it also behaves correctly: it goes on the stack above the spell, so
  * the spell is still countered if ward resolves, and other responses can happen in between.
  */
-function queueWardTriggers(
+export function queueWardTriggers(
   ctx: GameContext,
   controllerId: PlayerId,
   stackObjectId: ObjectId,
@@ -230,7 +230,7 @@ function describeWardCost(cost: WardCost): string {
  * permanent named in `targets` just became a target, regardless of whose. `queueTriggersForEvent`
  * itself enforces "an opponent controls" against `sourceControllerId`.
  */
-function queueBecomesTargetedTriggers(
+export function queueBecomesTargetedTriggers(
   ctx: GameContext,
   sourceControllerId: PlayerId,
   targets: readonly ObjectId[],

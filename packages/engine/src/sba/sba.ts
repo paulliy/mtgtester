@@ -8,6 +8,7 @@
  */
 
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
+import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import { computeTargetOptions } from '../actions/legal';
 import type { Ability, Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
@@ -603,6 +604,14 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   };
   s.stack.push(stackEntry);
   breakYieldsForStop(ctx, stackEntry);
+  // Ward and "becomes the target" watch every spell OR ABILITY (CR 702.21a), so a triggered
+  // ability's targets count exactly like a cast spell's or an activated ability's.
+  const allTargets = [
+    ...chosen.filter((target): target is ObjectId => target !== undefined),
+    ...Object.values(countTargets).flat(),
+  ];
+  queueWardTriggers(ctx, trigger.controllerId, id, allTargets);
+  queueBecomesTargetedTriggers(ctx, trigger.controllerId, allTargets);
   emit(ctx, 'triggerOnStack', { source: trigger.sourceName, description }, trigger.controllerId);
   debug(ctx, 'stack', `trigger on stack: ${trigger.sourceName} — ${description}`);
 }

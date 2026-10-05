@@ -554,3 +554,82 @@ describe('"if you created a token this turn"', () => {
     expect(evaluateCondition(ctx, { kind: 'createdTokenThisTurn' }, source)).toBe(true);
   });
 });
+
+describe('ward and "becomes the target" see triggered abilities too (CR 702.21a)', () => {
+  it("a triggered ability targeting an opponent's warded creature triggers ward", () => {
+    const ctx = pod();
+    const warded = spawn(ctx, 'P2', keywordCreature('Sweep Warded Bear', 'Ward {2}', '{1}{U}'));
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: 'sweep-etb',
+      sourceOracleId: 'sweep-etb' as never,
+      sourceName: 'Sweep Assassin',
+      ability: {
+        kind: 'triggered',
+        targets: [{ kind: 'creature' }],
+        effects: [{ op: 'destroy', target: 0 }],
+        description: 'destroy target creature',
+      },
+    });
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(2);
+    expect(ctx.state.stack[0]!.targets).toEqual([warded.id]);
+    expect(ctx.state.stack[1]!.description).toMatch(/ward/);
+    expect(ctx.state.stack[1]!.controllerId).toBe('P2');
+  });
+});
+
+describe('a target referenced twice in one resolution', () => {
+  it('still finds the creature when its own triggered ability is on the stack (fuzz: Snakeskin Veil)', () => {
+    const ctx = pod();
+    const veil = registerDef(
+      ctx,
+      oracle({
+        name: 'Sweep Snakeskin Veil',
+        typeLine: 'Instant',
+        manaCost: '{G}',
+        colors: ['G'],
+        oracleText:
+          'Put a +1/+1 counter on target creature you control. It gains hexproof until end of turn.',
+      }),
+    );
+    expect(veil.modeled, veil.unmodeledReasons.join('; ')).toBe(true);
+    const bear = spawn(ctx, 'P1', keywordCreature('Sweep ETB Bear', '', '{1}{G}'));
+    // The bear's own ETB trigger is still waiting on the stack, sharing its source card id.
+    ctx.state.stack.push({
+      id: 'o-sweep-etb' as ObjectId,
+      sourceId: bear.cardId,
+      controllerId: 'P1',
+      kind: 'triggeredAbility',
+      description: 'Sweep ETB Bear — enters',
+      targets: [],
+      card: null,
+      ability: { kind: 'triggered', targets: [], effects: [] },
+      sourceOracleId: bear.oracleId,
+      sourceCardId: bear.cardId,
+      isCommanderCast: false,
+    });
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'sweep-veil',
+          name: 'Sweep Snakeskin Veil',
+          oracleId: veil.oracleId,
+          controllerId: 'P1',
+        },
+        veil.spellAbility!,
+        [bear.id],
+      ),
+    );
+    expect(bear.counters['+1/+1']).toBe(1);
+    expect(
+      ctx.state.effects.some(
+        (e) =>
+          e.kind === 'grantKeyword' &&
+          e.keyword === 'hexproof' &&
+          e.targetCardIds.includes(bear.cardId),
+      ),
+    ).toBe(true);
+  });
+});
