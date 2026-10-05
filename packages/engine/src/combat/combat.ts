@@ -909,7 +909,7 @@ function* assignDamageDivisions(
         `divide its combat damage among them${trample ? ', or the defending player once every blocker has lethal (trample)' : ''}.`,
       options: targets.map((id) => ({
         type: 'assignDamage',
-        description: `All ${power} damage to ${id === attacker.attacking ? id : (findPermanent(ctx, id)?.name ?? id)}`,
+        description: `All ${power} damage to ${damageTargetName(ctx, id)}`,
         interaction: { kind: 'choice' as const },
       })),
       combatDamageSplit: { amount: power, targets },
@@ -919,7 +919,17 @@ function* assignDamageDivisions(
     emit(
       ctx,
       'damageAssignmentDivision',
-      { attacker: attacker.name, step, split: Object.fromEntries(division) },
+      {
+        attacker: attacker.name,
+        step,
+        split: Object.fromEntries(division),
+        // The division as applied — after `resolveDamageDivision`'s fallback — with names, so
+        // the log narrates what actually happened rather than whichever preset option the
+        // response's `actionId` happened to name.
+        assignments: [...division]
+          .filter(([, amount]) => amount > 0)
+          .map(([id, amount]) => ({ target: damageTargetName(ctx, id), amount })),
+      },
       attacker.controllerId,
     );
   }
@@ -936,6 +946,27 @@ function liveBlockersOf(ctx: GameContext, attacker: EnginePermanent): EnginePerm
   return attacker.blockedByOrdered
     .map((id) => findPermanent(ctx, id))
     .filter((b): b is EnginePermanent => b !== undefined && b.blocking === attacker.id);
+}
+
+/** A combat-damage division target's display name: a blocker's card name, or a player id. */
+export function damageTargetName(ctx: GameContext, id: ObjectId): string {
+  return findPermanent(ctx, id)?.name ?? id;
+}
+
+/**
+ * "2 to Wall of Omens, 1 to Goblin" — a submitted `combatDamageSplit`, for the decision log. The
+ * engine may still reject a malformed split (see `resolveDamageDivision`); the
+ * `damageAssignmentDivision` event that follows records the division actually applied.
+ */
+export function describeDamageSplit(
+  ctx: GameContext,
+  amount: number,
+  split: Readonly<Record<ObjectId, number>>,
+): string {
+  const parts = Object.entries(split)
+    .filter(([, n]) => n > 0)
+    .map(([id, n]) => `${n} to ${damageTargetName(ctx, id)}`);
+  return `Divide ${amount} damage: ${parts.length > 0 ? parts.join(', ') : 'none assigned'}`;
 }
 
 interface DamageAssignment {

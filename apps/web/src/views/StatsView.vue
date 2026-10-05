@@ -200,8 +200,9 @@ onMounted(() => void load());
     </component>
 
     <aside class="method">
-      <strong>Mana rates unavailable.</strong> Earlier recordings lack the draw history and
-      end-of-turn information needed to calculate reliable flood and drought rates.
+      <strong>Mana rates unavailable.</strong> Flood and drought rates are not calculated for any
+      game yet, including new ones: the recorded turn observations do not capture what each player
+      could actually afford, so a percentage would be a guess.
     </aside>
   </section>
 </template>

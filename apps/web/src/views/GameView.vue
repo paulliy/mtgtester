@@ -13,6 +13,7 @@ import { PROVIDER_LABELS } from '../lib/providerLabels';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { turnPositionLabel } from '../lib/turnLabels';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
+import CopyGameReportButton from '../components/CopyGameReportButton.vue';
 import GameOverPanel from '../components/GameOverPanel.vue';
 import HeldDecision from '../components/HeldDecision.vue';
 import PlaybackControls from '../components/PlaybackControls.vue';
@@ -169,6 +170,7 @@ const roundLabel = computed(() => {
         tok
       </span>
       <span class="conn" :class="store.connection">{{ CONNECTION_LABELS[store.connection] }}</span>
+      <CopyGameReportButton v-if="store.gameMode === 'singlePlayer' && store.sessionToken" />
     </header>
 
     <HeldDecision

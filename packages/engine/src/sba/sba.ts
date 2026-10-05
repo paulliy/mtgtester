@@ -9,6 +9,13 @@
 
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
+import {
+  abilityForModes,
+  abilityModeLabel,
+  abilityModeTargetSlots,
+  legalAbilityModeSelections,
+  slotIsActive,
+} from '../actions/ability-modes';
 import { computeTargetOptions } from '../actions/legal';
 import type { Ability, Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
@@ -374,48 +381,75 @@ function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
 
 function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen<void> {
   const s = ctx.state;
-  // `Ability.modes` is a SPELL-casting-time mechanism by design (its own doc comment: "the
-  // executor never sees `modes` at all" — a spell's mode is folded into `effects` by
-  // `resolveCastAbility` before the ability ever reaches here). A handful of triggered
-  // abilities (Kairi, the Swirling Sky's dies trigger) were modeled reusing the same field, but
-  // nothing on the trigger path ever read it — `effects` stayed `[]` and the ability was a
-  // silent no-op every time it fired. Folding the modes into a `chooseOne` effect (which
-  // `executeAbility` already knows how to run) gets the player the same choice, just resolved
-  // as the ability resolves rather than as it's placed on the stack (CR 603.3c would ask a beat
-  // earlier); every mode this engine models is targetless, so that timing difference is not
-  // observable.
-  const ability: Ability =
-    trigger.ability.modes !== undefined
-      ? {
-          kind: trigger.ability.kind,
-          targets: trigger.ability.targets,
-          effects: [
-            {
-              op: 'chooseOne',
-              options: trigger.ability.modes.options.map((o) => ({
-                effects: o.effects,
-                description: o.description ?? 'Mode',
-              })),
-            },
-          ],
-          ...(trigger.ability.description !== undefined
-            ? { description: trigger.ability.description }
-            : {}),
-        }
-      : trigger.ability;
-  const specs = ability.targets;
+  // A modal trigger's controller chooses the mode as the ability is put on the stack, BEFORE
+  // its targets (CR 603.3c, 700.2b): a mode whose targets cannot be chosen cannot be chosen,
+  // only the chosen modes' targets are announced, and with no choosable mode the ability is
+  // removed. Choosing at resolution instead (as this once did) asked for a target the chosen
+  // mode never used, let that target's illegality fizzle a targetless mode, and dropped the
+  // whole trigger when only one mode lacked a target.
   // Protection (CR 702.16): a triggered ability can't target what is protected from its source.
   const sourceColors = sourceColorsOf(ctx, trigger.sourceCardId, trigger.sourceOracleId);
+  let ability: Ability = trigger.ability;
+  let activeSlots: number[] | undefined;
+  let modeLabel: string | undefined;
+  const modes = trigger.ability.modes;
+  if (modes !== undefined) {
+    const selections = legalAbilityModeSelections(
+      trigger.ability,
+      (spec) =>
+        computeTargetOptions(
+          ctx,
+          spec,
+          trigger.controllerId,
+          sourceColors,
+          trigger.scope?.eventPlayerId,
+          undefined,
+          trigger.sourceCardId,
+        ).length,
+    );
+    if (selections.length === 0) {
+      emit(
+        ctx,
+        'triggerRemovedNoTargets',
+        { source: trigger.sourceName, kind: 'mode' },
+        trigger.controllerId,
+      );
+      debug(
+        ctx,
+        'stack',
+        `${trigger.sourceName}: no mode can be chosen — trigger removed (CR 700.2b)`,
+      );
+      return;
+    }
+    let selection = selections[0] as number[];
+    if (selections.length > 1) {
+      const outcome = yield {
+        decisionType: 'general',
+        player: trigger.controllerId,
+        prompt: `${trigger.sourceName}: choose ${modes.maxChoices === 1 ? 'a mode' : 'modes'} — ${trigger.ability.description ?? ''}`,
+        options: selections.map((candidate) => ({
+          type: 'chooseModes',
+          description: abilityModeLabel(modes, candidate),
+        })),
+      };
+      selection = selections[outcome.index] ?? selection;
+    }
+    ability = abilityForModes(trigger.ability, selection);
+    activeSlots = abilityModeTargetSlots(modes, selection);
+    modeLabel = abilityModeLabel(modes, selection);
+  }
+  const specs = ability.targets;
   const chosen: ObjectId[] = [];
   const countTargets: Record<number, ObjectId[]> = {};
   const divisionAmounts: Record<ObjectId, number> = {};
 
   // Ordinary (single-target) slots first — unchanged from before count slots existed. By
   // convention every count slot (below) is allocated AFTER all of an ability's ordinary slots,
-  // so `chosen` stays a dense array with nothing at a count slot's position.
+  // so `chosen` has nothing at a count slot's position. A modal trigger leaves an unchosen
+  // mode's slots empty too — indexed by slot, the same sparse layout a modal spell's targets use.
   const ordinarySlots: { slot: number; options: ObjectId[] }[] = [];
   for (const [i, spec] of specs.entries()) {
-    if (spec.count !== undefined) continue;
+    if (spec.count !== undefined || !slotIsActive(activeSlots, i)) continue;
     const options = computeTargetOptions(
       ctx,
       spec,
@@ -484,7 +518,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   // every id already chosen (ordinary or count) is what gives "other" its meaning without a
   // separate exclusion field, and is harmless for a slot with nothing else chosen yet (Ureni).
   for (const [i, spec] of specs.entries()) {
-    if (spec.count === undefined) continue;
+    if (spec.count === undefined || !slotIsActive(activeSlots, i)) continue;
     const count = spec.count;
     const alreadyChosen = new Set<ObjectId>([
       ...Object.values(chosen),
@@ -585,7 +619,10 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   }
 
   const id = `o-${s.nextObjectNum++}` as ObjectId;
-  const description = ability.description ?? trigger.sourceName;
+  // The announced mode is public (CR 700.2b) — name it on the stack, where every player sees it.
+  const description =
+    (ability.description ?? trigger.sourceName) +
+    (modeLabel === undefined ? '' : ` [mode: ${modeLabel}]`);
   const stackEntry: EngineStackObject = {
     id,
     sourceId: trigger.sourceCardId,

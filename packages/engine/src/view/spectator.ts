@@ -202,7 +202,9 @@ export function buildSpectatorState(ctx: GameContext): SpectatorState {
     controller: so.controllerId,
     kind: so.kind,
     description: so.description,
-    targets: [...so.targets],
+    // Stack targets are indexed by slot, so an unchosen mode leaves a hole that would serialize as
+    // `null`; the projection carries only the targets actually chosen.
+    targets: so.targets.filter((id) => id !== undefined),
     scryfallId: scryfallIdOf(ctx, so.sourceOracleId),
   }));
 
@@ -334,6 +336,9 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
       // Growth targeting Llanowar Elves"), so the log reads as the player's action.
       const description = str(p, 'description');
       if (description === null) return null;
+      // A combat-damage division is narrated by the `damageAssignmentDivision` event, which
+      // records the division the engine actually applied (after validating the response).
+      if (str(p, 'decisionType') === 'assignCombatDamage') return null;
       // Passing priority is the overwhelming majority of decisions and says nothing.
       if (/^pass\b/i.test(description)) return null;
       // A land play is announced twice — "Play Swamp" here and "plays Swamp" from the
@@ -346,6 +351,24 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
 
     case 'playLand':
       return { ...base, text: `plays ${str(p, 'name') ?? 'a land'}` };
+
+    case 'damageAssignmentDivision': {
+      const assignments = Array.isArray(p['assignments'])
+        ? (p['assignments'] as unknown[]).filter(
+            (entry): entry is { target: string; amount: number } =>
+              typeof entry === 'object' &&
+              entry !== null &&
+              typeof (entry as { target?: unknown }).target === 'string' &&
+              typeof (entry as { amount?: unknown }).amount === 'number',
+          )
+        : [];
+      if (assignments.length === 0) return null;
+      const parts = assignments.map((entry) => `${entry.amount} to ${entry.target}`);
+      return {
+        ...base,
+        text: `${str(p, 'attacker') ?? 'An attacker'} divides its combat damage: ${parts.join(', ')}`,
+      };
+    }
 
     case 'resolved':
       return { ...base, text: `${str(p, 'description') ?? 'spell'} resolves` };

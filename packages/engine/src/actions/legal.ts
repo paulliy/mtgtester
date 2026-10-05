@@ -1,4 +1,10 @@
 import { activationManaSources } from '../mana/activation';
+import {
+  abilityModeLabel,
+  abilityModeTargetSlots,
+  legalAbilityModeSelections,
+  slotIsActive,
+} from './ability-modes';
 /**
  * Legal-action generation (brief §1.2 — the engine computes EVERY legal option; the AI
  * only picks). This is the completeness-critical module: an option omitted here can never
@@ -106,6 +112,8 @@ export type PriorityActionPayload =
       x?: number;
       fromGraveyard?: boolean;
       fromHand?: boolean;
+      /** The announced modes of a modal activated ability (CR 602.2b, 700.2a). */
+      modes?: number[];
     }
   | { kind: 'companionToHand' };
 
@@ -1525,9 +1533,6 @@ export function computePriorityOptions(
         const jointSources = activationManaSources(ctx, player, perm, activated.costs, manaCost, x);
         if (jointSources === null) continue;
 
-        const slots: { slot: number; options: ObjectId[] }[] = [];
-        let slotNum = 0;
-        let missingTarget = false;
         // Equip (CR 702.6, `attachSelfTo`): re-attaching to the creature this is ALREADY
         // attached to is a strict no-op — same state in, same state out — so it is not a
         // meaningful target. Left in, the model can spam it forever for free once the
@@ -1535,8 +1540,8 @@ export function computePriorityOptions(
         const isAttachAbility = activated.ability.effects.some(
           (e: import('../cards/ability').Effect) => e.op === 'attachSelfTo',
         );
-        for (const spec of activated.ability.targets) {
-          let targetOptions = computeTargetOptions(
+        const targetOptionsFor = (spec: TargetSpec): ObjectId[] => {
+          const targetOptions = computeTargetOptions(
             ctx,
             spec,
             player.id,
@@ -1545,51 +1550,81 @@ export function computePriorityOptions(
             undefined,
             perm.cardId,
           );
-          if (isAttachAbility && perm.attachedTo !== null) {
-            targetOptions = targetOptions.filter((id) => id !== perm.attachedTo);
-          }
-          if (spec.count !== undefined) {
-            if (targetOptions.length < spec.count.min) missingTarget = true;
-            continue;
-          }
-          // CR 602.2b: an ability with no legal target for a slot cannot be activated at all.
-          if (targetOptions.length === 0) {
-            missingTarget = true;
-            break;
-          }
-          slots.push({ slot: slotNum++, options: targetOptions });
-        }
-        if (missingTarget) continue;
-
-        const option: EngineActionOption = {
-          type: 'activateAbility',
-          description:
-            `${perm.name}: ${activated.ability.description ?? 'activate ability'}` +
-            (xSymbols > 0 ? ` with X=${x}` : ''),
-          payload: {
-            kind: 'activateAbility',
-            objectId: perm.id,
-            index,
-            ...(xSymbols > 0 ? { x } : {}),
-          },
-          data: {
-            sourceName: perm.name,
-            sourceZone: 'battlefield',
-            abilityDescription: activated.ability.description ?? 'activate ability',
-            manaCost: describeManaCost(manaCost),
-            ...paymentPreview(ctx, player, manaCost, jointSources, allows),
-            abilityCosts: activated.costs,
-            ...(xSymbols > 0 ? { x } : {}),
-          },
-          interaction: {
-            kind: 'source',
-            sourceId: perm.id,
-            sourceCardId: perm.cardId,
-            abilityIndex: index,
-          },
+          return isAttachAbility && perm.attachedTo !== null
+            ? targetOptions.filter((id) => id !== perm.attachedTo)
+            : targetOptions;
         };
-        if (slots.length > 0) option.targets = slots;
-        options.push(option);
+        // A modal ability's mode is announced as part of activating it, before its targets
+        // (CR 602.2b, 700.2a) — one option per choosable mode, the same "the option menu is the
+        // contract" treatment a modal spell gets. A non-modal ability is one `undefined` mode.
+        const modes = activated.ability.modes;
+        const selections: (number[] | undefined)[] =
+          modes === undefined
+            ? [undefined]
+            : legalAbilityModeSelections(
+                activated.ability,
+                (spec) => targetOptionsFor(spec).length,
+              );
+
+        for (const selectedModes of selections) {
+          const activeSlots =
+            modes === undefined || selectedModes === undefined
+              ? undefined
+              : abilityModeTargetSlots(modes, selectedModes);
+          const modeLabel =
+            modes === undefined || selectedModes === undefined
+              ? undefined
+              : abilityModeLabel(modes, selectedModes);
+          const slots: { slot: number; options: ObjectId[] }[] = [];
+          let missingTarget = false;
+          for (const [slot, spec] of activated.ability.targets.entries()) {
+            if (!slotIsActive(activeSlots, slot)) continue;
+            const targetOptions = targetOptionsFor(spec);
+            if (spec.count !== undefined) {
+              if (targetOptions.length < spec.count.min) missingTarget = true;
+              continue;
+            }
+            // CR 602.2b: an ability with no legal target for a slot cannot be activated at all.
+            if (targetOptions.length === 0) {
+              missingTarget = true;
+              break;
+            }
+            slots.push({ slot, options: targetOptions });
+          }
+          if (missingTarget) continue;
+
+          const option: EngineActionOption = {
+            type: 'activateAbility',
+            description:
+              `${perm.name}: ${modeLabel ?? activated.ability.description ?? 'activate ability'}` +
+              (xSymbols > 0 ? ` with X=${x}` : ''),
+            payload: {
+              kind: 'activateAbility',
+              objectId: perm.id,
+              index,
+              ...(xSymbols > 0 ? { x } : {}),
+              ...(selectedModes !== undefined ? { modes: selectedModes } : {}),
+            },
+            data: {
+              sourceName: perm.name,
+              sourceZone: 'battlefield',
+              abilityDescription: activated.ability.description ?? 'activate ability',
+              ...(modeLabel !== undefined ? { modeLabel } : {}),
+              manaCost: describeManaCost(manaCost),
+              ...paymentPreview(ctx, player, manaCost, jointSources, allows),
+              abilityCosts: activated.costs,
+              ...(xSymbols > 0 ? { x } : {}),
+            },
+            interaction: {
+              kind: 'source',
+              sourceId: perm.id,
+              sourceCardId: perm.cardId,
+              abilityIndex: index,
+            },
+          };
+          if (slots.length > 0) option.targets = slots;
+          options.push(option);
+        }
       }
     }
   }

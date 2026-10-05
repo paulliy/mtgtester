@@ -14,6 +14,7 @@ import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
+import CopyGameReportButton from '../components/CopyGameReportButton.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
@@ -22,6 +23,7 @@ import ZoneStrip from '../components/ZoneStrip.vue';
 import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useCombatStrikes } from '../composables/useCombatStrikes';
 import { useLifeFlash, useLifeFlashBySeat } from '../composables/useLifeFlash';
+import { actionLabel } from '../lib/actionLabels';
 import { isTokenTypeLine } from '../lib/card';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { playerFacingPrompt, turnPositionLabel } from '../lib/turnLabels';
@@ -746,22 +748,6 @@ function actionCost(action: LegalAction): string[] {
     }
   }
   return labels;
-}
-
-function actionLabel(action: LegalAction): string {
-  const mode = actionData(action, 'modeLabel');
-  const variant = actionData(action, 'castVariant');
-  const ability = actionData(action, 'abilityDescription');
-  if (typeof mode === 'string') return mode;
-  if (typeof variant === 'string') return variant[0]?.toUpperCase() + variant.slice(1);
-  if (typeof ability === 'string') return ability;
-  if (action.type === 'playLand') return 'Play land';
-  if (action.type === 'castSpell') return 'Cast';
-  // Combat actions (attack/block) land here: falling back to `action.type` renders every
-  // option in a source's button list as the same bare word ("attack", "block", …), which is
-  // indistinguishable when a creature can attack three different opponents. `description` is
-  // already the full sentence the engine generated ("Grizzly Bears attacks P2 (40 life)").
-  return action.description;
 }
 
 function pendingSummary(action: LegalAction): string {
@@ -1547,7 +1533,9 @@ function abandon(): void {
           @update:show-reasoning="
             store.setDebugFlags({ ...store.debugFlags, showAIResponses: $event })
           "
-        />
+        >
+          <template #actions><CopyGameReportButton /></template>
+        </ActionLog>
       </aside>
     </main>
     <p v-else class="waiting">Waiting for the player-safe board…</p>
@@ -1912,8 +1900,13 @@ button.selected,
   color: var(--muted);
   flex-shrink: 0;
 }
+/*
+ * Natural card size, shrinking only when the battle row is shorter than the card. `flex: 1`
+ * here (and on the image) stretched the commander to the full height of an empty battlefield —
+ * a strip hundreds of pixels tall with the art cropped to a sliver (browser trial, Turn 4).
+ */
 .commander-card {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -1925,7 +1918,7 @@ button.selected,
 }
 .commander-card :deep(.card-image) {
   width: 100%;
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
 }
 .commander-card small {
