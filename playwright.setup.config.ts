@@ -30,6 +30,10 @@ const dbPath = join(runDirectory(), 'setup.sqlite');
 export default defineConfig({
   testDir: './apps/web/e2e',
   testMatch: /player-(setup|game)\.spec\.ts$/,
+  // Playwright empties its output directory when a run starts. CI runs this suite after the Card
+  // Test Lab, whose traces in `test-results/` are retained viewer evidence, so this run writes to
+  // a subdirectory of its own instead of wiping them.
+  outputDir: 'test-results/setup',
   globalTeardown: './apps/web/e2e/setup-teardown.ts',
   workers: 1,
   timeout: 120_000,
