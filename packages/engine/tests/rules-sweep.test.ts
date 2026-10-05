@@ -13,6 +13,7 @@ import type { PriorityActionPayload } from '../src/actions/legal';
 import { applyPriorityAction } from '../src/actions/apply';
 import { runCombatPhase } from '../src/combat/combat';
 import { executeAbility } from '../src/effects/resolve';
+import { computeCharacteristics } from '../src/effects/continuous';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { createGame } from '../src/state/game';
 import type { EnginePermanent, GameContext } from '../src/state/types';
@@ -818,5 +819,27 @@ describe('"another target" excludes the source (CR 109.4 "another")', () => {
     const targets = option?.targets?.[0]?.options ?? [];
     expect(targets).toContain(land.id);
     expect(targets).not.toContain(untapper.id);
+  });
+});
+
+describe('layer cache (fuzz: MTG_VERIFY_LAYER_CACHE)', () => {
+  it('"has hexproof as long as it entered this turn" ends when the turn does', () => {
+    const ctx = pod();
+    const zurgo = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Zurgo and Ojutai',
+        typeLine: 'Legendary Creature — Orc Dragon',
+        manaCost: '{2}{U}{R}{W}',
+        oracleText: 'Flying, haste\nZurgo and Ojutai has hexproof as long as it entered this turn.',
+        power: '4',
+        toughness: '4',
+      }),
+    );
+    zurgo.enteredTurnNumber = ctx.state.turnNumber;
+    expect(computeCharacteristics(ctx, zurgo).keywords).toContain('hexproof');
+    ctx.state.turnNumber += 1;
+    expect(computeCharacteristics(ctx, zurgo).keywords).not.toContain('hexproof');
   });
 });
