@@ -22,6 +22,7 @@ import ZoneStrip from '../components/ZoneStrip.vue';
 import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useCombatStrikes } from '../composables/useCombatStrikes';
 import { useLifeFlash, useLifeFlashBySeat } from '../composables/useLifeFlash';
+import { actionLabel } from '../lib/actionLabels';
 import { isTokenTypeLine } from '../lib/card';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { playerFacingPrompt, turnPositionLabel } from '../lib/turnLabels';
@@ -746,22 +747,6 @@ function actionCost(action: LegalAction): string[] {
     }
   }
   return labels;
-}
-
-function actionLabel(action: LegalAction): string {
-  const mode = actionData(action, 'modeLabel');
-  const variant = actionData(action, 'castVariant');
-  const ability = actionData(action, 'abilityDescription');
-  if (typeof mode === 'string') return mode;
-  if (typeof variant === 'string') return variant[0]?.toUpperCase() + variant.slice(1);
-  if (typeof ability === 'string') return ability;
-  if (action.type === 'playLand') return 'Play land';
-  if (action.type === 'castSpell') return 'Cast';
-  // Combat actions (attack/block) land here: falling back to `action.type` renders every
-  // option in a source's button list as the same bare word ("attack", "block", …), which is
-  // indistinguishable when a creature can attack three different opponents. `description` is
-  // already the full sentence the engine generated ("Grizzly Bears attacks P2 (40 life)").
-  return action.description;
 }
 
 function pendingSummary(action: LegalAction): string {
