@@ -94,6 +94,7 @@ import {
   manaRestrictionAllows,
   manaSourcesFor,
   opponentsOf,
+  sourceColorsOf,
   spellProtectedFromCounter,
   requireModeled,
 } from '../state/queries';
@@ -279,7 +280,10 @@ export function dealDamageToCreature(
   });
 }
 
-/** Deal damage from `source` to a player. Tracks commander combat damage (brief §5.7). */
+/**
+ * Deal damage from `source` to a player. Tracks commander combat damage (brief §5.7). Returns the
+ * damage actually dealt — 0 when it was prevented — for "deals damage to a player" consequences.
+ */
 export function dealDamageToPlayer(
   ctx: GameContext,
   source: EffectSource,
@@ -291,8 +295,8 @@ export function dealDamageToPlayer(
     sourceHasLifelink: boolean;
     sourceHasInfect?: boolean;
   },
-): void {
-  if (amount <= 0) return;
+): number {
+  if (amount <= 0) return 0;
   if (
     opts.combat &&
     (ctx.state.combatDamagePrevention.all ||
@@ -308,10 +312,11 @@ export function dealDamageToPlayer(
       amount,
       reason: 'combatShield',
     });
-    return;
+    return 0;
   }
   // Damage-doubling replacement (CR 616 — Neriv, Heart of the Storm).
   amount = damageAmountAfterReplacements(ctx, source.cardId, target.id, amount);
+  if (amount <= 0) return 0;
   if (opts.sourceHasInfect === true) {
     target.poisonCounters += amount;
     emit(
@@ -361,6 +366,7 @@ export function dealDamageToPlayer(
     combat: opts.combat,
     commanderDamage: opts.combat && opts.sourceIsCommander,
   });
+  return amount;
 }
 
 /** Deal non-combat damage from `source` to whichever kind of object `id` names. */
@@ -377,6 +383,8 @@ function dealDamageToObject(
     sourcePermanent !== undefined && hasKeyword(ctx, sourcePermanent, 'lifelink');
   const sourceHasDeathtouch =
     sourcePermanent !== undefined && hasKeyword(ctx, sourcePermanent, 'deathtouch');
+  // Protection (CR 702.16e) prevents damage from a protected-from source, noncombat included.
+  const sourceColors = sourceColorsOf(ctx, source.cardId, source.oracleId);
   const targetPlayer = ctx.state.players.find((p) => p.id === id);
   if (targetPlayer !== undefined) {
     dealDamageToPlayer(ctx, source, targetPlayer, amount, {
@@ -389,12 +397,31 @@ function dealDamageToObject(
   }
   const perm = findPermanent(ctx, id);
   if (perm === undefined) return;
-  // CR 120.3c: damage to a planeswalker removes that many loyalty counters instead of marking
-  // damage — a planeswalker has no toughness to compare marked damage against.
-  if (computeCharacteristics(ctx, perm).types.includes('Planeswalker')) {
+  // CR 120.3c/h: damage to a planeswalker removes that many loyalty counters, and damage to a
+  // battle that many defense counters, instead of marking damage — neither has toughness.
+  const permTypes = computeCharacteristics(ctx, perm).types;
+  const counterKind = permTypes.includes('Planeswalker')
+    ? 'loyalty'
+    : permTypes.includes('Battle') && !permTypes.includes('Creature')
+      ? 'defense'
+      : null;
+  if (counterKind !== null) {
+    if (amount <= 0) return;
     amount = damageAmountAfterReplacements(ctx, source.cardId, perm.controllerId, amount);
-    const have = perm.counters['loyalty'] ?? 0;
-    perm.counters['loyalty'] = Math.max(0, have - amount);
+    if (hasProtectionFrom(ctx, perm, sourceColors)) {
+      emit(ctx, 'damagePrevented', {
+        source: source.name,
+        target: perm.name,
+        targetCardId: perm.cardId,
+        amount,
+        reason: 'protection',
+      });
+      return;
+    }
+    const have = perm.counters[counterKind] ?? 0;
+    perm.counters[counterKind] = Math.max(0, have - amount);
+    // Lifelink applies to damage dealt to any object or player (CR 702.15b).
+    if (sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
     emit(ctx, 'damage', {
       source: source.name,
       sourceCardId: source.cardId,
@@ -410,6 +437,7 @@ function dealDamageToObject(
     sourceHasDeathtouch,
     sourceHasLifelink,
     sourceHasInfect,
+    sourceColors,
   });
 }
 
@@ -1287,6 +1315,21 @@ export function* executeAbility(
   /** Controller captured when a target slot is first resolved, before an earlier effect moves it. */
   const refControllerCache = new Map<number, PlayerId | undefined>();
 
+  /**
+   * CR 608.2b recheck of one target, with the same protection (CR 702.16) and event-player
+   * context the target was chosen under — otherwise a creature that gained protection from the
+   * source's color in response would still be hit.
+   */
+  const stillLegal = (id: ObjectId, spec: TargetSpec): boolean =>
+    isTargetStillLegal(
+      ctx,
+      id,
+      spec,
+      source.controllerId,
+      sourceColorsOf(ctx, source.cardId, source.oracleId),
+      scope.eventPlayerId,
+    );
+
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */
   const ref = (r: EffectRef): ObjectId | null => {
     if (r === 'source') {
@@ -1322,7 +1365,7 @@ export function* executeAbility(
       refCardIdCache.set(r, null);
       return null;
     }
-    if (!isTargetStillLegal(ctx, id, spec, source.controllerId, undefined, scope.eventPlayerId)) {
+    if (!stillLegal(id, spec)) {
       debug(ctx, 'effect', `${source.name}: target ${id} illegal — skipped`);
       refCardIdCache.set(r, null);
       return null;
@@ -1604,7 +1647,7 @@ export function* executeAbility(
         const spec = ability.targets[effect.targetSlot];
         const amount = amountOf(effect.amount);
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           dealDamageToObject(ctx, source, id, amount);
@@ -1614,9 +1657,7 @@ export function* executeAbility(
       case 'grantKeywordEachChosenUntilEot': {
         const spec = ability.targets[effect.targetSlot];
         const chosen = (countTargets?.[effect.targetSlot] ?? [])
-          .filter(
-            (id) => spec !== undefined && isTargetStillLegal(ctx, id, spec, source.controllerId),
-          )
+          .filter((id) => spec !== undefined && stillLegal(id, spec))
           .map((id) => findPermanent(ctx, id))
           .filter((permanent): permanent is EnginePermanent => permanent !== undefined);
         if (chosen.length > 0) {
@@ -1668,7 +1709,7 @@ export function* executeAbility(
         const spec = ability.targets[effect.targetSlot];
         const count = amountOf(effect.count);
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           const perm = findPermanent(ctx, id);
@@ -1680,7 +1721,7 @@ export function* executeAbility(
       case 'exileEachChosen': {
         const spec = ability.targets[effect.targetSlot];
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           const perm = findPermanent(ctx, id);
@@ -1693,7 +1734,7 @@ export function* executeAbility(
       case 'blinkEachChosen': {
         const spec = ability.targets[effect.targetSlot];
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           const permanent = findPermanent(ctx, id);
@@ -1923,7 +1964,7 @@ export function* executeAbility(
         // object chosen in the variable-count slot is returned independently.
         const spec = ability.targets[effect.targetSlot];
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           const perm = findPermanent(ctx, id);
@@ -1941,7 +1982,7 @@ export function* executeAbility(
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
           const amount = divisionAmounts?.[id] ?? 0;
           if (amount <= 0) continue;
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           dealDamageToObject(ctx, source, id, amount);

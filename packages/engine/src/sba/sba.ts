@@ -17,7 +17,7 @@ import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
 import { breakYieldsForStop } from '../turn/stops';
 import { consumeRegenerationShield, moveObject, movePermanentsToGraveyard } from '../state/objects';
-import { isCreaturePermanent, playersInApnapOrder } from '../state/queries';
+import { isCreaturePermanent, playersInApnapOrder, sourceColorsOf } from '../state/queries';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -62,10 +62,11 @@ function processEliminations(ctx: GameContext): void {
     // Combat cleanup: their creatures are gone; attackers pointed at them stand down
     // (CR 800.4e — no combat damage is assigned to a player who has left).
     const leavingIds = new Set(leaving.map((p) => p.id));
+    // An attacker whose blocker left stays blocked (CR 509.1h); the departed blocker just no
+    // longer exists to receive damage, so `blockedByOrdered` keeps its id.
     for (const perm of s.battlefield) {
       if (perm.attacking === player.id) perm.attacking = null;
       if (perm.blocking !== null && leavingIds.has(perm.blocking)) perm.blocking = null;
-      perm.blockedByOrdered = perm.blockedByOrdered.filter((id) => !leavingIds.has(id));
     }
 
     // Seating: survivors only (brief §5.2). Keep activePlayerIndex pointing at the same
@@ -78,6 +79,19 @@ function processEliminations(ctx: GameContext): void {
       if (idx >= 0) s.activePlayerIndex = idx;
     } else if (s.activePlayerIndex >= s.turnOrder.length) {
       s.activePlayerIndex = 0;
+    }
+
+    // CR 725.4: if the monarch leaves, the active player becomes the monarch — or, when the
+    // active player is the one leaving, the next player in turn order (who now sits at
+    // `activePlayerIndex`, since the leaving player's seat was just removed).
+    if (s.monarchPlayerId === player.id) {
+      const active = s.players.find((p) => p.id === s.currentTurnPlayer);
+      const successor =
+        active !== undefined && !active.hasLost
+          ? active.id
+          : (s.turnOrder[s.activePlayerIndex] ?? null);
+      s.monarchPlayerId = successor;
+      if (successor !== null) emit(ctx, 'monarch', { player: successor }, successor);
     }
   }
 
@@ -101,7 +115,15 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
 
   // --- Player checks ---
   for (const player of s.players) {
-    if (player.hasLost) continue;
+    if (player.hasLost) {
+      // A "you lose the game" effect (CR 104.3a) marks the player directly; they still have to
+      // leave the game here, or they would keep their seat, permanents and turns.
+      if (!s.eliminatedPlayers.includes(player.id)) {
+        player.lossReason ??= 'other';
+        acted = true;
+      }
+      continue;
+    }
     if (player.life <= 0) {
       markLoss(ctx, player, 'lifeZeroOrLess');
       acted = true;
@@ -361,6 +383,8 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         }
       : trigger.ability;
   const specs = ability.targets;
+  // Protection (CR 702.16): a triggered ability can't target what is protected from its source.
+  const sourceColors = sourceColorsOf(ctx, trigger.sourceCardId, trigger.sourceOracleId);
   const chosen: ObjectId[] = [];
   const countTargets: Record<number, ObjectId[]> = {};
   const divisionAmounts: Record<ObjectId, number> = {};
@@ -375,7 +399,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       ctx,
       spec,
       trigger.controllerId,
-      undefined,
+      sourceColors,
       trigger.scope?.eventPlayerId,
     );
     if (options.length === 0) {
@@ -467,7 +491,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         ctx,
         spec,
         trigger.controllerId,
-        undefined,
+        sourceColors,
         trigger.scope?.eventPlayerId,
         chosen,
       ).filter((id) => !alreadyChosen.has(id) && !picked.includes(id));

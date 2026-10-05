@@ -72,7 +72,10 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   damagedByDeathtouch: boolean;
   /** One-shot "next time this would be destroyed this turn" regeneration shields (CR 701.19a). */
   regenerationShields: number;
-  /** Set when this permanent dealt first-strike damage this combat (CR 510.5). */
+  /**
+   * Set when this permanent had first or double strike as this combat's first combat damage step
+   * began; without double strike it then deals no damage in the second step (CR 510.4).
+   */
   dealtFirstStrikeDamage: boolean;
   /** Timestamp assigned on entry (CR 613.7 ordering of continuous effects). */
   timestamp: number;

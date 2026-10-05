@@ -10,7 +10,7 @@ import { isPermanentCard } from '../cards/definition';
 import { executeAbility, isTargetStillLegal } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import { moveObject } from '../state/objects';
-import { getDefByOracleId } from '../state/queries';
+import { getDefByOracleId, sourceColorsOf } from '../state/queries';
 import type { EngineStackObject, GameContext } from '../state/types';
 
 /** Resolve the top object of the stack. Caller guarantees the stack is nonempty. */
@@ -62,6 +62,8 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   // (Ureni with no opponent creatures) contributes no targets and so cannot itself fizzle
   // anything — `anyChosen` tracks whether there was ever a target to check at all.
   const specs = top.ability?.targets ?? [];
+  // Protection gained in response makes a target illegal too (CR 702.16b, 608.2b).
+  const sourceColors = sourceColorsOf(ctx, top.sourceCardId, top.sourceOracleId);
   let anyChosen = false;
   let anyLegal = false;
   top.targets.forEach((t, i) => {
@@ -74,7 +76,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         t,
         specs[i] ?? kind,
         top.controllerId,
-        undefined,
+        sourceColors,
         top.triggerScope?.eventPlayerId,
       )
     )
@@ -91,7 +93,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
           id,
           spec,
           top.controllerId,
-          undefined,
+          sourceColors,
           top.triggerScope?.eventPlayerId,
         )
       )

@@ -287,9 +287,11 @@ export function consumeRegenerationShield(
   perm.attacking = null;
   perm.blocking = null;
   perm.blockedByOrdered = [];
+  perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
+  // Removed from combat (CR 701.19c). An attacker it was blocking REMAINS blocked (CR 509.1h), so
+  // its id stays in that attacker's `blockedByOrdered`; it just no longer counts as a live blocker.
   for (const other of ctx.state.battlefield) {
     if (other.blocking === perm.id) other.blocking = null;
-    other.blockedByOrdered = other.blockedByOrdered.filter((blockerId) => blockerId !== perm.id);
   }
   emit(
     ctx,

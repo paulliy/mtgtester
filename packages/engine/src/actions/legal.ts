@@ -35,6 +35,7 @@ import {
   cardZoneCandidate,
   canPlayFromZone,
   canPayNonManaCosts,
+  colorsOf,
   playFromZonePermission,
   castFromLibraryTopCandidates,
   castingSpellsBlockedFor,
@@ -560,7 +561,10 @@ export function permanentMatchesKind(
     case 'permanent':
       return true;
     case 'anyTarget':
-      return types.includes('Creature');
+      // CR 115.4: "any target" is a creature, player, planeswalker, or battle.
+      return (
+        types.includes('Creature') || types.includes('Planeswalker') || types.includes('Battle')
+      );
     case 'playerOrPlaneswalker':
       return types.includes('Planeswalker');
     case 'player':
@@ -727,7 +731,7 @@ export function computeTargetOptions(
     )
     .map((p) => p.id);
 
-  // "Any target" is creature-or-player (CR 115.4); "player or planeswalker" is analogous.
+  // "Any target" adds players to its permanents (CR 115.4); "player or planeswalker" likewise.
   // Players are never hexproof-filtered.
   return kind === 'anyTarget' || kind === 'playerOrPlaneswalker'
     ? [...permanents, ...players]
@@ -766,7 +770,8 @@ function computeCastTargets(
   const slots: { slot: number; options: ObjectId[] }[] = [];
   for (const [slotNum, spec] of (def.spellAbility?.targets ?? []).entries()) {
     if (activeSlots !== undefined && !activeSlots.includes(slotNum)) continue;
-    const options = computeTargetOptions(ctx, spec, casterId);
+    // Protection (CR 702.16): a spell can't target a permanent protected from its colors.
+    const options = computeTargetOptions(ctx, spec, casterId, def.colors);
     if (spec.count !== undefined) {
       if (options.length < spec.count.min) return null;
       continue; // Counted targets are chosen at announcement after the action is selected.
@@ -963,11 +968,14 @@ export function computePriorityOptions(
       return;
     const additionalManaCost = manaPortionOf(spellAdditionalCosts);
     const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
-    let base = reboundCast ? emptyCost() : addGeneric(def.manaCost, tax);
-    if (reduction.colored !== undefined) {
-      base = subtractColored(base, reduction.colored);
-    }
-    base = subtractGeneric(base, reduction.generic);
+    const unreduced = reboundCast ? emptyCost() : addGeneric(def.manaCost, tax);
+    // CR 601.2f: reductions apply to the total cost, after {X} has a value — so a reduction can
+    // pay for X's share, not just for whatever generic mana the printed cost happens to have.
+    const costWithX = (x: number): ParsedManaCost => {
+      let c = withX(unreduced, x);
+      if (reduction.colored !== undefined) c = subtractColored(c, reduction.colored);
+      return subtractGeneric(c, reduction.generic);
+    };
 
     // {X} is announced as part of casting (CR 601.2b), so each affordable value of X is its own
     // option. Enumerated rather than asked as a follow-up decision because the option menu is
@@ -990,7 +998,7 @@ export function computePriorityOptions(
       for (let x = 0; ; x++) {
         if (
           !canPay(
-            addManaCosts(withX(base, x), additionalManaCost),
+            addManaCosts(costWithX(x), additionalManaCost),
             player.manaEntries,
             sources,
             allows,
@@ -1013,7 +1021,7 @@ export function computePriorityOptions(
     );
 
     for (const x of xChoices) {
-      const cost = withX(base, x);
+      const cost = costWithX(x);
       if (!canPay(cost, player.manaEntries, sources, allows, player.life)) continue;
 
       for (const selectedModes of selections) {
@@ -1469,7 +1477,10 @@ export function computePriorityOptions(
         sourceOracleId: perm.oracleId,
       });
       const reduction = activationCostReductionFor(ctx, player.id, perm.oracleId, perm.cardId);
-      const baseManaCost = subtractGeneric(manaPortionOf(activated.costs), reduction.generic);
+      const baseManaCost = manaPortionOf(activated.costs);
+      // CR 601.2f (via 602.2b): the reduction applies once X is part of the total.
+      const reducedWithX = (x: number): ParsedManaCost =>
+        subtractGeneric(withX(baseManaCost, x), reduction.generic);
 
       // {X} is announced as part of activating (CR 602.1b), same treatment casting gives it —
       // every affordable value is its own option (Steel Hellkite).
@@ -1478,15 +1489,14 @@ export function computePriorityOptions(
       if (xSymbols === 0) xChoices.push(0);
       else {
         for (let x = 0; ; x++) {
-          if (!canPay(withX(baseManaCost, x), player.manaEntries, usable, allows, player.life))
-            break;
+          if (!canPay(reducedWithX(x), player.manaEntries, usable, allows, player.life)) break;
           xChoices.push(x);
         }
         if (xChoices.length === 0) continue;
       }
 
       for (const x of xChoices) {
-        const manaCost = withX(baseManaCost, x);
+        const manaCost = reducedWithX(x);
         if (!canPay(manaCost, player.manaEntries, usable, allows, player.life)) continue;
         if (!canPayNonManaCosts(ctx, perm, activated.costs, x)) continue;
         const jointSources = activationManaSources(ctx, player, perm, activated.costs, manaCost, x);
@@ -1503,7 +1513,7 @@ export function computePriorityOptions(
           (e: import('../cards/ability').Effect) => e.op === 'attachSelfTo',
         );
         for (const spec of activated.ability.targets) {
-          let targetOptions = computeTargetOptions(ctx, spec, player.id);
+          let targetOptions = computeTargetOptions(ctx, spec, player.id, colorsOf(ctx, perm));
           if (isAttachAbility && perm.attachedTo !== null) {
             targetOptions = targetOptions.filter((id) => id !== perm.attachedTo);
           }
@@ -1577,7 +1587,7 @@ export function computePriorityOptions(
       const slots: { slot: number; options: ObjectId[] }[] = [];
       let missingTarget = false;
       for (const [slot, spec] of activated.ability.targets.entries()) {
-        const targetOptions = computeTargetOptions(ctx, spec, player.id);
+        const targetOptions = computeTargetOptions(ctx, spec, player.id, def.colors);
         if (spec.count !== undefined) {
           if (targetOptions.length < spec.count.min) missingTarget = true;
           continue;
@@ -1692,7 +1702,7 @@ export function validateChosenTargets(
     if (choice === undefined) {
       throw new Error(`missing target for slot ${slotNum} of ${def.name}`);
     }
-    const legal = computeTargetOptions(ctx, spec, casterId);
+    const legal = computeTargetOptions(ctx, spec, casterId, def.colors);
     if (!legal.includes(choice)) {
       throw new Error(`illegal target ${choice} for slot ${slotNum} of ${def.name}`);
     }

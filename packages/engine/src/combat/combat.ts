@@ -894,11 +894,7 @@ function* assignDamageDivisions(
     if (!dealsInStep(ctx, attacker, step)) continue;
     const power = effectivePT(ctx, attacker).power;
     if (power <= 0) continue;
-    // `blockedByOrdered` is kept free of departed permanents by state-based actions
-    // (`sba.ts`), so this is already the live set — no extra filtering needed here.
-    const liveBlockers = attacker.blockedByOrdered
-      .map((id) => findPermanent(ctx, id))
-      .filter((b): b is EnginePermanent => b !== undefined);
+    const liveBlockers = liveBlockersOf(ctx, attacker);
     if (liveBlockers.length < 2) continue;
 
     const trample = hasKeyword(ctx, attacker, 'trample');
@@ -930,6 +926,18 @@ function* assignDamageDivisions(
   return divisions;
 }
 
+/**
+ * The blockers still blocking `attacker`. `blockedByOrdered` is the full history of who blocked
+ * it, because an attacker stays blocked even once every blocker has died or been removed from
+ * combat (CR 509.1h, 506.4) — only the blockers still on the battlefield and still blocking it
+ * can receive its damage.
+ */
+function liveBlockersOf(ctx: GameContext, attacker: EnginePermanent): EnginePermanent[] {
+  return attacker.blockedByOrdered
+    .map((id) => findPermanent(ctx, id))
+    .filter((b): b is EnginePermanent => b !== undefined && b.blocking === attacker.id);
+}
+
 interface DamageAssignment {
   source: EnginePermanent;
   targetCreature: EnginePermanent | null;
@@ -937,12 +945,25 @@ interface DamageAssignment {
   amount: number;
 }
 
-/** Does this creature deal damage in the given combat damage step? (CR 510.5) */
+/**
+ * Does this creature deal damage in the given combat damage step? (CR 510.4/510.5)
+ *
+ * The second step is for creatures that had neither first strike nor double strike as the first
+ * combat damage step began, plus whatever has double strike now — so gaining first strike after
+ * the first step doesn't stop a creature dealing damage, and losing it doesn't let a first
+ * striker deal damage twice (CR 702.7c). `dealtFirstStrikeDamage` records the former set.
+ */
 function dealsInStep(ctx: GameContext, perm: EnginePermanent, step: 'first' | 'regular'): boolean {
-  const first = hasKeyword(ctx, perm, 'first strike');
   const dbl = hasKeyword(ctx, perm, 'double strike');
-  if (step === 'first') return first || dbl;
-  return dbl || !first;
+  if (step === 'first') return dbl || hasKeyword(ctx, perm, 'first strike');
+  return dbl || !perm.dealtFirstStrikeDamage;
+}
+
+/** Remember who has first/double strike as the first combat damage step begins (CR 510.4). */
+function markFirstStrikeCombatants(ctx: GameContext): void {
+  for (const perm of [...attackers(ctx), ...blockersInCombat(ctx)]) {
+    if (dealsInStep(ctx, perm, 'first')) perm.dealtFirstStrikeDamage = true;
+  }
 }
 
 /**
@@ -965,9 +986,7 @@ function dealCombatDamage(
     const deathtouch = hasKeyword(ctx, attacker, 'deathtouch');
     const trample = hasKeyword(ctx, attacker, 'trample');
 
-    const liveBlockers = attacker.blockedByOrdered
-      .map((id) => findPermanent(ctx, id))
-      .filter((b): b is EnginePermanent => b !== undefined);
+    const liveBlockers = liveBlockersOf(ctx, attacker);
     const wasBlocked = attacker.blockedByOrdered.length > 0;
 
     if (!wasBlocked) {
@@ -1079,7 +1098,7 @@ function dealCombatDamage(
         sourceColors: traits.colors,
       });
     } else if (a.targetPlayer !== null) {
-      dealDamageToPlayer(
+      const dealt = dealDamageToPlayer(
         ctx,
         permanentSource(a.source),
         playerById(ctx, a.targetPlayer),
@@ -1091,7 +1110,10 @@ function dealCombatDamage(
           sourceHasInfect: traits.infect,
         },
       );
-      damageToPlayers.set(a.source, (damageToPlayers.get(a.source) ?? 0) + a.amount);
+      // Prevented damage was never dealt: no "deals combat damage to a player" trigger, and no
+      // monarch steal (CR 725.2 — "whenever a creature deals combat damage to the monarch").
+      if (dealt <= 0) continue;
+      damageToPlayers.set(a.source, (damageToPlayers.get(a.source) ?? 0) + dealt);
       if (
         ctx.state.monarchPlayerId === a.targetPlayer &&
         a.source.controllerId !== a.targetPlayer
@@ -1100,7 +1122,6 @@ function dealCombatDamage(
         emit(ctx, 'monarch', { player: a.source.controllerId }, a.source.controllerId);
       }
     }
-    if (step === 'first') a.source.dealtFirstStrikeDamage = true;
   }
 
   queueTriggersForEvent(
@@ -1153,6 +1174,7 @@ export function* runCombatPhase(ctx: GameContext): GameGen<void> {
 
     if (firstStrikeStepNeeded(ctx)) {
       setStep(ctx, 'firstStrikeCombatDamage');
+      markFirstStrikeCombatants(ctx);
       const firstDivisions = yield* assignDamageDivisions(ctx, 'first');
       dealCombatDamage(ctx, 'first', firstDivisions);
       yield* runPrioritySequence(ctx);

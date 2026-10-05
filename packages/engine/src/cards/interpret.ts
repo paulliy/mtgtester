@@ -980,7 +980,7 @@ function parseEffectSentence(
     return [{ op: 'untapTarget', target: alloc('creature') }];
   }
   if (s === 'untap target permanent') {
-    return [{ op: 'untapTarget', target: alloc('anyTarget') }];
+    return [{ op: 'untapTarget', target: alloc('permanent') }];
   }
   if (s === 'untap another target permanent') {
     return [{ op: 'untapTarget', target: alloc('permanent', OTHER) }];
