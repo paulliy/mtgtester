@@ -137,6 +137,33 @@ describe('formatSpectatorLine', () => {
     expect(line?.actorSeat).toBe('P1');
   });
 
+  it('narrates a combat-damage division from the applied split, not the decision option', () => {
+    // The decision's option text names a preset ("All 2 damage to Wall of Omens") that the
+    // submitted split can override; only the division event says what actually happened.
+    expect(
+      formatSpectatorLine(
+        event({
+          type: 'decision',
+          payload: {
+            decisionType: 'assignCombatDamage',
+            description: 'All 2 damage to Wall of Omens',
+          },
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      formatSpectatorLine(
+        event({
+          type: 'damageAssignmentDivision',
+          payload: {
+            attacker: 'Tilling Treefolk',
+            assignments: [{ target: 'Adaptive Sporesinger', amount: 2 }],
+          },
+        }),
+      )?.text,
+    ).toBe('Tilling Treefolk divides its combat damage: 2 to Adaptive Sporesinger');
+  });
+
   it('never leaks AI reasoning into the spectator log (brief §7.3, §15)', () => {
     const line = formatSpectatorLine(
       event({

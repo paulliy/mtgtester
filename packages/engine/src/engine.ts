@@ -24,6 +24,7 @@ import type {
   PlayerView,
   SpectatorState,
 } from '@mtg/shared';
+import { describeDamageSplit } from './combat/combat';
 import type { DecisionOutcome, GameGen, PendingDecision } from './decisions';
 import { forcedOutcome, isForced } from './decisions';
 import { EngineUsageError, IllegalDecisionError, UnmodeledCardError } from './errors';
@@ -240,7 +241,16 @@ export class Engine implements EngineDriver {
         requestId: request.requestId,
         decisionType: request.decisionType,
         actionId: action.id,
-        description: action.description,
+        // A combat-damage division is answered by its split, not by the preset option the
+        // `actionId` names ("All 3 damage to …"); describe what was actually submitted.
+        description:
+          request.combatDamageSplit !== undefined && response.combatDamageSplit !== undefined
+            ? describeDamageSplit(
+                this.ctx,
+                request.combatDamageSplit.amount,
+                response.combatDamageSplit,
+              )
+            : action.description,
         targets: [...targets.entries()].map(([slot, choice]) => ({ slot, choice })),
         // Preserve the exact wire response as submitted. The targets field above is the
         // normalized engine outcome (including forced single-option slots); replay needs both.
