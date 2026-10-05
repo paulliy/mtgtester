@@ -12,6 +12,7 @@ import { computePriorityOptions, computeTargetOptions } from '../src/actions/leg
 import type { PriorityActionPayload } from '../src/actions/legal';
 import { applyPriorityAction } from '../src/actions/apply';
 import { runCombatPhase } from '../src/combat/combat';
+import { resolveTopOfStack } from '../src/stack/stack';
 import { executeAbility } from '../src/effects/resolve';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { priorityCheckpoint } from '../src/sba/sba';
@@ -841,5 +842,75 @@ describe('layer cache (fuzz: MTG_VERIFY_LAYER_CACHE)', () => {
     expect(computeCharacteristics(ctx, zurgo).keywords).toContain('hexproof');
     ctx.state.turnNumber += 1;
     expect(computeCharacteristics(ctx, zurgo).keywords).not.toContain('hexproof');
+  });
+});
+
+describe('review follow-ups (Greptile on PR #12)', () => {
+  it('a cost reduction also applies to an additional cost such as kicker (CR 601.2f)', () => {
+    const ctx = pod();
+    ctx.state.phase = 'precombatMain';
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Sweep Reducer',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        oracleText: 'Instant and sorcery spells you cast cost {1} less to cast.',
+      }),
+    );
+    spawn(ctx, 'P1', mountain());
+    const card = conjure(ctx, 'P1', redBolt(), 'hand');
+    const def = ctx.defs.get(card.oracleId)!;
+    def.optionalAdditionalCost = {
+      mechanic: 'kicker',
+      cost: { generic: 1, colored: { W: 0, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },
+    };
+    // {R} + kicker {1} − {1} = {R}: one Mountain pays for the kicked cast.
+    const kicked = computePriorityOptions(ctx, ctx.state.players[0]!).find(
+      (o) =>
+        o.type === 'castSpell' &&
+        (o.payload as { optionalCostCount?: number }).optionalCostCount === 1,
+    );
+    expect(kicked).toBeDefined();
+    expect(() =>
+      pump(
+        applyPriorityAction(ctx, ctx.state.players[0]!, kicked!.payload as PriorityActionPayload, {
+          index: 0,
+          targets: new Map([[0, 'P2' as ObjectId]]),
+        }),
+      ),
+    ).not.toThrow();
+  });
+
+  it("protection uses a departed source's last known colors, not its printed ones (CR 702.16)", () => {
+    const ctx = pod();
+    const def = registerDef(
+      ctx,
+      oracle({ name: 'Sweep Red Pinger', typeLine: 'Creature — Elemental', colors: ['R'] }),
+    );
+    const proRed = spawn(ctx, 'P2', proRedBear());
+    // The red source was colorless when its ability went on the stack, then left the battlefield.
+    ctx.state.stack.push({
+      id: 'o-sweep-ping' as ObjectId,
+      sourceId: 'sweep-pinger',
+      controllerId: 'P1',
+      kind: 'activatedAbility',
+      description: 'Sweep Red Pinger — ping',
+      targets: [proRed.id],
+      card: null,
+      ability: {
+        kind: 'activated',
+        targets: [{ kind: 'creature' }],
+        effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'const', n: 1 } }],
+      },
+      sourceColors: [],
+      sourceOracleId: def.oracleId,
+      sourceCardId: 'sweep-pinger',
+      isCommanderCast: false,
+    });
+    pump(resolveTopOfStack(ctx));
+    expect(ctx.state.eventLog.some((e) => e.type === 'fizzle')).toBe(false);
+    expect(proRed.damageMarked).toBe(1);
   });
 });

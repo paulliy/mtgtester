@@ -542,7 +542,7 @@ export function* applyPriorityAction(
           throw new Error('non-mana alternative cost condition is not met');
         }
         castingAdditionalCosts = [...castingAdditionalCosts, ...(alt.costs ?? [])];
-        cost = payload.fromGraveyard === true ? applyRed(alt.manaCost) : emptyCost();
+        cost = payload.fromGraveyard === true ? alt.manaCost : emptyCost();
         exileOnResolution = alt.exileOnResolution === true;
         escaped = alt.escaped === true;
         ability = resolveCastAbility(def, undefined, obj.name) ?? {
@@ -554,7 +554,7 @@ export function* applyPriorityAction(
       } else if (payload.alternativeCast === 'overload') {
         const alt = def.alternativeCasts?.find((a) => a.kind === 'overload');
         if (!alt) throw new Error('missing overload cost');
-        cost = applyRed(alt.manaCost);
+        cost = alt.manaCost;
         ability = {
           kind: 'spell',
           targets: [],
@@ -566,12 +566,11 @@ export function* applyPriorityAction(
           def.alternativeCasts?.[payload.altIndex ?? 0] ??
           def.alternativeCasts?.find((a) => a.kind === payload.alternativeCast);
         if (!alt) throw new Error(`missing ${payload.alternativeCast} cost`);
-        cost = applyRed(alt.manaCost);
+        cost = alt.manaCost;
         ability = alt.ability ?? { kind: 'spell', targets: [], effects: [] };
         targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
       } else {
-        // CR 601.2f: reduce the total, after X is announced — matching `computePriorityOptions`.
-        cost = applyRed(withX(addGeneric(def.manaCost ?? emptyCost(), tax), payload.x ?? 0));
+        cost = withX(addGeneric(def.manaCost ?? emptyCost(), tax), payload.x ?? 0);
         const selectedModes =
           payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
         castingAdditionalCosts = [
@@ -623,7 +622,9 @@ export function* applyPriorityAction(
         def.colors,
       );
       const allTargets = [...targets, ...Object.values(counted.countTargets).flat()];
-      cost = addManaCosts(cost, manaPortionOf(castingAdditionalCosts));
+      // CR 601.2f: reductions apply once, to the TOTAL — mana cost with X announced plus every
+      // additional cost — exactly as `computePriorityOptions` priced the offered action.
+      cost = applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts)));
       const targetLifeTax = targetLifeTaxFor(ctx, player.id, allTargets);
       if (player.life < targetLifeTax) {
         throw new Error('engine bug: target life tax became unpayable at application time');
@@ -1016,6 +1017,7 @@ export function* applyPriorityAction(
           : {}),
         card: null,
         ability: announced,
+        sourceColors: colorsOf(ctx, perm),
         sourceOracleId: perm.oracleId,
         sourceCardId: perm.cardId,
         isCommanderCast: false,

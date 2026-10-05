@@ -215,6 +215,8 @@ export interface EffectSource {
   controllerId: PlayerId;
   /** Present only while a spell itself is resolving; permits self-replacement destinations. */
   resolvingStackObject?: EngineStackObject;
+  /** The source's colors as its ability went on the stack — protection's last known information. */
+  lastKnownColors?: readonly Color[];
 }
 
 /** Deal non-combat or combat damage from `source` to a creature. */
@@ -386,7 +388,7 @@ function dealDamageToObject(
   const sourceHasDeathtouch =
     sourcePermanent !== undefined && hasKeyword(ctx, sourcePermanent, 'deathtouch');
   // Protection (CR 702.16e) prevents damage from a protected-from source, noncombat included.
-  const sourceColors = sourceColorsOf(ctx, source.cardId, source.oracleId);
+  const sourceColors = sourceColorsOf(ctx, source.cardId, source.oracleId, source.lastKnownColors);
   const targetPlayer = ctx.state.players.find((p) => p.id === id);
   if (targetPlayer !== undefined) {
     dealDamageToPlayer(ctx, source, targetPlayer, amount, {
@@ -1317,7 +1319,7 @@ export function* executeAbility(
       id,
       spec,
       source.controllerId,
-      sourceColorsOf(ctx, source.cardId, source.oracleId),
+      sourceColorsOf(ctx, source.cardId, source.oracleId, source.lastKnownColors),
       scope.eventPlayerId,
       source.cardId,
     );

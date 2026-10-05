@@ -184,6 +184,12 @@ export interface EngineStackObject extends StackObject {
   sourceCardId: CardId;
   /** True when the "spell" is a commander cast from the command zone. */
   isCommanderCast: boolean;
+  /**
+   * The source's colors as this ability was put on the stack — last known information for
+   * protection (CR 702.16) once the source has left the battlefield, where its printed colors
+   * could be wrong (a red permanent made colorless).
+   */
+  sourceColors?: Color[];
   /** Kind of alternative cast used, if any (overload, adventure, omen). */
   alternativeCastKind?: 'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree';
   altIndex?: number;

@@ -66,7 +66,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   // otherwise targetless mode fizzle.
   const specs = top.ability?.targets ?? [];
   // Protection gained in response makes a target illegal too (CR 702.16b, 608.2b).
-  const sourceColors = sourceColorsOf(ctx, top.sourceCardId, top.sourceOracleId);
+  const sourceColors = sourceColorsOf(ctx, top.sourceCardId, top.sourceOracleId, top.sourceColors);
   let anyChosen = false;
   let anyLegal = false;
   top.targets.forEach((t, i) => {
@@ -126,6 +126,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         oracleId: top.sourceOracleId,
         controllerId: top.controllerId,
         ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
+        ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
       },
       top.ability,
       top.targets,

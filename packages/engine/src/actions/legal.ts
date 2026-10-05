@@ -991,13 +991,14 @@ export function computePriorityOptions(
     const additionalManaCost = manaPortionOf(spellAdditionalCosts);
     const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
     const unreduced = reboundCast ? emptyCost() : addGeneric(def.manaCost, tax);
-    // CR 601.2f: reductions apply to the total cost, after {X} has a value — so a reduction can
-    // pay for X's share, not just for whatever generic mana the printed cost happens to have.
-    const costWithX = (x: number): ParsedManaCost => {
-      let c = withX(unreduced, x);
-      if (reduction.colored !== undefined) c = subtractColored(c, reduction.colored);
-      return subtractGeneric(c, reduction.generic);
+    // CR 601.2f: reductions apply to the TOTAL cost — the mana cost with {X} given a value, plus
+    // every additional cost (kicker, mode costs) — so a reduction can pay for X's share or a
+    // kicker's, not just for whatever generic mana the printed cost happens to have.
+    const reduce = (c: ParsedManaCost): ParsedManaCost => {
+      const colored = reduction.colored === undefined ? c : subtractColored(c, reduction.colored);
+      return subtractGeneric(colored, reduction.generic);
     };
+    const costWithX = (x: number): ParsedManaCost => withX(unreduced, x);
 
     // {X} is announced as part of casting (CR 601.2b), so each affordable value of X is its own
     // option. Enumerated rather than asked as a follow-up decision because the option menu is
@@ -1020,7 +1021,7 @@ export function computePriorityOptions(
       for (let x = 0; ; x++) {
         if (
           !canPay(
-            addManaCosts(costWithX(x), additionalManaCost),
+            reduce(addManaCosts(costWithX(x), additionalManaCost)),
             player.manaEntries,
             sources,
             allows,
@@ -1044,7 +1045,7 @@ export function computePriorityOptions(
 
     for (const x of xChoices) {
       const cost = costWithX(x);
-      if (!canPay(cost, player.manaEntries, sources, allows, player.life)) continue;
+      if (!canPay(reduce(cost), player.manaEntries, sources, allows, player.life)) continue;
 
       for (const selectedModes of selections) {
         const targets = computeCastTargets(
@@ -1065,7 +1066,8 @@ export function computePriorityOptions(
               manaPortionOf([...spellAdditionalCosts, ...modeCosts]),
             );
             for (let i = 0; i < count; i++) prospective = addManaCosts(prospective, optional.cost);
-            if (!canPay(prospective, player.manaEntries, sources, allows, player.life)) break;
+            if (!canPay(reduce(prospective), player.manaEntries, sources, allows, player.life))
+              break;
             optionalCounts.push(count);
           }
         }
@@ -1086,7 +1088,7 @@ export function computePriorityOptions(
             }
           }
           const additionalCosts = [...spellAdditionalCosts, ...modeCosts, ...optionalCosts];
-          const selectionCost = addManaCosts(cost, manaPortionOf(additionalCosts));
+          const selectionCost = reduce(addManaCosts(cost, manaPortionOf(additionalCosts)));
           if (!canPay(selectionCost, player.manaEntries, sources, allows, player.life)) continue;
           if (
             !canPaySpellAdditionalCosts(ctx, player, additionalCosts, obj.cardId, sourceInHand, x)
@@ -1284,7 +1286,7 @@ export function computePriorityOptions(
         if (fromGraveyard ? alt.from !== 'graveyard' : alt.from === 'graveyard') continue;
         if (alt.kind === 'nonMana') {
           const alternativeCosts = [...spellAdditionalCosts, ...(alt.costs ?? [])];
-          const cost = addManaCosts(applyRed(alt.manaCost), manaPortionOf(alternativeCosts));
+          const cost = applyRed(addManaCosts(alt.manaCost, manaPortionOf(alternativeCosts)));
           if (
             (alt.condition === undefined ||
               evaluateCondition(ctx, alt.condition, {
@@ -1327,7 +1329,7 @@ export function computePriorityOptions(
             }
           }
         } else if (alt.kind === 'overload') {
-          const cost = addManaCosts(applyRed(alt.manaCost), additionalManaCost);
+          const cost = applyRed(addManaCosts(alt.manaCost, additionalManaCost));
           if (
             canPay(cost, player.manaEntries, sources, allows, player.life) &&
             canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)
@@ -1357,7 +1359,7 @@ export function computePriorityOptions(
           // commander's Adventure/Omen half is not offered from the command zone rather than
           // offered at the wrong price and then looked for in hand.
           if (fromCommand) continue;
-          const cost = addManaCosts(applyRed(alt.manaCost), additionalManaCost);
+          const cost = applyRed(addManaCosts(alt.manaCost, additionalManaCost));
           if (
             canPay(cost, player.manaEntries, sources, allows, player.life) &&
             canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)

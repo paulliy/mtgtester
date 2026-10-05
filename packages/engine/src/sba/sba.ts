@@ -632,6 +632,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     targets: chosen,
     card: null,
     ability,
+    sourceColors,
     sourceOracleId: trigger.sourceOracleId,
     sourceCardId: trigger.sourceCardId,
     isCommanderCast: false,
