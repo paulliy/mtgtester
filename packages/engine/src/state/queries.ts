@@ -117,6 +117,25 @@ export function colorsOf(ctx: GameContext, perm: EnginePermanent): Color[] {
   return computeCharacteristics(ctx, perm).colors;
 }
 
+/**
+ * The colors of whatever a spell or ability comes from, for protection (CR 702.16): a source
+ * still on the battlefield has its current colors; anything else (a spell on the stack, a card in
+ * hand activating channel/cycling, a source that has since left) uses its printed colors as last
+ * known information. Emblems and other cardless sources have no definition and are colorless.
+ */
+export function sourceColorsOf(
+  ctx: GameContext,
+  cardId: string,
+  oracleId: string,
+  /** Colors captured while the source was still on the battlefield (last known information). */
+  lastKnown?: readonly Color[],
+): Color[] {
+  const perm = ctx.state.battlefield.find((p) => p.cardId === cardId);
+  if (perm !== undefined) return colorsOf(ctx, perm);
+  if (lastKnown !== undefined) return [...lastKnown];
+  return [...(ctx.defs.get(oracleId as OracleId)?.colors ?? [])];
+}
+
 /** Players still in the game, in turn order starting from the active player (APNAP). */
 export function playersInApnapOrder(ctx: GameContext): EnginePlayerState[] {
   const s = ctx.state;

@@ -8,6 +8,7 @@
  */
 
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
+import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import {
   abilityForModes,
   abilityModeLabel,
@@ -24,7 +25,7 @@ import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
 import { breakYieldsForStop } from '../turn/stops';
 import { consumeRegenerationShield, moveObject, movePermanentsToGraveyard } from '../state/objects';
-import { isCreaturePermanent, playersInApnapOrder } from '../state/queries';
+import { isCreaturePermanent, playersInApnapOrder, sourceColorsOf } from '../state/queries';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -60,19 +61,40 @@ function processEliminations(ctx: GameContext): void {
     for (const perm of leaving) {
       debug(ctx, 'zoneChange', `${perm.name} leaves the game with its owner ${player.id}`);
     }
+    // Effects giving the leaving player control of other players' permanents end (CR 800.4a),
+    // so each returns to its owner — removed from combat and newly controlled (CR 302.6) —
+    // rather than lingering on the battlefield under a player who is no longer in the game.
+    for (const perm of s.battlefield) {
+      if (perm.controllerId !== player.id) continue;
+      perm.controllerId = perm.ownerId;
+      perm.timestamp = s.nextTimestamp++;
+      perm.summoningSick = true;
+      perm.attacking = null;
+      perm.blocking = null;
+      perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
+      debug(ctx, 'zoneChange', `${perm.name} returns to its owner ${perm.ownerId}`);
+    }
+    s.delayedTriggers = s.delayedTriggers.filter((t) => t.controllerId !== player.id);
     s.stack = s.stack.filter(
       (so) => so.controllerId !== player.id && so.card?.ownerId !== player.id,
     );
     s.pendingTriggers = s.pendingTriggers.filter((t) => t.controllerId !== player.id);
     s.exile = s.exile.filter((o) => o.ownerId !== player.id);
+    // Every other object they own leaves the game too: nothing may still count their graveyard
+    // (Tarmogoyf), target a card in it (Reanimate), or count their hand or library.
+    player.hand = [];
+    player.library = [];
+    player.graveyard = [];
+    player.commandZone = [];
 
     // Combat cleanup: their creatures are gone; attackers pointed at them stand down
     // (CR 800.4e — no combat damage is assigned to a player who has left).
     const leavingIds = new Set(leaving.map((p) => p.id));
+    // An attacker whose blocker left stays blocked (CR 509.1h); the departed blocker just no
+    // longer exists to receive damage, so `blockedByOrdered` keeps its id.
     for (const perm of s.battlefield) {
       if (perm.attacking === player.id) perm.attacking = null;
       if (perm.blocking !== null && leavingIds.has(perm.blocking)) perm.blocking = null;
-      perm.blockedByOrdered = perm.blockedByOrdered.filter((id) => !leavingIds.has(id));
     }
 
     // Seating: survivors only (brief §5.2). Keep activePlayerIndex pointing at the same
@@ -85,6 +107,19 @@ function processEliminations(ctx: GameContext): void {
       if (idx >= 0) s.activePlayerIndex = idx;
     } else if (s.activePlayerIndex >= s.turnOrder.length) {
       s.activePlayerIndex = 0;
+    }
+
+    // CR 725.4: if the monarch leaves, the active player becomes the monarch — or, when the
+    // active player is the one leaving, the next player in turn order (who now sits at
+    // `activePlayerIndex`, since the leaving player's seat was just removed).
+    if (s.monarchPlayerId === player.id) {
+      const active = s.players.find((p) => p.id === s.currentTurnPlayer);
+      const successor =
+        active !== undefined && !active.hasLost
+          ? active.id
+          : (s.turnOrder[s.activePlayerIndex] ?? null);
+      s.monarchPlayerId = successor;
+      if (successor !== null) emit(ctx, 'monarch', { player: successor }, successor);
     }
   }
 
@@ -108,7 +143,15 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
 
   // --- Player checks ---
   for (const player of s.players) {
-    if (player.hasLost) continue;
+    if (player.hasLost) {
+      // A "you lose the game" effect (CR 104.3a) marks the player directly; they still have to
+      // leave the game here, or they would keep their seat, permanents and turns.
+      if (!s.eliminatedPlayers.includes(player.id)) {
+        player.lossReason ??= 'other';
+        acted = true;
+      }
+      continue;
+    }
     if (player.life <= 0) {
       markLoss(ctx, player, 'lifeZeroOrLess');
       acted = true;
@@ -344,6 +387,8 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   // removed. Choosing at resolution instead (as this once did) asked for a target the chosen
   // mode never used, let that target's illegality fizzle a targetless mode, and dropped the
   // whole trigger when only one mode lacked a target.
+  // Protection (CR 702.16): a triggered ability can't target what is protected from its source.
+  const sourceColors = sourceColorsOf(ctx, trigger.sourceCardId, trigger.sourceOracleId);
   let ability: Ability = trigger.ability;
   let activeSlots: number[] | undefined;
   let modeLabel: string | undefined;
@@ -356,8 +401,10 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
           ctx,
           spec,
           trigger.controllerId,
-          undefined,
+          sourceColors,
           trigger.scope?.eventPlayerId,
+          undefined,
+          trigger.sourceCardId,
         ).length,
     );
     if (selections.length === 0) {
@@ -407,8 +454,10 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       ctx,
       spec,
       trigger.controllerId,
-      undefined,
+      sourceColors,
       trigger.scope?.eventPlayerId,
+      undefined,
+      trigger.sourceCardId,
     );
     if (options.length === 0) {
       emit(
@@ -499,9 +548,10 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         ctx,
         spec,
         trigger.controllerId,
-        undefined,
+        sourceColors,
         trigger.scope?.eventPlayerId,
         chosen,
+        trigger.sourceCardId,
       ).filter((id) => !alreadyChosen.has(id) && !picked.includes(id));
       if (candidates.length === 0) break;
       const canStop = picked.length >= count.min;
@@ -582,6 +632,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     targets: chosen,
     card: null,
     ability,
+    sourceColors,
     sourceOracleId: trigger.sourceOracleId,
     sourceCardId: trigger.sourceCardId,
     isCommanderCast: false,
@@ -594,6 +645,14 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   };
   s.stack.push(stackEntry);
   breakYieldsForStop(ctx, stackEntry);
+  // Ward and "becomes the target" watch every spell OR ABILITY (CR 702.21a), so a triggered
+  // ability's targets count exactly like a cast spell's or an activated ability's.
+  const allTargets = [
+    ...chosen.filter((target): target is ObjectId => target !== undefined),
+    ...Object.values(countTargets).flat(),
+  ];
+  queueWardTriggers(ctx, trigger.controllerId, id, allTargets);
+  queueBecomesTargetedTriggers(ctx, trigger.controllerId, allTargets);
   emit(ctx, 'triggerOnStack', { source: trigger.sourceName, description }, trigger.controllerId);
   debug(ctx, 'stack', `trigger on stack: ${trigger.sourceName} — ${description}`);
 }

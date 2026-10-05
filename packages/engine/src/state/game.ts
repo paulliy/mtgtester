@@ -122,7 +122,7 @@ export function createGame(config: GameConfig): GameContext {
     seed: config.seed,
     turnNumber: 0,
     activePlayerIndex: 0,
-    createdTokenThisTurn: { P1: false, P2: false, P3: false, P4: false },
+    createdTokenThisTurn: Object.fromEntries(players.map((p) => [p.id, false])),
     creaturesDiedThisTurn: 0,
     combatDamagePrevention: { all: false, players: {} },
     lifeFloorPlayers: {},

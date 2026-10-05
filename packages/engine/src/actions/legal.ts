@@ -41,6 +41,7 @@ import {
   cardZoneCandidate,
   canPlayFromZone,
   canPayNonManaCosts,
+  colorsOf,
   playFromZonePermission,
   castFromLibraryTopCandidates,
   castingSpellsBlockedFor,
@@ -568,7 +569,10 @@ export function permanentMatchesKind(
     case 'permanent':
       return true;
     case 'anyTarget':
-      return types.includes('Creature');
+      // CR 115.4: "any target" is a creature, player, planeswalker, or battle.
+      return (
+        types.includes('Creature') || types.includes('Planeswalker') || types.includes('Battle')
+      );
     case 'playerOrPlaneswalker':
       return types.includes('Planeswalker');
     case 'player':
@@ -632,6 +636,11 @@ export function computeTargetOptions(
    * the referenced slot has been chosen (falls back to the caster's own graveyard).
    */
   chosenTargets?: readonly ObjectId[],
+  /**
+   * The card id of the spell's or ability's source, so a filter's "another"/"other" (`OTHER`)
+   * excludes that source itself. Omitted ⇒ no source to exclude.
+   */
+  sourceCardId = '',
 ): ObjectId[] {
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
@@ -650,7 +659,15 @@ export function computeTargetOptions(
       ...(controller !== undefined ? { controller } : {}),
     };
     return [
-      ...computeTargetOptions(ctx, spellSpec, casterId, sourceColors, eventPlayerId, chosenTargets),
+      ...computeTargetOptions(
+        ctx,
+        spellSpec,
+        casterId,
+        sourceColors,
+        eventPlayerId,
+        chosenTargets,
+        sourceCardId,
+      ),
       ...computeTargetOptions(
         ctx,
         permanentSpec,
@@ -658,6 +675,7 @@ export function computeTargetOptions(
         sourceColors,
         eventPlayerId,
         chosenTargets,
+        sourceCardId,
       ),
     ];
   }
@@ -731,11 +749,11 @@ export function computeTargetOptions(
     .filter(
       (p) =>
         filter === undefined ||
-        matchesSelector(ctx, p, filter, { cardId: '', controllerId: casterId }),
+        matchesSelector(ctx, p, filter, { cardId: sourceCardId, controllerId: casterId }),
     )
     .map((p) => p.id);
 
-  // "Any target" is creature-or-player (CR 115.4); "player or planeswalker" is analogous.
+  // "Any target" adds players to its permanents (CR 115.4); "player or planeswalker" likewise.
   // Players are never hexproof-filtered.
   return kind === 'anyTarget' || kind === 'playerOrPlaneswalker'
     ? [...permanents, ...players]
@@ -774,7 +792,8 @@ function computeCastTargets(
   const slots: { slot: number; options: ObjectId[] }[] = [];
   for (const [slotNum, spec] of (def.spellAbility?.targets ?? []).entries()) {
     if (activeSlots !== undefined && !activeSlots.includes(slotNum)) continue;
-    const options = computeTargetOptions(ctx, spec, casterId);
+    // Protection (CR 702.16): a spell can't target a permanent protected from its colors.
+    const options = computeTargetOptions(ctx, spec, casterId, def.colors);
     if (spec.count !== undefined) {
       if (options.length < spec.count.min) return null;
       continue; // Counted targets are chosen at announcement after the action is selected.
@@ -971,11 +990,15 @@ export function computePriorityOptions(
       return;
     const additionalManaCost = manaPortionOf(spellAdditionalCosts);
     const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
-    let base = reboundCast ? emptyCost() : addGeneric(def.manaCost, tax);
-    if (reduction.colored !== undefined) {
-      base = subtractColored(base, reduction.colored);
-    }
-    base = subtractGeneric(base, reduction.generic);
+    const unreduced = reboundCast ? emptyCost() : addGeneric(def.manaCost, tax);
+    // CR 601.2f: reductions apply to the TOTAL cost — the mana cost with {X} given a value, plus
+    // every additional cost (kicker, mode costs) — so a reduction can pay for X's share or a
+    // kicker's, not just for whatever generic mana the printed cost happens to have.
+    const reduce = (c: ParsedManaCost): ParsedManaCost => {
+      const colored = reduction.colored === undefined ? c : subtractColored(c, reduction.colored);
+      return subtractGeneric(colored, reduction.generic);
+    };
+    const costWithX = (x: number): ParsedManaCost => withX(unreduced, x);
 
     // {X} is announced as part of casting (CR 601.2b), so each affordable value of X is its own
     // option. Enumerated rather than asked as a follow-up decision because the option menu is
@@ -998,7 +1021,7 @@ export function computePriorityOptions(
       for (let x = 0; ; x++) {
         if (
           !canPay(
-            addManaCosts(withX(base, x), additionalManaCost),
+            reduce(addManaCosts(costWithX(x), additionalManaCost)),
             player.manaEntries,
             sources,
             allows,
@@ -1021,8 +1044,8 @@ export function computePriorityOptions(
     );
 
     for (const x of xChoices) {
-      const cost = withX(base, x);
-      if (!canPay(cost, player.manaEntries, sources, allows, player.life)) continue;
+      const cost = costWithX(x);
+      if (!canPay(reduce(cost), player.manaEntries, sources, allows, player.life)) continue;
 
       for (const selectedModes of selections) {
         const targets = computeCastTargets(
@@ -1043,7 +1066,8 @@ export function computePriorityOptions(
               manaPortionOf([...spellAdditionalCosts, ...modeCosts]),
             );
             for (let i = 0; i < count; i++) prospective = addManaCosts(prospective, optional.cost);
-            if (!canPay(prospective, player.manaEntries, sources, allows, player.life)) break;
+            if (!canPay(reduce(prospective), player.manaEntries, sources, allows, player.life))
+              break;
             optionalCounts.push(count);
           }
         }
@@ -1064,7 +1088,7 @@ export function computePriorityOptions(
             }
           }
           const additionalCosts = [...spellAdditionalCosts, ...modeCosts, ...optionalCosts];
-          const selectionCost = addManaCosts(cost, manaPortionOf(additionalCosts));
+          const selectionCost = reduce(addManaCosts(cost, manaPortionOf(additionalCosts)));
           if (!canPay(selectionCost, player.manaEntries, sources, allows, player.life)) continue;
           if (
             !canPaySpellAdditionalCosts(ctx, player, additionalCosts, obj.cardId, sourceInHand, x)
@@ -1253,12 +1277,16 @@ export function computePriorityOptions(
       return subtractGeneric(b, reduction.generic);
     };
 
-    if (def.alternativeCasts && def.alternativeCasts.length > 0 && !fromExile) {
+    // Alternative casts from the top of the library are not offered: their payloads cannot say
+    // where the card is, and a top-of-library permission ("cast creature spells from the top")
+    // has not been checked against them — offering one made `applyPriorityAction` look in hand
+    // and throw (found by fuzzing an Omen card). Fail closed until both are modeled.
+    if (def.alternativeCasts && def.alternativeCasts.length > 0 && !fromExile && !fromLibraryTop) {
       for (const [index, alt] of def.alternativeCasts.entries()) {
         if (fromGraveyard ? alt.from !== 'graveyard' : alt.from === 'graveyard') continue;
         if (alt.kind === 'nonMana') {
           const alternativeCosts = [...spellAdditionalCosts, ...(alt.costs ?? [])];
-          const cost = addManaCosts(applyRed(alt.manaCost), manaPortionOf(alternativeCosts));
+          const cost = applyRed(addManaCosts(alt.manaCost, manaPortionOf(alternativeCosts)));
           if (
             (alt.condition === undefined ||
               evaluateCondition(ctx, alt.condition, {
@@ -1301,7 +1329,7 @@ export function computePriorityOptions(
             }
           }
         } else if (alt.kind === 'overload') {
-          const cost = addManaCosts(applyRed(alt.manaCost), additionalManaCost);
+          const cost = applyRed(addManaCosts(alt.manaCost, additionalManaCost));
           if (
             canPay(cost, player.manaEntries, sources, allows, player.life) &&
             canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)
@@ -1327,7 +1355,11 @@ export function computePriorityOptions(
             });
           }
         } else if (alt.kind === 'adventure' || alt.kind === 'omen') {
-          const cost = addManaCosts(applyRed(alt.manaCost), additionalManaCost);
+          // The payload below is hand-only (no commander tax, `fromCommand: false`), so a
+          // commander's Adventure/Omen half is not offered from the command zone rather than
+          // offered at the wrong price and then looked for in hand.
+          if (fromCommand) continue;
+          const cost = applyRed(addManaCosts(alt.manaCost, additionalManaCost));
           if (
             canPay(cost, player.manaEntries, sources, allows, player.life) &&
             canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)
@@ -1373,10 +1405,11 @@ export function computePriorityOptions(
     considerCast(libraryTop, false, true);
   for (const obj of player.graveyard) considerCast(obj, false, false, false, true);
   for (const obj of ctx.state.exile) {
-    if (obj.ownerId === player.id && obj.onAdventure === true) {
-      considerCast(obj, false, false, true);
-    }
-    if (obj.playableUntilEotBy === player.id) {
+    // One pass per card even when both permissions apply, or every option is offered twice.
+    if (
+      (obj.ownerId === player.id && obj.onAdventure === true) ||
+      obj.playableUntilEotBy === player.id
+    ) {
       considerCast(obj, false, false, true);
     }
   }
@@ -1477,7 +1510,10 @@ export function computePriorityOptions(
         sourceOracleId: perm.oracleId,
       });
       const reduction = activationCostReductionFor(ctx, player.id, perm.oracleId, perm.cardId);
-      const baseManaCost = subtractGeneric(manaPortionOf(activated.costs), reduction.generic);
+      const baseManaCost = manaPortionOf(activated.costs);
+      // CR 601.2f (via 602.2b): the reduction applies once X is part of the total.
+      const reducedWithX = (x: number): ParsedManaCost =>
+        subtractGeneric(withX(baseManaCost, x), reduction.generic);
 
       // {X} is announced as part of activating (CR 602.1b), same treatment casting gives it —
       // every affordable value is its own option (Steel Hellkite).
@@ -1486,15 +1522,14 @@ export function computePriorityOptions(
       if (xSymbols === 0) xChoices.push(0);
       else {
         for (let x = 0; ; x++) {
-          if (!canPay(withX(baseManaCost, x), player.manaEntries, usable, allows, player.life))
-            break;
+          if (!canPay(reducedWithX(x), player.manaEntries, usable, allows, player.life)) break;
           xChoices.push(x);
         }
         if (xChoices.length === 0) continue;
       }
 
       for (const x of xChoices) {
-        const manaCost = withX(baseManaCost, x);
+        const manaCost = reducedWithX(x);
         if (!canPay(manaCost, player.manaEntries, usable, allows, player.life)) continue;
         if (!canPayNonManaCosts(ctx, perm, activated.costs, x)) continue;
         const jointSources = activationManaSources(ctx, player, perm, activated.costs, manaCost, x);
@@ -1508,7 +1543,15 @@ export function computePriorityOptions(
           (e: import('../cards/ability').Effect) => e.op === 'attachSelfTo',
         );
         const targetOptionsFor = (spec: TargetSpec): ObjectId[] => {
-          const targetOptions = computeTargetOptions(ctx, spec, player.id);
+          const targetOptions = computeTargetOptions(
+            ctx,
+            spec,
+            player.id,
+            colorsOf(ctx, perm),
+            undefined,
+            undefined,
+            perm.cardId,
+          );
           return isAttachAbility && perm.attachedTo !== null
             ? targetOptions.filter((id) => id !== perm.attachedTo)
             : targetOptions;
@@ -1612,7 +1655,7 @@ export function computePriorityOptions(
       const slots: { slot: number; options: ObjectId[] }[] = [];
       let missingTarget = false;
       for (const [slot, spec] of activated.ability.targets.entries()) {
-        const targetOptions = computeTargetOptions(ctx, spec, player.id);
+        const targetOptions = computeTargetOptions(ctx, spec, player.id, def.colors);
         if (spec.count !== undefined) {
           if (targetOptions.length < spec.count.min) missingTarget = true;
           continue;
@@ -1665,6 +1708,11 @@ export function computePriorityOptions(
         kind: 'activateAbility',
         sourceOracleId: card.oracleId,
       });
+      // Mana and exiling the card itself are the only costs the graveyard payment path pays;
+      // anything else must not be offered rather than offered for free (fail closed, like the
+      // hand path above).
+      if (activated.costs.some((c) => c.kind !== 'mana' && c.kind !== 'exileSelfFromGraveyard'))
+        continue;
       const manaCost = manaPortionOf(activated.costs);
       if (!canPay(manaCost, player.manaEntries, sources, allows, player.life)) continue;
       if (activated.ability.targets.length > 0) continue; // not needed by any card in this pool
@@ -1727,7 +1775,7 @@ export function validateChosenTargets(
     if (choice === undefined) {
       throw new Error(`missing target for slot ${slotNum} of ${def.name}`);
     }
-    const legal = computeTargetOptions(ctx, spec, casterId);
+    const legal = computeTargetOptions(ctx, spec, casterId, def.colors);
     if (!legal.includes(choice)) {
       throw new Error(`illegal target ${choice} for slot ${slotNum} of ${def.name}`);
     }

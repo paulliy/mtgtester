@@ -118,20 +118,22 @@ const escapeSpell = oracle({
 });
 
 describe('graveyard alternative casts', () => {
-  it('parses Escape with its graveyard exile cost and resolution replacement', () => {
+  it('parses Escape with its graveyard exile cost and no resolution replacement', () => {
     const def = interpretCard(escapeSpell);
     expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
     expect(def.alternativeCasts).toEqual([
       expect.objectContaining({
         kind: 'nonMana',
         from: 'graveyard',
-        exileOnResolution: true,
+        escaped: true,
         costs: [{ kind: 'exileOtherCardsFromGraveyard', count: 2 }],
       }),
     ]);
+    // CR 702.138: unlike flashback, escape never exiles the spell as it leaves the stack.
+    expect(def.alternativeCasts?.[0]).not.toHaveProperty('exileOnResolution');
   });
 });
-it('offers and resolves Escape from the graveyard, exiling its other-card cost and the spell', () => {
+it('offers and resolves Escape from the graveyard, exiling its other-card cost; the spell returns to the graveyard', () => {
   const ctx = pod('escape-cast');
   const spell = conjure(ctx, 'P1', escapeSpell, 'graveyard');
   const fodderA = conjure(ctx, 'P1', forest(), 'graveyard');
@@ -191,7 +193,9 @@ it('offers and resolves Escape from the graveyard, exiling its other-card cost a
 
   pump(resolveTopOfStack(ctx));
 
-  expect(ctx.state.exile.some((card) => card.cardId === spell.cardId)).toBe(true);
+  // An escaped sorcery goes back to the graveyard (CR 702.138), ready to escape again.
+  expect(ctx.state.exile.some((card) => card.cardId === spell.cardId)).toBe(false);
+  expect(player.graveyard.some((card) => card.cardId === spell.cardId)).toBe(true);
   expect(ctx.state.stack).toHaveLength(0);
 });
 describe('non-mana alternative casts', () => {

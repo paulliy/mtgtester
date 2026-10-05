@@ -177,6 +177,29 @@ export function queueStepTriggers(
   ctx.state.delayedTriggers = remainingDelayed;
 }
 
+/**
+ * CR 725.2: the monarch designation carries an inherent triggered ability — "At the beginning of
+ * the monarch's end step, that player draws a card." It uses the stack like any other trigger, so
+ * it is queued alongside the step's other beginning-of-end-step triggers rather than drawn inline.
+ */
+function queueMonarchTrigger(ctx: GameContext): void {
+  const monarchId = ctx.state.monarchPlayerId;
+  if (monarchId === null || monarchId !== ctx.state.currentTurnPlayer) return;
+  ctx.state.pendingTriggers.push({
+    controllerId: monarchId,
+    sourceCardId: 'monarch',
+    sourceOracleId: '' as never,
+    sourceName: 'The monarch',
+    ability: {
+      kind: 'triggered',
+      targets: [],
+      effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+      description: 'At the beginning of your end step, draw a card',
+    },
+  });
+  debug(ctx, 'stack', `monarch end-step trigger queued: ${monarchId}`);
+}
+
 /** Cleanup step (CR 514), repeating while SBAs/triggers give players priority (514.3a). */
 function* cleanupStep(ctx: GameContext): GameGen<void> {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
@@ -250,10 +273,6 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   for (const player of ctx.state.players) player.cardsDrawnThisDrawStep = 0;
   queueStepTriggers(ctx, 'drawStep');
   yield* drawCards(ctx, ap, 1); // multiplayer: first-turn draw included (brief §5.3)
-  if (ctx.state.monarchPlayerId === ap.id) {
-    yield* drawCards(ctx, ap, 1);
-    emit(ctx, 'draw', { name: 'a card (monarch)' }, ap.id);
-  }
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
@@ -286,6 +305,7 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   // (CR 513.1), before anyone receives priority in it.
   setPhase(ctx, 'ending', 'end');
   queueStepTriggers(ctx, 'endStep');
+  queueMonarchTrigger(ctx);
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 

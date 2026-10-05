@@ -5,7 +5,7 @@ import { activationManaSources } from '../mana/activation';
  * legality holds; payment plans are recomputed here and must succeed.
  */
 
-import type { ObjectId, PlayerId } from '@mtg/shared';
+import type { Color, ObjectId, PlayerId } from '@mtg/shared';
 import {
   abilityForModes,
   abilityModeLabel,
@@ -48,6 +48,7 @@ import {
 import {
   activatingAbilitiesBlockedFor,
   castFromLibraryTopCandidates,
+  colorsOf,
   getDefByOracleId,
   playFromZonePermission,
   wardCostOf,
@@ -193,7 +194,7 @@ function* payActivationCosts(
  * anything. As a trigger it also behaves correctly: it goes on the stack above the spell, so
  * the spell is still countered if ward resolves, and other responses can happen in between.
  */
-function queueWardTriggers(
+export function queueWardTriggers(
   ctx: GameContext,
   controllerId: PlayerId,
   stackObjectId: ObjectId,
@@ -236,7 +237,7 @@ function describeWardCost(cost: WardCost): string {
  * permanent named in `targets` just became a target, regardless of whose. `queueTriggersForEvent`
  * itself enforces "an opponent controls" against `sourceControllerId`.
  */
-function queueBecomesTargetedTriggers(
+export function queueBecomesTargetedTriggers(
   ctx: GameContext,
   sourceControllerId: PlayerId,
   targets: readonly ObjectId[],
@@ -293,6 +294,8 @@ function* chooseCountTargets(
   sourceCardId: string,
   ordinaryTargets: readonly ObjectId[],
   activeSlots?: readonly number[],
+  /** The spell's or ability source's colors, for protection (CR 702.16). */
+  sourceColors?: readonly Color[],
 ): GameGen<{
   countTargets: Record<number, ObjectId[]>;
   divisionAmounts: Record<ObjectId, number>;
@@ -318,9 +321,10 @@ function* chooseCountTargets(
         ctx,
         spec,
         playerId,
-        undefined,
+        sourceColors,
         undefined,
         ordinaryTargets,
+        sourceCardId,
       ).filter((id) => !chosen.has(id));
       if (candidates.length === 0) break;
       const canStop = picked.length >= spec.count.min;
@@ -538,7 +542,7 @@ export function* applyPriorityAction(
           throw new Error('non-mana alternative cost condition is not met');
         }
         castingAdditionalCosts = [...castingAdditionalCosts, ...(alt.costs ?? [])];
-        cost = payload.fromGraveyard === true ? applyRed(alt.manaCost) : emptyCost();
+        cost = payload.fromGraveyard === true ? alt.manaCost : emptyCost();
         exileOnResolution = alt.exileOnResolution === true;
         escaped = alt.escaped === true;
         ability = resolveCastAbility(def, undefined, obj.name) ?? {
@@ -550,7 +554,7 @@ export function* applyPriorityAction(
       } else if (payload.alternativeCast === 'overload') {
         const alt = def.alternativeCasts?.find((a) => a.kind === 'overload');
         if (!alt) throw new Error('missing overload cost');
-        cost = applyRed(alt.manaCost);
+        cost = alt.manaCost;
         ability = {
           kind: 'spell',
           targets: [],
@@ -562,11 +566,11 @@ export function* applyPriorityAction(
           def.alternativeCasts?.[payload.altIndex ?? 0] ??
           def.alternativeCasts?.find((a) => a.kind === payload.alternativeCast);
         if (!alt) throw new Error(`missing ${payload.alternativeCast} cost`);
-        cost = applyRed(alt.manaCost);
+        cost = alt.manaCost;
         ability = alt.ability ?? { kind: 'spell', targets: [], effects: [] };
         targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
       } else {
-        cost = withX(applyRed(addGeneric(def.manaCost ?? emptyCost(), tax)), payload.x ?? 0);
+        cost = withX(addGeneric(def.manaCost ?? emptyCost(), tax), payload.x ?? 0);
         const selectedModes =
           payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
         castingAdditionalCosts = [
@@ -615,9 +619,12 @@ export function* applyPriorityAction(
           def,
           payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined),
         ),
+        def.colors,
       );
       const allTargets = [...targets, ...Object.values(counted.countTargets).flat()];
-      cost = addManaCosts(cost, manaPortionOf(castingAdditionalCosts));
+      // CR 601.2f: reductions apply once, to the TOTAL — mana cost with X announced plus every
+      // additional cost — exactly as `computePriorityOptions` priced the offered action.
+      cost = applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts)));
       const targetLifeTax = targetLifeTaxFor(ctx, player.id, allTargets);
       if (player.life < targetLifeTax) {
         throw new Error('engine bug: target life tax became unpayable at application time');
@@ -769,7 +776,7 @@ export function* applyPriorityAction(
           const choice = outcome.targets.get(slot);
           if (choice === undefined)
             throw new Error(`missing target for slot ${slot} of ${card.name}`);
-          if (!computeTargetOptions(ctx, spec, player.id).includes(choice)) {
+          if (!computeTargetOptions(ctx, spec, player.id, def.colors).includes(choice)) {
             throw new Error(`illegal target ${choice} for slot ${slot} of ${card.name}`);
           }
           targets.push(choice);
@@ -781,6 +788,8 @@ export function* applyPriorityAction(
           player.id,
           card.cardId,
           targets,
+          undefined,
+          def.colors,
         );
         const allTargets = [...targets, ...Object.values(counted.countTargets).flat()];
 
@@ -858,10 +867,15 @@ export function* applyPriorityAction(
         ][payload.index];
         if (activated === undefined) throw new Error('engine bug: activated ability index invalid');
 
-        const manaCost = activated.costs.find(
-          (c): c is Extract<AbilityCost, { kind: 'mana' }> => c.kind === 'mana',
-        );
-        if (manaCost !== undefined) yield* payManaCost(ctx, player, manaCost.cost);
+        // Every mana component, for the same purpose `computePriorityOptions` priced it with —
+        // otherwise mana that may only pay for activations would make an offered action unpayable.
+        const manaCost = manaPortionOf(activated.costs);
+        if (totalPips(manaCost) > 0) {
+          yield* payManaCost(ctx, player, manaCost, {
+            kind: 'activateAbility',
+            sourceOracleId: card.oracleId,
+          });
+        }
         if (activated.costs.some((c) => c.kind === 'exileSelfFromGraveyard')) {
           yield* moveObject(ctx, card, { zone: 'exile' });
         }
@@ -954,7 +968,16 @@ export function* applyPriorityAction(
         const choice = outcome.targets.get(slot);
         if (choice === undefined)
           throw new Error(`missing target for slot ${slot} of ${perm.name}`);
-        if (!computeTargetOptions(ctx, spec, player.id).includes(choice)) {
+        const legal = computeTargetOptions(
+          ctx,
+          spec,
+          player.id,
+          colorsOf(ctx, perm),
+          undefined,
+          undefined,
+          perm.cardId,
+        );
+        if (!legal.includes(choice)) {
           throw new Error(`illegal target ${choice} for slot ${slot} of ${perm.name}`);
         }
         targets[slot] = choice;
@@ -967,6 +990,7 @@ export function* applyPriorityAction(
         perm.cardId,
         targets.filter((id): id is ObjectId => id !== undefined),
         activeSlots,
+        colorsOf(ctx, perm),
       );
       const allTargets = [
         ...targets.filter((id): id is ObjectId => id !== undefined),
@@ -993,6 +1017,7 @@ export function* applyPriorityAction(
           : {}),
         card: null,
         ability: announced,
+        sourceColors: colorsOf(ctx, perm),
         sourceOracleId: perm.oracleId,
         sourceCardId: perm.cardId,
         isCommanderCast: false,
@@ -1014,14 +1039,16 @@ export function* applyPriorityAction(
         perm.oracleId,
         perm.cardId,
       );
-      const costsToPay = activated.costs.map((c) =>
-        c.kind === 'mana'
-          ? {
-              ...c,
-              cost: withX(subtractGeneric(c.cost, activationReduction.generic), payload.x ?? 0),
-            }
-          : c,
-      );
+      // The reduction applies once to the TOTAL mana cost with X announced (CR 601.2f), the way
+      // `computePriorityOptions` priced it — spread across mana components, never applied twice.
+      let reductionLeft = activationReduction.generic;
+      const costsToPay = activated.costs.map((c) => {
+        if (c.kind !== 'mana') return c;
+        const announced = withX(c.cost, payload.x ?? 0);
+        const reduced = subtractGeneric(announced, reductionLeft);
+        reductionLeft -= announced.generic - reduced.generic;
+        return { ...c, cost: reduced };
+      });
       const paymentScope = yield* payActivationCosts(ctx, player, perm, costsToPay, payload.x ?? 0);
       if (paymentScope.stationPower !== undefined) {
         stackEntry.triggerScope = {
