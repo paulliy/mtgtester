@@ -55,6 +55,34 @@ export function describeSubmittedSplit(
   return `Divide ${total} damage: ${parts.length > 0 ? parts.join(', ') : 'none assigned'}`;
 }
 
+/** The public zones a decision's targets can name — battlefield, stack and graveyards. */
+export interface PublicZones {
+  battlefield: ReadonlyArray<{ id: string; name: string }>;
+  stack: ReadonlyArray<{ id: string; description: string; card?: { name: string } | null }>;
+  players: ReadonlyArray<{ graveyard: ReadonlyArray<{ id: string; name: string }> }>;
+}
+
+/**
+ * The names of the ids a decision referred to, read from public zones only (a hand or face-down
+ * card is never named). Read when the decision is made, not when the report is built: by then a
+ * blocker a combat split was dealt to has usually died and left the battlefield, and a targeted
+ * spell has resolved. An id found nowhere — a player seat — names itself.
+ */
+export function publicNames(zones: PublicZones, ids: readonly string[]): Record<string, string> {
+  const nameOf = (id: string): string => {
+    const permanent = zones.battlefield.find((candidate) => candidate.id === id);
+    if (permanent !== undefined) return permanent.name;
+    const stacked = zones.stack.find((candidate) => candidate.id === id);
+    if (stacked !== undefined) return stacked.card?.name ?? stacked.description;
+    for (const player of zones.players) {
+      const card = player.graveyard.find((candidate) => candidate.id === id);
+      if (card !== undefined) return card.name;
+    }
+    return id;
+  };
+  return Object.fromEntries(ids.map((id) => [id, nameOf(id)]));
+}
+
 /**
  * A seat's deck source for the report. `reveal` is false for an opponent while the game is live:
  * an imported URL or pasted list identifies their cards, so only the kind survives. A generator

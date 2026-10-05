@@ -9,6 +9,7 @@ import type { OracleCard, ServerToClientMessage } from '@mtg/shared';
 import {
   describeSubmittedSplit,
   orderedDecklist,
+  publicNames,
   REPORT_LOG_LINES,
   reportDeckSource,
   type ReportSeatSource,
@@ -148,6 +149,26 @@ describe('report helpers', () => {
     expect(describeSubmittedSplit(undefined, { a: 0, b: 2 }, (id) => names[id] ?? id)).toBe(
       'Divide 2 damage: 2 to Goblin',
     );
+  });
+
+  it('names decision targets from public zones only, falling back to the id', () => {
+    const zones = {
+      battlefield: [{ id: 'o-1', name: 'Wall of Omens' }],
+      stack: [
+        { id: 'o-2', description: 'Cast Lightning Bolt', card: { name: 'Lightning Bolt' } },
+        { id: 'o-3', description: 'Adaptive Sporesinger — ETB', card: null },
+      ],
+      players: [{ graveyard: [{ id: 'o-4', name: 'Goblin' }] }],
+    };
+    expect(publicNames(zones, ['o-1', 'o-2', 'o-3', 'o-4', 'P2', 'o-hidden'])).toEqual({
+      'o-1': 'Wall of Omens',
+      'o-2': 'Lightning Bolt',
+      'o-3': 'Adaptive Sporesinger — ETB',
+      'o-4': 'Goblin',
+      P2: 'P2',
+      // Nothing outside public zones is consulted, so a hidden card is never named.
+      'o-hidden': 'o-hidden',
+    });
   });
 
   it('names the seed a pool seat actually used, and withholds an unrevealed URL', () => {

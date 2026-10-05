@@ -59,6 +59,7 @@ import {
   describeSubmittedSplit,
   mayRevealSeat,
   orderedDecklist,
+  publicNames,
   REPORT_LOG_LINES,
   reportDeckSource,
   reportLogLine,
@@ -143,7 +144,12 @@ export class MatchSession {
   private readonly ignoredAbilities = new Map<string, IgnoredPlayerAbility>();
   private playerRevision = 0;
   /** The human's most recent surfaced decision and answer, for "Copy game report". */
-  private lastHumanDecision: { request: DecisionRequest; response: DecisionResponse } | null = null;
+  private lastHumanDecision: {
+    request: DecisionRequest;
+    response: DecisionResponse;
+    /** Target names as of the decision, before the targets can die or resolve. */
+    names: Record<string, string>;
+  } | null = null;
 
   // ── Live presentation (brief §10.1) ───────────────────────────────────────────────────────
   //
@@ -299,7 +305,14 @@ export class MatchSession {
       },
       onDecision: (request, response, anchorSequence) => {
         if (request.decidingPlayer === this.humanSeat) {
-          this.lastHumanDecision = { request, response };
+          this.lastHumanDecision = {
+            request,
+            response,
+            names: publicNames(this.engine.getState(), [
+              ...(response.targets ?? []).map((target) => target.choice),
+              ...Object.keys(response.combatDamageSplit ?? {}),
+            ]),
+          };
         }
         this.aiCoordinator?.recordAcceptedDecision(request, response);
         if (request.decidingPlayer === this.humanSeat && this.opts.providerKind === 'ai') {
@@ -440,8 +453,7 @@ export class MatchSession {
       last === null
         ? undefined
         : last.request.legalActions.find((action) => action.id === last.response.actionId);
-    const nameOf = (id: string): string =>
-      board.battlefield.find((permanent) => permanent.id === id)?.name ?? id;
+    const nameOf = (id: string): string => last?.names[id] ?? id;
 
     return {
       schemaVersion: 2,

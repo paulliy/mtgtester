@@ -202,7 +202,9 @@ export function buildSpectatorState(ctx: GameContext): SpectatorState {
     controller: so.controllerId,
     kind: so.kind,
     description: so.description,
-    targets: [...so.targets],
+    // Stack targets are indexed by slot, so an unchosen mode leaves a hole that would serialize as
+    // `null`; the projection carries only the targets actually chosen.
+    targets: so.targets.filter((id) => id !== undefined),
     scryfallId: scryfallIdOf(ctx, so.sourceOracleId),
   }));
 

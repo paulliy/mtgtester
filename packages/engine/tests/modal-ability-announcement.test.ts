@@ -13,6 +13,8 @@ import type { PendingDecision } from '../src/decisions';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
+import { buildSpectatorState } from '../src/view/spectator';
+import { buildPlayerView } from '../src/view/view';
 import { moveObject } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
@@ -46,6 +48,16 @@ const RELIC_WARD = () =>
     manaCost: '{1}{W}',
     oracleText:
       'When this enchantment enters, choose one —\n• Destroy target artifact.\n• You gain 3 life.',
+  });
+
+/** Two modes, each with its own target slot: choosing the second leaves slot 0 empty. */
+const SPLIT_WARD = () =>
+  oracle({
+    name: 'Test Split Ward',
+    typeLine: 'Enchantment',
+    manaCost: '{1}{G}',
+    oracleText:
+      'When this enchantment enters, choose one —\n• Destroy target artifact.\n• Target creature gets +2/+2 until end of turn.',
   });
 
 function pod(seed: string): GameContext {
@@ -225,5 +237,47 @@ describe('modal activated abilities choose the mode as part of activation (CR 60
     );
     pump(resolveTopOfStack(ctx));
     expect(player.life).toBe(before + 2);
+  });
+});
+
+describe('slot-indexed stack targets (unchosen modes leave empty slots)', () => {
+  it('projects only the chosen targets — no null for an unchosen mode’s slot', () => {
+    const ctx = pod('modal-holes-projection');
+    spawn(ctx, 'P2', oracle({ name: 'Test Relic', typeLine: 'Artifact', manaCost: '{1}' }));
+    const ally = spawn(ctx, 'P1', bear());
+    enter(ctx, SPLIT_WARD());
+    pump(priorityCheckpoint(ctx), (d) => {
+      if (isModeChoice(d)) {
+        return {
+          index: d.options.findIndex((o) => /\+2\/\+2/.test(o.description)),
+          targets: new Map(),
+        };
+      }
+      if (isTargetChoice(d)) return { index: 0, targets: new Map([[1, ally.id]]) };
+      return { index: 0, targets: new Map() };
+    });
+
+    // Engine-side the creature sits in slot 1, so slot 0 (the artifact mode) is a hole.
+    const top = ctx.state.stack.at(-1)!;
+    expect(top.targets[1]).toBe(ally.id);
+    expect(0 in top.targets).toBe(false);
+    // The projections carry only real targets; a hole would serialize as `null`.
+    expect(buildSpectatorState(ctx).stack.at(-1)?.targets).toEqual([ally.id]);
+    expect(buildPlayerView(ctx, 'P2').stack.at(-1)?.targets).toEqual([ally.id]);
+    expect(JSON.stringify(buildSpectatorState(ctx).stack)).not.toContain('null');
+  });
+
+  it('an explicit undefined slot (a copied target array) does not fizzle a targetless mode', () => {
+    const ctx = pod('modal-holes-fizzle');
+    const lifeBefore = ctx.state.players[0]!.life;
+    enter(ctx, RELIC_WARD());
+    pump(priorityCheckpoint(ctx));
+    const top = ctx.state.stack.at(-1)!;
+    // `copyTargetSpell` spreads targets, turning a hole into an explicit undefined entry.
+    top.targets = [undefined as unknown as string];
+
+    pump(resolveTopOfStack(ctx));
+    expect(ctx.state.eventLog.some((e) => e.type === 'fizzle')).toBe(false);
+    expect(ctx.state.players[0]!.life).toBe(lifeBefore + 3);
   });
 });
