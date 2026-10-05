@@ -241,13 +241,18 @@ function viewerMana(ctx: GameContext, playerId: string): PlayerBoardState['viewe
     units += pool[symbol];
     if (symbol !== 'C' && pool[symbol] > 0) colors.add(symbol);
   }
+  // A permanent with several mana abilities is one source per ability, all sharing its card id,
+  // and tapping it activates only one of them: count its largest one, not their sum.
+  const bestByCard = new Map<string, number>();
   for (const source of manaSourcesFor(ctx, playerId)) {
     if (source.manaCost !== undefined || source.restriction !== undefined) continue;
-    for (const unit of source.units) {
-      units += 1;
-      for (const symbol of unit) colors.add(symbol);
-    }
+    bestByCard.set(
+      source.cardId,
+      Math.max(bestByCard.get(source.cardId) ?? 0, source.units.length),
+    );
+    for (const unit of source.units) for (const symbol of unit) colors.add(symbol);
   }
+  for (const best of bestByCard.values()) units += best;
   return { units, colors: COLOR_ORDER.filter((color) => colors.has(color)) };
 }
 

@@ -93,6 +93,35 @@ describe('Phase 6 player board projection', () => {
     });
   });
 
+  it('counts a permanent with several mana abilities once, at its largest ability', () => {
+    const ctx = createGame(pod());
+    const land = (name: string, oracleText: string) =>
+      oracle({
+        name,
+        typeLine: 'Land',
+        manaCost: null,
+        cmc: 0,
+        power: null,
+        toughness: null,
+        oracleText,
+      });
+    // Same-cost abilities that differ only in color merge into one source; a life cost or a
+    // different amount keeps them apart, the way a pain land's two abilities are.
+    const split = spawn(
+      ctx,
+      'P1',
+      land('Test Pain Land', '{T}: Add {C}.\n{T}, Pay 1 life: Add {G}.'),
+    );
+    const pair = spawn(ctx, 'P1', land('Test Pair Land', '{T}: Add {C}.\n{T}: Add {C}{C}.'));
+
+    // Each is one source per ability, sharing a card id; tapping it activates only one.
+    const sources = manaSourcesFor(ctx, 'P1');
+    expect(sources.filter((source) => source.cardId === split.cardId)).toHaveLength(2);
+    expect(sources.filter((source) => source.cardId === pair.cardId)).toHaveLength(2);
+    // One from the pain land and two from the pair land, not 2 + 3.
+    expect(buildPlayerBoardState(ctx, 'P1').viewerMana).toEqual({ units: 3, colors: ['G'] });
+  });
+
   it('redacts an opponent face-down permanent before serialization', () => {
     const ctx = createGame(pod());
     const hidden = spawn(
