@@ -628,6 +628,11 @@ export function computeTargetOptions(
    * the referenced slot has been chosen (falls back to the caster's own graveyard).
    */
   chosenTargets?: readonly ObjectId[],
+  /**
+   * The card id of the spell's or ability's source, so a filter's "another"/"other" (`OTHER`)
+   * excludes that source itself. Omitted ⇒ no source to exclude.
+   */
+  sourceCardId = '',
 ): ObjectId[] {
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
@@ -646,7 +651,15 @@ export function computeTargetOptions(
       ...(controller !== undefined ? { controller } : {}),
     };
     return [
-      ...computeTargetOptions(ctx, spellSpec, casterId, sourceColors, eventPlayerId, chosenTargets),
+      ...computeTargetOptions(
+        ctx,
+        spellSpec,
+        casterId,
+        sourceColors,
+        eventPlayerId,
+        chosenTargets,
+        sourceCardId,
+      ),
       ...computeTargetOptions(
         ctx,
         permanentSpec,
@@ -654,6 +667,7 @@ export function computeTargetOptions(
         sourceColors,
         eventPlayerId,
         chosenTargets,
+        sourceCardId,
       ),
     ];
   }
@@ -727,7 +741,7 @@ export function computeTargetOptions(
     .filter(
       (p) =>
         filter === undefined ||
-        matchesSelector(ctx, p, filter, { cardId: '', controllerId: casterId }),
+        matchesSelector(ctx, p, filter, { cardId: sourceCardId, controllerId: casterId }),
     )
     .map((p) => p.id);
 
@@ -1522,7 +1536,15 @@ export function computePriorityOptions(
           (e: import('../cards/ability').Effect) => e.op === 'attachSelfTo',
         );
         for (const spec of activated.ability.targets) {
-          let targetOptions = computeTargetOptions(ctx, spec, player.id, colorsOf(ctx, perm));
+          let targetOptions = computeTargetOptions(
+            ctx,
+            spec,
+            player.id,
+            colorsOf(ctx, perm),
+            undefined,
+            undefined,
+            perm.cardId,
+          );
           if (isAttachAbility && perm.attachedTo !== null) {
             targetOptions = targetOptions.filter((id) => id !== perm.attachedTo);
           }

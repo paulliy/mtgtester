@@ -317,6 +317,7 @@ function* chooseCountTargets(
         sourceColors,
         undefined,
         ordinaryTargets,
+        sourceCardId,
       ).filter((id) => !chosen.has(id));
       if (candidates.length === 0) break;
       const canStop = picked.length >= spec.count.min;
@@ -926,7 +927,16 @@ export function* applyPriorityAction(
         const choice = outcome.targets.get(slot);
         if (choice === undefined)
           throw new Error(`missing target for slot ${slot} of ${perm.name}`);
-        if (!computeTargetOptions(ctx, spec, player.id, colorsOf(ctx, perm)).includes(choice)) {
+        const legal = computeTargetOptions(
+          ctx,
+          spec,
+          player.id,
+          colorsOf(ctx, perm),
+          undefined,
+          undefined,
+          perm.cardId,
+        );
+        if (!legal.includes(choice)) {
           throw new Error(`illegal target ${choice} for slot ${slot} of ${perm.name}`);
         }
         targets.push(choice);

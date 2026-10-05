@@ -766,6 +766,8 @@ export function isTargetStillLegal(
   sourceColors?: readonly Color[],
   /** The player associated with this trigger event, if target text refers to them. */
   eventPlayerId?: PlayerId,
+  /** The source's card id, so `OTHER` in a filter excludes the source (see computeTargetOptions). */
+  sourceCardId = '',
 ): boolean {
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
@@ -826,7 +828,7 @@ export function isTargetStillLegal(
     return false;
   if (
     filter !== undefined &&
-    !matchesSelector(ctx, perm, filter, { cardId: '', controllerId: spellControllerId })
+    !matchesSelector(ctx, perm, filter, { cardId: sourceCardId, controllerId: spellControllerId })
   )
     return false;
   // Shroud (CR 702.18): untargetable by anything, including its own controller.
@@ -1329,6 +1331,7 @@ export function* executeAbility(
       source.controllerId,
       sourceColorsOf(ctx, source.cardId, source.oracleId),
       scope.eventPlayerId,
+      source.cardId,
     );
 
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */

@@ -422,6 +422,8 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       trigger.controllerId,
       sourceColors,
       trigger.scope?.eventPlayerId,
+      undefined,
+      trigger.sourceCardId,
     );
     if (options.length === 0) {
       emit(
@@ -515,6 +517,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         sourceColors,
         trigger.scope?.eventPlayerId,
         chosen,
+        trigger.sourceCardId,
       ).filter((id) => !alreadyChosen.has(id) && !picked.includes(id));
       if (candidates.length === 0) break;
       const canStop = picked.length >= count.min;

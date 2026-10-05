@@ -795,3 +795,28 @@ describe('casting from the top of the library (fuzz: Omen card)', () => {
     }
   });
 });
+
+describe('"another target" excludes the source (CR 109.4 "another")', () => {
+  it('an activated ability cannot target its own source', () => {
+    const ctx = pod();
+    ctx.state.phase = 'precombatMain';
+    const untapper = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Sweep Other Untapper',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        oracleText: '{1}: Untap another target permanent.',
+      }),
+    );
+    const land = spawn(ctx, 'P1', forest(), { tapped: true });
+    spawn(ctx, 'P1', forest());
+    const option = computePriorityOptions(ctx, ctx.state.players[0]!).find((o) =>
+      o.description.startsWith('Sweep Other Untapper'),
+    );
+    const targets = option?.targets?.[0]?.options ?? [];
+    expect(targets).toContain(land.id);
+    expect(targets).not.toContain(untapper.id);
+  });
+});

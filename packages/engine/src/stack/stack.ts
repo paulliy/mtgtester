@@ -78,6 +78,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         top.controllerId,
         sourceColors,
         top.triggerScope?.eventPlayerId,
+        top.sourceCardId,
       )
     )
       anyLegal = true;
@@ -95,6 +96,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
           top.controllerId,
           sourceColors,
           top.triggerScope?.eventPlayerId,
+          top.sourceCardId,
         )
       )
         anyLegal = true;
