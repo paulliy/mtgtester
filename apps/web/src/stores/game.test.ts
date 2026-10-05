@@ -390,6 +390,47 @@ describe('spectator store — server-confirmed position', () => {
     }
   });
 
+  it("does not mistake a stale session's refused resume for a refused start", () => {
+    const values = new Map<string, string>([['mtg-player-session', 'stale-token']]);
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+    try {
+      // A browser left with the token of a game the server no longer has.
+      store.sessionToken = 'stale-token';
+      store.gameMode = 'singlePlayer';
+      startWithPod(store, 'orbit');
+      // The connection opens: the resume goes out first, ahead of the queued start.
+      connectionChanged?.('open');
+      expect(sent.map((m) => m.type)).toContain('resumeGame');
+
+      inbound?.({
+        type: 'error',
+        payload: { message: 'That single-player session is unavailable.' },
+      });
+      // Not an answer to the start: nothing is reported, and the dead token is forgotten.
+      expect(store.errors).toEqual([]);
+      expect(store.sessionToken).toBeNull();
+      expect(values.has('mtg-player-session')).toBe(false);
+
+      // The start's own answer still lands, and still records what it was asked to remember.
+      const started = podGameStarted('fresh-game');
+      started.payload.sessionToken = 'fresh-token';
+      inbound?.(started);
+      expect(store.gameId).toBe('fresh-game');
+      expect(store.sessionToken).toBe('fresh-token');
+      expect(JSON.parse(values.get('mtg-recent-pod-ids') ?? '[]')).toEqual(['orbit']);
+
+      // A later error is a real one again.
+      inbound?.({ type: 'error', payload: { message: 'Not your decision.' } });
+      expect(store.errors).toEqual(['Not your decision.']);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it.each(['deck', 'pod'] as const)(
     'starts a confirmed game when recent %s storage rejects a write',
     (recent) => {
