@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { RandomDecisionProvider } from '@mtg/engine';
 import type { OracleCard, ServerToClientMessage } from '@mtg/shared';
 import {
+  describeSubmittedSplit,
   orderedDecklist,
   REPORT_LOG_LINES,
   reportDeckSource,
@@ -86,6 +87,7 @@ const SOURCES: ReportSeatSource[] = [
 
 const CONTEXT = {
   build: { commit: 'abc123', branch: 'feature', dirty: false },
+  cardData: { source: 'fixture.json', sha256: 'beef', entries: 2 },
   startedAt: '2026-10-05T00:00:00.000Z',
   sources: SOURCES,
   cardTestScenarioId: null,
@@ -121,7 +123,7 @@ async function waitFor(fn: () => void, timeoutMs = 10_000): Promise<void> {
 type ActionRequired = Extract<ServerToClientMessage, { type: 'playerActionRequired' }>;
 
 describe('report helpers', () => {
-  it('keeps the configured deck order and collapses only consecutive copies', () => {
+  it('keeps the configured deck order, collapses only consecutive copies, and keeps roles', () => {
     const list = orderedDecklist({
       id: 'P1',
       deckId: 'd',
@@ -129,8 +131,23 @@ describe('report helpers', () => {
       companion: card('Lurrus'),
       cards: [card('Forest'), card('Forest'), card('Sol Ring'), card('Forest')],
     });
-    // The seeded shuffle starts from this order, so a sorted list could not reproduce a game.
-    expect(list).toEqual(['1 Test General P1', '1 Lurrus', '2 Forest', '1 Sol Ring', '1 Forest']);
+    // The seeded shuffle starts from this order, so a sorted list could not reproduce a game; the
+    // companion stays labeled so a re-import cannot fold it into the main deck.
+    expect(list).toEqual({
+      commanders: ['Test General P1'],
+      companion: 'Lurrus',
+      library: ['2 Forest', '1 Sol Ring', '1 Forest'],
+    });
+  });
+
+  it('describes a submitted combat-damage split rather than the preset option', () => {
+    const names: Record<string, string> = { a: 'Wall of Omens', b: 'Goblin' };
+    expect(describeSubmittedSplit(3, { a: 2, b: 1 }, (id) => names[id] ?? id)).toBe(
+      'Divide 3 damage: 2 to Wall of Omens, 1 to Goblin',
+    );
+    expect(describeSubmittedSplit(undefined, { a: 0, b: 2 }, (id) => names[id] ?? id)).toBe(
+      'Divide 2 damage: 2 to Goblin',
+    );
   });
 
   it('names the seed a pool seat actually used, and withholds an unrevealed URL', () => {
@@ -170,7 +187,8 @@ describe('MatchSession.gameReport', () => {
     );
 
     const [own, p2, p3, p4] = before.seats;
-    expect(own?.decklist?.[0]).toBe('1 Test General P1');
+    expect(own?.decklist?.commanders).toEqual(['Test General P1']);
+    expect(before.cardData).toEqual(CONTEXT.cardData);
     expect(own?.source).toEqual({ kind: 'pool', seed: 'report-seed-seat1' });
     for (const opponent of [p2, p3, p4]) expect(opponent?.decklist).toBeNull();
     expect(p2?.source).toEqual({ kind: 'snapshot', snapshotId: 'snap-p2' });
@@ -225,7 +243,7 @@ describe('MatchSession.gameReport', () => {
     expect(report.status.over).toBe(true);
     expect(report.status.runner).toBe('finished');
     expect(report.pendingChoice).toBeNull();
-    for (const seat of report.seats) expect(seat.decklist?.length).toBeGreaterThan(0);
+    for (const seat of report.seats) expect(seat.decklist?.library.length).toBeGreaterThan(0);
     expect(report.seats[2]?.source).toEqual({ kind: 'url', url: 'https://example.test/decks/p3' });
     expect(report.recentLog.length).toBeLessThanOrEqual(REPORT_LOG_LINES);
     expect(report.recentLog.at(-1)).toMatch(/^T\d+/);

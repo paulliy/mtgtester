@@ -1,5 +1,6 @@
 import type { EnginePlayerConfig } from '@mtg/engine';
 import type {
+  GameReportDecklist,
   GameReportDeckSource,
   OracleCard,
   PlayerId,
@@ -13,17 +14,8 @@ export type ReportSeatSource = SeatSource | { kind: 'cardTestScenario' };
 /** How many of the player's newest log lines a report carries. */
 export const REPORT_LOG_LINES = 40;
 
-/**
- * The deck exactly as the engine received it — commanders, companion, then the library in its
- * configured order — with consecutive copies collapsed to "N Name". Order is kept rather than
- * sorted because the seeded opening shuffle starts from it: a sorted list does not reproduce.
- */
-export function orderedDecklist(config: EnginePlayerConfig): string[] {
-  const cards: OracleCard[] = [
-    ...config.commanders,
-    ...(config.companion ? [config.companion] : []),
-    ...config.cards,
-  ];
+/** Consecutive copies collapse to "N Name"; order is kept. */
+function collapse(cards: readonly OracleCard[]): string[] {
   const lines: Array<{ name: string; count: number }> = [];
   for (const card of cards) {
     const last = lines[lines.length - 1];
@@ -31,6 +23,36 @@ export function orderedDecklist(config: EnginePlayerConfig): string[] {
     else lines.push({ name: card.name, count: 1 });
   }
   return lines.map(({ name, count }) => `${count} ${name}`);
+}
+
+/**
+ * The deck exactly as the engine received it, by role. The library keeps its configured order
+ * rather than being sorted, because the seeded opening shuffle starts from it: a sorted list does
+ * not reproduce. The companion stays its own field — folded into the list it would read as the
+ * first library card, and a re-import would put it in the main deck.
+ */
+export function orderedDecklist(config: EnginePlayerConfig): GameReportDecklist {
+  return {
+    commanders: config.commanders.map((card) => card.name),
+    companion: config.companion?.name ?? null,
+    library: collapse(config.cards),
+  };
+}
+
+/**
+ * "Divide 3 damage: 2 to Wall of Omens, 1 to Goblin" — a submitted combat-damage split. The
+ * decision's own option text names a preset the split overrides, so it must not stand in for it.
+ */
+export function describeSubmittedSplit(
+  amount: number | undefined,
+  split: Readonly<Record<string, number>>,
+  nameOf: (id: string) => string,
+): string {
+  const parts = Object.entries(split)
+    .filter(([, n]) => n > 0)
+    .map(([id, n]) => `${n} to ${nameOf(id)}`);
+  const total = amount ?? Object.values(split).reduce((sum, n) => sum + n, 0);
+  return `Divide ${total} damage: ${parts.length > 0 ? parts.join(', ') : 'none assigned'}`;
 }
 
 /**

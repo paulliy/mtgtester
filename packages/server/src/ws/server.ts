@@ -16,6 +16,7 @@ import {
 import type {
   ClientToServerMessage,
   GameReportBuild,
+  GameReportCardData,
   GameStartedPayload,
   PlayerId,
   ServerToClientMessage,
@@ -45,6 +46,8 @@ export interface GameServerDeps {
   cardTestLab?: boolean;
   /** The checkout this server runs from, for "Copy game report". Unknown when omitted. */
   build?: GameReportBuild;
+  /** The Oracle data file this server loaded, for "Copy game report". Unknown when omitted. */
+  cardData?: GameReportCardData;
 }
 
 /** Four seats in v1; the count is a parameter, but only four is supported and tested (§15). */
@@ -414,6 +417,7 @@ export class GameServer {
     return Response.json(
       session.gameReport({
         build: this.deps.build ?? { commit: null, branch: null, dirty: null },
+        cardData: this.deps.cardData ?? { source: null, sha256: null, entries: 0 },
         startedAt: this.startedPayload?.startedAt ?? null,
         sources: this.reportSources?.sources ?? [],
         cardTestScenarioId: this.reportSources?.cardTestScenarioId ?? null,

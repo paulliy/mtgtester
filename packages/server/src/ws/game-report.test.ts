@@ -34,6 +34,7 @@ describe('POST /api/game-report', () => {
     expect(response.status).toBe(200);
     expect(session.gameReport).toHaveBeenCalledWith({
       build,
+      cardData: { source: null, sha256: null, entries: 0 },
       startedAt: '2026-10-05T00:00:00.000Z',
       sources: [{ kind: 'pool' }],
       cardTestScenarioId: null,

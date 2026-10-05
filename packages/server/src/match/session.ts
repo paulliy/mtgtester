@@ -18,6 +18,7 @@ import type {
   GameMode,
   GameReport,
   GameReportBuild,
+  GameReportCardData,
   IgnoredPlayerAbility,
   PlaybackMode,
   PlayerId,
@@ -55,6 +56,7 @@ import {
   PlayerConnectionGate,
 } from './human-provider';
 import {
+  describeSubmittedSplit,
   mayRevealSeat,
   orderedDecklist,
   REPORT_LOG_LINES,
@@ -421,6 +423,7 @@ export class MatchSession {
    */
   gameReport(context: {
     build: GameReportBuild;
+    cardData: GameReportCardData;
     startedAt: string | null;
     sources: readonly ReportSeatSource[];
     cardTestScenarioId: string | null;
@@ -444,6 +447,7 @@ export class MatchSession {
       schemaVersion: 1,
       generatedAt: new Date().toISOString(),
       build: context.build,
+      cardData: context.cardData,
       game: {
         id: this.opts.gameId,
         seed: this.opts.seed,
@@ -507,7 +511,16 @@ export class MatchSession {
               requestId: last.request.requestId,
               turn: last.request.turn,
               decisionType: last.request.decisionType,
-              description: lastAction?.description ?? `action ${last.response.actionId}`,
+              // A combat-damage division is answered by its split, not the preset option the
+              // `actionId` names ("All 3 damage to …") — the same mismatch the engine log had.
+              description:
+                last.response.combatDamageSplit !== undefined
+                  ? describeSubmittedSplit(
+                      last.request.combatDamageSplit?.amount,
+                      last.response.combatDamageSplit,
+                      nameOf,
+                    )
+                  : (lastAction?.description ?? `action ${last.response.actionId}`),
               targets: (last.response.targets ?? []).map((target) => nameOf(target.choice)),
             },
       recentLog: formatPlayerLog(this.engine.eventsSince(0), humanSeat)

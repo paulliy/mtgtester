@@ -36,6 +36,30 @@ export type GameReportDeckSource =
   | { kind: 'plaintext' }
   | { kind: 'cardTestScenario' };
 
+/**
+ * The Oracle card data the server loaded. The commit does not pin it: the Scryfall bulk file is
+ * gitignored and changes upstream, and Oracle text drives every card definition.
+ */
+export interface GameReportCardData {
+  /** The file loaded, relative to the server's working directory; null when none was. */
+  source: string | null;
+  /** SHA-256 of that file's bytes. */
+  sha256: string | null;
+  /** Entries in the file. */
+  entries: number;
+}
+
+/** A deck as the engine received it, each section in configured order. */
+export interface GameReportDecklist {
+  commanders: string[];
+  companion: string | null;
+  /**
+   * The library in configured order (which the seeded shuffle starts from); consecutive copies
+   * collapse into one "N Name" line.
+   */
+  library: string[];
+}
+
 export interface GameReportSeat {
   seat: PlayerId;
   controller: SeatControllerKind;
@@ -45,12 +69,8 @@ export interface GameReportSeat {
   archetypeTag: string;
   deckSnapshotId: string | null;
   source: GameReportDeckSource;
-  /**
-   * The deck exactly as the engine was given it: commanders, then companion, then the library in
-   * configured order (which the seeded shuffle starts from). Consecutive copies collapse into one
-   * "N Name" line. Null for an opponent while the game is live.
-   */
-  decklist: string[] | null;
+  /** The deck exactly as the engine was given it. Null for an opponent while the game is live. */
+  decklist: GameReportDecklist | null;
   /** Public state. */
   life: number;
   poisonCounters: number;
@@ -64,6 +84,7 @@ export interface GameReport {
   schemaVersion: 1;
   generatedAt: string;
   build: GameReportBuild;
+  cardData: GameReportCardData;
   game: {
     id: GameId;
     seed: string;

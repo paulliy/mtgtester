@@ -7,6 +7,7 @@ function report(over: Partial<GameReport> = {}): GameReport {
     schemaVersion: 1,
     generatedAt: '2026-10-05T02:00:00.000Z',
     build: { commit: 'ca22469', branch: 'claude/feature', dirty: false },
+    cardData: { source: 'data/scryfall-oracle-cards.json', sha256: 'f00d', entries: 38705 },
     game: {
       id: 'g1-seed',
       seed: 'cloud-full-game-2026-10-05',
@@ -36,7 +37,11 @@ function report(over: Partial<GameReport> = {}): GameReport {
         archetypeTag: 'tokens',
         deckSnapshotId: 'snap-1',
         source: { kind: 'pool', seed: 'cloud-full-game-2026-10-05-seat1' },
-        decklist: ['1 Ghalta and Mavren', '2 Forest'],
+        decklist: {
+          commanders: ['Ghalta and Mavren'],
+          companion: 'Jegantha, the Wellspring',
+          library: ['2 Forest'],
+        },
         life: 36,
         poisonCounters: 0,
         handSize: 3,
@@ -84,6 +89,9 @@ describe('formatGameReport', () => {
   it('leads with what a bug report needs: build, game id, seed, status and position', () => {
     const text = formatGameReport(report());
     expect(text).toContain('Build: claude/feature @ ca22469');
+    expect(text).toContain(
+      'Card data: data/scryfall-oracle-cards.json (38,705 entries, sha256 f00d)',
+    );
     expect(text).toContain('g1-seed · seed `cloud-full-game-2026-10-05`');
     expect(text).toContain('Status: awaitingHuman');
     expect(text).toContain('Position: Turn 50 · Main phase 1 · active P1 · priority P1');
@@ -95,6 +103,9 @@ describe('formatGameReport', () => {
   it('prints only the decklists the server released, and says why an opponent source is hidden', () => {
     const text = formatGameReport(report());
     expect(text).toContain('### P1 decklist (engine order)');
+    expect(text).toContain(
+      'Commander: 1 Ghalta and Mavren\nCompanion: 1 Jegantha, the Wellspring\n2 Forest',
+    );
     expect(text).not.toContain('### P3 decklist');
     expect(text).toContain('imported URL (hidden until game over)');
     expect(text).toContain('lost (lifeZeroOrLess)');

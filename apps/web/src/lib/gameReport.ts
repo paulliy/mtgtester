@@ -24,6 +24,12 @@ function build(report: GameReport): string {
   return `${branch ?? '(detached)'} @ ${commit}${dirty === true ? ' (uncommitted changes)' : ''}`;
 }
 
+function cardData(report: GameReport): string {
+  const { source, sha256, entries } = report.cardData;
+  if (source === null) return 'none loaded';
+  return `${source} (${entries.toLocaleString('en-US')} entries, sha256 ${sha256 ?? 'unknown'})`;
+}
+
 /**
  * The clipboard text for "Copy game report": a readable summary a person can scan in an issue,
  * followed by the full report as JSON so nothing is lost to the formatting.
@@ -39,6 +45,7 @@ export function formatGameReport(report: GameReport): string {
     '## MTG Tester game report',
     '',
     `- Build: ${build(report)}`,
+    `- Card data: ${cardData(report)}`,
     `- Game: ${game.id} · seed \`${game.seed}\`${game.cardTestScenarioId === null ? '' : ` · lab scenario ${game.cardTestScenarioId}`}`,
     `- Mode: ${game.gameMode}, you are ${game.humanSeat ?? 'spectating'} · bots: ${game.providerKind} · pace ${game.paceMs} ms (${game.playbackMode})`,
     `- Started: ${game.startedAt ?? 'unknown'} · report: ${report.generatedAt}`,
@@ -72,8 +79,12 @@ export function formatGameReport(report: GameReport): string {
   lines.push(...report.recentLog);
   lines.push('```');
   for (const seat of report.seats) {
-    if (seat.decklist === null) continue;
-    lines.push('', `### ${seat.seat} decklist (engine order)`, '```', ...seat.decklist, '```');
+    const deck = seat.decklist;
+    if (deck === null) continue;
+    lines.push('', `### ${seat.seat} decklist (engine order)`, '```');
+    for (const commander of deck.commanders) lines.push(`Commander: 1 ${commander}`);
+    if (deck.companion !== null) lines.push(`Companion: 1 ${deck.companion}`);
+    lines.push(...deck.library, '```');
   }
   lines.push('', '<details><summary>Full report (JSON)</summary>', '', '```json');
   lines.push(JSON.stringify(report, null, 2));
