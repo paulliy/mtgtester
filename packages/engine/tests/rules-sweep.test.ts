@@ -15,7 +15,10 @@ import { priorityCheckpoint } from '../src/sba/sba';
 import { createGame } from '../src/state/game';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { runTurn } from '../src/turn/turn';
-import { moveObject } from '../src/state/objects';
+import { createToken, moveObject } from '../src/state/objects';
+import { evaluateValueIn } from '../src/effects/values';
+import { cardTypesInAllGraveyards } from '../src/cards/value';
+import { evaluateCondition } from '../src/cards/condition';
 import type { EngineCardObject, EngineStackObject } from '../src/state/types';
 import {
   conjure,
@@ -498,5 +501,56 @@ describe('a player leaving the game (CR 800.4a)', () => {
     pump(priorityCheckpoint(ctx));
     expect(ctx.state.eliminatedPlayers).toContain('P2');
     expect(ctx.state.battlefield.find((p) => p.cardId === stolen.cardId)?.controllerId).toBe('P1');
+  });
+});
+
+describe('an eliminated player is out of the game (CR 800.4a, 102.2)', () => {
+  it('takes every card they own with them, graveyard included', () => {
+    const ctx = pod();
+    conjure(ctx, 'P2', keywordCreature('Sweep Dead Bear', '', '{1}{G}'), 'graveyard');
+    conjure(ctx, 'P2', redBolt(), 'graveyard');
+    expect(cardTypesInAllGraveyards(ctx)).toBe(2);
+    ctx.state.players[1]!.life = 0;
+    pump(priorityCheckpoint(ctx));
+    const p2 = ctx.state.players[1]!;
+    expect(p2.graveyard).toHaveLength(0);
+    expect(p2.hand).toHaveLength(0);
+    expect(p2.library).toHaveLength(0);
+    expect(cardTypesInAllGraveyards(ctx)).toBe(0);
+  });
+
+  it('is no longer counted as an opponent', () => {
+    const ctx = pod();
+    ctx.state.players[3]!.life = 0;
+    pump(priorityCheckpoint(ctx));
+    spawn(ctx, 'P1', keywordCreature('Sweep Counter Bear', '', '{1}{G}'));
+    const scope = { controllerId: 'P1' as const, sourceCardId: 'sweep' };
+    expect(evaluateValueIn(ctx, { kind: 'countOpponents' }, scope)).toBe(2);
+    // P2 and P3 have no creatures; the departed P4 must not count as a third.
+    expect(evaluateValueIn(ctx, { kind: 'countOpponentsWithFewerCreatures' }, scope)).toBe(2);
+  });
+});
+
+describe('"if you created a token this turn"', () => {
+  it('is set by creating a token, not by any permanent entering', () => {
+    const ctx = pod();
+    const source = { cardId: 'sweep', controllerId: 'P1' as const };
+    const bearCard = conjure(ctx, 'P1', keywordCreature('Sweep Real Bear', '', '{1}{G}'), 'hand');
+    pump(moveObject(ctx, bearCard, { zone: 'battlefield', controllerId: 'P1' }));
+    expect(evaluateCondition(ctx, { kind: 'createdTokenThisTurn' }, source)).toBe(false);
+    createToken(
+      ctx,
+      {
+        name: 'Sweep Soldier',
+        typeLine: 'Token Creature — Soldier',
+        types: ['Creature'],
+        subtypes: ['Soldier'],
+        colors: ['W'],
+        power: 1,
+        toughness: 1,
+      },
+      'P1',
+    );
+    expect(evaluateCondition(ctx, { kind: 'createdTokenThisTurn' }, source)).toBe(true);
   });
 });

@@ -518,7 +518,6 @@ export function* moveObject(
     const incoming = target.face === 'back' ? { ...obj, face: 'back' as const } : obj;
     const perm = makePermanent(ctx, incoming, controllerId, entersTappedOverride, target.faceDown);
     ctx.state.battlefield.push(perm);
-    if (ctx.state.createdTokenThisTurn) ctx.state.createdTokenThisTurn[controllerId] = true;
     next = perm;
 
     const chars = computeCharacteristics(ctx, perm);
@@ -864,6 +863,8 @@ export function createToken(
   };
   const perm = makePermanent(ctx, stub, controllerId, entersTapped ? true : undefined);
   ctx.state.battlefield.push(perm);
+  // "If you created a token this turn" — set by token creation, not by any permanent entering.
+  if (ctx.state.createdTokenThisTurn) ctx.state.createdTokenThisTurn[controllerId] = true;
   if (spec.grantHasteUntilEot === true) {
     ctx.state.effects.push({
       id: `eff-${ctx.state.nextObjectNum++}`,

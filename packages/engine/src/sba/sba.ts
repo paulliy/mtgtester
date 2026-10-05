@@ -72,6 +72,12 @@ function processEliminations(ctx: GameContext): void {
     );
     s.pendingTriggers = s.pendingTriggers.filter((t) => t.controllerId !== player.id);
     s.exile = s.exile.filter((o) => o.ownerId !== player.id);
+    // Every other object they own leaves the game too: nothing may still count their graveyard
+    // (Tarmogoyf), target a card in it (Reanimate), or count their hand or library.
+    player.hand = [];
+    player.library = [];
+    player.graveyard = [];
+    player.commandZone = [];
 
     // Combat cleanup: their creatures are gone; attackers pointed at them stand down
     // (CR 800.4e — no combat damage is assigned to a player who has left).

@@ -13,7 +13,7 @@ import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { computeCharacteristics, selectPermanents } from './continuous';
-import { cardZoneCandidate, effectivePT, getDefByOracleId } from '../state/queries';
+import { cardZoneCandidate, effectivePT, getDefByOracleId, opponentsOf } from '../state/queries';
 import { spellManaValue } from '../state/objects';
 
 function scopedPermanents(
@@ -70,6 +70,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       const source = { cardId: scope.sourceCardId ?? '', controllerId: scope.controllerId };
       let count = 0;
       for (const player of ctx.state.players) {
+        if (player.hasLost) continue;
         if (value.owner === 'you' && player.id !== scope.controllerId) continue;
         if (value.owner === 'opponents' && player.id === scope.controllerId) continue;
         for (const card of player[value.zone]) {
@@ -91,7 +92,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'devotionTo':
       return devotionTo(ctx, scope.controllerId, value.color);
     case 'countOpponents':
-      return ctx.state.players.filter((player) => player.id !== scope.controllerId).length;
+      // Opponents still in the game (CR 102.2/800.4a) — an eliminated player is no one's opponent.
+      return opponentsOf(ctx, scope.controllerId).length;
     case 'greatestToughnessAmong':
       return scopedPermanents(ctx, scope, value.selector, value.scope).reduce(
         (best, perm) => Math.max(best, effectivePT(ctx, perm).toughness),
@@ -212,16 +214,14 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
         'you',
       ).length;
       let count = 0;
-      for (const p of ctx.state.players) {
-        if (p.id !== scope.controllerId) {
-          const oppCreatures = scopedPermanents(
-            ctx,
-            { ...scope, controllerId: p.id },
-            { kind: 'type', value: 'Creature' },
-            'you',
-          ).length;
-          if (oppCreatures < myCreatures) count++;
-        }
+      for (const p of opponentsOf(ctx, scope.controllerId)) {
+        const oppCreatures = scopedPermanents(
+          ctx,
+          { ...scope, controllerId: p.id },
+          { kind: 'type', value: 'Creature' },
+          'you',
+        ).length;
+        if (oppCreatures < myCreatures) count++;
       }
       return count;
     }
@@ -249,9 +249,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return permanent === undefined ? 0 : effectivePT(ctx, permanent).power;
     }
     case 'opponentsLostLifeThisTurn':
-      return ctx.state.players.filter(
-        (player) =>
-          player.id !== scope.controllerId && ctx.state.lifeLostThisTurn[player.id] === true,
+      return opponentsOf(ctx, scope.controllerId).filter(
+        (player) => ctx.state.lifeLostThisTurn[player.id] === true,
       ).length;
     case 'powerOfTriggerObject': {
       const perm =
