@@ -72,6 +72,8 @@ watch(
         />
         AI reasoning
       </label>
+      <!-- Header controls a host view adds, e.g. the player's "Copy report". -->
+      <slot name="actions" />
       <span class="hint">Click line to jump</span>
     </div>
     <div ref="scroller" class="scroller">

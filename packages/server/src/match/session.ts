@@ -16,6 +16,8 @@ import type {
   DebugFlags,
   GameEvent,
   GameMode,
+  GameReport,
+  GameReportBuild,
   IgnoredPlayerAbility,
   PlaybackMode,
   PlayerId,
@@ -52,6 +54,14 @@ import {
   PersistentAbilityYieldProvider,
   PlayerConnectionGate,
 } from './human-provider';
+import {
+  mayRevealSeat,
+  orderedDecklist,
+  REPORT_LOG_LINES,
+  reportDeckSource,
+  reportLogLine,
+  type ReportSeatSource,
+} from './report';
 import type { SeatSetup } from './setup';
 
 /** `HeuristicDecisionProvider` (like the engine's `RandomDecisionProvider` before it) is
@@ -130,6 +140,8 @@ export class MatchSession {
   private readonly connectionGate = new PlayerConnectionGate();
   private readonly ignoredAbilities = new Map<string, IgnoredPlayerAbility>();
   private playerRevision = 0;
+  /** The human's most recent surfaced decision and answer, for "Copy game report". */
+  private lastHumanDecision: { request: DecisionRequest; response: DecisionResponse } | null = null;
 
   // ── Live presentation (brief §10.1) ───────────────────────────────────────────────────────
   //
@@ -284,6 +296,9 @@ export class MatchSession {
         this.publishGameOver(result);
       },
       onDecision: (request, response, anchorSequence) => {
+        if (request.decidingPlayer === this.humanSeat) {
+          this.lastHumanDecision = { request, response };
+        }
         this.aiCoordinator?.recordAcceptedDecision(request, response);
         if (request.decidingPlayer === this.humanSeat && this.opts.providerKind === 'ai') {
           this.ensureAiCoordinator().recordDecision(request, response, 'human');
@@ -397,6 +412,108 @@ export class MatchSession {
 
   getLivePaceMs(): number {
     return this.livePaceMs;
+  }
+
+  /**
+   * "Copy game report" (`GameReport`): everything needed to file and recreate this game, seen
+   * from the human seat. Only single-player sessions have one. Opponents' decklists and deck
+   * sources stay hidden until the game is over; the log and pending choice are the player's own.
+   */
+  gameReport(context: {
+    build: GameReportBuild;
+    startedAt: string | null;
+    sources: readonly ReportSeatSource[];
+    cardTestScenarioId: string | null;
+  }): GameReport {
+    const humanSeat = this.humanSeat;
+    if (humanSeat === null) throw new Error('only a single-player session has a game report');
+    const over = this.isOver();
+    const board = this.engine.playerState(humanSeat);
+    const halt = this.runner.getHalt();
+    const result = this.runner.getResult();
+    const pending = this.humanProvider?.current() ?? null;
+    const last = this.lastHumanDecision;
+    const lastAction =
+      last === null
+        ? undefined
+        : last.request.legalActions.find((action) => action.id === last.response.actionId);
+    const nameOf = (id: string): string =>
+      board.battlefield.find((permanent) => permanent.id === id)?.name ?? id;
+
+    return {
+      schemaVersion: 1,
+      generatedAt: new Date().toISOString(),
+      build: context.build,
+      game: {
+        id: this.opts.gameId,
+        seed: this.opts.seed,
+        gameMode: this.gameMode,
+        humanSeat,
+        providerKind: this.opts.providerKind,
+        playbackMode: this.playbackMode,
+        paceMs: this.livePaceMs,
+        startedAt: context.startedAt,
+        cardTestScenarioId: context.cardTestScenarioId,
+      },
+      status: {
+        runner: this.runner.getStatus(),
+        over,
+        winnerSeat: result?.winnerSeat ?? null,
+        halt: halt === null ? null : { kind: halt.kind, turn: halt.turn },
+      },
+      position: {
+        turn: board.turnNumber,
+        phase: board.phase,
+        step: board.step,
+        activePlayer: board.activePlayer,
+        priorityPlayer: board.priorityPlayer,
+      },
+      seats: this.opts.seats.map((setup, index) => {
+        const reveal = mayRevealSeat(setup.seat, humanSeat, over);
+        const seat = board.seats.find((candidate) => candidate.seat === setup.seat);
+        return {
+          seat: setup.seat,
+          controller: setup.seat === humanSeat ? 'human' : this.opts.providerKind,
+          label: setup.summary.label,
+          commanderNames: [...setup.summary.commanderNames],
+          colorIdentity: [...setup.summary.colorIdentity],
+          archetypeTag: setup.summary.archetypeTag,
+          deckSnapshotId: setup.deckSnapshotId,
+          source: reportDeckSource(context.sources[index], index, this.opts.seed, reveal),
+          decklist: reveal ? orderedDecklist(setup.config) : null,
+          life: seat?.life ?? 0,
+          poisonCounters: seat?.poisonCounters ?? 0,
+          handSize: seat?.handSize ?? 0,
+          librarySize: seat?.librarySize ?? 0,
+          hasLost: seat?.hasLost ?? false,
+          lossReason: seat?.lossReason ?? null,
+        };
+      }),
+      pendingChoice:
+        pending === null
+          ? null
+          : {
+              requestId: pending.request.requestId,
+              decisionType: pending.request.decisionType,
+              prompt: pending.request.prompt,
+              options: pending.request.legalActions
+                .filter((action) => !this.isIgnoredAbility(action))
+                .map((action) => action.description),
+            },
+      lastSubmittedAction:
+        last === null
+          ? null
+          : {
+              requestId: last.request.requestId,
+              turn: last.request.turn,
+              decisionType: last.request.decisionType,
+              description: lastAction?.description ?? `action ${last.response.actionId}`,
+              targets: (last.response.targets ?? []).map((target) => nameOf(target.choice)),
+            },
+      recentLog: formatPlayerLog(this.engine.eventsSince(0), humanSeat)
+        .slice(-REPORT_LOG_LINES)
+        .map(reportLogLine),
+    };
   }
 
   setDebugFlags(flags: DebugFlags): void {

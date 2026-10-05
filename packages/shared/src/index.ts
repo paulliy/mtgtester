@@ -166,6 +166,9 @@ export type {
   ResumeGamePayload,
 } from './protocol';
 
+// --- Copy game report ---
+export type { GameReport, GameReportBuild, GameReportDeckSource, GameReportSeat } from './report';
+
 export { BATCH_GAME_STATUSES, BATCH_STATUSES } from './batch';
 export type {
   BatchAggregate,

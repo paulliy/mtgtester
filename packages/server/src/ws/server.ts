@@ -15,6 +15,7 @@ import {
 } from '@mtg/shared';
 import type {
   ClientToServerMessage,
+  GameReportBuild,
   GameStartedPayload,
   PlayerId,
   ServerToClientMessage,
@@ -26,6 +27,7 @@ import { listKnownDecks } from '../cards/known-decks';
 import type { SupportedPool } from '../cards/pool';
 import type { GameStore } from '../db';
 import type { BannedList } from '../decks/banned';
+import type { ReportSeatSource } from '../match/report';
 import { MatchSession } from '../match/session';
 import { BatchManager, validateBatch } from '../batch/manager';
 import { setupSeats } from '../match/setup';
@@ -41,6 +43,8 @@ export interface GameServerDeps {
   port?: number;
   /** Explicit opt-in for closed, unpersisted deterministic viewer scenarios. */
   cardTestLab?: boolean;
+  /** The checkout this server runs from, for "Copy game report". Unknown when omitted. */
+  build?: GameReportBuild;
 }
 
 /** Four seats in v1; the count is a parameter, but only four is supported and tested (§15). */
@@ -107,6 +111,9 @@ export class GameServer {
   private playerSocket: ServerWebSocket<SocketData> | null = null;
   private sessionToken: string | null = null;
   private startedPayload: GameStartedPayload | null = null;
+  /** How each seat's deck was chosen, and the lab scenario if any — for "Copy game report". */
+  private reportSources: { sources: ReportSeatSource[]; cardTestScenarioId: string | null } | null =
+    null;
   private readonly batchManager: BatchManager | null;
   private readonly setupPreviews = new Map<
     string,
@@ -173,6 +180,9 @@ export class GameServer {
         }
         if (url.pathname === '/api/setup-preview' && request.method === 'POST') {
           return await this.handleSetupPreview(request);
+        }
+        if (url.pathname === '/api/game-report' && request.method === 'POST') {
+          return await this.handleGameReport(request);
         }
         if (url.pathname === '/api/card-test-scenarios') {
           if (this.deps.cardTestLab !== true)
@@ -366,6 +376,51 @@ export class GameServer {
     return Response.json({ ...preview, previewId });
   }
 
+  /**
+   * `POST /api/game-report` with `{ sessionToken }`: the "Copy game report" payload for the
+   * single-player game that token resumes. The token is the same reconnect credential `resumeGame`
+   * checks, so only the player's own browser can export a live game — and the session builds the
+   * report from the human seat, keeping opponents' decks hidden until the game is over. POST
+   * keeps the token out of URLs and request logs.
+   */
+  private async handleGameReport(request: Request): Promise<Response> {
+    let text: string;
+    try {
+      text = await request.text();
+    } catch {
+      return Response.json({ message: 'Unreadable request body.' }, { status: 400 });
+    }
+    const strict = parseStrictJson(text);
+    const token =
+      strict.ok &&
+      typeof strict.value === 'object' &&
+      strict.value !== null &&
+      !Array.isArray(strict.value)
+        ? (strict.value as Record<string, unknown>)['sessionToken']
+        : undefined;
+    if (typeof token !== 'string' || token.length === 0)
+      return Response.json({ message: 'A session token is required.' }, { status: 400 });
+    const session = this.session;
+    if (
+      session === null ||
+      session.getGameMode() !== 'singlePlayer' ||
+      this.sessionToken === null ||
+      token !== this.sessionToken
+    )
+      return Response.json(
+        { message: 'That single-player session is unavailable.' },
+        { status: 404 },
+      );
+    return Response.json(
+      session.gameReport({
+        build: this.deps.build ?? { commit: null, branch: null, dirty: null },
+        startedAt: this.startedPayload?.startedAt ?? null,
+        sources: this.reportSources?.sources ?? [],
+        cardTestScenarioId: this.reportSources?.cardTestScenarioId ?? null,
+      }),
+    );
+  }
+
   private async handleMessage(
     socket: ServerWebSocket<SocketData>,
     raw: string | Buffer,
@@ -514,6 +569,7 @@ export class GameServer {
         this.playerSocket = null;
         this.sessionToken = null;
         this.startedPayload = null;
+        this.reportSources = null;
         return;
 
       case 'setDebugFlags':
@@ -642,6 +698,7 @@ export class GameServer {
       this.session = null;
       this.sessionToken = null;
       this.startedPayload = null;
+      this.reportSources = null;
     }, PLAYER_IDLE_GRACE_MS);
     this.playerIdleTimer.unref?.();
   }
@@ -830,6 +887,7 @@ export class GameServer {
       startedAt: new Date().toISOString(),
     };
     this.startedPayload = startedPayload;
+    this.reportSources = { sources: [...seats], cardTestScenarioId: null };
     const startedMessage: ServerToClientMessage = { type: 'gameStarted', payload: startedPayload };
     if (gameMode === 'singlePlayer') this.sendTo(socket, startedMessage);
     else this.broadcast(startedMessage);
@@ -888,6 +946,10 @@ export class GameServer {
       cardTestScenario: scenario.metadata,
     };
     this.startedPayload = startedPayload;
+    this.reportSources = {
+      sources: scenario.seats.map(() => ({ kind: 'cardTestScenario' as const })),
+      cardTestScenarioId: scenario.metadata.id,
+    };
     this.sendTo(socket, { type: 'gameStarted', payload: startedPayload });
     session.start();
   }

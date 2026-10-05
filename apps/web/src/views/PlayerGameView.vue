@@ -14,6 +14,7 @@ import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
+import CopyGameReportButton from '../components/CopyGameReportButton.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
@@ -1532,7 +1533,9 @@ function abandon(): void {
           @update:show-reasoning="
             store.setDebugFlags({ ...store.debugFlags, showAIResponses: $event })
           "
-        />
+        >
+          <template #actions><CopyGameReportButton /></template>
+        </ActionLog>
       </aside>
     </main>
     <p v-else class="waiting">Waiting for the player-safe board…</p>

@@ -55,6 +55,18 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   await expect(summary.getByText('Since your last action')).toBeVisible();
   await expect(summary.locator('.bot-seat').first()).toBeVisible();
 
+  // "Copy game report" puts a filable report on the clipboard: this seed and the player's own
+  // deck, but no opponent decklist while the game is live.
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.getByRole('button', { name: 'Copy game report' }).click();
+  await expect(page.getByText('Game report copied.')).toBeAttached();
+  const report = await page.evaluate(() => navigator.clipboard.readText());
+  expect(report).toContain('## MTG Tester game report');
+  expect(report).toContain(`seed \`${SEED}\``);
+  expect(report).toContain('Position: Turn 7');
+  expect(report).toContain('### P1 decklist (engine order)');
+  expect(report).not.toMatch(/### P[234] decklist/);
+
   // A new turn brings a new land drop, so passing asks again; "Pass anyway" passes.
   await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
   await expect(reminder).toBeVisible();

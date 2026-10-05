@@ -25,6 +25,7 @@ import { toOracleCard, type RawScryfallCard } from '../cards/scryfall';
 import { GameStore } from '../db';
 import { loadBannedList, type BannedList } from '../decks/banned';
 import { GameServer } from '../ws/server';
+import { readBuildInfo } from '../build-info';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const DB_PATH = 'data/mtg.sqlite';
@@ -118,6 +119,7 @@ function main(): void {
     store,
     port: args.port,
     cardTestLab: args.cardTestLab,
+    build: readBuildInfo(process.cwd()),
   });
   const handle = server.listen();
   // Recover only after acquiring the port: a failed second launch must not close live work.
