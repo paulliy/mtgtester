@@ -6,7 +6,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { runCombatPhase } from '../src/combat/combat';
+import { RandomDecisionProvider } from '../src/providers/providers';
+import { describeDamageSplit, runCombatPhase } from '../src/combat/combat';
+import { formatSpectatorLog } from '../src/view/spectator';
 import { runTurn } from '../src/turn/turn';
 import { GameOverSignal } from '../src/signals';
 import { createGame } from '../src/state/game';
@@ -26,6 +28,7 @@ import {
   gameConfig,
   giantGrowth,
   keywordCreature,
+  makeEngine,
   oracle,
   pick,
   pump,
@@ -331,6 +334,41 @@ describe('combat (brief §5.4 worked example and CR 506–511)', () => {
     expect(ctx.state.battlefield.some((p) => p.cardId === wallA.cardId)).toBe(false);
     const survivor = ctx.state.battlefield.find((p) => p.cardId === wallB.cardId);
     expect(survivor?.damageMarked).toBe(0);
+  });
+
+  it('narrates the division actually applied, not the preset option the response named', () => {
+    const ctx = combatContext();
+    const crusher = spawn(ctx, 'P1', keywordCreature('Test Crusher', '', '{3}{G}', '3/3'));
+    const wallA = spawn(ctx, 'P2', keywordCreature('Test Wall A', '', '{2}', '3/3'));
+    const wallB = spawn(ctx, 'P2', keywordCreature('Test Wall B', '', '{2}', '1/1'));
+
+    let presetDescription: string | undefined;
+    let splitDescription: string | null = null;
+    pump(runCombatPhase(ctx), (d) => {
+      const attack = attackWith('Test Crusher', 'P2')(d);
+      if (attack !== null) return attack;
+      if (d.decisionType === 'declareBlockers') {
+        return declareBlocks(d, (_id, subject) =>
+          subject.name === 'Test Wall A' || subject.name === 'Test Wall B' ? crusher.id : null,
+        );
+      }
+      if (d.decisionType === 'assignCombatDamage') {
+        // Option 0 reads "All 3 damage to Test Wall A", but the split sends 2 to A and 1 to B —
+        // the browser trial's Wall of Omens/Goblin mismatch.
+        presetDescription = d.options[0]?.description;
+        splitDescription = describeDamageSplit(ctx, 3, { [wallA.id]: 2, [wallB.id]: 1 });
+        return splitDamage({ [wallA.id]: 2, [wallB.id]: 1 });
+      }
+      return pick(d, /Pass|does not/);
+    });
+
+    expect(presetDescription).toBe('All 3 damage to Test Wall A');
+    expect(splitDescription).toBe('Divide 3 damage: 2 to Test Wall A, 1 to Test Wall B');
+    const lines = formatSpectatorLog(ctx.state.eventLog).map((line) => line.text);
+    expect(lines).toContain(
+      'Test Crusher divides its combat damage: 2 to Test Wall A, 1 to Test Wall B',
+    );
+    expect(lines.some((line) => line.includes('All 3 damage'))).toBe(false);
   });
 
   it('an invalid or missing division falls back to dumping everything on the first live blocker', () => {
@@ -720,5 +758,59 @@ describe('combat (brief §5.4 worked example and CR 506–511)', () => {
     expect(ctx.state.turnOrder).toEqual(['P1', 'P3', 'P4']);
     // Regular (non-commander) damage in the same game did NOT count toward the total —
     // implicitly covered: only commander damage was tracked at all.
+  });
+});
+
+describe('combat-damage division in the replay log (browser trial, Turn 49/55)', () => {
+  it("records the submitted split as the decision's description, not option 0's preset", () => {
+    const seats = [0, 1, 2, 3].map(() => ({
+      cards: [
+        ...copies(12, forest),
+        ...copies(12, () => keywordCreature('Test Bear', '', '{G}', '2/2')),
+      ],
+    }));
+    const engine = makeEngine(seats, { seed: 'split-1', turnCap: 30 });
+    const providers = new Map<string, RandomDecisionProvider>();
+    let divisions = 0;
+    for (let i = 0; i < 20_000; i += 1) {
+      const step = engine.advance();
+      if (step.kind === 'gameOver') break;
+      if (step.kind !== 'decision') continue;
+      const request = step.request;
+      if (request.combatDamageSplit !== undefined) {
+        // Everything onto the LAST target: option 0 always names the first one, so a log that
+        // echoed the option text would say the opposite of what was submitted.
+        const { amount, targets } = request.combatDamageSplit;
+        const last = targets[targets.length - 1] as string;
+        divisions += 1;
+        engine.submit({
+          requestId: request.requestId,
+          actionId: 0,
+          combatDamageSplit: Object.fromEntries(
+            targets.map((id) => [id, id === last ? amount : 0]),
+          ),
+        });
+        continue;
+      }
+      let provider = providers.get(request.decidingPlayer);
+      if (provider === undefined) {
+        provider = new RandomDecisionProvider(`split-1-${request.decidingPlayer}`);
+        providers.set(request.decidingPlayer, provider);
+      }
+      engine.submit(provider.decide(request));
+    }
+
+    expect(divisions).toBeGreaterThan(0);
+    const log = engine.getState().eventLog;
+    const decisions = log.filter(
+      (event) =>
+        event.type === 'decision' && event.payload['decisionType'] === 'assignCombatDamage',
+    );
+    expect(decisions).toHaveLength(divisions);
+    for (const decision of decisions) {
+      const description = String(decision.payload['description']);
+      expect(description).toMatch(/^Divide \d+ damage: \d+ to /);
+      expect(description).not.toMatch(/^All /);
+    }
   });
 });

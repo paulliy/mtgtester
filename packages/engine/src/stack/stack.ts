@@ -60,11 +60,15 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   // Fizzle check (CR 608.2b): if the object HAD targets and every one is now illegal, it
   // doesn't resolve. Spell cards go to the graveyard. A variable-count slot chosen at zero
   // (Ureni with no opponent creatures) contributes no targets and so cannot itself fizzle
-  // anything — `anyChosen` tracks whether there was ever a target to check at all.
+  // anything — `anyChosen` tracks whether there was ever a target to check at all. Targets are
+  // indexed by slot, so an unchosen mode's slot is empty: a hole, or an explicit `undefined` once
+  // a copy has spread the array (`copyTargetSpell`). Neither is a target, so neither can make an
+  // otherwise targetless mode fizzle.
   const specs = top.ability?.targets ?? [];
   let anyChosen = false;
   let anyLegal = false;
   top.targets.forEach((t, i) => {
+    if (t === undefined) return;
     anyChosen = true;
     const kind = specs[i]?.kind;
     if (

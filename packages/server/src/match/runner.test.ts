@@ -497,6 +497,59 @@ describe('eliminatorFor', () => {
       expect(seat.eliminatedBySeat).not.toBe(seat.seat);
     }
   });
+
+  it("records each loser's own elimination turn, not the game's final turn", async () => {
+    const finish = vi.fn();
+    const appendEvents = vi.fn();
+    const recorder = {
+      start: vi.fn(),
+      appendEvents,
+      saveTurnSnapshot: vi.fn(),
+      loadTurnSnapshot: vi.fn(() => null),
+      snapshotTurns: vi.fn(() => []),
+      loadEvents: vi.fn(() => []),
+      markStatus: vi.fn(),
+      finish,
+    };
+    const runner = new MatchRunner({
+      engine: makeEngine(),
+      gameId: 'g-test',
+      seed: 'runner-test',
+      seats: SEATS,
+      providerFor: randomProviders(),
+      recorder: recorder as never,
+      onSnapshot: (turn) => {
+        runner.setViewTurn(turn);
+      },
+    });
+
+    await runner.run();
+
+    const eliminations = new Map<string, number>();
+    for (const call of appendEvents.mock.calls) {
+      for (const event of call[0] as Array<{
+        type: string;
+        turn: number;
+        payload: { player?: string };
+      }>) {
+        if (event.type === 'playerEliminated' && event.payload.player !== undefined) {
+          eliminations.set(event.payload.player, event.turn);
+        }
+      }
+    }
+    const seats = finish.mock.calls[0]?.[2] as Array<{
+      seat: string;
+      eliminatedOnTurn: number | null;
+    }>;
+    const losers = seats.filter((seat) => seat.eliminatedOnTurn !== null);
+    // Twenty-card libraries deck each seat out on its own turn, so the losers fall on
+    // different turns — exactly the case that recording the final turn for everyone hid.
+    expect(losers.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(losers.map((seat) => seat.eliminatedOnTurn)).size).toBeGreaterThan(1);
+    for (const seat of losers) {
+      expect(seat.eliminatedOnTurn).toBe(eliminations.get(seat.seat));
+    }
+  });
 });
 
 describe('MatchRunner — decision anchor sequences (ADR 0022)', () => {

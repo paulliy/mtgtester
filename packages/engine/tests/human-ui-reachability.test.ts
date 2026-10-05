@@ -450,19 +450,26 @@ describe('Kairi, the Swirling Sky', () => {
 
     pump(moveObject(ctx, onBoard, { zone: 'graveyard' })); // dies — queues the modal trigger
 
-    // Kairi's `targets: []`, so placement (CR 603.3d) asks nothing; the mode choice and its
-    // nested "which spell to return" decision both happen at RESOLUTION, inside one
-    // `executeAbility` call — one answer function has to field both prompts.
-    const placement = pump(priorityCheckpoint(ctx));
-    expect(placement.decisions).toHaveLength(0);
-
-    const { decisions } = pump(resolveTopOfStack(ctx), (d) => {
-      if (d.prompt.toLowerCase().includes('choose one')) {
+    // The mode is chosen as the trigger is put on the stack (CR 603.3c, 700.2b), before any
+    // target and never at resolution; the nested "which spell to return" decision is the only
+    // thing left for resolution.
+    const placement = pump(priorityCheckpoint(ctx), (d) => {
+      if (d.options.some((o) => o.type === 'chooseModes')) {
         return {
           index: d.options.findIndex((o) => /Mill/.test(o.description)),
           targets: new Map(),
         };
       }
+      return { index: 0, targets: new Map() };
+    });
+    const modeChoice = placement.decisions.filter((d) =>
+      d.options.some((o) => o.type === 'chooseModes'),
+    );
+    expect(modeChoice).toHaveLength(1);
+    expectAllReachable(ctx, modeChoice);
+    expect(ctx.state.stack.at(-1)?.description).toMatch(/\[mode: Mill/);
+
+    const { decisions } = pump(resolveTopOfStack(ctx), (d) => {
       if (d.prompt.includes('choose instant/sorcery card from graveyard')) {
         return {
           index: d.options.findIndex((o) => /Return/.test(o.description)),
@@ -471,10 +478,7 @@ describe('Kairi, the Swirling Sky', () => {
       }
       return { index: 0, targets: new Map() };
     });
-
-    const modeChoice = decisions.filter((d) => d.prompt.toLowerCase().includes('choose one'));
-    expect(modeChoice).toHaveLength(1);
-    expectAllReachable(ctx, modeChoice);
+    expect(decisions.some((d) => d.options.some((o) => o.type === 'chooseModes'))).toBe(false);
 
     const returnChoice = decisions.filter((d) =>
       d.prompt.includes('choose instant/sorcery card from graveyard'),

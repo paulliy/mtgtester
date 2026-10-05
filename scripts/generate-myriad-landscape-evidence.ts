@@ -54,6 +54,7 @@ const SOURCE_FILES = [
   'packages/bot/src/veto.ts',
   'packages/bot/src/weights.ts',
   'packages/engine/package.json',
+  'packages/engine/src/actions/ability-modes.ts',
   'packages/engine/src/actions/apply.ts',
   'packages/engine/src/actions/legal.ts',
   'packages/engine/src/cards/ability.ts',

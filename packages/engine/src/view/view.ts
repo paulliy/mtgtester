@@ -243,7 +243,9 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
     id: so.id,
     controller: so.controllerId,
     description: so.description,
-    targets: [...so.targets],
+    // Stack targets are indexed by slot, so an unchosen mode leaves a hole that would serialize as
+    // `null`; the projection carries only the targets actually chosen.
+    targets: so.targets.filter((id) => id !== undefined),
   }));
 
   const recentLog = s.eventLog

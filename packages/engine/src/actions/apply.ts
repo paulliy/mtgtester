@@ -6,6 +6,13 @@ import { activationManaSources } from '../mana/activation';
  */
 
 import type { ObjectId, PlayerId } from '@mtg/shared';
+import {
+  abilityForModes,
+  abilityModeLabel,
+  abilityModeSelections,
+  abilityModeTargetSlots,
+  slotIsActive,
+} from './ability-modes';
 import type { WardCost } from '../cards/ability';
 import { evaluateCondition } from '../cards/condition';
 import type { Ability, AbilityCost, CardDefinition } from '../cards/definition';
@@ -905,30 +912,69 @@ export function* applyPriorityAction(
         throw new Error('activated ability condition is not met');
       }
 
+      // CR 601.2b/602.2b: a modal ability's mode was announced by the option itself, before
+      // targets. Fold it in now so the stack entry, fizzle check and executor see only the
+      // chosen modes' effects, and only those modes' target slots are announced.
+      const modes = activated.ability.modes;
+      if ((modes === undefined) !== (payload.modes === undefined)) {
+        throw new Error(`engine bug: mode announcement mismatch for ${perm.name}`);
+      }
+      const selectedModes = payload.modes;
+      if (
+        modes !== undefined &&
+        selectedModes !== undefined &&
+        !abilityModeSelections(modes).some(
+          (candidate) =>
+            candidate.length === selectedModes.length &&
+            candidate.every((mode, i) => mode === selectedModes[i]),
+        )
+      ) {
+        throw new Error(`engine bug: invalid modes ${selectedModes.join(',')} for ${perm.name}`);
+      }
+      const announced =
+        selectedModes === undefined
+          ? activated.ability
+          : abilityForModes(activated.ability, selectedModes);
+      const activeSlots =
+        modes === undefined || selectedModes === undefined
+          ? undefined
+          : abilityModeTargetSlots(modes, selectedModes);
+      const modeLabel =
+        modes === undefined || selectedModes === undefined
+          ? undefined
+          : abilityModeLabel(modes, selectedModes);
+
       // CR 601.2c/601.2h: targets are chosen, then costs are paid, then the ability is on the
       // stack. Paying is one indivisible act and happens even if the ability never resolves —
       // which is why sacrificing the source does not remove the ability from the stack.
+      // Indexed by slot, so an unchosen mode's slot stays empty (as a modal spell's does).
       const targets: ObjectId[] = [];
       for (const [slot, spec] of activated.ability.targets.entries()) {
-        if (spec.count !== undefined) continue;
+        if (spec.count !== undefined || !slotIsActive(activeSlots, slot)) continue;
         const choice = outcome.targets.get(slot);
         if (choice === undefined)
           throw new Error(`missing target for slot ${slot} of ${perm.name}`);
         if (!computeTargetOptions(ctx, spec, player.id).includes(choice)) {
           throw new Error(`illegal target ${choice} for slot ${slot} of ${perm.name}`);
         }
-        targets.push(choice);
+        targets[slot] = choice;
       }
 
       const counted = yield* chooseCountTargets(
         ctx,
-        activated.ability,
+        announced,
         player.id,
         perm.cardId,
-        targets,
+        targets.filter((id): id is ObjectId => id !== undefined),
+        activeSlots,
       );
-      const allTargets = [...targets, ...Object.values(counted.countTargets).flat()];
-      const description = activated.ability.description ?? 'activated ability';
+      const allTargets = [
+        ...targets.filter((id): id is ObjectId => id !== undefined),
+        ...Object.values(counted.countTargets).flat(),
+      ];
+      const description =
+        (activated.ability.description ?? 'activated ability') +
+        (modeLabel === undefined ? '' : ` [mode: ${modeLabel}]`);
       const id = `o-${s.nextObjectNum++}` as ObjectId;
       // Snapshot before paying: a sacrifice cost removes the permanent, and the stack entry
       // must still name its source (CR 608.2f — the ability resolves regardless).
@@ -946,7 +992,7 @@ export function* applyPriorityAction(
           ? { divisionAmounts: counted.divisionAmounts }
           : {}),
         card: null,
-        ability: activated.ability,
+        ability: announced,
         sourceOracleId: perm.oracleId,
         sourceCardId: perm.cardId,
         isCommanderCast: false,
@@ -996,7 +1042,13 @@ export function* applyPriorityAction(
       emit(
         ctx,
         'activateAbility',
-        { player: player.id, source: perm.name, cardId: perm.cardId, description, targets },
+        {
+          player: player.id,
+          source: perm.name,
+          cardId: perm.cardId,
+          description,
+          targets: targets.filter((id): id is ObjectId => id !== undefined),
+        },
         player.id,
       );
       debug(ctx, 'stack', `${player.id} activates ${perm.name} — ${description}`);

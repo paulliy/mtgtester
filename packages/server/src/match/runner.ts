@@ -175,6 +175,8 @@ export class MatchRunner {
   private readonly landsDrawn = new Map<PlayerId, number>();
   private readonly cardsDrawn = new Map<PlayerId, number>();
   private readonly eliminators = new Map<PlayerId, PlayerId>();
+  /** The turn each player's `playerEliminated` event fired on — not the game's final turn. */
+  private readonly eliminationTurns = new Map<PlayerId, number>();
   private readonly indexedMetricEventSequences = new Set<number>();
 
   /** Resolves when something the compute gate cares about changes. */
@@ -520,6 +522,13 @@ export class MatchRunner {
       ) {
         this.eliminators.set(event.payload['target'], event.payload['controller']);
       }
+      if (
+        event.type === 'playerEliminated' &&
+        typeof event.payload['player'] === 'string' &&
+        !this.eliminationTurns.has(event.payload['player'])
+      ) {
+        this.eliminationTurns.set(event.payload['player'], event.turn);
+      }
     }
   }
 
@@ -618,6 +627,8 @@ export class MatchRunner {
   private persistOutcome(result: GameResult, status: GameStatus): void {
     const recorder = this.opts.recorder;
     if (recorder === null || recorder === undefined) return;
+    // The game-ending elimination can still be unflushed here; indexing is idempotent per sequence.
+    this.indexMetricEvents(this.opts.engine.eventsSince(this.eventCursor));
     const state = this.opts.engine.getState();
     recorder.finish(
       result,
@@ -625,7 +636,9 @@ export class MatchRunner {
       state.players.map((player) => ({
         seat: player.id,
         lossReason: player.lossReason,
-        eliminatedOnTurn: player.hasLost ? result.turnCount : null,
+        eliminatedOnTurn: player.hasLost
+          ? (this.eliminationTurns.get(player.id) ?? result.turnCount)
+          : null,
         eliminatedBySeat: eliminatorFor(player, this.eliminators.get(player.id) ?? null),
         mulligansTaken: mulligansOf(player),
         openingHandSize: 7,
