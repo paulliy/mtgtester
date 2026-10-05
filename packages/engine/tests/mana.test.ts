@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TAP_COST } from '../src/cards/definition';
 import type { ManaEntry } from '../src/cards/ability';
 import { canPay, parseManaCost, planPayment, withX } from '../src/mana/cost';
-import type { ManaSource, ProducedMana } from '../src/mana/cost';
+import type { ManaSource, ManaUnit, ProducedMana } from '../src/mana/cost';
 
 type Sym = 'W' | 'U' | 'B' | 'R' | 'G' | 'C';
 
@@ -129,6 +129,36 @@ describe('payment solver', () => {
     // The {C} alternative cannot pay a {U} pip; the solver backtracks to the any-color one.
     expect(plan?.tapCardIds).toEqual(['haven']);
     expect(producedSymbols(plan!.produced)).toEqual(['U']);
+  });
+
+  it('settles a payment it cannot make without retrying the same dead ends', () => {
+    // The shape that froze a built-in-bot game on turn 41: a stack of Treasures, a permanent with
+    // two mana abilities, and a cost one mana larger than the board can make. Every symbol of an
+    // any-color unit covers a generic pip the same way, so the search used to retry each dead end
+    // once per color: seven Treasures took seconds, twelve never returned.
+    const any: ManaUnit = ['W', 'U', 'B', 'R', 'G'];
+    const treasures: ManaSource[] = Array.from({ length: 7 }, (_, i) => ({
+      cardId: `treasure-${i}`,
+      units: [any],
+      costs: TAP_COST,
+    }));
+    const sources: ManaSource[] = [
+      ...treasures,
+      { cardId: 'nest', units: [any], costs: TAP_COST },
+      { cardId: 'nest', units: [['G']], costs: TAP_COST },
+      src('forest-1', 'G'),
+      src('forest-2', 'G'),
+      src('forest-3', 'G'),
+    ];
+
+    const started = performance.now();
+    expect(canPay(parseManaCost('{11}{G}').cost!, pool(), sources)).toBe(false);
+    expect(performance.now() - started).toBeLessThan(500);
+
+    // One mana less is payable, and still taps every permanent once.
+    const plan = planPayment(parseManaCost('{10}{G}').cost!, pool(), sources);
+    expect(plan?.tapCardIds).toHaveLength(11);
+    expect(new Set(plan?.tapCardIds).size).toBe(11);
   });
 });
 
