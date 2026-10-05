@@ -18,6 +18,7 @@ const ORACLE_SHA256 = '7014d3a7b8e20db7e2a12576165361775173e73cb28f1106afa40a659
 const SOURCE_FILES = [
   'scripts/card-evidence-input.ts',
   'apps/web/src/views/CardTestLabView.vue',
+  'packages/engine/src/actions/ability-modes.ts',
   'packages/engine/src/actions/apply.ts',
   'packages/engine/src/actions/legal.ts',
   'packages/engine/src/mana/activation.ts',

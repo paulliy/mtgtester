@@ -16,6 +16,7 @@ import {
   selectedModeTargetSlots,
   spellMatchesSelector,
 } from '../actions/legal';
+import { abilityModeSelections } from '../actions/ability-modes';
 import type { WardCost } from '../cards/ability';
 import type {
   Ability,
@@ -1180,21 +1181,6 @@ function freeCardIsCastable(
  * "whenever a Dragon you control attacks, IT gains double strike". Not a target: never
  * announced, never legality-checked, and it cannot fizzle the ability (CR 115.10a).
  */
-function modalAbilitySelections(modes: NonNullable<Ability['modes']>): number[][] {
-  const out: number[][] = [];
-  const visit = (next: number, chosen: number[]): void => {
-    if (chosen.length >= modes.minChoices && chosen.length <= modes.maxChoices)
-      out.push([...chosen]);
-    if (chosen.length === modes.maxChoices) return;
-    for (let i = next; i < modes.options.length; i++) {
-      chosen.push(i);
-      visit(modes.repeatable === true ? i : i + 1, chosen);
-      chosen.pop();
-    }
-  };
-  visit(0, []);
-  return out;
-}
 export function* executeAbility(
   ctx: GameContext,
   source: EffectSource,
@@ -1210,12 +1196,14 @@ export function* executeAbility(
 ): GameGen<void> {
   const controller = playerById(ctx, source.controllerId);
 
-  // Triggered and activated modal abilities choose their mode on resolution (CR 700.2). Spells
-  // are intentionally excluded: their modes are selected during announcement by the cast-action
-  // path, and `resolveCastAbility` has already substituted the chosen effects by the time this
-  // executor sees a spell.
+  // A modal ability's mode belongs to its announcement (CR 700.2a-b): triggers choose it in
+  // `pushTriggerOnStack`, battlefield activations in the option `computePriorityOptions` offers,
+  // and spells in the cast path — each folds the chosen effects in before the ability reaches
+  // the stack. This is only a defensive fallback for a path that still carries `modes` here (a
+  // modal hand or graveyard activation, which no modeled card has), so the choice is at least
+  // asked rather than silently doing nothing.
   if (ability.kind !== 'spell' && ability.modes !== undefined) {
-    const selections = modalAbilitySelections(ability.modes);
+    const selections = abilityModeSelections(ability.modes);
     if (selections.length === 0) return;
     const outcome = yield {
       decisionType: 'general',
