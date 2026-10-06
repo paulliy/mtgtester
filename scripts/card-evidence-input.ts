@@ -1207,6 +1207,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Mordant Dragon: redirect combat damage to that player's creature"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Necron Deathmark: destroy up to one creature, mill three'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

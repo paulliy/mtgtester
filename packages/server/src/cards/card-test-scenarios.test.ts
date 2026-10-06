@@ -130,6 +130,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'harvest-season-viewer-tapped-creature-count',
       'land-tax-viewer-upkeep-reveal-search',
       'mordant-dragon-viewer-combat-damage-redirect',
+      'necron-deathmark-viewer-destroy-up-to-one-and-mill',
     ]);
   });
 

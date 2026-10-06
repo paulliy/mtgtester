@@ -1955,3 +1955,30 @@ test("Mordant Dragon: redirect combat damage to that player's creature", async (
   await expect(permanent(page, 'Lab Servo')).toBeVisible();
   await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('35');
 });
+
+test('Necron Deathmark: destroy up to one creature, mill three', async ({ page }) => {
+  await runScenario(page, 'Necron Deathmark: destroy up to one creature, mill three');
+
+  const deathmark = handCard(page, 'Necron Deathmark');
+  await expect(deathmark).toHaveClass(/actionable/);
+  await deathmark.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // The ordinary player slot opens the target tray; then the up-to-one creature slot asks.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await expect(
+    page.getByText(/choose a target \(0\/1 chosen\), or stop choosing/i).first(),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible();
+  await page.getByRole('button', { name: 'Target Lab Ox' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Servo')).toBeVisible();
+  await expect(page.getByText(/mills Forest/).first()).toBeVisible();
+});

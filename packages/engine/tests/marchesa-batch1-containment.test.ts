@@ -209,7 +209,6 @@ const REASONS: Record<string, string> = {
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
   'Dread Return': 'Flashback—Sacrifice three creatures is claimed without a flashback alternative.',
   'Illuminor Szeras': 'Sacrifice-another-creature is an effect, not a cost.',
-  'Necron Deathmark': 'Destroy up-to-one is a required target.',
   'Sceptre of Eternal Glory':
     'The three-or-more-same-name land restriction is omitted from the three-mana ability.',
   'Shard of the Void Dragon': 'Exile-from-battlefield is omitted from the artifact-leaves trigger.',
@@ -317,6 +316,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Necron Deathmark',
     'Mordant Dragon',
     'Land Tax',
     'Harvest Season',

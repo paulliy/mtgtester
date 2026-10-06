@@ -4399,6 +4399,35 @@ function mordantDragonScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function necronDeathmarkScenario(gameId: GameId): CardTestScenario {
+  const deathmark = pinnedFrom(MARCHESA_BATCH1, 'Necron Deathmark');
+  return pr01Scenario(gameId, {
+    id: 'necron-deathmark-viewer-destroy-up-to-one-and-mill',
+    title: 'Necron Deathmark: destroy up to one creature, mill three',
+    instructions: [
+      'Cast Necron Deathmark with your five lands.',
+      'Target P2 for the mill and Lab Ox as the up-to-one creature, then let the trigger resolve.',
+    ],
+    expectedOutcome:
+      'Lab Ox is destroyed and P2 mills three cards; Lab Servo survives because only one creature may be chosen.',
+    oracleSha256: deathmark.sha256,
+    clauseIds: ['necron-deathmark-destroy-and-mill'],
+    decks: {
+      P1: [deathmark.card, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Necron Deathmark'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4490,6 +4519,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'harvest-season-viewer-tapped-creature-count',
   'land-tax-viewer-upkeep-reveal-search',
   'mordant-dragon-viewer-combat-damage-redirect',
+  'necron-deathmark-viewer-destroy-up-to-one-and-mill',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4577,6 +4607,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'harvest-season-viewer-tapped-creature-count': harvestSeasonScenario,
   'land-tax-viewer-upkeep-reveal-search': landTaxScenario,
   'mordant-dragon-viewer-combat-damage-redirect': mordantDragonScenario,
+  'necron-deathmark-viewer-destroy-up-to-one-and-mill': necronDeathmarkScenario,
 };
 
 export function createCardTestScenario(

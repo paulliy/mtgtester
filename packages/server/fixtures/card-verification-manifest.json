@@ -2190,13 +2190,32 @@
     "45866598-4ee4-46b6-ade2-ffcdbe98e58f": {
       "name": "Necron Deathmark",
       "oracleSha256": "9ea0d5feb506abd7f1b877e3898f5a1aa655060699a83b69ca1753ef2eb20ae6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "necron-deathmark-flash",
+          "oracleText": "Flash",
+          "implementation": ["keyword flash (interpreted)"],
+          "engineTestIds": ["necron-deathmark-pinned-oracle-supported"],
+          "viewerScenarioIds": ["necron-deathmark-viewer-destroy-up-to-one-and-mill"]
+        },
+        {
+          "id": "necron-deathmark-destroy-and-mill",
           "oracleText": "When this creature enters, destroy up to one target creature and target player mills three cards.",
-          "implementation": ["explicitly unsupported; up-to-one is a required target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self; ability word 'Synaptic Disintegrator' is flavor",
+            "targets: one player, then an up-to-one creature count slot (0..1)",
+            "destroyEachChosen(slot 1) honors indestructible; millTargetPlayer(target 0, 3)",
+            "an illegal creature target does not stop the mill while the player stays legal (CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "necron-deathmark-destroy-and-mill",
+            "necron-deathmark-zero-creatures",
+            "necron-deathmark-no-creatures-at-all",
+            "necron-deathmark-indestructible",
+            "necron-deathmark-illegal-creature-keeps-mill"
+          ],
+          "viewerScenarioIds": ["necron-deathmark-viewer-destroy-up-to-one-and-mill"]
         }
       ],
       "gameplayAiScenarioIds": []

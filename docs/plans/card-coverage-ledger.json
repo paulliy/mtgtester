@@ -1392,6 +1392,24 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "45866598-4ee4-46b6-ade2-ffcdbe98e58f",
+    "name": "Necron Deathmark",
+    "package": "PR01.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Synaptic Disintegrator — When this creature enters, destroy up to one target creature and target player mills three cards.\"",
+      "explicitly unsupported: Destroy up-to-one is a required target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "8430ae03-2d4c-4031-aa29-4d53815ded78",
     "name": "Negative Zone Portal",
     "package": "W4",

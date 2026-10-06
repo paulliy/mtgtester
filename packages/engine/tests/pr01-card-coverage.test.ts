@@ -1255,6 +1255,116 @@ describe('Mordant Dragon', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.10 Necron Deathmark
+// ---------------------------------------------------------------------------------------------
+
+describe('Necron Deathmark', () => {
+  const deathmark = pinned('Necron Deathmark');
+  const wall = () =>
+    oracle({
+      name: 'Deathmark Wall',
+      typeLine: 'Creature — Wall',
+      oracleText: 'Indestructible',
+      keywords: ['Indestructible'],
+    });
+
+  /** Choose `player` for the mill slot and `creature` (or none) for the up-to-one slot. */
+  const deathmarkAnswer =
+    (player: string, creature: string | null): Answer =>
+    (decision) => {
+      if (/choose (a|another) target/.test(decision.prompt)) {
+        return creature === null
+          ? optionMatching(decision, /Choose no more targets/)
+          : optionMatching(decision, new RegExp(`^Target ${creature}$`));
+      }
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) return { index: 0, targets: new Map([[slot.slot, player]]) };
+      return { index: 0, targets: new Map() };
+    };
+
+  function board(seed: string) {
+    const ctx = pod(seed);
+    for (const id of ['P1', 'P2']) {
+      playerById(ctx, id).library = [];
+      for (let i = 0; i < 5; i++) conjure(ctx, id, forest(), 'library');
+    }
+    return ctx;
+  }
+
+  it('necron-deathmark-pinned-oracle-supported — pins the Oracle and models an up-to-one creature slot', () => {
+    expect(deathmark.sha256).toBe(
+      '9ea0d5feb506abd7f1b877e3898f5a1aa655060699a83b69ca1753ef2eb20ae6',
+    );
+    const def = interpretCard(deathmark.card);
+    expect(def.modeled).toBe(true);
+    expect(def.keywords).toContain('flash');
+    expect(def.triggers[0]?.targets).toEqual([
+      { kind: 'player' },
+      { kind: 'creature', count: { min: 0, max: 1 } },
+    ]);
+  });
+
+  it('necron-deathmark-destroy-and-mill — destroys the chosen creature and the target player mills three', () => {
+    const ctx = board('deathmark-both');
+    const victim = spawn(ctx, 'P2', bear());
+    enter(ctx, 'P1', deathmark.card);
+    settle(ctx, deathmarkAnswer('P2', 'Test Bear'));
+    expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(false);
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toEqual([
+      'Test Bear',
+      'Forest',
+      'Forest',
+      'Forest',
+    ]);
+    expect(playerById(ctx, 'P2').library).toHaveLength(2);
+  });
+
+  it('necron-deathmark-zero-creatures — choosing no creature still mills the target player', () => {
+    const ctx = board('deathmark-none');
+    const bystander = spawn(ctx, 'P2', bear());
+    enter(ctx, 'P1', deathmark.card);
+    const { decisions } = settle(ctx, deathmarkAnswer('P2', null));
+    expect(
+      decisions.some((decision) =>
+        decision.options.some((option) => option.description === 'Choose no more targets'),
+      ),
+    ).toBe(true);
+    expect(ctx.state.battlefield.some((entry) => entry.id === bystander.id)).toBe(true);
+    expect(playerById(ctx, 'P2').graveyard).toHaveLength(3);
+  });
+
+  it('necron-deathmark-no-creatures-at-all — with no creature on the battlefield it still triggers for the mill', () => {
+    const ctx = board('deathmark-empty');
+    const self = enter(ctx, 'P1', deathmark.card);
+    // Deathmark itself is a creature, so destroy nothing by declining the creature slot.
+    settle(ctx, deathmarkAnswer('P1', null));
+    expect(ctx.state.battlefield.some((entry) => entry.cardId === self.cardId)).toBe(true);
+    expect(playerById(ctx, 'P1').graveyard).toHaveLength(3);
+  });
+
+  it('necron-deathmark-indestructible — an indestructible target survives; the mill still happens', () => {
+    const ctx = board('deathmark-indestructible');
+    const survivor = spawn(ctx, 'P2', wall());
+    enter(ctx, 'P1', deathmark.card);
+    settle(ctx, deathmarkAnswer('P2', 'Deathmark Wall'));
+    expect(ctx.state.battlefield.some((entry) => entry.id === survivor.id)).toBe(true);
+    expect(playerById(ctx, 'P2').graveyard).toHaveLength(3);
+  });
+
+  it('necron-deathmark-illegal-creature-keeps-mill — if the creature leaves first, the player still mills', () => {
+    const ctx = board('deathmark-partial');
+    const victim = spawn(ctx, 'P2', bear());
+    enter(ctx, 'P1', deathmark.card);
+    pump(priorityCheckpoint(ctx), deathmarkAnswer('P2', 'Test Bear'));
+    expect(ctx.state.stack[0]?.countTargets?.[1]).toEqual([victim.id]);
+    pump(moveObject(ctx, victim, { zone: 'exile' }));
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P2').graveyard).toHaveLength(3);
+    expect(playerById(ctx, 'P2').graveyard.every((card) => card.name === 'Forest')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1309,6 +1419,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Mordant Dragon',
     sha256: '5f4a39ae0545bf5d50bac488bb58ac3101bb6ac10eeb19f289e2159a39d40552',
+    clauseCount: 2,
+  },
+  {
+    name: 'Necron Deathmark',
+    sha256: '9ea0d5feb506abd7f1b877e3898f5a1aa655060699a83b69ca1753ef2eb20ae6',
     clauseCount: 2,
   },
 ];

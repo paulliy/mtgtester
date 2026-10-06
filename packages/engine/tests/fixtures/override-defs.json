@@ -2642,8 +2642,46 @@
   {
     "oracleId": "45866598-4ee4-46b6-ade2-ffcdbe98e58f",
     "name": "Necron Deathmark",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Synaptic Disintegrator — When this creature enters, destroy up to one target creature and target player mills three cards."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Destroy up to one target creature; target player mills three cards",
+          "effects": [
+            {
+              "op": "destroyEachChosen",
+              "targetSlot": 1
+            },
+            {
+              "count": 3,
+              "op": "millTargetPlayer",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "player"
+            },
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "470ec98e-120c-446d-ade6-7d80aa836b55",
@@ -15739,8 +15777,46 @@
   {
     "oracleId": "oracle-necron-deathmark",
     "name": "Necron Deathmark",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Synaptic Disintegrator — When this creature enters, destroy up to one target creature and target player mills three cards."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Destroy up to one target creature; target player mills three cards",
+          "effects": [
+            {
+              "op": "destroyEachChosen",
+              "targetSlot": 1
+            },
+            {
+              "count": 3,
+              "op": "millTargetPlayer",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "player"
+            },
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-necron-monolith",

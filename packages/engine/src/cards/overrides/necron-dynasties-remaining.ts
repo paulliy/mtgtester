@@ -216,10 +216,28 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Top-of-library cast omits colorless spells, and exile-top is implemented as mill.',
   );
   // Catalog audit necron-remaining-batch-4: up-to-one is a required target.
-  unsupportedCard(
+  // Coverage PR01: "up to one target creature" is a 0..1 count slot (count slots follow the
+  // ordinary player slot), so the trigger can still target only a player.
+  defineCard(
     '45866598-4ee4-46b6-ade2-ffcdbe98e58f',
     'Necron Deathmark',
-    'Destroy up-to-one is a required target.',
+    [
+      'Synaptic Disintegrator — When this creature enters, destroy up to one target creature and target player mills three cards.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [{ kind: 'player' }, { kind: 'creature', count: { min: 0, max: 1 } }],
+          effects: [
+            { op: 'destroyEachChosen', targetSlot: 1 },
+            { op: 'millTargetPlayer', target: 0, count: 3 },
+          ],
+          description: 'Destroy up to one target creature; target player mills three cards',
+        },
+      ],
+    },
   );
   defineCard(
     '20932bca-52be-4288-9c7d-4154650c5ec9',

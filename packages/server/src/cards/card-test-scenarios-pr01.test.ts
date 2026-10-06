@@ -293,3 +293,28 @@ describe('Mordant Dragon Card Test Lab scenario', () => {
     replays('mordant-dragon-viewer-combat-damage-redirect', steps);
   });
 });
+
+describe('Necron Deathmark Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Necron Deathmark' },
+    { action: 'Targets for Necron Deathmark', targets: ['P2'] },
+    { action: 'Target Lab Ox' },
+  ];
+
+  it('necron-deathmark-viewer-destroy-up-to-one-and-mill — destroys one chosen creature and mills the target player three', () => {
+    const { seat, onBattlefield, offered } = run(
+      'necron-deathmark-viewer-destroy-up-to-one-and-mill',
+      steps,
+    );
+    expect(offered.flat()).toContain('Choose no more targets');
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual([
+      'Lab Ox',
+      'Forest',
+      'Forest',
+      'Forest',
+    ]);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    expect(onBattlefield('Necron Deathmark')).toHaveLength(1);
+    replays('necron-deathmark-viewer-destroy-up-to-one-and-mill', steps);
+  });
+});

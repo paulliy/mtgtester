@@ -824,6 +824,11 @@ export type Effect =
   | { op: 'grantKeywordEachChosenUntilEot'; targetSlot: number; keyword: KeywordAbility }
   | { op: 'untapUpTo'; selector: Selector; max: number }
   | { op: 'exileEachChosen'; targetSlot: number }
+  /**
+   * "Destroy up to N target …" — destroy each object chosen for a variable-count target slot
+   * (possibly none), skipping any that became illegal (CR 608.2b).
+   */
+  | { op: 'destroyEachChosen'; targetSlot: number }
   | {
       op: 'blinkEachChosen';
       targetSlot: number;

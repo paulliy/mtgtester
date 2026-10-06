@@ -1678,6 +1678,18 @@ export function* executeAbility(
         }
         break;
       }
+      case 'destroyEachChosen': {
+        const spec = ability.targets[effect.targetSlot];
+        for (const id of countTargets?.[effect.targetSlot] ?? []) {
+          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+            continue;
+          }
+          const permanent = findPermanent(ctx, id);
+          if (permanent === undefined) continue;
+          yield* destroyPermanent(ctx, source, permanent, false);
+        }
+        break;
+      }
       case 'blinkEachChosen': {
         const spec = ability.targets[effect.targetSlot];
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
