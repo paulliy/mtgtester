@@ -1487,6 +1487,168 @@ describe('Plasmancer', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.12 Sylvan Reclamation
+// ---------------------------------------------------------------------------------------------
+
+describe('Sylvan Reclamation', () => {
+  const reclamation = pinned('Sylvan Reclamation');
+  const relic = () => oracle({ name: 'Reclaim Relic', typeLine: 'Artifact', manaCost: '{2}' });
+  const charm = () => oracle({ name: 'Reclaim Charm', typeLine: 'Enchantment', manaCost: '{1}' });
+  const golem = () =>
+    oracle({ name: 'Reclaim Golem', typeLine: 'Artifact Creature — Golem', manaCost: '{3}' });
+
+  const CHOOSE_TARGET = /^Choose target \d+ for /;
+  const exiled = (ctx: GameContext, owner: string) =>
+    ctx.state.exile.filter((card) => card.ownerId === owner).map((card) => card.name);
+
+  /** Choose each named target in order for the up-to-two slot, then stop. */
+  const pick =
+    (...names: string[]): Answer =>
+    (decision) => {
+      if (CHOOSE_TARGET.test(decision.prompt)) {
+        const next = names.shift();
+        return next === undefined
+          ? optionMatching(decision, /Choose no more targets/)
+          : optionMatching(decision, new RegExp(`^Target ${next}$`));
+      }
+      return { index: 0, targets: new Map() };
+    };
+
+  /** Cast Sylvan Reclamation from P1's hand, answering the target choices with `answer`. */
+  function cast(ctx: GameContext, answer: Answer) {
+    const inHand = conjure(ctx, 'P1', reclamation.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [
+      { symbol: 'G' },
+      { symbol: 'W' },
+      { symbol: 'G' },
+      { symbol: 'G' },
+      { symbol: 'G' },
+    ]);
+    const option = castOptionFor(ctx, 'P1', inHand.id);
+    expect(option).toBeDefined();
+    const { decisions } = takeAction(ctx, 'P1', option!.payload as PriorityActionPayload, answer);
+    expect(ctx.state.stack).toHaveLength(1);
+    return decisions;
+  }
+
+  const offeredTargets = (decisions: PendingDecision[]) =>
+    decisions
+      .filter((decision) => CHOOSE_TARGET.test(decision.prompt))
+      .flatMap((decision) => decision.options.map((option) => option.description));
+
+  it('sylvan-reclamation-pinned-oracle-supported — pins the Oracle and models the 0..2 exile plus revealing landcycling', () => {
+    expect(reclamation.sha256).toBe(
+      '5682177705c6c6ef5b2dccfc5926514a68168bac41623daea143bf738b440274',
+    );
+    const def = interpretCard(reclamation.card);
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.targets).toEqual([
+      expect.objectContaining({ kind: 'permanent', count: { min: 0, max: 2 } }),
+    ]);
+    expect(def.spellAbility?.effects).toEqual([{ op: 'exileEachChosen', targetSlot: 0 }]);
+    expect(def.activatedAbilities).toHaveLength(1);
+    expect(def.activatedAbilities[0]).toMatchObject({
+      zone: 'hand',
+      costs: [{ kind: 'mana' }, { kind: 'discardSelf' }],
+      ability: { effects: [{ op: 'searchLibrary', reveal: true }, { op: 'shuffle' }] },
+    });
+  });
+
+  it('sylvan-reclamation-exiles-two — the normal cast exiles an artifact and an enchantment', () => {
+    const ctx = pod('reclaim-two');
+    const artifact = spawn(ctx, 'P2', relic());
+    const enchantment = spawn(ctx, 'P3', charm());
+    cast(ctx, pick('Reclaim Relic', 'Reclaim Charm'));
+    expect(ctx.state.stack[0]?.countTargets?.[0]).toEqual([artifact.id, enchantment.id]);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((entry) => entry.id === artifact.id)).toBe(false);
+    expect(ctx.state.battlefield.some((entry) => entry.id === enchantment.id)).toBe(false);
+    expect(exiled(ctx, 'P2')).toEqual(['Reclaim Relic']);
+    expect(exiled(ctx, 'P3')).toEqual(['Reclaim Charm']);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual([
+      'Sylvan Reclamation',
+    ]);
+  });
+
+  it('sylvan-reclamation-at-most-two — after two choices no third target is offered', () => {
+    const ctx = pod('reclaim-max');
+    spawn(ctx, 'P2', relic());
+    spawn(ctx, 'P2', charm());
+    const third = spawn(ctx, 'P2', golem());
+    const decisions = cast(ctx, pick('Reclaim Relic', 'Reclaim Charm', 'Reclaim Golem'));
+    expect(decisions.filter((decision) => CHOOSE_TARGET.test(decision.prompt))).toHaveLength(2);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((entry) => entry.id === third.id)).toBe(true);
+  });
+
+  it('sylvan-reclamation-zero-targets — it can be cast choosing nothing, or with no artifact or enchantment at all', () => {
+    const chosen = pod('reclaim-zero');
+    const kept = spawn(chosen, 'P2', relic());
+    cast(chosen, pick());
+    resolveTop(chosen);
+    expect(chosen.state.battlefield.some((entry) => entry.id === kept.id)).toBe(true);
+    expect(playerById(chosen, 'P1').graveyard.map((card) => card.name)).toEqual([
+      'Sylvan Reclamation',
+    ]);
+
+    const empty = pod('reclaim-empty');
+    cast(empty, pick());
+    resolveTop(empty);
+    expect(playerById(empty, 'P1').graveyard.map((card) => card.name)).toEqual([
+      'Sylvan Reclamation',
+    ]);
+  });
+
+  it('sylvan-reclamation-target-filter — artifact creatures count; creatures and lands are never offered', () => {
+    const ctx = pod('reclaim-filter');
+    spawn(ctx, 'P2', golem());
+    spawn(ctx, 'P2', bear());
+    spawn(ctx, 'P2', forest());
+    const offered = offeredTargets(cast(ctx, pick('Reclaim Golem')));
+    expect(offered).toContain('Target Reclaim Golem');
+    expect(offered).not.toContain('Target Test Bear');
+    expect(offered).not.toContain('Target Forest');
+  });
+
+  it('sylvan-reclamation-one-target-left — a target that left does not stop the other exile', () => {
+    const ctx = pod('reclaim-partial');
+    const artifact = spawn(ctx, 'P2', relic());
+    const enchantment = spawn(ctx, 'P2', charm());
+    cast(ctx, pick('Reclaim Relic', 'Reclaim Charm'));
+    pump(moveObject(ctx, artifact, { zone: 'graveyard' }));
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toEqual(['Reclaim Relic']);
+    expect(exiled(ctx, 'P2')).toEqual(['Reclaim Charm']);
+    expect(ctx.state.battlefield.some((entry) => entry.id === enchantment.id)).toBe(false);
+  });
+
+  it('sylvan-reclamation-basic-landcycling-reveals — {2} and a discard search a revealed basic land into hand, then shuffle', () => {
+    const ctx = pod('reclaim-cycling');
+    const inHand = conjure(ctx, 'P1', reclamation.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }, { symbol: 'G' }]);
+    const activation = priorityOptions(ctx, 'P1').find((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'activateAbility' && payload.objectId === inHand.id;
+    });
+    expect(activation).toBeDefined();
+    takeAction(ctx, 'P1', activation!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual([
+      'Sylvan Reclamation',
+    ]);
+    const handBefore = playerById(ctx, 'P1').hand.length;
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(handBefore + 1);
+    const found = ctx.state.eventLog.find((event) => event.type === 'searchFound');
+    expect(found?.payload).toMatchObject({ name: 'Forest', to: 'hand', revealed: true });
+    expect(formatPlayerLog(ctx.state.eventLog, 'P2').map((line) => line.text)).toContain(
+      'reveals Forest',
+    );
+    const types = ctx.state.eventLog.map((event) => event.type);
+    expect(types.lastIndexOf('shuffle')).toBeGreaterThan(types.indexOf('searchFound'));
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1551,6 +1713,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Plasmancer',
     sha256: '0aedfcf7611280dfaf130e91c553dbc2a0bce3d94f087201255ccd6db34ea22e',
+    clauseCount: 2,
+  },
+  {
+    name: 'Sylvan Reclamation',
+    sha256: '5682177705c6c6ef5b2dccfc5926514a68168bac41623daea143bf738b440274',
     clauseCount: 2,
   },
 ];

@@ -1832,6 +1832,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "aeec8e85-6571-4da6-8a48-f5d3985ca10b",
+    "name": "Sylvan Reclamation",
+    "package": "PR01.12",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Exile up to two target artifacts and/or enchantments.\"",
+      "explicitly unsupported: Up-to-two exile requires at least one target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9138a768-d01d-4603-9bae-d3bff6cd2f61",
     "name": "Taunt from the Rampart",
     "package": "W6",

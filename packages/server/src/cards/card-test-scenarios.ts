@@ -4459,6 +4459,74 @@ function plasmancerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function sylvanReclamationScenario(gameId: GameId): CardTestScenario {
+  const reclamation = pinnedFrom(MARCHESA_BATCH1, 'Sylvan Reclamation');
+  const idol = card({
+    oracleId: 'lab-reclaim-idol',
+    name: 'Lab Idol',
+    typeLine: 'Artifact',
+    manaCost: '{2}',
+    cmc: 2,
+  });
+  return pr01Scenario(gameId, {
+    id: 'sylvan-reclamation-viewer-exile-up-to-two',
+    title: 'Sylvan Reclamation: exile up to two artifacts and/or enchantments',
+    instructions: [
+      'Cast Sylvan Reclamation with your five lands.',
+      'Choose Lab Servo and Lab Hex as its two targets, then let it resolve.',
+    ],
+    expectedOutcome:
+      'Lab Servo and Lab Hex are exiled. No third target is offered, so Lab Idol survives, and Lab Ox is never offered because it is neither an artifact nor an enchantment.',
+    oracleSha256: reclamation.sha256,
+    clauseIds: ['sylvan-reclamation-exile-up-to-two'],
+    decks: {
+      P1: [reclamation.card, FOREST, FOREST, FOREST, FOREST, PLAINS],
+      P2: [LAB_SERVO, LAB_HEX, LAB_OX, FOREST, FOREST],
+      P3: [idol, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Sylvan Reclamation'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Plains'] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Hex', 'Lab Ox'] },
+        { playerId: 'P3', cardNames: ['Lab Idol'] },
+      ],
+    },
+  });
+}
+
+function sylvanReclamationLandcyclingScenario(gameId: GameId): CardTestScenario {
+  const reclamation = pinnedFrom(MARCHESA_BATCH1, 'Sylvan Reclamation');
+  const secret = card({
+    oracleId: 'lab-reclaim-secret',
+    name: 'Reclamation Private Library Secret',
+    typeLine: 'Creature — Secret',
+  });
+  return pr01Scenario(gameId, {
+    id: 'sylvan-reclamation-viewer-basic-landcycling',
+    title: 'Sylvan Reclamation: basic landcycling reveals a basic land',
+    instructions: [
+      "Activate Sylvan Reclamation's basic landcycling from your hand with two Forests.",
+      'Choose the Plains from the library search.',
+    ],
+    expectedOutcome:
+      'Sylvan Reclamation is discarded, the Plains is revealed to every player and put into your hand, your library is shuffled, and other library cards stay private.',
+    oracleSha256: reclamation.sha256,
+    clauseIds: ['sylvan-reclamation-basic-landcycling'],
+    decks: {
+      P1: [reclamation.card, FOREST, FOREST, PLAINS, secret],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Sylvan Reclamation'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forest', 'Forest'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4552,6 +4620,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'mordant-dragon-viewer-combat-damage-redirect',
   'necron-deathmark-viewer-destroy-up-to-one-and-mill',
   'plasmancer-viewer-reveal-swamp',
+  'sylvan-reclamation-viewer-exile-up-to-two',
+  'sylvan-reclamation-viewer-basic-landcycling',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4641,6 +4711,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'mordant-dragon-viewer-combat-damage-redirect': mordantDragonScenario,
   'necron-deathmark-viewer-destroy-up-to-one-and-mill': necronDeathmarkScenario,
   'plasmancer-viewer-reveal-swamp': plasmancerScenario,
+  'sylvan-reclamation-viewer-exile-up-to-two': sylvanReclamationScenario,
+  'sylvan-reclamation-viewer-basic-landcycling': sylvanReclamationLandcyclingScenario,
 };
 
 export function createCardTestScenario(

@@ -2827,13 +2827,38 @@
     "aeec8e85-6571-4da6-8a48-f5d3985ca10b": {
       "name": "Sylvan Reclamation",
       "oracleSha256": "5682177705c6c6ef5b2dccfc5926514a68168bac41623daea143bf738b440274",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "sylvan-reclamation-exile-up-to-two",
           "oracleText": "Exile up to two target artifacts and/or enchantments.",
-          "implementation": ["explicitly unsupported; up-to-two requires at least one target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "spell target slot: permanent that is an artifact or an enchantment, count 0..2, chosen one at a time with 'Choose no more targets' always available",
+            "exileEachChosen(slot 0): each still-legal chosen target is exiled; a target that left does not stop the other (CR 608.2b)",
+            "castable with zero targets chosen or none available"
+          ],
+          "engineTestIds": [
+            "sylvan-reclamation-pinned-oracle-supported",
+            "sylvan-reclamation-exiles-two",
+            "sylvan-reclamation-at-most-two",
+            "sylvan-reclamation-zero-targets",
+            "sylvan-reclamation-target-filter",
+            "sylvan-reclamation-one-target-left"
+          ],
+          "viewerScenarioIds": ["sylvan-reclamation-viewer-exile-up-to-two"]
+        },
+        {
+          "id": "sylvan-reclamation-basic-landcycling",
+          "oracleText": "Basic landcycling {2}",
+          "implementation": [
+            "interpreted typecycling: {2} plus discard this card from hand, any time you could cast an instant",
+            "searchLibrary basic land to hand with reveal (CR 702.29a), then shuffle"
+          ],
+          "engineTestIds": [
+            "sylvan-reclamation-pinned-oracle-supported",
+            "sylvan-reclamation-basic-landcycling-reveals"
+          ],
+          "viewerScenarioIds": ["sylvan-reclamation-viewer-basic-landcycling"]
         }
       ],
       "gameplayAiScenarioIds": []

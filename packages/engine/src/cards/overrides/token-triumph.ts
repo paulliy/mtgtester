@@ -14,6 +14,7 @@ import {
   ofSupertype,
   ofType,
   allOf,
+  anyOf,
   powerAtMost,
   IN_COMBAT,
   toughnessAtLeast,
@@ -48,10 +49,23 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     'Idol of Oblivion',
     'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
   );
-  unsupportedCard(
+  // Coverage PR01: "up to two" is a 0..2 count slot, so the spell may be cast with no target.
+  defineCard(
     'aeec8e85-6571-4da6-8a48-f5d3985ca10b',
     'Sylvan Reclamation',
-    'Up-to-two exile requires at least one target.',
+    ['Exile up to two target artifacts and/or enchantments.'],
+    {
+      spellAbility: spell({
+        targets: [
+          {
+            kind: 'permanent',
+            filter: anyOf(ofType('Artifact'), ofType('Enchantment')),
+            count: { min: 0, max: 2 },
+          },
+        ],
+        effects: [{ op: 'exileEachChosen', targetSlot: 0 }],
+      }),
+    },
   );
   unsupportedCard(
     'fc3e48c9-e303-435c-bdb1-7dc7881a9858',

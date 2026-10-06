@@ -34,7 +34,7 @@ describe('Batch 2 card overrides', () => {
     expect(def.activatedAbilities).toHaveLength(3);
   });
 
-  it('contains Sylvan Reclamation', () => {
+  it('models Sylvan Reclamation with an up-to-two exile slot (coverage PR01)', () => {
     const card = oracle({
       oracleId: 'aeec8e85-6571-4da6-8a48-f5d3985ca10b',
       name: 'Sylvan Reclamation',
@@ -43,10 +43,9 @@ describe('Batch 2 card overrides', () => {
       oracleText: 'Exile up to two target artifacts and/or enchantments.\nBasic landcycling {2}',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Up-to-two exile requires at least one target.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.targets[0]?.count).toEqual({ min: 0, max: 2 });
+    expect(def.spellAbility?.effects).toEqual([{ op: 'exileEachChosen', targetSlot: 0 }]);
   });
 
   it('models Mentor of the Meek', () => {

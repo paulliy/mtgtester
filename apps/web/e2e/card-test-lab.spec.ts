@@ -2009,3 +2009,53 @@ test('Plasmancer: enters and reveals a basic Swamp', async ({ page }) => {
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Plasmancer Private Library Secret')).toHaveCount(0);
 });
+
+test('Sylvan Reclamation: exile up to two artifacts and/or enchantments', async ({ page }) => {
+  await runScenario(page, 'Sylvan Reclamation: exile up to two artifacts and/or enchantments');
+
+  const reclamation = handCard(page, 'Sylvan Reclamation');
+  await expect(reclamation).toHaveClass(/actionable/);
+  await reclamation.click();
+  // The card offers both the spell and basic landcycling, so pick the spell explicitly.
+  await expect(page.getByRole('button', { name: /^Basic landcycling \{2\}/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Cast {3}{W}{G}' }).click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Up to two: each target is one choice, and stopping is always allowed.
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Target Lab Ox' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Target Lab Servo' }).click();
+  await expect(page.getByRole('button', { name: 'Target Lab Servo' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Target Lab Hex' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Idol')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+});
+
+test('Sylvan Reclamation: basic landcycling reveals a basic land', async ({ page }) => {
+  await runScenario(page, 'Sylvan Reclamation: basic landcycling reveals a basic land');
+
+  const reclamation = handCard(page, 'Sylvan Reclamation');
+  await expect(reclamation).toHaveClass(/actionable/);
+  // Two lands cannot cast the spell, so landcycling is the card's only action.
+  await reclamation.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // The Plains is the only basic land name in the library, so the search finds it directly.
+  await expect(page.getByText('reveals Plains').first()).toBeVisible({ timeout: 15_000 });
+  await expect(handCard(page, 'Plains')).toBeVisible();
+  await expect(handCard(page, 'Sylvan Reclamation')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(page.getByRole('alertdialog', { name: /haven't played a land/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Pass anyway' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('Reclamation Private Library Secret')).toHaveCount(0);
+});

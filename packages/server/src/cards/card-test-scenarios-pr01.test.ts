@@ -337,3 +337,48 @@ describe('Plasmancer Card Test Lab scenario', () => {
     replays('plasmancer-viewer-reveal-swamp', steps);
   });
 });
+
+describe('Sylvan Reclamation Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Sylvan Reclamation' },
+    { action: 'Target Lab Servo' },
+    { action: 'Target Lab Hex' },
+  ];
+
+  it('sylvan-reclamation-viewer-exile-up-to-two — casts normally and exiles the two chosen permanents', () => {
+    const { state, onBattlefield, prompts, offered } = run(
+      'sylvan-reclamation-viewer-exile-up-to-two',
+      steps,
+    );
+    const targetChoices = prompts.filter((prompt) => /^Choose target \d+ for /.test(prompt));
+    expect(targetChoices).toHaveLength(2);
+    const firstChoice = offered.find((options) => options.includes('Target Lab Servo'))!;
+    expect(firstChoice).toEqual(
+      expect.arrayContaining(['Target Lab Hex', 'Target Lab Idol', 'Choose no more targets']),
+    );
+    expect(firstChoice).not.toContain('Target Lab Ox');
+    expect(onBattlefield('Lab Servo')).toHaveLength(0);
+    expect(onBattlefield('Lab Hex')).toHaveLength(0);
+    expect(onBattlefield('Lab Idol')).toHaveLength(1);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(state.exile.map((card) => card.name).sort()).toEqual(['Lab Hex', 'Lab Servo']);
+    replays('sylvan-reclamation-viewer-exile-up-to-two', steps);
+  });
+});
+
+describe('Sylvan Reclamation basic landcycling Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Basic landcycling {2}' }];
+
+  it('sylvan-reclamation-viewer-basic-landcycling — discards from hand and reveals the found basic land', () => {
+    const { state, seat } = run('sylvan-reclamation-viewer-basic-landcycling', steps);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Sylvan Reclamation']);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Plains']);
+    expect(state.eventLog.find((event) => event.type === 'searchFound')?.payload).toMatchObject({
+      name: 'Plains',
+      to: 'hand',
+      revealed: true,
+    });
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('sylvan-reclamation-viewer-basic-landcycling', steps);
+  });
+});

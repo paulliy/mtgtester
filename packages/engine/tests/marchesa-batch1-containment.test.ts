@@ -250,7 +250,6 @@ const REASONS: Record<string, string> = {
   'Hunting Wilds': 'The Forest search omits revealing the found cards.',
   'Idol of Oblivion':
     'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
-  'Sylvan Reclamation': 'Up-to-two exile requires at least one target.',
   'Flameblast Dragon': 'The damage target is chosen before you decide to pay X.',
   'Thunderbreak Regent':
     'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
@@ -315,6 +314,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Sylvan Reclamation',
     'Plasmancer',
     'Necron Deathmark',
     'Mordant Dragon',

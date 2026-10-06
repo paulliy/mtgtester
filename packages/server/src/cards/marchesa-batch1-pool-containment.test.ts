@@ -36,6 +36,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Necron Deathmark',
       'Plasmancer',
       'Smothering Tithe',
+      'Sylvan Reclamation',
       'War Room',
     ]);
   });
