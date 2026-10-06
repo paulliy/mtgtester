@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { choose, Engine, ScriptedDecisionProvider } from '@mtg/engine';
-import type { DecisionProvider, EnginePlayerConfig } from '@mtg/engine';
+import type { DecisionProvider, EnginePlayerConfig, PreparedScenarioSpec } from '@mtg/engine';
 import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } from '@mtg/shared';
 import type { SeatSetup } from '../match/setup';
 
@@ -4043,6 +4043,96 @@ function warRoomScenario(gameId: GameId): CardTestScenario {
   };
 }
 
+// ---------------------------------------------------------------------------------------------
+// Coverage PR01 (docs/plans/card-coverage-chunks.md): one scenario per restored clause group.
+// ---------------------------------------------------------------------------------------------
+
+interface Pr01ScenarioSpec {
+  id: string;
+  title: string;
+  instructions: string[];
+  expectedOutcome: string;
+  oracleSha256: string;
+  clauseIds: string[];
+  /** Library contents per seat; prepared hand/battlefield/graveyard cards are drawn from these. */
+  decks: Record<'P1' | 'P2' | 'P3' | 'P4', OracleCard[]>;
+  prepared: Omit<PreparedScenarioSpec, 'currentTurnPlayer' | 'phase' | 'step' | 'turnNumber'> &
+    Partial<Pick<PreparedScenarioSpec, 'currentTurnPlayer' | 'phase' | 'step' | 'turnNumber'>>;
+  decisionProviderOverrides?: CardTestScenario['decisionProviderOverrides'];
+}
+
+function pr01Scenario(gameId: GameId, spec: Pr01ScenarioSpec): CardTestScenario {
+  const seats = (['P1', 'P2', 'P3', 'P4'] as const).map((id) => player(id, spec.decks[id]));
+  const seed = `card-lab-${spec.id}-v1`;
+  const engine = new Engine(
+    { gameId, seed, players: seats.map(({ config }) => config), turnCap: 2 },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        ...spec.prepared,
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: spec.id,
+      version: 1,
+      title: spec.title,
+      instructions: spec.instructions,
+      expectedOutcome: spec.expectedOutcome,
+      oracleSha256: spec.oracleSha256,
+      clauseIds: spec.clauseIds,
+    },
+    seed,
+    seats: seats.map(({ setup }) => setup),
+    engine,
+    ...(spec.decisionProviderOverrides === undefined
+      ? {}
+      : { decisionProviderOverrides: spec.decisionProviderOverrides }),
+  };
+}
+
+const PR01_FILLER = [FOREST, FOREST];
+
+function forumOfAmityScenario(gameId: GameId): CardTestScenario {
+  const forum = pinnedFrom(MARCHESA_BATCH1, 'Forum of Amity');
+  const surveilled = card({
+    oracleId: 'lab-forum-surveilled',
+    name: 'Forum Surveilled Card',
+    typeLine: 'Creature — Secret',
+  });
+  return pr01Scenario(gameId, {
+    id: 'forum-of-amity-viewer-surveil',
+    title: 'Forum of Amity: surveil 1 through the normal activation',
+    instructions: [
+      'Activate Forum of Amity, paying {2}{W}{B} from Plains, Swamp, and two Forests plus tapping it.',
+      'Let the ability resolve, then choose to put the surveilled card into your graveyard.',
+    ],
+    expectedOutcome:
+      'Forum of Amity and the four paying lands are tapped, and Forum Surveilled Card moves from the top of your library to your graveyard.',
+    oracleSha256: forum.sha256,
+    clauseIds: ['forum-of-amity-surveil-activation'],
+    decks: {
+      P1: [forum.card, PLAINS, SWAMP, FOREST, FOREST, surveilled],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Forum of Amity', 'Plains', 'Swamp', 'Forest', 'Forest'],
+        },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4124,6 +4214,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'myriad-landscape-viewer-shared-type-search',
   'war-room-viewer-dynamic-life-activation',
   'war-room-viewer-colorless-mana',
+  // Coverage PR01
+  'forum-of-amity-viewer-surveil',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4202,6 +4294,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'myriad-landscape-viewer-shared-type-search': myriadLandscapeSearchScenario,
   'war-room-viewer-dynamic-life-activation': warRoomScenario,
   'war-room-viewer-colorless-mana': warRoomManaScenario,
+  'forum-of-amity-viewer-surveil': forumOfAmityScenario,
 };
 
 export function createCardTestScenario(

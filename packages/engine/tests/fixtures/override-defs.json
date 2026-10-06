@@ -2113,12 +2113,6 @@
     }
   },
   {
-    "oracleId": "349ea6c7-6b3e-417f-b082-b712e2b1635b",
-    "name": "Forum of Amity",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "34b90d3e-f48c-41ff-b3e4-5cab7a9cd597",
     "name": "Secret Rendezvous",
     "handledLines": [
@@ -12955,12 +12949,6 @@
   {
     "oracleId": "oracle-forum-filibuster",
     "name": "Forum Filibuster",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-forum-of-amity",
-    "name": "Forum of Amity",
     "handledLines": [],
     "def": {}
   },

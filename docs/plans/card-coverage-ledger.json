@@ -588,6 +588,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "349ea6c7-6b3e-417f-b082-b712e2b1635b",
+    "name": "Forum of Amity",
+    "package": "PR01.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Surveil is claimed without a surveil implementation."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "af20f452-5cb9-47cc-9a81-71f23204ddd0",
     "name": "Franklin Richards, Ascendant",
     "package": "W5",

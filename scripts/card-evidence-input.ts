@@ -1173,6 +1173,11 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['War Room: dynamic commander identity life activation'],
   },
   { file: 'card-test-lab.spec.ts', titlePath: ['War Room: colorless mana pays a spell cost'] },
+  // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Forum of Amity: surveil 1 through the normal activation'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

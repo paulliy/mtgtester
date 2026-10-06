@@ -1832,13 +1832,43 @@
     "349ea6c7-6b3e-417f-b082-b712e2b1635b": {
       "name": "Forum of Amity",
       "oracleSha256": "b49800b6e3d748f53ad05c73cbf239e4c57e16fac1e8288c5fdf8d1f36b384ee",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "forum-of-amity-enters-tapped",
+          "oracleText": "This land enters tapped.",
+          "implementation": ["entersTapped (interpreted)"],
+          "engineTestIds": [
+            "forum-of-amity-pinned-oracle-supported",
+            "forum-of-amity-enters-tapped"
+          ],
+          "viewerScenarioIds": ["forum-of-amity-viewer-surveil"]
+        },
+        {
+          "id": "forum-of-amity-mana",
+          "oracleText": "{T}: Add {W} or {B}.",
+          "implementation": ["manaAbilities units [[W, B]] (interpreted)"],
+          "engineTestIds": [
+            "forum-of-amity-pinned-oracle-supported",
+            "forum-of-amity-surveil-to-graveyard"
+          ],
+          "viewerScenarioIds": ["forum-of-amity-viewer-surveil"]
+        },
+        {
+          "id": "forum-of-amity-surveil-activation",
           "oracleText": "{2}{W}{B}, {T}: Surveil 1.",
-          "implementation": ["explicitly unsupported; surveil claimed without implementation"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "activated ability costs: mana {2}{W}{B} + tap (interpreted)",
+            "surveil(count=1) via the shared CR 701 surveil executor"
+          ],
+          "engineTestIds": [
+            "forum-of-amity-surveil-to-graveyard",
+            "forum-of-amity-surveil-keep-on-top",
+            "forum-of-amity-activation-costs",
+            "forum-of-amity-surveil-privacy",
+            "forum-of-amity-empty-library"
+          ],
+          "viewerScenarioIds": ["forum-of-amity-viewer-surveil"]
         }
       ],
       "gameplayAiScenarioIds": []

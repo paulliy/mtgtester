@@ -24,6 +24,17 @@ interface AuditLedger {
     reviewedOracleIds?: number;
     grandfatheredOracleIds?: number;
   }[];
+  /**
+   * Reviewed cards whose registration was deleted because the interpreter alone now models them
+   * faithfully (overrides/index.ts rule 5). Their batch rows stay as review history.
+   */
+  interpreterRestored?: {
+    oracleId: string;
+    name: string;
+    sourceFile: string;
+    restoredIn: string;
+    note: string;
+  }[];
 }
 
 const SOURCE = join(import.meta.dirname, '../src/cards/overrides/marchesa-the-black-rose.ts');
@@ -124,6 +135,14 @@ describe('Marchesa override catalog audit inventory', () => {
       const entry = listed.get(sourceFile)!;
       const unique = uniqueRegistrations(readFileSync(join(OVERRIDES_DIR, file), 'utf8'));
       expect(unique.size, file).toBe(entry.uniqueOracleIds);
+      const restoredHere = new Map(
+        (ledger.interpreterRestored ?? [])
+          .filter((restored) => restored.sourceFile === sourceFile)
+          .map((restored) => [restored.oracleId, restored.name]),
+      );
+      for (const [oracleId, name] of restoredHere) {
+        expect(unique.has(oracleId), `${name} must no longer be registered in ${file}`).toBe(false);
+      }
       const fileBatches = ledger.batches.filter(
         (batch) => (batch.sourceFile ?? ledger.sourceFile) === sourceFile,
       );
@@ -141,9 +160,15 @@ describe('Marchesa override catalog audit inventory', () => {
         fileBatches.flatMap((batch) => batch.cards.map((card) => card.oracleId)),
       );
       expect(reviewed.size, file).toBe(entry.reviewedOracleIds);
-      expect(unique.size - reviewed.size, file).toBe(entry.grandfatheredOracleIds);
+      expect(unique.size - (reviewed.size - restoredHere.size), file).toBe(
+        entry.grandfatheredOracleIds,
+      );
       for (const batch of fileBatches) {
         for (const card of batch.cards) {
+          if (restoredHere.has(card.oracleId)) {
+            expect(restoredHere.get(card.oracleId), card.name).toBe(card.name);
+            continue;
+          }
           expect(unique.get(card.oracleId), card.name).toBe(card.name);
         }
       }

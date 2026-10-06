@@ -190,7 +190,6 @@ const REASONS: Record<string, string> = {
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
   'Canoptek Tomb Sentinel':
     'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
-  'Forum of Amity': 'Surveil is claimed without a surveil implementation.',
   Plasmancer: 'The Swamp search omits revealing the found card.',
   Psychomancer:
     'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
@@ -328,6 +327,8 @@ describe('Marchesa catalog audit containment', () => {
     'Myriad Landscape',
     'Smothering Tithe',
     'War Room',
+    // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Forum of Amity',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

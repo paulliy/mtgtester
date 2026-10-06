@@ -1739,3 +1739,25 @@ test('War Room: colorless mana pays a spell cost', async ({ page }) => {
   ).toHaveCount(0);
   await expect(page.locator('.stack .empty')).toBeVisible();
 });
+
+// ---------------------------------------------------------------------------------------------
+// Coverage PR01 (docs/plans/card-coverage-chunks.md)
+// ---------------------------------------------------------------------------------------------
+
+test('Forum of Amity: surveil 1 through the normal activation', async ({ page }) => {
+  await runScenario(page, 'Forum of Amity: surveil 1 through the normal activation');
+
+  const forum = permanent(page, 'Forum of Amity');
+  await expect(forum).toHaveClass(/actionable/);
+  await forum.click();
+  await expect(page.getByText('Activate Forum of Amity')).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/surveil/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'Keep on top' })).toBeVisible();
+  await page.getByRole('button', { name: 'Put into graveyard' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Forum of Amity').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.getByText(/Forum Surveilled Card/).first()).toBeVisible();
+});

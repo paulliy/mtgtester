@@ -69,6 +69,9 @@ describe('mandatory card CI gate', () => {
     expect(command).toContain('war-room.test.ts');
     expect(command).toContain('toxic-deluge.test.ts');
     expect(command).toContain('chaos-warp.test.ts');
+    // Coverage PR01 restorations and their Card Test Lab scenarios.
+    expect(command).toContain('pr01-card-coverage.test.ts');
+    expect(command).toContain('card-test-scenarios-pr01.test.ts');
     expect(command).not.toContain('token-triumph-deck.test.ts');
     expect(command).not.toContain('data/scryfall-oracle-cards.json');
   });

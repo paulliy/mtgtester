@@ -121,6 +121,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'myriad-landscape-viewer-shared-type-search',
       'war-room-viewer-dynamic-life-activation',
       'war-room-viewer-colorless-mana',
+      'forum-of-amity-viewer-surveil',
     ]);
   });
 
