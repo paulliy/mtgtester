@@ -3,7 +3,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { oracle } from './fixtures';
 
 describe('Batch 2 card overrides', () => {
-  it('is catalog-contained because up-to-two requires at least one target', () => {
+  it('models Rishkar with an up-to-two counter slot and the granted mana ability (coverage PR01)', () => {
     const card = oracle({
       oracleId: '761021ce-4559-464e-aa03-85c2fe78e267',
       name: 'Rishkar, Peema Renegade',
@@ -13,10 +13,9 @@ describe('Batch 2 card overrides', () => {
         'When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.\nEach creature you control with a counter on it has "{T}: Add {G}."',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Up-to-two +1/+1 counters require at least one target.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.targets[0]?.count).toEqual({ min: 0, max: 2 });
+    expect(def.staticEffects).toHaveLength(1);
   });
 
   it('models Ajani, Caller of the Pride', () => {

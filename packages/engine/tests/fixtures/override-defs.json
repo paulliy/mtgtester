@@ -4661,8 +4661,76 @@
   {
     "oracleId": "761021ce-4559-464e-aa03-85c2fe78e267",
     "name": "Rishkar, Peema Renegade",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Each creature you control with a counter on it has \"{T}: Add {G}.\"",
+      "When ~ enters, put a +1/+1 counter on each of up to two target creatures."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "hasAnyCounter"
+              }
+            ]
+          },
+          "op": {
+            "addManaAbility": {
+              "costs": [
+                {
+                  "kind": "tap"
+                }
+              ],
+              "units": [
+                [
+                  "G"
+                ]
+              ]
+            },
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Put a +1/+1 counter on each of up to two target creatures",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 2,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "76678885-3674-443d-b9a2-2a460cf6aac0",
@@ -17826,8 +17894,76 @@
   {
     "oracleId": "oracle-rishkar-peema-renegade",
     "name": "Rishkar, Peema Renegade",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Each creature you control with a counter on it has \"{T}: Add {G}.\"",
+      "When ~ enters, put a +1/+1 counter on each of up to two target creatures."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "hasAnyCounter"
+              }
+            ]
+          },
+          "op": {
+            "addManaAbility": {
+              "costs": [
+                {
+                  "kind": "tap"
+                }
+              ],
+              "units": [
+                [
+                  "G"
+                ]
+              ]
+            },
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Put a +1/+1 counter on each of up to two target creatures",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 2,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-river-kelpie",

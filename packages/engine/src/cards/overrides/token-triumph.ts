@@ -9,6 +9,7 @@ import { defineCard, unsupportedCard } from './index';
 import { TAP, mana, manaCost, spell } from '../templates';
 import { constant } from '../value';
 import {
+  HAS_ANY_COUNTER,
   SELF,
   YOURS,
   OTHER,
@@ -78,10 +79,31 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     'Curse of Bounty',
     'Only the attacking player untaps; the curse controller always should.',
   );
-  unsupportedCard(
+  // Coverage PR01: "up to two" is a 0..2 count slot, so the trigger resolves with no target.
+  defineCard(
     '761021ce-4559-464e-aa03-85c2fe78e267',
     'Rishkar, Peema Renegade',
-    'Up-to-two +1/+1 counters require at least one target.',
+    [
+      'When ~ enters, put a +1/+1 counter on each of up to two target creatures.',
+      'Each creature you control with a counter on it has "{T}: Add {G}."',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [{ kind: 'creature', count: { min: 0, max: 2 } }],
+          effects: [{ op: 'putCountersEachChosen', targetSlot: 0, counter: '+1/+1', count: 1 }],
+          description: 'Put a +1/+1 counter on each of up to two target creatures',
+        },
+      ],
+      staticEffects: [
+        {
+          affects: allOf(ofType('Creature'), YOURS, HAS_ANY_COUNTER),
+          op: { layer: 6, addManaAbility: { units: [['G']], costs: [TAP] } },
+        },
+      ],
+    },
   );
   // Coverage PR01: the lieutenant buff reaches creatures only, and only while you control
   // your own commander (CR 903.7; a stolen commander does not count).

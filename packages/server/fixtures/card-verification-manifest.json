@@ -3174,13 +3174,34 @@
     "761021ce-4559-464e-aa03-85c2fe78e267": {
       "name": "Rishkar, Peema Renegade",
       "oracleSha256": "d0ebd951555eaeb46229fdf0a02a614e3752b215aeafd80d90078ec75008f758",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "rishkar-peema-renegade-enters-counters",
           "oracleText": "When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.",
-          "implementation": ["explicitly unsupported; up-to-two requires at least one target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self with a 0..2 creature count slot (any controller, Rishkar included)",
+            "putCountersEachChosen(slot 0, +1/+1, 1); choosing none is legal"
+          ],
+          "engineTestIds": [
+            "rishkar-peema-renegade-pinned-oracle-supported",
+            "rishkar-peema-renegade-two-counters",
+            "rishkar-peema-renegade-zero-targets"
+          ],
+          "viewerScenarioIds": ["rishkar-viewer-counters-and-mana"]
+        },
+        {
+          "id": "rishkar-peema-renegade-mana-grant",
+          "oracleText": "Each creature you control with a counter on it has \"{T}: Add {G}.\"",
+          "implementation": [
+            "layer 6 addManaAbility {T}: Add {G} to creatures you control with any counter (hasAnyCounter)",
+            "noncreature permanents and opponents' creatures gain nothing; a summoning-sick creature cannot pay {T}"
+          ],
+          "engineTestIds": [
+            "rishkar-peema-renegade-mana-grant",
+            "rishkar-peema-renegade-summoning-sick"
+          ],
+          "viewerScenarioIds": ["rishkar-viewer-counters-and-mana"]
         }
       ],
       "gameplayAiScenarioIds": []

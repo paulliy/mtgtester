@@ -2204,3 +2204,33 @@ test('Loran of the Third Path: you and target opponent each draw', async ({ page
   await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('1 in hand');
   await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('0 in hand');
 });
+
+test('Rishkar, Peema Renegade: two counters, then countered creatures tap for G', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Rishkar, Peema Renegade: two counters, then countered creatures tap for G',
+  );
+
+  await expect(page.getByText(/Mana ready\s*3/).first()).toBeVisible();
+  const rishkar = handCard(page, 'Rishkar, Peema Renegade');
+  await expect(rishkar).toHaveClass(/actionable/);
+  await rishkar.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Up to two targets, any controller, one decision each.
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Target Lab Ox' }).click();
+  await expect(page.getByRole('button', { name: 'Target Lab Ox' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Target Lab Servo' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toContainText('5/5');
+  await expect(permanent(page, 'Lab Servo')).toContainText('2/2');
+  // The countered Lab Ox now taps for {G}: one ready source (Rishkar itself is summoning sick).
+  await expect(page.getByText(/Mana ready\s*1/).first()).toBeVisible();
+});

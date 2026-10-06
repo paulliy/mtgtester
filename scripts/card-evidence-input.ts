@@ -1248,6 +1248,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Loran of the Third Path: you and target opponent each draw'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Rishkar, Peema Renegade: two counters, then countered creatures tap for G'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

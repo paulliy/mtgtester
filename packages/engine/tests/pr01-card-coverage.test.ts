@@ -29,6 +29,7 @@ import { runPrioritySequence } from '../src/turn/priority';
 import { queueStepTriggers, runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
+import { manaSourcesFor } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { formatPlayerLog } from '../src/view/spectator';
 import { buildPlayerView } from '../src/view/view';
@@ -2360,6 +2361,111 @@ describe('Loran of the Third Path', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.19 Rishkar, Peema Renegade
+// ---------------------------------------------------------------------------------------------
+
+describe('Rishkar, Peema Renegade', () => {
+  const rishkar = pinned('Rishkar, Peema Renegade');
+  const CHOOSE = /choose (a|another) target/i;
+
+  /** Choose each named creature, in order, for the up-to-two slot, then stop. */
+  const pick =
+    (...names: string[]): Answer =>
+    (decision) => {
+      if (CHOOSE.test(decision.prompt)) {
+        const next = names.shift();
+        return next === undefined
+          ? optionMatching(decision, /Choose no more targets/)
+          : optionMatching(decision, new RegExp(`^Target ${next}$`));
+      }
+      return { index: 0, targets: new Map() };
+    };
+
+  function castRishkar(ctx: GameContext, answer: Answer) {
+    const inHand = conjure(ctx, 'P1', rishkar.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }, { symbol: 'G' }, { symbol: 'G' }]);
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    return settle(ctx, answer).decisions;
+  }
+
+  const sourcesOf = (ctx: GameContext, playerId: string) =>
+    manaSourcesFor(ctx, playerId).map((source) => source.cardId);
+
+  it('rishkar-peema-renegade-pinned-oracle-supported — pins the Oracle and models the up-to-two counters and the granted mana ability', () => {
+    expect(rishkar.sha256).toBe('d0ebd951555eaeb46229fdf0a02a614e3752b215aeafd80d90078ec75008f758');
+    const def = interpretCard(rishkar.card);
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.targets).toEqual([{ kind: 'creature', count: { min: 0, max: 2 } }]);
+    expect(def.triggers[0]?.effects).toEqual([
+      { op: 'putCountersEachChosen', targetSlot: 0, counter: '+1/+1', count: 1 },
+    ]);
+    expect(def.staticEffects).toEqual([
+      expect.objectContaining({
+        op: { layer: 6, addManaAbility: { units: [['G']], costs: [{ kind: 'tap' }] } },
+      }),
+    ]);
+  });
+
+  it('rishkar-peema-renegade-two-counters — casting it puts one counter on each of two chosen creatures, any controller', () => {
+    const ctx = pod('rishkar-two');
+    const mine = spawn(ctx, 'P1', bear());
+    const theirs = spawn(ctx, 'P2', oracle({ name: 'Rishkar Rival', typeLine: 'Creature — Elf' }));
+    castRishkar(ctx, pick('Test Bear', 'Rishkar Rival'));
+    expect(mine.counters['+1/+1']).toBe(1);
+    expect(theirs.counters['+1/+1']).toBe(1);
+  });
+
+  it('rishkar-peema-renegade-zero-targets — it may choose no creature and still resolves', () => {
+    const ctx = pod('rishkar-zero');
+    const mine = spawn(ctx, 'P1', bear());
+    const decisions = castRishkar(ctx, pick());
+    expect(decisions.some((decision) => CHOOSE.test(decision.prompt))).toBe(true);
+    expect(mine.counters['+1/+1'] ?? 0).toBe(0);
+    expect(ctx.state.battlefield.some((entry) => entry.name === 'Rishkar, Peema Renegade')).toBe(
+      true,
+    );
+  });
+
+  it('rishkar-peema-renegade-mana-grant — your creatures with any counter tap for {G}; others and opponents do not', () => {
+    const ctx = pod('rishkar-mana');
+    spawn(ctx, 'P1', rishkar.card);
+    const countered = spawn(ctx, 'P1', bear());
+    countered.counters['+1/+1'] = 1;
+    const otherCounter = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Rishkar Shard', typeLine: 'Creature — Elf' }),
+    );
+    otherCounter.counters['-1/-1'] = 1;
+    const plain = spawn(ctx, 'P1', oracle({ name: 'Rishkar Plain', typeLine: 'Creature — Elf' }));
+    const theirs = spawn(ctx, 'P2', oracle({ name: 'Rishkar Rival', typeLine: 'Creature — Elf' }));
+    theirs.counters['+1/+1'] = 1;
+    const relic = spawn(ctx, 'P1', oracle({ name: 'Rishkar Relic', typeLine: 'Artifact' }));
+    relic.counters['charge'] = 1;
+    const mine = sourcesOf(ctx, 'P1');
+    expect(mine).toEqual(expect.arrayContaining([countered.cardId, otherCounter.cardId]));
+    expect(mine).not.toContain(plain.cardId);
+    expect(mine).not.toContain(relic.cardId);
+    expect(sourcesOf(ctx, 'P2')).not.toContain(theirs.cardId);
+    expect(
+      manaSourcesFor(ctx, 'P1').find((source) => source.cardId === countered.cardId)?.units,
+    ).toEqual([['G']]);
+  });
+
+  it('rishkar-peema-renegade-summoning-sick — a countered creature that just arrived cannot tap for mana', () => {
+    const ctx = pod('rishkar-sick');
+    spawn(ctx, 'P1', rishkar.card);
+    const fresh = spawn(ctx, 'P1', bear());
+    fresh.counters['+1/+1'] = 1;
+    fresh.summoningSick = true;
+    expect(sourcesOf(ctx, 'P1')).not.toContain(fresh.cardId);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2460,6 +2566,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Loran of the Third Path',
     sha256: '1113e09d5ae37057a26a4ed71a643206eb4ca8bb572b7116b0107ff2ebdd3454',
     clauseCount: 3,
+  },
+  {
+    name: 'Rishkar, Peema Renegade',
+    sha256: 'd0ebd951555eaeb46229fdf0a02a614e3752b215aeafd80d90078ec75008f758',
+    clauseCount: 2,
   },
 ];
 

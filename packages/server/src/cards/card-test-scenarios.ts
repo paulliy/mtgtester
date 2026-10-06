@@ -4803,6 +4803,35 @@ function loranDrawScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function rishkarScenario(gameId: GameId): CardTestScenario {
+  const rishkar = pinnedFrom(MARCHESA_BATCH1, 'Rishkar, Peema Renegade');
+  return pr01Scenario(gameId, {
+    id: 'rishkar-viewer-counters-and-mana',
+    title: 'Rishkar, Peema Renegade: two counters, then countered creatures tap for G',
+    instructions: [
+      'Cast Rishkar, Peema Renegade with your three Forests.',
+      "Choose Lab Ox and P2's Lab Servo for its two +1/+1 counters.",
+    ],
+    expectedOutcome:
+      'Lab Ox becomes 5/5 and Lab Servo 2/2. Lab Ox now has "{T}: Add {G}" and shows as one ready mana source; P2\'s Servo grants P2 nothing because Rishkar only affects creatures you control.',
+    oracleSha256: rishkar.sha256,
+    clauseIds: ['rishkar-peema-renegade-enters-counters', 'rishkar-peema-renegade-mana-grant'],
+    decks: {
+      P1: [rishkar.card, LAB_OX, FOREST, FOREST, FOREST],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Rishkar, Peema Renegade'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Forest', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4905,6 +4934,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'hunting-wilds-viewer-kicked',
   'loran-of-the-third-path-viewer-destroy-up-to-one',
   'loran-of-the-third-path-viewer-tap-draw',
+  'rishkar-viewer-counters-and-mana',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5003,6 +5033,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'hunting-wilds-viewer-kicked': huntingWildsScenario,
   'loran-of-the-third-path-viewer-destroy-up-to-one': loranDestroyScenario,
   'loran-of-the-third-path-viewer-tap-draw': loranDrawScenario,
+  'rishkar-viewer-counters-and-mana': rishkarScenario,
 };
 
 export function createCardTestScenario(

@@ -1650,6 +1650,25 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "761021ce-4559-464e-aa03-85c2fe78e267",
+    "name": "Rishkar, Peema Renegade",
+    "package": "PR01.19",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When ~ enters, put a +1/+1 counter on each of up to two target creatures.\"",
+      "unrecognized rules text: \"Each creature you control with a counter on it has \"{T}: Add {G}.\"\"",
+      "explicitly unsupported: Up-to-two +1/+1 counters require at least one target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "984f92dd-cb9b-4421-a8e6-75bfe566be10",
     "name": "Rite of the Raging Storm",
     "package": "W6",

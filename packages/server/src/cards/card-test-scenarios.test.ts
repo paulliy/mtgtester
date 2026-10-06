@@ -141,6 +141,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'hunting-wilds-viewer-kicked',
       'loran-of-the-third-path-viewer-destroy-up-to-one',
       'loran-of-the-third-path-viewer-tap-draw',
+      'rishkar-viewer-counters-and-mana',
     ]);
   });
 

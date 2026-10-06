@@ -540,3 +540,23 @@ describe('Loran of the Third Path Card Test Lab scenarios', () => {
     replays('loran-of-the-third-path-viewer-tap-draw', drawSteps);
   });
 });
+
+describe('Rishkar, Peema Renegade Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Rishkar, Peema Renegade' },
+    { action: 'Target Lab Ox' },
+    { action: 'Target Lab Servo' },
+  ];
+
+  it('rishkar-viewer-counters-and-mana — two counters land, and only your countered creature becomes a mana source', () => {
+    const { state, onBattlefield } = run('rishkar-viewer-counters-and-mana', steps);
+    const ox = onBattlefield('Lab Ox')[0]!;
+    const servo = onBattlefield('Lab Servo')[0]!;
+    expect(ox.counters['+1/+1']).toBe(1);
+    expect(servo.counters['+1/+1']).toBe(1);
+    expect(
+      state.battlefield.find((p) => p.name.startsWith('Rishkar'))?.counters['+1/+1'] ?? 0,
+    ).toBe(0);
+    replays('rishkar-viewer-counters-and-mana', steps);
+  });
+});

@@ -263,7 +263,6 @@ const REASONS: Record<string, string> = {
   'Frontier Siege': "The Dragons fight option still requires a target creature you don't control.",
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
-  'Rishkar, Peema Renegade': 'Up-to-two +1/+1 counters require at least one target.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
   'Aether Hub':
@@ -307,6 +306,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Rishkar, Peema Renegade',
     'Loran of the Third Path',
     'Hunting Wilds',
     'Foe-Razer Regent',
