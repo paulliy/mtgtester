@@ -189,7 +189,6 @@ const REASONS: Record<string, string> = {
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
   'Canoptek Tomb Sentinel':
     'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
-  Plasmancer: 'The Swamp search omits revealing the found card.',
   Psychomancer:
     'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
   'Anrakyr the Traveller':
@@ -316,6 +315,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Plasmancer',
     'Necron Deathmark',
     'Mordant Dragon',
     'Land Tax',

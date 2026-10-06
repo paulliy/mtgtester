@@ -337,11 +337,33 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     "If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can't, you lose the game.",
   ]);
 
-  // Catalog audit necron-main-batch-1: Swamp tutor omits reveal.
-  unsupportedCard(
+  defineCard(
     'b3ff8da4-f2cc-41c3-8950-9cc531854b78',
     'Plasmancer',
-    'The Swamp search omits revealing the found card.',
+    [
+      'Dynastic Advisor — When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [],
+          effects: [
+            {
+              op: 'searchLibrary',
+              filter: allOf(ofSupertype('Basic'), ofSubtype('Swamp')),
+              destinations: [{ zone: 'hand' }],
+              allowFailToFind: true,
+              reveal: true,
+            },
+            { op: 'shuffle' },
+          ],
+          description:
+            'Search for a basic Swamp card, reveal it, put it into your hand, then shuffle',
+        },
+      ],
+    },
   );
 
   // Catalog audit necron-main-batch-1: exile origin omitted; loseLife hits you.

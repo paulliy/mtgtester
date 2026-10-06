@@ -1802,13 +1802,30 @@
     "b3ff8da4-f2cc-41c3-8950-9cc531854b78": {
       "name": "Plasmancer",
       "oracleSha256": "0aedfcf7611280dfaf130e91c553dbc2a0bce3d94f087201255ccd6db34ea22e",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "plasmancer-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["plasmancer-pinned-oracle-supported"],
+          "viewerScenarioIds": ["plasmancer-viewer-reveal-swamp"]
+        },
+        {
+          "id": "plasmancer-enters-reveal-swamp",
           "oracleText": "When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle.",
-          "implementation": ["explicitly unsupported; Swamp search omits reveal"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self; ability word 'Dynastic Advisor' is flavor",
+            "searchLibrary filter Basic supertype + Swamp subtype, destination hand, reveal: true (CR 701.16a public searchFound)",
+            "may find nothing (CR 701.19c); shuffle always follows"
+          ],
+          "engineTestIds": [
+            "plasmancer-cast-reveals-swamp-to-hand",
+            "plasmancer-basic-swamp-only",
+            "plasmancer-find-nothing",
+            "plasmancer-search-hides-rest-of-library"
+          ],
+          "viewerScenarioIds": ["plasmancer-viewer-reveal-swamp"]
         }
       ],
       "gameplayAiScenarioIds": []

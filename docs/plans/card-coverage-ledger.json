@@ -1522,6 +1522,24 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "b3ff8da4-f2cc-41c3-8950-9cc531854b78",
+    "name": "Plasmancer",
+    "package": "PR01.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Dynastic Advisor — When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle.\"",
+      "explicitly unsupported: The Swamp search omits revealing the found card."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3d5c98ff-fcf1-42bd-9533-2648791a4f45",
     "name": "Power Pack",
     "package": "W5",

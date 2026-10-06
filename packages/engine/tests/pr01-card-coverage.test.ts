@@ -1365,6 +1365,128 @@ describe('Necron Deathmark', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.11 Plasmancer
+// ---------------------------------------------------------------------------------------------
+
+describe('Plasmancer', () => {
+  const plasmancer = pinned('Plasmancer');
+  const swamp = () =>
+    oracle({
+      name: 'Swamp',
+      typeLine: 'Basic Land — Swamp',
+      manaCost: null,
+      oracleText: '({T}: Add {B}.)',
+    });
+  const snowSwamp = () =>
+    oracle({
+      name: 'Snow-Covered Swamp',
+      typeLine: 'Basic Snow Land — Swamp',
+      types: ['Land'],
+      manaCost: null,
+      oracleText: '({T}: Add {B}.)',
+    });
+  const nonbasicSwamp = () =>
+    oracle({
+      name: 'Plasma Bog',
+      typeLine: 'Land — Swamp Forest',
+      manaCost: null,
+      oracleText: '({T}: Add {B} or {G}.)',
+    });
+  const SEARCH = /search your library/;
+
+  /** Cast Plasmancer from P1's hand on the normal path and resolve the creature spell. */
+  function castPlasmancer(seed: string) {
+    const ctx = pod(seed);
+    const inHand = conjure(ctx, 'P1', plasmancer.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [
+      { symbol: 'B' },
+      { symbol: 'B' },
+      { symbol: 'G' },
+      { symbol: 'G' },
+    ]);
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    return ctx;
+  }
+
+  it('plasmancer-pinned-oracle-supported — pins the Oracle and models flying plus the revealed Swamp search', () => {
+    expect(plasmancer.sha256).toBe(
+      '0aedfcf7611280dfaf130e91c553dbc2a0bce3d94f087201255ccd6db34ea22e',
+    );
+    const def = interpretCard(plasmancer.card);
+    expect(def.modeled).toBe(true);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]).toMatchObject({
+      trigger: { when: 'enters', subject: { kind: 'self' } },
+      effects: [
+        {
+          op: 'searchLibrary',
+          reveal: true,
+          allowFailToFind: true,
+          destinations: [{ zone: 'hand' }],
+        },
+        { op: 'shuffle' },
+      ],
+    });
+  });
+
+  it('plasmancer-cast-reveals-swamp-to-hand — casting it puts a revealed basic Swamp into hand, then shuffles', () => {
+    const cast = castPlasmancer('plasmancer-cast');
+    const found = conjure(cast, 'P1', swamp(), 'library');
+    settle(cast, answers([[SEARCH, /Put Swamp into your hand/]]));
+    const p1 = playerById(cast, 'P1');
+    expect(cast.state.battlefield.some((entry) => entry.name === 'Plasmancer')).toBe(true);
+    expect(p1.hand.map((card) => card.cardId)).toContain(found.cardId);
+    const event = cast.state.eventLog.find((entry) => entry.type === 'searchFound');
+    expect(event?.payload).toMatchObject({ name: 'Swamp', to: 'hand', revealed: true });
+    const types = cast.state.eventLog.map((entry) => entry.type);
+    expect(types.lastIndexOf('shuffle')).toBeGreaterThan(types.indexOf('searchFound'));
+    for (const viewer of ['P2', 'P3', 'P4']) {
+      expect(formatPlayerLog(cast.state.eventLog, viewer).map((line) => line.text)).toContain(
+        'reveals Swamp',
+      );
+    }
+  });
+
+  it('plasmancer-basic-swamp-only — snow basics count; nonbasic Swamps and other basics are never offered', () => {
+    const ctx = castPlasmancer('plasmancer-filter');
+    conjure(ctx, 'P1', snowSwamp(), 'library');
+    conjure(ctx, 'P1', nonbasicSwamp(), 'library');
+    const { decisions } = settle(ctx, answers([[SEARCH, /Put Snow-Covered Swamp into your hand/]]));
+    const search = decisions.find((decision) => SEARCH.test(decision.prompt))!;
+    const offered = search.options.map((option) => option.description);
+    expect(offered).toContain('Put Snow-Covered Swamp into your hand');
+    expect(offered).not.toContain('Put Plasma Bog into your hand');
+    expect(offered).not.toContain('Put Forest into your hand');
+    expect(playerById(ctx, 'P1').hand.map((card) => card.name)).toContain('Snow-Covered Swamp');
+  });
+
+  it('plasmancer-find-nothing — with no Swamp it finds nothing, reveals nothing, and still shuffles', () => {
+    const ctx = castPlasmancer('plasmancer-nothing');
+    const handBefore = playerById(ctx, 'P1').hand.length;
+    settle(ctx, answers([[SEARCH, /Find nothing/]]));
+    expect(playerById(ctx, 'P1').hand).toHaveLength(handBefore);
+    expect(ctx.state.eventLog.some((entry) => entry.type === 'searchFound')).toBe(false);
+    expect(ctx.state.eventLog.some((entry) => entry.type === 'shuffle')).toBe(true);
+  });
+
+  it('plasmancer-search-hides-rest-of-library — opponents see the revealed Swamp but no other library card', () => {
+    const ctx = castPlasmancer('plasmancer-private');
+    conjure(ctx, 'P1', swamp(), 'library');
+    conjure(ctx, 'P1', SECRET('Plasma Private Secret'), 'library');
+    settle(ctx, answers([[SEARCH, /Put Swamp into your hand/]]));
+    for (const viewer of ['P2', 'P3', 'P4']) {
+      expect(JSON.stringify(buildPlayerView(ctx, viewer)), viewer).not.toContain(
+        'Plasma Private Secret',
+      );
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1424,6 +1546,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Necron Deathmark',
     sha256: '9ea0d5feb506abd7f1b877e3898f5a1aa655060699a83b69ca1753ef2eb20ae6',
+    clauseCount: 2,
+  },
+  {
+    name: 'Plasmancer',
+    sha256: '0aedfcf7611280dfaf130e91c553dbc2a0bce3d94f087201255ccd6db34ea22e',
     clauseCount: 2,
   },
 ];

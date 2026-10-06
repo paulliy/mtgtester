@@ -4428,6 +4428,37 @@ function necronDeathmarkScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function plasmancerScenario(gameId: GameId): CardTestScenario {
+  const plasmancer = pinnedFrom(MARCHESA_BATCH1, 'Plasmancer');
+  const secret = card({
+    oracleId: 'lab-plasmancer-secret',
+    name: 'Plasmancer Private Library Secret',
+    typeLine: 'Creature — Secret',
+  });
+  return pr01Scenario(gameId, {
+    id: 'plasmancer-viewer-reveal-swamp',
+    title: 'Plasmancer: enters and reveals a basic Swamp',
+    instructions: [
+      'Cast Plasmancer with your four Swamps.',
+      'When its enters trigger resolves, choose the Swamp from the library search.',
+    ],
+    expectedOutcome:
+      'The Swamp is revealed to every player and put into your hand, your library is shuffled, the Forest is never offered, and other library cards stay private.',
+    oracleSha256: plasmancer.sha256,
+    clauseIds: ['plasmancer-enters-reveal-swamp'],
+    decks: {
+      P1: [plasmancer.card, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP, FOREST, secret],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Plasmancer'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4520,6 +4551,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'land-tax-viewer-upkeep-reveal-search',
   'mordant-dragon-viewer-combat-damage-redirect',
   'necron-deathmark-viewer-destroy-up-to-one-and-mill',
+  'plasmancer-viewer-reveal-swamp',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4608,6 +4640,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'land-tax-viewer-upkeep-reveal-search': landTaxScenario,
   'mordant-dragon-viewer-combat-damage-redirect': mordantDragonScenario,
   'necron-deathmark-viewer-destroy-up-to-one-and-mill': necronDeathmarkScenario,
+  'plasmancer-viewer-reveal-swamp': plasmancerScenario,
 };
 
 export function createCardTestScenario(

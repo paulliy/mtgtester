@@ -1211,6 +1211,7 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Necron Deathmark: destroy up to one creature, mill three'],
   },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Plasmancer: enters and reveals a basic Swamp'] },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

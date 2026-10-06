@@ -1982,3 +1982,29 @@ test('Necron Deathmark: destroy up to one creature, mill three', async ({ page }
   await expect(permanent(page, 'Lab Servo')).toBeVisible();
   await expect(page.getByText(/mills Forest/).first()).toBeVisible();
 });
+
+test('Plasmancer: enters and reveals a basic Swamp', async ({ page }) => {
+  await runScenario(page, 'Plasmancer: enters and reveals a basic Swamp');
+
+  const plasmancer = handCard(page, 'Plasmancer');
+  await expect(plasmancer).toHaveClass(/actionable/);
+  await plasmancer.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // The enters trigger searches: only the basic Swamp is offered, never the Forest.
+  await expect(page.getByText(/search your library/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'Find nothing' })).toBeVisible();
+  await expect(page.locator('.panel-group').filter({ hasText: 'Forest' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Put into your hand' }).click();
+
+  await expect(page.getByText('reveals Swamp').first()).toBeVisible({ timeout: 15_000 });
+  await expect(handCard(page, 'Swamp')).toBeVisible();
+  await expect(permanent(page, 'Plasmancer')).toBeVisible();
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(page.getByRole('alertdialog', { name: /haven't played a land/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Pass anyway' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('Plasmancer Private Library Secret')).toHaveCount(0);
+});

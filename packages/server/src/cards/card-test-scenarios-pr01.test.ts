@@ -318,3 +318,22 @@ describe('Necron Deathmark Card Test Lab scenario', () => {
     replays('necron-deathmark-viewer-destroy-up-to-one-and-mill', steps);
   });
 });
+
+describe('Plasmancer Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Plasmancer' }, { action: 'Put Swamp into your hand' }];
+
+  it('plasmancer-viewer-reveal-swamp — casts normally, then the enters trigger reveals a basic Swamp to hand', () => {
+    const { state, seat, onBattlefield, offered } = run('plasmancer-viewer-reveal-swamp', steps);
+    expect(onBattlefield('Plasmancer')).toHaveLength(1);
+    const search = offered.find((options) => options.includes('Put Swamp into your hand'));
+    expect(search).toEqual(['Put Swamp into your hand', 'Find nothing']);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Swamp']);
+    expect(state.eventLog.find((event) => event.type === 'searchFound')?.payload).toMatchObject({
+      name: 'Swamp',
+      to: 'hand',
+      revealed: true,
+    });
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('plasmancer-viewer-reveal-swamp', steps);
+  });
+});

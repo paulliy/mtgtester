@@ -6910,8 +6910,52 @@
   {
     "oracleId": "b3ff8da4-f2cc-41c3-8950-9cc531854b78",
     "name": "Plasmancer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Dynastic Advisor — When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Search for a basic Swamp card, reveal it, put it into your hand, then shuffle",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Swamp"
+                  }
+                ]
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
@@ -16780,8 +16824,52 @@
   {
     "oracleId": "oracle-plasmancer",
     "name": "Plasmancer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Dynastic Advisor — When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Search for a basic Swamp card, reveal it, put it into your hand, then shuffle",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Swamp"
+                  }
+                ]
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-primal-might",
