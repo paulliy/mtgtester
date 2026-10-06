@@ -7,9 +7,14 @@ import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import { copies, forest, gameConfig, conjure } from './fixtures';
 
-const fixture = JSON.parse(
-  readFileSync(new URL('./fixtures/urdragon-oracle.json', import.meta.url), 'utf8'),
-) as OracleCard[];
+const fixture = [
+  ...(JSON.parse(
+    readFileSync(new URL('./fixtures/urdragon-oracle.json', import.meta.url), 'utf8'),
+  ) as OracleCard[]),
+  ...(JSON.parse(
+    readFileSync(new URL('./fixtures/invalid-ir-oracle.json', import.meta.url), 'utf8'),
+  ) as OracleCard[]),
+];
 const cases = [
   [
     'sivitri-noop-contained',
@@ -20,6 +25,11 @@ const cases = [
     'zurgo-noop-contained',
     'Zurgo and Ojutai',
     '45392f93794edf49d1b74a1d73be74a4c4ce7f0815f3f49262a78b6a94618493',
+  ],
+  [
+    'forbidding-spirit-noop-contained',
+    'Forbidding Spirit',
+    'a15c65a6ecf3766c5ab5a38ef6ed59680bbd503c8bb0098a1924f2cf7fe2e9fc',
   ],
 ] as const;
 

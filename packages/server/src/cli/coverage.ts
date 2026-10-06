@@ -5,6 +5,7 @@
  *   bun run coverage --json                   # machine-diffable, for tracking a delta
  *   bun run coverage <fileOrUrl> [more...]    # arbitrary decks, including live URLs
  *   bun run coverage --strict                 # skip decks that aren't Commander-legal
+ *   bun run coverage --oracle-fixture packages/server/fixtures/coverage-oracle.json
  *
  * Paths are resolved from the repository root (the process working directory).
  *
@@ -17,7 +18,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve, join, basename } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
-import { loadOracleIndexFromFile } from '../cards/oracle-index';
+import { coverageInput } from './coverage-input';
 import { measureCoverage, type DeckCards } from '../cards/coverage';
 import { checkCoverageBaseline } from '../cards/coverage-baseline';
 import { assertCompleteCoverage } from '../cards/coverage-contract';
@@ -26,7 +27,6 @@ import { resolveDeck } from '../decks/resolve';
 import { validateDeck } from '../decks/validate';
 import { loadBannedList } from '../decks/banned';
 
-const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const FIXTURE_DIR = 'packages/server/fixtures/coverage-decks';
 /** Precon/catalog leftovers that must not re-enter required coverage counts. */
 const EXCLUDED_COVERAGE_DECKS = new Set(['counter-intelligence.txt']);
@@ -64,7 +64,8 @@ const pct = (n: number, of: number): string =>
   of === 0 ? '0.0%' : `${((n / of) * 100).toFixed(1)}%`;
 
 async function main(): Promise<void> {
-  const { inputs: userInputs, json, strict } = parseArgs(process.argv.slice(2));
+  const input = coverageInput(process.argv.slice(2));
+  const { inputs: userInputs, json, strict } = parseArgs(input.args);
   const inputs = userInputs.length > 0 ? userInputs : defaultInputs();
   if (inputs.length === 0) {
     console.error(
@@ -73,8 +74,8 @@ async function main(): Promise<void> {
     process.exit(2);
   }
 
-  if (!json) console.error(`Loading oracle data from ${BULK_PATH} …`);
-  const index = loadOracleIndexFromFile(resolve(BULK_PATH));
+  if (!json) console.error(`Loading oracle data from ${input.path} …`);
+  const index = input.index;
   if (!json) console.error(`  indexed ${index.size.toLocaleString()} cards.`);
 
   const banned = loadBannedList(resolve('docs/rules/commander-banned-list.md'));

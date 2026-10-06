@@ -6,6 +6,11 @@
  * not enough.
  */
 export const VERIFIED_TOKEN_TRIUMPH_CARDS = [
+  'Harvest Season',
+  'Rishkar, Peema Renegade',
+  'Sylvan Reclamation',
+  'Thunderfoot Baloth',
+  'Voice of Many',
   'Emmara, Soul of the Accord',
   'Leafkin Druid',
   'Fortified Village',
@@ -29,13 +34,8 @@ export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = [
   'Scavenging Ooze',
   'Conclave Tribunal',
   'Curse of Bounty',
-  'Harvest Season',
   'Hour of Reckoning',
   'Idol of Oblivion',
   "Karametra's Favor",
   'Nullmage Shepherd',
-  'Rishkar, Peema Renegade',
-  'Sylvan Reclamation',
-  'Thunderfoot Baloth',
-  'Voice of Many',
 ] as const;

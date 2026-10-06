@@ -4361,6 +4361,23 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "efd8dc6c-8233-45b2-99bd-e38ca2e0b35f": {
+      "name": "Forbidding Spirit",
+      "oracleSha256": "a15c65a6ecf3766c5ab5a38ef6ed59680bbd503c8bb0098a1924f2cf7fe2e9fc",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The enters-the-battlefield attack-tax trigger is an executable noOp; the engine has no implementation of its required attack payments through the next turn.",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays {2} for each of those creatures.",
+          "implementation": [
+            "unsupported: The enters-the-battlefield attack-tax trigger is an executable noOp; the engine has no implementation of its required attack payments through the next turn."
+          ],
+          "engineTestIds": ["forbidding-spirit-noop-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
