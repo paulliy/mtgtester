@@ -3731,15 +3731,40 @@
     "d8df9813-0376-4d30-8cdc-30451fb67726": {
       "name": "Will of the Mardu",
       "oracleSha256": "282fc2b19d0d9b74ca39e2fdeeaee0e14de5314c02b3dba2cde7f55bfc813e5e",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "will-of-the-mardu-choose",
           "oracleText": "Choose one. If you control a commander as you cast this spell, you may choose both instead.",
           "implementation": [
-            "explicitly unsupported; choose-both requires owning and controlling your commander"
+            "modal spell, one mode; maxChoicesIf controlsACommander raises it to both",
+            "controlsACommander: any player's commander you control counts (a stolen one too); your own commander controlled by someone else does not; read as the spell is cast",
+            "each mode announces only its own target (targetSlots)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "will-of-the-mardu-pinned-oracle-supported",
+            "will-of-the-mardu-choose-both-needs-a-commander"
+          ],
+          "viewerScenarioIds": ["will-of-the-mardu-viewer-choose-both"]
+        },
+        {
+          "id": "will-of-the-mardu-warriors",
+          "oracleText": "Create a number of 1/1 red Warrior creature tokens equal to the number of creatures target player controls.",
+          "implementation": [
+            "target player (slot 0); createToken WARRIOR_1_1_RED x countPermanentsControlledByTarget(Creature)"
+          ],
+          "engineTestIds": ["will-of-the-mardu-warriors", "will-of-the-mardu-both-in-order"],
+          "viewerScenarioIds": ["will-of-the-mardu-viewer-choose-both"]
+        },
+        {
+          "id": "will-of-the-mardu-damage",
+          "oracleText": "Will of the Mardu deals damage to target creature equal to the number of creatures you control.",
+          "implementation": [
+            "target creature (slot 1); dealDamage = creatures you control, counted on resolution",
+            "with both modes, modes resolve in printed order, so the new Warriors count"
+          ],
+          "engineTestIds": ["will-of-the-mardu-damage", "will-of-the-mardu-both-in-order"],
+          "viewerScenarioIds": ["will-of-the-mardu-viewer-choose-both"]
         }
       ],
       "gameplayAiScenarioIds": []

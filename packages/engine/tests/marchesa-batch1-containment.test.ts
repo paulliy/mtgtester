@@ -290,8 +290,6 @@ const REASONS: Record<string, string> = {
     "The dies intervening-if checks the battlefield, so it never sees this creature's counters.",
   'Reality Shift':
     'Manifest puts the card face-down but never offers turning it face up for its mana cost.',
-  'Will of the Mardu':
-    'Choose-both requires controlling your own commander, not any commander you control.',
 };
 
 describe('Marchesa catalog audit containment', () => {
@@ -302,6 +300,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Will of the Mardu',
     'Kairi, the Swirling Sky',
     'Frontier Siege',
     'Vastwood Surge',

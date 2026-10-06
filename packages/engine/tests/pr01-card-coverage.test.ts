@@ -2844,6 +2844,138 @@ describe('Kairi, the Swirling Sky', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.23 Will of the Mardu
+// ---------------------------------------------------------------------------------------------
+
+describe('Will of the Mardu', () => {
+  const will = pinned('Will of the Mardu');
+  const general = () =>
+    oracle({ name: 'Mardu General', typeLine: 'Legendary Creature — Orc', manaCost: '{3}' });
+
+  const castOptions = (ctx: GameContext, objectId: string) =>
+    priorityOptions(ctx, 'P1').filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'castSpell' && payload.objectId === objectId;
+    });
+  const modesOf = (option: { payload?: unknown }) => {
+    const payload = option.payload as { mode?: number; modes?: number[] };
+    return payload.modes ?? (payload.mode === undefined ? [] : [payload.mode]);
+  };
+
+  function setup(seed: string) {
+    const ctx = pod(seed);
+    const inHand = conjure(ctx, 'P1', will.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }, { symbol: 'W' }, { symbol: 'W' }]);
+    return { ctx, inHand };
+  }
+
+  /** Cast with exactly `modes`, filling slot 0 (player) and/or slot 1 (creature). */
+  function cast(
+    ctx: GameContext,
+    inHand: { id: string },
+    modes: number[],
+    targets: Map<number, string>,
+  ) {
+    const option = castOptions(ctx, inHand.id).find(
+      (candidate) => JSON.stringify(modesOf(candidate)) === JSON.stringify(modes),
+    );
+    expect(option, JSON.stringify(modes)).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload, undefined, targets);
+    resolveTop(ctx);
+  }
+
+  const warriors = (ctx: GameContext) =>
+    ctx.state.battlefield.filter(
+      (entry) => entry.name === 'Warrior' && entry.controllerId === 'P1',
+    );
+
+  it('will-of-the-mardu-pinned-oracle-supported — pins the Oracle and models both modes and the any-commander choose-both rider', () => {
+    expect(will.sha256).toBe('282fc2b19d0d9b74ca39e2fdeeaee0e14de5314c02b3dba2cde7f55bfc813e5e');
+    const def = interpretCard(will.card);
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.modes).toMatchObject({
+      minChoices: 1,
+      maxChoices: 1,
+      maxChoicesIf: { condition: { kind: 'controlsACommander' }, maxChoices: 2 },
+    });
+    expect(def.spellAbility?.modes?.options.map((option) => option.targetSlots)).toEqual([
+      [0],
+      [1],
+    ]);
+  });
+
+  it('will-of-the-mardu-warriors — makes one 1/1 red Warrior per creature the target player controls', () => {
+    const { ctx, inHand } = setup('mardu-warriors');
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P2', bear());
+    cast(ctx, inHand, [0], new Map([[0, 'P2']]));
+    expect(warriors(ctx)).toHaveLength(3);
+    const c = computeCharacteristics(ctx, warriors(ctx)[0]!);
+    expect([c.power, c.toughness, c.colors]).toEqual([1, 1, ['R']]);
+  });
+
+  it('will-of-the-mardu-damage — deals damage equal to the number of creatures you control', () => {
+    const { ctx, inHand } = setup('mardu-damage');
+    spawn(ctx, 'P1', bear());
+    spawn(ctx, 'P1', bear());
+    const victim = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Mardu Rival', typeLine: 'Creature — Orc', power: '3', toughness: '3' }),
+    );
+    cast(ctx, inHand, [1], new Map([[1, victim.id]]));
+    expect(victim.damageMarked).toBe(2);
+    expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(true);
+  });
+
+  it('will-of-the-mardu-choose-both-needs-a-commander — no commander: one mode only; your own or a stolen commander: both', () => {
+    const none = setup('mardu-none');
+    spawn(none.ctx, 'P2', bear());
+    expect(castOptions(none.ctx, none.inHand.id).map(modesOf)).toEqual([[0], [1]]);
+
+    const own = setup('mardu-own');
+    spawn(own.ctx, 'P2', bear());
+    spawn(own.ctx, 'P1', general()).isCommander = true;
+    expect(castOptions(own.ctx, own.inHand.id).map(modesOf)).toContainEqual([0, 1]);
+
+    const stolen = setup('mardu-stolen');
+    const theirs = spawn(stolen.ctx, 'P2', general());
+    theirs.isCommander = true;
+    theirs.controllerId = 'P1';
+    expect(castOptions(stolen.ctx, stolen.inHand.id).map(modesOf)).toContainEqual([0, 1]);
+
+    const lost = setup('mardu-lost');
+    spawn(lost.ctx, 'P2', bear());
+    const mine = spawn(lost.ctx, 'P1', general());
+    mine.isCommander = true;
+    mine.controllerId = 'P2';
+    expect(castOptions(lost.ctx, lost.inHand.id).map(modesOf)).not.toContainEqual([0, 1]);
+  });
+
+  it('will-of-the-mardu-both-in-order — with both modes the Warriors arrive first and count toward the damage', () => {
+    const { ctx, inHand } = setup('mardu-both');
+    spawn(ctx, 'P1', general()).isCommander = true;
+    for (let i = 0; i < 2; i++) spawn(ctx, 'P2', bear());
+    const victim = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Mardu Rival', typeLine: 'Creature — Orc', power: '5', toughness: '5' }),
+    );
+    cast(
+      ctx,
+      inHand,
+      [0, 1],
+      new Map([
+        [0, 'P2'],
+        [1, victim.id],
+      ]),
+    );
+    expect(warriors(ctx)).toHaveLength(3);
+    // The general plus three new Warriors: four creatures, so four damage.
+    expect(victim.damageMarked).toBe(4);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2964,6 +3096,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Kairi, the Swirling Sky',
     sha256: 'c157c1c01986c4c86651ae7c3cb70dfd09daf80ea13f016e3b0b1a351a020bcf',
     clauseCount: 4,
+  },
+  {
+    name: 'Will of the Mardu',
+    sha256: '282fc2b19d0d9b74ca39e2fdeeaee0e14de5314c02b3dba2cde7f55bfc813e5e',
+    clauseCount: 3,
   },
 ];
 

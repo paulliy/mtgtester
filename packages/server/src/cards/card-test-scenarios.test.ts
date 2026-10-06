@@ -147,6 +147,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'frontier-siege-viewer-dragons-fight',
       'kairi-viewer-bounce-total-six',
       'kairi-viewer-mill-and-return',
+      'will-of-the-mardu-viewer-choose-both',
     ]);
   });
 

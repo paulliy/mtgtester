@@ -76,7 +76,7 @@ describe("Akroma's Will", () => {
     expect(modes!.minChoices).toBe(1);
     expect(modes!.maxChoices).toBe(1);
     expect(modes!.maxChoicesIf).toEqual({
-      condition: { kind: 'controlsYourCommander' },
+      condition: { kind: 'controlsACommander' },
       maxChoices: 2,
     });
 

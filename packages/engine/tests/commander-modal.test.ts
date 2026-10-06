@@ -52,7 +52,7 @@ describe('commander-conditional modal headers', () => {
       minChoices: 1,
       maxChoices: 1,
       maxChoicesIf: {
-        condition: { kind: 'controlsYourCommander' },
+        condition: { kind: 'controlsACommander' },
         maxChoices: 2,
       },
     });
@@ -92,6 +92,33 @@ describe('commander-conditional modal headers', () => {
         return payload.modes?.join(',') === '0,1';
       }),
     ).toBe(true);
+  });
+
+  it("counts any commander you control, including another player's, but not your own under their control", () => {
+    const commander = () =>
+      oracle({
+        name: 'Borrowed Commander',
+        typeLine: 'Legendary Creature ' + String.fromCharCode(0x2014) + ' Human',
+        manaCost: '{0}',
+        cmc: 0,
+      });
+    const bothOffered = (ctx: GameContext) =>
+      castOptions(ctx, p1(ctx)).some((option) => {
+        const payload = option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>;
+        return payload.modes?.join(',') === '0,1';
+      });
+
+    const stolen = pod('modal-stolen-commander');
+    const theirs = spawn(stolen, 'P2', commander(), { isCommander: true });
+    theirs.controllerId = 'P1';
+    conjure(stolen, 'P1', conditionalModal(), 'hand');
+    expect(bothOffered(stolen)).toBe(true);
+
+    const lost = pod('modal-lost-commander');
+    const mine = spawn(lost, 'P1', commander(), { isCommander: true });
+    mine.controllerId = 'P2';
+    conjure(lost, 'P1', conditionalModal(), 'hand');
+    expect(bothOffered(lost)).toBe(false);
   });
 
   it('executes both selected modes when the commander condition is true', () => {

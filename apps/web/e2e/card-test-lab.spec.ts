@@ -2369,3 +2369,23 @@ test('Kairi, the Swirling Sky: dies, mill six and return a spell', async ({ page
   await expect(handCard(page, 'Lab Shock')).toBeVisible();
   await expect(page.getByText(/Library\s*0/).first()).toBeVisible();
 });
+
+test('Will of the Mardu: choose both while you control a commander', async ({ page }) => {
+  await runScenario(page, 'Will of the Mardu: choose both while you control a commander');
+
+  const will = handCard(page, 'Will of the Mardu');
+  await expect(will).toHaveClass(/actionable/);
+  await will.click();
+  // Controlling a commander unlocks the combined choice beside each single mode.
+  await page.getByRole('button', { name: /Warrior.*; Deal damage/ }).click();
+  await expect(page.getByText(/Target 1 of 2/)).toBeVisible();
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/Target 2 of 2/)).toBeVisible();
+  await permanent(page, 'Lab Brute').click();
+  await expect(page.getByText(/All 2 targets selected/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Brute')).toHaveCount(0);
+  await expect(permanent(page, 'Warrior').first()).toBeVisible();
+});

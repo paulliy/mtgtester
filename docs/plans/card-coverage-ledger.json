@@ -2359,18 +2359,22 @@
   {
     "oracleId": "d8df9813-0376-4d30-8cdc-30451fb67726",
     "name": "Will of the Mardu",
-    "package": "W1",
+    "package": "PR01.23",
     "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Choose one. If you control a commander as you cast this spell, you may choose both instead.\"",
       "unrecognized rules text: \"• Create a number of 1/1 red Warrior creature tokens equal to the number of creatures target player controls.\"",
-      "unrecognized rules text: \"• ~ deals damage to target creature equal to the number of creatures you control.\""
+      "unrecognized rules text: \"• ~ deals damage to target creature equal to the number of creatures you control.\"",
+      "explicitly unsupported: Choose-both requires controlling your own commander, not any commander you control."
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": ["packages/engine/tests/w1-remaining-cards.test.ts"],
-    "interpretationTests": ["packages/engine/tests/w1-remaining-cards.test.ts"],
-    "snapshotStatus": "passed",
-    "coverageDelta": 1
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "b08633e9-7b8f-4f69-a3b7-8d982b17574c",

@@ -2147,7 +2147,7 @@ function parseModalSpellBlock(
   const maxChoicesIf =
     conditionalHeader ===
     'if you control a commander as you cast this spell, you may choose both instead.'
-      ? { condition: { kind: 'controlsYourCommander' as const }, maxChoices: 2 }
+      ? { condition: { kind: 'controlsACommander' as const }, maxChoices: 2 }
       : repeatable || conditionalHeader.length === 0
         ? undefined
         : null;

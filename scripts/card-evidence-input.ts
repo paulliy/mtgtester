@@ -1272,6 +1272,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Kairi, the Swirling Sky: dies, mill six and return a spell'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Will of the Mardu: choose both while you control a commander'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

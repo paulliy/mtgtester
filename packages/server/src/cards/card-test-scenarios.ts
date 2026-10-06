@@ -5005,6 +5005,60 @@ function kairiMillScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function willOfTheMarduScenario(gameId: GameId): CardTestScenario {
+  const will = pinnedFrom(MARCHESA_BATCH1, 'Will of the Mardu');
+  const general = card({
+    oracleId: 'lab-mardu-general',
+    name: 'Lab Warlord',
+    typeLine: 'Legendary Creature — Orc Warrior',
+    manaCost: '{2}{W}',
+    cmc: 3,
+    colors: ['W'],
+    colorIdentity: ['W'],
+    power: '2',
+    toughness: '2',
+  });
+  const brute = card({
+    oracleId: 'lab-mardu-brute',
+    name: 'Lab Brute',
+    typeLine: 'Creature — Ogre',
+    manaCost: '{3}',
+    cmc: 3,
+    power: '3',
+    toughness: '3',
+  });
+  return pr01Scenario(gameId, {
+    id: 'will-of-the-mardu-viewer-choose-both',
+    title: 'Will of the Mardu: choose both while you control a commander',
+    instructions: [
+      'Your commander, Lab Warlord, is on the battlefield, so Will of the Mardu may choose both modes.',
+      'Cast it choosing both, targeting P2 for the Warriors and Lab Brute for the damage.',
+    ],
+    expectedOutcome:
+      'You create two 1/1 red Warriors (P2 controls two creatures). Then the damage counts your three creatures, so the 3/3 Lab Brute dies.',
+    oracleSha256: will.sha256,
+    clauseIds: [
+      'will-of-the-mardu-choose',
+      'will-of-the-mardu-warriors',
+      'will-of-the-mardu-damage',
+    ],
+    decks: {
+      P1: [will.card, PLAINS, PLAINS, PLAINS],
+      P2: [brute, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    commanders: { P1: [general] },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Will of the Mardu'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Warlord', 'Plains', 'Plains', 'Plains'] },
+        { playerId: 'P2', cardNames: ['Lab Brute', 'Lab Servo'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5113,6 +5167,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'frontier-siege-viewer-dragons-fight',
   'kairi-viewer-bounce-total-six',
   'kairi-viewer-mill-and-return',
+  'will-of-the-mardu-viewer-choose-both',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5217,6 +5272,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'frontier-siege-viewer-dragons-fight': frontierSiegeDragonsScenario,
   'kairi-viewer-bounce-total-six': kairiScenario,
   'kairi-viewer-mill-and-return': kairiMillScenario,
+  'will-of-the-mardu-viewer-choose-both': willOfTheMarduScenario,
 };
 
 export function createCardTestScenario(

@@ -8920,8 +8920,91 @@
   {
     "oracleId": "d8df9813-0376-4d30-8cdc-30451fb67726",
     "name": "Will of the Mardu",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose one. If you control a commander as you cast this spell, you may choose both instead.",
+      "• Create a number of 1/1 red Warrior creature tokens equal to the number of creatures target player controls.",
+      "• ~ deals damage to target creature equal to the number of creatures you control."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "maxChoicesIf": {
+            "condition": {
+              "kind": "controlsACommander"
+            },
+            "maxChoices": 2
+          },
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Create a 1/1 red Warrior for each creature target player controls",
+              "effects": [
+                {
+                  "count": {
+                    "kind": "countPermanentsControlledByTarget",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    "target": 0
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "R"
+                    ],
+                    "name": "Warrior",
+                    "power": 1,
+                    "subtypes": [
+                      "Warrior"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Warrior",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "description": "Deal damage to target creature equal to the number of creatures you control",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "countPermanents",
+                    "scope": "you",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  },
+                  "op": "dealDamage",
+                  "target": 1
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "player"
+          },
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "d9e24d7c-0907-45c1-b5d3-9fb16a929868",
@@ -20975,8 +21058,91 @@
   {
     "oracleId": "oracle-will-of-the-mardu",
     "name": "Will of the Mardu",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose one. If you control a commander as you cast this spell, you may choose both instead.",
+      "• Create a number of 1/1 red Warrior creature tokens equal to the number of creatures target player controls.",
+      "• ~ deals damage to target creature equal to the number of creatures you control."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "maxChoicesIf": {
+            "condition": {
+              "kind": "controlsACommander"
+            },
+            "maxChoices": 2
+          },
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Create a 1/1 red Warrior for each creature target player controls",
+              "effects": [
+                {
+                  "count": {
+                    "kind": "countPermanentsControlledByTarget",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    "target": 0
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "R"
+                    ],
+                    "name": "Warrior",
+                    "power": 1,
+                    "subtypes": [
+                      "Warrior"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Warrior",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "description": "Deal damage to target creature equal to the number of creatures you control",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "countPermanents",
+                    "scope": "you",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  },
+                  "op": "dealDamage",
+                  "target": 1
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "player"
+          },
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-wishclaw-talisman",

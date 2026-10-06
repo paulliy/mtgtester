@@ -115,6 +115,12 @@ export type Condition =
    * commander (CR 903.7) AND currently controlled by them; a stolen commander doesn't count.
    */
   | { kind: 'controlsYourCommander' }
+  /**
+   * "If you control a commander" (the Will cycle) — ANY player's commander you control counts,
+   * a stolen one included (CR 903.3: a commander is a commander whoever controls it), unlike
+   * `controlsYourCommander`'s own-commander lieutenant check.
+   */
+  | { kind: 'controlsACommander' }
   /** "if an opponent is the monarch" (Queen Marchesa). */
   | { kind: 'opponentIsMonarch' }
   /** A non-your-turn restriction, as on Force of Negation. */
@@ -330,6 +336,10 @@ export function evaluateCondition(
       const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
       return perm !== undefined && perm.chosenOption === condition.value;
     }
+    case 'controlsACommander':
+      return ctx.state.battlefield.some(
+        (p) => p.isCommander && p.controllerId === source.controllerId,
+      );
     case 'controlsYourCommander':
       return ctx.state.battlefield.some(
         (p) =>

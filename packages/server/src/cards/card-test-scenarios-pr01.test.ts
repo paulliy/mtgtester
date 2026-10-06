@@ -663,3 +663,23 @@ describe('Kairi, the Swirling Sky mill Card Test Lab scenario', () => {
     replays('kairi-viewer-mill-and-return', steps);
   });
 });
+
+describe('Will of the Mardu Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    {
+      action: 'target player controls; Deal damage to target creature',
+      targets: ['P2', 'Lab Brute'],
+    },
+  ];
+
+  it('will-of-the-mardu-viewer-choose-both — with a commander out, both modes resolve in order', () => {
+    const { onBattlefield, offered, seat } = run('will-of-the-mardu-viewer-choose-both', steps);
+    expect(
+      offered[0]?.filter((option) => option.startsWith('Cast Will of the Mardu')),
+    ).toHaveLength(3);
+    expect(onBattlefield('Warrior')).toHaveLength(2);
+    expect(onBattlefield('Lab Brute')).toHaveLength(0);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Brute']);
+    replays('will-of-the-mardu-viewer-choose-both', steps);
+  });
+});
