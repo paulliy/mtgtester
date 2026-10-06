@@ -43,7 +43,7 @@ import {
   subtractGeneric,
   withX,
 } from '../mana/cost';
-import type { ManaSource, ParsedManaCost } from '../mana/cost';
+import type { ManaSource, ParsedManaCost, PaymentPlan } from '../mana/cost';
 import {
   activatingAbilitiesBlockedFor,
   allowanceFor,
@@ -263,8 +263,9 @@ function paymentPreview(
   cost: ParsedManaCost,
   sources: readonly ManaSource[],
   allows: ReturnType<typeof allowanceFor>,
+  preparedPlan?: PaymentPlan,
 ): Record<string, unknown> {
-  const plan = planPayment(cost, player.manaEntries, sources, allows, player.life);
+  const plan = preparedPlan ?? planPayment(cost, player.manaEntries, sources, allows, player.life);
   if (plan === null || plan.tapCardIds.length === 0) return {};
   const permanents = plan.tapCardIds
     .map((cardId) => ctx.state.battlefield.find((permanent) => permanent.cardId === cardId))
@@ -570,13 +571,13 @@ export function computePriorityOptions(
     fromGraveyard = false,
   ): void => {
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
-    const jointlyPayable = (
+    const jointPayment = (
       mana: ParsedManaCost,
       costs: readonly AbilityCost[],
       x = 0,
       targetLifeTax = 0,
       energyAlternativeCost = 0,
-    ): boolean =>
+    ) =>
       planSpellPayment(ctx, player, {
         mana,
         costs,
@@ -587,7 +588,9 @@ export function computePriorityOptions(
         x,
         targetLifeTax,
         energyAlternativeCost,
-      }) !== null;
+      });
+    const jointlyPayable = (...args: Parameters<typeof jointPayment>): boolean =>
+      jointPayment(...args) !== null;
     requireModeled(
       def,
       fromLibraryTop
@@ -815,7 +818,8 @@ export function computePriorityOptions(
           }
           const additionalCosts = [...spellAdditionalCosts, ...modeCosts, ...optionalCosts];
           const selectionCost = reduce(addManaCosts(cost, manaPortionOf(additionalCosts)));
-          if (!jointlyPayable(selectionCost, additionalCosts, x)) continue;
+          const payment = jointPayment(selectionCost, additionalCosts, x);
+          if (payment === null) continue;
           const payableTargets = targets.map((slot) => ({
             ...slot,
             options: slot.options.filter((targetId) => {
@@ -871,7 +875,7 @@ export function computePriorityOptions(
                     ? 'exile'
                     : 'hand',
               manaCost: describeManaCost(selectionCost),
-              ...paymentPreview(ctx, player, selectionCost, sources, allows),
+              ...paymentPreview(ctx, player, selectionCost, sources, allows, payment.manaPlan),
               ...(tax > 0 ? { commanderTax: tax } : {}),
               ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
               ...(modeLabel !== undefined ? { modeLabel } : {}),
@@ -1031,7 +1035,14 @@ export function computePriorityOptions(
                   sourceName: obj.name,
                   sourceZone: fromCommand ? 'command' : fromGraveyard ? 'graveyard' : 'hand',
                   manaCost: fromGraveyard ? describeManaCost(cost) : 'free',
-                  ...paymentPreview(ctx, player, cost, sources, allows),
+                  ...paymentPreview(
+                    ctx,
+                    player,
+                    cost,
+                    sources,
+                    allows,
+                    jointPayment(cost, alternativeCosts)?.manaPlan,
+                  ),
                   castVariant: 'nonMana',
                   abilityCosts: alternativeCosts,
                 },
@@ -1061,7 +1072,14 @@ export function computePriorityOptions(
                 sourceName: obj.name,
                 sourceZone: fromCommand ? 'command' : 'hand',
                 manaCost: describeManaCost(cost),
-                ...paymentPreview(ctx, player, cost, sources, allows),
+                ...paymentPreview(
+                  ctx,
+                  player,
+                  cost,
+                  sources,
+                  allows,
+                  jointPayment(cost, spellAdditionalCosts)?.manaPlan,
+                ),
                 castVariant: 'overload',
               },
             });
@@ -1093,7 +1111,14 @@ export function computePriorityOptions(
                 sourceName: obj.name,
                 sourceZone: 'hand',
                 manaCost: describeManaCost(cost),
-                ...paymentPreview(ctx, player, cost, sources, allows),
+                ...paymentPreview(
+                  ctx,
+                  player,
+                  cost,
+                  sources,
+                  allows,
+                  jointPayment(cost, spellAdditionalCosts)?.manaPlan,
+                ),
                 castVariant: alt.kind,
               },
             });

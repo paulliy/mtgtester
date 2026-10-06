@@ -292,4 +292,40 @@ and report the exact failed action, attempted recovery, and remaining work.
 
 - Plan corrected: casting order/trigger timing, phase-specific target checks, combined
   payment, cumulative lint, generated capability evidence, and one six-phase roadmap.
-- Implementation phases remain incomplete until their checks and exit criteria pass.
+- Guardrails (`6609dcd`): cumulative override restrictions, exhaustive core effect/cost/target/
+  selector/value/condition dispatch, and an actual remove-counters executor with independent cases.
+- Shared targeting (`0ebff01`): common domain/filter/owner/protection semantics; CR 608.2b
+  legality is captured before instructions. Ordinary and counted surviving targets retain the
+  initial legality result. New-incarnation and non-target-choice regressions protect the move.
+- Enforced IR validation (`9e99933`): final merged definitions, custom definitions, and token
+  definitions check reference domains/scopes, modes, costs, and executable placeholders.
+  Sivitri and Zurgo/Ojutai are explicitly unsupported with pinned negative action evidence.
+- Bounded contracts and payment (`286050f`): full-context replay isolates state, definitions,
+  RNG position, and caches for every action/continuation; bounds fail evidence. Normal casting
+  and its existing alternatives use a joint mana/additional-cost witness with feasible choice
+  menus. Life/Phyrexian budgets, Treasure double use, overlapping hand/graveyard costs, and
+  tapping before sacrifice have independent regressions. Payment values are locked.
+- Complete Oracle audit and inventory recovery (`e06f0e8`): the 2026-10-06 Scryfall bulk
+  download contains 38,708 Oracle records. Semantic auditing reports no interpreter errors,
+  6,511 modeled definitions, and three placeholder-contained cards. Forbidding Spirit is the
+  third and now has pinned containment evidence. These counts are semantic inventory only.
+  Coverage tools accept explicit committed Oracle projections and keep all baseline identity/
+  population checks. Against the 906 pinned cards, fixture coverage is 537/802 and staples
+  coverage is 186/200; remaining unsupported cards are reported, not certified complete.
+  Obsolete PR01 backlog lists and the generated interpreter inventory are corrected.
+- Validation so far: full suite 3,420 passed with 29 bulk-input skips; after installing bulk
+  data the previously skipped suites were executed, obsolete expectations corrected, and the
+  implemented-card gate passed without skips. Current card gate: 1,310 passed. Production/test
+  typechecks, lint, formatting, snapshots (93 cards/723 registrations), and web build pass.
+  All 130 browser tests passed earlier at `0ebff01`; browser evidence must be refreshed for the
+  later changes. Compatibility pins are refreshed through the benchmark CLI; inputs/gold are
+  unchanged.
+- Remaining exit work: exact legacy builder exemptions and remaining union consumers;
+  wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
+  and explicit cross-zone reference permissions; exhaustive selector/value/condition semantic
+  validation; all casting proposals/trigger timing/rollback and free-cast migrations; mana
+  activation side-effect/resource scope; generated capability contracts/evidence enforcement;
+  and guarded representation/builders migration. No phase is declared complete by this record.
+- No current environment blocker: Bun is installed in a temporary toolchain, system Chromium
+  replaces the blocked browser download, and the bulk input was recovered. Continue the roadmap
+  before opening its completion PR.

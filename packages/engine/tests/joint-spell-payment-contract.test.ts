@@ -149,6 +149,25 @@ describe('independent combined spell-payment contracts', () => {
     expect(offered()).toBeDefined();
   });
 
+  it('the payment preview reserves the required tap object, matching actual mana payment', () => {
+    const { ctx, offered, cast } = setup([{ kind: 'tapOther', selector: ofType('Land') }], '{G}');
+    const land = spawn(ctx, 'P1', forest());
+    const creature = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Preview mana creature',
+        oracleText: '{T}: Add {G}.',
+      }),
+    );
+    expect(offered()?.data?.['paymentSourceIds']).toEqual([creature.id]);
+    cast();
+    expect(land.tapped).toBe(true);
+    expect(creature.tapped).toBe(true);
+    const manaEvent = ctx.state.eventLog.find((event) => event.type === 'tapForMana');
+    expect(manaEvent?.payload['cardId']).toBe(creature.cardId);
+  });
+
   it.each(['tapOther', 'sacrificeOther'] as const)(
     'one creature cannot pay two %s costs',
     (kind) => {
