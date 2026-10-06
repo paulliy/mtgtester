@@ -120,7 +120,8 @@ test('Gev, Scaled Scorch: ward — pay 2 life', async ({ page }) => {
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/is countered/i).first()).toBeVisible();
-  await expect(page.getByRole('img', { name: 'Gev, Scaled Scorch', exact: true })).toBeVisible();
+  // Scoped to the battlefield: a lingering hover preview of Gev is a second image with that name.
+  await expect(permanent(page, 'Gev, Scaled Scorch')).toBeVisible();
 });
 
 test('Nightscape Familiar: regenerate survives destruction', async ({ page }) => {
