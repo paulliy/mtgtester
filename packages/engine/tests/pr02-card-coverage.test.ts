@@ -830,6 +830,74 @@ describe('Endless Atlas', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.21 Sceptre of Eternal Glory
+// ---------------------------------------------------------------------------------------------
+
+describe('Sceptre of Eternal Glory', () => {
+  const sceptre = pinned('Sceptre of Eternal Glory');
+  const bear = (manaCost: string) =>
+    oracle({ name: `Sceptre Bear ${manaCost}`, typeLine: 'Creature — Bear', manaCost });
+
+  /** The lands count for the condition but are tapped, so only the Sceptre can pay. */
+  function ready(seed: string, lands: (() => OracleCard)[]) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', sceptre.card);
+    for (const land of lands) spawn(ctx, 'P1', land()).tapped = true;
+    return { ctx, source };
+  }
+
+  const castable = (ctx: GameContext, manaCost: string) =>
+    castOptionFor(ctx, 'P1', conjure(ctx, 'P1', bear(manaCost), 'hand').id) !== undefined;
+
+  it('sceptre-of-eternal-glory-pinned-oracle-supported — the interpreter reads both mana abilities and the condition', () => {
+    expect(sceptre.sha256).toBe('51ed0fa70d837b566989f2a57ef7b70bf50985d3c5c84b9d713f04a501aac2f5');
+    expect(sceptre.card.oracleText).toBe(
+      '{T}: Add one mana of any color.\n{T}: Add three mana of any one color. Activate only if you control three or more lands with the same name.',
+    );
+    expect(getOverride(sceptre.card.oracleId)).toBeUndefined();
+    expectModeled(sceptre.card);
+    const any = ['W', 'U', 'B', 'R', 'G'];
+    expect(interpretCard(sceptre.card).manaAbilities).toEqual([
+      { units: [any] },
+      {
+        units: [any, any, any],
+        linked: true,
+        condition: { kind: 'controlsLandsWithSameName', n: 3 },
+      },
+    ]);
+  });
+
+  it('sceptre-of-eternal-glory-one-of-any-color — without the condition it still makes one mana of any color', () => {
+    const { ctx } = ready('sceptre-one', [forest, forest, island]);
+    expect(castable(ctx, '{U}')).toBe(true);
+    expect(castable(ctx, '{U}{U}')).toBe(false);
+  });
+
+  it('sceptre-of-eternal-glory-three-of-one-color — three same-name lands unlock {B}{B}{B}', () => {
+    const { ctx, source } = ready('sceptre-three', [forest, forest, forest]);
+    const spell = conjure(ctx, 'P1', bear('{B}{B}{B}'), 'hand');
+    const cast = castOptionFor(ctx, 'P1', spell.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(true);
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+  });
+
+  it('sceptre-of-eternal-glory-one-color-only — the three mana are one color, so {W}{U}{1} stays unpayable', () => {
+    const { ctx } = ready('sceptre-linked', [forest, forest, forest]);
+    expect(castable(ctx, '{W}{W}{1}')).toBe(true);
+    expect(castable(ctx, '{W}{U}{1}')).toBe(false);
+  });
+
+  it('sceptre-of-eternal-glory-condition-is-yours — an opponent’s three Forests do not unlock it', () => {
+    const { ctx } = ready('sceptre-theirs', [forest, forest]);
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P2', forest());
+    expect(castable(ctx, '{B}{B}{B}')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -841,6 +909,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Sceptre of Eternal Glory',
+    sha256: '51ed0fa70d837b566989f2a57ef7b70bf50985d3c5c84b9d713f04a501aac2f5',
+    clauseCount: 2,
+  },
   {
     name: 'Endless Atlas',
     sha256: 'e1d31dc2c8118f97fe833d58fce9caf77240ad6f11bae0a80cb066638303a610',

@@ -199,23 +199,8 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Repair Barge — Whenever this Vehicle becomes crewed, each artifact creature card in your graveyard gains unearth {3} until end of turn.',
   ]);
 
-  defineCard(
-    '9a02a9a7-39d9-4763-85d3-747a0540b60b',
-    'Gilded Lotus',
-    ['{T}: Add three mana of any one color.'],
-    {
-      manaAbilities: [
-        {
-          units: [
-            ['W', 'U', 'B', 'R', 'G'],
-            ['W', 'U', 'B', 'R', 'G'],
-            ['W', 'U', 'B', 'R', 'G'],
-          ],
-          linked: true,
-        },
-      ],
-    },
-  );
+  // Gilded Lotus: the generic grammar reads "Add three mana of any one color" (coverage PR02),
+  // producing exactly the definition this override authored, so it was deleted (overrides rule 5).
 
   defineCard(
     '2f092562-9e17-43cd-aeb8-d0567f99363e',
@@ -383,10 +368,6 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   unimplemented('7388a797-d40d-4783-a281-d17bc159b856', 'Sautekh Immortal', [
     'Elite Troops — ~ enters with a +1/+1 counter on it for each creature that died this turn.',
-  ]);
-
-  unimplemented('ce08aff3-efe6-4186-9557-274e00a7ca38', 'Sceptre of Eternal Glory', [
-    '{T}: Add three mana of any one color. Activate only if you control three or more lands with the same name.',
   ]);
 
   unimplemented('6c85271c-c711-49b0-a72e-9e576c33714d', 'Sculpting Steel', [

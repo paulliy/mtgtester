@@ -175,6 +175,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'bespoke-battlewagon-viewer-tap-target',
       'endless-atlas-viewer-same-name-draw',
       'endless-atlas-viewer-mixed-names-blocked',
+      'sceptre-of-eternal-glory-viewer-three-black',
+      'sceptre-of-eternal-glory-viewer-one-mana',
     ]);
   });
 

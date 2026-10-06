@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 41,
+      "uniqueOracleIds": 40,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 54,
+      "uniqueOracleIds": 52,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -5676,6 +5676,27 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr02",
       "note": "Empty placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "ce08aff3-efe6-4186-9557-274e00a7ca38",
+      "name": "Sceptre of Eternal Glory",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the empty placeholder in necron-dynasties.ts): the interpreter reads {T}: Add three mana of any one color with its 'three or more lands with the same name' activation condition; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "ce08aff3-efe6-4186-9557-274e00a7ca38",
+      "name": "Sceptre of Eternal Glory",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Empty placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "9a02a9a7-39d9-4763-85d3-747a0540b60b",
+      "name": "Gilded Lotus",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02-grammar",
+      "note": "Override deleted (overrides rule 5) when coverage PR02 taught the grammar 'Add N mana of any one color' for Sceptre of Eternal Glory: the interpreter now derives exactly the linked three-unit mana ability the override authored. Behavior evidence stays in packages/engine/tests/necron-main-engine-batch1.test.ts."
     }
   ]
 }

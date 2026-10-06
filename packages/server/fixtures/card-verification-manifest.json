@@ -2337,13 +2337,36 @@
     "ce08aff3-efe6-4186-9557-274e00a7ca38": {
       "name": "Sceptre of Eternal Glory",
       "oracleSha256": "51ed0fa70d837b566989f2a57ef7b70bf50985d3c5c84b9d713f04a501aac2f5",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "sceptre-of-eternal-glory-any-color",
+          "oracleText": "{T}: Add one mana of any color.",
+          "implementation": ["interpreted mana ability: units [WUBRG]"],
+          "engineTestIds": [
+            "sceptre-of-eternal-glory-pinned-oracle-supported",
+            "sceptre-of-eternal-glory-one-of-any-color"
+          ],
+          "viewerScenarioIds": ["sceptre-of-eternal-glory-viewer-one-mana"]
+        },
+        {
+          "id": "sceptre-of-eternal-glory-three-of-one-color",
           "oracleText": "{T}: Add three mana of any one color. Activate only if you control three or more lands with the same name.",
-          "implementation": ["explicitly unsupported; same-name land restriction omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted mana ability: three [WUBRG] units, linked (all one color) — new 'Add N mana of any one color' grammar",
+            "condition controlsLandsWithSameName(3) from the generic mana 'Activate only if <condition>' grammar, evaluated when mana sources are listed"
+          ],
+          "engineTestIds": [
+            "sceptre-of-eternal-glory-pinned-oracle-supported",
+            "sceptre-of-eternal-glory-three-of-one-color",
+            "sceptre-of-eternal-glory-one-color-only",
+            "sceptre-of-eternal-glory-condition-is-yours",
+            "sceptre-of-eternal-glory-one-of-any-color"
+          ],
+          "viewerScenarioIds": [
+            "sceptre-of-eternal-glory-viewer-three-black",
+            "sceptre-of-eternal-glory-viewer-one-mana"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -3000,3 +3000,20 @@ test('Endless Atlas: two Forests and an Island do not unlock it', async ({ page 
   await expect(permanent(page, 'Endless Atlas').locator('.tap-badge')).toHaveCount(0);
   await expect(page.getByText('Atlas Drawn Page')).toHaveCount(0);
 });
+
+test('Sceptre of Eternal Glory: three Forests unlock {B}{B}{B}', async ({ page }) => {
+  await runScenario(page, 'Sceptre of Eternal Glory: three Forests unlock {B}{B}{B}');
+  await castAndResolve(page, 'Lab Black Ogre');
+  await expect(permanent(page, 'Lab Black Ogre')).toBeVisible();
+  await expect(permanent(page, 'Sceptre of Eternal Glory').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});
+
+test('Sceptre of Eternal Glory: mixed lands give one mana', async ({ page }) => {
+  await runScenario(page, 'Sceptre of Eternal Glory: mixed lands give one mana');
+  await expect(handCard(page, 'Lab Black Ogre')).not.toHaveClass(/actionable/);
+  await castAndResolve(page, 'Lab Black Bear');
+  await expect(permanent(page, 'Lab Black Bear')).toBeVisible();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(handCard(page, 'Lab Black Ogre')).toBeVisible();
+});

@@ -101,7 +101,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Dread Return',
       'Illuminor Szeras',
       'Necron Deathmark',
-      'Sceptre of Eternal Glory',
       'Shard of the Void Dragon',
       'The War in Heaven',
       'Their Number Is Legion',

@@ -297,12 +297,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Sautekh Immortal',
     'Enters-with counters is implemented as an enters trigger.',
   );
-  // Catalog audit necron-remaining-batch-4: same-name land restriction omitted from mana.
-  unsupportedCard(
-    'ce08aff3-efe6-4186-9557-274e00a7ca38',
-    'Sceptre of Eternal Glory',
-    'The three-or-more-same-name land restriction is omitted from the three-mana ability.',
-  );
+  // Sceptre of Eternal Glory: restored in coverage PR02. The interpreter reads the three-mana
+  // ability and its same-name-lands condition, so no override remains.
   defineCard(
     '6c85271c-c711-49b0-a72e-9e576c33714d',
     'Sculpting Steel',

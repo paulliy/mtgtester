@@ -5892,6 +5892,92 @@ function endlessAtlasBlockedScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_BLACK_OGRE = card({
+  oracleId: 'lab-black-ogre',
+  name: 'Lab Black Ogre',
+  typeLine: 'Creature — Ogre',
+  manaCost: '{B}{B}{B}',
+  cmc: 3,
+  colors: ['B'],
+  colorIdentity: ['B'],
+  power: '3',
+  toughness: '3',
+});
+const LAB_BLACK_BEAR = card({
+  oracleId: 'lab-black-bear',
+  name: 'Lab Black Bear',
+  typeLine: 'Creature — Bear',
+  manaCost: '{B}',
+  cmc: 1,
+  colors: ['B'],
+  colorIdentity: ['B'],
+  power: '2',
+  toughness: '2',
+});
+
+function sceptreScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    lands: OracleCard[];
+    instructions: string[];
+    expectedOutcome: string;
+  },
+): CardTestScenario {
+  const sceptre = pinnedFrom(MARCHESA_BATCH1, 'Sceptre of Eternal Glory');
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: sceptre.sha256,
+    clauseIds: [
+      'sceptre-of-eternal-glory-any-color',
+      'sceptre-of-eternal-glory-three-of-one-color',
+    ],
+    decks: {
+      P1: [sceptre.card, ...spec.lands, LAB_BLACK_OGRE, LAB_BLACK_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Black Ogre', 'Lab Black Bear'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Sceptre of Eternal Glory'] },
+        { playerId: 'P1', cardNames: spec.lands.map((land) => land.name), tapped: true },
+      ],
+    },
+  });
+}
+
+const sceptreThreeScenario = (gameId: GameId): CardTestScenario =>
+  sceptreScenario(gameId, {
+    id: 'sceptre-of-eternal-glory-viewer-three-black',
+    title: 'Sceptre of Eternal Glory: three Forests unlock {B}{B}{B}',
+    lands: [FOREST, FOREST, FOREST],
+    instructions: [
+      'Your three Forests are tapped but still share a name.',
+      'Cast Lab Black Ogre ({B}{B}{B}) with Sceptre of Eternal Glory alone.',
+    ],
+    expectedOutcome:
+      'Sceptre taps for three black mana and Lab Black Ogre resolves; Lab Black Bear stays in hand.',
+  });
+
+const sceptreOneScenario = (gameId: GameId): CardTestScenario =>
+  sceptreScenario(gameId, {
+    id: 'sceptre-of-eternal-glory-viewer-one-mana',
+    title: 'Sceptre of Eternal Glory: mixed lands give one mana',
+    lands: [FOREST, FOREST, ISLAND],
+    instructions: [
+      'With two Forests and an Island, only the one-mana ability is available.',
+      'Lab Black Ogre is not castable; cast Lab Black Bear ({B}).',
+    ],
+    expectedOutcome:
+      'Sceptre taps for one black mana and Lab Black Bear resolves; Lab Black Ogre stays in hand.',
+  });
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -6025,6 +6111,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'bespoke-battlewagon-viewer-tap-target',
   'endless-atlas-viewer-same-name-draw',
   'endless-atlas-viewer-mixed-names-blocked',
+  'sceptre-of-eternal-glory-viewer-three-black',
+  'sceptre-of-eternal-glory-viewer-one-mana',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6156,6 +6244,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'bespoke-battlewagon-viewer-tap-target': battlewagonTapTargetScenario,
   'endless-atlas-viewer-same-name-draw': endlessAtlasScenario,
   'endless-atlas-viewer-mixed-names-blocked': endlessAtlasBlockedScenario,
+  'sceptre-of-eternal-glory-viewer-three-black': sceptreThreeScenario,
+  'sceptre-of-eternal-glory-viewer-one-mana': sceptreOneScenario,
 };
 
 export function createCardTestScenario(

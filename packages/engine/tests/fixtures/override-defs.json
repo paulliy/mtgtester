@@ -6210,43 +6210,6 @@
     "def": {}
   },
   {
-    "oracleId": "9a02a9a7-39d9-4763-85d3-747a0540b60b",
-    "name": "Gilded Lotus",
-    "handledLines": [
-      "{T}: Add three mana of any one color."
-    ],
-    "def": {
-      "manaAbilities": [
-        {
-          "linked": true,
-          "units": [
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ],
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ],
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ]
-          ]
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "9a107e48-3d50-4941-95b1-10f2b29a4245",
     "name": "Stroke of Midnight",
     "handledLines": [],
@@ -8838,12 +8801,6 @@
       ]
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "ce08aff3-efe6-4186-9557-274e00a7ca38",
-    "name": "Sceptre of Eternal Glory",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "cf7352bf-3971-4bb7-88b9-65ab9a219289",
@@ -15850,43 +15807,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-gilded-lotus",
-    "name": "Gilded Lotus",
-    "handledLines": [
-      "{T}: Add three mana of any one color."
-    ],
-    "def": {
-      "manaAbilities": [
-        {
-          "linked": true,
-          "units": [
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ],
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ],
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ]
-          ]
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-gisela-blade-of-goldnight",
     "name": "Gisela, Blade of Goldnight",
     "handledLines": [
@@ -19908,12 +19828,6 @@
   {
     "oracleId": "oracle-scavenging-ooze",
     "name": "Scavenging Ooze",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-sceptre-of-eternal-glory",
-    "name": "Sceptre of Eternal Glory",
     "handledLines": [],
     "def": {}
   },

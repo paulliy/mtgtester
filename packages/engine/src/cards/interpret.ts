@@ -4149,6 +4149,10 @@ const MANA_ACTIVATE_ONLY_IF_RE = /^(add [^.]+)\. activate only if you control (?
 /** "Activate only if you control five or more lands." (Temple of the False God) */
 const MANA_ACTIVATE_ONLY_IF_COUNT_RE =
   /^(add [^.]+)\. activate only if you control (\w+) or more (.+)$/;
+/** Any other "Activate only if <condition>." on a mana ability, read by `parseActivationCondition`. */
+const MANA_ACTIVATE_ONLY_IF_ANY_RE = /^(add [^.]+)\. activate only if (.+)$/;
+/** "Add three mana of any one color" (Sceptre of Eternal Glory): N units, all the same color. */
+const MANA_N_OF_ONE_COLOR_RE = /^add (\w+) mana of any one color$/;
 
 /**
  * The condition of an "Activate only if …" restriction (CR 602.5b), lowercased with no trailing
@@ -4494,6 +4498,17 @@ function parseManaProduction(effectText: string, card: OracleCard): ManaAbilityS
       return { ...base, condition: countPermanents(ofSubtype(subtype), 'you', '>=', 1) };
     }
   }
+  // "Activate only if <condition>" in general (Sceptre of Eternal Glory's same-name lands). Read
+  // before the counted form below, which would claim "three or more lands with the same name".
+  {
+    const m = effectText.match(MANA_ACTIVATE_ONLY_IF_ANY_RE);
+    if (m !== null) {
+      const base = parseManaProduction(m[1] as string, card);
+      const condition = parseActivationCondition(m[2] as string, card);
+      if (base === null || condition === null) return null;
+      return { ...base, condition };
+    }
+  }
   // "Activate only if you control five or more lands" (Temple of the False God) - the counted
   // form of the gate above. `ManaAbilitySpec.condition` is already honoured by `manaSourcesFor`,
   // so this is a parser gap only.
@@ -4583,6 +4598,14 @@ function parseManaProduction(effectText: string, card: OracleCard): ManaAbilityS
     }
   }
   if (MANA_ANY_COLOR_RE.test(effectText)) return { units: [ALL_COLORS] };
+  {
+    const m = effectText.match(MANA_N_OF_ONE_COLOR_RE);
+    if (m !== null) {
+      const count = parseAmount(m[1] as string);
+      if (count === null || count < 1) return null;
+      return { units: Array.from({ length: count }, () => ALL_COLORS), linked: true };
+    }
+  }
   {
     const m = effectText.match(MANA_ANY_COMBINATION_RE);
     if (m !== null) {

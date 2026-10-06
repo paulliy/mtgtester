@@ -274,3 +274,23 @@ describe('Endless Atlas Card Test Lab scenarios', () => {
     expect(onBattlefield('Endless Atlas')[0]?.tapped).toBe(false);
   });
 });
+
+describe('Sceptre of Eternal Glory Card Test Lab scenarios', () => {
+  it('sceptre-of-eternal-glory-viewer-three-black — three Forests unlock three black mana', () => {
+    const steps: Step[] = [{ action: 'Cast Lab Black Ogre' }];
+    const { seat, onBattlefield } = run('sceptre-of-eternal-glory-viewer-three-black', steps);
+    expect(onBattlefield('Lab Black Ogre')).toHaveLength(1);
+    expect(onBattlefield('Sceptre of Eternal Glory')[0]?.tapped).toBe(true);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Black Bear']);
+    replays('sceptre-of-eternal-glory-viewer-three-black', steps);
+  });
+
+  it('sceptre-of-eternal-glory-viewer-one-mana — mixed lands leave only one mana of any color', () => {
+    const steps: Step[] = [{ action: 'Cast Lab Black Bear' }];
+    const { seat, onBattlefield, offered } = run('sceptre-of-eternal-glory-viewer-one-mana', steps);
+    expect(offered.flat().some((action) => action.includes('Cast Lab Black Ogre'))).toBe(false);
+    expect(onBattlefield('Lab Black Bear')).toHaveLength(1);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Black Ogre']);
+    replays('sceptre-of-eternal-glory-viewer-one-mana', steps);
+  });
+});

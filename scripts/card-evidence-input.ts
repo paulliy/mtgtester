@@ -1370,6 +1370,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Endless Atlas: two Forests and an Island do not unlock it'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sceptre of Eternal Glory: three Forests unlock {B}{B}{B}'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sceptre of Eternal Glory: mixed lands give one mana'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

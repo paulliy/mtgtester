@@ -155,15 +155,15 @@ describe('oracle-text interpreter (brief §6)', () => {
     ]);
   });
 
-  it('still refuses "two mana of any ONE color" rather than over-permitting', () => {
+  it('reads "two mana of any ONE color" as linked units, never two independent colors', () => {
     // Two units each offering all five colors would let one tap pay {W}{U}, which this land
-    // cannot do — the symbols are LINKED. Over-permissive modeling is worse than an honest halt
-    // (brief §6.3), so it keeps its own reason until the linkage is modeled (Ilysian Caryatid).
+    // cannot do — the symbols are LINKED. `linked` makes the payment solver assign every unit
+    // the same color (coverage PR02; behavior pinned by the Sceptre of Eternal Glory tests).
     const def = manaLand('{T}: Add two mana of any one color.');
 
-    expect(def.modeled).toBe(false);
-    expect(def.manaAbilities).toEqual([]);
-    expect(def.unmodeledReasons.join(' ')).toContain('unsupported mana production');
+    expect(def.modeled).toBe(true);
+    const any = ['W', 'U', 'B', 'R', 'G'];
+    expect(def.manaAbilities).toEqual([{ units: [any, any], linked: true }]);
   });
 
   it('normalizes modern "This creature" self-reference templating', () => {
