@@ -251,7 +251,6 @@ const REASONS: Record<string, string> = {
   'Kairi, the Swirling Sky':
     'Return-any-number targeting with total mana value 6 or less is an untargeted single bounce with no mana-value cap.',
   'Hunting Wilds': 'The Forest search omits revealing the found cards.',
-  'Harvest Season': 'X counts all creatures you control rather than tapped creatures.',
   'Idol of Oblivion':
     'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
   'Sylvan Reclamation': 'Up-to-two exile requires at least one target.',
@@ -320,6 +319,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Harvest Season',
     "Conjurer's Closet",
     'Canoptek Wraith',
     'Canoptek Spyder',

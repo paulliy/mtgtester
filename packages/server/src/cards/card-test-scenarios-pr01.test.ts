@@ -226,3 +226,23 @@ describe("Conjurer's Closet Card Test Lab scenario", () => {
     replays('conjurers-closet-viewer-end-step-blink', steps);
   });
 });
+
+describe('Harvest Season Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Harvest Season' },
+    { action: 'Put Island onto the battlefield tapped' },
+    { action: 'Put Plains onto the battlefield tapped' },
+  ];
+
+  it('harvest-season-viewer-tapped-creature-count — two tapped creatures allow exactly two basic-land searches', () => {
+    const { seat, onBattlefield, prompts } = run(
+      'harvest-season-viewer-tapped-creature-count',
+      steps,
+    );
+    expect(prompts.filter((prompt) => /search your library/.test(prompt))).toHaveLength(2);
+    expect(onBattlefield('Island')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Plains')[0]?.tapped).toBe(true);
+    expect(seat('P1').library.map((card) => card.name)).toEqual(['Swamp']);
+    replays('harvest-season-viewer-tapped-creature-count', steps);
+  });
+});

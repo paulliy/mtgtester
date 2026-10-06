@@ -29,6 +29,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       "Conjurer's Closet",
       'Fabled Passage',
       'Forum of Amity',
+      'Harvest Season',
       'Myriad Landscape',
       'Smothering Tithe',
       'War Room',

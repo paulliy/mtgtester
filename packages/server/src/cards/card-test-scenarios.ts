@@ -4302,6 +4302,35 @@ function conjurersClosetScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function harvestSeasonScenario(gameId: GameId): CardTestScenario {
+  const harvest = pinnedFrom(MARCHESA_BATCH1, 'Harvest Season');
+  return pr01Scenario(gameId, {
+    id: 'harvest-season-viewer-tapped-creature-count',
+    title: 'Harvest Season: search a basic per tapped creature',
+    instructions: [
+      'Cast Harvest Season with your three untapped Forests.',
+      'You control two tapped Lab Oxen and one untapped Lab Servo, so X is 2: put an Island and a Plains onto the battlefield tapped.',
+    ],
+    expectedOutcome:
+      'Exactly two searches are offered; the Island and Plains enter tapped, the untapped Lab Servo did not count, and your library is shuffled.',
+    oracleSha256: harvest.sha256,
+    clauseIds: ['harvest-season-search-x-tapped-creatures'],
+    decks: {
+      P1: [harvest.card, LAB_OX, LAB_OX, LAB_SERVO, FOREST, FOREST, FOREST, ISLAND, PLAINS, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Harvest Season'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Lab Ox'], tapped: true },
+        { playerId: 'P1', cardNames: ['Lab Servo', 'Forest', 'Forest', 'Forest'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4390,6 +4419,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'canoptek-spyder-viewer-vehicle-draw',
   'canoptek-wraith-viewer-scout-same-name-search',
   'conjurers-closet-viewer-end-step-blink',
+  'harvest-season-viewer-tapped-creature-count',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4474,6 +4504,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'canoptek-spyder-viewer-vehicle-draw': canoptekSpyderScenario,
   'canoptek-wraith-viewer-scout-same-name-search': canoptekWraithScenario,
   'conjurers-closet-viewer-end-step-blink': conjurersClosetScenario,
+  'harvest-season-viewer-tapped-creature-count': harvestSeasonScenario,
 };
 
 export function createCardTestScenario(

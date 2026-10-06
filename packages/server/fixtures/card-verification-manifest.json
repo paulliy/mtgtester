@@ -2736,13 +2736,24 @@
     "ec6d52f9-1c8f-48da-951c-be8d7813c7be": {
       "name": "Harvest Season",
       "oracleSha256": "3f013020bdf1351d15c88eff85e1030be7f07537aff30256a911ba95125b7c9f",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "harvest-season-search-x-tapped-creatures",
           "oracleText": "Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.",
-          "implementation": ["explicitly unsupported; X counts all creatures you control"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "searchLibrary(filter=Basic Land, destination=battlefield tapped, count=countTappedPermanents(Creature, you), allowFailToFind=true)",
+            "countTappedPermanents is evaluated once as the spell resolves",
+            "shuffle"
+          ],
+          "engineTestIds": [
+            "harvest-season-pinned-oracle-supported",
+            "harvest-season-x-is-tapped-creatures",
+            "harvest-season-zero-tapped",
+            "harvest-season-up-to",
+            "harvest-season-tapped-at-resolution"
+          ],
+          "viewerScenarioIds": ["harvest-season-viewer-tapped-creature-count"]
         }
       ],
       "gameplayAiScenarioIds": []

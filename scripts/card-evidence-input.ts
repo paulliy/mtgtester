@@ -1198,6 +1198,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Conjurer's Closet: blink a creature at your end step"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Harvest Season: search a basic per tapped creature'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

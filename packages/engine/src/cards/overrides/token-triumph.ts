@@ -6,15 +6,42 @@ import {
   SOLDIER_1_1_LIFELINK,
 } from '../tokens';
 import { defineCard, unsupportedCard } from './index';
-import { TAP, mana, manaCost } from '../templates';
+import { TAP, mana, manaCost, spell } from '../templates';
 import { constant } from '../value';
-import { YOURS, OTHER, ofType, allOf, powerAtMost, IN_COMBAT, toughnessAtLeast } from '../selector';
+import {
+  YOURS,
+  OTHER,
+  ofSupertype,
+  ofType,
+  allOf,
+  powerAtMost,
+  IN_COMBAT,
+  toughnessAtLeast,
+} from '../selector';
 
 export function registerTOKEN_TRIUMPHOverrides(): void {
-  unsupportedCard(
+  // Coverage PR01: X is the number of TAPPED creatures you control, fixed as the spell resolves.
+  defineCard(
     'ec6d52f9-1c8f-48da-951c-be8d7813c7be',
     'Harvest Season',
-    'X counts all creatures you control rather than tapped creatures.',
+    [
+      'Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.',
+    ],
+    {
+      spellAbility: spell({
+        targets: [],
+        effects: [
+          {
+            op: 'searchLibrary',
+            filter: allOf(ofSupertype('Basic'), ofType('Land')),
+            destinations: [{ zone: 'battlefield', tapped: true }],
+            count: { kind: 'countTappedPermanents', selector: ofType('Creature'), scope: 'you' },
+            allowFailToFind: true,
+          },
+          { op: 'shuffle' },
+        ],
+      }),
+    },
   );
   unsupportedCard(
     'c232d974-9c65-4bce-b045-e5a7cc0c62e0',

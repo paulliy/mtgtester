@@ -901,6 +901,24 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "ec6d52f9-1c8f-48da-951c-be8d7813c7be",
+    "name": "Harvest Season",
+    "package": "PR01.07",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.\"",
+      "explicitly unsupported: X counts all creatures you control rather than tapped creatures."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "d55cb52d-b35c-4602-a518-cd51f155a2d1",
     "name": "Human Torch",
     "package": "W3",

@@ -898,6 +898,104 @@ describe("Conjurer's Closet", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.07 Harvest Season
+// ---------------------------------------------------------------------------------------------
+
+describe('Harvest Season', () => {
+  const harvest = pinned('Harvest Season');
+
+  /** P1 casts Harvest Season with the given creatures on board; library holds `library`. */
+  function cast(seed: string, setup: (ctx: GameContext) => void, library: OracleCard[]) {
+    const ctx = pod(seed);
+    setup(ctx);
+    playerById(ctx, 'P1').library = [];
+    for (const card of [...library].reverse()) conjure(ctx, 'P1', card, 'library');
+    const inHand = conjure(ctx, 'P1', harvest.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }, { symbol: 'C' }, { symbol: 'C' }]);
+    const option = castOptionFor(ctx, 'P1', inHand.id);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    return ctx;
+  }
+
+  const searches = (decisions: PendingDecision[]) =>
+    decisions.filter((decision) => /search your library/.test(decision.prompt));
+  const forests = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((entry) => entry.controllerId === 'P1' && entry.name === 'Forest');
+
+  it('harvest-season-pinned-oracle-supported — pins the Oracle and counts tapped creatures', () => {
+    expect(harvest.sha256).toBe('3f013020bdf1351d15c88eff85e1030be7f07537aff30256a911ba95125b7c9f');
+    const def = interpretCard(harvest.card);
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.effects[0]).toMatchObject({
+      op: 'searchLibrary',
+      count: { kind: 'countTappedPermanents', selector: { kind: 'type', value: 'Creature' } },
+      destinations: [{ zone: 'battlefield', tapped: true }],
+    });
+  });
+
+  it('harvest-season-x-is-tapped-creatures — only your tapped creatures count toward X', () => {
+    const ctx = cast(
+      'harvest-tapped',
+      (c) => {
+        spawn(c, 'P1', bear(), { tapped: true });
+        spawn(c, 'P1', bear(), { tapped: true });
+        spawn(c, 'P1', bear());
+        spawn(c, 'P1', island(), { tapped: true });
+        spawn(c, 'P2', bear(), { tapped: true });
+      },
+      [forest(), forest(), forest(), forest()],
+    );
+    const { decisions } = resolveTop(ctx, answers([[/search your library/, /Put Forest/]]));
+    expect(searches(decisions)).toHaveLength(2);
+    expect(forests(ctx)).toHaveLength(2);
+    expect(forests(ctx).every((land) => land.tapped)).toBe(true);
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+  });
+
+  it('harvest-season-zero-tapped — with no tapped creatures nothing is searched, but the library is shuffled', () => {
+    const ctx = cast('harvest-zero', (c) => void spawn(c, 'P1', bear()), [forest(), forest()]);
+    const { decisions } = resolveTop(ctx);
+    expect(searches(decisions)).toEqual([]);
+    expect(forests(ctx)).toHaveLength(0);
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+  });
+
+  it('harvest-season-up-to — may find fewer than X, and only basic lands are offered', () => {
+    const nonbasic = oracle({ name: 'Harvest Grove', typeLine: 'Land', manaCost: null });
+    const ctx = cast(
+      'harvest-up-to',
+      (c) => {
+        for (let i = 0; i < 3; i++) spawn(c, 'P1', bear(), { tapped: true });
+      },
+      [nonbasic, forest(), forest()],
+    );
+    const { decisions } = resolveTop(ctx, (decision, count) =>
+      /search your library/.test(decision.prompt) && count === 1
+        ? optionMatching(decision, /Put Forest/)
+        : optionMatching(decision, /Find nothing/),
+    );
+    expect(searches(decisions)[0]!.options.map((option) => option.description)).not.toContain(
+      'Put Harvest Grove onto the battlefield tapped',
+    );
+    expect(forests(ctx)).toHaveLength(1);
+  });
+
+  it('harvest-season-tapped-at-resolution — X is counted when the spell resolves', () => {
+    const ctx = cast('harvest-resolution', (c) => void spawn(c, 'P1', bear(), { tapped: true }), [
+      forest(),
+      forest(),
+      forest(),
+    ]);
+    // A second creature becomes tapped while Harvest Season is on the stack.
+    spawn(ctx, 'P1', bear(), { tapped: true });
+    const { decisions } = resolveTop(ctx, answers([[/search your library/, /Put Forest/]]));
+    expect(searches(decisions)).toHaveLength(2);
+    expect(forests(ctx)).toHaveLength(2);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -937,6 +1035,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: "Conjurer's Closet",
     sha256: 'd80cdb0f2c13939c9ac36f2137931ba2cd340fb6e524f8906c038be6c7818b2c',
+    clauseCount: 1,
+  },
+  {
+    name: 'Harvest Season',
+    sha256: '3f013020bdf1351d15c88eff85e1030be7f07537aff30256a911ba95125b7c9f',
     clauseCount: 1,
   },
 ];

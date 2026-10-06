@@ -127,6 +127,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'canoptek-spyder-viewer-vehicle-draw',
       'canoptek-wraith-viewer-scout-same-name-search',
       'conjurers-closet-viewer-end-step-blink',
+      'harvest-season-viewer-tapped-creature-count',
     ]);
   });
 

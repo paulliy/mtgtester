@@ -45,6 +45,10 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return cardTypesInAllGraveyards(ctx);
     case 'countPermanents':
       return scopedPermanents(ctx, scope, value.selector, value.scope).length;
+    case 'countTappedPermanents':
+      return scopedPermanents(ctx, scope, value.selector, value.scope).filter(
+        (permanent) => permanent.tapped,
+      ).length;
     case 'countPermanentsControlledByTarget': {
       const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
       if (targetId === undefined) return 0;

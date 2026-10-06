@@ -163,7 +163,7 @@ describe('Batch 2 card overrides', () => {
     expect(def.triggers).toHaveLength(2);
   });
 
-  it('contains Harvest Season', () => {
+  it('models Harvest Season with X counting tapped creatures (coverage PR01)', () => {
     const card = oracle({
       oracleId: 'ec6d52f9-1c8f-48da-951c-be8d7813c7be',
       name: 'Harvest Season',
@@ -173,10 +173,11 @@ describe('Batch 2 card overrides', () => {
         'Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'X counts all creatures you control rather than tapped creatures.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.effects[0]).toMatchObject({
+      op: 'searchLibrary',
+      count: { kind: 'countTappedPermanents', scope: 'you' },
+    });
   });
 
   it('models Slate of Ancestry', () => {

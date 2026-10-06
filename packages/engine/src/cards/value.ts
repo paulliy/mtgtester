@@ -85,6 +85,12 @@ export type Value =
   | { kind: 'times'; of: Value; n: number }
   /** "the number of Dragons you control" / "the number of lands you control". */
   | { kind: 'countPermanents'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
+  /**
+   * "the number of tapped creatures you control" (Harvest Season). Tapped-ness is deliberately
+   * not a selector leaf (see selector.ts), so the tapped filter lives on the value, which is only
+   * ever evaluated at resolution, never inside a continuous effect.
+   */
+  | { kind: 'countTappedPermanents'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
   /** Number of matching permanents controlled by an announced player target. */
   | { kind: 'countPermanentsControlledByTarget'; target: EffectRef; selector: Selector }
   /** Number of Auras you control that are currently attached to creatures. */

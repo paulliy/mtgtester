@@ -8894,8 +8894,51 @@
   {
     "oracleId": "ec6d52f9-1c8f-48da-951c-be8d7813c7be",
     "name": "Harvest Season",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "count": {
+              "kind": "countTappedPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "destinations": [
+              {
+                "tapped": true,
+                "zone": "battlefield"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "ee7ebbc1-2f9e-4867-a522-424869b6d772",
@@ -14026,8 +14069,51 @@
   {
     "oracleId": "oracle-harvest-season",
     "name": "Harvest Season",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "count": {
+              "kind": "countTappedPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "destinations": [
+              {
+                "tapped": true,
+                "zone": "battlefield"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-hateful-eidolon",

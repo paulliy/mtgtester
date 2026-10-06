@@ -1876,3 +1876,29 @@ test("Conjurer's Closet: blink a creature at your end step", async ({ page }) =>
   await expect(permanent(page, 'Lab Greeter')).not.toHaveClass(/tapped/);
   await expect(page.getByText(/gains 2 life/).first()).toBeVisible();
 });
+
+test('Harvest Season: search a basic per tapped creature', async ({ page }) => {
+  await runScenario(page, 'Harvest Season: search a basic per tapped creature');
+
+  const harvest = handCard(page, 'Harvest Season');
+  await expect(harvest).toHaveClass(/actionable/);
+  await harvest.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  const put = (land: string) =>
+    page
+      .locator('.panel-group')
+      .filter({ hasText: land })
+      .getByRole('button', { name: 'Put onto the battlefield tapped' });
+  await expect(page.getByText(/search your library/i).first()).toBeVisible({ timeout: 15_000 });
+  await put('Island').click();
+  await expect(page.getByText(/search your library/i).first()).toBeVisible();
+  await put('Plains').click();
+
+  // X was 2, so there is no third search.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Island').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Plains').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Swamp')).toHaveCount(0);
+});
