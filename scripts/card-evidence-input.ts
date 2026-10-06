@@ -1304,6 +1304,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Sweet-Gum Recluse: flash in response, cascade into a cheaper spell'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sweet-Gum Recluse: reach blocks a flier'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Kogla, the Titan Ape: fight up to one creature on entry'],
   },
   {

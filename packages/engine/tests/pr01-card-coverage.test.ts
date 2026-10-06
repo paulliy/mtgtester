@@ -44,6 +44,7 @@ import {
   conjure,
   copies,
   declareAttacks,
+  declareBlocks,
   declareNoBlocks,
   forest,
   gameConfig,
@@ -1557,6 +1558,56 @@ describe('Mordant Dragon', () => {
     expect(ctx.state.battlefield.some((entry) => entry.id === wall.id)).toBe(false);
   });
 
+  it('mordant-dragon-dies-before-stack-keeps-colors — a Dragon made blue and removed before its trigger reaches the stack cannot target protection from blue', () => {
+    const ctx = pod('mordant-lki-colors');
+    const self = spawn(ctx, 'P1', dragon.card);
+    ctx.state.effects.push({
+      id: 'eff-test-blue',
+      sourceId: self.cardId,
+      description: 'Mordant Dragon becomes blue',
+      targetCardIds: [self.cardId],
+      kind: 'becomeCreature',
+      becomeCreature: {
+        addSubtypes: [],
+        addKeywords: [],
+        power: 4,
+        toughness: 4,
+        setColors: ['U'],
+      },
+      timestamp: ctx.state.nextTimestamp++,
+    });
+    const warded = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Mordant Warden',
+        typeLine: 'Creature — Wall',
+        power: '0',
+        toughness: '1',
+        oracleText: 'Protection from blue',
+      }),
+    );
+    const open = spawn(ctx, 'P2', ox());
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: self.cardId,
+      sourceObjectId: self.id,
+      sourceOracleId: self.oracleId,
+      sourceName: self.name,
+      ability: interpretCard(dragon.card).triggers[0]!,
+      scope: { damageDealt: 1, eventPlayerId: 'P2' },
+    });
+    pump(moveObject(ctx, self, { zone: 'graveyard' }));
+    // Choose the Warden whenever it is offered.
+    pump(priorityCheckpoint(ctx), dragonAnswer(warded.id, true));
+    expect(ctx.state.stack).toHaveLength(1);
+    // Blue immediately before it left (CR 113.7a): the Warden is protected from it, so the
+    // Ox is the only legal target.
+    const targeted = JSON.stringify(ctx.state.stack[0]!.targets);
+    expect(targeted).toContain(open.id);
+    expect(targeted).not.toContain(warded.id);
+  });
+
   it('mordant-dragon-lost-deathtouch-before-leaving — deathtouch lost before it left does not apply', () => {
     const ctx = pod('mordant-lki-lost');
     const self = spawn(ctx, 'P1', dragon.card);
@@ -1671,6 +1722,30 @@ describe('Necron Deathmark', () => {
       { kind: 'player' },
       { kind: 'creature', count: { min: 0, max: 1 } },
     ]);
+  });
+
+  it("necron-deathmark-flash-opponents-turn — it can be cast on an opponent's turn; a creature without flash cannot", () => {
+    const ctx = board('deathmark-flash');
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const inHand = conjure(ctx, 'P1', deathmark.card, 'hand');
+    const bystander = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Deathmark Bystander', typeLine: 'Creature — Human', manaCost: '{B}' }),
+      'hand',
+    );
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 6 }, () => ({ symbol: 'B' as const })),
+    );
+    expect(castOptionFor(ctx, 'P1', bystander.id)).toBeUndefined();
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    settle(ctx, deathmarkAnswer('P2', null));
+    expect(ctx.state.battlefield.some((entry) => entry.name === 'Necron Deathmark')).toBe(true);
+    expect(playerById(ctx, 'P2').graveyard).toHaveLength(3);
   });
 
   it('necron-deathmark-destroy-and-mill — destroys the chosen creature and the target player mills three', () => {
@@ -2741,6 +2816,61 @@ describe('Hunting Wilds', () => {
     expect(ctx.state.effects).toHaveLength(total - created);
   });
 
+  it("hunting-wilds-forests-enter-together — both Forests are chosen before either enters, and each one's entry sees the other", () => {
+    const ctx = pod('wilds-together');
+    const grove = () =>
+      oracle({ name: 'Watchful Grove', typeLine: 'Land — Forest', manaCost: null });
+    const first = conjure(ctx, 'P1', grove(), 'library');
+    conjure(ctx, 'P1', grove(), 'library');
+    const groveDef = ctx.defs.get(first.oracleId)!;
+    // "When this land enters, if you control two or more Forests, you gain 1 life."
+    ctx.defs.set(first.oracleId, {
+      ...groveDef,
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: { kind: 'self' },
+            condition: {
+              kind: 'countPermanents',
+              selector: { kind: 'subtype', value: 'Forest' },
+              scope: 'you',
+              cmp: '>=',
+              n: 2,
+            },
+          },
+          targets: [],
+          effects: [{ op: 'gainLife', amount: { kind: 'const', n: 1 } }],
+          description: 'You gain 1 life',
+        },
+      ],
+    });
+    const inHand = conjure(ctx, 'P1', wilds.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 4 }, () => ({ symbol: 'G' as const })),
+    );
+    const option = castOptions(ctx, inHand.id).find((candidate) => kickCount(candidate) === 0);
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    const onBattlefieldAtEachChoice: number[] = [];
+    resolveTop(ctx, (decision) => {
+      if (!SEARCH.test(decision.prompt)) return { index: 0, targets: new Map() };
+      onBattlefieldAtEachChoice.push(
+        ctx.state.battlefield.filter((entry) => entry.name === 'Watchful Grove').length,
+      );
+      return optionMatching(decision, /Put Watchful Grove onto the battlefield tapped/);
+    });
+    expect(onBattlefieldAtEachChoice).toEqual([0, 0]);
+    expect(ctx.state.battlefield.filter((entry) => entry.name === 'Watchful Grove')).toHaveLength(
+      2,
+    );
+    // CR 603.6a: both entered in one event, so both intervening-ifs see two Forests.
+    expect(
+      ctx.state.pendingTriggers.filter((trigger) => trigger.sourceName === 'Watchful Grove'),
+    ).toHaveLength(2);
+  });
+
   it('hunting-wilds-kicker-cost — kicking needs the extra {3}{G}; with four mana only the plain cast is offered', () => {
     const ctx = pod('wilds-cost');
     const inHand = conjure(ctx, 'P1', wilds.card, 'hand');
@@ -3483,6 +3613,25 @@ describe('Kairi, the Swirling Sky', () => {
     expect(backCopy.manaCost).toBeNull();
   });
 
+  it('kairi-the-swirling-sky-face-down-mana-value-zero — a face-down seven-drop has mana value 0 and fits the budget', () => {
+    const ctx = pod('kairi-face-down');
+    const card = conjure(ctx, 'P2', rock('Kairi Colossus', '{7}'), 'library');
+    const faceDown = pump(
+      moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P2', faceDown: true }),
+    ).value as EnginePermanent;
+    expect(faceDown.faceDown).toBe(true);
+    // CR 708.2: a face-down permanent has no mana cost, so its mana value is 0.
+    expect(permanentManaValue(ctx, faceDown)).toBe(0);
+    spawn(ctx, 'P2', rock('Kairi Idol', '{6}'));
+    // 0 + 6 fits the budget of 6; at mana value 7 the face-down card would never be offered.
+    dies(ctx, BOUNCE, pick('Kairi Colossus', 'Kairi Idol'));
+    expect(
+      playerById(ctx, 'P2')
+        .hand.map((entry) => entry.name)
+        .sort(),
+    ).toEqual(['Kairi Colossus', 'Kairi Idol']);
+  });
+
   it('kairi-the-swirling-sky-bounce-total-six — returns chosen nonland permanents to their owners while their mana values total 6 or less', () => {
     const ctx = pod('kairi-bounce');
     spawn(ctx, 'P2', rock('Kairi Idol', '{3}'));
@@ -3994,6 +4143,29 @@ describe('Mystic Sanctuary', () => {
     expect(ctx.state.stack).toHaveLength(0);
   });
 
+  it('mystic-sanctuary-blood-moon-enters-untapped — under Blood Moon it is a Mountain with no abilities, so it enters untapped and nothing triggers', () => {
+    const ctx = pod('sanctuary-blood-moon');
+    conjure(ctx, 'P1', bolt(), 'graveyard');
+    spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Sanctuary Blood Moon',
+        typeLine: 'Enchantment',
+        manaCost: '{2}{R}',
+        oracleText: 'Nonbasic lands are Mountains.',
+      }),
+    );
+    // CR 614.12: its own "enters tapped unless" applies only if it would have that ability on
+    // the battlefield, and under Blood Moon it would not.
+    const self = playSanctuary(ctx, [island(), island()]);
+    expect(self.tapped).toBe(false);
+    expect(computeCharacteristics(ctx, self).subtypes).toEqual(['Mountain']);
+    const { decisions } = settle(ctx, accept(true));
+    expect(decisions.some((decision) => decision.decisionType === 'optionalTrigger')).toBe(false);
+    expect(ctx.state.stack).toHaveLength(0);
+  });
+
   it('mystic-sanctuary-untapped-returns-spell — with three other Islands (any Island) it enters untapped and may put an instant on top', () => {
     const ctx = pod('sanctuary-untapped');
     const spell = conjure(ctx, 'P1', bolt(), 'graveyard');
@@ -4219,6 +4391,110 @@ describe('Sweet-Gum Recluse', () => {
     expect(def.triggers[0]?.effects).toEqual([
       { op: 'putCountersEachChosen', targetSlot: 0, counter: '+1/+1', count: 3 },
     ]);
+  });
+
+  it("sweet-gum-recluse-flash-opponents-turn — it can be cast on an opponent's turn; a creature without flash cannot", () => {
+    const ctx = pod('recluse-flash');
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const inHand = conjure(ctx, 'P1', recluse.card, 'hand');
+    const bystander = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Recluse Bystander', typeLine: 'Creature — Elf', manaCost: '{G}' }),
+      'hand',
+    );
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 7 }, () => ({ symbol: 'G' as const })),
+    );
+    expect(castOptionFor(ctx, 'P1', bystander.id)).toBeUndefined();
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    settle(ctx, pick());
+    expect(ctx.state.battlefield.some((entry) => entry.name === 'Sweet-Gum Recluse')).toBe(true);
+  });
+
+  it('sweet-gum-recluse-cascade-casts-hit — cascade skips lands and cards of mana value 6 or more, then casts the first cheaper hit for free', () => {
+    const ctx = pod('recluse-cascade');
+    conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Recluse Sapling',
+        typeLine: 'Creature — Plant',
+        manaCost: '{1}{G}',
+        power: '1',
+        toughness: '1',
+      }),
+      'library',
+    );
+    conjure(ctx, 'P1', forest(), 'library');
+    conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Recluse Titan', typeLine: 'Creature — Giant', manaCost: '{6}' }),
+      'library',
+    );
+    const castOffers: string[] = [];
+    const counters = pick('Recluse Sapling');
+    castRecluse(ctx, (decision, count) => {
+      if (/Cascade hit/.test(decision.prompt)) {
+        castOffers.push(...decision.options.map((option) => option.description));
+        return optionMatching(decision, /^Cast Recluse Sapling without paying its mana cost$/);
+      }
+      return counters(decision, count);
+    });
+    // The Titan (mana value 6, not less than the Recluse's 6) was skipped, never offered.
+    expect(castOffers.join('|')).not.toContain('Recluse Titan');
+    const sapling = ctx.state.battlefield.find((entry) => entry.name === 'Recluse Sapling');
+    expect(sapling).toBeDefined();
+    // It entered this turn, so the Recluse's trigger could give it counters.
+    expect(sapling!.counters['+1/+1']).toBe(3);
+    const library = playerById(ctx, 'P1').library.map((card) => card.name);
+    expect(library.slice(-2).sort()).toEqual(['Forest', 'Recluse Titan']);
+    expect(ctx.state.exile).toHaveLength(0);
+  });
+
+  it('sweet-gum-recluse-reach-blocks-flier — it may block an attacking flier; a creature without reach is never asked', () => {
+    const ctx = pod('recluse-reach');
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const self = spawn(ctx, 'P1', recluse.card);
+    spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Recluse Ox', typeLine: 'Creature — Ox', power: '4', toughness: '4' }),
+    );
+    const drake = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Recluse Drake',
+        typeLine: 'Creature — Drake',
+        power: '2',
+        toughness: '2',
+        oracleText: 'Flying',
+      }),
+    );
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    const asked: string[][] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        return declareAttacks(decision, (subjectId) => (subjectId === drake.id ? 'P1' : null));
+      }
+      if (decision.presentationBlockDeclaration !== undefined) {
+        asked.push(decision.presentationBlockDeclaration.subjects.map((subject) => subject.name));
+        return declareBlocks(decision, (subjectId) => (subjectId === self.id ? drake.id : null));
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: pass >= 0 ? pass : 0, targets: new Map() };
+    });
+    expect(asked).toEqual([['Sweet-Gum Recluse']]);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    expect(self.damageMarked).toBe(2);
   });
 
   it('sweet-gum-recluse-counters-on-new-creatures — three counters on each chosen creature that entered this turn, any controller, itself included', () => {

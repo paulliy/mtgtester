@@ -28,6 +28,7 @@ import {
   cardZoneCandidate,
   counterAmountAfterReplacements,
   counterAmountAfterReplacementsForCandidate,
+  colorsOf,
   damageKeywordsOf,
   getDefByOracleId,
   opponentsOf,
@@ -63,6 +64,8 @@ export interface MoveDestination {
   deferLeaveProcessing?: boolean;
   /** Internal card-zone batch: queue one aggregate departure event after every move completes. */
   deferCardZoneTriggers?: boolean;
+  /** Internal battlefield batch: enters triggers are queued once every object has entered. */
+  deferEntersTriggers?: boolean;
   /** Battlefield only: the controller it enters under (defaults to its owner). */
   controllerId?: PlayerId;
   /** Aura host chosen when casting, attached before entry triggers are collected. */
@@ -516,7 +519,7 @@ export function* moveObject(
   }
 
   // Last known information (CR 113.7a), read while it is still on the battlefield.
-  if (from === 'battlefield') rememberLeavingSourceDamageKeywords(ctx, obj as EnginePermanent);
+  if (from === 'battlefield') rememberLeavingSourceTraits(ctx, obj as EnginePermanent);
 
   if (target.zone === 'battlefield' && !target.faceDown) {
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
@@ -592,7 +595,15 @@ export function* moveObject(
         : undefined;
     let entersTappedOverride: boolean | undefined;
     const entersTappedUnless = landFace?.entersTappedUnless ?? def.entersTappedUnless;
-    if (!target.faceDown && entersTappedUnless !== undefined) {
+    if (
+      !target.faceDown &&
+      entersTappedUnless !== undefined &&
+      !losesAbilitiesAsItEnters(
+        ctx,
+        target.face === 'back' ? { ...obj, face: 'back' } : obj,
+        controllerId,
+      )
+    ) {
       const met = yield* resolveCondition(
         ctx,
         entersTappedUnless,
@@ -783,7 +794,11 @@ export function* moveObject(
   }
 
   // Triggers: enters on arriving, dies on battlefield → graveyard.
-  if (target.zone === 'battlefield' && from !== 'battlefield') {
+  if (
+    target.zone === 'battlefield' &&
+    from !== 'battlefield' &&
+    target.deferEntersTriggers !== true
+  ) {
     queueTriggersForObject(ctx, 'enters', next as EnginePermanent);
   }
   if (from === 'battlefield') {
@@ -796,8 +811,27 @@ export function* moveObject(
 }
 
 /**
+ * CR 614.12: a permanent's own "enters tapped unless" applies only if it would have that ability
+ * on the battlefield. Checked against the permanent as it would exist there, under the continuous
+ * effects already in play (a nonbasic land under Blood Moon has no abilities, so it enters
+ * untapped). The probe is never put anywhere, and its object id is handed back.
+ */
+function losesAbilitiesAsItEnters(
+  ctx: GameContext,
+  obj: EngineObject,
+  controllerId: PlayerId,
+): boolean {
+  const nextObjectNum = ctx.state.nextObjectNum;
+  const probe = makePermanent(ctx, obj, controllerId);
+  ctx.state.nextObjectNum = nextObjectNum;
+  return computeCharacteristics(ctx, probe).loseAbilities === true;
+}
+
+/**
  * Move cards as one zone-change event. Every card still gets the new object identity required
- * by CR 400.7, while aggregate "one or more cards leave" abilities see one event.
+ * by CR 400.7, while aggregate "one or more cards leave" abilities see one event. Objects put
+ * onto the battlefield together enter simultaneously: no enters trigger is checked until all of
+ * them are there (CR 603.6a), so each sees the others.
  */
 export function* moveObjects(
   ctx: GameContext,
@@ -809,15 +843,22 @@ export function* moveObjects(
       ? []
       : objects.filter((object): object is EngineCardObject => object.zone === 'graveyard');
   const moved: (EngineCardObject | EnginePermanent | null)[] = [];
+  const entered: EnginePermanent[] = [];
   for (const object of objects) {
-    moved.push(
-      yield* moveObject(ctx, object, {
-        ...destination,
-        ...(leavingGraveyard.includes(object as EngineCardObject)
-          ? { deferCardZoneTriggers: true }
-          : {}),
-      }),
-    );
+    const entering = destination.zone === 'battlefield' && object.zone !== 'battlefield';
+    const next = yield* moveObject(ctx, object, {
+      ...destination,
+      ...(leavingGraveyard.includes(object as EngineCardObject)
+        ? { deferCardZoneTriggers: true }
+        : {}),
+      ...(entering ? { deferEntersTriggers: true } : {}),
+    });
+    moved.push(next);
+    if (entering && next !== null && next.zone === 'battlefield')
+      entered.push(next as EnginePermanent);
+  }
+  for (const permanent of entered) {
+    if (ctx.state.battlefield.includes(permanent)) queueTriggersForObject(ctx, 'enters', permanent);
   }
   if (leavingGraveyard.length > 0) {
     queueCardZoneTriggers(ctx, 'leavesGraveyard', leavingGraveyard);
@@ -1483,11 +1524,12 @@ function remembersEventObject(ability: Ability): boolean {
 }
 
 /**
- * A permanent is leaving: record its damage keywords on every ability of its own waiting on the
- * stack or about to be put there, so damage it deals after it is gone uses the deathtouch, lifelink and infect it had
- * immediately before it left (CR 113.7a, Mordant Dragon). Only recorded when it had any.
+ * A permanent is leaving: record its colors and damage keywords on every ability of its own
+ * waiting on the stack or about to be put there, so its targets and the damage it deals after it
+ * is gone use the colors, deathtouch, lifelink and infect it had immediately before it left
+ * (CR 113.7a, Mordant Dragon). Damage keywords are only recorded when it had any.
  */
-function rememberLeavingSourceDamageKeywords(ctx: GameContext, perm: EnginePermanent): void {
+function rememberLeavingSourceTraits(ctx: GameContext, perm: EnginePermanent): void {
   const entries = ctx.state.stack.filter(
     (entry) =>
       entry.kind !== 'spell' &&
@@ -1503,7 +1545,9 @@ function rememberLeavingSourceDamageKeywords(ctx: GameContext, perm: EnginePerma
   );
   if (entries.length === 0 && pending.length === 0) return;
   const keywords = damageKeywordsOf(ctx, perm);
+  const colors = colorsOf(ctx, perm);
   for (const entry of [...entries, ...pending]) {
+    entry.sourceColors = [...colors];
     if (keywords.length > 0) entry.sourceDamageKeywords = keywords;
     else delete entry.sourceDamageKeywords;
   }

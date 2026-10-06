@@ -1964,6 +1964,8 @@ test("Mordant Dragon: redirect combat damage to that player's creature", async (
 test('Necron Deathmark: destroy up to one creature, mill three', async ({ page }) => {
   await runScenario(page, 'Necron Deathmark: destroy up to one creature, mill three');
 
+  // P3's spell is on the stack, so only a spell with flash can be cast now.
+  await expect(handCard(page, 'Lab Deathmark Bystander')).not.toHaveClass(/actionable/);
   const deathmark = handCard(page, 'Necron Deathmark');
   await expect(deathmark).toHaveClass(/actionable/);
   await deathmark.click();
@@ -2570,6 +2572,56 @@ test('Sweet-Gum Recluse: counters on creatures that entered this turn', async ({
   await expect(permanent(page, 'Lab Sprout')).toContainText('4/4');
   await expect(permanent(page, 'Sweet-Gum Recluse')).toContainText('3/6');
   await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+});
+
+test('Sweet-Gum Recluse: flash in response, cascade into a cheaper spell', async ({ page }) => {
+  await runScenario(page, 'Sweet-Gum Recluse: flash in response, cascade into a cheaper spell');
+
+  // P2's spell is on the stack, so only a spell with flash can be cast now.
+  await expect(handCard(page, 'Lab Bystander')).not.toHaveClass(/actionable/);
+  const recluse = handCard(page, 'Sweet-Gum Recluse');
+  await expect(recluse).toHaveClass(/actionable/);
+  await recluse.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Cascade exiles until Lab Seedling, the first nonland card with lower mana value.
+  await page
+    .getByRole('button', { name: 'Cast Lab Seedling without paying its mana cost' })
+    .click({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Target Lab Seedling' }).click();
+  await page.getByRole('button', { name: 'Target Sweet-Gum Recluse' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Seedling')).toContainText('4/4');
+  await expect(permanent(page, 'Sweet-Gum Recluse')).toContainText('3/6');
+  await expect(permanent(page, 'Lab Bystander')).toHaveCount(0);
+});
+
+test('Sweet-Gum Recluse: reach blocks a flier', async ({ page }) => {
+  await runScenario(page, 'Sweet-Gum Recluse: reach blocks a flier');
+
+  // P2 attacks with Lab Drake (flying). Only the Recluse, which has reach, may block it.
+  await page.getByRole('button', { name: /Declare blockers/ }).click({ timeout: 15_000 });
+  const rows = page.locator('.combat-assignment-row');
+  await expect(rows).toHaveCount(1);
+  await expect(rows.filter({ hasText: 'Lab Ox' })).toHaveCount(0);
+  await rows
+    .filter({ hasText: 'Sweet-Gum Recluse' })
+    .getByRole('button', { name: 'Lab Drake' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Sweet-Gum Recluse')).toBeVisible();
+  await expect(permanent(page, 'Lab Drake')).toBeVisible();
+  // Blocked, so none of Lab Drake's damage reaches you.
+  await expect(
+    page.locator('.human-zone .life-badge, .seat[data-seat="P1"] .life-badge'),
+  ).toHaveText('40');
 });
 
 test('Kogla, the Titan Ape: fight up to one creature on entry', async ({ page }) => {

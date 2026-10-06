@@ -4475,29 +4475,42 @@ function mordantDragonScenario(gameId: GameId): CardTestScenario {
 
 function necronDeathmarkScenario(gameId: GameId): CardTestScenario {
   const deathmark = pinnedFrom(MARCHESA_BATCH1, 'Necron Deathmark');
+  const bystander = card({
+    oracleId: 'lab-deathmark-bystander',
+    name: 'Lab Deathmark Bystander',
+    typeLine: 'Creature — Human',
+    manaCost: '{B}',
+    cmc: 1,
+    colors: ['B'],
+    colorIdentity: ['B'],
+    power: '1',
+    toughness: '1',
+  });
   return pr01Scenario(gameId, {
     id: 'necron-deathmark-viewer-destroy-up-to-one-and-mill',
     title: 'Necron Deathmark: destroy up to one creature, mill three',
     instructions: [
-      'Cast Necron Deathmark with your five lands.',
+      "P3's Lab Pending Spell is on the stack, so only a spell with flash can be cast; Lab Deathmark Bystander cannot.",
+      'Cast Necron Deathmark in response (flash) with your five lands.',
       'Target P2 for the mill and Lab Ox as the up-to-one creature, then let the trigger resolve.',
     ],
     expectedOutcome:
-      'Lab Ox is destroyed and P2 mills three cards; Lab Servo survives because only one creature may be chosen.',
+      'Lab Ox is destroyed and P2 mills three cards; Lab Servo survives because only one creature may be chosen. Lab Deathmark Bystander stays in your hand.',
     oracleSha256: deathmark.sha256,
-    clauseIds: ['necron-deathmark-destroy-and-mill'],
+    clauseIds: ['necron-deathmark-flash', 'necron-deathmark-destroy-and-mill'],
     decks: {
-      P1: [deathmark.card, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P1: [deathmark.card, bystander, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
       P2: [LAB_OX, LAB_SERVO, FOREST, FOREST, FOREST, FOREST],
-      P3: PR01_FILLER,
+      P3: [ARCANE_PENDING_SPELL, FOREST, FOREST],
       P4: PR01_FILLER,
     },
     prepared: {
-      hand: [{ playerId: 'P1', cardNames: ['Necron Deathmark'] }],
+      hand: [{ playerId: 'P1', cardNames: ['Necron Deathmark', 'Lab Deathmark Bystander'] }],
       battlefield: [
         { playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'] },
         { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
       ],
+      stack: [{ playerId: 'P3', cardNames: ['Lab Pending Spell'] }],
     },
   });
 }
@@ -5369,6 +5382,121 @@ function sweetGumRecluseScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function sweetGumRecluseFlashCascadeScenario(gameId: GameId): CardTestScenario {
+  const recluse = pinnedFrom(COVERAGE_PR01, 'Sweet-Gum Recluse');
+  const seedling = card({
+    oracleId: 'lab-recluse-seedling',
+    name: 'Lab Seedling',
+    typeLine: 'Creature — Plant',
+    manaCost: '{1}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '1',
+    toughness: '1',
+  });
+  const bystander = card({
+    oracleId: 'lab-recluse-bystander',
+    name: 'Lab Bystander',
+    typeLine: 'Creature — Elf',
+    manaCost: '{G}',
+    cmc: 1,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '1',
+    toughness: '1',
+  });
+  const forests = Array.from({ length: 6 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'sweet-gum-recluse-viewer-flash-cascade',
+    title: 'Sweet-Gum Recluse: flash in response, cascade into a cheaper spell',
+    instructions: [
+      "P2's Lab Pending Spell is on the stack. Lab Bystander has no flash, so it cannot be cast now.",
+      'Cast Sweet-Gum Recluse in response (flash); its cascade exiles until Lab Seedling.',
+      'Cast Lab Seedling without paying its mana cost, then choose Lab Seedling and Sweet-Gum Recluse for the counters.',
+    ],
+    expectedOutcome:
+      "Lab Seedling resolves first and becomes 4/4; Sweet-Gum Recluse becomes 3/6. Lab Bystander stays in your hand, and P2's spell resolves last.",
+    oracleSha256: recluse.sha256,
+    clauseIds: ['sweet-gum-recluse-flash', 'sweet-gum-recluse-cascade'],
+    decks: {
+      P1: [recluse.card, bystander, seedling, ...Array.from({ length: 8 }, () => FOREST)],
+      P2: [ARCANE_PENDING_SPELL, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Sweet-Gum Recluse', 'Lab Bystander'] }],
+      battlefield: [{ playerId: 'P1', cardNames: forests }],
+      stack: [{ playerId: 'P2', cardNames: ['Lab Pending Spell'] }],
+    },
+  });
+}
+
+/** P2's seat in the reach scenario: attack P1 with every creature, otherwise pass. */
+const attackP1WithEverything: DecisionProvider = {
+  decide(request) {
+    const attack = request.legalActions.find((action) =>
+      action.description.startsWith('Declare attackers'),
+    );
+    if (attack !== undefined) {
+      return {
+        requestId: request.requestId,
+        actionId: attack.id,
+        targets: (attack.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice: slot.options.includes('P1') ? 'P1' : (slot.options[0] as string),
+        })),
+      };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+  },
+};
+
+function sweetGumRecluseReachScenario(gameId: GameId): CardTestScenario {
+  const recluse = pinnedFrom(COVERAGE_PR01, 'Sweet-Gum Recluse');
+  const drake = card({
+    oracleId: 'lab-recluse-drake',
+    name: 'Lab Drake',
+    typeLine: 'Creature — Drake',
+    manaCost: '{1}{U}',
+    cmc: 2,
+    colors: ['U'],
+    colorIdentity: ['U'],
+    power: '2',
+    toughness: '2',
+    oracleText: 'Flying',
+  });
+  return pr01Scenario(gameId, {
+    id: 'sweet-gum-recluse-viewer-reach-block',
+    title: 'Sweet-Gum Recluse: reach blocks a flier',
+    instructions: [
+      "It is P2's turn. P2 attacks you with Lab Drake, which has flying.",
+      'Declare Sweet-Gum Recluse as a blocker for Lab Drake. Lab Ox has no reach and is not offered.',
+    ],
+    expectedOutcome: 'Sweet-Gum Recluse blocks Lab Drake and takes 2 damage; you stay at 40 life.',
+    oracleSha256: recluse.sha256,
+    clauseIds: ['sweet-gum-recluse-reach'],
+    decks: {
+      P1: [recluse.card, LAB_OX, FOREST, FOREST],
+      P2: [drake, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Sweet-Gum Recluse', 'Lab Ox'] },
+        { playerId: 'P2', cardNames: ['Lab Drake'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackP1WithEverything },
+  });
+}
+
 function koglaFightScenario(gameId: GameId): CardTestScenario {
   const kogla = pinnedFrom(COVERAGE_PR01, 'Kogla, the Titan Ape');
   const forests = Array.from({ length: 6 }, () => 'Forest');
@@ -5566,6 +5694,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'mystic-sanctuary-viewer-untapped-return',
   'brokers-hideout-viewer-sacrifice-and-search',
   'sweet-gum-recluse-viewer-new-creatures',
+  'sweet-gum-recluse-viewer-flash-cascade',
+  'sweet-gum-recluse-viewer-reach-block',
   'kogla-viewer-enters-fight',
   'kogla-viewer-bounce-and-attack',
   'opponent-graveyard-viewer-reanimate',
@@ -5685,6 +5815,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'mystic-sanctuary-viewer-untapped-return': mysticSanctuaryScenario,
   'brokers-hideout-viewer-sacrifice-and-search': brokersHideoutScenario,
   'sweet-gum-recluse-viewer-new-creatures': sweetGumRecluseScenario,
+  'sweet-gum-recluse-viewer-flash-cascade': sweetGumRecluseFlashCascadeScenario,
+  'sweet-gum-recluse-viewer-reach-block': sweetGumRecluseReachScenario,
   'kogla-viewer-enters-fight': koglaFightScenario,
   'kogla-viewer-bounce-and-attack': koglaAttackScenario,
   'opponent-graveyard-viewer-reanimate': opponentGraveyardScenario,

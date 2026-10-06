@@ -3780,15 +3780,19 @@ export function* executeAbility(
         break;
       }
       case 'huntingWilds': {
-        const found: EnginePermanent[] = [];
         const selectorSource = { cardId: source.cardId, controllerId: controller.id };
+        // Both choices are made first: "put them onto the battlefield" is one event, so the
+        // Forests enter together (CR 603.6a) and each one's entry sees the other.
+        const chosen: EngineCardObject[] = [];
         for (let i = 0; i < 2; i++) {
-          const matches = controller.library.filter((card) =>
-            selectMatches(
-              cardZoneCandidate(ctx, card, controller.id),
-              { kind: 'subtype', value: 'Forest' },
-              selectorSource,
-            ),
+          const matches = controller.library.filter(
+            (card) =>
+              !chosen.includes(card) &&
+              selectMatches(
+                cardZoneCandidate(ctx, card, controller.id),
+                { kind: 'subtype', value: 'Forest' },
+                selectorSource,
+              ),
           );
           if (matches.length === 0) break;
           const outcome = yield {
@@ -3812,17 +3816,18 @@ export function* executeAbility(
             ],
           };
           if (outcome.index >= matches.length) break;
-          const card = matches[outcome.index] as EngineCardObject;
-          yield* moveObject(ctx, card, {
-            zone: 'battlefield',
-            controllerId: controller.id,
-            entersTapped: true,
-          });
-          const permanent = ctx.state.battlefield.find(
-            (candidate) => candidate.cardId === card.cardId,
-          );
-          if (permanent !== undefined) found.push(permanent);
+          chosen.push(matches[outcome.index] as EngineCardObject);
         }
+        const found = (yield* moveObjects(ctx, chosen, {
+          zone: 'battlefield',
+          controllerId: controller.id,
+          entersTapped: true,
+        })).filter(
+          (moved): moved is EnginePermanent =>
+            moved !== null &&
+            moved.zone === 'battlefield' &&
+            ctx.state.battlefield.includes(moved as EnginePermanent),
+        );
         shuffleLibrary(ctx, controller);
         if (amountOf({ kind: 'optionalCostCount', mechanic: 'kicker' }) > 0) {
           for (const permanent of found) permanent.tapped = false;

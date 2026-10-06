@@ -268,10 +268,15 @@ export function candidateOf(
   // X as 0 off the stack (202.3b) — the same rule `cardZoneCandidate` applies for library/hand/
   // graveyard cards via `spellManaValue(def, undefined)`. Absent (not 0) when the def can't be
   // found, so `manaValueAtMost`/`manaValueAtLeast` correctly never match rather than matching
-  // everything as mana value 0.
+  // everything as mana value 0. A face-down permanent has no mana cost, so its mana value is 0
+  // whatever card it is (CR 708.2).
   const ownDef = ctx.defs.get(perm.oracleId);
   const manaValue =
-    ownDef === undefined ? undefined : perm.face === 'back' ? 0 : manaValueOf(ownDef.manaCost);
+    ownDef === undefined
+      ? undefined
+      : perm.face === 'back' || perm.faceDown
+        ? 0
+        : manaValueOf(ownDef.manaCost);
 
   return {
     cardId: perm.cardId,

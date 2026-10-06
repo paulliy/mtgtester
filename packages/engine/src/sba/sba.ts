@@ -401,7 +401,12 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   // mode never used, let that target's illegality fizzle a targetless mode, and dropped the
   // whole trigger when only one mode lacked a target.
   // Protection (CR 702.16): a triggered ability can't target what is protected from its source.
-  const sourceColors = sourceColorsOf(ctx, trigger.sourceCardId, trigger.sourceOracleId);
+  const sourceColors = sourceColorsOf(
+    ctx,
+    trigger.sourceCardId,
+    trigger.sourceOracleId,
+    trigger.sourceColors,
+  );
   let ability: Ability = trigger.ability;
   let activeSlots: number[] | undefined;
   let modeLabel: string | undefined;

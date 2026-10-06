@@ -312,6 +312,13 @@ describe('Necron Deathmark Card Test Lab scenario', () => {
       steps,
     );
     expect(offered.flat()).toContain('Choose no more targets');
+    // Flash: with P3's spell on the stack the Deathmark is castable; the Bystander is not.
+    const first = offered.find((options) =>
+      options.some((option) => option.includes('Cast Necron Deathmark')),
+    )!;
+    expect(first.join('|')).not.toContain('Cast Lab Deathmark Bystander');
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Deathmark Bystander']);
+    expect(seat('P3').graveyard.map((card) => card.name)).toEqual(['Lab Pending Spell']);
     expect(seat('P2').graveyard.map((card) => card.name)).toEqual([
       'Lab Ox',
       'Forest',
@@ -814,6 +821,48 @@ describe('Sweet-Gum Recluse Card Test Lab scenario', () => {
     expect(onBattlefield('Sweet-Gum Recluse')[0]?.counters['+1/+1']).toBe(3);
     expect(onBattlefield('Lab Ox')[0]?.counters['+1/+1'] ?? 0).toBe(0);
     replays('sweet-gum-recluse-viewer-new-creatures', steps);
+  });
+
+  const flashSteps: Step[] = [
+    { action: 'Cast Sweet-Gum Recluse' },
+    { action: 'Cast Lab Seedling without paying its mana cost' },
+    { action: 'Target Lab Seedling' },
+    { action: 'Target Sweet-Gum Recluse' },
+  ];
+
+  it('sweet-gum-recluse-viewer-flash-cascade — cast in response, cascades into Lab Seedling for free', () => {
+    const { seat, onBattlefield, offered } = run(
+      'sweet-gum-recluse-viewer-flash-cascade',
+      flashSteps,
+    );
+    // Flash: the Recluse is castable while P2's spell is on the stack; Lab Bystander is not.
+    const first = offered.find((options) =>
+      options.some((o) => o.includes('Cast Sweet-Gum Recluse')),
+    )!;
+    expect(first.join('|')).not.toContain('Cast Lab Bystander');
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Bystander']);
+    expect(onBattlefield('Lab Seedling')[0]?.counters['+1/+1']).toBe(3);
+    expect(onBattlefield('Sweet-Gum Recluse')[0]?.counters['+1/+1']).toBe(3);
+    // P2's spell still resolves once both creatures have.
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Pending Spell']);
+    replays('sweet-gum-recluse-viewer-flash-cascade', flashSteps);
+  });
+
+  const reachSteps: Step[] = [
+    { action: 'Declare attackers', targets: ['P1'] },
+    { action: 'Declare blockers', targets: ['Lab Drake'] },
+  ];
+
+  it('sweet-gum-recluse-viewer-reach-block — reach lets it block the flier; Lab Ox is never offered', () => {
+    const { seat, onBattlefield, offered } = run(
+      'sweet-gum-recluse-viewer-reach-block',
+      reachSteps,
+    );
+    const block = offered.find((options) => options.some((o) => o.startsWith('Declare blockers')))!;
+    expect(block).toContain('Declare blockers (1 eligible creature)');
+    expect(onBattlefield('Sweet-Gum Recluse')[0]?.damageMarked).toBe(2);
+    expect(seat('P1').life).toBe(40);
+    replays('sweet-gum-recluse-viewer-reach-block', reachSteps);
   });
 });
 

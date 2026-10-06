@@ -2288,8 +2288,13 @@
         {
           "id": "necron-deathmark-flash",
           "oracleText": "Flash",
-          "implementation": ["keyword flash (interpreted)"],
-          "engineTestIds": ["necron-deathmark-pinned-oracle-supported"],
+          "implementation": [
+            "keyword flash (interpreted): castable on an opponent's turn or with a spell on the stack; a creature without flash is not"
+          ],
+          "engineTestIds": [
+            "necron-deathmark-pinned-oracle-supported",
+            "necron-deathmark-flash-opponents-turn"
+          ],
           "viewerScenarioIds": ["necron-deathmark-viewer-destroy-up-to-one-and-mill"]
         },
         {
@@ -2909,6 +2914,7 @@
             "kairi-the-swirling-sky-bounce-zero",
             "kairi-the-swirling-sky-copy-token-mana-value",
             "kairi-the-swirling-sky-copied-back-face-mana-value-zero",
+            "kairi-the-swirling-sky-face-down-mana-value-zero",
             "kairi-the-swirling-sky-budget-rechecked-on-resolution"
           ],
           "viewerScenarioIds": ["kairi-viewer-bounce-total-six"]
@@ -2947,7 +2953,11 @@
             "huntingWilds op: up to two choices among Forest-subtype cards (any Forest card, nonbasic included), each may find nothing; onto the battlefield tapped; then shuffle",
             "no reveal: the Oracle text has none (the old containment reason was mistaken)"
           ],
-          "engineTestIds": ["hunting-wilds-unkicked", "hunting-wilds-forest-cards-only-this-way"],
+          "engineTestIds": [
+            "hunting-wilds-unkicked",
+            "hunting-wilds-forest-cards-only-this-way",
+            "hunting-wilds-forests-enter-together"
+          ],
           "viewerScenarioIds": ["hunting-wilds-viewer-kicked"]
         },
         {
@@ -3150,7 +3160,8 @@
             "mordant-dragon-no-creature-no-trigger",
             "mordant-dragon-last-known-deathtouch",
             "mordant-dragon-lost-deathtouch-before-leaving",
-            "mordant-dragon-dies-before-stack"
+            "mordant-dragon-dies-before-stack",
+            "mordant-dragon-dies-before-stack-keeps-colors"
           ],
           "viewerScenarioIds": ["mordant-dragon-viewer-combat-damage-redirect"]
         }
@@ -4087,11 +4098,13 @@
           "id": "mystic-sanctuary-enters-tapped-unless",
           "oracleText": "This land enters tapped unless you control three or more other Islands.",
           "implementation": [
-            "entersTappedUnless countPermanents(Island subtype, you) >= 3, evaluated as it enters, before it is on the battlefield, so only OTHER Islands count; any Island subtype counts, basic or not"
+            "entersTappedUnless countPermanents(Island subtype, you) >= 3, evaluated as it enters, before it is on the battlefield, so only OTHER Islands count; any Island subtype counts, basic or not",
+            "applies only if it would have the ability on the battlefield (CR 614.12): under Blood Moon it enters untapped"
           ],
           "engineTestIds": [
             "mystic-sanctuary-enters-tapped",
-            "mystic-sanctuary-untapped-returns-spell"
+            "mystic-sanctuary-untapped-returns-spell",
+            "mystic-sanctuary-blood-moon-enters-untapped"
           ],
           "viewerScenarioIds": ["mystic-sanctuary-viewer-untapped-return"]
         },
@@ -4148,28 +4161,42 @@
         {
           "id": "sweet-gum-recluse-flash",
           "oracleText": "Flash",
-          "implementation": ["keyword flash (interpreted)"],
-          "engineTestIds": ["sweet-gum-recluse-pinned-oracle-supported"],
-          "viewerScenarioIds": ["sweet-gum-recluse-viewer-new-creatures"]
+          "implementation": [
+            "keyword flash (interpreted): castable on an opponent's turn or with a spell on the stack; a creature without flash is not"
+          ],
+          "engineTestIds": [
+            "sweet-gum-recluse-pinned-oracle-supported",
+            "sweet-gum-recluse-flash-opponents-turn"
+          ],
+          "viewerScenarioIds": ["sweet-gum-recluse-viewer-flash-cascade"]
         },
         {
           "id": "sweet-gum-recluse-cascade",
           "oracleText": "Cascade",
           "implementation": [
-            "keyword cascade (interpreted); exercised on the normal cast path, revealing only lands here"
+            "keyword cascade (interpreted) on the normal cast path: exiles until the first nonland card with mana value less than 6, offers to cast it free, and puts the rest on the bottom; lands and costlier cards are skipped"
           ],
           "engineTestIds": [
             "sweet-gum-recluse-pinned-oracle-supported",
+            "sweet-gum-recluse-cascade-casts-hit",
             "sweet-gum-recluse-counters-on-new-creatures"
           ],
-          "viewerScenarioIds": ["sweet-gum-recluse-viewer-new-creatures"]
+          "viewerScenarioIds": [
+            "sweet-gum-recluse-viewer-flash-cascade",
+            "sweet-gum-recluse-viewer-new-creatures"
+          ]
         },
         {
           "id": "sweet-gum-recluse-reach",
           "oracleText": "Reach",
-          "implementation": ["keyword reach (interpreted)"],
-          "engineTestIds": ["sweet-gum-recluse-pinned-oracle-supported"],
-          "viewerScenarioIds": ["sweet-gum-recluse-viewer-new-creatures"]
+          "implementation": [
+            "keyword reach (interpreted): may block a creature with flying; a creature without reach or flying is never offered that block"
+          ],
+          "engineTestIds": [
+            "sweet-gum-recluse-pinned-oracle-supported",
+            "sweet-gum-recluse-reach-blocks-flier"
+          ],
+          "viewerScenarioIds": ["sweet-gum-recluse-viewer-reach-block"]
         },
         {
           "id": "sweet-gum-recluse-enters-counters",
