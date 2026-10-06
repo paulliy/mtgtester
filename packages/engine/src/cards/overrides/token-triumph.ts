@@ -295,10 +295,24 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     },
   );
   // Catalog audit token-triumph-batch-6: eliminated players still count as opponents.
-  unsupportedCard(
+  // Coverage PR01: only opponents still in the game are counted (CR 800.4a).
+  defineCard(
     '9b40faad-1b96-4461-89d8-9a207b58e832',
     'Voice of Many',
-    'Eliminated players still count as opponents who control fewer creatures.',
+    [
+      'When this creature enters, draw a card for each opponent who controls fewer creatures than you.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [],
+          effects: [{ op: 'draw', count: { kind: 'countOpponentsWithFewerCreatures' } }],
+          description: 'Draw a card for each opponent who controls fewer creatures than you',
+        },
+      ],
+    },
   );
   // Loyal Guardian
   defineCard(

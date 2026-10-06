@@ -94,6 +94,9 @@ function run(scenarioId: string, steps: Step[]) {
     });
     if (decisions > 60) throw new Error(`${scenarioId} did not terminate`);
   }
+  // A clean lab run ends after its priority window; an engine halt (an unmodeled card reached
+  // play) is a broken scenario, not an outcome.
+  expect(scenario!.engine.getResult()?.haltReason ?? null, scenarioId).toBeNull();
   const state = scenario!.engine.getState();
   const seat = (id: string) => state.players.find((candidate) => candidate.id === id)!;
   const onBattlefield = (name: string) =>
@@ -437,5 +440,21 @@ describe('Tomb Fortress Card Test Lab scenario', () => {
         .sort(),
     ).toEqual(['Forest', 'Forest', 'Forest', 'Lab Servo']);
     replays('tomb-fortress-viewer-mill-then-return', steps);
+  });
+});
+
+describe('Voice of Many Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Voice of Many' }];
+
+  it('voice-of-many-viewer-draw-per-opponent — draws one card for each opponent with fewer creatures', () => {
+    const { state, seat, onBattlefield } = run('voice-of-many-viewer-draw-per-opponent', steps);
+    expect(onBattlefield('Voice of Many')).toHaveLength(1);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual([
+      'Voice Drawn Card',
+      'Voice Drawn Card',
+    ]);
+    expect(seat('P1').library).toHaveLength(1);
+    expect(state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(2);
+    replays('voice-of-many-viewer-draw-per-opponent', steps);
   });
 });

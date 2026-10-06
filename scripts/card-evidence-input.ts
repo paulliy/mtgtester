@@ -1228,6 +1228,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Tomb Fortress: mill four, then return a creature card'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Voice of Many: draw for each opponent with fewer creatures'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

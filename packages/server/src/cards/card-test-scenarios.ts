@@ -4640,6 +4640,45 @@ function tombFortressScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function voiceOfManyScenario(gameId: GameId): CardTestScenario {
+  const voice = pinnedFrom(MARCHESA_BATCH1, 'Voice of Many');
+  const drawn = card({
+    oracleId: 'lab-voice-drawn',
+    name: 'Voice Drawn Card',
+    typeLine: 'Creature — Scribe',
+    power: '1',
+    toughness: '1',
+    manaCost: '{9}',
+    cmc: 9,
+  });
+  return pr01Scenario(gameId, {
+    id: 'voice-of-many-viewer-draw-per-opponent',
+    title: 'Voice of Many: draw for each opponent with fewer creatures',
+    instructions: [
+      'Cast Voice of Many with your four Forests.',
+      'Let its enters trigger resolve and count the cards you draw.',
+    ],
+    expectedOutcome:
+      'You control two creatures (Lab Ox and Voice of Many). P2 (none) and P3 (one) control fewer, but P4 (two) does not, so you draw exactly two cards.',
+    oracleSha256: voice.sha256,
+    clauseIds: ['voice-of-many-enters-draw'],
+    decks: {
+      P1: [voice.card, LAB_OX, FOREST, FOREST, FOREST, FOREST, drawn, drawn, drawn],
+      P2: PR01_FILLER,
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Voice of Many'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Forest', 'Forest', 'Forest', 'Forest'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+        { playerId: 'P4', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4737,6 +4776,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'sylvan-reclamation-viewer-basic-landcycling',
   'thunderfoot-baloth-viewer-lieutenant',
   'tomb-fortress-viewer-mill-then-return',
+  'voice-of-many-viewer-draw-per-opponent',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4830,6 +4870,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'sylvan-reclamation-viewer-basic-landcycling': sylvanReclamationLandcyclingScenario,
   'thunderfoot-baloth-viewer-lieutenant': thunderfootBalothScenario,
   'tomb-fortress-viewer-mill-then-return': tombFortressScenario,
+  'voice-of-many-viewer-draw-per-opponent': voiceOfManyScenario,
 };
 
 export function createCardTestScenario(

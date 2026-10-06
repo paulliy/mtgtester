@@ -13,7 +13,7 @@ import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { computeCharacteristics, selectPermanents } from './continuous';
-import { cardZoneCandidate, effectivePT, getDefByOracleId } from '../state/queries';
+import { cardZoneCandidate, effectivePT, getDefByOracleId, opponentsOf } from '../state/queries';
 import { spellManaValue } from '../state/objects';
 
 function scopedPermanents(
@@ -215,17 +215,17 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
         { kind: 'type', value: 'Creature' },
         'you',
       ).length;
+      // Only players still in the game are opponents (CR 800.4a); an eliminated player with no
+      // creatures left must not count as one who controls fewer.
       let count = 0;
-      for (const p of ctx.state.players) {
-        if (p.id !== scope.controllerId) {
-          const oppCreatures = scopedPermanents(
-            ctx,
-            { ...scope, controllerId: p.id },
-            { kind: 'type', value: 'Creature' },
-            'you',
-          ).length;
-          if (oppCreatures < myCreatures) count++;
-        }
+      for (const p of opponentsOf(ctx, scope.controllerId)) {
+        const oppCreatures = scopedPermanents(
+          ctx,
+          { ...scope, controllerId: p.id },
+          { kind: 'type', value: 'Creature' },
+          'you',
+        ).length;
+        if (oppCreatures < myCreatures) count++;
       }
       return count;
     }

@@ -290,7 +290,6 @@ const REASONS: Record<string, string> = {
   'Thundermaw Hellkite':
     'Tap applies to all opposing fliers, not only creatures dealt that damage.',
   'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
-  'Voice of Many': 'Eliminated players still count as opponents who control fewer creatures.',
   'Champion of Lambholt':
     "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
   'Conclave Tribunal': 'Convoke is stored as a ruleStatic but never offered as a payment.',
@@ -311,6 +310,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Voice of Many',
     'Tomb Fortress',
     'Thunderfoot Baloth',
     'Sylvan Reclamation',

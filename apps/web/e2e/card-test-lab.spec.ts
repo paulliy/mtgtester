@@ -2105,3 +2105,19 @@ test('Tomb Fortress: mill four, then return a creature card', async ({ page }) =
   await expect(permanent(page, 'Lab Ox')).toBeVisible();
   await expect(permanent(page, 'Tomb Fortress')).toHaveCount(0);
 });
+
+test('Voice of Many: draw for each opponent with fewer creatures', async ({ page }) => {
+  await runScenario(page, 'Voice of Many: draw for each opponent with fewer creatures');
+
+  const voice = handCard(page, 'Voice of Many');
+  await expect(voice).toHaveClass(/actionable/);
+  await voice.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Voice of Many')).toBeVisible();
+  // Two of the three opponents control fewer creatures, so exactly two cards are drawn.
+  await expect(page.getByText(/Hand\s*2/).first()).toBeVisible();
+  await expect(page.getByText(/Library\s*1/).first()).toBeVisible();
+});

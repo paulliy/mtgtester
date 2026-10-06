@@ -3360,13 +3360,24 @@
     "9b40faad-1b96-4461-89d8-9a207b58e832": {
       "name": "Voice of Many",
       "oracleSha256": "63a689cdc880b92b9c729e38b25e18cdb455d1c284bbd306e20cdb6e8fa787c7",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "voice-of-many-enters-draw",
           "oracleText": "When this creature enters, draw a card for each opponent who controls fewer creatures than you.",
-          "implementation": ["explicitly unsupported; eliminated players still count as opponents"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self",
+            "draw countOpponentsWithFewerCreatures, read on resolution; the Voice itself counts toward your creatures",
+            "only opponents still in the game count (CR 800.4a: opponentsOf excludes eliminated players); an equal count does not count"
+          ],
+          "engineTestIds": [
+            "voice-of-many-pinned-oracle-supported",
+            "voice-of-many-draws-per-opponent-with-fewer",
+            "voice-of-many-no-opponent-fewer",
+            "voice-of-many-ignores-eliminated-players",
+            "voice-of-many-counts-on-resolution"
+          ],
+          "viewerScenarioIds": ["voice-of-many-viewer-draw-per-opponent"]
         }
       ],
       "gameplayAiScenarioIds": []

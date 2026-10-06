@@ -39,6 +39,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Sylvan Reclamation',
       'Thunderfoot Baloth',
       'Tomb Fortress',
+      'Voice of Many',
       'War Room',
     ]);
   });

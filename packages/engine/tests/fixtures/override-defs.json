@@ -5875,8 +5875,32 @@
   {
     "oracleId": "9b40faad-1b96-4461-89d8-9a207b58e832",
     "name": "Voice of Many",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, draw a card for each opponent who controls fewer creatures than you."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Draw a card for each opponent who controls fewer creatures than you",
+          "effects": [
+            {
+              "count": {
+                "kind": "countOpponentsWithFewerCreatures"
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "9ba89c25-5302-414f-a2ec-436b8981999d",
@@ -19810,8 +19834,32 @@
   {
     "oracleId": "oracle-voice-of-many",
     "name": "Voice of Many",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, draw a card for each opponent who controls fewer creatures than you."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Draw a card for each opponent who controls fewer creatures than you",
+          "effects": [
+            {
+              "count": {
+                "kind": "countOpponentsWithFewerCreatures"
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-wandering-archaic-explore-the-vastlands",

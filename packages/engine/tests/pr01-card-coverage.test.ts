@@ -1882,6 +1882,87 @@ describe('Tomb Fortress', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.15 Voice of Many
+// ---------------------------------------------------------------------------------------------
+
+describe('Voice of Many', () => {
+  const voice = pinned('Voice of Many');
+
+  /** Give each seat `counts[seat]` bears, then cast Voice of Many from P1's hand and settle. */
+  function castWith(
+    seed: string,
+    counts: Record<string, number>,
+    before?: (ctx: GameContext) => void,
+  ) {
+    const ctx = pod(seed);
+    for (const [seat, count] of Object.entries(counts)) {
+      for (let i = 0; i < count; i++) spawn(ctx, seat, bear());
+    }
+    before?.(ctx);
+    const inHand = conjure(ctx, 'P1', voice.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 4 }, () => ({ symbol: 'G' as const })),
+    );
+    const handBefore = playerById(ctx, 'P1').hand.length - 1;
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    settle(ctx);
+    return { ctx, drawn: playerById(ctx, 'P1').hand.length - handBefore };
+  }
+
+  it('voice-of-many-pinned-oracle-supported — pins the Oracle and models the enters draw', () => {
+    expect(voice.sha256).toBe('63a689cdc880b92b9c729e38b25e18cdb455d1c284bbd306e20cdb6e8fa787c7');
+    const def = interpretCard(voice.card);
+    expect(def.modeled).toBe(true);
+    expect(def.triggers).toEqual([
+      expect.objectContaining({
+        trigger: { when: 'enters', subject: { kind: 'self' } },
+        effects: [{ op: 'draw', count: { kind: 'countOpponentsWithFewerCreatures' } }],
+      }),
+    ]);
+  });
+
+  it('voice-of-many-draws-per-opponent-with-fewer — counts itself, and an opponent with equal creatures does not count', () => {
+    // P1 ends with two creatures (a bear and the Voice): P2 (0) and P3 (1) have fewer, P4 (2) does not.
+    const { drawn } = castWith('voice-count', { P1: 1, P3: 1, P4: 2 });
+    expect(drawn).toBe(2);
+  });
+
+  it('voice-of-many-no-opponent-fewer — draws nothing when every opponent has at least as many', () => {
+    const { drawn } = castWith('voice-none', { P2: 1, P3: 1, P4: 3 });
+    expect(drawn).toBe(0);
+  });
+
+  it('voice-of-many-ignores-eliminated-players — a player who has left the game is not an opponent', () => {
+    const { ctx, drawn } = castWith('voice-eliminated', { P3: 2, P4: 1 }, (game) => {
+      playerById(game, 'P2').life = 0;
+      pump(priorityCheckpoint(game));
+      expect(playerById(game, 'P2').hasLost).toBe(true);
+    });
+    // P1 has only the Voice; P3 (2) and P4 (1) do not have fewer. P2, with no creatures, would
+    // have counted had it still been in the game.
+    expect(ctx.state.eliminatedPlayers).toContain('P2');
+    expect(drawn).toBe(0);
+  });
+
+  it('voice-of-many-counts-on-resolution — creature counts are read as the trigger resolves', () => {
+    const ctx = pod('voice-resolution');
+    spawn(ctx, 'P2', bear());
+    enter(ctx, 'P1', voice.card);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    const theirs = ctx.state.battlefield.find((entry) => entry.controllerId === 'P2')!;
+    pump(moveObject(ctx, theirs, { zone: 'graveyard' }));
+    const handBefore = playerById(ctx, 'P1').hand.length;
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand.length - handBefore).toBe(3);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1962,6 +2043,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Tomb Fortress',
     sha256: '65ac436976204aa19616a5462be74a04d8081dd30adaddfeedfe8b3fcaef5329',
     clauseCount: 3,
+  },
+  {
+    name: 'Voice of Many',
+    sha256: '63a689cdc880b92b9c729e38b25e18cdb455d1c284bbd306e20cdb6e8fa787c7',
+    clauseCount: 1,
   },
 ];
 

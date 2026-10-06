@@ -2192,6 +2192,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "9b40faad-1b96-4461-89d8-9a207b58e832",
+    "name": "Voice of Many",
+    "package": "PR01.15",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When this creature enters, draw a card for each opponent who controls fewer creatures than you.\"",
+      "explicitly unsupported: Eliminated players still count as opponents who control fewer creatures."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "5825d718-6a32-4f4c-9b56-1a50051cfe28",
     "name": "Wall of Tears",
     "package": "W3",

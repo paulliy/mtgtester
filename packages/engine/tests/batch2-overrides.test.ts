@@ -76,20 +76,20 @@ describe('Batch 2 card overrides', () => {
     expect(def.staticEffects).toHaveLength(1);
   });
 
-  it('contains Voice of Many', () => {
+  it('models Voice of Many counting only opponents still in the game (coverage PR01)', () => {
     const card = oracle({
       oracleId: '9b40faad-1b96-4461-89d8-9a207b58e832',
       name: 'Voice of Many',
-      typeLine: 'Creature — Elf Archon',
-      manaCost: '{2}{G}',
+      typeLine: 'Creature — Elf Druid',
+      manaCost: '{2}{G}{G}',
       oracleText:
-        'When Voice of Many enters, draw a card for each opponent who controls fewer creatures than you.',
+        'When this creature enters, draw a card for each opponent who controls fewer creatures than you.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Eliminated players still count as opponents who control fewer creatures.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.effects).toEqual([
+      { op: 'draw', count: { kind: 'countOpponentsWithFewerCreatures' } },
+    ]);
   });
 
   it('models Loyal Guardian', () => {
