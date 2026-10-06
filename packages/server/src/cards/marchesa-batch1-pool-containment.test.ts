@@ -41,6 +41,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Myriad Landscape',
       'Necron Deathmark',
       'Plasmancer',
+      'Return to Nature',
       'Rishkar, Peema Renegade',
       'Smothering Tithe',
       'Sylvan Reclamation',

@@ -2415,3 +2415,42 @@ test('Aether Channeler: return another target nonland permanent', async ({ page 
   await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('1 in hand');
   await expect(permanent(page, 'Aether Channeler')).toBeVisible();
 });
+
+test('Return to Nature: destroy target enchantment', async ({ page }) => {
+  await runScenario(page, 'Return to Nature: destroy target enchantment');
+
+  const nature = handCard(page, 'Return to Nature');
+  await expect(nature).toHaveClass(/actionable/);
+  await nature.click();
+  // No artifact is on the battlefield, so that mode is not offered.
+  await expect(
+    page.getByRole('button', { name: /Exile target card from a graveyard/ }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: /Destroy target artifact/ })).toHaveCount(0);
+  await page.getByRole('button', { name: /Destroy target enchantment/ }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Hex').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(0);
+});
+
+test('Return to Nature: exile target card from a graveyard', async ({ page }) => {
+  await runScenario(page, 'Return to Nature: exile target card from a graveyard');
+
+  const nature = handCard(page, 'Return to Nature');
+  await expect(nature).toHaveClass(/actionable/);
+  await nature.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page
+    .locator('.zone-card-thumb.targetable')
+    .filter({ has: page.getByRole('img', { name: 'Lab Servo', exact: true }) })
+    .click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Exile\s*1/).first()).toBeVisible();
+});

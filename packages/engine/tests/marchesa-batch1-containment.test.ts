@@ -255,7 +255,6 @@ const REASONS: Record<string, string> = {
     'The entering Dragon is the damage source, implemented as damage from this creature.',
   "Karametra's Favor":
     'The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects.',
-  'Return to Nature': 'Choose-one still requires targets for every mode.',
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
   'Druid of Purification':
@@ -299,6 +298,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Return to Nature',
     'Aether Channeler',
     'Will of the Mardu',
     'Kairi, the Swirling Sky',

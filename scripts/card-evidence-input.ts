@@ -1280,6 +1280,11 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Aether Channeler: return another target nonland permanent'],
   },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Return to Nature: destroy target enchantment'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Return to Nature: exile target card from a graveyard'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

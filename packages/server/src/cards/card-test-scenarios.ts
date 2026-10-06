@@ -5088,6 +5088,62 @@ function aetherChannelerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function returnToNatureDestroyScenario(gameId: GameId): CardTestScenario {
+  const nature = pinnedFrom(MARCHESA_BATCH1, 'Return to Nature');
+  return pr01Scenario(gameId, {
+    id: 'return-to-nature-viewer-destroy-enchantment',
+    title: 'Return to Nature: destroy target enchantment',
+    instructions: [
+      'Cast Return to Nature with your two Forests, choosing the enchantment mode.',
+      "Target P2's Lab Hex.",
+    ],
+    expectedOutcome:
+      'Lab Hex is destroyed. Only the enchantment and graveyard modes were offered, because no artifact was on the battlefield.',
+    oracleSha256: nature.sha256,
+    clauseIds: ['return-to-nature-choose-one', 'return-to-nature-destroy-enchantment'],
+    decks: {
+      P1: [nature.card, FOREST, FOREST],
+      P2: [LAB_HEX, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Return to Nature'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Hex'] },
+      ],
+      graveyard: [{ playerId: 'P2', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
+function returnToNatureExileScenario(gameId: GameId): CardTestScenario {
+  const nature = pinnedFrom(MARCHESA_BATCH1, 'Return to Nature');
+  return pr01Scenario(gameId, {
+    id: 'return-to-nature-viewer-exile-graveyard-card',
+    title: 'Return to Nature: exile target card from a graveyard',
+    instructions: [
+      'Cast Return to Nature with your two Forests, choosing the graveyard mode.',
+      'Target Lab Servo in your graveyard.',
+    ],
+    expectedOutcome: 'Lab Servo moves from your graveyard to exile.',
+    oracleSha256: nature.sha256,
+    clauseIds: ['return-to-nature-choose-one', 'return-to-nature-exile-graveyard-card'],
+    decks: {
+      P1: [nature.card, LAB_SERVO, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Return to Nature'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forest', 'Forest'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Servo'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5198,6 +5254,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kairi-viewer-mill-and-return',
   'will-of-the-mardu-viewer-choose-both',
   'aether-channeler-viewer-bounce-another',
+  'return-to-nature-viewer-destroy-enchantment',
+  'return-to-nature-viewer-exile-graveyard-card',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5304,6 +5362,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kairi-viewer-mill-and-return': kairiMillScenario,
   'will-of-the-mardu-viewer-choose-both': willOfTheMarduScenario,
   'aether-channeler-viewer-bounce-another': aetherChannelerScenario,
+  'return-to-nature-viewer-destroy-enchantment': returnToNatureDestroyScenario,
+  'return-to-nature-viewer-exile-graveyard-card': returnToNatureExileScenario,
 };
 
 export function createCardTestScenario(

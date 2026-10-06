@@ -3161,13 +3161,49 @@
     "777b8ec4-a783-4297-96b7-4f200d0eb734": {
       "name": "Return to Nature",
       "oracleSha256": "fabfad3d3c71353543dc51eba22fda33136e020c811fd4d553b2dcace2fa28a0",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Choose one —\n• Destroy target artifact.\n• Destroy target enchantment.\n• Exile target card from a graveyard.",
-          "implementation": ["explicitly unsupported; choose-one still requires every mode target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "return-to-nature-choose-one",
+          "oracleText": "Choose one —",
+          "implementation": [
+            "modal spell, exactly one mode chosen at cast time; each mode announces only its own target (targetSlots), so a mode without a legal target is not offered and the spell is castable when any mode is"
+          ],
+          "engineTestIds": [
+            "return-to-nature-pinned-oracle-supported",
+            "return-to-nature-modes-need-only-their-own-target"
+          ],
+          "viewerScenarioIds": [
+            "return-to-nature-viewer-destroy-enchantment",
+            "return-to-nature-viewer-exile-graveyard-card"
+          ]
+        },
+        {
+          "id": "return-to-nature-destroy-artifact",
+          "oracleText": "Destroy target artifact.",
+          "implementation": [
+            "target artifact (slot 0); destroy; an illegal target at resolution fizzles the spell (CR 608.2b)",
+            "viewer evidence: the destroy-enchantment scenario shows this mode withheld when no artifact exists; the destroy path is shared with the enchantment mode"
+          ],
+          "engineTestIds": [
+            "return-to-nature-destroy-artifact",
+            "return-to-nature-target-gone-fizzles"
+          ],
+          "viewerScenarioIds": ["return-to-nature-viewer-destroy-enchantment"]
+        },
+        {
+          "id": "return-to-nature-destroy-enchantment",
+          "oracleText": "Destroy target enchantment.",
+          "implementation": ["target enchantment (slot 1); destroy"],
+          "engineTestIds": ["return-to-nature-destroy-enchantment"],
+          "viewerScenarioIds": ["return-to-nature-viewer-destroy-enchantment"]
+        },
+        {
+          "id": "return-to-nature-exile-graveyard-card",
+          "oracleText": "Exile target card from a graveyard.",
+          "implementation": ["target cardInGraveyard, any player's graveyard (slot 2); exileCard"],
+          "engineTestIds": ["return-to-nature-exile-graveyard-card"],
+          "viewerScenarioIds": ["return-to-nature-viewer-exile-graveyard-card"]
         }
       ],
       "gameplayAiScenarioIds": []

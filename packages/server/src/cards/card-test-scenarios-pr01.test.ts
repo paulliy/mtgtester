@@ -704,3 +704,30 @@ describe('Aether Channeler Card Test Lab scenario', () => {
     replays('aether-channeler-viewer-bounce-another', steps);
   });
 });
+
+describe('Return to Nature Card Test Lab scenarios', () => {
+  const destroySteps: Step[] = [{ action: 'Destroy target enchantment', targets: ['Lab Hex'] }];
+  const exileSteps: Step[] = [
+    { action: 'Exile target card from a graveyard', targets: ['Lab Servo'] },
+  ];
+
+  it('return-to-nature-viewer-destroy-enchantment — only modes with a legal target are offered; the enchantment is destroyed', () => {
+    const { seat, offered } = run('return-to-nature-viewer-destroy-enchantment', destroySteps);
+    const casts = offered[0]!.filter((option) => option.startsWith('Cast Return to Nature'));
+    expect(casts).toHaveLength(2);
+    expect(casts.some((option) => option.includes('Destroy target artifact'))).toBe(false);
+    expect(
+      seat('P2')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Hex', 'Lab Ox']);
+    replays('return-to-nature-viewer-destroy-enchantment', destroySteps);
+  });
+
+  it('return-to-nature-viewer-exile-graveyard-card — the graveyard card is exiled', () => {
+    const { seat, state } = run('return-to-nature-viewer-exile-graveyard-card', exileSteps);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Return to Nature']);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Servo']);
+    replays('return-to-nature-viewer-exile-graveyard-card', exileSteps);
+  });
+});

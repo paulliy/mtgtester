@@ -3,7 +3,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { oracle } from './fixtures';
 
 describe('Draconic Destruction executable overrides', () => {
-  it('is catalog-contained because choose-one still requires every mode target', () => {
+  it('models choose-one with per-mode targets (coverage PR01)', () => {
     const def = interpretCard(
       oracle({
         oracleId: '777b8ec4-a783-4297-96b7-4f200d0eb734',
@@ -15,9 +15,11 @@ describe('Draconic Destruction executable overrides', () => {
       }),
     );
 
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Choose-one still requires targets for every mode.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.modes?.options.map((option) => option.targetSlots)).toEqual([
+      [0],
+      [1],
+      [2],
+    ]);
   });
 });

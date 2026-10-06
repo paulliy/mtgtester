@@ -4903,8 +4903,72 @@
   {
     "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
     "name": "Return to Nature",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose one —",
+      "• Destroy target artifact.",
+      "• Destroy target enchantment.",
+      "• Exile target card from a graveyard."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Destroy target artifact",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 0
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "description": "Destroy target enchantment",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 1
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            },
+            {
+              "description": "Exile target card from a graveyard",
+              "effects": [
+                {
+                  "op": "exileCard",
+                  "target": 2
+                }
+              ],
+              "targetSlots": [
+                2
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "artifact"
+          },
+          {
+            "kind": "enchantment"
+          },
+          {
+            "graveyardOwnerScope": "any",
+            "kind": "cardInGraveyard"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "77807103-bcd5-479f-bedd-f5d97aa6d3d2",
@@ -18558,8 +18622,72 @@
   {
     "oracleId": "oracle-return-to-nature",
     "name": "Return to Nature",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose one —",
+      "• Destroy target artifact.",
+      "• Destroy target enchantment.",
+      "• Exile target card from a graveyard."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Destroy target artifact",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 0
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "description": "Destroy target enchantment",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 1
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            },
+            {
+              "description": "Exile target card from a graveyard",
+              "effects": [
+                {
+                  "op": "exileCard",
+                  "target": 2
+                }
+              ],
+              "targetSlots": [
+                2
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "artifact"
+          },
+          {
+            "kind": "enchantment"
+          },
+          {
+            "graveyardOwnerScope": "any",
+            "kind": "cardInGraveyard"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-reverberate",

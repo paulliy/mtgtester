@@ -1711,6 +1711,27 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
+    "name": "Return to Nature",
+    "package": "PR01.25",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Choose one —\"",
+      "unrecognized rules text: \"• Destroy target artifact.\"",
+      "unrecognized rules text: \"• Destroy target enchantment.\"",
+      "unrecognized rules text: \"• Exile target card from a graveyard.\"",
+      "explicitly unsupported: Choose-one still requires targets for every mode."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "761021ce-4559-464e-aa03-85c2fe78e267",
     "name": "Rishkar, Peema Renegade",
     "package": "PR01.19",

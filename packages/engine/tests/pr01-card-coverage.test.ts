@@ -3089,6 +3089,113 @@ describe('Aether Channeler', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.25 Return to Nature
+// ---------------------------------------------------------------------------------------------
+
+describe('Return to Nature', () => {
+  const nature = pinned('Return to Nature');
+  const relic = () => oracle({ name: 'Nature Relic', typeLine: 'Artifact', manaCost: '{2}' });
+  const charm = () => oracle({ name: 'Nature Charm', typeLine: 'Enchantment', manaCost: '{1}' });
+
+  const castOptions = (ctx: GameContext, objectId: string) =>
+    priorityOptions(ctx, 'P1').filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'castSpell' && payload.objectId === objectId;
+    });
+  const modesOf = (option: { payload?: unknown }) => {
+    const payload = option.payload as { mode?: number; modes?: number[] };
+    return payload.modes ?? (payload.mode === undefined ? [] : [payload.mode]);
+  };
+
+  function setup(seed: string) {
+    const ctx = pod(seed);
+    const inHand = conjure(ctx, 'P1', nature.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }, { symbol: 'G' }]);
+    return { ctx, inHand };
+  }
+
+  function cast(
+    ctx: GameContext,
+    inHand: { id: string },
+    mode: number,
+    slot: number,
+    target: string,
+  ) {
+    const option = castOptions(ctx, inHand.id).find(
+      (candidate) => JSON.stringify(modesOf(candidate)) === JSON.stringify([mode]),
+    );
+    expect(option, `mode ${mode}`).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[slot, target]]),
+    );
+  }
+
+  it('return-to-nature-pinned-oracle-supported — pins the Oracle and models three single-target modes', () => {
+    expect(nature.sha256).toBe('fabfad3d3c71353543dc51eba22fda33136e020c811fd4d553b2dcace2fa28a0');
+    const def = interpretCard(nature.card);
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.modes?.options.map((option) => option.targetSlots)).toEqual([
+      [0],
+      [1],
+      [2],
+    ]);
+  });
+
+  it('return-to-nature-destroy-artifact — the first mode destroys the target artifact', () => {
+    const { ctx, inHand } = setup('nature-artifact');
+    const target = spawn(ctx, 'P2', relic());
+    cast(ctx, inHand, 0, 0, target.id);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toEqual(['Nature Relic']);
+  });
+
+  it('return-to-nature-destroy-enchantment — the second mode destroys the target enchantment', () => {
+    const { ctx, inHand } = setup('nature-enchantment');
+    const target = spawn(ctx, 'P3', charm());
+    cast(ctx, inHand, 1, 1, target.id);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P3').graveyard.map((card) => card.name)).toEqual(['Nature Charm']);
+  });
+
+  it('return-to-nature-exile-graveyard-card — the third mode exiles a card from any graveyard', () => {
+    const { ctx, inHand } = setup('nature-graveyard');
+    const buried = conjure(ctx, 'P4', bear(), 'graveyard');
+    cast(ctx, inHand, 2, 2, buried.id);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P4').graveyard).toEqual([]);
+    expect(ctx.state.exile.some((card) => card.cardId === buried.cardId)).toBe(true);
+  });
+
+  it('return-to-nature-modes-need-only-their-own-target — only modes with a legal target are offered; with none it cannot be cast', () => {
+    const graveyardOnly = setup('nature-only-graveyard');
+    conjure(graveyardOnly.ctx, 'P2', bear(), 'graveyard');
+    expect(castOptions(graveyardOnly.ctx, graveyardOnly.inHand.id).map(modesOf)).toEqual([[2]]);
+
+    const artifactOnly = setup('nature-only-artifact');
+    spawn(artifactOnly.ctx, 'P2', relic());
+    expect(castOptions(artifactOnly.ctx, artifactOnly.inHand.id).map(modesOf)).toEqual([[0]]);
+
+    const nothing = setup('nature-nothing');
+    expect(castOptions(nothing.ctx, nothing.inHand.id)).toEqual([]);
+  });
+
+  it("return-to-nature-target-gone-fizzles — if the chosen mode's target leaves, nothing happens", () => {
+    const { ctx, inHand } = setup('nature-fizzle');
+    const target = spawn(ctx, 'P2', relic());
+    const bystander = spawn(ctx, 'P2', charm());
+    cast(ctx, inHand, 0, 0, target.id);
+    pump(moveObject(ctx, target, { zone: 'exile' }));
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((entry) => entry.id === bystander.id)).toBe(true);
+    expect(ctx.state.eventLog.some((event) => event.type === 'fizzle')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3218,6 +3325,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Aether Channeler',
     sha256: '340f9c527f82807166ad11f5929dc8ddc727045317a5039a8bdaa6848d967ec1',
+    clauseCount: 4,
+  },
+  {
+    name: 'Return to Nature',
+    sha256: 'fabfad3d3c71353543dc51eba22fda33136e020c811fd4d553b2dcace2fa28a0',
     clauseCount: 4,
   },
 ];
