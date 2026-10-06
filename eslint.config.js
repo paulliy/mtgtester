@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import { cardAuthoringPlugin } from './scripts/eslint/card-authoring.js';
 import tseslint from 'typescript-eslint';
 import vue from 'eslint-plugin-vue';
 
@@ -74,8 +75,10 @@ export default tseslint.config(
       'packages/engine/src/cards/overrides/index.ts',
       'packages/engine/src/cards/overrides/snapshot.ts',
     ],
+    plugins: { 'card-authoring': cardAuthoringPlugin },
     rules: {
       'no-restricted-syntax': ['error', ...OVERRIDE_RESTRICTIONS],
+      'card-authoring/guard-legacy-builders': 'error',
     },
   },
   {

@@ -1,0 +1,1105 @@
+{
+  "schemaVersion": 1,
+  "scopes": [
+    {
+      "file": "packages/engine/src/cards/overrides/counter-intelligence.ts",
+      "sha256": "8756f0657bf8075090f7c22b008e396f4574dc91d812cd5bb3a3d3e3897c2205",
+      "description": "Coretapper"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/counter-intelligence.ts",
+      "sha256": "0467104db7793bce2c35ac96131f3506d5af5c67f3e6c36a9a4878acebbb1c5f",
+      "description": "Dispatch"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/counter-intelligence.ts",
+      "sha256": "fbda4f1ee4e6051c601e2447aed89c6123f13ffd2fa1ac1d189868bd2e0ba8a7",
+      "description": "Organic Extinction"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/coverage-pr01.ts",
+      "sha256": "f042506421b5514abcbfcace81e5b1c64094ae298a4f5fae30b0eaffd2f8519e",
+      "description": "Mystic Sanctuary"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/coverage-pr01.ts",
+      "sha256": "9dcac190e8008e00d62a39a06a8fe2a3aba7b87865ee59754ca4577bdf1b37d8",
+      "description": "Brokers Hideout"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/coverage-pr01.ts",
+      "sha256": "1268d22450703044d021e48cc0526ae0bf98d381dbf367515cfa95b28e5b7e28",
+      "description": "Sweet-Gum Recluse"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/coverage-pr01.ts",
+      "sha256": "1403698eb93862cc18dae97a02fb9723c3236fcadbaf0ebac14bd0e76051f370",
+      "description": "Kogla, the Titan Ape"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "0f11270006105e4729bf2a88c39558fd8b70e9345d4a23e90924fa1ce85a4fad",
+      "description": "HOARD_SMELTER_DRAGON_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "a6fb1284b0f96f67c740c39415ce48e3d8ce7ee8f4eb1d1318ad8f7811059c17",
+      "description": "LOAMING_SHAMAN_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "a6a33683752a292312e5c4795250a0c2c16c1751512920965d377ea3825d8d02",
+      "description": "PRIMAL_MIGHT_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "191af6a55509c2304e1ad16e2d687d2f7cba1060221beb6379336ee0e050a956",
+      "description": "RUNEHORN_HELLKITE_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "ae224dd26966964c62c7e515472182be5b8d5eb7eb9dc9213a0d25e5b95ba021",
+      "description": "DRAGON_MAGE_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "20576ec322029130b83f6d4d760b9d6ad4595334d6bb22926fdb97500d5ec8df",
+      "description": "SPIT_FLAME_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "2ee1763073ca20849851328e088bd2ce3b113a673edfc72ff5924253004c7bb5",
+      "description": "CLAN_DEFIANCE_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "39d6ef4b019fba5b65eacdd11af98dca9d926ca55eb689c922cf88d511d338e4",
+      "description": "STEEL_HELLKITE_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "5bb01120075df9091e5d1d6c7484ddf59f074d7a4b1c9bb5546a9f2bd4a0a218",
+      "description": "HUNTERS_PROWESS_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "47c601479199d8760b6a286de796ade245b8aa6c8cf46ca442a1c66beb6e763a",
+      "description": "PROVOKE_THE_TROLLS_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "ed05692a096aa577705d6c89fb3e412ded480664e07a9caadc8f4034ee1cca66",
+      "description": "DEMANDING_DRAGON_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "7dc927073a2b5f793573cd782f390c1db4daa9c58d6fe9f9da42399ecc77aafc",
+      "description": "Shamanic Revelation"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "e0eca59219078f11c856a1cecb2e9c9634e65802b695aa651f65ddc8f434f996",
+      "description": "Akoum Hellkite"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "1e380718682a015c19f1603081f3a68db49abab947589e4082da89206ceedd84",
+      "description": "Blossoming Defense"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "fb73f68a80d0d9622cc2fa446090781b3b842ed99ce10095001bedab84c2d69f",
+      "description": "Chain Reaction"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "5481cbc6e3263de9d10e9201b7d9ae0b93542d0604d6226fafec5c86f0db96b8",
+      "description": "Return to Nature"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "271c4fa185db23236adf05bc11a28cbf52ab6d5cc13b2e053c3ae194633d562f",
+      "description": "Foe-Razer Regent"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "0fbd7effd5385d9993ef38a1a5ca22c43f16b7b890c091316c9ea970fc3b35f4",
+      "description": "Frontier Siege"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "1f10012547eed486e628cc3844274c1492b2959032ea911308f6df38c8d30983",
+      "description": "Magmaquake"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "407b93d95802b2c4cbd981038514617472bebf91f5ef65cffe5fb251577bfd22",
+      "description": "Mordant Dragon"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "7e08d35336cf6453fb0d11d6e35adf5616d95669e7deb25b176c778b069e8e32",
+      "description": "Savage Ventmaw"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "f15a7001781807112986d69d7001f4f774b91df89f13a1494e5d34ecbece768d",
+      "description": "Unleash Fury"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "07edca5dbb8e6625528a6e397719db34d3ecb8fb4a3aea650873c2f4506a983c",
+      "description": "registerDRACONIC_DESTRUCTIONOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "70b35b7ede83ecbd5c045330e17ef843515faadc5809406a048e0593cb7c9616",
+      "description": "Clan Defiance"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "ff07edf450fcb85fadb77b64e739c284dc32bdd1c853641ce10ff68aeab6ee33",
+      "description": "Demanding Dragon"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "3299d2a5d251194e488bc9ef327cc0d860fa48bf1c1883ff9f735253b3bd97c3",
+      "description": "Dragon Mage"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "3b983fa40c423d8fc6e44677b72442a6f93737e57b8919ab50feb4eee9456e16",
+      "description": "Hoard-Smelter Dragon"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "e3d4f48a7d68474837293d1de0472e6fd1bdd04380cd39b8340c1a4be328b115",
+      "description": "Hunter's Prowess"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "af5011a4d64d25eba999f7432e1f3dc37bafca88cf85550e8ce48deea35709eb",
+      "description": "Loaming Shaman"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "ba893dbf1f39ba3eded0e47ef98b251a56c5e97c790caf3b597f4844fc522782",
+      "description": "Primal Might"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "7cb15248f0ef56bc2d102c75722d59d388e0aaf51c28edfba621cdfe91209d3e",
+      "description": "Provoke the Trolls"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "ad91f11d119627c38b43e0fa43760d1f0a8e77d82e48ed14b5fbfd458b90d5f5",
+      "description": "Runehorn Hellkite"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "fb0db9638c2ad5f5f23ad211639e98545c89bd218704b0bbc554e295ac8caa25",
+      "description": "Spit Flame"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "145b098f8b829e05c33c5a9ff8c22d9bd5e2d03b312de07ccc7a2e93b9d6ed76",
+      "description": "Steel Hellkite"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "de2d232aabd0f0570fc6ff0a249358b5e1f8a758b77ba5c64bdd3677bbdb7cb1",
+      "description": "ARCANE_DENIAL_TARGETS"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "6ddfccc3a2cda2a097e88c687c0c7fafc5f64327d4db9f686ec541444a1d9bdb",
+      "description": "ARCANE_DENIAL_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "551c559ebb9a7d1039e60fdc742d7addded02bc7c4c43f5fa3fb7081624b579b",
+      "description": "AETHERSQUALL_ANCIENT_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "98f9b554f14e9a1955db23f09049ffa97a508f390648bb5ed694d577373f8c8c",
+      "description": "AETHERTIDE_WHALE_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "c8f5d7efe90f210c6273e2e81bdfbfa25099a3772345652fc2c3d74e51d1671e",
+      "description": "AETHERWIND_BASKER_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "744170d3b916d6c4915b90a98617207f9b73e0f900c8251ebdce28972f5370f6",
+      "description": "ARCHITECT_OF_THE_UNTAMED_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "7344ab6ae5fc618e48d9f42e570086a6d94cee61a29493aee01792d600eb0cce",
+      "description": "BOOTLEGGERS_STASH_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "9b3fa46db1018418739ac067da15f851c20334bc91634ad67d6286bb9ee7182d",
+      "description": "DECOCTION_MODULE_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "2fa50dbfb07cf235cec9140e726d2fe1505eba4d2b1ec73099e33cb1bd83e826",
+      "description": "ERA_OF_INNOVATION_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "a34d20fa5d969f4f8705a4ed050a1eae4f2b5a9d33abae472a281ee57de9087b",
+      "description": "LOYAL_APPRENTICE_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "14e9fb0976e72805737c8e8ca83da1ee1bb719c8bce6deedec2d38fa7f23cce2",
+      "description": "RECKLESS_FIREWEAVER_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "81be4c3c6520a1e31d8b2699a82626dae921ee24e0d9b4708cb58de066aa2fe1",
+      "description": "RETROFITTER_FOUNDRY_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "0abb0ce058cb174ccad404aa0ff394625966beeb7a565ac83f6a2bd722c416fe",
+      "description": "PIA_NALAAR_CHIEF_MECHANIC_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "79a86e39e22d9db6ef5660f91e460f87a5853a26c400bdc8eeaf47f769bfc43a",
+      "description": "CONFISCATION_COUP_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "801c48da55c75b7507c196d6352a217c192696286ddf3621598ec08c474ddcd9",
+      "description": "NISSA_WORLDSOUL_SPEAKER_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "6cc7877342be5b7a3c5ed17130e8dd1c300738a5099142d4c2a00c2aa0717ab1",
+      "description": "AETHERIC_AMPLIFIER_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "db3cb89779d2b5454459f093ad3d551a6759e280e47e7530fcd5f7ddbb932270",
+      "description": "AETHERFLUX_CONDUIT_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "18375a13ed25dd50b1e5e8d5735eb14a1c102dcaedf207362239c400fa173eb3",
+      "description": "RAMPAGING_AETHERHOOD_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "b4dc1a8f019a7dac9c6be496c8b0b8e462d618008ffc2c16e75d0f65965f3695",
+      "description": "PEEMA_TRAILBLAZER_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "a8725d0581a125d8635b0fe855a52fdd4a82e29a63607b6cd20ba7f6d01b6b4d",
+      "description": "ELDER_GARGAROTH_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "0fd111a5c56e592dd66322e120774a7b610bffdfd1e3f290a21cb15579f8830a",
+      "description": "PEEMA_AETHER_SEER_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "40752ee4ae2ffa1a0a4a6d39e27e9302e0c68d0666b762cf6bdb8e5afd616cff",
+      "description": "COMBUSTIBLE_GEARHULK_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "9303c27ad46dcc54db0ce70ef4a1e595117e94e99d6e4d610196c1b67a6a077e",
+      "description": "SAHEELI_SUBLIME_ARTIFICER_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "64d5be8a8d04a4b604c97d1345c862e902586411495e069bc87035bf425bc488",
+      "description": "ONE_WITH_THE_MACHINE_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "fd6ce121cd93f3a39dbff0dbace013cfecf00b9281bdb4ab0c8f76c3ffc6389a",
+      "description": "MIDNIGHT_CLOCK_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "25dfd1651b2670c7488a39aa590ebcd3d90792dd307eb406d0b959aa94aaa91d",
+      "description": "DISALLOW_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "44b1ac423815aa948bc1d82bd7d03b73491a227399fdabcebc92b690ca98aaa8",
+      "description": "Glimmer of Genius"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "17ec7356b39cfc2968bc4d4c38a023fc3293bb6892c5c1311662d08f627ef133",
+      "description": "Rogue Refiner"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "8c6b9301a38c70774d823f9806d1f51a45efc248f0ab5d8d57cc153483186208",
+      "description": "Servant of the Conduit"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "0f82e8111f336e80e48efdf7bcf7471e535eb2148fb22139c7e47723d3afe232",
+      "description": "Whirler Virtuoso"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "1175a0cca5564e7f4ed615f27e27277fc3854566d956dc2065f3288b4e4bca50",
+      "description": "Conjurer's Closet"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "51f022624bf3140def72b9e3344da1902a23bcf383b86f192cacc40ae5e35962",
+      "description": "registerLIVING_ENERGYOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "4a353c91aa8744d264cc8ae4f37ccf71bfeda1b72e6355b68dca34a1c31ab118",
+      "description": "Pia Nalaar, Chief Mechanic"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "c27018b09756d8e7dcaeb6862961a76ae9ef96e8463ddef664c72bfc3a080039",
+      "description": "Era of Innovation"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "d6134610ccfd043914dd1c23ca4de4ee7b63509cbf960ce2dd67fb1ea8578584",
+      "description": "Aethersquall Ancient"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "605e629f94d109d535d85548cc91ba009da090023c093a99a29f81c6216fc2f6",
+      "description": "Aethertide Whale"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "9438202a14d1e93c7085680c401db8cd8930eb20205ae6cd926eefcc112e77b4",
+      "description": "Confiscation Coup"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "8afb4525932ac49b1896915a5268f5fb1bcdb4e7a3a44c54b467cc40c5a15512",
+      "description": "Nissa, Worldsoul Speaker"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "80b3fb7c738286fcd0ac7036c661922085922e365d4179d597d6e3ebf4043da7",
+      "description": "Arcane Denial"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "9823b9cc6f4ab60e989b7806b09aee827ebc64220f7b8eb467d1dad4f71effb7",
+      "description": "Aetheric Amplifier"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "18aa563cb07cfca7577ad698e27f871367242f16c9581881987ca1a19e63f458",
+      "description": "Aetherflux Conduit"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "baae11e98bf0af05771fdcb53e39b498bcdc97f3537356a90f36fcd501d11401",
+      "description": "Rampaging Aetherhood"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "b7c45cea9112ed727dacf8ad329bafeba64c5cbbb52dd5cd0bfdc6795c6f395b",
+      "description": "Peema Trailblazer"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "babbf65cefbd615bb2b4df1f767a44d4bb969031fec25a3fcfe6fa9dbe46ea97",
+      "description": "Architect of the Untamed"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "0f218f1ba3f4c3e5769c81fa81675ea5a0cc886872c9ea08195d770423ff818a",
+      "description": "Decoction Module"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "04dfd07c5afb4652543b1582e86ef0e37b9aac4ab5fffee1dc6c3bfac9d0887d",
+      "description": "Retrofitter Foundry"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "d23a26b298edaf101197e019861ff154293d8c4572c8160da786870ffffe4d52",
+      "description": "Elder Gargaroth"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "71ef3e5ebd499252caa66602dd28b864fb4ec4956e1f56ebb1a1f6e04a12668a",
+      "description": "Peema Aether-Seer"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "5cc34ccb46720099f62b5cdc6d70422e07eb2ceb55e47196a693fe8015ca49be",
+      "description": "Aetherwind Basker"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "61b61104e03eff8a4abcac088381df6c8fd25f11b540413b01386a507e7a44fd",
+      "description": "Bootleggers' Stash"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "634c7cbcafe93601b8d2be10acb0a1963f4384e1f94b2a45d0d204e012f46681",
+      "description": "Combustible Gearhulk"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "1ef01975e97da9d9c41d170aafc0b832b78c65a79f01d606fe17d85ae8819e37",
+      "description": "Saheeli, Sublime Artificer"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "502177ca3aa9d0335099d191b1c68a76880a29871c2d3a106d5702543f00e0f4",
+      "description": "Loyal Apprentice"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "40f57800371d496d263e2568046e23f508b50641c3fa2fa32595a55f0b708f14",
+      "description": "Reckless Fireweaver"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "75a97c5eda1a0a887bdabad35e90a71a96c30676bf95bd604c676772ebbf8638",
+      "description": "One with the Machine"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "ffed3d8dd903a5b7a2f7ea34b40059a9bc68982687afa2aaa090a69251cf2ab6",
+      "description": "Midnight Clock"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/living-energy.ts",
+      "sha256": "e660a6f4cb8dabc8f5c900c9bf70a7c741192ada88f9f77ce6de8c86995bbb86",
+      "description": "Disallow"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "69944fc3dd9573301909ab6398ce2feffc20f9f77e99b06004d417c9bef52508",
+      "description": "DETHRONE_TRIGGER"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "744e7ece87a5d2419ddee7d26e3f5fec7ea9c81ad348a8882348a8da0703924e",
+      "description": "MARCHESA"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "f4c15dea37e88c8441b42ac7fbae2a01a6ae4e3944060f15343ed0a6258fdebe",
+      "description": "Aether Channeler"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "3f03d1038e4b4181e2b8b797eeee757c9c632687b1b5416de6888ef6310b980f",
+      "description": "Anathemancer"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "27c5eb184acd39bb7b3e741005ec4e76a4c49e830bbd938a6e94b892a112307d",
+      "description": "Disciple of Bolas"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "2bbf7f5266074261a87bc93d1b4402c63d742792cc4d5087e5685390c923e844",
+      "description": "Fierce Guardianship"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "ee4b4d9c3ffd3ae91af70aeb2321f42834da2ff08b309b6e7420f0d202ccdd75",
+      "description": "Forge of Heroes"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "b6aa97f36f72a6a0ede226bad6a60189b6e6e446167ea22edff0c59fe99963ae",
+      "description": "Grave Pact"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "1ffd47ae074383cac084d0cee846735e8171cdba67611161a8c840c22efca632",
+      "description": "Madame Null, Power Broker"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "50a81d1401ef25340cf8507d632534e875fe97857d72939bb1fd4378895a13e6",
+      "description": "Mahadi, Emporium Master"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "1449912b621ca7d584d9d297bbd5be686dac59557560f24321e010dce930f03a",
+      "description": "Pawn of Ulamog"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "91d02c5b98c95a59db5b97a0e9f1dd97993bdfdfe0ac529284814a88f647ad0b",
+      "description": "registerMARCHESA_THE_BLACK_ROSEOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "2d92ecef53cfa5cc5c8cfb89d0540342d09f4ec92a1a96fd31edc5e33cbb9e52",
+      "description": "Dack's Duplicate"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "sha256": "852348a7ecc59bbccc52317d0ca3783ef888050a356bd7059f14f06a3982cb97",
+      "description": "Marchesa, the Black Rose"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "sha256": "8eacaecccf2ee85cf6f6b994a25dba1414c3dc48cb39d4cc16286f507ce02e9d",
+      "description": "Beacon of Unrest"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "sha256": "24106c4eadd125b80f8c52d826e4154dd80247472a76d97733ef7ea5e257647e",
+      "description": "Canoptek Scarab Swarm"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "sha256": "179a53141a9bd93975389382e9413da039370e5b5ac3eee382a6b04933b0d77c",
+      "description": "Canoptek Wraith"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "sha256": "b447fa45f46b387f3ea1b38e6baf11c212dbc9ad466de929d86be6ce4e2569ab",
+      "description": "Darkness"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "sha256": "8f226ffe085cfac3dc2f38a777034bbc15b7fe64972df72a62a02e3970a68a6c",
+      "description": "Lokhust Heavy Destroyer"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "sha256": "d68d20c090324352be4d42c048aca5b1a2070ee802bc07bdfeedef476a19f443",
+      "description": "Necron Deathmark"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "sha256": "fd36f3cc2c5dd55cc0aef83f817b7feff45a30785a071f677dd29114c4f5c613",
+      "description": "Necron Monolith"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "sha256": "fece9d733771911baeef99f9fb23bb1983cc9c813e025184f2ac4d7587a438d1",
+      "description": "Necron Overlord"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "sha256": "832f8f6373ac874a1f2b80ac8d724f5f71f6a0b7e2814027db9ff97bc88c2393",
+      "description": "Skorpekh Destroyer"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "sha256": "02000a52dd130652087e08b9355c756a7990be8e782267d63170045ff92de2ff",
+      "description": "Their Name Is Death"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "sha256": "462fb5107a19d0adc5dd4982487a08bbb9bd7a4e7bb1d0704bb9101644812766",
+      "description": "MYRIAD_LANDSCAPE_CANDIDATE"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "sha256": "92bf9faed3c710bef57cadfaff1c1929ee539e0f6e4fa0a79648162e6b8422e8",
+      "description": "Canoptek Spyder"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "sha256": "a1d531c43499ba9202ea4806f89f812815212975ae3ca93f57ef753c3efe83fc",
+      "description": "Defile"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "sha256": "ca1a2cbe1e89e90bb219b6f84a7a3f7db63af2b1d5ba11356064e7a561a870a5",
+      "description": "Flayed One"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "sha256": "0fa0e7efcbfc5186617d35b1f003db0f4d488ddab46c7646dcff8c5fab0fa706",
+      "description": "Go for the Throat"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "sha256": "53d6f7d8fba60584d14895fb6309e4c9f046c7befbcdd8dff3b74cd24a8b4069",
+      "description": "Mutilate"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "sha256": "724567a003b80e254e1f912dfb9b3cc383bf5d9160bf1757f4c244906c29f534",
+      "description": "Night Scythe"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "sha256": "7e7334355fa32d3a459ab6396c4e34a9183a25f81e5ee2b58f37fa2c48b5839c",
+      "description": "Plasmancer"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "sha256": "f4fbe1a9f0f5ac2a73c6e12f66bd57850904f4f9ca39e82b269883b2b3633e8d",
+      "description": "registerNECRON_DYNASTIESOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "sha256": "ad510816c33ec86cdf870e566293f5ae942e3f0c15a50641bd74319c75afa69d",
+      "description": "Myriad Landscape"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "800480476a9cfb8675c53672511974c6854a1d7dedd6f7288da5f621ac44b7b7",
+      "description": "CRACKLING_DOOM"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "6bad8a92e64ff2b922910db8bc3a55a21095eded00453d509c01a1a65286112a",
+      "description": "FLUMPH"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "4651366895d41276faed777af7fdbee93dfd728f7b66bd1aa116a8f0371fe6a3",
+      "description": "INKSHIELD"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "5a5851c1057491fac1c039ae795bbbe238b754aeb47e3af2c3bd3089e349363b",
+      "description": "MASTER"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "881ac7dc91450e656595f0c05e90f7db8def76266dfb68c9a154015b702f0ffc",
+      "description": "SECRET_RENDEZVOUS"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "b9ec9df1367e382a2057c84dfc0e89af05ccadec75d07f1aade55a8940d3ee17",
+      "description": "Loran of the Third Path"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "cd86237d3b00e7327f3e81ec64a17a82481081c97edfb68132b38f4a8776be7d",
+      "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "bd02587928e75a26c676aff157613e37171e66b64834bdc737be233c318915d6",
+      "description": "Crackling Doom"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "3924721de6b6e2cf349779baaebb251a9866866f113feb152ddf96ed7eb416d3",
+      "description": "Flumph"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "ae8611cb9fd6a08dccdc077ef56cb95a8b3eb85cf01734706156ecd33dbbc2e3",
+      "description": "Inkshield"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "e7f3a509d4b2651553d559a5750383f8717e5507fe435c85114d177a1c952949",
+      "description": "Master of Ceremonies"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "4eefab1c6212e78ef1cb581c4e5c36b33ae8b2433d28eadbc3618e80edc8b469",
+      "description": "Secret Rendezvous"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "e98ab68979b6ed01b554de93db18db1eb4ca62a9daf489fa60c136ee2e9539de",
+      "description": "BOROS_CHARM"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "9dba51cb2b2a2e0ae02eac5cb3bf00166cdafd13552ad5d35a07379cafda6f83",
+      "description": "RAKDOS_CHARM"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "917cc160059250ed624ebca7d97e1fa587738219aadec2085e876905deecf719",
+      "description": "QUEEN_MARCHESA"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "59c9432d23e1bbe7efcd24d4de99c7e50477778d2bed1baad210e97290db5677",
+      "description": "GENEROUS_GIFT"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "c9ad3d61c03ef1e2ab6f4449694bc5d637f3355b2fba07f218bdb72a8be54140",
+      "description": "STROKE_OF_MIDNIGHT"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "474c65ab94d80acf043da2afb0f84492c36034333156a1d168cf3822ce6bf25b",
+      "description": "SWORDS_TO_PLOWSHARES"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "63d00dad68cc07c08615617aed19f55df41f5d9dbf1f5f3e022aa74aad143593",
+      "description": "FABLED_PASSAGE_CANDIDATE"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "42c488e8c36c7b421b7a73cc48c57ae958239db7b4b557ae38e735e685baabe7",
+      "description": "Boros Garrison"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "9d9132c566a7d72e0a27ee45d0a286a11f5afa597b2059c94c8ed81f6319e55b",
+      "description": "Orzhov Basilica"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "a1b2f985a21c3ea9e828a5398e9f8899b9e30924aedcd1836c6582389d653b9d",
+      "description": "Rakdos Carnarium"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "da1ecff422785b95446b63c6995e3fd86136975870cd784f8005bf05481e0429",
+      "description": "registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "2495b2b957cd2729134be2ef7bfb649a3ede6b88185c318666e5790af55aa39e",
+      "description": "Boros Charm"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "e6275a9e0bf4dcde2f22f2501b3c65f66d9d18ec5e1f3523e61e3ad61202e4e5",
+      "description": "Rakdos Charm"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "8e4282080ac30f9421d5c222c0ffa365616d9faf64fce9e12225ecd865f896a6",
+      "description": "Queen Marchesa"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "70ee604f3b2d1eb7eac5d9d5882d27ed01b3c5ad93da0a146c4891af56148ea4",
+      "description": "Generous Gift"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "32ba6df4c48d608017e0e321d0ca203256190ad0a5ee9f506777401a12eb9e1f",
+      "description": "Stroke of Midnight"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "9c82179035d8f2a307dd130ad72c5c95396de4fe734577fa093ef6a38e33a5b0",
+      "description": "Swords to Plowshares"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "sha256": "5517cb205b930a75a484c44efff9438d90b610d3e6012cce3c1591ceba733414",
+      "description": "Fabled Passage"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "sha256": "474cad903edc65305b599300fc1eb5bedcd115f99003f3d7823bc619167e2bf8",
+      "description": "Chains of Custody"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "sha256": "fc7d527674803663781f86c21877c9c24b0abb9d1766c240fcf2e4407fcc2280",
+      "description": "Coercive Impetus"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "sha256": "2def8c34ee147df4eaff3fcfc864341384ac02d45b2f57e9cc6d883f2beeddec",
+      "description": "Land Tax"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "sha256": "7458a421b5c995fe338da800a3a4dc09a8760fe7d2622e3a24998c8154bc183c",
+      "description": "Parasitic Impetus"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "sha256": "7ccda5bddadd79c454d84dca8381a3aebad842cc4f04bbd6e313e3be54a6a12d",
+      "description": "Sram, Senior Edificer"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "sha256": "82fa4a234b933cc01fdb9bdcf0b016807e225f8d8e6363d1fa2ee51dfa69d52d",
+      "description": "Starfield Mystic"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "sha256": "431fb94d5b3f13e2b707cac9128f28b26b9b5182fe88683210f60a43de0feae6",
+      "description": "War Room"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "sha256": "6475e462524e60529824fa01525df5e06e3dfa6f16b38b9024de6be186f07823",
+      "description": "FLICKERING_WARD_DEF"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "sha256": "b3aa8f4a97d12bcd4e77b24a313a22716bf80bdbeb05f15ca24cafb1c8848d46",
+      "description": "Bojuka Bog"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "sha256": "c4ca88bdec8ca30c045eeef30469e07ce708ea75ea3ee11b67fb8b8fbf72c793",
+      "description": "registerSILVERQUILL_INFLUENCEOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "sha256": "9063f6329c900d7e4881256a7996528c22fb3ee4468de31c60794e5535e56c72",
+      "description": "Flickering Ward"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "506e11841231843f8c5b0509fa9c228d86f2d0f68223e23eee1a2a0bf6f20bba",
+      "description": "Sylvan Reclamation"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "0ebd803021d39731b8e6b4efa1e9b30561b56948e05f81120f83eda0fc3d3a81",
+      "description": "Rishkar, Peema Renegade"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "529d65c3956e96a45670d1276fc61fef1fe14222441014f452a6788e3774af91",
+      "description": "Overwhelming Instinct"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "7840d914b805aa8d0380afbc4540c00a24a14a12f6bd02f0c85ee4b660f7c73e",
+      "description": "Ajani, Caller of the Pride"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "c5d067322d931742c6298ca10be4afae275e1bb29ee0246892097ddc885e1f98",
+      "description": "Mentor of the Meek"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "a5c8997781e1f9910a202a86b1028d37f57da5e1e5a46f1c6beef600a1c6a470",
+      "description": "Voice of Many"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "229f689e47d77ce449f7c1c434393ee582a0cb76e3e1f387b32e8530c041acb5",
+      "description": "Loyal Guardian"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "b12d21888acd74f9a6ae3e7d95f46c7811cb45973edca802290ce8421ac8fa4d",
+      "description": "Dawn of Hope"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "5098a71402ea5e6ac170f707b00e1bf92ca779cd0b317f3baecff8dbc43bc122",
+      "description": "Hornet Nest"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "dcba0e774c42e71c1272bc019c6477d934480fdd31dc070aa99e5e380b25761c",
+      "description": "Trostani Discordant"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "0703b5103dce195cd24b3789bb5aa665afbacf051c468eb7193d6bb536a7f92c",
+      "description": "Slate of Ancestry"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "82b4b91611db899b763a207e6b9c50fb8705b492600029c29664d7c2a37edeae",
+      "description": "Felidar Retreat"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "df33f4bbc6d41d425e6049c7e8017c69c365f4d35e691342addde4115d3263db",
+      "description": "Great Oak Guardian"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "033e04c59a631807516695538bc8a55bd40c70dcbd1e99eb3e7628fa30eab6c7",
+      "description": "Rootborn Defenses"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "3648b08f770de46b1a8e1d2fd712e595cfd03b9533242d3eca87d3c655d5a1da",
+      "description": "Aura Mutation"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "89adda33f244a5f308b1654b1662d1a3093d4a30b39302b8bb638a055a6b4962",
+      "description": "Citywide Bust"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "49f9b4572e6ae457a2cb05cc5ed340f4beee27dde5d3a602c9d6192c5c32a1d5",
+      "description": "Collective Unconscious"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "sha256": "b2cdf30225774e65ce93544775c24040d2d3a4d5b0cc1b35a61112d603743ff3",
+      "description": "Camaraderie"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/urdragon.ts",
+      "sha256": "218ee18760c397d473fd3172a03db31d495ef3f74a119586b0a58dfd382e1a81",
+      "description": "iymrithDef"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/urdragon.ts",
+      "sha256": "d9ecf4ec7465e6c2169cb5c1f01dca126f2adca787dfe839bc07dc38a91c4cc2",
+      "description": "Kairi, the Swirling Sky"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/urdragon.ts",
+      "sha256": "17ad973ae9471fe5469b55cdd537ba60a4cd865a4ffd99629ee32fff6c357868",
+      "description": "lozhanDef"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/urdragon.ts",
+      "sha256": "59871287d925ace89fb8868a4077646a795ca211f503a8dba860ea0cc26ca738",
+      "description": "thrakkusDef"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/urdragon.ts",
+      "sha256": "e0d6edea2bd3e8bd20fac081ab57da57a6a7084008ccd422e469c84de88cb211",
+      "description": "registerURDRAGONOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/urdragon.ts",
+      "sha256": "620968b1cff9864e7e798bcedd155cb95923b7b944c917d6d62fc21262c2a2dd",
+      "description": "Iymrith, Desert Doom"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/urdragon.ts",
+      "sha256": "40fb9ec83a618c3f464d8676f295c1a5562a9c022b34fd8fd78a73576b230d44",
+      "description": "Lozhan, Dragons' Legacy"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/urdragon.ts",
+      "sha256": "4841bffd6485d278102881bf9be16cb43df758cd08e26e69c1daadad6099691e",
+      "description": "Thrakkus the Butcher"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w1-remaining.ts",
+      "sha256": "5b1a349ebbca4fa4b063642132793272444d575d010d9917fcdb9ec840e6cd49",
+      "description": "Fumiko the Lowblood"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w1-remaining.ts",
+      "sha256": "ba6684a6d6f699f40aed4902681de5c79dc766babe12ec1834b2979ccd8e5e32",
+      "description": "Ghalta and Mavren"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w1-remaining.ts",
+      "sha256": "a2caf6de5094b3f4fe082e4a03d58cc0d432337f02efac2f47b2ee7b8db30aa0",
+      "description": "Nova Flame"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w1-remaining.ts",
+      "sha256": "8063c304703e2e36141c0dde9c3adca8f44e6ea6284ead9c15e738b1ba5d4e71",
+      "description": "Sage's Reverie"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w1-remaining.ts",
+      "sha256": "f9a33ad00cf4fd89862d7836df585846f7046d5ab392ad31f0d26d0694a4663a",
+      "description": "scrivTrigger"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w1-remaining.ts",
+      "sha256": "8c68aaabf1288af730cfca0edb5247f09dbb0bc1761e9d2af53dfb981df4e643",
+      "description": "Scriv, the Obligator"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w1-remaining.ts",
+      "sha256": "b97113cac7c0b3227d53be7ef25d9942bf041604d4aa1c477de7753a5ab6389c",
+      "description": "Will of the Mardu"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w1-remaining.ts",
+      "sha256": "2da80f4124b15a979d78a77f81483d08048f1d714da2a425c1aa8330a4cc21a9",
+      "description": "registerW1RemainingOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "bd7a2c7f1345020e0d1d022ae6c3d25f826c552861d918c980443e71009ea85e",
+      "description": "Baxter Building"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "7e8f8133d1a5b0372f1deffd25566b0501a7e6386e936bbd69b7168079f0a85f",
+      "description": "Collective Effort"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "728ff0ca7bd08ffa4fa20ffb096aa33e0c24be4b41d1808a99bb5fed0132e92e",
+      "description": "Endless Foot Assault"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "eb76669e35223bfef6134c0496a3d8f8158e946e8b5eda70ef34790248e1dc8a",
+      "description": "Jacked Rabbit"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "76c583ca12816bbca59b84589bedeb66d5ada8aa141381e2a0cd56a2c59767c6",
+      "description": "Mondrak, Glory Dominus"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "528163f849ae35bbbac316c94b886b6beddf5e8cdea997d3a2322807931b95eb",
+      "description": "Pearl-Ear, Imperial Advisor"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "1f2fcc7c489ff01030582e76bc49ae501b0c17689f6136111d84712f237a5808",
+      "description": "Securitron Squadron"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "07c640227539e4654daa9d505fd8cea2b1c112566f94c22ee1baf6ce5db76c65",
+      "description": "Study Hall"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "9142a217a9620b160380acfa54fd78d4ed0c85b3eb392e4a785f2fea30d878a3",
+      "description": "Tender Wildguide"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "d714080fd6ddb55fe1b2944a93c25642bdb4f51423d149ebbf79d2870007bc29",
+      "description": "Terror of the Peaks"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "60babd33ce1d21dad481c73469659a2d823960532832791e83ccf92b5a7d1f46",
+      "description": "Twitching Doll"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "1786fa0bf1f65385f978fc3603ec1ccef53b0ecef1f16664156428ce42673480",
+      "description": "Ultimate Nullification"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "sha256": "898e22922a6925fda6b527ed0bcd20394fc9f83a4507913993ee8099867dbcb9",
+      "description": "Zopandrel, Hunger Dominus"
+    }
+  ]
+}

@@ -320,7 +320,16 @@ and report the exact failed action, attempted recovery, and remaining work.
   All 130 browser tests passed earlier at `0ebff01`; browser evidence must be refreshed for the
   later changes. Compatibility pins are refreshed through the benchmark CLI; inputs/gold are
   unchanged.
-- Remaining exit work: exact legacy builder exemptions and remaining union consumers;
+- Legacy authoring protection: stricter ability-envelope/named-slot rules now apply to all
+  new or materially changed overrides. The 220 legacy scopes have exact AST fingerprints;
+  formatting does not invalidate them, but changed registrations and reused raw helpers do.
+  An inventory check rejects stale/duplicate exemptions. All 15 actual ESLint contracts pass.
+- Browser recovery: the later 130-test run and the exact 126-scenario Card Test Lab run at
+  `152cea3` pass. The retained catalog report/traces validate against their captured source
+  tree. DB-backed player setup also passes after refreshing the supported-pool seed and
+  releasing player seats after failed tests. Subsequent casting behavior still needs fresh
+  viewer evidence.
+- Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; exhaustive selector/value/condition semantic
   validation; all casting proposals/trigger timing/rollback and free-cast migrations; mana
