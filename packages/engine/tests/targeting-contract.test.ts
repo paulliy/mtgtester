@@ -171,6 +171,117 @@ describe('shared target legality contract', () => {
     expect(isTargetStillLegal(ctx, permanent.id, 'creature', 'P1')).toBe(false);
   });
 
+  it('preserves both occurrences when builders reuse one target specification', () => {
+    const { ctx } = setup();
+    const first = spawn(ctx, 'P1', bear());
+    const second = spawn(ctx, 'P1', bear());
+    const spec: TargetSpec = { kind: 'creature' };
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'probe', name: 'Probe', oracleId: forest().oracleId, controllerId: 'P1' },
+        {
+          kind: 'spell',
+          targets: [spec, spec],
+          effects: [
+            { op: 'putCounters', target: 0, counter: '+1/+1', count: 1 },
+            { op: 'putCounters', target: 1, counter: '+1/+1', count: 1 },
+          ],
+        },
+        [first.id, second.id],
+      ),
+    );
+    expect(first.counters['+1/+1']).toBe(1);
+    expect(second.counters['+1/+1']).toBe(1);
+  });
+
+  it('keeps a player referent stable across repeated any-target instructions', () => {
+    const { ctx } = setup();
+    const player = ctx.state.players[1]!;
+    const initialLife = player.life;
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'probe', name: 'Probe', oracleId: forest().oracleId, controllerId: 'P1' },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'anyTarget' }],
+          effects: [
+            { op: 'loseLifeTarget', target: 0, amount: { kind: 'const', n: 2 } },
+            { op: 'loseLifeTarget', target: 0, amount: { kind: 'const', n: 3 } },
+          ],
+        },
+        [player.id as ObjectId],
+      ),
+    );
+    expect(player.life).toBe(initialLife - 5);
+  });
+
+  it('skips an illegal slot-based target while resolving the surviving target', () => {
+    const { ctx } = setup();
+    const source = spawn(ctx, 'P1', bear());
+    const protectedTarget = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Shrouded probe', oracleText: 'Shroud' }),
+    );
+    const initialHand = ctx.state.players[0]!.hand.length;
+    ctx.state.stack.push({
+      id: 'probe-stack',
+      sourceId: source.id,
+      controllerId: 'P1',
+      kind: 'spell',
+      description: 'Partial probe',
+      sourceOracleId: source.oracleId,
+      sourceCardId: source.cardId,
+      card: null,
+      isCommanderCast: false,
+      targets: [protectedTarget.id, 'P1' as ObjectId],
+      ability: {
+        kind: 'spell',
+        targets: [{ kind: 'creature' }, { kind: 'player' }],
+        effects: [
+          { op: 'exileUntilSourceLeaves', targetSlot: 0 },
+          { op: 'drawTarget', target: 1, count: { kind: 'const', n: 1 } },
+        ],
+      },
+    });
+    pump(resolveTopOfStack(ctx));
+    expect(ctx.state.battlefield).toContain(protectedTarget);
+    expect(ctx.state.players[0]!.hand).toHaveLength(initialHand + 1);
+  });
+
+  it('does not copy a spell that fails its announced noncreature restriction', () => {
+    const { ctx } = setup();
+    const card = conjure(ctx, 'P1', bear(), 'hand');
+    ctx.state.stack.push({
+      id: 'creature-spell',
+      sourceId: 'creature-spell',
+      controllerId: 'P1',
+      kind: 'spell',
+      description: card.name,
+      sourceOracleId: card.oracleId,
+      sourceCardId: card.cardId,
+      card,
+      isCommanderCast: false,
+      targets: [],
+      ability: { kind: 'spell', targets: [], effects: [] },
+    });
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'probe', name: 'Probe', oracleId: forest().oracleId, controllerId: 'P1' },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'noncreatureSpell' }],
+          effects: [{ op: 'copyTargetSpell', target: 0 }],
+        },
+        ['creature-spell'],
+      ),
+    );
+    expect(ctx.state.stack).toHaveLength(1);
+  });
+
   it('resolves a surviving counted target without enforcing announcement minima again', () => {
     const { ctx } = setup();
     const first = spawn(ctx, 'P1', bear());

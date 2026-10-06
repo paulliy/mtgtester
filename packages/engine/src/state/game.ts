@@ -6,6 +6,7 @@
 
 import type { Color, OracleCard, PlayerId } from '@mtg/shared';
 import { interpretCard } from '../cards/interpret';
+import { assertValidModeledDefinition } from '../cards/authoring-validation';
 import type { CardDefinition } from '../cards/definition';
 import { emptyPool } from '../mana/cost';
 import { Prng } from '../rng/prng';
@@ -35,7 +36,7 @@ export function createGame(config: GameConfig): GameContext {
     if (p.companion != null) addDef(p.companion);
   }
   for (const override of config.customDefinitions ?? []) {
-    defs.set(override.oracleId, override);
+    defs.set(override.oracleId, assertValidModeledDefinition(override));
   }
 
   let nextObjectNum = 1;

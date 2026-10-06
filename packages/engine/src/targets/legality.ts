@@ -1,5 +1,6 @@
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { TargetKind, TargetSpec } from '../cards/ability';
+import { playerFilterAlwaysTrue } from '../cards/effect-reference-contracts';
 import type { SelectorCandidate } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import { candidateOf, computeCharacteristics, matchesSelector } from '../effects/continuous';
@@ -150,7 +151,8 @@ export function targetIsLegal(
     return (
       (kind === 'player' || kind === 'anyTarget' || kind === 'playerOrPlaneswalker') &&
       !player.hasLost &&
-      matchesController(player.id)
+      matchesController(player.id) &&
+      (filter === undefined || playerFilterAlwaysTrue(filter))
     );
   }
   const permanent = findPermanent(ctx, candidate);

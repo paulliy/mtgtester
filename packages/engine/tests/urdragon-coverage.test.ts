@@ -124,7 +124,6 @@ const MODELED = [
   'Cyclonic Rift',
   'Kiora, Behemoth Beckoner',
   'Mosswort Bridge',
-  'Sivitri, Dragon Master',
   'Spinerock Knoll',
   // Inc 18 â€” Adventure / Omen layouts (dual-face support).
   'Bloomvine Regent // Claim Territory',
@@ -140,7 +139,6 @@ const MODELED = [
   'Skycloud Expanse',
   'Thrakkus the Butcher',
   'Vaevictis Asmadi, the Dire',
-  'Zurgo and Ojutai',
 ].sort();
 
 describe('The Ur-Dragon deck â€” model coverage', () => {

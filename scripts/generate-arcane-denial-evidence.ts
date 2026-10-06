@@ -20,6 +20,8 @@ const ORACLE_ID = 'ab1cc360-b9de-48d9-9983-4dfe4a7d2a37';
 const ORACLE_SHA256 = '7d764e957064fa08627fd48a85e1ea9aa50de341ffa09a88c2d36d0598156746';
 
 const SOURCE_FILES = [
+  'packages/engine/src/cards/authoring-validation.ts',
+  'packages/engine/src/cards/effect-reference-contracts.ts',
   'packages/engine/src/utils/assert-never.ts',
   'packages/engine/src/targets/context.ts',
   'packages/engine/src/targets/legality.ts',

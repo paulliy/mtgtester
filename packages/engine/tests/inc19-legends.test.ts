@@ -226,7 +226,6 @@ describe('Ur-Dragon residual-card implementation', () => {
       'Skycloud Expanse',
       'Thrakkus the Butcher',
       'Vaevictis Asmadi, the Dire',
-      'Zurgo and Ojutai',
     ]);
     for (const raw of list) {
       const def = interpretCard(raw);

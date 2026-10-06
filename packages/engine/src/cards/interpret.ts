@@ -11,6 +11,7 @@
  */
 
 import type { Color, OracleCard } from '@mtg/shared';
+import { enforceCardDefinition } from './authoring-validation';
 import { emptyCost, parseManaCost } from '../mana/cost';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type {
@@ -6940,62 +6941,64 @@ export function interpretCard(card: OracleCard): CardDefinition {
   // An authored override may implement lines the grammar cannot read (ADR 0010). It clears
   // only the specific reasons it names, so an errata'd card re-opens loudly rather than
   // silently keeping stale behavior â€” see `overrides/index.ts`.
-  return applyOverride({
-    oracleId: card.oracleId,
-    scryfallId: card.scryfallId,
-    name: frontName,
-    typeLine: card.typeLine,
-    supertypes: card.supertypes,
-    types: card.types,
-    subtypes: card.subtypes,
-    colors: card.colors,
-    colorIdentity: card.colorIdentity,
-    manaCost: isLandCard ? null : costResult.cost,
-    hasUnsupportedCost: costResult.unsupportedSymbols.length > 0,
-    power,
-    toughness,
-    loyalty,
-    defense,
-    ...(transformBack !== null ? { backFace: transformBack.backFace } : {}),
-    keywords,
-    ...(ward !== undefined ? { ward: { kind: 'mana' as const, cost: ward } } : {}),
-    ...(protectionFrom !== undefined ? { protectionFrom } : {}),
-    manaAbilities,
-    activatedAbilities,
-    entersTapped,
-    ...(entersTappedUnless !== undefined ? { entersTappedUnless } : {}),
-    ...(Object.keys(entersWithCounters).length > 0 ? { entersWithCounters } : {}),
-    ...(additionalCountersOnEntry.length > 0 ? { additionalCountersOnEntry } : {}),
-    ...(tokenCreationReplacement !== undefined ? { tokenCreationReplacement } : {}),
-    ...(pathwayLand !== null
-      ? { entersChoosingOption: pathwayLand.entersChoosingOption }
-      : chosenCreatureType
-        ? {
-            entersChoosingOption: {
-              prompt: 'choose a creature type',
-              domain: 'creatureType' as const,
-            },
-          }
-        : {}),
-    spellAbility:
-      (isSpell && (spellEffects.length > 0 || spellModes !== undefined)) ||
-      (card.subtypes.includes('Aura') && spellTargets.length > 0)
-        ? {
-            kind: 'spell',
-            targets: spellTargets,
-            effects: spellEffects,
-            ...(spellModes !== undefined ? { modes: spellModes } : {}),
-            ...(spellCantBeCountered ? { cantBeCountered: true } : {}),
-          }
-        : null,
-    ...(spellCantBeCountered ? { spellCantBeCountered: true } : {}),
-    ...(commanderFreeCast ? { commanderFreeCast: true } : {}),
-    ...(spellAdditionalCosts.length > 0 ? { spellAdditionalCosts } : {}),
-    triggers,
-    staticEffects,
-    ruleStatics,
-    ...(alternativeCasts ? { alternativeCasts } : {}),
-    modeled: reasons.length === 0,
-    unmodeledReasons: reasons,
-  });
+  return enforceCardDefinition(
+    applyOverride({
+      oracleId: card.oracleId,
+      scryfallId: card.scryfallId,
+      name: frontName,
+      typeLine: card.typeLine,
+      supertypes: card.supertypes,
+      types: card.types,
+      subtypes: card.subtypes,
+      colors: card.colors,
+      colorIdentity: card.colorIdentity,
+      manaCost: isLandCard ? null : costResult.cost,
+      hasUnsupportedCost: costResult.unsupportedSymbols.length > 0,
+      power,
+      toughness,
+      loyalty,
+      defense,
+      ...(transformBack !== null ? { backFace: transformBack.backFace } : {}),
+      keywords,
+      ...(ward !== undefined ? { ward: { kind: 'mana' as const, cost: ward } } : {}),
+      ...(protectionFrom !== undefined ? { protectionFrom } : {}),
+      manaAbilities,
+      activatedAbilities,
+      entersTapped,
+      ...(entersTappedUnless !== undefined ? { entersTappedUnless } : {}),
+      ...(Object.keys(entersWithCounters).length > 0 ? { entersWithCounters } : {}),
+      ...(additionalCountersOnEntry.length > 0 ? { additionalCountersOnEntry } : {}),
+      ...(tokenCreationReplacement !== undefined ? { tokenCreationReplacement } : {}),
+      ...(pathwayLand !== null
+        ? { entersChoosingOption: pathwayLand.entersChoosingOption }
+        : chosenCreatureType
+          ? {
+              entersChoosingOption: {
+                prompt: 'choose a creature type',
+                domain: 'creatureType' as const,
+              },
+            }
+          : {}),
+      spellAbility:
+        (isSpell && (spellEffects.length > 0 || spellModes !== undefined)) ||
+        (card.subtypes.includes('Aura') && spellTargets.length > 0)
+          ? {
+              kind: 'spell',
+              targets: spellTargets,
+              effects: spellEffects,
+              ...(spellModes !== undefined ? { modes: spellModes } : {}),
+              ...(spellCantBeCountered ? { cantBeCountered: true } : {}),
+            }
+          : null,
+      ...(spellCantBeCountered ? { spellCantBeCountered: true } : {}),
+      ...(commanderFreeCast ? { commanderFreeCast: true } : {}),
+      ...(spellAdditionalCosts.length > 0 ? { spellAdditionalCosts } : {}),
+      triggers,
+      staticEffects,
+      ruleStatics,
+      ...(alternativeCasts ? { alternativeCasts } : {}),
+      modeled: reasons.length === 0,
+      unmodeledReasons: reasons,
+    }),
+  );
 }

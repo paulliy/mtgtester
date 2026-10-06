@@ -4327,6 +4327,40 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "5cf86603-cc47-4644-890a-0997c694817f": {
+      "name": "Sivitri, Dragon Master",
+      "oracleSha256": "f3e1cc6f16f788685d23f89ea4ee1c95a0122e8053265fb69cc371ac01490b64",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The attack-tax loyalty ability is an executable noOp; the engine has no implementation of its required attack payments.",
+      "clauses": [
+        {
+          "oracleText": "+1: Until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays 2 life for each of those creatures.",
+          "implementation": [
+            "unsupported: The attack-tax loyalty ability is an executable noOp; the engine has no implementation of its required attack payments."
+          ],
+          "engineTestIds": ["sivitri-noop-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "941c9acd-2773-456a-88d5-0537735f93c6": {
+      "name": "Zurgo and Ojutai",
+      "oracleSha256": "45392f93794edf49d1b74a1d73be74a4c4ce7f0815f3f49262a78b6a94618493",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The combat-damage look/select/order/optional-return clause is an executable noOp; the linked choices are not implemented.",
+      "clauses": [
+        {
+          "oracleText": "Whenever one or more Dragons you control deal combat damage to a player or battle, look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. You may return one of those Dragons to its owner's hand.",
+          "implementation": [
+            "unsupported: The combat-damage look/select/order/optional-return clause is an executable noOp; the linked choices are not implemented."
+          ],
+          "engineTestIds": ["zurgo-noop-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

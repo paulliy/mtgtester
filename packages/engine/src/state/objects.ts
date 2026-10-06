@@ -14,6 +14,7 @@ import type { Ability, KeywordAbility, ObjectTriggerWhen, TokenSpec } from '../c
 import { actsOnItsTriggerObject } from '../cards/source-identity';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
 import type { CardDefinition } from '../cards/definition';
+import { assertValidModeledDefinition } from '../cards/authoring-validation';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
@@ -916,40 +917,43 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
     }),
   )}` as OracleId;
   if (!ctx.defs.has(oracleId)) {
-    ctx.defs.set(oracleId, {
+    ctx.defs.set(
       oracleId,
-      name: spec.name,
-      typeLine: spec.typeLine,
-      supertypes: spec.supertypes ?? [],
-      types:
-        spec.types ??
-        (spec.typeLine.includes('Creature')
-          ? ['Creature']
-          : spec.typeLine.includes('Land')
-            ? ['Land']
-            : spec.typeLine.includes('Artifact')
-              ? ['Artifact']
-              : ['Creature']),
-      subtypes: spec.subtypes ?? [],
-      colors: spec.colors,
-      colorIdentity: spec.colors,
-      manaCost: spec.manaCost ?? null,
-      hasUnsupportedCost: false,
-      power: evalPower,
-      toughness: evalToughness,
-      loyalty: null,
-      defense: null,
-      keywords: spec.keywords ?? [],
-      manaAbilities: spec.manaAbilities ?? [],
-      activatedAbilities: spec.activatedAbilities ?? [],
-      entersTapped: false,
-      spellAbility: null,
-      triggers: spec.triggers ?? [],
-      staticEffects: [],
-      ruleStatics: [],
-      modeled: true,
-      unmodeledReasons: [],
-    });
+      assertValidModeledDefinition({
+        oracleId,
+        name: spec.name,
+        typeLine: spec.typeLine,
+        supertypes: spec.supertypes ?? [],
+        types:
+          spec.types ??
+          (spec.typeLine.includes('Creature')
+            ? ['Creature']
+            : spec.typeLine.includes('Land')
+              ? ['Land']
+              : spec.typeLine.includes('Artifact')
+                ? ['Artifact']
+                : ['Creature']),
+        subtypes: spec.subtypes ?? [],
+        colors: spec.colors,
+        colorIdentity: spec.colors,
+        manaCost: spec.manaCost ?? null,
+        hasUnsupportedCost: false,
+        power: evalPower,
+        toughness: evalToughness,
+        loyalty: null,
+        defense: null,
+        keywords: spec.keywords ?? [],
+        manaAbilities: spec.manaAbilities ?? [],
+        activatedAbilities: spec.activatedAbilities ?? [],
+        entersTapped: false,
+        spellAbility: null,
+        triggers: spec.triggers ?? [],
+        staticEffects: [],
+        ruleStatics: [],
+        modeled: true,
+        unmodeledReasons: [],
+      }),
+    );
   }
   return oracleId;
 }

@@ -2170,7 +2170,7 @@
       "colorless": 0,
       "generic": 2
     },
-    "modeled": true,
+    "modeled": false,
     "name": "Sivitri, Dragon Master",
     "oracleId": "5cf86603-cc47-4644-890a-0997c694817f",
     "power": null,
@@ -2190,7 +2190,9 @@
     "types": [
       "Planeswalker"
     ],
-    "unmodeledReasons": []
+    "unmodeledReasons": [
+      "Invalid ability IR at definition.activatedAbilities[0].ability.effects[0]: executable noOp effects are prohibited; keep the card unsupported instead"
+    ]
   },
   {
     "activatedAbilities": [],
@@ -4385,7 +4387,7 @@
       "colorless": 0,
       "generic": 2
     },
-    "modeled": true,
+    "modeled": false,
     "name": "Zurgo and Ojutai",
     "oracleId": "941c9acd-2773-456a-88d5-0537735f93c6",
     "power": 4,
@@ -4450,7 +4452,9 @@
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": []
+    "unmodeledReasons": [
+      "Invalid ability IR at definition.triggers[0].effects[0]: executable noOp effects are prohibited; keep the card unsupported instead"
+    ]
   },
   {
     "activatedAbilities": [],

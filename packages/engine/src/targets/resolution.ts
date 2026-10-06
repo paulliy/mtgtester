@@ -20,7 +20,8 @@ export function captureResolutionTargets(
   context: TargetContext,
 ): ResolutionTargets {
   const legality = new Map<TargetSpec, Map<ObjectId, boolean>>();
-  let anyChosen = false;
+  const anyChosen =
+    ordinary.some((id) => id !== undefined) || Object.values(counted).some((ids) => ids.length > 0);
   let anyLegal = false;
   for (const [slot, spec] of specs.entries()) {
     const chosen =
@@ -29,9 +30,9 @@ export function captureResolutionTargets(
           ? []
           : [ordinary[slot]!]
         : (counted[slot] ?? []);
-    const results = new Map<ObjectId, boolean>();
+    // Builders may reuse one immutable spec in several ordinary occurrences.
+    const results = legality.get(spec) ?? new Map<ObjectId, boolean>();
     for (const id of chosen) {
-      anyChosen = true;
       const legal = targetIsLegal(ctx, spec, id, {
         ...context,
         chosenTargets: ordinary,

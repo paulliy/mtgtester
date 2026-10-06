@@ -1287,6 +1287,8 @@ export function* executeAbility(
   // slot resolves, and re-located via `findObjectByCardId` on every later call, following it
   // through zone changes the same way `triggerObjectCardId` does.
   const refCardIdCache = new Map<number, string | null>();
+  /** Players and stack objects keep their announced identity, including after countering. */
+  const refStableIdCache = new Map<number, ObjectId>();
   /** Controller captured when a target slot is first resolved, before an earlier effect moves it. */
   const refControllerCache = new Map<number, PlayerId | undefined>();
 
@@ -1306,6 +1308,12 @@ export function* executeAbility(
   source = { ...source, resolutionTargets };
   const stillLegal = (id: ObjectId, spec: TargetSpec): boolean =>
     resolutionTargets.legality.get(spec)?.get(id) === true;
+  // Legacy slot-based effects and scoped Values must also skip initially illegal targets.
+  // Preserve indexes; removing a target must not shift another target into its slot.
+  scope.targets = targets.map((id, slot) => {
+    const spec = ability.targets[slot];
+    return spec !== undefined && stillLegal(id, spec) ? id : '';
+  });
   if (countTargets !== undefined) {
     countTargets = Object.fromEntries(
       Object.entries(countTargets).map(([slot, ids]) => {
@@ -1378,6 +1386,8 @@ export function* executeAbility(
       }
       return perm.id;
     }
+    const stableId = refStableIdCache.get(r);
+    if (stableId !== undefined) return stableId;
     const cachedCardId = refCardIdCache.get(r);
     if (cachedCardId !== undefined) {
       if (cachedCardId === null) return null;
@@ -1418,7 +1428,10 @@ export function* executeAbility(
     // 0) -- `findObjectById` finds no permanent for a PlayerId, so the cache would poison itself
     // with `null` after the first effect and every later effect referencing that slot would
     // silently do nothing.
-    if (spec.kind === 'stackObject' || spec.kind === 'player') return id;
+    if (targetPlayer !== undefined || targetStack !== undefined) {
+      refStableIdCache.set(r, id);
+      return id;
+    }
     refCardIdCache.set(r, findObjectById(ctx, id)?.cardId ?? null);
     return id;
   };
@@ -3643,7 +3656,7 @@ export function* executeAbility(
         ctx.state.combatDamagePrevention.players[controller.id] = true;
         break;
       case 'copyTargetSpell': {
-        const targetId = targets[effect.target];
+        const targetId = ref(effect.target);
         const original = ctx.state.stack.find(
           (entry) => entry.id === targetId && entry.kind === 'spell',
         );
@@ -4248,8 +4261,7 @@ export function* executeAbility(
       case 'graveyardToHand': {
         const t = ref(effect.target);
         if (t === null) break;
-        const owner = playerById(ctx, source.controllerId);
-        const cardObj = owner.graveyard.find((c) => c.id === t);
+        const cardObj = findCardInAnyGraveyard(ctx, t);
         if (cardObj === undefined) break;
         emit(ctx, 'graveyardToHand', { target: cardObj.name, source: source.name });
         yield* moveObject(ctx, cardObj, { zone: 'hand' });
@@ -5515,7 +5527,7 @@ export function* executeAbility(
         break;
       }
       case 'noOp':
-        break;
+        throw new Error('engine bug: executable noOp effect is prohibited');
 
       default:
         assertNever(effect, 'Effect executor');
