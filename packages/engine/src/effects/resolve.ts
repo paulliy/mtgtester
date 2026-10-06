@@ -1238,6 +1238,9 @@ export function* executeAbility(
     sourceCardId: source.cardId,
     ...(targets !== undefined ? { targets } : {}),
     ...(triggerObjectCardId !== undefined ? { triggerObjectCardId } : {}),
+    ...(source.resolvingStackObject?.optionalCostCounts !== undefined
+      ? { resolvingOptionalCostCounts: source.resolvingStackObject.optionalCostCounts }
+      : {}),
     ...(extraScope ?? {}),
   };
   /** Evaluate an effect's `Value` amount in this ability's scope. */

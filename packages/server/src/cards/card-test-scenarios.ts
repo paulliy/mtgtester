@@ -4713,6 +4713,33 @@ function foeRazerRegentScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function huntingWildsScenario(gameId: GameId): CardTestScenario {
+  const wilds = pinnedFrom(MARCHESA_BATCH1, 'Hunting Wilds');
+  const lands = Array.from({ length: 8 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'hunting-wilds-viewer-kicked',
+    title: 'Hunting Wilds: kicked, two Forests become 3/3 haste creatures',
+    instructions: [
+      'Cast Hunting Wilds with kicker using your eight Forests.',
+      'Choose both Forests from the library search.',
+    ],
+    expectedOutcome:
+      'Both found Forests enter, untap, and become 3/3 green creatures with haste that are still lands; your library is shuffled.',
+    oracleSha256: wilds.sha256,
+    clauseIds: ['hunting-wilds-kicker', 'hunting-wilds-search', 'hunting-wilds-kicked-animate'],
+    decks: {
+      P1: [wilds.card, ...Array.from({ length: 10 }, () => FOREST)],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Hunting Wilds'] }],
+      battlefield: [{ playerId: 'P1', cardNames: lands }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4812,6 +4839,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'tomb-fortress-viewer-mill-then-return',
   'voice-of-many-viewer-draw-per-opponent',
   'foe-razer-regent-viewer-fight-and-grow',
+  'hunting-wilds-viewer-kicked',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4907,6 +4935,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'tomb-fortress-viewer-mill-then-return': tombFortressScenario,
   'voice-of-many-viewer-draw-per-opponent': voiceOfManyScenario,
   'foe-razer-regent-viewer-fight-and-grow': foeRazerRegentScenario,
+  'hunting-wilds-viewer-kicked': huntingWildsScenario,
 };
 
 export function createCardTestScenario(

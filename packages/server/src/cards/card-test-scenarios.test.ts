@@ -138,6 +138,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'tomb-fortress-viewer-mill-then-return',
       'voice-of-many-viewer-draw-per-opponent',
       'foe-razer-regent-viewer-fight-and-grow',
+      'hunting-wilds-viewer-kicked',
     ]);
   });
 

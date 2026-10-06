@@ -2140,3 +2140,28 @@ test('Foe-Razer Regent: fight on entry, grow at the end step', async ({ page }) 
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
   await expect(permanent(page, 'Foe-Razer Regent')).toContainText('6/7');
 });
+
+test('Hunting Wilds: kicked, two Forests become 3/3 haste creatures', async ({ page }) => {
+  await runScenario(page, 'Hunting Wilds: kicked, two Forests become 3/3 haste creatures');
+
+  const wilds = handCard(page, 'Hunting Wilds');
+  await expect(wilds).toHaveClass(/actionable/);
+  await wilds.click();
+  // The card offers a plain cast and a kicked one; choose the kicker.
+  await expect(page.getByRole('button', { name: 'Cast {3}{G}', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /^Cast \{6\}\{G\}\{G\}/ }).click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  const put = page.getByRole('button', { name: 'Put onto battlefield tapped' });
+  await expect(page.getByText(/search for a Forest card/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await put.first().click();
+  await expect(page.getByText(/search for a Forest card/i).first()).toBeVisible();
+  await put.first().click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Forest').filter({ hasText: '3/3' })).not.toHaveCount(0);
+  await expect(permanent(page, 'Forest').filter({ hasText: /haste/i })).not.toHaveCount(0);
+});

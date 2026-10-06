@@ -90,7 +90,6 @@ function pod(seed: string): GameContext {
 }
 
 const contained = new Set<string>([
-  'Hunting Wilds',
   'Vastwood Surge',
   'Etali, Primal Conqueror // Etali, Primal Sickness',
 ]);
@@ -324,12 +323,11 @@ describe('W2 card coverage', () => {
     expect(ctx.state.stack.at(-1)?.sourceCardId).toBe(spell.cardId);
   });
 
-  it('does not claim a kicked Forest search that omits reveal', () => {
+  it('models Hunting Wilds with kicker and the kicked Forest animation (coverage PR01)', () => {
     const def = definitions.get('Hunting Wilds')!;
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'The Forest search omits revealing the found cards.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.optionalAdditionalCost?.mechanic).toBe('kicker');
+    expect(def.spellAbility?.effects).toEqual([{ op: 'huntingWilds' }]);
   });
 
   it('doubles current power and toughness independently for each creature until cleanup', () => {

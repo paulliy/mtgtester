@@ -2796,13 +2796,36 @@
     "e9bc324e-c200-45ef-8b9b-52a61d0f7374": {
       "name": "Hunting Wilds",
       "oracleSha256": "b673b9cfa9797a896494a8d2751fe9cce08e1787a1e866d6b8b23ce3b3ba5804",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "hunting-wilds-kicker",
+          "oracleText": "Kicker {3}{G}",
+          "implementation": [
+            "optionalAdditionalCost kicker {3}{G}: a separate kicked cast option, offered only when the extra cost is payable"
+          ],
+          "engineTestIds": ["hunting-wilds-pinned-oracle-supported", "hunting-wilds-kicker-cost"],
+          "viewerScenarioIds": ["hunting-wilds-viewer-kicked"]
+        },
+        {
+          "id": "hunting-wilds-search",
           "oracleText": "Search your library for up to two Forest cards, put them onto the battlefield tapped, then shuffle.",
-          "implementation": ["explicitly unsupported; search omits reveal"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "huntingWilds op: up to two choices among Forest-subtype cards (any Forest card, nonbasic included), each may find nothing; onto the battlefield tapped; then shuffle",
+            "no reveal: the Oracle text has none (the old containment reason was mistaken)"
+          ],
+          "engineTestIds": ["hunting-wilds-unkicked", "hunting-wilds-forest-cards-only-this-way"],
+          "viewerScenarioIds": ["hunting-wilds-viewer-kicked"]
+        },
+        {
+          "id": "hunting-wilds-kicked-animate",
+          "oracleText": "If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.",
+          "implementation": [
+            "kicked check reads the resolving spell's optional-cost counts (the spell has left the stack by then)",
+            "untaps only the Forests found this way; a permanent-duration becomeCreature effect: 3/3, green, haste, types kept"
+          ],
+          "engineTestIds": ["hunting-wilds-kicked", "hunting-wilds-forest-cards-only-this-way"],
+          "viewerScenarioIds": ["hunting-wilds-viewer-kicked"]
         }
       ],
       "gameplayAiScenarioIds": []

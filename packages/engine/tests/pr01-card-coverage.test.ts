@@ -21,7 +21,7 @@ import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import { allOf, ofSupertype, ofType } from '../src/cards/selector';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
-import { executeAbility } from '../src/effects/resolve';
+import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { priorityCheckpoint } from '../src/sba/sba';
@@ -2112,6 +2112,126 @@ describe('Foe-Razer Regent', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.17 Hunting Wilds
+// ---------------------------------------------------------------------------------------------
+
+describe('Hunting Wilds', () => {
+  const wilds = pinned('Hunting Wilds');
+  const grove = () =>
+    oracle({
+      name: 'Wilds Grove',
+      typeLine: 'Land — Forest Plains',
+      manaCost: null,
+      oracleText: '({T}: Add {G} or {W}.)',
+    });
+  const SEARCH = /search for a Forest card/;
+
+  const castOptions = (ctx: GameContext, objectId: string) =>
+    priorityOptions(ctx, 'P1').filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'castSpell' && payload.objectId === objectId;
+    });
+  const kickCount = (option: { payload?: unknown }) =>
+    (option.payload as { optionalCostCount?: number }).optionalCostCount ?? 0;
+
+  /** Cast Hunting Wilds with `mana` green floating, kicked or not, and resolve it with `answer`. */
+  function cast(seed: string, kicked: boolean, answer: Answer, mana = 8) {
+    const ctx = pod(seed);
+    const inHand = conjure(ctx, 'P1', wilds.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: mana }, () => ({ symbol: 'G' as const })),
+    );
+    const option = castOptions(ctx, inHand.id).find(
+      (candidate) => kickCount(candidate) === (kicked ? 1 : 0),
+    );
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    const result = resolveTop(ctx, answer);
+    const forests = ctx.state.battlefield.filter((entry) => entry.controllerId === 'P1');
+    return { ctx, forests, decisions: result.decisions };
+  }
+
+  const twoForests = answers([[SEARCH, /Put Forest onto the battlefield tapped/]]);
+
+  it('hunting-wilds-pinned-oracle-supported — pins the Oracle and models kicker plus the search', () => {
+    expect(wilds.sha256).toBe('b673b9cfa9797a896494a8d2751fe9cce08e1787a1e866d6b8b23ce3b3ba5804');
+    const def = interpretCard(wilds.card);
+    expect(def.modeled).toBe(true);
+    expect(def.optionalAdditionalCost).toEqual({
+      mechanic: 'kicker',
+      cost: expect.objectContaining({ generic: 3, colored: expect.objectContaining({ G: 1 }) }),
+    });
+    expect(def.spellAbility?.effects).toEqual([{ op: 'huntingWilds' }]);
+  });
+
+  it('hunting-wilds-unkicked — finds up to two Forests tapped, then shuffles; they stay plain lands', () => {
+    const { ctx, forests } = cast('wilds-plain', false, twoForests, 4);
+    expect(forests).toHaveLength(2);
+    for (const forest_ of forests) {
+      expect(forest_.tapped).toBe(true);
+      expect(computeCharacteristics(ctx, forest_).types).not.toContain('Creature');
+    }
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+  });
+
+  it('hunting-wilds-kicked — the found Forests untap and become 3/3 green haste creatures that are still lands, for good', () => {
+    const { ctx, forests } = cast('wilds-kicked', true, twoForests);
+    expect(forests).toHaveLength(2);
+    for (const forest_ of forests) {
+      expect(forest_.tapped).toBe(false);
+      const c = computeCharacteristics(ctx, forest_);
+      expect(c.types).toEqual(expect.arrayContaining(['Land', 'Creature']));
+      expect(c.subtypes).toContain('Forest');
+      expect([c.power, c.toughness]).toEqual([3, 3]);
+      expect(c.colors).toEqual(['G']);
+      expect(c.keywords).toContain('haste');
+    }
+    endUntilEotEffects(ctx);
+    expect(computeCharacteristics(ctx, forests[0]!).power).toBe(3);
+  });
+
+  it('hunting-wilds-kicker-cost — kicking needs the extra {3}{G}; with four mana only the plain cast is offered', () => {
+    const ctx = pod('wilds-cost');
+    const inHand = conjure(ctx, 'P1', wilds.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 4 }, () => ({ symbol: 'G' as const })),
+    );
+    expect(castOptions(ctx, inHand.id).map(kickCount)).toEqual([0]);
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 4 }, () => ({ symbol: 'G' as const })),
+    );
+    expect(castOptions(ctx, inHand.id).map(kickCount)).toEqual([0, 1]);
+  });
+
+  it('hunting-wilds-forest-cards-only-this-way — any Forest card qualifies, finding nothing is allowed, and only the found Forests animate', () => {
+    const ctx = pod('wilds-filter');
+    const old = spawn(ctx, 'P1', forest());
+    conjure(ctx, 'P1', grove(), 'library');
+    const inHand = conjure(ctx, 'P1', wilds.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 8 }, () => ({ symbol: 'G' as const })),
+    );
+    const option = castOptions(ctx, inHand.id).find((candidate) => kickCount(candidate) === 1)!;
+    takeAction(ctx, 'P1', option.payload as PriorityActionPayload);
+    let picks = 0;
+    const { decisions } = resolveTop(ctx, (decision) =>
+      SEARCH.test(decision.prompt)
+        ? optionMatching(decision, picks++ === 0 ? /Put Wilds Grove/ : /Find nothing/)
+        : { index: 0, targets: new Map() },
+    );
+    expect(decisions.filter((decision) => SEARCH.test(decision.prompt))).toHaveLength(2);
+    const groveOnField = ctx.state.battlefield.find((entry) => entry.name === 'Wilds Grove')!;
+    expect(computeCharacteristics(ctx, groveOnField).power).toBe(3);
+    expect(computeCharacteristics(ctx, old).types).not.toContain('Creature');
+    expect(ctx.state.battlefield.filter((entry) => entry.name === 'Forest')).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2201,6 +2321,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Foe-Razer Regent',
     sha256: '538901867581226afa96f2206428146725bae81b91a1120ce5a42696a415e4ea',
+    clauseCount: 3,
+  },
+  {
+    name: 'Hunting Wilds',
+    sha256: 'b673b9cfa9797a896494a8d2751fe9cce08e1787a1e866d6b8b23ce3b3ba5804',
     clauseCount: 3,
   },
 ];

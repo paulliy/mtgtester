@@ -128,6 +128,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       // A spell announced with no X is X=0 (CR 601.2b), which is a legal announcement.
       return scope.x ?? 0;
     case 'optionalCostCount': {
+      const resolving = scope.resolvingOptionalCostCounts?.[value.mechanic];
+      if (resolving !== undefined) return resolving;
       const permanent = ctx.state.battlefield.find(
         (candidate) => candidate.cardId === scope.sourceCardId,
       );

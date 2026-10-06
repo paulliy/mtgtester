@@ -246,7 +246,6 @@ const REASONS: Record<string, string> = {
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
   'Kairi, the Swirling Sky':
     'Return-any-number targeting with total mana value 6 or less is an untargeted single bounce with no mana-value cap.',
-  'Hunting Wilds': 'The Forest search omits revealing the found cards.',
   'Idol of Oblivion':
     'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
   'Flameblast Dragon': 'The damage target is chosen before you decide to pay X.',
@@ -309,6 +308,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Hunting Wilds',
     'Foe-Razer Regent',
     'Voice of Many',
     'Tomb Fortress',

@@ -60,6 +60,11 @@ export interface ValueScope {
   triggerObjectId?: string;
   /** Total counters on an activated ability's source, captured before costs are paid. */
   sourceCountersTotal?: number;
+  /**
+   * Optional costs paid for the spell now resolving (kicker). It has already left the stack, so
+   * `optionalCostCount` cannot find it there (Hunting Wilds' "if this spell was kicked").
+   */
+  resolvingOptionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring', number>>;
   countPermanents?: (selector: Selector, scope: 'you' | 'opponents' | 'all') => number;
 }
 

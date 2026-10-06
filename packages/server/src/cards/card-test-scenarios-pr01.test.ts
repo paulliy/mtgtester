@@ -476,3 +476,34 @@ describe('Foe-Razer Regent Card Test Lab scenario', () => {
     replays('foe-razer-regent-viewer-fight-and-grow', steps);
   });
 });
+
+describe('Hunting Wilds Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Hunting Wilds ({6}{G}{G}) — kicker 1' },
+    { action: 'Put Forest onto the battlefield tapped' },
+    { action: 'Put Forest onto the battlefield tapped' },
+  ];
+
+  it('hunting-wilds-viewer-kicked — a kicked cast animates both found Forests', () => {
+    const { scenario, onBattlefield, offered, state } = run('hunting-wilds-viewer-kicked', steps);
+    expect(offered[0]).toEqual(
+      expect.arrayContaining([
+        'Cast Hunting Wilds ({3}{G})',
+        'Cast Hunting Wilds ({6}{G}{G}) — kicker 1',
+      ]),
+    );
+    const seen = scenario.engine
+      .view('P1')
+      .battlefield.filter((permanent) => permanent.name === 'Forest');
+    expect(onBattlefield('Forest')).toHaveLength(10);
+    const animated = seen.filter((permanent) => permanent.power === 3);
+    expect(animated).toHaveLength(2);
+    for (const permanent of animated) {
+      expect(permanent.toughness).toBe(3);
+      expect(permanent.keywords).toContain('haste');
+      expect(permanent.tapped).toBe(false);
+    }
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('hunting-wilds-viewer-kicked', steps);
+  });
+});

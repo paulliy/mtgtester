@@ -954,17 +954,21 @@
   {
     "oracleId": "e9bc324e-c200-45ef-8b9b-52a61d0f7374",
     "name": "Hunting Wilds",
-    "package": "W2",
+    "package": "PR01.17",
     "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Kicker {3}{G}\"",
-      "unrecognized rules text: \"If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.\""
+      "unrecognized rules text: \"If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.\"",
+      "explicitly unsupported: The Forest search omits revealing the found cards."
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": ["packages/engine/tests/w2-cards.test.ts"],
-    "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
-    "snapshotStatus": "passed",
-    "coverageDelta": 1
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",

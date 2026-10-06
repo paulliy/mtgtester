@@ -31,6 +31,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Foe-Razer Regent',
       'Forum of Amity',
       'Harvest Season',
+      'Hunting Wilds',
       'Land Tax',
       'Mordant Dragon',
       'Myriad Landscape',

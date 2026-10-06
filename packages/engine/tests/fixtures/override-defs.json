@@ -9113,8 +9113,35 @@
   {
     "oracleId": "e9bc324e-c200-45ef-8b9b-52a61d0f7374",
     "name": "Hunting Wilds",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.",
+      "Kicker {3}{G}"
+    ],
+    "def": {
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 1,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 3
+        },
+        "mechanic": "kicker"
+      },
+      "spellAbility": {
+        "effects": [
+          {
+            "op": "huntingWilds"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
@@ -14840,8 +14867,35 @@
   {
     "oracleId": "oracle-hunting-wilds",
     "name": "Hunting Wilds",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.",
+      "Kicker {3}{G}"
+    ],
+    "def": {
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 1,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 3
+        },
+        "mechanic": "kicker"
+      },
+      "spellAbility": {
+        "effects": [
+          {
+            "op": "huntingWilds"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-idol-of-oblivion",
