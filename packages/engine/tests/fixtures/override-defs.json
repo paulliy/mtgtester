@@ -9012,8 +9012,85 @@
   {
     "oracleId": "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f",
     "name": "Foe-Razer Regent",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, you may have it fight target creature you don't control.",
+      "Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may have it fight target creature you don't control",
+          "effects": [
+            {
+              "first": "source",
+              "op": "fight",
+              "second": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever a creature you control fights, put two +1/+1 counters on it at the next end step",
+          "effects": [
+            {
+              "ability": {
+                "description": "Put two +1/+1 counters on the creature that fought",
+                "effects": [
+                  {
+                    "count": 2,
+                    "counter": "+1/+1",
+                    "op": "putCounters",
+                    "target": "triggerObject"
+                  }
+                ],
+                "kind": "triggered",
+                "targets": []
+              },
+              "controller": "source",
+              "expiry": "onFire",
+              "op": "registerDelayedTrigger",
+              "sameObject": true,
+              "target": "triggerObject",
+              "when": "endStep"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "fights"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "e91240bc-4a13-4131-9379-5ddac6555f4a",
@@ -13717,8 +13794,85 @@
   {
     "oracleId": "oracle-foe-razer-regent",
     "name": "Foe-Razer Regent",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, you may have it fight target creature you don't control.",
+      "Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may have it fight target creature you don't control",
+          "effects": [
+            {
+              "first": "source",
+              "op": "fight",
+              "second": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever a creature you control fights, put two +1/+1 counters on it at the next end step",
+          "effects": [
+            {
+              "ability": {
+                "description": "Put two +1/+1 counters on the creature that fought",
+                "effects": [
+                  {
+                    "count": 2,
+                    "counter": "+1/+1",
+                    "op": "putCounters",
+                    "target": "triggerObject"
+                  }
+                ],
+                "kind": "triggered",
+                "targets": []
+              },
+              "controller": "source",
+              "expiry": "onFire",
+              "op": "registerDelayedTrigger",
+              "sameObject": true,
+              "target": "triggerObject",
+              "when": "endStep"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "fights"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-forge-of-heroes",

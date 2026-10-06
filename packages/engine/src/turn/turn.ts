@@ -163,8 +163,17 @@ export function queueStepTriggers(
         sourceName: 'Delayed Trigger',
         ability: delayed.ability,
         ...(delayed.targetId !== undefined ? { triggerObjectCardId: delayed.targetId } : {}),
-        ...(delayed.affectedPlayerId !== undefined
-          ? { scope: { eventPlayerId: delayed.affectedPlayerId } }
+        ...(delayed.affectedPlayerId !== undefined || delayed.targetObjectId !== undefined
+          ? {
+              scope: {
+                ...(delayed.affectedPlayerId !== undefined
+                  ? { eventPlayerId: delayed.affectedPlayerId }
+                  : {}),
+                ...(delayed.targetObjectId !== undefined
+                  ? { triggerObjectId: delayed.targetObjectId }
+                  : {}),
+              },
+            }
           : {}),
       });
       debug(ctx, 'stack', `delayed ${when} trigger queued: ${delayed.id}`);

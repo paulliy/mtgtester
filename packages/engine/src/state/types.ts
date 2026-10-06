@@ -371,6 +371,8 @@ export interface DelayedTrigger {
   sourceOracleId: OracleId;
   controllerId: PlayerId;
   targetId?: CardId;
+  /** With `sameObject`, the remembered object's id, so a new object of that card never matches. */
+  targetObjectId?: ObjectId;
   when: TriggerWhen;
   ability: Ability;
   /**

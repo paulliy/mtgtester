@@ -2121,3 +2121,22 @@ test('Voice of Many: draw for each opponent with fewer creatures', async ({ page
   await expect(page.getByText(/Hand\s*2/).first()).toBeVisible();
   await expect(page.getByText(/Library\s*1/).first()).toBeVisible();
 });
+
+test('Foe-Razer Regent: fight on entry, grow at the end step', async ({ page }) => {
+  await runScenario(page, 'Foe-Razer Regent: fight on entry, grow at the end step');
+
+  const regent = handCard(page, 'Foe-Razer Regent');
+  await expect(regent).toHaveClass(/actionable/);
+  await regent.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Lab Ox is the only creature P1 doesn't control, so the target is forced; the fight is optional.
+  await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Foe-Razer Regent')).toContainText('6/7');
+});

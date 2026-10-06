@@ -4679,6 +4679,40 @@ function voiceOfManyScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function foeRazerRegentScenario(gameId: GameId): CardTestScenario {
+  const regent = pinnedFrom(MARCHESA_BATCH1, 'Foe-Razer Regent');
+  return pr01Scenario(gameId, {
+    id: 'foe-razer-regent-viewer-fight-and-grow',
+    title: 'Foe-Razer Regent: fight on entry, grow at the end step',
+    instructions: [
+      'Cast Foe-Razer Regent with your seven Forests.',
+      "Target P2's Lab Ox with its enters trigger and choose to fight.",
+      'Pass to the end step and watch the Regent get two +1/+1 counters.',
+    ],
+    expectedOutcome:
+      'The Regent and Lab Ox deal damage to each other: Lab Ox dies and the 4/5 Regent survives with 4 damage. At the beginning of the end step it gets two +1/+1 counters and becomes 6/7.',
+    oracleSha256: regent.sha256,
+    clauseIds: ['foe-razer-regent-optional-fight', 'foe-razer-regent-fights-counters'],
+    decks: {
+      P1: [regent.card, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Foe-Razer Regent'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueToEndStep: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4777,6 +4811,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'thunderfoot-baloth-viewer-lieutenant',
   'tomb-fortress-viewer-mill-then-return',
   'voice-of-many-viewer-draw-per-opponent',
+  'foe-razer-regent-viewer-fight-and-grow',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4871,6 +4906,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'thunderfoot-baloth-viewer-lieutenant': thunderfootBalothScenario,
   'tomb-fortress-viewer-mill-then-return': tombFortressScenario,
   'voice-of-many-viewer-draw-per-opponent': voiceOfManyScenario,
+  'foe-razer-regent-viewer-fight-and-grow': foeRazerRegentScenario,
 };
 
 export function createCardTestScenario(

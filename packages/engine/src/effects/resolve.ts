@@ -1292,8 +1292,12 @@ export function* executeAbility(
       if (triggerObjectCardId === undefined) {
         throw new Error(`engine bug: ${source.name} used 'triggerObject' with no trigger object`);
       }
-      // Gone from the battlefield by resolution: the effect simply does nothing to it.
-      const perm = ctx.state.battlefield.find((p) => p.cardId === triggerObjectCardId);
+      // Gone from the battlefield by resolution: the effect simply does nothing to it. A delayed
+      // trigger that remembers the permanent itself also skips a new object of the same card.
+      const pinnedId = extraScope?.triggerObjectId;
+      const perm = ctx.state.battlefield.find(
+        (p) => p.cardId === triggerObjectCardId && (pinnedId === undefined || p.id === pinnedId),
+      );
       if (perm === undefined) {
         debug(ctx, 'effect', `${source.name}: trigger object has left the battlefield — skipped`);
         return null;
@@ -5096,12 +5100,16 @@ export function* executeAbility(
             `engine bug: ${source.name} affected target controller could not be captured`,
           );
         }
+        // `t` is the object's current id in whatever zone it is in; a creature that already died
+        // keeps a graveyard id that no later battlefield object can ever match.
+        const rememberedObjectId = effect.sameObject === true && t !== null ? t : undefined;
         ctx.state.delayedTriggers.push({
           id: `dt-${ctx.state.nextObjectNum++}`,
           sourceCardId: source.cardId,
           sourceOracleId: source.oracleId,
           controllerId: delayedController,
           ...(targetId !== undefined ? { targetId } : {}),
+          ...(rememberedObjectId !== undefined ? { targetObjectId: rememberedObjectId } : {}),
           when: effect.when,
           ability: effect.ability,
           expiry: effect.expiry,

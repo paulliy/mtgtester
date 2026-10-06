@@ -458,3 +458,21 @@ describe('Voice of Many Card Test Lab scenario', () => {
     replays('voice-of-many-viewer-draw-per-opponent', steps);
   });
 });
+
+describe('Foe-Razer Regent Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Foe-Razer Regent' },
+    { action: 'fight target creature', targets: ['Lab Ox'] },
+    { action: 'Yes' },
+  ];
+
+  it('foe-razer-regent-viewer-fight-and-grow — fights Lab Ox on entry, then gets two +1/+1 counters at the end step', () => {
+    const { state, onBattlefield, seat } = run('foe-razer-regent-viewer-fight-and-grow', steps);
+    expect(onBattlefield('Lab Ox')).toHaveLength(0);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    const regent = onBattlefield('Foe-Razer Regent')[0]!;
+    expect(regent.counters['+1/+1']).toBe(2);
+    expect(state.eventLog.some((event) => event.type === 'fight')).toBe(true);
+    replays('foe-razer-regent-viewer-fight-and-grow', steps);
+  });
+});

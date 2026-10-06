@@ -28,6 +28,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Canoptek Wraith',
       "Conjurer's Closet",
       'Fabled Passage',
+      'Foe-Razer Regent',
       'Forum of Amity',
       'Harvest Season',
       'Land Tax',

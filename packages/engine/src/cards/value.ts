@@ -53,6 +53,11 @@ export interface ValueScope {
   targets?: readonly string[];
   /** Card id of the object that fired the trigger. */
   triggerObjectCardId?: string;
+  /**
+   * The exact permanent a delayed trigger remembers, when it must not follow the card into a
+   * new object (CR 400.7): "put counters on it" after it left and returned does nothing.
+   */
+  triggerObjectId?: string;
   /** Total counters on an activated ability's source, captured before costs are paid. */
   sourceCountersTotal?: number;
   countPermanents?: (selector: Selector, scope: 'you' | 'opponents' | 'all') => number;
@@ -72,6 +77,7 @@ export type TriggerScope = Pick<
   | 'eventPlayerId'
   | 'stationPower'
   | 'sourceCountersTotal'
+  | 'triggerObjectId'
 >;
 
 export type Value =

@@ -1232,6 +1232,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Voice of Many: draw for each opponent with fewer creatures'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Foe-Razer Regent: fight on entry, grow at the end step'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

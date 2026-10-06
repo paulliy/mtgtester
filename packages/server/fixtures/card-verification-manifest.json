@@ -3039,13 +3039,44 @@
     "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f": {
       "name": "Foe-Razer Regent",
       "oracleSha256": "538901867581226afa96f2206428146725bae81b91a1120ce5a42696a415e4ea",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "foe-razer-regent-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["foe-razer-regent-pinned-oracle-supported"],
+          "viewerScenarioIds": ["foe-razer-regent-viewer-fight-and-grow"]
+        },
+        {
+          "id": "foe-razer-regent-optional-fight",
           "oracleText": "When this creature enters, you may have it fight target creature you don't control.",
-          "implementation": ["explicitly unsupported; optional fight still requires a target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self, target creature an opponent controls; with none the trigger is removed (CR 603.3d)",
+            "optional: yes/no on resolution (CR 603.5)",
+            "fight(source, target 0): no damage if either creature is gone (CR 701.12b)"
+          ],
+          "engineTestIds": [
+            "foe-razer-regent-fight-then-counters",
+            "foe-razer-regent-decline",
+            "foe-razer-regent-no-target"
+          ],
+          "viewerScenarioIds": ["foe-razer-regent-viewer-fight-and-grow"]
+        },
+        {
+          "id": "foe-razer-regent-fights-counters",
+          "oracleText": "Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step.",
+          "implementation": [
+            "fights trigger on any creature you control (each fighter queues its own event)",
+            "registers a delayed endStep trigger (expiry onFire, so a fight during the end step waits for the next one) that puts two +1/+1 counters on that creature",
+            "sameObject: the delayed trigger remembers the permanent itself, so a creature that left and returned is a new object and gets nothing (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "foe-razer-regent-fight-then-counters",
+            "foe-razer-regent-any-creature-you-control",
+            "foe-razer-regent-new-object-gets-nothing"
+          ],
+          "viewerScenarioIds": ["foe-razer-regent-viewer-fight-and-grow"]
         }
       ],
       "gameplayAiScenarioIds": []

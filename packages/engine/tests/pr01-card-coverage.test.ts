@@ -1963,6 +1963,155 @@ describe('Voice of Many', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.16 Foe-Razer Regent
+// ---------------------------------------------------------------------------------------------
+
+describe('Foe-Razer Regent', () => {
+  const regent = pinned('Foe-Razer Regent');
+  const FIGHT = /fight target creature you don't control/i;
+  /** A plain "target creature fights another target creature" spell, for fights the Regent didn't start. */
+  const LAB_FIGHT: Ability = {
+    kind: 'spell',
+    targets: [{ kind: 'creature' }, { kind: 'creature' }],
+    effects: [{ op: 'fight', first: 0, second: 1 }],
+  };
+
+  function toEndStep(ctx: GameContext) {
+    ctx.state.phase = 'ending';
+    ctx.state.step = 'end';
+    queueStepTriggers(ctx, 'endStep');
+    settle(ctx);
+  }
+
+  const plusOnes = (ctx: GameContext, cardId: string) =>
+    ctx.state.battlefield.find((entry) => entry.cardId === cardId)?.counters['+1/+1'] ?? 0;
+
+  /** Cast the Regent from P1's hand, answering its optional fight with `accept`. */
+  function castRegent(ctx: GameContext, accept: boolean, targetId?: string) {
+    const inHand = conjure(ctx, 'P1', regent.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 7 }, () => ({ symbol: 'G' as const })),
+    );
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const result = settle(ctx, (decision) => {
+      if (decision.decisionType === 'optionalTrigger') {
+        return optionMatching(decision, accept ? /^Yes$/ : /^No$/);
+      }
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined && targetId !== undefined) {
+        return { index: 0, targets: new Map([[slot.slot, targetId]]) };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    const self = ctx.state.battlefield.find((entry) => entry.name === 'Foe-Razer Regent')!;
+    return { self, decisions: result.decisions };
+  }
+
+  it('foe-razer-regent-pinned-oracle-supported — pins the Oracle and models flying, the optional fight, and the fights trigger', () => {
+    expect(regent.sha256).toBe('538901867581226afa96f2206428146725bae81b91a1120ce5a42696a415e4ea');
+    const def = interpretCard(regent.card);
+    expect(def.modeled).toBe(true);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers[0]).toMatchObject({
+      optional: true,
+      targets: [{ kind: 'creature', controller: 'opponent' }],
+      effects: [{ op: 'fight', first: 'source', second: 0 }],
+    });
+    expect(def.triggers[1]).toMatchObject({
+      trigger: { when: 'fights' },
+      effects: [{ op: 'registerDelayedTrigger', when: 'endStep', sameObject: true }],
+    });
+  });
+
+  it('foe-razer-regent-fight-then-counters — casting it and accepting fights, then it gets two +1/+1 counters at the end step', () => {
+    const ctx = pod('regent-fight');
+    const victim = spawn(ctx, 'P2', bear());
+    const { self } = castRegent(ctx, true, victim.id);
+    expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(false);
+    expect(self.damageMarked).toBe(2);
+    expect(plusOnes(ctx, self.cardId)).toBe(0);
+    toEndStep(ctx);
+    expect(plusOnes(ctx, self.cardId)).toBe(2);
+  });
+
+  it('foe-razer-regent-decline — answering no means no fight and no counters', () => {
+    const ctx = pod('regent-decline');
+    const victim = spawn(ctx, 'P2', bear());
+    const { self, decisions } = castRegent(ctx, false, victim.id);
+    expect(decisions.some((decision) => decision.decisionType === 'optionalTrigger')).toBe(true);
+    expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(true);
+    toEndStep(ctx);
+    expect(plusOnes(ctx, self.cardId)).toBe(0);
+  });
+
+  it("foe-razer-regent-no-target — without a creature you don't control the fight trigger never asks", () => {
+    const ctx = pod('regent-no-target');
+    spawn(ctx, 'P1', bear());
+    const { decisions } = castRegent(ctx, true);
+    expect(decisions.some((decision) => decision.decisionType === 'optionalTrigger')).toBe(false);
+    expect(decisions.some((decision) => FIGHT.test(decision.prompt))).toBe(false);
+    expect(ctx.state.battlefield.filter((entry) => entry.name === 'Test Bear')).toHaveLength(1);
+  });
+
+  it("foe-razer-regent-any-creature-you-control — another creature of yours that fights gets the counters; the opponent's does not", () => {
+    const ctx = pod('regent-other');
+    spawn(ctx, 'P1', regent.card);
+    const mine = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Regent Brute', typeLine: 'Creature — Ogre', power: '5', toughness: '5' }),
+    );
+    const theirs = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Regent Rival', typeLine: 'Creature — Ogre', power: '1', toughness: '6' }),
+    );
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'fight-spell', oracleId: 'fight-spell', name: 'Lab Fight', controllerId: 'P1' },
+        LAB_FIGHT,
+        [mine.id, theirs.id],
+      ),
+    );
+    settle(ctx);
+    toEndStep(ctx);
+    expect(plusOnes(ctx, mine.cardId)).toBe(2);
+    expect(plusOnes(ctx, theirs.cardId)).toBe(0);
+  });
+
+  it('foe-razer-regent-new-object-gets-nothing — a creature that left and returned before the end step is a new object', () => {
+    const ctx = pod('regent-blink');
+    spawn(ctx, 'P1', regent.card);
+    const mine = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Regent Brute', typeLine: 'Creature — Ogre', power: '5', toughness: '5' }),
+    );
+    const theirs = spawn(ctx, 'P2', bear());
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'fight-spell', oracleId: 'fight-spell', name: 'Lab Fight', controllerId: 'P1' },
+        LAB_FIGHT,
+        [mine.id, theirs.id],
+      ),
+    );
+    settle(ctx);
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    pump(moveObject(ctx, mine, { zone: 'exile' }));
+    const card = ctx.state.exile.find((entry) => entry.cardId === mine.cardId)!;
+    pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
+    toEndStep(ctx);
+    expect(plusOnes(ctx, mine.cardId)).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2048,6 +2197,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Voice of Many',
     sha256: '63a689cdc880b92b9c729e38b25e18cdb455d1c284bbd306e20cdb6e8fa787c7',
     clauseCount: 1,
+  },
+  {
+    name: 'Foe-Razer Regent',
+    sha256: '538901867581226afa96f2206428146725bae81b91a1120ce5a42696a415e4ea',
+    clauseCount: 3,
   },
 ];
 

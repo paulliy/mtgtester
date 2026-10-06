@@ -935,6 +935,11 @@ export type Effect =
       controller?: 'source' | 'targetController';
       /** Player referenced as `eventPlayer` when the delayed ability resolves. */
       affectedPlayer?: 'sourceController' | 'targetController';
+      /**
+       * Remember the permanent itself rather than its card: if it leaves the battlefield before
+       * the delayed ability resolves, it is a new object and the effect does nothing (CR 400.7).
+       */
+      sameObject?: true;
     }
   | { op: 'commandZoneToBattlefield'; target: EffectRef; entersHaste?: boolean }
   /**

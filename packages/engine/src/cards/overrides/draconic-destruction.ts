@@ -432,10 +432,56 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
   );
 
-  unsupportedCard(
+  // Coverage PR01: the fight is optional on resolution (CR 603.5); with no creature you don't
+  // control there is no target and the trigger is removed (CR 603.3d). The fights trigger
+  // remembers the creature itself, so one that left before the end step gets no counters.
+  defineCard(
     'e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f',
     'Foe-Razer Regent',
-    "Optional fight still requires a target creature you don't control.",
+    [
+      "When this creature enters, you may have it fight target creature you don't control.",
+      'Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          optional: true,
+          targets: [{ kind: 'creature', controller: 'opponent' }],
+          effects: [{ op: 'fight', first: 'source', second: 0 }],
+          description: "You may have it fight target creature you don't control",
+        },
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'fights',
+            subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) },
+          },
+          targets: [],
+          effects: [
+            {
+              op: 'registerDelayedTrigger',
+              when: 'endStep',
+              expiry: 'onFire',
+              target: 'triggerObject',
+              sameObject: true,
+              controller: 'source',
+              ability: {
+                kind: 'triggered',
+                targets: [],
+                effects: [
+                  { op: 'putCounters', target: 'triggerObject', counter: '+1/+1', count: 2 },
+                ],
+                description: 'Put two +1/+1 counters on the creature that fought',
+              },
+            },
+          ],
+          description:
+            'Whenever a creature you control fights, put two +1/+1 counters on it at the next end step',
+        },
+      ],
+    },
   );
 
   unsupportedCard(

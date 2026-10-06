@@ -262,7 +262,6 @@ const REASONS: Record<string, string> = {
   "Karametra's Favor":
     'The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects.',
   'Return to Nature': 'Choose-one still requires targets for every mode.',
-  'Foe-Razer Regent': "Optional fight still requires a target creature you don't control.",
   'Frontier Siege': "The Dragons fight option still requires a target creature you don't control.",
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
@@ -310,6 +309,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Foe-Razer Regent',
     'Voice of Many',
     'Tomb Fortress',
     'Thunderfoot Baloth',

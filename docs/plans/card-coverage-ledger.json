@@ -665,6 +665,25 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f",
+    "name": "Foe-Razer Regent",
+    "package": "PR01.16",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When this creature enters, you may have it fight target creature you don't control.\"",
+      "unrecognized rules text: \"Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step.\"",
+      "explicitly unsupported: Optional fight still requires a target creature you don't control."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "2ef75cf3-30dc-4852-a6d1-1d6391fad022",
     "name": "Forgotten Ancient",
     "package": "W4",
