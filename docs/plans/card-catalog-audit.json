@@ -5572,7 +5572,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
-      "uniqueOracleIds": 54,
+      "uniqueOracleIds": 53,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5655,6 +5655,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr01",
       "note": "Registration deleted: the interpreter models enters-tapped, the {W}/{B} mana ability and the surveil activation; engine and Card Test Lab evidence in packages/engine/tests/pr01-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "aaadfe41-b2be-4183-b45e-a70e53a59d2e",
+      "name": "Retrofitter Foundry",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter models all four activated abilities, including the {2}, {T} Servo ability the authored list used to drop; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

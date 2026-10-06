@@ -5576,6 +5576,44 @@ function koglaAttackScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+// ---------------------------------------------------------------------------------------------
+// Coverage PR02 (docs/plans/card-coverage-chunks.md): activation and casting costs. Scenarios
+// reuse the PR01 builder (`pr01Scenario`), which is generic over the prepared board.
+// ---------------------------------------------------------------------------------------------
+
+function retrofitterFoundryScenario(gameId: GameId): CardTestScenario {
+  const foundry = pinnedFrom(MARCHESA_BATCH1, 'Retrofitter Foundry');
+  const forests = Array.from({ length: 9 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'retrofitter-foundry-viewer-servo-thopter-construct',
+    title: 'Retrofitter Foundry: Servo, Thopter, then Construct',
+    instructions: [
+      'Activate {2}, {T} to create a Servo, then {3} to untap the Foundry.',
+      'Activate {1}, {T}, sacrificing the Servo, to create a Thopter, then {3} to untap again.',
+      'Activate {T}, sacrificing the Thopter, to create a Construct.',
+    ],
+    expectedOutcome:
+      'All nine Forests are spent; the Servo and Thopter were sacrificed as costs and a 4/4 Construct token remains.',
+    oracleSha256: foundry.sha256,
+    clauseIds: [
+      'retrofitter-foundry-untap',
+      'retrofitter-foundry-servo',
+      'retrofitter-foundry-thopter',
+      'retrofitter-foundry-construct',
+    ],
+    decks: {
+      P1: [foundry.card, ...Array.from({ length: 9 }, () => FOREST)],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Retrofitter Foundry', ...forests] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5699,6 +5737,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kogla-viewer-enters-fight',
   'kogla-viewer-bounce-and-attack',
   'opponent-graveyard-viewer-reanimate',
+  'retrofitter-foundry-viewer-servo-thopter-construct',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5820,6 +5859,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kogla-viewer-enters-fight': koglaFightScenario,
   'kogla-viewer-bounce-and-attack': koglaAttackScenario,
   'opponent-graveyard-viewer-reanimate': opponentGraveyardScenario,
+  'retrofitter-foundry-viewer-servo-thopter-construct': retrofitterFoundryScenario,
 };
 
 export function createCardTestScenario(

@@ -3518,15 +3518,61 @@
     "aaadfe41-b2be-4183-b45e-a70e53a59d2e": {
       "name": "Retrofitter Foundry",
       "oracleSha256": "39cf3707dcf66c91dc222d73e8ee28cb898c9969c597ae3c12a916d1b7537bc3",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "{3}: Untap this artifact.\n{2}, {T}: Create a 1/1 colorless Servo artifact creature token.\n{1}, {T}, Sacrifice a Servo: Create a 1/1 colorless Thopter artifact creature token with flying.\n{T}, Sacrifice a Thopter: Create a 4/4 colorless Construct artifact creature token.",
+          "id": "retrofitter-foundry-untap",
+          "oracleText": "{3}: Untap this artifact.",
           "implementation": [
-            "explicitly unsupported; Servo creation is dropped when activatedAbilities are replaced"
+            "interpreted activated ability: costs [mana {3}], effect untapTarget(source)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "retrofitter-foundry-pinned-oracle-supported",
+            "retrofitter-foundry-untap",
+            "retrofitter-foundry-untap-needs-three",
+            "retrofitter-foundry-full-chain"
+          ],
+          "viewerScenarioIds": ["retrofitter-foundry-viewer-servo-thopter-construct"]
+        },
+        {
+          "id": "retrofitter-foundry-servo",
+          "oracleText": "{2}, {T}: Create a 1/1 colorless Servo artifact creature token.",
+          "implementation": [
+            "interpreted activated ability: costs [mana {2}, tap], effect createToken(Servo 1/1 colorless artifact creature) — no override replaces the parsed list any more"
+          ],
+          "engineTestIds": [
+            "retrofitter-foundry-pinned-oracle-supported",
+            "retrofitter-foundry-servo",
+            "retrofitter-foundry-servo-needs-mana-and-untapped",
+            "retrofitter-foundry-full-chain"
+          ],
+          "viewerScenarioIds": ["retrofitter-foundry-viewer-servo-thopter-construct"]
+        },
+        {
+          "id": "retrofitter-foundry-thopter",
+          "oracleText": "{1}, {T}, Sacrifice a Servo: Create a 1/1 colorless Thopter artifact creature token with flying.",
+          "implementation": [
+            "interpreted activated ability: costs [mana {1}, tap, sacrificeOther(your Servo)], effect createToken(Thopter 1/1 flying)"
+          ],
+          "engineTestIds": [
+            "retrofitter-foundry-thopter",
+            "retrofitter-foundry-thopter-needs-own-servo",
+            "retrofitter-foundry-full-chain"
+          ],
+          "viewerScenarioIds": ["retrofitter-foundry-viewer-servo-thopter-construct"]
+        },
+        {
+          "id": "retrofitter-foundry-construct",
+          "oracleText": "{T}, Sacrifice a Thopter: Create a 4/4 colorless Construct artifact creature token.",
+          "implementation": [
+            "interpreted activated ability: costs [tap, sacrificeOther(your Thopter)], effect createToken(Construct 4/4)"
+          ],
+          "engineTestIds": [
+            "retrofitter-foundry-construct",
+            "retrofitter-foundry-construct-needs-thopter",
+            "retrofitter-foundry-full-chain"
+          ],
+          "viewerScenarioIds": ["retrofitter-foundry-viewer-servo-thopter-construct"]
         }
       ],
       "gameplayAiScenarioIds": []

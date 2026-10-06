@@ -7,7 +7,6 @@ import { SAC_SELF, TAP, mana, manaCost, spell, targetSlots } from '../templates'
 import {
   BEAST_3_3_GREEN,
   BEAST_6_6_ARTIFACT,
-  CONSTRUCT_4_4,
   NALAAR_AETHERJET,
   SERVO_1_1,
   THOPTER_1_1_FLYING,
@@ -298,48 +297,6 @@ const RECKLESS_FIREWEAVER_DEF: Partial<CardDefinition> = {
       targets: [],
       effects: [{ op: 'eachOpponentDamage', amount: 1 }],
       description: 'An artifact enters under your control — this deals one damage to each opponent',
-    },
-  ],
-};
-
-const RETROFITTER_FOUNDRY_DEF: Partial<CardDefinition> = {
-  activatedAbilities: [
-    {
-      costs: [mana('{3}')],
-      timing: 'any',
-      ability: {
-        kind: 'activated',
-        targets: [],
-        effects: [{ op: 'untapTarget', target: 'source' }],
-        description: 'Pay {3} — untap this artifact',
-      },
-    },
-    {
-      costs: [
-        mana('{1}'),
-        TAP,
-        { kind: 'sacrificeOther', selector: allOf(ofSubtype('Servo'), YOURS), count: 1 },
-      ],
-      timing: 'any',
-      ability: {
-        kind: 'activated',
-        targets: [],
-        effects: [{ op: 'createToken', count: constant(1), spec: THOPTER_1_1_FLYING }],
-        description: 'Pay {1}, tap, and sacrifice a Servo — create a Thopter',
-      },
-    },
-    {
-      costs: [
-        TAP,
-        { kind: 'sacrificeOther', selector: allOf(ofSubtype('Thopter'), YOURS), count: 1 },
-      ],
-      timing: 'any',
-      ability: {
-        kind: 'activated',
-        targets: [],
-        effects: [{ op: 'createToken', count: constant(1), spec: CONSTRUCT_4_4 }],
-        description: 'Tap and sacrifice a Thopter — create a Construct',
-      },
     },
   ],
 };
@@ -906,16 +863,9 @@ export function registerLIVING_ENERGYOverrides(): void {
     DECOCTION_MODULE_DEF,
   );
 
-  defineCard(
-    'aaadfe41-b2be-4183-b45e-a70e53a59d2e',
-    'Retrofitter Foundry',
-    [
-      '{3}: Untap this artifact.',
-      '{1}, {T}, Sacrifice a Servo: Create a 1/1 colorless Thopter artifact creature token with flying.',
-      '{T}, Sacrifice a Thopter: Create a 4/4 colorless Construct artifact creature token.',
-    ],
-    RETROFITTER_FOUNDRY_DEF,
-  );
+  // Retrofitter Foundry: restored in coverage PR02. The interpreter models all four activated
+  // abilities faithfully, so no override is registered (the authored list used to replace the
+  // parsed one and drop the {2}, {T} Servo ability).
 
   defineCard(
     '397b9dcf-690a-4a58-8637-bb9baab7cc2f',
@@ -1272,19 +1222,6 @@ export function registerLIVING_ENERGYOverrides(): void {
     ],
     PEEMA_TRAILBLAZER_DEF,
     'replace the earlier generated inline definition with the reviewed shared constant',
-  );
-  replaceCard(
-    'aaadfe41-b2be-4183-b45e-a70e53a59d2e',
-    'Retrofitter Foundry',
-    [],
-    RETROFITTER_FOUNDRY_DEF,
-    'replace the earlier generated inline definition with the reviewed shared constant',
-  );
-  // Catalog audit living-energy-batch-7: Servo creation is dropped by activatedAbilities replace.
-  unsupportedCard(
-    'aaadfe41-b2be-4183-b45e-a70e53a59d2e',
-    'Retrofitter Foundry',
-    'The {2}, {T} Servo creation is dropped when activatedAbilities replace the parsed abilities.',
   );
   replaceCard(
     'ab655810-f67e-4576-9174-35b16f5e3235',

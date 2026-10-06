@@ -7052,12 +7052,6 @@
     }
   },
   {
-    "oracleId": "aaadfe41-b2be-4183-b45e-a70e53a59d2e",
-    "name": "Retrofitter Foundry",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "ab1cc360-b9de-48d9-9983-4dfe4a7d2a37",
     "name": "Arcane Denial",
     "handledLines": [
@@ -19145,12 +19139,6 @@
   {
     "oracleId": "oracle-resurrection-orb",
     "name": "Resurrection Orb",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-retrofitter-foundry",
-    "name": "Retrofitter Foundry",
     "handledLines": [],
     "def": {}
   },

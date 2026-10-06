@@ -264,8 +264,6 @@ const REASONS: Record<string, string> = {
   'Solar Transformer':
     'The colorless mana ability is dropped when the energy mana ability replaces manaAbilities.',
   'Nullmage Shepherd': 'The four creatures cannot include this creature.',
-  'Retrofitter Foundry':
-    'The {2}, {T} Servo creation is dropped when activatedAbilities replace the parsed abilities.',
   'Cranial Plating': 'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
   'Dark Confidant':
     'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
@@ -323,6 +321,8 @@ describe('Marchesa catalog audit containment', () => {
     'Beacon of Unrest',
     'Attune with Aether',
     'Forum of Amity',
+    // Coverage PR02 (docs/plans/card-coverage-chunks.md).
+    'Retrofitter Foundry',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

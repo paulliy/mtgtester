@@ -16,7 +16,7 @@ const fixture = JSON.parse(
 ) as PinnedFixture;
 
 describe('Marchesa catalog audit supported-pool containment', () => {
-  // Fail-closed restorations plus the coverage PR01 cards (docs/plans/card-coverage-chunks.md).
+  // Fail-closed restorations plus the coverage PR01 and PR02 cards (docs/plans/card-coverage-chunks.md).
   it('includes exactly the independently restored slices', () => {
     const pool = buildSupportedPool(fixture.cards.map(({ card }) => card));
     expect(pool.considered).toBe(198);
@@ -41,6 +41,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Myriad Landscape',
       'Necron Deathmark',
       'Plasmancer',
+      'Retrofitter Foundry',
       'Return to Nature',
       'Rishkar, Peema Renegade',
       'Smothering Tithe',

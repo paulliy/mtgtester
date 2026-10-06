@@ -45,7 +45,6 @@ const CATALOG_CONTAINED = new Set([
   'Druid of Purification',
   'Aether Hub',
   'Solar Transformer',
-  'Retrofitter Foundry',
   'Chaos Warp',
   'Reality Shift',
 ]);

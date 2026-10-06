@@ -1723,6 +1723,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "aaadfe41-b2be-4183-b45e-a70e53a59d2e",
+    "name": "Retrofitter Foundry",
+    "package": "PR02.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The {2}, {T} Servo creation is dropped when activatedAbilities replace the parsed abilities."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
     "name": "Return to Nature",
     "package": "PR01.25",

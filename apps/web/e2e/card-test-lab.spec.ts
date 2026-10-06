@@ -2775,3 +2775,85 @@ test('Twinflame Tyrant: double damage from your spell', async ({ page }) => {
   ).toHaveText('34');
   await expect(page.getByText(/Lightning Bolt deals 6 to P2/i).first()).toBeVisible();
 });
+
+// Coverage PR02 (docs/plans/card-coverage-chunks.md).
+
+/** Click a permanent and take the source action whose button label matches `name`. */
+async function activate(page: Page, source: string, name: RegExp): Promise<void> {
+  const chip = permanent(page, source);
+  await expect(chip).toHaveClass(/actionable/, { timeout: 15_000 });
+  await chip.click();
+  // A source with one legal action goes straight to payment; several open the action menu.
+  // A cost with no mana asks only for confirmation.
+  const choice = page.getByRole('button', { name });
+  const confirmation = page.getByRole('button', { name: 'Confirm' });
+  await expect(choice.or(confirmation).first()).toBeVisible();
+  if (await choice.isVisible()) await choice.click();
+  await confirm(page);
+}
+
+/**
+ * Activate `source`'s ability labelled `name` and wait until the action log shows `resolves`
+ * resolving once more. Passes priority while the stack is non-empty; when passing is the only
+ * legal action the viewer passes on its own, so a pass is never forced into an empty stack.
+ */
+async function activateAndResolve(
+  page: Page,
+  source: string,
+  name: RegExp,
+  resolves: string,
+): Promise<void> {
+  const resolved = page.getByText(`${resolves} resolves`);
+  const before = await resolved.count();
+  await activate(page, source, name);
+  const empty = page.getByText('empty', { exact: true });
+  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  await expect
+    .poll(
+      async () => {
+        if ((await resolved.count()) > before) return true;
+        if ((await empty.count()) === 0 && (await pass.isEnabled())) await pass.click();
+        return false;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+}
+
+test('Retrofitter Foundry: Servo, Thopter, then Construct', async ({ page }) => {
+  await runScenario(page, 'Retrofitter Foundry: Servo, Thopter, then Construct');
+  const foundry = 'Retrofitter Foundry';
+  const untapped = async () =>
+    expect(permanent(page, foundry).locator('.tap-badge')).toHaveCount(0, { timeout: 15_000 });
+
+  await activateAndResolve(
+    page,
+    foundry,
+    /Create a 1\/1 colorless Servo/,
+    'Servo artifact creature token.',
+  );
+  await expect(permanent(page, 'Servo')).toBeVisible();
+  await activateAndResolve(page, foundry, /Untap this artifact/, 'Untap this artifact.');
+  await untapped();
+  await activateAndResolve(
+    page,
+    foundry,
+    /Sacrifice a Servo/,
+    'Thopter artifact creature token with flying.',
+  );
+  await expect(permanent(page, 'Thopter')).toBeVisible();
+  await expect(permanent(page, 'Servo')).toHaveCount(0);
+  await activateAndResolve(page, foundry, /Untap this artifact/, 'Untap this artifact.');
+  await untapped();
+  await activateAndResolve(
+    page,
+    foundry,
+    /Sacrifice a Thopter/,
+    'Construct artifact creature token.',
+  );
+  await expect(permanent(page, 'Construct')).toBeVisible();
+  await expect(permanent(page, 'Thopter')).toHaveCount(0);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Construct')).toBeVisible();
+});

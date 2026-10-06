@@ -1335,6 +1335,11 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Twinflame Tyrant: double damage from your spell'],
   },
+  // Coverage PR02 (docs/plans/card-coverage-chunks.md).
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Retrofitter Foundry: Servo, Thopter, then Construct'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

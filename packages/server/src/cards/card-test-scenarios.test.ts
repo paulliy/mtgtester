@@ -165,6 +165,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'kogla-viewer-enters-fight',
       'kogla-viewer-bounce-and-attack',
       'opponent-graveyard-viewer-reanimate',
+      'retrofitter-foundry-viewer-servo-thopter-construct',
     ]);
   });
 
