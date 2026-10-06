@@ -1173,6 +1173,7 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['War Room: dynamic commander identity life activation'],
   },
   { file: 'card-test-lab.spec.ts', titlePath: ['War Room: colorless mana pays a spell cost'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Public zones: reanimate an opponent’s creature'] },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

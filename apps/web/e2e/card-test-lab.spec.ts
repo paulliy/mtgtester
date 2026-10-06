@@ -208,8 +208,7 @@ test('Swords to Plowshares: exile and gain life', async ({ page }) => {
   await confirm(page);
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
-  // Game-over stays in player mode: opponent seats have no spectator exile meta-item, and a
-  // leftover card-preview img would still match a page-wide Lab Ox locator.
+  // Scope to the opponent zone: a leftover hover preview also has a Lab Ox image.
   const closeResults = page.getByRole('button', { name: 'Close results' });
   if (await closeResults.isVisible()) {
     await closeResults.click();
@@ -217,7 +216,11 @@ test('Swords to Plowshares: exile and gain life', async ({ page }) => {
   await expect(page.getByText('Lab Ox is exiled by Swords to Plowshares')).toBeVisible();
   await expect(page.getByText(/gains 4 life/i).first()).toBeVisible();
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('44');
+  const p2 = page.locator('.opponent[data-seat="P2"]');
+  await expect(p2).toContainText('44');
+  await expect(
+    p2.locator('.zone', { hasText: 'Exile' }).getByRole('img', { name: 'Lab Ox', exact: true }),
+  ).toBeVisible();
 });
 
 test('Go for the Throat: destroy a nonartifact creature', async ({ page }) => {
@@ -264,7 +267,7 @@ test('Bojuka Bog: exile the targeted graveyard', async ({ page }) => {
   await expect(page.locator('.target-instruction')).toHaveText(
     'Target 1 of 1: click a highlighted card or player.',
   );
-  await page.locator('.opponent').filter({ hasText: 'P2' }).click();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
@@ -653,7 +656,7 @@ test('Loaming Shaman: shuffle a graveyard card', async ({ page }) => {
   await confirm(page);
 
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
-  await page.locator('.opponent').filter({ hasText: 'P2' }).click();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
@@ -699,7 +702,7 @@ test('Akoum Hellkite: Mountain landfall deals 2', async ({ page }) => {
   await expect(page.locator('.target-instruction')).toHaveText(
     'Target 1 of 1: click a highlighted card or player.',
   );
-  await page.locator('.opponent').filter({ hasText: 'P2' }).click();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
@@ -825,7 +828,7 @@ test('Canoptek Scarab Swarm: exile graveyard, make Insects', async ({ page }) =>
   await confirm(page);
 
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
-  await page.locator('.opponent').filter({ hasText: 'P2' }).click();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
@@ -848,7 +851,7 @@ test('Great Oak Guardian: pump and untap P2 creatures', async ({ page }) => {
   await confirm(page);
 
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
-  await page.locator('.opponent').filter({ hasText: 'P2' }).click();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
@@ -1115,7 +1118,7 @@ test('Secret Rendezvous: you and P2 each draw three', async ({ page }) => {
   await expect(rendezvous).toHaveClass(/actionable/);
   await rendezvous.click();
   await expect(page.getByText(/Target 1 of /)).toBeVisible();
-  await page.locator('.opponent').filter({ hasText: 'P2' }).click();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
@@ -1134,7 +1137,7 @@ test('Demanding Dragon: 5 damage when P2 has no creature', async ({ page }) => {
   await confirm(page);
 
   await expect(page.getByText(/Target 1 of /)).toBeVisible();
-  await page.locator('.opponent').filter({ hasText: 'P2' }).click();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
@@ -1186,7 +1189,7 @@ test('Boros Charm: 4 damage to P2', async ({ page }) => {
   await charm.click();
   await page.getByRole('button', { name: /Deal 4 damage to target player/i }).click();
   await expect(page.getByText(/Target 1 of /)).toBeVisible();
-  await page.locator('.opponent').filter({ hasText: 'P2' }).click();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
@@ -1303,7 +1306,7 @@ test('Terror of the Peaks: entering Bear deals 2 to P2', async ({ page }) => {
   await confirm(page);
 
   await expect(page.getByText(/Target 1 of /)).toBeVisible();
-  await page.locator('.opponent').filter({ hasText: 'P2' }).click();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
@@ -1738,4 +1741,42 @@ test('War Room: colorless mana pays a spell cost', async ({ page }) => {
       .filter({ has: page.locator('.text', { hasText: /^draws / }) }),
   ).toHaveCount(0);
   await expect(page.locator('.stack .empty')).toBeVisible();
+});
+
+test('Public zones: reanimate an opponent’s creature', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await runScenario(page, 'Public zones: reanimate an opponent’s creature');
+  const p2 = page.locator('.opponent[data-seat="P2"]');
+  const graveyard = p2.locator('.zone', { hasText: 'Graveyard' });
+  const ox = graveyard.locator('.zone-card-thumb').filter({
+    has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
+  });
+  const signet = graveyard.locator('.zone-card-thumb').filter({
+    has: page.getByRole('img', { name: 'Eligible Signet', exact: true }),
+  });
+  await expect(ox).not.toHaveClass(/targetable/);
+  await handCard(page, 'Lab Reanimation').click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(ox).toHaveClass(/targetable/);
+  await expect(signet).not.toHaveClass(/targetable/);
+  await signet.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await ox.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await expect(page.locator('.chosen-targets')).toContainText('Lab Ox');
+  await expect(p2).not.toHaveClass(/chosen-target/);
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.locator('.human-zone .object').filter({
+      has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
+    }),
+  ).toBeVisible();
+  await expect(ox).toHaveCount(0);
+  await expect(signet).toBeVisible();
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
 });
