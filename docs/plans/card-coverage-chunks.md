@@ -1,6 +1,6 @@
 # Card coverage chunks: 302 cards to 906/906
 
-Prepared 2026-10-06. Status: active. This plan divides the remaining work under
+Prepared 2026-10-06. Status: active; PR01 is complete and PR02 is next. This plan divides the remaining work under
 [complete card coverage](complete-card-coverage.md) into eleven pull requests (PRs) of about 30
 cards each. Each commit models one card. The scope, definition of done and completion gate in that
 plan still apply. This document only orders the work and groups it into PRs.
@@ -8,16 +8,20 @@ plan still apply. This document only orders the work and groups it into PRs.
 ## Baseline
 
 The population is the frozen 906 unique Oracle IDs: the 12 committed coverage decks plus the
-200 EDH staples. Coverage was measured from the working tree at `406b61c` with `measureCoverage`
-against the committed `packages/server/fixtures/coverage-oracle.json`, which holds exactly those
-906 cards. `bun run coverage --json` and `bun run staples --json` with the local bulk file should
-give the same numbers.
+200 EDH staples. The plan was prepared from the working tree at `406b61c` (604/906). The current
+numbers below were measured after PR01 by interpreting every card in the committed
+`packages/server/fixtures/coverage-oracle.json`, which holds exactly those 906 cards.
+`bun run coverage --json` and `bun run staples --json` with the local bulk file should give the
+same numbers.
 
-| Population            | Modeled         | Remaining |
-| --------------------- | --------------- | --------: |
-| Fixture decks         | 511/802 (63.7%) |       291 |
-| EDH staples           | 185/200 (92.5%) |        15 |
-| Combined unique cards | 604/906 (66.7%) |       302 |
+| Population            | Before PR01     | After PR01      | Remaining |
+| --------------------- | --------------- | --------------- | --------: |
+| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) |       263 |
+| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) |        14 |
+| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) |       273 |
+
+PR01 landed exactly as planned: all 29 cards are modeled, no card regressed, and the remaining
+count for every deck matches the PR01 column below.
 
 The 302 remaining cards fall into two groups:
 
@@ -29,9 +33,10 @@ The 302 remaining cards fall into two groups:
 
 `card-coverage-ledger.json` has a row for all 109 unmodeled cards and for 11 of the fail-closed
 cards. The other 182 fail-closed cards came from the catalog audit and have no row yet. Five rows
-are stale: Etali, Gut, Hunting Wilds, Vastwood Surge and Will of the Mardu are still marked
-`modeled-focused-tests-passed`, but the audit closed them. Each card's commit adds or corrects its
-row.
+were stale: Etali, Gut, Hunting Wilds, Vastwood Surge and Will of the Mardu were marked
+`modeled-focused-tests-passed`, but the audit had closed them. PR01 corrected the rows for Hunting
+Wilds, Vastwood Surge and Will of the Mardu; Etali and Gut remain stale until their own commits.
+Each card's commit adds or corrects its row.
 
 ## Workflow
 
@@ -107,21 +112,21 @@ NEC Necron Dynasties, PRA Pramikon, QMQ Queen Marchesa, RUB Ruby, SIL Silverquil
 FF4 Fantastic Four, TOK Token Triumph, URD Urdragon, S EDH staples. A card that appears in
 several decks counts in each of them.
 
-| Deck | Now | PR01 | PR02 | PR03 | PR04 | PR05 | PR06 | PR07 | PR08 | PR09 | PR10 | PR11 |
-| ---- | --: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| BRI  |  24 |   22 |   22 |   21 |   11 |   11 |   11 |    9 |    8 |    6 |    4 |    0 |
-| DRA  |  14 |   10 |    9 |    9 |    9 |    9 |    3 |    3 |    3 |    2 |    0 |    0 |
-| LEN  |  19 |   17 |   11 |   11 |   10 |   10 |    9 |    8 |    7 |    4 |    0 |    0 |
-| MAR  |  31 |   30 |   23 |   13 |   10 |   10 |   10 |    9 |    7 |    6 |    1 |    0 |
-| NEC  |  37 |   31 |   23 |   14 |   13 |   10 |    9 |    7 |    7 |    5 |    3 |    0 |
-| PRA  |  36 |   35 |   35 |   32 |   32 |   30 |   24 |   15 |    5 |    4 |    2 |    0 |
-| QMQ  |  39 |   38 |   35 |   34 |   34 |   33 |   22 |   18 |   11 |    9 |    5 |    0 |
-| RUB  |  21 |   16 |   15 |   13 |   12 |   12 |   11 |   10 |   10 |    1 |    0 |    0 |
-| SIL  |  40 |   38 |   35 |   35 |   35 |   17 |   13 |    9 |    8 |    4 |    4 |    0 |
-| FF4  |  31 |   31 |   31 |   31 |   25 |   25 |   24 |   19 |   16 |    9 |    2 |    0 |
-| TOK  |  13 |    8 |    4 |    3 |    3 |    1 |    1 |    0 |    0 |    0 |    0 |    0 |
-| URD  |   3 |    2 |    2 |    2 |    2 |    2 |    1 |    0 |    0 |    0 |    0 |    0 |
-| S    |  15 |   14 |   12 |   11 |   11 |   11 |   11 |   11 |   10 |    9 |    7 |    0 |
+| Deck | Start | PR01 | PR02 | PR03 | PR04 | PR05 | PR06 | PR07 | PR08 | PR09 | PR10 | PR11 |
+| ---- | ----: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| BRI  |    24 |   22 |   22 |   21 |   11 |   11 |   11 |    9 |    8 |    6 |    4 |    0 |
+| DRA  |    14 |   10 |    9 |    9 |    9 |    9 |    3 |    3 |    3 |    2 |    0 |    0 |
+| LEN  |    19 |   17 |   11 |   11 |   10 |   10 |    9 |    8 |    7 |    4 |    0 |    0 |
+| MAR  |    31 |   30 |   23 |   13 |   10 |   10 |   10 |    9 |    7 |    6 |    1 |    0 |
+| NEC  |    37 |   31 |   23 |   14 |   13 |   10 |    9 |    7 |    7 |    5 |    3 |    0 |
+| PRA  |    36 |   35 |   35 |   32 |   32 |   30 |   24 |   15 |    5 |    4 |    2 |    0 |
+| QMQ  |    39 |   38 |   35 |   34 |   34 |   33 |   22 |   18 |   11 |    9 |    5 |    0 |
+| RUB  |    21 |   16 |   15 |   13 |   12 |   12 |   11 |   10 |   10 |    1 |    0 |    0 |
+| SIL  |    40 |   38 |   35 |   35 |   35 |   17 |   13 |    9 |    8 |    4 |    4 |    0 |
+| FF4  |    31 |   31 |   31 |   31 |   25 |   25 |   24 |   19 |   16 |    9 |    2 |    0 |
+| TOK  |    13 |    8 |    4 |    3 |    3 |    1 |    1 |    0 |    0 |    0 |    0 |    0 |
+| URD  |     3 |    2 |    2 |    2 |    2 |    2 |    1 |    0 |    0 |    0 |    0 |    0 |
+| S    |    15 |   14 |   12 |   11 |   11 |   11 |   11 |   11 |   10 |    9 |    7 |    0 |
 
 ## PR sections
 
