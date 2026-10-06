@@ -202,7 +202,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Humble Defector',
       'Selfless Squire',
       'Teyo, Geometric Tactician',
-      'Weathered Wayfarer',
       'Wishclaw Talisman',
       'Arcbond',
       'Backlash',

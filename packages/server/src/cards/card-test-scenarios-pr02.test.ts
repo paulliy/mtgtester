@@ -294,3 +294,32 @@ describe('Sceptre of Eternal Glory Card Test Lab scenarios', () => {
     replays('sceptre-of-eternal-glory-viewer-one-mana', steps);
   });
 });
+
+describe('Weathered Wayfarer Card Test Lab scenarios', () => {
+  const steps: Step[] = [
+    { action: 'Weathered Wayfarer: {W}, {T}: Search your library' },
+    { action: 'Put Wayfarer Revealed Land into your hand' },
+  ];
+
+  it('weathered-wayfarer-viewer-reveal-land — behind on lands, the search reveals a land into hand', () => {
+    const { state, seat, onBattlefield } = run('weathered-wayfarer-viewer-reveal-land', steps);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Wayfarer Revealed Land']);
+    expect(onBattlefield('Weathered Wayfarer')[0]?.tapped).toBe(true);
+    expect(state.eventLog.find((event) => event.type === 'searchFound')?.payload).toMatchObject({
+      name: 'Wayfarer Revealed Land',
+      to: 'hand',
+      revealed: true,
+    });
+    replays('weathered-wayfarer-viewer-reveal-land', steps);
+  });
+
+  it('weathered-wayfarer-viewer-equal-lands-blocked — equal land counts offer no activation', () => {
+    const { seat, onBattlefield, offered } = run(
+      'weathered-wayfarer-viewer-equal-lands-blocked',
+      [],
+    );
+    expect(offered.flat().some((action) => action.includes('Weathered Wayfarer'))).toBe(false);
+    expect(seat('P1').hand).toEqual([]);
+    expect(onBattlefield('Weathered Wayfarer')[0]?.tapped).toBe(false);
+  });
+});

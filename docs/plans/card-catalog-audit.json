@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 44,
+      "uniqueOracleIds": 43,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5697,6 +5697,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr02-grammar",
       "note": "Override deleted (overrides rule 5) when coverage PR02 taught the grammar 'Add N mana of any one color' for Sceptre of Eternal Glory: the interpreter now derives exactly the linked three-unit mana ability the override authored. Behavior evidence stays in packages/engine/tests/necron-main-engine-batch1.test.ts."
+    },
+    {
+      "oracleId": "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f",
+      "name": "Weathered Wayfarer",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the revealed land search (reveal is now kept by the search grammar) and the 'an opponent controls more lands than you' activation condition; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

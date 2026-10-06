@@ -2667,8 +2667,12 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
     ];
   }
 
-  const m = s.match(/^search your library for (.+?), (?:reveal .+?, )?(put .+?), then shuffle$/);
+  const m = s.match(
+    /^search your library for (.+?), (reveal (?:it|them|that card|those cards), )?(put .+?), then shuffle$/,
+  );
   if (m === null) return null;
+  // "…, reveal it, …" (CR 701.16a): the found card is public even when it goes to the hand.
+  const reveal = m[2] !== undefined;
 
   const differentNames = (m[1] as string).endsWith(' with different names');
   const filterText = differentNames
@@ -2676,7 +2680,7 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
     : (m[1] as string);
   const filter = parseSearchFilter(filterText, card);
   if (filter === null) return null;
-  const destinations = parseSearchDestinations(m[2] as string);
+  const destinations = parseSearchDestinations(m[3] as string);
   if (destinations === null) return null;
   const countMatch = (m[1] as string).match(/^up to (\w+) /);
   const count = countMatch === null ? null : parseAmount(countMatch[1] as string);
@@ -2688,6 +2692,7 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
       destinations,
       ...(count === null ? {} : { count: constant(count) }),
       ...(differentNames ? { differentNames: true } : {}),
+      ...(reveal ? { reveal: true } : {}),
     },
     { op: 'shuffle' },
   ];

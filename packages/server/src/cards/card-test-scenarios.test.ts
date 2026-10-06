@@ -177,6 +177,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'endless-atlas-viewer-mixed-names-blocked',
       'sceptre-of-eternal-glory-viewer-three-black',
       'sceptre-of-eternal-glory-viewer-one-mana',
+      'weathered-wayfarer-viewer-reveal-land',
+      'weathered-wayfarer-viewer-equal-lands-blocked',
     ]);
   });
 

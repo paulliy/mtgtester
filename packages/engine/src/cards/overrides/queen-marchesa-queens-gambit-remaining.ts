@@ -390,12 +390,8 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Verrak, Warped Sengir',
     'Copy-activated-ability when life was paid is unimplemented.',
   );
-  // Catalog audit queen-batch-3: more-lands restriction omitted.
-  unsupportedCard(
-    '1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f',
-    'Weathered Wayfarer',
-    'Opponent-controls-more-lands restriction is omitted from the search activation.',
-  );
+  // Weathered Wayfarer: restored in coverage PR02. The interpreter reads the revealed land search
+  // and its "an opponent controls more lands than you" activation condition.
   // Catalog audit queen-batch-3: opponent-gains-control omitted.
   unsupportedCard(
     '81c70ae7-3c18-4c9b-8505-e4db9e0e6518',

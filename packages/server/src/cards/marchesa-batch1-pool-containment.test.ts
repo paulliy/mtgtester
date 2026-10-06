@@ -56,6 +56,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Vastwood Surge',
       'Voice of Many',
       'War Room',
+      'Weathered Wayfarer',
       'Will of the Mardu',
     ]);
   });

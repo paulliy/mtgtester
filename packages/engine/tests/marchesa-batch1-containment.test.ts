@@ -158,8 +158,6 @@ const REASONS: Record<string, string> = {
     'All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.',
   'Teyo, Geometric Tactician':
     'The −2 directional attack restriction is claimed without an implementation.',
-  'Weathered Wayfarer':
-    'Opponent-controls-more-lands restriction is omitted from the search activation.',
   'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
   Arcbond: 'The delayed damage is dealt by Arcbond, not by the chosen creature.',
   Backlash: 'Untapped-creature targeting is implemented as any creature.',
@@ -319,6 +317,7 @@ describe('Marchesa catalog audit containment', () => {
     'Bespoke Battlewagon',
     'Endless Atlas',
     'Sceptre of Eternal Glory',
+    'Weathered Wayfarer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

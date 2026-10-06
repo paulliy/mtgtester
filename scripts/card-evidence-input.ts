@@ -1378,6 +1378,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Sceptre of Eternal Glory: mixed lands give one mana'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Weathered Wayfarer: behind on lands, reveal a land'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Weathered Wayfarer: equal lands do not unlock it'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

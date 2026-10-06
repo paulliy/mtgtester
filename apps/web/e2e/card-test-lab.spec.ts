@@ -3017,3 +3017,28 @@ test('Sceptre of Eternal Glory: mixed lands give one mana', async ({ page }) => 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(handCard(page, 'Lab Black Ogre')).toBeVisible();
 });
+
+test('Weathered Wayfarer: behind on lands, reveal a land', async ({ page }) => {
+  await runScenario(page, 'Weathered Wayfarer: behind on lands, reveal a land');
+  await activate(page, 'Weathered Wayfarer', /Search your library/);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(page.getByText(/search your library/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'Find nothing' })).toBeVisible();
+  await expect(page.locator('.panel-group').filter({ hasText: 'Island' })).toHaveCount(1);
+  await page
+    .locator('.panel-group')
+    .filter({ hasText: 'Wayfarer Revealed Land' })
+    .getByRole('button', { name: 'Put into your hand' })
+    .click();
+  await expect(page.getByText('reveals Wayfarer Revealed Land').first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(handCard(page, 'Wayfarer Revealed Land')).toBeVisible();
+});
+
+test('Weathered Wayfarer: equal lands do not unlock it', async ({ page }) => {
+  await runScenario(page, 'Weathered Wayfarer: equal lands do not unlock it');
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Weathered Wayfarer').locator('.tap-badge')).toHaveCount(0);
+  await expect(page.getByText('Wayfarer Revealed Land')).toHaveCount(0);
+});

@@ -556,12 +556,6 @@
     "def": {}
   },
   {
-    "oracleId": "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f",
-    "name": "Weathered Wayfarer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "10f274f9-9044-447b-81c9-d4906ad9e6be",
     "name": "Illuminor Szeras",
     "handledLines": [],
@@ -22164,12 +22158,6 @@
   {
     "oracleId": "oracle-wear-tear",
     "name": "Wear // Tear",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-weathered-wayfarer",
-    "name": "Weathered Wayfarer",
     "handledLines": [],
     "def": {}
   },

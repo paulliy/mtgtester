@@ -5978,6 +5978,73 @@ const sceptreOneScenario = (gameId: GameId): CardTestScenario =>
       'Sceptre taps for one black mana and Lab Black Bear resolves; Lab Black Ogre stays in hand.',
   });
 
+const LAB_REVEALED_LAND = card({
+  oracleId: 'lab-wayfarer-land',
+  name: 'Wayfarer Revealed Land',
+  typeLine: 'Land',
+  manaCost: null,
+  cmc: 0,
+});
+
+function weatheredWayfarerScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    opponentLands: number;
+    instructions: string[];
+    expectedOutcome: string;
+  },
+): CardTestScenario {
+  const wayfarer = pinnedFrom(MARCHESA_BATCH1, 'Weathered Wayfarer');
+  const forests = Array.from({ length: spec.opponentLands }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: wayfarer.sha256,
+    clauseIds: ['weathered-wayfarer-conditional-search'],
+    decks: {
+      P1: [wayfarer.card, PLAINS, LAB_REVEALED_LAND, ISLAND],
+      P2: [...forests, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Weathered Wayfarer', 'Plains'] },
+        { playerId: 'P2', cardNames: forests.map((land) => land.name) },
+      ],
+    },
+  });
+}
+
+const weatheredWayfarerSearchScenario = (gameId: GameId): CardTestScenario =>
+  weatheredWayfarerScenario(gameId, {
+    id: 'weathered-wayfarer-viewer-reveal-land',
+    title: 'Weathered Wayfarer: behind on lands, reveal a land',
+    opponentLands: 2,
+    instructions: [
+      'P2 controls two lands to your one, so activate Weathered Wayfarer for {W}.',
+      'Choose Wayfarer Revealed Land from the search.',
+    ],
+    expectedOutcome:
+      'Wayfarer Revealed Land is revealed to every player and put into your hand, and your library is shuffled.',
+  });
+
+const weatheredWayfarerBlockedScenario = (gameId: GameId): CardTestScenario =>
+  weatheredWayfarerScenario(gameId, {
+    id: 'weathered-wayfarer-viewer-equal-lands-blocked',
+    title: 'Weathered Wayfarer: equal lands do not unlock it',
+    opponentLands: 1,
+    instructions: [
+      'No opponent controls more lands than your one, so Weathered Wayfarer offers no activation.',
+    ],
+    expectedOutcome: 'Weathered Wayfarer and the Plains stay untapped and your hand stays empty.',
+  });
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -6113,6 +6180,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'endless-atlas-viewer-mixed-names-blocked',
   'sceptre-of-eternal-glory-viewer-three-black',
   'sceptre-of-eternal-glory-viewer-one-mana',
+  'weathered-wayfarer-viewer-reveal-land',
+  'weathered-wayfarer-viewer-equal-lands-blocked',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6246,6 +6315,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'endless-atlas-viewer-mixed-names-blocked': endlessAtlasBlockedScenario,
   'sceptre-of-eternal-glory-viewer-three-black': sceptreThreeScenario,
   'sceptre-of-eternal-glory-viewer-one-mana': sceptreOneScenario,
+  'weathered-wayfarer-viewer-reveal-land': weatheredWayfarerSearchScenario,
+  'weathered-wayfarer-viewer-equal-lands-blocked': weatheredWayfarerBlockedScenario,
 };
 
 export function createCardTestScenario(

@@ -428,7 +428,8 @@
               }
             ]
           },
-          "op": "searchLibrary"
+          "op": "searchLibrary",
+          "reveal": true
         },
         {
           "op": "shuffle"

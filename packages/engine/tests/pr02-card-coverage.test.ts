@@ -26,6 +26,7 @@ import { createGame } from '../src/state/game';
 import { prepareScenario } from '../src/testing/prepared-scenario';
 import { playerById } from '../src/state/objects';
 import { manaSourcesFor } from '../src/state/queries';
+import { buildPlayerView } from '../src/view/view';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import {
   conjure,
@@ -86,6 +87,26 @@ function pod(seed: string): GameContext {
 }
 
 type Answer = (decision: PendingDecision, count: number) => DecisionOutcome;
+
+function optionMatching(decision: PendingDecision, pattern: RegExp): DecisionOutcome {
+  const index = decision.options.findIndex((option) => pattern.test(option.description));
+  if (index < 0) {
+    throw new Error(
+      `no option matching ${String(pattern)} in: ${decision.options.map((o) => o.description).join(' | ')}`,
+    );
+  }
+  return { index, targets: new Map() };
+}
+
+/** Answer each decision whose prompt matches with the option matching the paired pattern. */
+function answers(rules: [prompt: RegExp, option: RegExp][]): Answer {
+  return (decision) => {
+    for (const [prompt, option] of rules) {
+      if (prompt.test(decision.prompt)) return optionMatching(decision, option);
+    }
+    return { index: 0, targets: new Map() };
+  };
+}
 
 function priorityOptions(ctx: GameContext, playerId: string) {
   return computePriorityOptions(ctx, playerById(ctx, playerId));
@@ -898,6 +919,127 @@ describe('Sceptre of Eternal Glory', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.22 Weathered Wayfarer
+// ---------------------------------------------------------------------------------------------
+
+describe('Weathered Wayfarer', () => {
+  const wayfarer = pinned('Weathered Wayfarer');
+  const SECRET_LAND = () =>
+    oracle({ name: 'Wayfarer Secret Land', typeLine: 'Land', manaCost: null, oracleText: '' });
+
+  /** P1 has the Wayfarer and `mine` lands; P2 has `theirs`; P3 has `third`. */
+  function ready(seed: string, mine: number, theirs: number, third = 0) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', wayfarer.card);
+    for (let i = 0; i < mine; i++) spawn(ctx, 'P1', plains()).tapped = true;
+    for (let i = 0; i < theirs; i++) spawn(ctx, 'P2', forest());
+    for (let i = 0; i < third; i++) spawn(ctx, 'P3', forest());
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }]);
+    return { ctx, source };
+  }
+
+  it('weathered-wayfarer-pinned-oracle-supported — the interpreter reads the revealed search and its condition', () => {
+    expect(wayfarer.sha256).toBe(
+      '42ef11f806b155602ccdd9ce54d2cd2e123a4df1d42d90c83dcedad110cfaafd',
+    );
+    expect(wayfarer.card.oracleText).toBe(
+      '{W}, {T}: Search your library for a land card, reveal it, put it into your hand, then shuffle. Activate only if an opponent controls more lands than you.',
+    );
+    expect(getOverride(wayfarer.card.oracleId)).toBeUndefined();
+    expectModeled(wayfarer.card);
+    const [ability] = interpretCard(wayfarer.card).activatedAbilities;
+    expect(ability?.condition).toEqual({
+      kind: 'opponentControlsMore',
+      selector: { kind: 'type', value: 'Land' },
+    });
+    expect(ability?.ability.effects).toEqual([
+      {
+        op: 'searchLibrary',
+        filter: { kind: 'type', value: 'Land' },
+        destinations: [{ zone: 'hand' }],
+        reveal: true,
+      },
+      { op: 'shuffle' },
+    ]);
+  });
+
+  it('weathered-wayfarer-search-reveals-land — behind on lands, {W}, {T} reveals a land into hand', () => {
+    const { ctx, source } = ready('wayfarer-search', 1, 2);
+    const land = conjure(ctx, 'P1', SECRET_LAND(), 'library');
+    conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Wayfarer Library Bear', typeLine: 'Creature — Bear' }),
+      'library',
+    );
+    const option = activationsOf(ctx, 'P1', source)[0];
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(true);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand.map((card) => card.cardId)).toContain(land.cardId);
+    expect(ctx.state.eventLog.find((event) => event.type === 'searchFound')?.payload).toMatchObject(
+      {
+        name: 'Wayfarer Secret Land',
+        to: 'hand',
+        revealed: true,
+      },
+    );
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    // Revealed (CR 701.16a): an opponent's view names the card that went to P1's hand.
+    expect(JSON.stringify(buildPlayerView(ctx, 'P2'))).toContain('Wayfarer Secret Land');
+  });
+
+  it('weathered-wayfarer-only-lands-match — the search offers every land and no nonland card', () => {
+    const { ctx, source } = ready('wayfarer-only-lands', 1, 2);
+    conjure(ctx, 'P1', SECRET_LAND(), 'library');
+    conjure(ctx, 'P1', island(), 'library');
+    conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Wayfarer Library Bear', typeLine: 'Creature — Bear' }),
+      'library',
+    );
+    takeAction(ctx, 'P1', activationsOf(ctx, 'P1', source)[0]!.payload as PriorityActionPayload);
+    const { decisions } = resolveTop(ctx, answers([[/search your library/, /Put Island/]]));
+    const search = decisions.find((decision) => /search your library/.test(decision.prompt));
+    expect(search?.options.map((option) => option.description)).toEqual(
+      expect.arrayContaining([
+        'Put Wayfarer Secret Land into your hand',
+        'Put Island into your hand',
+      ]),
+    );
+    expect(search?.options.some((option) => /Wayfarer Library Bear/.test(option.description))).toBe(
+      false,
+    );
+    expect(playerById(ctx, 'P1').hand.map((card) => card.name)).toEqual(['Island']);
+  });
+
+  it('weathered-wayfarer-equal-lands-blocked — with as many lands as every opponent, it cannot activate', () => {
+    const { ctx, source } = ready('wayfarer-equal', 2, 2, 2);
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+  });
+
+  it('weathered-wayfarer-single-opponent-not-pooled — two opponents with one land each do not outnumber two', () => {
+    const { ctx, source } = ready('wayfarer-pooled', 2, 1, 1);
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+    spawn(ctx, 'P3', forest());
+    spawn(ctx, 'P3', forest());
+    expect(activationsOf(ctx, 'P1', source)).toHaveLength(1);
+  });
+
+  it('weathered-wayfarer-costs — it needs {W} and to be untapped', () => {
+    const tapped = ready('wayfarer-tapped', 0, 1);
+    tapped.source.tapped = true;
+    expect(activationsOf(tapped.ctx, 'P1', tapped.source)).toEqual([]);
+    const ctx = pod('wayfarer-no-mana');
+    const source = spawn(ctx, 'P1', wayfarer.card);
+    spawn(ctx, 'P2', forest());
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -909,6 +1051,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Weathered Wayfarer',
+    sha256: '42ef11f806b155602ccdd9ce54d2cd2e123a4df1d42d90c83dcedad110cfaafd',
+    clauseCount: 1,
+  },
   {
     name: 'Sceptre of Eternal Glory',
     sha256: '51ed0fa70d837b566989f2a57ef7b70bf50985d3c5c84b9d713f04a501aac2f5',
