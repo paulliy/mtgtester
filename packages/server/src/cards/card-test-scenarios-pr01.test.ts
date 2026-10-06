@@ -372,10 +372,15 @@ describe('Sylvan Reclamation Card Test Lab scenario', () => {
 });
 
 describe('Sylvan Reclamation basic landcycling Card Test Lab scenario', () => {
-  const steps: Step[] = [{ action: 'Basic landcycling {2}' }];
+  const steps: Step[] = [
+    { action: 'Basic landcycling {2}' },
+    { action: 'Put Plains into your hand' },
+  ];
 
   it('sylvan-reclamation-viewer-basic-landcycling — discards from hand and reveals the found basic land', () => {
-    const { state, seat } = run('sylvan-reclamation-viewer-basic-landcycling', steps);
+    const { state, seat, offered } = run('sylvan-reclamation-viewer-basic-landcycling', steps);
+    // The hidden-zone search may always find nothing (CR 701.19b), so it is a real choice.
+    expect(offered).toContainEqual(['Put Plains into your hand', 'Find nothing']);
     expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Sylvan Reclamation']);
     expect(seat('P1').hand.map((card) => card.name)).toEqual(['Plains']);
     expect(state.eventLog.find((event) => event.type === 'searchFound')?.payload).toMatchObject({

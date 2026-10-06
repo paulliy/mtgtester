@@ -2051,7 +2051,13 @@ test('Sylvan Reclamation: basic landcycling reveals a basic land', async ({ page
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await confirm(page);
 
-  // The Plains is the only basic land name in the library, so the search finds it directly.
+  // The Plains is the only basic land in the library; the search may still find nothing.
+  await expect(page.getByRole('button', { name: 'Find nothing' })).toBeVisible({
+    timeout: 15_000,
+  });
+  const putIntoHand = page.getByRole('button', { name: 'Put into your hand' });
+  await expect(putIntoHand).toHaveCount(1);
+  await putIntoHand.click();
   await expect(page.getByText('reveals Plains').first()).toBeVisible({ timeout: 15_000 });
   await expect(handCard(page, 'Plains')).toBeVisible();
   await expect(handCard(page, 'Sylvan Reclamation')).toHaveCount(0);

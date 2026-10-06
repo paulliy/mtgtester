@@ -24,7 +24,11 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   // Intervening-if, second check (CR 603.4): the condition is checked again on resolution, and
   // a trigger whose condition has since become false is simply removed. Checked before the
   // "you may" prompt, because an ability that does nothing should not be offered.
-  const intervening = top.ability?.trigger?.condition;
+  // A mode chosen as the permanent entered (Frontier Siege's Khans or Dragons) is not an
+  // intervening-if: it decides which ability the permanent has, so it is checked when the ability
+  // triggers and the ability resolves even if the permanent has left by then (CR 113.7a).
+  const condition = top.ability?.trigger?.condition;
+  const intervening = condition?.kind === 'chosenOptionIs' ? undefined : condition;
   if (
     intervening !== undefined &&
     !evaluateCondition(ctx, intervening, {
@@ -38,23 +42,6 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     emit(ctx, 'triggerConditionFailed', { description: top.description }, top.controllerId);
     debug(ctx, 'stack', `${top.description} removed — intervening-if false on resolution`);
     return;
-  }
-
-  // Optional ("you may") triggered ability: the yes/no choice is made on resolution.
-  if (top.kind === 'triggeredAbility' && top.ability?.optional === true) {
-    const outcome = yield {
-      decisionType: 'optionalTrigger',
-      player: top.controllerId,
-      prompt: `${top.description} — use this ability?`,
-      options: [
-        { type: 'acceptTrigger', description: 'Yes' },
-        { type: 'declineTrigger', description: 'No' },
-      ],
-    };
-    if (outcome.index === 1) {
-      emit(ctx, 'triggerDeclined', { description: top.description }, top.controllerId);
-      return;
-    }
   }
 
   // Fizzle check (CR 608.2b): if the object HAD targets and every one is now illegal, it
@@ -115,6 +102,25 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
       });
     }
     return;
+  }
+
+  // Optional ("you may") triggered ability: the yes/no choice is made on resolution, after the
+  // fizzle check — an ability whose targets are all illegal is removed without anyone choosing
+  // anything (CR 608.2b).
+  if (top.kind === 'triggeredAbility' && top.ability?.optional === true) {
+    const outcome = yield {
+      decisionType: 'optionalTrigger',
+      player: top.controllerId,
+      prompt: `${top.description} — use this ability?`,
+      options: [
+        { type: 'acceptTrigger', description: 'Yes' },
+        { type: 'declineTrigger', description: 'No' },
+      ],
+    };
+    if (outcome.index === 1) {
+      emit(ctx, 'triggerDeclined', { description: top.description }, top.controllerId);
+      return;
+    }
   }
 
   if (top.ability !== null) {

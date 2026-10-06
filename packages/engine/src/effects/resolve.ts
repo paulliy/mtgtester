@@ -218,8 +218,9 @@ export interface EffectSource {
   /** The source's colors as its ability went on the stack — protection's last known information. */
   lastKnownColors?: readonly Color[];
   /**
-   * The source permanent this ability came from, for an ability that sacrifices "it": null when
-   * it was already off the battlefield. Absent when not tracked, and the source is found by card.
+   * The source permanent this ability came from, for an ability that acts on "it" (sacrifice it,
+   * it fights): null when it was already off the battlefield. Absent when not tracked, and the
+   * source is then found by card.
    */
   objectId?: ObjectId | null;
 }
@@ -1333,9 +1334,9 @@ export function* executeAbility(
     );
 
   /**
-   * The permanent "it" names in "sacrifice it": the very object the ability came from when that
-   * was recorded (a blinked source is a new object, CR 400.7), otherwise the source card's
-   * permanent.
+   * The source permanent "it" names ("sacrifice it", "it fights"): the very object the ability
+   * came from when that was recorded (a blinked source is a new object, CR 400.7), otherwise the
+   * source card's permanent.
    */
   const sourcePermanent = (): EnginePermanent | undefined => {
     if (source.objectId === null) return undefined;
@@ -1348,16 +1349,14 @@ export function* executeAbility(
 
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */
   const ref = (r: EffectRef): ObjectId | null => {
-    if (r === 'source') {
-      return ctx.state.battlefield.find((p) => p.cardId === source.cardId)?.id ?? null;
-    }
+    if (r === 'source') return sourcePermanent()?.id ?? null;
     if (r === 'eventPlayer') {
       return (scope.eventPlayerId as unknown as ObjectId | undefined) ?? null;
     }
     if (r === 'attachedToSource') {
-      const sourcePermanent = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
-      if (sourcePermanent === undefined || sourcePermanent.attachedTo === null) return null;
-      return findPermanent(ctx, sourcePermanent.attachedTo)?.id ?? null;
+      const attachment = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      if (attachment === undefined || attachment.attachedTo === null) return null;
+      return findPermanent(ctx, attachment.attachedTo)?.id ?? null;
     }
     if (r === 'triggerObject') {
       if (triggerObjectCardId === undefined) {

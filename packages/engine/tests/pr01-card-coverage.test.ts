@@ -1020,7 +1020,10 @@ describe("Conjurer's Closet", () => {
     pump(priorityCheckpoint(ctx), closetAnswer(creature.id, true));
     expect(ctx.state.stack).toHaveLength(1);
     pump(moveObject(ctx, creature, { zone: 'graveyard' }));
-    resolveTop(ctx, closetAnswer(null, true));
+    const { decisions } = resolveTop(ctx, closetAnswer(null, true));
+    // All its targets are illegal, so it is removed without the "you may" choice (CR 608.2b).
+    expect(decisions.some((decision) => decision.decisionType === 'optionalTrigger')).toBe(false);
+    expect(ctx.state.eventLog.some((event) => event.type === 'fizzle')).toBe(true);
     expect(ctx.state.battlefield.some((entry) => entry.cardId === creature.cardId)).toBe(false);
     expect(playerById(ctx, 'P1').graveyard.some((card) => card.cardId === creature.cardId)).toBe(
       true,
@@ -1786,6 +1789,28 @@ describe('Sylvan Reclamation', () => {
     const types = ctx.state.eventLog.map((event) => event.type);
     expect(types.lastIndexOf('shuffle')).toBeGreaterThan(types.indexOf('searchFound'));
   });
+
+  it('sylvan-reclamation-landcycling-may-find-nothing — the hidden-zone search may fail to find even with a basic in the library', () => {
+    const ctx = pod('reclaim-cycling-nothing');
+    const inHand = conjure(ctx, 'P1', reclamation.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }, { symbol: 'G' }]);
+    const activation = priorityOptions(ctx, 'P1').find((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'activateAbility' && payload.objectId === inHand.id;
+    });
+    takeAction(ctx, 'P1', activation!.payload as PriorityActionPayload);
+    const handBefore = playerById(ctx, 'P1').hand.length;
+    const { decisions } = resolveTop(ctx, answers([[/search your library/i, /Find nothing/]]));
+    // The library holds only Forests, yet the choice is still offered (CR 701.19b).
+    expect(
+      decisions.some((decision) =>
+        decision.options.some((option) => option.description === 'Find nothing'),
+      ),
+    ).toBe(true);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(handBefore);
+    expect(ctx.state.eventLog.some((event) => event.type === 'searchFound')).toBe(false);
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -2385,6 +2410,19 @@ describe('Hunting Wilds', () => {
     expect(computeCharacteristics(ctx, forests[0]!).power).toBe(3);
   });
 
+  it('hunting-wilds-animation-ends-on-zone-change — a Forest that leaves and is played again is a new object and only a land', () => {
+    const { ctx, forests } = cast('wilds-zone-change', true, twoForests);
+    const [bounced, kept] = forests as [EnginePermanent, EnginePermanent];
+    pump(moveObject(ctx, bounced, { zone: 'hand' }));
+    const card = playerById(ctx, 'P1').hand.find((entry) => entry.cardId === bounced.cardId)!;
+    pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
+    const replayed = ctx.state.battlefield.find((entry) => entry.cardId === bounced.cardId)!;
+    expect(computeCharacteristics(ctx, replayed).types).not.toContain('Creature');
+    // The other Forest it animated is still a 3/3 creature land.
+    expect(computeCharacteristics(ctx, kept).types).toContain('Creature');
+    expect(computeCharacteristics(ctx, kept).power).toBe(3);
+  });
+
   it('hunting-wilds-kicker-cost — kicking needs the extra {3}{G}; with four mana only the plain cast is offered', () => {
     const ctx = pod('wilds-cost');
     const inHand = conjure(ctx, 'P1', wilds.card, 'hand');
@@ -2852,6 +2890,34 @@ describe('Frontier Siege', () => {
     mainPhase(ctx, 'P2');
     expect(green(ctx, 'P1')).toBe(0);
     expect(green(ctx, 'P2')).toBe(0);
+  });
+
+  it('frontier-siege-khans-after-siege-leaves — a Khans trigger already on the stack still adds {G}{G} after the Siege leaves', () => {
+    const ctx = pod('siege-khans-leaves');
+    const self = castSiege(ctx, 'Khans');
+    playerById(ctx, 'P1').manaEntries = [];
+    ctx.state.phase = 'postcombatMain';
+    ctx.state.step = null;
+    queueStepTriggers(ctx, 'mainPhase');
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, self, { zone: 'graveyard' }));
+    resolveTop(ctx);
+    // The mode decided which ability triggered; it is not rechecked (CR 113.7a).
+    expect(green(ctx, 'P1')).toBe(2);
+  });
+
+  it('frontier-siege-dragons-after-siege-leaves — a Dragons trigger already on the stack still lets the flier fight', () => {
+    const ctx = pod('siege-dragons-leaves');
+    const self = castSiege(ctx, 'Dragons');
+    const victim = spawn(ctx, 'P2', bear());
+    enter(ctx, 'P1', drake());
+    pump(priorityCheckpoint(ctx), fightAnswer(true));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, self, { zone: 'graveyard' }));
+    resolveTop(ctx, fightAnswer(true));
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(false);
   });
 
   it('frontier-siege-dragons-fight — Dragons lets an entering flier you control fight a creature you do not control', () => {
@@ -3798,6 +3864,30 @@ describe('Kogla, the Titan Ape', () => {
     expect(choice.options.map((option) => option.description)).not.toContain('Target Test Bear');
     expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(false);
     expect(self.damageMarked).toBe(3);
+  });
+
+  it('kogla-the-titan-ape-blinked-in-response — a Kogla that left and returned is a new object; the old trigger has no "it" to fight', () => {
+    const ctx = pod('kogla-blink');
+    const rival = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Kogla Rival', typeLine: 'Creature — Ape', power: '3', toughness: '3' }),
+    );
+    const { cardId } = enter(ctx, 'P1', kogla.card);
+    const self = ctx.state.battlefield.find((entry) => entry.cardId === cardId)!;
+    pump(priorityCheckpoint(ctx), (decision) =>
+      CHOOSE.test(decision.prompt)
+        ? optionMatching(decision, /^Target Kogla Rival$/)
+        : { index: 0, targets: new Map() },
+    );
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, self, { zone: 'exile' }));
+    const card = ctx.state.exile.find((entry) => entry.cardId === self.cardId)!;
+    pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
+    resolveTop(ctx);
+    const returned = ctx.state.battlefield.find((entry) => entry.cardId === self.cardId)!;
+    expect(returned.damageMarked).toBe(0);
+    expect(ctx.state.battlefield.find((entry) => entry.id === rival.id)?.damageMarked).toBe(0);
   });
 
   it('kogla-the-titan-ape-up-to-one — it may fight nothing', () => {

@@ -379,11 +379,18 @@ function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
   return ctx.state.players.find((p) => p.id === id)?.id ?? id;
 }
 
-/** Whether an ability sacrifices its own source as part of its effect ("sacrifice it"). */
-function sacrificesItsSource(ability: Ability): boolean {
+/**
+ * Whether an ability acts on its source permanent as "it" — sacrifices it, or has it fight. Those
+ * abilities remember the exact source object, so a source blinked in response is a new object
+ * they no longer affect (CR 400.7).
+ */
+function actsOnItsSourcePermanent(ability: Ability): boolean {
   return ability.effects.some(
     (effect) =>
-      effect.op === 'sacrificeSourceThenReflexive' || effect.op === 'mayPayManaAndSacrificeSource',
+      effect.op === 'sacrificeSourceThenReflexive' ||
+      effect.op === 'mayPayManaAndSacrificeSource' ||
+      (effect.op === 'fightUpToOneChosen' && effect.a === 'source') ||
+      (effect.op === 'fight' && (effect.first === 'source' || effect.second === 'source')),
   );
 }
 
@@ -655,7 +662,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       ? { triggerObjectCardId: trigger.triggerObjectCardId }
       : {}),
     ...(trigger.scope !== undefined ? { triggerScope: trigger.scope } : {}),
-    ...(sacrificesItsSource(ability)
+    ...(actsOnItsSourcePermanent(ability)
       ? {
           sourceObjectId:
             s.battlefield.find((permanent) => permanent.cardId === trigger.sourceCardId)?.id ??

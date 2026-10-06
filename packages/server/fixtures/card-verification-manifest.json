@@ -2947,7 +2947,11 @@
             "kicked check reads the resolving spell's optional-cost counts (the spell has left the stack by then)",
             "untaps only the Forests found this way; a permanent-duration becomeCreature effect: 3/3, green, haste, types kept"
           ],
-          "engineTestIds": ["hunting-wilds-kicked", "hunting-wilds-forest-cards-only-this-way"],
+          "engineTestIds": [
+            "hunting-wilds-kicked",
+            "hunting-wilds-forest-cards-only-this-way",
+            "hunting-wilds-animation-ends-on-zone-change"
+          ],
           "viewerScenarioIds": ["hunting-wilds-viewer-kicked"]
         }
       ],
@@ -3026,7 +3030,8 @@
           ],
           "engineTestIds": [
             "sylvan-reclamation-pinned-oracle-supported",
-            "sylvan-reclamation-basic-landcycling-reveals"
+            "sylvan-reclamation-basic-landcycling-reveals",
+            "sylvan-reclamation-landcycling-may-find-nothing"
           ],
           "viewerScenarioIds": ["sylvan-reclamation-viewer-basic-landcycling"]
         }
@@ -3293,7 +3298,11 @@
             "mainPhase trigger, player you, condition chosenOptionIs Khans; addMana {G}{G}",
             "fires in each of your main phases and never on another player's turn"
           ],
-          "engineTestIds": ["frontier-siege-khans-mana", "frontier-siege-modes-exclusive"],
+          "engineTestIds": [
+            "frontier-siege-khans-mana",
+            "frontier-siege-modes-exclusive",
+            "frontier-siege-khans-after-siege-leaves"
+          ],
           "viewerScenarioIds": ["frontier-siege-viewer-khans-mana"]
         },
         {
@@ -3307,7 +3316,8 @@
           "engineTestIds": [
             "frontier-siege-dragons-fight",
             "frontier-siege-dragons-decline-and-filters",
-            "frontier-siege-modes-exclusive"
+            "frontier-siege-modes-exclusive",
+            "frontier-siege-dragons-after-siege-leaves"
           ],
           "viewerScenarioIds": ["frontier-siege-viewer-dragons-fight"]
         }
@@ -4175,7 +4185,8 @@
           "engineTestIds": [
             "kogla-the-titan-ape-pinned-oracle-supported",
             "kogla-the-titan-ape-enters-fight",
-            "kogla-the-titan-ape-up-to-one"
+            "kogla-the-titan-ape-up-to-one",
+            "kogla-the-titan-ape-blinked-in-response"
           ],
           "viewerScenarioIds": ["kogla-viewer-enters-fight"]
         },

@@ -196,10 +196,10 @@ export interface EngineStackObject extends StackObject {
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;
   /**
-   * Triggered abilities that sacrifice their own source ("sacrifice it"): the source permanent
-   * as the ability went on the stack, or null when it was not on the battlefield then. A source
-   * blinked in response is a new object the ability cannot sacrifice (CR 400.7). Recorded only
-   * for those abilities; everywhere else the source is still found by card.
+   * Triggered abilities that act on their source permanent as "it" (sacrifice it, it fights):
+   * the source permanent as the ability went on the stack, or null when it was not on the
+   * battlefield then. A source blinked in response is a new object the ability no longer affects
+   * (CR 400.7). Recorded only for those abilities; everywhere else the source is found by card.
    */
   sourceObjectId?: ObjectId | null;
   /** Numbers the firing event contributed (count, damage, spell mana value). */
