@@ -2234,3 +2234,32 @@ test('Rishkar, Peema Renegade: two counters, then countered creatures tap for G'
   // The countered Lab Ox now taps for {G}: one ready source (Rishkar itself is summoning sick).
   await expect(page.getByText(/Mana ready\s*1/).first()).toBeVisible();
 });
+
+test('Vastwood Surge: kicked, two basics and counters on your creatures', async ({ page }) => {
+  await runScenario(page, 'Vastwood Surge: kicked, two basics and counters on your creatures');
+
+  const surge = handCard(page, 'Vastwood Surge');
+  await expect(surge).toHaveClass(/actionable/);
+  await surge.click();
+  // The card offers a plain cast and a kicked one; choose the kicker.
+  await expect(page.getByRole('button', { name: 'Cast {3}{G}', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /^Cast \{7\}\{G\}/ }).click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  const put = (land: string) =>
+    page
+      .locator('.panel-group')
+      .filter({ hasText: land })
+      .getByRole('button', { name: 'Put onto the battlefield tapped' });
+  await expect(page.getByText(/search your library/i).first()).toBeVisible({ timeout: 15_000 });
+  await put('Plains').click();
+  await expect(page.getByText(/search your library/i).first()).toBeVisible();
+  await put('Island').click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toContainText('6/6');
+  await expect(permanent(page, 'Lab Servo')).toContainText('1/1');
+  await expect(permanent(page, 'Plains')).toBeVisible();
+  await expect(permanent(page, 'Island')).toBeVisible();
+});

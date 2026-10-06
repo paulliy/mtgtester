@@ -2186,17 +2186,21 @@
   {
     "oracleId": "8ba2a7ad-a09b-4f52-9c76-c70510dc4feb",
     "name": "Vastwood Surge",
-    "package": "W2",
+    "package": "PR01.20",
     "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Kicker {4}\"",
-      "unrecognized rules text: \"Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control.\""
+      "unrecognized rules text: \"Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control.\"",
+      "explicitly unsupported: The basic-land search omits revealing the found cards."
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": ["packages/engine/tests/w2-cards.test.ts"],
-    "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
-    "snapshotStatus": "passed",
-    "coverageDelta": 1
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "a8bf8ff8-d924-4fd2-b5ed-05b38f55325a",

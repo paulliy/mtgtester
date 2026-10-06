@@ -2777,13 +2777,30 @@
     "8ba2a7ad-a09b-4f52-9c76-c70510dc4feb": {
       "name": "Vastwood Surge",
       "oracleSha256": "5922182fae289ab48ae49f025ac55977e4bf45975284d4d5b0663666de3fd5f5",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "vastwood-surge-kicker",
+          "oracleText": "Kicker {4}",
+          "implementation": [
+            "optionalAdditionalCost kicker {4}: a separate kicked cast option, offered only when payable"
+          ],
+          "engineTestIds": ["vastwood-surge-pinned-oracle-supported", "vastwood-surge-kicker-cost"],
+          "viewerScenarioIds": ["vastwood-surge-viewer-kicked"]
+        },
+        {
+          "id": "vastwood-surge-search-and-counters",
           "oracleText": "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control.",
-          "implementation": ["explicitly unsupported; search omits reveal"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "searchLibrary basic land x2 (may stop early or find nothing), onto the battlefield tapped, then shuffle; no reveal (the Oracle text has none, so the old containment reason was mistaken)",
+            "putCountersEach creatures you control, +1/+1 x (2 x kicker count), read from the resolving spell: zero when unkicked"
+          ],
+          "engineTestIds": [
+            "vastwood-surge-unkicked",
+            "vastwood-surge-kicked",
+            "vastwood-surge-basic-only-up-to-two"
+          ],
+          "viewerScenarioIds": ["vastwood-surge-viewer-kicked"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -142,6 +142,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'loran-of-the-third-path-viewer-destroy-up-to-one',
       'loran-of-the-third-path-viewer-tap-draw',
       'rishkar-viewer-counters-and-mana',
+      'vastwood-surge-viewer-kicked',
     ]);
   });
 

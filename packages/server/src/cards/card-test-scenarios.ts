@@ -4832,6 +4832,36 @@ function rishkarScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function vastwoodSurgeScenario(gameId: GameId): CardTestScenario {
+  const surge = pinnedFrom(MARCHESA_BATCH1, 'Vastwood Surge');
+  const lands = Array.from({ length: 8 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'vastwood-surge-viewer-kicked',
+    title: 'Vastwood Surge: kicked, two basics and counters on your creatures',
+    instructions: [
+      'Cast Vastwood Surge with kicker using your eight Forests.',
+      'Choose the Plains and then the Island from the library search.',
+    ],
+    expectedOutcome:
+      "The Plains and Island enter tapped, your library is shuffled, and Lab Ox gets two +1/+1 counters (6/6). P2's Lab Servo is not yours and stays 1/1.",
+    oracleSha256: surge.sha256,
+    clauseIds: ['vastwood-surge-kicker', 'vastwood-surge-search-and-counters'],
+    decks: {
+      P1: [surge.card, LAB_OX, ...Array.from({ length: 8 }, () => FOREST), PLAINS, ISLAND],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Vastwood Surge'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', ...lands] },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4935,6 +4965,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'loran-of-the-third-path-viewer-destroy-up-to-one',
   'loran-of-the-third-path-viewer-tap-draw',
   'rishkar-viewer-counters-and-mana',
+  'vastwood-surge-viewer-kicked',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5034,6 +5065,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'loran-of-the-third-path-viewer-destroy-up-to-one': loranDestroyScenario,
   'loran-of-the-third-path-viewer-tap-draw': loranDrawScenario,
   'rishkar-viewer-counters-and-mana': rishkarScenario,
+  'vastwood-surge-viewer-kicked': vastwoodSurgeScenario,
 };
 
 export function createCardTestScenario(

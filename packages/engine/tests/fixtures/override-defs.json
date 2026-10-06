@@ -5242,8 +5242,87 @@
   {
     "oracleId": "8ba2a7ad-a09b-4f52-9c76-c70510dc4feb",
     "name": "Vastwood Surge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Kicker {4}",
+      "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control."
+    ],
+    "def": {
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 4
+        },
+        "mechanic": "kicker"
+      },
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "count": {
+              "kind": "const",
+              "n": 2
+            },
+            "destinations": [
+              {
+                "tapped": true,
+                "zone": "battlefield"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "op": "shuffle"
+          },
+          {
+            "count": {
+              "kind": "times",
+              "n": 2,
+              "of": {
+                "kind": "optionalCostCount",
+                "mechanic": "kicker"
+              }
+            },
+            "counter": "+1/+1",
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
@@ -20255,8 +20334,87 @@
   {
     "oracleId": "oracle-vastwood-surge",
     "name": "Vastwood Surge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Kicker {4}",
+      "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control."
+    ],
+    "def": {
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 4
+        },
+        "mechanic": "kicker"
+      },
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "count": {
+              "kind": "const",
+              "n": 2
+            },
+            "destinations": [
+              {
+                "tapped": true,
+                "zone": "battlefield"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "op": "shuffle"
+          },
+          {
+            "count": {
+              "kind": "times",
+              "n": 2,
+              "of": {
+                "kind": "optionalCostCount",
+                "mechanic": "kicker"
+              }
+            },
+            "counter": "+1/+1",
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-verix-bladewing",

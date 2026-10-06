@@ -2466,6 +2466,119 @@ describe('Rishkar, Peema Renegade', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.20 Vastwood Surge
+// ---------------------------------------------------------------------------------------------
+
+describe('Vastwood Surge', () => {
+  const surge = pinned('Vastwood Surge');
+  const SEARCH = /search your library/i;
+  const grove = () =>
+    oracle({
+      name: 'Surge Grove',
+      typeLine: 'Land — Forest Plains',
+      manaCost: null,
+      oracleText: '({T}: Add {G} or {W}.)',
+    });
+
+  const castOptions = (ctx: GameContext, objectId: string) =>
+    priorityOptions(ctx, 'P1').filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'castSpell' && payload.objectId === objectId;
+    });
+  const kickCount = (option: { payload?: unknown }) =>
+    (option.payload as { optionalCostCount?: number }).optionalCostCount ?? 0;
+
+  function cast(ctx: GameContext, kicked: boolean, answer: Answer, mana = 8) {
+    const inHand = conjure(ctx, 'P1', surge.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: mana }, () => ({ symbol: 'G' as const })),
+    );
+    const option = castOptions(ctx, inHand.id).find(
+      (candidate) => kickCount(candidate) === (kicked ? 1 : 0),
+    );
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    return resolveTop(ctx, answer).decisions;
+  }
+
+  const twoForests = answers([[SEARCH, /Put Forest onto the battlefield tapped/]]);
+  const lands = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((entry) => entry.controllerId === 'P1' && entry.name === 'Forest');
+
+  it('vastwood-surge-pinned-oracle-supported — pins the Oracle and models kicker, the basic search, and the kicked counters', () => {
+    expect(surge.sha256).toBe('5922182fae289ab48ae49f025ac55977e4bf45975284d4d5b0663666de3fd5f5');
+    const def = interpretCard(surge.card);
+    expect(def.modeled).toBe(true);
+    expect(def.optionalAdditionalCost).toEqual({
+      mechanic: 'kicker',
+      cost: expect.objectContaining({ generic: 4 }),
+    });
+    expect(def.spellAbility?.effects).toEqual([
+      expect.objectContaining({ op: 'searchLibrary', allowFailToFind: true }),
+      { op: 'shuffle' },
+      expect.objectContaining({ op: 'putCountersEach', counter: '+1/+1' }),
+    ]);
+  });
+
+  it('vastwood-surge-unkicked — finds up to two basics tapped and puts no counters', () => {
+    const ctx = pod('surge-plain');
+    const mine = spawn(ctx, 'P1', bear());
+    cast(ctx, false, twoForests, 4);
+    expect(lands(ctx)).toHaveLength(2);
+    expect(lands(ctx).every((land) => land.tapped)).toBe(true);
+    expect(mine.counters['+1/+1'] ?? 0).toBe(0);
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+  });
+
+  it('vastwood-surge-kicked — a kicked cast puts two +1/+1 counters on each creature you control only', () => {
+    const ctx = pod('surge-kicked');
+    const mine = spawn(ctx, 'P1', bear());
+    const token = spawn(ctx, 'P1', bear(), { isToken: true });
+    const theirs = spawn(ctx, 'P2', bear());
+    cast(ctx, true, twoForests);
+    expect(mine.counters['+1/+1']).toBe(2);
+    expect(token.counters['+1/+1']).toBe(2);
+    expect(theirs.counters['+1/+1'] ?? 0).toBe(0);
+    expect(lands(ctx).every((land) => (land.counters['+1/+1'] ?? 0) === 0)).toBe(true);
+  });
+
+  it('vastwood-surge-kicker-cost — the kicked cast needs the extra {4}', () => {
+    const ctx = pod('surge-cost');
+    const inHand = conjure(ctx, 'P1', surge.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 7 }, () => ({ symbol: 'G' as const })),
+    );
+    expect(castOptions(ctx, inHand.id).map(kickCount)).toEqual([0]);
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }]);
+    expect(castOptions(ctx, inHand.id).map(kickCount)).toEqual([0, 1]);
+  });
+
+  it('vastwood-surge-basic-only-up-to-two — a nonbasic land is never offered, and it may stop early', () => {
+    const ctx = pod('surge-filter');
+    conjure(ctx, 'P1', grove(), 'library');
+    let picks = 0;
+    const decisions = cast(
+      ctx,
+      false,
+      (decision) =>
+        SEARCH.test(decision.prompt)
+          ? optionMatching(decision, picks++ === 0 ? /Put Forest/ : /Find nothing/)
+          : { index: 0, targets: new Map() },
+      4,
+    );
+    const searches = decisions.filter((decision) => SEARCH.test(decision.prompt));
+    for (const search of searches) {
+      expect(search.options.map((option) => option.description).join('|')).not.toContain(
+        'Surge Grove',
+      );
+    }
+    expect(lands(ctx)).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2570,6 +2683,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Rishkar, Peema Renegade',
     sha256: 'd0ebd951555eaeb46229fdf0a02a614e3752b215aeafd80d90078ec75008f758',
+    clauseCount: 2,
+  },
+  {
+    name: 'Vastwood Surge',
+    sha256: '5922182fae289ab48ae49f025ac55977e4bf45975284d4d5b0663666de3fd5f5',
     clauseCount: 2,
   },
 ];

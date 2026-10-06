@@ -1252,6 +1252,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Rishkar, Peema Renegade: two counters, then countered creatures tap for G'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Vastwood Surge: kicked, two basics and counters on your creatures'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

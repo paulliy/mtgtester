@@ -560,3 +560,22 @@ describe('Rishkar, Peema Renegade Card Test Lab scenario', () => {
     replays('rishkar-viewer-counters-and-mana', steps);
   });
 });
+
+describe('Vastwood Surge Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'kicker 1' },
+    { action: 'Put Plains onto the battlefield tapped' },
+    { action: 'Put Island onto the battlefield tapped' },
+  ];
+
+  it('vastwood-surge-viewer-kicked — a kicked cast fetches two basics and counters only your creatures', () => {
+    const { state, onBattlefield, offered } = run('vastwood-surge-viewer-kicked', steps);
+    expect(offered[0]?.some((option) => option.endsWith('kicker 1'))).toBe(true);
+    expect(onBattlefield('Plains')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Island')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Lab Ox')[0]?.counters['+1/+1']).toBe(2);
+    expect(onBattlefield('Lab Servo')[0]?.counters['+1/+1'] ?? 0).toBe(0);
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('vastwood-surge-viewer-kicked', steps);
+  });
+});

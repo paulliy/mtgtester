@@ -239,7 +239,6 @@ const REASONS: Record<string, string> = {
   'Adaptive Omnitool': 'Artifact-from-library is put into hand without revealing.',
   'Bespoke Battlewagon':
     'Crew 4 is dropped when the energy activations replace the parsed activated abilities.',
-  'Vastwood Surge': 'The basic-land search omits revealing the found cards.',
   'Dragon Tempest': 'Dragon-dealt damage is implemented as damage from this enchantment.',
   'Dream Pillager':
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
@@ -306,6 +305,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Vastwood Surge',
     'Rishkar, Peema Renegade',
     'Loran of the Third Path',
     'Hunting Wilds',
