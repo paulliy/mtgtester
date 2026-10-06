@@ -14,6 +14,7 @@ import {
   slotIsActive,
 } from './ability-modes';
 import type { WardCost } from '../cards/ability';
+import { actsOnItsSourcePermanent } from '../cards/source-identity';
 import { evaluateCondition } from '../cards/condition';
 import type { Ability, AbilityCost, CardDefinition } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
@@ -1026,6 +1027,7 @@ export function* applyPriorityAction(
         sourceColors: colorsOf(ctx, perm),
         sourceOracleId: perm.oracleId,
         sourceCardId: perm.cardId,
+        ...(actsOnItsSourcePermanent(announced) ? { sourceObjectId: perm.id } : {}),
         isCommanderCast: false,
         triggerScope: {
           sourceCountersTotal: Object.values(perm.counters).reduce(

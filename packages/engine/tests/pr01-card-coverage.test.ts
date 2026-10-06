@@ -856,6 +856,43 @@ describe('Canoptek Wraith', () => {
       expect(ctx.state.battlefield.some((entry) => entry.cardId === self.cardId)).toBe(true);
     });
 
+    const birds = () =>
+      oracle({
+        name: 'Wraith Birds',
+        typeLine: 'Creature — Bird',
+        oracleText: '{T}: Add {G}.',
+        power: '0',
+        toughness: '1',
+      });
+
+    it("canoptek-wraith-altar-and-mana-creature — Birds taps for mana first, then may be the Altar's sacrifice", () => {
+      // {3} = {G} from the Birds + {C}{C} from the Altar, whose only fodder besides the Wraith is
+      // the Birds. Legal: tap the Birds for mana, then sacrifice it. The payment must not try to
+      // tap the Birds after sacrificing it.
+      const { ctx, self } = board('wraith-altar-birds', [island()], [island()], 0);
+      spawn(ctx, 'P1', altar());
+      const mana = spawn(ctx, 'P1', birds());
+      mana.summoningSick = false;
+      const { decisions } = scout(
+        ctx,
+        self,
+        answers([
+          [/pay \{3\} and sacrifice/, /Pay \{3\} and sacrifice/],
+          [/to sacrifice/, /Sacrifice Wraith Birds/],
+          [/search your library/, /Put Island onto the battlefield tapped/],
+        ]),
+      );
+      expect(decisions.some((decision) => /pay \{3\} and sacrifice/.test(decision.prompt))).toBe(
+        true,
+      );
+      expect(
+        playerById(ctx, 'P1')
+          .graveyard.map((card) => card.name)
+          .sort(),
+      ).toEqual(['Canoptek Wraith', 'Wraith Birds']);
+      expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    });
+
     it('canoptek-wraith-altars-two-creatures — with two other creatures both Altars pay, each sacrificing a different one', () => {
       const { ctx, self } = board('wraith-two-altars-ok', [island()], [island()], 0);
       spawn(ctx, 'P1', altar());
@@ -2303,6 +2340,32 @@ describe('Foe-Razer Regent', () => {
     expect(plusOnes(ctx, mine.cardId)).toBe(0);
   });
 
+  it('foe-razer-regent-token-fighter-died — a token that died fighting ceased to exist; the end step does nothing and does not halt', () => {
+    const ctx = pod('regent-token-died');
+    spawn(ctx, 'P1', regent.card);
+    const token = spawn(ctx, 'P1', bear());
+    token.isToken = true;
+    const theirs = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Regent Rival', typeLine: 'Creature — Ogre', power: '5', toughness: '5' }),
+    );
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'fight-spell', oracleId: 'fight-spell', name: 'Lab Fight', controllerId: 'P1' },
+        LAB_FIGHT,
+        [token.id, theirs.id],
+      ),
+    );
+    settle(ctx);
+    expect(ctx.state.battlefield.some((entry) => entry.id === token.id)).toBe(false);
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    expect(() => toEndStep(ctx)).not.toThrow();
+    expect(ctx.state.delayedTriggers).toHaveLength(0);
+    expect(ctx.state.stack).toHaveLength(0);
+  });
+
   it('foe-razer-regent-fighter-died — a creature that died from the fight gets nothing and the game continues', () => {
     const ctx = pod('regent-fighter-died');
     spawn(ctx, 'P1', regent.card);
@@ -3027,6 +3090,38 @@ describe('Kairi, the Swirling Sky', () => {
       [{ op: 'millAndReturnSpells' }],
     ]);
     expect(def.triggers[0]?.modes?.options.map((option) => option.targetSlots)).toEqual([[0], []]);
+  });
+
+  it('kairi-the-swirling-sky-copy-token-mana-value — a token copy of a seven-mana permanent counts as seven and is never offered', () => {
+    const ctx = pod('kairi-copy-token');
+    const colossus = spawn(ctx, 'P2', rock('Kairi Colossus', '{7}'));
+    spawn(ctx, 'P2', rock('Kairi Trinket', '{1}'));
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: colossus.cardId,
+          oracleId: colossus.oracleId,
+          name: colossus.name,
+          controllerId: 'P2',
+        },
+        {
+          kind: 'spell',
+          targets: [],
+          effects: [{ op: 'createTokenCopyOf', ref: 'source', count: { kind: 'const', n: 1 } }],
+        },
+        [],
+      ),
+    );
+    const copy = ctx.state.battlefield.find(
+      (entry) => entry.isToken && entry.name === 'Kairi Colossus',
+    );
+    expect(copy).toBeDefined();
+    const decisions = dies(ctx, BOUNCE, pick('Kairi Trinket'));
+    const offered = offeredTargets(decisions).flat();
+    // A copy copies the mana cost (CR 707.2): neither Colossus fits a total of 6.
+    expect(offered).toContain('Target Kairi Trinket');
+    expect(offered).not.toContain('Target Kairi Colossus');
   });
 
   it('kairi-the-swirling-sky-bounce-total-six — returns chosen nonland permanents to their owners while their mana values total 6 or less', () => {
@@ -3939,6 +4034,30 @@ describe('Kogla, the Titan Ape', () => {
     resolveTop(ctx);
     expect(playerById(ctx, 'P1').hand.map((card) => card.name)).toContain('Kogla Squire');
     expect(computeCharacteristics(ctx, self).keywords).toContain('indestructible');
+  });
+
+  it('kogla-the-titan-ape-bounce-blinked-kogla — a Kogla blinked in response is a new object and does not gain indestructible', () => {
+    const ctx = pod('kogla-bounce-blink');
+    const self = spawn(ctx, 'P1', kogla.card);
+    const mine = spawn(ctx, 'P1', human('Kogla Squire'));
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }, { symbol: 'G' }]);
+    const option = activationOf(ctx, 'P1', self);
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, mine.id]]),
+    );
+    pump(moveObject(ctx, self, { zone: 'exile' }));
+    const card = ctx.state.exile.find((entry) => entry.cardId === self.cardId)!;
+    pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
+    resolveTop(ctx);
+    // The Human target is still legal, so the ability resolves: the Human returns, but the
+    // Kogla it would protect is gone.
+    expect(playerById(ctx, 'P1').hand.map((entry) => entry.name)).toContain('Kogla Squire');
+    const returned = ctx.state.battlefield.find((entry) => entry.cardId === self.cardId)!;
+    expect(computeCharacteristics(ctx, returned).keywords).not.toContain('indestructible');
   });
 
   it('kogla-the-titan-ape-bounce-fizzles — if the Human leaves first, the ability does nothing at all', () => {

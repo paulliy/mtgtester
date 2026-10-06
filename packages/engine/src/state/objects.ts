@@ -756,8 +756,12 @@ export function* moveObjects(
  * The id is derived from the spec, so N Treasures share one definition entry.
  */
 function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
+  const manaCostKey =
+    spec.manaCost === undefined || spec.manaCost === null
+      ? ''
+      : `:${JSON.stringify(spec.manaCost)}`;
   const oracleId =
-    `token:${spec.name}:${spec.typeLine}:${(spec.supertypes ?? []).join('+')}:${spec.power ?? ''}/${spec.toughness ?? ''}` as OracleId;
+    `token:${spec.name}:${spec.typeLine}:${(spec.supertypes ?? []).join('+')}:${spec.power ?? ''}/${spec.toughness ?? ''}${manaCostKey}` as OracleId;
   if (!ctx.defs.has(oracleId)) {
     const evalPower =
       spec.power === null || spec.power === undefined
@@ -788,7 +792,7 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
       subtypes: spec.subtypes ?? [],
       colors: spec.colors,
       colorIdentity: spec.colors,
-      manaCost: null,
+      manaCost: spec.manaCost ?? null,
       hasUnsupportedCost: false,
       power: evalPower,
       toughness: evalToughness,
@@ -1000,6 +1004,8 @@ export function tokenSpecCopying(
     triggers: def.triggers,
     manaAbilities: def.manaAbilities,
     activatedAbilities: def.activatedAbilities,
+    // A copy copies the mana cost (CR 707.2), so the token's mana value is the original's.
+    manaCost: def.manaCost,
   };
 }
 

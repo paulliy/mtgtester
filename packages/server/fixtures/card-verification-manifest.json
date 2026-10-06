@@ -2058,7 +2058,8 @@
             "canoptek-wraith-reserved-from-mana-sacrifice",
             "canoptek-wraith-altar-sacrifices-another",
             "canoptek-wraith-altars-share-one-creature",
-            "canoptek-wraith-altars-two-creatures"
+            "canoptek-wraith-altars-two-creatures",
+            "canoptek-wraith-altar-and-mana-creature"
           ],
           "viewerScenarioIds": ["canoptek-wraith-viewer-scout-same-name-search"]
         }
@@ -2899,7 +2900,8 @@
           "engineTestIds": [
             "kairi-the-swirling-sky-bounce-total-six",
             "kairi-the-swirling-sky-budget-and-filter",
-            "kairi-the-swirling-sky-bounce-zero"
+            "kairi-the-swirling-sky-bounce-zero",
+            "kairi-the-swirling-sky-copy-token-mana-value"
           ],
           "viewerScenarioIds": ["kairi-viewer-bounce-total-six"]
         },
@@ -3263,7 +3265,8 @@
             "foe-razer-regent-any-creature-you-control",
             "foe-razer-regent-new-object-gets-nothing",
             "foe-razer-regent-blink-in-response",
-            "foe-razer-regent-fighter-died"
+            "foe-razer-regent-fighter-died",
+            "foe-razer-regent-token-fighter-died"
           ],
           "viewerScenarioIds": ["foe-razer-regent-viewer-fight-and-grow"]
         }
@@ -4209,7 +4212,8 @@
           ],
           "engineTestIds": [
             "kogla-the-titan-ape-human-bounce",
-            "kogla-the-titan-ape-bounce-fizzles"
+            "kogla-the-titan-ape-bounce-fizzles",
+            "kogla-the-titan-ape-bounce-blinked-kogla"
           ],
           "viewerScenarioIds": ["kogla-viewer-bounce-and-attack"]
         }

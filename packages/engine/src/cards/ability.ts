@@ -1115,6 +1115,11 @@ export interface TokenSpec {
   legendary?: boolean;
   /** Apply haste to each token created from this spec until the current end step. */
   grantHasteUntilEot?: boolean;
+  /**
+   * A token copy's copied mana cost (CR 707.2), so its mana value is the original's. Ordinary
+   * tokens have none and a mana value of 0.
+   */
+  manaCost?: ParsedManaCost | null;
 }
 
 /**

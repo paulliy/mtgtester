@@ -18,6 +18,7 @@ import {
 } from '../actions/ability-modes';
 import { computeTargetOptions, withinTotalManaValue } from '../actions/legal';
 import type { Ability, Effect } from '../cards/ability';
+import { actsOnItsSourcePermanent } from '../cards/source-identity';
 import type { GameGen } from '../decisions';
 import { computeCharacteristics } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
@@ -377,21 +378,6 @@ function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
   const perm = ctx.state.battlefield.find((p) => p.id === id);
   if (perm !== undefined) return perm.name;
   return ctx.state.players.find((p) => p.id === id)?.id ?? id;
-}
-
-/**
- * Whether an ability acts on its source permanent as "it" — sacrifices it, or has it fight. Those
- * abilities remember the exact source object, so a source blinked in response is a new object
- * they no longer affect (CR 400.7).
- */
-function actsOnItsSourcePermanent(ability: Ability): boolean {
-  return ability.effects.some(
-    (effect) =>
-      effect.op === 'sacrificeSourceThenReflexive' ||
-      effect.op === 'mayPayManaAndSacrificeSource' ||
-      (effect.op === 'fightUpToOneChosen' && effect.a === 'source') ||
-      (effect.op === 'fight' && (effect.first === 'source' || effect.second === 'source')),
-  );
 }
 
 function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen<void> {

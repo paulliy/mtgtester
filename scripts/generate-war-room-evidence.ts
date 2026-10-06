@@ -79,6 +79,7 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/overrides/w1-remaining.ts',
   'packages/engine/src/cards/overrides/w2-remaining.ts',
   'packages/engine/src/cards/selector.ts',
+  'packages/engine/src/cards/source-identity.ts',
   'packages/engine/src/cards/templates.ts',
   'packages/engine/src/cards/tokens.ts',
   'packages/engine/src/combat/combat.ts',

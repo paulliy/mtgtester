@@ -5191,9 +5191,15 @@ export function* executeAbility(
             : (targetPlayer?.id ??
               targetStack?.controllerId ??
               (targetObject as unknown as { controllerId?: PlayerId } | undefined)?.controllerId);
+        // A remembered trigger object that no longer exists anywhere (a token that died fighting
+        // and ceased to exist) still names its card, so the delayed ability does nothing.
+        const goneTriggerObjectCardId =
+          t === null && effect.target === 'triggerObject' && effect.sameObject === true
+            ? triggerObjectCardId
+            : undefined;
         const targetId =
           t === null
-            ? undefined
+            ? goneTriggerObjectCardId
             : targetPlayer !== undefined
               ? targetPlayer.id
               : (targetStack?.controllerId ?? targetObject?.cardId);
@@ -6346,6 +6352,14 @@ function sacrificeDemandsOf(
   return { perm, demands, sacrificesItself: source.costs.some((c) => c.kind === 'sacrificeSelf') };
 }
 
+/** A mana source that needs nothing but itself: no sacrifice and no mana in its cost. */
+function isPlainManaSource(source: ManaSource): boolean {
+  return (
+    source.manaCost === undefined &&
+    source.costs.every((cost) => cost.kind !== 'sacrificeOther' && cost.kind !== 'sacrificeSelf')
+  );
+}
+
 /** Whether every demand can be met by its own distinct permanent, none of them `unavailable`. */
 function demandsAllocatable(
   ctx: GameContext,
@@ -6371,8 +6385,10 @@ function demandsAllocatable(
  * The mana sources that can all be activated together when `reserved` permanents are spoken for
  * by another part of the same cost (Ashnod's Altar paying for Canoptek Wraith's "{3} and
  * sacrifice it" may not sacrifice the Wraith). Sacrifice costs must be met by DISTINCT
- * permanents: two Altars cannot both sacrifice the one other creature. Sources are kept in
- * order while the kept set stays jointly payable, so the result is deterministic.
+ * permanents: two Altars cannot both sacrifice the one other creature. A plain source (Birds of
+ * Paradise) may be one of them, since it is tapped for mana first; any other kept source may
+ * not, since it must survive to be activated. Sources are kept in order while the kept set
+ * stays jointly payable, so the result is deterministic.
  */
 function jointlyPayableSources(
   ctx: GameContext,
@@ -6386,11 +6402,13 @@ function jointlyPayableSources(
   for (const source of sources) {
     const info = sacrificeDemandsOf(ctx, source);
     if (info === undefined) continue;
-    if (info.sacrificesItself && unavailable.has(info.perm.id)) continue;
+    if (unavailable.has(info.perm.id)) continue;
     const nextDemands = [...demands, ...info.demands];
-    const nextUnavailable = info.sacrificesItself
-      ? new Set([...unavailable, info.perm.id])
-      : unavailable;
+    // A plain source is activated before any sacrifice (see `payManaCost`), so it can make its
+    // mana and still be sacrificed afterwards. Any other kept source must survive to be used.
+    const nextUnavailable = isPlainManaSource(source)
+      ? unavailable
+      : new Set([...unavailable, info.perm.id]);
     if (!demandsAllocatable(ctx, nextDemands, nextUnavailable)) continue;
     kept.push(source);
     demands = nextDemands;
@@ -6433,7 +6451,16 @@ export function* payManaCost(
   // goes, rather than tapping everything and then adding it all. The distinction is invisible
   // for a board of ordinary lands — the pool ends up identical — and load-bearing for a source
   // whose own activation costs mana, which can only be paid out of what earlier sources made.
-  for (const [sourceIndex, source] of plan.tapSources.entries()) {
+  // With permanents reserved, plain sources go first: they depend on nothing, and once they
+  // have made their mana they are fair game for a later sacrifice cost (`jointlyPayableSources`).
+  const tapSources =
+    reservedObjectIds.size === 0
+      ? plan.tapSources
+      : [
+          ...plan.tapSources.filter(isPlainManaSource),
+          ...plan.tapSources.filter((source) => !isPlainManaSource(source)),
+        ];
+  for (const [sourceIndex, source] of tapSources.entries()) {
     const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
     if (perm === undefined) throw new Error('engine bug: payment source vanished');
     // Read before the cost is paid: a Treasure's cost sacrifices it, so by the time its mana is
@@ -6467,15 +6494,23 @@ export function* payManaCost(
         ? undefined
         : (candidate: EnginePermanent, remainingHere: number): boolean => {
             const own = sacrificeDemandsOf(ctx, source)?.demands ?? [];
-            const later = plan.tapSources
-              .slice(sourceIndex + 1)
-              .flatMap((next) => sacrificeDemandsOf(ctx, next)?.demands ?? []);
+            const laterSources = tapSources.slice(sourceIndex + 1);
+            const later = laterSources.flatMap(
+              (next) => sacrificeDemandsOf(ctx, next)?.demands ?? [],
+            );
+            // A source still to be activated must survive to make its mana; one already used
+            // may be sacrificed.
+            const laterPermanents = laterSources.flatMap((next) => {
+              const permanent = sacrificeDemandsOf(ctx, next)?.perm;
+              return permanent === undefined ? [] : [permanent.id];
+            });
+            const unavailable = new Set([...reservedObjectIds, ...laterPermanents]);
             return (
-              !reservedObjectIds.has(candidate.id) &&
+              !unavailable.has(candidate.id) &&
               demandsAllocatable(
                 ctx,
                 [...own.slice(0, remainingHere), ...later],
-                new Set([...reservedObjectIds, candidate.id]),
+                new Set([...unavailable, candidate.id]),
               )
             );
           };
