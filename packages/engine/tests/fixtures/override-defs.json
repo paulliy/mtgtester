@@ -8004,8 +8004,62 @@
   {
     "oracleId": "d2d9ecea-7925-420e-98b9-2f87f41f387c",
     "name": "Land Tax",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may search for up to three basic lands, reveal them, and put them into your hand",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "count": {
+                "kind": "const",
+                "n": 3
+              },
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "opponentControlsMore",
+              "selector": {
+                "kind": "type",
+                "value": "Land"
+              }
+            },
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "d5efba91-8400-41a3-91c6-cb5e81f07976",
@@ -14613,8 +14667,62 @@
   {
     "oracleId": "oracle-land-tax",
     "name": "Land Tax",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may search for up to three basic lands, reveal them, and put them into your hand",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "count": {
+                "kind": "const",
+                "n": 3
+              },
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "opponentControlsMore",
+              "selector": {
+                "kind": "type",
+                "value": "Land"
+              }
+            },
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-leafkin-druid",

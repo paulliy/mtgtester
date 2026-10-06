@@ -180,7 +180,6 @@ const REASONS: Record<string, string> = {
   'Verrak, Warped Sengir': 'Copy-activated-ability when life was paid is unimplemented.',
   'Killian, Decisive Mentor':
     'Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.',
-  'Land Tax': 'The upkeep search is mandatory and omits revealing the found cards.',
   'Promise of Loyalty':
     'Keep-one sacrifice, vow counters, and attack restriction are unimplemented.',
   "Songbirds' Blessing":
@@ -319,6 +318,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Land Tax',
     'Harvest Season',
     "Conjurer's Closet",
     'Canoptek Wraith',

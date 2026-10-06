@@ -4331,6 +4331,44 @@ function harvestSeasonScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function landTaxScenario(gameId: GameId): CardTestScenario {
+  const tax = pinnedFrom(MARCHESA_BATCH1, 'Land Tax');
+  const secret = card({
+    oracleId: 'lab-land-tax-secret',
+    name: 'Land Tax Private Secret',
+    typeLine: 'Creature — Secret',
+    manaCost: '{6}',
+    cmc: 6,
+  });
+  return pr01Scenario(gameId, {
+    id: 'land-tax-viewer-upkeep-reveal-search',
+    title: 'Land Tax: reveal three basics at your upkeep',
+    instructions: [
+      "Pass through P4's turn; Land Tax triggers at your upkeep because P2 controls more lands than you.",
+      'Choose Yes, then put Plains, Swamp, and Island into your hand.',
+    ],
+    expectedOutcome:
+      'Three basic lands are revealed to every player and put into your hand, your library is shuffled, and the private library card stays hidden.',
+    oracleSha256: tax.sha256,
+    clauseIds: ['land-tax-upkeep-search'],
+    decks: {
+      P1: [tax.card, FOREST, PLAINS, SWAMP, ISLAND, secret],
+      P2: [FOREST, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P4',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Land Tax', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Forest', 'Forest', 'Forest'] },
+      ],
+      continueToNextUpkeep: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4420,6 +4458,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'canoptek-wraith-viewer-scout-same-name-search',
   'conjurers-closet-viewer-end-step-blink',
   'harvest-season-viewer-tapped-creature-count',
+  'land-tax-viewer-upkeep-reveal-search',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4505,6 +4544,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'canoptek-wraith-viewer-scout-same-name-search': canoptekWraithScenario,
   'conjurers-closet-viewer-end-step-blink': conjurersClosetScenario,
   'harvest-season-viewer-tapped-creature-count': harvestSeasonScenario,
+  'land-tax-viewer-upkeep-reveal-search': landTaxScenario,
 };
 
 export function createCardTestScenario(

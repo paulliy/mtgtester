@@ -246,3 +246,27 @@ describe('Harvest Season Card Test Lab scenario', () => {
     replays('harvest-season-viewer-tapped-creature-count', steps);
   });
 });
+
+describe('Land Tax Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Yes' },
+    { action: 'Put Plains into your hand' },
+    { action: 'Put Swamp into your hand' },
+    { action: 'Put Island into your hand' },
+  ];
+
+  it('land-tax-viewer-upkeep-reveal-search — the upkeep trigger reveals three basics into hand and shuffles', () => {
+    const { state, seat } = run('land-tax-viewer-upkeep-reveal-search', steps);
+    expect(state.turnOrder[state.activePlayerIndex]).toBe('P1');
+    expect(state.step).toBe('upkeep');
+    expect(
+      seat('P1')
+        .hand.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Island', 'Plains', 'Swamp']);
+    const found = state.eventLog.filter((event) => event.type === 'searchFound');
+    expect(found.map((event) => event.payload['revealed'])).toEqual([true, true, true]);
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('land-tax-viewer-upkeep-reveal-search', steps);
+  });
+});

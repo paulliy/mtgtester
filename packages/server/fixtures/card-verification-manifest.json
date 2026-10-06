@@ -1669,13 +1669,27 @@
     "d2d9ecea-7925-420e-98b9-2f87f41f387c": {
       "name": "Land Tax",
       "oracleSha256": "4b365fab95d5ae332e404759f054d57169911d769d44ef0cbf6890e83ac0d4a7",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "land-tax-upkeep-search",
           "oracleText": "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.",
-          "implementation": ["explicitly unsupported; mandatory search omits reveal"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "upkeep trigger (player=you) with intervening-if opponentControlsMore(Land), compared per opponent and rechecked on resolution (CR 603.4)",
+            "optional: yes/no on resolution",
+            "searchLibrary(filter=Basic Land, destination=hand, count=3, allowFailToFind=true, reveal=true)",
+            "shuffle"
+          ],
+          "engineTestIds": [
+            "land-tax-pinned-oracle-supported",
+            "land-tax-search-reveal-three",
+            "land-tax-per-opponent-comparison",
+            "land-tax-rechecked-on-resolution",
+            "land-tax-decline",
+            "land-tax-only-your-upkeep",
+            "land-tax-fewer-basics"
+          ],
+          "viewerScenarioIds": ["land-tax-viewer-upkeep-reveal-search"]
         }
       ],
       "gameplayAiScenarioIds": []

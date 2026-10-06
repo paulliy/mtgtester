@@ -1113,6 +1113,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "d2d9ecea-7925-420e-98b9-2f87f41f387c",
+    "name": "Land Tax",
+    "package": "PR01.08",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.\"",
+      "explicitly unsupported: The upkeep search is mandatory and omits revealing the found cards."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f7d8b91b-6541-4d3e-af51-7e000eac69c1",
     "name": "Legion's Landing // Adanto, the First Fort",
     "package": "W3",

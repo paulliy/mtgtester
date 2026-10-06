@@ -32,7 +32,19 @@ import { moveObject, playerById } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { formatPlayerLog } from '../src/view/spectator';
 import { buildPlayerView } from '../src/view/view';
-import { bear, conjure, copies, forest, gameConfig, island, oracle, pump, spawn } from './fixtures';
+import {
+  bear,
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  island,
+  oracle,
+  plains,
+  pump,
+  spawn,
+  swamp,
+} from './fixtures';
 
 interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
@@ -996,6 +1008,131 @@ describe('Harvest Season', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.08 Land Tax
+// ---------------------------------------------------------------------------------------------
+
+describe('Land Tax', () => {
+  const tax = pinned('Land Tax');
+
+  /** P1 has Land Tax and `mine` lands; P2..P4 have the given land counts. */
+  function board(seed: string, mine: number, others: [number, number, number], library = 5) {
+    const ctx = pod(seed);
+    spawn(ctx, 'P1', tax.card);
+    for (let i = 0; i < mine; i++) spawn(ctx, 'P1', island());
+    (['P2', 'P3', 'P4'] as const).forEach((id, index) => {
+      for (let i = 0; i < others[index]!; i++) spawn(ctx, id, forest());
+    });
+    playerById(ctx, 'P1').library = [];
+    conjure(ctx, 'P1', SECRET('Land Tax Private Secret'), 'library');
+    for (let i = 0; i < library; i++)
+      conjure(ctx, 'P1', i % 2 === 0 ? plains() : swamp(), 'library');
+    return ctx;
+  }
+
+  function upkeep(ctx: GameContext, active = 'P1') {
+    ctx.state.currentTurnPlayer = active;
+    ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(active);
+    ctx.state.phase = 'beginning';
+    ctx.state.step = 'upkeep';
+    queueStepTriggers(ctx, 'upkeep');
+  }
+
+  const taxAnswer =
+    (accept: boolean): Answer =>
+    (decision) =>
+      decision.decisionType === 'optionalTrigger'
+        ? optionMatching(decision, accept ? /^Yes$/ : /^No$/)
+        : /search your library/.test(decision.prompt)
+          ? optionMatching(decision, /Put (Plains|Swamp) into your hand/)
+          : { index: 0, targets: new Map() };
+
+  const searches = (decisions: PendingDecision[]) =>
+    decisions.filter((decision) => /search your library/.test(decision.prompt));
+
+  it('land-tax-pinned-oracle-supported — pins the Oracle and models the conditional optional search', () => {
+    expect(tax.sha256).toBe('4b365fab95d5ae332e404759f054d57169911d769d44ef0cbf6890e83ac0d4a7');
+    const def = interpretCard(tax.card);
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]).toMatchObject({
+      optional: true,
+      trigger: {
+        when: 'upkeep',
+        player: 'you',
+        condition: { kind: 'opponentControlsMore' },
+      },
+    });
+  });
+
+  it('land-tax-search-reveal-three — finds up to three basics, reveals them, puts them into hand, and shuffles', () => {
+    const ctx = board('tax-search', 2, [3, 0, 0]);
+    upkeep(ctx);
+    const handBefore = playerById(ctx, 'P1').hand.length;
+    const { decisions } = settle(ctx, taxAnswer(true));
+    expect(searches(decisions)).toHaveLength(3);
+    const hand = playerById(ctx, 'P1').hand;
+    expect(hand).toHaveLength(handBefore + 3);
+    expect(hand.every((card) => ['Plains', 'Swamp'].includes(card.name))).toBe(true);
+    const revealed = ctx.state.eventLog.filter((event) => event.type === 'searchFound');
+    expect(revealed).toHaveLength(3);
+    expect(revealed.every((event) => event.payload['revealed'] === true)).toBe(true);
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    const opponentLog = buildPlayerView(ctx, 'P2').recentLog.join('\n');
+    expect(opponentLog).toContain('revealed=true');
+    expect(opponentLog).not.toContain('Land Tax Private Secret');
+  });
+
+  it('land-tax-per-opponent-comparison — no trigger when no single opponent has more lands, even if they do combined', () => {
+    const ctx = board('tax-per-opponent', 3, [3, 2, 3]);
+    upkeep(ctx);
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+    const { decisions } = settle(ctx, taxAnswer(true));
+    expect(decisions.some((decision) => decision.decisionType === 'optionalTrigger')).toBe(false);
+  });
+
+  it('land-tax-rechecked-on-resolution — the intervening if is checked again as it resolves', () => {
+    const ctx = board('tax-recheck', 2, [3, 0, 0]);
+    upkeep(ctx);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    spawn(ctx, 'P1', island());
+    const { decisions } = resolveTop(ctx, taxAnswer(true));
+    expect(searches(decisions)).toEqual([]);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(0);
+  });
+
+  it('land-tax-decline — declining searches nothing and does not shuffle', () => {
+    const ctx = board('tax-decline', 1, [2, 0, 0]);
+    upkeep(ctx);
+    const { decisions } = settle(ctx, taxAnswer(false));
+    expect(searches(decisions)).toEqual([]);
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(false);
+  });
+
+  it("land-tax-only-your-upkeep — does not trigger on an opponent's upkeep", () => {
+    const ctx = board('tax-other-upkeep', 1, [5, 0, 0]);
+    upkeep(ctx, 'P2');
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+  });
+
+  it('land-tax-fewer-basics — may find fewer, and nonbasic lands are never offered', () => {
+    const ctx = board('tax-fewer', 1, [2, 0, 0], 1);
+    conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Tax Nonbasic', typeLine: 'Land', manaCost: null }),
+      'library',
+    );
+    upkeep(ctx);
+    const { decisions } = settle(ctx, taxAnswer(true));
+    expect(searches(decisions)).toHaveLength(1);
+    expect(searches(decisions)[0]!.options.map((option) => option.description)).not.toContain(
+      'Put Tax Nonbasic into your hand',
+    );
+    expect(playerById(ctx, 'P1').hand.map((card) => card.name)).toEqual(['Plains']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1040,6 +1177,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Harvest Season',
     sha256: '3f013020bdf1351d15c88eff85e1030be7f07537aff30256a911ba95125b7c9f',
+    clauseCount: 1,
+  },
+  {
+    name: 'Land Tax',
+    sha256: '4b365fab95d5ae332e404759f054d57169911d769d44ef0cbf6890e83ac0d4a7',
     clauseCount: 1,
   },
 ];

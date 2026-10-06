@@ -3,7 +3,7 @@
 import type { CardDefinition } from '../definition';
 import type { KeywordAbility } from '../ability';
 import { ATTACHED, auraBuff as auraBuffStatics, mana, TAP } from '../templates';
-import { allOf, ofSubtype, ofType, YOURS } from '../selector';
+import { allOf, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
 import { constant } from '../value';
 import { defineCard as defineCardImpl, unimplemented, unsupportedCard } from './index';
 
@@ -280,10 +280,42 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Attached-Aura pump counts all Auras you control.',
   );
   // Catalog audit silverquill-remaining-batch-3: "you may" and reveal are omitted.
-  unsupportedCard(
+  // Coverage PR01 (was contained by silverquill-remaining-batch-3): an intervening-if upkeep
+  // trigger (checked as it triggers and as it resolves, CR 603.4), "you may" on resolution, and a
+  // revealed search for up to three basic lands into hand.
+  defineCard(
     'd2d9ecea-7925-420e-98b9-2f87f41f387c',
     'Land Tax',
-    'The upkeep search is mandatory and omits revealing the found cards.',
+    [
+      'At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'upkeep',
+            player: 'you',
+            condition: { kind: 'opponentControlsMore', selector: ofType('Land') },
+          },
+          optional: true,
+          targets: [],
+          effects: [
+            {
+              op: 'searchLibrary',
+              filter: allOf(ofSupertype('Basic'), ofType('Land')),
+              destinations: [{ zone: 'hand' }],
+              count: constant(3),
+              allowFailToFind: true,
+              reveal: true,
+            },
+            { op: 'shuffle' },
+          ],
+          description:
+            'You may search for up to three basic lands, reveal them, and put them into your hand',
+        },
+      ],
+    },
   );
   // Catalog audit silverquill-remaining-batch-2: pumps every creature in combat.
   unsupportedCard(

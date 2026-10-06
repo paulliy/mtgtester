@@ -1902,3 +1902,26 @@ test('Harvest Season: search a basic per tapped creature', async ({ page }) => {
   await expect(permanent(page, 'Plains').locator('.tap-badge')).toHaveText('TAP');
   await expect(permanent(page, 'Swamp')).toHaveCount(0);
 });
+
+test('Land Tax: reveal three basics at your upkeep', async ({ page }) => {
+  await runScenario(page, 'Land Tax: reveal three basics at your upkeep');
+
+  await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+
+  for (const land of ['Plains', 'Swamp', 'Island']) {
+    await expect(page.getByText(/search your library/i).first()).toBeVisible();
+    await page
+      .locator('.panel-group')
+      .filter({ hasText: land })
+      .getByRole('button', { name: 'Put into your hand' })
+      .click();
+  }
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  for (const land of ['Plains', 'Swamp', 'Island']) {
+    await expect(page.getByText(`reveals ${land}`).first()).toBeVisible();
+    await expect(handCard(page, land)).toBeVisible();
+  }
+  await expect(page.getByText('Land Tax Private Secret')).toHaveCount(0);
+});
