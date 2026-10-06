@@ -1220,6 +1220,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Sylvan Reclamation: basic landcycling reveals a basic land'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Thunderfoot Baloth: lieutenant pumps your creatures'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

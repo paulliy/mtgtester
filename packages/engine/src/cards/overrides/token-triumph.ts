@@ -9,6 +9,7 @@ import { defineCard, unsupportedCard } from './index';
 import { TAP, mana, manaCost, spell } from '../templates';
 import { constant } from '../value';
 import {
+  SELF,
   YOURS,
   OTHER,
   ofSupertype,
@@ -82,10 +83,33 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     'Rishkar, Peema Renegade',
     'Up-to-two +1/+1 counters require at least one target.',
   );
-  unsupportedCard(
+  // Coverage PR01: the lieutenant buff reaches creatures only, and only while you control
+  // your own commander (CR 903.7; a stolen commander does not count).
+  defineCard(
     'f55334d9-1ec2-4667-bf28-5a0384d6f053',
     'Thunderfoot Baloth',
-    'Lieutenant +2/+2 and trample apply to all permanents you control, not just creatures.',
+    [
+      'As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.',
+    ],
+    {
+      staticEffects: [
+        {
+          affects: SELF,
+          op: { layer: 7, sublayer: 'd', power: 2, toughness: 2 },
+          condition: { kind: 'controlsYourCommander' },
+        },
+        {
+          affects: allOf(ofType('Creature'), YOURS, OTHER),
+          op: { layer: 7, sublayer: 'd', power: 2, toughness: 2 },
+          condition: { kind: 'controlsYourCommander' },
+        },
+        {
+          affects: allOf(ofType('Creature'), YOURS, OTHER),
+          op: { layer: 6, addKeyword: 'trample' },
+          condition: { kind: 'controlsYourCommander' },
+        },
+      ],
+    },
   );
   // Emmara, Soul of the Accord no longer needs an override: the generic parser reads
   // "Whenever ~ becomes tapped, ..." since City of Brass added `becomes tapped` to the object

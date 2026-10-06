@@ -3085,15 +3085,34 @@
     "f55334d9-1ec2-4667-bf28-5a0384d6f053": {
       "name": "Thunderfoot Baloth",
       "oracleSha256": "ad245d778eb6fdf24778c3037b47c0b0bb89e80346f64557ce250b39123fb23f",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Lieutenant — As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.",
-          "implementation": [
-            "explicitly unsupported; lieutenant applies to all permanents you control"
+          "id": "thunderfoot-baloth-trample",
+          "oracleText": "Trample",
+          "implementation": ["keyword trample (interpreted)"],
+          "engineTestIds": [
+            "thunderfoot-baloth-pinned-oracle-supported",
+            "thunderfoot-baloth-no-commander"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["thunderfoot-baloth-viewer-lieutenant"]
+        },
+        {
+          "id": "thunderfoot-baloth-lieutenant",
+          "oracleText": "As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.",
+          "implementation": [
+            "ability word 'Lieutenant' is flavor",
+            "three static effects conditioned on controlsYourCommander (your own commander on the battlefield under your control, CR 903.7)",
+            "layer 7d +2/+2 to self; layer 7d +2/+2 and layer 6 trample to other creatures you control (creatures only)"
+          ],
+          "engineTestIds": [
+            "thunderfoot-baloth-lieutenant-active",
+            "thunderfoot-baloth-creatures-only",
+            "thunderfoot-baloth-no-commander",
+            "thunderfoot-baloth-commander-control",
+            "thunderfoot-baloth-cast-and-commander-leaves"
+          ],
+          "viewerScenarioIds": ["thunderfoot-baloth-viewer-lieutenant"]
         }
       ],
       "gameplayAiScenarioIds": []

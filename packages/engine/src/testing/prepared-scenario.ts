@@ -31,12 +31,23 @@ export interface PreparedScenarioSpec {
   continueToEndStep?: boolean;
 }
 
-function takeNamedCard(ctx: GameContext, playerId: PlayerId, name: string): EngineCardObject {
+function takeNamedCard(
+  ctx: GameContext,
+  playerId: PlayerId,
+  name: string,
+  orCommandZone = false,
+): EngineCardObject {
   const player = ctx.state.players.find((candidate) => candidate.id === playerId);
   if (player === undefined) throw new Error(`prepared scenario has unknown player ${playerId}`);
   const index = player.library.findIndex((card) => card.name === name);
-  if (index < 0) throw new Error(`prepared scenario cannot find ${name} in ${playerId}'s library`);
-  return player.library.splice(index, 1)[0] as EngineCardObject;
+  if (index >= 0) return player.library.splice(index, 1)[0] as EngineCardObject;
+  // A battlefield entry may name the player's commander, which starts in the command zone and
+  // keeps its commander identity (CR 903.3) on the battlefield.
+  const commandIndex = orCommandZone
+    ? player.commandZone.findIndex((card) => card.name === name)
+    : -1;
+  if (commandIndex >= 0) return player.commandZone.splice(commandIndex, 1)[0] as EngineCardObject;
+  throw new Error(`prepared scenario cannot find ${name} in ${playerId}'s library`);
 }
 
 /**
@@ -64,7 +75,7 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
 
   for (const entry of spec.battlefield) {
     for (const name of entry.cardNames) {
-      const card = takeNamedCard(ctx, entry.playerId, name);
+      const card = takeNamedCard(ctx, entry.playerId, name, true);
       const permanent = makePermanent(ctx, card, entry.playerId);
       // The arranged position stands in for a settled mid-game board: arranged permanents have
       // been under the player's control since before this turn, so they are neither summoning

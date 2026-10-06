@@ -1961,6 +1961,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "f55334d9-1ec2-4667-bf28-5a0384d6f053",
+    "name": "Thunderfoot Baloth",
+    "package": "PR01.13",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.\"",
+      "explicitly unsupported: Lieutenant +2/+2 and trample apply to all permanents you control, not just creatures."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b4c27c89-fa50-4cf0-bf37-039732d16fef",
     "name": "Toby, Beastie Befriender",
     "package": "W6",

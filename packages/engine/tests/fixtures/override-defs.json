@@ -9264,8 +9264,79 @@
   {
     "oracleId": "f55334d9-1ec2-4667-bf28-5a0384d6f053",
     "name": "Thunderfoot Baloth",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "other"
+              }
+            ]
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "other"
+              }
+            ]
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "addKeyword": "trample",
+            "layer": 6
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "f586ecb8-310c-4f40-a766-6a7ca46a254d",
@@ -19135,8 +19206,79 @@
   {
     "oracleId": "oracle-thunderfoot-baloth",
     "name": "Thunderfoot Baloth",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "other"
+              }
+            ]
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "other"
+              }
+            ]
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "addKeyword": "trample",
+            "layer": 6
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-thundermaw-hellkite",

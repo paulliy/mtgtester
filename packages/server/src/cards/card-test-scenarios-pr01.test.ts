@@ -382,3 +382,31 @@ describe('Sylvan Reclamation basic landcycling Card Test Lab scenario', () => {
     replays('sylvan-reclamation-viewer-basic-landcycling', steps);
   });
 });
+
+describe('Thunderfoot Baloth Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Thunderfoot Baloth' }];
+
+  it('thunderfoot-baloth-viewer-lieutenant — with your commander out, it and your other creatures get the buff; noncreatures do not', () => {
+    const { scenario } = run('thunderfoot-baloth-viewer-lieutenant', steps);
+    const view = scenario.engine.view('P1');
+    expect(view.commanders).toEqual([
+      expect.objectContaining({ name: 'Lab General', zone: 'battlefield' }),
+    ]);
+    const seen = new Map(view.battlefield.map((permanent) => [permanent.name, permanent]));
+    const shape = (name: string) => {
+      const permanent = seen.get(name)!;
+      return {
+        power: permanent.power,
+        toughness: permanent.toughness,
+        trample: permanent.keywords?.includes('trample') ?? false,
+      };
+    };
+    expect(shape('Thunderfoot Baloth')).toEqual({ power: 7, toughness: 7, trample: true });
+    expect(shape('Lab General')).toEqual({ power: 4, toughness: 4, trample: true });
+    expect(shape('Lab Ox')).toEqual({ power: 6, toughness: 6, trample: true });
+    expect(shape('Lab Servo')).toEqual({ power: 1, toughness: 1, trample: false });
+    expect(seen.get('Lab Relic')?.keywords ?? []).not.toContain('trample');
+    expect(seen.get('Lab Relic')?.power ?? 0).toBe(0);
+    replays('thunderfoot-baloth-viewer-lieutenant', steps);
+  });
+});

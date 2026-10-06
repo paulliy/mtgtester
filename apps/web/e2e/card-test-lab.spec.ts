@@ -2059,3 +2059,24 @@ test('Sylvan Reclamation: basic landcycling reveals a basic land', async ({ page
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Reclamation Private Library Secret')).toHaveCount(0);
 });
+
+test('Thunderfoot Baloth: lieutenant pumps your creatures', async ({ page }) => {
+  await runScenario(page, 'Thunderfoot Baloth: lieutenant pumps your creatures');
+
+  // Before the Baloth: printed stats only.
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+  const baloth = handCard(page, 'Thunderfoot Baloth');
+  await expect(baloth).toHaveClass(/actionable/);
+  await baloth.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Thunderfoot Baloth')).toContainText('7/7');
+  await expect(permanent(page, 'Lab General')).toContainText('4/4');
+  await expect(permanent(page, 'Lab Ox')).toContainText('6/6');
+  await expect(permanent(page, 'Lab Servo')).toContainText('1/1');
+  await expect(permanent(page, 'Lab Ox')).toContainText(/trample/i);
+  await expect(permanent(page, 'Lab Servo')).not.toContainText(/trample/i);
+  await expect(permanent(page, 'Lab Relic')).not.toContainText(/trample/i);
+});

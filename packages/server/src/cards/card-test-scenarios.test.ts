@@ -134,6 +134,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'plasmancer-viewer-reveal-swamp',
       'sylvan-reclamation-viewer-exile-up-to-two',
       'sylvan-reclamation-viewer-basic-landcycling',
+      'thunderfoot-baloth-viewer-lieutenant',
     ]);
   });
 

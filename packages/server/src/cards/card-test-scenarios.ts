@@ -4056,13 +4056,21 @@ interface Pr01ScenarioSpec {
   clauseIds: string[];
   /** Library contents per seat; prepared hand/battlefield/graveyard cards are drawn from these. */
   decks: Record<'P1' | 'P2' | 'P3' | 'P4', OracleCard[]>;
+  /** Commanders per seat; they start in the command zone unless `prepared` places them. */
+  commanders?: Partial<Record<'P1' | 'P2' | 'P3' | 'P4', OracleCard[]>>;
   prepared: Omit<PreparedScenarioSpec, 'currentTurnPlayer' | 'phase' | 'step' | 'turnNumber'> &
     Partial<Pick<PreparedScenarioSpec, 'currentTurnPlayer' | 'phase' | 'step' | 'turnNumber'>>;
   decisionProviderOverrides?: CardTestScenario['decisionProviderOverrides'];
 }
 
 function pr01Scenario(gameId: GameId, spec: Pr01ScenarioSpec): CardTestScenario {
-  const seats = (['P1', 'P2', 'P3', 'P4'] as const).map((id) => player(id, spec.decks[id]));
+  const seats = (['P1', 'P2', 'P3', 'P4'] as const).map((id) => {
+    const seat = player(id, spec.decks[id]);
+    const commanders = spec.commanders?.[id] ?? [];
+    seat.config.commanders = commanders;
+    seat.setup.summary.commanderNames = commanders.map((commander) => commander.name);
+    return seat;
+  });
   const seed = `card-lab-${spec.id}-v1`;
   const engine = new Engine(
     { gameId, seed, players: seats.map(({ config }) => config), turnCap: 2 },
@@ -4527,6 +4535,67 @@ function sylvanReclamationLandcyclingScenario(gameId: GameId): CardTestScenario 
   });
 }
 
+function thunderfootBalothScenario(gameId: GameId): CardTestScenario {
+  const baloth = pinnedFrom(MARCHESA_BATCH1, 'Thunderfoot Baloth');
+  const general = card({
+    oracleId: 'lab-baloth-general',
+    name: 'Lab General',
+    typeLine: 'Legendary Creature — Elf Warrior',
+    manaCost: '{2}{G}',
+    cmc: 3,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+  });
+  const relic = card({
+    oracleId: 'lab-baloth-relic',
+    name: 'Lab Relic',
+    typeLine: 'Artifact',
+    manaCost: '{1}',
+    cmc: 1,
+  });
+  return pr01Scenario(gameId, {
+    id: 'thunderfoot-baloth-viewer-lieutenant',
+    title: 'Thunderfoot Baloth: lieutenant pumps your creatures',
+    instructions: [
+      'Your commander, Lab General, is on the battlefield. Cast Thunderfoot Baloth with your six Forests.',
+      'Inspect your creatures once it resolves.',
+    ],
+    expectedOutcome:
+      "Thunderfoot Baloth is 7/7. Lab General and Lab Ox get +2/+2 and trample. Lab Relic and your lands are not creatures and gain nothing, and P2's Lab Servo is unchanged.",
+    oracleSha256: baloth.sha256,
+    clauseIds: ['thunderfoot-baloth-lieutenant'],
+    decks: {
+      P1: [baloth.card, LAB_OX, relic, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    commanders: { P1: [general] },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Thunderfoot Baloth'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Lab General',
+            'Lab Ox',
+            'Lab Relic',
+            'Forest',
+            'Forest',
+            'Forest',
+            'Forest',
+            'Forest',
+            'Forest',
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4622,6 +4691,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'plasmancer-viewer-reveal-swamp',
   'sylvan-reclamation-viewer-exile-up-to-two',
   'sylvan-reclamation-viewer-basic-landcycling',
+  'thunderfoot-baloth-viewer-lieutenant',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4713,6 +4783,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'plasmancer-viewer-reveal-swamp': plasmancerScenario,
   'sylvan-reclamation-viewer-exile-up-to-two': sylvanReclamationScenario,
   'sylvan-reclamation-viewer-basic-landcycling': sylvanReclamationLandcyclingScenario,
+  'thunderfoot-baloth-viewer-lieutenant': thunderfootBalothScenario,
 };
 
 export function createCardTestScenario(

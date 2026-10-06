@@ -1649,6 +1649,105 @@ describe('Sylvan Reclamation', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.13 Thunderfoot Baloth
+// ---------------------------------------------------------------------------------------------
+
+describe('Thunderfoot Baloth', () => {
+  const baloth = pinned('Thunderfoot Baloth');
+  const general = () =>
+    oracle({ name: 'Baloth General', typeLine: 'Legendary Creature — Elf', manaCost: '{2}' });
+  const relic = () => oracle({ name: 'Baloth Relic', typeLine: 'Artifact', manaCost: '{1}' });
+
+  const stats = (ctx: GameContext, permanent: EnginePermanent) => {
+    const c = computeCharacteristics(ctx, permanent);
+    return { power: c.power, toughness: c.toughness, trample: c.keywords.includes('trample') };
+  };
+
+  /** P1 controls the Baloth and a bear; `commander` decides whether P1's commander is out. */
+  function board(seed: string, commander: boolean) {
+    const ctx = pod(seed);
+    const self = spawn(ctx, 'P1', baloth.card);
+    const bear_ = spawn(ctx, 'P1', bear());
+    const theirs = spawn(ctx, 'P2', bear());
+    const general_ = commander ? spawn(ctx, 'P1', general()) : undefined;
+    if (general_ !== undefined) general_.isCommander = true;
+    return { ctx, self, bear: bear_, theirs, general: general_ };
+  }
+
+  it('thunderfoot-baloth-pinned-oracle-supported — pins the Oracle and models trample plus the creature-only lieutenant statics', () => {
+    expect(baloth.sha256).toBe('ad245d778eb6fdf24778c3037b47c0b0bb89e80346f64557ce250b39123fb23f');
+    const def = interpretCard(baloth.card);
+    expect(def.modeled).toBe(true);
+    expect(def.keywords).toContain('trample');
+    expect(def.staticEffects).toHaveLength(3);
+    for (const effect of def.staticEffects) {
+      expect(effect.condition).toEqual({ kind: 'controlsYourCommander' });
+    }
+  });
+
+  it('thunderfoot-baloth-lieutenant-active — with your commander out it is 7/7 and other creatures you control get +2/+2 and trample', () => {
+    const { ctx, self, bear: mine, theirs, general: commander } = board('baloth-on', true);
+    expect(stats(ctx, self)).toEqual({ power: 7, toughness: 7, trample: true });
+    expect(stats(ctx, mine)).toEqual({ power: 4, toughness: 4, trample: true });
+    expect(stats(ctx, commander!)).toEqual({ power: 4, toughness: 4, trample: true });
+    expect(stats(ctx, theirs)).toEqual({ power: 2, toughness: 2, trample: false });
+  });
+
+  it('thunderfoot-baloth-creatures-only — noncreature permanents you control gain nothing', () => {
+    const { ctx } = board('baloth-noncreature', true);
+    const artifact = spawn(ctx, 'P1', relic());
+    const land = spawn(ctx, 'P1', forest());
+    for (const permanent of [artifact, land]) {
+      const c = computeCharacteristics(ctx, permanent);
+      expect(c.keywords).not.toContain('trample');
+      expect(c.power ?? 0).toBe(0);
+      expect(c.toughness ?? 0).toBe(0);
+    }
+  });
+
+  it('thunderfoot-baloth-no-commander — without your commander only its printed 5/5 trample remains', () => {
+    const { ctx, self, bear: mine } = board('baloth-off', false);
+    expect(stats(ctx, self)).toEqual({ power: 5, toughness: 5, trample: true });
+    expect(stats(ctx, mine)).toEqual({ power: 2, toughness: 2, trample: false });
+  });
+
+  it("thunderfoot-baloth-commander-control — a stolen commander or another player's commander does not count", () => {
+    const stolen = board('baloth-stolen', true);
+    stolen.general!.controllerId = 'P2';
+    expect(stats(stolen.ctx, stolen.self)).toEqual({ power: 5, toughness: 5, trample: true });
+    expect(stats(stolen.ctx, stolen.bear)).toEqual({ power: 2, toughness: 2, trample: false });
+
+    const borrowed = board('baloth-borrowed', false);
+    const theirCommander = spawn(borrowed.ctx, 'P2', general());
+    theirCommander.isCommander = true;
+    theirCommander.controllerId = 'P1';
+    expect(stats(borrowed.ctx, borrowed.self)).toEqual({ power: 5, toughness: 5, trample: true });
+  });
+
+  it('thunderfoot-baloth-cast-and-commander-leaves — casting it applies the buff, which ends when the commander leaves', () => {
+    const ctx = pod('baloth-cast');
+    const commander = spawn(ctx, 'P1', general());
+    commander.isCommander = true;
+    const mine = spawn(ctx, 'P1', bear());
+    const inHand = conjure(ctx, 'P1', baloth.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 6 }, () => ({ symbol: 'G' as const })),
+    );
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const self = ctx.state.battlefield.find((entry) => entry.name === 'Thunderfoot Baloth')!;
+    expect(stats(ctx, self)).toEqual({ power: 7, toughness: 7, trample: true });
+    expect(stats(ctx, mine)).toEqual({ power: 4, toughness: 4, trample: true });
+    pump(moveObject(ctx, commander, { zone: 'graveyard' }));
+    expect(stats(ctx, self)).toEqual({ power: 5, toughness: 5, trample: true });
+    expect(stats(ctx, mine)).toEqual({ power: 2, toughness: 2, trample: false });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1718,6 +1817,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Sylvan Reclamation',
     sha256: '5682177705c6c6ef5b2dccfc5926514a68168bac41623daea143bf738b440274',
+    clauseCount: 2,
+  },
+  {
+    name: 'Thunderfoot Baloth',
+    sha256: 'ad245d778eb6fdf24778c3037b47c0b0bb89e80346f64557ce250b39123fb23f',
     clauseCount: 2,
   },
 ];
