@@ -29,6 +29,7 @@ const SOURCE_FILES = [
   'apps/web/src/views/CardTestLabView.vue',
   'packages/engine/src/actions/ability-modes.ts',
   'packages/engine/src/actions/apply.ts',
+  'packages/engine/src/casting/cast.ts',
   'packages/engine/src/actions/legal.ts',
   'packages/engine/src/mana/activation.ts',
   'packages/engine/src/mana/spell-payment.ts',

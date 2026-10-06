@@ -65,6 +65,7 @@ const SOURCE_FILES = [
   'packages/engine/package.json',
   'packages/engine/src/actions/ability-modes.ts',
   'packages/engine/src/actions/apply.ts',
+  'packages/engine/src/casting/cast.ts',
   'packages/engine/src/actions/legal.ts',
   'packages/engine/src/cards/ability.ts',
   'packages/engine/src/cards/condition.ts',
