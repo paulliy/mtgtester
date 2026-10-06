@@ -22,6 +22,7 @@ import { endUntilEotEffects } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
+import { runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { prepareScenario } from '../src/testing/prepared-scenario';
 import { playerById } from '../src/state/objects';
@@ -31,6 +32,7 @@ import type { EnginePermanent, GameContext } from '../src/state/types';
 import {
   conjure,
   copies,
+  declareAttacks,
   forest,
   gameConfig,
   island,
@@ -1234,6 +1236,111 @@ describe('Mistveil Plains', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.05 Carrion Feeder
+// ---------------------------------------------------------------------------------------------
+
+describe('Carrion Feeder', () => {
+  const feeder = pinned('Carrion Feeder');
+  const victim = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Thrull', power: '1', toughness: '1' });
+
+  it('carrion-feeder-pinned-oracle-supported — the interpreter reads can’t-block and the self-inclusive sacrifice', () => {
+    expect(feeder.sha256).toBe('7fb3a771052de7acaa2d3eaebe9c39509ae68522bd344b4bd2491f77e6a3e069');
+    expect(feeder.card.oracleText).toBe(
+      "This creature can't block.\nSacrifice a creature: Put a +1/+1 counter on this creature.",
+    );
+    expect(getOverride(feeder.card.oracleId)).toBeUndefined();
+    expectModeled(feeder.card);
+    const def = interpretCard(feeder.card);
+    expect(def.cantBlock).toBe(true);
+    expect(def.activatedAbilities[0]?.costs).toEqual([
+      {
+        kind: 'sacrificeOther',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'controller', who: 'you' },
+            { kind: 'type', value: 'Creature' },
+          ],
+        },
+        allowSelf: true,
+      },
+    ]);
+  });
+
+  it('carrion-feeder-cant-block — it is never offered as a blocker; another creature is', () => {
+    const ctx = pod('feeder-cant-block');
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const self = spawn(ctx, 'P1', feeder.card);
+    const wall = spawn(ctx, 'P1', victim('Feeder Wall'));
+    const attacker = spawn(ctx, 'P2', victim('Feeder Attacker'));
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    const asked: string[][] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        return declareAttacks(decision, (subjectId) => (subjectId === attacker.id ? 'P1' : null));
+      }
+      if (decision.presentationBlockDeclaration !== undefined) {
+        asked.push(decision.presentationBlockDeclaration.subjects.map((subject) => subject.name));
+        return { index: 0, targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(asked.flat()).toContain(wall.name);
+    expect(asked.flat()).not.toContain(self.name);
+  });
+
+  it('carrion-feeder-sacrifices-another — sacrificing another creature puts a counter on it', () => {
+    const ctx = pod('feeder-another');
+    const self = spawn(ctx, 'P1', feeder.card);
+    const fodder = spawn(ctx, 'P1', victim('Feeder Fodder'));
+    const option = activationsOf(ctx, 'P1', self)[0];
+    expect(option).toBeDefined();
+    const { decisions } = takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      answers([[/sacrifice/i, /Feeder Fodder/]]),
+    );
+    expect(decisions.some((decision) => /sacrifice/i.test(decision.prompt))).toBe(true);
+    expect(ctx.state.battlefield.some((perm) => perm.id === fodder.id)).toBe(false);
+    resolveTop(ctx);
+    expect(self.counters['+1/+1']).toBe(1);
+  });
+
+  it('carrion-feeder-sacrifices-itself — alone, it may sacrifice itself to pay the cost', () => {
+    const ctx = pod('feeder-self');
+    const self = spawn(ctx, 'P1', feeder.card);
+    const option = activationsOf(ctx, 'P1', self)[0];
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(ctx.state.battlefield.some((perm) => perm.id === self.id)).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toContain('Carrion Feeder');
+    resolveTop(ctx);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('carrion-feeder-only-your-creatures — an opponent’s creature is never offered as the sacrifice', () => {
+    const ctx = pod('feeder-theirs');
+    const self = spawn(ctx, 'P1', feeder.card);
+    spawn(ctx, 'P2', victim('Feeder Opponent Creature'));
+    const option = activationsOf(ctx, 'P1', self)[0];
+    const { decisions } = takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    for (const decision of decisions) {
+      expect(
+        decision.options.some((choice) => /Feeder Opponent Creature/.test(choice.description)),
+      ).toBe(false);
+    }
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Feeder Opponent Creature')).toBe(
+      true,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1245,6 +1352,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Carrion Feeder',
+    sha256: '7fb3a771052de7acaa2d3eaebe9c39509ae68522bd344b4bd2491f77e6a3e069',
+    clauseCount: 2,
+  },
   {
     name: 'Mistveil Plains',
     sha256: 'ba245c46e7ecea52425fded3beb73f5bba3666af9f1c85e8234df1a5a3430791',

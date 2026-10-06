@@ -140,7 +140,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Smokestack',
       'The Ooze',
       'Watcher for Tomorrow',
-      'Carrion Feeder',
       'Dark Confidant',
       'Gleeful Arsonist',
       'Glen Elendra Archmage',

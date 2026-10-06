@@ -164,12 +164,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Bolt Bend',
     'Change-the-target is implemented as copyTargetSpell; a copy is not a retarget.',
   );
-  // Catalog audit batch 8: "Sacrifice a creature" can be this creature; sacrificeOther cannot.
-  unsupportedCard(
-    'a1cc5e37-b09a-4b7f-afd5-77c1c35aa425',
-    'Carrion Feeder',
-    'Sacrifice-a-creature cost uses sacrificeOther, which cannot sacrifice this creature.',
-  );
+  // Carrion Feeder: restored in coverage PR02. The interpreter reads "can't block" and the
+  // sacrifice-a-creature cost, which may sacrifice Carrion Feeder itself (allowSelf).
   // Catalog audit batch 3: control change is permanent, not "for as long as this remains".
   unsupportedCard(
     '026ef98e-4f0a-4a6d-b74f-d17ac8b10e37',

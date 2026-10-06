@@ -388,6 +388,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425",
+    "name": "Carrion Feeder",
+    "package": "PR02.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Sacrifice-a-creature cost uses sacrificeOther, which cannot sacrifice this creature."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "d51136fa-3c13-48a5-83fd-51fe00010a4b",
     "name": "Celebrate the Mountain-king",
     "package": "W5",

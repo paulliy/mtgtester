@@ -1399,6 +1399,11 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Mistveil Plains: one white permanent does not unlock it'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Carrion Feeder: sacrifice another creature, then itself'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Carrion Feeder: it can't block"] },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

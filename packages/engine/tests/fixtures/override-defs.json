@@ -6790,12 +6790,6 @@
     }
   },
   {
-    "oracleId": "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425",
-    "name": "Carrion Feeder",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
     "name": "Reverberate",
     "handledLines": [],
@@ -13050,12 +13044,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-carrion-feeder",
-    "name": "Carrion Feeder",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-chain-reaction",

@@ -5718,6 +5718,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: the interpreter reads the {W}, {T} bottom-of-library activation (new graveyardToLibraryBottom effect) and its 'two or more white permanents' activation condition; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425",
+      "name": "Carrion Feeder",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads \"can't block\" (new grammar) and the sacrifice-a-creature cost, whose allowSelf lets Carrion Feeder sacrifice itself; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

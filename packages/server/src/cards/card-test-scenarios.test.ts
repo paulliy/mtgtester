@@ -183,6 +183,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'idol-of-oblivion-viewer-eldrazi',
       'mistveil-plains-viewer-bottom-of-library',
       'mistveil-plains-viewer-one-white-blocked',
+      'carrion-feeder-viewer-sacrifice',
+      'carrion-feeder-viewer-cant-block',
     ]);
   });
 

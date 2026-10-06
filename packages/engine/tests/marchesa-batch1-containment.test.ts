@@ -39,8 +39,6 @@ const REASONS: Record<string, string> = {
   'Body Launderer':
     'Connive is approximated as unconditional +1/+1, and the return trigger omits equal-or-lesser power.',
   'Bolt Bend': 'Change-the-target is implemented as copyTargetSpell; a copy is not a retarget.',
-  'Carrion Feeder':
-    'Sacrifice-a-creature cost uses sacrificeOther, which cannot sacrifice this creature.',
   'Chaos Warp':
     'The top card is not revealed; a nonpermanent remains hidden on top of the library.',
   'Cytoplast Manipulator':
@@ -317,6 +315,7 @@ describe('Marchesa catalog audit containment', () => {
     'Weathered Wayfarer',
     'Idol of Oblivion',
     'Mistveil Plains',
+    'Carrion Feeder',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

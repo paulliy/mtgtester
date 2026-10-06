@@ -60,7 +60,10 @@ function scripted(steps: Step[]) {
       const targets = step.targets.map((name, position) => {
         const slot = slots[position];
         if (slot === undefined) throw new Error(`${step.action}: no target slot ${position}`);
-        const choice = slot.options.find((id) => names.get(id) === name);
+        // A name, or a literal option such as a player id or "__no_block__".
+        const choice =
+          slot.options.find((id) => names.get(id) === name) ??
+          (slot.options.includes(name) ? name : undefined);
         if (choice === undefined) {
           throw new Error(
             `${step.action}: no target named ${name} among [${slot.options
@@ -377,5 +380,46 @@ describe('Mistveil Plains Card Test Lab scenarios', () => {
       false,
     );
     expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Mistveil Buried Card']);
+  });
+});
+
+describe('Carrion Feeder Card Test Lab scenarios', () => {
+  const sacrificeSteps: Step[] = [
+    { action: 'Carrion Feeder: Sacrifice a creature' },
+    { action: 'Sacrifice Lab Thrull' },
+    // Let the first activation resolve before activating again.
+    { action: 'Pass priority' },
+    { action: 'Carrion Feeder: Sacrifice a creature' },
+    { action: 'Sacrifice Carrion Feeder' },
+  ];
+
+  it('carrion-feeder-viewer-sacrifice — sacrifices another creature for a counter, then itself', () => {
+    const { seat, onBattlefield, state } = run('carrion-feeder-viewer-sacrifice', sacrificeSteps);
+    expect(onBattlefield('Carrion Feeder')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Carrion Feeder', 'Lab Thrull']);
+    // The first activation's counter lands on the Feeder; the second has no Feeder to grow.
+    expect(
+      state.eventLog.filter((event) => event.type === 'counters').map((event) => event.payload),
+    ).toEqual([
+      expect.objectContaining({ target: 'Carrion Feeder', counter: '+1/+1', added: 1, total: 1 }),
+    ]);
+    replays('carrion-feeder-viewer-sacrifice', sacrificeSteps);
+  });
+
+  const blockSteps: Step[] = [
+    { action: 'Declare attackers', targets: ['P1'] },
+    { action: 'Declare blockers', targets: ['__no_block__'] },
+  ];
+
+  it('carrion-feeder-viewer-cant-block — only Lab Thrull is eligible to block; the Feeder never is', () => {
+    const { seat, offered } = run('carrion-feeder-viewer-cant-block', blockSteps);
+    const block = offered.find((options) => options.some((o) => o.startsWith('Declare blockers')))!;
+    expect(block).toContain('Declare blockers (1 eligible creature)');
+    expect(seat('P1').life).toBe(36);
+    replays('carrion-feeder-viewer-cant-block', blockSteps);
   });
 });

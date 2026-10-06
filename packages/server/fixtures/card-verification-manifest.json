@@ -614,15 +614,30 @@
     "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425": {
       "name": "Carrion Feeder",
       "oracleSha256": "7fb3a771052de7acaa2d3eaebe9c39509ae68522bd344b4bd2491f77e6a3e069",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "carrion-feeder-cant-block",
+          "oracleText": "This creature can't block.",
+          "implementation": [
+            "new grammar: '~ can't block' sets the printed cantBlock characteristic, which combat's canBlock checks on the permanent"
+          ],
+          "engineTestIds": ["carrion-feeder-pinned-oracle-supported", "carrion-feeder-cant-block"],
+          "viewerScenarioIds": ["carrion-feeder-viewer-cant-block"]
+        },
+        {
+          "id": "carrion-feeder-sacrifice-a-creature",
           "oracleText": "Sacrifice a creature: Put a +1/+1 counter on this creature.",
           "implementation": [
-            "explicitly unsupported; sacrificeOther cannot sacrifice this creature"
+            "interpreted activated ability: cost sacrificeOther(your creature, allowSelf: true) so Carrion Feeder may sacrifice itself; effect putCountersEach(self, +1/+1, 1)"
           ],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "carrion-feeder-pinned-oracle-supported",
+            "carrion-feeder-sacrifices-another",
+            "carrion-feeder-sacrifices-itself",
+            "carrion-feeder-only-your-creatures"
+          ],
+          "viewerScenarioIds": ["carrion-feeder-viewer-sacrifice"]
         }
       ],
       "gameplayAiScenarioIds": []

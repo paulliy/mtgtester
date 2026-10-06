@@ -8,7 +8,7 @@
  *
  * The lab backend holds a single live session, so these tests run serially.
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import type { ServerToClientMessage, SpectatorPermanent } from '@mtg/shared';
 
 test.describe.configure({ mode: 'serial' });
@@ -2846,6 +2846,21 @@ test('Retrofitter Foundry: Servo, Thopter, then Construct', async ({ page }) => 
   await expect(permanent(page, 'Construct')).toBeVisible();
 });
 
+/** Pass priority whenever offered until `target` is visible. */
+async function passUntil(page: Page, target: Locator): Promise<void> {
+  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  await expect
+    .poll(
+      async () => {
+        if (await target.isVisible()) return true;
+        if (await pass.isVisible()) await pass.click();
+        return false;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+}
+
 /** Wait until the action log shows `resolves` resolving more than `before` times. */
 async function awaitResolution(page: Page, resolves: string, before: number): Promise<void> {
   const resolved = page.getByText(`${resolves} resolves`);
@@ -3092,4 +3107,55 @@ test('Mistveil Plains: one white permanent does not unlock it', async ({ page })
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/Graveyard\s*1/).first()).toBeVisible();
   await expect(permanent(page, 'Mistveil Plains').locator('.tap-badge')).toHaveCount(0);
+});
+
+test('Carrion Feeder: sacrifice another creature, then itself', async ({ page }) => {
+  await runScenario(page, 'Carrion Feeder: sacrifice another creature, then itself');
+  const feeder = permanent(page, 'Carrion Feeder');
+
+  for (const victim of ['Lab Thrull', 'Carrion Feeder']) {
+    await expect(feeder).toHaveClass(/actionable/, { timeout: 15_000 });
+    await feeder.click();
+    // With two creatures the sacrifice is chosen by clicking a highlighted permanent; once the
+    // Feeder is alone, sacrificing it is the only way to pay and needs no choice.
+    await confirm(page);
+    if (victim === 'Lab Thrull') {
+      await expect(page.getByText(/to sacrifice as an activation cost/).first()).toBeVisible();
+      await permanent(page, victim).click();
+      await confirm(page);
+    }
+    await awaitResolution(
+      page,
+      'Put a +1/+1 counter on this creature.',
+      victim === 'Lab Thrull' ? 0 : 1,
+    );
+    if (victim === 'Lab Thrull') {
+      await expect(permanent(page, 'Lab Thrull')).toHaveCount(0);
+      await expect(feeder).toContainText('2/2');
+    }
+  }
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Carrion Feeder')).toHaveCount(0);
+  await expect(page.getByText(/Graveyard\s*2/).first()).toBeVisible();
+});
+
+test("Carrion Feeder: it can't block", async ({ page }) => {
+  await runScenario(page, "Carrion Feeder: it can't block");
+
+  // P2 attacks with Lab Ox. The Feeder's instant-speed ability keeps giving you priority, so
+  // pass until the block declaration. Only Lab Thrull may block; Carrion Feeder is never offered.
+  const declare = page.getByRole('button', { name: /Declare blockers/ });
+  await passUntil(page, declare);
+  await declare.click();
+  const rows = page.locator('.combat-assignment-row');
+  await expect(rows).toHaveCount(1);
+  await expect(rows.filter({ hasText: 'Carrion Feeder' })).toHaveCount(0);
+  await expect(rows.filter({ hasText: 'Lab Thrull' })).toHaveCount(1);
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.human-zone .life-badge, .seat[data-seat="P1"] .life-badge'),
+  ).toHaveText('36');
 });

@@ -29,6 +29,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Bespoke Battlewagon',
       'Canoptek Spyder',
       'Canoptek Wraith',
+      'Carrion Feeder',
       "Conjurer's Closet",
       'Endless Atlas',
       'Fabled Passage',

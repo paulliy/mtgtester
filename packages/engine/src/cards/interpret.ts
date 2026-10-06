@@ -5794,6 +5794,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   const additionalCountersOnEntry: { affects: Selector; counter: string; count: Value }[] = [];
   const ruleStatics: RuleStatic[] = [];
   const entersWithCounters: Record<string, number | Value> = {};
+  let cantBlock = false;
   let entersTapped = false;
   let entersTappedUnless: Condition | undefined;
   let tokenCreationReplacement: TokenSpec | undefined;
@@ -6519,6 +6520,11 @@ export function interpretCard(card: OracleCard): CardDefinition {
     }
     // 4b. A continuous static ability / CDA (ADR 0005). These specific patterns will move to
     //     the authored-override registry; here they prove the layer engine end-to-end.
+    // "~ can't block." — the printed characteristic `combat.ts` checks on the permanent.
+    if (lower === "~ can't block") {
+      cantBlock = true;
+      continue;
+    }
     {
       const stat = parseStaticLine(lower, card);
       if (stat !== null) {
@@ -7034,6 +7040,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
     manaAbilities,
     activatedAbilities,
     entersTapped,
+    ...(cantBlock ? { cantBlock: true } : {}),
     ...(entersTappedUnless !== undefined ? { entersTappedUnless } : {}),
     ...(Object.keys(entersWithCounters).length > 0 ? { entersWithCounters } : {}),
     ...(additionalCountersOnEntry.length > 0 ? { additionalCountersOnEntry } : {}),

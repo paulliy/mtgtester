@@ -6193,6 +6193,75 @@ const mistveilBlockedScenario = (gameId: GameId): CardTestScenario =>
     expectedOutcome: 'Mistveil Buried Card stays in your graveyard.',
   });
 
+const LAB_THRULL = card({
+  oracleId: 'lab-thrull',
+  name: 'Lab Thrull',
+  typeLine: 'Creature — Thrull',
+  manaCost: '{B}',
+  cmc: 1,
+  colors: ['B'],
+  colorIdentity: ['B'],
+  power: '1',
+  toughness: '1',
+});
+
+function carrionFeederSacrificeScenario(gameId: GameId): CardTestScenario {
+  const feeder = pinnedFrom(MARCHESA_BATCH1, 'Carrion Feeder');
+  return pr01Scenario(gameId, {
+    id: 'carrion-feeder-viewer-sacrifice',
+    title: 'Carrion Feeder: sacrifice another creature, then itself',
+    instructions: [
+      'Activate Carrion Feeder, sacrificing Lab Thrull: it gets a +1/+1 counter.',
+      'Activate it again, sacrificing Carrion Feeder itself.',
+    ],
+    expectedOutcome:
+      'Lab Thrull is sacrificed and Carrion Feeder gets a +1/+1 counter; then Carrion Feeder sacrifices itself and both are in your graveyard.',
+    oracleSha256: feeder.sha256,
+    clauseIds: ['carrion-feeder-sacrifice-a-creature'],
+    decks: {
+      P1: [feeder.card, LAB_THRULL, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Carrion Feeder', 'Lab Thrull'] }],
+    },
+  });
+}
+
+function carrionFeederCantBlockScenario(gameId: GameId): CardTestScenario {
+  const feeder = pinnedFrom(MARCHESA_BATCH1, 'Carrion Feeder');
+  return pr01Scenario(gameId, {
+    id: 'carrion-feeder-viewer-cant-block',
+    title: "Carrion Feeder: it can't block",
+    instructions: [
+      "It is P2's turn. P2 attacks you with Lab Ox.",
+      'Only Lab Thrull is offered as a blocker; Carrion Feeder never is. Declare no blocks.',
+    ],
+    expectedOutcome: 'Carrion Feeder is never offered as a blocker; Lab Ox deals 4 damage to you.',
+    oracleSha256: feeder.sha256,
+    clauseIds: ['carrion-feeder-cant-block'],
+    decks: {
+      P1: [feeder.card, LAB_THRULL, FOREST],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Carrion Feeder', 'Lab Thrull'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackP1WithEverything },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -6334,6 +6403,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'idol-of-oblivion-viewer-eldrazi',
   'mistveil-plains-viewer-bottom-of-library',
   'mistveil-plains-viewer-one-white-blocked',
+  'carrion-feeder-viewer-sacrifice',
+  'carrion-feeder-viewer-cant-block',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6473,6 +6544,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'idol-of-oblivion-viewer-eldrazi': idolEldraziScenario,
   'mistveil-plains-viewer-bottom-of-library': mistveilBottomScenario,
   'mistveil-plains-viewer-one-white-blocked': mistveilBlockedScenario,
+  'carrion-feeder-viewer-sacrifice': carrionFeederSacrificeScenario,
+  'carrion-feeder-viewer-cant-block': carrionFeederCantBlockScenario,
 };
 
 export function createCardTestScenario(

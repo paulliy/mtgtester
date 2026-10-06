@@ -61,18 +61,31 @@ describe('Marchesa override catalog audit inventory', () => {
     );
 
     const unique = uniqueRegistrations(source);
+    // Reviewed cards whose registration was deleted because the interpreter now models them.
+    const restored = new Set(
+      (ledger.interpreterRestored ?? [])
+        .filter((entry) => entry.sourceFile === ledger.sourceFile)
+        .map((entry) => entry.oracleId),
+    );
     const reviewed = new Map<string, string>();
     for (const batch of ledger.batches) {
       if ((batch.sourceFile ?? ledger.sourceFile) !== ledger.sourceFile) continue;
       for (const card of batch.cards) {
+        if (restored.has(card.oracleId)) {
+          expect(unique.has(card.oracleId), `${card.name} must no longer be registered`).toBe(
+            false,
+          );
+          continue;
+        }
         expect(unique.get(card.oracleId), card.name).toBe(card.name);
         reviewed.set(card.oracleId, card.implementationStatus);
       }
     }
 
     const grandfathered = [...unique.entries()].filter(([id]) => !reviewed.has(id));
-    expect(unique.size).toBe(44);
-    expect(reviewed.size).toBe(44);
+    expect(restored.size).toBe(1);
+    expect(unique.size).toBe(44 - restored.size);
+    expect(reviewed.size).toBe(44 - restored.size);
     expect(grandfathered.length).toBe(0);
     expect(
       [...reviewed.values()].every(
