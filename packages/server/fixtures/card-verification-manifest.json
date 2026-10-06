@@ -4030,6 +4030,49 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "17b60106-a4c7-410a-8ac3-ec8e74e29a7c": {
+      "name": "Mystic Sanctuary",
+      "oracleSha256": "e893509bf714c1d47fb25d292a62e3a3c8a39c7d40915c5f97d1fcabea94688e",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "id": "mystic-sanctuary-mana",
+          "oracleText": "({T}: Add {U}.)",
+          "implementation": ["Island subtype: intrinsic {T}: Add {U} (interpreted)"],
+          "engineTestIds": ["mystic-sanctuary-pinned-oracle-supported"],
+          "viewerScenarioIds": ["mystic-sanctuary-viewer-untapped-return"]
+        },
+        {
+          "id": "mystic-sanctuary-enters-tapped-unless",
+          "oracleText": "This land enters tapped unless you control three or more other Islands.",
+          "implementation": [
+            "entersTappedUnless countPermanents(Island subtype, you) >= 3, evaluated as it enters, before it is on the battlefield, so only OTHER Islands count; any Island subtype counts, basic or not"
+          ],
+          "engineTestIds": [
+            "mystic-sanctuary-enters-tapped",
+            "mystic-sanctuary-untapped-returns-spell"
+          ],
+          "viewerScenarioIds": ["mystic-sanctuary-viewer-untapped-return"]
+        },
+        {
+          "id": "mystic-sanctuary-untapped-trigger",
+          "oracleText": "When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library.",
+          "implementation": [
+            "enters trigger with the new entersUntapped event qualifier, read once as it enters (not an intervening-if: tapping it in response does not cancel)",
+            "target instant or sorcery card in your own graveyard (none: no trigger); optional on resolution; graveyardToLibraryTop"
+          ],
+          "engineTestIds": [
+            "mystic-sanctuary-untapped-returns-spell",
+            "mystic-sanctuary-decline",
+            "mystic-sanctuary-tapped-in-response",
+            "mystic-sanctuary-targets-own-instants-and-sorceries",
+            "mystic-sanctuary-enters-tapped"
+          ],
+          "viewerScenarioIds": ["mystic-sanctuary-viewer-untapped-return"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -1469,16 +1469,20 @@
   {
     "oracleId": "17b60106-a4c7-410a-8ac3-ec8e74e29a7c",
     "name": "Mystic Sanctuary",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR01.26",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"~ enters tapped unless you control three or more other Islands.\"",
       "unrecognized rules text: \"When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library.\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "171a0a09-4aee-466c-aebd-3b0d4c1f51b4",

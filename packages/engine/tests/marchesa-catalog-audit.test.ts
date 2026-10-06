@@ -123,6 +123,8 @@ describe('Marchesa override catalog audit inventory', () => {
       'snapshot.ts',
       'marchesa-the-black-rose.ts',
       'reviewed-five.ts',
+      // Coverage PR01 cards with no earlier registration, gated by pr01-card-coverage.test.ts.
+      'coverage-pr01.ts',
     ]);
     const remaining = readdirSync(OVERRIDES_DIR)
       .filter((file) => file.endsWith('.ts') && !skip.has(file))

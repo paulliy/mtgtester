@@ -53,7 +53,7 @@ interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
 }
 
-const PINNED_FILES = ['fixtures/marchesa-batch1-oracle.json'];
+const PINNED_FILES = ['fixtures/marchesa-batch1-oracle.json', 'fixtures/coverage-pr01-oracle.json'];
 const pinnedCards = PINNED_FILES.flatMap(
   (file) =>
     (JSON.parse(readFileSync(join(import.meta.dirname, file), 'utf8')) as PinnedFixture).cards,
@@ -3196,6 +3196,132 @@ describe('Return to Nature', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.26 Mystic Sanctuary
+// ---------------------------------------------------------------------------------------------
+
+describe('Mystic Sanctuary', () => {
+  const sanctuary = pinned('Mystic Sanctuary');
+  const island = () =>
+    oracle({
+      name: 'Island',
+      typeLine: 'Basic Land — Island',
+      manaCost: null,
+      oracleText: '({T}: Add {U}.)',
+    });
+  const dualIsland = () =>
+    oracle({
+      name: 'Sanctuary Strait',
+      typeLine: 'Land — Island Swamp',
+      manaCost: null,
+      oracleText: '({T}: Add {U} or {B}.)',
+    });
+  const bolt = () =>
+    oracle({
+      name: 'Sanctuary Bolt',
+      typeLine: 'Instant',
+      manaCost: '{R}',
+      oracleText: 'Draw a card.',
+    });
+
+  /** Play Mystic Sanctuary from P1's hand as the land drop, with `islands` already out. */
+  function playSanctuary(ctx: GameContext, islands: OracleCard[]) {
+    for (const land of islands) spawn(ctx, 'P1', land);
+    const inHand = conjure(ctx, 'P1', sanctuary.card, 'hand');
+    const play = priorityOptions(ctx, 'P1').find((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'playLand' && payload.objectId === inHand.id;
+    });
+    expect(play).toBeDefined();
+    takeAction(ctx, 'P1', play!.payload as PriorityActionPayload);
+    return ctx.state.battlefield.find((entry) => entry.name === 'Mystic Sanctuary')!;
+  }
+
+  const accept =
+    (yes: boolean, target?: string): Answer =>
+    (decision) => {
+      if (decision.decisionType === 'optionalTrigger') {
+        return optionMatching(decision, yes ? /^Yes$/ : /^No$/);
+      }
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined && target !== undefined) {
+        return { index: 0, targets: new Map([[slot.slot, target]]) };
+      }
+      return { index: 0, targets: new Map() };
+    };
+
+  it('mystic-sanctuary-pinned-oracle-supported — pins the Oracle and models the conditional entry and the untapped-entry trigger', () => {
+    expect(sanctuary.sha256).toBe(
+      'e893509bf714c1d47fb25d292a62e3a3c8a39c7d40915c5f97d1fcabea94688e',
+    );
+    const def = interpretCard(sanctuary.card);
+    expect(def.modeled).toBe(true);
+    expect(def.subtypes).toContain('Island');
+    expect(def.manaAbilities).toEqual([expect.objectContaining({ units: [['U']] })]);
+    expect(def.entersTappedUnless).toEqual({
+      kind: 'countPermanents',
+      selector: { kind: 'subtype', value: 'Island' },
+      scope: 'you',
+      cmp: '>=',
+      n: 3,
+    });
+    expect(def.triggers[0]).toMatchObject({
+      optional: true,
+      trigger: { when: 'enters', entersUntapped: true },
+      effects: [{ op: 'graveyardToLibraryTop', target: 0 }],
+    });
+  });
+
+  it('mystic-sanctuary-enters-tapped — with two other Islands it enters tapped and nothing triggers', () => {
+    const ctx = pod('sanctuary-tapped');
+    conjure(ctx, 'P1', bolt(), 'graveyard');
+    const self = playSanctuary(ctx, [island(), island()]);
+    expect(self.tapped).toBe(true);
+    const { decisions } = settle(ctx, accept(true));
+    expect(decisions.some((decision) => decision.decisionType === 'optionalTrigger')).toBe(false);
+    expect(ctx.state.stack).toHaveLength(0);
+  });
+
+  it('mystic-sanctuary-untapped-returns-spell — with three other Islands (any Island) it enters untapped and may put an instant on top', () => {
+    const ctx = pod('sanctuary-untapped');
+    const spell = conjure(ctx, 'P1', bolt(), 'graveyard');
+    const self = playSanctuary(ctx, [island(), island(), dualIsland()]);
+    expect(self.tapped).toBe(false);
+    settle(ctx, accept(true, spell.id));
+    expect(playerById(ctx, 'P1').library[0]?.cardId).toBe(spell.cardId);
+    expect(playerById(ctx, 'P1').graveyard).toEqual([]);
+  });
+
+  it('mystic-sanctuary-decline — answering no leaves the graveyard alone', () => {
+    const ctx = pod('sanctuary-decline');
+    const spell = conjure(ctx, 'P1', bolt(), 'graveyard');
+    playSanctuary(ctx, [island(), island(), island()]);
+    settle(ctx, accept(false, spell.id));
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.cardId)).toEqual([spell.cardId]);
+  });
+
+  it('mystic-sanctuary-tapped-in-response — "enters untapped" is part of the event, so tapping it in response does not cancel', () => {
+    const ctx = pod('sanctuary-response');
+    const spell = conjure(ctx, 'P1', bolt(), 'graveyard');
+    const self = playSanctuary(ctx, [island(), island(), island()]);
+    pump(priorityCheckpoint(ctx), accept(true, spell.id));
+    expect(ctx.state.stack).toHaveLength(1);
+    self.tapped = true;
+    resolveTop(ctx, accept(true, spell.id));
+    expect(playerById(ctx, 'P1').library[0]?.cardId).toBe(spell.cardId);
+  });
+
+  it("mystic-sanctuary-targets-own-instants-and-sorceries — creature cards and opponents' graveyards are not targets", () => {
+    const ctx = pod('sanctuary-targets');
+    conjure(ctx, 'P1', bear(), 'graveyard');
+    conjure(ctx, 'P2', bolt(), 'graveyard');
+    playSanctuary(ctx, [island(), island(), island()]);
+    const { decisions } = settle(ctx, accept(true));
+    expect(decisions.some((decision) => decision.decisionType === 'optionalTrigger')).toBe(false);
+    expect(ctx.state.stack).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3331,6 +3457,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Return to Nature',
     sha256: 'fabfad3d3c71353543dc51eba22fda33136e020c811fd4d553b2dcace2fa28a0',
     clauseCount: 4,
+  },
+  {
+    name: 'Mystic Sanctuary',
+    sha256: 'e893509bf714c1d47fb25d292a62e3a3c8a39c7d40915c5f97d1fcabea94688e',
+    clauseCount: 3,
   },
 ];
 

@@ -196,6 +196,10 @@ const W2_REMAINING_BATCH1: PinnedOracleFile = JSON.parse(
 const MARCHESA_BATCH1: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/marchesa-batch1-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
+/** Coverage PR01 cards that had no earlier pinned fixture. */
+const COVERAGE_PR01: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr01-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
 
 function pinnedFrom(file: PinnedOracleFile, name: string): { card: OracleCard; sha256: string } {
   const entry = file.cards.find((candidate) => candidate.card.name === name);
@@ -5144,6 +5148,33 @@ function returnToNatureExileScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function mysticSanctuaryScenario(gameId: GameId): CardTestScenario {
+  const sanctuary = pinnedFrom(COVERAGE_PR01, 'Mystic Sanctuary');
+  return pr01Scenario(gameId, {
+    id: 'mystic-sanctuary-viewer-untapped-return',
+    title: 'Mystic Sanctuary: enters untapped and returns an instant',
+    instructions: [
+      'Play Mystic Sanctuary as your land drop. You control three other Islands, so it enters untapped.',
+      'Choose to put Lab Shock from your graveyard on top of your library.',
+    ],
+    expectedOutcome:
+      'Mystic Sanctuary enters untapped and Lab Shock moves from your graveyard to the top of your library.',
+    oracleSha256: sanctuary.sha256,
+    clauseIds: ['mystic-sanctuary-enters-tapped-unless', 'mystic-sanctuary-untapped-trigger'],
+    decks: {
+      P1: [sanctuary.card, ISLAND, ISLAND, ISLAND, LAB_SHOCK],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Mystic Sanctuary'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Island', 'Island', 'Island'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Shock'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5256,6 +5287,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'aether-channeler-viewer-bounce-another',
   'return-to-nature-viewer-destroy-enchantment',
   'return-to-nature-viewer-exile-graveyard-card',
+  'mystic-sanctuary-viewer-untapped-return',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5364,6 +5396,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'aether-channeler-viewer-bounce-another': aetherChannelerScenario,
   'return-to-nature-viewer-destroy-enchantment': returnToNatureDestroyScenario,
   'return-to-nature-viewer-exile-graveyard-card': returnToNatureExileScenario,
+  'mystic-sanctuary-viewer-untapped-return': mysticSanctuaryScenario,
 };
 
 export function createCardTestScenario(

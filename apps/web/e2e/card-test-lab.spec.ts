@@ -2454,3 +2454,20 @@ test('Return to Nature: exile target card from a graveyard', async ({ page }) =>
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/Exile\s*1/).first()).toBeVisible();
 });
+
+test('Mystic Sanctuary: enters untapped and returns an instant', async ({ page }) => {
+  await runScenario(page, 'Mystic Sanctuary: enters untapped and returns an instant');
+
+  const sanctuary = handCard(page, 'Mystic Sanctuary');
+  await expect(sanctuary).toHaveClass(/actionable/);
+  await sanctuary.click();
+
+  // Three other Islands: it enters untapped, so the trigger fires; Lab Shock is the only target.
+  await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Mystic Sanctuary')).not.toHaveClass(/tapped/);
+  await expect(page.getByText(/Library\s*1/).first()).toBeVisible();
+  await expect(page.getByText(/Graveyard\s*0/).first()).toBeVisible();
+});

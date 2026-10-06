@@ -1020,6 +1020,64 @@
     }
   },
   {
+    "oracleId": "17b60106-a4c7-410a-8ac3-ec8e74e29a7c",
+    "name": "Mystic Sanctuary",
+    "handledLines": [
+      "When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library.",
+      "~ enters tapped unless you control three or more other Islands."
+    ],
+    "def": {
+      "entersTappedUnless": {
+        "cmp": ">=",
+        "kind": "countPermanents",
+        "n": 3,
+        "scope": "you",
+        "selector": {
+          "kind": "subtype",
+          "value": "Island"
+        }
+      },
+      "triggers": [
+        {
+          "description": "You may put target instant or sorcery card from your graveyard on top of your library",
+          "effects": [
+            {
+              "op": "graveyardToLibraryTop",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Instant"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Sorcery"
+                  }
+                ]
+              },
+              "kind": "cardInGraveyard"
+            }
+          ],
+          "trigger": {
+            "entersUntapped": true,
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "180e1a7e-890d-477c-80a5-da8a5f2857b3",
     "name": "Reckless Fireweaver",
     "handledLines": [],
@@ -17153,6 +17211,64 @@
     "name": "Mystic Forge",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-mystic-sanctuary",
+    "name": "Mystic Sanctuary",
+    "handledLines": [
+      "When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library.",
+      "~ enters tapped unless you control three or more other Islands."
+    ],
+    "def": {
+      "entersTappedUnless": {
+        "cmp": ">=",
+        "kind": "countPermanents",
+        "n": 3,
+        "scope": "you",
+        "selector": {
+          "kind": "subtype",
+          "value": "Island"
+        }
+      },
+      "triggers": [
+        {
+          "description": "You may put target instant or sorcery card from your graveyard on top of your library",
+          "effects": [
+            {
+              "op": "graveyardToLibraryTop",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Instant"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Sorcery"
+                  }
+                ]
+              },
+              "kind": "cardInGraveyard"
+            }
+          ],
+          "trigger": {
+            "entersUntapped": true,
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-necron-deathmark",

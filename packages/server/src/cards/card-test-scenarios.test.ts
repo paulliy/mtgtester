@@ -151,6 +151,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'aether-channeler-viewer-bounce-another',
       'return-to-nature-viewer-destroy-enchantment',
       'return-to-nature-viewer-exile-graveyard-card',
+      'mystic-sanctuary-viewer-untapped-return',
     ]);
   });
 

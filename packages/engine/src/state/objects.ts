@@ -1143,6 +1143,9 @@ export function queueTriggersForEvent(
         // and abilities never qualify, regardless of what the subject selector matches.
         if (when === 'becomesTargeted' && s.sourceControllerId === source.controllerId)
           return false;
+        if ('entersUntapped' in spec && spec.entersUntapped === true && s.permanent.tapped) {
+          return false;
+        }
         return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
           : matchesSelector(ctx, s.permanent, spec.subject.selector, from);

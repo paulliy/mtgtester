@@ -731,3 +731,15 @@ describe('Return to Nature Card Test Lab scenarios', () => {
     replays('return-to-nature-viewer-exile-graveyard-card', exileSteps);
   });
 });
+
+describe('Mystic Sanctuary Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Play Mystic Sanctuary' }, { action: 'Yes' }];
+
+  it('mystic-sanctuary-viewer-untapped-return — enters untapped and puts the instant on top', () => {
+    const { seat, onBattlefield } = run('mystic-sanctuary-viewer-untapped-return', steps);
+    expect(onBattlefield('Mystic Sanctuary')[0]?.tapped).toBe(false);
+    expect(seat('P1').library.map((card) => card.name)).toEqual(['Lab Shock']);
+    expect(seat('P1').graveyard).toEqual([]);
+    replays('mystic-sanctuary-viewer-untapped-return', steps);
+  });
+});

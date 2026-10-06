@@ -1204,6 +1204,12 @@ export type TriggerHead =
        * The count reaches the effects as the `triggerCount` `Value`.
        */
       aggregate?: boolean | 'byEventPlayer';
+      /**
+       * "When this land enters **untapped**" (Mystic Sanctuary) — part of the trigger event, read
+       * once as the permanent enters. Not an intervening-if (CR 603.4): tapping it in response
+       * does not remove the ability.
+       */
+      entersUntapped?: true;
     }
   /**
    * "Whenever you cast a Dragon spell" — the subject is a spell on the stack, so it is matched

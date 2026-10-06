@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-06",
+  "cards": [
+    {
+      "sha256": "e893509bf714c1d47fb25d292a62e3a3c8a39c7d40915c5f97d1fcabea94688e",
+      "card": {
+        "oracleId": "17b60106-a4c7-410a-8ac3-ec8e74e29a7c",
+        "scryfallId": "4cd86997-d7b9-4b5b-9488-11f5c679e4d3",
+        "name": "Mystic Sanctuary",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Land — Island",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [
+          "Island"
+        ],
+        "oracleText": "({T}: Add {U}.)\nThis land enters tapped unless you control three or more other Islands.\nWhen this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9bb13d41853e16160f5e38c4c1470a7b91403284e0e1306f001227d86a7435d5",
+      "card": {
+        "oracleId": "bd002797-a545-4bee-88bf-b878436e7cca",
+        "scryfallId": "989b299b-daa9-4bda-94e2-9a2f0e8f2bce",
+        "name": "Brokers Hideout",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b7a06140e0022bef19a4a2e2b61c1d72dd7173f61421f1acfe414da5eee7e541",
+      "card": {
+        "oracleId": "8ea10a5a-b698-4f7d-a9c8-520f8d835f34",
+        "scryfallId": "2d3c6325-450d-47f3-a69b-cdfc25ae65e6",
+        "name": "Sweet-Gum Recluse",
+        "manaCost": "{4}{G}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Spider",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Spider"
+        ],
+        "oracleText": "Flash\nCascade\nReach\nWhen this creature enters, put three +1/+1 counters on each of any number of target creatures that entered this turn.",
+        "power": "0",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach",
+          "Flash",
+          "Cascade"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b4db59d3f23bce59cddf085d47b283059f82bea48ef05cd4a0c110961f4f303d",
+      "card": {
+        "oracleId": "8b21062e-97b0-4967-96df-30e8309f4fba",
+        "scryfallId": "3c35ca79-eb72-427a-a8ed-404b2214389a",
+        "name": "Kogla, the Titan Ape",
+        "manaCost": "{3}{G}{G}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Ape",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Ape"
+        ],
+        "oracleText": "When Kogla enters, it fights up to one target creature you don't control.\nWhenever Kogla attacks, destroy target artifact or enchantment defending player controls.\n{1}{G}: Return target Human you control to its owner's hand. Kogla gains indestructible until end of turn.",
+        "power": "7",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Fight"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

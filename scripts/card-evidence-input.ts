@@ -1285,6 +1285,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Return to Nature: exile target card from a graveyard'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mystic Sanctuary: enters untapped and returns an instant'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);
