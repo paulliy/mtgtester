@@ -20,6 +20,9 @@ const ORACLE_ID = 'ab1cc360-b9de-48d9-9983-4dfe4a7d2a37';
 const ORACLE_SHA256 = '7d764e957064fa08627fd48a85e1ea9aa50de341ffa09a88c2d36d0598156746';
 
 const SOURCE_FILES = [
+  'packages/engine/tests/fixtures/bug-hunt-oracle.json',
+  'packages/server/fixtures/coverage-oracle.json',
+  'packages/server/src/cards/bug-hunt-scenarios.ts',
   'scripts/card-evidence-input.ts',
   'docs/plans/fail-closed-card-restoration.md',
   'packages/engine/src/cards/ability.ts',

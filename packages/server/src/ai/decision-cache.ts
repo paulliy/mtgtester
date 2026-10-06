@@ -51,6 +51,10 @@ export function digestDecision(request: DecisionRequest, view: PlayerView): numb
   h = hashString(h, request.step ?? 'none');
   h = hashString(h, request.prompt);
 
+  // Choice contracts carry object identities, totals and bounds outside the menu.
+  const { requestId: _requestId, turn: _turn, ...contract } = request;
+  h = hashString(h, JSON.stringify(contract));
+
   // The menu: a cached actionId is an index into it, so it must be part of the key.
   h = mix(h, request.legalActions.length);
   for (const action of request.legalActions) {
@@ -117,13 +121,7 @@ export function digestDecision(request: DecisionRequest, view: PlayerView): numb
 }
 
 /** What the cache stores — the answer stripped of its (per-request) identity. */
-interface CachedAnswer {
-  actionId: number;
-  targets?: DecisionResponse['targets'];
-  modes?: DecisionResponse['modes'];
-  xValue?: DecisionResponse['xValue'];
-  order?: DecisionResponse['order'];
-}
+type CachedAnswer = Omit<DecisionResponse, 'requestId' | 'note'>;
 
 const DEFAULT_MAX_ENTRIES = 200;
 
@@ -148,24 +146,16 @@ export class DecisionCache {
     this.entries.set(key, hit);
 
     const response: DecisionResponse = {
+      ...structuredClone(hit),
       requestId: request.requestId,
-      actionId: hit.actionId,
       note: 'Cache: identical game state and menu already decided',
     };
-    if (hit.targets !== undefined) response.targets = hit.targets;
-    if (hit.modes !== undefined) response.modes = hit.modes;
-    if (hit.xValue !== undefined) response.xValue = hit.xValue;
-    if (hit.order !== undefined) response.order = hit.order;
     return response;
   }
 
   set(request: DecisionRequest, view: PlayerView, response: DecisionResponse): void {
     const key = digestDecision(request, view);
-    const answer: CachedAnswer = { actionId: response.actionId };
-    if (response.targets !== undefined) answer.targets = response.targets;
-    if (response.modes !== undefined) answer.modes = response.modes;
-    if (response.xValue !== undefined) answer.xValue = response.xValue;
-    if (response.order !== undefined) answer.order = response.order;
+    const { requestId: _requestId, note: _note, ...answer } = structuredClone(response);
 
     this.entries.delete(key);
     this.entries.set(key, answer);

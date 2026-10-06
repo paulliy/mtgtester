@@ -811,7 +811,58 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
       }
     }
   }
-  return sources;
+  return sources.flatMap((source) => {
+    if (source.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'mana')) return [source];
+    const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId)!;
+    const player = ctx.state.players.find((p) => p.id === playerId)!;
+    const resources: NonNullable<ManaSource['resources']>[number][] = [];
+    const sacrifices: string[][] = [];
+    let limit = Infinity;
+    for (const cost of source.costs) {
+      if (cost.kind === 'tap' || cost.kind === 'sacrificeSelf' || cost.kind === 'exileSelf')
+        limit = 1;
+      if (cost.kind === 'payLife' || cost.kind === 'payLifeValue') {
+        const amount =
+          cost.kind === 'payLife'
+            ? cost.amount
+            : evaluateValue(ctx, cost.amount, { controllerId: playerId });
+        resources.push({ key: 'life', amount, available: player.life });
+        if (amount > 0) limit = Math.min(limit, Math.floor(player.life / amount));
+      }
+      if (cost.kind === 'payEnergy') {
+        resources.push({ key: 'energy', amount: cost.amount, available: player.energy });
+        if (cost.amount > 0) limit = Math.min(limit, Math.floor(player.energy / cost.amount));
+      }
+      if (cost.kind === 'removeCounters') {
+        const amount = typeof cost.count === 'number' ? cost.count : evaluateValue(ctx, cost.count);
+        const available = perm.counters[cost.counter] ?? 0;
+        resources.push({ key: `${perm.cardId}:counter:${cost.counter}`, amount, available });
+        if (amount > 0) limit = Math.min(limit, Math.floor(available / amount));
+      }
+      if (cost.kind === 'sacrificeOther') {
+        const candidates = ctx.state.battlefield
+          .filter(
+            (p) =>
+              p.controllerId === playerId &&
+              (cost.allowSelf === true || p.id !== perm.id) &&
+              matchesSelector(ctx, p, cost.selector, {
+                cardId: perm.cardId,
+                controllerId: playerId,
+              }),
+          )
+          .map((p) => p.cardId);
+        const count = cost.count ?? 1;
+        for (let i = 0; i < count; i++) sacrifices.push(candidates);
+        limit = Math.min(limit, Math.floor(candidates.length / count));
+      }
+    }
+    const shared = {
+      ...(resources.length > 0 ? { resources } : {}),
+      ...(sacrifices.length > 0 ? { sacrifices } : {}),
+    };
+    if (!Number.isFinite(limit) || limit <= 1) return [{ ...source, ...shared }];
+    return Array.from({ length: limit }, (_, activation) => ({ ...source, ...shared, activation }));
+  });
 }
 
 /** Best-effort preview of mana symbols produced by a set of mana abilities. */
@@ -875,6 +926,8 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
     if (def === undefined) continue;
     const printedRuleStatics =
       perm.transformed && def.backFace !== undefined ? def.backFace.ruleStatics : def.ruleStatics;
+    if (printedRuleStatics.length === 0 || computeCharacteristics(ctx, perm).loseAbilities)
+      continue;
     for (const rs of printedRuleStatics) {
       if (rs.kind === 'costReduction' && rs.selfOnly === true) continue;
       out.push({
@@ -1119,6 +1172,7 @@ export function damageAmountAfterReplacements(
   sourceCardId: string,
   targetControllerId: PlayerId,
   amount: number,
+  sourceControllerId?: PlayerId,
 ): number {
   const sourcePerm = ctx.state.battlefield.find((p) => p.cardId === sourceCardId);
   for (const entry of gatherRuleStatics(ctx)) {
@@ -1127,7 +1181,12 @@ export function damageAmountAfterReplacements(
       const from: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
       if (matchesSelector(ctx, sourcePerm, entry.static.sourceFilter, from)) amount *= 2;
     } else if (entry.static.kind === 'damageDoubledToOpponents') {
-      if (targetControllerId !== entry.controllerId) amount *= 2;
+      if (
+        targetControllerId !== entry.controllerId &&
+        (entry.static.sourceControllerOnly !== true ||
+          (sourceControllerId ?? sourcePerm?.controllerId) === entry.controllerId)
+      )
+        amount *= 2;
     } else if (entry.static.kind === 'damageHalvedToYou') {
       if (targetControllerId === entry.controllerId) amount = Math.floor(amount / 2);
     }

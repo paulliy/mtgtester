@@ -96,6 +96,24 @@ function runRealCombat(
       const [chosen] = [...divisions.values()];
       if (chosen !== undefined) return splitDamage(chosen);
     }
+    if (
+      decision.decisionType === 'assignCombatDamage' &&
+      decision.combatDamageSplit?.targets.length === 2
+    ) {
+      // These parity cases choose maximum trample overflow explicitly; the engine
+      // now also permits keeping excess on the lone blocker.
+      const spec = decision.combatDamageSplit;
+      const blocker = ctx.state.battlefield.find((p) => p.id === spec.targets[0])!;
+      const attacker = ctx.state.battlefield.find((p) => p.id === attackerIds[0])!;
+      const deathtouch = computeCharacteristics(ctx, attacker).keywords.includes('deathtouch');
+      const lethal = Math.min(
+        spec.amount,
+        deathtouch
+          ? 1
+          : Math.max(0, computeCharacteristics(ctx, blocker).toughness - blocker.damageMarked),
+      );
+      return splitDamage({ [blocker.id]: lethal, P2: spec.amount - lethal });
+    }
     return { index: 0, targets: new Map() };
   });
 

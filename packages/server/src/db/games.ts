@@ -82,25 +82,21 @@ export class GameRecorder {
 
   /** Open a game row and its four seats. Called once, before the first turn. */
   start(seed: string, seats: readonly GameSeatRecord[], gameMode: GameMode = 'spectator'): void {
-    this.db
-      .query(
-        `INSERT INTO games (id, seed, started_at, status, game_mode) VALUES (?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET seed = excluded.seed, started_at = excluded.started_at,
-                                       status = excluded.status, game_mode = excluded.game_mode`,
-      )
-      .run(this.gameId, seed, new Date().toISOString(), 'running' satisfies GameStatus, gameMode);
-
-    for (const seat of seats) {
+    const insert = () => {
       this.db
-        .query(
-          `INSERT INTO game_players (game_id, seat, deck_snapshot_id, controller_kind)
-           VALUES (?, ?, ?, ?)
-           ON CONFLICT(game_id, seat) DO UPDATE SET
-             deck_snapshot_id = excluded.deck_snapshot_id,
-             controller_kind = excluded.controller_kind`,
-        )
-        .run(this.gameId, seatIndex(seat.seat), seat.deckSnapshotId, seat.controllerKind ?? 'ai');
-    }
+        .query(`INSERT INTO games (id, seed, started_at, status, game_mode) VALUES (?, ?, ?, ?, ?)`)
+        .run(this.gameId, seed, new Date().toISOString(), 'running' satisfies GameStatus, gameMode);
+      for (const seat of seats) {
+        this.db
+          .query(
+            `INSERT INTO game_players (game_id, seat, deck_snapshot_id, controller_kind)
+             VALUES (?, ?, ?, ?)`,
+          )
+          .run(this.gameId, seatIndex(seat.seat), seat.deckSnapshotId, seat.controllerKind ?? 'ai');
+      }
+    };
+    if (this.db.transaction !== undefined) this.db.transaction(insert)();
+    else insert();
   }
 
   /**

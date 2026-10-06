@@ -3472,6 +3472,71 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "5acff7a3-bc84-4251-bd37-80231396ac38": {
+      "name": "Chains of Custody",
+      "oracleSha256": "eb434266ac7e174bfb596bcaf65bedc3e305f5b661553e946f4e3cc80979feca",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Enchant creature you control\nWhen this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.",
+          "implementation": [
+            "Aura cast targeting",
+            "attach before entry triggers",
+            "linked exile source incarnation and owner return"
+          ],
+          "engineTestIds": ["normally cast Chains of Custody must enter attached"],
+          "viewerScenarioIds": ["regression-viewer-aura-attachment"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "321b5cc6-8df6-4292-97a0-a6a3a22f3b55": {
+      "name": "Twinflame Tyrant",
+      "oracleSha256": "8e42b54004bd00d48845c1e46c0e29b657bb7224723966d1bb6175f68315e3eb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "If a source you control would deal damage to an opponent or a permanent an opponent controls, it deals double that damage instead.",
+          "implementation": [
+            "damage replacement checks source controller, including spell sources"
+          ],
+          "engineTestIds": ["Twinflame Tyrant doubles damage only"],
+          "viewerScenarioIds": ["regression-viewer-damage-source-controller"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5f04d4b0-2c75-4f2d-97d5-96220b624b17": {
+      "name": "Queen Allenal of Ruadach",
+      "oracleSha256": "0a196282a0213107fdbb59458d7334ed2fc84cc3a8e17a800d50333f8e708e0c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "If one or more creature tokens would be created under your control, those tokens plus a 1/1 white Soldier creature token are created instead.",
+          "implementation": ["token definition identity includes all copiable characteristics"],
+          "engineTestIds": ["Queen Allenal replacement must not acquire lifelink"],
+          "viewerScenarioIds": ["regression-viewer-token-characteristics"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1861e642-21d5-4232-89f3-b5557f2946c1": {
+      "name": "Phyrexian Tower",
+      "oracleSha256": "a7c3b5164f1d8387cf0508abed41b57dedd73a2e831e98327d32155adb566321",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}, Sacrifice a creature: Add {B}{B}.",
+          "implementation": [
+            "resource-aware payment planning",
+            "activation ordering before sacrificing a needed source"
+          ],
+          "engineTestIds": ["Phyrexian Tower must allow its chosen sacrifice"],
+          "viewerScenarioIds": ["regression-viewer-mana-source-order"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

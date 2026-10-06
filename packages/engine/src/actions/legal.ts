@@ -641,6 +641,7 @@ export function computeTargetOptions(
    * excludes that source itself. Omitted ⇒ no source to exclude.
    */
   sourceCardId = '',
+  targeting = true,
 ): ObjectId[] {
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
@@ -731,9 +732,9 @@ export function computeTargetOptions(
   const permanents = ctx.state.battlefield
     .filter((p) => permanentMatchesKind(ctx, p, kind))
     // Shroud (CR 702.18) removes a permanent from every target list, its controller's included.
-    .filter((p) => !hasKeyword(ctx, p, 'shroud'))
+    .filter((p) => !targeting || !hasKeyword(ctx, p, 'shroud'))
     // Hexproof: can't be the target of spells/abilities OPPONENTS control (CR 702.11).
-    .filter((p) => p.controllerId === casterId || !hasKeyword(ctx, p, 'hexproof'))
+    .filter((p) => !targeting || p.controllerId === casterId || !hasKeyword(ctx, p, 'hexproof'))
     // Protection (CR 702.16). Kept in lockstep with `isTargetStillLegal`, which re-checks the
     // same three at resolution — a divergence means offering a target we would then refuse.
     .filter((p) => sourceColors === undefined || !hasProtectionFrom(ctx, p, sourceColors))

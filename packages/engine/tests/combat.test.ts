@@ -197,13 +197,14 @@ describe('combat (brief §5.4 worked example and CR 506–511)', () => {
       'P1',
       keywordCreature('Test Champion', 'Double strike, trample', '{1}{W}', '4/4'),
     );
-    spawn(ctx, 'P2', keywordCreature('Test Sapling', '', '{1}', '1/1'));
+    const blocker = spawn(ctx, 'P2', keywordCreature('Test Sapling', '', '{1}', '1/1'));
 
     pump(runCombatPhase(ctx), (d) => {
       const attack = attackWith('Test Champion', 'P2')(d);
       if (attack !== null) return attack;
       const block = blockWith('Test Sapling', champion.id)(d);
       if (block !== null) return block;
+      if (d.decisionType === 'assignCombatDamage') return splitDamage({ [blocker.id]: 1, P2: 3 });
       return pick(d, /Pass|does not/);
     });
 
@@ -218,13 +219,14 @@ describe('combat (brief §5.4 worked example and CR 506–511)', () => {
       'P1',
       keywordCreature('Test Crusher', 'Trample, deathtouch', '{3}{G}', '4/4'),
     );
-    spawn(ctx, 'P2', keywordCreature('Test Wall', '', '{2}', '3/3'));
+    const blocker = spawn(ctx, 'P2', keywordCreature('Test Wall', '', '{2}', '3/3'));
 
     pump(runCombatPhase(ctx), (d) => {
       const attack = attackWith('Test Crusher', 'P2')(d);
       if (attack !== null) return attack;
       const block = blockWith('Test Wall', crusher.id)(d);
       if (block !== null) return block;
+      if (d.decisionType === 'assignCombatDamage') return splitDamage({ [blocker.id]: 1, P2: 3 });
       return pick(d, /Pass|does not/);
     });
 

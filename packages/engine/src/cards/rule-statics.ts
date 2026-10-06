@@ -90,7 +90,7 @@ export type RuleStatic =
    * much damage instead" (Neriv, Heart of the Storm) — a damage REPLACEMENT effect (CR 616). */
   | { kind: 'damageDoubled'; sourceFilter: Selector }
   /** "Sources would deal damage to an opponent or their permanents" (Gisela). */
-  | { kind: 'damageDoubledToOpponents' }
+  | { kind: 'damageDoubledToOpponents'; sourceControllerOnly?: true }
   /** "Sources would deal damage to you or your permanents" (Gisela). */
   | { kind: 'damageHalvedToYou' }
   /** "If an effect would create one or more tokens under your control, it creates twice that many instead." */

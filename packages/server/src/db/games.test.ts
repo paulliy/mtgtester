@@ -102,8 +102,26 @@ describe('GameRecorder', () => {
     ]);
 
     expect(calls[0]?.sql).toContain('INSERT INTO games');
+    expect(calls[0]?.sql).not.toContain('ON CONFLICT');
     expect(calls[0]?.args).toContain('seed-x');
     expect(calls.filter((c) => c.sql.includes('INSERT INTO game_players'))).toHaveLength(2);
+  });
+
+  it('opens the game and all seats in one transaction', () => {
+    const { db, calls } = fakeDb();
+    let committedCalls = 0;
+    db.transaction =
+      (fn) =>
+      (...args) => {
+        expect(calls).toHaveLength(0);
+        fn(...args);
+        committedCalls = calls.length;
+      };
+    new GameRecorder(db, 'g-unique').start('same-seed', [
+      { seat: 'P1', deckSnapshotId: 'snap-1' },
+      { seat: 'P2', deckSnapshotId: 'snap-2' },
+    ]);
+    expect(committedCalls).toBe(3);
   });
 
   it('records single-player mode and each seat controller', () => {

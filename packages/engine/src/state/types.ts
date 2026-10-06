@@ -60,6 +60,10 @@ export interface EngineObject extends GameObject {
 
 export interface EnginePermanent extends PermanentState, EngineObject {
   zone: 'battlefield';
+  /** Controller established by entering, distinct from later control-changing effects. */
+  defaultControllerId?: PlayerId;
+  /** Control-changing effects in resolution order; the recipient leaving ends their effects. */
+  controlChanges?: PlayerId[];
   /** Whether a transforming double-faced permanent currently uses its back face. */
   transformed: boolean;
   /** Player this creature is attacking, while in combat. */
@@ -351,6 +355,8 @@ export interface CombatState {
 
 /** A triggered ability that has triggered but is not yet on the stack (CR 603.3b). */
 export interface PendingTrigger {
+  /** Battlefield incarnation that generated the trigger, retained after it leaves. */
+  sourceObjectId?: ObjectId;
   controllerId: PlayerId;
   sourceCardId: CardId;
   sourceOracleId: OracleId;
@@ -453,7 +459,7 @@ export interface EngineState extends GameState {
   /**
    * Cards exiled "until SOURCE leaves the battlefield" (Conclave Tribunal), keyed by the
    * source's card id, so `moveObject` can find and return them all when the source itself
-   * leaves (CR 610.2b — they return under the control they had when exiled). The exiled
+   * leaves (CR 610.3c — they return under their owners' control). The exiled
    * object itself lives in `exile`; this only records which one to look for and who gets it.
    */
   exiledUntilLeaves: Record<CardId, { cardId: CardId; controllerId: PlayerId }[]>;

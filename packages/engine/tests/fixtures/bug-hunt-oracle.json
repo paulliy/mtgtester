@@ -1,0 +1,912 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-09-11",
+  "cards": [
+    {
+      "sha256": "eb434266ac7e174bfb596bcaf65bedc3e305f5b661553e946f4e3cc80979feca",
+      "card": {
+        "oracleId": "5acff7a3-bc84-4251-bd37-80231396ac38",
+        "scryfallId": "3484b0bb-f305-404b-b4a9-430296061365",
+        "name": "Chains of Custody",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature you control\nWhen this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.\nEnchanted creature has ward {2}. (Whenever it becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ffbd695d4e087c74775a9a50a680773cd8131fbba0422ffff9f49a5d5d9cfffc",
+      "card": {
+        "oracleId": "dbb8a3d9-6b1b-4ad1-b8b9-f92ead03d1d9",
+        "scryfallId": "f98ca390-d2ea-41c8-93ed-57fcd22737d8",
+        "name": "Coercive Impetus",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature gets +1/+1 and is goaded. (It attacks each combat if able and attacks a player other than you if able.)\nWhenever enchanted creature attacks, you draw a card and lose 1 life.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad",
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8e42b54004bd00d48845c1e46c0e29b657bb7224723966d1bb6175f68315e3eb",
+      "card": {
+        "oracleId": "321b5cc6-8df6-4292-97a0-a6a3a22f3b55",
+        "scryfallId": "1eb34f51-0bd2-43c3-af95-2ce8dabcc7bb",
+        "name": "Twinflame Tyrant",
+        "manaCost": "{3}{R}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nIf a source you control would deal damage to an opponent or a permanent an opponent controls, it deals double that damage instead.",
+        "power": "3",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3965db91ca2244009ad9d7a63e3fe627ac272950655f2e1d342785410e0a98c7",
+      "card": {
+        "oracleId": "f89de40f-52d3-44b1-8faa-6ddaa32880d0",
+        "scryfallId": "ac148784-b7b6-4aae-bffb-a4cf09f56971",
+        "name": "Rith, Liberated Primeval",
+        "manaCost": "{2}{R}{G}{W}",
+        "cmc": 5,
+        "colors": [
+          "G",
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Dragon",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, ward {2}\nOther Dragons you control have ward {2}.\nAt the beginning of your end step, if a creature or planeswalker an opponent controlled was dealt excess damage this turn, create a 4/4 red Dragon creature token with flying.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Ward"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0a196282a0213107fdbb59458d7334ed2fc84cc3a8e17a800d50333f8e708e0c",
+      "card": {
+        "oracleId": "5f04d4b0-2c75-4f2d-97d5-96220b624b17",
+        "scryfallId": "b44b4e8b-7675-4c6a-a16a-92f8b6a0259f",
+        "name": "Queen Allenal of Ruadach",
+        "manaCost": "{G}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Elf Noble",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Noble"
+        ],
+        "oracleText": "Queen Allenal of Ruadach's power and toughness are each equal to the number of creatures you control.\nIf one or more creature tokens would be created under your control, those tokens plus a 1/1 white Soldier creature token are created instead.",
+        "power": "*",
+        "toughness": "*",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0f2ceb0abebb655426f702639ff86a5342b8a83c919d693ce164352a9fca9d94",
+      "card": {
+        "oracleId": "d7a38484-2acc-49a6-b32d-d54dddb14d31",
+        "scryfallId": "cf2a9e82-8670-4b7f-b5f0-8e10f8aeff1c",
+        "name": "Dawn of Hope",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever you gain life, you may pay {2}. If you do, draw a card.\n{3}{W}: Create a 1/1 white Soldier creature token with lifelink.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a7c3b5164f1d8387cf0508abed41b57dedd73a2e831e98327d32155adb566321",
+      "card": {
+        "oracleId": "1861e642-21d5-4232-89f3-b5557f2946c1",
+        "scryfallId": "0b47f6d2-9f65-47a4-bfc4-15619befe53d",
+        "name": "Phyrexian Tower",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Legendary Land",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{T}, Sacrifice a creature: Add {B}{B}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b724d983ff9d9cfa82edcdbf0db252f6810dbb807c1f4853513130005a4890d6",
+      "card": {
+        "oracleId": "68954295-54e3-4303-a6bc-fc4547a4e3a3",
+        "scryfallId": "6a0b230b-d391-4998-a3f7-7b158a0ec2cd",
+        "name": "Llanowar Elves",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elf Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Druid"
+        ],
+        "oracleText": "{T}: Add {G}.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7242d946f1bf41c2b62c576b845a3e9bbfb511d4628e61db5e7f40a55b3f8885",
+      "card": {
+        "oracleId": "8b755881-a72d-4e21-a369-d2924eb4585a",
+        "scryfallId": "e60deb92-f7dd-4f4e-9036-e47dd586f985",
+        "name": "Cultivate",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Search your library for up to two basic land cards, reveal those cards, put one onto the battlefield tapped and the other into your hand, then shuffle.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "21dbe6d091dcc8c44babb0927a5d2dd88782409e9f6f61b2f18f8784c539c9df",
+      "card": {
+        "oracleId": "4d18bcba-a346-445e-a182-6cc30b7e066d",
+        "scryfallId": "3c0f7157-a375-499c-92c7-d47d2e95dbad",
+        "name": "Ashnod's Altar",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Sacrifice a creature: Add {C}{C}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "74281c344675c84c7e9bf505c748cfc49a81d03087904f01e856fc4c0fc7973b",
+      "card": {
+        "oracleId": "00c0543c-2a1f-4425-8283-4062d74a1637",
+        "scryfallId": "daafd816-f7c1-4630-9e5c-a1e5db570a35",
+        "name": "Solemn Simulacrum",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Golem",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Golem"
+        ],
+        "oracleText": "When this creature enters, you may search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.\nWhen this creature dies, you may draw a card.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "60e494b5a27f6cab8d10d059745bde6be4718d6134041275ed2491ac2ec7d17f",
+      "card": {
+        "oracleId": "32263baa-d3f0-463f-92b3-4e9938476add",
+        "scryfallId": "535b9ac6-dba2-4162-86ed-df3e9fad0306",
+        "name": "Hedron Archive",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}{C}.\n{2}, {T}, Sacrifice this artifact: Draw two cards.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3ffe44404e5d8920631095f59f9d4d2cf6f2c1c7d75e097d42c0a3fb82d4f8e6",
+      "card": {
+        "oracleId": "d0ee5bdc-2b69-4b73-9a20-ffcc18783b29",
+        "scryfallId": "504a69eb-3c2d-4bb1-b117-252b15acf0c2",
+        "name": "Mana Confluence",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}, Pay 1 life: Add one mana of any color.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e9ca785fcb292b4cc54c4fe7b0a931d90b37165b32e523e65aa643b368ab5482",
+      "card": {
+        "oracleId": "ac10d218-f9a6-4058-9cda-a15ca1b0b7b5",
+        "scryfallId": "aaf258fc-3ba4-4b83-bdbf-10a07e0b6c03",
+        "name": "Assassin's Trophy",
+        "manaCost": "{B}{G}",
+        "cmc": 2,
+        "colors": [
+          "B",
+          "G"
+        ],
+        "colorIdentity": [
+          "B",
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target permanent an opponent controls. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "40940c9930c70530e60c8cfe4c36c39c5893a0c9f60242505af31fb573b59ee1",
+      "card": {
+        "oracleId": "6ad8011d-3471-4369-9d68-b264cc027487",
+        "scryfallId": "91fdb56b-54d5-4272-8319-505ff987fe9b",
+        "name": "Sol Ring",
+        "manaCost": "{1}",
+        "cmc": 1,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}{C}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d1b319e79623360cf97f01d2c4d7aa3d977a2de83dd8d84cc8b413d5813e2adb",
+      "card": {
+        "oracleId": "7c4c556c-b5e3-493a-a7b0-38c55b7809ac",
+        "scryfallId": "13129e63-558d-415d-87eb-616868205341",
+        "name": "Oji, the Exquisite Blade",
+        "manaCost": "{2}{W}{U}",
+        "cmc": 4,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Monk",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Monk"
+        ],
+        "oracleText": "When Oji enters, you gain 2 life and scry 2.\nWhenever you cast your second spell each turn, exile up to one target creature you control, then return it to the battlefield under its owner's control.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Scry"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bb67e6b8de23a07a68e7774a5b8a609172f5e156e4c180349754452f9d2b97f3",
+      "card": {
+        "oracleId": "a044474a-cd72-4e9d-bd8d-a08f2de9cdc0",
+        "scryfallId": "368b6903-5fc4-43e7-bd44-46b8107c8bb4",
+        "name": "Reanimate",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Put target creature card from a graveyard onto the battlefield under your control. You lose life equal to that card's mana value.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "dd54721c087b619a26f981a6135c0a32dcd3864a19bfaa1ce9f7cd525b3be50e",
+      "card": {
+        "oracleId": "123d2b6e-114e-4767-860d-50790382ca4a",
+        "scryfallId": "cc4693c6-f532-4726-b51a-21b04f820448",
+        "name": "Hornet Nest",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Insect",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Insect"
+        ],
+        "oracleText": "Defender (This creature can't attack.)\nWhenever this creature is dealt damage, create that many 1/1 green Insect creature tokens with flying and deathtouch. (Any amount of damage a creature with deathtouch deals to a creature is enough to destroy it.)",
+        "power": "0",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Defender"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2afb74ec471acc6d4b5e941764475d2841122c2adcc7702e29cfd94fde798fe1",
+      "card": {
+        "oracleId": "1d5ff280-7f4d-4801-aefd-9b6e6b1f2818",
+        "scryfallId": "59793f1c-8c7e-433e-9c09-40aa3ce931a1",
+        "name": "Ajani, Caller of the Pride",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Planeswalker — Ajani",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Planeswalker"
+        ],
+        "subtypes": [
+          "Ajani"
+        ],
+        "oracleText": "+1: Put a +1/+1 counter on up to one target creature.\n−3: Target creature gains flying and double strike until end of turn.\n−8: Create X 2/2 white Cat creature tokens, where X is your life total.",
+        "power": null,
+        "toughness": null,
+        "loyalty": "4",
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "16c1dce9451da2ecb25d639cb63c337fb095cdaba0ba45a6d04ad71103f0c809",
+      "card": {
+        "oracleId": "66f9f325-5e8e-4ebf-b5b3-c6410d80f2c5",
+        "scryfallId": "900b8908-ba51-472e-ab7a-43bd07f90577",
+        "name": "Gisela, Blade of Goldnight",
+        "manaCost": "{4}{R}{W}{W}",
+        "cmc": 7,
+        "colors": [
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Angel",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Angel"
+        ],
+        "oracleText": "Flying, first strike\nIf a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead.\nIf a source would deal damage to you or a permanent you control, prevent half that damage, rounded up.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "First strike",
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0badde835e0f15580abf1b15790bb671c74fdfd1d6540667e95a5f538bdecad6",
+      "card": {
+        "oracleId": "4457ed35-7c10-48c8-9776-456485fdf070",
+        "scryfallId": "7673784e-db4b-43a1-8d55-1bb9fc1e284f",
+        "name": "Lightning Bolt",
+        "manaCost": "{R}",
+        "cmc": 1,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Lightning Bolt deals 3 damage to any target.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4c127255ec65e1daea2a3024b2118009e490ec5f56c0e47392d1f5c99ed85312",
+      "card": {
+        "oracleId": "feb244f8-bcb1-44cf-9940-2719221a7309",
+        "scryfallId": "7aff07f9-9528-4149-9af0-f4e3c66c9dc5",
+        "name": "Vampire Nighthawk",
+        "manaCost": "{1}{B}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Vampire Shaman",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Vampire",
+          "Shaman"
+        ],
+        "oracleText": "Flying\nDeathtouch (Any amount of damage this deals to a creature is enough to destroy it.)\nLifelink (Damage dealt by this creature also causes you to gain that much life.)",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Deathtouch",
+          "Flying",
+          "Lifelink"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5e2d3b95fd44cf97fe0321f71fd1ca99913957dd6b5d1508a818023acef59a8f",
+      "card": {
+        "oracleId": "c0b3bbce-977c-42a9-afcb-dabdfc717c97",
+        "scryfallId": "c569fab1-6901-40ab-b958-001698819585",
+        "name": "Atarka, World Render",
+        "manaCost": "{5}{R}{G}",
+        "cmc": 7,
+        "colors": [
+          "G",
+          "R"
+        ],
+        "colorIdentity": [
+          "G",
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Dragon",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, trample\nWhenever a Dragon you control attacks, it gains double strike until end of turn.",
+        "power": "6",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Trample"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0a0b4ea815e8dcd7d9ebe5c69624d8c83f8668bcb60f97f5e20686b87848b58b",
+      "card": {
+        "oracleId": "2d3e6549-6cc6-434f-a189-ba3b55e64c34",
+        "scryfallId": "84aa18de-6acc-46cc-8e28-3046790a6751",
+        "name": "Rampaging Baloths",
+        "manaCost": "{4}{G}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Beast",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Beast"
+        ],
+        "oracleText": "Trample\nLandfall — Whenever a land you control enters, create a 4/4 green Beast creature token.",
+        "power": "6",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Trample",
+          "Landfall"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a4cad0bb6e21eb64ca02b8b68cb6ea02fa14896a4a3f2887a8a44bcafc3206e0",
+      "card": {
+        "oracleId": "d3a0b660-358c-41bd-9cd2-41fbf3491b1a",
+        "scryfallId": "492c2f9a-51e7-4e0f-9899-23bf43ea988b",
+        "name": "Birds of Paradise",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Bird",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Bird"
+        ],
+        "oracleText": "Flying\n{T}: Add one mana of any color.",
+        "power": "0",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0d93e4c0d187373fc54e47b66b99133a628c0e63f7c39992972b8f2a74f4e386",
+      "card": {
+        "oracleId": "24882fa2-3fe9-4c1b-aa3d-0e6488b9db27",
+        "scryfallId": "e32c67d1-187f-40df-b3b3-6036f5c92834",
+        "name": "Heroic Intervention",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Permanents you control gain hexproof and indestructible until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2bdc70414a3dd2d2299ea20ce91581f4a5a43986881655aa793a63c3d5f2e275",
+      "card": {
+        "oracleId": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
+        "scryfallId": "e2a27742-08c1-4153-af7f-25a7a98f585e",
+        "name": "Reliquary Tower",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "You have no maximum hand size.\n{T}: Add {C}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import { choose, Engine, ScriptedDecisionProvider } from '@mtg/engine';
 import type { DecisionProvider, EnginePlayerConfig } from '@mtg/engine';
 import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } from '@mtg/shared';
 import type { SeatSetup } from '../match/setup';
+import { BUG_HUNT_SCENARIO_IDS, bugHuntScenario } from './bug-hunt-scenarios';
 
 export interface CardTestScenario {
   metadata: CardTestScenarioMetadata;
@@ -4114,6 +4115,7 @@ export const REVIEWED_BASELINE_SCENARIO_IDS = [
 ] as const;
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...BUG_HUNT_SCENARIO_IDS,
   ...REVIEWED_BASELINE_SCENARIO_IDS,
   'swords-viewer-exile-and-gain-life',
   'throat-viewer-destroy-nonartifact',
@@ -4189,6 +4191,9 @@ export const CARD_TEST_SCENARIO_IDS = [
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  ...Object.fromEntries(
+    BUG_HUNT_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => bugHuntScenario(id, gameId)]),
+  ),
   'tribute-viewer-cast-search-select-resolve': tributeMageScenario,
   'gev-viewer-opponent-targets-ward': gevWardScenario,
   'nightscape-viewer-activate-regenerate-destroy': nightscapeScenario,

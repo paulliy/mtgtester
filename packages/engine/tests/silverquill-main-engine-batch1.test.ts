@@ -166,7 +166,9 @@ describe('Flickering Ward', () => {
     const host = spawn(ctx, 'P1', bear());
     const other = spawn(ctx, 'P1', bear());
     const auraObj = conjure(ctx, 'P1', card, 'hand');
-    pump(moveObject(ctx, auraObj, { zone: 'battlefield' }), (decision) => pick(decision, 'Red'));
+    pump(moveObject(ctx, auraObj, { zone: 'battlefield', attachedTo: host.id }), (decision) =>
+      pick(decision, 'Red'),
+    );
     const aura = ctx.state.battlefield.find((permanent) => permanent.cardId === auraObj.cardId)!;
     aura.attachedTo = host.id;
     expect(aura.chosenOption).toBe('R');
@@ -179,7 +181,9 @@ describe('Flickering Ward', () => {
     spawn(ctx, 'P1', plains());
     const host = spawn(ctx, 'P1', bear());
     const auraObj = conjure(ctx, 'P1', card, 'hand');
-    pump(moveObject(ctx, auraObj, { zone: 'battlefield' }), (decision) => pick(decision, 'Blue'));
+    pump(moveObject(ctx, auraObj, { zone: 'battlefield', attachedTo: host.id }), (decision) =>
+      pick(decision, 'Blue'),
+    );
     const aura = ctx.state.battlefield.find((permanent) => permanent.cardId === auraObj.cardId)!;
     aura.attachedTo = host.id;
     const activate = computePriorityOptions(ctx, playerOf(ctx, 'P1')).find((option) => {

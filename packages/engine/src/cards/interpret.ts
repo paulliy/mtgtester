@@ -5143,7 +5143,7 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
     lower ===
     'if a source you control would deal damage to an opponent or a permanent an opponent controls, it deals double that damage instead'
   ) {
-    return [{ kind: 'damageDoubledToOpponents' }];
+    return [{ kind: 'damageDoubledToOpponents', sourceControllerOnly: true }];
   }
   if (lower === 'affinity for artifacts') {
     return [
@@ -6970,7 +6970,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
           }
         : {}),
     spellAbility:
-      isSpell && (spellEffects.length > 0 || spellModes !== undefined)
+      (isSpell && (spellEffects.length > 0 || spellModes !== undefined)) ||
+      (card.subtypes.includes('Aura') && spellTargets.length > 0)
         ? {
             kind: 'spell',
             targets: spellTargets,

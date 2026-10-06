@@ -24,7 +24,12 @@ import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
 import { breakYieldsForStop } from '../turn/stops';
-import { consumeRegenerationShield, moveObject, movePermanentsToGraveyard } from '../state/objects';
+import {
+  consumeRegenerationShield,
+  moveObject,
+  movePermanentsToGraveyard,
+  returnExiledUntilLeaves,
+} from '../state/objects';
 import { isCreaturePermanent, playersInApnapOrder, sourceColorsOf } from '../state/queries';
 import type {
   EngineCardObject,
@@ -48,7 +53,7 @@ function markLoss(ctx: GameContext, player: EnginePlayerState, reason: LossReaso
  * game (no dies/leave triggers — they cease to be in the game), spells/abilities they
  * control leave the stack, combat assignments against them are cleaned up.
  */
-function processEliminations(ctx: GameContext): void {
+function* processEliminations(ctx: GameContext): GameGen<void> {
   const s = ctx.state;
   for (const player of s.players) {
     if (!player.hasLost || s.eliminatedPlayers.includes(player.id)) continue;
@@ -61,19 +66,28 @@ function processEliminations(ctx: GameContext): void {
     for (const perm of leaving) {
       debug(ctx, 'zoneChange', `${perm.name} leaves the game with its owner ${player.id}`);
     }
-    // Effects giving the leaving player control of other players' permanents end (CR 800.4a),
-    // so each returns to its owner — removed from combat and newly controlled (CR 302.6) —
-    // rather than lingering on the battlefield under a player who is no longer in the game.
-    for (const perm of s.battlefield) {
+    // End effects giving a departed player control. A permanent put onto the
+    // battlefield under that player's control has no such effect to end (CR 800.4a).
+    for (const perm of [...s.battlefield]) {
       if (perm.controllerId !== player.id) continue;
-      perm.controllerId = perm.ownerId;
+      perm.controlChanges = (perm.controlChanges ?? []).filter(
+        (id) => !s.players.find((p) => p.id === id)?.hasLost,
+      );
+      const controller = perm.controlChanges.at(-1) ?? perm.defaultControllerId ?? perm.ownerId;
+      if (s.players.find((p) => p.id === controller)?.hasLost) {
+        leaving.push(perm);
+        yield* moveObject(ctx, perm, { zone: 'exile' });
+        continue;
+      }
+      perm.controllerId = controller;
       perm.timestamp = s.nextTimestamp++;
       perm.summoningSick = true;
       perm.attacking = null;
       perm.blocking = null;
       perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
-      debug(ctx, 'zoneChange', `${perm.name} returns to its owner ${perm.ownerId}`);
     }
+    // Leaving the game ends linked-exile durations too, although it queues no dies triggers.
+    for (const perm of leaving) yield* returnExiledUntilLeaves(ctx, perm.cardId);
     s.delayedTriggers = s.delayedTriggers.filter((t) => t.controllerId !== player.id);
     s.stack = s.stack.filter(
       (so) => so.controllerId !== player.id && so.card?.ownerId !== player.id,
@@ -168,7 +182,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   }
   if (acted) {
     // Simultaneous losses processed together; may end the game via GameOverSignal.
-    processEliminations(ctx);
+    yield* processEliminations(ctx);
     return true;
   }
 
@@ -215,8 +229,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     if (!s.battlefield.includes(perm)) continue;
     const chars = computeCharacteristics(ctx, perm);
 
-    // Aura attached to nothing/illegally (CR 704.5m). Auras enter Phase 2 only via test
-    // fixtures, but the SBA is real.
+    // An Aura must remain attached to a permanent allowed by its enchant restriction (CR 704.5m).
     if (chars.subtypes.includes('Aura')) {
       const host =
         perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
@@ -625,7 +638,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     (modeLabel === undefined ? '' : ` [mode: ${modeLabel}]`);
   const stackEntry: EngineStackObject = {
     id,
-    sourceId: trigger.sourceCardId,
+    sourceId: trigger.sourceObjectId ?? trigger.sourceCardId,
     controllerId: trigger.controllerId,
     kind: 'triggeredAbility',
     description: `${trigger.sourceName} — ${description}`,

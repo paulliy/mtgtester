@@ -848,7 +848,8 @@ function resolveDamageDivision(
   const deathtouch = hasKeyword(ctx, attacker, 'deathtouch');
   const lethalFor = (b: EnginePermanent): number => {
     const bpt = effectivePT(ctx, b);
-    return deathtouch ? 1 : Math.max(1, bpt.toughness - b.damageMarked);
+    const remaining = Math.max(0, bpt.toughness - b.damageMarked);
+    return b.damagedByDeathtouch ? 0 : deathtouch ? Math.min(1, remaining) : remaining;
   };
   const wellFormed =
     Object.keys(raw).every((id) => targets.includes(id)) &&
@@ -880,10 +881,9 @@ function resolveDamageDivision(
  * combat) because a blocker from the first-strike step can die before the regular step runs,
  * changing what there is to divide among.
  *
- * A single blocker (or none) has nothing to choose — CR 510.1c already forces the whole amount to
- * it, and trample's own lethal-first/excess-to-player split (CR 702.19b) still applies without a
- * decision — so those cases are left to `dealCombatDamage`'s existing forced-case logic entirely;
- * this only ever asks, and only ever has an entry in the returned map, for 2+ live blockers.
+ * A single blocker also permits a choice when trample can send excess to the player:
+ * the attacker may assign that excess to either recipient (CR 702.19b). No blocker,
+ * a nontrampling single blocker, or insufficient power for excess is forced.
  */
 function* assignDamageDivisions(
   ctx: GameContext,
@@ -895,9 +895,18 @@ function* assignDamageDivisions(
     const power = effectivePT(ctx, attacker).power;
     if (power <= 0) continue;
     const liveBlockers = liveBlockersOf(ctx, attacker);
-    if (liveBlockers.length < 2) continue;
-
     const trample = hasKeyword(ctx, attacker, 'trample');
+    if (liveBlockers.length === 0) continue;
+    if (liveBlockers.length === 1) {
+      const blocker = liveBlockers[0]!;
+      const remaining = Math.max(0, effectivePT(ctx, blocker).toughness - blocker.damageMarked);
+      const lethal = blocker.damagedByDeathtouch
+        ? 0
+        : hasKeyword(ctx, attacker, 'deathtouch')
+          ? Math.min(1, remaining)
+          : remaining;
+      if (!trample || attacker.attacking === null || power <= lethal) continue;
+    }
     const targets: ObjectId[] = liveBlockers.map((b) => b.id);
     if (trample && attacker.attacking !== null) targets.push(attacker.attacking);
 
@@ -1032,7 +1041,7 @@ function dealCombatDamage(
       continue;
     }
 
-    const division = liveBlockers.length >= 2 ? divisions.get(attacker.id) : undefined;
+    const division = divisions.get(attacker.id);
     if (division !== undefined) {
       // 2+ live blockers: use the chosen arbitrary division exactly (CR 510.1c) — including,
       // with trample, however much of it (if any) the controller sent to the defending player.
@@ -1060,15 +1069,14 @@ function dealCombatDamage(
       continue;
     }
 
-    // 0 or 1 live blocker: nothing to choose. With exactly one, CR 510.1c forces the whole
-    // amount to it, EXCEPT trample still splits lethal-to-blocker/excess-to-player (CR 702.19b)
-    // with no decision needed either, since there's only one way to satisfy "lethal first."
+    // Remaining 0/1-blocker cases are forced; any trample excess choice was handled above.
     // With zero live blockers, trample sends all remaining damage to the defending player once the
     // blocker is gone — even if that happened in the first-strike step and this is the regular step.
     const [only] = liveBlockers;
     if (only !== undefined) {
       const bpt = effectivePT(ctx, only);
-      const lethal = deathtouch ? 1 : Math.max(1, bpt.toughness - only.damageMarked);
+      const remaining = Math.max(0, bpt.toughness - only.damageMarked);
+      const lethal = only.damagedByDeathtouch ? 0 : deathtouch ? Math.min(1, remaining) : remaining;
       const toBlocker = trample ? Math.min(power, lethal) : power;
       assignments.push({
         source: attacker,

@@ -9,6 +9,7 @@
  */
 
 import type { ObjectId, OracleId, PlayerId, Zone } from '@mtg/shared';
+import { computeTargetOptions } from '../actions/legal';
 import type { Ability, KeywordAbility, ObjectTriggerWhen, TokenSpec } from '../cards/ability';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
 import type { CardDefinition } from '../cards/definition';
@@ -62,6 +63,8 @@ export interface MoveDestination {
   deferCardZoneTriggers?: boolean;
   /** Battlefield only: the controller it enters under (defaults to its owner). */
   controllerId?: PlayerId;
+  /** Aura host chosen when casting, attached before entry triggers are collected. */
+  attachedTo?: ObjectId;
   /** Battlefield only: choose the back face of an MDFC land // spell. */
   face?: 'front' | 'back';
   /**
@@ -85,6 +88,9 @@ export function removeFromCurrentZone(ctx: GameContext, obj: EngineObject): void
   };
   switch (obj.zone) {
     case 'battlefield':
+      // CR 400.7: a resolved effect's fixed set never follows a card into a new incarnation.
+      for (const effect of s.effects)
+        effect.targetCardIds = effect.targetCardIds.filter((id) => id !== obj.cardId);
       pull(s.battlefield);
       break;
     case 'exile':
@@ -162,6 +168,21 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
       : {}),
   };
 }
+/** Apply a control-changing effect without replacing the permanent's initial controller. */
+export function changeController(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  controllerId: PlayerId,
+): void {
+  (perm.controlChanges ??= []).push(controllerId);
+  perm.controllerId = controllerId;
+  perm.timestamp = ctx.state.nextTimestamp++;
+  perm.summoningSick = true;
+  perm.attacking = null;
+  perm.blocking = null;
+  perm.statuses = perm.statuses.filter((status) => status !== 'attacking' && status !== 'blocking');
+}
+
 /** Build the battlefield form of an object (used by moveObject and by casting). */
 export function makePermanent(
   ctx: GameContext,
@@ -246,6 +267,7 @@ export function makePermanent(
     ...reincarnate(ctx, obj, 'battlefield'),
     zone: 'battlefield',
     controllerId,
+    defaultControllerId: controllerId,
     transformed: false,
     tapped:
       entersTappedOverride ?? (faceDown ? false : (landFace?.entersTapped ?? def.entersTapped)),
@@ -472,6 +494,45 @@ export function* moveObject(
     if (outcome.index === 0) target = { zone: 'command' };
   }
 
+  if (target.zone === 'battlefield' && !target.faceDown) {
+    const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+    if (def.subtypes.includes('Aura')) {
+      const enchant = def.spellAbility?.targets[0];
+      const controllerId = target.controllerId ?? obj.ownerId;
+      const hosts =
+        enchant === undefined
+          ? []
+          : computeTargetOptions(
+              ctx,
+              enchant,
+              controllerId,
+              def.colors,
+              undefined,
+              undefined,
+              obj.cardId,
+              false,
+            );
+      if (target.attachedTo !== undefined) {
+        if (!hosts.includes(target.attachedTo)) return null;
+      } else {
+        // CR 303.4f: putting an Aura onto the battlefield chooses an enchantable
+        // permanent without targeting it. With no host it stays in its current zone.
+        if (hosts.length === 0) return null;
+        const outcome = yield {
+          decisionType: 'general',
+          player: controllerId,
+          prompt: `${obj.name}: choose a permanent to enchant.`,
+          options: hosts.map((id) => ({
+            type: 'attachAura',
+            description: `Enchant ${ctx.state.battlefield.find((p) => p.id === id)!.name}`,
+            payload: id,
+          })),
+        };
+        target = { ...target, attachedTo: hosts[outcome.index]! };
+      }
+    }
+  }
+
   removeFromCurrentZone(ctx, obj);
 
   if (from === 'battlefield' && target.zone === 'graveyard') {
@@ -517,6 +578,7 @@ export function* moveObject(
     if (target.entersTapped === true) entersTappedOverride = true;
     const incoming = target.face === 'back' ? { ...obj, face: 'back' as const } : obj;
     const perm = makePermanent(ctx, incoming, controllerId, entersTappedOverride, target.faceDown);
+    perm.attachedTo = target.attachedTo ?? null;
     ctx.state.battlefield.push(perm);
     next = perm;
 
@@ -750,21 +812,44 @@ export function* moveObjects(
  * The id is derived from the spec, so N Treasures share one definition entry.
  */
 function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
-  const oracleId =
-    `token:${spec.name}:${spec.typeLine}:${(spec.supertypes ?? []).join('+')}:${spec.power ?? ''}/${spec.toughness ?? ''}` as OracleId;
+  const evalPower =
+    spec.power === null || spec.power === undefined
+      ? null
+      : typeof spec.power === 'number'
+        ? spec.power
+        : evaluateValue(ctx, spec.power);
+  const evalToughness =
+    spec.toughness === null || spec.toughness === undefined
+      ? null
+      : typeof spec.toughness === 'number'
+        ? spec.toughness
+        : evaluateValue(ctx, spec.toughness);
+  // Resolve dynamic P/T before interning. All copiable characteristics, including
+  // colors and abilities, distinguish definitions; creation-only haste does not.
+  const { grantHasteUntilEot: _haste, ...copiable } = spec;
+  const canonical = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value !== null && typeof value === 'object')
+      return Object.fromEntries(
+        Object.entries(value)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, item]) => [key, canonical(item)]),
+      );
+    return value;
+  };
+  const oracleId = `token:${JSON.stringify(
+    canonical({
+      ...copiable,
+      power: evalPower,
+      toughness: evalToughness,
+      supertypes: spec.supertypes ?? [],
+      keywords: spec.keywords ?? [],
+      triggers: spec.triggers ?? [],
+      manaAbilities: spec.manaAbilities ?? [],
+      activatedAbilities: spec.activatedAbilities ?? [],
+    }),
+  )}` as OracleId;
   if (!ctx.defs.has(oracleId)) {
-    const evalPower =
-      spec.power === null || spec.power === undefined
-        ? null
-        : typeof spec.power === 'number'
-          ? spec.power
-          : evaluateValue(ctx, spec.power);
-    const evalToughness =
-      spec.toughness === null || spec.toughness === undefined
-        ? null
-        : typeof spec.toughness === 'number'
-          ? spec.toughness
-          : evaluateValue(ctx, spec.toughness);
     ctx.defs.set(oracleId, {
       oracleId,
       name: spec.name,
@@ -1088,6 +1173,7 @@ function queueCardZoneTriggers(
           ctx.state.pendingTriggers.push({
             controllerId: source.controllerId,
             sourceCardId: source.cardId,
+            sourceObjectId: source.id,
             sourceOracleId: source.oracleId,
             sourceName: source.name,
             ability,
@@ -1228,6 +1314,7 @@ export function queueTriggersForEvent(
           ctx.state.pendingTriggers.push({
             controllerId: source.controllerId,
             sourceCardId: source.cardId,
+            sourceObjectId: source.id,
             sourceOracleId: source.oracleId,
             sourceName: source.name,
             ability,
@@ -1273,6 +1360,7 @@ export function queueTriggersForEvent(
           ctx.state.pendingTriggers.push({
             controllerId: card.ownerId,
             sourceCardId: card.cardId,
+            sourceObjectId: card.id,
             sourceOracleId: card.oracleId,
             sourceName: card.name,
             ability,
@@ -1420,6 +1508,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
         ctx.state.pendingTriggers.push({
           controllerId: source.controllerId,
           sourceCardId: source.cardId,
+          sourceObjectId: source.id,
           sourceOracleId: source.oracleId,
           sourceName: source.name,
           ability,
@@ -1529,18 +1618,18 @@ function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: 
 
 /**
  * "Until SOURCE leaves the battlefield" (Conclave Tribunal, CR 610.2b): when the source itself
- * leaves — regardless of where it goes — every card it exiled this way comes back, under the
- * control it had when exiled. Each return is a normal zone change (a NEW object, "enters"
+ * leaves — regardless of where it goes — every card it exiled this way comes back, under the control
+ * of its owner (CR 610.3c). Each return is a normal zone change (a NEW object, "enters"
  * triggers included), just like any other return from exile.
  */
-function* returnExiledUntilLeaves(ctx: GameContext, sourceCardId: CardId): GameGen<void> {
+export function* returnExiledUntilLeaves(ctx: GameContext, sourceCardId: CardId): GameGen<void> {
   const entries = ctx.state.exiledUntilLeaves[sourceCardId];
   if (entries === undefined) return;
   delete ctx.state.exiledUntilLeaves[sourceCardId];
   for (const entry of entries) {
     const exiled = ctx.state.exile.find((c) => c.cardId === entry.cardId);
-    if (exiled === undefined) continue;
-    yield* moveObject(ctx, exiled, { zone: 'battlefield', controllerId: entry.controllerId });
+    if (exiled === undefined || playerById(ctx, exiled.ownerId).hasLost) continue;
+    yield* moveObject(ctx, exiled, { zone: 'battlefield', controllerId: exiled.ownerId });
   }
 }
 
@@ -1571,6 +1660,7 @@ export function queuePlayerTriggersForEvent(
         ctx.state.pendingTriggers.push({
           controllerId: perm.controllerId,
           sourceCardId: perm.cardId,
+          sourceObjectId: perm.id,
           sourceOracleId: perm.oracleId,
           sourceName: perm.name,
           ability,

@@ -493,3 +493,38 @@ describe('spectator store — server-confirmed position', () => {
     },
   );
 });
+
+it('rejects late state and log frames from a replaced game', () => {
+  setActivePinia(createPinia());
+  const store = useGameStore();
+  store.connect();
+  inbound?.(podGameStarted('replacement'));
+  const current = { gameId: 'replacement', turnNumber: 4, seats: [], battlefield: [] } as never;
+  inbound?.({
+    type: 'stateSnapshot',
+    payload: { turn: 4, sequence: 10, frontierTurn: 4, atFrontier: true, state: current },
+  });
+  inbound?.({
+    type: 'stateSnapshot',
+    payload: {
+      turn: 1,
+      sequence: 2,
+      frontierTurn: 1,
+      atFrontier: true,
+      state: { gameId: 'retired', turnNumber: 1, seats: [], battlefield: [] } as never,
+    },
+  });
+  inbound?.({
+    type: 'eventBatch',
+    payload: {
+      gameId: 'retired',
+      lines: [line(3, 1, 'retired game log')],
+      frontierTurn: 1,
+      snapshotTurns: [1],
+    },
+  });
+  expect(store.gameId).toBe('replacement');
+  expect(store.state).toEqual(current);
+  expect(store.viewTurn).toBe(4);
+  expect(store.log.some((entry) => entry.text === 'retired game log')).toBe(false);
+});

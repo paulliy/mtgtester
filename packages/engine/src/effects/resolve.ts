@@ -48,6 +48,7 @@ import {
   describeManaCost,
   entryIsUsable,
   planPayment,
+  sacrificesArePayable,
   totalPips,
   withX,
 } from '../mana/cost';
@@ -63,6 +64,7 @@ import {
   applyTokenCreationReplacements,
   consumeRegenerationShield,
   createToken,
+  changeController,
   createTokens,
   makePermanent,
   moveObject,
@@ -209,6 +211,8 @@ function findPhysicalObjectByCardId(ctx: GameContext, cardId: string): EngineObj
 
 /** Identity of whatever is dealing damage / causing an effect, for logging + rules. */
 export interface EffectSource {
+  /** The source incarnation, when resolving an ability of a permanent. */
+  id?: ObjectId;
   cardId: string;
   name: string;
   oracleId: string;
@@ -247,7 +251,13 @@ export function dealDamageToCreature(
   // Damage-doubling replacement (CR 616 — Neriv, Heart of the Storm), applied to the amount
   // BEFORE protection: the source deals more damage, independent of whether the target can
   // prevent it.
-  amount = damageAmountAfterReplacements(ctx, source.cardId, target.controllerId, amount);
+  amount = damageAmountAfterReplacements(
+    ctx,
+    source.cardId,
+    target.controllerId,
+    amount,
+    source.controllerId,
+  );
   // Protection (CR 702.16), the D in DEBT: damage from a source of a protected-from color is
   // prevented entirely, so no damage is marked and no lifelink is gained.
   if (opts.sourceColors !== undefined && hasProtectionFrom(ctx, target, opts.sourceColors)) {
@@ -263,7 +273,12 @@ export function dealDamageToCreature(
   // Excess damage this turn (Rith, Liberated Primeval) — the amount by which this single hit
   // exceeded what was needed to reduce the target to 0 toughness, accounting for damage already
   // marked. Tracked by the DAMAGED permanent's controller, regardless of who dealt it.
-  const neededToKill = Math.max(0, effectivePT(ctx, target).toughness - target.damageMarked);
+  const remainingToughness = Math.max(0, effectivePT(ctx, target).toughness - target.damageMarked);
+  const neededToKill = target.damagedByDeathtouch
+    ? 0
+    : opts.sourceHasDeathtouch
+      ? Math.min(1, remainingToughness)
+      : remainingToughness;
   if (amount > neededToKill) {
     ctx.state.excessDamageControllerIds.push(target.controllerId);
   }
@@ -319,7 +334,13 @@ export function dealDamageToPlayer(
     return 0;
   }
   // Damage-doubling replacement (CR 616 — Neriv, Heart of the Storm).
-  amount = damageAmountAfterReplacements(ctx, source.cardId, target.id, amount);
+  amount = damageAmountAfterReplacements(
+    ctx,
+    source.cardId,
+    target.id,
+    amount,
+    source.controllerId,
+  );
   if (amount <= 0) return 0;
   if (opts.sourceHasInfect === true) {
     target.poisonCounters += amount;
@@ -380,7 +401,9 @@ function dealDamageToObject(
   id: ObjectId,
   amount: number,
 ): void {
-  const sourcePermanent = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+  const sourcePermanent = ctx.state.battlefield.find(
+    (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
+  );
   const sourceHasInfect =
     sourcePermanent !== undefined && hasKeyword(ctx, sourcePermanent, 'infect');
   const sourceHasLifelink =
@@ -411,7 +434,13 @@ function dealDamageToObject(
       : null;
   if (counterKind !== null) {
     if (amount <= 0) return;
-    amount = damageAmountAfterReplacements(ctx, source.cardId, perm.controllerId, amount);
+    amount = damageAmountAfterReplacements(
+      ctx,
+      source.cardId,
+      perm.controllerId,
+      amount,
+      source.controllerId,
+    );
     if (hasProtectionFrom(ctx, perm, sourceColors)) {
       emit(ctx, 'damagePrevented', {
         source: source.name,
@@ -423,6 +452,8 @@ function dealDamageToObject(
       return;
     }
     const have = perm.counters[counterKind] ?? 0;
+    if (counterKind === 'loyalty' && amount > have)
+      ctx.state.excessDamageControllerIds.push(perm.controllerId);
     perm.counters[counterKind] = Math.max(0, have - amount);
     // Lifelink applies to damage dealt to any object or player (CR 702.15b).
     if (sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
@@ -900,6 +931,7 @@ function addCounters(
       ctx.state.pendingTriggers.push({
         controllerId: perm.controllerId,
         sourceCardId: perm.cardId,
+        sourceObjectId: perm.id,
         sourceOracleId: perm.oracleId,
         sourceName: perm.name,
         ability: threshold.ability,
@@ -924,7 +956,10 @@ function affectedBy(
   eventPlayerId?: PlayerId,
 ): EnginePermanent[] {
   return selectPermanents(ctx, selector, {
-    cardId: source.cardId,
+    cardId:
+      source.id !== undefined && !ctx.state.battlefield.some((p) => p.id === source.id)
+        ? ''
+        : source.cardId,
     controllerId: source.controllerId,
     ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
   });
@@ -1327,13 +1362,19 @@ export function* executeAbility(
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */
   const ref = (r: EffectRef): ObjectId | null => {
     if (r === 'source') {
-      return ctx.state.battlefield.find((p) => p.cardId === source.cardId)?.id ?? null;
+      return (
+        ctx.state.battlefield.find(
+          (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
+        )?.id ?? null
+      );
     }
     if (r === 'eventPlayer') {
       return (scope.eventPlayerId as unknown as ObjectId | undefined) ?? null;
     }
     if (r === 'attachedToSource') {
-      const sourcePermanent = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      const sourcePermanent = ctx.state.battlefield.find(
+        (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
+      );
       if (sourcePermanent === undefined || sourcePermanent.attachedTo === null) return null;
       return findPermanent(ctx, sourcePermanent.attachedTo)?.id ?? null;
     }
@@ -1777,7 +1818,9 @@ export function* executeAbility(
         emit(ctx, 'exile', { target: cardObj.name, source: source.name });
         const def = getDefByOracleId(ctx, cardObj.oracleId, cardObj.name);
         if (def.types.includes('Creature')) {
-          const sourcePerm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+          const sourcePerm = ctx.state.battlefield.find(
+            (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
+          );
           if (sourcePerm) addCounters(ctx, source, sourcePerm, '+1/+1', 1);
           const controller = ctx.state.players.find((p) => p.id === source.controllerId);
           if (controller) gainLife(ctx, controller, 1);
@@ -1809,6 +1852,13 @@ export function* executeAbility(
         break;
       }
       case 'exileUntilSourceLeaves': {
+        // CR 610.3a: if the duration ended before this effect resolves, exile nothing.
+        if (
+          !ctx.state.battlefield.some(
+            (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
+          )
+        )
+          break;
         const targetId = scope.targets?.[effect.targetSlot];
         if (!targetId) break;
         const perm = findPermanent(ctx, targetId);
@@ -1959,7 +2009,7 @@ export function* executeAbility(
         for (const perm of ctx.state.battlefield) {
           const chars = computeCharacteristics(ctx, perm);
           if (chars.types.includes('Creature') && perm.controllerId !== perm.ownerId) {
-            perm.controllerId = perm.ownerId;
+            changeController(ctx, perm, perm.ownerId);
           }
         }
         break;
@@ -2197,8 +2247,7 @@ export function* executeAbility(
         const t = ref(effect.target);
         const perm = t === null ? undefined : findPermanent(ctx, t);
         if (perm !== undefined && perm.controllerId !== source.controllerId) {
-          perm.controllerId = source.controllerId;
-          perm.timestamp = ctx.state.nextTimestamp++;
+          changeController(ctx, perm, source.controllerId);
           perm.summoningSick = true;
           emit(ctx, 'gainControl', {
             source: source.name,
@@ -2732,11 +2781,12 @@ export function* executeAbility(
         const targetId = ref(effect.target);
         const target =
           targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
-        const permanent = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+        const permanent = ctx.state.battlefield.find(
+          (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
+        );
         if (target === undefined || permanent === undefined) break;
         yield* drawCards(ctx, controller, 2);
-        permanent.controllerId = target.id;
-        permanent.timestamp = ctx.state.nextTimestamp++;
+        changeController(ctx, permanent, target.id);
         break;
       }
       case 'shadrixModes': {
@@ -3769,7 +3819,9 @@ export function* executeAbility(
         break;
       case 'attachSelfTo': {
         const t = ref(effect.target);
-        const equipment = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+        const equipment = ctx.state.battlefield.find(
+          (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
+        );
         if (t === null || equipment === undefined) break;
         // CR 702.6b: equipping moves the Equipment; it never leaves the battlefield, so its
         // timestamp is unchanged and the granted abilities keep their layer position.
@@ -4001,7 +4053,9 @@ export function* executeAbility(
       case 'becomeCopyOf': {
         const targetId = ref(effect.ref);
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);
-        const self = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+        const self = ctx.state.battlefield.find(
+          (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
+        );
         if (target === undefined || self === undefined || target.cardId === self.cardId) break;
         applyCopy(ctx, self, target as EnginePermanent, {
           untilEot: effect.untilEot,
@@ -4051,8 +4105,7 @@ export function* executeAbility(
       case 'gainControl':
         for (const perm of affectedBy(ctx, source, effect.selector)) {
           if (perm.controllerId === source.controllerId) continue;
-          perm.controllerId = source.controllerId;
-          perm.timestamp = ctx.state.nextTimestamp++;
+          changeController(ctx, perm, source.controllerId);
           // CR 302.6: not continuously controlled by the new controller since their turn began.
           // Left true under haste, exactly like a freshly cast creature.
           perm.summoningSick = true;
@@ -6143,7 +6196,7 @@ export function* payManaCost(
   // goes, rather than tapping everything and then adding it all. The distinction is invisible
   // for a board of ordinary lands — the pool ends up identical — and load-bearing for a source
   // whose own activation costs mana, which can only be paid out of what earlier sources made.
-  for (const source of plan.tapSources) {
+  for (const [sourceIndex, source] of plan.tapSources.entries()) {
     const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
     if (perm === undefined) throw new Error('engine bug: payment source vanished');
     // Read before the cost is paid: a Treasure's cost sacrifices it, so by the time its mana is
@@ -6170,7 +6223,47 @@ export function* payManaCost(
       }
       removeMana(player, spentOnSource);
     }
-    yield* payAbilityCosts(ctx, player, perm, source.costs, 'tapForMana');
+    const future = plan.tapSources.slice(sourceIndex + 1);
+    yield* payAbilityCosts(
+      ctx,
+      player,
+      perm,
+      source.costs,
+      'tapForMana',
+      0,
+      undefined,
+      (candidate, remainingCosts) => {
+        const available = new Set(ctx.state.battlefield.map((p) => p.cardId));
+        const unavailable = new Set([
+          candidate.cardId,
+          ...future.map((s) => s.cardId),
+          ...sources.map((s) => s.cardId).filter((id) => !available.has(id)),
+        ]);
+        const groups = future.flatMap((s) => [...(s.sacrifices ?? [])]);
+        for (const remaining of remainingCosts) {
+          if (remaining.kind !== 'sacrificeOther') continue;
+          const candidates = ctx.state.battlefield
+            .filter(
+              (p) =>
+                p.controllerId === player.id &&
+                (remaining.allowSelf === true || p.id !== perm.id) &&
+                matchesSelector(ctx, p, remaining.selector, {
+                  cardId: perm.cardId,
+                  controllerId: player.id,
+                }),
+            )
+            .map((p) => p.cardId);
+          for (let i = 0; i < (remaining.count ?? 1); i++) groups.push(candidates);
+        }
+        return (
+          !future.some((s) => s.cardId === candidate.cardId) &&
+          sacrificesArePayable(
+            groups.map((g) => g.filter((id) => available.has(id))),
+            unavailable,
+          )
+        );
+      },
+    );
 
     // Add exactly the mana the planner chose this source to produce — the SPECIFIC symbol per
     // unit (correct for multi-color sources, where the first symbol would mispay), carrying
@@ -6179,7 +6272,7 @@ export function* payManaCost(
     addMana(
       player,
       plan.produced
-        .filter((p) => p.cardId === source.cardId)
+        .filter((p) => p.cardId === source.cardId && p.activation === source.activation)
         .map(({ symbol }) => ({
           symbol,
           ...(source.restriction !== undefined ? { restriction: source.restriction } : {}),
@@ -6246,6 +6339,7 @@ export function* payAbilityCosts(
   tapEvent: 'tap' | 'tapForMana',
   announcedX = 0,
   canTap?: (candidate: EnginePermanent, remaining: readonly AbilityCost[]) => boolean,
+  canSacrifice?: (candidate: EnginePermanent, remaining: readonly AbilityCost[]) => boolean,
 ): GameGen<{ stationPower?: number }> {
   let stationPower: number | undefined;
   for (const [costIndex, cost] of costs.entries()) {
@@ -6371,7 +6465,12 @@ export function* payAbilityCosts(
               matchesSelector(ctx, candidate, cost.selector, {
                 cardId: perm.cardId,
                 controllerId: player.id,
-              }),
+              }) &&
+              (canSacrifice?.(candidate, [
+                { ...cost, count: count - i - 1 },
+                ...costs.slice(costIndex + 1),
+              ]) ??
+                true),
           );
           if (options.length === 0) throw new Error('engine bug: sacrifice cost became unpayable');
           const outcome = yield {

@@ -46,6 +46,10 @@ describe('deterministic Card Test Lab scenarios', () => {
 
   it('lists every registered scenario in catalog order', () => {
     expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
+      'regression-viewer-aura-attachment',
+      'regression-viewer-mana-source-order',
+      'regression-viewer-token-characteristics',
+      'regression-viewer-damage-source-controller',
       'tribute-viewer-cast-search-select-resolve',
       'gev-viewer-opponent-targets-ward',
       'nightscape-viewer-activate-regenerate-destroy',

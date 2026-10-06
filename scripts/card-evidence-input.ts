@@ -1174,6 +1174,22 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   { file: 'card-test-lab.spec.ts', titlePath: ['War Room: colorless mana pays a spell cost'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Public zones: reanimate an opponent’s creature'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Chains of Custody: attach before the entry trigger'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Phyrexian Tower: use the Elf before sacrificing it'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Queen Allenal: plain and lifelink Soldiers stay distinct'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Twinflame Tyrant: double damage from your spell'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

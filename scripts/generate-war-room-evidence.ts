@@ -16,6 +16,9 @@ import {
 const ORACLE_ID = '71c52bf5-2a5d-488e-8b15-7ef290e4b77d';
 const ORACLE_SHA256 = '7014d3a7b8e20db7e2a12576165361775173e73cb28f1106afa40a659d6d0c74';
 const SOURCE_FILES = [
+  'packages/engine/tests/fixtures/bug-hunt-oracle.json',
+  'packages/server/fixtures/coverage-oracle.json',
+  'packages/server/src/cards/bug-hunt-scenarios.ts',
   'scripts/card-evidence-input.ts',
   'apps/web/src/views/CardTestLabView.vue',
   'packages/engine/src/actions/ability-modes.ts',

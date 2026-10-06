@@ -40,6 +40,7 @@ import {
   oracle,
   pump,
   spawn,
+  splitDamage,
 } from './fixtures';
 
 function pod(seed = 'trigger-events-2'): GameContext {
@@ -252,7 +253,7 @@ describe('dealsCombatDamageToPlayer', () => {
     const ctx = pod();
     spawn(ctx, 'P1', combatDamageDraw());
     const trampler = spawn(ctx, 'P1', dragon('Test Trampler', '5/5', 'Trample'));
-    spawn(ctx, 'P2', keywordCreature('Test Chump', '', '{G}', '1/1'));
+    const blocker = spawn(ctx, 'P2', keywordCreature('Test Chump', '', '{G}', '1/1'));
     const before = handSize(ctx, 'P1');
 
     ctx.state.phase = 'combat';
@@ -264,6 +265,7 @@ describe('dealsCombatDamageToPlayer', () => {
           subject.name === 'Test Chump' ? trampler.id : null,
         );
       }
+      if (d.decisionType === 'assignCombatDamage') return splitDamage({ [blocker.id]: 1, P2: 4 });
       return { index: 0, targets: new Map() };
     });
 

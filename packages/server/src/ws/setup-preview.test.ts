@@ -34,6 +34,33 @@ beforeEach(() => {
 });
 
 describe('preview-bound start', () => {
+  it.each(['close', 'abandon'])(
+    'cancels before setup when %s occurs during revalidation',
+    async (interruption) => {
+      const server = seam();
+      server.setupPreviews.set('token', { request, createdAt: Date.now() });
+      let release!: (value: { blockers: string[] }) => void;
+      mocks.preview.mockReturnValue(
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+      );
+      const socket = { send: vi.fn() };
+      const pending = server.handleMessage(
+        socket,
+        JSON.stringify({ type: 'startGame', payload: { ...request, previewId: 'token' } }),
+      );
+      if (interruption === 'close') {
+        (server as unknown as { onSocketClose(socket: unknown): void }).onSocketClose(socket);
+      } else {
+        await server.handleMessage(socket, JSON.stringify({ type: 'abandonGame', payload: {} }));
+      }
+      release({ blockers: [] });
+      await pending;
+      expect(mocks.setup).not.toHaveBeenCalled();
+      expect(mocks.construct).not.toHaveBeenCalled();
+    },
+  );
   it('rejects changed selections before any setup write', async () => {
     const server = seam();
     server.setupPreviews.set('token', { request, createdAt: Date.now() });

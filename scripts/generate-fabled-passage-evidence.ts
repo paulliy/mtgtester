@@ -18,6 +18,9 @@ const ORACLE_SHA256 = 'fd064f3f1c8289f7cd3a05433a31b03a8676ba4ce9035cd6706bd3708
 const SCENARIO_ID = 'fabled-passage-viewer-search-entry-untap';
 
 const SOURCE_FILES = [
+  'packages/engine/tests/fixtures/bug-hunt-oracle.json',
+  'packages/server/fixtures/coverage-oracle.json',
+  'packages/server/src/cards/bug-hunt-scenarios.ts',
   'scripts/card-evidence-input.ts',
   'apps/web/src/views/CardTestLabView.vue',
   'docs/plans/fail-closed-card-restoration.md',
