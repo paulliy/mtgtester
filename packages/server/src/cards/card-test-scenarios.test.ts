@@ -148,6 +148,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'kairi-viewer-bounce-total-six',
       'kairi-viewer-mill-and-return',
       'will-of-the-mardu-viewer-choose-both',
+      'aether-channeler-viewer-bounce-another',
     ]);
   });
 

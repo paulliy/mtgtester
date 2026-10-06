@@ -3708,7 +3708,8 @@
                 {
                   "op": "millAndReturnSpells"
                 }
-              ]
+              ],
+              "targetSlots": []
             }
           ]
         },

@@ -84,6 +84,8 @@ export function registerURDRAGONOverrides(): void {
                 description:
                   'Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand',
                 effects: [{ op: 'millAndReturnSpells' }],
+                // Explicitly targetless: a mode without `targetSlots` would announce every slot.
+                targetSlots: [],
               },
             ],
           },

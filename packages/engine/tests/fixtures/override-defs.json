@@ -5288,7 +5288,8 @@
                   {
                     "op": "millAndReturnSpells"
                   }
-                ]
+                ],
+                "targetSlots": []
               }
             ]
           },
@@ -10341,8 +10342,109 @@
   {
     "oracleId": "fb220f46-f8b8-4804-baa4-e7d50b4871f7",
     "name": "Aether Channeler",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, choose one —",
+      "• Create a 1/1 white Bird creature token with flying.",
+      "• Draw a card.",
+      "• Return another target nonland permanent to its owner's hand."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Aether Channeler enters, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Create a 1/1 white Bird creature token with flying",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createToken",
+                    "spec": {
+                      "colors": [
+                        "W"
+                      ],
+                      "keywords": [
+                        "flying"
+                      ],
+                      "name": "Bird",
+                      "power": 1,
+                      "subtypes": [
+                        "Bird"
+                      ],
+                      "toughness": 1,
+                      "typeLine": "Creature — Bird",
+                      "types": [
+                        "Creature"
+                      ]
+                    }
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "Return another target nonland permanent to its owner's hand",
+                "effects": [
+                  {
+                    "op": "returnToHand",
+                    "target": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Draw a card",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "draw"
+                  }
+                ],
+                "targetSlots": []
+              }
+            ]
+          },
+          "targets": [
+            {
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
@@ -10641,8 +10743,109 @@
   {
     "oracleId": "oracle-aether-channeler",
     "name": "Aether Channeler",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, choose one —",
+      "• Create a 1/1 white Bird creature token with flying.",
+      "• Draw a card.",
+      "• Return another target nonland permanent to its owner's hand."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Aether Channeler enters, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Create a 1/1 white Bird creature token with flying",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createToken",
+                    "spec": {
+                      "colors": [
+                        "W"
+                      ],
+                      "keywords": [
+                        "flying"
+                      ],
+                      "name": "Bird",
+                      "power": 1,
+                      "subtypes": [
+                        "Bird"
+                      ],
+                      "toughness": 1,
+                      "typeLine": "Creature — Bird",
+                      "types": [
+                        "Creature"
+                      ]
+                    }
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "Return another target nonland permanent to its owner's hand",
+                "effects": [
+                  {
+                    "op": "returnToHand",
+                    "target": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Draw a card",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "draw"
+                  }
+                ],
+                "targetSlots": []
+              }
+            ]
+          },
+          "targets": [
+            {
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-aether-hub",
@@ -15669,7 +15872,8 @@
                   {
                     "op": "millAndReturnSpells"
                   }
-                ]
+                ],
+                "targetSlots": []
               }
             ]
           },

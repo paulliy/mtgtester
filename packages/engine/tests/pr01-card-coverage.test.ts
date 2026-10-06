@@ -2767,6 +2767,7 @@ describe('Kairi, the Swirling Sky', () => {
       [{ op: 'returnToHandEachChosen', targetSlot: 0 }],
       [{ op: 'millAndReturnSpells' }],
     ]);
+    expect(def.triggers[0]?.modes?.options.map((option) => option.targetSlots)).toEqual([[0], []]);
   });
 
   it('kairi-the-swirling-sky-bounce-total-six — returns chosen nonland permanents to their owners while their mana values total 6 or less', () => {
@@ -2830,8 +2831,10 @@ describe('Kairi, the Swirling Sky', () => {
       conjure(ctx, 'P1', card, 'library');
     }
     p1.library.reverse();
+    // A nonland permanent is on the battlefield, yet the mill mode announces no target.
+    spawn(ctx, 'P2', rock('Kairi Idol', '{3}'));
     let picks = 0;
-    dies(ctx, MILL, (decision) =>
+    const decisions = dies(ctx, MILL, (decision) =>
       RETURN.test(decision.prompt)
         ? optionMatching(decision, picks++ === 0 ? /Return Kairi Bolt/ : /Return Kairi Wave/)
         : { index: 0, targets: new Map() },
@@ -2840,6 +2843,7 @@ describe('Kairi, the Swirling Sky', () => {
     expect(p1.hand.map((card) => card.name).sort()).toEqual(['Kairi Bolt', 'Kairi Wave']);
     expect(p1.graveyard.map((card) => card.name)).toContain('Kairi Insight');
     expect(ctx.state.eventLog.filter((event) => event.type === 'mill')).toHaveLength(6);
+    expect(decisions.some((decision) => CHOOSE.test(decision.prompt))).toBe(false);
   });
 });
 
@@ -2976,6 +2980,115 @@ describe('Will of the Mardu', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.24 Aether Channeler
+// ---------------------------------------------------------------------------------------------
+
+describe('Aether Channeler', () => {
+  const channeler = pinned('Aether Channeler');
+  const relic = () => oracle({ name: 'Channel Relic', typeLine: 'Artifact', manaCost: '{2}' });
+  const MODE = /Bird creature token/;
+
+  const modeOptions = (decisions: PendingDecision[]) =>
+    decisions
+      .find((decision) => decision.options.some((option) => MODE.test(option.description)))
+      ?.options.map((option) => option.description) ?? [];
+
+  /** Cast the Channeler from P1's hand and settle, choosing `mode` and answering targets. */
+  function castChanneler(ctx: GameContext, mode: RegExp, targetId?: string) {
+    const inHand = conjure(ctx, 'P1', channeler.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'U' }, { symbol: 'U' }, { symbol: 'U' }]);
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    let offered: string[] = [];
+    const { decisions } = settle(ctx, (decision) => {
+      if (decision.options.some((option) => MODE.test(option.description))) {
+        return optionMatching(decision, mode);
+      }
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) {
+        offered = slot.options;
+        return { index: 0, targets: new Map([[slot.slot, targetId ?? slot.options[0]!]]) };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    return { decisions, offered };
+  }
+
+  it('aether-channeler-pinned-oracle-supported — pins the Oracle and models the three-mode enters trigger', () => {
+    expect(channeler.sha256).toBe(
+      '340f9c527f82807166ad11f5929dc8ddc727045317a5039a8bdaa6848d967ec1',
+    );
+    const def = interpretCard(channeler.card);
+    expect(def.modeled).toBe(true);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]?.modes?.options.map((option) => option.targetSlots)).toEqual([
+      [],
+      [0],
+      [],
+    ]);
+  });
+
+  it('aether-channeler-bird — the Bird mode creates a 1/1 white flying Bird', () => {
+    const ctx = pod('channeler-bird');
+    castChanneler(ctx, /^Create a 1\/1 white Bird/);
+    const bird = ctx.state.battlefield.find((entry) => entry.name === 'Bird')!;
+    const c = computeCharacteristics(ctx, bird);
+    expect([c.power, c.toughness, c.colors, c.keywords]).toEqual([1, 1, ['W'], ['flying']]);
+  });
+
+  it('aether-channeler-bounce-another — returns another target nonland permanent to its owner; never itself or a land', () => {
+    const ctx = pod('channeler-bounce');
+    const theirs = spawn(ctx, 'P2', relic());
+    const mine = spawn(ctx, 'P1', bear());
+    const land = spawn(ctx, 'P2', forest());
+    const { offered } = castChanneler(ctx, /^Return another target/, theirs.id);
+    expect(offered).toContain(mine.id);
+    const self = ctx.state.battlefield.find((entry) => entry.name === 'Aether Channeler')!;
+    expect(offered).toContain(theirs.id);
+    expect(offered).not.toContain(self.id);
+    expect(offered).not.toContain(land.id);
+    expect(playerById(ctx, 'P2').hand.map((card) => card.name)).toEqual(['Channel Relic']);
+  });
+
+  it('aether-channeler-draw — the draw mode draws one card', () => {
+    const ctx = pod('channeler-draw');
+    const before = playerById(ctx, 'P1').hand.length;
+    castChanneler(ctx, /^Draw a card$/);
+    expect(playerById(ctx, 'P1').hand.length).toBe(before + 1);
+  });
+
+  it('aether-channeler-bounce-needs-another — with no other nonland permanent the bounce mode is not offered', () => {
+    const ctx = pod('channeler-alone');
+    spawn(ctx, 'P2', forest());
+    const { decisions } = castChanneler(ctx, /^Draw a card$/);
+    expect(modeOptions(decisions)).toEqual([
+      'Create a 1/1 white Bird creature token with flying',
+      'Draw a card',
+    ]);
+  });
+
+  it('aether-channeler-another-excludes-source-on-activations — "another target" never offers the source itself', () => {
+    const ctx = pod('another-activation');
+    const untapper = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Untapper',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        oracleText: '{T}: Untap another target permanent.',
+      }),
+    );
+    const other = spawn(ctx, 'P1', forest(), { tapped: true });
+    const option = activationOf(ctx, 'P1', untapper);
+    expect(option?.targets?.[0]?.options).toContain(other.id);
+    expect(option?.targets?.[0]?.options).not.toContain(untapper.id);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3101,6 +3214,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Will of the Mardu',
     sha256: '282fc2b19d0d9b74ca39e2fdeeaee0e14de5314c02b3dba2cde7f55bfc813e5e',
     clauseCount: 3,
+  },
+  {
+    name: 'Aether Channeler',
+    sha256: '340f9c527f82807166ad11f5929dc8ddc727045317a5039a8bdaa6848d967ec1',
+    clauseCount: 4,
   },
 ];
 

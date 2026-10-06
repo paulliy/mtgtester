@@ -273,13 +273,48 @@
     "fb220f46-f8b8-4804-baa4-e7d50b4871f7": {
       "name": "Aether Channeler",
       "oracleSha256": "340f9c527f82807166ad11f5929dc8ddc727045317a5039a8bdaa6848d967ec1",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "When this creature enters, choose one —\n• Create a 1/1 white Bird creature token with flying.\n• Return another target nonland permanent to its owner's hand.\n• Draw a card.",
-          "implementation": ["explicitly unsupported; bounce mode is untargeted returnOneToHand"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "id": "aether-channeler-enters-modes",
+          "oracleText": "When this creature enters, choose one —",
+          "implementation": [
+            "enters trigger on self; modal, one mode, chosen as the trigger is put on the stack (CR 700.2a)",
+            "a mode whose target cannot be chosen is not offered; targetless modes declare targetSlots: []"
+          ],
+          "engineTestIds": [
+            "aether-channeler-pinned-oracle-supported",
+            "aether-channeler-bounce-needs-another"
+          ],
+          "viewerScenarioIds": ["aether-channeler-viewer-bounce-another"]
+        },
+        {
+          "id": "aether-channeler-bird",
+          "oracleText": "Create a 1/1 white Bird creature token with flying.",
+          "implementation": ["createToken BIRD_1_1_FLYING (1/1 white Bird, flying)"],
+          "engineTestIds": ["aether-channeler-bird"],
+          "viewerScenarioIds": ["aether-channeler-viewer-bounce-another"]
+        },
+        {
+          "id": "aether-channeler-bounce",
+          "oracleText": "Return another target nonland permanent to its owner's hand.",
+          "implementation": [
+            "target permanent: nonland and OTHER; target computation now receives the trigger source's card id, so 'another' excludes the Channeler (the same fix applies to every 'another target' trigger and battlefield activation)",
+            "returnToHand(target 0) to its owner's hand"
+          ],
+          "engineTestIds": [
+            "aether-channeler-bounce-another",
+            "aether-channeler-bounce-needs-another",
+            "aether-channeler-another-excludes-source-on-activations"
+          ],
+          "viewerScenarioIds": ["aether-channeler-viewer-bounce-another"]
+        },
+        {
+          "id": "aether-channeler-draw",
+          "oracleText": "Draw a card.",
+          "implementation": ["draw 1"],
+          "engineTestIds": ["aether-channeler-draw"],
+          "viewerScenarioIds": ["aether-channeler-viewer-bounce-another"]
         }
       ],
       "gameplayAiScenarioIds": []

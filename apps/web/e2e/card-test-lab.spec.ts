@@ -2389,3 +2389,29 @@ test('Will of the Mardu: choose both while you control a commander', async ({ pa
   await expect(permanent(page, 'Lab Brute')).toHaveCount(0);
   await expect(permanent(page, 'Warrior').first()).toBeVisible();
 });
+
+test('Aether Channeler: return another target nonland permanent', async ({ page }) => {
+  await runScenario(page, 'Aether Channeler: return another target nonland permanent');
+
+  const channeler = handCard(page, 'Aether Channeler');
+  await expect(channeler).toHaveClass(/actionable/);
+  await channeler.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // The mode is chosen first; only the return mode then asks for a target.
+  await expect(page.getByRole('button', { name: /^Create a 1\/1 white Bird/ })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Draw a card', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /^Return another target nonland permanent/ }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('1 in hand');
+  await expect(permanent(page, 'Aether Channeler')).toBeVisible();
+});

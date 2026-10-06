@@ -5059,6 +5059,35 @@ function willOfTheMarduScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function aetherChannelerScenario(gameId: GameId): CardTestScenario {
+  const channeler = pinnedFrom(MARCHESA_BATCH1, 'Aether Channeler');
+  return pr01Scenario(gameId, {
+    id: 'aether-channeler-viewer-bounce-another',
+    title: 'Aether Channeler: return another target nonland permanent',
+    instructions: [
+      'Cast Aether Channeler with your three Islands.',
+      "Choose the return mode, then target P2's Lab Ox.",
+    ],
+    expectedOutcome:
+      "Lab Ox returns to P2's hand. The Channeler itself and the lands were never offered as targets.",
+    oracleSha256: channeler.sha256,
+    clauseIds: ['aether-channeler-enters-modes', 'aether-channeler-bounce'],
+    decks: {
+      P1: [channeler.card, ISLAND, ISLAND, ISLAND],
+      P2: [LAB_OX, LAB_HEX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Aether Channeler'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Island', 'Island', 'Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Hex'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5168,6 +5197,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kairi-viewer-bounce-total-six',
   'kairi-viewer-mill-and-return',
   'will-of-the-mardu-viewer-choose-both',
+  'aether-channeler-viewer-bounce-another',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5273,6 +5303,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kairi-viewer-bounce-total-six': kairiScenario,
   'kairi-viewer-mill-and-return': kairiMillScenario,
   'will-of-the-mardu-viewer-choose-both': willOfTheMarduScenario,
+  'aether-channeler-viewer-bounce-another': aetherChannelerScenario,
 };
 
 export function createCardTestScenario(

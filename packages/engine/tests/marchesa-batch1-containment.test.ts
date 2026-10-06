@@ -34,7 +34,6 @@ function canonical(value: unknown): string {
 
 const REASONS: Record<string, string> = {
   'Toxic Deluge': 'Pay-X-life additional cost is implemented as loseLife on resolution.',
-  'Aether Channeler': 'Return-another-target bounce is implemented as untargeted returnOneToHand.',
   'Blasphemous Edict':
     'The thirteen-creature {B} alternative cost is claimed without an alternativeCast.',
   'Body Launderer':
@@ -300,6 +299,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Aether Channeler',
     'Will of the Mardu',
     'Kairi, the Swirling Sky',
     'Frontier Siege',

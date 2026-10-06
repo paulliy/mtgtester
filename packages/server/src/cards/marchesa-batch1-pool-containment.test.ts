@@ -21,6 +21,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
     const pool = buildSupportedPool(fixture.cards.map(({ card }) => card));
     expect(pool.considered).toBe(198);
     expect(pool.cards.map(({ card }) => card.name)).toEqual([
+      'Aether Channeler',
       'Arcane Denial',
       'Attune with Aether',
       'Beacon of Unrest',

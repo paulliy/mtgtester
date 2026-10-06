@@ -5,7 +5,7 @@ import { TAP } from '../templates';
 import type { Ability } from '../ability';
 import { constant } from '../value';
 import { allOf, anyOf, hasCounter, IS_TOKEN, OTHER, not, ofType, YOURS } from '../selector';
-import { ELDRAZI_SPAWN_0_1, TREASURE } from '../tokens';
+import { BIRD_1_1_FLYING, ELDRAZI_SPAWN_0_1, TREASURE } from '../tokens';
 import { defineCard, unsupportedCard } from './index';
 
 // Dethrone (CR 702.103) has no generic keyword representation in this engine — every carrier
@@ -82,10 +82,49 @@ const MARCHESA: Partial<CardDefinition> = {
 
 export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   // Catalog audit batch 3: bounce mode is untargeted choose-on-resolution, not "another target".
-  unsupportedCard(
+  // Coverage PR01: the mode is chosen as the trigger is put on the stack; only the bounce mode
+  // targets, and "another" excludes the Channeler itself.
+  defineCard(
     'fb220f46-f8b8-4804-baa4-e7d50b4871f7',
     'Aether Channeler',
-    'Return-another-target bounce is implemented as untargeted returnOneToHand.',
+    [
+      'When this creature enters, choose one —',
+      '• Create a 1/1 white Bird creature token with flying.',
+      "• Return another target nonland permanent to its owner's hand.",
+      '• Draw a card.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [{ kind: 'permanent', filter: allOf(not(ofType('Land')), OTHER) }],
+          effects: [],
+          modes: {
+            minChoices: 1,
+            maxChoices: 1,
+            options: [
+              {
+                description: 'Create a 1/1 white Bird creature token with flying',
+                effects: [{ op: 'createToken', spec: BIRD_1_1_FLYING, count: constant(1) }],
+                targetSlots: [],
+              },
+              {
+                description: "Return another target nonland permanent to its owner's hand",
+                effects: [{ op: 'returnToHand', target: 0 }],
+                targetSlots: [0],
+              },
+              {
+                description: 'Draw a card',
+                effects: [{ op: 'draw', count: constant(1) }],
+                targetSlots: [],
+              },
+            ],
+          },
+          description: 'When Aether Channeler enters, choose one',
+        },
+      ],
+    },
   );
   defineCard(
     '137b5708-50a9-4f4c-84e6-9043be9f1989',

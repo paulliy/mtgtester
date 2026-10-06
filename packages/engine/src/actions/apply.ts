@@ -955,7 +955,17 @@ export function* applyPriorityAction(
         const choice = outcome.targets.get(slot);
         if (choice === undefined)
           throw new Error(`missing target for slot ${slot} of ${perm.name}`);
-        if (!computeTargetOptions(ctx, spec, player.id).includes(choice)) {
+        if (
+          !computeTargetOptions(
+            ctx,
+            spec,
+            player.id,
+            undefined,
+            undefined,
+            undefined,
+            perm.cardId,
+          ).includes(choice)
+        ) {
           throw new Error(`illegal target ${choice} for slot ${slot} of ${perm.name}`);
         }
         targets[slot] = choice;

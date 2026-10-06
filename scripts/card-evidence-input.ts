@@ -1276,6 +1276,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Will of the Mardu: choose both while you control a commander'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aether Channeler: return another target nonland permanent'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

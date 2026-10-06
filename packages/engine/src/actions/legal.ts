@@ -654,6 +654,11 @@ export function computeTargetOptions(
    * the referenced slot has been chosen (falls back to the caster's own graveyard).
    */
   chosenTargets?: readonly ObjectId[],
+  /**
+   * The card id of the permanent whose ability is targeting, so an `OTHER` filter ("another
+   * target") excludes it. Omitted for spells, whose source is on the stack, not the battlefield.
+   */
+  sourceCardId?: string,
 ): ObjectId[] {
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
@@ -753,7 +758,7 @@ export function computeTargetOptions(
     .filter(
       (p) =>
         filter === undefined ||
-        matchesSelector(ctx, p, filter, { cardId: '', controllerId: casterId }),
+        matchesSelector(ctx, p, filter, { cardId: sourceCardId ?? '', controllerId: casterId }),
     )
     .map((p) => p.id);
 
@@ -1530,7 +1535,15 @@ export function computePriorityOptions(
           (e: import('../cards/ability').Effect) => e.op === 'attachSelfTo',
         );
         const targetOptionsFor = (spec: TargetSpec): ObjectId[] => {
-          const targetOptions = computeTargetOptions(ctx, spec, player.id);
+          const targetOptions = computeTargetOptions(
+            ctx,
+            spec,
+            player.id,
+            undefined,
+            undefined,
+            undefined,
+            perm.cardId,
+          );
           return isAttachAbility && perm.attachedTo !== null
             ? targetOptions.filter((id) => id !== perm.attachedTo)
             : targetOptions;

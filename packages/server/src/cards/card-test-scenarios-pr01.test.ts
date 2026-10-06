@@ -683,3 +683,24 @@ describe('Will of the Mardu Card Test Lab scenario', () => {
     replays('will-of-the-mardu-viewer-choose-both', steps);
   });
 });
+
+describe('Aether Channeler Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Aether Channeler' },
+    { action: 'Return another target nonland permanent' },
+    { action: 'Targets for Aether Channeler', targets: ['Lab Ox'] },
+  ];
+
+  it('aether-channeler-viewer-bounce-another — the return mode bounces the targeted permanent', () => {
+    const { seat, onBattlefield, offered } = run('aether-channeler-viewer-bounce-another', steps);
+    expect(offered).toContainEqual([
+      'Create a 1/1 white Bird creature token with flying',
+      "Return another target nonland permanent to its owner's hand",
+      'Draw a card',
+    ]);
+    expect(seat('P2').hand.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(onBattlefield('Lab Hex')).toHaveLength(1);
+    expect(onBattlefield('Aether Channeler')).toHaveLength(1);
+    replays('aether-channeler-viewer-bounce-another', steps);
+  });
+});
