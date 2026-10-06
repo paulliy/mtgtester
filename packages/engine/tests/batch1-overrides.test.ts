@@ -67,7 +67,7 @@ describe('Batch 1 card overrides', () => {
     );
   });
 
-  it('is catalog-contained because lieutenant buffs all permanents you control', () => {
+  it('models the lieutenant buff for creatures only (coverage PR01)', () => {
     const card = oracle({
       oracleId: 'f55334d9-1ec2-4667-bf28-5a0384d6f053',
       name: 'Thunderfoot Baloth',
@@ -77,10 +77,12 @@ describe('Batch 1 card overrides', () => {
         'Trample\nLieutenant — As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Lieutenant +2/+2 and trample apply to all permanents you control, not just creatures.',
-    );
+    expect(def.modeled).toBe(true);
+    const others = def.staticEffects.filter((effect) => effect.affects.kind === 'allOf');
+    expect(others).toHaveLength(2);
+    for (const effect of others) {
+      expect(JSON.stringify(effect.affects)).toContain('"value":"Creature"');
+    }
   });
 
   it('models Fortified Village with reveal condition', () => {

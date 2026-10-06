@@ -103,13 +103,13 @@ const MODELED = [
   'Temur Battlecrier',
   'The Ur-Dragon',
   // Inc 14 â€” modal spells, a fixed-plus-variable-count damage split, divided damage among a
-  // variable-count target group, and a resolution-time conditional effect. Kairi stays
-  // deferred (modes + variable count + a mana-value bound + mill + graveyardâ†’hand is four
-  // subsystems for one card) â€” see the increment note in the plan.
+  // variable-count target group, and a resolution-time conditional effect. Kairi was deferred
+  // until coverage PR01 added the count slot's total-mana-value budget.
   'Crux of Fate',
   'Drakuseth, Maw of Flames',
   'Stubborn Denial',
   'Ureni, the Song Unending',
+  'Kairi, the Swirling Sky',
   // Inc 15 â€” damage-doubling replacement (CR 616), gain-control-of-a-set + a control-change
   // timestamp, and turn-scoped excess-damage tracking feeding an intervening-if.
   'Karrthus, Tyrant of Jund',

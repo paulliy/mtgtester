@@ -122,9 +122,10 @@ describe.skipIf(SKIP)('L5: Human UI Reachability Tests', () => {
     }
   });
 
-  it('does not claim Sylvan Reclamation targeting after catalog containment', () => {
+  it('models Sylvan Reclamation up-to-two targeting (coverage PR01)', () => {
     const recCard = getOracleCard('Sylvan Reclamation');
     const def = interpretCard(recCard);
-    expect(def.modeled).toBe(false);
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.targets[0]?.count).toEqual({ min: 0, max: 2 });
   });
 });

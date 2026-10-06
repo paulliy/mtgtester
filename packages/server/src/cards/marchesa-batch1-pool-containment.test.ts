@@ -16,15 +16,41 @@ const fixture = JSON.parse(
 ) as PinnedFixture;
 
 describe('Marchesa catalog audit supported-pool containment', () => {
-  it('includes the independently restored Arcane Denial, Fabled Passage, and Smothering Tithe slices', () => {
+  // Fail-closed restorations plus the coverage PR01 cards (docs/plans/card-coverage-chunks.md).
+  it('includes exactly the independently restored slices', () => {
     const pool = buildSupportedPool(fixture.cards.map(({ card }) => card));
     expect(pool.considered).toBe(198);
     expect(pool.cards.map(({ card }) => card.name)).toEqual([
+      'Aether Channeler',
       'Arcane Denial',
+      'Attune with Aether',
+      'Beacon of Unrest',
+      'Canoptek Spyder',
+      'Canoptek Wraith',
+      "Conjurer's Closet",
       'Fabled Passage',
+      'Foe-Razer Regent',
+      'Forum of Amity',
+      'Frontier Siege',
+      'Harvest Season',
+      'Hunting Wilds',
+      'Kairi, the Swirling Sky',
+      'Land Tax',
+      'Loran of the Third Path',
+      'Mordant Dragon',
       'Myriad Landscape',
+      'Necron Deathmark',
+      'Plasmancer',
+      'Return to Nature',
+      'Rishkar, Peema Renegade',
       'Smothering Tithe',
+      'Sylvan Reclamation',
+      'Thunderfoot Baloth',
+      'Tomb Fortress',
+      'Vastwood Surge',
+      'Voice of Many',
       'War Room',
+      'Will of the Mardu',
     ]);
   });
 });

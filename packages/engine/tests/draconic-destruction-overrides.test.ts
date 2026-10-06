@@ -257,7 +257,7 @@ describe('Loaming Shaman', () => {
 });
 
 describe('Foe-Razer Regent', () => {
-  it('is catalog-contained because optional fight still requires a target', () => {
+  it('models the optional fight and the fights trigger (coverage PR01)', () => {
     const card = oracle({
       oracleId: 'e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f',
       name: 'Foe-Razer Regent',
@@ -265,12 +265,13 @@ describe('Foe-Razer Regent', () => {
       manaCost: '{5}{G}{G}',
       power: '4',
       toughness: '5',
+      oracleText:
+        "Flying\nWhen this creature enters, you may have it fight target creature you don't control.\nWhenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step.",
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      "Optional fight still requires a target creature you don't control.",
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.optional).toBe(true);
+    expect(def.triggers[1]?.trigger).toMatchObject({ when: 'fights' });
   });
 });
 

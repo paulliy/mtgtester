@@ -2147,7 +2147,7 @@ function parseModalSpellBlock(
   const maxChoicesIf =
     conditionalHeader ===
     'if you control a commander as you cast this spell, you may choose both instead.'
-      ? { condition: { kind: 'controlsYourCommander' as const }, maxChoices: 2 }
+      ? { condition: { kind: 'controlsACommander' as const }, maxChoices: 2 }
       : repeatable || conditionalHeader.length === 0
         ? undefined
         : null;
@@ -6598,8 +6598,16 @@ export function interpretCard(card: OracleCard): CardDefinition {
             ability: {
               kind: 'activated',
               targets: [],
+              // CR 702.29a: typecycling's search reveals the found card. A search for a card
+              // with a stated quality may always find nothing (CR 701.19b).
               effects: [
-                { op: 'searchLibrary', filter, destinations: [{ zone: 'hand' }] },
+                {
+                  op: 'searchLibrary',
+                  filter,
+                  destinations: [{ zone: 'hand' }],
+                  reveal: true,
+                  allowFailToFind: true,
+                },
                 { op: 'shuffle' },
               ],
               description: line,

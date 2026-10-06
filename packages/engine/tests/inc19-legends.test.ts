@@ -213,6 +213,8 @@ describe('Ur-Dragon residual-card implementation', () => {
 
     const executable = new Set([
       'Iymrith, Desert Doom',
+      // Coverage PR01: the bounce mode's total-mana-value budget is modeled.
+      'Kairi, the Swirling Sky',
       "Lozhan, Dragons' Legacy",
       'Morophon, the Boundless',
       // Back on the list: its `{1}, {T}` mana ability is honoured now that `planPayment` pays

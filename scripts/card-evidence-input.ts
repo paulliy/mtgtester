@@ -1173,6 +1173,151 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['War Room: dynamic commander identity life activation'],
   },
   { file: 'card-test-lab.spec.ts', titlePath: ['War Room: colorless mana pays a spell cost'] },
+  // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Forum of Amity: surveil 1 through the normal activation'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Attune with Aether: reveal a basic land, then get two energy'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Beacon of Unrest: reanimate a creature card, shuffle Beacon away'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Canoptek Spyder: a Vehicle entering draws a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Canoptek Wraith: pay, sacrifice, and fetch same-name basics'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Conjurer's Closet: blink a creature at your end step"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Harvest Season: search a basic per tapped creature'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Land Tax: reveal three basics at your upkeep'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Mordant Dragon: redirect combat damage to that player's creature"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Necron Deathmark: destroy up to one creature, mill three'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Plasmancer: enters and reveals a basic Swamp'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sylvan Reclamation: exile up to two artifacts and/or enchantments'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sylvan Reclamation: basic landcycling reveals a basic land'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Thunderfoot Baloth: lieutenant pumps your creatures'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomb Fortress: mill four, then return a creature card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Voice of Many: draw for each opponent with fewer creatures'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Foe-Razer Regent: fight on entry, grow at the end step'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hunting Wilds: kicked, two Forests become 3/3 haste creatures'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Loran of the Third Path: destroy up to one artifact or enchantment'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Loran of the Third Path: you and target opponent each draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Rishkar, Peema Renegade: two counters, then countered creatures tap for G'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Vastwood Surge: kicked, two basics and counters on your creatures'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Frontier Siege: Khans adds {G}{G} at your next main phase'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Frontier Siege: Dragons lets an entering flier fight'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Kairi, the Swirling Sky: dies, bounce up to total mana value 6'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Kairi, the Swirling Sky: dies, mill six and return a spell'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Will of the Mardu: choose both while you control a commander'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aether Channeler: return another target nonland permanent'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aether Channeler: create a 1/1 white Bird with flying'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Aether Channeler: draw a card'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Return to Nature: destroy target enchantment'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Return to Nature: exile target card from a graveyard'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mystic Sanctuary: enters untapped and returns an instant'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Brokers Hideout: sacrifice it, then search for a basic'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sweet-Gum Recluse: counters on creatures that entered this turn'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sweet-Gum Recluse: flash in response, cascade into a cheaper spell'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sweet-Gum Recluse: reach blocks a flier'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Kogla, the Titan Ape: fight up to one creature on entry'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Kogla, the Titan Ape: bounce a Human, then attack'],
+  },
   { file: 'card-test-lab.spec.ts', titlePath: ['Public zones: reanimate an opponent’s creature'] },
   {
     file: 'card-test-lab.spec.ts',

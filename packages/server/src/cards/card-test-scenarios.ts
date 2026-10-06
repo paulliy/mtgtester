@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { choose, Engine, ScriptedDecisionProvider } from '@mtg/engine';
-import type { DecisionProvider, EnginePlayerConfig } from '@mtg/engine';
+import type { DecisionProvider, EnginePlayerConfig, PreparedScenarioSpec } from '@mtg/engine';
 import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } from '@mtg/shared';
 import type { SeatSetup } from '../match/setup';
 import { BUG_HUNT_SCENARIO_IDS, bugHuntScenario } from './bug-hunt-scenarios';
@@ -197,6 +197,10 @@ const W2_REMAINING_BATCH1: PinnedOracleFile = JSON.parse(
 
 const MARCHESA_BATCH1: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/marchesa-batch1-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+/** Coverage PR01 cards that had no earlier pinned fixture. */
+const COVERAGE_PR01: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr01-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
 function pinnedFrom(file: PinnedOracleFile, name: string): { card: OracleCard; sha256: string } {
@@ -4105,6 +4109,1473 @@ function warRoomScenario(gameId: GameId): CardTestScenario {
   };
 }
 
+// ---------------------------------------------------------------------------------------------
+// Coverage PR01 (docs/plans/card-coverage-chunks.md): one scenario per restored clause group.
+// ---------------------------------------------------------------------------------------------
+
+interface Pr01ScenarioSpec {
+  id: string;
+  title: string;
+  instructions: string[];
+  expectedOutcome: string;
+  oracleSha256: string;
+  clauseIds: string[];
+  /** Library contents per seat; prepared hand/battlefield/graveyard cards are drawn from these. */
+  decks: Record<'P1' | 'P2' | 'P3' | 'P4', OracleCard[]>;
+  /** Commanders per seat; they start in the command zone unless `prepared` places them. */
+  commanders?: Partial<Record<'P1' | 'P2' | 'P3' | 'P4', OracleCard[]>>;
+  prepared: Omit<PreparedScenarioSpec, 'currentTurnPlayer' | 'phase' | 'step' | 'turnNumber'> &
+    Partial<Pick<PreparedScenarioSpec, 'currentTurnPlayer' | 'phase' | 'step' | 'turnNumber'>>;
+  decisionProviderOverrides?: CardTestScenario['decisionProviderOverrides'];
+}
+
+function pr01Scenario(gameId: GameId, spec: Pr01ScenarioSpec): CardTestScenario {
+  const seats = (['P1', 'P2', 'P3', 'P4'] as const).map((id) => {
+    const seat = player(id, spec.decks[id]);
+    const commanders = spec.commanders?.[id] ?? [];
+    seat.config.commanders = commanders;
+    seat.setup.summary.commanderNames = commanders.map((commander) => commander.name);
+    return seat;
+  });
+  const seed = `card-lab-${spec.id}-v1`;
+  const engine = new Engine(
+    { gameId, seed, players: seats.map(({ config }) => config), turnCap: 2 },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        ...spec.prepared,
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: spec.id,
+      version: 1,
+      title: spec.title,
+      instructions: spec.instructions,
+      expectedOutcome: spec.expectedOutcome,
+      oracleSha256: spec.oracleSha256,
+      clauseIds: spec.clauseIds,
+    },
+    seed,
+    seats: seats.map(({ setup }) => setup),
+    engine,
+    ...(spec.decisionProviderOverrides === undefined
+      ? {}
+      : { decisionProviderOverrides: spec.decisionProviderOverrides }),
+  };
+}
+
+const PR01_FILLER = [FOREST, FOREST];
+
+function forumOfAmityScenario(gameId: GameId): CardTestScenario {
+  const forum = pinnedFrom(MARCHESA_BATCH1, 'Forum of Amity');
+  const surveilled = card({
+    oracleId: 'lab-forum-surveilled',
+    name: 'Forum Surveilled Card',
+    typeLine: 'Creature — Secret',
+  });
+  return pr01Scenario(gameId, {
+    id: 'forum-of-amity-viewer-surveil',
+    title: 'Forum of Amity: surveil 1 through the normal activation',
+    instructions: [
+      'Activate Forum of Amity, paying {2}{W}{B} from Plains, Swamp, and two Forests plus tapping it.',
+      'Let the ability resolve, then choose to put the surveilled card into your graveyard.',
+    ],
+    expectedOutcome:
+      'Forum of Amity and the four paying lands are tapped, and Forum Surveilled Card moves from the top of your library to your graveyard.',
+    oracleSha256: forum.sha256,
+    clauseIds: ['forum-of-amity-surveil-activation'],
+    decks: {
+      P1: [forum.card, PLAINS, SWAMP, FOREST, FOREST, surveilled],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Forum of Amity', 'Plains', 'Swamp', 'Forest', 'Forest'],
+        },
+      ],
+    },
+  });
+}
+
+function attuneWithAetherScenario(gameId: GameId): CardTestScenario {
+  const attune = pinnedFrom(MARCHESA_BATCH1, 'Attune with Aether');
+  const secret = card({
+    oracleId: 'lab-attune-secret',
+    name: 'Attune Private Library Secret',
+    typeLine: 'Creature — Secret',
+  });
+  return pr01Scenario(gameId, {
+    id: 'attune-with-aether-viewer-reveal-to-hand',
+    title: 'Attune with Aether: reveal a basic land, then get two energy',
+    instructions: [
+      'Cast Attune with Aether from your hand using your Forest.',
+      'Choose the Island from the library search and let the spell resolve.',
+    ],
+    expectedOutcome:
+      'The Island is revealed to every player and put into your hand, your library is shuffled, you have two energy, and other library cards stay private.',
+    oracleSha256: attune.sha256,
+    clauseIds: ['attune-with-aether-search-reveal-energy'],
+    decks: {
+      P1: [attune.card, FOREST, ISLAND, secret],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Attune with Aether'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forest'] }],
+    },
+  });
+}
+
+function beaconOfUnrestScenario(gameId: GameId): CardTestScenario {
+  const beacon = pinnedFrom(MARCHESA_BATCH1, 'Beacon of Unrest');
+  return pr01Scenario(gameId, {
+    id: 'beacon-of-unrest-viewer-reanimate-and-shuffle',
+    title: 'Beacon of Unrest: reanimate a creature card, shuffle Beacon away',
+    instructions: [
+      'Cast Beacon of Unrest from your hand with your five lands.',
+      'Target Lab Ox in your graveyard and let the spell resolve.',
+    ],
+    expectedOutcome:
+      'Lab Ox returns to the battlefield under your control, and Beacon of Unrest is shuffled into your library instead of going to your graveyard.',
+    oracleSha256: beacon.sha256,
+    clauseIds: ['beacon-of-unrest-reanimate', 'beacon-of-unrest-shuffle-self'],
+    decks: {
+      P1: [beacon.card, SWAMP, SWAMP, FOREST, FOREST, FOREST, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Beacon of Unrest'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Forest', 'Forest', 'Forest'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
+function canoptekSpyderScenario(gameId: GameId): CardTestScenario {
+  const spyder = pinnedFrom(MARCHESA_BATCH1, 'Canoptek Spyder');
+  const vehicle = card({
+    oracleId: 'lab-spyder-vehicle',
+    name: 'Lab Skiff',
+    typeLine: 'Artifact — Vehicle',
+    manaCost: '{1}',
+    cmc: 1,
+  });
+  const drawn = card({
+    oracleId: 'lab-spyder-drawn',
+    name: 'Spyder Drawn Card',
+    typeLine: 'Creature — Secret',
+    manaCost: '{6}',
+    cmc: 6,
+  });
+  return pr01Scenario(gameId, {
+    id: 'canoptek-spyder-viewer-vehicle-draw',
+    title: 'Canoptek Spyder: a Vehicle entering draws a card',
+    instructions: [
+      'Cast Lab Skiff, a noncreature artifact Vehicle, from your hand with your Forest.',
+      "Let it resolve so Canoptek Spyder's Fabricator Claw Array triggers, then let the trigger resolve.",
+    ],
+    expectedOutcome:
+      'Lab Skiff enters, the Spyder trigger resolves, and you draw Spyder Drawn Card from the top of your library.',
+    oracleSha256: spyder.sha256,
+    clauseIds: ['canoptek-spyder-artifact-creature-or-vehicle-draw'],
+    decks: {
+      P1: [spyder.card, vehicle, FOREST, drawn],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Skiff'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Canoptek Spyder', 'Forest'] }],
+    },
+  });
+}
+
+function canoptekWraithScenario(gameId: GameId): CardTestScenario {
+  const wraith = pinnedFrom(MARCHESA_BATCH1, 'Canoptek Wraith');
+  return pr01Scenario(gameId, {
+    id: 'canoptek-wraith-viewer-scout-same-name-search',
+    title: 'Canoptek Wraith: pay, sacrifice, and fetch same-name basics',
+    instructions: [
+      'Pass priority to move to combat, then attack P2 with Canoptek Wraith (it cannot be blocked).',
+      'When it deals combat damage, pay {3} and sacrifice it, choose Island, and find two Islands.',
+    ],
+    expectedOutcome:
+      'Canoptek Wraith is in your graveyard, two Islands from your library entered tapped, the Forest stayed in your library, and your library was shuffled.',
+    oracleSha256: wraith.sha256,
+    clauseIds: ['canoptek-wraith-unblockable', 'canoptek-wraith-scout-search'],
+    decks: {
+      P1: [wraith.card, ISLAND, ISLAND, ISLAND, FOREST, ISLAND, ISLAND, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Canoptek Wraith', 'Island', 'Island', 'Island', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function conjurersClosetScenario(gameId: GameId): CardTestScenario {
+  const closet = pinnedFrom(MARCHESA_BATCH1, "Conjurer's Closet");
+  const greeter = card({
+    oracleId: 'lab-closet-greeter',
+    name: 'Lab Greeter',
+    typeLine: 'Creature — Human',
+    manaCost: '{2}',
+    cmc: 2,
+    power: '2',
+    toughness: '2',
+    oracleText: 'When this creature enters, you gain 2 life.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'conjurers-closet-viewer-end-step-blink',
+    title: "Conjurer's Closet: blink a creature at your end step",
+    instructions: [
+      'Pass priority in your main phase; the lab moves to your end step.',
+      "Target Lab Greeter with Conjurer's Closet's trigger and choose Yes when it resolves.",
+    ],
+    expectedOutcome:
+      'Lab Greeter is exiled and returns untapped under your control, and its enters trigger gains you 2 life (40 to 42).',
+    oracleSha256: closet.sha256,
+    clauseIds: ['conjurers-closet-end-step-blink'],
+    decks: {
+      P1: [closet.card, greeter, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ["Conjurer's Closet"] },
+        { playerId: 'P1', cardNames: ['Lab Greeter'], tapped: true },
+      ],
+      continueToEndStep: true,
+    },
+  });
+}
+
+function harvestSeasonScenario(gameId: GameId): CardTestScenario {
+  const harvest = pinnedFrom(MARCHESA_BATCH1, 'Harvest Season');
+  return pr01Scenario(gameId, {
+    id: 'harvest-season-viewer-tapped-creature-count',
+    title: 'Harvest Season: search a basic per tapped creature',
+    instructions: [
+      'Cast Harvest Season with your three untapped Forests.',
+      'You control two tapped Lab Oxen and one untapped Lab Servo, so X is 2: put an Island and a Plains onto the battlefield tapped.',
+    ],
+    expectedOutcome:
+      'Exactly two searches are offered; the Island and Plains enter tapped, the untapped Lab Servo did not count, and your library is shuffled.',
+    oracleSha256: harvest.sha256,
+    clauseIds: ['harvest-season-search-x-tapped-creatures'],
+    decks: {
+      P1: [harvest.card, LAB_OX, LAB_OX, LAB_SERVO, FOREST, FOREST, FOREST, ISLAND, PLAINS, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Harvest Season'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Lab Ox'], tapped: true },
+        { playerId: 'P1', cardNames: ['Lab Servo', 'Forest', 'Forest', 'Forest'] },
+      ],
+    },
+  });
+}
+
+function landTaxScenario(gameId: GameId): CardTestScenario {
+  const tax = pinnedFrom(MARCHESA_BATCH1, 'Land Tax');
+  const secret = card({
+    oracleId: 'lab-land-tax-secret',
+    name: 'Land Tax Private Secret',
+    typeLine: 'Creature — Secret',
+    manaCost: '{6}',
+    cmc: 6,
+  });
+  return pr01Scenario(gameId, {
+    id: 'land-tax-viewer-upkeep-reveal-search',
+    title: 'Land Tax: reveal three basics at your upkeep',
+    instructions: [
+      "Pass through P4's turn; Land Tax triggers at your upkeep because P2 controls more lands than you.",
+      'Choose Yes, then put Plains, Swamp, and Island into your hand.',
+    ],
+    expectedOutcome:
+      'Three basic lands are revealed to every player and put into your hand, your library is shuffled, and the private library card stays hidden.',
+    oracleSha256: tax.sha256,
+    clauseIds: ['land-tax-upkeep-search'],
+    decks: {
+      P1: [tax.card, FOREST, PLAINS, SWAMP, ISLAND, secret],
+      P2: [FOREST, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P4',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Land Tax', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Forest', 'Forest', 'Forest'] },
+      ],
+      continueToNextUpkeep: true,
+    },
+  });
+}
+
+function mordantDragonScenario(gameId: GameId): CardTestScenario {
+  const dragon = pinnedFrom(MARCHESA_BATCH1, 'Mordant Dragon');
+  return pr01Scenario(gameId, {
+    id: 'mordant-dragon-viewer-combat-damage-redirect',
+    title: "Mordant Dragon: redirect combat damage to that player's creature",
+    instructions: [
+      'Attack P2 with Mordant Dragon; P2 has no flyer to block it.',
+      'When it deals combat damage, target Lab Ox (P2 controls it) and choose Yes.',
+    ],
+    expectedOutcome:
+      'P2 takes 5 combat damage (40 to 35), then Mordant Dragon deals 5 damage to Lab Ox, which dies; Lab Servo is untouched.',
+    oracleSha256: dragon.sha256,
+    clauseIds: ['mordant-dragon-combat-damage-rider'],
+    decks: {
+      P1: [dragon.card, FOREST],
+      P2: [LAB_OX, LAB_SERVO, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Mordant Dragon'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function necronDeathmarkScenario(gameId: GameId): CardTestScenario {
+  const deathmark = pinnedFrom(MARCHESA_BATCH1, 'Necron Deathmark');
+  const bystander = card({
+    oracleId: 'lab-deathmark-bystander',
+    name: 'Lab Deathmark Bystander',
+    typeLine: 'Creature — Human',
+    manaCost: '{B}',
+    cmc: 1,
+    colors: ['B'],
+    colorIdentity: ['B'],
+    power: '1',
+    toughness: '1',
+  });
+  return pr01Scenario(gameId, {
+    id: 'necron-deathmark-viewer-destroy-up-to-one-and-mill',
+    title: 'Necron Deathmark: destroy up to one creature, mill three',
+    instructions: [
+      "P3's Lab Pending Spell is on the stack, so only a spell with flash can be cast; Lab Deathmark Bystander cannot.",
+      'Cast Necron Deathmark in response (flash) with your five lands.',
+      'Target P2 for the mill and Lab Ox as the up-to-one creature, then let the trigger resolve.',
+    ],
+    expectedOutcome:
+      'Lab Ox is destroyed and P2 mills three cards; Lab Servo survives because only one creature may be chosen. Lab Deathmark Bystander stays in your hand.',
+    oracleSha256: deathmark.sha256,
+    clauseIds: ['necron-deathmark-flash', 'necron-deathmark-destroy-and-mill'],
+    decks: {
+      P1: [deathmark.card, bystander, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST, FOREST, FOREST],
+      P3: [ARCANE_PENDING_SPELL, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Necron Deathmark', 'Lab Deathmark Bystander'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      stack: [{ playerId: 'P3', cardNames: ['Lab Pending Spell'] }],
+    },
+  });
+}
+
+function plasmancerScenario(gameId: GameId): CardTestScenario {
+  const plasmancer = pinnedFrom(MARCHESA_BATCH1, 'Plasmancer');
+  const secret = card({
+    oracleId: 'lab-plasmancer-secret',
+    name: 'Plasmancer Private Library Secret',
+    typeLine: 'Creature — Secret',
+  });
+  return pr01Scenario(gameId, {
+    id: 'plasmancer-viewer-reveal-swamp',
+    title: 'Plasmancer: enters and reveals a basic Swamp',
+    instructions: [
+      'Cast Plasmancer with your four Swamps.',
+      'When its enters trigger resolves, choose the Swamp from the library search.',
+    ],
+    expectedOutcome:
+      'The Swamp is revealed to every player and put into your hand, your library is shuffled, the Forest is never offered, and other library cards stay private.',
+    oracleSha256: plasmancer.sha256,
+    clauseIds: ['plasmancer-enters-reveal-swamp'],
+    decks: {
+      P1: [plasmancer.card, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP, FOREST, secret],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Plasmancer'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
+function sylvanReclamationScenario(gameId: GameId): CardTestScenario {
+  const reclamation = pinnedFrom(MARCHESA_BATCH1, 'Sylvan Reclamation');
+  const idol = card({
+    oracleId: 'lab-reclaim-idol',
+    name: 'Lab Idol',
+    typeLine: 'Artifact',
+    manaCost: '{2}',
+    cmc: 2,
+  });
+  return pr01Scenario(gameId, {
+    id: 'sylvan-reclamation-viewer-exile-up-to-two',
+    title: 'Sylvan Reclamation: exile up to two artifacts and/or enchantments',
+    instructions: [
+      'Cast Sylvan Reclamation with your five lands.',
+      'Choose Lab Servo and Lab Hex as its two targets, then let it resolve.',
+    ],
+    expectedOutcome:
+      'Lab Servo and Lab Hex are exiled. No third target is offered, so Lab Idol survives, and Lab Ox is never offered because it is neither an artifact nor an enchantment.',
+    oracleSha256: reclamation.sha256,
+    clauseIds: ['sylvan-reclamation-exile-up-to-two'],
+    decks: {
+      P1: [reclamation.card, FOREST, FOREST, FOREST, FOREST, PLAINS],
+      P2: [LAB_SERVO, LAB_HEX, LAB_OX, FOREST, FOREST],
+      P3: [idol, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Sylvan Reclamation'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Plains'] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Hex', 'Lab Ox'] },
+        { playerId: 'P3', cardNames: ['Lab Idol'] },
+      ],
+    },
+  });
+}
+
+function sylvanReclamationLandcyclingScenario(gameId: GameId): CardTestScenario {
+  const reclamation = pinnedFrom(MARCHESA_BATCH1, 'Sylvan Reclamation');
+  const secret = card({
+    oracleId: 'lab-reclaim-secret',
+    name: 'Reclamation Private Library Secret',
+    typeLine: 'Creature — Secret',
+  });
+  return pr01Scenario(gameId, {
+    id: 'sylvan-reclamation-viewer-basic-landcycling',
+    title: 'Sylvan Reclamation: basic landcycling reveals a basic land',
+    instructions: [
+      "Activate Sylvan Reclamation's basic landcycling from your hand with two Forests.",
+      'Choose the Plains from the library search.',
+    ],
+    expectedOutcome:
+      'Sylvan Reclamation is discarded, the Plains is revealed to every player and put into your hand, your library is shuffled, and other library cards stay private.',
+    oracleSha256: reclamation.sha256,
+    clauseIds: ['sylvan-reclamation-basic-landcycling'],
+    decks: {
+      P1: [reclamation.card, FOREST, FOREST, PLAINS, secret],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Sylvan Reclamation'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forest', 'Forest'] }],
+    },
+  });
+}
+
+function thunderfootBalothScenario(gameId: GameId): CardTestScenario {
+  const baloth = pinnedFrom(MARCHESA_BATCH1, 'Thunderfoot Baloth');
+  const general = card({
+    oracleId: 'lab-baloth-general',
+    name: 'Lab General',
+    typeLine: 'Legendary Creature — Elf Warrior',
+    manaCost: '{2}{G}',
+    cmc: 3,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+  });
+  const relic = card({
+    oracleId: 'lab-baloth-relic',
+    name: 'Lab Relic',
+    typeLine: 'Artifact',
+    manaCost: '{1}',
+    cmc: 1,
+  });
+  return pr01Scenario(gameId, {
+    id: 'thunderfoot-baloth-viewer-lieutenant',
+    title: 'Thunderfoot Baloth: lieutenant pumps your creatures',
+    instructions: [
+      'Your commander, Lab General, is on the battlefield. Cast Thunderfoot Baloth with your six Forests.',
+      'Inspect your creatures once it resolves.',
+    ],
+    expectedOutcome:
+      "Thunderfoot Baloth is 7/7. Lab General and Lab Ox get +2/+2 and trample. Lab Relic and your lands are not creatures and gain nothing, and P2's Lab Servo is unchanged.",
+    oracleSha256: baloth.sha256,
+    clauseIds: ['thunderfoot-baloth-lieutenant'],
+    decks: {
+      P1: [baloth.card, LAB_OX, relic, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    commanders: { P1: [general] },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Thunderfoot Baloth'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Lab General',
+            'Lab Ox',
+            'Lab Relic',
+            'Forest',
+            'Forest',
+            'Forest',
+            'Forest',
+            'Forest',
+            'Forest',
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function tombFortressScenario(gameId: GameId): CardTestScenario {
+  const fortress = pinnedFrom(MARCHESA_BATCH1, 'Tomb Fortress');
+  return pr01Scenario(gameId, {
+    id: 'tomb-fortress-viewer-mill-then-return',
+    title: 'Tomb Fortress: mill four, then return a creature card',
+    instructions: [
+      'Activate Tomb Fortress with your five Swamps, tapping and exiling the Fortress.',
+      'After the four cards are milled, choose Lab Ox, which was just milled, to return.',
+    ],
+    expectedOutcome:
+      'Four cards are milled, then you choose among every creature card now in your graveyard (Lab Servo and the milled Lab Ox). Lab Ox enters under your control and Tomb Fortress is exiled.',
+    oracleSha256: fortress.sha256,
+    clauseIds: ['tomb-fortress-mill-then-return'],
+    decks: {
+      P1: [
+        fortress.card,
+        LAB_SERVO,
+        SWAMP,
+        SWAMP,
+        SWAMP,
+        SWAMP,
+        SWAMP,
+        FOREST,
+        LAB_OX,
+        FOREST,
+        FOREST,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Tomb Fortress', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'],
+        },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Servo'] }],
+    },
+  });
+}
+
+function voiceOfManyScenario(gameId: GameId): CardTestScenario {
+  const voice = pinnedFrom(MARCHESA_BATCH1, 'Voice of Many');
+  const drawn = card({
+    oracleId: 'lab-voice-drawn',
+    name: 'Voice Drawn Card',
+    typeLine: 'Creature — Scribe',
+    power: '1',
+    toughness: '1',
+    manaCost: '{9}',
+    cmc: 9,
+  });
+  return pr01Scenario(gameId, {
+    id: 'voice-of-many-viewer-draw-per-opponent',
+    title: 'Voice of Many: draw for each opponent with fewer creatures',
+    instructions: [
+      'Cast Voice of Many with your four Forests.',
+      'Let its enters trigger resolve and count the cards you draw.',
+    ],
+    expectedOutcome:
+      'You control two creatures (Lab Ox and Voice of Many). P2 (none) and P3 (one) control fewer, but P4 (two) does not, so you draw exactly two cards.',
+    oracleSha256: voice.sha256,
+    clauseIds: ['voice-of-many-enters-draw'],
+    decks: {
+      P1: [voice.card, LAB_OX, FOREST, FOREST, FOREST, FOREST, drawn, drawn, drawn],
+      P2: PR01_FILLER,
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Voice of Many'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Forest', 'Forest', 'Forest', 'Forest'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+        { playerId: 'P4', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function foeRazerRegentScenario(gameId: GameId): CardTestScenario {
+  const regent = pinnedFrom(MARCHESA_BATCH1, 'Foe-Razer Regent');
+  return pr01Scenario(gameId, {
+    id: 'foe-razer-regent-viewer-fight-and-grow',
+    title: 'Foe-Razer Regent: fight on entry, grow at the end step',
+    instructions: [
+      'Cast Foe-Razer Regent with your seven Forests.',
+      "Target P2's Lab Ox with its enters trigger and choose to fight.",
+      'Pass to the end step and watch the Regent get two +1/+1 counters.',
+    ],
+    expectedOutcome:
+      'The Regent and Lab Ox deal damage to each other: Lab Ox dies and the 4/5 Regent survives with 4 damage. At the beginning of the end step it gets two +1/+1 counters and becomes 6/7.',
+    oracleSha256: regent.sha256,
+    clauseIds: ['foe-razer-regent-optional-fight', 'foe-razer-regent-fights-counters'],
+    decks: {
+      P1: [regent.card, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Foe-Razer Regent'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueToEndStep: true,
+    },
+  });
+}
+
+function huntingWildsScenario(gameId: GameId): CardTestScenario {
+  const wilds = pinnedFrom(MARCHESA_BATCH1, 'Hunting Wilds');
+  const lands = Array.from({ length: 8 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'hunting-wilds-viewer-kicked',
+    title: 'Hunting Wilds: kicked, two Forests become 3/3 haste creatures',
+    instructions: [
+      'Cast Hunting Wilds with kicker using your eight Forests.',
+      'Choose both Forests from the library search.',
+    ],
+    expectedOutcome:
+      'Both found Forests enter, untap, and become 3/3 green creatures with haste that are still lands; your library is shuffled.',
+    oracleSha256: wilds.sha256,
+    clauseIds: ['hunting-wilds-kicker', 'hunting-wilds-search', 'hunting-wilds-kicked-animate'],
+    decks: {
+      P1: [wilds.card, ...Array.from({ length: 10 }, () => FOREST)],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Hunting Wilds'] }],
+      battlefield: [{ playerId: 'P1', cardNames: lands }],
+    },
+  });
+}
+
+function loranDestroyScenario(gameId: GameId): CardTestScenario {
+  const loran = pinnedFrom(MARCHESA_BATCH1, 'Loran of the Third Path');
+  return pr01Scenario(gameId, {
+    id: 'loran-of-the-third-path-viewer-destroy-up-to-one',
+    title: 'Loran of the Third Path: destroy up to one artifact or enchantment',
+    instructions: [
+      'Cast Loran of the Third Path with your three Plains.',
+      'Choose Lab Hex for its enters trigger and let it resolve.',
+    ],
+    expectedOutcome:
+      'Lab Hex is destroyed. Lab Servo, an artifact creature, was also offered but survives because only one target may be chosen; Lab Ox was never offered.',
+    oracleSha256: loran.sha256,
+    clauseIds: ['loran-of-the-third-path-destroy-up-to-one'],
+    decks: {
+      P1: [loran.card, PLAINS, PLAINS, PLAINS],
+      P2: [LAB_HEX, LAB_SERVO, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Loran of the Third Path'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Plains', 'Plains', 'Plains'] },
+        { playerId: 'P2', cardNames: ['Lab Hex', 'Lab Servo', 'Lab Ox'] },
+      ],
+    },
+  });
+}
+
+function loranDrawScenario(gameId: GameId): CardTestScenario {
+  const loran = pinnedFrom(MARCHESA_BATCH1, 'Loran of the Third Path');
+  const drawn = card({
+    oracleId: 'lab-loran-drawn',
+    name: 'Loran Drawn Card',
+    typeLine: 'Creature — Scribe',
+    manaCost: '{9}',
+    cmc: 9,
+    power: '1',
+    toughness: '1',
+  });
+  return pr01Scenario(gameId, {
+    id: 'loran-of-the-third-path-viewer-tap-draw',
+    title: 'Loran of the Third Path: you and target opponent each draw',
+    instructions: [
+      'Activate Loran of the Third Path by tapping it.',
+      'Target P3, then let the ability resolve.',
+    ],
+    expectedOutcome: 'Loran taps, and you and P3 each draw one card. P2 and P4 draw nothing.',
+    oracleSha256: loran.sha256,
+    clauseIds: ['loran-of-the-third-path-tap-draw'],
+    decks: {
+      P1: [loran.card, drawn],
+      P2: PR01_FILLER,
+      P3: [drawn, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Loran of the Third Path'] }],
+    },
+  });
+}
+
+function rishkarScenario(gameId: GameId): CardTestScenario {
+  const rishkar = pinnedFrom(MARCHESA_BATCH1, 'Rishkar, Peema Renegade');
+  return pr01Scenario(gameId, {
+    id: 'rishkar-viewer-counters-and-mana',
+    title: 'Rishkar, Peema Renegade: two counters, then countered creatures tap for G',
+    instructions: [
+      'Cast Rishkar, Peema Renegade with your three Forests.',
+      "Choose Lab Ox and P2's Lab Servo for its two +1/+1 counters.",
+    ],
+    expectedOutcome:
+      'Lab Ox becomes 5/5 and Lab Servo 2/2. Lab Ox now has "{T}: Add {G}" and shows as one ready mana source; P2\'s Servo grants P2 nothing because Rishkar only affects creatures you control.',
+    oracleSha256: rishkar.sha256,
+    clauseIds: ['rishkar-peema-renegade-enters-counters', 'rishkar-peema-renegade-mana-grant'],
+    decks: {
+      P1: [rishkar.card, LAB_OX, FOREST, FOREST, FOREST],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Rishkar, Peema Renegade'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Forest', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function vastwoodSurgeScenario(gameId: GameId): CardTestScenario {
+  const surge = pinnedFrom(MARCHESA_BATCH1, 'Vastwood Surge');
+  const lands = Array.from({ length: 8 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'vastwood-surge-viewer-kicked',
+    title: 'Vastwood Surge: kicked, two basics and counters on your creatures',
+    instructions: [
+      'Cast Vastwood Surge with kicker using your eight Forests.',
+      'Choose the Plains and then the Island from the library search.',
+    ],
+    expectedOutcome:
+      "The Plains and Island enter tapped, your library is shuffled, and Lab Ox gets two +1/+1 counters (6/6). P2's Lab Servo is not yours and stays 1/1.",
+    oracleSha256: surge.sha256,
+    clauseIds: ['vastwood-surge-kicker', 'vastwood-surge-search-and-counters'],
+    decks: {
+      P1: [surge.card, LAB_OX, ...Array.from({ length: 8 }, () => FOREST), PLAINS, ISLAND],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Vastwood Surge'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', ...lands] },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function frontierSiegeKhansScenario(gameId: GameId): CardTestScenario {
+  const siege = pinnedFrom(MARCHESA_BATCH1, 'Frontier Siege');
+  const wurm = card({
+    oracleId: 'lab-siege-wurm',
+    name: 'Lab Wurm',
+    typeLine: 'Creature — Wurm',
+    manaCost: '{G}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '3',
+    toughness: '3',
+  });
+  return pr01Scenario(gameId, {
+    id: 'frontier-siege-viewer-khans-mana',
+    title: 'Frontier Siege: Khans adds {G}{G} at your next main phase',
+    instructions: [
+      'Cast Frontier Siege with your four Forests and choose Khans.',
+      'Pass through combat. At the beginning of your postcombat main phase, use the {G}{G} it adds to cast Lab Wurm.',
+    ],
+    expectedOutcome:
+      'Your lands are all tapped, but the Khans trigger adds {G}{G} at the beginning of your postcombat main phase, which pays for Lab Wurm.',
+    oracleSha256: siege.sha256,
+    clauseIds: ['frontier-siege-choose-mode', 'frontier-siege-khans'],
+    decks: {
+      P1: [siege.card, wurm, FOREST, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Frontier Siege', 'Lab Wurm'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest'] }],
+      continueThroughCombat: true,
+      continueToPostcombatMain: true,
+    },
+  });
+}
+
+function frontierSiegeDragonsScenario(gameId: GameId): CardTestScenario {
+  const siege = pinnedFrom(MARCHESA_BATCH1, 'Frontier Siege');
+  const drake = card({
+    oracleId: 'lab-siege-drake',
+    name: 'Lab Drake',
+    typeLine: 'Creature — Drake',
+    oracleText: 'Flying',
+    manaCost: '{2}',
+    cmc: 2,
+    power: '3',
+    toughness: '3',
+  });
+  return pr01Scenario(gameId, {
+    id: 'frontier-siege-viewer-dragons-fight',
+    title: 'Frontier Siege: Dragons lets an entering flier fight',
+    instructions: [
+      'Cast Frontier Siege with four of your Forests and choose Dragons.',
+      "Cast Lab Drake, then choose to have it fight P2's Lab Servo.",
+    ],
+    expectedOutcome:
+      'Lab Drake and Lab Servo deal damage to each other: Lab Servo dies and the 3/3 Drake survives with 1 damage.',
+    oracleSha256: siege.sha256,
+    clauseIds: ['frontier-siege-choose-mode', 'frontier-siege-dragons'],
+    decks: {
+      P1: [siege.card, drake, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Frontier Siege', 'Lab Drake'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function kairiScenario(gameId: GameId): CardTestScenario {
+  const kairi = pinnedFrom(MARCHESA_BATCH1, 'Kairi, the Swirling Sky');
+  const idol = card({
+    oracleId: 'lab-kairi-idol',
+    name: 'Lab Idol',
+    typeLine: 'Artifact',
+    manaCost: '{2}',
+    cmc: 2,
+  });
+  return pr01Scenario(gameId, {
+    id: 'kairi-viewer-bounce-total-six',
+    title: 'Kairi, the Swirling Sky: dies, bounce up to total mana value 6',
+    instructions: [
+      'Cast Lab Doom on your own Kairi, the Swirling Sky.',
+      'When Kairi dies, choose the return mode, then choose Lab Ox (mana value 4) and Lab Idol (2).',
+    ],
+    expectedOutcome:
+      "After Lab Ox, Lab Hex (mana value 3) is no longer offered because it would exceed 6. Lab Ox and Lab Idol return to P2's hand; Lab Hex stays.",
+    oracleSha256: kairi.sha256,
+    clauseIds: ['kairi-the-swirling-sky-dies-modes', 'kairi-the-swirling-sky-bounce'],
+    decks: {
+      P1: [kairi.card, LAB_DOOM, SWAMP, SWAMP],
+      P2: [LAB_OX, LAB_HEX, idol, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Kairi, the Swirling Sky', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Hex', 'Lab Idol'] },
+      ],
+    },
+  });
+}
+
+function kairiMillScenario(gameId: GameId): CardTestScenario {
+  const kairi = pinnedFrom(MARCHESA_BATCH1, 'Kairi, the Swirling Sky');
+  return pr01Scenario(gameId, {
+    id: 'kairi-viewer-mill-and-return',
+    title: 'Kairi, the Swirling Sky: dies, mill six and return a spell',
+    instructions: [
+      'Cast Lab Doom on your own Kairi, the Swirling Sky.',
+      'When Kairi dies, choose the mill mode. Return Lab Shock, then choose to stop returning.',
+    ],
+    expectedOutcome:
+      'Your six library cards are milled. Instant and sorcery cards in your graveyard (Lab Shock and both copies of Lab Doom) are offered; Lab Shock returns to your hand and you stop after one.',
+    oracleSha256: kairi.sha256,
+    clauseIds: ['kairi-the-swirling-sky-dies-modes', 'kairi-the-swirling-sky-mill'],
+    decks: {
+      P1: [kairi.card, LAB_DOOM, SWAMP, SWAMP, LAB_SHOCK, LAB_DOOM, FOREST, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Kairi, the Swirling Sky', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
+function willOfTheMarduScenario(gameId: GameId): CardTestScenario {
+  const will = pinnedFrom(MARCHESA_BATCH1, 'Will of the Mardu');
+  const general = card({
+    oracleId: 'lab-mardu-general',
+    name: 'Lab Warlord',
+    typeLine: 'Legendary Creature — Orc Warrior',
+    manaCost: '{2}{W}',
+    cmc: 3,
+    colors: ['W'],
+    colorIdentity: ['W'],
+    power: '2',
+    toughness: '2',
+  });
+  const brute = card({
+    oracleId: 'lab-mardu-brute',
+    name: 'Lab Brute',
+    typeLine: 'Creature — Ogre',
+    manaCost: '{3}',
+    cmc: 3,
+    power: '3',
+    toughness: '3',
+  });
+  return pr01Scenario(gameId, {
+    id: 'will-of-the-mardu-viewer-choose-both',
+    title: 'Will of the Mardu: choose both while you control a commander',
+    instructions: [
+      'Your commander, Lab Warlord, is on the battlefield, so Will of the Mardu may choose both modes.',
+      'Cast it choosing both, targeting P2 for the Warriors and Lab Brute for the damage.',
+    ],
+    expectedOutcome:
+      'You create two 1/1 red Warriors (P2 controls two creatures). Then the damage counts your three creatures, so the 3/3 Lab Brute dies.',
+    oracleSha256: will.sha256,
+    clauseIds: [
+      'will-of-the-mardu-choose',
+      'will-of-the-mardu-warriors',
+      'will-of-the-mardu-damage',
+    ],
+    decks: {
+      P1: [will.card, PLAINS, PLAINS, PLAINS],
+      P2: [brute, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    commanders: { P1: [general] },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Will of the Mardu'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Warlord', 'Plains', 'Plains', 'Plains'] },
+        { playerId: 'P2', cardNames: ['Lab Brute', 'Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function aetherChannelerScenario(gameId: GameId): CardTestScenario {
+  const channeler = pinnedFrom(MARCHESA_BATCH1, 'Aether Channeler');
+  return pr01Scenario(gameId, {
+    id: 'aether-channeler-viewer-bounce-another',
+    title: 'Aether Channeler: return another target nonland permanent',
+    instructions: [
+      'Cast Aether Channeler with your three Islands.',
+      "Choose the return mode, then target P2's Lab Ox.",
+    ],
+    expectedOutcome:
+      "Lab Ox returns to P2's hand. The Channeler itself and the lands were never offered as targets.",
+    oracleSha256: channeler.sha256,
+    clauseIds: ['aether-channeler-enters-modes', 'aether-channeler-bounce'],
+    decks: {
+      P1: [channeler.card, ISLAND, ISLAND, ISLAND],
+      P2: [LAB_OX, LAB_HEX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Aether Channeler'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Island', 'Island', 'Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Hex'] },
+      ],
+    },
+  });
+}
+
+function aetherChannelerBirdScenario(gameId: GameId): CardTestScenario {
+  const channeler = pinnedFrom(MARCHESA_BATCH1, 'Aether Channeler');
+  return pr01Scenario(gameId, {
+    id: 'aether-channeler-viewer-bird',
+    title: 'Aether Channeler: create a 1/1 white Bird with flying',
+    instructions: ['Cast Aether Channeler with your three Islands.', 'Choose the Bird mode.'],
+    expectedOutcome:
+      'A 1/1 white Bird creature token with flying enters under your control. Nothing is returned and no card is drawn.',
+    oracleSha256: channeler.sha256,
+    clauseIds: ['aether-channeler-enters-modes', 'aether-channeler-bird'],
+    decks: {
+      P1: [channeler.card, ISLAND, ISLAND, ISLAND],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Aether Channeler'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Island', 'Island', 'Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+function aetherChannelerDrawScenario(gameId: GameId): CardTestScenario {
+  const channeler = pinnedFrom(MARCHESA_BATCH1, 'Aether Channeler');
+  const drawn = card({
+    oracleId: 'lab-channeler-drawn',
+    name: 'Channeler Drawn Card',
+    typeLine: 'Creature — Scribe',
+    manaCost: '{9}',
+    cmc: 9,
+    power: '1',
+    toughness: '1',
+  });
+  return pr01Scenario(gameId, {
+    id: 'aether-channeler-viewer-draw',
+    title: 'Aether Channeler: draw a card',
+    instructions: ['Cast Aether Channeler with your three Islands.', 'Choose the draw mode.'],
+    expectedOutcome:
+      'You draw Channeler Drawn Card, the only card left in your library. No token is created and nothing is returned.',
+    oracleSha256: channeler.sha256,
+    clauseIds: ['aether-channeler-enters-modes', 'aether-channeler-draw'],
+    decks: {
+      P1: [channeler.card, ISLAND, ISLAND, ISLAND, drawn],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Aether Channeler'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Island', 'Island', 'Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+function returnToNatureDestroyScenario(gameId: GameId): CardTestScenario {
+  const nature = pinnedFrom(MARCHESA_BATCH1, 'Return to Nature');
+  return pr01Scenario(gameId, {
+    id: 'return-to-nature-viewer-destroy-enchantment',
+    title: 'Return to Nature: destroy target enchantment',
+    instructions: [
+      'Cast Return to Nature with your two Forests, choosing the enchantment mode.',
+      "Target P2's Lab Hex.",
+    ],
+    expectedOutcome:
+      'Lab Hex is destroyed. Only the enchantment and graveyard modes were offered, because no artifact was on the battlefield.',
+    oracleSha256: nature.sha256,
+    clauseIds: ['return-to-nature-choose-one', 'return-to-nature-destroy-enchantment'],
+    decks: {
+      P1: [nature.card, FOREST, FOREST],
+      P2: [LAB_HEX, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Return to Nature'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Hex'] },
+      ],
+      graveyard: [{ playerId: 'P2', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
+function returnToNatureExileScenario(gameId: GameId): CardTestScenario {
+  const nature = pinnedFrom(MARCHESA_BATCH1, 'Return to Nature');
+  return pr01Scenario(gameId, {
+    id: 'return-to-nature-viewer-exile-graveyard-card',
+    title: 'Return to Nature: exile target card from a graveyard',
+    instructions: [
+      'Cast Return to Nature with your two Forests, choosing the graveyard mode.',
+      'Target Lab Servo in your graveyard.',
+    ],
+    expectedOutcome: 'Lab Servo moves from your graveyard to exile.',
+    oracleSha256: nature.sha256,
+    clauseIds: ['return-to-nature-choose-one', 'return-to-nature-exile-graveyard-card'],
+    decks: {
+      P1: [nature.card, LAB_SERVO, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Return to Nature'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forest', 'Forest'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Servo'] }],
+    },
+  });
+}
+
+function mysticSanctuaryScenario(gameId: GameId): CardTestScenario {
+  const sanctuary = pinnedFrom(COVERAGE_PR01, 'Mystic Sanctuary');
+  return pr01Scenario(gameId, {
+    id: 'mystic-sanctuary-viewer-untapped-return',
+    title: 'Mystic Sanctuary: enters untapped and returns an instant',
+    instructions: [
+      'Play Mystic Sanctuary as your land drop. You control three other Islands, so it enters untapped.',
+      'Choose to put Lab Shock from your graveyard on top of your library.',
+    ],
+    expectedOutcome:
+      'Mystic Sanctuary enters untapped and Lab Shock moves from your graveyard to the top of your library.',
+    oracleSha256: sanctuary.sha256,
+    clauseIds: ['mystic-sanctuary-enters-tapped-unless', 'mystic-sanctuary-untapped-trigger'],
+    decks: {
+      P1: [sanctuary.card, ISLAND, ISLAND, ISLAND, LAB_SHOCK],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Mystic Sanctuary'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Island', 'Island', 'Island'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Shock'] }],
+    },
+  });
+}
+
+function brokersHideoutScenario(gameId: GameId): CardTestScenario {
+  const hideout = pinnedFrom(COVERAGE_PR01, 'Brokers Hideout');
+  return pr01Scenario(gameId, {
+    id: 'brokers-hideout-viewer-sacrifice-and-search',
+    title: 'Brokers Hideout: sacrifice it, then search for a basic',
+    instructions: [
+      'Play Brokers Hideout as your land drop.',
+      'Its enters trigger sacrifices it; then choose the Plains from the search.',
+    ],
+    expectedOutcome:
+      'Brokers Hideout goes to your graveyard. A separate trigger then puts the Plains onto the battlefield tapped, shuffles your library, and you gain 1 life (41). The Swamp is never offered.',
+    oracleSha256: hideout.sha256,
+    clauseIds: ['brokers-hideout-sacrifice-search'],
+    decks: {
+      P1: [hideout.card, PLAINS, ISLAND, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Brokers Hideout'] }],
+      battlefield: [],
+    },
+  });
+}
+
+function sweetGumRecluseScenario(gameId: GameId): CardTestScenario {
+  const recluse = pinnedFrom(COVERAGE_PR01, 'Sweet-Gum Recluse');
+  const sprout = card({
+    oracleId: 'lab-recluse-sprout',
+    name: 'Lab Sprout',
+    typeLine: 'Creature — Plant',
+    manaCost: '{G}',
+    cmc: 1,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '1',
+    toughness: '1',
+  });
+  const forests = Array.from({ length: 7 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'sweet-gum-recluse-viewer-new-creatures',
+    title: 'Sweet-Gum Recluse: counters on creatures that entered this turn',
+    instructions: [
+      'Cast Lab Sprout, then cast Sweet-Gum Recluse (its cascade finds only lands).',
+      'Choose Lab Sprout and Sweet-Gum Recluse for its counters, then stop.',
+    ],
+    expectedOutcome:
+      'Lab Sprout becomes 4/4 and Sweet-Gum Recluse 3/6. Lab Ox, which was already on the battlefield, is never offered.',
+    oracleSha256: recluse.sha256,
+    clauseIds: ['sweet-gum-recluse-enters-counters'],
+    decks: {
+      P1: [
+        recluse.card,
+        sprout,
+        LAB_OX,
+        ...Array.from({ length: 7 }, () => FOREST),
+        FOREST,
+        FOREST,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Sweet-Gum Recluse', 'Lab Sprout'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Ox', ...forests] }],
+    },
+  });
+}
+
+function sweetGumRecluseFlashCascadeScenario(gameId: GameId): CardTestScenario {
+  const recluse = pinnedFrom(COVERAGE_PR01, 'Sweet-Gum Recluse');
+  const seedling = card({
+    oracleId: 'lab-recluse-seedling',
+    name: 'Lab Seedling',
+    typeLine: 'Creature — Plant',
+    manaCost: '{1}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '1',
+    toughness: '1',
+  });
+  const bystander = card({
+    oracleId: 'lab-recluse-bystander',
+    name: 'Lab Bystander',
+    typeLine: 'Creature — Elf',
+    manaCost: '{G}',
+    cmc: 1,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '1',
+    toughness: '1',
+  });
+  const forests = Array.from({ length: 6 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'sweet-gum-recluse-viewer-flash-cascade',
+    title: 'Sweet-Gum Recluse: flash in response, cascade into a cheaper spell',
+    instructions: [
+      "P2's Lab Pending Spell is on the stack. Lab Bystander has no flash, so it cannot be cast now.",
+      'Cast Sweet-Gum Recluse in response (flash); its cascade exiles until Lab Seedling.',
+      'Cast Lab Seedling without paying its mana cost, then choose Lab Seedling and Sweet-Gum Recluse for the counters.',
+    ],
+    expectedOutcome:
+      "Lab Seedling resolves first and becomes 4/4; Sweet-Gum Recluse becomes 3/6. Lab Bystander stays in your hand, and P2's spell resolves last.",
+    oracleSha256: recluse.sha256,
+    clauseIds: ['sweet-gum-recluse-flash', 'sweet-gum-recluse-cascade'],
+    decks: {
+      P1: [recluse.card, bystander, seedling, ...Array.from({ length: 8 }, () => FOREST)],
+      P2: [ARCANE_PENDING_SPELL, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Sweet-Gum Recluse', 'Lab Bystander'] }],
+      battlefield: [{ playerId: 'P1', cardNames: forests }],
+      stack: [{ playerId: 'P2', cardNames: ['Lab Pending Spell'] }],
+    },
+  });
+}
+
+/** P2's seat in the reach scenario: attack P1 with every creature, otherwise pass. */
+const attackP1WithEverything: DecisionProvider = {
+  decide(request) {
+    const attack = request.legalActions.find((action) =>
+      action.description.startsWith('Declare attackers'),
+    );
+    if (attack !== undefined) {
+      return {
+        requestId: request.requestId,
+        actionId: attack.id,
+        targets: (attack.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice: slot.options.includes('P1') ? 'P1' : (slot.options[0] as string),
+        })),
+      };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+  },
+};
+
+function sweetGumRecluseReachScenario(gameId: GameId): CardTestScenario {
+  const recluse = pinnedFrom(COVERAGE_PR01, 'Sweet-Gum Recluse');
+  const drake = card({
+    oracleId: 'lab-recluse-drake',
+    name: 'Lab Drake',
+    typeLine: 'Creature — Drake',
+    manaCost: '{1}{U}',
+    cmc: 2,
+    colors: ['U'],
+    colorIdentity: ['U'],
+    power: '2',
+    toughness: '2',
+    oracleText: 'Flying',
+  });
+  return pr01Scenario(gameId, {
+    id: 'sweet-gum-recluse-viewer-reach-block',
+    title: 'Sweet-Gum Recluse: reach blocks a flier',
+    instructions: [
+      "It is P2's turn. P2 attacks you with Lab Drake, which has flying.",
+      'Declare Sweet-Gum Recluse as a blocker for Lab Drake. Lab Ox has no reach and is not offered.',
+    ],
+    expectedOutcome: 'Sweet-Gum Recluse blocks Lab Drake and takes 2 damage; you stay at 40 life.',
+    oracleSha256: recluse.sha256,
+    clauseIds: ['sweet-gum-recluse-reach'],
+    decks: {
+      P1: [recluse.card, LAB_OX, FOREST, FOREST],
+      P2: [drake, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Sweet-Gum Recluse', 'Lab Ox'] },
+        { playerId: 'P2', cardNames: ['Lab Drake'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackP1WithEverything },
+  });
+}
+
+function koglaFightScenario(gameId: GameId): CardTestScenario {
+  const kogla = pinnedFrom(COVERAGE_PR01, 'Kogla, the Titan Ape');
+  const forests = Array.from({ length: 6 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'kogla-viewer-enters-fight',
+    title: 'Kogla, the Titan Ape: fight up to one creature on entry',
+    instructions: [
+      'Cast Kogla, the Titan Ape with your six Forests.',
+      "Choose P2's Lab Ox for its enters fight.",
+    ],
+    expectedOutcome:
+      'Kogla (7/6) and Lab Ox (4/4) deal damage to each other: Lab Ox dies and Kogla survives with 4 damage.',
+    oracleSha256: kogla.sha256,
+    clauseIds: ['kogla-the-titan-ape-enters-fight'],
+    decks: {
+      P1: [kogla.card, ...Array.from({ length: 6 }, () => FOREST)],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Kogla, the Titan Ape'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: forests },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function koglaAttackScenario(gameId: GameId): CardTestScenario {
+  const kogla = pinnedFrom(COVERAGE_PR01, 'Kogla, the Titan Ape');
+  const squire = card({
+    oracleId: 'lab-kogla-squire',
+    name: 'Lab Squire',
+    typeLine: 'Creature — Human Soldier',
+    manaCost: '{W}',
+    cmc: 1,
+    colors: ['W'],
+    colorIdentity: ['W'],
+    power: '1',
+    toughness: '1',
+  });
+  const idol = card({
+    oracleId: 'lab-kogla-idol',
+    name: 'Lab Idol',
+    typeLine: 'Artifact',
+    manaCost: '{2}',
+    cmc: 2,
+  });
+  return pr01Scenario(gameId, {
+    id: 'kogla-viewer-bounce-and-attack',
+    title: 'Kogla, the Titan Ape: bounce a Human, then attack',
+    instructions: [
+      'Activate Kogla for {1}{G}, returning your Lab Squire to your hand.',
+      'Attack P2 with Kogla; its attack trigger destroys an artifact or enchantment P2 controls.',
+    ],
+    expectedOutcome:
+      "Lab Squire returns to your hand and Kogla gains indestructible. When Kogla attacks P2, Lab Hex (P2's only artifact or enchantment) is destroyed; P3's Lab Idol is untouched.",
+    oracleSha256: kogla.sha256,
+    clauseIds: ['kogla-the-titan-ape-attack-destroy', 'kogla-the-titan-ape-human-bounce'],
+    decks: {
+      P1: [kogla.card, squire, FOREST, FOREST],
+      P2: [LAB_HEX, FOREST, FOREST],
+      P3: [idol, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Kogla, the Titan Ape', 'Lab Squire', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Hex'] },
+        { playerId: 'P3', cardNames: ['Lab Idol'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4187,6 +5658,46 @@ export const CARD_TEST_SCENARIO_IDS = [
   'myriad-landscape-viewer-shared-type-search',
   'war-room-viewer-dynamic-life-activation',
   'war-room-viewer-colorless-mana',
+  // Coverage PR01
+  'forum-of-amity-viewer-surveil',
+  'attune-with-aether-viewer-reveal-to-hand',
+  'beacon-of-unrest-viewer-reanimate-and-shuffle',
+  'canoptek-spyder-viewer-vehicle-draw',
+  'canoptek-wraith-viewer-scout-same-name-search',
+  'conjurers-closet-viewer-end-step-blink',
+  'harvest-season-viewer-tapped-creature-count',
+  'land-tax-viewer-upkeep-reveal-search',
+  'mordant-dragon-viewer-combat-damage-redirect',
+  'necron-deathmark-viewer-destroy-up-to-one-and-mill',
+  'plasmancer-viewer-reveal-swamp',
+  'sylvan-reclamation-viewer-exile-up-to-two',
+  'sylvan-reclamation-viewer-basic-landcycling',
+  'thunderfoot-baloth-viewer-lieutenant',
+  'tomb-fortress-viewer-mill-then-return',
+  'voice-of-many-viewer-draw-per-opponent',
+  'foe-razer-regent-viewer-fight-and-grow',
+  'hunting-wilds-viewer-kicked',
+  'loran-of-the-third-path-viewer-destroy-up-to-one',
+  'loran-of-the-third-path-viewer-tap-draw',
+  'rishkar-viewer-counters-and-mana',
+  'vastwood-surge-viewer-kicked',
+  'frontier-siege-viewer-khans-mana',
+  'frontier-siege-viewer-dragons-fight',
+  'kairi-viewer-bounce-total-six',
+  'kairi-viewer-mill-and-return',
+  'will-of-the-mardu-viewer-choose-both',
+  'aether-channeler-viewer-bounce-another',
+  'aether-channeler-viewer-bird',
+  'aether-channeler-viewer-draw',
+  'return-to-nature-viewer-destroy-enchantment',
+  'return-to-nature-viewer-exile-graveyard-card',
+  'mystic-sanctuary-viewer-untapped-return',
+  'brokers-hideout-viewer-sacrifice-and-search',
+  'sweet-gum-recluse-viewer-new-creatures',
+  'sweet-gum-recluse-viewer-flash-cascade',
+  'sweet-gum-recluse-viewer-reach-block',
+  'kogla-viewer-enters-fight',
+  'kogla-viewer-bounce-and-attack',
   'opponent-graveyard-viewer-reanimate',
 ] as const;
 
@@ -4269,6 +5780,45 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'myriad-landscape-viewer-shared-type-search': myriadLandscapeSearchScenario,
   'war-room-viewer-dynamic-life-activation': warRoomScenario,
   'war-room-viewer-colorless-mana': warRoomManaScenario,
+  'forum-of-amity-viewer-surveil': forumOfAmityScenario,
+  'attune-with-aether-viewer-reveal-to-hand': attuneWithAetherScenario,
+  'beacon-of-unrest-viewer-reanimate-and-shuffle': beaconOfUnrestScenario,
+  'canoptek-spyder-viewer-vehicle-draw': canoptekSpyderScenario,
+  'canoptek-wraith-viewer-scout-same-name-search': canoptekWraithScenario,
+  'conjurers-closet-viewer-end-step-blink': conjurersClosetScenario,
+  'harvest-season-viewer-tapped-creature-count': harvestSeasonScenario,
+  'land-tax-viewer-upkeep-reveal-search': landTaxScenario,
+  'mordant-dragon-viewer-combat-damage-redirect': mordantDragonScenario,
+  'necron-deathmark-viewer-destroy-up-to-one-and-mill': necronDeathmarkScenario,
+  'plasmancer-viewer-reveal-swamp': plasmancerScenario,
+  'sylvan-reclamation-viewer-exile-up-to-two': sylvanReclamationScenario,
+  'sylvan-reclamation-viewer-basic-landcycling': sylvanReclamationLandcyclingScenario,
+  'thunderfoot-baloth-viewer-lieutenant': thunderfootBalothScenario,
+  'tomb-fortress-viewer-mill-then-return': tombFortressScenario,
+  'voice-of-many-viewer-draw-per-opponent': voiceOfManyScenario,
+  'foe-razer-regent-viewer-fight-and-grow': foeRazerRegentScenario,
+  'hunting-wilds-viewer-kicked': huntingWildsScenario,
+  'loran-of-the-third-path-viewer-destroy-up-to-one': loranDestroyScenario,
+  'loran-of-the-third-path-viewer-tap-draw': loranDrawScenario,
+  'rishkar-viewer-counters-and-mana': rishkarScenario,
+  'vastwood-surge-viewer-kicked': vastwoodSurgeScenario,
+  'frontier-siege-viewer-khans-mana': frontierSiegeKhansScenario,
+  'frontier-siege-viewer-dragons-fight': frontierSiegeDragonsScenario,
+  'kairi-viewer-bounce-total-six': kairiScenario,
+  'kairi-viewer-mill-and-return': kairiMillScenario,
+  'will-of-the-mardu-viewer-choose-both': willOfTheMarduScenario,
+  'aether-channeler-viewer-bounce-another': aetherChannelerScenario,
+  'aether-channeler-viewer-bird': aetherChannelerBirdScenario,
+  'aether-channeler-viewer-draw': aetherChannelerDrawScenario,
+  'return-to-nature-viewer-destroy-enchantment': returnToNatureDestroyScenario,
+  'return-to-nature-viewer-exile-graveyard-card': returnToNatureExileScenario,
+  'mystic-sanctuary-viewer-untapped-return': mysticSanctuaryScenario,
+  'brokers-hideout-viewer-sacrifice-and-search': brokersHideoutScenario,
+  'sweet-gum-recluse-viewer-new-creatures': sweetGumRecluseScenario,
+  'sweet-gum-recluse-viewer-flash-cascade': sweetGumRecluseFlashCascadeScenario,
+  'sweet-gum-recluse-viewer-reach-block': sweetGumRecluseReachScenario,
+  'kogla-viewer-enters-fight': koglaFightScenario,
+  'kogla-viewer-bounce-and-attack': koglaAttackScenario,
   'opponent-graveyard-viewer-reanimate': opponentGraveyardScenario,
 };
 

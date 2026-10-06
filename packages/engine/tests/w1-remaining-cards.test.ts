@@ -20,9 +20,10 @@ const modeledNames = [
   'Nova Flame',
   "Sage's Reverie",
   'Scriv, the Obligator',
+  'Will of the Mardu',
 ] as const;
 
-const containedNames = ['Gut, True Soul Zealot', 'Will of the Mardu'] as const;
+const containedNames = ['Gut, True Soul Zealot'] as const;
 const names = [...modeledNames, ...containedNames] as const;
 
 const cards = new Map(
@@ -228,12 +229,12 @@ describe('remaining W1 cards', () => {
     expect(debtorPlayer.life).toBe(beforeLife - 2);
   });
 
-  it('contains Will of the Mardu until choose-both accepts any commander you control', () => {
+  it('models Will of the Mardu with choose-both for any commander you control (coverage PR01)', () => {
     const definition = definitions.get('Will of the Mardu')!;
-    expect(definition.modeled).toBe(false);
-    expect(definition.unmodeledReasons.join('\n')).toContain(
-      'Choose-both requires controlling your own commander, not any commander you control.',
-    );
+    expect(definition.modeled).toBe(true);
+    expect(definition.spellAbility?.modes?.maxChoicesIf?.condition).toEqual({
+      kind: 'controlsACommander',
+    });
   });
 });
 

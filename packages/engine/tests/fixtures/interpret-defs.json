@@ -3665,7 +3665,7 @@
       "colorless": 0,
       "generic": 4
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Kairi, the Swirling Sky",
     "oracleId": "85aa53e8-f062-4d02-bc69-1413f7f0dcf1",
     "power": 6,
@@ -3683,6 +3683,7 @@
     "toughness": 6,
     "triggers": [
       {
+        "description": "When Kairi dies, choose one",
         "effects": [],
         "kind": "triggered",
         "modes": {
@@ -3690,24 +3691,45 @@
           "minChoices": 1,
           "options": [
             {
-              "description": "Return nonland permanents <= 6 total MV",
+              "description": "Return any number of target nonland permanents with total mana value 6 or less to their owners' hands",
               "effects": [
                 {
-                  "op": "bounceUpTo6MV"
+                  "op": "returnToHandEachChosen",
+                  "targetSlot": 0
                 }
+              ],
+              "targetSlots": [
+                0
               ]
             },
             {
-              "description": "Mill 6 and return up to 2 spells from graveyard",
+              "description": "Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand",
               "effects": [
                 {
                   "op": "millAndReturnSpells"
                 }
-              ]
+              ],
+              "targetSlots": []
             }
           ]
         },
-        "targets": [],
+        "targets": [
+          {
+            "count": {
+              "max": null,
+              "min": 0
+            },
+            "filter": {
+              "kind": "not",
+              "of": {
+                "kind": "type",
+                "value": "Land"
+              }
+            },
+            "kind": "permanent",
+            "totalManaValueAtMost": 6
+          }
+        ],
         "trigger": {
           "subject": {
             "kind": "self"
@@ -3720,12 +3742,7 @@
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"When ~ dies, choose one —\"",
-      "unrecognized rules text: \"• Return any number of target nonland permanents with total mana value 6 or less to their owners' hands.\"",
-      "unrecognized rules text: \"• Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.\"",
-      "explicitly unsupported: Return-any-number targeting with total mana value 6 or less is an untargeted single bounce with no mana-value cap."
-    ],
+    "unmodeledReasons": [],
     "ward": {
       "cost": {
         "colored": {

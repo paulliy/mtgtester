@@ -45,6 +45,10 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return cardTypesInAllGraveyards(ctx);
     case 'countPermanents':
       return scopedPermanents(ctx, scope, value.selector, value.scope).length;
+    case 'countTappedPermanents':
+      return scopedPermanents(ctx, scope, value.selector, value.scope).filter(
+        (permanent) => permanent.tapped,
+      ).length;
     case 'countPermanentsControlledByTarget': {
       const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
       if (targetId === undefined) return 0;
@@ -126,6 +130,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       // A spell announced with no X is X=0 (CR 601.2b), which is a legal announcement.
       return scope.x ?? 0;
     case 'optionalCostCount': {
+      const resolving = scope.resolvingOptionalCostCounts?.[value.mechanic];
+      if (resolving !== undefined) return resolving;
       const permanent = ctx.state.battlefield.find(
         (candidate) => candidate.cardId === scope.sourceCardId,
       );
@@ -213,6 +219,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
         { kind: 'type', value: 'Creature' },
         'you',
       ).length;
+      // Only players still in the game are opponents (CR 800.4a); an eliminated player with no
+      // creatures left must not count as one who controls fewer.
       let count = 0;
       for (const p of opponentsOf(ctx, scope.controllerId)) {
         const oppCreatures = scopedPermanents(

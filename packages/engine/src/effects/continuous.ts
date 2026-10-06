@@ -63,7 +63,7 @@ const BASIC_LAND_MANA: Record<string, ManaUnit> = {
 type Applicability =
   | { kind: 'selector'; selector: Selector; source: SelectorSource }
   /** An until-end-of-turn effect, pinned to the objects it resolved against (CR 611.2c). */
-  | { kind: 'fixed'; cardIds: readonly string[] };
+  | { kind: 'fixed'; cardIds: readonly string[]; objectIds?: readonly string[] };
 
 interface LayerEffect {
   applies: Applicability;
@@ -177,7 +177,11 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
   }
 
   for (const eff of ctx.state.effects) {
-    const applies = { kind: 'fixed', cardIds: eff.targetCardIds } as const;
+    const applies = {
+      kind: 'fixed',
+      cardIds: eff.targetCardIds,
+      ...(eff.targetObjectIds !== undefined ? { objectIds: eff.targetObjectIds } : {}),
+    } as const;
     if (eff.kind === 'ptDelta') {
       out.push({
         applies,
@@ -264,10 +268,15 @@ export function candidateOf(
   // X as 0 off the stack (202.3b) — the same rule `cardZoneCandidate` applies for library/hand/
   // graveyard cards via `spellManaValue(def, undefined)`. Absent (not 0) when the def can't be
   // found, so `manaValueAtMost`/`manaValueAtLeast` correctly never match rather than matching
-  // everything as mana value 0.
+  // everything as mana value 0. A face-down permanent has no mana cost, so its mana value is 0
+  // whatever card it is (CR 708.2).
   const ownDef = ctx.defs.get(perm.oracleId);
   const manaValue =
-    ownDef === undefined ? undefined : perm.face === 'back' ? 0 : manaValueOf(ownDef.manaCost);
+    ownDef === undefined
+      ? undefined
+      : perm.face === 'back' || perm.faceDown
+        ? 0
+        : manaValueOf(ownDef.manaCost);
 
   return {
     cardId: perm.cardId,
@@ -308,7 +317,12 @@ export function matchesSelector(
 }
 
 function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean {
-  if (effect.applies.kind === 'fixed') return effect.applies.cardIds.includes(entry.perm.cardId);
+  if (effect.applies.kind === 'fixed') {
+    return (
+      effect.applies.cardIds.includes(entry.perm.cardId) &&
+      (effect.applies.objectIds === undefined || effect.applies.objectIds.includes(entry.perm.id))
+    );
+  }
   return selectMatches(
     candidateOf(ctx, entry.perm, entry.chars),
     effect.applies.selector,

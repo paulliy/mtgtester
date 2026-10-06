@@ -5,7 +5,17 @@
 import { NECRON_WARRIOR_2_2 } from '../tokens';
 import { defineCard, unimplemented, unsupportedCard } from './index';
 import type { CardDefinition } from '../definition';
-import { allOf, not, OTHER, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
+import {
+  allOf,
+  anyOf,
+  IS_TOKEN,
+  not,
+  OTHER,
+  ofSubtype,
+  ofSupertype,
+  ofType,
+  YOURS,
+} from '../selector';
 import { mana, SAC_SELF, TAP } from '../templates';
 import { constant } from '../value';
 
@@ -63,10 +73,36 @@ export function registerNECRON_DYNASTIESOverrides(): void {
   ]);
 
   // Catalog audit necron-main-batch-2: Vehicle is a subtype, not a type.
-  unsupportedCard(
+  // Coverage PR01: "nontoken" modifies both "artifact creature" and "Vehicle", and Vehicle is a
+  // subtype (an artifact Vehicle that is not a creature still triggers).
+  defineCard(
     'bcad5b83-5513-4455-a9c9-716281505eaa',
     'Canoptek Spyder',
-    'Vehicle is selected as a type rather than a subtype, so Vehicles do not trigger the draw.',
+    [
+      'Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'permanent',
+              selector: allOf(
+                OTHER,
+                YOURS,
+                not(IS_TOKEN),
+                anyOf(allOf(ofType('Artifact'), ofType('Creature')), ofSubtype('Vehicle')),
+              ),
+            },
+          },
+          targets: [],
+          effects: [{ op: 'draw', count: constant(1) }],
+          description: 'Draw a card when another nontoken artifact creature or Vehicle enters',
+        },
+      ],
+    },
   );
 
   unimplemented('678b3fb5-aa9f-4268-9433-2a89dd37b927', 'Canoptek Tomb Sentinel', [
@@ -301,11 +337,33 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     "If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can't, you lose the game.",
   ]);
 
-  // Catalog audit necron-main-batch-1: Swamp tutor omits reveal.
-  unsupportedCard(
+  defineCard(
     'b3ff8da4-f2cc-41c3-8950-9cc531854b78',
     'Plasmancer',
-    'The Swamp search omits revealing the found card.',
+    [
+      'Dynastic Advisor — When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [],
+          effects: [
+            {
+              op: 'searchLibrary',
+              filter: allOf(ofSupertype('Basic'), ofSubtype('Swamp')),
+              destinations: [{ zone: 'hand' }],
+              allowFailToFind: true,
+              reveal: true,
+            },
+            { op: 'shuffle' },
+          ],
+          description:
+            'Search for a basic Swamp card, reveal it, put it into your hand, then shuffle',
+        },
+      ],
+    },
   );
 
   // Catalog audit necron-main-batch-1: exile origin omitted; loseLife hits you.

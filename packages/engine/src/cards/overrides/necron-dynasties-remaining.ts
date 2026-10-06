@@ -1,8 +1,9 @@
 /** Remaining authored overrides for necron-dynasties.txt. */
 
-import { TAP, mana } from '../templates';
+import { EXILE_SELF, TAP, activated, mana, manaCost, spell } from '../templates';
+import { constant } from '../value';
 import type { TokenSpec } from '../ability';
-import { allOf, ofType, not, YOURS } from '../selector';
+import { allOf, anyOf, ofType, not, SELF, YOURS } from '../selector';
 import { defineCard, unsupportedCard } from './index';
 import { INSECT_1_1_FLYING, NECRON_WARRIOR_2_2 as NECRON_WARRIOR_TOKEN } from '../tokens';
 
@@ -15,11 +16,28 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Anrakyr the Traveller',
     'Artifact-from-hand-or-graveyard life cast is implemented as free casts from hand.',
   );
-  // Catalog audit necron-remaining-batch-2: shuffle this into library is shuffle-only.
-  unsupportedCard(
+  // Coverage PR01 (was contained by necron-remaining-batch-2): the resolving Beacon itself is shuffled into its owner's library.
+  defineCard(
     'aef874fa-93c0-4f86-8b0d-dc24ec51467d',
     'Beacon of Unrest',
-    "Shuffle this into its owner's library is implemented as shuffleLibrary only.",
+    [
+      "Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library.",
+    ],
+    {
+      spellAbility: spell({
+        targets: [
+          {
+            kind: 'cardInGraveyard',
+            filter: anyOf(ofType('Artifact'), ofType('Creature')),
+            graveyardOwnerScope: 'any',
+          },
+        ],
+        effects: [
+          { op: 'graveyardToBattlefield', target: 0 },
+          { op: 'resolvingSpellShuffleIntoLibrary' },
+        ],
+      }),
+    },
   );
   // Catalog audit necron-remaining-batch-4: type change omits spells and other zones.
   unsupportedCard(
@@ -57,11 +75,43 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Canoptek Tomb Sentinel',
     'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
   );
-  // Catalog audit necron-remaining-batch-2: same-name land search is any two basics.
-  unsupportedCard(
+  // Coverage PR01 (was contained by necron-remaining-batch-2): the optional {3}-and-sacrifice
+  // payment gates the choice of a land you control and a search for basics with its name.
+  defineCard(
     '61849685-b407-4ed0-aafc-ec3a003200b9',
     'Canoptek Wraith',
-    'Same-name-as-chosen-land search is implemented as any two basics.',
+    [
+      "Wraith Form — ~ can't be blocked.",
+      'Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.',
+    ],
+    {
+      // An executable override turns off generic ability-label stripping, so the labelled
+      // "can't be blocked" line is authored here too.
+      staticEffects: [{ affects: SELF, op: { layer: 6, setCantBeBlocked: true } }],
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
+          targets: [],
+          effects: [
+            {
+              op: 'mayPayManaAndSacrificeSource',
+              cost: manaCost('{3}'),
+              then: [
+                {
+                  op: 'searchBasicsNamedLikeChosenLand',
+                  count: 2,
+                  destination: { zone: 'battlefield', tapped: true },
+                },
+                { op: 'shuffle' },
+              ],
+            },
+          ],
+          description:
+            'You may pay {3} and sacrifice this creature to fetch up to two basics named like a land you control',
+        },
+      ],
+    },
   );
   // Catalog audit necron-remaining-batch-2: GY activation discount is claimed, not authored.
   unsupportedCard(
@@ -167,10 +217,28 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Top-of-library cast omits colorless spells, and exile-top is implemented as mill.',
   );
   // Catalog audit necron-remaining-batch-4: up-to-one is a required target.
-  unsupportedCard(
+  // Coverage PR01: "up to one target creature" is a 0..1 count slot (count slots follow the
+  // ordinary player slot), so the trigger can still target only a player.
+  defineCard(
     '45866598-4ee4-46b6-ade2-ffcdbe98e58f',
     'Necron Deathmark',
-    'Destroy up-to-one is a required target.',
+    [
+      'Synaptic Disintegrator — When this creature enters, destroy up to one target creature and target player mills three cards.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [{ kind: 'player' }, { kind: 'creature', count: { min: 0, max: 1 } }],
+          effects: [
+            { op: 'destroyEachChosen', targetSlot: 1 },
+            { op: 'millTargetPlayer', target: 0, count: 3 },
+          ],
+          description: 'Destroy up to one target creature; target player mills three cards',
+        },
+      ],
+    },
   );
   defineCard(
     '20932bca-52be-4288-9c7d-4154650c5ec9',
@@ -323,11 +391,28 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Tomb Blade',
     'Combat-damage life loss targets any player, not the damaged player.',
   );
-  // Catalog audit necron-remaining-batch-5: return is targeted before mill.
-  unsupportedCard(
+  // Coverage PR01: the creature card is chosen on resolution, after the mill, with no target.
+  defineCard(
     '986f510c-e2ec-423e-a443-51a169939558',
     'Tomb Fortress',
-    'The creature return is a target chosen before milling.',
+    [
+      '{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery.',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{2}{B}{B}{B}'), TAP, EXILE_SELF],
+          timing: 'sorcery',
+          targets: [],
+          effects: [
+            { op: 'mill', count: constant(4) },
+            { op: 'returnOneFromYourGraveyardToBattlefield', filter: ofType('Creature') },
+          ],
+          description:
+            'Mill four cards, then return a creature card from your graveyard to the battlefield',
+        }),
+      ],
+    },
   );
   // Catalog audit necron-remaining-batch-6: graveyard mana abilities omitted.
   unsupportedCard(

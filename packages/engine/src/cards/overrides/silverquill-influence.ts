@@ -4,7 +4,7 @@
 
 import { constant } from '../value';
 import { ATTACHED, mana } from '../templates';
-import { defineCard, unimplemented, unsupportedCard } from './index';
+import { defineCard, unimplemented } from './index';
 import { ofSubtype } from '../selector';
 
 const FLICKERING_WARD_DEF = {
@@ -124,12 +124,8 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'When this Aura enters, if it\'s on the battlefield, it loses "enchant creature card in a graveyard" and gains "enchant creature put onto the battlefield with this Aura." Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature\'s controller sacrifices it.',
   ]);
 
-  // Catalog audit silverquill-main-batch-1: Surveil is claimed with an empty patch.
-  unsupportedCard(
-    '349ea6c7-6b3e-417f-b082-b712e2b1635b',
-    'Forum of Amity',
-    'Surveil is claimed without a surveil implementation.',
-  );
+  // Forum of Amity: restored in coverage PR01. The interpreter now models enters-tapped, the
+  // {W}/{B} mana ability, and the surveil activation faithfully, so no override is registered.
 
   unimplemented('2143f413-7baa-4fd6-a7ca-32f52bfa553f', 'Shadrix Silverquill', [
     'At the beginning of combat on your turn, you may choose two. Each mode must target a different player.',

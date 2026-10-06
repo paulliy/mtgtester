@@ -11,10 +11,16 @@ import { GameOverSignal, TurnAbortedSignal } from '../signals';
 import { playerById } from '../state/objects';
 import type { GameContext } from '../state/types';
 import { runOpeningHands } from '../turn/mulligan';
-import { runPrioritySequence } from '../turn/priority';
+import { emptyManaPools, runPrioritySequence } from '../turn/priority';
 import { priorityCheckpoint } from '../sba/sba';
 import type { PreparedScenarioSpec } from '../testing/prepared-scenario';
-import { queueStepTriggers, runTurn } from '../turn/turn';
+import {
+  beginEndStep,
+  beginPostcombatMain,
+  queueStepTriggers,
+  runCombatAndExtraCombats,
+  runTurn,
+} from '../turn/turn';
 
 function advanceToNextTurnPlayer(ctx: GameContext): void {
   const s = ctx.state;
@@ -116,6 +122,24 @@ export function* playPreparedScenario(
   emit(ctx, 'gameStart', { seed: state.seed, players: state.seating });
   emit(ctx, 'startingPlayer', { player: state.currentTurnPlayer });
   yield* runPrioritySequence(ctx);
+  if (spec.continueThroughCombat === true) {
+    emptyManaPools(ctx);
+    yield* runCombatAndExtraCombats(ctx);
+  }
+  // The production phase transitions, so the phase event and every beginning-of-step trigger
+  // (the monarch's end-step draw too) match a real turn.
+  if (spec.continueToPostcombatMain === true) {
+    emptyManaPools(ctx);
+    beginPostcombatMain(ctx);
+    yield* priorityCheckpoint(ctx);
+    yield* runPrioritySequence(ctx);
+  }
+  if (spec.continueToEndStep === true) {
+    emptyManaPools(ctx);
+    beginEndStep(ctx);
+    yield* priorityCheckpoint(ctx);
+    yield* runPrioritySequence(ctx);
+  }
   if (spec.continueToNextUpkeep === true) {
     advanceToNextTurnPlayer(ctx);
     state.turnNumber += 1;

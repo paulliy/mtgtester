@@ -15,7 +15,7 @@ import {
 } from '../selector';
 import { NINJA_1_1_BLACK, RABBIT_1_1_WHITE, SPIDER_2_2_REACH_GREEN } from '../tokens';
 import { constant } from '../value';
-import { mana, manaCost, SAC_SELF, sacOther, TAP } from '../templates';
+import { mana, manaCost, SAC_SELF, sacOther, spell, TAP } from '../templates';
 import { defineCard, unsupportedCard } from './index';
 
 const CREATURE = ofType('Creature');
@@ -146,10 +146,19 @@ export function registerW2RemainingOverrides(): void {
     'Exile splices library cards without a zone-change, so leave-library events are skipped.',
   );
 
-  unsupportedCard(
+  // Coverage PR01: the Oracle search has no reveal; the kicked rider untaps the found Forests and
+  // makes them permanent 3/3 green haste creatures that are still lands.
+  defineCard(
     'e9bc324e-c200-45ef-8b9b-52a61d0f7374',
     'Hunting Wilds',
-    'The Forest search omits revealing the found cards.',
+    [
+      'Kicker {3}{G}',
+      'If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.',
+    ],
+    {
+      optionalAdditionalCost: { mechanic: 'kicker', cost: manaCost('{3}{G}') },
+      spellAbility: spell({ targets: [], effects: [{ op: 'huntingWilds' }] }),
+    },
   );
 
   defineCard('5a343a5f-3f9b-43c3-8532-8391de7a5443', 'Jacked Rabbit', ['Ravenous'], {
@@ -427,11 +436,37 @@ export function registerW2RemainingOverrides(): void {
     },
   );
 
-  // Catalog audit w2-batch-1: basic-land search omits reveal.
-  unsupportedCard(
+  // Coverage PR01: the Oracle search has no reveal. The kicked rider's count is 2 x the kicker
+  // count, so an unkicked cast puts no counters.
+  defineCard(
     '8ba2a7ad-a09b-4f52-9c76-c70510dc4feb',
     'Vastwood Surge',
-    'The basic-land search omits revealing the found cards.',
+    [
+      'Kicker {4}',
+      'Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control.',
+    ],
+    {
+      optionalAdditionalCost: { mechanic: 'kicker', cost: manaCost('{4}') },
+      spellAbility: spell({
+        targets: [],
+        effects: [
+          {
+            op: 'searchLibrary',
+            filter: allOf(ofSupertype('Basic'), ofType('Land')),
+            destinations: [{ zone: 'battlefield', tapped: true }],
+            count: constant(2),
+            allowFailToFind: true,
+          },
+          { op: 'shuffle' },
+          {
+            op: 'putCountersEach',
+            selector: allOf(ofType('Creature'), YOURS),
+            counter: '+1/+1',
+            count: { kind: 'times', of: { kind: 'optionalCostCount', mechanic: 'kicker' }, n: 2 },
+          },
+        ],
+      }),
+    },
   );
 
   defineCard('d7315b3b-6e5d-4d28-a503-bfae1daf6c43', 'Verix Bladewing', ['Kicker {3}'], {

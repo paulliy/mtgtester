@@ -435,6 +435,13 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
 
     case 'surveil':
       return { ...base, text: `surveils ${num(p, 'looked') ?? 0}` };
+
+    // Only an explicitly revealed search result is narrated: CR 701.16a makes it public, while an
+    // unrevealed find bound for a hidden zone must stay private to the searcher.
+    case 'searchFound':
+      return p['revealed'] === true
+        ? { ...base, text: `reveals ${str(p, 'name') ?? 'a card'}` }
+        : null;
     case 'lifeLoss':
       return { ...base, text: `loses ${num(p, 'amount') ?? 0} life` };
 

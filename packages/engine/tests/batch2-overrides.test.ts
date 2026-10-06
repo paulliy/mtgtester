@@ -3,7 +3,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { oracle } from './fixtures';
 
 describe('Batch 2 card overrides', () => {
-  it('is catalog-contained because up-to-two requires at least one target', () => {
+  it('models Rishkar with an up-to-two counter slot and the granted mana ability (coverage PR01)', () => {
     const card = oracle({
       oracleId: '761021ce-4559-464e-aa03-85c2fe78e267',
       name: 'Rishkar, Peema Renegade',
@@ -13,10 +13,9 @@ describe('Batch 2 card overrides', () => {
         'When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.\nEach creature you control with a counter on it has "{T}: Add {G}."',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Up-to-two +1/+1 counters require at least one target.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.targets[0]?.count).toEqual({ min: 0, max: 2 });
+    expect(def.staticEffects).toHaveLength(1);
   });
 
   it('models Ajani, Caller of the Pride', () => {
@@ -34,7 +33,7 @@ describe('Batch 2 card overrides', () => {
     expect(def.activatedAbilities).toHaveLength(3);
   });
 
-  it('contains Sylvan Reclamation', () => {
+  it('models Sylvan Reclamation with an up-to-two exile slot (coverage PR01)', () => {
     const card = oracle({
       oracleId: 'aeec8e85-6571-4da6-8a48-f5d3985ca10b',
       name: 'Sylvan Reclamation',
@@ -43,10 +42,9 @@ describe('Batch 2 card overrides', () => {
       oracleText: 'Exile up to two target artifacts and/or enchantments.\nBasic landcycling {2}',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Up-to-two exile requires at least one target.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.targets[0]?.count).toEqual({ min: 0, max: 2 });
+    expect(def.spellAbility?.effects).toEqual([{ op: 'exileEachChosen', targetSlot: 0 }]);
   });
 
   it('models Mentor of the Meek', () => {
@@ -77,20 +75,20 @@ describe('Batch 2 card overrides', () => {
     expect(def.staticEffects).toHaveLength(1);
   });
 
-  it('contains Voice of Many', () => {
+  it('models Voice of Many counting only opponents still in the game (coverage PR01)', () => {
     const card = oracle({
       oracleId: '9b40faad-1b96-4461-89d8-9a207b58e832',
       name: 'Voice of Many',
-      typeLine: 'Creature — Elf Archon',
-      manaCost: '{2}{G}',
+      typeLine: 'Creature — Elf Druid',
+      manaCost: '{2}{G}{G}',
       oracleText:
-        'When Voice of Many enters, draw a card for each opponent who controls fewer creatures than you.',
+        'When this creature enters, draw a card for each opponent who controls fewer creatures than you.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Eliminated players still count as opponents who control fewer creatures.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.effects).toEqual([
+      { op: 'draw', count: { kind: 'countOpponentsWithFewerCreatures' } },
+    ]);
   });
 
   it('models Loyal Guardian', () => {
@@ -163,7 +161,7 @@ describe('Batch 2 card overrides', () => {
     expect(def.triggers).toHaveLength(2);
   });
 
-  it('contains Harvest Season', () => {
+  it('models Harvest Season with X counting tapped creatures (coverage PR01)', () => {
     const card = oracle({
       oracleId: 'ec6d52f9-1c8f-48da-951c-be8d7813c7be',
       name: 'Harvest Season',
@@ -173,10 +171,11 @@ describe('Batch 2 card overrides', () => {
         'Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'X counts all creatures you control rather than tapped creatures.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.effects[0]).toMatchObject({
+      op: 'searchLibrary',
+      count: { kind: 'countTappedPermanents', scope: 'you' },
+    });
   });
 
   it('models Slate of Ancestry', () => {

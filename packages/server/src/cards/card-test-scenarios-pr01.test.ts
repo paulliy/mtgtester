@@ -1,0 +1,897 @@
+/**
+ * Coverage PR01 Card Test Lab scenarios (docs/plans/card-coverage-chunks.md), driven headlessly
+ * through the same Engine the real viewer session uses. The Playwright spec drives the identical
+ * scenarios through the real frontend; this suite pins their authoritative outcomes and replay.
+ */
+import type { DecisionRequest } from '@mtg/shared';
+import { describe, expect, it } from 'vitest';
+import { createCardTestScenario } from './card-test-scenarios';
+import type { CardTestScenario } from './card-test-scenarios';
+
+interface Choice {
+  actionId: number;
+  targets?: Array<{ slot: number; choice: string }>;
+}
+
+/** One scripted step: take the first legal action whose description contains `action`. */
+interface Step {
+  action: string;
+  /** Fill target slots, in order, with the objects or players of these names. */
+  targets?: string[];
+}
+
+function objectNames(scenario: CardTestScenario): Map<string, string> {
+  const names = new Map<string, string>();
+  const state = scenario.engine.getState();
+  for (const perm of state.battlefield) names.set(perm.id, perm.name);
+  for (const player of state.players) {
+    names.set(player.id, player.id);
+    for (const card of player.graveyard) names.set(card.id, card.name);
+    for (const card of player.hand) names.set(card.id, card.name);
+  }
+  for (const card of state.exile) names.set(card.id, card.name);
+  for (const entry of state.stack) names.set(entry.id, entry.description);
+  return names;
+}
+
+/**
+ * Prefer the scripted steps in order; each step is consumed once. Anything else passes priority,
+ * so the scenario ends once every player passes with an empty stack.
+ */
+function scripted(steps: Step[]) {
+  const remaining = [...steps];
+  return (request: DecisionRequest, scenario: CardTestScenario): Choice => {
+    for (const [index, step] of remaining.entries()) {
+      const action = request.legalActions.find((candidate) =>
+        candidate.description.includes(step.action),
+      );
+      if (action === undefined) continue;
+      remaining.splice(index, 1);
+      if (step.targets === undefined) return { actionId: action.id };
+      const slots =
+        (
+          action.interaction as
+            { targetSlots?: Array<{ slot: number; options: string[] }> } | undefined
+        )?.targetSlots ??
+        action.targets ??
+        [];
+      const names = objectNames(scenario);
+      const targets = step.targets.map((name, position) => {
+        const slot = slots[position];
+        if (slot === undefined) throw new Error(`${step.action}: no target slot ${position}`);
+        const choice = slot.options.find((id) => names.get(id) === name);
+        if (choice === undefined) {
+          throw new Error(
+            `${step.action}: no target named ${name} among [${slot.options
+              .map((id) => names.get(id) ?? id)
+              .join(', ')}]`,
+          );
+        }
+        return { slot: slot.slot, choice };
+      });
+      return { actionId: action.id, targets };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { actionId: (pass ?? request.legalActions[0]!).id };
+  };
+}
+
+function run(scenarioId: string, steps: Step[]) {
+  const scenario = createCardTestScenario(scenarioId, 'card-lab-pr01');
+  expect(scenario, scenarioId).not.toBeNull();
+  const choose = scripted(steps);
+  const prompts: string[] = [];
+  const offered: string[][] = [];
+  let decisions = 0;
+  for (;;) {
+    const step = scenario!.engine.advance();
+    if (step.kind === 'gameOver') break;
+    if (step.kind === 'continue') continue;
+    decisions++;
+    prompts.push(step.request.prompt ?? '');
+    offered.push(step.request.legalActions.map((action) => action.description));
+    scenario!.engine.submit({
+      requestId: step.request.requestId,
+      ...choose(step.request, scenario!),
+    });
+    if (decisions > 60) throw new Error(`${scenarioId} did not terminate`);
+  }
+  // A clean lab run ends after its priority window; an engine halt (an unmodeled card reached
+  // play) is a broken scenario, not an outcome.
+  expect(scenario!.engine.getResult()?.haltReason ?? null, scenarioId).toBeNull();
+  const state = scenario!.engine.getState();
+  const seat = (id: string) => state.players.find((candidate) => candidate.id === id)!;
+  const onBattlefield = (name: string) =>
+    state.battlefield.filter((permanent) => permanent.name === name);
+  return { scenario: scenario!, state, seat, onBattlefield, prompts, offered };
+}
+
+function replays(scenarioId: string, steps: Step[]): void {
+  const first = run(scenarioId, steps).state;
+  const second = run(scenarioId, steps).state;
+  expect(second.eventLog).toEqual(first.eventLog);
+}
+
+describe('Forum of Amity Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Forum of Amity: {2}{W}{B}, {T}: Surveil 1.' },
+    { action: 'Put Forum Surveilled Card into your graveyard' },
+  ];
+
+  it('forum-of-amity-viewer-surveil — pays through normal activation and surveils into the graveyard', () => {
+    const { state, seat, onBattlefield, offered } = run('forum-of-amity-viewer-surveil', steps);
+    expect(offered.flat()).toContain('Keep Forum Surveilled Card on top');
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Forum Surveilled Card']);
+    expect(seat('P1').library).toEqual([]);
+    expect(onBattlefield('Forum of Amity')[0]?.tapped).toBe(true);
+    expect(
+      state.battlefield.filter((permanent) => permanent.controllerId === 'P1' && !permanent.tapped),
+    ).toEqual([]);
+    expect(state.eventLog.some((event) => event.type === 'activateAbility')).toBe(true);
+    expect(state.eventLog.some((event) => event.type === 'surveil')).toBe(true);
+    replays('forum-of-amity-viewer-surveil', steps);
+  });
+});
+
+describe('Attune with Aether Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Attune with Aether' },
+    { action: 'Put Island into your hand' },
+  ];
+
+  it('attune-with-aether-viewer-reveal-to-hand — casts normally, reveals the Island to hand, shuffles, and gives energy', () => {
+    const { state, seat, offered } = run('attune-with-aether-viewer-reveal-to-hand', steps);
+    expect(offered.flat()).toContain('Find nothing');
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Island']);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Attune with Aether']);
+    expect(seat('P1').energy).toBe(2);
+    expect(state.eventLog.find((event) => event.type === 'searchFound')?.payload).toMatchObject({
+      name: 'Island',
+      to: 'hand',
+      revealed: true,
+    });
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('attune-with-aether-viewer-reveal-to-hand', steps);
+  });
+});
+
+describe('Beacon of Unrest Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Beacon of Unrest', targets: ['Lab Ox'] }];
+
+  it('beacon-of-unrest-viewer-reanimate-and-shuffle — reanimates the creature card and shuffles Beacon into its library', () => {
+    const { state, seat, onBattlefield } = run(
+      'beacon-of-unrest-viewer-reanimate-and-shuffle',
+      steps,
+    );
+    expect(onBattlefield('Lab Ox')[0]?.controllerId).toBe('P1');
+    expect(seat('P1').graveyard).toEqual([]);
+    expect(seat('P1').library.map((card) => card.name)).toEqual(['Beacon of Unrest']);
+    const types = state.eventLog.map((event) => event.type);
+    expect(types.lastIndexOf('shuffle')).toBeGreaterThan(types.indexOf('graveyardToBattlefield'));
+    replays('beacon-of-unrest-viewer-reanimate-and-shuffle', steps);
+  });
+});
+
+describe('Canoptek Spyder Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Lab Skiff' }];
+
+  it('canoptek-spyder-viewer-vehicle-draw — a noncreature Vehicle entering triggers the draw', () => {
+    const { state, seat, onBattlefield } = run('canoptek-spyder-viewer-vehicle-draw', steps);
+    expect(onBattlefield('Lab Skiff')).toHaveLength(1);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Spyder Drawn Card']);
+    expect(seat('P1').library).toEqual([]);
+    expect(state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(1);
+    replays('canoptek-spyder-viewer-vehicle-draw', steps);
+  });
+});
+
+describe('Canoptek Wraith Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Declare attackers', targets: ['P2'] },
+    { action: 'Pay {3} and sacrifice Canoptek Wraith' },
+    { action: 'Choose Island' },
+    { action: 'Put Island onto the battlefield tapped' },
+    { action: 'Put Island onto the battlefield tapped' },
+  ];
+
+  it('canoptek-wraith-viewer-scout-same-name-search — unblocked combat damage, payment, sacrifice, and same-name search', () => {
+    const { state, seat, onBattlefield, offered } = run(
+      'canoptek-wraith-viewer-scout-same-name-search',
+      steps,
+    );
+    expect(offered.flat()).toContain('Choose Forest');
+    expect(seat('P2').life).toBe(38);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Canoptek Wraith']);
+    expect(onBattlefield('Island')).toHaveLength(5);
+    expect(onBattlefield('Island').every((land) => land.tapped)).toBe(true);
+    expect(seat('P1').library.map((card) => card.name)).toEqual(['Forest']);
+    expect(state.eventLog.some((event) => event.type === 'sacrifice')).toBe(true);
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('canoptek-wraith-viewer-scout-same-name-search', steps);
+  });
+});
+
+describe("Conjurer's Closet Card Test Lab scenario", () => {
+  const steps: Step[] = [{ action: 'Yes' }];
+
+  it('conjurers-closet-viewer-end-step-blink — the end-step trigger blinks the creature, which re-enters untapped', () => {
+    const { state, seat, onBattlefield, prompts } = run(
+      'conjurers-closet-viewer-end-step-blink',
+      steps,
+    );
+    expect(prompts.some((prompt) => /use this ability/.test(prompt))).toBe(true);
+    expect(onBattlefield('Lab Greeter')[0]?.tapped).toBe(false);
+    expect(seat('P1').life).toBe(42);
+    expect(state.phase).toBe('ending');
+    expect(
+      state.eventLog.some(
+        (event) => event.type === 'zoneChange' && event.payload['to'] === 'exile',
+      ),
+    ).toBe(true);
+    replays('conjurers-closet-viewer-end-step-blink', steps);
+  });
+});
+
+describe('Harvest Season Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Harvest Season' },
+    { action: 'Put Island onto the battlefield tapped' },
+    { action: 'Put Plains onto the battlefield tapped' },
+  ];
+
+  it('harvest-season-viewer-tapped-creature-count — two tapped creatures allow exactly two basic-land searches', () => {
+    const { seat, onBattlefield, prompts } = run(
+      'harvest-season-viewer-tapped-creature-count',
+      steps,
+    );
+    expect(prompts.filter((prompt) => /search your library/.test(prompt))).toHaveLength(2);
+    expect(onBattlefield('Island')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Plains')[0]?.tapped).toBe(true);
+    expect(seat('P1').library.map((card) => card.name)).toEqual(['Swamp']);
+    replays('harvest-season-viewer-tapped-creature-count', steps);
+  });
+});
+
+describe('Land Tax Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Yes' },
+    { action: 'Put Plains into your hand' },
+    { action: 'Put Swamp into your hand' },
+    { action: 'Put Island into your hand' },
+  ];
+
+  it('land-tax-viewer-upkeep-reveal-search — the upkeep trigger reveals three basics into hand and shuffles', () => {
+    const { state, seat } = run('land-tax-viewer-upkeep-reveal-search', steps);
+    expect(state.turnOrder[state.activePlayerIndex]).toBe('P1');
+    expect(state.step).toBe('upkeep');
+    expect(
+      seat('P1')
+        .hand.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Island', 'Plains', 'Swamp']);
+    const found = state.eventLog.filter((event) => event.type === 'searchFound');
+    expect(found.map((event) => event.payload['revealed'])).toEqual([true, true, true]);
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('land-tax-viewer-upkeep-reveal-search', steps);
+  });
+});
+
+describe('Mordant Dragon Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Declare attackers', targets: ['P2'] },
+    { action: 'Targets for Mordant Dragon', targets: ['Lab Ox'] },
+    { action: 'Yes' },
+  ];
+
+  it("mordant-dragon-viewer-combat-damage-redirect — combat damage to P2, then that much damage to P2's targeted creature", () => {
+    const { state, seat, onBattlefield } = run(
+      'mordant-dragon-viewer-combat-damage-redirect',
+      steps,
+    );
+    expect(seat('P2').life).toBe(35);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(onBattlefield('Lab Servo')[0]?.damageMarked).toBe(0);
+    const redirect = state.eventLog.find(
+      (event) => event.type === 'damage' && event.payload['target'] === 'Lab Ox',
+    );
+    expect(redirect?.payload['amount']).toBe(5);
+    replays('mordant-dragon-viewer-combat-damage-redirect', steps);
+  });
+});
+
+describe('Necron Deathmark Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Necron Deathmark' },
+    { action: 'Targets for Necron Deathmark', targets: ['P2'] },
+    { action: 'Target Lab Ox' },
+  ];
+
+  it('necron-deathmark-viewer-destroy-up-to-one-and-mill — destroys one chosen creature and mills the target player three', () => {
+    const { seat, onBattlefield, offered } = run(
+      'necron-deathmark-viewer-destroy-up-to-one-and-mill',
+      steps,
+    );
+    expect(offered.flat()).toContain('Choose no more targets');
+    // Flash: with P3's spell on the stack the Deathmark is castable; the Bystander is not.
+    const first = offered.find((options) =>
+      options.some((option) => option.includes('Cast Necron Deathmark')),
+    )!;
+    expect(first.join('|')).not.toContain('Cast Lab Deathmark Bystander');
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Deathmark Bystander']);
+    expect(seat('P3').graveyard.map((card) => card.name)).toEqual(['Lab Pending Spell']);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual([
+      'Lab Ox',
+      'Forest',
+      'Forest',
+      'Forest',
+    ]);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    expect(onBattlefield('Necron Deathmark')).toHaveLength(1);
+    replays('necron-deathmark-viewer-destroy-up-to-one-and-mill', steps);
+  });
+});
+
+describe('Plasmancer Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Plasmancer' }, { action: 'Put Swamp into your hand' }];
+
+  it('plasmancer-viewer-reveal-swamp — casts normally, then the enters trigger reveals a basic Swamp to hand', () => {
+    const { state, seat, onBattlefield, offered } = run('plasmancer-viewer-reveal-swamp', steps);
+    expect(onBattlefield('Plasmancer')).toHaveLength(1);
+    const search = offered.find((options) => options.includes('Put Swamp into your hand'));
+    expect(search).toEqual(['Put Swamp into your hand', 'Find nothing']);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Swamp']);
+    expect(state.eventLog.find((event) => event.type === 'searchFound')?.payload).toMatchObject({
+      name: 'Swamp',
+      to: 'hand',
+      revealed: true,
+    });
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('plasmancer-viewer-reveal-swamp', steps);
+  });
+});
+
+describe('Sylvan Reclamation Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Sylvan Reclamation' },
+    { action: 'Target Lab Servo' },
+    { action: 'Target Lab Hex' },
+  ];
+
+  it('sylvan-reclamation-viewer-exile-up-to-two — casts normally and exiles the two chosen permanents', () => {
+    const { state, onBattlefield, prompts, offered } = run(
+      'sylvan-reclamation-viewer-exile-up-to-two',
+      steps,
+    );
+    const targetChoices = prompts.filter((prompt) => /^Choose target \d+ for /.test(prompt));
+    expect(targetChoices).toHaveLength(2);
+    const firstChoice = offered.find((options) => options.includes('Target Lab Servo'))!;
+    expect(firstChoice).toEqual(
+      expect.arrayContaining(['Target Lab Hex', 'Target Lab Idol', 'Choose no more targets']),
+    );
+    expect(firstChoice).not.toContain('Target Lab Ox');
+    expect(onBattlefield('Lab Servo')).toHaveLength(0);
+    expect(onBattlefield('Lab Hex')).toHaveLength(0);
+    expect(onBattlefield('Lab Idol')).toHaveLength(1);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(state.exile.map((card) => card.name).sort()).toEqual(['Lab Hex', 'Lab Servo']);
+    replays('sylvan-reclamation-viewer-exile-up-to-two', steps);
+  });
+});
+
+describe('Sylvan Reclamation basic landcycling Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Basic landcycling {2}' },
+    { action: 'Put Plains into your hand' },
+  ];
+
+  it('sylvan-reclamation-viewer-basic-landcycling — discards from hand and reveals the found basic land', () => {
+    const { state, seat, offered } = run('sylvan-reclamation-viewer-basic-landcycling', steps);
+    // The hidden-zone search may always find nothing (CR 701.19b), so it is a real choice.
+    expect(offered).toContainEqual(['Put Plains into your hand', 'Find nothing']);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Sylvan Reclamation']);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Plains']);
+    expect(state.eventLog.find((event) => event.type === 'searchFound')?.payload).toMatchObject({
+      name: 'Plains',
+      to: 'hand',
+      revealed: true,
+    });
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('sylvan-reclamation-viewer-basic-landcycling', steps);
+  });
+});
+
+describe('Thunderfoot Baloth Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Thunderfoot Baloth' }];
+
+  it('thunderfoot-baloth-viewer-lieutenant — with your commander out, it and your other creatures get the buff; noncreatures do not', () => {
+    const { scenario } = run('thunderfoot-baloth-viewer-lieutenant', steps);
+    const view = scenario.engine.view('P1');
+    expect(view.commanders).toEqual([
+      expect.objectContaining({ name: 'Lab General', zone: 'battlefield' }),
+    ]);
+    const seen = new Map(view.battlefield.map((permanent) => [permanent.name, permanent]));
+    const shape = (name: string) => {
+      const permanent = seen.get(name)!;
+      return {
+        power: permanent.power,
+        toughness: permanent.toughness,
+        trample: permanent.keywords?.includes('trample') ?? false,
+      };
+    };
+    expect(shape('Thunderfoot Baloth')).toEqual({ power: 7, toughness: 7, trample: true });
+    expect(shape('Lab General')).toEqual({ power: 4, toughness: 4, trample: true });
+    expect(shape('Lab Ox')).toEqual({ power: 6, toughness: 6, trample: true });
+    expect(shape('Lab Servo')).toEqual({ power: 1, toughness: 1, trample: false });
+    expect(seen.get('Lab Relic')?.keywords ?? []).not.toContain('trample');
+    expect(seen.get('Lab Relic')?.power ?? 0).toBe(0);
+    replays('thunderfoot-baloth-viewer-lieutenant', steps);
+  });
+});
+
+describe('Tomb Fortress Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Mill four cards' },
+    { action: 'Return Lab Ox to the battlefield' },
+  ];
+
+  it('tomb-fortress-viewer-mill-then-return — mills four, then offers the creature cards in the graveyard, including the milled one', () => {
+    const { state, seat, onBattlefield, offered } = run(
+      'tomb-fortress-viewer-mill-then-return',
+      steps,
+    );
+    const choice = offered.find((options) => options.includes('Return Lab Ox to the battlefield'));
+    expect(choice).toEqual([
+      'Return Lab Servo to the battlefield',
+      'Return Lab Ox to the battlefield',
+    ]);
+    expect(onBattlefield('Lab Ox')[0]?.controllerId).toBe('P1');
+    expect(onBattlefield('Tomb Fortress')).toHaveLength(0);
+    expect(state.exile.map((card) => card.name)).toEqual(['Tomb Fortress']);
+    expect(seat('P1').library).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Forest', 'Forest', 'Forest', 'Lab Servo']);
+    replays('tomb-fortress-viewer-mill-then-return', steps);
+  });
+});
+
+describe('Voice of Many Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Voice of Many' }];
+
+  it('voice-of-many-viewer-draw-per-opponent — draws one card for each opponent with fewer creatures', () => {
+    const { state, seat, onBattlefield } = run('voice-of-many-viewer-draw-per-opponent', steps);
+    expect(onBattlefield('Voice of Many')).toHaveLength(1);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual([
+      'Voice Drawn Card',
+      'Voice Drawn Card',
+    ]);
+    expect(seat('P1').library).toHaveLength(1);
+    expect(state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(2);
+    replays('voice-of-many-viewer-draw-per-opponent', steps);
+  });
+});
+
+describe('Foe-Razer Regent Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Foe-Razer Regent' },
+    { action: 'fight target creature', targets: ['Lab Ox'] },
+    { action: 'Yes' },
+  ];
+
+  it('foe-razer-regent-viewer-fight-and-grow — fights Lab Ox on entry, then gets two +1/+1 counters at the end step', () => {
+    const { state, onBattlefield, seat } = run('foe-razer-regent-viewer-fight-and-grow', steps);
+    expect(onBattlefield('Lab Ox')).toHaveLength(0);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    const regent = onBattlefield('Foe-Razer Regent')[0]!;
+    expect(regent.counters['+1/+1']).toBe(2);
+    expect(state.eventLog.some((event) => event.type === 'fight')).toBe(true);
+    replays('foe-razer-regent-viewer-fight-and-grow', steps);
+  });
+});
+
+describe('Hunting Wilds Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Hunting Wilds ({6}{G}{G}) — kicker 1' },
+    { action: 'Put Forest onto the battlefield tapped' },
+    { action: 'Put Forest onto the battlefield tapped' },
+  ];
+
+  it('hunting-wilds-viewer-kicked — a kicked cast animates both found Forests', () => {
+    const { scenario, onBattlefield, offered, state } = run('hunting-wilds-viewer-kicked', steps);
+    expect(offered[0]).toEqual(
+      expect.arrayContaining([
+        'Cast Hunting Wilds ({3}{G})',
+        'Cast Hunting Wilds ({6}{G}{G}) — kicker 1',
+      ]),
+    );
+    const seen = scenario.engine
+      .view('P1')
+      .battlefield.filter((permanent) => permanent.name === 'Forest');
+    expect(onBattlefield('Forest')).toHaveLength(10);
+    const animated = seen.filter((permanent) => permanent.power === 3);
+    expect(animated).toHaveLength(2);
+    for (const permanent of animated) {
+      expect(permanent.toughness).toBe(3);
+      expect(permanent.keywords).toContain('haste');
+      expect(permanent.tapped).toBe(false);
+    }
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('hunting-wilds-viewer-kicked', steps);
+  });
+});
+
+describe('Loran of the Third Path Card Test Lab scenarios', () => {
+  const destroySteps: Step[] = [
+    { action: 'Cast Loran of the Third Path' },
+    { action: 'Target Lab Hex' },
+  ];
+  const drawSteps: Step[] = [{ action: 'You and target opponent each draw', targets: ['P3'] }];
+
+  it('loran-of-the-third-path-viewer-destroy-up-to-one — destroys the one chosen artifact or enchantment', () => {
+    const { onBattlefield, offered } = run(
+      'loran-of-the-third-path-viewer-destroy-up-to-one',
+      destroySteps,
+    );
+    const choice = offered.find((options) => options.includes('Target Lab Hex'))!;
+    expect(choice).toEqual(expect.arrayContaining(['Target Lab Servo', 'Choose no more targets']));
+    expect(choice).not.toContain('Target Lab Ox');
+    expect(onBattlefield('Lab Hex')).toHaveLength(0);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    replays('loran-of-the-third-path-viewer-destroy-up-to-one', destroySteps);
+  });
+
+  it('loran-of-the-third-path-viewer-tap-draw — you and the targeted opponent each draw', () => {
+    const { seat, onBattlefield } = run('loran-of-the-third-path-viewer-tap-draw', drawSteps);
+    expect(onBattlefield('Loran of the Third Path')[0]?.tapped).toBe(true);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Loran Drawn Card']);
+    expect(seat('P3').hand).toHaveLength(1);
+    expect(seat('P2').hand).toHaveLength(0);
+    expect(seat('P4').hand).toHaveLength(0);
+    replays('loran-of-the-third-path-viewer-tap-draw', drawSteps);
+  });
+});
+
+describe('Rishkar, Peema Renegade Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Rishkar, Peema Renegade' },
+    { action: 'Target Lab Ox' },
+    { action: 'Target Lab Servo' },
+  ];
+
+  it('rishkar-viewer-counters-and-mana — two counters land, and only your countered creature becomes a mana source', () => {
+    const { state, onBattlefield } = run('rishkar-viewer-counters-and-mana', steps);
+    const ox = onBattlefield('Lab Ox')[0]!;
+    const servo = onBattlefield('Lab Servo')[0]!;
+    expect(ox.counters['+1/+1']).toBe(1);
+    expect(servo.counters['+1/+1']).toBe(1);
+    expect(
+      state.battlefield.find((p) => p.name.startsWith('Rishkar'))?.counters['+1/+1'] ?? 0,
+    ).toBe(0);
+    replays('rishkar-viewer-counters-and-mana', steps);
+  });
+});
+
+describe('Vastwood Surge Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'kicker 1' },
+    { action: 'Put Plains onto the battlefield tapped' },
+    { action: 'Put Island onto the battlefield tapped' },
+  ];
+
+  it('vastwood-surge-viewer-kicked — a kicked cast fetches two basics and counters only your creatures', () => {
+    const { state, onBattlefield, offered } = run('vastwood-surge-viewer-kicked', steps);
+    expect(offered[0]?.some((option) => option.endsWith('kicker 1'))).toBe(true);
+    expect(onBattlefield('Plains')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Island')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Lab Ox')[0]?.counters['+1/+1']).toBe(2);
+    expect(onBattlefield('Lab Servo')[0]?.counters['+1/+1'] ?? 0).toBe(0);
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('vastwood-surge-viewer-kicked', steps);
+  });
+});
+
+describe('Frontier Siege Card Test Lab scenarios', () => {
+  const khansSteps: Step[] = [
+    { action: 'Cast Frontier Siege' },
+    { action: 'Khans —' },
+    { action: 'Cast Lab Wurm' },
+  ];
+  const dragonsSteps: Step[] = [
+    { action: 'Cast Frontier Siege' },
+    { action: 'Dragons —' },
+    { action: 'Cast Lab Drake' },
+    { action: 'Yes' },
+  ];
+
+  it('frontier-siege-viewer-khans-mana — the postcombat main-phase {G}{G} pays for Lab Wurm', () => {
+    const { onBattlefield, state, offered } = run('frontier-siege-viewer-khans-mana', khansSteps);
+    expect(offered).toContainEqual([
+      'Khans — add {G}{G} at each of your main phases',
+      'Dragons — your flying creatures may fight when they enter',
+    ]);
+    expect(onBattlefield('Lab Wurm')).toHaveLength(1);
+    expect(onBattlefield('Forest').every((forest) => forest.tapped)).toBe(true);
+    expect(state.phase).toBe('postcombatMain');
+    replays('frontier-siege-viewer-khans-mana', khansSteps);
+  });
+
+  it('frontier-siege-viewer-dragons-fight — the entering flier fights the opponent creature', () => {
+    const { onBattlefield, seat } = run('frontier-siege-viewer-dragons-fight', dragonsSteps);
+    expect(onBattlefield('Frontier Siege')).toHaveLength(1);
+    expect(onBattlefield('Lab Servo')).toHaveLength(0);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Servo']);
+    expect(onBattlefield('Lab Drake')[0]?.damageMarked).toBe(1);
+    replays('frontier-siege-viewer-dragons-fight', dragonsSteps);
+  });
+});
+
+describe('Kairi, the Swirling Sky Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Lab Doom', targets: ['Kairi, the Swirling Sky'] },
+    { action: 'Return any number of target nonland permanents' },
+    { action: 'Target Lab Ox' },
+    { action: 'Target Lab Idol' },
+  ];
+
+  it('kairi-viewer-bounce-total-six — the dies trigger bounces within the mana value budget', () => {
+    const { seat, onBattlefield, offered } = run('kairi-viewer-bounce-total-six', steps);
+    const afterOx = offered.find(
+      (options) => options.includes('Target Lab Idol') && !options.includes('Target Lab Ox'),
+    )!;
+    expect(afterOx).not.toContain('Target Lab Hex');
+    expect(
+      seat('P2')
+        .hand.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Idol', 'Lab Ox']);
+    expect(onBattlefield('Lab Hex')).toHaveLength(1);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Kairi, the Swirling Sky', 'Lab Doom']);
+    replays('kairi-viewer-bounce-total-six', steps);
+  });
+});
+
+describe('Kairi, the Swirling Sky mill Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Lab Doom', targets: ['Kairi, the Swirling Sky'] },
+    { action: 'Mill six cards' },
+    { action: 'Return Lab Shock from graveyard' },
+    { action: 'Done returning spells' },
+  ];
+
+  it('kairi-viewer-mill-and-return — mills six, then returns the chosen instant', () => {
+    const { seat, offered, state } = run('kairi-viewer-mill-and-return', steps);
+    expect(seat('P1').library).toEqual([]);
+    expect(state.eventLog.filter((event) => event.type === 'mill')).toHaveLength(6);
+    const choice = offered.find((options) => options.includes('Return Lab Shock from graveyard'))!;
+    expect(choice.filter((option) => option === 'Return Lab Doom from graveyard')).toHaveLength(2);
+    expect(choice).toContain('Done returning spells');
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Shock']);
+    replays('kairi-viewer-mill-and-return', steps);
+  });
+});
+
+describe('Will of the Mardu Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    {
+      action: 'target player controls; Deal damage to target creature',
+      targets: ['P2', 'Lab Brute'],
+    },
+  ];
+
+  it('will-of-the-mardu-viewer-choose-both — with a commander out, both modes resolve in order', () => {
+    const { onBattlefield, offered, seat } = run('will-of-the-mardu-viewer-choose-both', steps);
+    expect(
+      offered[0]?.filter((option) => option.startsWith('Cast Will of the Mardu')),
+    ).toHaveLength(3);
+    expect(onBattlefield('Warrior')).toHaveLength(2);
+    expect(onBattlefield('Lab Brute')).toHaveLength(0);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Brute']);
+    replays('will-of-the-mardu-viewer-choose-both', steps);
+  });
+});
+
+describe('Aether Channeler Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Aether Channeler' },
+    { action: 'Return another target nonland permanent' },
+    { action: 'Targets for Aether Channeler', targets: ['Lab Ox'] },
+  ];
+
+  it('aether-channeler-viewer-bounce-another — the return mode bounces the targeted permanent', () => {
+    const { seat, onBattlefield, offered } = run('aether-channeler-viewer-bounce-another', steps);
+    expect(offered).toContainEqual([
+      'Create a 1/1 white Bird creature token with flying',
+      "Return another target nonland permanent to its owner's hand",
+      'Draw a card',
+    ]);
+    expect(seat('P2').hand.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(onBattlefield('Lab Hex')).toHaveLength(1);
+    expect(onBattlefield('Aether Channeler')).toHaveLength(1);
+    replays('aether-channeler-viewer-bounce-another', steps);
+  });
+
+  it('aether-channeler-viewer-bird — the Bird mode creates a 1/1 white flier and nothing else', () => {
+    const birdSteps: Step[] = [
+      { action: 'Cast Aether Channeler' },
+      { action: 'Create a 1/1 white Bird creature token with flying' },
+    ];
+    const { seat, onBattlefield } = run('aether-channeler-viewer-bird', birdSteps);
+    const birds = onBattlefield('Bird');
+    expect(birds).toHaveLength(1);
+    expect(birds[0]?.controllerId).toBe('P1');
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(seat('P2').hand).toEqual([]);
+    expect(seat('P1').hand).toEqual([]);
+    replays('aether-channeler-viewer-bird', birdSteps);
+  });
+
+  it('aether-channeler-viewer-draw — the draw mode draws a card and nothing else', () => {
+    const drawSteps: Step[] = [{ action: 'Cast Aether Channeler' }, { action: 'Draw a card' }];
+    const { seat, onBattlefield } = run('aether-channeler-viewer-draw', drawSteps);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Channeler Drawn Card']);
+    expect(onBattlefield('Bird')).toHaveLength(0);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(seat('P2').hand).toEqual([]);
+    replays('aether-channeler-viewer-draw', drawSteps);
+  });
+});
+
+describe('Return to Nature Card Test Lab scenarios', () => {
+  const destroySteps: Step[] = [{ action: 'Destroy target enchantment', targets: ['Lab Hex'] }];
+  const exileSteps: Step[] = [
+    { action: 'Exile target card from a graveyard', targets: ['Lab Servo'] },
+  ];
+
+  it('return-to-nature-viewer-destroy-enchantment — only modes with a legal target are offered; the enchantment is destroyed', () => {
+    const { seat, offered } = run('return-to-nature-viewer-destroy-enchantment', destroySteps);
+    const casts = offered[0]!.filter((option) => option.startsWith('Cast Return to Nature'));
+    expect(casts).toHaveLength(2);
+    expect(casts.some((option) => option.includes('Destroy target artifact'))).toBe(false);
+    expect(
+      seat('P2')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Hex', 'Lab Ox']);
+    replays('return-to-nature-viewer-destroy-enchantment', destroySteps);
+  });
+
+  it('return-to-nature-viewer-exile-graveyard-card — the graveyard card is exiled', () => {
+    const { seat, state } = run('return-to-nature-viewer-exile-graveyard-card', exileSteps);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Return to Nature']);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Servo']);
+    replays('return-to-nature-viewer-exile-graveyard-card', exileSteps);
+  });
+});
+
+describe('Mystic Sanctuary Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Play Mystic Sanctuary' }, { action: 'Yes' }];
+
+  it('mystic-sanctuary-viewer-untapped-return — enters untapped and puts the instant on top', () => {
+    const { seat, onBattlefield } = run('mystic-sanctuary-viewer-untapped-return', steps);
+    expect(onBattlefield('Mystic Sanctuary')[0]?.tapped).toBe(false);
+    expect(seat('P1').library.map((card) => card.name)).toEqual(['Lab Shock']);
+    expect(seat('P1').graveyard).toEqual([]);
+    replays('mystic-sanctuary-viewer-untapped-return', steps);
+  });
+});
+
+describe('Brokers Hideout Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Play Brokers Hideout' },
+    { action: 'Put Plains onto the battlefield tapped' },
+  ];
+
+  it('brokers-hideout-viewer-sacrifice-and-search — sacrifices itself, then the reflexive search fetches the Plains', () => {
+    const { seat, onBattlefield, offered } = run(
+      'brokers-hideout-viewer-sacrifice-and-search',
+      steps,
+    );
+    const search = offered.find((options) =>
+      options.includes('Put Plains onto the battlefield tapped'),
+    )!;
+    expect(search.join('|')).not.toContain('Swamp');
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Brokers Hideout']);
+    expect(onBattlefield('Plains')[0]?.tapped).toBe(true);
+    expect(seat('P1').life).toBe(41);
+    replays('brokers-hideout-viewer-sacrifice-and-search', steps);
+  });
+});
+
+describe('Sweet-Gum Recluse Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Lab Sprout' },
+    // Let Lab Sprout resolve first: the Recluse has flash and could otherwise respond to it.
+    { action: 'Pass priority' },
+    { action: 'Cast Sweet-Gum Recluse' },
+    { action: 'Target Lab Sprout' },
+    { action: 'Target Sweet-Gum Recluse' },
+  ];
+
+  it('sweet-gum-recluse-viewer-new-creatures — counters only on creatures that entered this turn', () => {
+    const { onBattlefield, offered } = run('sweet-gum-recluse-viewer-new-creatures', steps);
+    const first = offered.find((options) => options.includes('Target Lab Sprout'))!;
+    expect(first).not.toContain('Target Lab Ox');
+    expect(onBattlefield('Lab Sprout')[0]?.counters['+1/+1']).toBe(3);
+    expect(onBattlefield('Sweet-Gum Recluse')[0]?.counters['+1/+1']).toBe(3);
+    expect(onBattlefield('Lab Ox')[0]?.counters['+1/+1'] ?? 0).toBe(0);
+    replays('sweet-gum-recluse-viewer-new-creatures', steps);
+  });
+
+  const flashSteps: Step[] = [
+    { action: 'Cast Sweet-Gum Recluse' },
+    { action: 'Cast Lab Seedling without paying its mana cost' },
+    { action: 'Target Lab Seedling' },
+    { action: 'Target Sweet-Gum Recluse' },
+  ];
+
+  it('sweet-gum-recluse-viewer-flash-cascade — cast in response, cascades into Lab Seedling for free', () => {
+    const { seat, onBattlefield, offered } = run(
+      'sweet-gum-recluse-viewer-flash-cascade',
+      flashSteps,
+    );
+    // Flash: the Recluse is castable while P2's spell is on the stack; Lab Bystander is not.
+    const first = offered.find((options) =>
+      options.some((o) => o.includes('Cast Sweet-Gum Recluse')),
+    )!;
+    expect(first.join('|')).not.toContain('Cast Lab Bystander');
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Bystander']);
+    expect(onBattlefield('Lab Seedling')[0]?.counters['+1/+1']).toBe(3);
+    expect(onBattlefield('Sweet-Gum Recluse')[0]?.counters['+1/+1']).toBe(3);
+    // P2's spell still resolves once both creatures have.
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Pending Spell']);
+    replays('sweet-gum-recluse-viewer-flash-cascade', flashSteps);
+  });
+
+  const reachSteps: Step[] = [
+    { action: 'Declare attackers', targets: ['P1'] },
+    { action: 'Declare blockers', targets: ['Lab Drake'] },
+  ];
+
+  it('sweet-gum-recluse-viewer-reach-block — reach lets it block the flier; Lab Ox is never offered', () => {
+    const { seat, onBattlefield, offered } = run(
+      'sweet-gum-recluse-viewer-reach-block',
+      reachSteps,
+    );
+    const block = offered.find((options) => options.some((o) => o.startsWith('Declare blockers')))!;
+    expect(block).toContain('Declare blockers (1 eligible creature)');
+    expect(onBattlefield('Sweet-Gum Recluse')[0]?.damageMarked).toBe(2);
+    expect(seat('P1').life).toBe(40);
+    replays('sweet-gum-recluse-viewer-reach-block', reachSteps);
+  });
+});
+
+describe('Kogla, the Titan Ape Card Test Lab scenarios', () => {
+  const fightSteps: Step[] = [{ action: 'Cast Kogla, the Titan Ape' }, { action: 'Target Lab Ox' }];
+  const attackSteps: Step[] = [
+    { action: 'Return target Human you control', targets: ['Lab Squire'] },
+    { action: 'Declare attackers', targets: ['P2'] },
+  ];
+
+  it('kogla-viewer-enters-fight — fights the chosen creature', () => {
+    const { seat, onBattlefield } = run('kogla-viewer-enters-fight', fightSteps);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(onBattlefield('Kogla, the Titan Ape')[0]?.damageMarked).toBe(4);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    replays('kogla-viewer-enters-fight', fightSteps);
+  });
+
+  it("kogla-viewer-bounce-and-attack — bounces the Human, then destroys the defending player's enchantment", () => {
+    const { seat, onBattlefield, scenario } = run('kogla-viewer-bounce-and-attack', attackSteps);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Squire']);
+    expect(
+      scenario.engine
+        .view('P1')
+        .battlefield.find((permanent) => permanent.name === 'Kogla, the Titan Ape')?.keywords,
+    ).toContain('indestructible');
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Hex']);
+    expect(onBattlefield('Lab Idol')).toHaveLength(1);
+    expect(seat('P2').life).toBe(33);
+    replays('kogla-viewer-bounce-and-attack', attackSteps);
+  });
+});

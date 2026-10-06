@@ -14,7 +14,7 @@ import {
   TREASURE,
 } from '../tokens';
 import { defineCard, replaceCard, unimplemented, unsupportedCard } from './index';
-import { allOf, anyOf, not, ofSubtype, ofType, OTHER, SELF, YOURS } from '../selector';
+import { allOf, anyOf, not, ofSubtype, ofSupertype, ofType, OTHER, SELF, YOURS } from '../selector';
 import type { CardDefinition } from '../definition';
 
 const ARTIFACT_OR_ARTIFICER = anyOf(ofType('Artifact'), ofSubtype('Artificer'));
@@ -973,11 +973,30 @@ export function registerLIVING_ENERGYOverrides(): void {
     },
   );
 
-  // Catalog audit living-energy-batch-3: basic-land search omits reveal.
-  unsupportedCard(
+  // Coverage PR01: the found basic is revealed to every player before it goes to hand (CR
+  // 701.16a), the search may legally find nothing (CR 701.19c), and the energy follows.
+  defineCard(
     'b337c241-f2c4-48e3-a303-371b172fcd18',
     'Attune with Aether',
-    'The basic-land search omits revealing the found card.',
+    [
+      'Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} .',
+    ],
+    {
+      spellAbility: spell({
+        targets: [],
+        effects: [
+          {
+            op: 'searchLibrary',
+            filter: allOf(ofSupertype('Basic'), ofType('Land')),
+            destinations: [{ zone: 'hand' }],
+            allowFailToFind: true,
+            reveal: true,
+          },
+          { op: 'shuffle' },
+          { op: 'gainEnergy', amount: constant(2) },
+        ],
+      }),
+    },
   );
 
   // Catalog audit living-energy-batch-6: replacing manaAbilities drops {T}: Add {C}.
@@ -1146,11 +1165,26 @@ export function registerLIVING_ENERGYOverrides(): void {
     '{2}{R}, Sacrifice an artifact: ~ deals 2 damage to any target.',
   ]);
 
-  // Catalog audit living-energy-batch-3: targeted optional blink is an untargeted choice.
-  unsupportedCard(
+  // Coverage PR01 (was contained by living-energy-batch-3): the creature is targeted when the
+  // trigger is put on the stack, and "you may" is decided as it resolves (CR 603.5).
+  defineCard(
     'cd1eda60-53e4-44d0-9b2c-7a57395e291f',
     "Conjurer's Closet",
-    'Optional exile-and-return is implemented as an untargeted choice among creatures you control.',
+    [
+      'At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'endStep', player: 'you' },
+          optional: true,
+          targets: [{ kind: 'creature', controller: 'you' }],
+          effects: [{ op: 'blinkTarget', target: 0 }],
+          description: 'You may exile target creature you control, then return it',
+        },
+      ],
+    },
   );
 
   defineCard(

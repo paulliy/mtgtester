@@ -6,25 +6,68 @@ import {
   SOLDIER_1_1_LIFELINK,
 } from '../tokens';
 import { defineCard, unsupportedCard } from './index';
-import { TAP, mana, manaCost } from '../templates';
+import { TAP, mana, manaCost, spell } from '../templates';
 import { constant } from '../value';
-import { YOURS, OTHER, ofType, allOf, powerAtMost, IN_COMBAT, toughnessAtLeast } from '../selector';
+import {
+  HAS_ANY_COUNTER,
+  SELF,
+  YOURS,
+  OTHER,
+  ofSupertype,
+  ofType,
+  allOf,
+  anyOf,
+  powerAtMost,
+  IN_COMBAT,
+  toughnessAtLeast,
+} from '../selector';
 
 export function registerTOKEN_TRIUMPHOverrides(): void {
-  unsupportedCard(
+  // Coverage PR01: X is the number of TAPPED creatures you control, fixed as the spell resolves.
+  defineCard(
     'ec6d52f9-1c8f-48da-951c-be8d7813c7be',
     'Harvest Season',
-    'X counts all creatures you control rather than tapped creatures.',
+    [
+      'Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.',
+    ],
+    {
+      spellAbility: spell({
+        targets: [],
+        effects: [
+          {
+            op: 'searchLibrary',
+            filter: allOf(ofSupertype('Basic'), ofType('Land')),
+            destinations: [{ zone: 'battlefield', tapped: true }],
+            count: { kind: 'countTappedPermanents', selector: ofType('Creature'), scope: 'you' },
+            allowFailToFind: true,
+          },
+          { op: 'shuffle' },
+        ],
+      }),
+    },
   );
   unsupportedCard(
     'c232d974-9c65-4bce-b045-e5a7cc0c62e0',
     'Idol of Oblivion',
     'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
   );
-  unsupportedCard(
+  // Coverage PR01: "up to two" is a 0..2 count slot, so the spell may be cast with no target.
+  defineCard(
     'aeec8e85-6571-4da6-8a48-f5d3985ca10b',
     'Sylvan Reclamation',
-    'Up-to-two exile requires at least one target.',
+    ['Exile up to two target artifacts and/or enchantments.'],
+    {
+      spellAbility: spell({
+        targets: [
+          {
+            kind: 'permanent',
+            filter: anyOf(ofType('Artifact'), ofType('Enchantment')),
+            count: { min: 0, max: 2 },
+          },
+        ],
+        effects: [{ op: 'exileEachChosen', targetSlot: 0 }],
+      }),
+    },
   );
   unsupportedCard(
     'fc3e48c9-e303-435c-bdb1-7dc7881a9858',
@@ -36,15 +79,59 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     'Curse of Bounty',
     'Only the attacking player untaps; the curse controller always should.',
   );
-  unsupportedCard(
+  // Coverage PR01: "up to two" is a 0..2 count slot, so the trigger resolves with no target.
+  defineCard(
     '761021ce-4559-464e-aa03-85c2fe78e267',
     'Rishkar, Peema Renegade',
-    'Up-to-two +1/+1 counters require at least one target.',
+    [
+      'When ~ enters, put a +1/+1 counter on each of up to two target creatures.',
+      'Each creature you control with a counter on it has "{T}: Add {G}."',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [{ kind: 'creature', count: { min: 0, max: 2 } }],
+          effects: [{ op: 'putCountersEachChosen', targetSlot: 0, counter: '+1/+1', count: 1 }],
+          description: 'Put a +1/+1 counter on each of up to two target creatures',
+        },
+      ],
+      staticEffects: [
+        {
+          affects: allOf(ofType('Creature'), YOURS, HAS_ANY_COUNTER),
+          op: { layer: 6, addManaAbility: { units: [['G']], costs: [TAP] } },
+        },
+      ],
+    },
   );
-  unsupportedCard(
+  // Coverage PR01: the lieutenant buff reaches creatures only, and only while you control
+  // your own commander (CR 903.7; a stolen commander does not count).
+  defineCard(
     'f55334d9-1ec2-4667-bf28-5a0384d6f053',
     'Thunderfoot Baloth',
-    'Lieutenant +2/+2 and trample apply to all permanents you control, not just creatures.',
+    [
+      'As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.',
+    ],
+    {
+      staticEffects: [
+        {
+          affects: SELF,
+          op: { layer: 7, sublayer: 'd', power: 2, toughness: 2 },
+          condition: { kind: 'controlsYourCommander' },
+        },
+        {
+          affects: allOf(ofType('Creature'), YOURS, OTHER),
+          op: { layer: 7, sublayer: 'd', power: 2, toughness: 2 },
+          condition: { kind: 'controlsYourCommander' },
+        },
+        {
+          affects: allOf(ofType('Creature'), YOURS, OTHER),
+          op: { layer: 6, addKeyword: 'trample' },
+          condition: { kind: 'controlsYourCommander' },
+        },
+      ],
+    },
   );
   // Emmara, Soul of the Accord no longer needs an override: the generic parser reads
   // "Whenever ~ becomes tapped, ..." since City of Brass added `becomes tapped` to the object
@@ -230,10 +317,24 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     },
   );
   // Catalog audit token-triumph-batch-6: eliminated players still count as opponents.
-  unsupportedCard(
+  // Coverage PR01: only opponents still in the game are counted (CR 800.4a).
+  defineCard(
     '9b40faad-1b96-4461-89d8-9a207b58e832',
     'Voice of Many',
-    'Eliminated players still count as opponents who control fewer creatures.',
+    [
+      'When this creature enters, draw a card for each opponent who controls fewer creatures than you.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [],
+          effects: [{ op: 'draw', count: { kind: 'countOpponentsWithFewerCreatures' } }],
+          description: 'Draw a card for each opponent who controls fewer creatures than you',
+        },
+      ],
+    },
   );
   // Loyal Guardian
   defineCard(

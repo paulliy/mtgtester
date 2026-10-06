@@ -1,5 +1,10 @@
 import { allOf, OTHER, ofType, YOURS } from '../selector';
-import { CONTRACT_AURA, DINOSAUR_X_X_TRAMPLE_GREEN, VAMPIRE_1_1_LIFELINK_WHITE } from '../tokens';
+import {
+  CONTRACT_AURA,
+  DINOSAUR_X_X_TRAMPLE_GREEN,
+  VAMPIRE_1_1_LIFELINK_WHITE,
+  WARRIOR_1_1_RED,
+} from '../tokens';
 import { constant } from '../value';
 import { defineCard, unsupportedCard } from './index';
 
@@ -201,10 +206,56 @@ export function registerW1RemainingOverrides(): void {
     },
   );
 
-  // Catalog audit w1-remaining-batch-2: "a commander" is not "your commander".
-  unsupportedCard(
+  // Coverage PR01: choosing both needs ANY commander you control (controlsACommander), checked
+  // as the spell is cast. Each mode announces only its own target.
+  defineCard(
     'd8df9813-0376-4d30-8cdc-30451fb67726',
     'Will of the Mardu',
-    'Choose-both requires controlling your own commander, not any commander you control.',
+    [
+      'Choose one. If you control a commander as you cast this spell, you may choose both instead.',
+      '• Create a number of 1/1 red Warrior creature tokens equal to the number of creatures target player controls.',
+      '• ~ deals damage to target creature equal to the number of creatures you control.',
+    ],
+    {
+      spellAbility: {
+        kind: 'spell',
+        targets: [{ kind: 'player' }, { kind: 'creature' }],
+        effects: [],
+        modes: {
+          minChoices: 1,
+          maxChoices: 1,
+          maxChoicesIf: { condition: { kind: 'controlsACommander' }, maxChoices: 2 },
+          options: [
+            {
+              description: 'Create a 1/1 red Warrior for each creature target player controls',
+              effects: [
+                {
+                  op: 'createToken',
+                  spec: WARRIOR_1_1_RED,
+                  count: {
+                    kind: 'countPermanentsControlledByTarget',
+                    target: 0,
+                    selector: ofType('Creature'),
+                  },
+                },
+              ],
+              targetSlots: [0],
+            },
+            {
+              description:
+                'Deal damage to target creature equal to the number of creatures you control',
+              effects: [
+                {
+                  op: 'dealDamage',
+                  target: 1,
+                  amount: { kind: 'countPermanents', selector: ofType('Creature'), scope: 'you' },
+                },
+              ],
+              targetSlots: [1],
+            },
+          ],
+        },
+      },
+    },
   );
 }

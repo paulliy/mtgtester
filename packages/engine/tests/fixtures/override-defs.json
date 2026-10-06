@@ -1020,6 +1020,64 @@
     }
   },
   {
+    "oracleId": "17b60106-a4c7-410a-8ac3-ec8e74e29a7c",
+    "name": "Mystic Sanctuary",
+    "handledLines": [
+      "When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library.",
+      "~ enters tapped unless you control three or more other Islands."
+    ],
+    "def": {
+      "entersTappedUnless": {
+        "cmp": ">=",
+        "kind": "countPermanents",
+        "n": 3,
+        "scope": "you",
+        "selector": {
+          "kind": "subtype",
+          "value": "Island"
+        }
+      },
+      "triggers": [
+        {
+          "description": "You may put target instant or sorcery card from your graveyard on top of your library",
+          "effects": [
+            {
+              "op": "graveyardToLibraryTop",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Instant"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Sorcery"
+                  }
+                ]
+              },
+              "kind": "cardInGraveyard"
+            }
+          ],
+          "trigger": {
+            "entersUntapped": true,
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "180e1a7e-890d-477c-80a5-da8a5f2857b3",
     "name": "Reckless Fireweaver",
     "handledLines": [],
@@ -2113,12 +2171,6 @@
     }
   },
   {
-    "oracleId": "349ea6c7-6b3e-417f-b082-b712e2b1635b",
-    "name": "Forum of Amity",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "34b90d3e-f48c-41ff-b3e4-5cab7a9cd597",
     "name": "Secret Rendezvous",
     "handledLines": [
@@ -2648,8 +2700,46 @@
   {
     "oracleId": "45866598-4ee4-46b6-ade2-ffcdbe98e58f",
     "name": "Necron Deathmark",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Synaptic Disintegrator — When this creature enters, destroy up to one target creature and target player mills three cards."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Destroy up to one target creature; target player mills three cards",
+          "effects": [
+            {
+              "op": "destroyEachChosen",
+              "targetSlot": 1
+            },
+            {
+              "count": 3,
+              "op": "millTargetPlayer",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "player"
+            },
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "470ec98e-120c-446d-ade6-7d80aa836b55",
@@ -2877,8 +2967,102 @@
   {
     "oracleId": "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1",
     "name": "Frontier Siege",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As this enchantment enters, choose Khans or Dragons.",
+      "• Dragons — Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
+      "• Khans — At the beginning of each of your main phases, add {G}{G}."
+    ],
+    "def": {
+      "entersChoosingOption": {
+        "options": [
+          {
+            "key": "Khans",
+            "label": "Khans — add {G}{G} at each of your main phases"
+          },
+          {
+            "key": "Dragons",
+            "label": "Dragons — your flying creatures may fight when they enter"
+          }
+        ],
+        "prompt": "Choose Khans or Dragons"
+      },
+      "triggers": [
+        {
+          "description": "Khans — at the beginning of each of your main phases, add {G}{G}",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "colors": [
+                "G"
+              ],
+              "fixedSymbols": [
+                "G",
+                "G"
+              ],
+              "op": "addMana"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "chosenOptionIs",
+              "value": "Khans"
+            },
+            "player": "you",
+            "when": "mainPhase"
+          }
+        },
+        {
+          "description": "Dragons — a flying creature you control enters; it may fight target creature you don't control",
+          "effects": [
+            {
+              "first": "triggerObject",
+              "op": "fight",
+              "second": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "condition": {
+              "kind": "chosenOptionIs",
+              "value": "Dragons"
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "4dcfd397-9d29-420c-8fd8-c7c2a99de122",
@@ -3545,8 +3729,65 @@
   {
     "oracleId": "61849685-b407-4ed0-aafc-ec3a003200b9",
     "name": "Canoptek Wraith",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+      "Wraith Form — ~ can't be blocked."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 6,
+            "setCantBeBlocked": true
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "You may pay {3} and sacrifice this creature to fetch up to two basics named like a land you control",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "op": "mayPayManaAndSacrificeSource",
+              "then": [
+                {
+                  "count": 2,
+                  "destination": {
+                    "tapped": true,
+                    "zone": "battlefield"
+                  },
+                  "op": "searchBasicsNamedLikeChosenLand"
+                },
+                {
+                  "op": "shuffle"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "61c89b11-65c9-4fda-bbcd-d84de25df801",
@@ -4572,8 +4813,76 @@
   {
     "oracleId": "761021ce-4559-464e-aa03-85c2fe78e267",
     "name": "Rishkar, Peema Renegade",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Each creature you control with a counter on it has \"{T}: Add {G}.\"",
+      "When ~ enters, put a +1/+1 counter on each of up to two target creatures."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "hasAnyCounter"
+              }
+            ]
+          },
+          "op": {
+            "addManaAbility": {
+              "costs": [
+                {
+                  "kind": "tap"
+                }
+              ],
+              "units": [
+                [
+                  "G"
+                ]
+              ]
+            },
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Put a +1/+1 counter on each of up to two target creatures",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 2,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "76678885-3674-443d-b9a2-2a460cf6aac0",
@@ -4652,8 +4961,72 @@
   {
     "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
     "name": "Return to Nature",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose one —",
+      "• Destroy target artifact.",
+      "• Destroy target enchantment.",
+      "• Exile target card from a graveyard."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Destroy target artifact",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 0
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "description": "Destroy target enchantment",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 1
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            },
+            {
+              "description": "Exile target card from a graveyard",
+              "effects": [
+                {
+                  "op": "exileCard",
+                  "target": 2
+                }
+              ],
+              "targetSlots": [
+                2
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "artifact"
+          },
+          {
+            "kind": "enchantment"
+          },
+          {
+            "graveyardOwnerScope": "any",
+            "kind": "cardInGraveyard"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "77807103-bcd5-479f-bedd-f5d97aa6d3d2",
@@ -5004,8 +5377,70 @@
   {
     "oracleId": "85aa53e8-f062-4d02-bc69-1413f7f0dcf1",
     "name": "Kairi, the Swirling Sky",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ dies, choose one —",
+      "• Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.",
+      "• Return any number of target nonland permanents with total mana value 6 or less to their owners' hands."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Kairi dies, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Return any number of target nonland permanents with total mana value 6 or less to their owners' hands",
+                "effects": [
+                  {
+                    "op": "returnToHandEachChosen",
+                    "targetSlot": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand",
+                "effects": [
+                  {
+                    "op": "millAndReturnSpells"
+                  }
+                ],
+                "targetSlots": []
+              }
+            ]
+          },
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              "kind": "permanent",
+              "totalManaValueAtMost": 6
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "86084ed9-b8bb-4289-9579-6056194787bc",
@@ -5077,6 +5512,115 @@
     }
   },
   {
+    "oracleId": "8b21062e-97b0-4967-96df-30e8309f4fba",
+    "name": "Kogla, the Titan Ape",
+    "handledLines": [
+      "When ~ enters, it fights up to one target creature you don't control.",
+      "Whenever ~ attacks, destroy target artifact or enchantment defending player controls.",
+      "{1}{G}: Return target Human you control to its owner's hand. ~ gains indestructible until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Return target Human you control to its owner's hand; Kogla gains indestructible until end of turn",
+            "effects": [
+              {
+                "op": "returnToHand",
+                "target": 0
+              },
+              {
+                "keyword": "indestructible",
+                "op": "grantKeywordUntilEot",
+                "target": "source"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "filter": {
+                  "kind": "subtype",
+                  "value": "Human"
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "It fights up to one target creature you don't control",
+          "effects": [
+            {
+              "a": "source",
+              "bSlot": 0,
+              "op": "fightUpToOneChosen"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Destroy target artifact or enchantment defending player controls",
+          "effects": [
+            {
+              "op": "destroy",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "artifactOrEnchantment"
+            }
+          ],
+          "trigger": {
+            "defendingPlayerIsEventPlayer": true,
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "8b5cffd5-5db3-4151-9275-d91387554412",
     "name": "Cut a Deal",
     "handledLines": [],
@@ -5085,8 +5629,87 @@
   {
     "oracleId": "8ba2a7ad-a09b-4f52-9c76-c70510dc4feb",
     "name": "Vastwood Surge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Kicker {4}",
+      "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control."
+    ],
+    "def": {
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 4
+        },
+        "mechanic": "kicker"
+      },
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "count": {
+              "kind": "const",
+              "n": 2
+            },
+            "destinations": [
+              {
+                "tapped": true,
+                "zone": "battlefield"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "op": "shuffle"
+          },
+          {
+            "count": {
+              "kind": "times",
+              "n": 2,
+              "of": {
+                "kind": "optionalCostCount",
+                "mechanic": "kicker"
+              }
+            },
+            "counter": "+1/+1",
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
@@ -5139,6 +5762,47 @@
           ]
         }
       }
+    }
+  },
+  {
+    "oracleId": "8ea10a5a-b698-4f7d-a9c8-520f8d835f34",
+    "name": "Sweet-Gum Recluse",
+    "handledLines": [
+      "When this creature enters, put three +1/+1 counters on each of any number of target creatures that entered this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Put three +1/+1 counters on each of any number of target creatures that entered this turn",
+          "effects": [
+            {
+              "count": 3,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "filter": {
+                "kind": "enteredThisTurn"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
     }
   },
   {
@@ -5422,8 +6086,59 @@
   {
     "oracleId": "986f510c-e2ec-423e-a443-51a169939558",
     "name": "Tomb Fortress",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Mill four cards, then return a creature card from your graveyard to the battlefield",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "mill"
+              },
+              {
+                "filter": {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                "op": "returnOneFromYourGraveyardToBattlefield"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 3,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "exileSelf"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "99140891-face-4015-aacd-1309e87d8f9f",
@@ -5735,8 +6450,32 @@
   {
     "oracleId": "9b40faad-1b96-4461-89d8-9a207b58e832",
     "name": "Voice of Many",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, draw a card for each opponent who controls fewer creatures than you."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Draw a card for each opponent who controls fewer creatures than you",
+          "effects": [
+            {
+              "count": {
+                "kind": "countOpponentsWithFewerCreatures"
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "9ba89c25-5302-414f-a2ec-436b8981999d",
@@ -6554,14 +7293,82 @@
   {
     "oracleId": "aeec8e85-6571-4da6-8a48-f5d3985ca10b",
     "name": "Sylvan Reclamation",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Exile up to two target artifacts and/or enchantments."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "op": "exileEachChosen",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": 2,
+              "min": 0
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                }
+              ]
+            },
+            "kind": "permanent"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "aef874fa-93c0-4f86-8b0d-dc24ec51467d",
     "name": "Beacon of Unrest",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": 0
+          },
+          {
+            "op": "resolvingSpellShuffleIntoLibrary"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "graveyardOwnerScope": "any",
+            "kind": "cardInGraveyard"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
@@ -6733,20 +7540,176 @@
   {
     "oracleId": "b337c241-f2c4-48e3-a303-371b172fcd18",
     "name": "Attune with Aether",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} ."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary",
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "gainEnergy"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "b3d81980-76f2-44e2-b1c9-01e30c726312",
     "name": "Loran of the Third Path",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ enters, destroy up to one target artifact or enchantment.",
+      "{T}: You and target opponent each draw a card."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "You and target opponent each draw a card",
+            "effects": [
+              {
+                "op": "drawTargetAndController",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "opponent",
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Destroy up to one target artifact or enchantment",
+          "effects": [
+            {
+              "op": "destroyEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "b3ff8da4-f2cc-41c3-8950-9cc531854b78",
     "name": "Plasmancer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Dynastic Advisor — When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Search for a basic Swamp card, reveal it, put it into your hand, then shuffle",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Swamp"
+                  }
+                ]
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
@@ -6949,8 +7912,153 @@
   {
     "oracleId": "bcad5b83-5513-4455-a9c9-716281505eaa",
     "name": "Canoptek Spyder",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Draw a card when another nontoken artifact creature or Vehicle enters",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "isToken"
+                    }
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "allOf",
+                        "of": [
+                          {
+                            "kind": "type",
+                            "value": "Artifact"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Creature"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Vehicle"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "bd002797-a545-4bee-88bf-b878436e7cca",
+    "name": "Brokers Hideout",
+    "handledLines": [
+      "When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Sacrifice this land",
+          "effects": [
+            {
+              "op": "sacrificeSourceThenReflexive",
+              "then": {
+                "description": "Search for a basic Forest, Plains, or Island, put it onto the battlefield tapped, then shuffle and gain 1 life",
+                "effects": [
+                  {
+                    "allowFailToFind": true,
+                    "destinations": [
+                      {
+                        "tapped": true,
+                        "zone": "battlefield"
+                      }
+                    ],
+                    "filter": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "supertype",
+                          "value": "Basic"
+                        },
+                        {
+                          "kind": "anyOf",
+                          "of": [
+                            {
+                              "kind": "subtype",
+                              "value": "Forest"
+                            },
+                            {
+                              "kind": "subtype",
+                              "value": "Plains"
+                            },
+                            {
+                              "kind": "subtype",
+                              "value": "Island"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "op": "searchLibrary"
+                  },
+                  {
+                    "op": "shuffle"
+                  },
+                  {
+                    "amount": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "gainLife"
+                  }
+                ],
+                "kind": "triggered",
+                "targets": []
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "bd92cacd-c7d8-43a2-a261-ea4754fefdc5",
@@ -7139,8 +8247,39 @@
   {
     "oracleId": "c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7",
     "name": "Mordant Dragon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may have it deal that much damage to target creature that player controls",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
@@ -7470,8 +8609,34 @@
   {
     "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
     "name": "Conjurer's Closet",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may exile target creature you control, then return it",
+          "effects": [
+            {
+              "op": "blinkTarget",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "you",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
@@ -7786,8 +8951,62 @@
   {
     "oracleId": "d2d9ecea-7925-420e-98b9-2f87f41f387c",
     "name": "Land Tax",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may search for up to three basic lands, reveal them, and put them into your hand",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "count": {
+                "kind": "const",
+                "n": 3
+              },
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "opponentControlsMore",
+              "selector": {
+                "kind": "type",
+                "value": "Land"
+              }
+            },
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "d5efba91-8400-41a3-91c6-cb5e81f07976",
@@ -8054,8 +9273,91 @@
   {
     "oracleId": "d8df9813-0376-4d30-8cdc-30451fb67726",
     "name": "Will of the Mardu",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose one. If you control a commander as you cast this spell, you may choose both instead.",
+      "• Create a number of 1/1 red Warrior creature tokens equal to the number of creatures target player controls.",
+      "• ~ deals damage to target creature equal to the number of creatures you control."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "maxChoicesIf": {
+            "condition": {
+              "kind": "controlsACommander"
+            },
+            "maxChoices": 2
+          },
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Create a 1/1 red Warrior for each creature target player controls",
+              "effects": [
+                {
+                  "count": {
+                    "kind": "countPermanentsControlledByTarget",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    "target": 0
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "R"
+                    ],
+                    "name": "Warrior",
+                    "power": 1,
+                    "subtypes": [
+                      "Warrior"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Warrior",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "description": "Deal damage to target creature equal to the number of creatures you control",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "countPermanents",
+                    "scope": "you",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  },
+                  "op": "dealDamage",
+                  "target": 1
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "player"
+          },
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "d9e24d7c-0907-45c1-b5d3-9fb16a929868",
@@ -8518,8 +9820,85 @@
   {
     "oracleId": "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f",
     "name": "Foe-Razer Regent",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, you may have it fight target creature you don't control.",
+      "Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may have it fight target creature you don't control",
+          "effects": [
+            {
+              "first": "source",
+              "op": "fight",
+              "second": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever a creature you control fights, put two +1/+1 counters on it at the next end step",
+          "effects": [
+            {
+              "ability": {
+                "description": "Put two +1/+1 counters on the creature that fought",
+                "effects": [
+                  {
+                    "count": 2,
+                    "counter": "+1/+1",
+                    "op": "putCounters",
+                    "target": "triggerObject"
+                  }
+                ],
+                "kind": "triggered",
+                "targets": []
+              },
+              "controller": "source",
+              "expiry": "onFire",
+              "op": "registerDelayedTrigger",
+              "sameObject": true,
+              "target": "triggerObject",
+              "when": "endStep"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "fights"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "e91240bc-4a13-4131-9379-5ddac6555f4a",
@@ -8542,8 +9921,35 @@
   {
     "oracleId": "e9bc324e-c200-45ef-8b9b-52a61d0f7374",
     "name": "Hunting Wilds",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.",
+      "Kicker {3}{G}"
+    ],
+    "def": {
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 1,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 3
+        },
+        "mechanic": "kicker"
+      },
+      "spellAbility": {
+        "effects": [
+          {
+            "op": "huntingWilds"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
@@ -8676,8 +10082,51 @@
   {
     "oracleId": "ec6d52f9-1c8f-48da-951c-be8d7813c7be",
     "name": "Harvest Season",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "count": {
+              "kind": "countTappedPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "destinations": [
+              {
+                "tapped": true,
+                "zone": "battlefield"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "ee7ebbc1-2f9e-4867-a522-424869b6d772",
@@ -8802,8 +10251,79 @@
   {
     "oracleId": "f55334d9-1ec2-4667-bf28-5a0384d6f053",
     "name": "Thunderfoot Baloth",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "other"
+              }
+            ]
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "other"
+              }
+            ]
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "addKeyword": "trample",
+            "layer": 6
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "f586ecb8-310c-4f40-a766-6a7ca46a254d",
@@ -9174,8 +10694,109 @@
   {
     "oracleId": "fb220f46-f8b8-4804-baa4-e7d50b4871f7",
     "name": "Aether Channeler",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, choose one —",
+      "• Create a 1/1 white Bird creature token with flying.",
+      "• Draw a card.",
+      "• Return another target nonland permanent to its owner's hand."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Aether Channeler enters, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Create a 1/1 white Bird creature token with flying",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createToken",
+                    "spec": {
+                      "colors": [
+                        "W"
+                      ],
+                      "keywords": [
+                        "flying"
+                      ],
+                      "name": "Bird",
+                      "power": 1,
+                      "subtypes": [
+                        "Bird"
+                      ],
+                      "toughness": 1,
+                      "typeLine": "Creature — Bird",
+                      "types": [
+                        "Creature"
+                      ]
+                    }
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "Return another target nonland permanent to its owner's hand",
+                "effects": [
+                  {
+                    "op": "returnToHand",
+                    "target": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Draw a card",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "draw"
+                  }
+                ],
+                "targetSlots": []
+              }
+            ]
+          },
+          "targets": [
+            {
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
@@ -9474,8 +11095,109 @@
   {
     "oracleId": "oracle-aether-channeler",
     "name": "Aether Channeler",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, choose one —",
+      "• Create a 1/1 white Bird creature token with flying.",
+      "• Draw a card.",
+      "• Return another target nonland permanent to its owner's hand."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Aether Channeler enters, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Create a 1/1 white Bird creature token with flying",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createToken",
+                    "spec": {
+                      "colors": [
+                        "W"
+                      ],
+                      "keywords": [
+                        "flying"
+                      ],
+                      "name": "Bird",
+                      "power": 1,
+                      "subtypes": [
+                        "Bird"
+                      ],
+                      "toughness": 1,
+                      "typeLine": "Creature — Bird",
+                      "types": [
+                        "Creature"
+                      ]
+                    }
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "Return another target nonland permanent to its owner's hand",
+                "effects": [
+                  {
+                    "op": "returnToHand",
+                    "target": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Draw a card",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "draw"
+                  }
+                ],
+                "targetSlots": []
+              }
+            ]
+          },
+          "targets": [
+            {
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-aether-hub",
@@ -10176,8 +11898,50 @@
   {
     "oracleId": "oracle-attune-with-aether",
     "name": "Attune with Aether",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} ."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary",
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "gainEnergy"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-aura-mutation",
@@ -10293,8 +12057,42 @@
   {
     "oracleId": "oracle-beacon-of-unrest",
     "name": "Beacon of Unrest",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": 0
+          },
+          {
+            "op": "resolvingSpellShuffleIntoLibrary"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "graveyardOwnerScope": "any",
+            "kind": "cardInGraveyard"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-bespoke-battlewagon",
@@ -10625,6 +12423,86 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-brokers-hideout",
+    "name": "Brokers Hideout",
+    "handledLines": [
+      "When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Sacrifice this land",
+          "effects": [
+            {
+              "op": "sacrificeSourceThenReflexive",
+              "then": {
+                "description": "Search for a basic Forest, Plains, or Island, put it onto the battlefield tapped, then shuffle and gain 1 life",
+                "effects": [
+                  {
+                    "allowFailToFind": true,
+                    "destinations": [
+                      {
+                        "tapped": true,
+                        "zone": "battlefield"
+                      }
+                    ],
+                    "filter": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "supertype",
+                          "value": "Basic"
+                        },
+                        {
+                          "kind": "anyOf",
+                          "of": [
+                            {
+                              "kind": "subtype",
+                              "value": "Forest"
+                            },
+                            {
+                              "kind": "subtype",
+                              "value": "Plains"
+                            },
+                            {
+                              "kind": "subtype",
+                              "value": "Island"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "op": "searchLibrary"
+                  },
+                  {
+                    "op": "shuffle"
+                  },
+                  {
+                    "amount": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "gainLife"
+                  }
+                ],
+                "kind": "triggered",
+                "targets": []
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-caged-sun",
     "name": "Caged Sun",
     "handledLines": [],
@@ -10756,8 +12634,73 @@
   {
     "oracleId": "oracle-canoptek-spyder",
     "name": "Canoptek Spyder",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Draw a card when another nontoken artifact creature or Vehicle enters",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "isToken"
+                    }
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "allOf",
+                        "of": [
+                          {
+                            "kind": "type",
+                            "value": "Artifact"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Creature"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Vehicle"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-canoptek-tomb-sentinel",
@@ -10768,8 +12711,65 @@
   {
     "oracleId": "oracle-canoptek-wraith",
     "name": "Canoptek Wraith",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+      "Wraith Form — ~ can't be blocked."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 6,
+            "setCantBeBlocked": true
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "You may pay {3} and sacrifice this creature to fetch up to two basics named like a land you control",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "op": "mayPayManaAndSacrificeSource",
+              "then": [
+                {
+                  "count": 2,
+                  "destination": {
+                    "tapped": true,
+                    "zone": "battlefield"
+                  },
+                  "op": "searchBasicsNamedLikeChosenLand"
+                },
+                {
+                  "op": "shuffle"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-carrion-feeder",
@@ -11375,8 +13375,34 @@
   {
     "oracleId": "oracle-conjurer-s-closet",
     "name": "Conjurer's Closet",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may exile target creature you control, then return it",
+          "effects": [
+            {
+              "op": "blinkTarget",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "you",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-convergence-of-dominion",
@@ -12885,8 +14911,85 @@
   {
     "oracleId": "oracle-foe-razer-regent",
     "name": "Foe-Razer Regent",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, you may have it fight target creature you don't control.",
+      "Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may have it fight target creature you don't control",
+          "effects": [
+            {
+              "first": "source",
+              "op": "fight",
+              "second": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever a creature you control fights, put two +1/+1 counters on it at the next end step",
+          "effects": [
+            {
+              "ability": {
+                "description": "Put two +1/+1 counters on the creature that fought",
+                "effects": [
+                  {
+                    "count": 2,
+                    "counter": "+1/+1",
+                    "op": "putCounters",
+                    "target": "triggerObject"
+                  }
+                ],
+                "kind": "triggered",
+                "targets": []
+              },
+              "controller": "source",
+              "expiry": "onFire",
+              "op": "registerDelayedTrigger",
+              "sameObject": true,
+              "target": "triggerObject",
+              "when": "endStep"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "fights"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-forge-of-heroes",
@@ -12959,16 +15062,104 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-forum-of-amity",
-    "name": "Forum of Amity",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-frontier-siege",
     "name": "Frontier Siege",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As this enchantment enters, choose Khans or Dragons.",
+      "• Dragons — Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
+      "• Khans — At the beginning of each of your main phases, add {G}{G}."
+    ],
+    "def": {
+      "entersChoosingOption": {
+        "options": [
+          {
+            "key": "Khans",
+            "label": "Khans — add {G}{G} at each of your main phases"
+          },
+          {
+            "key": "Dragons",
+            "label": "Dragons — your flying creatures may fight when they enter"
+          }
+        ],
+        "prompt": "Choose Khans or Dragons"
+      },
+      "triggers": [
+        {
+          "description": "Khans — at the beginning of each of your main phases, add {G}{G}",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "colors": [
+                "G"
+              ],
+              "fixedSymbols": [
+                "G",
+                "G"
+              ],
+              "op": "addMana"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "chosenOptionIs",
+              "value": "Khans"
+            },
+            "player": "you",
+            "when": "mainPhase"
+          }
+        },
+        {
+          "description": "Dragons — a flying creature you control enters; it may fight target creature you don't control",
+          "effects": [
+            {
+              "first": "triggerObject",
+              "op": "fight",
+              "second": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "condition": {
+              "kind": "chosenOptionIs",
+              "value": "Dragons"
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-frostboil-snarl",
@@ -13590,8 +15781,51 @@
   {
     "oracleId": "oracle-harvest-season",
     "name": "Harvest Season",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "count": {
+              "kind": "countTappedPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "destinations": [
+              {
+                "tapped": true,
+                "zone": "battlefield"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-hateful-eidolon",
@@ -13817,8 +16051,35 @@
   {
     "oracleId": "oracle-hunting-wilds",
     "name": "Hunting Wilds",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.",
+      "Kicker {3}{G}"
+    ],
+    "def": {
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 1,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 3
+        },
+        "mechanic": "kicker"
+      },
+      "spellAbility": {
+        "effects": [
+          {
+            "op": "huntingWilds"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-idol-of-oblivion",
@@ -14010,8 +16271,70 @@
   {
     "oracleId": "oracle-kairi-the-swirling-sky",
     "name": "Kairi, the Swirling Sky",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ dies, choose one —",
+      "• Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.",
+      "• Return any number of target nonland permanents with total mana value 6 or less to their owners' hands."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Kairi dies, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Return any number of target nonland permanents with total mana value 6 or less to their owners' hands",
+                "effects": [
+                  {
+                    "op": "returnToHandEachChosen",
+                    "targetSlot": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand",
+                "effects": [
+                  {
+                    "op": "millAndReturnSpells"
+                  }
+                ],
+                "targetSlots": []
+              }
+            ]
+          },
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              "kind": "permanent",
+              "totalManaValueAtMost": 6
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-kalain-reclusive-painter",
@@ -14083,6 +16406,115 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-kogla-the-titan-ape",
+    "name": "Kogla, the Titan Ape",
+    "handledLines": [
+      "When ~ enters, it fights up to one target creature you don't control.",
+      "Whenever ~ attacks, destroy target artifact or enchantment defending player controls.",
+      "{1}{G}: Return target Human you control to its owner's hand. ~ gains indestructible until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Return target Human you control to its owner's hand; Kogla gains indestructible until end of turn",
+            "effects": [
+              {
+                "op": "returnToHand",
+                "target": 0
+              },
+              {
+                "keyword": "indestructible",
+                "op": "grantKeywordUntilEot",
+                "target": "source"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "filter": {
+                  "kind": "subtype",
+                  "value": "Human"
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "It fights up to one target creature you don't control",
+          "effects": [
+            {
+              "a": "source",
+              "bSlot": 0,
+              "op": "fightUpToOneChosen"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Destroy target artifact or enchantment defending player controls",
+          "effects": [
+            {
+              "op": "destroy",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "artifactOrEnchantment"
+            }
+          ],
+          "trigger": {
+            "defendingPlayerIsEventPlayer": true,
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-kor-spiritdancer",
     "name": "Kor Spiritdancer",
     "handledLines": [],
@@ -14091,8 +16523,62 @@
   {
     "oracleId": "oracle-land-tax",
     "name": "Land Tax",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may search for up to three basic lands, reveal them, and put them into your hand",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "count": {
+                "kind": "const",
+                "n": 3
+              },
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "opponentControlsMore",
+              "selector": {
+                "kind": "type",
+                "value": "Land"
+              }
+            },
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-leafkin-druid",
@@ -14229,8 +16715,78 @@
   {
     "oracleId": "oracle-loran-of-the-third-path",
     "name": "Loran of the Third Path",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ enters, destroy up to one target artifact or enchantment.",
+      "{T}: You and target opponent each draw a card."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "You and target opponent each draw a card",
+            "effects": [
+              {
+                "op": "drawTargetAndController",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "opponent",
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Destroy up to one target artifact or enchantment",
+          "effects": [
+            {
+              "op": "destroyEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-loyal-apprentice",
@@ -14919,8 +17475,39 @@
   {
     "oracleId": "oracle-mordant-dragon",
     "name": "Mordant Dragon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may have it deal that much damage to target creature that player controls",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-mutilate",
@@ -15045,10 +17632,106 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-mystic-sanctuary",
+    "name": "Mystic Sanctuary",
+    "handledLines": [
+      "When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library.",
+      "~ enters tapped unless you control three or more other Islands."
+    ],
+    "def": {
+      "entersTappedUnless": {
+        "cmp": ">=",
+        "kind": "countPermanents",
+        "n": 3,
+        "scope": "you",
+        "selector": {
+          "kind": "subtype",
+          "value": "Island"
+        }
+      },
+      "triggers": [
+        {
+          "description": "You may put target instant or sorcery card from your graveyard on top of your library",
+          "effects": [
+            {
+              "op": "graveyardToLibraryTop",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Instant"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Sorcery"
+                  }
+                ]
+              },
+              "kind": "cardInGraveyard"
+            }
+          ],
+          "trigger": {
+            "entersUntapped": true,
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-necron-deathmark",
     "name": "Necron Deathmark",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Synaptic Disintegrator — When this creature enters, destroy up to one target creature and target player mills three cards."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Destroy up to one target creature; target player mills three cards",
+          "effects": [
+            {
+              "op": "destroyEachChosen",
+              "targetSlot": 1
+            },
+            {
+              "count": 3,
+              "op": "millTargetPlayer",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "player"
+            },
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-necron-monolith",
@@ -16012,8 +18695,52 @@
   {
     "oracleId": "oracle-plasmancer",
     "name": "Plasmancer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Dynastic Advisor — When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Search for a basic Swamp card, reveal it, put it into your hand, then shuffle",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Swamp"
+                  }
+                ]
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-primal-might",
@@ -16430,8 +19157,72 @@
   {
     "oracleId": "oracle-return-to-nature",
     "name": "Return to Nature",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose one —",
+      "• Destroy target artifact.",
+      "• Destroy target enchantment.",
+      "• Exile target card from a graveyard."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Destroy target artifact",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 0
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "description": "Destroy target enchantment",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 1
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            },
+            {
+              "description": "Exile target card from a graveyard",
+              "effects": [
+                {
+                  "op": "exileCard",
+                  "target": 2
+                }
+              ],
+              "targetSlots": [
+                2
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "artifact"
+          },
+          {
+            "kind": "enchantment"
+          },
+          {
+            "graveyardOwnerScope": "any",
+            "kind": "cardInGraveyard"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-reverberate",
@@ -16442,8 +19233,76 @@
   {
     "oracleId": "oracle-rishkar-peema-renegade",
     "name": "Rishkar, Peema Renegade",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Each creature you control with a counter on it has \"{T}: Add {G}.\"",
+      "When ~ enters, put a +1/+1 counter on each of up to two target creatures."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "hasAnyCounter"
+              }
+            ]
+          },
+          "op": {
+            "addManaAbility": {
+              "costs": [
+                {
+                  "kind": "tap"
+                }
+              ],
+              "units": [
+                [
+                  "G"
+                ]
+              ]
+            },
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Put a +1/+1 counter on each of up to two target creatures",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 2,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-river-kelpie",
@@ -17873,6 +20732,47 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-sweet-gum-recluse",
+    "name": "Sweet-Gum Recluse",
+    "handledLines": [
+      "When this creature enters, put three +1/+1 counters on each of any number of target creatures that entered this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Put three +1/+1 counters on each of any number of target creatures that entered this turn",
+          "effects": [
+            {
+              "count": 3,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "filter": {
+                "kind": "enteredThisTurn"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-swords-to-plowshares",
     "name": "Swords to Plowshares",
     "handledLines": [
@@ -17899,8 +20799,42 @@
   {
     "oracleId": "oracle-sylvan-reclamation",
     "name": "Sylvan Reclamation",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Exile up to two target artifacts and/or enchantments."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "op": "exileEachChosen",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": 2,
+              "min": 0
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                }
+              ]
+            },
+            "kind": "permanent"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-szarekh-the-silent-king",
@@ -18211,8 +21145,79 @@
   {
     "oracleId": "oracle-thunderfoot-baloth",
     "name": "Thunderfoot Baloth",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "other"
+              }
+            ]
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "other"
+              }
+            ]
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "addKeyword": "trample",
+            "layer": 6
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-thundermaw-hellkite",
@@ -18235,8 +21240,59 @@
   {
     "oracleId": "oracle-tomb-fortress",
     "name": "Tomb Fortress",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Mill four cards, then return a creature card from your graveyard to the battlefield",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "mill"
+              },
+              {
+                "filter": {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                "op": "returnOneFromYourGraveyardToBattlefield"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 3,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "exileSelf"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-tomik-wielder-of-law",
@@ -18579,8 +21635,87 @@
   {
     "oracleId": "oracle-vastwood-surge",
     "name": "Vastwood Surge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Kicker {4}",
+      "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control."
+    ],
+    "def": {
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 4
+        },
+        "mechanic": "kicker"
+      },
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "count": {
+              "kind": "const",
+              "n": 2
+            },
+            "destinations": [
+              {
+                "tapped": true,
+                "zone": "battlefield"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "op": "shuffle"
+          },
+          {
+            "count": {
+              "kind": "times",
+              "n": 2,
+              "of": {
+                "kind": "optionalCostCount",
+                "mechanic": "kicker"
+              }
+            },
+            "counter": "+1/+1",
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-verix-bladewing",
@@ -18642,8 +21777,32 @@
   {
     "oracleId": "oracle-voice-of-many",
     "name": "Voice of Many",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, draw a card for each opponent who controls fewer creatures than you."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Draw a card for each opponent who controls fewer creatures than you",
+          "effects": [
+            {
+              "count": {
+                "kind": "countOpponentsWithFewerCreatures"
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-wandering-archaic-explore-the-vastlands",
@@ -18807,8 +21966,91 @@
   {
     "oracleId": "oracle-will-of-the-mardu",
     "name": "Will of the Mardu",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose one. If you control a commander as you cast this spell, you may choose both instead.",
+      "• Create a number of 1/1 red Warrior creature tokens equal to the number of creatures target player controls.",
+      "• ~ deals damage to target creature equal to the number of creatures you control."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "maxChoicesIf": {
+            "condition": {
+              "kind": "controlsACommander"
+            },
+            "maxChoices": 2
+          },
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Create a 1/1 red Warrior for each creature target player controls",
+              "effects": [
+                {
+                  "count": {
+                    "kind": "countPermanentsControlledByTarget",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    "target": 0
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "R"
+                    ],
+                    "name": "Warrior",
+                    "power": 1,
+                    "subtypes": [
+                      "Warrior"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Warrior",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "description": "Deal damage to target creature equal to the number of creatures you control",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "countPermanents",
+                    "scope": "you",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  },
+                  "op": "dealDamage",
+                  "target": 1
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "player"
+          },
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-wishclaw-talisman",

@@ -1,5 +1,26 @@
 [
   {
+    "oracleId": "fb220f46-f8b8-4804-baa4-e7d50b4871f7",
+    "name": "Aether Channeler",
+    "package": "PR01.24",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When this creature enters, choose one —\"",
+      "unrecognized rules text: \"• Create a 1/1 white Bird creature token with flying.\"",
+      "unrecognized rules text: \"• Return another target nonland permanent to its owner's hand.\"",
+      "unrecognized rules text: \"• Draw a card.\"",
+      "explicitly unsupported: Return-another-target bounce is implemented as untargeted returnOneToHand."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "48369aec-a991-4bef-8554-01c84302b063",
     "name": "Aetherspouts",
     "package": "W4",
@@ -81,6 +102,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "b337c241-f2c4-48e3-a303-371b172fcd18",
+    "name": "Attune with Aether",
+    "package": "PR01.02",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} .\"",
+      "explicitly unsupported: The basic-land search omits revealing the found card."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "a98cc4d0-a322-4142-aee0-83f39b137616",
     "name": "Aurora Phoenix",
     "package": "W3",
@@ -121,6 +160,24 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "aef874fa-93c0-4f86-8b0d-dc24ec51467d",
+    "name": "Beacon of Unrest",
+    "package": "PR01.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library.\"",
+      "explicitly unsupported: Shuffle this into its owner's library is implemented as shuffleLibrary only."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "011da9c5-aa8a-4fa0-b1f2-62b9f3760476",
@@ -207,15 +264,19 @@
   {
     "oracleId": "bd002797-a545-4bee-88bf-b878436e7cca",
     "name": "Brokers Hideout",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR01.27",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life.\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "0623c51a-e829-413f-a3a0-817c0902821e",
@@ -242,6 +303,42 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "bcad5b83-5513-4455-a9c9-716281505eaa",
+    "name": "Canoptek Spyder",
+    "package": "PR01.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.\"",
+      "explicitly unsupported: Vehicle is selected as a type rather than a subtype, so Vehicles do not trigger the draw."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "61849685-b407-4ed0-aafc-ec3a003200b9",
+    "name": "Canoptek Wraith",
+    "package": "PR01.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.\"",
+      "explicitly unsupported: Same-name-as-chosen-land search is implemented as any two basics."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "e9566303-15cf-4444-a044-fc19540f21b6",
@@ -328,6 +425,24 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
+    "name": "Conjurer's Closet",
+    "package": "PR01.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control.\"",
+      "explicitly unsupported: Optional exile-and-return is implemented as an untargeted choice among creatures you control."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "2469c0b7-a045-4733-bf53-28f3fdbe3797",
@@ -575,6 +690,25 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f",
+    "name": "Foe-Razer Regent",
+    "package": "PR01.16",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When this creature enters, you may have it fight target creature you don't control.\"",
+      "unrecognized rules text: \"Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step.\"",
+      "explicitly unsupported: Optional fight still requires a target creature you don't control."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "2ef75cf3-30dc-4852-a6d1-1d6391fad022",
     "name": "Forgotten Ancient",
     "package": "W4",
@@ -588,6 +722,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "349ea6c7-6b3e-417f-b082-b712e2b1635b",
+    "name": "Forum of Amity",
+    "package": "PR01.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Surveil is claimed without a surveil implementation."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "af20f452-5cb9-47cc-9a81-71f23204ddd0",
     "name": "Franklin Richards, Ascendant",
     "package": "W5",
@@ -599,6 +748,26 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1",
+    "name": "Frontier Siege",
+    "package": "PR01.21",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"As this enchantment enters, choose Khans or Dragons.\"",
+      "unrecognized rules text: \"• Khans — At the beginning of each of your main phases, add {G}{G}.\"",
+      "unrecognized rules text: \"• Dragons — Whenever a creature you control with flying enters, you may have it fight target creature you don't control.\"",
+      "explicitly unsupported: The Dragons fight option still requires a target creature you don't control."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "9cb741ae-14d6-4a8d-bfad-703abfe3682c",
@@ -796,6 +965,24 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "ec6d52f9-1c8f-48da-951c-be8d7813c7be",
+    "name": "Harvest Season",
+    "package": "PR01.07",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.\"",
+      "explicitly unsupported: X counts all creatures you control rather than tapped creatures."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "d55cb52d-b35c-4602-a518-cd51f155a2d1",
     "name": "Human Torch",
     "package": "W3",
@@ -812,17 +999,21 @@
   {
     "oracleId": "e9bc324e-c200-45ef-8b9b-52a61d0f7374",
     "name": "Hunting Wilds",
-    "package": "W2",
+    "package": "PR01.17",
     "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Kicker {3}{G}\"",
-      "unrecognized rules text: \"If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.\""
+      "unrecognized rules text: \"If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.\"",
+      "explicitly unsupported: The Forest search omits revealing the found cards."
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": ["packages/engine/tests/w2-cards.test.ts"],
-    "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
-    "snapshotStatus": "passed",
-    "coverageDelta": 1
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",
@@ -905,6 +1096,26 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "85aa53e8-f062-4d02-bc69-1413f7f0dcf1",
+    "name": "Kairi, the Swirling Sky",
+    "package": "PR01.22",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When ~ dies, choose one —\"",
+      "unrecognized rules text: \"• Return any number of target nonland permanents with total mana value 6 or less to their owners' hands.\"",
+      "unrecognized rules text: \"• Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.\"",
+      "explicitly unsupported: Return-any-number targeting with total mana value 6 or less is an untargeted single bounce with no mana-value cap."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
     "name": "Kazuul, Tyrant of the Cliffs",
     "package": "W6",
@@ -964,17 +1175,21 @@
   {
     "oracleId": "8b21062e-97b0-4967-96df-30e8309f4fba",
     "name": "Kogla, the Titan Ape",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR01.29",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When ~ enters, it fights up to one target creature you don't control.\"",
       "unrecognized rules text: \"Whenever ~ attacks, destroy target artifact or enchantment defending player controls.\"",
       "unrecognized rules text: \"{1}{G}: Return target Human you control to its owner's hand. ~ gains indestructible until end of turn.\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "3233af43-7826-4895-b67e-03c6102c2cd5",
@@ -988,6 +1203,24 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "d2d9ecea-7925-420e-98b9-2f87f41f387c",
+    "name": "Land Tax",
+    "package": "PR01.08",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.\"",
+      "explicitly unsupported: The upkeep search is mandatory and omits revealing the found cards."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "f7d8b91b-6541-4d3e-af51-7e000eac69c1",
@@ -1028,6 +1261,25 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "b3d81980-76f2-44e2-b1c9-01e30c726312",
+    "name": "Loran of the Third Path",
+    "package": "PR01.18",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When ~ enters, destroy up to one target artifact or enchantment.\"",
+      "unrecognized rules text: \"{T}: You and target opponent each draw a card.\"",
+      "explicitly unsupported: Up-to-one destroy is a required target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "15fbb7b1-c62d-4f82-9f35-2c10299779f4",
@@ -1194,6 +1446,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7",
+    "name": "Mordant Dragon",
+    "package": "PR01.09",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls.\"",
+      "explicitly unsupported: Optional combat-damage rider is a required target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "8a52f3c0-2552-4425-b2e3-5496eb2232a7",
     "name": "Mystic Remora",
     "package": "W9",
@@ -1207,16 +1477,20 @@
   {
     "oracleId": "17b60106-a4c7-410a-8ac3-ec8e74e29a7c",
     "name": "Mystic Sanctuary",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR01.26",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"~ enters tapped unless you control three or more other Islands.\"",
       "unrecognized rules text: \"When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library.\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "171a0a09-4aee-466c-aebd-3b0d4c1f51b4",
@@ -1231,6 +1505,24 @@
     "interpretationTests": ["packages/engine/tests/w1-defender-relative-attacks.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "45866598-4ee4-46b6-ade2-ffcdbe98e58f",
+    "name": "Necron Deathmark",
+    "package": "PR01.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Synaptic Disintegrator — When this creature enters, destroy up to one target creature and target player mills three cards.\"",
+      "explicitly unsupported: Destroy up-to-one is a required target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "8430ae03-2d4c-4031-aa29-4d53815ded78",
@@ -1345,6 +1637,24 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "b3ff8da4-f2cc-41c3-8950-9cc531854b78",
+    "name": "Plasmancer",
+    "package": "PR01.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Dynastic Advisor — When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle.\"",
+      "explicitly unsupported: The Swamp search omits revealing the found card."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3d5c98ff-fcf1-42bd-9533-2648791a4f45",
     "name": "Power Pack",
     "package": "W5",
@@ -1411,6 +1721,46 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
+    "name": "Return to Nature",
+    "package": "PR01.25",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Choose one —\"",
+      "unrecognized rules text: \"• Destroy target artifact.\"",
+      "unrecognized rules text: \"• Destroy target enchantment.\"",
+      "unrecognized rules text: \"• Exile target card from a graveyard.\"",
+      "explicitly unsupported: Choose-one still requires targets for every mode."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "761021ce-4559-464e-aa03-85c2fe78e267",
+    "name": "Rishkar, Peema Renegade",
+    "package": "PR01.19",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When ~ enters, put a +1/+1 counter on each of up to two target creatures.\"",
+      "unrecognized rules text: \"Each creature you control with a counter on it has \"{T}: Add {G}.\"\"",
+      "explicitly unsupported: Up-to-two +1/+1 counters require at least one target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "984f92dd-cb9b-4421-a8e6-75bfe566be10",
@@ -1626,15 +1976,37 @@
   {
     "oracleId": "8ea10a5a-b698-4f7d-a9c8-520f8d835f34",
     "name": "Sweet-Gum Recluse",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR01.28",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When this creature enters, put three +1/+1 counters on each of any number of target creatures that entered this turn.\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "aeec8e85-6571-4da6-8a48-f5d3985ca10b",
+    "name": "Sylvan Reclamation",
+    "package": "PR01.12",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Exile up to two target artifacts and/or enchantments.\"",
+      "explicitly unsupported: Up-to-two exile requires at least one target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "9138a768-d01d-4603-9bae-d3bff6cd2f61",
@@ -1748,6 +2120,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "f55334d9-1ec2-4667-bf28-5a0384d6f053",
+    "name": "Thunderfoot Baloth",
+    "package": "PR01.13",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.\"",
+      "explicitly unsupported: Lieutenant +2/+2 and trample apply to all permanents you control, not just creatures."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b4c27c89-fa50-4cf0-bf37-039732d16fef",
     "name": "Toby, Beastie Befriender",
     "package": "W6",
@@ -1760,6 +2150,24 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "986f510c-e2ec-423e-a443-51a169939558",
+    "name": "Tomb Fortress",
+    "package": "PR01.14",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery.\"",
+      "explicitly unsupported: The creature return is a target chosen before milling."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "8a29bd35-33ef-4317-9fe5-8aaff5d7d64d",
@@ -1876,17 +2284,21 @@
   {
     "oracleId": "8ba2a7ad-a09b-4f52-9c76-c70510dc4feb",
     "name": "Vastwood Surge",
-    "package": "W2",
+    "package": "PR01.20",
     "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Kicker {4}\"",
-      "unrecognized rules text: \"Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control.\""
+      "unrecognized rules text: \"Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control.\"",
+      "explicitly unsupported: The basic-land search omits revealing the found cards."
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": ["packages/engine/tests/w2-cards.test.ts"],
-    "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
-    "snapshotStatus": "passed",
-    "coverageDelta": 1
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "a8bf8ff8-d924-4fd2-b5ed-05b38f55325a",
@@ -1943,6 +2355,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "9b40faad-1b96-4461-89d8-9a207b58e832",
+    "name": "Voice of Many",
+    "package": "PR01.15",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When this creature enters, draw a card for each opponent who controls fewer creatures than you.\"",
+      "explicitly unsupported: Eliminated players still count as opponents who control fewer creatures."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "5825d718-6a32-4f4c-9b56-1a50051cfe28",
     "name": "Wall of Tears",
     "package": "W3",
@@ -1987,18 +2417,22 @@
   {
     "oracleId": "d8df9813-0376-4d30-8cdc-30451fb67726",
     "name": "Will of the Mardu",
-    "package": "W1",
+    "package": "PR01.23",
     "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Choose one. If you control a commander as you cast this spell, you may choose both instead.\"",
       "unrecognized rules text: \"• Create a number of 1/1 red Warrior creature tokens equal to the number of creatures target player controls.\"",
-      "unrecognized rules text: \"• ~ deals damage to target creature equal to the number of creatures you control.\""
+      "unrecognized rules text: \"• ~ deals damage to target creature equal to the number of creatures you control.\"",
+      "explicitly unsupported: Choose-both requires controlling your own commander, not any commander you control."
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": ["packages/engine/tests/w1-remaining-cards.test.ts"],
-    "interpretationTests": ["packages/engine/tests/w1-remaining-cards.test.ts"],
-    "snapshotStatus": "passed",
-    "coverageDelta": 1
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "b08633e9-7b8f-4f69-a3b7-8d982b17574c",

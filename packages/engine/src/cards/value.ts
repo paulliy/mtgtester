@@ -53,8 +53,24 @@ export interface ValueScope {
   targets?: readonly string[];
   /** Card id of the object that fired the trigger. */
   triggerObjectCardId?: string;
+  /**
+   * The exact permanent a delayed trigger remembers, when it must not follow the card into a
+   * new object (CR 400.7): "put counters on it" after it left and returned does nothing.
+   */
+  triggerObjectId?: string;
+  /**
+   * The exact object whose event fired this trigger, captured when it fired. A delayed trigger
+   * that remembers "it" (Foe-Razer Regent's "the creature that fought") takes this rather than
+   * looking the card up at resolution, which would find a new object blinked in response.
+   */
+  eventObjectId?: string;
   /** Total counters on an activated ability's source, captured before costs are paid. */
   sourceCountersTotal?: number;
+  /**
+   * Optional costs paid for the spell now resolving (kicker). It has already left the stack, so
+   * `optionalCostCount` cannot find it there (Hunting Wilds' "if this spell was kicked").
+   */
+  resolvingOptionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring', number>>;
   countPermanents?: (selector: Selector, scope: 'you' | 'opponents' | 'all') => number;
 }
 
@@ -72,6 +88,8 @@ export type TriggerScope = Pick<
   | 'eventPlayerId'
   | 'stationPower'
   | 'sourceCountersTotal'
+  | 'triggerObjectId'
+  | 'eventObjectId'
 >;
 
 export type Value =
@@ -85,6 +103,12 @@ export type Value =
   | { kind: 'times'; of: Value; n: number }
   /** "the number of Dragons you control" / "the number of lands you control". */
   | { kind: 'countPermanents'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
+  /**
+   * "the number of tapped creatures you control" (Harvest Season). Tapped-ness is deliberately
+   * not a selector leaf (see selector.ts), so the tapped filter lives on the value, which is only
+   * ever evaluated at resolution, never inside a continuous effect.
+   */
+  | { kind: 'countTappedPermanents'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
   /** Number of matching permanents controlled by an announced player target. */
   | { kind: 'countPermanentsControlledByTarget'; target: EffectRef; selector: Selector }
   /** Number of Auras you control that are currently attached to creatures. */

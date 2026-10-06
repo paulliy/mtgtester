@@ -8,7 +8,7 @@
  * depend on it without a cycle.
  */
 
-import type { Color } from '@mtg/shared';
+import type { Color, ManaCostString } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { Condition } from './condition';
 import type { Selector } from './selector';
@@ -393,6 +393,11 @@ export interface TargetSpec {
    */
   count?: { min: number; max: number };
   /**
+   * "Any number of target nonland permanents with total mana value 6 or less" (Kairi) — a
+   * budget on a `count` slot: each further choice must fit what the earlier ones left.
+   */
+  totalManaValueAtMost?: number;
+  /**
    * "Target cards from THEIR graveyard" (Loaming Shaman) — for a `cardInGraveyard` slot, the
    * index of an EARLIER ordinary slot holding the player whose graveyard this searches, instead
    * of the ability's own controller. By the same "count slots are allocated after ordinary
@@ -542,6 +547,12 @@ export type Effect =
   | { op: 'sacrifice'; target: EffectRef }
   /** Sacrifice one matching controlled permanent, then perform linked effects only if it happened. */
   | { op: 'sacrificeOneThen'; selector: Selector; then: Effect[] }
+  /**
+   * "Sacrifice it. When you do, …" (Brokers Hideout) — a reflexive trigger (CR 603.12). If the
+   * source is sacrificed, `then` triggers and goes on the stack as its own ability, with a
+   * priority window in between; if it could not be sacrificed, nothing triggers.
+   */
+  | { op: 'sacrificeSourceThenReflexive'; then: Ability }
   | { op: 'gainControlTarget'; target: EffectRef }
   | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'putCountersEach'; selector: Selector; counter: string; count: Value | number }
@@ -563,9 +574,21 @@ export type Effect =
   | { op: 'exileAllGraveyards' }
   /** Put the currently resolving spell card on the bottom of its owner's library. */
   | { op: 'resolvingSpellToLibraryBottom' }
+  /**
+   * "Shuffle ~ into its owner's library" on a resolving spell (Beacon of Unrest): the card goes
+   * from the stack into its owner's library, which that player then shuffles. A spell that
+   * fizzles never reaches this instruction and goes to its owner's graveyard as usual.
+   */
+  | { op: 'resolvingSpellShuffleIntoLibrary' }
   | { op: 'exileTargetPlayerGraveyard'; target: EffectRef }
   | { op: 'returnToHandEach'; selector: Selector }
   | { op: 'graveyardToBattlefieldEach'; filter: Selector; scope?: 'you' | 'all' }
+  /**
+   * "Return a creature card from your graveyard to the battlefield" with no target (Tomb
+   * Fortress): the card is chosen as the effect resolves, after any earlier mill in the same
+   * ability, from the cards then in your graveyard. Mandatory when one matches.
+   */
+  | { op: 'returnOneFromYourGraveyardToBattlefield'; filter: Selector }
   | { op: 'graveyardToHandEach'; filter: Selector; scope?: 'you' | 'all' }
   | { op: 'unearth' }
   | { op: 'grantUnearthToArtifactCreaturesInGraveyard'; cost: ParsedManaCost }
@@ -628,6 +651,11 @@ export type Effect =
       bind?: string;
       /** Surface CR 701.19c's legal failure-to-find choice even for one distinct card name. */
       allowFailToFind?: boolean;
+      /**
+       * "…, reveal it, …" (CR 701.16a): each found card is shown to every player, even when its
+       * destination is a hidden zone such as the hand.
+       */
+      reveal?: boolean;
     }
   /**
    * Choose a set of cards in one private-library decision, then validate the set as a whole.
@@ -813,6 +841,11 @@ export type Effect =
   | { op: 'grantKeywordEachChosenUntilEot'; targetSlot: number; keyword: KeywordAbility }
   | { op: 'untapUpTo'; selector: Selector; max: number }
   | { op: 'exileEachChosen'; targetSlot: number }
+  /**
+   * "Destroy up to N target …" — destroy each object chosen for a variable-count target slot
+   * (possibly none), skipping any that became illegal (CR 608.2b).
+   */
+  | { op: 'destroyEachChosen'; targetSlot: number }
   | {
       op: 'blinkEachChosen';
       targetSlot: number;
@@ -913,6 +946,11 @@ export type Effect =
       controller?: 'source' | 'targetController';
       /** Player referenced as `eventPlayer` when the delayed ability resolves. */
       affectedPlayer?: 'sourceController' | 'targetController';
+      /**
+       * Remember the permanent itself rather than its card: if it leaves the battlefield before
+       * the delayed ability resolves, it is a new object and the effect does nothing (CR 400.7).
+       */
+      sameObject?: true;
     }
   | { op: 'commandZoneToBattlefield'; target: EffectRef; entersHaste?: boolean }
   /**
@@ -934,6 +972,18 @@ export type Effect =
   | { op: 'drawUpTo'; count: number }
   /** The routed player chooses an integer from zero through count, then draws that many cards. */
   | { op: 'drawUpToN'; count: number; player?: 'controller' | 'eventPlayer' }
+  /**
+   * "You may pay {N} and sacrifice it. If you do, …" on a resolving ability of a permanent
+   * (Canoptek Wraith). Offered only while the source is still on the battlefield under the
+   * ability's controller and the mana is payable: a cost that can't be paid can't be chosen.
+   */
+  | { op: 'mayPayManaAndSacrificeSource'; cost: ParsedManaCost; then: Effect[] }
+  /**
+   * "Choose a land you control. Then search your library for up to N basic land cards which
+   * have the same name as the chosen land" (Canoptek Wraith). The land is chosen on resolution,
+   * not targeted; only its name matters, so one option is offered per distinct land name.
+   */
+  | { op: 'searchBasicsNamedLikeChosenLand'; count: number; destination: SearchDestination }
   | { op: 'mayPayEnergyUpTo'; min: number; max: Value; then?: Effect[] }
   | { op: 'mayPayEnergy'; amount: Value; then?: Effect[] }
   | { op: 'doublePlayerCounters' }
@@ -1065,6 +1115,13 @@ export interface TokenSpec {
   legendary?: boolean;
   /** Apply haste to each token created from this spec until the current end step. */
   grantHasteUntilEot?: boolean;
+  /**
+   * A token copy's copied mana cost (CR 707.2), so its mana value is the original's. Ordinary
+   * tokens have none and a mana value of 0.
+   */
+  manaCost?: ParsedManaCost | null;
+  /** The copied mana cost as printed, so the board shows the copy's cost too. */
+  manaCostText?: ManaCostString | null;
 }
 
 /**
@@ -1160,6 +1217,18 @@ export type TriggerHead =
        * The count reaches the effects as the `triggerCount` `Value`.
        */
       aggregate?: boolean | 'byEventPlayer';
+      /**
+       * "When this land enters **untapped**" (Mystic Sanctuary) — part of the trigger event, read
+       * once as the permanent enters. Not an intervening-if (CR 603.4): tapping it in response
+       * does not remove the ability.
+       */
+      entersUntapped?: true;
+      /**
+       * "Whenever ~ attacks, destroy target artifact or enchantment **defending player** controls"
+       * (Kogla) — for an `attacks` trigger, `eventPlayer` is the player the creature is attacking
+       * instead of the attacker's controller.
+       */
+      defendingPlayerIsEventPlayer?: true;
     }
   /**
    * "Whenever you cast a Dragon spell" — the subject is a spell on the stack, so it is matched

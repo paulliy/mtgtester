@@ -273,13 +273,52 @@
     "fb220f46-f8b8-4804-baa4-e7d50b4871f7": {
       "name": "Aether Channeler",
       "oracleSha256": "340f9c527f82807166ad11f5929dc8ddc727045317a5039a8bdaa6848d967ec1",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "When this creature enters, choose one —\n• Create a 1/1 white Bird creature token with flying.\n• Return another target nonland permanent to its owner's hand.\n• Draw a card.",
-          "implementation": ["explicitly unsupported; bounce mode is untargeted returnOneToHand"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "id": "aether-channeler-enters-modes",
+          "oracleText": "When this creature enters, choose one —",
+          "implementation": [
+            "enters trigger on self; modal, one mode, chosen as the trigger is put on the stack (CR 700.2a)",
+            "a mode whose target cannot be chosen is not offered; targetless modes declare targetSlots: []"
+          ],
+          "engineTestIds": [
+            "aether-channeler-pinned-oracle-supported",
+            "aether-channeler-bounce-needs-another"
+          ],
+          "viewerScenarioIds": [
+            "aether-channeler-viewer-bounce-another",
+            "aether-channeler-viewer-bird",
+            "aether-channeler-viewer-draw"
+          ]
+        },
+        {
+          "id": "aether-channeler-bird",
+          "oracleText": "Create a 1/1 white Bird creature token with flying.",
+          "implementation": ["createToken BIRD_1_1_FLYING (1/1 white Bird, flying)"],
+          "engineTestIds": ["aether-channeler-bird"],
+          "viewerScenarioIds": ["aether-channeler-viewer-bird"]
+        },
+        {
+          "id": "aether-channeler-bounce",
+          "oracleText": "Return another target nonland permanent to its owner's hand.",
+          "implementation": [
+            "target permanent: nonland and OTHER; target computation now receives the trigger source's card id, so 'another' excludes the Channeler (the same fix applies to every 'another target' trigger and battlefield activation)",
+            "returnToHand(target 0) to its owner's hand"
+          ],
+          "engineTestIds": [
+            "aether-channeler-bounce-another",
+            "aether-channeler-bounce-needs-another",
+            "aether-channeler-another-excludes-source-on-activations"
+          ],
+          "viewerScenarioIds": ["aether-channeler-viewer-bounce-another"]
+        },
+        {
+          "id": "aether-channeler-draw",
+          "oracleText": "Draw a card.",
+          "implementation": ["draw 1"],
+          "engineTestIds": ["aether-channeler-draw"],
+          "viewerScenarioIds": ["aether-channeler-viewer-draw"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1571,13 +1610,41 @@
     "b3d81980-76f2-44e2-b1c9-01e30c726312": {
       "name": "Loran of the Third Path",
       "oracleSha256": "1113e09d5ae37057a26a4ed71a643206eb4ca8bb572b7116b0107ff2ebdd3454",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "loran-of-the-third-path-vigilance",
+          "oracleText": "Vigilance",
+          "implementation": ["keyword vigilance (interpreted)"],
+          "engineTestIds": ["loran-of-the-third-path-pinned-oracle-supported"],
+          "viewerScenarioIds": ["loran-of-the-third-path-viewer-destroy-up-to-one"]
+        },
+        {
+          "id": "loran-of-the-third-path-destroy-up-to-one",
           "oracleText": "When Loran enters, destroy up to one target artifact or enchantment.",
-          "implementation": ["explicitly unsupported; required target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self with a 0..1 count slot: permanent that is an artifact or an enchantment, any controller",
+            "destroyEachChosen(slot 0): honors indestructible; choosing none or having none to choose destroys nothing"
+          ],
+          "engineTestIds": [
+            "loran-of-the-third-path-destroys-chosen",
+            "loran-of-the-third-path-zero-targets",
+            "loran-of-the-third-path-filter-and-indestructible"
+          ],
+          "viewerScenarioIds": ["loran-of-the-third-path-viewer-destroy-up-to-one"]
+        },
+        {
+          "id": "loran-of-the-third-path-tap-draw",
+          "oracleText": "{T}: You and target opponent each draw a card.",
+          "implementation": [
+            "activated ability, cost {T} (needs an untapped, non-summoning-sick Loran)",
+            "target opponent; drawTargetAndController: the target and you each draw one card"
+          ],
+          "engineTestIds": [
+            "loran-of-the-third-path-tap-draw",
+            "loran-of-the-third-path-draw-apnap"
+          ],
+          "viewerScenarioIds": ["loran-of-the-third-path-viewer-tap-draw"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1669,13 +1736,27 @@
     "d2d9ecea-7925-420e-98b9-2f87f41f387c": {
       "name": "Land Tax",
       "oracleSha256": "4b365fab95d5ae332e404759f054d57169911d769d44ef0cbf6890e83ac0d4a7",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "land-tax-upkeep-search",
           "oracleText": "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.",
-          "implementation": ["explicitly unsupported; mandatory search omits reveal"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "upkeep trigger (player=you) with intervening-if opponentControlsMore(Land), compared per opponent and rechecked on resolution (CR 603.4)",
+            "optional: yes/no on resolution",
+            "searchLibrary(filter=Basic Land, destination=hand, count=3, allowFailToFind=true, reveal=true)",
+            "shuffle"
+          ],
+          "engineTestIds": [
+            "land-tax-pinned-oracle-supported",
+            "land-tax-search-reveal-three",
+            "land-tax-per-opponent-comparison",
+            "land-tax-rechecked-on-resolution",
+            "land-tax-decline",
+            "land-tax-only-your-upkeep",
+            "land-tax-fewer-basics"
+          ],
+          "viewerScenarioIds": ["land-tax-viewer-upkeep-reveal-search"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1788,13 +1869,30 @@
     "b3ff8da4-f2cc-41c3-8950-9cc531854b78": {
       "name": "Plasmancer",
       "oracleSha256": "0aedfcf7611280dfaf130e91c553dbc2a0bce3d94f087201255ccd6db34ea22e",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "plasmancer-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["plasmancer-pinned-oracle-supported"],
+          "viewerScenarioIds": ["plasmancer-viewer-reveal-swamp"]
+        },
+        {
+          "id": "plasmancer-enters-reveal-swamp",
           "oracleText": "When this creature enters, search your library for a basic Swamp card, reveal it, put it into your hand, then shuffle.",
-          "implementation": ["explicitly unsupported; Swamp search omits reveal"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self; ability word 'Dynastic Advisor' is flavor",
+            "searchLibrary filter Basic supertype + Swamp subtype, destination hand, reveal: true (CR 701.16a public searchFound)",
+            "may find nothing (CR 701.19c); shuffle always follows"
+          ],
+          "engineTestIds": [
+            "plasmancer-cast-reveals-swamp-to-hand",
+            "plasmancer-basic-swamp-only",
+            "plasmancer-find-nothing",
+            "plasmancer-search-hides-rest-of-library"
+          ],
+          "viewerScenarioIds": ["plasmancer-viewer-reveal-swamp"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1832,13 +1930,43 @@
     "349ea6c7-6b3e-417f-b082-b712e2b1635b": {
       "name": "Forum of Amity",
       "oracleSha256": "b49800b6e3d748f53ad05c73cbf239e4c57e16fac1e8288c5fdf8d1f36b384ee",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "forum-of-amity-enters-tapped",
+          "oracleText": "This land enters tapped.",
+          "implementation": ["entersTapped (interpreted)"],
+          "engineTestIds": [
+            "forum-of-amity-pinned-oracle-supported",
+            "forum-of-amity-enters-tapped"
+          ],
+          "viewerScenarioIds": ["forum-of-amity-viewer-surveil"]
+        },
+        {
+          "id": "forum-of-amity-mana",
+          "oracleText": "{T}: Add {W} or {B}.",
+          "implementation": ["manaAbilities units [[W, B]] (interpreted)"],
+          "engineTestIds": [
+            "forum-of-amity-pinned-oracle-supported",
+            "forum-of-amity-surveil-to-graveyard"
+          ],
+          "viewerScenarioIds": ["forum-of-amity-viewer-surveil"]
+        },
+        {
+          "id": "forum-of-amity-surveil-activation",
           "oracleText": "{2}{W}{B}, {T}: Surveil 1.",
-          "implementation": ["explicitly unsupported; surveil claimed without implementation"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "activated ability costs: mana {2}{W}{B} + tap (interpreted)",
+            "surveil(count=1) via the shared CR 701 surveil executor"
+          ],
+          "engineTestIds": [
+            "forum-of-amity-surveil-to-graveyard",
+            "forum-of-amity-surveil-keep-on-top",
+            "forum-of-amity-activation-costs",
+            "forum-of-amity-surveil-privacy",
+            "forum-of-amity-empty-library"
+          ],
+          "viewerScenarioIds": ["forum-of-amity-viewer-surveil"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1862,13 +1990,36 @@
     "aef874fa-93c0-4f86-8b0d-dc24ec51467d": {
       "name": "Beacon of Unrest",
       "oracleSha256": "e8e9347132f2e3a9e1529d4ac633e47efaa45a78780e6efb21226d155a7c58d4",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "beacon-of-unrest-reanimate",
+          "oracleText": "Put target artifact or creature card from a graveyard onto the battlefield under your control.",
+          "implementation": [
+            "target cardInGraveyard(filter=Artifact or Creature, graveyardOwnerScope=any)",
+            "graveyardToBattlefield(target 0) under the caster's control"
+          ],
+          "engineTestIds": [
+            "beacon-of-unrest-pinned-oracle-supported",
+            "beacon-of-unrest-reanimate-opponent-creature",
+            "beacon-of-unrest-target-filter",
+            "beacon-of-unrest-no-target-not-castable",
+            "beacon-of-unrest-fizzle-to-graveyard"
+          ],
+          "viewerScenarioIds": ["beacon-of-unrest-viewer-reanimate-and-shuffle"]
+        },
+        {
+          "id": "beacon-of-unrest-shuffle-self",
           "oracleText": "Shuffle Beacon of Unrest into its owner's library.",
-          "implementation": ["explicitly unsupported; shuffleLibrary does not return this spell"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "resolvingSpellShuffleIntoLibrary: the resolving card moves from the stack to its owner's library, which is then shuffled; a fizzled spell goes to the graveyard instead (CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "beacon-of-unrest-shuffles-itself",
+            "beacon-of-unrest-owner-library",
+            "beacon-of-unrest-fizzle-to-graveyard"
+          ],
+          "viewerScenarioIds": ["beacon-of-unrest-viewer-reanimate-and-shuffle"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1876,15 +2027,47 @@
     "61849685-b407-4ed0-aafc-ec3a003200b9": {
       "name": "Canoptek Wraith",
       "oracleSha256": "04d5efb7388c9a8185ee2000da27e3c1fe20e8da9a1061abff8f431729d2e4b2",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+          "id": "canoptek-wraith-unblockable",
+          "oracleText": "Wraith Form — This creature can't be blocked.",
           "implementation": [
-            "explicitly unsupported; any two basics instead of same name as chosen land"
+            "static layer 6 setCantBeBlocked on self (authored because an executable override disables generic ability-label stripping)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "canoptek-wraith-pinned-oracle-supported",
+            "canoptek-wraith-cant-be-blocked"
+          ],
+          "viewerScenarioIds": ["canoptek-wraith-viewer-scout-same-name-search"]
+        },
+        {
+          "id": "canoptek-wraith-scout-search",
+          "oracleText": "Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+          "implementation": [
+            "dealsCombatDamageToPlayer trigger on self",
+            "mayPayManaAndSacrificeSource({3}): offered only while the Wraith is on the battlefield and {3} is payable",
+            "searchBasicsNamedLikeChosenLand(count=2, battlefield tapped): untargeted land choice, then basics with that exact name, find-nothing allowed",
+            "shuffle"
+          ],
+          "engineTestIds": [
+            "canoptek-wraith-same-name-search",
+            "canoptek-wraith-up-to-two",
+            "canoptek-wraith-name-not-type",
+            "canoptek-wraith-nonbasic-choice-finds-nothing",
+            "canoptek-wraith-decline",
+            "canoptek-wraith-unpayable",
+            "canoptek-wraith-blinked-in-response",
+            "canoptek-wraith-reserved-from-mana-sacrifice",
+            "canoptek-wraith-altar-sacrifices-another",
+            "canoptek-wraith-altars-share-one-creature",
+            "canoptek-wraith-altars-two-creatures",
+            "canoptek-wraith-altar-and-mana-creature",
+            "canoptek-wraith-tower-and-altar",
+            "canoptek-wraith-altar-sacrifices-unused-spawn",
+            "canoptek-wraith-two-altars-either-order"
+          ],
+          "viewerScenarioIds": ["canoptek-wraith-viewer-scout-same-name-search"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2100,13 +2283,38 @@
     "45866598-4ee4-46b6-ade2-ffcdbe98e58f": {
       "name": "Necron Deathmark",
       "oracleSha256": "9ea0d5feb506abd7f1b877e3898f5a1aa655060699a83b69ca1753ef2eb20ae6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "necron-deathmark-flash",
+          "oracleText": "Flash",
+          "implementation": [
+            "keyword flash (interpreted): castable on an opponent's turn or with a spell on the stack; a creature without flash is not"
+          ],
+          "engineTestIds": [
+            "necron-deathmark-pinned-oracle-supported",
+            "necron-deathmark-flash-opponents-turn"
+          ],
+          "viewerScenarioIds": ["necron-deathmark-viewer-destroy-up-to-one-and-mill"]
+        },
+        {
+          "id": "necron-deathmark-destroy-and-mill",
           "oracleText": "When this creature enters, destroy up to one target creature and target player mills three cards.",
-          "implementation": ["explicitly unsupported; up-to-one is a required target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self; ability word 'Synaptic Disintegrator' is flavor",
+            "targets: one player, then an up-to-one creature count slot (0..1)",
+            "destroyEachChosen(slot 1) honors indestructible; millTargetPlayer(target 0, 3)",
+            "an illegal creature target does not stop the mill while the player stays legal (CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "necron-deathmark-destroy-and-mill",
+            "necron-deathmark-zero-creatures",
+            "necron-deathmark-no-creatures-at-all",
+            "necron-deathmark-indestructible",
+            "necron-deathmark-illegal-creature-keeps-mill",
+            "necron-deathmark-protection-in-response"
+          ],
+          "viewerScenarioIds": ["necron-deathmark-viewer-destroy-up-to-one-and-mill"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2246,13 +2454,37 @@
     "986f510c-e2ec-423e-a443-51a169939558": {
       "name": "Tomb Fortress",
       "oracleSha256": "65ac436976204aa19616a5462be74a04d8081dd30adaddfeedfe8b3fcaef5329",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Mill four cards, then return a creature card from your graveyard to the battlefield.",
-          "implementation": ["explicitly unsupported; return is a target chosen before mill"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "tomb-fortress-enters-tapped",
+          "oracleText": "This land enters tapped.",
+          "implementation": ["entersTapped (interpreted)"],
+          "engineTestIds": ["tomb-fortress-pinned-oracle-supported", "tomb-fortress-enters-tapped"],
+          "viewerScenarioIds": ["tomb-fortress-viewer-mill-then-return"]
+        },
+        {
+          "id": "tomb-fortress-mana",
+          "oracleText": "{T}: Add {B}.",
+          "implementation": ["mana ability {T}: add {B} (interpreted)"],
+          "engineTestIds": ["tomb-fortress-pinned-oracle-supported"],
+          "viewerScenarioIds": ["tomb-fortress-viewer-mill-then-return"]
+        },
+        {
+          "id": "tomb-fortress-mill-then-return",
+          "oracleText": "{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery.",
+          "implementation": [
+            "activated ability, sorcery timing; costs {2}{B}{B}{B}, tap, exile this land",
+            "mill 4 (controller), then returnOneFromYourGraveyardToBattlefield(Creature): no target; the card is chosen on resolution from the creature cards then in your graveyard, including ones just milled",
+            "mandatory when any creature card is there; nothing happens otherwise"
+          ],
+          "engineTestIds": [
+            "tomb-fortress-returns-milled-creature",
+            "tomb-fortress-choose-after-mill",
+            "tomb-fortress-no-creature",
+            "tomb-fortress-activation-limits"
+          ],
+          "viewerScenarioIds": ["tomb-fortress-viewer-mill-then-return"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2385,15 +2617,30 @@
     "bcad5b83-5513-4455-a9c9-716281505eaa": {
       "name": "Canoptek Spyder",
       "oracleSha256": "53b215a10a556d1e72d4f977805f0cb972b18a035e0e0e3e8d4a9e928b9c5e20",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "canoptek-spyder-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["canoptek-spyder-pinned-oracle-supported"],
+          "viewerScenarioIds": ["canoptek-spyder-viewer-vehicle-draw"]
+        },
+        {
+          "id": "canoptek-spyder-artifact-creature-or-vehicle-draw",
           "oracleText": "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.",
           "implementation": [
-            "explicitly unsupported; Vehicle selected as a type rather than a subtype"
+            "enters trigger on permanent matching other + yours + nontoken + (Artifact and Creature, or subtype Vehicle)",
+            "draw(1)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "canoptek-spyder-nontoken-artifact-creature-draws",
+            "canoptek-spyder-vehicle-draws",
+            "canoptek-spyder-tokens-do-not-draw",
+            "canoptek-spyder-filter-negatives",
+            "canoptek-spyder-two-spyders"
+          ],
+          "viewerScenarioIds": ["canoptek-spyder-viewer-vehicle-draw"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2443,13 +2690,25 @@
     "b337c241-f2c4-48e3-a303-371b172fcd18": {
       "name": "Attune with Aether",
       "oracleSha256": "e1dc515b653e7e3f91dda25d2ed30a27208e28a623ab2be3604d643119e57c94",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} (two energy counters).",
-          "implementation": ["explicitly unsupported; search omits reveal"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "attune-with-aether-search-reveal-energy",
+          "oracleText": "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E}",
+          "implementation": [
+            "searchLibrary(filter=Basic Land, destination=hand, allowFailToFind=true, reveal=true) — searchFound carries revealed=true, so every view shows the card (CR 701.16a)",
+            "shuffle",
+            "gainEnergy(2)"
+          ],
+          "engineTestIds": [
+            "attune-with-aether-pinned-oracle-supported",
+            "attune-with-aether-reveal-to-hand",
+            "attune-with-aether-reveal-is-public",
+            "attune-with-aether-find-nothing",
+            "attune-with-aether-basic-only",
+            "attune-with-aether-unrevealed-search-stays-private"
+          ],
+          "viewerScenarioIds": ["attune-with-aether-viewer-reveal-to-hand"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2503,15 +2762,27 @@
     "cd1eda60-53e4-44d0-9b2c-7a57395e291f": {
       "name": "Conjurer's Closet",
       "oracleSha256": "d80cdb0f2c13939c9ac36f2137931ba2cd340fb6e524f8906c038be6c7818b2c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "conjurers-closet-end-step-blink",
           "oracleText": "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control.",
           "implementation": [
-            "explicitly unsupported; untargeted blink among creatures you control"
+            "endStep trigger (player=you)",
+            "optional: yes/no decided on resolution (CR 603.5)",
+            "target creature you control, chosen as the trigger is put on the stack",
+            "blinkTarget: exile, then return the same card under your control as a new object; a token does not return"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "conjurers-closet-pinned-oracle-supported",
+            "conjurers-closet-blink-resets-and-reenters",
+            "conjurers-closet-chooses-among-own-creatures",
+            "conjurers-closet-decline",
+            "conjurers-closet-no-target-or-other-turn",
+            "conjurers-closet-token-does-not-return",
+            "conjurers-closet-illegal-target-fizzles"
+          ],
+          "viewerScenarioIds": ["conjurers-closet-viewer-end-step-blink"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2563,13 +2834,30 @@
     "8ba2a7ad-a09b-4f52-9c76-c70510dc4feb": {
       "name": "Vastwood Surge",
       "oracleSha256": "5922182fae289ab48ae49f025ac55977e4bf45975284d4d5b0663666de3fd5f5",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "vastwood-surge-kicker",
+          "oracleText": "Kicker {4}",
+          "implementation": [
+            "optionalAdditionalCost kicker {4}: a separate kicked cast option, offered only when payable"
+          ],
+          "engineTestIds": ["vastwood-surge-pinned-oracle-supported", "vastwood-surge-kicker-cost"],
+          "viewerScenarioIds": ["vastwood-surge-viewer-kicked"]
+        },
+        {
+          "id": "vastwood-surge-search-and-counters",
           "oracleText": "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If this spell was kicked, put two +1/+1 counters on each creature you control.",
-          "implementation": ["explicitly unsupported; search omits reveal"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "searchLibrary basic land x2 (may stop early or find nothing), onto the battlefield tapped, then shuffle; no reveal (the Oracle text has none, so the old containment reason was mistaken)",
+            "putCountersEach creatures you control, +1/+1 x (2 x kicker count), read from the resolving spell: zero when unkicked"
+          ],
+          "engineTestIds": [
+            "vastwood-surge-unkicked",
+            "vastwood-surge-kicked",
+            "vastwood-surge-basic-only-up-to-two"
+          ],
+          "viewerScenarioIds": ["vastwood-surge-viewer-kicked"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2591,15 +2879,55 @@
     "85aa53e8-f062-4d02-bc69-1413f7f0dcf1": {
       "name": "Kairi, the Swirling Sky",
       "oracleSha256": "c157c1c01986c4c86651ae7c3cb70dfd09daf80ea13f016e3b0b1a351a020bcf",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "kairi-the-swirling-sky-keywords",
+          "oracleText": "Flying, ward {3}",
+          "implementation": ["keyword flying and ward {3} (interpreted)"],
+          "engineTestIds": ["kairi-the-swirling-sky-pinned-oracle-supported"],
+          "viewerScenarioIds": ["kairi-viewer-bounce-total-six"]
+        },
+        {
+          "id": "kairi-the-swirling-sky-dies-modes",
+          "oracleText": "When Kairi dies, choose one —",
+          "implementation": [
+            "dies trigger on self; modal, exactly one mode, chosen as the trigger is put on the stack (CR 700.2a); the bounce mode's target slot is active only when that mode is chosen"
+          ],
+          "engineTestIds": [
+            "kairi-the-swirling-sky-pinned-oracle-supported",
+            "kairi-the-swirling-sky-bounce-total-six",
+            "kairi-the-swirling-sky-mill-and-return"
+          ],
+          "viewerScenarioIds": ["kairi-viewer-bounce-total-six", "kairi-viewer-mill-and-return"]
+        },
+        {
+          "id": "kairi-the-swirling-sky-bounce",
           "oracleText": "Return any number of target nonland permanents with total mana value 6 or less to their owners' hands.",
           "implementation": [
-            "explicitly unsupported; untargeted single bounce with no mana-value cap"
+            "count slot 0..any of nonland permanents with totalManaValueAtMost 6: each further target must fit what the earlier ones left (tokens have mana value 0)",
+            "returnToHandEachChosen(slot 0) to owners' hands; choosing none is legal"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "kairi-the-swirling-sky-bounce-total-six",
+            "kairi-the-swirling-sky-budget-and-filter",
+            "kairi-the-swirling-sky-bounce-zero",
+            "kairi-the-swirling-sky-copy-token-mana-value",
+            "kairi-the-swirling-sky-copied-back-face-mana-value-zero",
+            "kairi-the-swirling-sky-face-down-mana-value-zero",
+            "kairi-the-swirling-sky-budget-rechecked-on-resolution"
+          ],
+          "viewerScenarioIds": ["kairi-viewer-bounce-total-six"]
+        },
+        {
+          "id": "kairi-the-swirling-sky-mill",
+          "oracleText": "Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.",
+          "implementation": [
+            "millAndReturnSpells: mill six from the top (fewer if the library is shorter), emitting a mill event per card",
+            "then up to two choices among instant/sorcery cards in your graveyard (including ones just milled), each may stop early; no targets"
+          ],
+          "engineTestIds": ["kairi-the-swirling-sky-mill-and-return"],
+          "viewerScenarioIds": ["kairi-viewer-mill-and-return"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2607,13 +2935,46 @@
     "e9bc324e-c200-45ef-8b9b-52a61d0f7374": {
       "name": "Hunting Wilds",
       "oracleSha256": "b673b9cfa9797a896494a8d2751fe9cce08e1787a1e866d6b8b23ce3b3ba5804",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "hunting-wilds-kicker",
+          "oracleText": "Kicker {3}{G}",
+          "implementation": [
+            "optionalAdditionalCost kicker {3}{G}: a separate kicked cast option, offered only when the extra cost is payable"
+          ],
+          "engineTestIds": ["hunting-wilds-pinned-oracle-supported", "hunting-wilds-kicker-cost"],
+          "viewerScenarioIds": ["hunting-wilds-viewer-kicked"]
+        },
+        {
+          "id": "hunting-wilds-search",
           "oracleText": "Search your library for up to two Forest cards, put them onto the battlefield tapped, then shuffle.",
-          "implementation": ["explicitly unsupported; search omits reveal"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "huntingWilds op: up to two choices among Forest-subtype cards (any Forest card, nonbasic included), each may find nothing; onto the battlefield tapped; then shuffle",
+            "no reveal: the Oracle text has none (the old containment reason was mistaken)"
+          ],
+          "engineTestIds": [
+            "hunting-wilds-unkicked",
+            "hunting-wilds-forest-cards-only-this-way",
+            "hunting-wilds-forests-enter-together"
+          ],
+          "viewerScenarioIds": ["hunting-wilds-viewer-kicked"]
+        },
+        {
+          "id": "hunting-wilds-kicked-animate",
+          "oracleText": "If this spell was kicked, untap all Forests put onto the battlefield this way. They become 3/3 green creatures with haste that are still lands.",
+          "implementation": [
+            "kicked check reads the resolving spell's optional-cost counts (the spell has left the stack by then)",
+            "untaps only the Forests found this way; a permanent-duration becomeCreature effect: 3/3, green, haste, types kept"
+          ],
+          "engineTestIds": [
+            "hunting-wilds-kicked",
+            "hunting-wilds-forest-cards-only-this-way",
+            "hunting-wilds-animation-ends-on-zone-change",
+            "hunting-wilds-animated-forest-dies-as-creature",
+            "hunting-wilds-effects-dropped-after-last-forest-leaves"
+          ],
+          "viewerScenarioIds": ["hunting-wilds-viewer-kicked"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2621,13 +2982,24 @@
     "ec6d52f9-1c8f-48da-951c-be8d7813c7be": {
       "name": "Harvest Season",
       "oracleSha256": "3f013020bdf1351d15c88eff85e1030be7f07537aff30256a911ba95125b7c9f",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "harvest-season-search-x-tapped-creatures",
           "oracleText": "Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.",
-          "implementation": ["explicitly unsupported; X counts all creatures you control"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "searchLibrary(filter=Basic Land, destination=battlefield tapped, count=countTappedPermanents(Creature, you), allowFailToFind=true)",
+            "countTappedPermanents is evaluated once as the spell resolves",
+            "shuffle"
+          ],
+          "engineTestIds": [
+            "harvest-season-pinned-oracle-supported",
+            "harvest-season-x-is-tapped-creatures",
+            "harvest-season-zero-tapped",
+            "harvest-season-up-to",
+            "harvest-season-tapped-at-resolution"
+          ],
+          "viewerScenarioIds": ["harvest-season-viewer-tapped-creature-count"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2651,13 +3023,40 @@
     "aeec8e85-6571-4da6-8a48-f5d3985ca10b": {
       "name": "Sylvan Reclamation",
       "oracleSha256": "5682177705c6c6ef5b2dccfc5926514a68168bac41623daea143bf738b440274",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "sylvan-reclamation-exile-up-to-two",
           "oracleText": "Exile up to two target artifacts and/or enchantments.",
-          "implementation": ["explicitly unsupported; up-to-two requires at least one target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "spell target slot: permanent that is an artifact or an enchantment, count 0..2, chosen one at a time with 'Choose no more targets' always available",
+            "exileEachChosen(slot 0): each still-legal chosen target is exiled; a target that left does not stop the other (CR 608.2b)",
+            "castable with zero targets chosen or none available"
+          ],
+          "engineTestIds": [
+            "sylvan-reclamation-pinned-oracle-supported",
+            "sylvan-reclamation-exiles-two",
+            "sylvan-reclamation-at-most-two",
+            "sylvan-reclamation-zero-targets",
+            "sylvan-reclamation-target-filter",
+            "sylvan-reclamation-one-target-left",
+            "sylvan-reclamation-legality-decided-first"
+          ],
+          "viewerScenarioIds": ["sylvan-reclamation-viewer-exile-up-to-two"]
+        },
+        {
+          "id": "sylvan-reclamation-basic-landcycling",
+          "oracleText": "Basic landcycling {2}",
+          "implementation": [
+            "interpreted typecycling: {2} plus discard this card from hand, any time you could cast an instant",
+            "searchLibrary basic land to hand with reveal (CR 702.29a), then shuffle"
+          ],
+          "engineTestIds": [
+            "sylvan-reclamation-pinned-oracle-supported",
+            "sylvan-reclamation-basic-landcycling-reveals",
+            "sylvan-reclamation-landcycling-may-find-nothing"
+          ],
+          "viewerScenarioIds": ["sylvan-reclamation-viewer-basic-landcycling"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2735,13 +3134,36 @@
     "c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7": {
       "name": "Mordant Dragon",
       "oracleSha256": "5f4a39ae0545bf5d50bac488bb58ac3101bb6ac10eeb19f289e2159a39d40552",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "mordant-dragon-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["mordant-dragon-pinned-oracle-supported"],
+          "viewerScenarioIds": ["mordant-dragon-viewer-combat-damage-redirect"]
+        },
+        {
+          "id": "mordant-dragon-combat-damage-rider",
           "oracleText": "Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls.",
-          "implementation": ["explicitly unsupported; optional rider is a required target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "dealsCombatDamageToPlayer trigger on self; eventPlayer is the damaged player",
+            "target creature controlled by eventPlayer, chosen as the trigger is put on the stack (none: no trigger, CR 603.3d)",
+            "optional: yes/no on resolution",
+            "dealDamage(target 0, amount=damageDealt) with the Dragon as the source"
+          ],
+          "engineTestIds": [
+            "mordant-dragon-redirects-that-much",
+            "mordant-dragon-amount-is-damage-dealt",
+            "mordant-dragon-decline",
+            "mordant-dragon-only-that-players-creatures",
+            "mordant-dragon-no-creature-no-trigger",
+            "mordant-dragon-last-known-deathtouch",
+            "mordant-dragon-lost-deathtouch-before-leaving",
+            "mordant-dragon-dies-before-stack",
+            "mordant-dragon-dies-before-stack-keeps-colors"
+          ],
+          "viewerScenarioIds": ["mordant-dragon-viewer-combat-damage-redirect"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2781,13 +3203,49 @@
     "777b8ec4-a783-4297-96b7-4f200d0eb734": {
       "name": "Return to Nature",
       "oracleSha256": "fabfad3d3c71353543dc51eba22fda33136e020c811fd4d553b2dcace2fa28a0",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Choose one —\n• Destroy target artifact.\n• Destroy target enchantment.\n• Exile target card from a graveyard.",
-          "implementation": ["explicitly unsupported; choose-one still requires every mode target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "return-to-nature-choose-one",
+          "oracleText": "Choose one —",
+          "implementation": [
+            "modal spell, exactly one mode chosen at cast time; each mode announces only its own target (targetSlots), so a mode without a legal target is not offered and the spell is castable when any mode is"
+          ],
+          "engineTestIds": [
+            "return-to-nature-pinned-oracle-supported",
+            "return-to-nature-modes-need-only-their-own-target"
+          ],
+          "viewerScenarioIds": [
+            "return-to-nature-viewer-destroy-enchantment",
+            "return-to-nature-viewer-exile-graveyard-card"
+          ]
+        },
+        {
+          "id": "return-to-nature-destroy-artifact",
+          "oracleText": "Destroy target artifact.",
+          "implementation": [
+            "target artifact (slot 0); destroy; an illegal target at resolution fizzles the spell (CR 608.2b)",
+            "viewer evidence: the destroy-enchantment scenario shows this mode withheld when no artifact exists; the destroy path is shared with the enchantment mode"
+          ],
+          "engineTestIds": [
+            "return-to-nature-destroy-artifact",
+            "return-to-nature-target-gone-fizzles"
+          ],
+          "viewerScenarioIds": ["return-to-nature-viewer-destroy-enchantment"]
+        },
+        {
+          "id": "return-to-nature-destroy-enchantment",
+          "oracleText": "Destroy target enchantment.",
+          "implementation": ["target enchantment (slot 1); destroy"],
+          "engineTestIds": ["return-to-nature-destroy-enchantment"],
+          "viewerScenarioIds": ["return-to-nature-viewer-destroy-enchantment"]
+        },
+        {
+          "id": "return-to-nature-exile-graveyard-card",
+          "oracleText": "Exile target card from a graveyard.",
+          "implementation": ["target cardInGraveyard, any player's graveyard (slot 2); exileCard"],
+          "engineTestIds": ["return-to-nature-exile-graveyard-card"],
+          "viewerScenarioIds": ["return-to-nature-viewer-exile-graveyard-card"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2795,13 +3253,47 @@
     "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f": {
       "name": "Foe-Razer Regent",
       "oracleSha256": "538901867581226afa96f2206428146725bae81b91a1120ce5a42696a415e4ea",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "foe-razer-regent-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["foe-razer-regent-pinned-oracle-supported"],
+          "viewerScenarioIds": ["foe-razer-regent-viewer-fight-and-grow"]
+        },
+        {
+          "id": "foe-razer-regent-optional-fight",
           "oracleText": "When this creature enters, you may have it fight target creature you don't control.",
-          "implementation": ["explicitly unsupported; optional fight still requires a target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self, target creature an opponent controls; with none the trigger is removed (CR 603.3d)",
+            "optional: yes/no on resolution (CR 603.5)",
+            "fight(source, target 0): no damage if either creature is gone (CR 701.12b)"
+          ],
+          "engineTestIds": [
+            "foe-razer-regent-fight-then-counters",
+            "foe-razer-regent-decline",
+            "foe-razer-regent-no-target"
+          ],
+          "viewerScenarioIds": ["foe-razer-regent-viewer-fight-and-grow"]
+        },
+        {
+          "id": "foe-razer-regent-fights-counters",
+          "oracleText": "Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step.",
+          "implementation": [
+            "fights trigger on any creature you control (each fighter queues its own event)",
+            "registers a delayed endStep trigger (expiry onFire, so a fight during the end step waits for the next one) that puts two +1/+1 counters on that creature",
+            "sameObject: the delayed trigger remembers the permanent itself, so a creature that left and returned is a new object and gets nothing (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "foe-razer-regent-fight-then-counters",
+            "foe-razer-regent-any-creature-you-control",
+            "foe-razer-regent-new-object-gets-nothing",
+            "foe-razer-regent-blink-in-response",
+            "foe-razer-regent-fighter-died",
+            "foe-razer-regent-token-fighter-died"
+          ],
+          "viewerScenarioIds": ["foe-razer-regent-viewer-fight-and-grow"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2809,13 +3301,54 @@
     "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1": {
       "name": "Frontier Siege",
       "oracleSha256": "1b195bc9d7e3f03e803eb4ad56d689fbd073b725d5ce8076b9998e0740982641",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
-          "implementation": ["explicitly unsupported; optional fight still requires a target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "frontier-siege-choose-mode",
+          "oracleText": "As this enchantment enters, choose Khans or Dragons.",
+          "implementation": [
+            "entersChoosingOption Khans/Dragons: an as-enters replacement choice stored as chosenOption (not a trigger)"
+          ],
+          "engineTestIds": [
+            "frontier-siege-pinned-oracle-supported",
+            "frontier-siege-khans-mana",
+            "frontier-siege-dragons-fight"
+          ],
+          "viewerScenarioIds": [
+            "frontier-siege-viewer-khans-mana",
+            "frontier-siege-viewer-dragons-fight"
+          ]
+        },
+        {
+          "id": "frontier-siege-khans",
+          "oracleText": "Khans — At the beginning of each of your main phases, add {G}{G}.",
+          "implementation": [
+            "mainPhase trigger, player you, condition chosenOptionIs Khans; addMana {G}{G}",
+            "fires in each of your main phases and never on another player's turn"
+          ],
+          "engineTestIds": [
+            "frontier-siege-khans-mana",
+            "frontier-siege-modes-exclusive",
+            "frontier-siege-khans-after-siege-leaves"
+          ],
+          "viewerScenarioIds": ["frontier-siege-viewer-khans-mana"]
+        },
+        {
+          "id": "frontier-siege-dragons",
+          "oracleText": "Dragons — Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
+          "implementation": [
+            "enters trigger for creatures you control with flying, condition chosenOptionIs Dragons",
+            "target creature an opponent controls (none: no trigger, CR 603.3d); optional on resolution (CR 603.5)",
+            "fight(triggerObject, target 0)"
+          ],
+          "engineTestIds": [
+            "frontier-siege-dragons-fight",
+            "frontier-siege-dragons-decline-and-filters",
+            "frontier-siege-modes-exclusive",
+            "frontier-siege-dragons-after-siege-leaves",
+            "frontier-siege-dragons-blinked-flier"
+          ],
+          "viewerScenarioIds": ["frontier-siege-viewer-dragons-fight"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2851,13 +3384,34 @@
     "761021ce-4559-464e-aa03-85c2fe78e267": {
       "name": "Rishkar, Peema Renegade",
       "oracleSha256": "d0ebd951555eaeb46229fdf0a02a614e3752b215aeafd80d90078ec75008f758",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "rishkar-peema-renegade-enters-counters",
           "oracleText": "When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.",
-          "implementation": ["explicitly unsupported; up-to-two requires at least one target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self with a 0..2 creature count slot (any controller, Rishkar included)",
+            "putCountersEachChosen(slot 0, +1/+1, 1); choosing none is legal"
+          ],
+          "engineTestIds": [
+            "rishkar-peema-renegade-pinned-oracle-supported",
+            "rishkar-peema-renegade-two-counters",
+            "rishkar-peema-renegade-zero-targets"
+          ],
+          "viewerScenarioIds": ["rishkar-viewer-counters-and-mana"]
+        },
+        {
+          "id": "rishkar-peema-renegade-mana-grant",
+          "oracleText": "Each creature you control with a counter on it has \"{T}: Add {G}.\"",
+          "implementation": [
+            "layer 6 addManaAbility {T}: Add {G} to creatures you control with any counter (hasAnyCounter)",
+            "noncreature permanents and opponents' creatures gain nothing; a summoning-sick creature cannot pay {T}"
+          ],
+          "engineTestIds": [
+            "rishkar-peema-renegade-mana-grant",
+            "rishkar-peema-renegade-summoning-sick"
+          ],
+          "viewerScenarioIds": ["rishkar-viewer-counters-and-mana"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2865,15 +3419,34 @@
     "f55334d9-1ec2-4667-bf28-5a0384d6f053": {
       "name": "Thunderfoot Baloth",
       "oracleSha256": "ad245d778eb6fdf24778c3037b47c0b0bb89e80346f64557ce250b39123fb23f",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Lieutenant — As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.",
-          "implementation": [
-            "explicitly unsupported; lieutenant applies to all permanents you control"
+          "id": "thunderfoot-baloth-trample",
+          "oracleText": "Trample",
+          "implementation": ["keyword trample (interpreted)"],
+          "engineTestIds": [
+            "thunderfoot-baloth-pinned-oracle-supported",
+            "thunderfoot-baloth-no-commander"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["thunderfoot-baloth-viewer-lieutenant"]
+        },
+        {
+          "id": "thunderfoot-baloth-lieutenant",
+          "oracleText": "As long as you control your commander, this creature gets +2/+2 and other creatures you control get +2/+2 and have trample.",
+          "implementation": [
+            "ability word 'Lieutenant' is flavor",
+            "three static effects conditioned on controlsYourCommander (your own commander on the battlefield under your control, CR 903.7)",
+            "layer 7d +2/+2 to self; layer 7d +2/+2 and layer 6 trample to other creatures you control (creatures only)"
+          ],
+          "engineTestIds": [
+            "thunderfoot-baloth-lieutenant-active",
+            "thunderfoot-baloth-creatures-only",
+            "thunderfoot-baloth-no-commander",
+            "thunderfoot-baloth-commander-control",
+            "thunderfoot-baloth-cast-and-commander-leaves"
+          ],
+          "viewerScenarioIds": ["thunderfoot-baloth-viewer-lieutenant"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3097,13 +3670,24 @@
     "9b40faad-1b96-4461-89d8-9a207b58e832": {
       "name": "Voice of Many",
       "oracleSha256": "63a689cdc880b92b9c729e38b25e18cdb455d1c284bbd306e20cdb6e8fa787c7",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "voice-of-many-enters-draw",
           "oracleText": "When this creature enters, draw a card for each opponent who controls fewer creatures than you.",
-          "implementation": ["explicitly unsupported; eliminated players still count as opponents"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self",
+            "draw countOpponentsWithFewerCreatures, read on resolution; the Voice itself counts toward your creatures",
+            "only opponents still in the game count (CR 800.4a: opponentsOf excludes eliminated players); an equal count does not count"
+          ],
+          "engineTestIds": [
+            "voice-of-many-pinned-oracle-supported",
+            "voice-of-many-draws-per-opponent-with-fewer",
+            "voice-of-many-no-opponent-fewer",
+            "voice-of-many-ignores-eliminated-players",
+            "voice-of-many-counts-on-resolution"
+          ],
+          "viewerScenarioIds": ["voice-of-many-viewer-draw-per-opponent"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3269,15 +3853,40 @@
     "d8df9813-0376-4d30-8cdc-30451fb67726": {
       "name": "Will of the Mardu",
       "oracleSha256": "282fc2b19d0d9b74ca39e2fdeeaee0e14de5314c02b3dba2cde7f55bfc813e5e",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "will-of-the-mardu-choose",
           "oracleText": "Choose one. If you control a commander as you cast this spell, you may choose both instead.",
           "implementation": [
-            "explicitly unsupported; choose-both requires owning and controlling your commander"
+            "modal spell, one mode; maxChoicesIf controlsACommander raises it to both",
+            "controlsACommander: any player's commander you control counts (a stolen one too); your own commander controlled by someone else does not; read as the spell is cast",
+            "each mode announces only its own target (targetSlots)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "will-of-the-mardu-pinned-oracle-supported",
+            "will-of-the-mardu-choose-both-needs-a-commander"
+          ],
+          "viewerScenarioIds": ["will-of-the-mardu-viewer-choose-both"]
+        },
+        {
+          "id": "will-of-the-mardu-warriors",
+          "oracleText": "Create a number of 1/1 red Warrior creature tokens equal to the number of creatures target player controls.",
+          "implementation": [
+            "target player (slot 0); createToken WARRIOR_1_1_RED x countPermanentsControlledByTarget(Creature)"
+          ],
+          "engineTestIds": ["will-of-the-mardu-warriors", "will-of-the-mardu-both-in-order"],
+          "viewerScenarioIds": ["will-of-the-mardu-viewer-choose-both"]
+        },
+        {
+          "id": "will-of-the-mardu-damage",
+          "oracleText": "Will of the Mardu deals damage to target creature equal to the number of creatures you control.",
+          "implementation": [
+            "target creature (slot 1); dealDamage = creatures you control, counted on resolution",
+            "with both modes, modes resolve in printed order, so the new Warriors count"
+          ],
+          "engineTestIds": ["will-of-the-mardu-damage", "will-of-the-mardu-both-in-order"],
+          "viewerScenarioIds": ["will-of-the-mardu-viewer-choose-both"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3469,6 +4078,187 @@
             "mahadi-not-on-opponent-end-step"
           ],
           "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "17b60106-a4c7-410a-8ac3-ec8e74e29a7c": {
+      "name": "Mystic Sanctuary",
+      "oracleSha256": "e893509bf714c1d47fb25d292a62e3a3c8a39c7d40915c5f97d1fcabea94688e",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "id": "mystic-sanctuary-mana",
+          "oracleText": "({T}: Add {U}.)",
+          "implementation": ["Island subtype: intrinsic {T}: Add {U} (interpreted)"],
+          "engineTestIds": ["mystic-sanctuary-pinned-oracle-supported"],
+          "viewerScenarioIds": ["mystic-sanctuary-viewer-untapped-return"]
+        },
+        {
+          "id": "mystic-sanctuary-enters-tapped-unless",
+          "oracleText": "This land enters tapped unless you control three or more other Islands.",
+          "implementation": [
+            "entersTappedUnless countPermanents(Island subtype, you) >= 3, evaluated as it enters, before it is on the battlefield, so only OTHER Islands count; any Island subtype counts, basic or not",
+            "applies only if it would have the ability on the battlefield (CR 614.12): under Blood Moon it enters untapped"
+          ],
+          "engineTestIds": [
+            "mystic-sanctuary-enters-tapped",
+            "mystic-sanctuary-untapped-returns-spell",
+            "mystic-sanctuary-blood-moon-enters-untapped"
+          ],
+          "viewerScenarioIds": ["mystic-sanctuary-viewer-untapped-return"]
+        },
+        {
+          "id": "mystic-sanctuary-untapped-trigger",
+          "oracleText": "When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library.",
+          "implementation": [
+            "enters trigger with the new entersUntapped event qualifier, read once as it enters (not an intervening-if: tapping it in response does not cancel)",
+            "target instant or sorcery card in your own graveyard (none: no trigger); optional on resolution; graveyardToLibraryTop"
+          ],
+          "engineTestIds": [
+            "mystic-sanctuary-untapped-returns-spell",
+            "mystic-sanctuary-decline",
+            "mystic-sanctuary-tapped-in-response",
+            "mystic-sanctuary-targets-own-instants-and-sorceries",
+            "mystic-sanctuary-enters-tapped"
+          ],
+          "viewerScenarioIds": ["mystic-sanctuary-viewer-untapped-return"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bd002797-a545-4bee-88bf-b878436e7cca": {
+      "name": "Brokers Hideout",
+      "oracleSha256": "9bb13d41853e16160f5e38c4c1470a7b91403284e0e1306f001227d86a7435d5",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "id": "brokers-hideout-sacrifice-search",
+          "oracleText": "When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+          "implementation": [
+            "enters trigger on self: sacrificeSourceThenReflexive sacrifices it (only if it is still yours on the battlefield)",
+            "'When you do' is a reflexive trigger (CR 603.12): queued as its own pending trigger, so it uses the stack after a priority window; nothing triggers if it was not sacrificed",
+            "reflexive ability: search basic Forest/Plains/Island onto the battlefield tapped (may find nothing), then shuffle and gain 1 life"
+          ],
+          "engineTestIds": [
+            "brokers-hideout-pinned-oracle-supported",
+            "brokers-hideout-reflexive-search",
+            "brokers-hideout-basic-forest-plains-island-only",
+            "brokers-hideout-find-nothing",
+            "brokers-hideout-not-sacrificed-no-search",
+            "brokers-hideout-blinked-in-response"
+          ],
+          "viewerScenarioIds": ["brokers-hideout-viewer-sacrifice-and-search"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8ea10a5a-b698-4f7d-a9c8-520f8d835f34": {
+      "name": "Sweet-Gum Recluse",
+      "oracleSha256": "b7a06140e0022bef19a4a2e2b61c1d72dd7173f61421f1acfe414da5eee7e541",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "id": "sweet-gum-recluse-flash",
+          "oracleText": "Flash",
+          "implementation": [
+            "keyword flash (interpreted): castable on an opponent's turn or with a spell on the stack; a creature without flash is not"
+          ],
+          "engineTestIds": [
+            "sweet-gum-recluse-pinned-oracle-supported",
+            "sweet-gum-recluse-flash-opponents-turn"
+          ],
+          "viewerScenarioIds": ["sweet-gum-recluse-viewer-flash-cascade"]
+        },
+        {
+          "id": "sweet-gum-recluse-cascade",
+          "oracleText": "Cascade",
+          "implementation": [
+            "keyword cascade (interpreted) on the normal cast path: exiles until the first nonland card with mana value less than 6, offers to cast it free, and puts the rest on the bottom; lands and costlier cards are skipped"
+          ],
+          "engineTestIds": [
+            "sweet-gum-recluse-pinned-oracle-supported",
+            "sweet-gum-recluse-cascade-casts-hit",
+            "sweet-gum-recluse-counters-on-new-creatures"
+          ],
+          "viewerScenarioIds": [
+            "sweet-gum-recluse-viewer-flash-cascade",
+            "sweet-gum-recluse-viewer-new-creatures"
+          ]
+        },
+        {
+          "id": "sweet-gum-recluse-reach",
+          "oracleText": "Reach",
+          "implementation": [
+            "keyword reach (interpreted): may block a creature with flying; a creature without reach or flying is never offered that block"
+          ],
+          "engineTestIds": [
+            "sweet-gum-recluse-pinned-oracle-supported",
+            "sweet-gum-recluse-reach-blocks-flier"
+          ],
+          "viewerScenarioIds": ["sweet-gum-recluse-viewer-reach-block"]
+        },
+        {
+          "id": "sweet-gum-recluse-enters-counters",
+          "oracleText": "When this creature enters, put three +1/+1 counters on each of any number of target creatures that entered this turn.",
+          "implementation": [
+            "enters trigger on self; count slot 0..any of creatures that entered this turn (enteredThisTurn), any controller, the Recluse included",
+            "putCountersEachChosen(slot 0, +1/+1, 3); choosing none is legal"
+          ],
+          "engineTestIds": [
+            "sweet-gum-recluse-counters-on-new-creatures",
+            "sweet-gum-recluse-only-this-turn",
+            "sweet-gum-recluse-zero-targets"
+          ],
+          "viewerScenarioIds": ["sweet-gum-recluse-viewer-new-creatures"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8b21062e-97b0-4967-96df-30e8309f4fba": {
+      "name": "Kogla, the Titan Ape",
+      "oracleSha256": "b4db59d3f23bce59cddf085d47b283059f82bea48ef05cd4a0c110961f4f303d",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "id": "kogla-the-titan-ape-enters-fight",
+          "oracleText": "When Kogla enters, it fights up to one target creature you don't control.",
+          "implementation": [
+            "enters trigger on self with a 0..1 count slot: creature an opponent controls",
+            "fightUpToOneChosen(source, slot 0): choosing none means no fight"
+          ],
+          "engineTestIds": [
+            "kogla-the-titan-ape-pinned-oracle-supported",
+            "kogla-the-titan-ape-enters-fight",
+            "kogla-the-titan-ape-up-to-one",
+            "kogla-the-titan-ape-blinked-in-response",
+            "kogla-the-titan-ape-not-a-creature"
+          ],
+          "viewerScenarioIds": ["kogla-viewer-enters-fight"]
+        },
+        {
+          "id": "kogla-the-titan-ape-attack-destroy",
+          "oracleText": "Whenever Kogla attacks, destroy target artifact or enchantment defending player controls.",
+          "implementation": [
+            "attacks trigger on self with the new defendingPlayerIsEventPlayer qualifier: eventPlayer is the player Kogla attacks",
+            "target artifact or enchantment controlled by eventPlayer; destroy"
+          ],
+          "engineTestIds": ["kogla-the-titan-ape-attack-destroys-defenders-permanent"],
+          "viewerScenarioIds": ["kogla-viewer-bounce-and-attack"]
+        },
+        {
+          "id": "kogla-the-titan-ape-human-bounce",
+          "oracleText": "{1}{G}: Return target Human you control to its owner's hand. Kogla gains indestructible until end of turn.",
+          "implementation": [
+            "activated {1}{G}: target permanent you control with the Human subtype; returnToHand",
+            "grantKeywordUntilEot(source, indestructible); if the Human left first the whole ability fizzles (CR 608.2b), so no indestructible"
+          ],
+          "engineTestIds": [
+            "kogla-the-titan-ape-human-bounce",
+            "kogla-the-titan-ape-bounce-fizzles",
+            "kogla-the-titan-ape-bounce-blinked-kogla"
+          ],
+          "viewerScenarioIds": ["kogla-viewer-bounce-and-attack"]
         }
       ],
       "gameplayAiScenarioIds": []

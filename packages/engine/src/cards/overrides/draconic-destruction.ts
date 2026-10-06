@@ -3,7 +3,7 @@
  */
 
 import { constant } from '../value';
-import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost } from '../templates';
+import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost, spell } from '../templates';
 import { defineCard, unsupportedCard } from './index';
 import { allOf, anyOf, not, ofSubtype, ofType, SELF, withKeyword, YOURS } from '../selector';
 
@@ -405,10 +405,48 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     DEMANDING_DRAGON_DEF,
   );
 
-  unsupportedCard(
+  // Coverage PR01: each mode announces only its own target, so the spell is castable when any
+  // one mode has a legal target (CR 700.2a; 601.2c).
+  defineCard(
     '777b8ec4-a783-4297-96b7-4f200d0eb734',
     'Return to Nature',
-    'Choose-one still requires targets for every mode.',
+    [
+      'Choose one —',
+      '• Destroy target artifact.',
+      '• Destroy target enchantment.',
+      '• Exile target card from a graveyard.',
+    ],
+    {
+      spellAbility: spell({
+        targets: [
+          { kind: 'artifact' },
+          { kind: 'enchantment' },
+          { kind: 'cardInGraveyard', graveyardOwnerScope: 'any' },
+        ],
+        effects: [],
+        modes: {
+          minChoices: 1,
+          maxChoices: 1,
+          options: [
+            {
+              description: 'Destroy target artifact',
+              effects: [{ op: 'destroy', target: 0 }],
+              targetSlots: [0],
+            },
+            {
+              description: 'Destroy target enchantment',
+              effects: [{ op: 'destroy', target: 1 }],
+              targetSlots: [1],
+            },
+            {
+              description: 'Exile target card from a graveyard',
+              effects: [{ op: 'exileCard', target: 2 }],
+              targetSlots: [2],
+            },
+          ],
+        },
+      }),
+    },
   );
 
   // Dragonlord's Servant ("Dragon spells you cast cost {1} less to cast.") and Dragonspeaker
@@ -432,10 +470,56 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
   );
 
-  unsupportedCard(
+  // Coverage PR01: the fight is optional on resolution (CR 603.5); with no creature you don't
+  // control there is no target and the trigger is removed (CR 603.3d). The fights trigger
+  // remembers the creature itself, so one that left before the end step gets no counters.
+  defineCard(
     'e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f',
     'Foe-Razer Regent',
-    "Optional fight still requires a target creature you don't control.",
+    [
+      "When this creature enters, you may have it fight target creature you don't control.",
+      'Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          optional: true,
+          targets: [{ kind: 'creature', controller: 'opponent' }],
+          effects: [{ op: 'fight', first: 'source', second: 0 }],
+          description: "You may have it fight target creature you don't control",
+        },
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'fights',
+            subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) },
+          },
+          targets: [],
+          effects: [
+            {
+              op: 'registerDelayedTrigger',
+              when: 'endStep',
+              expiry: 'onFire',
+              target: 'triggerObject',
+              sameObject: true,
+              controller: 'source',
+              ability: {
+                kind: 'triggered',
+                targets: [],
+                effects: [
+                  { op: 'putCounters', target: 'triggerObject', counter: '+1/+1', count: 2 },
+                ],
+                description: 'Put two +1/+1 counters on the creature that fought',
+              },
+            },
+          ],
+          description:
+            'Whenever a creature you control fights, put two +1/+1 counters on it at the next end step',
+        },
+      ],
+    },
   );
 
   unsupportedCard(
@@ -453,10 +537,65 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     { entersTappedUnless: { kind: 'mayRevealCardFromHand', subtypes: ['Mountain', 'Forest'] } },
   );
 
-  unsupportedCard(
+  // Coverage PR01: the mode is chosen as it enters (a replacement, not a trigger). The Dragons
+  // fight is optional on resolution (CR 603.5); with no creature you don't control there is no
+  // target and the trigger is removed (CR 603.3d).
+  defineCard(
     '4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1',
     'Frontier Siege',
-    "The Dragons fight option still requires a target creature you don't control.",
+    [
+      'As this enchantment enters, choose Khans or Dragons.',
+      '• Khans — At the beginning of each of your main phases, add {G}{G}.',
+      "• Dragons — Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
+    ],
+    {
+      entersChoosingOption: {
+        prompt: 'Choose Khans or Dragons',
+        options: [
+          { key: 'Khans', label: 'Khans — add {G}{G} at each of your main phases' },
+          {
+            key: 'Dragons',
+            label: 'Dragons — your flying creatures may fight when they enter',
+          },
+        ],
+      },
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'mainPhase',
+            player: 'you',
+            condition: { kind: 'chosenOptionIs', value: 'Khans' },
+          },
+          targets: [],
+          effects: [
+            {
+              op: 'addMana',
+              amount: constant(2),
+              colors: ['G'],
+              fixedSymbols: ['G', 'G'],
+            },
+          ],
+          description: 'Khans — at the beginning of each of your main phases, add {G}{G}',
+        },
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'permanent',
+              selector: allOf(ofType('Creature'), withKeyword('flying'), YOURS),
+            },
+            condition: { kind: 'chosenOptionIs', value: 'Dragons' },
+          },
+          optional: true,
+          targets: [{ kind: 'creature', controller: 'opponent' }],
+          effects: [{ op: 'fight', first: 'triggerObject', second: 0 }],
+          description:
+            "Dragons — a flying creature you control enters; it may fight target creature you don't control",
+        },
+      ],
+    },
   );
 
   defineCard(
@@ -509,10 +648,28 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     },
   );
 
-  unsupportedCard(
+  // Coverage PR01: the target is a creature the damaged player controls, chosen as the trigger is
+  // put on the stack (no such creature, no trigger: CR 603.3d); "you may" is decided on
+  // resolution, and the Dragon deals the damage.
+  defineCard(
     'c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7',
     'Mordant Dragon',
-    'Optional combat-damage rider is a required target.',
+    [
+      'Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
+          optional: true,
+          targets: [{ kind: 'creature', controller: 'eventPlayer' }],
+          effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'damageDealt' } }],
+          description:
+            'You may have it deal that much damage to target creature that player controls',
+        },
+      ],
+    },
   );
 
   defineCard(

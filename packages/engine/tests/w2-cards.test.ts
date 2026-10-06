@@ -89,11 +89,7 @@ function pod(seed: string): GameContext {
   return ctx;
 }
 
-const contained = new Set<string>([
-  'Hunting Wilds',
-  'Vastwood Surge',
-  'Etali, Primal Conqueror // Etali, Primal Sickness',
-]);
+const contained = new Set<string>(['Etali, Primal Conqueror // Etali, Primal Sickness']);
 
 describe('W2 card coverage', () => {
   it('fully models the frozen Oracle fixtures that are not catalog-contained', () => {
@@ -324,12 +320,11 @@ describe('W2 card coverage', () => {
     expect(ctx.state.stack.at(-1)?.sourceCardId).toBe(spell.cardId);
   });
 
-  it('does not claim a kicked Forest search that omits reveal', () => {
+  it('models Hunting Wilds with kicker and the kicked Forest animation (coverage PR01)', () => {
     const def = definitions.get('Hunting Wilds')!;
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'The Forest search omits revealing the found cards.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.optionalAdditionalCost?.mechanic).toBe('kicker');
+    expect(def.spellAbility?.effects).toEqual([{ op: 'huntingWilds' }]);
   });
 
   it('doubles current power and toughness independently for each creature until cleanup', () => {
@@ -666,12 +661,10 @@ describe('W2 card coverage', () => {
     expect(ctx.state.players[1]!.life).toBe(before - 4);
   });
 
-  it('does not claim a kicked basic-land search that omits reveal', () => {
+  it('models Vastwood Surge with kicker-scaled counters (coverage PR01)', () => {
     const def = definitions.get('Vastwood Surge')!;
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'The basic-land search omits revealing the found cards.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.optionalAdditionalCost?.mechanic).toBe('kicker');
   });
 
   it('creates Verix Bladewing’s legendary Dragon token only from a kicked entry', () => {

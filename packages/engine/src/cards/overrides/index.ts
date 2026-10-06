@@ -63,6 +63,7 @@ import { registerMARCHESA_THE_BLACK_ROSEOverrides } from './marchesa-the-black-r
 import { registerW1RemainingOverrides } from './w1-remaining';
 import { registerW2RemainingOverrides } from './w2-remaining';
 import { registerReviewedFiveOverrides } from './reviewed-five';
+import { registerCoveragePr01Overrides } from './coverage-pr01';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -139,6 +140,7 @@ registerDeck('marchesa-the-black-rose', registerMARCHESA_THE_BLACK_ROSEOverrides
 registerDeck('w1-remaining', registerW1RemainingOverrides);
 registerDeck('w2-remaining', registerW2RemainingOverrides);
 registerDeck('reviewed-five', registerReviewedFiveOverrides);
+registerDeck('coverage-pr01', registerCoveragePr01Overrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {

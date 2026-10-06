@@ -16,7 +16,7 @@ import {
   legalAbilityModeSelections,
   slotIsActive,
 } from '../actions/ability-modes';
-import { computeTargetOptions } from '../actions/legal';
+import { computeTargetOptions, withinTotalManaValue } from '../actions/legal';
 import type { Ability, Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { computeCharacteristics } from '../effects/continuous';
@@ -401,7 +401,12 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   // mode never used, let that target's illegality fizzle a targetless mode, and dropped the
   // whole trigger when only one mode lacked a target.
   // Protection (CR 702.16): a triggered ability can't target what is protected from its source.
-  const sourceColors = sourceColorsOf(ctx, trigger.sourceCardId, trigger.sourceOracleId);
+  const sourceColors = sourceColorsOf(
+    ctx,
+    trigger.sourceCardId,
+    trigger.sourceOracleId,
+    trigger.sourceColors,
+  );
   let ability: Ability = trigger.ability;
   let activeSlots: number[] | undefined;
   let modeLabel: string | undefined;
@@ -557,15 +562,20 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
 
     const picked: ObjectId[] = [];
     for (let k = 0; k < effectiveMax; k++) {
-      const candidates = computeTargetOptions(
+      const candidates = withinTotalManaValue(
         ctx,
         spec,
-        trigger.controllerId,
-        sourceColors,
-        trigger.scope?.eventPlayerId,
-        chosen,
-        trigger.sourceCardId,
-      ).filter((id) => !alreadyChosen.has(id) && !picked.includes(id));
+        picked,
+        computeTargetOptions(
+          ctx,
+          spec,
+          trigger.controllerId,
+          sourceColors,
+          trigger.scope?.eventPlayerId,
+          chosen,
+          trigger.sourceCardId,
+        ).filter((id) => !alreadyChosen.has(id) && !picked.includes(id)),
+      );
       if (candidates.length === 0) break;
       const canStop = picked.length >= count.min;
       const outcome = yield {
@@ -573,7 +583,9 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         player: trigger.controllerId,
         prompt:
           `${trigger.sourceName}: choose ${picked.length > 0 ? 'another' : 'a'} target ` +
-          `(${picked.length}/${effectiveMax} chosen)${canStop ? ', or stop choosing' : ''}.`,
+          // "Any number of" has no upper bound to show.
+          `(${picked.length}${Number.isFinite(effectiveMax) ? `/${effectiveMax}` : ''} chosen)` +
+          `${canStop ? ', or stop choosing' : ''}.`,
         options: [
           ...candidates.map((id) => ({
             type: 'pickTarget',
@@ -653,6 +665,9 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       ? { triggerObjectCardId: trigger.triggerObjectCardId }
       : {}),
     ...(trigger.scope !== undefined ? { triggerScope: trigger.scope } : {}),
+    ...(trigger.sourceDamageKeywords !== undefined
+      ? { sourceDamageKeywords: trigger.sourceDamageKeywords }
+      : {}),
     ...(Object.keys(countTargets).length > 0 ? { countTargets } : {}),
     ...(Object.keys(divisionAmounts).length > 0 ? { divisionAmounts } : {}),
   };

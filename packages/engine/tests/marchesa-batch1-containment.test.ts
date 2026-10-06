@@ -34,7 +34,6 @@ function canonical(value: unknown): string {
 
 const REASONS: Record<string, string> = {
   'Toxic Deluge': 'Pay-X-life additional cost is implemented as loseLife on resolution.',
-  'Aether Channeler': 'Return-another-target bounce is implemented as untargeted returnOneToHand.',
   'Blasphemous Edict':
     'The thirteen-creature {B} alternative cost is claimed without an alternativeCast.',
   'Body Launderer':
@@ -169,7 +168,6 @@ const REASONS: Record<string, string> = {
     'Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.',
   'Deflecting Palm':
     'Source choice and reflection are implemented as unscoped combat-damage prevention.',
-  'Loran of the Third Path': 'Up-to-one destroy is a required target.',
   'Scheming Symmetry':
     'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
   'Kambal, Consul of Allocation':
@@ -180,7 +178,6 @@ const REASONS: Record<string, string> = {
   'Verrak, Warped Sengir': 'Copy-activated-ability when life was paid is unimplemented.',
   'Killian, Decisive Mentor':
     'Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.',
-  'Land Tax': 'The upkeep search is mandatory and omits revealing the found cards.',
   'Promise of Loyalty':
     'Keep-one sacrifice, vow counters, and attack restriction are unimplemented.',
   "Songbirds' Blessing":
@@ -190,15 +187,10 @@ const REASONS: Record<string, string> = {
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
   'Canoptek Tomb Sentinel':
     'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
-  'Forum of Amity': 'Surveil is claimed without a surveil implementation.',
-  Plasmancer: 'The Swamp search omits revealing the found card.',
   Psychomancer:
     'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
   'Anrakyr the Traveller':
     'Artifact-from-hand-or-graveyard life cast is implemented as free casts from hand.',
-  'Beacon of Unrest':
-    "Shuffle this into its owner's library is implemented as shuffleLibrary only.",
-  'Canoptek Wraith': 'Same-name-as-chosen-land search is implemented as any two basics.',
   'Convergence of Dominion':
     'Graveyard activation cost reduction is claimed without a static effect.',
   'Endless Atlas': 'The three-or-more-same-name land restriction is omitted from the draw ability.',
@@ -214,7 +206,6 @@ const REASONS: Record<string, string> = {
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
   'Dread Return': 'Flashback—Sacrifice three creatures is claimed without a flashback alternative.',
   'Illuminor Szeras': 'Sacrifice-another-creature is an effect, not a cost.',
-  'Necron Deathmark': 'Destroy up-to-one is a required target.',
   'Sceptre of Eternal Glory':
     'The three-or-more-same-name land restriction is omitted from the three-mana ability.',
   'Shard of the Void Dragon': 'Exile-from-battlefield is omitted from the artifact-leaves trigger.',
@@ -227,43 +218,31 @@ const REASONS: Record<string, string> = {
   'Shard of the Nightbringer': 'The if-you-cast-it intervening if is omitted.',
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
-  'Tomb Fortress': 'The creature return is a target chosen before milling.',
   'Mask of Memory': 'Equipped-creature combat damage is implemented as any equipped creature.',
   'Sautekh Immortal': 'Enters-with counters is implemented as an enters trigger.',
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
   'Lightning Runner':
     'Untap all creatures you control is implemented as untapEach of all permanents you control.',
   'Aetheric Amplifier': 'Choose-one is implemented as two independent activated abilities.',
-  'Canoptek Spyder':
-    'Vehicle is selected as a type rather than a subtype, so Vehicles do not trigger the draw.',
   'Peema Trailblazer': 'Exhaust is omitted, and the ability requires tapping this creature.',
   'Saheeli, Radiant Creator':
     'The copy is a reflexive trigger after payment; the target is chosen before you decide to pay.',
   'Saheeli, Sublime Artificer': 'A +1 loyalty ability is authored that is not on the card.',
-  'Attune with Aether': 'The basic-land search omits revealing the found card.',
   'Aetherworks Marvel':
     'Look-at-top-six free-cast does not put the rest on the bottom in a random order, and skips that reordering when no spell is castable.',
   'Territorial Aetherkite':
     'The damage is a reflexive trigger after payment, implemented as the same resolution.',
   Duplicant: 'Optional exile is a required target.',
-  "Conjurer's Closet":
-    'Optional exile-and-return is implemented as an untargeted choice among creatures you control.',
   'Soul-Guide Lantern':
     'Opponent-graveyard exile is authored with a free draw instead of a separate {1} draw ability.',
   'Adaptive Omnitool': 'Artifact-from-library is put into hand without revealing.',
   'Bespoke Battlewagon':
     'Crew 4 is dropped when the energy activations replace the parsed activated abilities.',
-  'Vastwood Surge': 'The basic-land search omits revealing the found cards.',
   'Dragon Tempest': 'Dragon-dealt damage is implemented as damage from this enchantment.',
   'Dream Pillager':
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
-  'Kairi, the Swirling Sky':
-    'Return-any-number targeting with total mana value 6 or less is an untargeted single bounce with no mana-value cap.',
-  'Hunting Wilds': 'The Forest search omits revealing the found cards.',
-  'Harvest Season': 'X counts all creatures you control rather than tapped creatures.',
   'Idol of Oblivion':
     'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
-  'Sylvan Reclamation': 'Up-to-two exile requires at least one target.',
   'Flameblast Dragon': 'The damage target is chosen before you decide to pay X.',
   'Thunderbreak Regent':
     'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
@@ -272,19 +251,12 @@ const REASONS: Record<string, string> = {
   'Dragonkin Berserker':
     'Boast cost reduction applies only to this creature, not to Boast abilities you activate.',
   'Atarka Monument': 'The animation does not make it red and green.',
-  'Mordant Dragon': 'Optional combat-damage rider is a required target.',
   'Scourge of Valkas':
     'The entering Dragon is the damage source, implemented as damage from this creature.',
   "Karametra's Favor":
     'The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects.',
-  'Return to Nature': 'Choose-one still requires targets for every mode.',
-  'Foe-Razer Regent': "Optional fight still requires a target creature you don't control.",
-  'Frontier Siege': "The Dragons fight option still requires a target creature you don't control.",
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
-  'Rishkar, Peema Renegade': 'Up-to-two +1/+1 counters require at least one target.',
-  'Thunderfoot Baloth':
-    'Lieutenant +2/+2 and trample apply to all permanents you control, not just creatures.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
   'Aether Hub':
@@ -308,7 +280,6 @@ const REASONS: Record<string, string> = {
   'Thundermaw Hellkite':
     'Tap applies to all opposing fliers, not only creatures dealt that damage.',
   'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
-  'Voice of Many': 'Eliminated players still count as opponents who control fewer creatures.',
   'Champion of Lambholt':
     "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
   'Conclave Tribunal': 'Convoke is stored as a ruleStatic but never offered as a payment.',
@@ -317,8 +288,6 @@ const REASONS: Record<string, string> = {
     "The dies intervening-if checks the battlefield, so it never sees this creature's counters.",
   'Reality Shift':
     'Manifest puts the card face-down but never offers turning it face up for its mana cost.',
-  'Will of the Mardu':
-    'Choose-both requires controlling your own commander, not any commander you control.',
 };
 
 describe('Marchesa catalog audit containment', () => {
@@ -328,6 +297,32 @@ describe('Marchesa catalog audit containment', () => {
     'Myriad Landscape',
     'Smothering Tithe',
     'War Room',
+    // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Return to Nature',
+    'Aether Channeler',
+    'Will of the Mardu',
+    'Kairi, the Swirling Sky',
+    'Frontier Siege',
+    'Vastwood Surge',
+    'Rishkar, Peema Renegade',
+    'Loran of the Third Path',
+    'Hunting Wilds',
+    'Foe-Razer Regent',
+    'Voice of Many',
+    'Tomb Fortress',
+    'Thunderfoot Baloth',
+    'Sylvan Reclamation',
+    'Plasmancer',
+    'Necron Deathmark',
+    'Mordant Dragon',
+    'Land Tax',
+    'Harvest Season',
+    "Conjurer's Closet",
+    'Canoptek Wraith',
+    'Canoptek Spyder',
+    'Beacon of Unrest',
+    'Attune with Aether',
+    'Forum of Amity',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

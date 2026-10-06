@@ -164,8 +164,17 @@ export function queueStepTriggers(
         sourceName: 'Delayed Trigger',
         ability: delayed.ability,
         ...(delayed.targetId !== undefined ? { triggerObjectCardId: delayed.targetId } : {}),
-        ...(delayed.affectedPlayerId !== undefined
-          ? { scope: { eventPlayerId: delayed.affectedPlayerId } }
+        ...(delayed.affectedPlayerId !== undefined || delayed.targetObjectId !== undefined
+          ? {
+              scope: {
+                ...(delayed.affectedPlayerId !== undefined
+                  ? { eventPlayerId: delayed.affectedPlayerId }
+                  : {}),
+                ...(delayed.targetObjectId !== undefined
+                  ? { triggerObjectId: delayed.targetObjectId }
+                  : {}),
+              },
+            }
           : {}),
       });
       debug(ctx, 'stack', `delayed ${when} trigger queued: ${delayed.id}`);
@@ -199,6 +208,22 @@ function queueMonarchTrigger(ctx: GameContext): void {
     },
   });
   debug(ctx, 'stack', `monarch end-step trigger queued: ${monarchId}`);
+}
+
+/** Begin the postcombat main phase: the phase event, then "at the beginning of your main phase". */
+export function beginPostcombatMain(ctx: GameContext): void {
+  setPhase(ctx, 'postcombatMain', null);
+  queueStepTriggers(ctx, 'mainPhase');
+}
+
+/**
+ * Begin the end step. "At the beginning of the end step" triggers, the monarch's draw included,
+ * are queued as the step begins (CR 513.1), before anyone receives priority in it.
+ */
+export function beginEndStep(ctx: GameContext): void {
+  setPhase(ctx, 'ending', 'end');
+  queueStepTriggers(ctx, 'endStep');
+  queueMonarchTrigger(ctx);
 }
 
 /** Cleanup step (CR 514), repeating while SBAs/triggers give players priority (514.3a). */
@@ -249,6 +274,21 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
 }
 
 /** One complete turn for `state.currentTurnPlayer`. */
+/**
+ * The combat phase (CR 506) plus any extra combat phases it created. Shared by `runTurn` and the
+ * Card Test Lab's prepared-scenario continuation so both use one combat sequence.
+ */
+export function* runCombatAndExtraCombats(ctx: GameContext): GameGen<void> {
+  setPhase(ctx, 'combat', null);
+  queueStepTriggers(ctx, 'beginningOfCombat');
+  yield* runCombatPhase(ctx);
+  while (ctx.state.extraCombatPhases > 0) {
+    ctx.state.extraCombatPhases -= 1;
+    queueStepTriggers(ctx, 'beginningOfCombat');
+    yield* runCombatPhase(ctx);
+  }
+}
+
 export function* runTurn(ctx: GameContext): GameGen<void> {
   const s = ctx.state;
   const ap = playerById(ctx, s.currentTurnPlayer);
@@ -286,27 +326,14 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
-  // Combat.
-  setPhase(ctx, 'combat', null);
-  queueStepTriggers(ctx, 'beginningOfCombat');
-  yield* runCombatPhase(ctx);
-  while (ctx.state.extraCombatPhases > 0) {
-    ctx.state.extraCombatPhases -= 1;
-    queueStepTriggers(ctx, 'beginningOfCombat');
-    yield* runCombatPhase(ctx);
-  }
+  yield* runCombatAndExtraCombats(ctx);
 
   // Postcombat main.
-  setPhase(ctx, 'postcombatMain', null);
-  queueStepTriggers(ctx, 'mainPhase');
+  beginPostcombatMain(ctx);
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
-  // Ending phase. "At the beginning of the end step" triggers are queued as the step begins
-  // (CR 513.1), before anyone receives priority in it.
-  setPhase(ctx, 'ending', 'end');
-  queueStepTriggers(ctx, 'endStep');
-  queueMonarchTrigger(ctx);
+  beginEndStep(ctx);
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 

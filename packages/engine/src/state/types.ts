@@ -177,6 +177,9 @@ export interface EngineCardObject extends EngineObject {
   reboundCastBy?: PlayerId;
 }
 
+/** The keywords that change how a source's damage is dealt (CR 702.2, 702.15, 702.90). */
+export type DamageKeyword = 'deathtouch' | 'lifelink' | 'infect';
+
 export interface EngineStackObject extends StackObject {
   /** The card object being cast, for spells (moves to its destination on resolution). */
   card: EngineCardObject | null;
@@ -194,6 +197,12 @@ export interface EngineStackObject extends StackObject {
    * could be wrong (a red permanent made colorless).
    */
   sourceColors?: Color[];
+  /**
+   * The source's damage keywords (deathtouch, lifelink, infect) immediately before it left the
+   * battlefield, recorded as it leaves and only when it had any — last known information for
+   * damage it deals afterwards (Mordant Dragon's trigger, CR 113.7a).
+   */
+  sourceDamageKeywords?: DamageKeyword[];
   /** Kind of alternative cast used, if any (overload, adventure, omen). */
   alternativeCastKind?: 'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree';
   altIndex?: number;
@@ -311,6 +320,13 @@ export interface UntilEotEffect extends ContinuousEffect {
    * creature entering afterwards is not pumped and one that leaves and returns is not either.
    */
   targetCardIds: CardId[];
+  /**
+   * The exact objects, for an effect that outlives the turn (Hunting Wilds' animated Forests):
+   * a card that leaves and returns is a new object the effect never applied to (CR 400.7). The
+   * departing object keeps the effect, so last-known information still sees it (a dying
+   * animated Forest is a creature dying).
+   */
+  targetObjectIds?: ObjectId[];
   kind:
     | 'ptDelta'
     | 'grantKeyword'
@@ -357,6 +373,10 @@ export interface CombatState {
 export interface PendingTrigger {
   /** Battlefield incarnation that generated the trigger, retained after it leaves. */
   sourceObjectId?: ObjectId;
+  /** The source's colors as it left before this went on the stack (CR 113.7a). */
+  sourceColors?: Color[];
+  /** The source's damage keywords as it left before this went on the stack (CR 113.7a). */
+  sourceDamageKeywords?: DamageKeyword[];
   controllerId: PlayerId;
   sourceCardId: CardId;
   sourceOracleId: OracleId;
@@ -386,6 +406,8 @@ export interface DelayedTrigger {
   sourceOracleId: OracleId;
   controllerId: PlayerId;
   targetId?: CardId;
+  /** With `sameObject`, the remembered object's id, so a new object of that card never matches. */
+  targetObjectId?: ObjectId;
   when: TriggerWhen;
   ability: Ability;
   /**

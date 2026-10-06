@@ -64,6 +64,7 @@ import type { PriorityActionPayload } from './legal';
 import {
   activationCostReductionFor,
   computeTargetOptions,
+  withinTotalManaValue,
   costReductionFor,
   handActivationCost,
   manaPortionOf,
@@ -318,15 +319,20 @@ function* chooseCountTargets(
     const maximum = Math.min(spec.count.max, total ?? Infinity);
     const picked: ObjectId[] = [];
     for (let index = 0; index < maximum; index++) {
-      const candidates = computeTargetOptions(
+      const candidates = withinTotalManaValue(
         ctx,
         spec,
-        playerId,
-        sourceColors,
-        undefined,
-        ordinaryTargets,
-        sourceCardId,
-      ).filter((id) => !chosen.has(id));
+        picked,
+        computeTargetOptions(
+          ctx,
+          spec,
+          playerId,
+          sourceColors,
+          undefined,
+          ordinaryTargets,
+          sourceCardId,
+        ).filter((id) => !chosen.has(id)),
+      );
       if (candidates.length === 0) break;
       const canStop = picked.length >= spec.count.min;
       const outcome = yield {

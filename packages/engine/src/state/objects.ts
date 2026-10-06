@@ -11,6 +11,7 @@
 import type { ObjectId, OracleId, PlayerId, Zone } from '@mtg/shared';
 import { computeTargetOptions } from '../actions/legal';
 import type { Ability, KeywordAbility, ObjectTriggerWhen, TokenSpec } from '../cards/ability';
+import { actsOnItsTriggerObject } from '../cards/source-identity';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
 import type { CardDefinition } from '../cards/definition';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
@@ -27,6 +28,8 @@ import {
   cardZoneCandidate,
   counterAmountAfterReplacements,
   counterAmountAfterReplacementsForCandidate,
+  colorsOf,
+  damageKeywordsOf,
   getDefByOracleId,
   opponentsOf,
   tokenCreationMultiplierFor,
@@ -61,6 +64,8 @@ export interface MoveDestination {
   deferLeaveProcessing?: boolean;
   /** Internal card-zone batch: queue one aggregate departure event after every move completes. */
   deferCardZoneTriggers?: boolean;
+  /** Internal battlefield batch: enters triggers are queued once every object has entered. */
+  deferEntersTriggers?: boolean;
   /** Battlefield only: the controller it enters under (defaults to its owner). */
   controllerId?: PlayerId;
   /** Aura host chosen when casting, attached before entry triggers are collected. */
@@ -79,8 +84,29 @@ export interface MoveDestination {
   libraryPosition?: 'top' | 'bottom';
 }
 
-/** Remove `obj` from whatever zone container currently holds it. */
-export function removeFromCurrentZone(ctx: GameContext, obj: EngineObject): void {
+/**
+ * CR 400.7: a resolved effect's fixed set never follows a card into a new incarnation, so a
+ * permanent that has left is dropped from every fixed effect.
+ */
+function releaseFixedEffects(ctx: GameContext, cardId: CardId): void {
+  ctx.state.effects = ctx.state.effects.filter((effect) => {
+    if (!effect.targetCardIds.includes(cardId)) return true;
+    effect.targetCardIds = effect.targetCardIds.filter((id) => id !== cardId);
+    // A fixed set that has lost its last member affects nothing ever again.
+    return effect.targetCardIds.length > 0;
+  });
+}
+
+/**
+ * Remove `obj` from whatever zone container currently holds it. A permanent leaving releases
+ * its fixed effects at once, unless the caller still needs its last known characteristics
+ * (`moveObject`, which releases them after leave processing).
+ */
+export function removeFromCurrentZone(
+  ctx: GameContext,
+  obj: EngineObject,
+  keepEffectsForLastKnownInformation = false,
+): void {
   const s = ctx.state;
   const pull = (arr: { id: ObjectId }[]): void => {
     const i = arr.findIndex((o) => o.id === obj.id);
@@ -88,9 +114,7 @@ export function removeFromCurrentZone(ctx: GameContext, obj: EngineObject): void
   };
   switch (obj.zone) {
     case 'battlefield':
-      // CR 400.7: a resolved effect's fixed set never follows a card into a new incarnation.
-      for (const effect of s.effects)
-        effect.targetCardIds = effect.targetCardIds.filter((id) => id !== obj.cardId);
+      if (!keepEffectsForLastKnownInformation) releaseFixedEffects(ctx, obj.cardId);
       pull(s.battlefield);
       break;
     case 'exile':
@@ -494,6 +518,9 @@ export function* moveObject(
     if (outcome.index === 0) target = { zone: 'command' };
   }
 
+  // Last known information (CR 113.7a), read while it is still on the battlefield.
+  if (from === 'battlefield') rememberLeavingSourceTraits(ctx, obj as EnginePermanent);
+
   if (target.zone === 'battlefield' && !target.faceDown) {
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
     if (def.subtypes.includes('Aura')) {
@@ -533,7 +560,10 @@ export function* moveObject(
     }
   }
 
-  removeFromCurrentZone(ctx, obj);
+  // Its fixed effects stay until leave processing has read its last known characteristics: an
+  // animated land that dies is a creature dying (CR 113.7a, 603.10a).
+  const keepForLeaveProcessing = from === 'battlefield' && target.zone !== 'battlefield';
+  removeFromCurrentZone(ctx, obj, keepForLeaveProcessing);
 
   if (from === 'battlefield' && target.zone === 'graveyard') {
     (obj as unknown as EngineCardObject).rememberedCounters = {
@@ -546,10 +576,9 @@ export function* moveObject(
   if (obj.isToken && from === 'battlefield' && target.zone !== 'battlefield') {
     emit(ctx, 'tokenCeased', { name: obj.name, cardId: obj.cardId });
     debug(ctx, 'zoneChange', `token ${obj.name} ceased to exist`);
-    if (!target.deferLeaveProcessing) {
-      queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
-      yield* returnExiledUntilLeaves(ctx, obj.cardId);
-    }
+    if (!target.deferLeaveProcessing) queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    releaseFixedEffects(ctx, obj.cardId);
+    if (!target.deferLeaveProcessing) yield* returnExiledUntilLeaves(ctx, obj.cardId);
     return null;
   }
 
@@ -566,7 +595,15 @@ export function* moveObject(
         : undefined;
     let entersTappedOverride: boolean | undefined;
     const entersTappedUnless = landFace?.entersTappedUnless ?? def.entersTappedUnless;
-    if (!target.faceDown && entersTappedUnless !== undefined) {
+    if (
+      !target.faceDown &&
+      entersTappedUnless !== undefined &&
+      !losesAbilitiesAsItEnters(
+        ctx,
+        target.face === 'back' ? { ...obj, face: 'back' } : obj,
+        controllerId,
+      )
+    ) {
       const met = yield* resolveCondition(
         ctx,
         entersTappedUnless,
@@ -757,22 +794,44 @@ export function* moveObject(
   }
 
   // Triggers: enters on arriving, dies on battlefield → graveyard.
-  if (target.zone === 'battlefield' && from !== 'battlefield') {
+  if (
+    target.zone === 'battlefield' &&
+    from !== 'battlefield' &&
+    target.deferEntersTriggers !== true
+  ) {
     queueTriggersForObject(ctx, 'enters', next as EnginePermanent);
   }
   if (from === 'battlefield') {
-    if (!target.deferLeaveProcessing) {
-      queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
-      yield* returnExiledUntilLeaves(ctx, obj.cardId);
-    }
+    if (!target.deferLeaveProcessing) queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    if (keepForLeaveProcessing) releaseFixedEffects(ctx, obj.cardId);
+    if (!target.deferLeaveProcessing) yield* returnExiledUntilLeaves(ctx, obj.cardId);
   }
 
   return next;
 }
 
 /**
+ * CR 614.12: a permanent's own "enters tapped unless" applies only if it would have that ability
+ * on the battlefield. Checked against the permanent as it would exist there, under the continuous
+ * effects already in play (a nonbasic land under Blood Moon has no abilities, so it enters
+ * untapped). The probe is never put anywhere, and its object id is handed back.
+ */
+function losesAbilitiesAsItEnters(
+  ctx: GameContext,
+  obj: EngineObject,
+  controllerId: PlayerId,
+): boolean {
+  const nextObjectNum = ctx.state.nextObjectNum;
+  const probe = makePermanent(ctx, obj, controllerId);
+  ctx.state.nextObjectNum = nextObjectNum;
+  return computeCharacteristics(ctx, probe).loseAbilities === true;
+}
+
+/**
  * Move cards as one zone-change event. Every card still gets the new object identity required
- * by CR 400.7, while aggregate "one or more cards leave" abilities see one event.
+ * by CR 400.7, while aggregate "one or more cards leave" abilities see one event. Objects put
+ * onto the battlefield together enter simultaneously: no enters trigger is checked until all of
+ * them are there (CR 603.6a), so each sees the others.
  */
 export function* moveObjects(
   ctx: GameContext,
@@ -784,15 +843,22 @@ export function* moveObjects(
       ? []
       : objects.filter((object): object is EngineCardObject => object.zone === 'graveyard');
   const moved: (EngineCardObject | EnginePermanent | null)[] = [];
+  const entered: EnginePermanent[] = [];
   for (const object of objects) {
-    moved.push(
-      yield* moveObject(ctx, object, {
-        ...destination,
-        ...(leavingGraveyard.includes(object as EngineCardObject)
-          ? { deferCardZoneTriggers: true }
-          : {}),
-      }),
-    );
+    const entering = destination.zone === 'battlefield' && object.zone !== 'battlefield';
+    const next = yield* moveObject(ctx, object, {
+      ...destination,
+      ...(leavingGraveyard.includes(object as EngineCardObject)
+        ? { deferCardZoneTriggers: true }
+        : {}),
+      ...(entering ? { deferEntersTriggers: true } : {}),
+    });
+    moved.push(next);
+    if (entering && next !== null && next.zone === 'battlefield')
+      entered.push(next as EnginePermanent);
+  }
+  for (const permanent of entered) {
+    if (ctx.state.battlefield.includes(permanent)) queueTriggersForObject(ctx, 'enters', permanent);
   }
   if (leavingGraveyard.length > 0) {
     queueCardZoneTriggers(ctx, 'leavesGraveyard', leavingGraveyard);
@@ -867,7 +933,7 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
       subtypes: spec.subtypes ?? [],
       colors: spec.colors,
       colorIdentity: spec.colors,
-      manaCost: null,
+      manaCost: spec.manaCost ?? null,
       hasUnsupportedCost: false,
       power: evalPower,
       toughness: evalToughness,
@@ -941,7 +1007,7 @@ export function createToken(
     name: spec.name,
     typeLine: spec.typeLine,
     oracleText: '',
-    manaCost: null,
+    manaCost: spec.manaCostText ?? null,
     isToken: true,
     isCommander: false,
     zone: 'battlefield',
@@ -1079,6 +1145,10 @@ export function tokenSpecCopying(
     triggers: def.triggers,
     manaAbilities: def.manaAbilities,
     activatedAbilities: def.activatedAbilities,
+    // A copy copies the mana cost (CR 707.2), so the token's mana value is the original's —
+    // except that a copy of a back face has mana value 0 (CR 202.3b, 712.8e), never the front's.
+    manaCost: perm.transformed ? null : def.manaCost,
+    manaCostText: perm.transformed ? null : perm.manaCost,
   };
 }
 
@@ -1236,6 +1306,9 @@ export function queueTriggersForEvent(
         // and abilities never qualify, regardless of what the subject selector matches.
         if (when === 'becomesTargeted' && s.sourceControllerId === source.controllerId)
           return false;
+        if ('entersUntapped' in spec && spec.entersUntapped === true && s.permanent.tapped) {
+          return false;
+        }
         return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
           : matchesSelector(ctx, s.permanent, spec.subject.selector, from);
@@ -1303,10 +1376,22 @@ export function queueTriggersForEvent(
           }
           const amounts = group.filter((s) => s.amount !== undefined);
           const eventPlayerId =
-            spec.aggregate === 'byEventPlayer' ? byEventPlayerKey(first) : first.playerId;
+            'defendingPlayerIsEventPlayer' in spec &&
+            spec.defendingPlayerIsEventPlayer === true &&
+            first.permanent.attacking !== null
+              ? first.permanent.attacking
+              : spec.aggregate === 'byEventPlayer'
+                ? byEventPlayerKey(first)
+                : first.playerId;
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
+            ...(spec.subject.kind !== 'self' &&
+            (remembersEventObject(ability) ||
+              (actsOnItsTriggerObject(ability) &&
+                ctx.state.battlefield.some((permanent) => permanent.id === first.permanent.id)))
+              ? { eventObjectId: first.permanent.id }
+              : {}),
             ...(amounts.length > 0
               ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
               : {}),
@@ -1424,6 +1509,50 @@ export function queueTriggersForEvent(
 }
 
 /** The one-subject case, which is every event except attacks and combat damage. */
+/**
+ * Whether a trigger's effects remember the exact object that fired it (a `sameObject` delayed
+ * trigger on 'triggerObject'). Only those capture the event object's id, so every other
+ * trigger's pending entry stays as it was.
+ */
+function remembersEventObject(ability: Ability): boolean {
+  return ability.effects.some(
+    (effect) =>
+      effect.op === 'registerDelayedTrigger' &&
+      effect.sameObject === true &&
+      effect.target === 'triggerObject',
+  );
+}
+
+/**
+ * A permanent is leaving: record its colors and damage keywords on every ability of its own
+ * waiting on the stack or about to be put there, so its targets and the damage it deals after it
+ * is gone use the colors, deathtouch, lifelink and infect it had immediately before it left
+ * (CR 113.7a, Mordant Dragon). Damage keywords are only recorded when it had any.
+ */
+function rememberLeavingSourceTraits(ctx: GameContext, perm: EnginePermanent): void {
+  const entries = ctx.state.stack.filter(
+    (entry) =>
+      entry.kind !== 'spell' &&
+      entry.sourceCardId === perm.cardId &&
+      (entry.sourceId === perm.id || entry.sourceId === perm.cardId),
+  );
+  // Triggers that have fired but are not on the stack yet: combat damage that also kills the
+  // source triggers first, then state-based actions remove the source before it is put there.
+  const pending = ctx.state.pendingTriggers.filter(
+    (trigger) =>
+      trigger.sourceCardId === perm.cardId &&
+      (trigger.sourceObjectId === undefined || trigger.sourceObjectId === perm.id),
+  );
+  if (entries.length === 0 && pending.length === 0) return;
+  const keywords = damageKeywordsOf(ctx, perm);
+  const colors = colorsOf(ctx, perm);
+  for (const entry of [...entries, ...pending]) {
+    entry.sourceColors = [...colors];
+    if (keywords.length > 0) entry.sourceDamageKeywords = keywords;
+    else delete entry.sourceDamageKeywords;
+  }
+}
+
 export function queueTriggersForObject(
   ctx: GameContext,
   when: ObjectTriggerWhen,
