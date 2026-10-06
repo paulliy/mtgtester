@@ -31,7 +31,6 @@ export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = [
   'Curse of Bounty',
   'Harvest Season',
   'Hour of Reckoning',
-  'Idol of Oblivion',
   "Karametra's Favor",
   'Nullmage Shepherd',
   'Rishkar, Peema Renegade',

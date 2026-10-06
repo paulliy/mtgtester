@@ -5621,7 +5621,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "uniqueOracleIds": 31,
+      "uniqueOracleIds": 30,
       "reviewedOracleIds": 31,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5704,6 +5704,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: the interpreter reads the revealed land search (reveal is now kept by the search grammar) and the 'an opponent controls more lands than you' activation condition; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c232d974-9c65-4bce-b045-e5a7cc0c62e0",
+      "name": "Idol of Oblivion",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the draw's 'you created a token this turn' activation condition and the 10/10 colorless Eldrazi creature token; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

@@ -1067,6 +1067,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "c232d974-9c65-4bce-b045-e5a7cc0c62e0",
+    "name": "Idol of Oblivion",
+    "package": "PR02.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",
     "name": "Illusionist's Gambit",
     "package": "W6",

@@ -234,8 +234,6 @@ const REASONS: Record<string, string> = {
   'Dragon Tempest': 'Dragon-dealt damage is implemented as damage from this enchantment.',
   'Dream Pillager':
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
-  'Idol of Oblivion':
-    'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
   'Flameblast Dragon': 'The damage target is chosen before you decide to pay X.',
   'Thunderbreak Regent':
     'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
@@ -318,6 +316,7 @@ describe('Marchesa catalog audit containment', () => {
     'Endless Atlas',
     'Sceptre of Eternal Glory',
     'Weathered Wayfarer',
+    'Idol of Oblivion',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

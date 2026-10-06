@@ -323,3 +323,34 @@ describe('Weathered Wayfarer Card Test Lab scenarios', () => {
     expect(onBattlefield('Weathered Wayfarer')[0]?.tapped).toBe(false);
   });
 });
+
+describe('Idol of Oblivion Card Test Lab scenarios', () => {
+  const drawSteps: Step[] = [
+    { action: 'Lab Token Maker: {1}: Create a 1/1 colorless Servo' },
+    { action: 'Idol of Oblivion: {T}: Draw a card.' },
+  ];
+
+  it('idol-of-oblivion-viewer-token-then-draw — the draw unlocks only after a token is created', () => {
+    const { seat, onBattlefield, offered } = run(
+      'idol-of-oblivion-viewer-token-then-draw',
+      drawSteps,
+    );
+    expect(offered[0]?.some((action) => action.includes('Idol of Oblivion: {T}: Draw'))).toBe(
+      false,
+    );
+    expect(onBattlefield('Servo')).toHaveLength(1);
+    expect(onBattlefield('Idol of Oblivion')[0]?.tapped).toBe(true);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Idol Drawn Page']);
+    replays('idol-of-oblivion-viewer-token-then-draw', drawSteps);
+  });
+
+  const eldraziSteps: Step[] = [{ action: 'Create a 10/10 colorless Eldrazi' }];
+
+  it('idol-of-oblivion-viewer-eldrazi — {8}, {T}, sacrifice: a 10/10 Eldrazi creature token', () => {
+    const { seat, onBattlefield } = run('idol-of-oblivion-viewer-eldrazi', eldraziSteps);
+    expect(onBattlefield('Idol of Oblivion')).toEqual([]);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Idol of Oblivion']);
+    expect(onBattlefield('Eldrazi')[0]).toMatchObject({ power: 10, toughness: 10 });
+    replays('idol-of-oblivion-viewer-eldrazi', eldraziSteps);
+  });
+});

@@ -46,11 +46,8 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       }),
     },
   );
-  unsupportedCard(
-    'c232d974-9c65-4bce-b045-e5a7cc0c62e0',
-    'Idol of Oblivion',
-    'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
-  );
+  // Idol of Oblivion: restored in coverage PR02. The interpreter reads the draw's "Activate only
+  // if you created a token this turn" condition and the 10/10 colorless Eldrazi creature token.
   // Coverage PR01: "up to two" is a 0..2 count slot, so the spell may be cast with no target.
   defineCard(
     'aeec8e85-6571-4da6-8a48-f5d3985ca10b',

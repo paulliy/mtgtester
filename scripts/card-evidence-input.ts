@@ -1386,6 +1386,11 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Weathered Wayfarer: equal lands do not unlock it'],
   },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Idol of Oblivion: make a token, then draw'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Idol of Oblivion: sacrifice it for a 10/10 Eldrazi'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

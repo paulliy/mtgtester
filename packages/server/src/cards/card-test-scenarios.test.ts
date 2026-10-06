@@ -179,6 +179,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'sceptre-of-eternal-glory-viewer-one-mana',
       'weathered-wayfarer-viewer-reveal-land',
       'weathered-wayfarer-viewer-equal-lands-blocked',
+      'idol-of-oblivion-viewer-token-then-draw',
+      'idol-of-oblivion-viewer-eldrazi',
     ]);
   });
 

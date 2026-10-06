@@ -3042,3 +3042,30 @@ test('Weathered Wayfarer: equal lands do not unlock it', async ({ page }) => {
   await expect(permanent(page, 'Weathered Wayfarer').locator('.tap-badge')).toHaveCount(0);
   await expect(page.getByText('Wayfarer Revealed Land')).toHaveCount(0);
 });
+
+test('Idol of Oblivion: make a token, then draw', async ({ page }) => {
+  await runScenario(page, 'Idol of Oblivion: make a token, then draw');
+  await expect(permanent(page, 'Idol of Oblivion')).not.toHaveClass(/actionable/);
+  await activateAndResolve(
+    page,
+    'Lab Token Maker',
+    /Create a 1\/1 colorless Servo/,
+    'Servo artifact creature token.',
+  );
+  await expect(permanent(page, 'Servo')).toBeVisible();
+  await activateAndResolve(page, 'Idol of Oblivion', /Draw a card/, 'created a token this turn.');
+  await expect(handCard(page, 'Idol Drawn Page')).toBeVisible();
+});
+
+test('Idol of Oblivion: sacrifice it for a 10/10 Eldrazi', async ({ page }) => {
+  await runScenario(page, 'Idol of Oblivion: sacrifice it for a 10/10 Eldrazi');
+  await activateAndResolve(
+    page,
+    'Idol of Oblivion',
+    /Create a 10\/10 colorless Eldrazi/,
+    'Eldrazi creature token.',
+  );
+  await expect(permanent(page, 'Eldrazi')).toContainText('10/10');
+  await expect(permanent(page, 'Idol of Oblivion')).toHaveCount(0);
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});

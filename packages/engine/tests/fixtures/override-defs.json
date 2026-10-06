@@ -8300,12 +8300,6 @@
     "def": {}
   },
   {
-    "oracleId": "c232d974-9c65-4bce-b045-e5a7cc0c62e0",
-    "name": "Idol of Oblivion",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
     "name": "Reliquary Tower",
     "handledLines": [
@@ -16329,12 +16323,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "oracle-idol-of-oblivion",
-    "name": "Idol of Oblivion",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-illuminor-szeras",

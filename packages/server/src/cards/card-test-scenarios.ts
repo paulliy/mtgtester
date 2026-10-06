@@ -6045,6 +6045,72 @@ const weatheredWayfarerBlockedScenario = (gameId: GameId): CardTestScenario =>
     expectedOutcome: 'Weathered Wayfarer and the Plains stay untapped and your hand stays empty.',
   });
 
+const LAB_TOKEN_MAKER = card({
+  oracleId: 'lab-token-maker',
+  name: 'Lab Token Maker',
+  typeLine: 'Artifact',
+  manaCost: '{1}',
+  cmc: 1,
+  oracleText: '{1}: Create a 1/1 colorless Servo artifact creature token.',
+});
+const LAB_IDOL_PAGE = card({
+  oracleId: 'lab-idol-page',
+  name: 'Idol Drawn Page',
+  typeLine: 'Creature — Secret',
+});
+
+function idolDrawScenario(gameId: GameId): CardTestScenario {
+  const idol = pinnedFrom(MARCHESA_BATCH1, 'Idol of Oblivion');
+  return pr01Scenario(gameId, {
+    id: 'idol-of-oblivion-viewer-token-then-draw',
+    title: 'Idol of Oblivion: make a token, then draw',
+    instructions: [
+      'Idol of Oblivion cannot draw yet: you have not created a token this turn.',
+      'Activate Lab Token Maker for {1} to create a Servo, then tap Idol of Oblivion to draw.',
+    ],
+    expectedOutcome:
+      'A Servo token is created, Idol of Oblivion taps, and you draw Idol Drawn Page.',
+    oracleSha256: idol.sha256,
+    clauseIds: ['idol-of-oblivion-conditional-draw'],
+    decks: {
+      P1: [idol.card, LAB_TOKEN_MAKER, FOREST, LAB_IDOL_PAGE],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Idol of Oblivion', 'Lab Token Maker', 'Forest'] },
+      ],
+    },
+  });
+}
+
+function idolEldraziScenario(gameId: GameId): CardTestScenario {
+  const idol = pinnedFrom(MARCHESA_BATCH1, 'Idol of Oblivion');
+  const forests = Array.from({ length: 8 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'idol-of-oblivion-viewer-eldrazi',
+    title: 'Idol of Oblivion: sacrifice it for a 10/10 Eldrazi',
+    instructions: ['Activate {8}, {T}, Sacrifice Idol of Oblivion with your eight Forests.'],
+    expectedOutcome:
+      'Idol of Oblivion goes to your graveyard and a 10/10 colorless Eldrazi creature token enters.',
+    oracleSha256: idol.sha256,
+    clauseIds: ['idol-of-oblivion-eldrazi'],
+    decks: {
+      P1: [idol.card, ...Array.from({ length: 8 }, () => FOREST)],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Idol of Oblivion', ...forests] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -6182,6 +6248,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'sceptre-of-eternal-glory-viewer-one-mana',
   'weathered-wayfarer-viewer-reveal-land',
   'weathered-wayfarer-viewer-equal-lands-blocked',
+  'idol-of-oblivion-viewer-token-then-draw',
+  'idol-of-oblivion-viewer-eldrazi',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6317,6 +6385,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'sceptre-of-eternal-glory-viewer-one-mana': sceptreOneScenario,
   'weathered-wayfarer-viewer-reveal-land': weatheredWayfarerSearchScenario,
   'weathered-wayfarer-viewer-equal-lands-blocked': weatheredWayfarerBlockedScenario,
+  'idol-of-oblivion-viewer-token-then-draw': idolDrawScenario,
+  'idol-of-oblivion-viewer-eldrazi': idolEldraziScenario,
 };
 
 export function createCardTestScenario(

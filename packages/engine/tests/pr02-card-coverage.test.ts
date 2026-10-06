@@ -1040,6 +1040,101 @@ describe('Weathered Wayfarer', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.01 Idol of Oblivion
+// ---------------------------------------------------------------------------------------------
+
+describe('Idol of Oblivion', () => {
+  const idol = pinned('Idol of Oblivion');
+  const DRAW = /\{T\}: Draw a card/;
+  const ELDRAZI = /Create a 10\/10 colorless Eldrazi/;
+  const TOKEN_MAKER = () =>
+    oracle({
+      name: 'Lab Token Maker',
+      typeLine: 'Artifact',
+      manaCost: '{1}',
+      oracleText: '{1}: Create a 1/1 colorless Servo artifact creature token.',
+    });
+
+  function ready(seed: string, mana = 0) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', idol.card);
+    if (mana > 0) addMana(playerById(ctx, 'P1'), generic(mana));
+    return { ctx, source };
+  }
+
+  /** Create a token for `playerId` through a normal activated ability. */
+  function makeToken(ctx: GameContext, playerId: string) {
+    const maker = spawn(ctx, playerId, TOKEN_MAKER());
+    addMana(playerById(ctx, playerId), generic(1));
+    takeAction(
+      ctx,
+      playerId,
+      activationsOf(ctx, playerId, maker)[0]!.payload as PriorityActionPayload,
+    );
+    resolveTop(ctx);
+  }
+
+  it('idol-of-oblivion-pinned-oracle-supported — the interpreter reads the conditional draw and the Eldrazi', () => {
+    expect(idol.sha256).toBe('3baa23cd967df7e2c0549ab91ce4f57a51d53fd1282487e1236073936643962b');
+    expect(idol.card.oracleText).toBe(
+      '{T}: Draw a card. Activate only if you created a token this turn.\n{8}, {T}, Sacrifice this artifact: Create a 10/10 colorless Eldrazi creature token.',
+    );
+    expect(getOverride(idol.card.oracleId)).toBeUndefined();
+    expectModeled(idol.card);
+    const [draw, eldrazi] = interpretCard(idol.card).activatedAbilities;
+    expect(draw?.condition).toEqual({ kind: 'createdTokenThisTurn' });
+    expect(eldrazi?.condition).toBeUndefined();
+  });
+
+  it('idol-of-oblivion-draw-blocked-without-token — no token this turn, no draw', () => {
+    const { ctx, source } = ready('idol-no-token');
+    expect(activationMatching(ctx, 'P1', source, DRAW)).toBeUndefined();
+  });
+
+  it('idol-of-oblivion-draw-after-token — after you create a token, {T} draws a card', () => {
+    const { ctx, source } = ready('idol-token');
+    makeToken(ctx, 'P1');
+    const before = playerById(ctx, 'P1').hand.length;
+    const option = activationMatching(ctx, 'P1', source, DRAW);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(true);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(before + 1);
+  });
+
+  it('idol-of-oblivion-opponent-token-does-not-count — only tokens you created unlock it', () => {
+    const { ctx, source } = ready('idol-their-token');
+    makeToken(ctx, 'P2');
+    expect(activationMatching(ctx, 'P1', source, DRAW)).toBeUndefined();
+  });
+
+  it('idol-of-oblivion-eldrazi — {8}, {T}, sacrifice it: a 10/10 colorless Eldrazi creature, not an artifact', () => {
+    const { ctx, source } = ready('idol-eldrazi', 8);
+    const option = activationMatching(ctx, 'P1', source, ELDRAZI);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(ctx.state.battlefield.some((perm) => perm.id === source.id)).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toContain('Idol of Oblivion');
+    resolveTop(ctx);
+    const token = ctx.state.battlefield.find((perm) => perm.isToken && perm.name === 'Eldrazi');
+    expect(token).toBeDefined();
+    const chars = computeCharacteristics(ctx, token!);
+    expect(chars.types).toEqual(['Creature']);
+    expect(chars.subtypes).toEqual(['Eldrazi']);
+    expect(chars.colors).toEqual([]);
+    expect([chars.power, chars.toughness]).toEqual([10, 10]);
+    // Creating the Eldrazi is itself a token this turn.
+    expect(ctx.state.createdTokenThisTurn['P1']).toBe(true);
+  });
+
+  it('idol-of-oblivion-eldrazi-needs-eight — seven mana cannot pay it', () => {
+    const { ctx, source } = ready('idol-eldrazi-short', 7);
+    expect(activationMatching(ctx, 'P1', source, ELDRAZI)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1051,6 +1146,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Idol of Oblivion',
+    sha256: '3baa23cd967df7e2c0549ab91ce4f57a51d53fd1282487e1236073936643962b',
+    clauseCount: 2,
+  },
   {
     name: 'Weathered Wayfarer',
     sha256: '42ef11f806b155602ccdd9ce54d2cd2e123a4df1d42d90c83dcedad110cfaafd',

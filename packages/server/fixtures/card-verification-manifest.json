@@ -3117,15 +3117,36 @@
     "c232d974-9c65-4bce-b045-e5a7cc0c62e0": {
       "name": "Idol of Oblivion",
       "oracleSha256": "3baa23cd967df7e2c0549ab91ce4f57a51d53fd1282487e1236073936643962b",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "{T}: Draw a card. Activate only if you created a token this turn.\n{8}, {T}, Sacrifice this artifact: Create a 10/10 colorless Eldrazi creature token.",
+          "id": "idol-of-oblivion-conditional-draw",
+          "oracleText": "{T}: Draw a card. Activate only if you created a token this turn.",
           "implementation": [
-            "explicitly unsupported; restriction is a resolution no-op; wrong Eldrazi token"
+            "interpreted activated ability: costs [tap], effect draw(1)",
+            "condition createdTokenThisTurn from the 'Activate only if' grammar — set by token creation under your control, cleared after each untap step; checked when offered and when paid"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "idol-of-oblivion-pinned-oracle-supported",
+            "activation-condition-parses-known-phrasings",
+            "idol-of-oblivion-draw-blocked-without-token",
+            "idol-of-oblivion-draw-after-token",
+            "idol-of-oblivion-opponent-token-does-not-count"
+          ],
+          "viewerScenarioIds": ["idol-of-oblivion-viewer-token-then-draw"]
+        },
+        {
+          "id": "idol-of-oblivion-eldrazi",
+          "oracleText": "{8}, {T}, Sacrifice this artifact: Create a 10/10 colorless Eldrazi creature token.",
+          "implementation": [
+            "interpreted activated ability: costs [mana {8}, tap, sacrificeSelf], effect createToken(Eldrazi 10/10 colorless creature — not an artifact)"
+          ],
+          "engineTestIds": [
+            "idol-of-oblivion-pinned-oracle-supported",
+            "idol-of-oblivion-eldrazi",
+            "idol-of-oblivion-eldrazi-needs-eight"
+          ],
+          "viewerScenarioIds": ["idol-of-oblivion-viewer-eldrazi"]
         }
       ],
       "gameplayAiScenarioIds": []
