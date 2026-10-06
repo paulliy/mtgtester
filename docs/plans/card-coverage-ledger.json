@@ -1459,6 +1459,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "bb5c1817-ac22-4779-9005-251bc354f181",
+    "name": "Mistveil Plains",
+    "package": "PR02.17",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Bottom-of-library is implemented as graveyardToLibraryTop."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3b8eb602-01e8-432e-8dfc-8fdb62c3aa43",
     "name": "Mocking Doppelganger",
     "package": "W7",

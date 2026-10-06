@@ -3069,3 +3069,27 @@ test('Idol of Oblivion: sacrifice it for a 10/10 Eldrazi', async ({ page }) => {
   await expect(permanent(page, 'Idol of Oblivion')).toHaveCount(0);
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
 });
+
+test('Mistveil Plains: put a graveyard card on the bottom', async ({ page }) => {
+  await runScenario(page, 'Mistveil Plains: put a graveyard card on the bottom');
+  await expect(page.getByText(/Graveyard\s*1/).first()).toBeVisible();
+  const chip = permanent(page, 'Mistveil Plains');
+  await expect(chip).toHaveClass(/actionable/);
+  await chip.click();
+  const choice = page.getByRole('button', { name: /on the bottom of your library/ });
+  if (await choice.isVisible()) await choice.click();
+  const target = page.getByRole('button', { name: /Mistveil Buried Card/ });
+  if (await target.isVisible()) await target.click();
+  await confirm(page);
+  await awaitResolution(page, 'two or more white permanents.', 0);
+  await expect(page.getByText(/Graveyard\s*0/).first()).toBeVisible();
+  await expect(page.getByText(/Library\s*2/).first()).toBeVisible();
+  await expect(chip.locator('.tap-badge')).toHaveText('TAP');
+});
+
+test('Mistveil Plains: one white permanent does not unlock it', async ({ page }) => {
+  await runScenario(page, 'Mistveil Plains: one white permanent does not unlock it');
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Graveyard\s*1/).first()).toBeVisible();
+  await expect(permanent(page, 'Mistveil Plains').locator('.tap-badge')).toHaveCount(0);
+});

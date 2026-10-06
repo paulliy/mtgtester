@@ -1366,13 +1366,45 @@
     "bb5c1817-ac22-4779-9005-251bc354f181": {
       "name": "Mistveil Plains",
       "oracleSha256": "ba245c46e7ecea52425fded3beb73f5bba3666af9f1c85e8234df1a5a3430791",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "mistveil-plains-tap-for-white",
+          "oracleText": "({T}: Add {W}.)",
+          "implementation": ["interpreted intrinsic Plains mana ability: {T}: Add {W}"],
+          "engineTestIds": [
+            "mistveil-plains-pinned-oracle-supported",
+            "mistveil-plains-taps-for-white"
+          ],
+          "viewerScenarioIds": ["mistveil-plains-viewer-bottom-of-library"]
+        },
+        {
+          "id": "mistveil-plains-enters-tapped",
+          "oracleText": "This land enters tapped.",
+          "implementation": ["interpreted entersTapped: true"],
+          "engineTestIds": [
+            "mistveil-plains-pinned-oracle-supported",
+            "mistveil-plains-enters-tapped"
+          ],
+          "viewerScenarioIds": ["mistveil-plains-viewer-bottom-of-library"]
+        },
+        {
+          "id": "mistveil-plains-bottom-of-library",
           "oracleText": "{W}, {T}: Put target card from your graveyard on the bottom of your library. Activate only if you control two or more white permanents.",
-          "implementation": ["explicitly unsupported; graveyardToLibraryTop"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted activated ability: costs [mana {W}, tap], target card in your graveyard, new effect graveyardToLibraryBottom (moveObject to library, position bottom)",
+            "condition countPermanents(white, you, >= 2) from the 'Activate only if' grammar; the land itself is colorless"
+          ],
+          "engineTestIds": [
+            "mistveil-plains-pinned-oracle-supported",
+            "mistveil-plains-bottom-of-library",
+            "mistveil-plains-needs-two-white-permanents",
+            "mistveil-plains-own-graveyard-only"
+          ],
+          "viewerScenarioIds": [
+            "mistveil-plains-viewer-bottom-of-library",
+            "mistveil-plains-viewer-one-white-blocked"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -168,6 +168,8 @@ function settle(ctx: GameContext, answer?: Answer) {
   });
 }
 
+const SECRET_CARD = (name: string) => oracle({ name, typeLine: 'Creature — Secret' });
+
 const generic = (n: number) => Array.from({ length: n }, () => ({ symbol: 'C' as const }));
 
 /** The pinned card is modeled under both ids with no remaining reasons. */
@@ -1135,6 +1137,103 @@ describe('Idol of Oblivion', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.17 Mistveil Plains
+// ---------------------------------------------------------------------------------------------
+
+describe('Mistveil Plains', () => {
+  const mistveil = pinned('Mistveil Plains');
+  const WHITE = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Soldier', manaCost: '{W}', colors: ['W'] });
+
+  /** Mistveil Plains, an untapped Plains for {W}, `whites` white creatures, and a graveyard card. */
+  function ready(seed: string, whites: number) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', mistveil.card);
+    source.tapped = false;
+    spawn(ctx, 'P1', plains());
+    for (let i = 0; i < whites; i++) spawn(ctx, 'P1', WHITE(`Mistveil Soldier ${i}`));
+    const buried = conjure(ctx, 'P1', SECRET_CARD('Mistveil Buried Card'), 'graveyard');
+    conjure(ctx, 'P1', SECRET_CARD('Mistveil Library Top'), 'library');
+    return { ctx, source, buried };
+  }
+
+  it('mistveil-plains-pinned-oracle-supported — the interpreter reads enters-tapped, {W}, and the bottom activation', () => {
+    expect(mistveil.sha256).toBe(
+      'ba245c46e7ecea52425fded3beb73f5bba3666af9f1c85e8234df1a5a3430791',
+    );
+    expect(mistveil.card.oracleText).toBe(
+      '({T}: Add {W}.)\nThis land enters tapped.\n{W}, {T}: Put target card from your graveyard on the bottom of your library. Activate only if you control two or more white permanents.',
+    );
+    expect(getOverride(mistveil.card.oracleId)).toBeUndefined();
+    expectModeled(mistveil.card);
+    const def = interpretCard(mistveil.card);
+    expect(def.entersTapped).toBe(true);
+    expect(def.manaAbilities).toEqual([{ units: [['W']] }]);
+    expect(def.activatedAbilities[0]?.ability.effects).toEqual([
+      { op: 'graveyardToLibraryBottom', target: 0 },
+    ]);
+    expect(def.activatedAbilities[0]?.condition).toEqual({
+      kind: 'countPermanents',
+      selector: { kind: 'color', value: 'W' },
+      scope: 'you',
+      cmp: '>=',
+      n: 2,
+    });
+  });
+
+  it('mistveil-plains-enters-tapped — a normal land play puts it onto the battlefield tapped', () => {
+    const ctx = pod('mistveil-land-play');
+    const inHand = conjure(ctx, 'P1', mistveil.card, 'hand');
+    const play = priorityOptions(ctx, 'P1').find((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'playLand' && payload.objectId === inHand.id;
+    });
+    takeAction(ctx, 'P1', play!.payload as PriorityActionPayload);
+    expect(ctx.state.battlefield.find((perm) => perm.cardId === inHand.cardId)?.tapped).toBe(true);
+  });
+
+  it('mistveil-plains-taps-for-white — {T}: Add {W} pays a white spell', () => {
+    const ctx = pod('mistveil-white');
+    spawn(ctx, 'P1', mistveil.card);
+    const spell = conjure(ctx, 'P1', WHITE('Mistveil Bear'), 'hand');
+    expect(castOptionFor(ctx, 'P1', spell.id)).toBeDefined();
+  });
+
+  it('mistveil-plains-bottom-of-library — with two white permanents, a graveyard card goes to the bottom', () => {
+    const { ctx, source, buried } = ready('mistveil-bottom', 2);
+    const option = activationsOf(ctx, 'P1', source)[0];
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, buried.id]]),
+    );
+    expect(source.tapped).toBe(true);
+    resolveTop(ctx);
+    const library = playerById(ctx, 'P1').library;
+    expect(library.at(-1)?.cardId).toBe(buried.cardId);
+    expect(library[0]?.name).toBe('Mistveil Library Top');
+    expect(playerById(ctx, 'P1').graveyard).toEqual([]);
+  });
+
+  it('mistveil-plains-needs-two-white-permanents — one white permanent is not enough (the land is colorless)', () => {
+    const { ctx, source } = ready('mistveil-one-white', 1);
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+    spawn(ctx, 'P1', WHITE('Mistveil Second Soldier'));
+    expect(activationsOf(ctx, 'P1', source)).toHaveLength(1);
+  });
+
+  it('mistveil-plains-own-graveyard-only — an opponent’s graveyard card is not a legal target', () => {
+    const { ctx, source } = ready('mistveil-theirs', 2);
+    playerById(ctx, 'P1').graveyard = [];
+    conjure(ctx, 'P2', SECRET_CARD('Mistveil Opponent Card'), 'graveyard');
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1146,6 +1245,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Mistveil Plains',
+    sha256: 'ba245c46e7ecea52425fded3beb73f5bba3666af9f1c85e8234df1a5a3430791',
+    clauseCount: 3,
+  },
   {
     name: 'Idol of Oblivion',
     sha256: '3baa23cd967df7e2c0549ab91ce4f57a51d53fd1282487e1236073936643962b',

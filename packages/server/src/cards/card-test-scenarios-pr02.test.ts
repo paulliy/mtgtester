@@ -354,3 +354,28 @@ describe('Idol of Oblivion Card Test Lab scenarios', () => {
     replays('idol-of-oblivion-viewer-eldrazi', eldraziSteps);
   });
 });
+
+describe('Mistveil Plains Card Test Lab scenarios', () => {
+  const steps: Step[] = [
+    { action: 'on the bottom of your library', targets: ['Mistveil Buried Card'] },
+  ];
+
+  it('mistveil-plains-viewer-bottom-of-library — the targeted graveyard card goes under the library', () => {
+    const { seat, onBattlefield } = run('mistveil-plains-viewer-bottom-of-library', steps);
+    expect(seat('P1').graveyard).toEqual([]);
+    expect(seat('P1').library.map((card) => card.name)).toEqual([
+      'Mistveil Library Top',
+      'Mistveil Buried Card',
+    ]);
+    expect(onBattlefield('Mistveil Plains')[0]?.tapped).toBe(true);
+    replays('mistveil-plains-viewer-bottom-of-library', steps);
+  });
+
+  it('mistveil-plains-viewer-one-white-blocked — one white permanent offers no activation', () => {
+    const { seat, offered } = run('mistveil-plains-viewer-one-white-blocked', []);
+    expect(offered.flat().some((action) => action.includes('on the bottom of your library'))).toBe(
+      false,
+    );
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Mistveil Buried Card']);
+  });
+});

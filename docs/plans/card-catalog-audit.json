@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 43,
+      "uniqueOracleIds": 42,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5711,6 +5711,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: the interpreter reads the draw's 'you created a token this turn' activation condition and the 10/10 colorless Eldrazi creature token; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "bb5c1817-ac22-4779-9005-251bc354f181",
+      "name": "Mistveil Plains",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the {W}, {T} bottom-of-library activation (new graveyardToLibraryBottom effect) and its 'two or more white permanents' activation condition; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

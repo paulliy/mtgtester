@@ -41,6 +41,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Kairi, the Swirling Sky',
       'Land Tax',
       'Loran of the Third Path',
+      'Mistveil Plains',
       'Mordant Dragon',
       'Myriad Landscape',
       'Necron Deathmark',

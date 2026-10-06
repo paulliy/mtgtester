@@ -191,7 +191,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Malakir Rebirth // Malakir Mire',
       'Mangara, the Diplomat',
       'Michiko Konda, Truth Seeker',
-      'Mistveil Plains',
       'Valakut Awakening // Valakut Stoneforge',
       'Wear // Tear',
       'Cut a Deal',

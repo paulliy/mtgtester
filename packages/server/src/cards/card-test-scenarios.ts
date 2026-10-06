@@ -6111,6 +6111,88 @@ function idolEldraziScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_WHITE_SOLDIER = card({
+  oracleId: 'lab-white-soldier',
+  name: 'Lab White Soldier',
+  typeLine: 'Creature — Soldier',
+  manaCost: '{W}',
+  cmc: 1,
+  colors: ['W'],
+  colorIdentity: ['W'],
+  power: '1',
+  toughness: '1',
+});
+const LAB_BURIED_CARD = card({
+  oracleId: 'lab-mistveil-buried',
+  name: 'Mistveil Buried Card',
+  typeLine: 'Creature — Secret',
+});
+const LAB_LIBRARY_TOP = card({
+  oracleId: 'lab-mistveil-top',
+  name: 'Mistveil Library Top',
+  typeLine: 'Creature — Secret',
+});
+
+function mistveilScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    whites: number;
+    instructions: string[];
+    expectedOutcome: string;
+  },
+): CardTestScenario {
+  const mistveil = pinnedFrom(MARCHESA_BATCH1, 'Mistveil Plains');
+  const soldiers = Array.from({ length: spec.whites }, () => LAB_WHITE_SOLDIER);
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: mistveil.sha256,
+    clauseIds: ['mistveil-plains-bottom-of-library'],
+    decks: {
+      P1: [mistveil.card, PLAINS, ...soldiers, LAB_BURIED_CARD, LAB_LIBRARY_TOP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Mistveil Plains', 'Plains', ...soldiers.map((soldier) => soldier.name)],
+        },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Mistveil Buried Card'] }],
+    },
+  });
+}
+
+const mistveilBottomScenario = (gameId: GameId): CardTestScenario =>
+  mistveilScenario(gameId, {
+    id: 'mistveil-plains-viewer-bottom-of-library',
+    title: 'Mistveil Plains: put a graveyard card on the bottom',
+    whites: 2,
+    instructions: [
+      'With two white creatures, activate Mistveil Plains, paying {W} with the Plains.',
+      'Target Mistveil Buried Card in your graveyard.',
+    ],
+    expectedOutcome:
+      'Mistveil Buried Card moves to the bottom of your library; Mistveil Library Top is still on top.',
+  });
+
+const mistveilBlockedScenario = (gameId: GameId): CardTestScenario =>
+  mistveilScenario(gameId, {
+    id: 'mistveil-plains-viewer-one-white-blocked',
+    title: 'Mistveil Plains: one white permanent does not unlock it',
+    whites: 1,
+    instructions: ['With one white creature, Mistveil Plains offers no activation.'],
+    expectedOutcome: 'Mistveil Buried Card stays in your graveyard.',
+  });
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -6250,6 +6332,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'weathered-wayfarer-viewer-equal-lands-blocked',
   'idol-of-oblivion-viewer-token-then-draw',
   'idol-of-oblivion-viewer-eldrazi',
+  'mistveil-plains-viewer-bottom-of-library',
+  'mistveil-plains-viewer-one-white-blocked',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6387,6 +6471,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'weathered-wayfarer-viewer-equal-lands-blocked': weatheredWayfarerBlockedScenario,
   'idol-of-oblivion-viewer-token-then-draw': idolDrawScenario,
   'idol-of-oblivion-viewer-eldrazi': idolEldraziScenario,
+  'mistveil-plains-viewer-bottom-of-library': mistveilBottomScenario,
+  'mistveil-plains-viewer-one-white-blocked': mistveilBlockedScenario,
 };
 
 export function createCardTestScenario(

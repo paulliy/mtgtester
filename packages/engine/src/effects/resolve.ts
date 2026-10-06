@@ -4276,12 +4276,16 @@ export function* executeAbility(
         loseLife(ctx, controller, manaValue);
         break;
       }
-      case 'graveyardToLibraryTop': {
+      case 'graveyardToLibraryTop':
+      case 'graveyardToLibraryBottom': {
         const t = ref(effect.target);
         if (t === null) break;
         const card = findObjectById(ctx, t);
         if (card !== undefined)
-          yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'top' });
+          yield* moveObject(ctx, card, {
+            zone: 'library',
+            libraryPosition: effect.op === 'graveyardToLibraryTop' ? 'top' : 'bottom',
+          });
         break;
       }
       case 'graveyardToHand': {

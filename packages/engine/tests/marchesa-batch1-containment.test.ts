@@ -145,7 +145,6 @@ const REASONS: Record<string, string> = {
     'Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added.',
   'Michiko Konda, Truth Seeker':
     'Damage-to-you is implemented as damage to permanents you control.',
-  'Mistveil Plains': 'Bottom-of-library is implemented as graveyardToLibraryTop.',
   'Valakut Awakening // Valakut Stoneforge':
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
@@ -317,6 +316,7 @@ describe('Marchesa catalog audit containment', () => {
     'Sceptre of Eternal Glory',
     'Weathered Wayfarer',
     'Idol of Oblivion',
+    'Mistveil Plains',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

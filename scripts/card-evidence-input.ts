@@ -1391,6 +1391,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Idol of Oblivion: sacrifice it for a 10/10 Eldrazi'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mistveil Plains: put a graveyard card on the bottom'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mistveil Plains: one white permanent does not unlock it'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

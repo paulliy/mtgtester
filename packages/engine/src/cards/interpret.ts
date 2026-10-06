@@ -1000,6 +1000,11 @@ function parseEffectSentence(
   if (s === 'put target artifact card from your graveyard on top of your library') {
     return [{ op: 'graveyardToLibraryTop', target: alloc('cardInGraveyard', ofType('Artifact')) }];
   }
+  // "Put target card from your graveyard on the bottom of your library" (Mistveil Plains): any
+  // card, so the graveyard target carries no filter.
+  if (s === 'put target card from your graveyard on the bottom of your library') {
+    return [{ op: 'graveyardToLibraryBottom', target: alloc('cardInGraveyard') }];
+  }
   if (s === 'exile target attacking or blocking creature') {
     return [{ op: 'exile', target: alloc('creature', { kind: 'inCombat' }) }];
   }

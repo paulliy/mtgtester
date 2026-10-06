@@ -7865,12 +7865,6 @@
     "def": {}
   },
   {
-    "oracleId": "bb5c1817-ac22-4779-9005-251bc354f181",
-    "name": "Mistveil Plains",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
     "name": "Kardur, Doomscourge",
     "handledLines": [],
@@ -17617,12 +17611,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-mistveil-plains",
-    "name": "Mistveil Plains",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-mob-rule",

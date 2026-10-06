@@ -303,12 +303,8 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Michiko Konda, Truth Seeker',
     'Damage-to-you is implemented as damage to permanents you control.',
   );
-  // Catalog audit queen-batch-2: bottom of library authored as library top.
-  unsupportedCard(
-    'bb5c1817-ac22-4779-9005-251bc354f181',
-    'Mistveil Plains',
-    'Bottom-of-library is implemented as graveyardToLibraryTop.',
-  );
+  // Mistveil Plains: restored in coverage PR02. The interpreter reads the bottom-of-library
+  // activation (graveyardToLibraryBottom) and its two-white-permanents condition.
   // Catalog audit queen-batch-1: power uses all graveyards, not opponents' graveyards.
   unsupportedCard(
     '379ed4ec-8f2e-448b-9ed2-a3181e2f877e',

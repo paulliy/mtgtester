@@ -181,6 +181,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'weathered-wayfarer-viewer-equal-lands-blocked',
       'idol-of-oblivion-viewer-token-then-draw',
       'idol-of-oblivion-viewer-eldrazi',
+      'mistveil-plains-viewer-bottom-of-library',
+      'mistveil-plains-viewer-one-white-blocked',
     ]);
   });
 

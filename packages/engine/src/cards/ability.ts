@@ -787,6 +787,8 @@ export type Effect =
   | { op: 'graveyardToHand'; target: EffectRef }
   /** Put target card from your graveyard on top of your library. */
   | { op: 'graveyardToLibraryTop'; target: EffectRef }
+  /** "Put target card from your graveyard on the bottom of your library" (Mistveil Plains). */
+  | { op: 'graveyardToLibraryBottom'; target: EffectRef }
   /** "Return target creature to its owner's hand" — the general permanent-to-hand bounce. */
   | { op: 'returnToHand'; target: EffectRef }
   /** Return one permanent matching a selector; used by bounce lands' mandatory ETB. */
