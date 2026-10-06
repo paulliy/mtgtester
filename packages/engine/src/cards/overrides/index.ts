@@ -78,7 +78,27 @@ export interface CardOverride {
   def: Partial<CardDefinition>;
   /** A confirmed incorrect implementation contained until its faithful replacement lands. */
   unsupportedReason?: string;
+  /**
+   * `'append'` (registered by `extendCard`): the ability lists in `def` are appended to the
+   * interpreted lists instead of replacing them, so the lines the interpreter already parses keep
+   * their parsed abilities. Every other field still merges with the shallow spread.
+   */
+  compose?: 'append';
 }
+
+/**
+ * The `CardDefinition` lists an `'append'` override extends rather than replaces. These are the
+ * per-line ability lists: each printed ability line contributes its own entries, so an override
+ * that models some lines must not erase the entries for the lines it does not claim.
+ */
+export const APPENDABLE_LISTS = [
+  'manaAbilities',
+  'activatedAbilities',
+  'triggers',
+  'staticEffects',
+  'ruleStatics',
+  'keywords',
+] as const satisfies readonly (keyof CardDefinition)[];
 
 /**
  * Every authored override, keyed by oracle id.
@@ -212,6 +232,23 @@ export function defineCard(
 ): void {
   registerOverride({ oracleId, name, handledLines, def });
   registerOverride({ oracleId: fixtureOracleId(name), name, handledLines, def });
+}
+
+/**
+ * Register authored abilities for the lines the interpreter cannot parse, KEEPING the abilities it
+ * did parse from the card's other lines (`compose: 'append'`). Use this rather than `defineCard`
+ * when a card mixes parsed and unparsed lines that land in the same ability list — Aether Hub's
+ * parsed `{T}: Add {C}` beside an authored energy mana ability — so the authored list cannot drop
+ * a parsed ability the way a shallow spread would (overrides rule 4).
+ */
+export function extendCard(
+  oracleId: string,
+  name: string,
+  handledLines: string[],
+  def: Partial<CardDefinition>,
+): void {
+  registerOverride({ oracleId, name, handledLines, def, compose: 'append' });
+  registerOverride({ oracleId: fixtureOracleId(name), name, handledLines, def, compose: 'append' });
 }
 
 /**
@@ -398,6 +435,15 @@ export function applyOverride(def: CardDefinition): CardDefinition {
   }
 
   const merged: CardDefinition = { ...def, ...override.def };
+  if (override.compose === 'append') {
+    const target = merged as unknown as Record<string, unknown[] | undefined>;
+    const parsed = def as unknown as Record<string, unknown[] | undefined>;
+    const authored = override.def as unknown as Record<string, unknown[] | undefined>;
+    for (const key of APPENDABLE_LISTS) {
+      if (authored[key] === undefined) continue;
+      target[key] = [...(parsed[key] ?? []), ...authored[key]];
+    }
+  }
   merged.unmodeledReasons = remaining;
   merged.modeled = remaining.length === 0;
   return merged;

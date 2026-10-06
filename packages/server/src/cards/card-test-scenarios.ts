@@ -5614,6 +5614,74 @@ function retrofitterFoundryScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_GREEN_BEAR = card({
+  oracleId: 'lab-green-bear',
+  name: 'Lab Green Bear',
+  typeLine: 'Creature — Bear',
+  manaCost: '{G}',
+  cmc: 1,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  power: '2',
+  toughness: '2',
+});
+const LAB_GENERIC_BEAR = card({
+  oracleId: 'lab-generic-bear',
+  name: 'Lab Generic Bear',
+  typeLine: 'Artifact Creature — Bear',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '1',
+});
+
+function aetherHubEnergyScenario(gameId: GameId): CardTestScenario {
+  const hub = pinnedFrom(MARCHESA_BATCH1, 'Aether Hub');
+  return pr01Scenario(gameId, {
+    id: 'aether-hub-viewer-energy-any-color',
+    title: 'Aether Hub: enter for energy, then pay it for green',
+    instructions: [
+      'Play Aether Hub; its enters trigger gives you one energy.',
+      'Cast Lab Green Bear, paying {G} with Aether Hub and one energy.',
+    ],
+    expectedOutcome:
+      'Aether Hub enters untapped and gives one energy, then taps and spends it for {G}: Lab Green Bear resolves and you end with zero energy.',
+    oracleSha256: hub.sha256,
+    clauseIds: ['aether-hub-enters-energy', 'aether-hub-energy-any-color'],
+    decks: { P1: [hub.card, LAB_GREEN_BEAR], P2: PR01_FILLER, P3: PR01_FILLER, P4: PR01_FILLER },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Aether Hub', 'Lab Green Bear'] }],
+      battlefield: [],
+    },
+  });
+}
+
+function aetherHubColorlessScenario(gameId: GameId): CardTestScenario {
+  const hub = pinnedFrom(MARCHESA_BATCH1, 'Aether Hub');
+  return pr01Scenario(gameId, {
+    id: 'aether-hub-viewer-colorless',
+    title: 'Aether Hub: colorless mana with no energy',
+    instructions: [
+      'With no energy, cast Lab Generic Bear by tapping Aether Hub for {C}.',
+      'Lab Green Bear stays uncastable: the Hub cannot make {G} without energy.',
+    ],
+    expectedOutcome:
+      'Aether Hub taps for {C} and Lab Generic Bear resolves; you still have zero energy and Lab Green Bear is still in hand.',
+    oracleSha256: hub.sha256,
+    clauseIds: ['aether-hub-colorless'],
+    decks: {
+      P1: [hub.card, LAB_GREEN_BEAR, LAB_GENERIC_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Green Bear', 'Lab Generic Bear'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Aether Hub'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5738,6 +5806,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kogla-viewer-bounce-and-attack',
   'opponent-graveyard-viewer-reanimate',
   'retrofitter-foundry-viewer-servo-thopter-construct',
+  'aether-hub-viewer-energy-any-color',
+  'aether-hub-viewer-colorless',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5860,6 +5930,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kogla-viewer-bounce-and-attack': koglaAttackScenario,
   'opponent-graveyard-viewer-reanimate': opponentGraveyardScenario,
   'retrofitter-foundry-viewer-servo-thopter-construct': retrofitterFoundryScenario,
+  'aether-hub-viewer-energy-any-color': aetherHubEnergyScenario,
+  'aether-hub-viewer-colorless': aetherHubColorlessScenario,
 };
 
 export function createCardTestScenario(

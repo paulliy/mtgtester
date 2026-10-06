@@ -42,6 +42,9 @@ export function overrideSnapshot(): string {
     // change which reasons `applyOverride` clears.
     handledLines: [...o.handledLines].sort(),
     def: canonical(o.def),
+    // An `'append'` override extends the interpreted ability lists instead of replacing them, so
+    // the same `def` means different behavior with and without it.
+    ...(o.compose === undefined ? {} : { compose: o.compose }),
   }));
   return `${JSON.stringify(entries, null, 2)}\n`;
 }

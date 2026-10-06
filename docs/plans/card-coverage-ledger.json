@@ -21,6 +21,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "61c89b11-65c9-4fda-bbcd-d84de25df801",
+    "name": "Aether Hub",
+    "package": "PR02.23",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The colorless mana ability is dropped when the energy mana ability replaces manaAbilities."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "48369aec-a991-4bef-8554-01c84302b063",
     "name": "Aetherspouts",
     "package": "W4",

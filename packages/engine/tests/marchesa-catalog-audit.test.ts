@@ -44,7 +44,7 @@ const OVERRIDES_DIR = join(import.meta.dirname, '../src/cards/overrides');
 function uniqueRegistrations(source: string): Map<string, string> {
   const unique = new Map<string, string>();
   const pattern =
-    /(?:defineCard|unsupportedCard|replaceCard|unimplemented)\(\s*['"]([0-9a-f-]{36})['"],\s*(?:'((?:\\'|[^'])*)'|"((?:\\"|[^"])*)")/g;
+    /(?:defineCard|extendCard|unsupportedCard|replaceCard|unimplemented)\(\s*['"]([0-9a-f-]{36})['"],\s*(?:'((?:\\'|[^'])*)'|"((?:\\"|[^"])*)")/g;
   for (const match of source.matchAll(pattern)) {
     const name = (match[2] ?? match[3] ?? '').replace(/\\'/g, "'").replace(/\\"/g, '"');
     unique.set(match[1]!, name);

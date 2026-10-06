@@ -259,8 +259,6 @@ const REASONS: Record<string, string> = {
   'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  'Aether Hub':
-    'The colorless mana ability is dropped when the energy mana ability replaces manaAbilities.',
   'Solar Transformer':
     'The colorless mana ability is dropped when the energy mana ability replaces manaAbilities.',
   'Nullmage Shepherd': 'The four creatures cannot include this creature.',
@@ -323,6 +321,7 @@ describe('Marchesa catalog audit containment', () => {
     'Forum of Amity',
     // Coverage PR02 (docs/plans/card-coverage-chunks.md).
     'Retrofitter Foundry',
+    'Aether Hub',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

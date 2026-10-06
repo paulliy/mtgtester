@@ -3470,15 +3470,44 @@
     "61c89b11-65c9-4fda-bbcd-d84de25df801": {
       "name": "Aether Hub",
       "oracleSha256": "a6641d8a589b60feec25b6da189a097707da60158d6196778bc6365bcccf88ec",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "{T}: Add {C}.\n{T}, Pay {E}: Add one mana of any color.",
+          "id": "aether-hub-enters-energy",
+          "oracleText": "When this land enters, you get {E}",
+          "implementation": ["authored enters trigger: gainEnergy(1)"],
+          "engineTestIds": ["aether-hub-pinned-oracle-supported", "aether-hub-enters-energy"],
+          "viewerScenarioIds": ["aether-hub-viewer-energy-any-color"]
+        },
+        {
+          "id": "aether-hub-colorless",
+          "oracleText": "{T}: Add {C}.",
           "implementation": [
-            "explicitly unsupported; colorless mana is dropped when energy mana replaces manaAbilities"
+            "interpreted mana ability {T}: Add {C}, kept because extendCard (compose: 'append') appends the authored mana ability instead of replacing manaAbilities"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "aether-hub-pinned-oracle-supported",
+            "extend-card-appends-to-parsed-lists",
+            "extend-card-default-merge-still-replaces",
+            "extend-card-leaves-unlisted-fields-alone",
+            "aether-hub-colorless-without-energy",
+            "aether-hub-one-mana-per-tap"
+          ],
+          "viewerScenarioIds": ["aether-hub-viewer-colorless"]
+        },
+        {
+          "id": "aether-hub-energy-any-color",
+          "oracleText": "{T}, Pay {E}: Add one mana of any color.",
+          "implementation": [
+            "authored mana ability: units [WUBRG], costs [tap, payEnergy(1)], appended to the parsed list"
+          ],
+          "engineTestIds": [
+            "aether-hub-pinned-oracle-supported",
+            "aether-hub-energy-any-color",
+            "aether-hub-no-energy-no-color",
+            "aether-hub-one-mana-per-tap"
+          ],
+          "viewerScenarioIds": ["aether-hub-viewer-energy-any-color", "aether-hub-viewer-colorless"]
         }
       ],
       "gameplayAiScenarioIds": []

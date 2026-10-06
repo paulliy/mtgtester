@@ -12,7 +12,7 @@ import {
   THOPTER_1_1_FLYING,
   TREASURE,
 } from '../tokens';
-import { defineCard, replaceCard, unimplemented, unsupportedCard } from './index';
+import { defineCard, extendCard, replaceCard, unimplemented, unsupportedCard } from './index';
 import { allOf, anyOf, not, ofSubtype, ofSupertype, ofType, OTHER, SELF, YOURS } from '../selector';
 import type { CardDefinition } from '../definition';
 
@@ -896,11 +896,26 @@ export function registerLIVING_ENERGYOverrides(): void {
     PEEMA_AETHER_SEER_DEF,
   );
 
-  // Catalog audit living-energy-batch-6: replacing manaAbilities drops {T}: Add {C}.
-  unsupportedCard(
+  // Coverage PR02: the energy mana ability is appended to the parsed {T}: Add {C} instead of
+  // replacing manaAbilities, which used to drop the colorless ability.
+  extendCard(
     '61c89b11-65c9-4fda-bbcd-d84de25df801',
     'Aether Hub',
-    'The colorless mana ability is dropped when the energy mana ability replaces manaAbilities.',
+    ['When this land enters, you get {E} .', '{T}, Pay {E}: Add one mana of any color.'],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [],
+          effects: [{ op: 'gainEnergy', amount: constant(1) }],
+          description: 'Enters — gain one energy',
+        },
+      ],
+      manaAbilities: [
+        { units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, { kind: 'payEnergy', amount: 1 }] },
+      ],
+    },
   );
 
   defineCard(

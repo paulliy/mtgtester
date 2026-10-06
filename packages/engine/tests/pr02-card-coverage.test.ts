@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
-import { fixtureOracleId, getOverride } from '../src/cards/overrides';
+import { fixtureOracleId, getOverride, registerOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { addMana } from '../src/mana/pool';
@@ -23,8 +23,9 @@ import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
+import { manaSourcesFor } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
@@ -108,6 +109,14 @@ function takeAction(
     applyPriorityAction(ctx, playerById(ctx, playerId), payload, { index: 0, targets }),
     answer,
   );
+}
+
+/** The priority option that casts `objectId` from its current zone, if it is legal now. */
+function castOptionFor(ctx: GameContext, playerId: string, objectId: string) {
+  return priorityOptions(ctx, playerId).find((option) => {
+    const payload = option.payload as PriorityActionPayload;
+    return payload.kind === 'castSpell' && payload.objectId === objectId;
+  });
 }
 
 function resolveTop(ctx: GameContext, answer?: Answer) {
@@ -295,6 +304,154 @@ describe('Retrofitter Foundry', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Shared primitive: extendCard appends authored ability lists to the interpreted ones
+// ---------------------------------------------------------------------------------------------
+
+describe('extendCard ability composition', () => {
+  const twoLines = (name: string) =>
+    oracle({
+      name,
+      typeLine: 'Artifact',
+      oracleText: '{T}: Add {C}.\nFrobnicate the widget.',
+    });
+  const authored = {
+    manaAbilities: [{ units: [['G' as const]] }],
+  };
+
+  it('extend-card-appends-to-parsed-lists — an append override keeps the parsed mana ability', () => {
+    const card = twoLines('Lab Append Rock');
+    registerOverride({
+      oracleId: card.oracleId,
+      name: card.name,
+      handledLines: ['Frobnicate the widget.'],
+      def: authored,
+      compose: 'append',
+    });
+    const def = interpretCard(card);
+    expect(def.modeled).toBe(true);
+    expect(def.manaAbilities).toEqual([{ units: [['C']] }, { units: [['G']] }]);
+  });
+
+  it('extend-card-default-merge-still-replaces — a plain override still replaces the list (rule 4)', () => {
+    const card = twoLines('Lab Replace Rock');
+    registerOverride({
+      oracleId: card.oracleId,
+      name: card.name,
+      handledLines: ['Frobnicate the widget.'],
+      def: authored,
+    });
+    expect(interpretCard(card).manaAbilities).toEqual([{ units: [['G']] }]);
+  });
+
+  it('extend-card-leaves-unlisted-fields-alone — fields the override omits stay interpreted', () => {
+    const card = twoLines('Lab Untouched Rock');
+    registerOverride({
+      oracleId: card.oracleId,
+      name: card.name,
+      handledLines: ['Frobnicate the widget.'],
+      def: { activatedAbilities: [] },
+      compose: 'append',
+    });
+    const def = interpretCard(card);
+    expect(def.manaAbilities).toEqual([{ units: [['C']] }]);
+    expect(def.activatedAbilities).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// 2.23 Aether Hub
+// ---------------------------------------------------------------------------------------------
+
+describe('Aether Hub', () => {
+  const hub = pinned('Aether Hub');
+  const greenSpell = () =>
+    oracle({ name: 'Hub Green Spell', typeLine: 'Creature — Bear', manaCost: '{G}' });
+  const colorlessSpell = () =>
+    oracle({ name: 'Hub Generic Spell', typeLine: 'Creature — Bear', manaCost: '{1}' });
+
+  function withHub(seed: string, energy: number) {
+    const ctx = pod(seed);
+    const land = spawn(ctx, 'P1', hub.card);
+    playerById(ctx, 'P1').energy = energy;
+    return { ctx, land };
+  }
+
+  it('aether-hub-pinned-oracle-supported — appends the energy ability to the parsed {T}: Add {C}', () => {
+    expect(hub.sha256).toBe('a6641d8a589b60feec25b6da189a097707da60158d6196778bc6365bcccf88ec');
+    expect(hub.card.oracleText).toBe(
+      'When this land enters, you get {E} (an energy counter).\n{T}: Add {C}.\n{T}, Pay {E}: Add one mana of any color.',
+    );
+    expectModeled(hub.card);
+    expect(getOverride(hub.card.oracleId)?.compose).toBe('append');
+    const def = interpretCard(hub.card);
+    expect(def.manaAbilities).toEqual([
+      { units: [['C']] },
+      {
+        units: [['W', 'U', 'B', 'R', 'G']],
+        costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 1 }],
+      },
+    ]);
+    expect(def.triggers).toHaveLength(1);
+  });
+
+  it('aether-hub-enters-energy — a normal land play triggers and gives one energy', () => {
+    const ctx = pod('hub-land-play');
+    const inHand = conjure(ctx, 'P1', hub.card, 'hand');
+    const play = priorityOptions(ctx, 'P1').find((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'playLand' && payload.objectId === inHand.id;
+    });
+    expect(play).toBeDefined();
+    takeAction(ctx, 'P1', play!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').energy).toBe(0);
+    settle(ctx);
+    expect(playerById(ctx, 'P1').energy).toBe(1);
+    const entered = ctx.state.battlefield.find((entry) => entry.cardId === inHand.cardId);
+    expect(entered?.tapped).toBe(false);
+  });
+
+  it('aether-hub-colorless-without-energy — {T}: Add {C} pays a generic cost and spends no energy', () => {
+    const { ctx, land } = withHub('hub-colorless', 0);
+    const spell = conjure(ctx, 'P1', colorlessSpell(), 'hand');
+    expect(manaSourcesFor(ctx, 'P1').some((source) => source.cardId === land.cardId)).toBe(true);
+    const cast = castOptionFor(ctx, 'P1', spell.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    expect(land.tapped).toBe(true);
+    expect(playerById(ctx, 'P1').energy).toBe(0);
+    expect(ctx.state.stack).toHaveLength(1);
+  });
+
+  it('aether-hub-energy-any-color — {T}, Pay {E} adds a colored mana and spends the energy', () => {
+    const { ctx, land } = withHub('hub-any-color', 2);
+    const spell = conjure(ctx, 'P1', greenSpell(), 'hand');
+    const cast = castOptionFor(ctx, 'P1', spell.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    expect(land.tapped).toBe(true);
+    expect(playerById(ctx, 'P1').energy).toBe(1);
+    expect(ctx.state.stack).toHaveLength(1);
+  });
+
+  it('aether-hub-no-energy-no-color — without energy the Hub cannot pay {G}', () => {
+    const { ctx } = withHub('hub-no-energy', 0);
+    const spell = conjure(ctx, 'P1', greenSpell(), 'hand');
+    expect(castOptionFor(ctx, 'P1', spell.id)).toBeUndefined();
+  });
+
+  it('aether-hub-one-mana-per-tap — both abilities need {T}, so the Hub cannot pay {G}{1}', () => {
+    const { ctx } = withHub('hub-one-tap', 3);
+    const spell = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Hub Two Mana Spell', typeLine: 'Creature — Bear', manaCost: '{1}{G}' }),
+      'hand',
+    );
+    expect(castOptionFor(ctx, 'P1', spell.id)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -306,6 +463,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Aether Hub',
+    sha256: 'a6641d8a589b60feec25b6da189a097707da60158d6196778bc6365bcccf88ec',
+    clauseCount: 3,
+  },
   {
     name: 'Retrofitter Foundry',
     sha256: '39cf3707dcf66c91dc222d73e8ee28cb898c9969c597ae3c12a916d1b7537bc3',

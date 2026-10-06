@@ -1340,6 +1340,11 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Retrofitter Foundry: Servo, Thopter, then Construct'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aether Hub: enter for energy, then pay it for green'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Aether Hub: colorless mana with no energy'] },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

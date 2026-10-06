@@ -3792,8 +3792,57 @@
   {
     "oracleId": "61c89b11-65c9-4fda-bbcd-d84de25df801",
     "name": "Aether Hub",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this land enters, you get {E} .",
+      "{T}, Pay {E}: Add one mana of any color."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 1,
+              "kind": "payEnergy"
+            }
+          ],
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Enters — gain one energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "63394e24-a456-4cc6-9885-8c62447b050a",
@@ -11196,8 +11245,57 @@
   {
     "oracleId": "oracle-aether-hub",
     "name": "Aether Hub",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this land enters, you get {E} .",
+      "{T}, Pay {E}: Add one mana of any color."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 1,
+              "kind": "payEnergy"
+            }
+          ],
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Enters — gain one energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-aetherflux-conduit",

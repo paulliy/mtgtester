@@ -139,3 +139,33 @@ describe('Retrofitter Foundry Card Test Lab scenario', () => {
     replays('retrofitter-foundry-viewer-servo-thopter-construct', steps);
   });
 });
+
+describe('Aether Hub Card Test Lab scenarios', () => {
+  const energySteps: Step[] = [{ action: 'Play Aether Hub' }, { action: 'Cast Lab Green Bear' }];
+
+  it('aether-hub-viewer-energy-any-color — enters for one energy, then spends it for {G}', () => {
+    const { seat, onBattlefield, state } = run('aether-hub-viewer-energy-any-color', energySteps);
+    expect(onBattlefield('Lab Green Bear')).toHaveLength(1);
+    expect(onBattlefield('Aether Hub')[0]?.tapped).toBe(true);
+    expect(seat('P1').energy).toBe(0);
+    expect(seat('P1').hand).toEqual([]);
+    expect(state.eventLog.find((event) => event.type === 'energy')?.payload).toMatchObject({
+      player: 'P1',
+      amount: 1,
+      total: 1,
+    });
+    replays('aether-hub-viewer-energy-any-color', energySteps);
+  });
+
+  const colorlessSteps: Step[] = [{ action: 'Cast Lab Generic Bear' }];
+
+  it('aether-hub-viewer-colorless — taps for {C} with no energy; {G} stays unpayable', () => {
+    const { seat, onBattlefield, offered } = run('aether-hub-viewer-colorless', colorlessSteps);
+    expect(offered.flat().some((action) => action.includes('Cast Lab Green Bear'))).toBe(false);
+    expect(onBattlefield('Lab Generic Bear')).toHaveLength(1);
+    expect(onBattlefield('Aether Hub')[0]?.tapped).toBe(true);
+    expect(seat('P1').energy).toBe(0);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Green Bear']);
+    replays('aether-hub-viewer-colorless', colorlessSteps);
+  });
+});

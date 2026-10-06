@@ -2803,21 +2803,9 @@ async function activateAndResolve(
   name: RegExp,
   resolves: string,
 ): Promise<void> {
-  const resolved = page.getByText(`${resolves} resolves`);
-  const before = await resolved.count();
+  const before = await page.getByText(`${resolves} resolves`).count();
   await activate(page, source, name);
-  const empty = page.getByText('empty', { exact: true });
-  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
-  await expect
-    .poll(
-      async () => {
-        if ((await resolved.count()) > before) return true;
-        if ((await empty.count()) === 0 && (await pass.isEnabled())) await pass.click();
-        return false;
-      },
-      { timeout: 15_000 },
-    )
-    .toBe(true);
+  await awaitResolution(page, resolves, before);
 }
 
 test('Retrofitter Foundry: Servo, Thopter, then Construct', async ({ page }) => {
@@ -2856,4 +2844,59 @@ test('Retrofitter Foundry: Servo, Thopter, then Construct', async ({ page }) => 
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Construct')).toBeVisible();
+});
+
+/** Wait until the action log shows `resolves` resolving more than `before` times. */
+async function awaitResolution(page: Page, resolves: string, before: number): Promise<void> {
+  const resolved = page.getByText(`${resolves} resolves`);
+  const empty = page.getByText('empty', { exact: true });
+  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  await expect
+    .poll(
+      async () => {
+        if ((await resolved.count()) > before) return true;
+        if ((await empty.count()) === 0 && (await pass.isEnabled())) await pass.click();
+        return false;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+}
+
+/** Cast a hand card with auto-pay and wait for it to resolve. */
+async function castAndResolve(page: Page, name: string): Promise<void> {
+  const before = await page.getByText(`${name} resolves`).count();
+  const spell = handCard(page, name);
+  await expect(spell).toHaveClass(/actionable/, { timeout: 15_000 });
+  await spell.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, name, before);
+}
+
+test('Aether Hub: enter for energy, then pay it for green', async ({ page }) => {
+  await runScenario(page, 'Aether Hub: enter for energy, then pay it for green');
+  await expect(handCard(page, 'Lab Green Bear')).not.toHaveClass(/actionable/);
+
+  await handCard(page, 'Aether Hub').click();
+  await awaitResolution(page, 'Enters — gain one energy', 0);
+  await expect(permanent(page, 'Aether Hub').locator('.tap-badge')).toHaveCount(0);
+
+  await castAndResolve(page, 'Lab Green Bear');
+  await expect(permanent(page, 'Lab Green Bear')).toBeVisible();
+  await expect(permanent(page, 'Aether Hub').locator('.tap-badge')).toHaveText('TAP');
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});
+
+test('Aether Hub: colorless mana with no energy', async ({ page }) => {
+  await runScenario(page, 'Aether Hub: colorless mana with no energy');
+  await expect(handCard(page, 'Lab Green Bear')).not.toHaveClass(/actionable/);
+
+  await castAndResolve(page, 'Lab Generic Bear');
+  await expect(permanent(page, 'Lab Generic Bear')).toBeVisible();
+  await expect(permanent(page, 'Aether Hub').locator('.tap-badge')).toHaveText('TAP');
+  await expect(handCard(page, 'Lab Green Bear')).toBeVisible();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
 });
