@@ -7019,8 +7019,73 @@
   {
     "oracleId": "bcad5b83-5513-4455-a9c9-716281505eaa",
     "name": "Canoptek Spyder",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Draw a card when another nontoken artifact creature or Vehicle enters",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "isToken"
+                    }
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "allOf",
+                        "of": [
+                          {
+                            "kind": "type",
+                            "value": "Artifact"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Creature"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Vehicle"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "bd92cacd-c7d8-43a2-a261-ea4754fefdc5",
@@ -10902,8 +10967,73 @@
   {
     "oracleId": "oracle-canoptek-spyder",
     "name": "Canoptek Spyder",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Draw a card when another nontoken artifact creature or Vehicle enters",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "isToken"
+                    }
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "allOf",
+                        "of": [
+                          {
+                            "kind": "type",
+                            "value": "Artifact"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Creature"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Vehicle"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-canoptek-tomb-sentinel",

@@ -280,6 +280,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "bcad5b83-5513-4455-a9c9-716281505eaa",
+    "name": "Canoptek Spyder",
+    "package": "PR01.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.\"",
+      "explicitly unsupported: Vehicle is selected as a type rather than a subtype, so Vehicles do not trigger the draw."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "e9566303-15cf-4444-a044-fc19540f21b6",
     "name": "Captain America, Skybound",
     "package": "W3",

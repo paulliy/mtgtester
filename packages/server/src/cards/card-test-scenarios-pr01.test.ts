@@ -166,3 +166,16 @@ describe('Beacon of Unrest Card Test Lab scenario', () => {
     replays('beacon-of-unrest-viewer-reanimate-and-shuffle', steps);
   });
 });
+
+describe('Canoptek Spyder Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Lab Skiff' }];
+
+  it('canoptek-spyder-viewer-vehicle-draw — a noncreature Vehicle entering triggers the draw', () => {
+    const { state, seat, onBattlefield } = run('canoptek-spyder-viewer-vehicle-draw', steps);
+    expect(onBattlefield('Lab Skiff')).toHaveLength(1);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Spyder Drawn Card']);
+    expect(seat('P1').library).toEqual([]);
+    expect(state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(1);
+    replays('canoptek-spyder-viewer-vehicle-draw', steps);
+  });
+});

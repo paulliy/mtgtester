@@ -1808,3 +1808,17 @@ test('Beacon of Unrest: reanimate a creature card, shuffle Beacon away', async (
   await expect(page.getByText(/Graveyard\s*0/).first()).toBeVisible();
   await expect(page.getByText(/Library\s*1/).first()).toBeVisible();
 });
+
+test('Canoptek Spyder: a Vehicle entering draws a card', async ({ page }) => {
+  await runScenario(page, 'Canoptek Spyder: a Vehicle entering draws a card');
+
+  const skiff = handCard(page, 'Lab Skiff');
+  await expect(skiff).toHaveClass(/actionable/);
+  await skiff.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Skiff')).toBeVisible();
+  await expect(handCard(page, 'Spyder Drawn Card')).toBeVisible();
+});

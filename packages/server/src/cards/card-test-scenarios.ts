@@ -4193,6 +4193,46 @@ function beaconOfUnrestScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function canoptekSpyderScenario(gameId: GameId): CardTestScenario {
+  const spyder = pinnedFrom(MARCHESA_BATCH1, 'Canoptek Spyder');
+  const vehicle = card({
+    oracleId: 'lab-spyder-vehicle',
+    name: 'Lab Skiff',
+    typeLine: 'Artifact — Vehicle',
+    manaCost: '{1}',
+    cmc: 1,
+  });
+  const drawn = card({
+    oracleId: 'lab-spyder-drawn',
+    name: 'Spyder Drawn Card',
+    typeLine: 'Creature — Secret',
+    manaCost: '{6}',
+    cmc: 6,
+  });
+  return pr01Scenario(gameId, {
+    id: 'canoptek-spyder-viewer-vehicle-draw',
+    title: 'Canoptek Spyder: a Vehicle entering draws a card',
+    instructions: [
+      'Cast Lab Skiff, a noncreature artifact Vehicle, from your hand with your Forest.',
+      "Let it resolve so Canoptek Spyder's Fabricator Claw Array triggers, then let the trigger resolve.",
+    ],
+    expectedOutcome:
+      'Lab Skiff enters, the Spyder trigger resolves, and you draw Spyder Drawn Card from the top of your library.',
+    oracleSha256: spyder.sha256,
+    clauseIds: ['canoptek-spyder-artifact-creature-or-vehicle-draw'],
+    decks: {
+      P1: [spyder.card, vehicle, FOREST, drawn],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Skiff'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Canoptek Spyder', 'Forest'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4278,6 +4318,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'forum-of-amity-viewer-surveil',
   'attune-with-aether-viewer-reveal-to-hand',
   'beacon-of-unrest-viewer-reanimate-and-shuffle',
+  'canoptek-spyder-viewer-vehicle-draw',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4359,6 +4400,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'forum-of-amity-viewer-surveil': forumOfAmityScenario,
   'attune-with-aether-viewer-reveal-to-hand': attuneWithAetherScenario,
   'beacon-of-unrest-viewer-reanimate-and-shuffle': beaconOfUnrestScenario,
+  'canoptek-spyder-viewer-vehicle-draw': canoptekSpyderScenario,
 };
 
 export function createCardTestScenario(

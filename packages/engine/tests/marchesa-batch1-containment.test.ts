@@ -231,8 +231,6 @@ const REASONS: Record<string, string> = {
   'Lightning Runner':
     'Untap all creatures you control is implemented as untapEach of all permanents you control.',
   'Aetheric Amplifier': 'Choose-one is implemented as two independent activated abilities.',
-  'Canoptek Spyder':
-    'Vehicle is selected as a type rather than a subtype, so Vehicles do not trigger the draw.',
   'Peema Trailblazer': 'Exhaust is omitted, and the ability requires tapping this creature.',
   'Saheeli, Radiant Creator':
     'The copy is a reflexive trigger after payment; the target is chosen before you decide to pay.',
@@ -325,6 +323,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Canoptek Spyder',
     'Beacon of Unrest',
     'Attune with Aether',
     'Forum of Amity',

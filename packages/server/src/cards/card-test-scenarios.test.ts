@@ -124,6 +124,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'forum-of-amity-viewer-surveil',
       'attune-with-aether-viewer-reveal-to-hand',
       'beacon-of-unrest-viewer-reanimate-and-shuffle',
+      'canoptek-spyder-viewer-vehicle-draw',
     ]);
   });
 

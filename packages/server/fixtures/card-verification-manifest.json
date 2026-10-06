@@ -2438,15 +2438,30 @@
     "bcad5b83-5513-4455-a9c9-716281505eaa": {
       "name": "Canoptek Spyder",
       "oracleSha256": "53b215a10a556d1e72d4f977805f0cb972b18a035e0e0e3e8d4a9e928b9c5e20",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "canoptek-spyder-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["canoptek-spyder-pinned-oracle-supported"],
+          "viewerScenarioIds": ["canoptek-spyder-viewer-vehicle-draw"]
+        },
+        {
+          "id": "canoptek-spyder-artifact-creature-or-vehicle-draw",
           "oracleText": "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.",
           "implementation": [
-            "explicitly unsupported; Vehicle selected as a type rather than a subtype"
+            "enters trigger on permanent matching other + yours + nontoken + (Artifact and Creature, or subtype Vehicle)",
+            "draw(1)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "canoptek-spyder-nontoken-artifact-creature-draws",
+            "canoptek-spyder-vehicle-draws",
+            "canoptek-spyder-tokens-do-not-draw",
+            "canoptek-spyder-filter-negatives",
+            "canoptek-spyder-two-spyders"
+          ],
+          "viewerScenarioIds": ["canoptek-spyder-viewer-vehicle-draw"]
         }
       ],
       "gameplayAiScenarioIds": []

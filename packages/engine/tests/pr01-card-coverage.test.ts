@@ -23,8 +23,9 @@ import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { executeAbility } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { runPrioritySequence } from '../src/turn/priority';
 import { createGame } from '../src/state/game';
-import { playerById } from '../src/state/objects';
+import { moveObject, playerById } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { formatPlayerLog } from '../src/view/spectator';
 import { buildPlayerView } from '../src/view/view';
@@ -133,6 +134,31 @@ function castOptionFor(ctx: GameContext, playerId: string, objectId: string) {
 
 function resolveTop(ctx: GameContext, answer?: Answer) {
   return pump(resolveTopOfStack(ctx), answer);
+}
+
+/**
+ * Run the normal priority loop with every player passing: pending triggers go on the stack and
+ * resolve in order. Non-priority decisions go to `answer` (default: first option).
+ */
+function settle(ctx: GameContext, answer?: Answer) {
+  return pump(runPrioritySequence(ctx), (decision, count) => {
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    if (pass >= 0) return { index: pass, targets: new Map() };
+    return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+  });
+}
+
+/** Move a card onto the battlefield through the normal zone change, queueing its triggers. */
+function enter(
+  ctx: GameContext,
+  controllerId: string,
+  card: OracleCard,
+  opts?: { token?: boolean },
+) {
+  const object = conjure(ctx, controllerId, card, 'hand');
+  if (opts?.token === true) object.isToken = true;
+  pump(moveObject(ctx, object, { zone: 'battlefield', controllerId }));
+  return object;
 }
 
 function spellAbilityOf(effects: Effect[]): Ability {
@@ -502,6 +528,71 @@ describe('Beacon of Unrest', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.04 Canoptek Spyder
+// ---------------------------------------------------------------------------------------------
+
+describe('Canoptek Spyder', () => {
+  const spyder = pinned('Canoptek Spyder');
+  const cog = () =>
+    oracle({ name: 'Spyder Cog', typeLine: 'Artifact Creature — Construct', manaCost: '{2}' });
+  const vehicle = () =>
+    oracle({ name: 'Spyder Vehicle', typeLine: 'Artifact — Vehicle', manaCost: '{2}' });
+  const relic = () => oracle({ name: 'Spyder Relic', typeLine: 'Artifact', manaCost: '{1}' });
+
+  function board(seed: string) {
+    const ctx = pod(seed);
+    spawn(ctx, 'P1', spyder.card);
+    return { ctx, hand: () => playerById(ctx, 'P1').hand.length };
+  }
+
+  /** Cards drawn by P1 after `act` once every resulting trigger has resolved. */
+  function drawsAfter(ctx: GameContext, act: () => void): number {
+    const before = playerById(ctx, 'P1').hand.length;
+    act();
+    settle(ctx);
+    return playerById(ctx, 'P1').hand.length - before;
+  }
+
+  it('canoptek-spyder-pinned-oracle-supported — pins the Oracle and models flying plus the draw trigger', () => {
+    expect(spyder.sha256).toBe('53b215a10a556d1e72d4f977805f0cb972b18a035e0e0e3e8d4a9e928b9c5e20');
+    const def = interpretCard(spyder.card);
+    expect(def.modeled).toBe(true);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers).toHaveLength(1);
+  });
+
+  it('canoptek-spyder-nontoken-artifact-creature-draws — another nontoken artifact creature you control entering draws a card', () => {
+    const { ctx } = board('spyder-cog');
+    expect(drawsAfter(ctx, () => enter(ctx, 'P1', cog()))).toBe(1);
+  });
+
+  it('canoptek-spyder-vehicle-draws — a noncreature Vehicle you control entering draws a card', () => {
+    const { ctx } = board('spyder-vehicle');
+    expect(drawsAfter(ctx, () => enter(ctx, 'P1', vehicle()))).toBe(1);
+  });
+
+  it('canoptek-spyder-tokens-do-not-draw — artifact creature and Vehicle tokens do not trigger', () => {
+    const { ctx } = board('spyder-tokens');
+    expect(drawsAfter(ctx, () => enter(ctx, 'P1', cog(), { token: true }))).toBe(0);
+    expect(drawsAfter(ctx, () => enter(ctx, 'P1', vehicle(), { token: true }))).toBe(0);
+  });
+
+  it("canoptek-spyder-filter-negatives — nonartifact creatures, plain artifacts, opponents' permanents, and itself do not trigger", () => {
+    const { ctx } = board('spyder-negatives');
+    expect(drawsAfter(ctx, () => enter(ctx, 'P1', bear()))).toBe(0);
+    expect(drawsAfter(ctx, () => enter(ctx, 'P1', relic()))).toBe(0);
+    expect(drawsAfter(ctx, () => enter(ctx, 'P2', cog()))).toBe(0);
+    const fresh = pod('spyder-self');
+    expect(drawsAfter(fresh, () => enter(fresh, 'P1', spyder.card))).toBe(0);
+  });
+
+  it('canoptek-spyder-two-spyders — each Spyder triggers for another entering Spyder', () => {
+    const { ctx } = board('spyder-pair');
+    expect(drawsAfter(ctx, () => enter(ctx, 'P1', spyder.card))).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -526,6 +617,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Beacon of Unrest',
     sha256: 'e8e9347132f2e3a9e1529d4ac633e47efaa45a78780e6efb21226d155a7c58d4',
+    clauseCount: 2,
+  },
+  {
+    name: 'Canoptek Spyder',
+    sha256: '53b215a10a556d1e72d4f977805f0cb972b18a035e0e0e3e8d4a9e928b9c5e20',
     clauseCount: 2,
   },
 ];
