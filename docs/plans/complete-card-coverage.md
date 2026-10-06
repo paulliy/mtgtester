@@ -1,6 +1,7 @@
 # Complete card coverage plan
 
-Prepared 2026-09-06 from the current working tree and local Oracle cache. Status: active; W1 and W2 are complete.
+Prepared 2026-09-06 from the current working tree and local Oracle cache. Status: active; W1 and W2 are complete. The remaining 302 cards are scheduled as eleven
+~30-card PRs, one card per commit, in [card coverage chunks](card-coverage-chunks.md).
 
 ## Scope and measured baseline
 
