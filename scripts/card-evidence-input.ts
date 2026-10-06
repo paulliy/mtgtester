@@ -1353,6 +1353,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Solar Transformer: colorless mana with no energy'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Bespoke Battlewagon: tap for energy, then crew 4'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Bespoke Battlewagon: pay four energy to animate, then draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Bespoke Battlewagon: pay two energy to tap P2's creature"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

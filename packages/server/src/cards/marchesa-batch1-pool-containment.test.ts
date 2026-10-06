@@ -26,6 +26,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Arcane Denial',
       'Attune with Aether',
       'Beacon of Unrest',
+      'Bespoke Battlewagon',
       'Canoptek Spyder',
       'Canoptek Wraith',
       "Conjurer's Closet",

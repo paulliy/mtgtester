@@ -8739,8 +8739,111 @@
   {
     "oracleId": "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0",
     "name": "Bespoke Battlewagon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Pay {E}{E}{E}{E}: ~ becomes an artifact creature until end of turn.",
+      "{T}, Pay {E}{E}: Tap target creature.",
+      "{T}, Pay {E}{E}{E}: Draw a card.",
+      "{T}: You get {E}{E} ."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}: You get {E}{E}.",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 2
+                },
+                "op": "gainEnergy"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "{T}, Pay {E}{E}: Tap target creature.",
+            "effects": [
+              {
+                "op": "tapTarget",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 2,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "{T}, Pay {E}{E}{E}: Draw a card.",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 3,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.",
+            "effects": [
+              {
+                "op": "becomeArtifactCreature"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "amount": 4,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "ce08aff3-efe6-4186-9557-274e00a7ca38",
@@ -12238,8 +12341,111 @@
   {
     "oracleId": "oracle-bespoke-battlewagon",
     "name": "Bespoke Battlewagon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Pay {E}{E}{E}{E}: ~ becomes an artifact creature until end of turn.",
+      "{T}, Pay {E}{E}: Tap target creature.",
+      "{T}, Pay {E}{E}{E}: Draw a card.",
+      "{T}: You get {E}{E} ."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}: You get {E}{E}.",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 2
+                },
+                "op": "gainEnergy"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "{T}, Pay {E}{E}: Tap target creature.",
+            "effects": [
+              {
+                "op": "tapTarget",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 2,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "{T}, Pay {E}{E}{E}: Draw a card.",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 3,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.",
+            "effects": [
+              {
+                "op": "becomeArtifactCreature"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "amount": 4,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-biotransference",

@@ -18,10 +18,12 @@ import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId, getOverride, registerOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
+import { endUntilEotEffects } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { createGame } from '../src/state/game';
+import { prepareScenario } from '../src/testing/prepared-scenario';
 import { playerById } from '../src/state/objects';
 import { manaSourcesFor } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
@@ -534,6 +536,177 @@ describe('Solar Transformer', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.32 Bespoke Battlewagon
+// ---------------------------------------------------------------------------------------------
+
+describe('Bespoke Battlewagon', () => {
+  const wagon = pinned('Bespoke Battlewagon');
+  const GAIN = /\{T\}: You get \{E\}\{E\}/;
+  const TAP_TARGET = /Tap target creature/;
+  const DRAW = /Draw a card/;
+  const ANIMATE = /becomes an artifact creature/;
+  const CREW = /^.*Crew 4/;
+
+  function ready(seed: string, energy: number) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', wagon.card);
+    playerById(ctx, 'P1').energy = energy;
+    return { ctx, source };
+  }
+
+  const isCreature = (ctx: GameContext, perm: EnginePermanent) =>
+    computeCharacteristics(ctx, perm).types.includes('Creature');
+
+  it('bespoke-battlewagon-pinned-oracle-supported — appends four energy activations to the parsed Crew 4', () => {
+    expect(wagon.sha256).toBe('17244fc3e0a51b50c27c6b7583124bd9d6773c9a102cea36f4055792ea885d21');
+    expect(wagon.card.oracleText).toBe(
+      '{T}: You get {E}{E} (two energy counters).\n{T}, Pay {E}{E}: Tap target creature.\n{T}, Pay {E}{E}{E}: Draw a card.\nPay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.\nCrew 4',
+    );
+    expectModeled(wagon.card);
+    expect(getOverride(wagon.card.oracleId)?.compose).toBe('append');
+    const def = interpretCard(wagon.card);
+    expect(def.activatedAbilities.map((entry) => entry.ability.description)).toEqual([
+      'Crew 4',
+      '{T}: You get {E}{E}.',
+      '{T}, Pay {E}{E}: Tap target creature.',
+      '{T}, Pay {E}{E}{E}: Draw a card.',
+      'Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.',
+    ]);
+  });
+
+  it('prepared-scenario-energy — a Card Test Lab position can start a player with energy', () => {
+    const ctx = pod('wagon-prepared-energy');
+    prepareScenario(ctx, {
+      currentTurnPlayer: 'P1',
+      phase: 'precombatMain',
+      step: null,
+      turnNumber: 1,
+      hand: [],
+      battlefield: [],
+      energy: [{ playerId: 'P1', amount: 7 }],
+    });
+    expect(playerById(ctx, 'P1').energy).toBe(7);
+    expect(playerById(ctx, 'P2').energy).toBe(0);
+    expect(() =>
+      prepareScenario(ctx, {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [],
+        battlefield: [],
+        energy: [{ playerId: 'P9', amount: 1 }],
+      }),
+    ).toThrow(/unknown player/);
+  });
+
+  it('bespoke-battlewagon-gain-energy — {T} gives two energy through the stack', () => {
+    const { ctx, source } = ready('wagon-gain', 0);
+    const option = activationMatching(ctx, 'P1', source, GAIN);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(true);
+    expect(playerById(ctx, 'P1').energy).toBe(0);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').energy).toBe(2);
+  });
+
+  it('bespoke-battlewagon-tap-abilities-need-untapped — a tapped Battlewagon offers only the energy animation', () => {
+    const { ctx, source } = ready('wagon-tapped', 9);
+    source.tapped = true;
+    const offered = activationsOf(ctx, 'P1', source).map((option) => option.description);
+    expect(offered.some((text) => GAIN.test(text))).toBe(false);
+    expect(offered.some((text) => TAP_TARGET.test(text))).toBe(false);
+    expect(offered.some((text) => DRAW.test(text))).toBe(false);
+    expect(offered.some((text) => ANIMATE.test(text))).toBe(true);
+  });
+
+  it('bespoke-battlewagon-tap-target-creature — {T}, Pay {E}{E} taps an opponent’s creature', () => {
+    const { ctx, source } = ready('wagon-tap-target', 2);
+    const victim = spawn(ctx, 'P2', oracle({ name: 'Wagon Victim', typeLine: 'Creature — Ox' }));
+    const option = activationMatching(ctx, 'P1', source, TAP_TARGET);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, victim.id]]),
+    );
+    expect(playerById(ctx, 'P1').energy).toBe(0);
+    expect(victim.tapped).toBe(false);
+    resolveTop(ctx);
+    expect(victim.tapped).toBe(true);
+  });
+
+  it('bespoke-battlewagon-tap-target-needs-two-energy — one energy cannot pay it', () => {
+    const { ctx, source } = ready('wagon-tap-short', 1);
+    spawn(ctx, 'P2', oracle({ name: 'Wagon Victim', typeLine: 'Creature — Ox' }));
+    expect(activationMatching(ctx, 'P1', source, TAP_TARGET)).toBeUndefined();
+  });
+
+  it('bespoke-battlewagon-draw — {T}, Pay {E}{E}{E} draws a card', () => {
+    const { ctx, source } = ready('wagon-draw', 3);
+    const before = playerById(ctx, 'P1').hand.length;
+    const option = activationMatching(ctx, 'P1', source, DRAW);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').energy).toBe(0);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(before + 1);
+    const short = ready('wagon-draw-short', 2);
+    expect(activationsOf(short.ctx, 'P1', short.source).length).toBeGreaterThan(0);
+    expect(activationMatching(short.ctx, 'P1', short.source, DRAW)).toBeUndefined();
+  });
+
+  it('bespoke-battlewagon-animate — Pay {E}{E}{E}{E} makes it a 5/6 artifact creature until end of turn, uncrewed', () => {
+    const { ctx, source } = ready('wagon-animate', 4);
+    expect(isCreature(ctx, source)).toBe(false);
+    const option = activationMatching(ctx, 'P1', source, ANIMATE);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(false);
+    expect(playerById(ctx, 'P1').energy).toBe(0);
+    resolveTop(ctx);
+    const chars = computeCharacteristics(ctx, source);
+    expect(chars.types).toEqual(expect.arrayContaining(['Artifact', 'Creature']));
+    expect([chars.power, chars.toughness]).toEqual([5, 6]);
+    endUntilEotEffects(ctx);
+    expect(isCreature(ctx, source)).toBe(false);
+  });
+
+  it('bespoke-battlewagon-animate-needs-four-energy — three energy cannot pay it', () => {
+    const { ctx, source } = ready('wagon-animate-short', 3);
+    expect(activationMatching(ctx, 'P1', source, ANIMATE)).toBeUndefined();
+  });
+
+  it('bespoke-battlewagon-crew-kept — Crew 4 still taps power-4 creatures to animate it', () => {
+    const { ctx, source } = ready('wagon-crew', 0);
+    const crew = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Wagon Crew', typeLine: 'Creature — Giant', power: '4', toughness: '4' }),
+    );
+    const option = activationMatching(ctx, 'P1', source, CREW);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(crew.tapped).toBe(true);
+    resolveTop(ctx);
+    expect(isCreature(ctx, source)).toBe(true);
+  });
+
+  it('bespoke-battlewagon-crew-needs-power-four — a 3-power creature cannot crew it', () => {
+    const { ctx, source } = ready('wagon-crew-short', 0);
+    spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Wagon Weakling', typeLine: 'Creature — Elf', power: '3', toughness: '3' }),
+    );
+    expect(activationMatching(ctx, 'P1', source, CREW)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -545,6 +718,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Bespoke Battlewagon',
+    sha256: '17244fc3e0a51b50c27c6b7583124bd9d6773c9a102cea36f4055792ea885d21',
+    clauseCount: 5,
+  },
   {
     name: 'Solar Transformer',
     sha256: '2a416da6016481cde18645f08b0a9c28b2da620d08fe234bb82abcf7ef8719a3',

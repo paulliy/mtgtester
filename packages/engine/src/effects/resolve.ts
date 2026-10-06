@@ -4983,7 +4983,8 @@ export function* executeAbility(
         emit(ctx, 'becomeCreature', { source: source.name, target: perm.name });
         break;
       }
-      case 'crewVehicle': {
+      case 'crewVehicle':
+      case 'becomeArtifactCreature': {
         const t = ref('source');
         if (t === null) break;
         const perm = findPermanent(ctx, t);

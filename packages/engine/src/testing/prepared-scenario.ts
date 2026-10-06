@@ -14,6 +14,8 @@ export interface PreparedScenarioSpec {
     tapped?: boolean;
   }>;
   graveyard?: Array<{ playerId: PlayerId; cardNames: string[] }>;
+  /** Starting energy counters (CR 122.1) per player, standing in for energy gained earlier. */
+  energy?: Array<{ playerId: PlayerId; amount: number }>;
   /** Arrange already-cast spells below the tested response. */
   stack?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /** Lab-only finite continuation used to exercise next-upkeep delayed triggers. */
@@ -91,6 +93,13 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
       permanent.enteredTurnNumber = spec.turnNumber - 1;
       ctx.state.battlefield.push(permanent);
     }
+  }
+
+  for (const entry of spec.energy ?? []) {
+    const player = ctx.state.players.find((candidate) => candidate.id === entry.playerId);
+    if (player === undefined)
+      throw new Error(`prepared scenario has unknown player ${entry.playerId}`);
+    player.energy = entry.amount;
   }
 
   for (const entry of spec.graveyard ?? []) {

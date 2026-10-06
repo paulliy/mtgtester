@@ -2931,3 +2931,54 @@ test('Solar Transformer: colorless mana with no energy', async ({ page }) => {
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
 });
+
+test('Bespoke Battlewagon: tap for energy, then crew 4', async ({ page }) => {
+  await runScenario(page, 'Bespoke Battlewagon: tap for energy, then crew 4');
+  const wagon = 'Bespoke Battlewagon';
+
+  await activateAndResolve(page, wagon, /You get \{E\}\{E\}/, 'You get {E}{E}.');
+  await expect(permanent(page, wagon).locator('.tap-badge')).toHaveText('TAP');
+  await activateAndResolve(page, wagon, /Crew 4/, 'Crew 4');
+  await expect(permanent(page, 'Lab Giant').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, wagon)).toContainText('5/6');
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});
+
+test('Bespoke Battlewagon: pay four energy to animate, then draw', async ({ page }) => {
+  await runScenario(page, 'Bespoke Battlewagon: pay four energy to animate, then draw');
+  const wagon = 'Bespoke Battlewagon';
+
+  await activateAndResolve(
+    page,
+    wagon,
+    /becomes an artifact creature/,
+    'becomes an artifact creature until end of turn.',
+  );
+  await expect(permanent(page, wagon)).toContainText('5/6');
+  await expect(permanent(page, wagon).locator('.tap-badge')).toHaveCount(0);
+  await activateAndResolve(page, wagon, /Draw a card/, 'Draw a card.');
+  await expect(handCard(page, 'Forest')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  const skipLand = page.getByRole('button', { name: 'Pass anyway' });
+  if (await skipLand.isVisible()) await skipLand.click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});
+
+test("Bespoke Battlewagon: pay two energy to tap P2's creature", async ({ page }) => {
+  await runScenario(page, "Bespoke Battlewagon: pay two energy to tap P2's creature");
+  const wagon = permanent(page, 'Bespoke Battlewagon');
+  await expect(wagon).toHaveClass(/actionable/);
+  await wagon.click();
+  await page.getByRole('button', { name: /Tap target creature/ }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Tap target creature.', 0);
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+  await expect(wagon.locator('.tap-badge')).toHaveText('TAP');
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});

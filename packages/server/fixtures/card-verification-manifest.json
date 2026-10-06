@@ -2818,15 +2818,71 @@
     "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0": {
       "name": "Bespoke Battlewagon",
       "oracleSha256": "17244fc3e0a51b50c27c6b7583124bd9d6773c9a102cea36f4055792ea885d21",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.\nCrew 4",
+          "id": "bespoke-battlewagon-gain-energy",
+          "oracleText": "{T}: You get {E}{E}",
           "implementation": [
-            "explicitly unsupported; Crew 4 dropped by replacement activatedAbilities"
+            "authored activated ability (appended by extendCard): costs [tap], effect gainEnergy(2)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "bespoke-battlewagon-pinned-oracle-supported",
+            "bespoke-battlewagon-gain-energy",
+            "bespoke-battlewagon-tap-abilities-need-untapped"
+          ],
+          "viewerScenarioIds": ["bespoke-battlewagon-viewer-energy-and-crew"]
+        },
+        {
+          "id": "bespoke-battlewagon-tap-target",
+          "oracleText": "{T}, Pay {E}{E}: Tap target creature.",
+          "implementation": [
+            "authored activated ability: costs [tap, payEnergy(2)], target creature, effect tapTarget"
+          ],
+          "engineTestIds": [
+            "bespoke-battlewagon-tap-target-creature",
+            "bespoke-battlewagon-tap-target-needs-two-energy",
+            "bespoke-battlewagon-tap-abilities-need-untapped"
+          ],
+          "viewerScenarioIds": ["bespoke-battlewagon-viewer-tap-target"]
+        },
+        {
+          "id": "bespoke-battlewagon-draw",
+          "oracleText": "{T}, Pay {E}{E}{E}: Draw a card.",
+          "implementation": [
+            "authored activated ability: costs [tap, payEnergy(3)], effect draw(1)"
+          ],
+          "engineTestIds": [
+            "bespoke-battlewagon-draw",
+            "bespoke-battlewagon-tap-abilities-need-untapped"
+          ],
+          "viewerScenarioIds": ["bespoke-battlewagon-viewer-animate-and-draw"]
+        },
+        {
+          "id": "bespoke-battlewagon-animate",
+          "oracleText": "Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.",
+          "implementation": [
+            "authored activated ability: costs [payEnergy(4)], effect becomeArtifactCreature — the crew layer-4 becomeCreature effect at printed 5/6 without crewing it (CR 702.122b)"
+          ],
+          "engineTestIds": [
+            "bespoke-battlewagon-animate",
+            "bespoke-battlewagon-animate-needs-four-energy",
+            "prepared-scenario-energy"
+          ],
+          "viewerScenarioIds": ["bespoke-battlewagon-viewer-animate-and-draw"]
+        },
+        {
+          "id": "bespoke-battlewagon-crew",
+          "oracleText": "Crew 4",
+          "implementation": [
+            "interpreted Crew 4 (tapCreaturesTotalPower 4 → crewVehicle), kept because extendCard appends instead of replacing activatedAbilities"
+          ],
+          "engineTestIds": [
+            "bespoke-battlewagon-pinned-oracle-supported",
+            "bespoke-battlewagon-crew-kept",
+            "bespoke-battlewagon-crew-needs-power-four"
+          ],
+          "viewerScenarioIds": ["bespoke-battlewagon-viewer-energy-and-crew"]
         }
       ],
       "gameplayAiScenarioIds": []

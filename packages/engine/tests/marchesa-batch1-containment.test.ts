@@ -236,8 +236,6 @@ const REASONS: Record<string, string> = {
   'Soul-Guide Lantern':
     'Opponent-graveyard exile is authored with a free draw instead of a separate {1} draw ability.',
   'Adaptive Omnitool': 'Artifact-from-library is put into hand without revealing.',
-  'Bespoke Battlewagon':
-    'Crew 4 is dropped when the energy activations replace the parsed activated abilities.',
   'Dragon Tempest': 'Dragon-dealt damage is implemented as damage from this enchantment.',
   'Dream Pillager':
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
@@ -321,6 +319,7 @@ describe('Marchesa catalog audit containment', () => {
     'Retrofitter Foundry',
     'Aether Hub',
     'Solar Transformer',
+    'Bespoke Battlewagon',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

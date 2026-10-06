@@ -224,6 +224,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0",
+    "name": "Bespoke Battlewagon",
+    "package": "PR02.32",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Crew 4 is dropped when the energy activations replace the parsed activated abilities."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "df72b5d6-6f9e-4d6b-acf6-7dec4ff35468",
     "name": "Bess, Soul Nourisher",
     "package": "W3",

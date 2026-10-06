@@ -170,6 +170,9 @@ describe('deterministic Card Test Lab scenarios', () => {
       'aether-hub-viewer-colorless',
       'solar-transformer-viewer-cast-and-energy-mana',
       'solar-transformer-viewer-colorless',
+      'bespoke-battlewagon-viewer-energy-and-crew',
+      'bespoke-battlewagon-viewer-animate-and-draw',
+      'bespoke-battlewagon-viewer-tap-target',
     ]);
   });
 

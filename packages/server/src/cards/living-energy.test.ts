@@ -41,7 +41,6 @@ const CATALOG_CONTAINED = new Set([
   "Conjurer's Closet",
   'Soul-Guide Lantern',
   'Adaptive Omnitool',
-  'Bespoke Battlewagon',
   'Druid of Purification',
   'Chaos Warp',
   'Reality Shift',

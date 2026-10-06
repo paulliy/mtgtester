@@ -5750,6 +5750,97 @@ function solarTransformerColorlessScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_GIANT = card({
+  oracleId: 'lab-giant',
+  name: 'Lab Giant',
+  typeLine: 'Creature — Giant',
+  manaCost: '{4}',
+  cmc: 4,
+  power: '4',
+  toughness: '4',
+});
+
+function battlewagonScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    instructions: string[];
+    expectedOutcome: string;
+    clauseIds: string[];
+    energy: number;
+    extras: OracleCard[];
+    opponentBoard?: OracleCard[];
+  },
+): CardTestScenario {
+  const wagon = pinnedFrom(MARCHESA_BATCH1, 'Bespoke Battlewagon');
+  const opponent = spec.opponentBoard ?? [];
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: wagon.sha256,
+    clauseIds: spec.clauseIds,
+    decks: {
+      P1: [wagon.card, ...spec.extras, FOREST],
+      P2: [...opponent, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Bespoke Battlewagon', ...spec.extras.map((extra) => extra.name)],
+        },
+        { playerId: 'P2', cardNames: opponent.map((extra) => extra.name) },
+      ],
+      energy: [{ playerId: 'P1', amount: spec.energy }],
+    },
+  });
+}
+
+const battlewagonGainAndCrewScenario = (gameId: GameId): CardTestScenario =>
+  battlewagonScenario(gameId, {
+    id: 'bespoke-battlewagon-viewer-energy-and-crew',
+    title: 'Bespoke Battlewagon: tap for energy, then crew 4',
+    instructions: ['Activate {T}: You get {E}{E}.', 'Then crew it with Lab Giant (power 4).'],
+    expectedOutcome:
+      'You have two energy, Battlewagon is tapped and is a 5/6 artifact creature, and Lab Giant is tapped for crew.',
+    clauseIds: ['bespoke-battlewagon-gain-energy', 'bespoke-battlewagon-crew'],
+    energy: 0,
+    extras: [LAB_GIANT],
+  });
+
+const battlewagonAnimateAndDrawScenario = (gameId: GameId): CardTestScenario =>
+  battlewagonScenario(gameId, {
+    id: 'bespoke-battlewagon-viewer-animate-and-draw',
+    title: 'Bespoke Battlewagon: pay four energy to animate, then draw',
+    instructions: [
+      'Starting with seven energy, pay {E}{E}{E}{E}: Battlewagon becomes an artifact creature.',
+      'Then activate {T}, Pay {E}{E}{E}: Draw a card.',
+    ],
+    expectedOutcome:
+      'Battlewagon is a 5/6 artifact creature without being crewed, it is tapped, you drew the Forest, and you have no energy left.',
+    clauseIds: ['bespoke-battlewagon-animate', 'bespoke-battlewagon-draw'],
+    energy: 7,
+    extras: [],
+  });
+
+const battlewagonTapTargetScenario = (gameId: GameId): CardTestScenario =>
+  battlewagonScenario(gameId, {
+    id: 'bespoke-battlewagon-viewer-tap-target',
+    title: "Bespoke Battlewagon: pay two energy to tap P2's creature",
+    instructions: ["Starting with two energy, activate {T}, Pay {E}{E} targeting P2's Lab Ox."],
+    expectedOutcome: 'Lab Ox is tapped, Battlewagon is tapped, and you have no energy left.',
+    clauseIds: ['bespoke-battlewagon-tap-target'],
+    energy: 2,
+    extras: [],
+    opponentBoard: [LAB_OX],
+  });
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5878,6 +5969,9 @@ export const CARD_TEST_SCENARIO_IDS = [
   'aether-hub-viewer-colorless',
   'solar-transformer-viewer-cast-and-energy-mana',
   'solar-transformer-viewer-colorless',
+  'bespoke-battlewagon-viewer-energy-and-crew',
+  'bespoke-battlewagon-viewer-animate-and-draw',
+  'bespoke-battlewagon-viewer-tap-target',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6004,6 +6098,9 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'aether-hub-viewer-colorless': aetherHubColorlessScenario,
   'solar-transformer-viewer-cast-and-energy-mana': solarTransformerEnergyScenario,
   'solar-transformer-viewer-colorless': solarTransformerColorlessScenario,
+  'bespoke-battlewagon-viewer-energy-and-crew': battlewagonGainAndCrewScenario,
+  'bespoke-battlewagon-viewer-animate-and-draw': battlewagonAnimateAndDrawScenario,
+  'bespoke-battlewagon-viewer-tap-target': battlewagonTapTargetScenario,
 };
 
 export function createCardTestScenario(

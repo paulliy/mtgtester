@@ -756,11 +756,62 @@ export function registerLIVING_ENERGYOverrides(): void {
     CONFISCATION_COUP_DEF,
   );
 
-  // Catalog audit living-energy-batch-4: Crew 4 is overwritten by energy activations.
-  unsupportedCard(
+  // Coverage PR02: the four energy activations are appended to the parsed Crew 4 instead of
+  // replacing activatedAbilities. Paying four energy animates it without crewing it.
+  extendCard(
     'cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0',
     'Bespoke Battlewagon',
-    'Crew 4 is dropped when the energy activations replace the parsed activated abilities.',
+    [
+      '{T}: You get {E}{E} .',
+      '{T}, Pay {E}{E}: Tap target creature.',
+      '{T}, Pay {E}{E}{E}: Draw a card.',
+      'Pay {E}{E}{E}{E}: ~ becomes an artifact creature until end of turn.',
+    ],
+    {
+      activatedAbilities: [
+        {
+          costs: [TAP],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [{ op: 'gainEnergy', amount: constant(2) }],
+            description: '{T}: You get {E}{E}.',
+          },
+        },
+        {
+          costs: [TAP, { kind: 'payEnergy', amount: 2 }],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [{ kind: 'creature' }],
+            effects: [{ op: 'tapTarget', target: 0 }],
+            description: '{T}, Pay {E}{E}: Tap target creature.',
+          },
+        },
+        {
+          costs: [TAP, { kind: 'payEnergy', amount: 3 }],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [{ op: 'draw', count: constant(1) }],
+            description: '{T}, Pay {E}{E}{E}: Draw a card.',
+          },
+        },
+        {
+          costs: [{ kind: 'payEnergy', amount: 4 }],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [{ op: 'becomeArtifactCreature' }],
+            description:
+              'Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.',
+          },
+        },
+      ],
+    },
   );
 
   defineCard(

@@ -202,3 +202,55 @@ describe('Solar Transformer Card Test Lab scenarios', () => {
     replays('solar-transformer-viewer-colorless', colorlessSteps);
   });
 });
+
+describe('Bespoke Battlewagon Card Test Lab scenarios', () => {
+  type State = ReturnType<typeof run>['state'];
+  /** Battlewagon has an active becomes-an-artifact-creature effect (crew or energy). */
+  const animated = (state: State) =>
+    state.effects.some(
+      (effect) =>
+        effect.description === 'Bespoke Battlewagon becomes an artifact creature until end of turn',
+    );
+
+  const crewSteps: Step[] = [{ action: 'You get {E}{E}' }, { action: 'Crew 4' }];
+
+  it('bespoke-battlewagon-viewer-energy-and-crew — taps for two energy, then Crew 4 still animates it', () => {
+    const { seat, onBattlefield, state } = run(
+      'bespoke-battlewagon-viewer-energy-and-crew',
+      crewSteps,
+    );
+    expect(seat('P1').energy).toBe(2);
+    expect(onBattlefield('Bespoke Battlewagon')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Lab Giant')[0]?.tapped).toBe(true);
+    expect(animated(state)).toBe(true);
+    replays('bespoke-battlewagon-viewer-energy-and-crew', crewSteps);
+  });
+
+  const animateSteps: Step[] = [
+    { action: 'becomes an artifact creature' },
+    { action: 'Draw a card' },
+  ];
+
+  it('bespoke-battlewagon-viewer-animate-and-draw — four energy animates it without crew; three more draw', () => {
+    const { seat, onBattlefield, state } = run(
+      'bespoke-battlewagon-viewer-animate-and-draw',
+      animateSteps,
+    );
+    const wagon = onBattlefield('Bespoke Battlewagon')[0]!;
+    expect(animated(state)).toBe(true);
+    expect(wagon.tapped).toBe(true);
+    expect(seat('P1').energy).toBe(0);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Forest']);
+    replays('bespoke-battlewagon-viewer-animate-and-draw', animateSteps);
+  });
+
+  const tapSteps: Step[] = [{ action: 'Tap target creature', targets: ['Lab Ox'] }];
+
+  it('bespoke-battlewagon-viewer-tap-target — two energy taps P2’s Lab Ox', () => {
+    const { seat, onBattlefield } = run('bespoke-battlewagon-viewer-tap-target', tapSteps);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Bespoke Battlewagon')[0]?.tapped).toBe(true);
+    expect(seat('P1').energy).toBe(0);
+    replays('bespoke-battlewagon-viewer-tap-target', tapSteps);
+  });
+});

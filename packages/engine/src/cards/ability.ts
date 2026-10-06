@@ -569,6 +569,12 @@ export type Effect =
   | { op: 'removeCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'removeCountersEach'; selector: Selector; counter: string; count: Value | number }
   | { op: 'crewVehicle'; minPower: number }
+  /**
+   * "This Vehicle becomes an artifact creature until end of turn" from an ability other than
+   * crew (Bespoke Battlewagon's energy ability). Same layer-4 effect as `crewVehicle`, but the
+   * Vehicle does not become crewed (CR 702.122b), so "becomes crewed" triggers do not fire.
+   */
+  | { op: 'becomeArtifactCreature' }
   | { op: 'exileEach'; selector: Selector }
   | { op: 'exileEachOpponentGraveyard' }
   | { op: 'exileAllGraveyards' }
