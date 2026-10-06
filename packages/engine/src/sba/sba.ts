@@ -26,14 +26,8 @@ import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
 import { breakYieldsForStop } from '../turn/stops';
 import { consumeRegenerationShield, moveObject, movePermanentsToGraveyard } from '../state/objects';
-import {
-  damageKeywordsOf,
-  isCreaturePermanent,
-  playersInApnapOrder,
-  sourceColorsOf,
-} from '../state/queries';
+import { isCreaturePermanent, playersInApnapOrder, sourceColorsOf } from '../state/queries';
 import type {
-  DamageKeyword,
   EngineCardObject,
   EnginePermanent,
   EnginePlayerState,
@@ -386,16 +380,6 @@ function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
   return ctx.state.players.find((p) => p.id === id)?.id ?? id;
 }
 
-/** The source's damage keywords for its stack entry, recorded only when it has any. */
-function damageKeywordsField(
-  ctx: GameContext,
-  sourceCardId: string,
-): { sourceDamageKeywords?: DamageKeyword[] } {
-  const perm = ctx.state.battlefield.find((permanent) => permanent.cardId === sourceCardId);
-  const keywords = perm === undefined ? [] : damageKeywordsOf(ctx, perm);
-  return keywords.length > 0 ? { sourceDamageKeywords: keywords } : {};
-}
-
 function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen<void> {
   const s = ctx.state;
   // A modal trigger's controller chooses the mode as the ability is put on the stack, BEFORE
@@ -664,7 +648,6 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       ? { triggerObjectCardId: trigger.triggerObjectCardId }
       : {}),
     ...(trigger.scope !== undefined ? { triggerScope: trigger.scope } : {}),
-    ...damageKeywordsField(ctx, trigger.sourceCardId),
     ...(actsOnItsSourcePermanent(ability)
       ? {
           sourceObjectId:

@@ -224,7 +224,7 @@ export interface EffectSource {
    * source is then found by card.
    */
   objectId?: ObjectId | null;
-  /** The source's damage keywords as its ability went on the stack — LKI once it has left. */
+  /** The source's damage keywords as it left the battlefield — LKI for damage it deals after. */
   lastKnownDamageKeywords?: readonly DamageKeyword[];
 }
 
@@ -390,8 +390,8 @@ function dealDamageToObject(
   amount: number,
 ): void {
   const sourcePermanent = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
-  // A source that has left deals damage with its last known abilities (CR 113.7a): Mordant
-  // Dragon that had deathtouch when its trigger went on the stack still destroys.
+  // A source that has left deals damage with its last known abilities (CR 113.7a): a Mordant
+  // Dragon that had deathtouch as it left still destroys.
   const sourceHas = (kw: DamageKeyword): boolean =>
     sourcePermanent !== undefined
       ? hasKeyword(ctx, sourcePermanent, kw)
@@ -6400,11 +6400,13 @@ function demandsAllocatable(
 /**
  * The mana sources a payment may use when `reserved` permanents are spoken for by another part
  * of the same cost (Ashnod's Altar paying for Canoptek Wraith's "{3} and sacrifice it" may not
- * sacrifice the Wraith). Sources with no sacrifice demand are always kept. Among those that
- * demand sacrifices, the first subset (larger first, then in source order, so the result is
- * deterministic) is chosen whose demands can each be met by a DISTINCT permanent and that
- * `pays` the cost: two Altars cannot both sacrifice the one other creature, and Phyrexian
- * Tower's sacrifice ability does not crowd out an Altar that could use that creature instead.
+ * sacrifice the Wraith). Sources that cost nothing to keep are always kept. Among the others
+ * (those demanding sacrifices, and non-plain sources an Altar could sacrifice instead), the
+ * first subset (larger first, then in source order, so the result is deterministic) is chosen
+ * whose demands can each be met by a DISTINCT permanent and that `pays` the cost: two Altars
+ * cannot both sacrifice the one other creature, Phyrexian Tower's sacrifice ability does not
+ * crowd out an Altar that could use that creature instead, and an unused Eldrazi Spawn may be
+ * the Altar's fodder.
  * A plain source (Birds of Paradise) may be fodder, since it is tapped for mana first; any other
  * kept source may not, since it must survive to be activated.
  */
@@ -6422,10 +6424,15 @@ function jointlyPayableSources(
     if (reserved.has(info.perm.id) && !isPlainManaSource(source)) return [];
     return [{ source, ...info }];
   });
-  const free = entries.filter((entry) => entry.demands.length === 0);
-  const demanding = entries
-    .filter((entry) => entry.demands.length > 0)
-    .slice(0, MAX_SACRIFICE_SOURCES);
+  // A source is optional when keeping it could cost something: it demands sacrifices, or it is
+  // not plain and its permanent could be another source's fodder (an Eldrazi Spawn that an
+  // Altar may sacrifice instead of using for mana). Everything else is always kept.
+  const accepts = entries.flatMap((entry) => entry.demands);
+  const optional = (entry: (typeof entries)[number]): boolean =>
+    entry.demands.length > 0 ||
+    (!isPlainManaSource(entry.source) && accepts.some((demand) => demand(entry.perm)));
+  const free = entries.filter((entry) => !optional(entry));
+  const demanding = entries.filter(optional).slice(0, MAX_SACRIFICE_SOURCES);
   const subsets = Array.from({ length: 2 ** demanding.length }, (_, mask) => mask).sort(
     (a, b) => bitCount(b) - bitCount(a) || a - b,
   );
@@ -6444,8 +6451,8 @@ function jointlyPayableSources(
   return free.map((entry) => entry.source);
 }
 
-/** Sacrifice-cost mana sources considered together; more are rare enough to ignore. */
-const MAX_SACRIFICE_SOURCES = 8;
+/** Optional mana sources considered together; more are rare enough to ignore. */
+const MAX_SACRIFICE_SOURCES = 10;
 
 function bitCount(n: number): number {
   let count = 0;

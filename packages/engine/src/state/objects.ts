@@ -27,6 +27,7 @@ import {
   cardZoneCandidate,
   counterAmountAfterReplacements,
   counterAmountAfterReplacementsForCandidate,
+  damageKeywordsOf,
   getDefByOracleId,
   opponentsOf,
   tokenCreationMultiplierFor,
@@ -472,6 +473,9 @@ export function* moveObject(
     };
     if (outcome.index === 0) target = { zone: 'command' };
   }
+
+  // Last known information (CR 113.7a), read while it is still on the battlefield.
+  if (from === 'battlefield') rememberLeavingSourceDamageKeywords(ctx, obj as EnginePermanent);
 
   removeFromCurrentZone(ctx, obj);
 
@@ -1371,6 +1375,26 @@ function remembersEventObject(ability: Ability): boolean {
       effect.sameObject === true &&
       effect.target === 'triggerObject',
   );
+}
+
+/**
+ * A permanent is leaving: record its damage keywords on every ability of its own waiting on the
+ * stack, so damage it deals after it is gone uses the deathtouch, lifelink and infect it had
+ * immediately before it left (CR 113.7a, Mordant Dragon). Only recorded when it had any.
+ */
+function rememberLeavingSourceDamageKeywords(ctx: GameContext, perm: EnginePermanent): void {
+  const entries = ctx.state.stack.filter(
+    (entry) =>
+      entry.kind !== 'spell' &&
+      entry.sourceCardId === perm.cardId &&
+      (entry.sourceObjectId === undefined || entry.sourceObjectId === perm.id),
+  );
+  if (entries.length === 0) return;
+  const keywords = damageKeywordsOf(ctx, perm);
+  for (const entry of entries) {
+    if (keywords.length > 0) entry.sourceDamageKeywords = keywords;
+    else delete entry.sourceDamageKeywords;
+  }
 }
 
 export function queueTriggersForObject(

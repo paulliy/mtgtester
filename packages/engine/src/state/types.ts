@@ -194,9 +194,9 @@ export interface EngineStackObject extends StackObject {
    */
   sourceColors?: Color[];
   /**
-   * The source's damage keywords (deathtouch, lifelink, infect) as this ability was put on the
-   * stack, recorded only when it had any — last known information for damage the source deals
-   * after it has left the battlefield (Mordant Dragon's trigger, CR 113.7a).
+   * The source's damage keywords (deathtouch, lifelink, infect) immediately before it left the
+   * battlefield, recorded as it leaves and only when it had any — last known information for
+   * damage it deals afterwards (Mordant Dragon's trigger, CR 113.7a).
    */
   sourceDamageKeywords?: DamageKeyword[];
   /** Kind of alternative cast used, if any (overload, adventure, omen). */

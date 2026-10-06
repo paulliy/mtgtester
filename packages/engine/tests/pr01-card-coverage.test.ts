@@ -925,6 +925,89 @@ describe('Canoptek Wraith', () => {
       expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
     });
 
+    it("canoptek-wraith-altar-sacrifices-unused-spawn — an Eldrazi Spawn whose own mana is not needed may be the Altar's fodder", () => {
+      // {3} = {C} from a land + {C}{C} from the Altar sacrificing the Spawn. Keeping the Spawn as
+      // a mana source instead would leave the Altar no fodder and only {2}.
+      const { ctx, self } = board('wraith-altar-spawn', [], [island()], 0);
+      spawn(
+        ctx,
+        'P1',
+        oracle({
+          name: 'Wraith Waste',
+          typeLine: 'Land',
+          manaCost: null,
+          oracleText: '{T}: Add {C}.',
+        }),
+      );
+      spawn(ctx, 'P1', altar());
+      const spawnling = spawn(
+        ctx,
+        'P1',
+        oracle({
+          name: 'Wraith Spawn',
+          typeLine: 'Creature — Eldrazi Spawn',
+          oracleText: 'Sacrifice this creature: Add {C}.',
+          power: '0',
+          toughness: '1',
+        }),
+      );
+      expect(manaSourcesFor(ctx, 'P1').some((source) => source.cardId === spawnling.cardId)).toBe(
+        true,
+      );
+      const { decisions } = scout(
+        ctx,
+        self,
+        answers([[/pay \{3\} and sacrifice/, /Pay \{3\} and sacrifice/]]),
+      );
+      expect(decisions.some((decision) => /pay \{3\} and sacrifice/.test(decision.prompt))).toBe(
+        true,
+      );
+      expect(
+        playerById(ctx, 'P1')
+          .graveyard.map((card) => card.name)
+          .sort(),
+      ).toEqual(['Canoptek Wraith', 'Wraith Spawn']);
+      expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    });
+
+    it("canoptek-wraith-two-altars-either-order — with one floating mana, Ashnod's Altar pays whichever altar comes first", () => {
+      // {3} = one floating {C} + Ashnod's {C}{C}; Phyrexian Altar would make only one. Both
+      // altars want the same lone creature, so legality must not depend on battlefield order.
+      const phyrexian = () =>
+        oracle({
+          name: 'Wraith Phyrexian Altar',
+          typeLine: 'Artifact',
+          manaCost: '{3}',
+          oracleText: 'Sacrifice a creature: Add one mana of any color.',
+        });
+      for (const order of ['phyrexian-first', 'ashnod-first'] as const) {
+        const { ctx, self } = board(`wraith-altar-order-${order}`, [], [island()], 1);
+        if (order === 'phyrexian-first') {
+          spawn(ctx, 'P1', phyrexian());
+          spawn(ctx, 'P1', altar());
+        } else {
+          spawn(ctx, 'P1', altar());
+          spawn(ctx, 'P1', phyrexian());
+        }
+        spawn(ctx, 'P1', bear());
+        const { decisions } = scout(
+          ctx,
+          self,
+          answers([[/pay \{3\} and sacrifice/, /Pay \{3\} and sacrifice/]]),
+        );
+        expect(
+          decisions.some((decision) => /pay \{3\} and sacrifice/.test(decision.prompt)),
+          order,
+        ).toBe(true);
+        expect(
+          playerById(ctx, 'P1')
+            .graveyard.map((card) => card.name)
+            .sort(),
+          order,
+        ).toEqual(['Canoptek Wraith', 'Test Bear']);
+      }
+    });
+
     it('canoptek-wraith-altars-two-creatures — with two other creatures both Altars pay, each sacrificing a different one', () => {
       const { ctx, self } = board('wraith-two-altars-ok', [island()], [island()], 0);
       spawn(ctx, 'P1', altar());
@@ -1436,6 +1519,37 @@ describe('Mordant Dragon', () => {
     // 1 damage from a (last known) deathtouch source destroys the 0/9 wall (CR 113.7a).
     pump(priorityCheckpoint(ctx));
     expect(ctx.state.battlefield.some((entry) => entry.id === wall.id)).toBe(false);
+  });
+
+  it('mordant-dragon-lost-deathtouch-before-leaving — deathtouch lost before it left does not apply', () => {
+    const ctx = pod('mordant-lki-lost');
+    const self = spawn(ctx, 'P1', dragon.card);
+    ctx.state.effects.push({
+      id: 'eff-test-deathtouch',
+      sourceId: self.cardId,
+      description: 'Mordant Dragon gains deathtouch',
+      targetCardIds: [self.cardId],
+      kind: 'grantKeyword',
+      keyword: 'deathtouch',
+      timestamp: ctx.state.nextTimestamp++,
+    });
+    const wall = spawn(ctx, 'P2', big());
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: self.cardId,
+      sourceOracleId: self.oracleId,
+      sourceName: self.name,
+      ability: interpretCard(dragon.card).triggers[0]!,
+      scope: { damageDealt: 1, eventPlayerId: 'P2' },
+    });
+    pump(priorityCheckpoint(ctx), dragonAnswer(wall.id, true));
+    // In response, the deathtouch grant ends, then the Dragon leaves: its last known
+    // information is "no deathtouch" (CR 113.7a), so 1 damage does not destroy the 0/9.
+    ctx.state.effects = ctx.state.effects.filter((effect) => effect.id !== 'eff-test-deathtouch');
+    pump(moveObject(ctx, self, { zone: 'graveyard' }));
+    resolveTop(ctx, dragonAnswer(null, true));
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.battlefield.find((entry) => entry.id === wall.id)?.damageMarked).toBe(1);
   });
 
   it('mordant-dragon-decline — answering no deals no extra damage', () => {
