@@ -579,3 +579,38 @@ describe('Vastwood Surge Card Test Lab scenario', () => {
     replays('vastwood-surge-viewer-kicked', steps);
   });
 });
+
+describe('Frontier Siege Card Test Lab scenarios', () => {
+  const khansSteps: Step[] = [
+    { action: 'Cast Frontier Siege' },
+    { action: 'Khans —' },
+    { action: 'Cast Lab Wurm' },
+  ];
+  const dragonsSteps: Step[] = [
+    { action: 'Cast Frontier Siege' },
+    { action: 'Dragons —' },
+    { action: 'Cast Lab Drake' },
+    { action: 'Yes' },
+  ];
+
+  it('frontier-siege-viewer-khans-mana — the postcombat main-phase {G}{G} pays for Lab Wurm', () => {
+    const { onBattlefield, state, offered } = run('frontier-siege-viewer-khans-mana', khansSteps);
+    expect(offered).toContainEqual([
+      'Khans — add {G}{G} at each of your main phases',
+      'Dragons — your flying creatures may fight when they enter',
+    ]);
+    expect(onBattlefield('Lab Wurm')).toHaveLength(1);
+    expect(onBattlefield('Forest').every((forest) => forest.tapped)).toBe(true);
+    expect(state.phase).toBe('postcombatMain');
+    replays('frontier-siege-viewer-khans-mana', khansSteps);
+  });
+
+  it('frontier-siege-viewer-dragons-fight — the entering flier fights the opponent creature', () => {
+    const { onBattlefield, seat } = run('frontier-siege-viewer-dragons-fight', dragonsSteps);
+    expect(onBattlefield('Frontier Siege')).toHaveLength(1);
+    expect(onBattlefield('Lab Servo')).toHaveLength(0);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Servo']);
+    expect(onBattlefield('Lab Drake')[0]?.damageMarked).toBe(1);
+    replays('frontier-siege-viewer-dragons-fight', dragonsSteps);
+  });
+});

@@ -3149,13 +3149,48 @@
     "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1": {
       "name": "Frontier Siege",
       "oracleSha256": "1b195bc9d7e3f03e803eb4ad56d689fbd073b725d5ce8076b9998e0740982641",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
-          "implementation": ["explicitly unsupported; optional fight still requires a target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "frontier-siege-choose-mode",
+          "oracleText": "As this enchantment enters, choose Khans or Dragons.",
+          "implementation": [
+            "entersChoosingOption Khans/Dragons: an as-enters replacement choice stored as chosenOption (not a trigger)"
+          ],
+          "engineTestIds": [
+            "frontier-siege-pinned-oracle-supported",
+            "frontier-siege-khans-mana",
+            "frontier-siege-dragons-fight"
+          ],
+          "viewerScenarioIds": [
+            "frontier-siege-viewer-khans-mana",
+            "frontier-siege-viewer-dragons-fight"
+          ]
+        },
+        {
+          "id": "frontier-siege-khans",
+          "oracleText": "Khans — At the beginning of each of your main phases, add {G}{G}.",
+          "implementation": [
+            "mainPhase trigger, player you, condition chosenOptionIs Khans; addMana {G}{G}",
+            "fires in each of your main phases and never on another player's turn"
+          ],
+          "engineTestIds": ["frontier-siege-khans-mana", "frontier-siege-modes-exclusive"],
+          "viewerScenarioIds": ["frontier-siege-viewer-khans-mana"]
+        },
+        {
+          "id": "frontier-siege-dragons",
+          "oracleText": "Dragons — Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
+          "implementation": [
+            "enters trigger for creatures you control with flying, condition chosenOptionIs Dragons",
+            "target creature an opponent controls (none: no trigger, CR 603.3d); optional on resolution (CR 603.5)",
+            "fight(triggerObject, target 0)"
+          ],
+          "engineTestIds": [
+            "frontier-siege-dragons-fight",
+            "frontier-siege-dragons-decline-and-filters",
+            "frontier-siege-modes-exclusive"
+          ],
+          "viewerScenarioIds": ["frontier-siege-viewer-dragons-fight"]
         }
       ],
       "gameplayAiScenarioIds": []

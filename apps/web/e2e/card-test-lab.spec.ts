@@ -2263,3 +2263,54 @@ test('Vastwood Surge: kicked, two basics and counters on your creatures', async 
   await expect(permanent(page, 'Plains')).toBeVisible();
   await expect(permanent(page, 'Island')).toBeVisible();
 });
+
+test('Frontier Siege: Khans adds {G}{G} at your next main phase', async ({ page }) => {
+  await runScenario(page, 'Frontier Siege: Khans adds {G}{G} at your next main phase');
+
+  const siege = handCard(page, 'Frontier Siege');
+  await expect(siege).toHaveClass(/actionable/);
+  await siege.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/Choose Khans or Dragons/).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: /^Khans —/ }).click();
+
+  // With every land tapped, Lab Wurm only becomes castable from the postcombat {G}{G}.
+  const wurm = handCard(page, 'Lab Wurm');
+  await expect(wurm).toHaveClass(/actionable/, { timeout: 15_000 });
+  await expect(page.getByText(/Main phase\s*2/).first()).toBeVisible();
+  await expect(page.getByText(/2G/).first()).toBeVisible();
+  await wurm.click();
+  // Paid from the floating {G}{G}, so no land is auto-tapped.
+  await expect(page.getByText(/Pending\s*Cast Lab Wurm/i)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Wurm')).toBeVisible();
+});
+
+test('Frontier Siege: Dragons lets an entering flier fight', async ({ page }) => {
+  await runScenario(page, 'Frontier Siege: Dragons lets an entering flier fight');
+
+  const siege = handCard(page, 'Frontier Siege');
+  await expect(siege).toHaveClass(/actionable/);
+  await siege.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/Choose Khans or Dragons/).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: /^Dragons —/ }).click();
+
+  const drake = handCard(page, 'Lab Drake');
+  await expect(drake).toHaveClass(/actionable/, { timeout: 15_000 });
+  await drake.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Lab Servo is the only creature P1 doesn't control, so the target is forced; the fight is optional.
+  await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Drake')).toBeVisible();
+});

@@ -120,6 +120,14 @@ export function* playPreparedScenario(
     emptyManaPools(ctx);
     yield* runCombatAndExtraCombats(ctx);
   }
+  if (spec.continueToPostcombatMain === true) {
+    emptyManaPools(ctx);
+    state.phase = 'postcombatMain';
+    state.step = null;
+    queueStepTriggers(ctx, 'mainPhase');
+    yield* priorityCheckpoint(ctx);
+    yield* runPrioritySequence(ctx);
+  }
   if (spec.continueToEndStep === true) {
     emptyManaPools(ctx);
     state.phase = 'ending';

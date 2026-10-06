@@ -143,6 +143,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'loran-of-the-third-path-viewer-tap-draw',
       'rishkar-viewer-counters-and-mana',
       'vastwood-surge-viewer-kicked',
+      'frontier-siege-viewer-khans-mana',
+      'frontier-siege-viewer-dragons-fight',
     ]);
   });
 

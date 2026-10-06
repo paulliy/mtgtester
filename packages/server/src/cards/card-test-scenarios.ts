@@ -4862,6 +4862,87 @@ function vastwoodSurgeScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function frontierSiegeKhansScenario(gameId: GameId): CardTestScenario {
+  const siege = pinnedFrom(MARCHESA_BATCH1, 'Frontier Siege');
+  const wurm = card({
+    oracleId: 'lab-siege-wurm',
+    name: 'Lab Wurm',
+    typeLine: 'Creature — Wurm',
+    manaCost: '{G}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '3',
+    toughness: '3',
+  });
+  return pr01Scenario(gameId, {
+    id: 'frontier-siege-viewer-khans-mana',
+    title: 'Frontier Siege: Khans adds {G}{G} at your next main phase',
+    instructions: [
+      'Cast Frontier Siege with your four Forests and choose Khans.',
+      'Pass through combat. At the beginning of your postcombat main phase, use the {G}{G} it adds to cast Lab Wurm.',
+    ],
+    expectedOutcome:
+      'Your lands are all tapped, but the Khans trigger adds {G}{G} at the beginning of your postcombat main phase, which pays for Lab Wurm.',
+    oracleSha256: siege.sha256,
+    clauseIds: ['frontier-siege-choose-mode', 'frontier-siege-khans'],
+    decks: {
+      P1: [siege.card, wurm, FOREST, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Frontier Siege', 'Lab Wurm'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest'] }],
+      continueThroughCombat: true,
+      continueToPostcombatMain: true,
+    },
+  });
+}
+
+function frontierSiegeDragonsScenario(gameId: GameId): CardTestScenario {
+  const siege = pinnedFrom(MARCHESA_BATCH1, 'Frontier Siege');
+  const drake = card({
+    oracleId: 'lab-siege-drake',
+    name: 'Lab Drake',
+    typeLine: 'Creature — Drake',
+    oracleText: 'Flying',
+    manaCost: '{2}',
+    cmc: 2,
+    power: '3',
+    toughness: '3',
+  });
+  return pr01Scenario(gameId, {
+    id: 'frontier-siege-viewer-dragons-fight',
+    title: 'Frontier Siege: Dragons lets an entering flier fight',
+    instructions: [
+      'Cast Frontier Siege with four of your Forests and choose Dragons.',
+      "Cast Lab Drake, then choose to have it fight P2's Lab Servo.",
+    ],
+    expectedOutcome:
+      'Lab Drake and Lab Servo deal damage to each other: Lab Servo dies and the 3/3 Drake survives with 1 damage.',
+    oracleSha256: siege.sha256,
+    clauseIds: ['frontier-siege-choose-mode', 'frontier-siege-dragons'],
+    decks: {
+      P1: [siege.card, drake, FOREST, FOREST, FOREST, FOREST, FOREST, FOREST],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Frontier Siege', 'Lab Drake'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4966,6 +5047,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'loran-of-the-third-path-viewer-tap-draw',
   'rishkar-viewer-counters-and-mana',
   'vastwood-surge-viewer-kicked',
+  'frontier-siege-viewer-khans-mana',
+  'frontier-siege-viewer-dragons-fight',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5066,6 +5149,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'loran-of-the-third-path-viewer-tap-draw': loranDrawScenario,
   'rishkar-viewer-counters-and-mana': rishkarScenario,
   'vastwood-surge-viewer-kicked': vastwoodSurgeScenario,
+  'frontier-siege-viewer-khans-mana': frontierSiegeKhansScenario,
+  'frontier-siege-viewer-dragons-fight': frontierSiegeDragonsScenario,
 };
 
 export function createCardTestScenario(

@@ -2579,6 +2579,137 @@ describe('Vastwood Surge', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.21 Frontier Siege
+// ---------------------------------------------------------------------------------------------
+
+describe('Frontier Siege', () => {
+  const siege = pinned('Frontier Siege');
+  const drake = () =>
+    oracle({
+      name: 'Siege Drake',
+      typeLine: 'Creature — Drake',
+      oracleText: 'Flying',
+      keywords: ['Flying'],
+      power: '3',
+      toughness: '3',
+    });
+  const MODE = /Choose Khans or Dragons/;
+
+  /** Cast Frontier Siege from P1's hand choosing `mode`. */
+  function castSiege(ctx: GameContext, mode: 'Khans' | 'Dragons') {
+    const inHand = conjure(ctx, 'P1', siege.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 4 }, () => ({ symbol: 'G' as const })),
+    );
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    const { decisions } = resolveTop(ctx, answers([[MODE, new RegExp(`^${mode} —`)]]));
+    expect(decisions.some((decision) => MODE.test(decision.prompt))).toBe(true);
+    return ctx.state.battlefield.find((entry) => entry.name === 'Frontier Siege')!;
+  }
+
+  const green = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).manaEntries.filter((entry) => entry.symbol === 'G').length;
+
+  function mainPhase(ctx: GameContext, active: string) {
+    ctx.state.currentTurnPlayer = active;
+    ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(active);
+    ctx.state.phase = 'postcombatMain';
+    ctx.state.step = null;
+    queueStepTriggers(ctx, 'mainPhase');
+    settle(ctx);
+  }
+
+  const fightAnswer =
+    (accept: boolean): Answer =>
+    (decision) =>
+      decision.decisionType === 'optionalTrigger'
+        ? optionMatching(decision, accept ? /^Yes$/ : /^No$/)
+        : { index: 0, targets: new Map() };
+
+  it('frontier-siege-pinned-oracle-supported — pins the Oracle and models the as-enters mode and both mode abilities', () => {
+    expect(siege.sha256).toBe('1b195bc9d7e3f03e803eb4ad56d689fbd073b725d5ce8076b9998e0740982641');
+    const def = interpretCard(siege.card);
+    expect(def.modeled).toBe(true);
+    expect(def.entersChoosingOption?.options?.map((option) => option.key)).toEqual([
+      'Khans',
+      'Dragons',
+    ]);
+    expect(def.triggers.map((trigger) => trigger.trigger?.condition)).toEqual([
+      { kind: 'chosenOptionIs', value: 'Khans' },
+      { kind: 'chosenOptionIs', value: 'Dragons' },
+    ]);
+    expect(def.triggers[1]).toMatchObject({
+      optional: true,
+      targets: [{ kind: 'creature', controller: 'opponent' }],
+      effects: [{ op: 'fight', first: 'triggerObject', second: 0 }],
+    });
+  });
+
+  it('frontier-siege-khans-mana — Khans adds {G}{G} at the beginning of each of your main phases only', () => {
+    const ctx = pod('siege-khans');
+    const self = castSiege(ctx, 'Khans');
+    expect(self.chosenOption).toBe('Khans');
+    playerById(ctx, 'P1').manaEntries = [];
+    mainPhase(ctx, 'P1');
+    expect(green(ctx, 'P1')).toBe(2);
+    playerById(ctx, 'P1').manaEntries = [];
+    mainPhase(ctx, 'P2');
+    expect(green(ctx, 'P1')).toBe(0);
+    expect(green(ctx, 'P2')).toBe(0);
+  });
+
+  it('frontier-siege-dragons-fight — Dragons lets an entering flier you control fight a creature you do not control', () => {
+    const ctx = pod('siege-dragons');
+    castSiege(ctx, 'Dragons');
+    const victim = spawn(ctx, 'P2', bear());
+    enter(ctx, 'P1', drake());
+    settle(ctx, fightAnswer(true));
+    expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(false);
+    const flier = ctx.state.battlefield.find((entry) => entry.name === 'Siege Drake')!;
+    expect(flier.damageMarked).toBe(2);
+  });
+
+  it("frontier-siege-dragons-decline-and-filters — declining does nothing; nonfliers, opponents' fliers, and no target never ask", () => {
+    const ctx = pod('siege-dragons-filters');
+    castSiege(ctx, 'Dragons');
+    const victim = spawn(ctx, 'P2', bear());
+    enter(ctx, 'P1', drake());
+    const declined = settle(ctx, fightAnswer(false));
+    expect(declined.decisions.some((d) => d.decisionType === 'optionalTrigger')).toBe(true);
+    expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(true);
+
+    enter(ctx, 'P1', bear());
+    enter(ctx, 'P2', drake());
+    const others = settle(ctx, fightAnswer(true));
+    expect(others.decisions.some((d) => d.decisionType === 'optionalTrigger')).toBe(false);
+
+    const lonely = pod('siege-dragons-no-target');
+    castSiege(lonely, 'Dragons');
+    enter(lonely, 'P1', drake());
+    const none = settle(lonely, fightAnswer(true));
+    expect(none.decisions.some((d) => d.decisionType === 'optionalTrigger')).toBe(false);
+  });
+
+  it('frontier-siege-modes-exclusive — Khans never fights and Dragons never adds mana', () => {
+    const khans = pod('siege-khans-only');
+    castSiege(khans, 'Khans');
+    spawn(khans, 'P2', bear());
+    enter(khans, 'P1', drake());
+    const fights = settle(khans, fightAnswer(true));
+    expect(fights.decisions.some((d) => d.decisionType === 'optionalTrigger')).toBe(false);
+
+    const dragons = pod('siege-dragons-only');
+    castSiege(dragons, 'Dragons');
+    playerById(dragons, 'P1').manaEntries = [];
+    mainPhase(dragons, 'P1');
+    expect(green(dragons, 'P1')).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2689,6 +2820,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Vastwood Surge',
     sha256: '5922182fae289ab48ae49f025ac55977e4bf45975284d4d5b0663666de3fd5f5',
     clauseCount: 2,
+  },
+  {
+    name: 'Frontier Siege',
+    sha256: '1b195bc9d7e3f03e803eb4ad56d689fbd073b725d5ce8076b9998e0740982641',
+    clauseCount: 3,
   },
 ];
 

@@ -1256,6 +1256,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Vastwood Surge: kicked, two basics and counters on your creatures'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Frontier Siege: Khans adds {G}{G} at your next main phase'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Frontier Siege: Dragons lets an entering flier fight'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

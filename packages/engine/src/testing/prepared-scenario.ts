@@ -24,6 +24,12 @@ export interface PreparedScenarioSpec {
    */
   continueThroughCombat?: boolean;
   /**
+   * Lab-only finite continuation for "at the beginning of each of your main phases" triggers:
+   * after the arranged window (and combat, when also requested), begin this turn's postcombat
+   * main phase, queue its triggers, and run its priority window.
+   */
+  continueToPostcombatMain?: boolean;
+  /**
    * Lab-only finite continuation for "at the beginning of your end step" triggers: after the
    * arranged priority window (and combat, when also requested), move to this turn's end step,
    * queue its triggers, and run its priority window.

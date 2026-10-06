@@ -499,10 +499,65 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     { entersTappedUnless: { kind: 'mayRevealCardFromHand', subtypes: ['Mountain', 'Forest'] } },
   );
 
-  unsupportedCard(
+  // Coverage PR01: the mode is chosen as it enters (a replacement, not a trigger). The Dragons
+  // fight is optional on resolution (CR 603.5); with no creature you don't control there is no
+  // target and the trigger is removed (CR 603.3d).
+  defineCard(
     '4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1',
     'Frontier Siege',
-    "The Dragons fight option still requires a target creature you don't control.",
+    [
+      'As this enchantment enters, choose Khans or Dragons.',
+      '• Khans — At the beginning of each of your main phases, add {G}{G}.',
+      "• Dragons — Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
+    ],
+    {
+      entersChoosingOption: {
+        prompt: 'Choose Khans or Dragons',
+        options: [
+          { key: 'Khans', label: 'Khans — add {G}{G} at each of your main phases' },
+          {
+            key: 'Dragons',
+            label: 'Dragons — your flying creatures may fight when they enter',
+          },
+        ],
+      },
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'mainPhase',
+            player: 'you',
+            condition: { kind: 'chosenOptionIs', value: 'Khans' },
+          },
+          targets: [],
+          effects: [
+            {
+              op: 'addMana',
+              amount: constant(2),
+              colors: ['G'],
+              fixedSymbols: ['G', 'G'],
+            },
+          ],
+          description: 'Khans — at the beginning of each of your main phases, add {G}{G}',
+        },
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'permanent',
+              selector: allOf(ofType('Creature'), withKeyword('flying'), YOURS),
+            },
+            condition: { kind: 'chosenOptionIs', value: 'Dragons' },
+          },
+          optional: true,
+          targets: [{ kind: 'creature', controller: 'opponent' }],
+          effects: [{ op: 'fight', first: 'triggerObject', second: 0 }],
+          description:
+            "Dragons — a flying creature you control enters; it may fight target creature you don't control",
+        },
+      ],
+    },
   );
 
   defineCard(
