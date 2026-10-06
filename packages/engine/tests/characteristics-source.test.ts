@@ -21,6 +21,7 @@ const ALLOWED: Record<string, string> = {
   'cards/interpret.ts':
     'buildTransformBackFace copies printed characteristics from a freshly interpreted synthetic card face',
   'effects/continuous.ts': 'the layer engine itself: printed values seed the layer pass',
+  'stack/stack.ts': 'finishSpellCard reads a resolving spell card before it enters the battlefield',
   'actions/apply.ts':
     'reads the printed type of a card being announced from hand or the command zone, before it is a permanent',
   'actions/legal.ts':

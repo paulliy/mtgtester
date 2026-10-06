@@ -127,13 +127,13 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     yield* executeAbility(
       ctx,
       {
+        id: top.sourceId,
         cardId: top.sourceCardId,
         name: top.card?.name ?? top.description,
         oracleId: top.sourceOracleId,
         controllerId: top.controllerId,
         ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
         ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
-        ...(top.sourceObjectId !== undefined ? { objectId: top.sourceObjectId } : {}),
         ...(top.sourceDamageKeywords !== undefined
           ? { lastKnownDamageKeywords: top.sourceDamageKeywords }
           : {}),
@@ -181,6 +181,7 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
     const moved = yield* moveObject(ctx, card, {
       zone: 'battlefield',
       controllerId: spell.controllerId,
+      ...(def.subtypes.includes('Aura') ? { attachedTo: spell.targets[0] } : {}),
     });
     if (spell.grantHasteOnResolution && moved && moved.zone === 'battlefield') {
       ctx.state.effects.push({

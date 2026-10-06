@@ -187,17 +187,22 @@ export type ManaUnit = readonly (Color | 'C')[];
 /**
  * An activatable mana source — a permanent whose mana ability can be paid for right now.
  * Availability (untapped? not summoning-sick?) is decided by `manaSourcesFor` before the
- * source is offered, so the solver never has to know what the ability costs.
+ * source is offered; shared resource budgets and sacrifice candidates are carried into the solve.
  */
 export interface ManaSource {
   /** Stable card id of the permanent to activate. */
   cardId: string;
+  /** Distinguishes repeated activations of a source from its alternative abilities. */
+  activation?: number;
+  /** Shared, finite resources consumed by this activation. */
+  resources?: readonly { key: string; amount: number; available: number }[];
+  /** Eligible physical cards for each sacrifice in the activation cost. */
+  sacrifices?: readonly (readonly string[])[];
   /** The units of mana produced when activated, each a choice among symbols. */
   units: ManaUnit[];
   /**
-   * What activating it costs. The solver ignores the non-mana components — availability was
-   * already decided — but the caller applying the plan needs them, because "tap it" is not the
-   * only way to pay.
+   * What activating it costs. Shared budgets and sacrifice candidates below let the solver
+   * check combined payments; the caller applies these costs when activating each source.
    */
   costs: readonly AbilityCost[];
   /**
@@ -238,7 +243,20 @@ export interface ManaSource {
 /** One mana produced by tapping a source, and which source produced it. */
 export interface ProducedMana {
   cardId: string;
+  activation?: number;
   symbol: Color | 'C';
+}
+
+/** Can all sacrifice costs consume distinct, still-available permanents? */
+export function sacrificesArePayable(
+  groups: readonly (readonly string[])[],
+  unavailable: ReadonlySet<string>,
+): boolean {
+  if (groups.length === 0) return true;
+  const [first, ...rest] = [...groups].sort((a, b) => a.length - b.length);
+  return first!.some(
+    (id) => !unavailable.has(id) && sacrificesArePayable(rest, new Set([...unavailable, id])),
+  );
 }
 
 export interface PaymentPlan {
@@ -396,9 +414,9 @@ export function planPayment(
   // the first pass is byte-identical to the payment this function has always planned, so every
   // existing card's tap choices are unchanged and a filter land is only reached for.
   const freeSources = usableSources.filter((s) => s.manaCost === undefined);
-  const firstPass = solveFrom(cost, usableEntries, freeSources);
+  const firstPass = solveFrom(cost, usableEntries, freeSources, lifeTotal);
   if (firstPass !== null || freeSources.length === usableSources.length) return firstPass;
-  return solveWithCostly(cost, usableEntries, usableSources);
+  return solveWithCostly(cost, usableEntries, usableSources, lifeTotal);
 }
 
 /**
@@ -416,11 +434,11 @@ function solveWithCostly(
   cost: ParsedManaCost,
   usableEntries: readonly ManaEntry[],
   usableSources: readonly ManaSource[],
+  lifeTotal: number,
 ): PaymentPlan | null {
   const entries = usableEntries.filter((e) => e.restriction === undefined);
   const sources = usableSources.filter((s) => s.restriction === undefined);
-  const plan = solveFrom(cost, entries, sources);
-  return plan === null ? null : orderForActivation(cost, entries, plan);
+  return solveFrom(cost, entries, sources, lifeTotal);
 }
 
 /**
@@ -471,44 +489,51 @@ function orderForActivation(
   poolEntries: readonly ManaEntry[],
   plan: PaymentPlan,
 ): PaymentPlan | null {
-  const free: ManaSource[] = [];
-  const costly: ManaSource[] = [];
-  for (const source of plan.tapSources)
-    (source.manaCost === undefined ? free : costly).push(source);
-  // Guard against a factorial search. No real board has this many mana-costing sources in one
-  // payment; refusing is fail-closed.
-  if (costly.length > 6) return null;
-
   const producedBy = (source: ManaSource): ManaEntry[] =>
-    plan.produced.filter((p) => p.cardId === source.cardId).map(({ symbol }) => ({ symbol }));
-
-  const start: ManaEntry[] = [...poolEntries];
-  for (const source of free) start.push(...producedBy(source));
-
+    plan.produced
+      .filter((p) => p.cardId === source.cardId && p.activation === source.activation)
+      .map(({ symbol }) => ({ symbol }));
   const order: ManaSource[] = [];
-  const search = (available: readonly ManaEntry[], remaining: readonly ManaSource[]): boolean => {
+  const search = (
+    available: readonly ManaEntry[],
+    remaining: readonly ManaSource[],
+    removed: ReadonlySet<string>,
+  ): boolean => {
     if (remaining.length === 0) return selectEntriesToSpend(available, cost) !== null;
-    for (const source of remaining) {
-      const spent = selectEntriesToSpend(available, source.manaCost as ParsedManaCost);
+    // Produce with creatures before sacrificing them. Try other orders when a source's
+    // own mana cost or sacrifice requirements demand it.
+    const candidates = [...remaining].sort(
+      (a, b) => (a.sacrifices?.length ?? 0) - (b.sacrifices?.length ?? 0),
+    );
+    for (const source of candidates) {
+      if (removed.has(source.cardId)) continue;
+      const spent =
+        source.manaCost === undefined ? [] : selectEntriesToSpend(available, source.manaCost);
       if (spent === null) continue;
-      const next = available.filter((e) => !spent.includes(e));
-      order.push(source);
-      if (
-        search(
-          [...next, ...producedBy(source)],
-          remaining.filter((s) => s !== source),
-        )
-      ) {
-        return true;
-      }
-      order.pop();
+      const rest = remaining.filter((s) => s !== source);
+      const afterSelf = new Set(removed);
+      if (source.costs.some((c) => c.kind === 'sacrificeSelf' || c.kind === 'exileSelf'))
+        afterSelf.add(source.cardId);
+      const choose = (index: number, gone: ReadonlySet<string>): boolean => {
+        if (index === (source.sacrifices?.length ?? 0)) {
+          order.push(source);
+          const next = available.filter((e) => !spent.includes(e));
+          if (search([...next, ...producedBy(source)], rest, gone)) return true;
+          order.pop();
+          return false;
+        }
+        for (const id of source.sacrifices![index]!) {
+          if (gone.has(id) || rest.some((s) => s.cardId === id)) continue;
+          if (choose(index + 1, new Set([...gone, id]))) return true;
+        }
+        return false;
+      };
+      if (choose(0, afterSelf)) return true;
     }
     return false;
   };
-  if (!search(start, costly)) return null;
-
-  const tapSources = [...free, ...order];
-  return { ...plan, tapSources, tapCardIds: tapSources.map((s) => s.cardId) };
+  if (!search(poolEntries, plan.tapSources, new Set())) return null;
+  return { ...plan, tapSources: order, tapCardIds: order.map((s) => s.cardId) };
 }
 
 /** The exact solve over a fixed set of usable entries and sources. */
@@ -516,6 +541,7 @@ function solveFrom(
   cost: ParsedManaCost,
   usableEntries: readonly ManaEntry[],
   usableSources: readonly ManaSource[],
+  lifeTotal: number,
 ): PaymentPlan | null {
   // Work on a mutable remaining-cost copy. Strategy: satisfy colored + {C} pips first
   // (they are the constrained ones), then generic from whatever remains.
@@ -576,6 +602,7 @@ function solveFrom(
     !hasHybrid &&
     !hasAlternatives &&
     !hasCostly &&
+    !usableSources.some((s) => s.resources !== undefined || s.sacrifices !== undefined) &&
     usableSources.every((s) => s.units.every((u) => u.length === 1))
   ) {
     return planSingleChoice(need, usableSources, fromPool);
@@ -586,6 +613,7 @@ function solveFrom(
   // Source counts are small (≤ dozens of lands), and we prune on total production. The
   // `produced` accumulator records the symbol actually chosen for each unit of every tapped
   // source (pushes are undone on backtrack), so callers add exactly what was chosen.
+  let orderedPlan: PaymentPlan | null = null;
   const chosen: ManaSource[] = [];
   const produced: ProducedMana[] = [];
 
@@ -607,15 +635,26 @@ function solveFrom(
   const sharedIds = new Set(
     usableSources.map((s) => s.cardId).filter((id, i, ids) => ids.indexOf(id) !== i),
   );
+  const hasResources = usableSources.some(
+    (s) => s.resources !== undefined || s.sacrifices !== undefined,
+  );
   const failed = new Set<string>();
   const stateKey = (srcIdx: number, need2: ParsedManaCost): string =>
     `${srcIdx}|${needKey(need2)}|${chosen
-      .filter((s) => sharedIds.has(s.cardId))
-      .map((s) => s.cardId)
+      .filter((s) => hasResources || sharedIds.has(s.cardId))
+      .map((s) => `${usableSources.indexOf(s)}`)
       .join(',')}`;
 
   const solve = (srcIdx: number, need2: ParsedManaCost): boolean => {
-    if (totalPips(need2) === 0) return true;
+    if (totalPips(need2) === 0) {
+      orderedPlan = orderForActivation(cost, usableEntries, {
+        tapSources: [...chosen],
+        tapCardIds: chosen.map((s) => s.cardId),
+        fromPool,
+        produced: [...produced],
+      });
+      return orderedPlan !== null;
+    }
     if (srcIdx >= usableSources.length) return false;
     const key = stateKey(srcIdx, need2);
     if (failed.has(key)) return false;
@@ -636,7 +675,8 @@ function solveFrom(
 
     const src = usableSources[srcIdx] as ManaSource;
     // Alternatives of one permanent share a cardId; it can only be tapped once.
-    if (chosen.some((s) => s.cardId === src.cardId)) return solve(srcIdx + 1, need2);
+    if (chosen.some((s) => s.cardId === src.cardId && s.activation === src.activation))
+      return solve(srcIdx + 1, need2);
 
     // Option A: tap this source. Assign each unit to a pip (or let it float). A tapped
     // source produces ALL its units, so each unit adds a symbol to `produced`.
@@ -656,7 +696,11 @@ function solveFrom(
       const unit = src.units[unitIdx] as ManaUnit;
       const candidates = forced === undefined ? unit : unit.filter((s) => s === forced);
       const attempt = (sym: Color | 'C', next: ParsedManaCost): boolean => {
-        produced.push({ cardId: src.cardId, symbol: sym });
+        produced.push({
+          cardId: src.cardId,
+          symbol: sym,
+          ...(src.activation !== undefined ? { activation: src.activation } : {}),
+        });
         if (assignUnits(unitIdx + 1, next, src.linked === true ? sym : forced)) return true;
         produced.pop();
         return false;
@@ -695,6 +739,21 @@ function solveFrom(
     };
 
     chosen.push(src);
+    const used = new Map<string, number>();
+    let resourcesAvailable = true;
+    for (const source of chosen) {
+      for (const resource of source.resources ?? []) {
+        const amount = (used.get(resource.key) ?? 0) + resource.amount;
+        used.set(resource.key, amount);
+        const available =
+          resource.key === 'life' ? Math.min(resource.available, lifeTotal) : resource.available;
+        if (amount > available) resourcesAvailable = false;
+      }
+    }
+    if (!resourcesAvailable) {
+      chosen.pop();
+      return solve(srcIdx + 1, need2);
+    }
     // A source that costs mana to activate adds its own cost to what still has to be found:
     // the payment as a whole must cover `cost` PLUS every activation cost it pays along the
     // way. `assignUnits`'s terminal test still compares against the un-augmented `need2`, so
@@ -710,7 +769,7 @@ function solveFrom(
   };
 
   if (!solve(0, need)) return null;
-  return { tapCardIds: chosen.map((s) => s.cardId), tapSources: [...chosen], fromPool, produced };
+  return orderedPlan;
 }
 
 /**

@@ -118,6 +118,7 @@ export interface MatchSessionOptions {
 }
 
 export class MatchSession {
+  private abandoned = false;
   readonly engine: Engine;
   readonly runner: MatchRunner;
   private readonly logger: AiCallLogger | null;
@@ -549,7 +550,7 @@ export class MatchSession {
   // ── The presentation clock ────────────────────────────────────────────────────────────────
 
   private startPresenting(): void {
-    if (this.playbackMode !== 'live') return;
+    if (this.abandoned || this.playbackMode !== 'live') return;
 
     // The opening board is turn 0, and `presentedTurn` starts there, so "catch up to the
     // frontier" alone would never send it.
@@ -868,7 +869,9 @@ export class MatchSession {
   }
 
   abandon(): void {
+    this.abandoned = true;
     this.stopPresenting();
+    this.pendingLines = [];
     this.aiCoordinator?.cancel();
     this.aiJev?.cancel?.();
     this.runner.abandon();

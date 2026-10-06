@@ -240,6 +240,21 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function handle(message: ServerToClientMessage): void {
+    if (message.type !== 'gameStarted') {
+      const payload = message.payload;
+      const incomingGameId =
+        'gameId' in payload
+          ? payload.gameId
+          : 'state' in payload
+            ? payload.state.gameId
+            : 'result' in payload
+              ? payload.result.gameId
+              : 'request' in payload
+                ? payload.request.gameId
+                : undefined;
+      if (gameId.value !== null && incomingGameId !== undefined && incomingGameId !== gameId.value)
+        return;
+    }
     switch (message.type) {
       case 'gameStarted': {
         resumePending = false;

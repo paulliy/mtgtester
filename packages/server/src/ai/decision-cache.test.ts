@@ -195,3 +195,25 @@ describe('DecisionCache', () => {
     expect(cache.get(makeRequest(), viewFor(39))).toBeNull();
   });
 });
+
+it('preserves complete split responses on cache hits without sharing mutable data', () => {
+  const cache = new DecisionCache();
+  const request = makeRequest({ combatDamageSplit: { amount: 3, targets: ['b1', 'b2'] } });
+  const answer: DecisionResponse = {
+    requestId: request.requestId,
+    actionId: 0,
+    combatDamageSplit: { b1: 2, b2: 1 },
+    manaSplit: { G: 2, R: 1 },
+  };
+  cache.set(request, makeView(), answer);
+  answer.combatDamageSplit!['b1'] = 99;
+  const hit = cache.get({ ...request, requestId: 'new-request' }, makeView())!;
+  expect(hit.requestId).toBe('new-request');
+  expect(hit.combatDamageSplit).toEqual({ b1: 2, b2: 1 });
+  expect(hit.manaSplit).toEqual({ G: 2, R: 1 });
+  hit.combatDamageSplit!['b1'] = 88;
+  expect(cache.get(request, makeView())!.combatDamageSplit).toEqual({ b1: 2, b2: 1 });
+  expect(
+    cache.get({ ...request, combatDamageSplit: { amount: 3, targets: ['b3', 'b4'] } }, makeView()),
+  ).toBeNull();
+});

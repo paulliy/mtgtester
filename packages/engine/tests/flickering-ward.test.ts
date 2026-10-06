@@ -1,5 +1,5 @@
 /**
- * Flickering Ward — "As this Aura enters, choose a color. Enchanted creature has protection
+ * Flickering Ward — "Enchant creature.\nAs this Aura enters, choose a color. Enchanted creature has protection
  * from the chosen color... {W}: Return this Aura to its owner's hand." Reuses the as-enters
  * modal-choice primitive (see `caged-sun.test.ts`) to drive a dynamic `addProtection` layer-6
  * op via the new `addProtectionFromChosenColor` `ContinuousOp`, resolved in `gatherEffects`
@@ -22,7 +22,7 @@ const flickeringWard = (): ReturnType<typeof oracle> =>
     power: null,
     toughness: null,
     oracleText:
-      "As this Aura enters, choose a color.\nEnchanted creature has protection from the chosen color. This effect doesn't remove this Aura.\n{W}: Return this Aura to its owner's hand.",
+      "Enchant creature.\nAs this Aura enters, choose a color.\nEnchanted creature has protection from the chosen color. This effect doesn't remove this Aura.\n{W}: Return this Aura to its owner's hand.",
   });
 
 const bear = (): ReturnType<typeof oracle> =>
@@ -52,7 +52,9 @@ describe('Flickering Ward (as-enters modal choice, dynamic protection)', () => {
     const creature = spawn(ctx, 'P1', bear());
 
     const wardObj = conjure(ctx, 'P1', flickeringWard(), 'hand');
-    pump(moveObject(ctx, wardObj, { zone: 'battlefield' }), (d) => pick(d, 'Red'));
+    pump(moveObject(ctx, wardObj, { zone: 'battlefield', attachedTo: creature.id }), (d) =>
+      pick(d, 'Red'),
+    );
     const ward = ctx.state.battlefield.find((p) => p.cardId === wardObj.cardId);
     if (ward === undefined) throw new Error('expected a permanent');
     ward.attachedTo = creature.id;

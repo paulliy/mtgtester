@@ -195,8 +195,9 @@ the cutoff admits, 200 iterations each:
 
 Engagement, over five seeded four-player `pool --play` games: **49 of 51** block declarations were
 searched, the other two declining on width. Damage division came up **once in five games** — it
-only arises with 2+ live blockers on one attacker — which is worth knowing before 7c spends any of
-its sample size trying to measure that side of the work.
+was then offered only with 2+ live blockers on one attacker. That implementation omitted the
+single-blocker trample choice: CR 702.19b lets the attacker assign excess either to the blocker
+or to the defending player. The engine now offers that choice whenever excess is available.
 
 > Corrected by 7c'''s larger sample: damage division is rarer than block declaration but not that
 > rare. Over 120 games it came up 64 times against 668 block declarations, so about once every two

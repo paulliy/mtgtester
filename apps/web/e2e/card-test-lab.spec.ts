@@ -9,6 +9,7 @@
  * The lab backend holds a single live session, so these tests run serially.
  */
 import { expect, test, type Page } from '@playwright/test';
+import type { ServerToClientMessage, SpectatorPermanent } from '@mtg/shared';
 
 test.describe.configure({ mode: 'serial' });
 test.use({ trace: 'on', screenshot: 'on' });
@@ -2656,4 +2657,69 @@ test('Public zones: reanimate an opponent’s creature', async ({ page }) => {
   await expect(ox).toHaveCount(0);
   await expect(signet).toBeVisible();
   await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+});
+
+test('Chains of Custody: attach before the entry trigger', async ({ page }) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(page, 'Chains of Custody: attach before the entry trigger');
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Llanowar Elves')?.id).toBeTruthy();
+  const hostId = boards.at(-1)!.find((p) => p.name === 'Llanowar Elves')!.id;
+  await handCard(page, 'Chains of Custody').click();
+  await permanent(page, 'Llanowar Elves').click();
+  await confirm(page);
+  // The entry trigger has one legal target, so the engine resolves it automatically.
+  await expect(
+    page.getByText(/Solemn Simulacrum is exiled by Chains of Custody/i).first(),
+  ).toBeVisible();
+  await expect(permanent(page, 'Chains of Custody')).toBeVisible();
+  await expect(permanent(page, 'Llanowar Elves')).toBeVisible();
+  await expect(permanent(page, 'Solemn Simulacrum')).toHaveCount(0);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Chains of Custody')?.attachedTo)
+    .toBe(hostId);
+});
+
+test('Phyrexian Tower: use the Elf before sacrificing it', async ({ page }) => {
+  await runScenario(page, 'Phyrexian Tower: use the Elf before sacrificing it');
+  const cultivate = handCard(page, 'Cultivate');
+  await expect(cultivate).toHaveClass(/actionable/);
+  await cultivate.click();
+  await expect(page.getByText(/Auto-pay:.*Llanowar Elves.*Phyrexian Tower/i)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/Cultivate: search your library/i).first()).toBeVisible();
+  // Declining the search is legal and keeps this payment regression independent of library choices.
+  await page.getByRole('button', { name: 'Find nothing', exact: true }).click();
+  await expect(permanent(page, 'Llanowar Elves')).toHaveCount(0);
+  await expect(permanent(page, 'Phyrexian Tower').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.getByText(/Cultivate resolves/i).first()).toBeVisible();
+});
+
+test('Queen Allenal: plain and lifelink Soldiers stay distinct', async ({ page }) => {
+  await runScenario(page, 'Queen Allenal: plain and lifelink Soldiers stay distinct');
+  await permanent(page, 'Dawn of Hope').click();
+  await confirm(page);
+  const soldiers = permanent(page, 'Soldier');
+  await expect(soldiers).toHaveCount(2);
+  await expect(soldiers.nth(0)).toContainText(/lifelink/i);
+  await expect(soldiers.nth(1)).not.toContainText(/lifelink/i);
+  await expect(soldiers.nth(0)).toContainText('1/1');
+  await expect(soldiers.nth(1)).toContainText('1/1');
+});
+
+test('Twinflame Tyrant: double damage from your spell', async ({ page }) => {
+  await runScenario(page, 'Twinflame Tyrant: double damage from your spell');
+  await handCard(page, 'Lightning Bolt').click();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await confirm(page);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('34');
+  await expect(page.getByText(/Lightning Bolt deals 6 to P2/i).first()).toBeVisible();
 });

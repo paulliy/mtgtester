@@ -105,7 +105,6 @@ export function isAllowedLocalRequest(request: Request, port: number): boolean {
 export class GameServer {
   private readonly sockets = new Set<ServerWebSocket<SocketData>>();
   private session: MatchSession | null = null;
-  private nextGameNum = 1;
   private startingGame = false;
   private startingSocket: ServerWebSocket<SocketData> | null = null;
   private startGeneration = 0;
@@ -761,6 +760,7 @@ export class GameServer {
     socket: ServerWebSocket<SocketData>,
     payload: StartGamePayload,
   ): Promise<void> {
+    const generation = this.startGeneration;
     const { seats, providerKind, playbackMode, paceMs } = payload;
     const gameMode = payload.gameMode ?? 'spectator';
     // Reruns use a fresh seed; the old one is still stored with its game (brief §4).
@@ -803,6 +803,7 @@ export class GameServer {
         return;
       }
       const fresh = await previewMatchup(entry.request, this.deps);
+      if (generation !== this.startGeneration) return;
       if (fresh.blockers.length > 0) {
         // A blocker is per-seat free text and names unmodeled cards, so it leaves setup by
         // the same private-data path a `SeatProblem` does. Only a spectator sees the list.
@@ -823,7 +824,6 @@ export class GameServer {
       return;
     }
     // Prepare the replacement before abandoning the current game.
-    const generation = this.startGeneration;
     const setup = await setupSeats(seats, this.deps, seed);
     if (generation !== this.startGeneration) return;
     if (!setup.ok) {
@@ -847,7 +847,7 @@ export class GameServer {
       return;
     }
 
-    const gameId = `g${this.nextGameNum++}-${seed}`;
+    const gameId = `g-${crypto.randomUUID()}`;
     const session = new MatchSession({
       gameId,
       seed,
@@ -862,6 +862,7 @@ export class GameServer {
         reflectionEnabled: payload.reflectionEnabled,
       }),
       send: (message) => {
+        if (this.session !== session) return;
         if (gameMode === 'singlePlayer') {
           if (this.playerSocket !== null) this.sendTo(this.playerSocket, message);
         } else {
@@ -900,7 +901,7 @@ export class GameServer {
   }
 
   private startCardTestScenario(socket: ServerWebSocket<SocketData>, scenarioId: string): void {
-    const gameId = `card-lab-${this.nextGameNum++}` as GameStartedPayload['gameId'];
+    const gameId = `card-lab-${crypto.randomUUID()}` as GameStartedPayload['gameId'];
     const scenario = createCardTestScenario(scenarioId, gameId);
     if (scenario === null) {
       this.sendTo(socket, {
@@ -924,6 +925,7 @@ export class GameServer {
         : {}),
       // Deliberately no store: lab runs never enter normal game statistics.
       send: (message) => {
+        if (this.session !== session) return;
         if (this.playerSocket !== null) this.sendTo(this.playerSocket, message);
       },
     });

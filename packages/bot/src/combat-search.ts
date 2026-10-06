@@ -690,9 +690,13 @@ export function searchDamageSplit(
   const index = creatureIndex(view);
   const blockerIds = spec.targets.filter((id) => index.has(id));
   const playerTargetId = spec.targets.find((id) => !index.has(id));
-  // The engine only ever asks with 2+ live blockers; one is forced by CR 510.1c with nothing to
-  // choose. Anything else means the request isn't shaped the way this search expects.
-  if (!cfg.enabled || blockerIds.length < 2) return decline();
+  // A single blocker permits a split when trample can send excess to the defending player.
+  if (
+    !cfg.enabled ||
+    blockerIds.length === 0 ||
+    (blockerIds.length === 1 && playerTargetId === undefined)
+  )
+    return decline();
   if (blockerIds.length > cfg.maxSplitBlockers) return decline();
 
   const blockers = blockerIds.map((id) => index.get(id) as SnapshotCreature);

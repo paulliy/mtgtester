@@ -119,6 +119,7 @@ export function queueStepTriggers(
         ctx.state.pendingTriggers.push({
           controllerId: perm.controllerId,
           sourceCardId: perm.cardId,
+          sourceObjectId: perm.id,
           sourceOracleId: perm.oracleId,
           sourceName: perm.name,
           ability,
