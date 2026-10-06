@@ -1240,6 +1240,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Hunting Wilds: kicked, two Forests become 3/3 haste creatures'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Loran of the Third Path: destroy up to one artifact or enchantment'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Loran of the Third Path: you and target opponent each draw'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

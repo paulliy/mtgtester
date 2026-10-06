@@ -169,7 +169,6 @@ const REASONS: Record<string, string> = {
     'Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.',
   'Deflecting Palm':
     'Source choice and reflection are implemented as unscoped combat-damage prevention.',
-  'Loran of the Third Path': 'Up-to-one destroy is a required target.',
   'Scheming Symmetry':
     'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
   'Kambal, Consul of Allocation':
@@ -308,6 +307,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Loran of the Third Path',
     'Hunting Wilds',
     'Foe-Razer Regent',
     'Voice of Many',

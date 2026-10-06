@@ -2232,6 +2232,134 @@ describe('Hunting Wilds', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.18 Loran of the Third Path
+// ---------------------------------------------------------------------------------------------
+
+describe('Loran of the Third Path', () => {
+  const loran = pinned('Loran of the Third Path');
+  const relic = () => oracle({ name: 'Loran Relic', typeLine: 'Artifact', manaCost: '{2}' });
+  const charm = () => oracle({ name: 'Loran Charm', typeLine: 'Enchantment', manaCost: '{1}' });
+  const vault = () =>
+    oracle({
+      name: 'Loran Vault',
+      typeLine: 'Artifact',
+      manaCost: '{3}',
+      oracleText: 'Indestructible',
+      keywords: ['Indestructible'],
+    });
+  const CHOOSE = /choose (a|another) target/i;
+
+  /** Choose `name` (or no target) for the up-to-one slot. */
+  const pick =
+    (name: string | null): Answer =>
+    (decision) => {
+      if (CHOOSE.test(decision.prompt)) {
+        return name === null
+          ? optionMatching(decision, /Choose no more targets/)
+          : optionMatching(decision, new RegExp(`^Target ${name}$`));
+      }
+      return { index: 0, targets: new Map() };
+    };
+
+  /** Cast Loran from P1's hand and settle its enters trigger with `answer`. */
+  function castLoran(ctx: GameContext, answer: Answer) {
+    const inHand = conjure(ctx, 'P1', loran.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }, { symbol: 'W' }, { symbol: 'W' }]);
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const { decisions } = settle(ctx, answer);
+    return decisions;
+  }
+
+  const offered = (decisions: PendingDecision[]) =>
+    decisions
+      .filter((decision) => CHOOSE.test(decision.prompt))
+      .flatMap((decision) => decision.options.map((option) => option.description));
+
+  it('loran-of-the-third-path-pinned-oracle-supported — pins the Oracle and models vigilance, the up-to-one destroy, and the draw ability', () => {
+    expect(loran.sha256).toBe('1113e09d5ae37057a26a4ed71a643206eb4ca8bb572b7116b0107ff2ebdd3454');
+    const def = interpretCard(loran.card);
+    expect(def.modeled).toBe(true);
+    expect(def.keywords).toContain('vigilance');
+    expect(def.triggers[0]?.targets).toEqual([
+      expect.objectContaining({ kind: 'permanent', count: { min: 0, max: 1 } }),
+    ]);
+    expect(def.triggers[0]?.effects).toEqual([{ op: 'destroyEachChosen', targetSlot: 0 }]);
+    expect(def.activatedAbilities[0]).toMatchObject({
+      costs: [{ kind: 'tap' }],
+      ability: {
+        targets: [{ kind: 'player', controller: 'opponent' }],
+        effects: [{ op: 'drawTargetAndController', target: 0 }],
+      },
+    });
+  });
+
+  it('loran-of-the-third-path-destroys-chosen — casting it destroys the chosen artifact or enchantment, whoever controls it', () => {
+    const ctx = pod('loran-destroy');
+    const theirs = spawn(ctx, 'P2', charm());
+    const mine = spawn(ctx, 'P1', relic());
+    const decisions = castLoran(ctx, pick('Loran Relic'));
+    expect(offered(decisions)).toEqual(
+      expect.arrayContaining(['Target Loran Relic', 'Target Loran Charm']),
+    );
+    expect(ctx.state.battlefield.some((entry) => entry.id === mine.id)).toBe(false);
+    expect(ctx.state.battlefield.some((entry) => entry.id === theirs.id)).toBe(true);
+  });
+
+  it('loran-of-the-third-path-zero-targets — choosing nothing, or having nothing to choose, destroys nothing', () => {
+    const chosen = pod('loran-none');
+    const kept = spawn(chosen, 'P2', relic());
+    castLoran(chosen, pick(null));
+    expect(chosen.state.battlefield.some((entry) => entry.id === kept.id)).toBe(true);
+
+    const empty = pod('loran-empty');
+    const decisions = castLoran(empty, pick(null));
+    expect(offered(decisions)).toEqual([]);
+    expect(empty.state.battlefield.some((entry) => entry.name === 'Loran of the Third Path')).toBe(
+      true,
+    );
+  });
+
+  it('loran-of-the-third-path-filter-and-indestructible — creatures and lands are not offered; an indestructible artifact survives', () => {
+    const ctx = pod('loran-filter');
+    spawn(ctx, 'P2', bear());
+    spawn(ctx, 'P2', forest());
+    const survivor = spawn(ctx, 'P2', vault());
+    const decisions = castLoran(ctx, pick('Loran Vault'));
+    expect(offered(decisions)).not.toContain('Target Test Bear');
+    expect(offered(decisions)).not.toContain('Target Forest');
+    expect(ctx.state.battlefield.some((entry) => entry.id === survivor.id)).toBe(true);
+  });
+
+  it('loran-of-the-third-path-tap-draw — {T}: you and the target opponent each draw; it needs an untapped, non-sick Loran', () => {
+    const ctx = pod('loran-draw');
+    const self = spawn(ctx, 'P1', loran.card);
+    self.summoningSick = true;
+    expect(activationOf(ctx, 'P1', self)).toBeUndefined();
+    self.summoningSick = false;
+    const option = activationOf(ctx, 'P1', self);
+    expect(option).toBeDefined();
+    const before = { P1: playerById(ctx, 'P1').hand.length, P3: playerById(ctx, 'P3').hand.length };
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, 'P3']]),
+    );
+    expect(option!.targets?.[0]?.options).toEqual(expect.arrayContaining(['P2', 'P3', 'P4']));
+    expect(option!.targets?.[0]?.options).not.toContain('P1');
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand.length).toBe(before.P1 + 1);
+    expect(playerById(ctx, 'P3').hand.length).toBe(before.P3 + 1);
+    expect(playerById(ctx, 'P2').hand).toHaveLength(0);
+    expect(self.tapped).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2326,6 +2454,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Hunting Wilds',
     sha256: 'b673b9cfa9797a896494a8d2751fe9cce08e1787a1e866d6b8b23ce3b3ba5804',
+    clauseCount: 3,
+  },
+  {
+    name: 'Loran of the Third Path',
+    sha256: '1113e09d5ae37057a26a4ed71a643206eb4ca8bb572b7116b0107ff2ebdd3454',
     clauseCount: 3,
   },
 ];

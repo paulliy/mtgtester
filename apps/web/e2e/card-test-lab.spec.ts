@@ -2165,3 +2165,42 @@ test('Hunting Wilds: kicked, two Forests become 3/3 haste creatures', async ({ p
   await expect(permanent(page, 'Forest').filter({ hasText: '3/3' })).not.toHaveCount(0);
   await expect(permanent(page, 'Forest').filter({ hasText: /haste/i })).not.toHaveCount(0);
 });
+
+test('Loran of the Third Path: destroy up to one artifact or enchantment', async ({ page }) => {
+  await runScenario(page, 'Loran of the Third Path: destroy up to one artifact or enchantment');
+
+  const loran = handCard(page, 'Loran of the Third Path');
+  await expect(loran).toHaveClass(/actionable/);
+  await loran.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Up to one: stopping is allowed, and the creature-only Lab Ox is never offered.
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Target Lab Servo' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Target Lab Ox' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Target Lab Hex' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Servo')).toBeVisible();
+});
+
+test('Loran of the Third Path: you and target opponent each draw', async ({ page }) => {
+  await runScenario(page, 'Loran of the Third Path: you and target opponent each draw');
+
+  const loran = permanent(page, 'Loran of the Third Path');
+  await expect(loran).toHaveClass(/actionable/);
+  await loran.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent').filter({ hasText: 'P3' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Hand\s*1/).first()).toBeVisible();
+  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('1 in hand');
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('0 in hand');
+});

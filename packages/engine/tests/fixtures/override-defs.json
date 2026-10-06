@@ -7013,8 +7013,78 @@
   {
     "oracleId": "b3d81980-76f2-44e2-b1c9-01e30c726312",
     "name": "Loran of the Third Path",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ enters, destroy up to one target artifact or enchantment.",
+      "{T}: You and target opponent each draw a card."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "You and target opponent each draw a card",
+            "effects": [
+              {
+                "op": "drawTargetAndController",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "opponent",
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Destroy up to one target artifact or enchantment",
+          "effects": [
+            {
+              "op": "destroyEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "b3ff8da4-f2cc-41c3-8950-9cc531854b78",
@@ -15360,8 +15430,78 @@
   {
     "oracleId": "oracle-loran-of-the-third-path",
     "name": "Loran of the Third Path",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ enters, destroy up to one target artifact or enchantment.",
+      "{T}: You and target opponent each draw a card."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "You and target opponent each draw a card",
+            "effects": [
+              {
+                "op": "drawTargetAndController",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "opponent",
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Destroy up to one target artifact or enchantment",
+          "effects": [
+            {
+              "op": "destroyEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-loyal-apprentice",

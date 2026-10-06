@@ -52,7 +52,9 @@ function scripted(steps: Step[]) {
         (
           action.interaction as
             { targetSlots?: Array<{ slot: number; options: string[] }> } | undefined
-        )?.targetSlots ?? [];
+        )?.targetSlots ??
+        action.targets ??
+        [];
       const names = objectNames(scenario);
       const targets = step.targets.map((name, position) => {
         const slot = slots[position];
@@ -505,5 +507,36 @@ describe('Hunting Wilds Card Test Lab scenario', () => {
     }
     expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
     replays('hunting-wilds-viewer-kicked', steps);
+  });
+});
+
+describe('Loran of the Third Path Card Test Lab scenarios', () => {
+  const destroySteps: Step[] = [
+    { action: 'Cast Loran of the Third Path' },
+    { action: 'Target Lab Hex' },
+  ];
+  const drawSteps: Step[] = [{ action: 'You and target opponent each draw', targets: ['P3'] }];
+
+  it('loran-of-the-third-path-viewer-destroy-up-to-one — destroys the one chosen artifact or enchantment', () => {
+    const { onBattlefield, offered } = run(
+      'loran-of-the-third-path-viewer-destroy-up-to-one',
+      destroySteps,
+    );
+    const choice = offered.find((options) => options.includes('Target Lab Hex'))!;
+    expect(choice).toEqual(expect.arrayContaining(['Target Lab Servo', 'Choose no more targets']));
+    expect(choice).not.toContain('Target Lab Ox');
+    expect(onBattlefield('Lab Hex')).toHaveLength(0);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    replays('loran-of-the-third-path-viewer-destroy-up-to-one', destroySteps);
+  });
+
+  it('loran-of-the-third-path-viewer-tap-draw — you and the targeted opponent each draw', () => {
+    const { seat, onBattlefield } = run('loran-of-the-third-path-viewer-tap-draw', drawSteps);
+    expect(onBattlefield('Loran of the Third Path')[0]?.tapped).toBe(true);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Loran Drawn Card']);
+    expect(seat('P3').hand).toHaveLength(1);
+    expect(seat('P2').hand).toHaveLength(0);
+    expect(seat('P4').hand).toHaveLength(0);
+    replays('loran-of-the-third-path-viewer-tap-draw', drawSteps);
   });
 });

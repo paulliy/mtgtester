@@ -33,6 +33,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Harvest Season',
       'Hunting Wilds',
       'Land Tax',
+      'Loran of the Third Path',
       'Mordant Dragon',
       'Myriad Landscape',
       'Necron Deathmark',

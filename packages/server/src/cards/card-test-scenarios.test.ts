@@ -139,6 +139,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'voice-of-many-viewer-draw-per-opponent',
       'foe-razer-regent-viewer-fight-and-grow',
       'hunting-wilds-viewer-kicked',
+      'loran-of-the-third-path-viewer-destroy-up-to-one',
+      'loran-of-the-third-path-viewer-tap-draw',
     ]);
   });
 

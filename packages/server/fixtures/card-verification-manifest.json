@@ -1571,13 +1571,38 @@
     "b3d81980-76f2-44e2-b1c9-01e30c726312": {
       "name": "Loran of the Third Path",
       "oracleSha256": "1113e09d5ae37057a26a4ed71a643206eb4ca8bb572b7116b0107ff2ebdd3454",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "loran-of-the-third-path-vigilance",
+          "oracleText": "Vigilance",
+          "implementation": ["keyword vigilance (interpreted)"],
+          "engineTestIds": ["loran-of-the-third-path-pinned-oracle-supported"],
+          "viewerScenarioIds": ["loran-of-the-third-path-viewer-destroy-up-to-one"]
+        },
+        {
+          "id": "loran-of-the-third-path-destroy-up-to-one",
           "oracleText": "When Loran enters, destroy up to one target artifact or enchantment.",
-          "implementation": ["explicitly unsupported; required target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enters trigger on self with a 0..1 count slot: permanent that is an artifact or an enchantment, any controller",
+            "destroyEachChosen(slot 0): honors indestructible; choosing none or having none to choose destroys nothing"
+          ],
+          "engineTestIds": [
+            "loran-of-the-third-path-destroys-chosen",
+            "loran-of-the-third-path-zero-targets",
+            "loran-of-the-third-path-filter-and-indestructible"
+          ],
+          "viewerScenarioIds": ["loran-of-the-third-path-viewer-destroy-up-to-one"]
+        },
+        {
+          "id": "loran-of-the-third-path-tap-draw",
+          "oracleText": "{T}: You and target opponent each draw a card.",
+          "implementation": [
+            "activated ability, cost {T} (needs an untapped, non-summoning-sick Loran)",
+            "target opponent; drawTargetAndController: the target and you each draw one card"
+          ],
+          "engineTestIds": ["loran-of-the-third-path-tap-draw"],
+          "viewerScenarioIds": ["loran-of-the-third-path-viewer-tap-draw"]
         }
       ],
       "gameplayAiScenarioIds": []

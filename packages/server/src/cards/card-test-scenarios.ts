@@ -4740,6 +4740,69 @@ function huntingWildsScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function loranDestroyScenario(gameId: GameId): CardTestScenario {
+  const loran = pinnedFrom(MARCHESA_BATCH1, 'Loran of the Third Path');
+  return pr01Scenario(gameId, {
+    id: 'loran-of-the-third-path-viewer-destroy-up-to-one',
+    title: 'Loran of the Third Path: destroy up to one artifact or enchantment',
+    instructions: [
+      'Cast Loran of the Third Path with your three Plains.',
+      'Choose Lab Hex for its enters trigger and let it resolve.',
+    ],
+    expectedOutcome:
+      'Lab Hex is destroyed. Lab Servo, an artifact creature, was also offered but survives because only one target may be chosen; Lab Ox was never offered.',
+    oracleSha256: loran.sha256,
+    clauseIds: ['loran-of-the-third-path-destroy-up-to-one'],
+    decks: {
+      P1: [loran.card, PLAINS, PLAINS, PLAINS],
+      P2: [LAB_HEX, LAB_SERVO, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Loran of the Third Path'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Plains', 'Plains', 'Plains'] },
+        { playerId: 'P2', cardNames: ['Lab Hex', 'Lab Servo', 'Lab Ox'] },
+      ],
+    },
+  });
+}
+
+function loranDrawScenario(gameId: GameId): CardTestScenario {
+  const loran = pinnedFrom(MARCHESA_BATCH1, 'Loran of the Third Path');
+  const drawn = card({
+    oracleId: 'lab-loran-drawn',
+    name: 'Loran Drawn Card',
+    typeLine: 'Creature — Scribe',
+    manaCost: '{9}',
+    cmc: 9,
+    power: '1',
+    toughness: '1',
+  });
+  return pr01Scenario(gameId, {
+    id: 'loran-of-the-third-path-viewer-tap-draw',
+    title: 'Loran of the Third Path: you and target opponent each draw',
+    instructions: [
+      'Activate Loran of the Third Path by tapping it.',
+      'Target P3, then let the ability resolve.',
+    ],
+    expectedOutcome: 'Loran taps, and you and P3 each draw one card. P2 and P4 draw nothing.',
+    oracleSha256: loran.sha256,
+    clauseIds: ['loran-of-the-third-path-tap-draw'],
+    decks: {
+      P1: [loran.card, drawn],
+      P2: PR01_FILLER,
+      P3: [drawn, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Loran of the Third Path'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4840,6 +4903,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'voice-of-many-viewer-draw-per-opponent',
   'foe-razer-regent-viewer-fight-and-grow',
   'hunting-wilds-viewer-kicked',
+  'loran-of-the-third-path-viewer-destroy-up-to-one',
+  'loran-of-the-third-path-viewer-tap-draw',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4936,6 +5001,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'voice-of-many-viewer-draw-per-opponent': voiceOfManyScenario,
   'foe-razer-regent-viewer-fight-and-grow': foeRazerRegentScenario,
   'hunting-wilds-viewer-kicked': huntingWildsScenario,
+  'loran-of-the-third-path-viewer-destroy-up-to-one': loranDestroyScenario,
+  'loran-of-the-third-path-viewer-tap-draw': loranDrawScenario,
 };
 
 export function createCardTestScenario(

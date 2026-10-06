@@ -1194,6 +1194,25 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "b3d81980-76f2-44e2-b1c9-01e30c726312",
+    "name": "Loran of the Third Path",
+    "package": "PR01.18",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When ~ enters, destroy up to one target artifact or enchantment.\"",
+      "unrecognized rules text: \"{T}: You and target opponent each draw a card.\"",
+      "explicitly unsupported: Up-to-one destroy is a required target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "15fbb7b1-c62d-4f82-9f35-2c10299779f4",
     "name": "Lurking Predators",
     "package": "W5",

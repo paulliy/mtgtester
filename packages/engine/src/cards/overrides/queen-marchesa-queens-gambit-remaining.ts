@@ -1,7 +1,8 @@
 /** Remaining authored overrides for queen-marchesa-queens-gambit.txt. */
 
 import type { CardDefinition } from '../definition';
-import { manaCost, triggered } from '../templates';
+import { activated, manaCost, TAP, triggered } from '../templates';
+import { anyOf, ofType } from '../selector';
 import { TREASURE } from '../tokens';
 import { constant } from '../value';
 import { defineCard, unsupportedCard } from './index';
@@ -248,11 +249,39 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     ],
     INKSHIELD,
   );
-  // Catalog audit queen-batch-4: up-to-one destroy is a required target.
-  unsupportedCard(
+  // Coverage PR01: "up to one" is a 0..1 count slot, so Loran's trigger resolves with no target.
+  defineCard(
     'b3d81980-76f2-44e2-b1c9-01e30c726312',
     'Loran of the Third Path',
-    'Up-to-one destroy is a required target.',
+    [
+      'When ~ enters, destroy up to one target artifact or enchantment.',
+      '{T}: You and target opponent each draw a card.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [
+            {
+              kind: 'permanent',
+              filter: anyOf(ofType('Artifact'), ofType('Enchantment')),
+              count: { min: 0, max: 1 },
+            },
+          ],
+          effects: [{ op: 'destroyEachChosen', targetSlot: 0 }],
+          description: 'Destroy up to one target artifact or enchantment',
+        },
+      ],
+      activatedAbilities: [
+        activated({
+          costs: [TAP],
+          targets: [{ kind: 'player', controller: 'opponent' }],
+          effects: [{ op: 'drawTargetAndController', target: 0 }],
+          description: 'You and target opponent each draw a card',
+        }),
+      ],
+    },
   );
   // Catalog audit queen-batch-2: attack restriction omitted; extra second-spell trigger added.
   unsupportedCard(
