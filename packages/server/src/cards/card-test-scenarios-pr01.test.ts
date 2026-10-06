@@ -205,3 +205,24 @@ describe('Canoptek Wraith Card Test Lab scenario', () => {
     replays('canoptek-wraith-viewer-scout-same-name-search', steps);
   });
 });
+
+describe("Conjurer's Closet Card Test Lab scenario", () => {
+  const steps: Step[] = [{ action: 'Yes' }];
+
+  it('conjurers-closet-viewer-end-step-blink — the end-step trigger blinks the creature, which re-enters untapped', () => {
+    const { state, seat, onBattlefield, prompts } = run(
+      'conjurers-closet-viewer-end-step-blink',
+      steps,
+    );
+    expect(prompts.some((prompt) => /use this ability/.test(prompt))).toBe(true);
+    expect(onBattlefield('Lab Greeter')[0]?.tapped).toBe(false);
+    expect(seat('P1').life).toBe(42);
+    expect(state.phase).toBe('ending');
+    expect(
+      state.eventLog.some(
+        (event) => event.type === 'zoneChange' && event.payload['to'] === 'exile',
+      ),
+    ).toBe(true);
+    replays('conjurers-closet-viewer-end-step-blink', steps);
+  });
+});

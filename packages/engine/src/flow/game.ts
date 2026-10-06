@@ -120,6 +120,14 @@ export function* playPreparedScenario(
     emptyManaPools(ctx);
     yield* runCombatAndExtraCombats(ctx);
   }
+  if (spec.continueToEndStep === true) {
+    emptyManaPools(ctx);
+    state.phase = 'ending';
+    state.step = 'end';
+    queueStepTriggers(ctx, 'endStep');
+    yield* priorityCheckpoint(ctx);
+    yield* runPrioritySequence(ctx);
+  }
   if (spec.continueToNextUpkeep === true) {
     advanceToNextTurnPlayer(ctx);
     state.turnNumber += 1;

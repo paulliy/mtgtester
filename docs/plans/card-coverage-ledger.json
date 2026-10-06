@@ -402,6 +402,24 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
+    "name": "Conjurer's Closet",
+    "package": "PR01.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control.\"",
+      "explicitly unsupported: Optional exile-and-return is implemented as an untargeted choice among creatures you control."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "2469c0b7-a045-4733-bf53-28f3fdbe3797",
     "name": "Cosmic Crucible",
     "package": "W3",

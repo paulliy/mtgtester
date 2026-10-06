@@ -2606,15 +2606,27 @@
     "cd1eda60-53e4-44d0-9b2c-7a57395e291f": {
       "name": "Conjurer's Closet",
       "oracleSha256": "d80cdb0f2c13939c9ac36f2137931ba2cd340fb6e524f8906c038be6c7818b2c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "conjurers-closet-end-step-blink",
           "oracleText": "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control.",
           "implementation": [
-            "explicitly unsupported; untargeted blink among creatures you control"
+            "endStep trigger (player=you)",
+            "optional: yes/no decided on resolution (CR 603.5)",
+            "target creature you control, chosen as the trigger is put on the stack",
+            "blinkTarget: exile, then return the same card under your control as a new object; a token does not return"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "conjurers-closet-pinned-oracle-supported",
+            "conjurers-closet-blink-resets-and-reenters",
+            "conjurers-closet-chooses-among-own-creatures",
+            "conjurers-closet-decline",
+            "conjurers-closet-no-target-or-other-turn",
+            "conjurers-closet-token-does-not-return",
+            "conjurers-closet-illegal-target-fizzles"
+          ],
+          "viewerScenarioIds": ["conjurers-closet-viewer-end-step-blink"]
         }
       ],
       "gameplayAiScenarioIds": []

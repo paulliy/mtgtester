@@ -126,6 +126,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'beacon-of-unrest-viewer-reanimate-and-shuffle',
       'canoptek-spyder-viewer-vehicle-draw',
       'canoptek-wraith-viewer-scout-same-name-search',
+      'conjurers-closet-viewer-end-step-blink',
     ]);
   });
 

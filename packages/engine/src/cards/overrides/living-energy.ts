@@ -1165,11 +1165,26 @@ export function registerLIVING_ENERGYOverrides(): void {
     '{2}{R}, Sacrifice an artifact: ~ deals 2 damage to any target.',
   ]);
 
-  // Catalog audit living-energy-batch-3: targeted optional blink is an untargeted choice.
-  unsupportedCard(
+  // Coverage PR01 (was contained by living-energy-batch-3): the creature is targeted when the
+  // trigger is put on the stack, and "you may" is decided as it resolves (CR 603.5).
+  defineCard(
     'cd1eda60-53e4-44d0-9b2c-7a57395e291f',
     "Conjurer's Closet",
-    'Optional exile-and-return is implemented as an untargeted choice among creatures you control.',
+    [
+      'At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'endStep', player: 'you' },
+          optional: true,
+          targets: [{ kind: 'creature', controller: 'you' }],
+          effects: [{ op: 'blinkTarget', target: 0 }],
+          description: 'You may exile target creature you control, then return it',
+        },
+      ],
+    },
   );
 
   defineCard(

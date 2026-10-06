@@ -24,7 +24,9 @@ import { computeCharacteristics } from '../src/effects/continuous';
 import { executeAbility } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { runPrioritySequence } from '../src/turn/priority';
+import { queueStepTriggers } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
@@ -756,6 +758,146 @@ describe('Canoptek Wraith', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.06 Conjurer's Closet
+// ---------------------------------------------------------------------------------------------
+
+describe("Conjurer's Closet", () => {
+  const closet = pinned("Conjurer's Closet");
+  const greeter = () =>
+    oracle({
+      name: 'Closet Greeter',
+      typeLine: 'Creature — Human',
+      oracleText: 'When this creature enters, you gain 2 life.',
+    });
+
+  function endStep(ctx: GameContext, active = 'P1') {
+    ctx.state.currentTurnPlayer = active;
+    ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(active);
+    ctx.state.phase = 'ending';
+    ctx.state.step = 'end';
+    queueStepTriggers(ctx, 'endStep');
+  }
+
+  /** Answer the Closet's target choice (when asked) and its yes/no resolution decision. */
+  function closetAnswer(targetId: string | null, accept: boolean): Answer {
+    return (decision) => {
+      if (decision.decisionType === 'optionalTrigger') {
+        return optionMatching(decision, accept ? /^Yes$/ : /^No$/);
+      }
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined && targetId !== null) {
+        return { index: 0, targets: new Map([[slot.slot, targetId]]) };
+      }
+      return { index: 0, targets: new Map() };
+    };
+  }
+
+  it('conjurers-closet-pinned-oracle-supported — pins the Oracle and models the optional targeted blink', () => {
+    expect(closet.sha256).toBe('d80cdb0f2c13939c9ac36f2137931ba2cd340fb6e524f8906c038be6c7818b2c');
+    const def = interpretCard(closet.card);
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]).toMatchObject({
+      optional: true,
+      trigger: { when: 'endStep', player: 'you' },
+      targets: [{ kind: 'creature', controller: 'you' }],
+      effects: [{ op: 'blinkTarget', target: 0 }],
+    });
+  });
+
+  it('conjurers-closet-blink-resets-and-reenters — the creature returns as a new untapped object under your control and its ETB triggers', () => {
+    const ctx = pod('closet-blink');
+    spawn(ctx, 'P1', closet.card);
+    const creature = spawn(ctx, 'P1', greeter(), { tapped: true });
+    creature.counters['+1/+1'] = 2;
+    creature.damageMarked = 1;
+    const lifeBefore = playerById(ctx, 'P1').life;
+    endStep(ctx);
+    settle(ctx, closetAnswer(creature.id, true));
+    const returned = ctx.state.battlefield.find((entry) => entry.cardId === creature.cardId);
+    expect(returned).toBeDefined();
+    expect(returned!.id).not.toBe(creature.id);
+    expect(returned!.controllerId).toBe('P1');
+    expect(returned!.tapped).toBe(false);
+    expect(returned!.counters['+1/+1'] ?? 0).toBe(0);
+    expect(returned!.damageMarked).toBe(0);
+    expect(playerById(ctx, 'P1').life).toBe(lifeBefore + 2);
+  });
+
+  it('conjurers-closet-chooses-among-own-creatures — only creatures you control are offered, and the chosen one blinks', () => {
+    const ctx = pod('closet-choice');
+    spawn(ctx, 'P1', closet.card);
+    const first = spawn(ctx, 'P1', bear());
+    const second = spawn(ctx, 'P1', greeter(), { tapped: true });
+    const theirs = spawn(ctx, 'P2', bear());
+    endStep(ctx);
+    const { decisions } = settle(ctx, closetAnswer(second.id, true));
+    const offered = decisions.flatMap(
+      (decision) => decision.options[0]?.targets?.[0]?.options ?? [],
+    );
+    expect(offered).toEqual(expect.arrayContaining([first.id, second.id]));
+    expect(offered).not.toContain(theirs.id);
+    expect(ctx.state.battlefield.find((entry) => entry.id === first.id)).toBeDefined();
+    expect(ctx.state.battlefield.find((entry) => entry.cardId === second.cardId)?.tapped).toBe(
+      false,
+    );
+  });
+
+  it('conjurers-closet-decline — answering no leaves the creature untouched', () => {
+    const ctx = pod('closet-decline');
+    spawn(ctx, 'P1', closet.card);
+    const creature = spawn(ctx, 'P1', greeter(), { tapped: true });
+    endStep(ctx);
+    const lifeBefore = playerById(ctx, 'P1').life;
+    settle(ctx, closetAnswer(creature.id, false));
+    expect(ctx.state.battlefield.find((entry) => entry.id === creature.id)?.tapped).toBe(true);
+    expect(playerById(ctx, 'P1').life).toBe(lifeBefore);
+    expect(ctx.state.eventLog.some((event) => event.type === 'triggerDeclined')).toBe(true);
+  });
+
+  it("conjurers-closet-no-target-or-other-turn — nothing resolves without a creature you control or on another player's end step", () => {
+    const empty = pod('closet-empty');
+    spawn(empty, 'P1', closet.card);
+    const theirs = spawn(empty, 'P2', bear(), { tapped: true });
+    endStep(empty);
+    const emptyRun = settle(empty);
+    expect(emptyRun.decisions.some((d) => d.decisionType === 'optionalTrigger')).toBe(false);
+    expect(empty.state.battlefield.find((entry) => entry.id === theirs.id)?.tapped).toBe(true);
+
+    const other = pod('closet-other-turn');
+    spawn(other, 'P1', closet.card);
+    const mine = spawn(other, 'P1', bear(), { tapped: true });
+    endStep(other, 'P2');
+    expect(other.state.pendingTriggers).toHaveLength(0);
+    settle(other);
+    expect(other.state.battlefield.find((entry) => entry.id === mine.id)?.tapped).toBe(true);
+  });
+
+  it('conjurers-closet-token-does-not-return — an exiled token ceases to exist instead of returning', () => {
+    const ctx = pod('closet-token');
+    spawn(ctx, 'P1', closet.card);
+    const token = spawn(ctx, 'P1', bear(), { isToken: true });
+    endStep(ctx);
+    settle(ctx, closetAnswer(token.id, true));
+    expect(ctx.state.battlefield.some((entry) => entry.cardId === token.cardId)).toBe(false);
+  });
+
+  it('conjurers-closet-illegal-target-fizzles — a target that left before resolution is not returned', () => {
+    const ctx = pod('closet-fizzle');
+    spawn(ctx, 'P1', closet.card);
+    const creature = spawn(ctx, 'P1', bear());
+    endStep(ctx);
+    pump(priorityCheckpoint(ctx), closetAnswer(creature.id, true));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, creature, { zone: 'graveyard' }));
+    resolveTop(ctx, closetAnswer(null, true));
+    expect(ctx.state.battlefield.some((entry) => entry.cardId === creature.cardId)).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.some((card) => card.cardId === creature.cardId)).toBe(
+      true,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -791,6 +933,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Canoptek Wraith',
     sha256: '04d5efb7388c9a8185ee2000da27e3c1fe20e8da9a1061abff8f431729d2e4b2',
     clauseCount: 2,
+  },
+  {
+    name: "Conjurer's Closet",
+    sha256: 'd80cdb0f2c13939c9ac36f2137931ba2cd340fb6e524f8906c038be6c7818b2c',
+    clauseCount: 1,
   },
 ];
 

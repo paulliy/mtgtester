@@ -4262,6 +4262,46 @@ function canoptekWraithScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function conjurersClosetScenario(gameId: GameId): CardTestScenario {
+  const closet = pinnedFrom(MARCHESA_BATCH1, "Conjurer's Closet");
+  const greeter = card({
+    oracleId: 'lab-closet-greeter',
+    name: 'Lab Greeter',
+    typeLine: 'Creature — Human',
+    manaCost: '{2}',
+    cmc: 2,
+    power: '2',
+    toughness: '2',
+    oracleText: 'When this creature enters, you gain 2 life.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'conjurers-closet-viewer-end-step-blink',
+    title: "Conjurer's Closet: blink a creature at your end step",
+    instructions: [
+      'Pass priority in your main phase; the lab moves to your end step.',
+      "Target Lab Greeter with Conjurer's Closet's trigger and choose Yes when it resolves.",
+    ],
+    expectedOutcome:
+      'Lab Greeter is exiled and returns untapped under your control, and its enters trigger gains you 2 life (40 to 42).',
+    oracleSha256: closet.sha256,
+    clauseIds: ['conjurers-closet-end-step-blink'],
+    decks: {
+      P1: [closet.card, greeter, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ["Conjurer's Closet"] },
+        { playerId: 'P1', cardNames: ['Lab Greeter'], tapped: true },
+      ],
+      continueToEndStep: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4349,6 +4389,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'beacon-of-unrest-viewer-reanimate-and-shuffle',
   'canoptek-spyder-viewer-vehicle-draw',
   'canoptek-wraith-viewer-scout-same-name-search',
+  'conjurers-closet-viewer-end-step-blink',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4432,6 +4473,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'beacon-of-unrest-viewer-reanimate-and-shuffle': beaconOfUnrestScenario,
   'canoptek-spyder-viewer-vehicle-draw': canoptekSpyderScenario,
   'canoptek-wraith-viewer-scout-same-name-search': canoptekWraithScenario,
+  'conjurers-closet-viewer-end-step-blink': conjurersClosetScenario,
 };
 
 export function createCardTestScenario(

@@ -239,8 +239,6 @@ const REASONS: Record<string, string> = {
   'Territorial Aetherkite':
     'The damage is a reflexive trigger after payment, implemented as the same resolution.',
   Duplicant: 'Optional exile is a required target.',
-  "Conjurer's Closet":
-    'Optional exile-and-return is implemented as an untargeted choice among creatures you control.',
   'Soul-Guide Lantern':
     'Opponent-graveyard exile is authored with a free draw instead of a separate {1} draw ability.',
   'Adaptive Omnitool': 'Artifact-from-library is put into hand without revealing.',
@@ -322,6 +320,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    "Conjurer's Closet",
     'Canoptek Wraith',
     'Canoptek Spyder',
     'Beacon of Unrest',

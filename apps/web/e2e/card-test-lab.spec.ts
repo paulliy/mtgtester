@@ -1863,3 +1863,16 @@ test('Canoptek Wraith: pay, sacrifice, and fetch same-name basics', async ({ pag
   await expect(permanent(page, 'Island')).toContainText('×5');
   await expect(page.getByText(/Graveyard\s*1/).first()).toBeVisible();
 });
+
+test("Conjurer's Closet: blink a creature at your end step", async ({ page }) => {
+  await runScenario(page, "Conjurer's Closet: blink a creature at your end step");
+
+  // Nothing is castable in the main phase, so the lab moves on to the end step trigger.
+  await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Greeter')).not.toHaveClass(/tapped/);
+  await expect(page.getByText(/gains 2 life/).first()).toBeVisible();
+});

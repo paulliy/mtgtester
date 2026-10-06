@@ -23,6 +23,12 @@ export interface PreparedScenarioSpec {
    * window closes, run this turn's combat phase through the production combat code, then end.
    */
   continueThroughCombat?: boolean;
+  /**
+   * Lab-only finite continuation for "at the beginning of your end step" triggers: after the
+   * arranged priority window (and combat, when also requested), move to this turn's end step,
+   * queue its triggers, and run its priority window.
+   */
+  continueToEndStep?: boolean;
 }
 
 function takeNamedCard(ctx: GameContext, playerId: PlayerId, name: string): EngineCardObject {

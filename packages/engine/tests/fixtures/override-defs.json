@@ -7662,8 +7662,34 @@
   {
     "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
     "name": "Conjurer's Closet",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may exile target creature you control, then return it",
+          "effects": [
+            {
+              "op": "blinkTarget",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "you",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
@@ -11765,8 +11791,34 @@
   {
     "oracleId": "oracle-conjurer-s-closet",
     "name": "Conjurer's Closet",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may exile target creature you control, then return it",
+          "effects": [
+            {
+              "op": "blinkTarget",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "you",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-convergence-of-dominion",
