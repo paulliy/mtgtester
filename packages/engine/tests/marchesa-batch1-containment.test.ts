@@ -261,7 +261,6 @@ const REASONS: Record<string, string> = {
   'Dragonkin Berserker':
     'Boast cost reduction applies only to this creature, not to Boast abilities you activate.',
   'Atarka Monument': 'The animation does not make it red and green.',
-  'Mordant Dragon': 'Optional combat-damage rider is a required target.',
   'Scourge of Valkas':
     'The entering Dragon is the damage source, implemented as damage from this creature.',
   "Karametra's Favor":
@@ -318,6 +317,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Mordant Dragon',
     'Land Tax',
     'Harvest Season',
     "Conjurer's Closet",

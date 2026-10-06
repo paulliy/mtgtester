@@ -129,6 +129,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'conjurers-closet-viewer-end-step-blink',
       'harvest-season-viewer-tapped-creature-count',
       'land-tax-viewer-upkeep-reveal-search',
+      'mordant-dragon-viewer-combat-damage-redirect',
     ]);
   });
 

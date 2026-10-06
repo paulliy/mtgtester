@@ -509,10 +509,28 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     },
   );
 
-  unsupportedCard(
+  // Coverage PR01: the target is a creature the damaged player controls, chosen as the trigger is
+  // put on the stack (no such creature, no trigger: CR 603.3d); "you may" is decided on
+  // resolution, and the Dragon deals the damage.
+  defineCard(
     'c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7',
     'Mordant Dragon',
-    'Optional combat-damage rider is a required target.',
+    [
+      'Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
+          optional: true,
+          targets: [{ kind: 'creature', controller: 'eventPlayer' }],
+          effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'damageDealt' } }],
+          description:
+            'You may have it deal that much damage to target creature that player controls',
+        },
+      ],
+    },
   );
 
   defineCard(

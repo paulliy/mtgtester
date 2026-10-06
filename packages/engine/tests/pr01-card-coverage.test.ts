@@ -26,7 +26,7 @@ import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { runPrioritySequence } from '../src/turn/priority';
-import { queueStepTriggers } from '../src/turn/turn';
+import { queueStepTriggers, runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
@@ -36,6 +36,8 @@ import {
   bear,
   conjure,
   copies,
+  declareAttacks,
+  declareNoBlocks,
   forest,
   gameConfig,
   island,
@@ -1133,6 +1135,126 @@ describe('Land Tax', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.09 Mordant Dragon
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Run this turn's combat phase through the production combat code: each attacker in `attacks`
+ * attacks its mapped defender, nobody blocks, and other decisions go to `answer`.
+ */
+function runCombat(ctx: GameContext, attacks: Record<string, string>, answer?: Answer) {
+  ctx.state.phase = 'precombatMain';
+  ctx.state.step = null;
+  return pump(runCombatAndExtraCombats(ctx), (decision, count) => {
+    if (decision.presentationAttackDeclaration !== undefined) {
+      return declareAttacks(decision, (subjectId) => attacks[subjectId] ?? null);
+    }
+    if (decision.presentationBlockDeclaration !== undefined) return declareNoBlocks(decision);
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    if (pass >= 0) return { index: pass, targets: new Map() };
+    return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+  });
+}
+
+describe('Mordant Dragon', () => {
+  const dragon = pinned('Mordant Dragon');
+  const ox = () =>
+    oracle({ name: 'Mordant Ox', typeLine: 'Creature — Ox', power: '5', toughness: '5' });
+  const big = () =>
+    oracle({ name: 'Mordant Wall', typeLine: 'Creature — Wall', power: '0', toughness: '9' });
+
+  /** Answer the Dragon's target (when asked) and its yes/no resolution decision. */
+  const dragonAnswer =
+    (targetId: string | null, accept: boolean): Answer =>
+    (decision) => {
+      if (decision.decisionType === 'optionalTrigger') {
+        return optionMatching(decision, accept ? /^Yes$/ : /^No$/);
+      }
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined && targetId !== null) {
+        return { index: 0, targets: new Map([[slot.slot, targetId]]) };
+      }
+      return { index: 0, targets: new Map() };
+    };
+
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+
+  it('mordant-dragon-pinned-oracle-supported — pins the Oracle and models flying plus the optional targeted rider', () => {
+    expect(dragon.sha256).toBe('5f4a39ae0545bf5d50bac488bb58ac3101bb6ac10eeb19f289e2159a39d40552');
+    const def = interpretCard(dragon.card);
+    expect(def.modeled).toBe(true);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers[0]).toMatchObject({
+      optional: true,
+      trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
+      targets: [{ kind: 'creature', controller: 'eventPlayer' }],
+      effects: [{ op: 'dealDamage', target: 0, amount: { kind: 'damageDealt' } }],
+    });
+  });
+
+  it("mordant-dragon-redirects-that-much — after hitting a player it may deal that much damage to that player's creature", () => {
+    const ctx = pod('mordant-accept');
+    const self = spawn(ctx, 'P1', dragon.card);
+    const victim = spawn(ctx, 'P2', ox());
+    const power = computeCharacteristics(ctx, self).power;
+    const before = life(ctx, 'P2');
+    runCombat(ctx, { [self.id]: 'P2' }, dragonAnswer(victim.id, true));
+    expect(life(ctx, 'P2')).toBe(before - power);
+    expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(false);
+    const hit = ctx.state.eventLog.filter(
+      (event) => event.type === 'damage' && event.payload['target'] === 'Mordant Ox',
+    );
+    expect(hit).toHaveLength(1);
+    // The Dragon itself is the damage source ("have it deal").
+    expect(hit[0]!.payload).toMatchObject({ sourceCardId: self.cardId, amount: power });
+  });
+
+  it('mordant-dragon-amount-is-damage-dealt — the rider uses the combat damage actually dealt', () => {
+    const ctx = pod('mordant-amount');
+    const self = spawn(ctx, 'P1', dragon.card);
+    self.counters['+1/+1'] = 2;
+    const wall = spawn(ctx, 'P2', big());
+    const power = computeCharacteristics(ctx, self).power;
+    runCombat(ctx, { [self.id]: 'P2' }, dragonAnswer(wall.id, true));
+    expect(ctx.state.battlefield.find((entry) => entry.id === wall.id)?.damageMarked).toBe(power);
+  });
+
+  it('mordant-dragon-decline — answering no deals no extra damage', () => {
+    const ctx = pod('mordant-decline');
+    const self = spawn(ctx, 'P1', dragon.card);
+    const wall = spawn(ctx, 'P2', big());
+    runCombat(ctx, { [self.id]: 'P2' }, dragonAnswer(wall.id, false));
+    expect(ctx.state.battlefield.find((entry) => entry.id === wall.id)?.damageMarked).toBe(0);
+    expect(ctx.state.eventLog.some((event) => event.type === 'triggerDeclined')).toBe(true);
+  });
+
+  it('mordant-dragon-only-that-players-creatures — only creatures the damaged player controls are legal targets', () => {
+    const ctx = pod('mordant-targets');
+    const self = spawn(ctx, 'P1', dragon.card);
+    const theirs = spawn(ctx, 'P2', big());
+    const theirOther = spawn(ctx, 'P2', ox());
+    const bystander = spawn(ctx, 'P3', big());
+    const mine = spawn(ctx, 'P1', big());
+    const { decisions } = runCombat(ctx, { [self.id]: 'P2' }, dragonAnswer(theirs.id, true));
+    const offered = decisions
+      .filter((decision) => decision.presentationAttackDeclaration === undefined)
+      .flatMap((decision) => decision.options[0]?.targets?.[0]?.options ?? []);
+    expect(offered).toEqual(expect.arrayContaining([theirs.id, theirOther.id]));
+    expect(offered).not.toContain(bystander.id);
+    expect(offered).not.toContain(mine.id);
+  });
+
+  it('mordant-dragon-no-creature-no-trigger — with no creature for that player, nothing is asked', () => {
+    const ctx = pod('mordant-empty');
+    const self = spawn(ctx, 'P1', dragon.card);
+    spawn(ctx, 'P3', big());
+    const { decisions } = runCombat(ctx, { [self.id]: 'P2' }, dragonAnswer(null, true));
+    expect(decisions.some((decision) => decision.decisionType === 'optionalTrigger')).toBe(false);
+    expect(ctx.state.stack).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1183,6 +1305,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Land Tax',
     sha256: '4b365fab95d5ae332e404759f054d57169911d769d44ef0cbf6890e83ac0d4a7',
     clauseCount: 1,
+  },
+  {
+    name: 'Mordant Dragon',
+    sha256: '5f4a39ae0545bf5d50bac488bb58ac3101bb6ac10eeb19f289e2159a39d40552',
+    clauseCount: 2,
   },
 ];
 

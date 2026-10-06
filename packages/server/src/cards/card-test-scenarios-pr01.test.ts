@@ -270,3 +270,26 @@ describe('Land Tax Card Test Lab scenario', () => {
     replays('land-tax-viewer-upkeep-reveal-search', steps);
   });
 });
+
+describe('Mordant Dragon Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Declare attackers', targets: ['P2'] },
+    { action: 'Targets for Mordant Dragon', targets: ['Lab Ox'] },
+    { action: 'Yes' },
+  ];
+
+  it("mordant-dragon-viewer-combat-damage-redirect — combat damage to P2, then that much damage to P2's targeted creature", () => {
+    const { state, seat, onBattlefield } = run(
+      'mordant-dragon-viewer-combat-damage-redirect',
+      steps,
+    );
+    expect(seat('P2').life).toBe(35);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(onBattlefield('Lab Servo')[0]?.damageMarked).toBe(0);
+    const redirect = state.eventLog.find(
+      (event) => event.type === 'damage' && event.payload['target'] === 'Lab Ox',
+    );
+    expect(redirect?.payload['amount']).toBe(5);
+    replays('mordant-dragon-viewer-combat-damage-redirect', steps);
+  });
+});

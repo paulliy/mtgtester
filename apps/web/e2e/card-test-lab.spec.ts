@@ -1925,3 +1925,33 @@ test('Land Tax: reveal three basics at your upkeep', async ({ page }) => {
   }
   await expect(page.getByText('Land Tax Private Secret')).toHaveCount(0);
 });
+
+test("Mordant Dragon: redirect combat damage to that player's creature", async ({ page }) => {
+  await runScenario(page, "Mordant Dragon: redirect combat damage to that player's creature");
+
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Mordant Dragon' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The trigger targets a creature P2 controls; Lab Ox and Lab Servo are both legal.
+  await expect(page.getByText(/Choose targets for Mordant Dragon/).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  // The target tray opens directly for a triggered ability's target choice.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/use this ability/i).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Servo')).toBeVisible();
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('35');
+});

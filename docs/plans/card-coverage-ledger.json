@@ -1335,6 +1335,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7",
+    "name": "Mordant Dragon",
+    "package": "PR01.09",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls.\"",
+      "explicitly unsupported: Optional combat-damage rider is a required target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "8a52f3c0-2552-4425-b2e3-5496eb2232a7",
     "name": "Mystic Remora",
     "package": "W9",

@@ -4369,6 +4369,36 @@ function landTaxScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function mordantDragonScenario(gameId: GameId): CardTestScenario {
+  const dragon = pinnedFrom(MARCHESA_BATCH1, 'Mordant Dragon');
+  return pr01Scenario(gameId, {
+    id: 'mordant-dragon-viewer-combat-damage-redirect',
+    title: "Mordant Dragon: redirect combat damage to that player's creature",
+    instructions: [
+      'Attack P2 with Mordant Dragon; P2 has no flyer to block it.',
+      'When it deals combat damage, target Lab Ox (P2 controls it) and choose Yes.',
+    ],
+    expectedOutcome:
+      'P2 takes 5 combat damage (40 to 35), then Mordant Dragon deals 5 damage to Lab Ox, which dies; Lab Servo is untouched.',
+    oracleSha256: dragon.sha256,
+    clauseIds: ['mordant-dragon-combat-damage-rider'],
+    decks: {
+      P1: [dragon.card, FOREST],
+      P2: [LAB_OX, LAB_SERVO, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Mordant Dragon'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4459,6 +4489,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'conjurers-closet-viewer-end-step-blink',
   'harvest-season-viewer-tapped-creature-count',
   'land-tax-viewer-upkeep-reveal-search',
+  'mordant-dragon-viewer-combat-damage-redirect',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4545,6 +4576,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'conjurers-closet-viewer-end-step-blink': conjurersClosetScenario,
   'harvest-season-viewer-tapped-creature-count': harvestSeasonScenario,
   'land-tax-viewer-upkeep-reveal-search': landTaxScenario,
+  'mordant-dragon-viewer-combat-damage-redirect': mordantDragonScenario,
 };
 
 export function createCardTestScenario(

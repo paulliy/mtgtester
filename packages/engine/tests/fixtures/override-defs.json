@@ -7331,8 +7331,39 @@
   {
     "oracleId": "c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7",
     "name": "Mordant Dragon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may have it deal that much damage to target creature that player controls",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
@@ -15549,8 +15580,39 @@
   {
     "oracleId": "oracle-mordant-dragon",
     "name": "Mordant Dragon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature deals combat damage to a player, you may have it deal that much damage to target creature that player controls."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may have it deal that much damage to target creature that player controls",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-mutilate",

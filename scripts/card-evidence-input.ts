@@ -1203,6 +1203,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['Harvest Season: search a basic per tapped creature'],
   },
   { file: 'card-test-lab.spec.ts', titlePath: ['Land Tax: reveal three basics at your upkeep'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Mordant Dragon: redirect combat damage to that player's creature"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -31,6 +31,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Forum of Amity',
       'Harvest Season',
       'Land Tax',
+      'Mordant Dragon',
       'Myriad Landscape',
       'Smothering Tithe',
       'War Room',
