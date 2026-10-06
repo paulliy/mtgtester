@@ -994,6 +994,31 @@ describe('Weathered Wayfarer', () => {
     expect(JSON.stringify(buildPlayerView(ctx, 'P2'))).toContain('Wayfarer Secret Land');
   });
 
+  it('search-grammar-reveal-those-cards — Cultivate’s "reveal those cards" is public too', () => {
+    const ctx = pod('cultivate-reveal');
+    const cultivate = oracle({
+      name: 'Cultivate',
+      typeLine: 'Sorcery',
+      manaCost: '{2}{G}',
+      oracleText:
+        'Search your library for up to two basic land cards, reveal those cards, put one onto the battlefield tapped and the other into your hand, then shuffle.',
+    });
+    const effects = interpretCard(cultivate).spellAbility?.effects;
+    expect(effects?.[0]).toMatchObject({ op: 'searchLibrary', reveal: true });
+    const inHand = conjure(ctx, 'P1', cultivate, 'hand');
+    conjure(ctx, 'P1', plains(), 'library');
+    conjure(ctx, 'P1', island(), 'library');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }, ...generic(2)]);
+    takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', inHand.id)!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const found = ctx.state.eventLog.filter((event) => event.type === 'searchFound');
+    expect(found.length).toBe(2);
+    for (const event of found) expect(event.payload).toMatchObject({ revealed: true });
+    const handLand = playerById(ctx, 'P1').hand.find((card) => card.name !== 'Cultivate');
+    expect(handLand).toBeDefined();
+    expect(JSON.stringify(buildPlayerView(ctx, 'P2'))).toContain(handLand!.name);
+  });
+
   it('weathered-wayfarer-only-lands-match — the search offers every land and no nonland card', () => {
     const { ctx, source } = ready('wayfarer-only-lands', 1, 2);
     conjure(ctx, 'P1', SECRET_LAND(), 'library');

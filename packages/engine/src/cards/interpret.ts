@@ -4796,7 +4796,6 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
       timing,
       ...(oncePerTurn ? { oncePerTurn: true } : {}),
       ...(condition === undefined ? {} : { condition }),
-      ...(condition === undefined ? {} : { condition }),
       ability: {
         kind: 'activated',
         targets: modal.targets,
