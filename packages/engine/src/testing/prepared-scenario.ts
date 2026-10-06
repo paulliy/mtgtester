@@ -18,6 +18,11 @@ export interface PreparedScenarioSpec {
   stack?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /** Lab-only finite continuation used to exercise next-upkeep delayed triggers. */
   continueToNextUpkeep?: boolean;
+  /**
+   * Lab-only finite continuation for combat triggers: after the arranged precombat-main priority
+   * window closes, run this turn's combat phase through the production combat code, then end.
+   */
+  continueThroughCombat?: boolean;
 }
 
 function takeNamedCard(ctx: GameContext, playerId: PlayerId, name: string): EngineCardObject {

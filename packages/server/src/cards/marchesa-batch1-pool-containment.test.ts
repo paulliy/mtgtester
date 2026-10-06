@@ -25,6 +25,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Attune with Aether',
       'Beacon of Unrest',
       'Canoptek Spyder',
+      'Canoptek Wraith',
       'Fabled Passage',
       'Forum of Amity',
       'Myriad Landscape',

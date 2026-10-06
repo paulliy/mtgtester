@@ -3539,8 +3539,65 @@
   {
     "oracleId": "61849685-b407-4ed0-aafc-ec3a003200b9",
     "name": "Canoptek Wraith",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+      "Wraith Form — ~ can't be blocked."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 6,
+            "setCantBeBlocked": true
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "You may pay {3} and sacrifice this creature to fetch up to two basics named like a land you control",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "op": "mayPayManaAndSacrificeSource",
+              "then": [
+                {
+                  "count": 2,
+                  "destination": {
+                    "tapped": true,
+                    "zone": "battlefield"
+                  },
+                  "op": "searchBasicsNamedLikeChosenLand"
+                },
+                {
+                  "op": "shuffle"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "61c89b11-65c9-4fda-bbcd-d84de25df801",
@@ -11044,8 +11101,65 @@
   {
     "oracleId": "oracle-canoptek-wraith",
     "name": "Canoptek Wraith",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+      "Wraith Form — ~ can't be blocked."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 6,
+            "setCantBeBlocked": true
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "You may pay {3} and sacrifice this creature to fetch up to two basics named like a land you control",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "op": "mayPayManaAndSacrificeSource",
+              "then": [
+                {
+                  "count": 2,
+                  "destination": {
+                    "tapped": true,
+                    "zone": "battlefield"
+                  },
+                  "op": "searchBasicsNamedLikeChosenLand"
+                },
+                {
+                  "op": "shuffle"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-carrion-feeder",

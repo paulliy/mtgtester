@@ -1822,3 +1822,44 @@ test('Canoptek Spyder: a Vehicle entering draws a card', async ({ page }) => {
   await expect(permanent(page, 'Lab Skiff')).toBeVisible();
   await expect(handCard(page, 'Spyder Drawn Card')).toBeVisible();
 });
+
+test('Canoptek Wraith: pay, sacrifice, and fetch same-name basics', async ({ page }) => {
+  await runScenario(page, 'Canoptek Wraith: pay, sacrifice, and fetch same-name basics');
+
+  // Nothing is castable, so precombat priority passes itself and combat begins.
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Canoptek Wraith' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Combat damage triggers Transdimensional Scout: pay {3} and sacrifice through the normal panel.
+  await expect(page.getByText(/pay \{3\} and sacrifice Canoptek Wraith/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Decline' })).toBeVisible();
+  await page.getByRole('button', { name: 'Pay {3} and sacrifice Canoptek Wraith' }).click();
+
+  // Choose a land you control: one option per distinct land name.
+  await expect(page.getByText(/choose a land you control/i).first()).toBeVisible();
+  await page
+    .locator('.panel-group')
+    .filter({ hasText: 'Island' })
+    .getByRole('button', { name: 'Choose' })
+    .click();
+
+  // Only Islands are offered; take two.
+  const put = page.getByRole('button', { name: 'Put onto the battlefield tapped' });
+  await expect(page.getByText(/search your library/i).first()).toBeVisible();
+  await expect(page.locator('.panel-group').filter({ hasText: 'Forest' })).toHaveCount(0);
+  await put.first().click();
+  await expect(page.getByText(/search your library/i).first()).toBeVisible();
+  await put.first().click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Canoptek Wraith')).toHaveCount(0);
+  await expect(permanent(page, 'Island')).toContainText('×5');
+  await expect(page.getByText(/Graveyard\s*1/).first()).toBeVisible();
+});

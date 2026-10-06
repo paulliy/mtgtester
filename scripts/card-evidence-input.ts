@@ -1190,6 +1190,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Canoptek Spyder: a Vehicle entering draws a card'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Canoptek Wraith: pay, sacrifice, and fetch same-name basics'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -179,3 +179,29 @@ describe('Canoptek Spyder Card Test Lab scenario', () => {
     replays('canoptek-spyder-viewer-vehicle-draw', steps);
   });
 });
+
+describe('Canoptek Wraith Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Declare attackers', targets: ['P2'] },
+    { action: 'Pay {3} and sacrifice Canoptek Wraith' },
+    { action: 'Choose Island' },
+    { action: 'Put Island onto the battlefield tapped' },
+    { action: 'Put Island onto the battlefield tapped' },
+  ];
+
+  it('canoptek-wraith-viewer-scout-same-name-search — unblocked combat damage, payment, sacrifice, and same-name search', () => {
+    const { state, seat, onBattlefield, offered } = run(
+      'canoptek-wraith-viewer-scout-same-name-search',
+      steps,
+    );
+    expect(offered.flat()).toContain('Choose Forest');
+    expect(seat('P2').life).toBe(38);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Canoptek Wraith']);
+    expect(onBattlefield('Island')).toHaveLength(5);
+    expect(onBattlefield('Island').every((land) => land.tapped)).toBe(true);
+    expect(seat('P1').library.map((card) => card.name)).toEqual(['Forest']);
+    expect(state.eventLog.some((event) => event.type === 'sacrifice')).toBe(true);
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('canoptek-wraith-viewer-scout-same-name-search', steps);
+  });
+});

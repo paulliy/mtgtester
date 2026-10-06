@@ -20,6 +20,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import { allOf, ofSupertype, ofType } from '../src/cards/selector';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
+import { computeCharacteristics } from '../src/effects/continuous';
 import { executeAbility } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
@@ -29,7 +30,7 @@ import { moveObject, playerById } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { formatPlayerLog } from '../src/view/spectator';
 import { buildPlayerView } from '../src/view/view';
-import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { bear, conjure, copies, forest, gameConfig, island, oracle, pump, spawn } from './fixtures';
 
 interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
@@ -593,6 +594,168 @@ describe('Canoptek Spyder', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.05 Canoptek Wraith
+// ---------------------------------------------------------------------------------------------
+
+describe('Canoptek Wraith', () => {
+  const wraith = pinned('Canoptek Wraith');
+  const snowForest = () =>
+    oracle({
+      name: 'Snow-Covered Forest',
+      typeLine: 'Basic Snow Land — Forest',
+      manaCost: null,
+      oracleText: '({T}: Add {G}.)',
+    });
+  const grove = () =>
+    oracle({ name: 'Wraith Grove', typeLine: 'Land', manaCost: null, oracleText: '{T}: Add {G}.' });
+
+  /** P1 controls Wraith plus `lands`; the library holds `library` (top first). */
+  function board(seed: string, lands: OracleCard[], library: OracleCard[], mana = 3) {
+    const ctx = pod(seed);
+    const self = spawn(ctx, 'P1', wraith.card);
+    for (const land of lands) spawn(ctx, 'P1', land, { tapped: true });
+    playerById(ctx, 'P1').library = [];
+    for (const card of [...library].reverse()) conjure(ctx, 'P1', card, 'library');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: mana }, () => ({ symbol: 'C' as const })),
+    );
+    return { ctx, self };
+  }
+
+  function scout(ctx: GameContext, self: EnginePermanent, answer?: Answer) {
+    const trigger = interpretCard(wraith.card).triggers[0]!;
+    return pump(
+      executeAbility(
+        ctx,
+        { cardId: self.cardId, oracleId: self.oracleId, name: self.name, controllerId: 'P1' },
+        trigger,
+        [],
+      ),
+      answer,
+    );
+  }
+
+  const lands = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((entry) => entry.controllerId === 'P1' && entry.name === name);
+
+  it('canoptek-wraith-pinned-oracle-supported — pins the Oracle and models both lines', () => {
+    expect(wraith.sha256).toBe('04d5efb7388c9a8185ee2000da27e3c1fe20e8da9a1061abff8f431729d2e4b2');
+    const def = interpretCard(wraith.card);
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.trigger).toEqual({
+      when: 'dealsCombatDamageToPlayer',
+      subject: { kind: 'self' },
+    });
+  });
+
+  it('canoptek-wraith-cant-be-blocked — Wraith Form makes it unblockable', () => {
+    const { ctx, self } = board('wraith-unblockable', [], []);
+    expect(computeCharacteristics(ctx, self).cantBeBlocked).toBe(true);
+  });
+
+  it('canoptek-wraith-same-name-search — pays {3}, sacrifices, and finds up to two basics named like the chosen land', () => {
+    const { ctx, self } = board(
+      'wraith-same-name',
+      [island(), forest()],
+      [forest(), island(), island(), island()],
+    );
+    const { decisions } = scout(
+      ctx,
+      self,
+      answers([
+        [/pay \{3\} and sacrifice/, /Pay \{3\} and sacrifice/],
+        [/choose a land you control/, /Choose Island/],
+        [/search your library/, /Put Island onto the battlefield tapped/],
+      ]),
+    );
+    expect(ctx.state.battlefield.some((entry) => entry.cardId === self.cardId)).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Canoptek Wraith']);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    expect(lands(ctx, 'Island')).toHaveLength(3);
+    expect(lands(ctx, 'Island').every((land) => land.tapped)).toBe(true);
+    const searches = decisions.filter((decision) => /search your library/.test(decision.prompt));
+    expect(searches).toHaveLength(2);
+    for (const search of searches) {
+      expect(search.options.map((option) => option.description)).not.toContain(
+        'Put Forest onto the battlefield tapped',
+      );
+    }
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+  });
+
+  it('canoptek-wraith-up-to-two — may stop after one or find nothing', () => {
+    const { ctx, self } = board('wraith-up-to', [forest()], [forest(), forest()]);
+    scout(
+      ctx,
+      self,
+      answers([
+        [/pay \{3\} and sacrifice/, /Pay \{3\} and sacrifice/],
+        [/search your library/, /Find nothing/],
+      ]),
+    );
+    expect(lands(ctx, 'Forest')).toHaveLength(1);
+    expect(playerById(ctx, 'P1').library).toHaveLength(2);
+  });
+
+  it('canoptek-wraith-name-not-type — a Snow-Covered Forest choice never finds a plain Forest', () => {
+    const { ctx, self } = board('wraith-snow', [snowForest()], [forest(), snowForest()]);
+    const { decisions } = scout(
+      ctx,
+      self,
+      answers([
+        [/pay \{3\} and sacrifice/, /Pay \{3\} and sacrifice/],
+        [/search your library/, /Put Snow-Covered Forest/],
+      ]),
+    );
+    const searches = decisions.filter((decision) => /search your library/.test(decision.prompt));
+    expect(searches[0]?.options.map((option) => option.description)).toEqual([
+      'Put Snow-Covered Forest onto the battlefield tapped',
+      'Find nothing',
+    ]);
+    expect(lands(ctx, 'Snow-Covered Forest')).toHaveLength(2);
+    expect(lands(ctx, 'Forest')).toHaveLength(0);
+  });
+
+  it('canoptek-wraith-nonbasic-choice-finds-nothing — choosing a nonbasic land still sacrifices, then finds nothing', () => {
+    const { ctx, self } = board('wraith-nonbasic', [grove()], [forest()]);
+    const { decisions } = scout(
+      ctx,
+      self,
+      answers([[/pay \{3\} and sacrifice/, /Pay \{3\} and sacrifice/]]),
+    );
+    expect(decisions.some((decision) => /search your library/.test(decision.prompt))).toBe(false);
+    expect(ctx.state.battlefield.some((entry) => entry.cardId === self.cardId)).toBe(false);
+    expect(playerById(ctx, 'P1').library.map((card) => card.name)).toEqual(['Forest']);
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+  });
+
+  it('canoptek-wraith-decline — declining keeps the Wraith, the mana, and the library', () => {
+    const { ctx, self } = board('wraith-decline', [island()], [island()]);
+    scout(ctx, self, answers([[/pay \{3\} and sacrifice/, /Decline/]]));
+    expect(ctx.state.battlefield.some((entry) => entry.cardId === self.cardId)).toBe(true);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(3);
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(false);
+  });
+
+  it('canoptek-wraith-unpayable — without {3}, or once the Wraith is gone, nothing is offered', () => {
+    const poor = board('wraith-poor', [island()], [island()], 2);
+    const poorRun = scout(poor.ctx, poor.self);
+    expect(poorRun.decisions).toEqual([]);
+    expect(poor.ctx.state.battlefield.some((entry) => entry.cardId === poor.self.cardId)).toBe(
+      true,
+    );
+
+    const gone = board('wraith-gone', [island()], [island()]);
+    gone.ctx.state.battlefield = gone.ctx.state.battlefield.filter(
+      (entry) => entry.cardId !== gone.self.cardId,
+    );
+    expect(scout(gone.ctx, gone.self).decisions).toEqual([]);
+    expect(lands(gone.ctx, 'Island')).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -622,6 +785,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Canoptek Spyder',
     sha256: '53b215a10a556d1e72d4f977805f0cb972b18a035e0e0e3e8d4a9e928b9c5e20',
+    clauseCount: 2,
+  },
+  {
+    name: 'Canoptek Wraith',
+    sha256: '04d5efb7388c9a8185ee2000da27e3c1fe20e8da9a1061abff8f431729d2e4b2',
     clauseCount: 2,
   },
 ];

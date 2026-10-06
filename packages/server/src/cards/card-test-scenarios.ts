@@ -4233,6 +4233,35 @@ function canoptekSpyderScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function canoptekWraithScenario(gameId: GameId): CardTestScenario {
+  const wraith = pinnedFrom(MARCHESA_BATCH1, 'Canoptek Wraith');
+  return pr01Scenario(gameId, {
+    id: 'canoptek-wraith-viewer-scout-same-name-search',
+    title: 'Canoptek Wraith: pay, sacrifice, and fetch same-name basics',
+    instructions: [
+      'Pass priority to move to combat, then attack P2 with Canoptek Wraith (it cannot be blocked).',
+      'When it deals combat damage, pay {3} and sacrifice it, choose Island, and find two Islands.',
+    ],
+    expectedOutcome:
+      'Canoptek Wraith is in your graveyard, two Islands from your library entered tapped, the Forest stayed in your library, and your library was shuffled.',
+    oracleSha256: wraith.sha256,
+    clauseIds: ['canoptek-wraith-unblockable', 'canoptek-wraith-scout-search'],
+    decks: {
+      P1: [wraith.card, ISLAND, ISLAND, ISLAND, FOREST, ISLAND, ISLAND, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Canoptek Wraith', 'Island', 'Island', 'Island', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4319,6 +4348,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'attune-with-aether-viewer-reveal-to-hand',
   'beacon-of-unrest-viewer-reanimate-and-shuffle',
   'canoptek-spyder-viewer-vehicle-draw',
+  'canoptek-wraith-viewer-scout-same-name-search',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4401,6 +4431,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'attune-with-aether-viewer-reveal-to-hand': attuneWithAetherScenario,
   'beacon-of-unrest-viewer-reanimate-and-shuffle': beaconOfUnrestScenario,
   'canoptek-spyder-viewer-vehicle-draw': canoptekSpyderScenario,
+  'canoptek-wraith-viewer-scout-same-name-search': canoptekWraithScenario,
 };
 
 export function createCardTestScenario(

@@ -30,7 +30,7 @@ import type {
   TargetSpec,
 } from '../cards/definition';
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
-import { selectMatches } from '../cards/selector';
+import { allOf, ofSupertype, ofType, selectMatches } from '../cards/selector';
 import type { GameGen } from '../decisions';
 import { UnmodeledCardError } from '../errors';
 import {
@@ -4246,6 +4246,81 @@ export function* executeAbility(
         }
         break;
       }
+      case 'mayPayManaAndSacrificeSource': {
+        const self = ctx.state.battlefield.find(
+          (permanent) =>
+            permanent.cardId === source.cardId && permanent.controllerId === controller.id,
+        );
+        const payable =
+          self !== undefined &&
+          canPay(effect.cost, controller.manaEntries, manaSourcesFor(ctx, controller.id));
+        if (!payable) break;
+        const costText = describeManaCost(effect.cost);
+        const outcome = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `${source.name}: pay ${costText} and sacrifice ${self.name}?`,
+          options: [
+            plainOption({ type: 'decline', description: 'Decline', verb: 'Decline' }),
+            plainOption({
+              type: 'payCost',
+              description: `Pay ${costText} and sacrifice ${self.name}`,
+              verb: 'Pay',
+            }),
+          ],
+        };
+        if (outcome.index !== 1) break;
+        yield* payManaCost(ctx, controller, effect.cost);
+        emit(ctx, 'sacrifice', { name: self.name, cardId: self.cardId }, controller.id);
+        yield* moveObject(ctx, self, { zone: 'graveyard', reason: 'sacrifice' });
+        yield* executeAbility(
+          ctx,
+          source,
+          { ...ability, effects: effect.then },
+          targets,
+          triggerObjectCardId,
+          { ...scope },
+          countTargets,
+          divisionAmounts,
+        );
+        break;
+      }
+      case 'searchBasicsNamedLikeChosenLand': {
+        const lands = ctx.state.battlefield.filter(
+          (permanent) =>
+            permanent.controllerId === controller.id &&
+            computeCharacteristics(ctx, permanent).types.includes('Land'),
+        );
+        const byName = [...new Map(lands.map((land) => [land.name, land])).values()];
+        if (byName.length === 0) break;
+        const outcome = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `${source.name}: choose a land you control.`,
+          presentationSource: presentedSource(ctx, source),
+          options: byName.map((land) =>
+            cardOption(ctx, land, {
+              type: 'chooseLand',
+              description: `Choose ${land.name}`,
+              verb: 'Choose',
+            }),
+          ),
+        };
+        const chosen = byName[outcome.index] ?? byName[0]!;
+        emit(ctx, 'chosen', { name: chosen.name, source: source.name }, controller.id);
+        yield* searchLibrary(
+          ctx,
+          source,
+          controller,
+          allOf(ofSupertype('Basic'), ofType('Land')),
+          Array.from({ length: effect.count }, () => effect.destination),
+          false,
+          true,
+          false,
+          (card) => card.name === chosen.name,
+        );
+        break;
+      }
       case 'mayPayEnergy': {
         const amount = Math.max(0, Math.floor(amountOf(effect.amount)));
         const canPayAmount = controller.energy >= amount;
@@ -5538,6 +5613,8 @@ function* searchLibrary(
   differentNames = false,
   allowFailToFind = false,
   reveal = false,
+  /** An extra per-card condition a selector cannot express (a name chosen on resolution). */
+  cardFilter: (card: EngineCardObject) => boolean = () => true,
 ): GameGen<string[]> {
   const selectorSource = { cardId: source.cardId, controllerId: player.id };
   const chosenNames = new Set<string>();
@@ -5554,6 +5631,7 @@ function* searchLibrary(
     const matches = player.library.filter(
       (card) =>
         (!differentNames || !chosenNames.has(card.name)) &&
+        cardFilter(card) &&
         selectMatches(cardZoneCandidate(ctx, card, player.id), filter, selectorSource),
     );
     if (matches.length === 0) break;

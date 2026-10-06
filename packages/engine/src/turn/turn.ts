@@ -225,6 +225,21 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
 }
 
 /** One complete turn for `state.currentTurnPlayer`. */
+/**
+ * The combat phase (CR 506) plus any extra combat phases it created. Shared by `runTurn` and the
+ * Card Test Lab's prepared-scenario continuation so both use one combat sequence.
+ */
+export function* runCombatAndExtraCombats(ctx: GameContext): GameGen<void> {
+  setPhase(ctx, 'combat', null);
+  queueStepTriggers(ctx, 'beginningOfCombat');
+  yield* runCombatPhase(ctx);
+  while (ctx.state.extraCombatPhases > 0) {
+    ctx.state.extraCombatPhases -= 1;
+    queueStepTriggers(ctx, 'beginningOfCombat');
+    yield* runCombatPhase(ctx);
+  }
+}
+
 export function* runTurn(ctx: GameContext): GameGen<void> {
   const s = ctx.state;
   const ap = playerById(ctx, s.currentTurnPlayer);
@@ -266,15 +281,7 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
-  // Combat.
-  setPhase(ctx, 'combat', null);
-  queueStepTriggers(ctx, 'beginningOfCombat');
-  yield* runCombatPhase(ctx);
-  while (ctx.state.extraCombatPhases > 0) {
-    ctx.state.extraCombatPhases -= 1;
-    queueStepTriggers(ctx, 'beginningOfCombat');
-    yield* runCombatPhase(ctx);
-  }
+  yield* runCombatAndExtraCombats(ctx);
 
   // Postcombat main.
   setPhase(ctx, 'postcombatMain', null);

@@ -1,8 +1,8 @@
 /** Remaining authored overrides for necron-dynasties.txt. */
 
-import { TAP, mana, spell } from '../templates';
+import { TAP, mana, manaCost, spell } from '../templates';
 import type { TokenSpec } from '../ability';
-import { allOf, anyOf, ofType, not, YOURS } from '../selector';
+import { allOf, anyOf, ofType, not, SELF, YOURS } from '../selector';
 import { defineCard, unsupportedCard } from './index';
 import { INSECT_1_1_FLYING, NECRON_WARRIOR_2_2 as NECRON_WARRIOR_TOKEN } from '../tokens';
 
@@ -74,11 +74,43 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Canoptek Tomb Sentinel',
     'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
   );
-  // Catalog audit necron-remaining-batch-2: same-name land search is any two basics.
-  unsupportedCard(
+  // Coverage PR01 (was contained by necron-remaining-batch-2): the optional {3}-and-sacrifice
+  // payment gates the choice of a land you control and a search for basics with its name.
+  defineCard(
     '61849685-b407-4ed0-aafc-ec3a003200b9',
     'Canoptek Wraith',
-    'Same-name-as-chosen-land search is implemented as any two basics.',
+    [
+      "Wraith Form — ~ can't be blocked.",
+      'Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.',
+    ],
+    {
+      // An executable override turns off generic ability-label stripping, so the labelled
+      // "can't be blocked" line is authored here too.
+      staticEffects: [{ affects: SELF, op: { layer: 6, setCantBeBlocked: true } }],
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
+          targets: [],
+          effects: [
+            {
+              op: 'mayPayManaAndSacrificeSource',
+              cost: manaCost('{3}'),
+              then: [
+                {
+                  op: 'searchBasicsNamedLikeChosenLand',
+                  count: 2,
+                  destination: { zone: 'battlefield', tapped: true },
+                },
+                { op: 'shuffle' },
+              ],
+            },
+          ],
+          description:
+            'You may pay {3} and sacrifice this creature to fetch up to two basics named like a land you control',
+        },
+      ],
+    },
   );
   // Catalog audit necron-remaining-batch-2: GY activation discount is claimed, not authored.
   unsupportedCard(

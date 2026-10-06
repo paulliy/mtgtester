@@ -1929,15 +1929,38 @@
     "61849685-b407-4ed0-aafc-ec3a003200b9": {
       "name": "Canoptek Wraith",
       "oracleSha256": "04d5efb7388c9a8185ee2000da27e3c1fe20e8da9a1061abff8f431729d2e4b2",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+          "id": "canoptek-wraith-unblockable",
+          "oracleText": "Wraith Form — This creature can't be blocked.",
           "implementation": [
-            "explicitly unsupported; any two basics instead of same name as chosen land"
+            "static layer 6 setCantBeBlocked on self (authored because an executable override disables generic ability-label stripping)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "canoptek-wraith-pinned-oracle-supported",
+            "canoptek-wraith-cant-be-blocked"
+          ],
+          "viewerScenarioIds": ["canoptek-wraith-viewer-scout-same-name-search"]
+        },
+        {
+          "id": "canoptek-wraith-scout-search",
+          "oracleText": "Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+          "implementation": [
+            "dealsCombatDamageToPlayer trigger on self",
+            "mayPayManaAndSacrificeSource({3}): offered only while the Wraith is on the battlefield and {3} is payable",
+            "searchBasicsNamedLikeChosenLand(count=2, battlefield tapped): untargeted land choice, then basics with that exact name, find-nothing allowed",
+            "shuffle"
+          ],
+          "engineTestIds": [
+            "canoptek-wraith-same-name-search",
+            "canoptek-wraith-up-to-two",
+            "canoptek-wraith-name-not-type",
+            "canoptek-wraith-nonbasic-choice-finds-nothing",
+            "canoptek-wraith-decline",
+            "canoptek-wraith-unpayable"
+          ],
+          "viewerScenarioIds": ["canoptek-wraith-viewer-scout-same-name-search"]
         }
       ],
       "gameplayAiScenarioIds": []

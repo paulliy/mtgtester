@@ -945,6 +945,18 @@ export type Effect =
   | { op: 'drawUpTo'; count: number }
   /** The routed player chooses an integer from zero through count, then draws that many cards. */
   | { op: 'drawUpToN'; count: number; player?: 'controller' | 'eventPlayer' }
+  /**
+   * "You may pay {N} and sacrifice it. If you do, …" on a resolving ability of a permanent
+   * (Canoptek Wraith). Offered only while the source is still on the battlefield under the
+   * ability's controller and the mana is payable: a cost that can't be paid can't be chosen.
+   */
+  | { op: 'mayPayManaAndSacrificeSource'; cost: ParsedManaCost; then: Effect[] }
+  /**
+   * "Choose a land you control. Then search your library for up to N basic land cards which
+   * have the same name as the chosen land" (Canoptek Wraith). The land is chosen on resolution,
+   * not targeted; only its name matters, so one option is offered per distinct land name.
+   */
+  | { op: 'searchBasicsNamedLikeChosenLand'; count: number; destination: SearchDestination }
   | { op: 'mayPayEnergyUpTo'; min: number; max: Value; then?: Effect[] }
   | { op: 'mayPayEnergy'; amount: Value; then?: Effect[] }
   | { op: 'doublePlayerCounters' }
