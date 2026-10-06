@@ -63,7 +63,7 @@ const BASIC_LAND_MANA: Record<string, ManaUnit> = {
 type Applicability =
   | { kind: 'selector'; selector: Selector; source: SelectorSource }
   /** An until-end-of-turn effect, pinned to the objects it resolved against (CR 611.2c). */
-  | { kind: 'fixed'; cardIds: readonly string[] };
+  | { kind: 'fixed'; cardIds: readonly string[]; objectIds?: readonly string[] };
 
 interface LayerEffect {
   applies: Applicability;
@@ -177,7 +177,11 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
   }
 
   for (const eff of ctx.state.effects) {
-    const applies = { kind: 'fixed', cardIds: eff.targetCardIds } as const;
+    const applies = {
+      kind: 'fixed',
+      cardIds: eff.targetCardIds,
+      ...(eff.targetObjectIds !== undefined ? { objectIds: eff.targetObjectIds } : {}),
+    } as const;
     if (eff.kind === 'ptDelta') {
       out.push({
         applies,
@@ -308,7 +312,12 @@ export function matchesSelector(
 }
 
 function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean {
-  if (effect.applies.kind === 'fixed') return effect.applies.cardIds.includes(entry.perm.cardId);
+  if (effect.applies.kind === 'fixed') {
+    return (
+      effect.applies.cardIds.includes(entry.perm.cardId) &&
+      (effect.applies.objectIds === undefined || effect.applies.objectIds.includes(entry.perm.id))
+    );
+  }
   return selectMatches(
     candidateOf(ctx, entry.perm, entry.chars),
     effect.applies.selector,

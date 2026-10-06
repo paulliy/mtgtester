@@ -101,6 +101,7 @@ import {
   requireModeled,
 } from '../state/queries';
 import type {
+  DamageKeyword,
   EngineCardObject,
   EngineObject,
   EnginePermanent,
@@ -223,6 +224,8 @@ export interface EffectSource {
    * source is then found by card.
    */
   objectId?: ObjectId | null;
+  /** The source's damage keywords as its ability went on the stack — LKI once it has left. */
+  lastKnownDamageKeywords?: readonly DamageKeyword[];
 }
 
 /** Deal non-combat or combat damage from `source` to a creature. */
@@ -387,12 +390,15 @@ function dealDamageToObject(
   amount: number,
 ): void {
   const sourcePermanent = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
-  const sourceHasInfect =
-    sourcePermanent !== undefined && hasKeyword(ctx, sourcePermanent, 'infect');
-  const sourceHasLifelink =
-    sourcePermanent !== undefined && hasKeyword(ctx, sourcePermanent, 'lifelink');
-  const sourceHasDeathtouch =
-    sourcePermanent !== undefined && hasKeyword(ctx, sourcePermanent, 'deathtouch');
+  // A source that has left deals damage with its last known abilities (CR 113.7a): Mordant
+  // Dragon that had deathtouch when its trigger went on the stack still destroys.
+  const sourceHas = (kw: DamageKeyword): boolean =>
+    sourcePermanent !== undefined
+      ? hasKeyword(ctx, sourcePermanent, kw)
+      : (source.lastKnownDamageKeywords?.includes(kw) ?? false);
+  const sourceHasInfect = sourceHas('infect');
+  const sourceHasLifelink = sourceHas('lifelink');
+  const sourceHasDeathtouch = sourceHas('deathtouch');
   // Protection (CR 702.16e) prevents damage from a protected-from source, noncombat included.
   const sourceColors = sourceColorsOf(ctx, source.cardId, source.oracleId, source.lastKnownColors);
   const targetPlayer = ctx.state.players.find((p) => p.id === id);
@@ -1364,7 +1370,9 @@ export function* executeAbility(
       }
       // Gone from the battlefield by resolution: the effect simply does nothing to it. A delayed
       // trigger that remembers the permanent itself also skips a new object of the same card.
-      const pinnedId = extraScope?.triggerObjectId;
+      // A trigger that acts on its event object remembers it (`eventObjectId`), so a creature
+      // blinked in response is a new object it no longer affects (CR 400.7).
+      const pinnedId = extraScope?.triggerObjectId ?? extraScope?.eventObjectId;
       const perm = ctx.state.battlefield.find(
         (p) => p.cardId === triggerObjectCardId && (pinnedId === undefined || p.id === pinnedId),
       );
@@ -2618,8 +2626,12 @@ export function* executeAbility(
         const target =
           targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
         if (target === undefined) break;
-        yield* drawCards(ctx, target, 1);
-        yield* drawCards(ctx, controller, 1);
+        // "You and target opponent each draw": the players draw in APNAP order (CR 101.4).
+        for (const drawer of playersInApnapOrder(ctx)) {
+          if (drawer.id === controller.id || drawer.id === target.id) {
+            yield* drawCards(ctx, drawer, 1);
+          }
+        }
         break;
       }
       case 'drawTargetAndControllerN': {
@@ -2627,8 +2639,12 @@ export function* executeAbility(
         const target =
           targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
         if (target === undefined) break;
-        yield* drawCards(ctx, target, effect.count);
-        yield* drawCards(ctx, controller, effect.count);
+        // "You and target opponent each draw": the players draw in APNAP order (CR 101.4).
+        for (const drawer of playersInApnapOrder(ctx)) {
+          if (drawer.id === controller.id || drawer.id === target.id) {
+            yield* drawCards(ctx, drawer, effect.count);
+          }
+        }
         break;
       }
       case 'drawTarget': {
@@ -3766,6 +3782,7 @@ export function* executeAbility(
               sourceId: source.cardId,
               description: 'Hunting Wilds animated Forests',
               targetCardIds: found.map((permanent) => permanent.cardId),
+              targetObjectIds: found.map((permanent) => permanent.id),
               kind: 'becomeCreature',
               duration: 'permanent',
               becomeCreature: {
@@ -4415,13 +4432,12 @@ export function* executeAbility(
         // The Wraith is spoken for by the sacrifice half of this cost, so no mana ability paying
         // the {3} half may sacrifice it (CR 601.2g-h: an unpayable part makes the whole illegal).
         const reserved = new Set<string>(self === undefined ? [] : [self.id]);
+        const allows = allowanceFor(ctx, controller.id, { kind: 'other' });
+        const pays = (kept: ManaSource[]): boolean =>
+          canPay(effect.cost, controller.manaEntries, kept, allows, controller.life);
         const payable =
           self !== undefined &&
-          canPay(
-            effect.cost,
-            controller.manaEntries,
-            jointlyPayableSources(ctx, manaSourcesFor(ctx, controller.id), reserved),
-          );
+          pays(jointlyPayableSources(ctx, manaSourcesFor(ctx, controller.id), reserved, pays));
         if (!payable) break;
         const costText = describeManaCost(effect.cost);
         const outcome = yield {
@@ -6382,39 +6398,59 @@ function demandsAllocatable(
 }
 
 /**
- * The mana sources that can all be activated together when `reserved` permanents are spoken for
- * by another part of the same cost (Ashnod's Altar paying for Canoptek Wraith's "{3} and
- * sacrifice it" may not sacrifice the Wraith). Sacrifice costs must be met by DISTINCT
- * permanents: two Altars cannot both sacrifice the one other creature. A plain source (Birds of
- * Paradise) may be one of them, since it is tapped for mana first; any other kept source may
- * not, since it must survive to be activated. Sources are kept in order while the kept set
- * stays jointly payable, so the result is deterministic.
+ * The mana sources a payment may use when `reserved` permanents are spoken for by another part
+ * of the same cost (Ashnod's Altar paying for Canoptek Wraith's "{3} and sacrifice it" may not
+ * sacrifice the Wraith). Sources with no sacrifice demand are always kept. Among those that
+ * demand sacrifices, the first subset (larger first, then in source order, so the result is
+ * deterministic) is chosen whose demands can each be met by a DISTINCT permanent and that
+ * `pays` the cost: two Altars cannot both sacrifice the one other creature, and Phyrexian
+ * Tower's sacrifice ability does not crowd out an Altar that could use that creature instead.
+ * A plain source (Birds of Paradise) may be fodder, since it is tapped for mana first; any other
+ * kept source may not, since it must survive to be activated.
  */
 function jointlyPayableSources(
   ctx: GameContext,
   sources: readonly ManaSource[],
   reserved: ReadonlySet<string>,
+  pays: (kept: ManaSource[]) => boolean,
 ): ManaSource[] {
   if (reserved.size === 0) return [...sources];
-  const kept: ManaSource[] = [];
-  let demands: SacrificeDemand[] = [];
-  let unavailable = new Set(reserved);
-  for (const source of sources) {
+  const entries = sources.flatMap((source) => {
     const info = sacrificeDemandsOf(ctx, source);
-    if (info === undefined) continue;
-    if (unavailable.has(info.perm.id)) continue;
-    const nextDemands = [...demands, ...info.demands];
-    // A plain source is activated before any sacrifice (see `payManaCost`), so it can make its
-    // mana and still be sacrificed afterwards. Any other kept source must survive to be used.
-    const nextUnavailable = isPlainManaSource(source)
-      ? unavailable
-      : new Set([...unavailable, info.perm.id]);
-    if (!demandsAllocatable(ctx, nextDemands, nextUnavailable)) continue;
-    kept.push(source);
-    demands = nextDemands;
-    unavailable = nextUnavailable;
+    if (info === undefined) return [];
+    // A reserved permanent may still tap for mana, but nothing may sacrifice it.
+    if (reserved.has(info.perm.id) && !isPlainManaSource(source)) return [];
+    return [{ source, ...info }];
+  });
+  const free = entries.filter((entry) => entry.demands.length === 0);
+  const demanding = entries
+    .filter((entry) => entry.demands.length > 0)
+    .slice(0, MAX_SACRIFICE_SOURCES);
+  const subsets = Array.from({ length: 2 ** demanding.length }, (_, mask) => mask).sort(
+    (a, b) => bitCount(b) - bitCount(a) || a - b,
+  );
+  for (const mask of subsets) {
+    const chosen = demanding.filter((_, index) => (mask & (1 << index)) !== 0);
+    const kept = [...free, ...chosen];
+    const unavailable = new Set(reserved);
+    for (const entry of kept) {
+      if (!isPlainManaSource(entry.source)) unavailable.add(entry.perm.id);
+    }
+    const demands = chosen.flatMap((entry) => entry.demands);
+    if (!demandsAllocatable(ctx, demands, unavailable)) continue;
+    const keptSources = kept.map((entry) => entry.source);
+    if (pays(keptSources)) return keptSources;
   }
-  return kept;
+  return free.map((entry) => entry.source);
+}
+
+/** Sacrifice-cost mana sources considered together; more are rare enough to ignore. */
+const MAX_SACRIFICE_SOURCES = 8;
+
+function bitCount(n: number): number {
+  let count = 0;
+  for (let rest = n; rest > 0; rest >>= 1) count += rest & 1;
+  return count;
 }
 
 /**
@@ -6437,12 +6473,13 @@ export function* payManaCost(
   reservedObjectIds: ReadonlySet<string> = new Set(),
 ): GameGen<{ spellCantBeCountered: boolean; treasureManaSpent: number; manaSpent: number }> {
   const excluded = new Set(excludedSourceCardIds);
+  const allows = allowanceFor(ctx, player.id, purpose);
   const sources = jointlyPayableSources(
     ctx,
     manaSourcesFor(ctx, player.id).filter((source) => !excluded.has(source.cardId)),
     reservedObjectIds,
+    (kept) => planPayment(cost, player.manaEntries, kept, allows, player.life) !== null,
   );
-  const allows = allowanceFor(ctx, player.id, purpose);
   const plan = planPayment(cost, player.manaEntries, sources, allows, player.life);
   if (plan === null) {
     throw new Error(`engine bug: cost for ${player.id} became unpayable at application time`);

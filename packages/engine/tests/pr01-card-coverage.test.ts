@@ -11,7 +11,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { OracleCard } from '@mtg/shared';
+import type { ObjectId, OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
@@ -893,6 +893,38 @@ describe('Canoptek Wraith', () => {
       expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
     });
 
+    it('canoptek-wraith-tower-and-altar — Phyrexian Tower makes {C} while the Altar sacrifices the one other creature', () => {
+      // Tower's own sacrifice ability would want the Bear too; using Tower's plain {C} and the
+      // Altar's {C}{C} instead is a legal way to pay {3}, so it must be offered.
+      const { ctx, self } = board('wraith-tower-altar', [], [island()], 0);
+      spawn(
+        ctx,
+        'P1',
+        oracle({
+          name: 'Wraith Tower',
+          typeLine: 'Legendary Land',
+          manaCost: null,
+          oracleText: '{T}: Add {C}.\n{T}, Sacrifice a creature: Add {B}{B}.',
+        }),
+      );
+      spawn(ctx, 'P1', altar());
+      spawn(ctx, 'P1', bear());
+      const { decisions } = scout(
+        ctx,
+        self,
+        answers([[/pay \{3\} and sacrifice/, /Pay \{3\} and sacrifice/]]),
+      );
+      expect(decisions.some((decision) => /pay \{3\} and sacrifice/.test(decision.prompt))).toBe(
+        true,
+      );
+      expect(
+        playerById(ctx, 'P1')
+          .graveyard.map((card) => card.name)
+          .sort(),
+      ).toEqual(['Canoptek Wraith', 'Test Bear']);
+      expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    });
+
     it('canoptek-wraith-altars-two-creatures — with two other creatures both Altars pay, each sacrificing a different one', () => {
       const { ctx, self } = board('wraith-two-altars-ok', [island()], [island()], 0);
       spawn(ctx, 'P1', altar());
@@ -1374,6 +1406,36 @@ describe('Mordant Dragon', () => {
     const power = computeCharacteristics(ctx, self).power;
     runCombat(ctx, { [self.id]: 'P2' }, dragonAnswer(wall.id, true));
     expect(ctx.state.battlefield.find((entry) => entry.id === wall.id)?.damageMarked).toBe(power);
+  });
+
+  it('mordant-dragon-last-known-deathtouch — a Dragon that had deathtouch and then left still deals deathtouch damage', () => {
+    const ctx = pod('mordant-lki');
+    const self = spawn(ctx, 'P1', dragon.card);
+    ctx.state.effects.push({
+      id: 'eff-test-deathtouch',
+      sourceId: self.cardId,
+      description: 'Mordant Dragon gains deathtouch',
+      targetCardIds: [self.cardId],
+      kind: 'grantKeyword',
+      keyword: 'deathtouch',
+      timestamp: ctx.state.nextTimestamp++,
+    });
+    const wall = spawn(ctx, 'P2', big());
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: self.cardId,
+      sourceOracleId: self.oracleId,
+      sourceName: self.name,
+      ability: interpretCard(dragon.card).triggers[0]!,
+      scope: { damageDealt: 1, eventPlayerId: 'P2' },
+    });
+    pump(priorityCheckpoint(ctx), dragonAnswer(wall.id, true));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, self, { zone: 'graveyard' }));
+    resolveTop(ctx, dragonAnswer(null, true));
+    // 1 damage from a (last known) deathtouch source destroys the 0/9 wall (CR 113.7a).
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.battlefield.some((entry) => entry.id === wall.id)).toBe(false);
   });
 
   it('mordant-dragon-decline — answering no deals no extra damage', () => {
@@ -2486,6 +2548,13 @@ describe('Hunting Wilds', () => {
     expect(computeCharacteristics(ctx, kept).power).toBe(3);
   });
 
+  it('hunting-wilds-animated-forest-dies-as-creature — an animated Forest that is destroyed dies as a creature', () => {
+    const { ctx, forests } = cast('wilds-forest-dies', true, twoForests);
+    const before = ctx.state.creaturesDiedThisTurn;
+    pump(moveObject(ctx, forests[0]!, { zone: 'graveyard' }));
+    expect(ctx.state.creaturesDiedThisTurn).toBe(before + 1);
+  });
+
   it('hunting-wilds-kicker-cost — kicking needs the extra {3}{G}; with four mana only the plain cast is offered', () => {
     const ctx = pod('wilds-cost');
     const inHand = conjure(ctx, 'P1', wilds.card, 'hand');
@@ -2651,6 +2720,31 @@ describe('Loran of the Third Path', () => {
     expect(playerById(ctx, 'P3').hand.length).toBe(before.P3 + 1);
     expect(playerById(ctx, 'P2').hand).toHaveLength(0);
     expect(self.tapped).toBe(true);
+  });
+
+  it('loran-of-the-third-path-draw-apnap — the players draw in APNAP order, whoever is active', () => {
+    const drawOrder = (active: string) => {
+      const ctx = pod(`loran-apnap-${active}`);
+      ctx.state.currentTurnPlayer = active;
+      ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(active);
+      const self = spawn(ctx, 'P1', loran.card);
+      self.summoningSick = false;
+      const ability = interpretCard(loran.card).activatedAbilities[0]!.ability;
+      pump(
+        executeAbility(
+          ctx,
+          { cardId: self.cardId, oracleId: self.oracleId, name: self.name, controllerId: 'P1' },
+          ability,
+          ['P3' as ObjectId],
+        ),
+      );
+      return ctx.state.eventLog
+        .filter((event) => event.type === 'draw')
+        .map((event) => event.actorSeat);
+    };
+    // CR 101.4: on P1's turn P1 draws first; on P3's turn P3 does.
+    expect(drawOrder('P1')).toEqual(['P1', 'P3']);
+    expect(drawOrder('P3')).toEqual(['P3', 'P1']);
   });
 });
 
@@ -2981,6 +3075,23 @@ describe('Frontier Siege', () => {
     resolveTop(ctx, fightAnswer(true));
     pump(priorityCheckpoint(ctx));
     expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(false);
+  });
+
+  it('frontier-siege-dragons-blinked-flier — a flier blinked in response is a new object; the trigger has no "it" to fight', () => {
+    const ctx = pod('siege-dragons-blink');
+    castSiege(ctx, 'Dragons');
+    const victim = spawn(ctx, 'P2', bear());
+    const { cardId } = enter(ctx, 'P1', drake());
+    pump(priorityCheckpoint(ctx), fightAnswer(true));
+    expect(ctx.state.stack).toHaveLength(1);
+    const flier = ctx.state.battlefield.find((entry) => entry.cardId === cardId)!;
+    pump(moveObject(ctx, flier, { zone: 'exile' }));
+    const card = ctx.state.exile.find((entry) => entry.cardId === cardId)!;
+    pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
+    resolveTop(ctx, fightAnswer(true));
+    const returned = ctx.state.battlefield.find((entry) => entry.cardId === cardId)!;
+    expect(returned.damageMarked).toBe(0);
+    expect(ctx.state.battlefield.find((entry) => entry.id === victim.id)?.damageMarked).toBe(0);
   });
 
   it('frontier-siege-dragons-fight — Dragons lets an entering flier you control fight a creature you do not control', () => {

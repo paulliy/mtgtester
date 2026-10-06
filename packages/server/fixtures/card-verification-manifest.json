@@ -1640,7 +1640,10 @@
             "activated ability, cost {T} (needs an untapped, non-summoning-sick Loran)",
             "target opponent; drawTargetAndController: the target and you each draw one card"
           ],
-          "engineTestIds": ["loran-of-the-third-path-tap-draw"],
+          "engineTestIds": [
+            "loran-of-the-third-path-tap-draw",
+            "loran-of-the-third-path-draw-apnap"
+          ],
           "viewerScenarioIds": ["loran-of-the-third-path-viewer-tap-draw"]
         }
       ],
@@ -2059,7 +2062,8 @@
             "canoptek-wraith-altar-sacrifices-another",
             "canoptek-wraith-altars-share-one-creature",
             "canoptek-wraith-altars-two-creatures",
-            "canoptek-wraith-altar-and-mana-creature"
+            "canoptek-wraith-altar-and-mana-creature",
+            "canoptek-wraith-tower-and-altar"
           ],
           "viewerScenarioIds": ["canoptek-wraith-viewer-scout-same-name-search"]
         }
@@ -2952,7 +2956,8 @@
           "engineTestIds": [
             "hunting-wilds-kicked",
             "hunting-wilds-forest-cards-only-this-way",
-            "hunting-wilds-animation-ends-on-zone-change"
+            "hunting-wilds-animation-ends-on-zone-change",
+            "hunting-wilds-animated-forest-dies-as-creature"
           ],
           "viewerScenarioIds": ["hunting-wilds-viewer-kicked"]
         }
@@ -3136,7 +3141,8 @@
             "mordant-dragon-amount-is-damage-dealt",
             "mordant-dragon-decline",
             "mordant-dragon-only-that-players-creatures",
-            "mordant-dragon-no-creature-no-trigger"
+            "mordant-dragon-no-creature-no-trigger",
+            "mordant-dragon-last-known-deathtouch"
           ],
           "viewerScenarioIds": ["mordant-dragon-viewer-combat-damage-redirect"]
         }
@@ -3320,7 +3326,8 @@
             "frontier-siege-dragons-fight",
             "frontier-siege-dragons-decline-and-filters",
             "frontier-siege-modes-exclusive",
-            "frontier-siege-dragons-after-siege-leaves"
+            "frontier-siege-dragons-after-siege-leaves",
+            "frontier-siege-dragons-blinked-flier"
           ],
           "viewerScenarioIds": ["frontier-siege-viewer-dragons-fight"]
         }

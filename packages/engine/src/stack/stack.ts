@@ -134,6 +134,9 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
         ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
         ...(top.sourceObjectId !== undefined ? { objectId: top.sourceObjectId } : {}),
+        ...(top.sourceDamageKeywords !== undefined
+          ? { lastKnownDamageKeywords: top.sourceDamageKeywords }
+          : {}),
       },
       top.ability,
       top.targets,

@@ -10,6 +10,7 @@
 
 import type { ObjectId, OracleId, PlayerId, Zone } from '@mtg/shared';
 import type { Ability, KeywordAbility, ObjectTriggerWhen, TokenSpec } from '../cards/ability';
+import { actsOnItsTriggerObject } from '../cards/source-identity';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
 import type { CardDefinition } from '../cards/definition';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
@@ -473,12 +474,6 @@ export function* moveObject(
   }
 
   removeFromCurrentZone(ctx, obj);
-
-  // An effect that lasts indefinitely on fixed objects (Hunting Wilds' animated Forests) is
-  // keyed by card, so it must let go of a permanent that leaves: if the card returns it is a new
-  // object the effect never applied to (CR 400.7, 611.2c). Until-end-of-turn effects expire on
-  // their own at cleanup.
-  if (from === 'battlefield') releaseIndefiniteEffects(ctx, obj.cardId);
 
   if (from === 'battlefield' && target.zone === 'graveyard') {
     (obj as unknown as EngineCardObject).rememberedCounters = {
@@ -1242,7 +1237,10 @@ export function queueTriggersForEvent(
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
-            ...(spec.subject.kind !== 'self' && remembersEventObject(ability)
+            ...(spec.subject.kind !== 'self' &&
+            (remembersEventObject(ability) ||
+              (actsOnItsTriggerObject(ability) &&
+                ctx.state.battlefield.some((permanent) => permanent.id === first.permanent.id)))
               ? { eventObjectId: first.permanent.id }
               : {}),
             ...(amounts.length > 0
@@ -1372,16 +1370,6 @@ function remembersEventObject(ability: Ability): boolean {
       effect.sameObject === true &&
       effect.target === 'triggerObject',
   );
-}
-
-/** Drop `cardId` from every indefinite fixed-object effect, removing an effect left empty. */
-function releaseIndefiniteEffects(ctx: GameContext, cardId: CardId): void {
-  if (!ctx.state.effects.some((effect) => effect.duration === 'permanent')) return;
-  ctx.state.effects = ctx.state.effects.flatMap((effect) => {
-    if (effect.duration !== 'permanent' || !effect.targetCardIds.includes(cardId)) return [effect];
-    const remaining = effect.targetCardIds.filter((id) => id !== cardId);
-    return remaining.length === 0 ? [] : [{ ...effect, targetCardIds: remaining }];
-  });
 }
 
 export function queueTriggersForObject(

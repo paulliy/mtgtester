@@ -50,6 +50,7 @@ import {
   activatingAbilitiesBlockedFor,
   castFromLibraryTopCandidates,
   colorsOf,
+  damageKeywordsOf,
   getDefByOracleId,
   playFromZonePermission,
   wardCostOf,
@@ -1028,6 +1029,9 @@ export function* applyPriorityAction(
         sourceOracleId: perm.oracleId,
         sourceCardId: perm.cardId,
         ...(actsOnItsSourcePermanent(announced) ? { sourceObjectId: perm.id } : {}),
+        ...(damageKeywordsOf(ctx, perm).length > 0
+          ? { sourceDamageKeywords: damageKeywordsOf(ctx, perm) }
+          : {}),
         isCommanderCast: false,
         triggerScope: {
           sourceCountersTotal: Object.values(perm.counters).reduce(

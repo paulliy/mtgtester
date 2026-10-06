@@ -23,6 +23,7 @@ import { UnmodeledCardError } from '../errors';
 import type { ManaAllowance, ManaSource, ManaUnit, ParsedManaCost } from '../mana/cost';
 import { manaCostComponent } from '../mana/cost';
 import type {
+  DamageKeyword,
   EngineCardObject,
   EngineObject,
   EnginePermanent,
@@ -88,6 +89,11 @@ export function triggersOf(ctx: GameContext, perm: EnginePermanent): Ability[] {
 }
 
 /** Effective keywords through the CR 613 layer engine (grants in layer 6). */
+/** The damage keywords a permanent has now, for last known information on the stack. */
+export function damageKeywordsOf(ctx: GameContext, perm: EnginePermanent): DamageKeyword[] {
+  return (['deathtouch', 'lifelink', 'infect'] as const).filter((kw) => hasKeyword(ctx, perm, kw));
+}
+
 export function hasKeyword(ctx: GameContext, perm: EnginePermanent, kw: KeywordAbility): boolean {
   return computeCharacteristics(ctx, perm).keywords.includes(kw);
 }
