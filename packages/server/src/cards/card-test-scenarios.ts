@@ -4133,6 +4133,37 @@ function forumOfAmityScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function attuneWithAetherScenario(gameId: GameId): CardTestScenario {
+  const attune = pinnedFrom(MARCHESA_BATCH1, 'Attune with Aether');
+  const secret = card({
+    oracleId: 'lab-attune-secret',
+    name: 'Attune Private Library Secret',
+    typeLine: 'Creature — Secret',
+  });
+  return pr01Scenario(gameId, {
+    id: 'attune-with-aether-viewer-reveal-to-hand',
+    title: 'Attune with Aether: reveal a basic land, then get two energy',
+    instructions: [
+      'Cast Attune with Aether from your hand using your Forest.',
+      'Choose the Island from the library search and let the spell resolve.',
+    ],
+    expectedOutcome:
+      'The Island is revealed to every player and put into your hand, your library is shuffled, you have two energy, and other library cards stay private.',
+    oracleSha256: attune.sha256,
+    clauseIds: ['attune-with-aether-search-reveal-energy'],
+    decks: {
+      P1: [attune.card, FOREST, ISLAND, secret],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Attune with Aether'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forest'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4216,6 +4247,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'war-room-viewer-colorless-mana',
   // Coverage PR01
   'forum-of-amity-viewer-surveil',
+  'attune-with-aether-viewer-reveal-to-hand',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4295,6 +4327,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'war-room-viewer-dynamic-life-activation': warRoomScenario,
   'war-room-viewer-colorless-mana': warRoomManaScenario,
   'forum-of-amity-viewer-surveil': forumOfAmityScenario,
+  'attune-with-aether-viewer-reveal-to-hand': attuneWithAetherScenario,
 };
 
 export function createCardTestScenario(

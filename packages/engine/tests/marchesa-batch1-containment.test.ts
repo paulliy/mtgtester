@@ -239,7 +239,6 @@ const REASONS: Record<string, string> = {
   'Saheeli, Radiant Creator':
     'The copy is a reflexive trigger after payment; the target is chosen before you decide to pay.',
   'Saheeli, Sublime Artificer': 'A +1 loyalty ability is authored that is not on the card.',
-  'Attune with Aether': 'The basic-land search omits revealing the found card.',
   'Aetherworks Marvel':
     'Look-at-top-six free-cast does not put the rest on the bottom in a random order, and skips that reordering when no spell is castable.',
   'Territorial Aetherkite':
@@ -328,6 +327,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Attune with Aether',
     'Forum of Amity',
   ]);
 

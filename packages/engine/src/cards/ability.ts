@@ -628,6 +628,11 @@ export type Effect =
       bind?: string;
       /** Surface CR 701.19c's legal failure-to-find choice even for one distinct card name. */
       allowFailToFind?: boolean;
+      /**
+       * "…, reveal it, …" (CR 701.16a): each found card is shown to every player, even when its
+       * destination is a hidden zone such as the hand.
+       */
+      reveal?: boolean;
     }
   /**
    * Choose a set of cards in one private-library decision, then validate the set as a whole.

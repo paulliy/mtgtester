@@ -15,14 +15,18 @@ import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
+import type { Ability, Effect } from '../src/cards/ability';
 import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
+import { allOf, ofSupertype, ofType } from '../src/cards/selector';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
+import { executeAbility } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
+import { formatPlayerLog } from '../src/view/spectator';
 import { buildPlayerView } from '../src/view/view';
 import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
@@ -123,6 +127,10 @@ function takeAction(
 
 function resolveTop(ctx: GameContext, answer?: Answer) {
   return pump(resolveTopOfStack(ctx), answer);
+}
+
+function spellAbilityOf(effects: Effect[]): Ability {
+  return { kind: 'spell', targets: [], effects };
 }
 
 const SECRET = (name: string) => oracle({ name, typeLine: 'Creature — Secret' });
@@ -240,6 +248,126 @@ describe('Forum of Amity', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.02 Attune with Aether
+// ---------------------------------------------------------------------------------------------
+
+describe('Attune with Aether', () => {
+  const attune = pinned('Attune with Aether');
+  const NONBASIC = () =>
+    oracle({ name: 'Attune Nonbasic Land', typeLine: 'Land', manaCost: null, oracleText: '' });
+
+  function castAttune(seed: string, answer?: Answer) {
+    const ctx = pod(seed);
+    const inHand = conjure(ctx, 'P1', attune.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }]);
+    const cast = priorityOptions(ctx, 'P1').find((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'castSpell' && payload.objectId === inHand.id;
+    });
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    expect(ctx.state.stack).toHaveLength(1);
+    return { ctx, inHand, resolved: () => resolveTop(ctx, answer) };
+  }
+
+  it('attune-with-aether-pinned-oracle-supported — pins the Oracle and models the whole line', () => {
+    expect(attune.sha256).toBe('e1dc515b653e7e3f91dda25d2ed30a27208e28a623ab2be3604d643119e57c94');
+    expect(attune.card.oracleText).toBe(
+      'Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} (two energy counters).',
+    );
+    const def = interpretCard(attune.card);
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.effects).toEqual([
+      expect.objectContaining({ op: 'searchLibrary', reveal: true, allowFailToFind: true }),
+      { op: 'shuffle' },
+      expect.objectContaining({ op: 'gainEnergy' }),
+    ]);
+  });
+
+  it('attune-with-aether-reveal-to-hand — normal cast reveals the found basic, puts it in hand, shuffles, and gives {E}{E}', () => {
+    const { ctx } = castAttune('attune-reveal', answers([[/search your library/, /Put Forest/]]));
+    const forestInLibrary = playerById(ctx, 'P1').library.find((card) => card.name === 'Forest')!;
+    const handBefore = playerById(ctx, 'P1').hand.length;
+    resolveTop(ctx, answers([[/search your library/, /Put Forest into your hand/]]));
+
+    const p1 = playerById(ctx, 'P1');
+    expect(p1.hand.map((card) => card.cardId)).toContain(forestInLibrary.cardId);
+    expect(p1.hand).toHaveLength(handBefore + 1);
+    expect(p1.energy).toBe(2);
+    expect(p1.graveyard.map((card) => card.name)).toEqual(['Attune with Aether']);
+    const found = ctx.state.eventLog.find((event) => event.type === 'searchFound');
+    expect(found?.payload).toMatchObject({ name: 'Forest', to: 'hand', revealed: true });
+    const types = ctx.state.eventLog.map((event) => event.type);
+    expect(types.indexOf('shuffle')).toBeGreaterThan(types.indexOf('searchFound'));
+  });
+
+  it('attune-with-aether-reveal-is-public — every opponent sees the revealed card but no other library card', () => {
+    const { ctx } = castAttune('attune-public');
+    conjure(ctx, 'P1', SECRET('Attune Private Secret'), 'library');
+    resolveTop(ctx, answers([[/search your library/, /Put Forest into your hand/]]));
+    for (const viewer of ['P2', 'P3', 'P4']) {
+      const view = buildPlayerView(ctx, viewer);
+      const revealed = view.recentLog.find((line) => line.includes('searchFound'));
+      expect(revealed, viewer).toContain('name=Forest');
+      expect(revealed, viewer).toContain('revealed=true');
+      expect(JSON.stringify(view), viewer).not.toContain('Attune Private Secret');
+    }
+    const narrated = formatPlayerLog(ctx.state.eventLog, 'P2').map((line) => line.text);
+    expect(narrated).toContain('reveals Forest');
+  });
+
+  it('attune-with-aether-find-nothing — may find nothing yet still shuffles and gives {E}{E}', () => {
+    const { ctx } = castAttune('attune-nothing');
+    const { decisions } = resolveTop(ctx, answers([[/search your library/, /Find nothing/]]));
+    const p1 = playerById(ctx, 'P1');
+    expect(decisions.some((d) => d.options.some((o) => o.description === 'Find nothing'))).toBe(
+      true,
+    );
+    expect(p1.hand.some((card) => card.name === 'Forest')).toBe(false);
+    expect(p1.energy).toBe(2);
+    expect(ctx.state.eventLog.some((event) => event.type === 'searchFound')).toBe(false);
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+  });
+
+  it('attune-with-aether-basic-only — a nonbasic land is never offered', () => {
+    const { ctx } = castAttune('attune-basic-only');
+    conjure(ctx, 'P1', NONBASIC(), 'library');
+    const { decisions } = resolveTop(ctx, answers([[/search your library/, /Find nothing/]]));
+    const search = decisions.find((decision) => /search your library/.test(decision.prompt))!;
+    expect(search.options.map((option) => option.description)).not.toContain(
+      'Put Attune Nonbasic Land into your hand',
+    );
+  });
+
+  it('attune-with-aether-unrevealed-search-stays-private — a search without reveal still hides the found card', () => {
+    const ctx = pod('attune-unrevealed-regression');
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'tutor', oracleId: 'tutor', name: 'Private Tutor', controllerId: 'P1' },
+        spellAbilityOf([
+          {
+            op: 'searchLibrary',
+            filter: allOf(ofSupertype('Basic'), ofType('Land')),
+            destinations: [{ zone: 'hand' }],
+            allowFailToFind: true,
+          },
+        ]),
+        [],
+      ),
+      answers([[/search your library/, /Put Forest into your hand/]]),
+    );
+    const found = buildPlayerView(ctx, 'P2').recentLog.find((line) => line.includes('searchFound'));
+    expect(found).toBeDefined();
+    expect(found).not.toContain('Forest');
+    expect(buildPlayerView(ctx, 'P1').recentLog.join('\n')).toContain('name=Forest');
+    expect(formatPlayerLog(ctx.state.eventLog, 'P2').map((line) => line.text)).not.toContain(
+      'reveals Forest',
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -255,6 +383,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Forum of Amity',
     sha256: 'b49800b6e3d748f53ad05c73cbf239e4c57e16fac1e8288c5fdf8d1f36b384ee',
     clauseCount: 3,
+  },
+  {
+    name: 'Attune with Aether',
+    sha256: 'e1dc515b653e7e3f91dda25d2ed30a27208e28a623ab2be3604d643119e57c94',
+    clauseCount: 1,
   },
 ];
 

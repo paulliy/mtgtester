@@ -3533,6 +3533,7 @@ export function* executeAbility(
           destinations,
           effect.differentNames === true,
           effect.allowFailToFind === true,
+          effect.reveal === true,
         );
         if (effect.bind !== undefined) effectBindings.set(effect.bind, foundCardIds);
         break;
@@ -5526,10 +5527,19 @@ function* searchLibrary(
   destinations: readonly SearchDestination[],
   differentNames = false,
   allowFailToFind = false,
+  reveal = false,
 ): GameGen<string[]> {
   const selectorSource = { cardId: source.cardId, controllerId: player.id };
   const chosenNames = new Set<string>();
   const foundCardIds: string[] = [];
+  // CR 701.16a: a revealed card is public to every player whatever zone it goes to.
+  const found = (card: EngineCardObject, to: SearchDestination['zone']): void =>
+    emit(ctx, 'searchFound', {
+      player: player.id,
+      name: card.name,
+      to,
+      ...(reveal ? { revealed: true } : {}),
+    });
   for (const destination of destinations) {
     const matches = player.library.filter(
       (card) =>
@@ -5555,10 +5565,10 @@ function* searchLibrary(
         player.library.splice(player.library.indexOf(card), 1);
         shuffleLibrary(ctx, player);
         player.library.unshift(card);
-        emit(ctx, 'searchFound', { player: player.id, name: card.name, to: destination.zone });
+        found(card, destination.zone);
         continue;
       }
-      emit(ctx, 'searchFound', { player: player.id, name: card.name, to: destination.zone });
+      found(card, destination.zone);
       chosenNames.add(card.name);
       yield* moveObject(
         ctx,
@@ -5604,10 +5614,10 @@ function* searchLibrary(
       player.library.splice(player.library.indexOf(card), 1);
       shuffleLibrary(ctx, player);
       player.library.unshift(card);
-      emit(ctx, 'searchFound', { player: player.id, name: card.name, to: destination.zone });
+      found(card, destination.zone);
       continue;
     }
-    emit(ctx, 'searchFound', { player: player.id, name: card.name, to: destination.zone });
+    found(card, destination.zone);
     chosenNames.add(card.name);
     yield* moveObject(
       ctx,

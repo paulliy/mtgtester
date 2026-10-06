@@ -1178,6 +1178,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Forum of Amity: surveil 1 through the normal activation'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Attune with Aether: reveal a basic land, then get two energy'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

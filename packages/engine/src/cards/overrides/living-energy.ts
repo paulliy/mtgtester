@@ -14,7 +14,7 @@ import {
   TREASURE,
 } from '../tokens';
 import { defineCard, replaceCard, unimplemented, unsupportedCard } from './index';
-import { allOf, anyOf, not, ofSubtype, ofType, OTHER, SELF, YOURS } from '../selector';
+import { allOf, anyOf, not, ofSubtype, ofSupertype, ofType, OTHER, SELF, YOURS } from '../selector';
 import type { CardDefinition } from '../definition';
 
 const ARTIFACT_OR_ARTIFICER = anyOf(ofType('Artifact'), ofSubtype('Artificer'));
@@ -973,11 +973,30 @@ export function registerLIVING_ENERGYOverrides(): void {
     },
   );
 
-  // Catalog audit living-energy-batch-3: basic-land search omits reveal.
-  unsupportedCard(
+  // Coverage PR01: the found basic is revealed to every player before it goes to hand (CR
+  // 701.16a), the search may legally find nothing (CR 701.19c), and the energy follows.
+  defineCard(
     'b337c241-f2c4-48e3-a303-371b172fcd18',
     'Attune with Aether',
-    'The basic-land search omits revealing the found card.',
+    [
+      'Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} .',
+    ],
+    {
+      spellAbility: spell({
+        targets: [],
+        effects: [
+          {
+            op: 'searchLibrary',
+            filter: allOf(ofSupertype('Basic'), ofType('Land')),
+            destinations: [{ zone: 'hand' }],
+            allowFailToFind: true,
+            reveal: true,
+          },
+          { op: 'shuffle' },
+          { op: 'gainEnergy', amount: constant(2) },
+        ],
+      }),
+    },
   );
 
   // Catalog audit living-energy-batch-6: replacing manaAbilities drops {T}: Add {C}.

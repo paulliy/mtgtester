@@ -122,6 +122,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'war-room-viewer-dynamic-life-activation',
       'war-room-viewer-colorless-mana',
       'forum-of-amity-viewer-surveil',
+      'attune-with-aether-viewer-reveal-to-hand',
     ]);
   });
 

@@ -2473,13 +2473,25 @@
     "b337c241-f2c4-48e3-a303-371b172fcd18": {
       "name": "Attune with Aether",
       "oracleSha256": "e1dc515b653e7e3f91dda25d2ed30a27208e28a623ab2be3604d643119e57c94",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} (two energy counters).",
-          "implementation": ["explicitly unsupported; search omits reveal"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "attune-with-aether-search-reveal-energy",
+          "oracleText": "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E}",
+          "implementation": [
+            "searchLibrary(filter=Basic Land, destination=hand, allowFailToFind=true, reveal=true) — searchFound carries revealed=true, so every view shows the card (CR 701.16a)",
+            "shuffle",
+            "gainEnergy(2)"
+          ],
+          "engineTestIds": [
+            "attune-with-aether-pinned-oracle-supported",
+            "attune-with-aether-reveal-to-hand",
+            "attune-with-aether-reveal-is-public",
+            "attune-with-aether-find-nothing",
+            "attune-with-aether-basic-only",
+            "attune-with-aether-unrevealed-search-stays-private"
+          ],
+          "viewerScenarioIds": ["attune-with-aether-viewer-reveal-to-hand"]
         }
       ],
       "gameplayAiScenarioIds": []

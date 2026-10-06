@@ -127,3 +127,25 @@ describe('Forum of Amity Card Test Lab scenario', () => {
     replays('forum-of-amity-viewer-surveil', steps);
   });
 });
+
+describe('Attune with Aether Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Attune with Aether' },
+    { action: 'Put Island into your hand' },
+  ];
+
+  it('attune-with-aether-viewer-reveal-to-hand — casts normally, reveals the Island to hand, shuffles, and gives energy', () => {
+    const { state, seat, offered } = run('attune-with-aether-viewer-reveal-to-hand', steps);
+    expect(offered.flat()).toContain('Find nothing');
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Island']);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Attune with Aether']);
+    expect(seat('P1').energy).toBe(2);
+    expect(state.eventLog.find((event) => event.type === 'searchFound')?.payload).toMatchObject({
+      name: 'Island',
+      to: 'hand',
+      revealed: true,
+    });
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    replays('attune-with-aether-viewer-reveal-to-hand', steps);
+  });
+});

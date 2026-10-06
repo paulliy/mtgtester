@@ -81,6 +81,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "b337c241-f2c4-48e3-a303-371b172fcd18",
+    "name": "Attune with Aether",
+    "package": "PR01.02",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} .\"",
+      "explicitly unsupported: The basic-land search omits revealing the found card."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "a98cc4d0-a322-4142-aee0-83f39b137616",
     "name": "Aurora Phoenix",
     "package": "W3",

@@ -6727,8 +6727,50 @@
   {
     "oracleId": "b337c241-f2c4-48e3-a303-371b172fcd18",
     "name": "Attune with Aether",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} ."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary",
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "gainEnergy"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "b3d81980-76f2-44e2-b1c9-01e30c726312",
@@ -10170,8 +10212,50 @@
   {
     "oracleId": "oracle-attune-with-aether",
     "name": "Attune with Aether",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E} ."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "allowFailToFind": true,
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "op": "searchLibrary",
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "gainEnergy"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-aura-mutation",

@@ -1761,3 +1761,27 @@ test('Forum of Amity: surveil 1 through the normal activation', async ({ page })
   await expect(permanent(page, 'Forum of Amity').locator('.tap-badge')).toHaveText('TAP');
   await expect(page.getByText(/Forum Surveilled Card/).first()).toBeVisible();
 });
+
+test('Attune with Aether: reveal a basic land, then get two energy', async ({ page }) => {
+  await runScenario(page, 'Attune with Aether: reveal a basic land, then get two energy');
+
+  const attune = handCard(page, 'Attune with Aether');
+  await expect(attune).toHaveClass(/actionable/);
+  await attune.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/search your library/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'Find nothing' })).toBeVisible();
+  await page.getByRole('button', { name: 'Put into your hand' }).click();
+
+  // The revealed Island is now a playable land in hand, so passing asks about the land drop.
+  await expect(page.getByText('reveals Island').first()).toBeVisible({ timeout: 15_000 });
+  await expect(handCard(page, 'Island')).toBeVisible();
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(page.getByRole('alertdialog', { name: /haven't played a land/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Pass anyway' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('Attune Private Library Secret')).toHaveCount(0);
+});
