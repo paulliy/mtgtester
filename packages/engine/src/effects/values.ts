@@ -1,3 +1,4 @@
+import { assertNever } from '../utils/assert-never';
 /**
  * Resolution-time `Value` evaluation — the half that reads *current* characteristics.
  *
@@ -301,5 +302,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
         ? (object.counters[value.counter] ?? 0)
         : (object.rememberedCounters?.[value.counter] ?? 0);
     }
+
+    default:
+      assertNever(value, 'resolution value');
   }
 }

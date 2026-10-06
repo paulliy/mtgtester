@@ -1,3 +1,4 @@
+import { assertNever } from '../utils/assert-never';
 import { activationManaSources } from '../mana/activation';
 import {
   abilityModeLabel,
@@ -582,6 +583,9 @@ export function permanentMatchesKind(
     case 'noncreatureSpell':
     case 'commanderInCommandZone':
       return false;
+
+    default:
+      assertNever(kind, 'permanent target kind');
   }
 }
 

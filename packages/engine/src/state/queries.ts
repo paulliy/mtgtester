@@ -1,3 +1,4 @@
+import { assertNever } from '../utils/assert-never';
 /**
  * Read-only state queries: definitions, effective characteristics (computed through the CR
  * 613 layer engine — see `effects/continuous.ts`), players in the game, and mana sources.
@@ -626,6 +627,12 @@ export function canPayNonManaCosts(
         if (controller === undefined || controller.hand.length < (cost.count ?? 1)) return false;
         break;
       }
+      case 'discardHand':
+        // Discarding the entire hand is payable even when that hand is empty.
+        break;
+      case 'exileOtherCardsFromGraveyard':
+        // Supported only by the spell-cost path, not battlefield activations.
+        return false;
       case 'exileCardFromHand':
         return false;
       case 'discardSelf':
@@ -639,6 +646,9 @@ export function canPayNonManaCosts(
         return false;
       case 'mana':
         break;
+
+      default:
+        assertNever(cost, 'activation affordability');
     }
   }
   return true;

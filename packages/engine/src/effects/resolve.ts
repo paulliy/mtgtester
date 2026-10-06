@@ -1,3 +1,4 @@
+import { assertNever } from '../utils/assert-never';
 /**
  * Effect resolution (brief §6.2): applying the mechanical outcome of `EffectSpec`s, plus
  * the shared damage/draw/life primitives used by combat and turn-based actions.
@@ -2467,6 +2468,22 @@ export function* executeAbility(
             targets: [...original.targets],
           });
         }
+        break;
+      }
+      case 'removeCounters': {
+        const id = ref(effect.target);
+        const permanent = id === null ? undefined : findPermanent(ctx, id);
+        if (permanent === undefined) break;
+        const present = permanent.counters[effect.counter] ?? 0;
+        const removed = Math.min(present, amountOf(effect.count));
+        if (removed <= 0) break;
+        if (removed === present) delete permanent.counters[effect.counter];
+        else permanent.counters[effect.counter] = present - removed;
+        emit(ctx, 'removeCounter', {
+          target: permanent.name,
+          counter: effect.counter,
+          count: removed,
+        });
         break;
       }
       case 'removeCountersEach': {
@@ -5555,6 +5572,9 @@ export function* executeAbility(
       }
       case 'noOp':
         break;
+
+      default:
+        assertNever(effect, 'Effect executor');
     }
   }
 }
@@ -6859,6 +6879,10 @@ export function* payAbilityCosts(
         break;
       case 'exileCardFromHand':
         throw new Error('engine bug: exileCardFromHand is only supported for spell costs');
+      case 'discardSelf':
+      case 'exileSelfFromGraveyard':
+      case 'exileOtherCardsFromGraveyard':
+        throw new Error(`engine bug: ${cost.kind} is not a battlefield activation cost`);
       case 'discardHand':
         yield* discardCards(ctx, player, player.hand.length);
         break;
@@ -6912,6 +6936,9 @@ export function* payAbilityCosts(
         }
         break;
       }
+
+      default:
+        assertNever(cost, 'activation cost');
     }
   }
   if (costs.some((c) => c.kind === 'sacrificeSelf')) {

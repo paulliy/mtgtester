@@ -1,3 +1,4 @@
+import { assertNever } from '../utils/assert-never';
 /**
  * `Condition` — a predicate over game state, and the counterpart to `Selector` (ADR 0008).
  *
@@ -180,8 +181,39 @@ export function isChoiceCondition(condition: Condition): boolean {
       return condition.of.some(isChoiceCondition);
     case 'not':
       return isChoiceCondition(condition.of);
-    default:
+    case 'countPermanents':
+    case 'opponentControlsMore':
+    case 'opponentCount':
+    case 'excessDamageDealtTo':
+    case 'opponentDealtDamageThisTurn':
+    case 'totalCreaturePower':
+    case 'isUntapped':
+    case 'wasKicked':
+    case 'announcedXAtLeast':
+    case 'escaped':
+    case 'hasCounters':
+    case 'enteredThisTurn':
+    case 'createdTokenThisTurn':
+    case 'hadToAttackThisCombat':
+    case 'triggerObjectHadToAttackThisCombat':
+    case 'triggerObjectMatches':
+    case 'chosenOptionIs':
+    case 'controlsYourCommander':
+    case 'controlsACommander':
+    case 'opponentIsMonarch':
+    case 'notYourTurn':
+    case 'yourTurn':
+    case 'attackingPlayerHasMoreLife':
+    case 'attackingPlayerHasMoreLifeThanYou':
+    case 'triggerObjectAttackingOpponent':
+    case 'eventPlayerDrawCount':
+    case 'notFirstDrawInOwnDrawStep':
+    case 'cardsInYourGraveyard':
+    case 'sourceHasCounters':
+    case 'castSpellThisTurn':
       return false;
+    default:
+      assertNever(condition, 'condition classification');
   }
 }
 
@@ -439,6 +471,9 @@ export function evaluateCondition(
       throw new Error(
         'engine bug: mayPayMana is a choice condition — use resolveCondition, not evaluateCondition',
       );
+
+    default:
+      assertNever(condition, 'condition');
   }
 }
 
