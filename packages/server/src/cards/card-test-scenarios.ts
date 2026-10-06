@@ -4943,6 +4943,68 @@ function frontierSiegeDragonsScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function kairiScenario(gameId: GameId): CardTestScenario {
+  const kairi = pinnedFrom(MARCHESA_BATCH1, 'Kairi, the Swirling Sky');
+  const idol = card({
+    oracleId: 'lab-kairi-idol',
+    name: 'Lab Idol',
+    typeLine: 'Artifact',
+    manaCost: '{2}',
+    cmc: 2,
+  });
+  return pr01Scenario(gameId, {
+    id: 'kairi-viewer-bounce-total-six',
+    title: 'Kairi, the Swirling Sky: dies, bounce up to total mana value 6',
+    instructions: [
+      'Cast Lab Doom on your own Kairi, the Swirling Sky.',
+      'When Kairi dies, choose the return mode, then choose Lab Ox (mana value 4) and Lab Idol (2).',
+    ],
+    expectedOutcome:
+      "After Lab Ox, Lab Hex (mana value 3) is no longer offered because it would exceed 6. Lab Ox and Lab Idol return to P2's hand; Lab Hex stays.",
+    oracleSha256: kairi.sha256,
+    clauseIds: ['kairi-the-swirling-sky-dies-modes', 'kairi-the-swirling-sky-bounce'],
+    decks: {
+      P1: [kairi.card, LAB_DOOM, SWAMP, SWAMP],
+      P2: [LAB_OX, LAB_HEX, idol, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Kairi, the Swirling Sky', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Hex', 'Lab Idol'] },
+      ],
+    },
+  });
+}
+
+function kairiMillScenario(gameId: GameId): CardTestScenario {
+  const kairi = pinnedFrom(MARCHESA_BATCH1, 'Kairi, the Swirling Sky');
+  return pr01Scenario(gameId, {
+    id: 'kairi-viewer-mill-and-return',
+    title: 'Kairi, the Swirling Sky: dies, mill six and return a spell',
+    instructions: [
+      'Cast Lab Doom on your own Kairi, the Swirling Sky.',
+      'When Kairi dies, choose the mill mode. Return Lab Shock, then choose to stop returning.',
+    ],
+    expectedOutcome:
+      'Your six library cards are milled. Instant and sorcery cards in your graveyard (Lab Shock and both copies of Lab Doom) are offered; Lab Shock returns to your hand and you stop after one.',
+    oracleSha256: kairi.sha256,
+    clauseIds: ['kairi-the-swirling-sky-dies-modes', 'kairi-the-swirling-sky-mill'],
+    decks: {
+      P1: [kairi.card, LAB_DOOM, SWAMP, SWAMP, LAB_SHOCK, LAB_DOOM, FOREST, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Kairi, the Swirling Sky', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5049,6 +5111,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'vastwood-surge-viewer-kicked',
   'frontier-siege-viewer-khans-mana',
   'frontier-siege-viewer-dragons-fight',
+  'kairi-viewer-bounce-total-six',
+  'kairi-viewer-mill-and-return',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5151,6 +5215,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'vastwood-surge-viewer-kicked': vastwoodSurgeScenario,
   'frontier-siege-viewer-khans-mana': frontierSiegeKhansScenario,
   'frontier-siege-viewer-dragons-fight': frontierSiegeDragonsScenario,
+  'kairi-viewer-bounce-total-six': kairiScenario,
+  'kairi-viewer-mill-and-return': kairiMillScenario,
 };
 
 export function createCardTestScenario(

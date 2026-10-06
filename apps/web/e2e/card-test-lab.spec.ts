@@ -2314,3 +2314,58 @@ test('Frontier Siege: Dragons lets an entering flier fight', async ({ page }) =>
   await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
   await expect(permanent(page, 'Lab Drake')).toBeVisible();
 });
+
+test('Kairi, the Swirling Sky: dies, bounce up to total mana value 6', async ({ page }) => {
+  await runScenario(page, 'Kairi, the Swirling Sky: dies, bounce up to total mana value 6');
+
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/);
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Kairi, the Swirling Sky').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // The mode is chosen as the dies trigger is put on the stack.
+  await page
+    .getByRole('button', { name: /^Return any number of target nonland permanents/ })
+    .click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Target Lab Ox' }).click();
+  // Lab Ox spent 4 of the 6: Lab Hex (3) no longer fits, Lab Idol (2) does.
+  await expect(page.getByRole('button', { name: 'Target Lab Idol' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Target Lab Hex' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Target Lab Idol' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Idol')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Hex')).toBeVisible();
+});
+
+test('Kairi, the Swirling Sky: dies, mill six and return a spell', async ({ page }) => {
+  await runScenario(page, 'Kairi, the Swirling Sky: dies, mill six and return a spell');
+
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/);
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Kairi, the Swirling Sky').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await page.getByRole('button', { name: /^Mill six cards/ }).click({ timeout: 15_000 });
+  await expect(page.getByText(/choose instant\/sorcery card/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await page
+    .locator('.panel-group')
+    .filter({ hasText: 'Lab Shock' })
+    .getByRole('button', { name: 'Return to hand' })
+    .click();
+  await expect(page.getByText(/choose instant\/sorcery card/i).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Done returning spells' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(handCard(page, 'Lab Shock')).toBeVisible();
+  await expect(page.getByText(/Library\s*0/).first()).toBeVisible();
+});

@@ -242,8 +242,6 @@ const REASONS: Record<string, string> = {
   'Dragon Tempest': 'Dragon-dealt damage is implemented as damage from this enchantment.',
   'Dream Pillager':
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
-  'Kairi, the Swirling Sky':
-    'Return-any-number targeting with total mana value 6 or less is an untargeted single bounce with no mana-value cap.',
   'Idol of Oblivion':
     'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
   'Flameblast Dragon': 'The damage target is chosen before you decide to pay X.',
@@ -304,6 +302,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Kairi, the Swirling Sky',
     'Frontier Siege',
     'Vastwood Surge',
     'Rishkar, Peema Renegade',

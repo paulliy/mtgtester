@@ -1264,6 +1264,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Frontier Siege: Dragons lets an entering flier fight'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Kairi, the Swirling Sky: dies, bounce up to total mana value 6'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Kairi, the Swirling Sky: dies, mill six and return a spell'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

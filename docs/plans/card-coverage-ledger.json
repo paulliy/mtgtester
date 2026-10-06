@@ -1071,6 +1071,26 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "85aa53e8-f062-4d02-bc69-1413f7f0dcf1",
+    "name": "Kairi, the Swirling Sky",
+    "package": "PR01.22",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"When ~ dies, choose one —\"",
+      "unrecognized rules text: \"• Return any number of target nonland permanents with total mana value 6 or less to their owners' hands.\"",
+      "unrecognized rules text: \"• Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.\"",
+      "explicitly unsupported: Return-any-number targeting with total mana value 6 or less is an untargeted single bounce with no mana-value cap."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
     "name": "Kazuul, Tyrant of the Cliffs",
     "package": "W6",

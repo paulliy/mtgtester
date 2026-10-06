@@ -614,3 +614,52 @@ describe('Frontier Siege Card Test Lab scenarios', () => {
     replays('frontier-siege-viewer-dragons-fight', dragonsSteps);
   });
 });
+
+describe('Kairi, the Swirling Sky Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Lab Doom', targets: ['Kairi, the Swirling Sky'] },
+    { action: 'Return any number of target nonland permanents' },
+    { action: 'Target Lab Ox' },
+    { action: 'Target Lab Idol' },
+  ];
+
+  it('kairi-viewer-bounce-total-six — the dies trigger bounces within the mana value budget', () => {
+    const { seat, onBattlefield, offered } = run('kairi-viewer-bounce-total-six', steps);
+    const afterOx = offered.find(
+      (options) => options.includes('Target Lab Idol') && !options.includes('Target Lab Ox'),
+    )!;
+    expect(afterOx).not.toContain('Target Lab Hex');
+    expect(
+      seat('P2')
+        .hand.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Idol', 'Lab Ox']);
+    expect(onBattlefield('Lab Hex')).toHaveLength(1);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Kairi, the Swirling Sky', 'Lab Doom']);
+    replays('kairi-viewer-bounce-total-six', steps);
+  });
+});
+
+describe('Kairi, the Swirling Sky mill Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Lab Doom', targets: ['Kairi, the Swirling Sky'] },
+    { action: 'Mill six cards' },
+    { action: 'Return Lab Shock from graveyard' },
+    { action: 'Done returning spells' },
+  ];
+
+  it('kairi-viewer-mill-and-return — mills six, then returns the chosen instant', () => {
+    const { seat, offered, state } = run('kairi-viewer-mill-and-return', steps);
+    expect(seat('P1').library).toEqual([]);
+    expect(state.eventLog.filter((event) => event.type === 'mill')).toHaveLength(6);
+    const choice = offered.find((options) => options.includes('Return Lab Shock from graveyard'))!;
+    expect(choice.filter((option) => option === 'Return Lab Doom from graveyard')).toHaveLength(2);
+    expect(choice).toContain('Done returning spells');
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Shock']);
+    replays('kairi-viewer-mill-and-return', steps);
+  });
+});

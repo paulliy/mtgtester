@@ -3,7 +3,7 @@
 import { defineCard, unsupportedCard } from './index';
 import { constant } from '../value';
 import { manaCost } from '../templates';
-import { allOf, anyOf, IS_COMMANDER, not, ofSubtype, SELF, YOURS } from '../selector';
+import { allOf, anyOf, IS_COMMANDER, not, ofSubtype, ofType, SELF, YOURS } from '../selector';
 
 export function registerURDRAGONOverrides(): void {
   unsupportedCard(
@@ -46,10 +46,51 @@ export function registerURDRAGONOverrides(): void {
     iymrithDef,
   );
 
-  unsupportedCard(
+  // Coverage PR01: the mode is chosen as the trigger is put on the stack (CR 700.2a). The bounce
+  // mode targets any number of nonland permanents whose mana values total 6 or less.
+  defineCard(
     '85aa53e8-f062-4d02-bc69-1413f7f0dcf1',
     'Kairi, the Swirling Sky',
-    'Return-any-number targeting with total mana value 6 or less is an untargeted single bounce with no mana-value cap.',
+    [
+      'When ~ dies, choose one —',
+      "• Return any number of target nonland permanents with total mana value 6 or less to their owners' hands.",
+      '• Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'dies', subject: { kind: 'self' } },
+          targets: [
+            {
+              kind: 'permanent',
+              filter: not(ofType('Land')),
+              count: { min: 0, max: Infinity },
+              totalManaValueAtMost: 6,
+            },
+          ],
+          effects: [],
+          modes: {
+            minChoices: 1,
+            maxChoices: 1,
+            options: [
+              {
+                description:
+                  "Return any number of target nonland permanents with total mana value 6 or less to their owners' hands",
+                effects: [{ op: 'returnToHandEachChosen', targetSlot: 0 }],
+                targetSlots: [0],
+              },
+              {
+                description:
+                  'Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand',
+                effects: [{ op: 'millAndReturnSpells' }],
+              },
+            ],
+          },
+          description: 'When Kairi dies, choose one',
+        },
+      ],
+    },
   );
 
   const lozhanDef = {

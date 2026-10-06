@@ -22,7 +22,7 @@ import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../car
 import type { SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EngineActionOption } from '../decisions';
-import { computeCharacteristics, matchesSelector } from '../effects/continuous';
+import { candidateOf, computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import {
   addGeneric,
@@ -617,6 +617,28 @@ export function spellMatchesSelector(
   };
   return selectMatches(candidate, selector, { cardId: '', controllerId: casterId });
 }
+/**
+ * A count slot's remaining candidates under its `totalManaValueAtMost` budget (Kairi): each must
+ * fit within what the already-picked permanents leave. Without a budget, `candidates` is
+ * returned unchanged.
+ */
+export function withinTotalManaValue(
+  ctx: GameContext,
+  spec: TargetSpec,
+  picked: readonly ObjectId[],
+  candidates: ObjectId[],
+): ObjectId[] {
+  const budget = spec.totalManaValueAtMost;
+  if (budget === undefined) return candidates;
+  const manaValue = (id: ObjectId): number => {
+    const perm = ctx.state.battlefield.find((candidate) => candidate.id === id);
+    if (perm === undefined) return 0;
+    return candidateOf(ctx, perm, computeCharacteristics(ctx, perm)).manaValue ?? 0;
+  };
+  const spent = picked.reduce((total, id) => total + manaValue(id), 0);
+  return candidates.filter((id) => manaValue(id) <= budget - spent);
+}
+
 export function computeTargetOptions(
   ctx: GameContext,
   spec: TargetKind | TargetSpec,

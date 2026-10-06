@@ -2710,6 +2710,140 @@ describe('Frontier Siege', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.22 Kairi, the Swirling Sky
+// ---------------------------------------------------------------------------------------------
+
+describe('Kairi, the Swirling Sky', () => {
+  const kairi = pinned('Kairi, the Swirling Sky');
+  const rock = (name: string, cost: string) =>
+    oracle({ name, typeLine: 'Artifact', manaCost: cost });
+  const spellCard = (name: string, type: 'Instant' | 'Sorcery') =>
+    oracle({ name, typeLine: type, manaCost: '{1}', oracleText: 'Draw a card.' });
+  const BOUNCE = /^Return any number of target nonland permanents/;
+  const MILL = /^Mill six cards/;
+  const CHOOSE = /choose (a|another) target/i;
+  const RETURN = /Kairi: choose instant\/sorcery card/;
+
+  /** Kairi dies; `mode` picks the mode and `rest` answers what follows. */
+  function dies(ctx: GameContext, mode: RegExp, rest: Answer) {
+    const self = spawn(ctx, 'P1', kairi.card);
+    pump(moveObject(ctx, self, { zone: 'graveyard' }));
+    return settle(ctx, (decision, count) =>
+      decision.options.some((option) => BOUNCE.test(option.description))
+        ? optionMatching(decision, mode)
+        : rest(decision, count),
+    ).decisions;
+  }
+
+  /** Pick each named permanent for the count slot in order, then stop. */
+  const pick =
+    (...names: string[]): Answer =>
+    (decision) => {
+      if (CHOOSE.test(decision.prompt)) {
+        const next = names.shift();
+        return next === undefined
+          ? optionMatching(decision, /Choose no more targets/)
+          : optionMatching(decision, new RegExp(`^Target ${next}$`));
+      }
+      return { index: 0, targets: new Map() };
+    };
+
+  const offeredTargets = (decisions: PendingDecision[]) =>
+    decisions
+      .filter((decision) => CHOOSE.test(decision.prompt))
+      .map((decision) => decision.options.map((option) => option.description));
+
+  it('kairi-the-swirling-sky-pinned-oracle-supported — pins the Oracle and models flying, ward, and the modal dies trigger', () => {
+    expect(kairi.sha256).toBe('c157c1c01986c4c86651ae7c3cb70dfd09daf80ea13f016e3b0b1a351a020bcf');
+    const def = interpretCard(kairi.card);
+    expect(def.modeled).toBe(true);
+    expect(def.keywords).toContain('flying');
+    expect(def.ward).toMatchObject({ kind: 'mana', cost: expect.objectContaining({ generic: 3 }) });
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]?.targets).toEqual([
+      expect.objectContaining({ count: { min: 0, max: Infinity }, totalManaValueAtMost: 6 }),
+    ]);
+    expect(def.triggers[0]?.modes?.options.map((option) => option.effects)).toEqual([
+      [{ op: 'returnToHandEachChosen', targetSlot: 0 }],
+      [{ op: 'millAndReturnSpells' }],
+    ]);
+  });
+
+  it('kairi-the-swirling-sky-bounce-total-six — returns chosen nonland permanents to their owners while their mana values total 6 or less', () => {
+    const ctx = pod('kairi-bounce');
+    spawn(ctx, 'P2', rock('Kairi Idol', '{3}'));
+    spawn(ctx, 'P3', rock('Kairi Totem', '{3}'));
+    spawn(ctx, 'P2', rock('Kairi Trinket', '{1}'));
+    const decisions = dies(ctx, BOUNCE, pick('Kairi Idol', 'Kairi Totem', 'Kairi Trinket'));
+    const offered = offeredTargets(decisions);
+    // Idol and Totem spend the whole budget, so no third choice is ever asked.
+    expect(offered).toHaveLength(2);
+    expect(playerById(ctx, 'P2').hand.map((card) => card.name)).toEqual(['Kairi Idol']);
+    expect(playerById(ctx, 'P3').hand.map((card) => card.name)).toEqual(['Kairi Totem']);
+    expect(ctx.state.battlefield.some((entry) => entry.name === 'Kairi Trinket')).toBe(true);
+  });
+
+  it('kairi-the-swirling-sky-budget-and-filter — over-budget permanents and lands are never offered; tokens fit for free', () => {
+    const ctx = pod('kairi-budget');
+    spawn(ctx, 'P2', rock('Kairi Colossus', '{7}'));
+    spawn(ctx, 'P2', rock('Kairi Idol', '{4}'));
+    spawn(ctx, 'P2', rock('Kairi Totem', '{3}'));
+    spawn(ctx, 'P2', rock('Kairi Charm', '{2}'));
+    spawn(ctx, 'P2', forest());
+    spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Kairi Spirit', typeLine: 'Creature — Spirit', manaCost: null }),
+      { isToken: true },
+    );
+    const decisions = dies(ctx, BOUNCE, pick('Kairi Idol', 'Kairi Charm', 'Kairi Spirit'));
+    const offered = offeredTargets(decisions);
+    expect(offered[0]).not.toContain('Target Kairi Colossus');
+    expect(offered[0]).not.toContain('Target Forest');
+    expect(offered[1]).not.toContain('Target Kairi Totem');
+    expect(offered[1]).toContain('Target Kairi Charm');
+    expect(offered[2]).toEqual(['Target Kairi Spirit', 'Choose no more targets']);
+    expect(ctx.state.battlefield.some((entry) => entry.name === 'Kairi Spirit')).toBe(false);
+    expect(ctx.state.battlefield.some((entry) => entry.name === 'Kairi Totem')).toBe(true);
+  });
+
+  it('kairi-the-swirling-sky-bounce-zero — the bounce mode may choose no target at all', () => {
+    const ctx = pod('kairi-zero');
+    const kept = spawn(ctx, 'P2', rock('Kairi Idol', '{3}'));
+    dies(ctx, BOUNCE, pick());
+    expect(ctx.state.battlefield.some((entry) => entry.id === kept.id)).toBe(true);
+  });
+
+  it('kairi-the-swirling-sky-mill-and-return — mills six, then returns up to two instant or sorcery cards', () => {
+    const ctx = pod('kairi-mill');
+    const p1 = playerById(ctx, 'P1');
+    p1.library = [];
+    for (const card of [
+      spellCard('Kairi Bolt', 'Instant'),
+      forest(),
+      spellCard('Kairi Wave', 'Sorcery'),
+      spellCard('Kairi Insight', 'Instant'),
+      forest(),
+      forest(),
+      forest(),
+    ]) {
+      conjure(ctx, 'P1', card, 'library');
+    }
+    p1.library.reverse();
+    let picks = 0;
+    dies(ctx, MILL, (decision) =>
+      RETURN.test(decision.prompt)
+        ? optionMatching(decision, picks++ === 0 ? /Return Kairi Bolt/ : /Return Kairi Wave/)
+        : { index: 0, targets: new Map() },
+    );
+    expect(p1.library).toHaveLength(1);
+    expect(p1.hand.map((card) => card.name).sort()).toEqual(['Kairi Bolt', 'Kairi Wave']);
+    expect(p1.graveyard.map((card) => card.name)).toContain('Kairi Insight');
+    expect(ctx.state.eventLog.filter((event) => event.type === 'mill')).toHaveLength(6);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2825,6 +2959,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Frontier Siege',
     sha256: '1b195bc9d7e3f03e803eb4ad56d689fbd073b725d5ce8076b9998e0740982641',
     clauseCount: 3,
+  },
+  {
+    name: 'Kairi, the Swirling Sky',
+    sha256: 'c157c1c01986c4c86651ae7c3cb70dfd09daf80ea13f016e3b0b1a351a020bcf',
+    clauseCount: 4,
   },
 ];
 

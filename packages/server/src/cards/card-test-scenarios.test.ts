@@ -145,6 +145,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'vastwood-surge-viewer-kicked',
       'frontier-siege-viewer-khans-mana',
       'frontier-siege-viewer-dragons-fight',
+      'kairi-viewer-bounce-total-six',
+      'kairi-viewer-mill-and-return',
     ]);
   });
 

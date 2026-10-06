@@ -393,6 +393,11 @@ export interface TargetSpec {
    */
   count?: { min: number; max: number };
   /**
+   * "Any number of target nonland permanents with total mana value 6 or less" (Kairi) — a
+   * budget on a `count` slot: each further choice must fit what the earlier ones left.
+   */
+  totalManaValueAtMost?: number;
+  /**
    * "Target cards from THEIR graveyard" (Loaming Shaman) — for a `cardInGraveyard` slot, the
    * index of an EARLIER ordinary slot holding the player whose graveyard this searches, instead
    * of the ability's own controller. By the same "count slots are allocated after ordinary

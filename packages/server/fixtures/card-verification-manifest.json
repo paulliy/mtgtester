@@ -2822,15 +2822,51 @@
     "85aa53e8-f062-4d02-bc69-1413f7f0dcf1": {
       "name": "Kairi, the Swirling Sky",
       "oracleSha256": "c157c1c01986c4c86651ae7c3cb70dfd09daf80ea13f016e3b0b1a351a020bcf",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "kairi-the-swirling-sky-keywords",
+          "oracleText": "Flying, ward {3}",
+          "implementation": ["keyword flying and ward {3} (interpreted)"],
+          "engineTestIds": ["kairi-the-swirling-sky-pinned-oracle-supported"],
+          "viewerScenarioIds": ["kairi-viewer-bounce-total-six"]
+        },
+        {
+          "id": "kairi-the-swirling-sky-dies-modes",
+          "oracleText": "When Kairi dies, choose one —",
+          "implementation": [
+            "dies trigger on self; modal, exactly one mode, chosen as the trigger is put on the stack (CR 700.2a); the bounce mode's target slot is active only when that mode is chosen"
+          ],
+          "engineTestIds": [
+            "kairi-the-swirling-sky-pinned-oracle-supported",
+            "kairi-the-swirling-sky-bounce-total-six",
+            "kairi-the-swirling-sky-mill-and-return"
+          ],
+          "viewerScenarioIds": ["kairi-viewer-bounce-total-six", "kairi-viewer-mill-and-return"]
+        },
+        {
+          "id": "kairi-the-swirling-sky-bounce",
           "oracleText": "Return any number of target nonland permanents with total mana value 6 or less to their owners' hands.",
           "implementation": [
-            "explicitly unsupported; untargeted single bounce with no mana-value cap"
+            "count slot 0..any of nonland permanents with totalManaValueAtMost 6: each further target must fit what the earlier ones left (tokens have mana value 0)",
+            "returnToHandEachChosen(slot 0) to owners' hands; choosing none is legal"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "kairi-the-swirling-sky-bounce-total-six",
+            "kairi-the-swirling-sky-budget-and-filter",
+            "kairi-the-swirling-sky-bounce-zero"
+          ],
+          "viewerScenarioIds": ["kairi-viewer-bounce-total-six"]
+        },
+        {
+          "id": "kairi-the-swirling-sky-mill",
+          "oracleText": "Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.",
+          "implementation": [
+            "millAndReturnSpells: mill six from the top (fewer if the library is shorter), emitting a mill event per card",
+            "then up to two choices among instant/sorcery cards in your graveyard (including ones just milled), each may stop early; no targets"
+          ],
+          "engineTestIds": ["kairi-the-swirling-sky-mill-and-return"],
+          "viewerScenarioIds": ["kairi-viewer-mill-and-return"]
         }
       ],
       "gameplayAiScenarioIds": []

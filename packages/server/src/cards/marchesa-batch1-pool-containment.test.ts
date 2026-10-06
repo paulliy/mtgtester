@@ -33,6 +33,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Frontier Siege',
       'Harvest Season',
       'Hunting Wilds',
+      'Kairi, the Swirling Sky',
       'Land Tax',
       'Loran of the Third Path',
       'Mordant Dragon',

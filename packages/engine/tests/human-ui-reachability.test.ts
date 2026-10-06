@@ -418,13 +418,12 @@ describe('Kairi, the Swirling Sky', () => {
         "Flying, ward {3}\nWhen Kairi dies, choose one —\n• Return any number of target nonland permanents with total mana value 6 or less to their owners' hands.\n• Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.",
     });
 
-  it('dies trigger still carries two modes on leftover IR, but the card is catalog-contained', () => {
+  it('dies trigger carries two modes and the card is modeled (coverage PR01)', () => {
     // Regression for `Ability.modes` being a spell-casting-time-only mechanism: a triggered
     // ability built the same way (Kairi's dies trigger) never asked its mode question and
     // never ran either mode's effects — `effects: []` resolved to nothing, silently.
     const def = interpretCard(kairi());
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain('explicitly unsupported:');
+    expect(def.modeled).toBe(true);
     expect(def.triggers[0]?.effects).toEqual([]); // modes still live in `.modes`, not `.effects`...
     expect(def.triggers[0]?.modes?.options).toHaveLength(2); // ...but a real choice IS declared
   });

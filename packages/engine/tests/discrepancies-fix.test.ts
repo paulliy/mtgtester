@@ -53,7 +53,7 @@ describe('Discrepancy Fixes & CR Compliance', () => {
   });
 
   describe('Kairi, the Swirling Sky — Modal Death Trigger', () => {
-    it('is catalog-contained because return-any-number is an untargeted bounce', () => {
+    it('models the targeted bounce with a total mana value budget (coverage PR01)', () => {
       const raw = oracle({
         oracleId: '85aa53e8-f062-4d02-bc69-1413f7f0dcf1',
         name: 'Kairi, the Swirling Sky',
@@ -67,10 +67,8 @@ describe('Discrepancy Fixes & CR Compliance', () => {
       });
 
       const def = interpretCard(raw);
-      expect(def.modeled).toBe(false);
-      expect(def.unmodeledReasons.join('\n')).toContain(
-        'Return-any-number targeting with total mana value 6 or less is an untargeted single bounce with no mana-value cap.',
-      );
+      expect(def.modeled).toBe(true);
+      expect(def.triggers[0]?.targets[0]?.totalManaValueAtMost).toBe(6);
     });
   });
 

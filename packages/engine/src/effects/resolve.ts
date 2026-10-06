@@ -5204,6 +5204,13 @@ export function* executeAbility(
         for (let i = 0; i < n; i++) {
           const topCard = controller.library[0] as EngineCardObject;
           yield* moveObject(ctx, topCard, { zone: 'graveyard' });
+          // The same per-card event the generic `mill` op emits, so "mills" reads the same.
+          emit(
+            ctx,
+            'mill',
+            { player: controller.id, cardId: topCard.cardId, name: topCard.name },
+            controller.id,
+          );
         }
         for (let pass = 0; pass < 2; pass++) {
           const spellsInGy = controller.graveyard.filter((c) => {

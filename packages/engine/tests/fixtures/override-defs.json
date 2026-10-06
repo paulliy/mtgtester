@@ -5255,8 +5255,69 @@
   {
     "oracleId": "85aa53e8-f062-4d02-bc69-1413f7f0dcf1",
     "name": "Kairi, the Swirling Sky",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ dies, choose one —",
+      "• Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.",
+      "• Return any number of target nonland permanents with total mana value 6 or less to their owners' hands."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Kairi dies, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Return any number of target nonland permanents with total mana value 6 or less to their owners' hands",
+                "effects": [
+                  {
+                    "op": "returnToHandEachChosen",
+                    "targetSlot": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand",
+                "effects": [
+                  {
+                    "op": "millAndReturnSpells"
+                  }
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              "kind": "permanent",
+              "totalManaValueAtMost": 6
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "86084ed9-b8bb-4289-9579-6056194787bc",
@@ -15492,8 +15553,69 @@
   {
     "oracleId": "oracle-kairi-the-swirling-sky",
     "name": "Kairi, the Swirling Sky",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ dies, choose one —",
+      "• Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand.",
+      "• Return any number of target nonland permanents with total mana value 6 or less to their owners' hands."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Kairi dies, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Return any number of target nonland permanents with total mana value 6 or less to their owners' hands",
+                "effects": [
+                  {
+                    "op": "returnToHandEachChosen",
+                    "targetSlot": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Mill six cards, then return up to two instant and/or sorcery cards from your graveyard to your hand",
+                "effects": [
+                  {
+                    "op": "millAndReturnSpells"
+                  }
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              "kind": "permanent",
+              "totalManaValueAtMost": 6
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-kalain-reclusive-painter",
