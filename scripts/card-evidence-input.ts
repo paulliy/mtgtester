@@ -1305,6 +1305,7 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Kogla, the Titan Ape: bounce a Human, then attack'],
   },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Public zones: reanimate an opponent’s creature'] },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

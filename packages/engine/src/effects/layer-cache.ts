@@ -123,6 +123,8 @@ export function digestOf(
     h = mix(h, perm.tapped ? 1 : 0);
     // Combat-dependent statics must expire even if no other characteristic input changes.
     h = mix(h, perm.attacking !== null ? 1 : perm.blocking !== null ? 2 : 0);
+    // The `hadToAttackThisCombat` condition reads this per-combat flag.
+    h = mix(h, perm.hadToAttackThisCombat === true ? 1 : 0);
     // `?? []` would allocate a throwaway array on every digest call for the overwhelming
     // majority of permanents, which never set any of these — an `undefined` guard keeps the
     // fast path (this function runs on every characteristics query) allocation-free.
@@ -162,6 +164,31 @@ export function digestOf(
   }
 
   h = mix(h, extra === undefined ? 0 : extra.timestamp + 1);
+
+  // A static ability's `condition` can read game-level state no permanent carries: "as long as
+  // it entered this turn" (the turn number), "during your turn" (the active player), graveyard,
+  // hand and life counts, spells cast this turn, the monarch. Each is a cheap scalar, so fold
+  // them all rather than learn which one a new condition starts reading from a stale cache.
+  h = mix(h, s.turnNumber + 0x10000);
+  h = mix(h, hashString(s.currentTurnPlayer ?? ''));
+  h = mix(h, hashString(s.phase ?? ''));
+  h = mix(h, hashString(s.step ?? ''));
+  h = mix(h, s.monarchPlayerId === null ? 0 : hashString(s.monarchPlayerId));
+  h = mix(h, s.eliminatedPlayers.length);
+  h = mix(h, s.creaturesDiedThisTurn + 0x10000);
+  h = mix(h, s.excessDamageControllerIds.length);
+  for (const player of s.players) {
+    h = mix(h, player.life + 0x10000);
+    h = mix(h, player.hand.length);
+    h = mix(h, player.library.length);
+    h = mix(h, player.graveyard.length);
+    h = mix(h, player.spellsCastThisTurn);
+    h = mix(h, player.noncreatureSpellsCastThisTurn);
+    h = mix(h, player.cardsDrawnThisTurn);
+    h = mix(h, player.cardsDrawnThisDrawStep);
+    h = mix(h, (s.damageDealtToPlayersThisTurn[player.id] ?? 0) + 0x10000);
+    h = mix(h, s.createdTokenThisTurn?.[player.id] === true ? 1 : 0);
+  }
 
   if (includeGraveyards) {
     for (const player of s.players) {

@@ -120,6 +120,7 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
   const frontDef = ctx.defs.get(obj.oracleId);
   const landFace = mdfcLandFaceFor(ctx, obj);
   const transformFace = frontDef?.backFace;
+  const castFromStack = obj.zone === 'stack' && zone === 'battlefield';
   return {
     id: newObjectId(ctx),
     cardId: obj.cardId,
@@ -150,10 +151,13 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
     zone,
     ...(zone === 'battlefield' && obj.face !== undefined ? { face: obj.face } : {}),
     ...(zone === 'battlefield' && obj.escaped === true ? { escaped: true } : {}),
-    ...((obj as EngineCardObject).announcedX !== undefined
+    // How a spell was cast — its X and any kicker-style payments — describes the permanent that
+    // spell becomes (CR 107.3m, 702.33d), and nothing after: a kicked creature that dies and is
+    // reanimated was not kicked, and an X creature put onto the battlefield later has X = 0.
+    ...(castFromStack && (obj as EngineCardObject).announcedX !== undefined
       ? { announcedX: (obj as EngineCardObject).announcedX }
       : {}),
-    ...((obj as EngineCardObject).optionalCostCounts !== undefined
+    ...(castFromStack && (obj as EngineCardObject).optionalCostCounts !== undefined
       ? { optionalCostCounts: { ...(obj as EngineCardObject).optionalCostCounts } }
       : {}),
   };
@@ -287,9 +291,11 @@ export function consumeRegenerationShield(
   perm.attacking = null;
   perm.blocking = null;
   perm.blockedByOrdered = [];
+  perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
+  // Removed from combat (CR 701.19c). An attacker it was blocking REMAINS blocked (CR 509.1h), so
+  // its id stays in that attacker's `blockedByOrdered`; it just no longer counts as a live blocker.
   for (const other of ctx.state.battlefield) {
     if (other.blocking === perm.id) other.blocking = null;
-    other.blockedByOrdered = other.blockedByOrdered.filter((blockerId) => blockerId !== perm.id);
   }
   emit(
     ctx,
@@ -512,7 +518,6 @@ export function* moveObject(
     const incoming = target.face === 'back' ? { ...obj, face: 'back' as const } : obj;
     const perm = makePermanent(ctx, incoming, controllerId, entersTappedOverride, target.faceDown);
     ctx.state.battlefield.push(perm);
-    if (ctx.state.createdTokenThisTurn) ctx.state.createdTokenThisTurn[controllerId] = true;
     next = perm;
 
     const chars = computeCharacteristics(ctx, perm);
@@ -858,6 +863,8 @@ export function createToken(
   };
   const perm = makePermanent(ctx, stub, controllerId, entersTapped ? true : undefined);
   ctx.state.battlefield.push(perm);
+  // "If you created a token this turn" — set by token creation, not by any permanent entering.
+  if (ctx.state.createdTokenThisTurn) ctx.state.createdTokenThisTurn[controllerId] = true;
   if (spec.grantHasteUntilEot === true) {
     ctx.state.effects.push({
       id: `eff-${ctx.state.nextObjectNum++}`,

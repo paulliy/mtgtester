@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { choose, Engine, ScriptedDecisionProvider } from '@mtg/engine';
 import type { DecisionProvider, EnginePlayerConfig, PreparedScenarioSpec } from '@mtg/engine';
@@ -3922,6 +3923,66 @@ function myriadLandscapeManaScenario(gameId: GameId): CardTestScenario {
   };
 }
 
+/** Exercises public-zone targeting through the existing Reanimate grammar, without an override. */
+function opponentGraveyardScenario(gameId: GameId): CardTestScenario {
+  const reanimation = card({
+    oracleId: 'lab-reanimation',
+    name: 'Lab Reanimation',
+    typeLine: 'Sorcery',
+    manaCost: '{B}',
+    cmc: 1,
+    colors: ['B'],
+    oracleText:
+      "Put target creature card from a graveyard onto the battlefield under your control. You lose life equal to that card's mana value.",
+  });
+  const p1 = player('P1', [reanimation, SWAMP, LAB_SERVO]);
+  const p2 = player('P2', [LAB_OX, ELIGIBLE_SIGNET, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const id = 'opponent-graveyard-viewer-reanimate';
+  const seed = `card-lab-${id}-v1`;
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 1,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [{ playerId: 'P1', cardNames: ['Lab Reanimation'] }],
+        battlefield: [{ playerId: 'P1', cardNames: ['Swamp'] }],
+        graveyard: [
+          { playerId: 'P1', cardNames: ['Lab Servo'] },
+          { playerId: 'P2', cardNames: ['Eligible Signet', 'Lab Ox'] },
+        ],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id,
+      version: 1,
+      title: 'Public zones: reanimate an opponent’s creature',
+      instructions: [
+        'Cast Lab Reanimation from hand.',
+        'Click the highlighted Lab Ox in P2’s graveyard strip and confirm the spell.',
+      ],
+      expectedOutcome:
+        'Lab Ox leaves P2’s graveyard and enters under P1’s control; P1 loses 4 life. Eligible Signet cannot be selected.',
+      oracleSha256: createHash('sha256').update(JSON.stringify(reanimation)).digest('hex'),
+      clauseIds: ['opponent-graveyard-target-selection'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
 function warRoomManaScenario(gameId: GameId): CardTestScenario {
   const warRoom = pinnedFrom(MARCHESA_BATCH1, 'War Room');
   const manaSink = card({
@@ -5442,6 +5503,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'sweet-gum-recluse-viewer-new-creatures',
   'kogla-viewer-enters-fight',
   'kogla-viewer-bounce-and-attack',
+  'opponent-graveyard-viewer-reanimate',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5555,6 +5617,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'sweet-gum-recluse-viewer-new-creatures': sweetGumRecluseScenario,
   'kogla-viewer-enters-fight': koglaFightScenario,
   'kogla-viewer-bounce-and-attack': koglaAttackScenario,
+  'opponent-graveyard-viewer-reanimate': opponentGraveyardScenario,
 };
 
 export function createCardTestScenario(

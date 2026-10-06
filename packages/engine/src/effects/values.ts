@@ -74,6 +74,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       const source = { cardId: scope.sourceCardId ?? '', controllerId: scope.controllerId };
       let count = 0;
       for (const player of ctx.state.players) {
+        if (player.hasLost) continue;
         if (value.owner === 'you' && player.id !== scope.controllerId) continue;
         if (value.owner === 'opponents' && player.id === scope.controllerId) continue;
         for (const card of player[value.zone]) {
@@ -95,7 +96,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'devotionTo':
       return devotionTo(ctx, scope.controllerId, value.color);
     case 'countOpponents':
-      return ctx.state.players.filter((player) => player.id !== scope.controllerId).length;
+      // Opponents still in the game (CR 102.2/800.4a) — an eliminated player is no one's opponent.
+      return opponentsOf(ctx, scope.controllerId).length;
     case 'greatestToughnessAmong':
       return scopedPermanents(ctx, scope, value.selector, value.scope).reduce(
         (best, perm) => Math.max(best, effectivePT(ctx, perm).toughness),
@@ -255,9 +257,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return permanent === undefined ? 0 : effectivePT(ctx, permanent).power;
     }
     case 'opponentsLostLifeThisTurn':
-      return ctx.state.players.filter(
-        (player) =>
-          player.id !== scope.controllerId && ctx.state.lifeLostThisTurn[player.id] === true,
+      return opponentsOf(ctx, scope.controllerId).filter(
+        (player) => ctx.state.lifeLostThisTurn[player.id] === true,
       ).length;
     case 'powerOfTriggerObject': {
       const perm =

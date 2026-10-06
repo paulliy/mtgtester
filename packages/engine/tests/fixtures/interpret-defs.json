@@ -787,7 +787,7 @@
           "kind": "activated",
           "targets": [
             {
-              "kind": "anyTarget"
+              "kind": "permanent"
             }
           ]
         },

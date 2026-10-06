@@ -280,7 +280,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       return scope.sourceCounters[value.counter] ?? 0;
     case 'countPermanents':
       if (!scope?.countPermanents) {
-        throw 'engine bug: value countPermanents needs a layer evaluation scope';
+        throw new Error('engine bug: value countPermanents needs a layer evaluation scope');
       }
       return scope.countPermanents(value.selector, value.scope);
     case 'aurasYouControlAttachedToCreatures':

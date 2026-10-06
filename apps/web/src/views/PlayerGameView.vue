@@ -158,6 +158,11 @@ function permanentsFor(seat: string) {
   return state.value?.battlefield.filter((permanent) => permanent.controller === seat) ?? [];
 }
 
+/** Use the redacted player projection, including anonymous face-down exile placeholders. */
+function exileFor(seat: string) {
+  return state.value?.exile.filter((card) => card.owner === seat) ?? [];
+}
+
 /**
  * Groups identical tokens/creatures (same name, state, P/T, counters — see `stackPermanents.ts`)
  * into one tile with a count badge, so a wide go-wide board doesn't clog the screen with a dozen
@@ -991,12 +996,13 @@ function abandon(): void {
     <main v-if="state" class="player-layout">
       <section ref="tableRef" class="table" @dragover="onBoardDragOver">
         <CombatOverlay :drag-source-id="draggedId" :pointer="dragPointer" />
-        <div class="opponents" :style="{ gridTemplateColumns: opponentColumns }">
+        <div class="opponents" :style="{ '--opponent-columns': opponentColumns }">
           <article
             v-for="opponent in opponents"
             :key="opponent.seat"
             :ref="seatAnchorRef(opponent.seat)"
             class="opponent"
+            :data-seat="opponent.seat"
             :class="{
               active: opponent.seat === state.activePlayer,
               targetable: isLegalTarget(opponent.seat),
@@ -1068,6 +1074,24 @@ function abandon(): void {
                   :name-by-id="nameById"
                 />
               </div>
+            </div>
+            <div
+              v-if="opponent.graveyard.length > 0 || exileFor(opponent.seat).length > 0"
+              class="zones-strip opponent-zones"
+              @click.stop
+            >
+              <ZoneStrip
+                label="Graveyard"
+                :cards="opponent.graveyard"
+                :selectable-ids="zoneTargetIds"
+                @select="chooseTarget"
+              />
+              <ZoneStrip
+                label="Exile"
+                :cards="exileFor(opponent.seat)"
+                :selectable-ids="zoneTargetIds"
+                @select="chooseTarget"
+              />
             </div>
           </article>
         </div>
@@ -1662,7 +1686,7 @@ button.selected,
 .opponents {
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: var(--opponent-columns, repeat(3, minmax(0, 1fr)));
   gap: 0.5rem;
 }
 .opponent,
@@ -1683,6 +1707,16 @@ button.selected,
 .opponent {
   cursor: pointer;
   gap: 0.25rem;
+  overflow-y: auto;
+}
+.opponent > .permanents {
+  flex-shrink: 0;
+}
+.opponent-zones {
+  cursor: default;
+}
+.opponent-zones :deep(.cards-strip) {
+  max-height: 5.2rem;
 }
 .opponent.active {
   border-color: var(--accent);
@@ -2243,16 +2277,19 @@ button.primary {
 }
 @media (max-width: 900px) {
   .player-layout {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     overflow: auto;
   }
   .opponents {
     grid-template-columns: 1fr;
   }
   .table {
+    flex-shrink: 0;
     grid-template-rows: auto auto;
   }
   .rail {
+    flex-shrink: 0;
     min-height: 30rem;
   }
 }

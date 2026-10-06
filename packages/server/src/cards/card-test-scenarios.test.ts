@@ -156,6 +156,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'sweet-gum-recluse-viewer-new-creatures',
       'kogla-viewer-enters-fight',
       'kogla-viewer-bounce-and-attack',
+      'opponent-graveyard-viewer-reanimate',
     ]);
   });
 
@@ -2048,5 +2049,43 @@ describe('deterministic Card Test Lab scenarios — registered card scenarios', 
     const second = run();
     expect(structuredClone(second)).toEqual(structuredClone(first));
     expect(second.eventLog).toEqual(first.eventLog);
+  });
+});
+
+describe('opponent graveyard viewer scenario', () => {
+  it('offers public creature cards from both graveyards and resolves the opponent target', () => {
+    let sawCast = false;
+    const { scenario } = runScenarioWith('opponent-graveyard-viewer-reanimate', (request, sc) => {
+      const choice = chooseWithTarget(request, sc, 'Cast Lab Reanimation', 'Lab Ox');
+      if (choice === null) return passChoice(request);
+      sawCast = true;
+      const action = request.legalActions.find((candidate) => candidate.id === choice.actionId)!;
+      expect(action.interaction?.kind).toBe('source');
+      if (action.interaction?.kind === 'source') {
+        const names = objectNames(sc);
+        expect(
+          action.interaction.targetSlots?.[0]?.options.map((id) => names.get(id)).sort(),
+        ).toEqual(['Lab Ox', 'Lab Servo']);
+      }
+      const view = sc.engine.playerState('P1');
+      expect(
+        view.seats.find((seat) => seat.seat === 'P2')?.graveyard.map((card) => card.name),
+      ).toEqual(['Eligible Signet', 'Lab Ox']);
+      expect(
+        view.seats.filter((seat) => seat.seat !== 'P1').every((seat) => seat.hand === null),
+      ).toBe(true);
+      return choice;
+    });
+    expect(sawCast).toBe(true);
+    const state = scenario.engine.getState();
+    expect(state.players.find((player) => player.id === 'P1')?.life).toBe(36);
+    expect(
+      state.players.find((player) => player.id === 'P2')?.graveyard.map((card) => card.name),
+    ).toEqual(['Eligible Signet']);
+    expect(state.battlefield.find((permanent) => permanent.name === 'Lab Ox')).toMatchObject({
+      ownerId: 'P2',
+      controllerId: 'P1',
+    });
+    expect(state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
   });
 });

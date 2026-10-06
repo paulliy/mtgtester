@@ -95,6 +95,8 @@ import {
   manaRestrictionAllows,
   manaSourcesFor,
   opponentsOf,
+  playersInApnapOrder,
+  sourceColorsOf,
   spellProtectedFromCounter,
   requireModeled,
 } from '../state/queries';
@@ -213,6 +215,8 @@ export interface EffectSource {
   controllerId: PlayerId;
   /** Present only while a spell itself is resolving; permits self-replacement destinations. */
   resolvingStackObject?: EngineStackObject;
+  /** The source's colors as its ability went on the stack — protection's last known information. */
+  lastKnownColors?: readonly Color[];
 }
 
 /** Deal non-combat or combat damage from `source` to a creature. */
@@ -280,7 +284,10 @@ export function dealDamageToCreature(
   });
 }
 
-/** Deal damage from `source` to a player. Tracks commander combat damage (brief §5.7). */
+/**
+ * Deal damage from `source` to a player. Tracks commander combat damage (brief §5.7). Returns the
+ * damage actually dealt — 0 when it was prevented — for "deals damage to a player" consequences.
+ */
 export function dealDamageToPlayer(
   ctx: GameContext,
   source: EffectSource,
@@ -292,8 +299,8 @@ export function dealDamageToPlayer(
     sourceHasLifelink: boolean;
     sourceHasInfect?: boolean;
   },
-): void {
-  if (amount <= 0) return;
+): number {
+  if (amount <= 0) return 0;
   if (
     opts.combat &&
     (ctx.state.combatDamagePrevention.all ||
@@ -309,10 +316,11 @@ export function dealDamageToPlayer(
       amount,
       reason: 'combatShield',
     });
-    return;
+    return 0;
   }
   // Damage-doubling replacement (CR 616 — Neriv, Heart of the Storm).
   amount = damageAmountAfterReplacements(ctx, source.cardId, target.id, amount);
+  if (amount <= 0) return 0;
   if (opts.sourceHasInfect === true) {
     target.poisonCounters += amount;
     emit(
@@ -362,6 +370,7 @@ export function dealDamageToPlayer(
     combat: opts.combat,
     commanderDamage: opts.combat && opts.sourceIsCommander,
   });
+  return amount;
 }
 
 /** Deal non-combat damage from `source` to whichever kind of object `id` names. */
@@ -378,6 +387,8 @@ function dealDamageToObject(
     sourcePermanent !== undefined && hasKeyword(ctx, sourcePermanent, 'lifelink');
   const sourceHasDeathtouch =
     sourcePermanent !== undefined && hasKeyword(ctx, sourcePermanent, 'deathtouch');
+  // Protection (CR 702.16e) prevents damage from a protected-from source, noncombat included.
+  const sourceColors = sourceColorsOf(ctx, source.cardId, source.oracleId, source.lastKnownColors);
   const targetPlayer = ctx.state.players.find((p) => p.id === id);
   if (targetPlayer !== undefined) {
     dealDamageToPlayer(ctx, source, targetPlayer, amount, {
@@ -390,12 +401,31 @@ function dealDamageToObject(
   }
   const perm = findPermanent(ctx, id);
   if (perm === undefined) return;
-  // CR 120.3c: damage to a planeswalker removes that many loyalty counters instead of marking
-  // damage — a planeswalker has no toughness to compare marked damage against.
-  if (computeCharacteristics(ctx, perm).types.includes('Planeswalker')) {
+  // CR 120.3c/h: damage to a planeswalker removes that many loyalty counters, and damage to a
+  // battle that many defense counters, instead of marking damage — neither has toughness.
+  const permTypes = computeCharacteristics(ctx, perm).types;
+  const counterKind = permTypes.includes('Planeswalker')
+    ? 'loyalty'
+    : permTypes.includes('Battle') && !permTypes.includes('Creature')
+      ? 'defense'
+      : null;
+  if (counterKind !== null) {
+    if (amount <= 0) return;
     amount = damageAmountAfterReplacements(ctx, source.cardId, perm.controllerId, amount);
-    const have = perm.counters['loyalty'] ?? 0;
-    perm.counters['loyalty'] = Math.max(0, have - amount);
+    if (hasProtectionFrom(ctx, perm, sourceColors)) {
+      emit(ctx, 'damagePrevented', {
+        source: source.name,
+        target: perm.name,
+        targetCardId: perm.cardId,
+        amount,
+        reason: 'protection',
+      });
+      return;
+    }
+    const have = perm.counters[counterKind] ?? 0;
+    perm.counters[counterKind] = Math.max(0, have - amount);
+    // Lifelink applies to damage dealt to any object or player (CR 702.15b).
+    if (sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
     emit(ctx, 'damage', {
       source: source.name,
       sourceCardId: source.cardId,
@@ -411,6 +441,7 @@ function dealDamageToObject(
     sourceHasDeathtouch,
     sourceHasLifelink,
     sourceHasInfect,
+    sourceColors,
   });
 }
 
@@ -738,6 +769,8 @@ export function isTargetStillLegal(
   sourceColors?: readonly Color[],
   /** The player associated with this trigger event, if target text refers to them. */
   eventPlayerId?: PlayerId,
+  /** The source's card id, so `OTHER` in a filter excludes the source (see computeTargetOptions). */
+  sourceCardId = '',
 ): boolean {
   const { kind, controller, filter } =
     typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
@@ -798,7 +831,7 @@ export function isTargetStillLegal(
     return false;
   if (
     filter !== undefined &&
-    !matchesSelector(ctx, perm, filter, { cardId: '', controllerId: spellControllerId })
+    !matchesSelector(ctx, perm, filter, { cardId: sourceCardId, controllerId: spellControllerId })
   )
     return false;
   // Shroud (CR 702.18): untargetable by anything, including its own controller.
@@ -1278,6 +1311,22 @@ export function* executeAbility(
   /** Controller captured when a target slot is first resolved, before an earlier effect moves it. */
   const refControllerCache = new Map<number, PlayerId | undefined>();
 
+  /**
+   * CR 608.2b recheck of one target, with the same protection (CR 702.16) and event-player
+   * context the target was chosen under — otherwise a creature that gained protection from the
+   * source's color in response would still be hit.
+   */
+  const stillLegal = (id: ObjectId, spec: TargetSpec): boolean =>
+    isTargetStillLegal(
+      ctx,
+      id,
+      spec,
+      source.controllerId,
+      sourceColorsOf(ctx, source.cardId, source.oracleId, source.lastKnownColors),
+      scope.eventPlayerId,
+      source.cardId,
+    );
+
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */
   const ref = (r: EffectRef): ObjectId | null => {
     if (r === 'source') {
@@ -1309,7 +1358,16 @@ export function* executeAbility(
     }
     const cachedCardId = refCardIdCache.get(r);
     if (cachedCardId !== undefined) {
-      return cachedCardId === null ? null : (findObjectByCardId(ctx, cachedCardId)?.id ?? null);
+      if (cachedCardId === null) return null;
+      // The card itself, wherever it now is — NOT a triggered ability on the stack that merely
+      // shares its source card id (Snakeskin Veil's "it gains hexproof" after its counter, aimed
+      // at a creature whose own ETB trigger is still waiting on the stack). Only a target that is
+      // itself a spell on the stack falls through to the stack lookup.
+      return (
+        findPhysicalObjectByCardId(ctx, cachedCardId)?.id ??
+        findObjectByCardId(ctx, cachedCardId)?.id ??
+        null
+      );
     }
     const id = targets[r];
     const spec = ability.targets[r];
@@ -1317,7 +1375,7 @@ export function* executeAbility(
       refCardIdCache.set(r, null);
       return null;
     }
-    if (!isTargetStillLegal(ctx, id, spec, source.controllerId, undefined, scope.eventPlayerId)) {
+    if (!stillLegal(id, spec)) {
       debug(ctx, 'effect', `${source.name}: target ${id} illegal — skipped`);
       refCardIdCache.set(r, null);
       return null;
@@ -1415,7 +1473,8 @@ export function* executeAbility(
       case 'pumpUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         const power = amountOf(effect.power);
         const toughness = amountOf(effect.toughness);
         ctx.state.effects.push({
@@ -1442,7 +1501,8 @@ export function* executeAbility(
       case 'cantBeBlockedUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
@@ -1456,7 +1516,8 @@ export function* executeAbility(
       case 'grantKeywordUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
@@ -1599,7 +1660,7 @@ export function* executeAbility(
         const spec = ability.targets[effect.targetSlot];
         const amount = amountOf(effect.amount);
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           dealDamageToObject(ctx, source, id, amount);
@@ -1609,9 +1670,7 @@ export function* executeAbility(
       case 'grantKeywordEachChosenUntilEot': {
         const spec = ability.targets[effect.targetSlot];
         const chosen = (countTargets?.[effect.targetSlot] ?? [])
-          .filter(
-            (id) => spec !== undefined && isTargetStillLegal(ctx, id, spec, source.controllerId),
-          )
+          .filter((id) => spec !== undefined && stillLegal(id, spec))
           .map((id) => findPermanent(ctx, id))
           .filter((permanent): permanent is EnginePermanent => permanent !== undefined);
         if (chosen.length > 0) {
@@ -1663,7 +1722,7 @@ export function* executeAbility(
         const spec = ability.targets[effect.targetSlot];
         const count = amountOf(effect.count);
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           const perm = findPermanent(ctx, id);
@@ -1675,7 +1734,7 @@ export function* executeAbility(
       case 'exileEachChosen': {
         const spec = ability.targets[effect.targetSlot];
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           const perm = findPermanent(ctx, id);
@@ -1700,7 +1759,7 @@ export function* executeAbility(
       case 'blinkEachChosen': {
         const spec = ability.targets[effect.targetSlot];
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           const permanent = findPermanent(ctx, id);
@@ -1930,7 +1989,7 @@ export function* executeAbility(
         // object chosen in the variable-count slot is returned independently.
         const spec = ability.targets[effect.targetSlot];
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           const perm = findPermanent(ctx, id);
@@ -1948,7 +2007,7 @@ export function* executeAbility(
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
           const amount = divisionAmounts?.[id] ?? 0;
           if (amount <= 0) continue;
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           dealDamageToObject(ctx, source, id, amount);
@@ -1958,7 +2017,8 @@ export function* executeAbility(
       case 'destroy': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         yield* destroyPermanent(ctx, source, perm, effect.cantRegenerate === true);
         break;
       }
@@ -2067,7 +2127,8 @@ export function* executeAbility(
       case 'exile': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         emit(ctx, 'exile', { target: perm.name, source: source.name });
         yield* moveObject(ctx, perm, { zone: 'exile' });
         break;
@@ -2095,7 +2156,7 @@ export function* executeAbility(
           emit(ctx, 'counterSpell', { countered: countered.description, by: source.name });
           debug(ctx, 'stack', `${countered.description} countered by ${source.name}`);
           if (countered.card !== null)
-            yield* moveObject(ctx, countered.card, { zone: 'graveyard' });
+            yield* moveObject(ctx, countered.card, { zone: counteredCardZone(countered) });
         }
         createTokens(ctx, effect.spec, amountOf(effect.count), beneficiary);
         break;
@@ -2148,7 +2209,7 @@ export function* executeAbility(
           debug(ctx, 'stack', `${countered.description} countered by ${source.name}`);
           if (countered.card !== null) {
             yield* moveObject(ctx, countered.card, {
-              zone: effect.exileIfCountered === true ? 'exile' : 'graveyard',
+              zone: effect.exileIfCountered === true ? 'exile' : counteredCardZone(countered),
             });
           }
         }
@@ -2179,14 +2240,16 @@ export function* executeAbility(
       case 'putCounters': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         addCounters(ctx, source, perm, effect.counter, amountOf(effect.count));
         break;
       }
       case 'putCounterByPermanentType': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
         const isPlaneswalker = computeCharacteristics(ctx, perm).types.includes('Planeswalker');
         addCounters(
           ctx,
@@ -2985,12 +3048,16 @@ export function* executeAbility(
         }
         break;
       }
-      case 'sacrificeEachPlayer':
-        for (const player of ctx.state.players.filter((p) => !p.hasLost)) {
+      case 'sacrificeEachPlayer': {
+        // CR 101.4: each player chooses in APNAP order, then everything chosen is sacrificed at
+        // once — the same shape as `sacrificeOneEachOpponent`.
+        const selected: EnginePermanent[] = [];
+        for (const player of playersInApnapOrder(ctx)) {
           for (let i = 0; i < effect.count; i++) {
             const candidates = ctx.state.battlefield.filter(
               (perm) =>
                 perm.controllerId === player.id &&
+                !selected.includes(perm) &&
                 (effect.filter === 'any' ||
                   computeCharacteristics(ctx, perm).types.includes('Creature')),
             );
@@ -3003,10 +3070,12 @@ export function* executeAbility(
               verb: 'Sacrifice',
             });
             if (chosen === null) break;
-            yield* moveObject(ctx, chosen, { zone: 'graveyard', reason: 'sacrifice' });
+            selected.push(chosen);
           }
         }
+        yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
+      }
       case 'sacrificeAndDrawForPower': {
         const candidates = ctx.state.battlefield.filter(
           (perm) =>
@@ -3172,8 +3241,10 @@ export function* executeAbility(
         }
         break;
       }
-      case 'sacrificeOneCreatureEachPlayer':
-        for (const player of ctx.state.players.filter((p) => !p.hasLost)) {
+      case 'sacrificeOneCreatureEachPlayer': {
+        // CR 101.4: choices in APNAP order, then one simultaneous sacrifice.
+        const selected: EnginePermanent[] = [];
+        for (const player of playersInApnapOrder(ctx)) {
           const creatures = ctx.state.battlefield.filter(
             (perm) =>
               perm.controllerId === player.id &&
@@ -3186,10 +3257,11 @@ export function* executeAbility(
             type: 'sacrifice',
             verb: 'Sacrifice',
           });
-          if (chosen !== null)
-            yield* moveObject(ctx, chosen, { zone: 'graveyard', reason: 'sacrifice' });
+          if (chosen !== null) selected.push(chosen);
         }
+        yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
+      }
       case 'sacrificeOtherForMana': {
         const candidates = ctx.state.battlefield.filter(
           (perm) =>
@@ -3366,7 +3438,8 @@ export function* executeAbility(
           ctx.state.temporaryGraveyardAbilities[card.cardId] = [
             {
               costs: [{ kind: 'mana', cost: effect.cost }],
-              timing: 'any',
+              // Unearth is always "activate only as a sorcery" (CR 702.84a), granted or printed.
+              timing: 'sorcery',
               zone: 'graveyard',
               ability: {
                 kind: 'activated',
@@ -4145,7 +4218,10 @@ export function* executeAbility(
         if (stackEntry?.card === null || stackEntry?.card === undefined) break;
         ctx.state.stack.splice(stackIndex, 1);
         emit(ctx, 'returnToHand', { target: stackEntry.card.name, source: source.name });
-        yield* moveObject(ctx, stackEntry.card, { zone: 'hand' });
+        // A flashback spell is exiled whenever it would leave the stack (CR 702.34a).
+        yield* moveObject(ctx, stackEntry.card, {
+          zone: stackEntry.exileOnResolution === true ? 'exile' : 'hand',
+        });
         break;
       }
       case 'returnOneToHand': {
@@ -4772,24 +4848,23 @@ export function* executeAbility(
       case 'grantAbilityUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent;
-        if (perm) {
-          ctx.state.effects.push({
-            id: `eff-${ctx.state.nextObjectNum++}`,
-            sourceId: source.cardId,
-            description: `${perm.name} gains ability until end of turn`,
-            targetCardIds: [perm.cardId],
-            kind: 'grantAbility',
-            ability: effect.ability,
-            timestamp: ctx.state.nextTimestamp++,
-          });
-        }
+        const perm = findPermanent(ctx, t);
+        if (perm === undefined) break;
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${perm.name} gains ability until end of turn`,
+          targetCardIds: [perm.cardId],
+          kind: 'grantAbility',
+          ability: effect.ability,
+          timestamp: ctx.state.nextTimestamp++,
+        });
         break;
       }
       case 'becomeCreatureUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent | undefined;
+        const perm = findPermanent(ctx, t);
         if (perm === undefined) break;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
@@ -4812,7 +4887,7 @@ export function* executeAbility(
       case 'crewVehicle': {
         const t = ref('source');
         if (t === null) break;
-        const perm = findPermanent(ctx, t) as EnginePermanent | undefined;
+        const perm = findPermanent(ctx, t);
         if (perm === undefined) break;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
@@ -5669,7 +5744,16 @@ function* counterUnlessPays(
   ctx.state.stack.splice(index, 1);
   emit(ctx, 'counterSpell', { countered: entry.description, by: source.name });
   debug(ctx, 'stack', `${entry.description} countered by ${source.name} (unpaid)`);
-  if (entry.card !== null) yield* moveObject(ctx, entry.card, { zone: 'graveyard' });
+  if (entry.card !== null) yield* moveObject(ctx, entry.card, { zone: counteredCardZone(entry) });
+}
+
+/**
+ * Where a countered spell's card goes: its owner's graveyard, unless it was cast with flashback,
+ * which exiles it instead "any time it would leave the stack" (CR 702.34a) — countered included,
+ * exactly as the fizzle path in `stack.ts` already does.
+ */
+function counteredCardZone(entry: EngineStackObject): 'exile' | 'graveyard' {
+  return entry.exileOnResolution === true ? 'exile' : 'graveyard';
 }
 
 /** Shuffle a library with the game's seeded PRNG — never `Math.random` (brief §4/§5.9). */
