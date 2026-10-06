@@ -53,12 +53,13 @@ import {
   totalPips,
   withX,
 } from '../mana/cost';
-import type { ManaSource, ParsedManaCost } from '../mana/cost';
+import type { ManaSource, ParsedManaCost, PaymentPlan } from '../mana/cost';
+import type { SpellPaymentChoice } from '../mana/spell-payment';
 import { addMana, removeMana, selectEntriesToSpend } from '../mana/pool';
 import type { ManaEntry, PaymentPurpose } from '../cards/ability';
 import { debug, emit } from '../log/log';
 import { cardOption, plainOption, playerOption, presentedSource, valueOption } from '../present';
-import { chooseCard } from './choose';
+import { chooseCard, type ChooseCardSpec } from './choose';
 import {
   additionalTypedTriggerCopies,
   applyCopy,
@@ -566,17 +567,26 @@ function* discardCards(
   player: EnginePlayerState,
   count: number,
   excludeCardId?: string,
+  canDiscard?: (card: EngineCardObject, ordinal: number) => boolean,
 ): GameGen<void> {
   for (let i = 0; i < count; i++) {
-    const cards = player.hand.filter((card) => card.cardId !== excludeCardId);
-    if (cards.length === 0) break;
-    const chosen = yield* chooseCard(ctx, {
-      player: player.id,
-      prompt: `Discard a card (${i + 1} of ${count}).`,
-      cards,
-      type: 'discard',
-      verb: 'Discard',
-    });
+    const cards = player.hand.filter(
+      (card) => card.cardId !== excludeCardId && (canDiscard?.(card, i) ?? true),
+    );
+    if (cards.length === 0) {
+      if (canDiscard !== undefined) throw new Error('prepared discard cost became unpayable');
+      break;
+    }
+    const chosen =
+      canDiscard === undefined
+        ? yield* chooseCard(ctx, {
+            player: player.id,
+            prompt: `Discard a card (${i + 1} of ${count}).`,
+            cards,
+            type: 'discard',
+            verb: 'Discard',
+          })
+        : (cards[0] ?? null);
     if (chosen === null) throw new Error('engine bug: discard choice was not in hand');
     const card = chosen as EngineCardObject;
     emit(ctx, 'discard', { player: player.id, name: card.name, cardId: card.cardId }, player.id);
@@ -641,20 +651,51 @@ export function* paySpellAdditionalCosts(
   player: EnginePlayerState,
   costs: readonly AbilityCost[],
   sourceCardId: string,
-  sourceInHand: boolean,
+  _sourceInHand: boolean,
   announcedX = 0,
+  preparedChoices?: readonly SpellPaymentChoice[],
 ): GameGen<void> {
-  for (const cost of costs) {
+  function* pickCost<T extends EngineCardObject | EnginePermanent>(
+    spec: ChooseCardSpec<T>,
+  ): GameGen<T | null> {
+    if (preparedChoices !== undefined) return spec.cards[0] ?? null;
+    return yield* chooseCard(ctx, spec);
+  }
+  const assigned = (objectId: ObjectId, costIndex: number, ordinal = 0): boolean =>
+    preparedChoices === undefined ||
+    preparedChoices.some(
+      (choice) =>
+        choice.costIndex === costIndex &&
+        choice.ordinal === ordinal &&
+        choice.objectId === objectId,
+    );
+  const orderedCosts = [...costs.entries()];
+  // CR 601.2h permits costs in any order. Tap a shared permanent before sacrificing it.
+  if (preparedChoices !== undefined)
+    orderedCosts.sort(
+      (a, b) => Number(b[1].kind === 'tapOther') - Number(a[1].kind === 'tapOther'),
+    );
+  for (const [costIndex, cost] of orderedCosts) {
     switch (cost.kind) {
       case 'discardCard':
-        yield* discardCards(ctx, player, cost.count ?? 1, sourceInHand ? sourceCardId : undefined);
+        yield* discardCards(
+          ctx,
+          player,
+          cost.count ?? 1,
+          sourceCardId,
+          preparedChoices === undefined
+            ? undefined
+            : (card, ordinal) => assigned(card.id, costIndex, ordinal),
+        );
         break;
       case 'exileOtherCardsFromGraveyard': {
         for (let i = 0; i < cost.count; i++) {
-          const options = player.graveyard.filter((card) => card.cardId !== sourceCardId);
+          const options = player.graveyard.filter(
+            (card) => card.cardId !== sourceCardId && assigned(card.id, costIndex, i),
+          );
           if (options.length === 0)
             throw new Error('engine bug: exile-from-graveyard cost became unpayable');
-          const chosen = yield* chooseCard(ctx, {
+          const chosen = yield* pickCost({
             player: player.id,
             prompt:
               player.id +
@@ -685,7 +726,8 @@ export function* paySpellAdditionalCosts(
         for (let i = 0; i < count; i++) {
           const options = player.hand.filter(
             (card) =>
-              (!sourceInHand || card.cardId !== sourceCardId) &&
+              card.cardId !== sourceCardId &&
+              assigned(card.id, costIndex, i) &&
               selectMatches(cardZoneCandidate(ctx, card, player.id), cost.selector, {
                 cardId: sourceCardId,
                 controllerId: player.id,
@@ -693,7 +735,7 @@ export function* paySpellAdditionalCosts(
           );
           if (options.length === 0)
             throw new Error('engine bug: exile-from-hand cost became unpayable');
-          const chosen = yield* chooseCard(ctx, {
+          const chosen = yield* pickCost({
             player: player.id,
             prompt: player.id + ': choose a card to exile from hand as a spell cost.',
             cards: options,
@@ -731,6 +773,7 @@ export function* paySpellAdditionalCosts(
           (candidate) =>
             candidate.controllerId === player.id &&
             !candidate.tapped &&
+            assigned(candidate.id, costIndex) &&
             matchesSelector(ctx, candidate, cost.selector, {
               cardId: sourceCardId,
               controllerId: player.id,
@@ -738,7 +781,7 @@ export function* paySpellAdditionalCosts(
         );
         if (options.length === 0)
           throw new Error('engine bug: spell additional tap cost became unpayable');
-        const chosen = yield* chooseCard(ctx, {
+        const chosen = yield* pickCost({
           player: player.id,
           prompt: player.id + ': choose a permanent to tap as a spell cost.',
           cards: options,
@@ -758,6 +801,7 @@ export function* paySpellAdditionalCosts(
           const options = ctx.state.battlefield.filter(
             (candidate) =>
               candidate.controllerId === player.id &&
+              assigned(candidate.id, costIndex, i) &&
               matchesSelector(ctx, candidate, cost.selector, {
                 cardId: sourceCardId,
                 controllerId: player.id,
@@ -765,7 +809,7 @@ export function* paySpellAdditionalCosts(
           );
           if (options.length === 0)
             throw new Error('engine bug: spell additional sacrifice cost became unpayable');
-          const chosen = yield* chooseCard(ctx, {
+          const chosen = yield* pickCost({
             player: player.id,
             prompt:
               player.id +
@@ -6435,6 +6479,8 @@ export function* payManaCost(
   excludedSourceCardIds: readonly string[] = [],
   /** Permanents another part of the same cost will sacrifice; no mana ability may use them. */
   reservedObjectIds: ReadonlySet<string> = new Set(),
+  /** Locked by a joint cost planner against this unchanged context. */
+  preparedPlan?: PaymentPlan,
 ): GameGen<{ spellCantBeCountered: boolean; treasureManaSpent: number; manaSpent: number }> {
   const excluded = new Set(excludedSourceCardIds);
   const allows = allowanceFor(ctx, player.id, purpose);
@@ -6443,7 +6489,7 @@ export function* payManaCost(
     manaSourcesFor(ctx, player.id).filter((source) => !excluded.has(source.cardId)),
     reservedObjectIds,
   );
-  const plan = planPayment(cost, player.manaEntries, sources, allows, player.life);
+  const plan = preparedPlan ?? planPayment(cost, player.manaEntries, sources, allows, player.life);
   if (plan === null) {
     throw new Error(`engine bug: cost for ${player.id} became unpayable at application time`);
   }

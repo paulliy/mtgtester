@@ -31,6 +31,7 @@ const SOURCE_FILES = [
   'packages/engine/src/actions/apply.ts',
   'packages/engine/src/actions/legal.ts',
   'packages/engine/src/mana/activation.ts',
+  'packages/engine/src/mana/spell-payment.ts',
   'packages/engine/src/turn/priority.ts',
   'packages/engine/src/stack/stack.ts',
   'packages/server/src/cards/card-test-scenarios.test.ts',
