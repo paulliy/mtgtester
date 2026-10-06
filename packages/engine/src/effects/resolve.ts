@@ -2943,6 +2943,21 @@ export function* executeAbility(
         yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
       }
+      case 'sacrificeSourceThenReflexive': {
+        const t = ref('source');
+        const perm = t === null ? undefined : findPermanent(ctx, t);
+        // Only a permanent you control can be sacrificed (CR 701.21a).
+        if (perm === undefined || perm.controllerId !== source.controllerId) break;
+        yield* moveObject(ctx, perm, { zone: 'graveyard', reason: 'sacrifice' });
+        ctx.state.pendingTriggers.push({
+          controllerId: source.controllerId,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId,
+          sourceName: source.name,
+          ability: effect.then,
+        });
+        break;
+      }
       case 'sacrificeOneThen': {
         const candidates = affectedBy(ctx, source, effect.selector).filter(
           (permanent) => permanent.controllerId === controller.id,

@@ -7831,6 +7831,86 @@
     }
   },
   {
+    "oracleId": "bd002797-a545-4bee-88bf-b878436e7cca",
+    "name": "Brokers Hideout",
+    "handledLines": [
+      "When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Sacrifice this land",
+          "effects": [
+            {
+              "op": "sacrificeSourceThenReflexive",
+              "then": {
+                "description": "Search for a basic Forest, Plains, or Island, put it onto the battlefield tapped, then shuffle and gain 1 life",
+                "effects": [
+                  {
+                    "allowFailToFind": true,
+                    "destinations": [
+                      {
+                        "tapped": true,
+                        "zone": "battlefield"
+                      }
+                    ],
+                    "filter": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "supertype",
+                          "value": "Basic"
+                        },
+                        {
+                          "kind": "anyOf",
+                          "of": [
+                            {
+                              "kind": "subtype",
+                              "value": "Forest"
+                            },
+                            {
+                              "kind": "subtype",
+                              "value": "Plains"
+                            },
+                            {
+                              "kind": "subtype",
+                              "value": "Island"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "op": "searchLibrary"
+                  },
+                  {
+                    "op": "shuffle"
+                  },
+                  {
+                    "amount": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "gainLife"
+                  }
+                ],
+                "kind": "triggered",
+                "targets": []
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "bd92cacd-c7d8-43a2-a261-ea4754fefdc5",
     "name": "Sage's Reverie",
     "handledLines": [
@@ -12191,6 +12271,86 @@
     "name": "Breena, the Demagogue",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-brokers-hideout",
+    "name": "Brokers Hideout",
+    "handledLines": [
+      "When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Sacrifice this land",
+          "effects": [
+            {
+              "op": "sacrificeSourceThenReflexive",
+              "then": {
+                "description": "Search for a basic Forest, Plains, or Island, put it onto the battlefield tapped, then shuffle and gain 1 life",
+                "effects": [
+                  {
+                    "allowFailToFind": true,
+                    "destinations": [
+                      {
+                        "tapped": true,
+                        "zone": "battlefield"
+                      }
+                    ],
+                    "filter": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "supertype",
+                          "value": "Basic"
+                        },
+                        {
+                          "kind": "anyOf",
+                          "of": [
+                            {
+                              "kind": "subtype",
+                              "value": "Forest"
+                            },
+                            {
+                              "kind": "subtype",
+                              "value": "Plains"
+                            },
+                            {
+                              "kind": "subtype",
+                              "value": "Island"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "op": "searchLibrary"
+                  },
+                  {
+                    "op": "shuffle"
+                  },
+                  {
+                    "amount": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "gainLife"
+                  }
+                ],
+                "kind": "triggered",
+                "targets": []
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-caged-sun",

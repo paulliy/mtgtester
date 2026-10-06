@@ -547,6 +547,12 @@ export type Effect =
   | { op: 'sacrifice'; target: EffectRef }
   /** Sacrifice one matching controlled permanent, then perform linked effects only if it happened. */
   | { op: 'sacrificeOneThen'; selector: Selector; then: Effect[] }
+  /**
+   * "Sacrifice it. When you do, …" (Brokers Hideout) — a reflexive trigger (CR 603.12). If the
+   * source is sacrificed, `then` triggers and goes on the stack as its own ability, with a
+   * priority window in between; if it could not be sacrificed, nothing triggers.
+   */
+  | { op: 'sacrificeSourceThenReflexive'; then: Ability }
   | { op: 'gainControlTarget'; target: EffectRef }
   | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'putCountersEach'; selector: Selector; counter: string; count: Value | number }

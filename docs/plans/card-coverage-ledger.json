@@ -264,15 +264,19 @@
   {
     "oracleId": "bd002797-a545-4bee-88bf-b878436e7cca",
     "name": "Brokers Hideout",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR01.27",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life.\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "0623c51a-e829-413f-a3a0-817c0902821e",

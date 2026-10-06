@@ -743,3 +743,25 @@ describe('Mystic Sanctuary Card Test Lab scenario', () => {
     replays('mystic-sanctuary-viewer-untapped-return', steps);
   });
 });
+
+describe('Brokers Hideout Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Play Brokers Hideout' },
+    { action: 'Put Plains onto the battlefield tapped' },
+  ];
+
+  it('brokers-hideout-viewer-sacrifice-and-search — sacrifices itself, then the reflexive search fetches the Plains', () => {
+    const { seat, onBattlefield, offered } = run(
+      'brokers-hideout-viewer-sacrifice-and-search',
+      steps,
+    );
+    const search = offered.find((options) =>
+      options.includes('Put Plains onto the battlefield tapped'),
+    )!;
+    expect(search.join('|')).not.toContain('Swamp');
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Brokers Hideout']);
+    expect(onBattlefield('Plains')[0]?.tapped).toBe(true);
+    expect(seat('P1').life).toBe(41);
+    replays('brokers-hideout-viewer-sacrifice-and-search', steps);
+  });
+});

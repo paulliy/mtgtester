@@ -5175,6 +5175,32 @@ function mysticSanctuaryScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function brokersHideoutScenario(gameId: GameId): CardTestScenario {
+  const hideout = pinnedFrom(COVERAGE_PR01, 'Brokers Hideout');
+  return pr01Scenario(gameId, {
+    id: 'brokers-hideout-viewer-sacrifice-and-search',
+    title: 'Brokers Hideout: sacrifice it, then search for a basic',
+    instructions: [
+      'Play Brokers Hideout as your land drop.',
+      'Its enters trigger sacrifices it; then choose the Plains from the search.',
+    ],
+    expectedOutcome:
+      'Brokers Hideout goes to your graveyard. A separate trigger then puts the Plains onto the battlefield tapped, shuffles your library, and you gain 1 life (41). The Swamp is never offered.',
+    oracleSha256: hideout.sha256,
+    clauseIds: ['brokers-hideout-sacrifice-search'],
+    decks: {
+      P1: [hideout.card, PLAINS, ISLAND, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Brokers Hideout'] }],
+      battlefield: [],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5288,6 +5314,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'return-to-nature-viewer-destroy-enchantment',
   'return-to-nature-viewer-exile-graveyard-card',
   'mystic-sanctuary-viewer-untapped-return',
+  'brokers-hideout-viewer-sacrifice-and-search',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5397,6 +5424,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'return-to-nature-viewer-destroy-enchantment': returnToNatureDestroyScenario,
   'return-to-nature-viewer-exile-graveyard-card': returnToNatureExileScenario,
   'mystic-sanctuary-viewer-untapped-return': mysticSanctuaryScenario,
+  'brokers-hideout-viewer-sacrifice-and-search': brokersHideoutScenario,
 };
 
 export function createCardTestScenario(

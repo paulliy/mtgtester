@@ -1289,6 +1289,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Mystic Sanctuary: enters untapped and returns an instant'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Brokers Hideout: sacrifice it, then search for a basic'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

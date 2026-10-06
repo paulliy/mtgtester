@@ -4073,6 +4073,31 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "bd002797-a545-4bee-88bf-b878436e7cca": {
+      "name": "Brokers Hideout",
+      "oracleSha256": "9bb13d41853e16160f5e38c4c1470a7b91403284e0e1306f001227d86a7435d5",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "id": "brokers-hideout-sacrifice-search",
+          "oracleText": "When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+          "implementation": [
+            "enters trigger on self: sacrificeSourceThenReflexive sacrifices it (only if it is still yours on the battlefield)",
+            "'When you do' is a reflexive trigger (CR 603.12): queued as its own pending trigger, so it uses the stack after a priority window; nothing triggers if it was not sacrificed",
+            "reflexive ability: search basic Forest/Plains/Island onto the battlefield tapped (may find nothing), then shuffle and gain 1 life"
+          ],
+          "engineTestIds": [
+            "brokers-hideout-pinned-oracle-supported",
+            "brokers-hideout-reflexive-search",
+            "brokers-hideout-basic-forest-plains-island-only",
+            "brokers-hideout-find-nothing",
+            "brokers-hideout-not-sacrificed-no-search"
+          ],
+          "viewerScenarioIds": ["brokers-hideout-viewer-sacrifice-and-search"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -152,6 +152,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'return-to-nature-viewer-destroy-enchantment',
       'return-to-nature-viewer-exile-graveyard-card',
       'mystic-sanctuary-viewer-untapped-return',
+      'brokers-hideout-viewer-sacrifice-and-search',
     ]);
   });
 

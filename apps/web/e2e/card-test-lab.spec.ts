@@ -2471,3 +2471,26 @@ test('Mystic Sanctuary: enters untapped and returns an instant', async ({ page }
   await expect(page.getByText(/Library\s*1/).first()).toBeVisible();
   await expect(page.getByText(/Graveyard\s*0/).first()).toBeVisible();
 });
+
+test('Brokers Hideout: sacrifice it, then search for a basic', async ({ page }) => {
+  await runScenario(page, 'Brokers Hideout: sacrifice it, then search for a basic');
+
+  const hideout = handCard(page, 'Brokers Hideout');
+  await expect(hideout).toHaveClass(/actionable/);
+  await hideout.click();
+
+  // The enters trigger sacrifices it; the search is a separate (reflexive) trigger.
+  await expect(page.getByText(/search your library/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.panel-group').filter({ hasText: 'Swamp' })).toHaveCount(0);
+  await page
+    .locator('.panel-group')
+    .filter({ hasText: 'Plains' })
+    .getByRole('button', { name: 'Put onto the battlefield tapped' })
+    .click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Brokers Hideout')).toHaveCount(0);
+  await expect(permanent(page, 'Plains')).toBeVisible();
+  await expect(page.getByText('Put Plains onto the battlefield tapped').first()).toBeVisible();
+  await expect(page.getByText('gains 1 life').first()).toBeVisible();
+});

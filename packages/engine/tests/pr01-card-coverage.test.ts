@@ -3322,6 +3322,113 @@ describe('Mystic Sanctuary', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.27 Brokers Hideout
+// ---------------------------------------------------------------------------------------------
+
+describe('Brokers Hideout', () => {
+  const hideout = pinned('Brokers Hideout');
+  const basic = (name: string, type: string, symbol: string) =>
+    oracle({
+      name,
+      typeLine: `Basic Land — ${type}`,
+      manaCost: null,
+      oracleText: `({T}: Add {${symbol}}.)`,
+    });
+  const grove = () =>
+    oracle({
+      name: 'Hideout Grove',
+      typeLine: 'Land — Forest',
+      manaCost: null,
+      oracleText: '({T}: Add {G}.)',
+    });
+  const SEARCH = /search your library/i;
+
+  /** Play Brokers Hideout as P1's land drop with `library` cards on top of a Forest library. */
+  function play(seed: string, library: OracleCard[]) {
+    const ctx = pod(seed);
+    for (const card of library) conjure(ctx, 'P1', card, 'library');
+    const inHand = conjure(ctx, 'P1', hideout.card, 'hand');
+    const option = priorityOptions(ctx, 'P1').find((candidate) => {
+      const payload = candidate.payload as PriorityActionPayload;
+      return payload.kind === 'playLand' && payload.objectId === inHand.id;
+    });
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    return ctx;
+  }
+
+  it('brokers-hideout-pinned-oracle-supported — pins the Oracle and models the sacrifice with a reflexive search', () => {
+    expect(hideout.sha256).toBe('9bb13d41853e16160f5e38c4c1470a7b91403284e0e1306f001227d86a7435d5');
+    const def = interpretCard(hideout.card);
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.effects).toEqual([
+      expect.objectContaining({ op: 'sacrificeSourceThenReflexive' }),
+    ]);
+  });
+
+  it('brokers-hideout-reflexive-search — it sacrifices itself, then a separate trigger fetches a basic tapped, shuffles, and gains 1 life', () => {
+    const ctx = play('hideout-search', [
+      basic('Plains', 'Plains', 'W'),
+      basic('Island', 'Island', 'U'),
+    ]);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((entry) => entry.name === 'Brokers Hideout')).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Brokers Hideout']);
+    // The search is its own ability on the stack, after a priority window (CR 603.12).
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    const life = playerById(ctx, 'P1').life;
+    resolveTop(ctx, answers([[SEARCH, /Put Plains onto the battlefield tapped/]]));
+    const plains = ctx.state.battlefield.find((entry) => entry.name === 'Plains');
+    expect(plains?.tapped).toBe(true);
+    expect(playerById(ctx, 'P1').life).toBe(life + 1);
+    const types = ctx.state.eventLog.map((event) => event.type);
+    expect(types.lastIndexOf('shuffle')).toBeGreaterThan(types.indexOf('searchFound'));
+  });
+
+  it('brokers-hideout-basic-forest-plains-island-only — Swamps and nonbasic Forests are never offered', () => {
+    const ctx = play('hideout-filter', [
+      basic('Swamp', 'Swamp', 'B'),
+      grove(),
+      basic('Island', 'Island', 'U'),
+    ]);
+    const { decisions } = settle(
+      ctx,
+      answers([[SEARCH, /Put Island onto the battlefield tapped/]]),
+    );
+    const search = decisions.find((decision) => SEARCH.test(decision.prompt))!;
+    const offered = search.options.map((option) => option.description).join('|');
+    expect(offered).toContain('Island');
+    expect(offered).toContain('Forest');
+    expect(offered).not.toContain('Swamp');
+    expect(offered).not.toContain('Hideout Grove');
+  });
+
+  it('brokers-hideout-find-nothing — finding nothing still shuffles and gains 1 life', () => {
+    const ctx = play('hideout-nothing', []);
+    const life = playerById(ctx, 'P1').life;
+    settle(ctx, answers([[SEARCH, /Find nothing/]]));
+    expect(playerById(ctx, 'P1').life).toBe(life + 1);
+    expect(ctx.state.eventLog.some((event) => event.type === 'searchFound')).toBe(false);
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+  });
+
+  it('brokers-hideout-not-sacrificed-no-search — if it already left, nothing is sacrificed and nothing triggers', () => {
+    const ctx = play('hideout-gone', []);
+    pump(priorityCheckpoint(ctx));
+    const self = ctx.state.battlefield.find((entry) => entry.name === 'Brokers Hideout')!;
+    pump(moveObject(ctx, self, { zone: 'exile' }));
+    const life = playerById(ctx, 'P1').life;
+    resolveTop(ctx);
+    const { decisions } = settle(ctx, answers([[SEARCH, /Find nothing/]]));
+    expect(decisions.some((decision) => SEARCH.test(decision.prompt))).toBe(false);
+    expect(playerById(ctx, 'P1').life).toBe(life);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3462,6 +3569,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Mystic Sanctuary',
     sha256: 'e893509bf714c1d47fb25d292a62e3a3c8a39c7d40915c5f97d1fcabea94688e',
     clauseCount: 3,
+  },
+  {
+    name: 'Brokers Hideout',
+    sha256: '9bb13d41853e16160f5e38c4c1470a7b91403284e0e1306f001227d86a7435d5',
+    clauseCount: 1,
   },
 ];
 

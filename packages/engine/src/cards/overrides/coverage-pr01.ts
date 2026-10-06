@@ -5,7 +5,8 @@
  * inventory.
  */
 
-import { anyOf, ofSubtype, ofType } from '../selector';
+import { allOf, anyOf, ofSubtype, ofSupertype, ofType } from '../selector';
+import { constant } from '../value';
 import { defineCard } from './index';
 
 export function registerCoveragePr01Overrides(): void {
@@ -36,6 +37,50 @@ export function registerCoveragePr01Overrides(): void {
           effects: [{ op: 'graveyardToLibraryTop', target: 0 }],
           description:
             'You may put target instant or sorcery card from your graveyard on top of your library',
+        },
+      ],
+    },
+  );
+
+  // Brokers Hideout: the search is a reflexive trigger (CR 603.12), so it uses the stack after
+  // the sacrifice instead of happening inside the enters trigger's resolution.
+  defineCard(
+    'bd002797-a545-4bee-88bf-b878436e7cca',
+    'Brokers Hideout',
+    [
+      'When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [],
+          effects: [
+            {
+              op: 'sacrificeSourceThenReflexive',
+              then: {
+                kind: 'triggered',
+                targets: [],
+                effects: [
+                  {
+                    op: 'searchLibrary',
+                    filter: allOf(
+                      ofSupertype('Basic'),
+                      anyOf(ofSubtype('Forest'), ofSubtype('Plains'), ofSubtype('Island')),
+                    ),
+                    destinations: [{ zone: 'battlefield', tapped: true }],
+                    allowFailToFind: true,
+                  },
+                  { op: 'shuffle' },
+                  { op: 'gainLife', amount: constant(1) },
+                ],
+                description:
+                  'Search for a basic Forest, Plains, or Island, put it onto the battlefield tapped, then shuffle and gain 1 life',
+              },
+            },
+          ],
+          description: 'Sacrifice this land',
         },
       ],
     },
