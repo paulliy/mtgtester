@@ -150,12 +150,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Dread Return',
     'Flashback—Sacrifice three creatures is claimed without a flashback alternative.',
   );
-  // Catalog audit necron-remaining-batch-3: same-name land restriction omitted.
-  unsupportedCard(
-    'cb923c4d-1d2e-4039-90bb-72d1981b9738',
-    'Endless Atlas',
-    'The three-or-more-same-name land restriction is omitted from the draw ability.',
-  );
+  // Endless Atlas: restored in coverage PR02. The interpreter reads "Activate only if you control
+  // three or more lands with the same name" as an activation condition, so no override remains.
   // Catalog audit necron-remaining-batch-3: crewed is implemented as becomesTapped.
   unsupportedCard(
     'bb1b4786-3804-486b-9fd9-85848d24d362',

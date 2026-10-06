@@ -604,6 +604,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "cb923c4d-1d2e-4039-90bb-72d1981b9738",
+    "name": "Endless Atlas",
+    "package": "PR02.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The three-or-more-same-name land restriction is omitted from the draw ability."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "overrides deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "77ccafd9-6d76-4658-81ab-bde0454fcc15",
     "name": "Endless Foot Assault",
     "package": "W2",

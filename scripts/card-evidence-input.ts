@@ -1365,6 +1365,11 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Bespoke Battlewagon: pay two energy to tap P2's creature"],
   },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Endless Atlas: three Forests unlock the draw'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Endless Atlas: two Forests and an Island do not unlock it'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

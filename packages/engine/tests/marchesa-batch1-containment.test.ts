@@ -193,7 +193,6 @@ const REASONS: Record<string, string> = {
     'Artifact-from-hand-or-graveyard life cast is implemented as free casts from hand.',
   'Convergence of Dominion':
     'Graveyard activation cost reduction is claimed without a static effect.',
-  'Endless Atlas': 'The three-or-more-same-name land restriction is omitted from the draw ability.',
   'Ghost Ark': 'Becomes-crewed is implemented as becomesTapped.',
   'Hexmark Destroyer': 'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
   'Imotekh the Stormlord':
@@ -320,6 +319,7 @@ describe('Marchesa catalog audit containment', () => {
     'Aether Hub',
     'Solar Transformer',
     'Bespoke Battlewagon',
+    'Endless Atlas',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

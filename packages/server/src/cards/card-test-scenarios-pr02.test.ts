@@ -254,3 +254,23 @@ describe('Bespoke Battlewagon Card Test Lab scenarios', () => {
     replays('bespoke-battlewagon-viewer-tap-target', tapSteps);
   });
 });
+
+describe('Endless Atlas Card Test Lab scenarios', () => {
+  const steps: Step[] = [{ action: 'Endless Atlas: {2}, {T}: Draw a card.' }];
+
+  it('endless-atlas-viewer-same-name-draw — three Forests unlock the {2}, {T} draw', () => {
+    const { seat, onBattlefield, offered } = run('endless-atlas-viewer-same-name-draw', steps);
+    expect(offered.flat().some((action) => action.includes('Endless Atlas'))).toBe(true);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Atlas Drawn Page']);
+    expect(onBattlefield('Endless Atlas')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Forest').filter((land) => land.tapped)).toHaveLength(2);
+    replays('endless-atlas-viewer-same-name-draw', steps);
+  });
+
+  it('endless-atlas-viewer-mixed-names-blocked — no activation without three same-name lands', () => {
+    const { seat, onBattlefield, offered } = run('endless-atlas-viewer-mixed-names-blocked', []);
+    expect(offered.flat().some((action) => action.includes('Endless Atlas'))).toBe(false);
+    expect(seat('P1').hand).toEqual([]);
+    expect(onBattlefield('Endless Atlas')[0]?.tapped).toBe(false);
+  });
+});

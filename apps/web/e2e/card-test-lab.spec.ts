@@ -2982,3 +2982,21 @@ test("Bespoke Battlewagon: pay two energy to tap P2's creature", async ({ page }
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
 });
+
+test('Endless Atlas: three Forests unlock the draw', async ({ page }) => {
+  await runScenario(page, 'Endless Atlas: three Forests unlock the draw');
+  await activateAndResolve(page, 'Endless Atlas', /Draw a card/, 'lands with the same name.');
+  await expect(handCard(page, 'Atlas Drawn Page')).toBeVisible();
+  await expect(permanent(page, 'Endless Atlas').locator('.tap-badge')).toHaveText('TAP');
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});
+
+test('Endless Atlas: two Forests and an Island do not unlock it', async ({ page }) => {
+  await runScenario(page, 'Endless Atlas: two Forests and an Island do not unlock it');
+  // With no legal action but passing, the viewer passes on its own and the window closes.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Endless Atlas')).toBeVisible();
+  await expect(permanent(page, 'Endless Atlas').locator('.tap-badge')).toHaveCount(0);
+  await expect(page.getByText('Atlas Drawn Page')).toHaveCount(0);
+});

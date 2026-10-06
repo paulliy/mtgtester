@@ -60,6 +60,11 @@ export type Condition =
    * almost any threshold. The printed line asks whether ANY SINGLE opponent is ahead of you.
    */
   | { kind: 'opponentControlsMore'; selector: Selector }
+  /**
+   * "you control three or more lands with the same name" (Endless Atlas, Sceptre of Eternal
+   * Glory): some single name is shared by at least `n` lands you control.
+   */
+  | { kind: 'controlsLandsWithSameName'; n: number }
   /** "you have two or more opponents" — counts players still in the game, not permanents. */
   | { kind: 'opponentCount'; cmp: '>=' | '<='; n: number }
   /** "you may pay 2 life" — a choice, not a fact. Only `resolveCondition` can answer it. */
@@ -263,6 +268,14 @@ export function evaluateCondition(
       return opponentsOf(ctx, source.controllerId).some(
         (opp) => matched.filter((perm) => perm.controllerId === opp.id).length > yours,
       );
+    }
+    case 'controlsLandsWithSameName': {
+      const byName = new Map<string, number>();
+      for (const land of selectPermanents(ctx, ofType('Land'), source)) {
+        if (land.controllerId !== source.controllerId) continue;
+        byName.set(land.name, (byName.get(land.name) ?? 0) + 1);
+      }
+      return [...byName.values()].some((count) => count >= condition.n);
     }
     case 'notYourTurn':
       return ctx.state.currentTurnPlayer !== source.controllerId;

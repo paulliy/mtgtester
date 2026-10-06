@@ -8624,12 +8624,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "cb923c4d-1d2e-4039-90bb-72d1981b9738",
-    "name": "Endless Atlas",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "cba58942-b98c-45aa-8651-7dc666e31c93",
     "name": "Fumiko the Lowblood",
     "handledLines": [
@@ -14643,12 +14637,6 @@
   {
     "oracleId": "oracle-eldrazi-conscription",
     "name": "Eldrazi Conscription",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-endless-atlas",
-    "name": "Endless Atlas",
     "handledLines": [],
     "def": {}
   },

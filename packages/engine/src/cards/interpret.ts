@@ -4151,6 +4151,32 @@ const MANA_ACTIVATE_ONLY_IF_COUNT_RE =
   /^(add [^.]+)\. activate only if you control (\w+) or more (.+)$/;
 
 /**
+ * The condition of an "Activate only if …" restriction (CR 602.5b), lowercased with no trailing
+ * period. Returns null for any phrasing it does not know, so the ability stays unmodeled rather
+ * than becoming activatable at times the card forbids.
+ */
+function parseActivationCondition(text: string, card: OracleCard): Condition | null {
+  const sameName = text.match(/^you control (\w+) or more lands with the same name$/);
+  if (sameName !== null) {
+    const n = parseAmount(sameName[1] as string);
+    return n === null ? null : { kind: 'controlsLandsWithSameName', n };
+  }
+  const opponentMore = text.match(/^an opponent controls more (.+) than you$/);
+  if (opponentMore !== null) {
+    const selector = parseSubject(opponentMore[1] as string, card);
+    return selector === null ? null : { kind: 'opponentControlsMore', selector };
+  }
+  if (text === 'you created a token this turn') return { kind: 'createdTokenThisTurn' };
+  const counted = text.match(/^you control (\w+) or more (.+)$/);
+  if (counted !== null) {
+    const n = parseAmount(counted[1] as string);
+    const selector = parseSubject(counted[2] as string, card);
+    return n === null || selector === null ? null : countPermanents(selector, 'you', '>=', n);
+  }
+  return null;
+}
+
+/**
  * "â€¦Spend this mana only to cast a Dragon creature spell." (Haven of the Spirit Dragon) â€” a
  * CR 106.6 restriction riding on the mana produced.
  */
@@ -4711,6 +4737,15 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     timing = 'sorcery';
     lower = sorceryOnly[1] as string;
   }
+  // "Activate only if <condition>." (CR 602.5b) — checked when activation is offered and paid.
+  let condition: Condition | undefined;
+  const onlyIf = lower.match(/^(.+)\. activate only if (.+)$/);
+  if (onlyIf !== null) {
+    const parsed = parseActivationCondition(onlyIf[2] as string, card);
+    if (parsed === null) return null;
+    condition = parsed;
+    lower = onlyIf[1] as string;
+  }
 
   const split = splitActivation(lower);
   if (split === null) return null;
@@ -4727,6 +4762,8 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
       costs,
       timing,
       ...(oncePerTurn ? { oncePerTurn: true } : {}),
+      ...(condition === undefined ? {} : { condition }),
+      ...(condition === undefined ? {} : { condition }),
       ability: {
         kind: 'activated',
         targets: modal.targets,
@@ -4766,6 +4803,7 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     costs,
     timing,
     ...(oncePerTurn ? { oncePerTurn: true } : {}),
+    ...(condition === undefined ? {} : { condition }),
     // "Discard this card" can only be paid from the hand, so the ability functions there
     // (CR 112.6a) — channel lands, Boseiju and Otawara. Without the zone the battlefield loop
     // would offer it and `canPayNonManaCosts` would refuse the cost, making it dead either way.

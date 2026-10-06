@@ -2091,13 +2091,28 @@
     "cb923c4d-1d2e-4039-90bb-72d1981b9738": {
       "name": "Endless Atlas",
       "oracleSha256": "e1d31dc2c8118f97fe833d58fce9caf77240ad6f11bae0a80cb066638303a610",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "endless-atlas-same-name-draw",
           "oracleText": "{2}, {T}: Draw a card. Activate only if you control three or more lands with the same name.",
-          "implementation": ["explicitly unsupported; same-name land restriction omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted activated ability: costs [mana {2}, tap], effect draw(1)",
+            "generic 'Activate only if <condition>' grammar (CR 602.5b) → condition controlsLandsWithSameName(3): some name shared by three lands you control, tapped or not; checked when the activation is offered and when it is paid"
+          ],
+          "engineTestIds": [
+            "endless-atlas-pinned-oracle-supported",
+            "activation-condition-parses-known-phrasings",
+            "activation-condition-unknown-phrasing-stays-unmodeled",
+            "endless-atlas-draws-with-three-same-name-lands",
+            "endless-atlas-mixed-names-blocked",
+            "endless-atlas-only-your-lands",
+            "endless-atlas-costs"
+          ],
+          "viewerScenarioIds": [
+            "endless-atlas-viewer-same-name-draw",
+            "endless-atlas-viewer-mixed-names-blocked"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

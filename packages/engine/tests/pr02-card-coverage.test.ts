@@ -27,7 +27,17 @@ import { prepareScenario } from '../src/testing/prepared-scenario';
 import { playerById } from '../src/state/objects';
 import { manaSourcesFor } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import {
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  island,
+  oracle,
+  plains,
+  pump,
+  spawn,
+} from './fixtures';
 
 interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
@@ -707,6 +717,110 @@ describe('Bespoke Battlewagon', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Shared primitive: "Activate only if <condition>." on activated abilities (CR 602.5b)
+// ---------------------------------------------------------------------------------------------
+
+describe('activation-condition grammar', () => {
+  const withLine = (name: string, line: string) =>
+    interpretCard(oracle({ name, typeLine: 'Artifact', oracleText: line }));
+
+  it('activation-condition-parses-known-phrasings — each phrasing becomes a condition on the ability', () => {
+    const cases: [string, unknown][] = [
+      [
+        'you control three or more lands with the same name',
+        { kind: 'controlsLandsWithSameName', n: 3 },
+      ],
+      [
+        'an opponent controls more lands than you',
+        { kind: 'opponentControlsMore', selector: { kind: 'type', value: 'Land' } },
+      ],
+      ['you created a token this turn', { kind: 'createdTokenThisTurn' }],
+    ];
+    for (const [phrase, condition] of cases) {
+      const def = withLine(`Lab Gate ${phrase}`, `{1}: Draw a card. Activate only if ${phrase}.`);
+      expect(def.modeled, phrase).toBe(true);
+      expect(def.activatedAbilities[0]?.condition, phrase).toEqual(condition);
+    }
+  });
+
+  it('activation-condition-unknown-phrasing-stays-unmodeled — an unread condition never becomes unconditional', () => {
+    const def = withLine(
+      'Lab Gate Unknown',
+      '{1}: Draw a card. Activate only if the moon is full.',
+    );
+    expect(def.modeled).toBe(false);
+    expect(def.activatedAbilities).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// 2.10 Endless Atlas
+// ---------------------------------------------------------------------------------------------
+
+describe('Endless Atlas', () => {
+  const atlas = pinned('Endless Atlas');
+
+  function ready(seed: string, lands: (() => OracleCard)[], mana = 2) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', atlas.card);
+    for (const land of lands) spawn(ctx, 'P1', land());
+    addMana(playerById(ctx, 'P1'), generic(mana));
+    return { ctx, source };
+  }
+
+  it('endless-atlas-pinned-oracle-supported — the interpreter reads the draw and its same-name condition', () => {
+    expect(atlas.sha256).toBe('e1d31dc2c8118f97fe833d58fce9caf77240ad6f11bae0a80cb066638303a610');
+    expect(atlas.card.oracleText).toBe(
+      '{2}, {T}: Draw a card. Activate only if you control three or more lands with the same name.',
+    );
+    expect(getOverride(atlas.card.oracleId)).toBeUndefined();
+    expect(getOverride(fixtureOracleId(atlas.card.name))).toBeUndefined();
+    expectModeled(atlas.card);
+    expect(interpretCard(atlas.card).activatedAbilities).toEqual([
+      expect.objectContaining({ condition: { kind: 'controlsLandsWithSameName', n: 3 } }),
+    ]);
+  });
+
+  it('endless-atlas-draws-with-three-same-name-lands — three Forests allow the {2}, {T} draw', () => {
+    const { ctx, source } = ready('atlas-three-forests', [forest, forest, forest]);
+    const before = playerById(ctx, 'P1').hand.length;
+    const option = activationsOf(ctx, 'P1', source)[0];
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(true);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(before + 1);
+  });
+
+  it('endless-atlas-mixed-names-blocked — two Forests and an Island do not satisfy it', () => {
+    const { ctx, source } = ready('atlas-mixed', [forest, forest, island, plains]);
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+  });
+
+  it('endless-atlas-only-your-lands — an opponent’s Forests do not count toward yours', () => {
+    const { ctx, source } = ready('atlas-theirs', [forest, forest]);
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P2', forest());
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+    spawn(ctx, 'P1', forest());
+    expect(activationsOf(ctx, 'P1', source)).toHaveLength(1);
+  });
+
+  it('endless-atlas-costs — {1} or a tapped Atlas cannot activate it', () => {
+    // The Forests still count while tapped; tapping them leaves only the pool's {1} to pay.
+    const short = ready('atlas-short-mana', [forest, forest, forest], 1);
+    for (const land of short.ctx.state.battlefield) {
+      if (land.name === 'Forest') land.tapped = true;
+    }
+    expect(activationsOf(short.ctx, 'P1', short.source)).toEqual([]);
+    addMana(playerById(short.ctx, 'P1'), generic(1));
+    expect(activationsOf(short.ctx, 'P1', short.source)).toHaveLength(1);
+    const tapped = ready('atlas-tapped', [forest, forest, forest]);
+    tapped.source.tapped = true;
+    expect(activationsOf(tapped.ctx, 'P1', tapped.source)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -718,6 +832,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Endless Atlas',
+    sha256: 'e1d31dc2c8118f97fe833d58fce9caf77240ad6f11bae0a80cb066638303a610',
+    clauseCount: 1,
+  },
   {
     name: 'Bespoke Battlewagon',
     sha256: '17244fc3e0a51b50c27c6b7583124bd9d6773c9a102cea36f4055792ea885d21',

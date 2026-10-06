@@ -178,10 +178,6 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Flashback—Sacrifice three creatures.',
   ]);
 
-  unimplemented('cb923c4d-1d2e-4039-90bb-72d1981b9738', 'Endless Atlas', [
-    '{2}, {T}: Draw a card. Activate only if you control three or more lands with the same name.',
-  ]);
-
   defineCard(
     '899415fd-4164-42a5-a0c7-eef1967c5ec5',
     'Flayed One',

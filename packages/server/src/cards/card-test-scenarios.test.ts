@@ -173,6 +173,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'bespoke-battlewagon-viewer-energy-and-crew',
       'bespoke-battlewagon-viewer-animate-and-draw',
       'bespoke-battlewagon-viewer-tap-target',
+      'endless-atlas-viewer-same-name-draw',
+      'endless-atlas-viewer-mixed-names-blocked',
     ]);
   });
 

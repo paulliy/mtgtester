@@ -5841,6 +5841,57 @@ const battlewagonTapTargetScenario = (gameId: GameId): CardTestScenario =>
     opponentBoard: [LAB_OX],
   });
 
+const LAB_ATLAS_PAGE = card({
+  oracleId: 'lab-atlas-page',
+  name: 'Atlas Drawn Page',
+  typeLine: 'Creature — Secret',
+});
+
+function endlessAtlasScenario(gameId: GameId): CardTestScenario {
+  const atlas = pinnedFrom(MARCHESA_BATCH1, 'Endless Atlas');
+  return pr01Scenario(gameId, {
+    id: 'endless-atlas-viewer-same-name-draw',
+    title: 'Endless Atlas: three Forests unlock the draw',
+    instructions: ['With three Forests, activate Endless Atlas for {2} and draw a card.'],
+    expectedOutcome:
+      'Two Forests and Endless Atlas tap; the three Forests still satisfy the same-name condition and you draw Atlas Drawn Page.',
+    oracleSha256: atlas.sha256,
+    clauseIds: ['endless-atlas-same-name-draw'],
+    decks: {
+      P1: [atlas.card, FOREST, FOREST, FOREST, LAB_ATLAS_PAGE],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Endless Atlas', 'Forest', 'Forest', 'Forest'] }],
+    },
+  });
+}
+
+function endlessAtlasBlockedScenario(gameId: GameId): CardTestScenario {
+  const atlas = pinnedFrom(MARCHESA_BATCH1, 'Endless Atlas');
+  return pr01Scenario(gameId, {
+    id: 'endless-atlas-viewer-mixed-names-blocked',
+    title: 'Endless Atlas: two Forests and an Island do not unlock it',
+    instructions: ['With two Forests and an Island, Endless Atlas offers no activation; pass.'],
+    expectedOutcome: 'Endless Atlas is never actionable and you draw nothing.',
+    oracleSha256: atlas.sha256,
+    clauseIds: ['endless-atlas-same-name-draw'],
+    decks: {
+      P1: [atlas.card, FOREST, FOREST, ISLAND, LAB_ATLAS_PAGE],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Endless Atlas', 'Forest', 'Forest', 'Island'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5972,6 +6023,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'bespoke-battlewagon-viewer-energy-and-crew',
   'bespoke-battlewagon-viewer-animate-and-draw',
   'bespoke-battlewagon-viewer-tap-target',
+  'endless-atlas-viewer-same-name-draw',
+  'endless-atlas-viewer-mixed-names-blocked',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6101,6 +6154,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'bespoke-battlewagon-viewer-energy-and-crew': battlewagonGainAndCrewScenario,
   'bespoke-battlewagon-viewer-animate-and-draw': battlewagonAnimateAndDrawScenario,
   'bespoke-battlewagon-viewer-tap-target': battlewagonTapTargetScenario,
+  'endless-atlas-viewer-same-name-draw': endlessAtlasScenario,
+  'endless-atlas-viewer-mixed-names-blocked': endlessAtlasBlockedScenario,
 };
 
 export function createCardTestScenario(
