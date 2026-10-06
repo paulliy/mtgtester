@@ -2494,3 +2494,35 @@ test('Brokers Hideout: sacrifice it, then search for a basic', async ({ page }) 
   await expect(page.getByText('Put Plains onto the battlefield tapped').first()).toBeVisible();
   await expect(page.getByText('gains 1 life').first()).toBeVisible();
 });
+
+test('Sweet-Gum Recluse: counters on creatures that entered this turn', async ({ page }) => {
+  await runScenario(page, 'Sweet-Gum Recluse: counters on creatures that entered this turn');
+
+  const sprout = handCard(page, 'Lab Sprout');
+  await expect(sprout).toHaveClass(/actionable/);
+  await sprout.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // The Recluse has flash, so priority comes back with Lab Sprout on the stack; let it resolve.
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(permanent(page, 'Lab Sprout')).toBeVisible({ timeout: 15_000 });
+
+  const recluse = handCard(page, 'Sweet-Gum Recluse');
+  await expect(recluse).toHaveClass(/actionable/);
+  await recluse.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Target Lab Ox' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Target Lab Sprout' }).click();
+  // With both new creatures chosen there is nothing left to offer, so choosing ends there.
+  await page.getByRole('button', { name: 'Target Sweet-Gum Recluse' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Sprout')).toContainText('4/4');
+  await expect(permanent(page, 'Sweet-Gum Recluse')).toContainText('3/6');
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+});

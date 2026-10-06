@@ -5,7 +5,7 @@
  * inventory.
  */
 
-import { allOf, anyOf, ofSubtype, ofSupertype, ofType } from '../selector';
+import { allOf, anyOf, ENTERED_THIS_TURN, ofSubtype, ofSupertype, ofType } from '../selector';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -81,6 +81,34 @@ export function registerCoveragePr01Overrides(): void {
             },
           ],
           description: 'Sacrifice this land',
+        },
+      ],
+    },
+  );
+
+  // Sweet-Gum Recluse: any number of targets, each a creature that entered this turn (itself
+  // included, since it has just entered).
+  defineCard(
+    '8ea10a5a-b698-4f7d-a9c8-520f8d835f34',
+    'Sweet-Gum Recluse',
+    [
+      'When this creature enters, put three +1/+1 counters on each of any number of target creatures that entered this turn.',
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [
+            {
+              kind: 'creature',
+              filter: ENTERED_THIS_TURN,
+              count: { min: 0, max: Infinity },
+            },
+          ],
+          effects: [{ op: 'putCountersEachChosen', targetSlot: 0, counter: '+1/+1', count: 3 }],
+          description:
+            'Put three +1/+1 counters on each of any number of target creatures that entered this turn',
         },
       ],
     },

@@ -520,7 +520,9 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         player: trigger.controllerId,
         prompt:
           `${trigger.sourceName}: choose ${picked.length > 0 ? 'another' : 'a'} target ` +
-          `(${picked.length}/${effectiveMax} chosen)${canStop ? ', or stop choosing' : ''}.`,
+          // "Any number of" has no upper bound to show.
+          `(${picked.length}${Number.isFinite(effectiveMax) ? `/${effectiveMax}` : ''} chosen)` +
+          `${canStop ? ', or stop choosing' : ''}.`,
         options: [
           ...candidates.map((id) => ({
             type: 'pickTarget',

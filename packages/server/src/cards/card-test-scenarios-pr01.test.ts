@@ -765,3 +765,24 @@ describe('Brokers Hideout Card Test Lab scenario', () => {
     replays('brokers-hideout-viewer-sacrifice-and-search', steps);
   });
 });
+
+describe('Sweet-Gum Recluse Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Lab Sprout' },
+    // Let Lab Sprout resolve first: the Recluse has flash and could otherwise respond to it.
+    { action: 'Pass priority' },
+    { action: 'Cast Sweet-Gum Recluse' },
+    { action: 'Target Lab Sprout' },
+    { action: 'Target Sweet-Gum Recluse' },
+  ];
+
+  it('sweet-gum-recluse-viewer-new-creatures — counters only on creatures that entered this turn', () => {
+    const { onBattlefield, offered } = run('sweet-gum-recluse-viewer-new-creatures', steps);
+    const first = offered.find((options) => options.includes('Target Lab Sprout'))!;
+    expect(first).not.toContain('Target Lab Ox');
+    expect(onBattlefield('Lab Sprout')[0]?.counters['+1/+1']).toBe(3);
+    expect(onBattlefield('Sweet-Gum Recluse')[0]?.counters['+1/+1']).toBe(3);
+    expect(onBattlefield('Lab Ox')[0]?.counters['+1/+1'] ?? 0).toBe(0);
+    replays('sweet-gum-recluse-viewer-new-creatures', steps);
+  });
+});

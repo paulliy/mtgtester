@@ -5656,6 +5656,47 @@
     }
   },
   {
+    "oracleId": "8ea10a5a-b698-4f7d-a9c8-520f8d835f34",
+    "name": "Sweet-Gum Recluse",
+    "handledLines": [
+      "When this creature enters, put three +1/+1 counters on each of any number of target creatures that entered this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Put three +1/+1 counters on each of any number of target creatures that entered this turn",
+          "effects": [
+            {
+              "count": 3,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "filter": {
+                "kind": "enteredThisTurn"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "8f2c8498-5b10-4ec7-8678-598c90987556",
     "name": "Disciple of Bolas",
     "handledLines": [
@@ -20471,6 +20512,47 @@
     "name": "Sunforger",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-sweet-gum-recluse",
+    "name": "Sweet-Gum Recluse",
+    "handledLines": [
+      "When this creature enters, put three +1/+1 counters on each of any number of target creatures that entered this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Put three +1/+1 counters on each of any number of target creatures that entered this turn",
+          "effects": [
+            {
+              "count": 3,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "filter": {
+                "kind": "enteredThisTurn"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-swords-to-plowshares",

@@ -4098,6 +4098,54 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "8ea10a5a-b698-4f7d-a9c8-520f8d835f34": {
+      "name": "Sweet-Gum Recluse",
+      "oracleSha256": "b7a06140e0022bef19a4a2e2b61c1d72dd7173f61421f1acfe414da5eee7e541",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "id": "sweet-gum-recluse-flash",
+          "oracleText": "Flash",
+          "implementation": ["keyword flash (interpreted)"],
+          "engineTestIds": ["sweet-gum-recluse-pinned-oracle-supported"],
+          "viewerScenarioIds": ["sweet-gum-recluse-viewer-new-creatures"]
+        },
+        {
+          "id": "sweet-gum-recluse-cascade",
+          "oracleText": "Cascade",
+          "implementation": [
+            "keyword cascade (interpreted); exercised on the normal cast path, revealing only lands here"
+          ],
+          "engineTestIds": [
+            "sweet-gum-recluse-pinned-oracle-supported",
+            "sweet-gum-recluse-counters-on-new-creatures"
+          ],
+          "viewerScenarioIds": ["sweet-gum-recluse-viewer-new-creatures"]
+        },
+        {
+          "id": "sweet-gum-recluse-reach",
+          "oracleText": "Reach",
+          "implementation": ["keyword reach (interpreted)"],
+          "engineTestIds": ["sweet-gum-recluse-pinned-oracle-supported"],
+          "viewerScenarioIds": ["sweet-gum-recluse-viewer-new-creatures"]
+        },
+        {
+          "id": "sweet-gum-recluse-enters-counters",
+          "oracleText": "When this creature enters, put three +1/+1 counters on each of any number of target creatures that entered this turn.",
+          "implementation": [
+            "enters trigger on self; count slot 0..any of creatures that entered this turn (enteredThisTurn), any controller, the Recluse included",
+            "putCountersEachChosen(slot 0, +1/+1, 3); choosing none is legal"
+          ],
+          "engineTestIds": [
+            "sweet-gum-recluse-counters-on-new-creatures",
+            "sweet-gum-recluse-only-this-turn",
+            "sweet-gum-recluse-zero-targets"
+          ],
+          "viewerScenarioIds": ["sweet-gum-recluse-viewer-new-creatures"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

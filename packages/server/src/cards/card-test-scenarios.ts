@@ -5201,6 +5201,51 @@ function brokersHideoutScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function sweetGumRecluseScenario(gameId: GameId): CardTestScenario {
+  const recluse = pinnedFrom(COVERAGE_PR01, 'Sweet-Gum Recluse');
+  const sprout = card({
+    oracleId: 'lab-recluse-sprout',
+    name: 'Lab Sprout',
+    typeLine: 'Creature — Plant',
+    manaCost: '{G}',
+    cmc: 1,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '1',
+    toughness: '1',
+  });
+  const forests = Array.from({ length: 7 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'sweet-gum-recluse-viewer-new-creatures',
+    title: 'Sweet-Gum Recluse: counters on creatures that entered this turn',
+    instructions: [
+      'Cast Lab Sprout, then cast Sweet-Gum Recluse (its cascade finds only lands).',
+      'Choose Lab Sprout and Sweet-Gum Recluse for its counters, then stop.',
+    ],
+    expectedOutcome:
+      'Lab Sprout becomes 4/4 and Sweet-Gum Recluse 3/6. Lab Ox, which was already on the battlefield, is never offered.',
+    oracleSha256: recluse.sha256,
+    clauseIds: ['sweet-gum-recluse-enters-counters'],
+    decks: {
+      P1: [
+        recluse.card,
+        sprout,
+        LAB_OX,
+        ...Array.from({ length: 7 }, () => FOREST),
+        FOREST,
+        FOREST,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Sweet-Gum Recluse', 'Lab Sprout'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Ox', ...forests] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5315,6 +5360,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'return-to-nature-viewer-exile-graveyard-card',
   'mystic-sanctuary-viewer-untapped-return',
   'brokers-hideout-viewer-sacrifice-and-search',
+  'sweet-gum-recluse-viewer-new-creatures',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5425,6 +5471,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'return-to-nature-viewer-exile-graveyard-card': returnToNatureExileScenario,
   'mystic-sanctuary-viewer-untapped-return': mysticSanctuaryScenario,
   'brokers-hideout-viewer-sacrifice-and-search': brokersHideoutScenario,
+  'sweet-gum-recluse-viewer-new-creatures': sweetGumRecluseScenario,
 };
 
 export function createCardTestScenario(

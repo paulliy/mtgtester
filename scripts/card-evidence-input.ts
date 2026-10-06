@@ -1293,6 +1293,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Brokers Hideout: sacrifice it, then search for a basic'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sweet-Gum Recluse: counters on creatures that entered this turn'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

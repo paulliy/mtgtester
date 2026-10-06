@@ -3429,6 +3429,98 @@ describe('Brokers Hideout', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.28 Sweet-Gum Recluse
+// ---------------------------------------------------------------------------------------------
+
+describe('Sweet-Gum Recluse', () => {
+  const recluse = pinned('Sweet-Gum Recluse');
+  const CHOOSE = /choose (a|another) target/i;
+
+  /** A creature that has been on the battlefield since an earlier turn. */
+  const veteran = (ctx: GameContext, seat: string, name: string) => {
+    const perm = spawn(ctx, seat, oracle({ name, typeLine: 'Creature — Elf' }));
+    perm.enteredTurnNumber = ctx.state.turnNumber - 1;
+    return perm;
+  };
+
+  /** Pick each named creature for the any-number slot in order, then stop. */
+  const pick =
+    (...names: string[]): Answer =>
+    (decision) => {
+      if (CHOOSE.test(decision.prompt)) {
+        const next = names.shift();
+        return next === undefined
+          ? optionMatching(decision, /Choose no more targets/)
+          : optionMatching(decision, new RegExp(`^Target ${next}$`));
+      }
+      return { index: 0, targets: new Map() };
+    };
+
+  /** Cast the Recluse from P1's hand (cascade finds only lands) and settle with `answer`. */
+  function castRecluse(ctx: GameContext, answer: Answer) {
+    const inHand = conjure(ctx, 'P1', recluse.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 6 }, () => ({ symbol: 'G' as const })),
+    );
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    const { decisions } = settle(ctx, answer);
+    return {
+      decisions,
+      self: ctx.state.battlefield.find((entry) => entry.name === 'Sweet-Gum Recluse')!,
+    };
+  }
+
+  const offered = (decisions: PendingDecision[]) =>
+    decisions
+      .filter((decision) => CHOOSE.test(decision.prompt))
+      .flatMap((decision) => decision.options.map((option) => option.description));
+
+  it('sweet-gum-recluse-pinned-oracle-supported — pins the Oracle and models flash, cascade, reach, and the any-number counters', () => {
+    expect(recluse.sha256).toBe('b7a06140e0022bef19a4a2e2b61c1d72dd7173f61421f1acfe414da5eee7e541');
+    const def = interpretCard(recluse.card);
+    expect(def.modeled).toBe(true);
+    expect(def.keywords).toEqual(expect.arrayContaining(['flash', 'cascade', 'reach']));
+    expect(def.triggers[0]?.targets).toEqual([
+      { kind: 'creature', filter: { kind: 'enteredThisTurn' }, count: { min: 0, max: Infinity } },
+    ]);
+    expect(def.triggers[0]?.effects).toEqual([
+      { op: 'putCountersEachChosen', targetSlot: 0, counter: '+1/+1', count: 3 },
+    ]);
+  });
+
+  it('sweet-gum-recluse-counters-on-new-creatures — three counters on each chosen creature that entered this turn, any controller, itself included', () => {
+    const ctx = pod('recluse-counters');
+    const fresh = spawn(ctx, 'P1', bear());
+    const theirs = spawn(ctx, 'P2', oracle({ name: 'Recluse Rival', typeLine: 'Creature — Elf' }));
+    const { self } = castRecluse(ctx, pick('Test Bear', 'Recluse Rival', 'Sweet-Gum Recluse'));
+    expect(fresh.counters['+1/+1']).toBe(3);
+    expect(theirs.counters['+1/+1']).toBe(3);
+    expect(self.counters['+1/+1']).toBe(3);
+  });
+
+  it('sweet-gum-recluse-only-this-turn — creatures that entered on an earlier turn are never offered', () => {
+    const ctx = pod('recluse-filter');
+    const old = veteran(ctx, 'P1', 'Recluse Elder');
+    spawn(ctx, 'P1', bear());
+    const { decisions } = castRecluse(ctx, pick('Test Bear'));
+    expect(offered(decisions)).not.toContain('Target Recluse Elder');
+    expect(offered(decisions)).toContain('Target Sweet-Gum Recluse');
+    expect(old.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('sweet-gum-recluse-zero-targets — it may choose no creature at all', () => {
+    const ctx = pod('recluse-zero');
+    const fresh = spawn(ctx, 'P1', bear());
+    const { self } = castRecluse(ctx, pick());
+    expect(fresh.counters['+1/+1'] ?? 0).toBe(0);
+    expect(self.counters['+1/+1'] ?? 0).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3574,6 +3666,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Brokers Hideout',
     sha256: '9bb13d41853e16160f5e38c4c1470a7b91403284e0e1306f001227d86a7435d5',
     clauseCount: 1,
+  },
+  {
+    name: 'Sweet-Gum Recluse',
+    sha256: 'b7a06140e0022bef19a4a2e2b61c1d72dd7173f61421f1acfe414da5eee7e541',
+    clauseCount: 4,
   },
 ];
 

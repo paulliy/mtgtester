@@ -1972,15 +1972,19 @@
   {
     "oracleId": "8ea10a5a-b698-4f7d-a9c8-520f8d835f34",
     "name": "Sweet-Gum Recluse",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR01.28",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When this creature enters, put three +1/+1 counters on each of any number of target creatures that entered this turn.\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "aeec8e85-6571-4da6-8a48-f5d3985ca10b",
