@@ -1280,6 +1280,11 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Aether Channeler: return another target nonland permanent'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aether Channeler: create a 1/1 white Bird with flying'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Aether Channeler: draw a card'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Return to Nature: destroy target enchantment'] },
   {
     file: 'card-test-lab.spec.ts',

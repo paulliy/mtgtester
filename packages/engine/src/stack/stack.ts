@@ -127,6 +127,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         controllerId: top.controllerId,
         ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
         ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
+        ...(top.sourceObjectId !== undefined ? { objectId: top.sourceObjectId } : {}),
       },
       top.ability,
       top.targets,

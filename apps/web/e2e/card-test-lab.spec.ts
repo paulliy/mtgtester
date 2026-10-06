@@ -2419,6 +2419,41 @@ test('Aether Channeler: return another target nonland permanent', async ({ page 
   await expect(permanent(page, 'Aether Channeler')).toBeVisible();
 });
 
+test('Aether Channeler: create a 1/1 white Bird with flying', async ({ page }) => {
+  await runScenario(page, 'Aether Channeler: create a 1/1 white Bird with flying');
+
+  const channeler = handCard(page, 'Aether Channeler');
+  await expect(channeler).toHaveClass(/actionable/);
+  await channeler.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await page.getByRole('button', { name: /^Create a 1\/1 white Bird/ }).click({ timeout: 15_000 });
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Bird')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('0 in hand');
+  await expect(page.getByText(/Hand\s*0/).first()).toBeVisible();
+});
+
+test('Aether Channeler: draw a card', async ({ page }) => {
+  await runScenario(page, 'Aether Channeler: draw a card');
+
+  const channeler = handCard(page, 'Aether Channeler');
+  await expect(channeler).toHaveClass(/actionable/);
+  await channeler.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await page.getByRole('button', { name: 'Draw a card', exact: true }).click({ timeout: 15_000 });
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Hand\s*1/).first()).toBeVisible();
+  await expect(permanent(page, 'Bird')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+});
+
 test('Return to Nature: destroy target enchantment', async ({ page }) => {
   await runScenario(page, 'Return to Nature: destroy target enchantment');
 

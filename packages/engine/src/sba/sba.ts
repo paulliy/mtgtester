@@ -379,6 +379,14 @@ function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
   return ctx.state.players.find((p) => p.id === id)?.id ?? id;
 }
 
+/** Whether an ability sacrifices its own source as part of its effect ("sacrifice it"). */
+function sacrificesItsSource(ability: Ability): boolean {
+  return ability.effects.some(
+    (effect) =>
+      effect.op === 'sacrificeSourceThenReflexive' || effect.op === 'mayPayManaAndSacrificeSource',
+  );
+}
+
 function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen<void> {
   const s = ctx.state;
   // A modal trigger's controller chooses the mode as the ability is put on the stack, BEFORE
@@ -647,6 +655,13 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       ? { triggerObjectCardId: trigger.triggerObjectCardId }
       : {}),
     ...(trigger.scope !== undefined ? { triggerScope: trigger.scope } : {}),
+    ...(sacrificesItsSource(ability)
+      ? {
+          sourceObjectId:
+            s.battlefield.find((permanent) => permanent.cardId === trigger.sourceCardId)?.id ??
+            null,
+        }
+      : {}),
     ...(Object.keys(countTargets).length > 0 ? { countTargets } : {}),
     ...(Object.keys(divisionAmounts).length > 0 ? { divisionAmounts } : {}),
   };

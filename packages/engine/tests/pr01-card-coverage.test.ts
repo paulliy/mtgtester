@@ -27,7 +27,9 @@ import { resolveTopOfStack } from '../src/stack/stack';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { runPrioritySequence } from '../src/turn/priority';
 import { queueStepTriggers, runCombatAndExtraCombats } from '../src/turn/turn';
+import { playPreparedScenario } from '../src/flow/game';
 import { createGame } from '../src/state/game';
+import { prepareScenario, type PreparedScenarioSpec } from '../src/testing/prepared-scenario';
 import { moveObject, playerById } from '../src/state/objects';
 import { manaSourcesFor } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
@@ -770,6 +772,78 @@ describe('Canoptek Wraith', () => {
     expect(scout(gone.ctx, gone.self).decisions).toEqual([]);
     expect(lands(gone.ctx, 'Island')).toHaveLength(1);
   });
+
+  it('canoptek-wraith-blinked-in-response — a Wraith that left and returned is a new object the trigger cannot sacrifice', () => {
+    const { ctx, self } = board('wraith-blink', [island()], [island(), island()]);
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: self.cardId,
+      sourceOracleId: self.oracleId,
+      sourceName: self.name,
+      ability: interpretCard(wraith.card).triggers[0]!,
+    });
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, self, { zone: 'exile' }));
+    const card = ctx.state.exile.find((entry) => entry.cardId === self.cardId)!;
+    pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
+    const { decisions } = resolveTop(ctx, answers([[/pay \{3\} and sacrifice/, /Pay \{3\}/]]));
+    expect(decisions.some((decision) => /pay \{3\} and sacrifice/.test(decision.prompt))).toBe(
+      false,
+    );
+    expect(ctx.state.battlefield.some((entry) => entry.cardId === self.cardId)).toBe(true);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(3);
+    expect(lands(ctx, 'Island')).toHaveLength(1);
+  });
+
+  describe('paying {3} with a sacrifice-a-creature mana ability', () => {
+    const altar = () =>
+      oracle({
+        name: 'Wraith Altar',
+        typeLine: 'Artifact',
+        manaCost: '{3}',
+        oracleText: 'Sacrifice a creature: Add {C}{C}.',
+      });
+
+    it('canoptek-wraith-reserved-from-mana-sacrifice — the Altar may not sacrifice the Wraith it is paying for', () => {
+      const { ctx, self } = board('wraith-altar-alone', [island()], [island()], 1);
+      const shrine = spawn(ctx, 'P1', altar());
+      expect(manaSourcesFor(ctx, 'P1').some((source) => source.cardId === shrine.cardId)).toBe(
+        true,
+      );
+      // The Wraith is the only creature: {2} from the Altar would need to sacrifice it, which
+      // the "and sacrifice it" half then cannot pay, so the whole cost is unpayable.
+      expect(scout(ctx, self).decisions).toEqual([]);
+      expect(ctx.state.battlefield.some((entry) => entry.cardId === self.cardId)).toBe(true);
+      expect(playerById(ctx, 'P1').graveyard).toEqual([]);
+    });
+
+    it('canoptek-wraith-altar-sacrifices-another — with another creature, the Altar sacrifices that one and the Wraith is sacrificed by its own cost', () => {
+      const { ctx, self } = board('wraith-altar-other', [island()], [island(), island()], 1);
+      spawn(ctx, 'P1', altar());
+      spawn(ctx, 'P1', bear());
+      const { decisions } = scout(
+        ctx,
+        self,
+        answers([
+          [/pay \{3\} and sacrifice/, /Pay \{3\} and sacrifice/],
+          [/search your library/, /Put Island onto the battlefield tapped/],
+        ]),
+      );
+      // Never offered the Wraith as the Altar's sacrifice (the Bear is the only candidate left).
+      expect(
+        decisions.some((decision) =>
+          decision.options.some((option) => option.description === 'Sacrifice Canoptek Wraith'),
+        ),
+      ).toBe(false);
+      expect(
+        playerById(ctx, 'P1')
+          .graveyard.map((card) => card.name)
+          .sort(),
+      ).toEqual(['Canoptek Wraith', 'Test Bear']);
+      expect(lands(ctx, 'Island').length).toBeGreaterThan(1);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -1360,6 +1434,29 @@ describe('Necron Deathmark', () => {
     expect(ctx.state.stack[0]?.countTargets?.[1]).toEqual([victim.id]);
     pump(moveObject(ctx, victim, { zone: 'exile' }));
     resolveTop(ctx);
+    expect(playerById(ctx, 'P2').graveyard).toHaveLength(3);
+    expect(playerById(ctx, 'P2').graveyard.every((card) => card.name === 'Forest')).toBe(true);
+  });
+
+  it('necron-deathmark-protection-in-response — a creature that gains protection from black is not destroyed', () => {
+    const ctx = board('deathmark-protection');
+    const victim = spawn(ctx, 'P2', bear());
+    enter(ctx, 'P1', deathmark.card);
+    pump(priorityCheckpoint(ctx), deathmarkAnswer('P2', 'Test Bear'));
+    expect(ctx.state.stack[0]?.countTargets?.[1]).toEqual([victim.id]);
+    // In response, the creature gains protection from black: no longer a legal target of the
+    // black Deathmark's trigger (CR 608.2b), while the player target still is.
+    ctx.state.effects.push({
+      id: 'eff-test-protection',
+      sourceId: victim.cardId,
+      description: 'Test Bear gains protection from B',
+      targetCardIds: [victim.cardId],
+      kind: 'grantProtection',
+      protectionFrom: ['B'],
+      timestamp: ctx.state.nextTimestamp++,
+    });
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(true);
     expect(playerById(ctx, 'P2').graveyard).toHaveLength(3);
     expect(playerById(ctx, 'P2').graveyard.every((card) => card.name === 'Forest')).toBe(true);
   });
@@ -2109,6 +2206,60 @@ describe('Foe-Razer Regent', () => {
     pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
     toEndStep(ctx);
     expect(plusOnes(ctx, mine.cardId)).toBe(0);
+  });
+
+  it('foe-razer-regent-blink-in-response — a creature blinked while the Regent trigger waits is a new object that never fought', () => {
+    const ctx = pod('regent-blink-in-response');
+    spawn(ctx, 'P1', regent.card);
+    const mine = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Regent Brute', typeLine: 'Creature — Ogre', power: '5', toughness: '5' }),
+    );
+    const theirs = spawn(ctx, 'P2', bear());
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'fight-spell', oracleId: 'fight-spell', name: 'Lab Fight', controllerId: 'P1' },
+        LAB_FIGHT,
+        [mine.id, theirs.id],
+      ),
+    );
+    // The Regent's trigger goes on the stack; before it resolves the creature is blinked.
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, mine, { zone: 'exile' }));
+    const card = ctx.state.exile.find((entry) => entry.cardId === mine.cardId)!;
+    pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
+    resolveTop(ctx);
+    toEndStep(ctx);
+    expect(plusOnes(ctx, mine.cardId)).toBe(0);
+  });
+
+  it('foe-razer-regent-fighter-died — a creature that died from the fight gets nothing and the game continues', () => {
+    const ctx = pod('regent-fighter-died');
+    spawn(ctx, 'P1', regent.card);
+    const mine = spawn(ctx, 'P1', bear());
+    const theirs = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Regent Rival', typeLine: 'Creature — Ogre', power: '5', toughness: '5' }),
+    );
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'fight-spell', oracleId: 'fight-spell', name: 'Lab Fight', controllerId: 'P1' },
+        LAB_FIGHT,
+        [mine.id, theirs.id],
+      ),
+    );
+    settle(ctx);
+    expect(playerById(ctx, 'P1').graveyard.some((entry) => entry.cardId === mine.cardId)).toBe(
+      true,
+    );
+    expect(() => toEndStep(ctx)).not.toThrow();
+    expect(ctx.state.delayedTriggers).toHaveLength(0);
+    expect(ctx.state.stack).toHaveLength(0);
   });
 });
 
@@ -3426,6 +3577,23 @@ describe('Brokers Hideout', () => {
     expect(decisions.some((decision) => SEARCH.test(decision.prompt))).toBe(false);
     expect(playerById(ctx, 'P1').life).toBe(life);
   });
+
+  it('brokers-hideout-blinked-in-response — a Hideout that left and returned is a new object; the old trigger does not sacrifice it', () => {
+    const ctx = play('hideout-blink', [basic('Island', 'Island', 'U')]);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    const self = ctx.state.battlefield.find((entry) => entry.name === 'Brokers Hideout')!;
+    pump(moveObject(ctx, self, { zone: 'exile' }));
+    const card = ctx.state.exile.find((entry) => entry.cardId === self.cardId)!;
+    pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
+    // The returned Hideout's own enters trigger is still pending; the original resolves first.
+    const life = playerById(ctx, 'P1').life;
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((entry) => entry.cardId === self.cardId)).toBe(true);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(playerById(ctx, 'P1').life).toBe(life);
+  });
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -3907,4 +4075,38 @@ describe('PR01 restoration gate', () => {
       }
     },
   );
+});
+
+// ---------------------------------------------------------------------------------------------
+// Card Test Lab continuations use the production phase transitions
+// ---------------------------------------------------------------------------------------------
+
+describe('prepared-scenario continuations', () => {
+  const passEverything = (decision: PendingDecision): DecisionOutcome => {
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    return { index: Math.max(pass, 0), targets: new Map() };
+  };
+
+  it('prepared-end-step-monarch — continuing to the end step begins it like a real turn, monarch draw included', () => {
+    const ctx = pod('prepared-end-step');
+    ctx.state.monarchPlayerId = 'P1';
+    const spec: PreparedScenarioSpec = {
+      currentTurnPlayer: 'P1',
+      phase: 'precombatMain',
+      step: null,
+      turnNumber: 3,
+      hand: [],
+      battlefield: [],
+      continueToPostcombatMain: true,
+      continueToEndStep: true,
+    };
+    prepareScenario(ctx, spec);
+    const handBefore = playerById(ctx, 'P1').hand.length;
+    pump(playPreparedScenario(ctx, spec), passEverything);
+    expect(playerById(ctx, 'P1').hand.length).toBe(handBefore + 1);
+    const phases = ctx.state.eventLog
+      .filter((event) => event.type === 'phaseBegin')
+      .map((event) => (event.payload as { phase: string }).phase);
+    expect(phases).toEqual(['postcombatMain', 'ending']);
+  });
 });

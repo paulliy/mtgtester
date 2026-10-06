@@ -5153,6 +5153,67 @@ function aetherChannelerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function aetherChannelerBirdScenario(gameId: GameId): CardTestScenario {
+  const channeler = pinnedFrom(MARCHESA_BATCH1, 'Aether Channeler');
+  return pr01Scenario(gameId, {
+    id: 'aether-channeler-viewer-bird',
+    title: 'Aether Channeler: create a 1/1 white Bird with flying',
+    instructions: ['Cast Aether Channeler with your three Islands.', 'Choose the Bird mode.'],
+    expectedOutcome:
+      'A 1/1 white Bird creature token with flying enters under your control. Nothing is returned and no card is drawn.',
+    oracleSha256: channeler.sha256,
+    clauseIds: ['aether-channeler-enters-modes', 'aether-channeler-bird'],
+    decks: {
+      P1: [channeler.card, ISLAND, ISLAND, ISLAND],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Aether Channeler'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Island', 'Island', 'Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+function aetherChannelerDrawScenario(gameId: GameId): CardTestScenario {
+  const channeler = pinnedFrom(MARCHESA_BATCH1, 'Aether Channeler');
+  const drawn = card({
+    oracleId: 'lab-channeler-drawn',
+    name: 'Channeler Drawn Card',
+    typeLine: 'Creature — Scribe',
+    manaCost: '{9}',
+    cmc: 9,
+    power: '1',
+    toughness: '1',
+  });
+  return pr01Scenario(gameId, {
+    id: 'aether-channeler-viewer-draw',
+    title: 'Aether Channeler: draw a card',
+    instructions: ['Cast Aether Channeler with your three Islands.', 'Choose the draw mode.'],
+    expectedOutcome:
+      'You draw Channeler Drawn Card, the only card left in your library. No token is created and nothing is returned.',
+    oracleSha256: channeler.sha256,
+    clauseIds: ['aether-channeler-enters-modes', 'aether-channeler-draw'],
+    decks: {
+      P1: [channeler.card, ISLAND, ISLAND, ISLAND, drawn],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Aether Channeler'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Island', 'Island', 'Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
 function returnToNatureDestroyScenario(gameId: GameId): CardTestScenario {
   const nature = pinnedFrom(MARCHESA_BATCH1, 'Return to Nature');
   return pr01Scenario(gameId, {
@@ -5496,6 +5557,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kairi-viewer-mill-and-return',
   'will-of-the-mardu-viewer-choose-both',
   'aether-channeler-viewer-bounce-another',
+  'aether-channeler-viewer-bird',
+  'aether-channeler-viewer-draw',
   'return-to-nature-viewer-destroy-enchantment',
   'return-to-nature-viewer-exile-graveyard-card',
   'mystic-sanctuary-viewer-untapped-return',
@@ -5610,6 +5673,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kairi-viewer-mill-and-return': kairiMillScenario,
   'will-of-the-mardu-viewer-choose-both': willOfTheMarduScenario,
   'aether-channeler-viewer-bounce-another': aetherChannelerScenario,
+  'aether-channeler-viewer-bird': aetherChannelerBirdScenario,
+  'aether-channeler-viewer-draw': aetherChannelerDrawScenario,
   'return-to-nature-viewer-destroy-enchantment': returnToNatureDestroyScenario,
   'return-to-nature-viewer-exile-graveyard-card': returnToNatureExileScenario,
   'mystic-sanctuary-viewer-untapped-return': mysticSanctuaryScenario,

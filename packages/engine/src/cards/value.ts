@@ -58,6 +58,12 @@ export interface ValueScope {
    * new object (CR 400.7): "put counters on it" after it left and returned does nothing.
    */
   triggerObjectId?: string;
+  /**
+   * The exact object whose event fired this trigger, captured when it fired. A delayed trigger
+   * that remembers "it" (Foe-Razer Regent's "the creature that fought") takes this rather than
+   * looking the card up at resolution, which would find a new object blinked in response.
+   */
+  eventObjectId?: string;
   /** Total counters on an activated ability's source, captured before costs are paid. */
   sourceCountersTotal?: number;
   /**
@@ -83,6 +89,7 @@ export type TriggerScope = Pick<
   | 'stationPower'
   | 'sourceCountersTotal'
   | 'triggerObjectId'
+  | 'eventObjectId'
 >;
 
 export type Value =

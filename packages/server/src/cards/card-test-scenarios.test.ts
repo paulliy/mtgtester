@@ -149,6 +149,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'kairi-viewer-mill-and-return',
       'will-of-the-mardu-viewer-choose-both',
       'aether-channeler-viewer-bounce-another',
+      'aether-channeler-viewer-bird',
+      'aether-channeler-viewer-draw',
       'return-to-nature-viewer-destroy-enchantment',
       'return-to-nature-viewer-exile-graveyard-card',
       'mystic-sanctuary-viewer-untapped-return',

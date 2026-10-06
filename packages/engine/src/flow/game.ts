@@ -14,7 +14,13 @@ import { runOpeningHands } from '../turn/mulligan';
 import { emptyManaPools, runPrioritySequence } from '../turn/priority';
 import { priorityCheckpoint } from '../sba/sba';
 import type { PreparedScenarioSpec } from '../testing/prepared-scenario';
-import { queueStepTriggers, runCombatAndExtraCombats, runTurn } from '../turn/turn';
+import {
+  beginEndStep,
+  beginPostcombatMain,
+  queueStepTriggers,
+  runCombatAndExtraCombats,
+  runTurn,
+} from '../turn/turn';
 
 function advanceToNextTurnPlayer(ctx: GameContext): void {
   const s = ctx.state;
@@ -120,19 +126,17 @@ export function* playPreparedScenario(
     emptyManaPools(ctx);
     yield* runCombatAndExtraCombats(ctx);
   }
+  // The production phase transitions, so the phase event and every beginning-of-step trigger
+  // (the monarch's end-step draw too) match a real turn.
   if (spec.continueToPostcombatMain === true) {
     emptyManaPools(ctx);
-    state.phase = 'postcombatMain';
-    state.step = null;
-    queueStepTriggers(ctx, 'mainPhase');
+    beginPostcombatMain(ctx);
     yield* priorityCheckpoint(ctx);
     yield* runPrioritySequence(ctx);
   }
   if (spec.continueToEndStep === true) {
     emptyManaPools(ctx);
-    state.phase = 'ending';
-    state.step = 'end';
-    queueStepTriggers(ctx, 'endStep');
+    beginEndStep(ctx);
     yield* priorityCheckpoint(ctx);
     yield* runPrioritySequence(ctx);
   }

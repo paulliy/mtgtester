@@ -703,6 +703,31 @@ describe('Aether Channeler Card Test Lab scenario', () => {
     expect(onBattlefield('Aether Channeler')).toHaveLength(1);
     replays('aether-channeler-viewer-bounce-another', steps);
   });
+
+  it('aether-channeler-viewer-bird — the Bird mode creates a 1/1 white flier and nothing else', () => {
+    const birdSteps: Step[] = [
+      { action: 'Cast Aether Channeler' },
+      { action: 'Create a 1/1 white Bird creature token with flying' },
+    ];
+    const { seat, onBattlefield } = run('aether-channeler-viewer-bird', birdSteps);
+    const birds = onBattlefield('Bird');
+    expect(birds).toHaveLength(1);
+    expect(birds[0]?.controllerId).toBe('P1');
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(seat('P2').hand).toEqual([]);
+    expect(seat('P1').hand).toEqual([]);
+    replays('aether-channeler-viewer-bird', birdSteps);
+  });
+
+  it('aether-channeler-viewer-draw — the draw mode draws a card and nothing else', () => {
+    const drawSteps: Step[] = [{ action: 'Cast Aether Channeler' }, { action: 'Draw a card' }];
+    const { seat, onBattlefield } = run('aether-channeler-viewer-draw', drawSteps);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Channeler Drawn Card']);
+    expect(onBattlefield('Bird')).toHaveLength(0);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(seat('P2').hand).toEqual([]);
+    replays('aether-channeler-viewer-draw', drawSteps);
+  });
 });
 
 describe('Return to Nature Card Test Lab scenarios', () => {

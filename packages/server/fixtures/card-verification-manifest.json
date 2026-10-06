@@ -286,14 +286,18 @@
             "aether-channeler-pinned-oracle-supported",
             "aether-channeler-bounce-needs-another"
           ],
-          "viewerScenarioIds": ["aether-channeler-viewer-bounce-another"]
+          "viewerScenarioIds": [
+            "aether-channeler-viewer-bounce-another",
+            "aether-channeler-viewer-bird",
+            "aether-channeler-viewer-draw"
+          ]
         },
         {
           "id": "aether-channeler-bird",
           "oracleText": "Create a 1/1 white Bird creature token with flying.",
           "implementation": ["createToken BIRD_1_1_FLYING (1/1 white Bird, flying)"],
           "engineTestIds": ["aether-channeler-bird"],
-          "viewerScenarioIds": ["aether-channeler-viewer-bounce-another"]
+          "viewerScenarioIds": ["aether-channeler-viewer-bird"]
         },
         {
           "id": "aether-channeler-bounce",
@@ -314,7 +318,7 @@
           "oracleText": "Draw a card.",
           "implementation": ["draw 1"],
           "engineTestIds": ["aether-channeler-draw"],
-          "viewerScenarioIds": ["aether-channeler-viewer-bounce-another"]
+          "viewerScenarioIds": ["aether-channeler-viewer-draw"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2049,7 +2053,10 @@
             "canoptek-wraith-name-not-type",
             "canoptek-wraith-nonbasic-choice-finds-nothing",
             "canoptek-wraith-decline",
-            "canoptek-wraith-unpayable"
+            "canoptek-wraith-unpayable",
+            "canoptek-wraith-blinked-in-response",
+            "canoptek-wraith-reserved-from-mana-sacrifice",
+            "canoptek-wraith-altar-sacrifices-another"
           ],
           "viewerScenarioIds": ["canoptek-wraith-viewer-scout-same-name-search"]
         }
@@ -2290,7 +2297,8 @@
             "necron-deathmark-zero-creatures",
             "necron-deathmark-no-creatures-at-all",
             "necron-deathmark-indestructible",
-            "necron-deathmark-illegal-creature-keeps-mill"
+            "necron-deathmark-illegal-creature-keeps-mill",
+            "necron-deathmark-protection-in-response"
           ],
           "viewerScenarioIds": ["necron-deathmark-viewer-destroy-up-to-one-and-mill"]
         }
@@ -3246,7 +3254,9 @@
           "engineTestIds": [
             "foe-razer-regent-fight-then-counters",
             "foe-razer-regent-any-creature-you-control",
-            "foe-razer-regent-new-object-gets-nothing"
+            "foe-razer-regent-new-object-gets-nothing",
+            "foe-razer-regent-blink-in-response",
+            "foe-razer-regent-fighter-died"
           ],
           "viewerScenarioIds": ["foe-razer-regent-viewer-fight-and-grow"]
         }
@@ -4092,7 +4102,8 @@
             "brokers-hideout-reflexive-search",
             "brokers-hideout-basic-forest-plains-island-only",
             "brokers-hideout-find-nothing",
-            "brokers-hideout-not-sacrificed-no-search"
+            "brokers-hideout-not-sacrificed-no-search",
+            "brokers-hideout-blinked-in-response"
           ],
           "viewerScenarioIds": ["brokers-hideout-viewer-sacrifice-and-search"]
         }

@@ -51,7 +51,7 @@ import {
   totalPips,
   withX,
 } from '../mana/cost';
-import type { ParsedManaCost } from '../mana/cost';
+import type { ManaSource, ParsedManaCost } from '../mana/cost';
 import { addMana, removeMana, selectEntriesToSpend } from '../mana/pool';
 import type { ManaEntry, PaymentPurpose } from '../cards/ability';
 import { debug, emit } from '../log/log';
@@ -217,6 +217,11 @@ export interface EffectSource {
   resolvingStackObject?: EngineStackObject;
   /** The source's colors as its ability went on the stack — protection's last known information. */
   lastKnownColors?: readonly Color[];
+  /**
+   * The source permanent this ability came from, for an ability that sacrifices "it": null when
+   * it was already off the battlefield. Absent when not tracked, and the source is found by card.
+   */
+  objectId?: ObjectId | null;
 }
 
 /** Deal non-combat or combat damage from `source` to a creature. */
@@ -1327,6 +1332,20 @@ export function* executeAbility(
       source.cardId,
     );
 
+  /**
+   * The permanent "it" names in "sacrifice it": the very object the ability came from when that
+   * was recorded (a blinked source is a new object, CR 400.7), otherwise the source card's
+   * permanent.
+   */
+  const sourcePermanent = (): EnginePermanent | undefined => {
+    if (source.objectId === null) return undefined;
+    return ctx.state.battlefield.find((permanent) =>
+      source.objectId === undefined
+        ? permanent.cardId === source.cardId
+        : permanent.id === source.objectId,
+    );
+  };
+
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */
   const ref = (r: EffectRef): ObjectId | null => {
     if (r === 'source') {
@@ -1747,7 +1766,7 @@ export function* executeAbility(
       case 'destroyEachChosen': {
         const spec = ability.targets[effect.targetSlot];
         for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !isTargetStillLegal(ctx, id, spec, source.controllerId)) {
+          if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
           const permanent = findPermanent(ctx, id);
@@ -3007,8 +3026,7 @@ export function* executeAbility(
         break;
       }
       case 'sacrificeSourceThenReflexive': {
-        const t = ref('source');
-        const perm = t === null ? undefined : findPermanent(ctx, t);
+        const perm = sourcePermanent();
         // Only a permanent you control can be sacrificed (CR 701.21a).
         if (perm === undefined || perm.controllerId !== source.controllerId) break;
         yield* moveObject(ctx, perm, { zone: 'graveyard', reason: 'sacrifice' });
@@ -4393,13 +4411,20 @@ export function* executeAbility(
         break;
       }
       case 'mayPayManaAndSacrificeSource': {
-        const self = ctx.state.battlefield.find(
-          (permanent) =>
-            permanent.cardId === source.cardId && permanent.controllerId === controller.id,
-        );
+        const found = sourcePermanent();
+        const self = found?.controllerId === controller.id ? found : undefined;
+        // The Wraith is spoken for by the sacrifice half of this cost, so no mana ability paying
+        // the {3} half may sacrifice it (CR 601.2g-h: an unpayable part makes the whole illegal).
+        const reserved = new Set<string>(self === undefined ? [] : [self.id]);
         const payable =
           self !== undefined &&
-          canPay(effect.cost, controller.manaEntries, manaSourcesFor(ctx, controller.id));
+          canPay(
+            effect.cost,
+            controller.manaEntries,
+            manaSourcesFor(ctx, controller.id).filter((manaSource) =>
+              sacrificeCostsPayableWithout(ctx, manaSource, reserved),
+            ),
+          );
         if (!payable) break;
         const costText = describeManaCost(effect.cost);
         const outcome = yield {
@@ -4416,7 +4441,7 @@ export function* executeAbility(
           ],
         };
         if (outcome.index !== 1) break;
-        yield* payManaCost(ctx, controller, effect.cost);
+        yield* payManaCost(ctx, controller, effect.cost, { kind: 'other' }, [], reserved);
         emit(ctx, 'sacrifice', { name: self.name, cardId: self.cardId }, controller.id);
         yield* moveObject(ctx, self, { zone: 'graveyard', reason: 'sacrifice' });
         yield* executeAbility(
@@ -5195,7 +5220,12 @@ export function* executeAbility(
         }
         // `t` is the object's current id in whatever zone it is in; a creature that already died
         // keeps a graveyard id that no later battlefield object can ever match.
-        const rememberedObjectId = effect.sameObject === true && t !== null ? t : undefined;
+        // The trigger object as it was when the event fired, when the firing trigger captured
+        // it: a creature blinked in response is a new object that never fought (CR 400.7).
+        const eventObjectId =
+          effect.target === 'triggerObject' ? extraScope?.eventObjectId : undefined;
+        const rememberedObjectId =
+          effect.sameObject === true ? (eventObjectId ?? (t !== null ? t : undefined)) : undefined;
         ctx.state.delayedTriggers.push({
           id: `dt-${ctx.state.nextObjectNum++}`,
           sourceCardId: source.cardId,
@@ -6304,15 +6334,51 @@ export function endUntilEotEffects(ctx: GameContext): void {
  * A generator because not every mana ability costs {T}: "Sacrifice this creature: Add {R}{R}"
  * moves a permanent to the graveyard, and `moveObject` can ask the CR 903.9b commander question.
  */
+/**
+ * Whether a mana source can still be activated when `reserved` permanents are spoken for by
+ * another part of the same cost: it must not sacrifice a reserved permanent itself, and each
+ * "sacrifice another" cost must have enough candidates left (Ashnod's Altar paying for Canoptek
+ * Wraith's "{3} and sacrifice it" may not sacrifice the Wraith).
+ */
+function sacrificeCostsPayableWithout(
+  ctx: GameContext,
+  source: ManaSource,
+  reserved: ReadonlySet<string>,
+): boolean {
+  if (reserved.size === 0) return true;
+  const perm = ctx.state.battlefield.find((permanent) => permanent.cardId === source.cardId);
+  if (perm === undefined) return false;
+  return source.costs.every((cost) => {
+    if (cost.kind === 'sacrificeSelf') return !reserved.has(perm.id);
+    if (cost.kind !== 'sacrificeOther') return true;
+    const candidates = ctx.state.battlefield.filter(
+      (candidate) =>
+        !reserved.has(candidate.id) &&
+        (cost.allowSelf === true || candidate.id !== perm.id) &&
+        candidate.controllerId === perm.controllerId &&
+        matchesSelector(ctx, candidate, cost.selector, {
+          cardId: perm.cardId,
+          controllerId: perm.controllerId,
+        }),
+    );
+    return candidates.length >= (cost.count ?? 1);
+  });
+}
+
 export function* payManaCost(
   ctx: GameContext,
   player: EnginePlayerState,
   cost: ParsedManaCost,
   purpose: PaymentPurpose = { kind: 'other' },
   excludedSourceCardIds: readonly string[] = [],
+  /** Permanents another part of the same cost will sacrifice; no mana ability may use them. */
+  reservedObjectIds: ReadonlySet<string> = new Set(),
 ): GameGen<{ spellCantBeCountered: boolean; treasureManaSpent: number; manaSpent: number }> {
   const excluded = new Set(excludedSourceCardIds);
-  const sources = manaSourcesFor(ctx, player.id).filter((source) => !excluded.has(source.cardId));
+  const sources = manaSourcesFor(ctx, player.id).filter(
+    (source) =>
+      !excluded.has(source.cardId) && sacrificeCostsPayableWithout(ctx, source, reservedObjectIds),
+  );
   const allows = allowanceFor(ctx, player.id, purpose);
   const plan = planPayment(cost, player.manaEntries, sources, allows, player.life);
   if (plan === null) {
@@ -6349,7 +6415,16 @@ export function* payManaCost(
       }
       removeMana(player, spentOnSource);
     }
-    yield* payAbilityCosts(ctx, player, perm, source.costs, 'tapForMana');
+    yield* payAbilityCosts(
+      ctx,
+      player,
+      perm,
+      source.costs,
+      'tapForMana',
+      0,
+      undefined,
+      reservedObjectIds,
+    );
 
     // Add exactly the mana the planner chose this source to produce — the SPECIFIC symbol per
     // unit (correct for multi-color sources, where the first symbol would mispay), carrying
@@ -6425,6 +6500,8 @@ export function* payAbilityCosts(
   tapEvent: 'tap' | 'tapForMana',
   announcedX = 0,
   canTap?: (candidate: EnginePermanent, remaining: readonly AbilityCost[]) => boolean,
+  /** Permanents reserved for another part of the same payment, never chosen to sacrifice here. */
+  reservedObjectIds: ReadonlySet<string> = new Set(),
 ): GameGen<{ stationPower?: number }> {
   let stationPower: number | undefined;
   for (const [costIndex, cost] of costs.entries()) {
@@ -6545,6 +6622,7 @@ export function* payAbilityCosts(
         for (let i = 0; i < count; i++) {
           const options = ctx.state.battlefield.filter(
             (candidate) =>
+              !reservedObjectIds.has(candidate.id) &&
               (cost.allowSelf === true || candidate.id !== perm.id) &&
               candidate.controllerId === player.id &&
               matchesSelector(ctx, candidate, cost.selector, {

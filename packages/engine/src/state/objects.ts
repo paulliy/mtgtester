@@ -1230,6 +1230,9 @@ export function queueTriggersForEvent(
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
+            ...(spec.subject.kind !== 'self' && remembersEventObject(ability)
+              ? { eventObjectId: first.permanent.id }
+              : {}),
             ...(amounts.length > 0
               ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
               : {}),
@@ -1345,6 +1348,20 @@ export function queueTriggersForEvent(
 }
 
 /** The one-subject case, which is every event except attacks and combat damage. */
+/**
+ * Whether a trigger's effects remember the exact object that fired it (a `sameObject` delayed
+ * trigger on 'triggerObject'). Only those capture the event object's id, so every other
+ * trigger's pending entry stays as it was.
+ */
+function remembersEventObject(ability: Ability): boolean {
+  return ability.effects.some(
+    (effect) =>
+      effect.op === 'registerDelayedTrigger' &&
+      effect.sameObject === true &&
+      effect.target === 'triggerObject',
+  );
+}
+
 export function queueTriggersForObject(
   ctx: GameContext,
   when: ObjectTriggerWhen,
