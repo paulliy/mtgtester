@@ -3228,6 +3228,8 @@ describe('Kairi, the Swirling Sky', () => {
       (entry) => entry.isToken && entry.name === 'Kairi Colossus',
     );
     expect(copy).toBeDefined();
+    // The copy shows the copied cost on the board too, so players can see why it is excluded.
+    expect(copy!.manaCost).toBe('{7}');
     const decisions = dies(ctx, BOUNCE, pick('Kairi Trinket'));
     const offered = offeredTargets(decisions).flat();
     // A copy copies the mana cost (CR 707.2): neither Colossus fits a total of 6.

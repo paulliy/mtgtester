@@ -8,7 +8,7 @@
  * depend on it without a cycle.
  */
 
-import type { Color } from '@mtg/shared';
+import type { Color, ManaCostString } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { Condition } from './condition';
 import type { Selector } from './selector';
@@ -1120,6 +1120,8 @@ export interface TokenSpec {
    * tokens have none and a mana value of 0.
    */
   manaCost?: ParsedManaCost | null;
+  /** The copied mana cost as printed, so the board shows the copy's cost too. */
+  manaCostText?: ManaCostString | null;
 }
 
 /**

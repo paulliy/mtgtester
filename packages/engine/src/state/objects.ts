@@ -861,7 +861,7 @@ export function createToken(
     name: spec.name,
     typeLine: spec.typeLine,
     oracleText: '',
-    manaCost: null,
+    manaCost: spec.manaCostText ?? null,
     isToken: true,
     isCommander: false,
     zone: 'battlefield',
@@ -1001,6 +1001,7 @@ export function tokenSpecCopying(
     activatedAbilities: def.activatedAbilities,
     // A copy copies the mana cost (CR 707.2), so the token's mana value is the original's.
     manaCost: def.manaCost,
+    manaCostText: perm.manaCost,
   };
 }
 
