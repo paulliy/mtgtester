@@ -28,7 +28,7 @@ import { playerById } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { formatPlayerLog } from '../src/view/spectator';
 import { buildPlayerView } from '../src/view/view';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
@@ -115,14 +115,20 @@ function takeAction(
   playerId: string,
   payload: PriorityActionPayload,
   answer?: Answer,
+  targets: ReadonlyMap<number, string> = new Map(),
 ) {
   return pump(
-    applyPriorityAction(ctx, playerById(ctx, playerId), payload, {
-      index: 0,
-      targets: new Map(),
-    }),
+    applyPriorityAction(ctx, playerById(ctx, playerId), payload, { index: 0, targets }),
     answer,
   );
+}
+
+/** The priority option that casts `objectId` from its current zone, if it is legal now. */
+function castOptionFor(ctx: GameContext, playerId: string, objectId: string) {
+  return priorityOptions(ctx, playerId).find((option) => {
+    const payload = option.payload as PriorityActionPayload;
+    return payload.kind === 'castSpell' && payload.objectId === objectId;
+  });
 }
 
 function resolveTop(ctx: GameContext, answer?: Answer) {
@@ -368,6 +374,134 @@ describe('Attune with Aether', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.03 Beacon of Unrest
+// ---------------------------------------------------------------------------------------------
+
+describe('Beacon of Unrest', () => {
+  const beacon = pinned('Beacon of Unrest');
+  const RELIC = () =>
+    oracle({ name: 'Beacon Relic', typeLine: 'Artifact', manaCost: '{2}', oracleText: '' });
+  const CHARM = () =>
+    oracle({ name: 'Beacon Charm', typeLine: 'Enchantment', manaCost: '{1}', oracleText: '' });
+
+  function setup(seed: string) {
+    const ctx = pod(seed);
+    const card = conjure(ctx, 'P1', beacon.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [
+      { symbol: 'B' },
+      { symbol: 'B' },
+      { symbol: 'C' },
+      { symbol: 'C' },
+      { symbol: 'C' },
+    ]);
+    return { ctx, card };
+  }
+
+  function cast(ctx: GameContext, objectId: string, targetId: string) {
+    const option = castOptionFor(ctx, 'P1', objectId);
+    expect(option).toBeDefined();
+    expect(option!.targets?.[0]?.options).toContain(targetId);
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, targetId]]),
+    );
+    expect(ctx.state.stack).toHaveLength(1);
+  }
+
+  it('beacon-of-unrest-pinned-oracle-supported — pins the Oracle and models both sentences', () => {
+    expect(beacon.sha256).toBe('e8e9347132f2e3a9e1529d4ac633e47efaa45a78780e6efb21226d155a7c58d4');
+    expect(beacon.card.oracleText).toBe(
+      "Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle Beacon of Unrest into its owner's library.",
+    );
+    const def = interpretCard(beacon.card);
+    expect(def.modeled).toBe(true);
+    expect(def.spellAbility?.effects).toEqual([
+      { op: 'graveyardToBattlefield', target: 0 },
+      { op: 'resolvingSpellShuffleIntoLibrary' },
+    ]);
+  });
+
+  it("beacon-of-unrest-reanimate-opponent-creature — returns an opponent's creature card under your control", () => {
+    const { ctx, card } = setup('beacon-opponent-creature');
+    const victim = conjure(ctx, 'P2', bear(), 'graveyard');
+    cast(ctx, card.id, victim.id);
+    resolveTop(ctx);
+    const returned = ctx.state.battlefield.find((entry) => entry.cardId === victim.cardId);
+    expect(returned?.controllerId).toBe('P1');
+    expect(returned?.ownerId).toBe('P2');
+    expect(playerById(ctx, 'P2').graveyard).toEqual([]);
+  });
+
+  it("beacon-of-unrest-shuffles-itself — the resolving Beacon goes into its owner's library, then that library is shuffled", () => {
+    const { ctx, card } = setup('beacon-shuffle-self');
+    const relic = conjure(ctx, 'P1', RELIC(), 'graveyard');
+    const libraryBefore = playerById(ctx, 'P1').library.length;
+    cast(ctx, card.id, relic.id);
+    resolveTop(ctx);
+    const p1 = playerById(ctx, 'P1');
+    expect(ctx.state.battlefield.some((entry) => entry.cardId === relic.cardId)).toBe(true);
+    expect(p1.graveyard.some((entry) => entry.cardId === card.cardId)).toBe(false);
+    expect(p1.library.some((entry) => entry.cardId === card.cardId)).toBe(true);
+    expect(p1.library).toHaveLength(libraryBefore + 1);
+    const types = ctx.state.eventLog.map((event) => event.type);
+    expect(types.lastIndexOf('shuffle')).toBeGreaterThan(
+      types.lastIndexOf('graveyardToBattlefield'),
+    );
+    expect(ctx.state.stack).toHaveLength(0);
+  });
+
+  it("beacon-of-unrest-owner-library — a Beacon owned by another player shuffles into that player's library", () => {
+    const { ctx, card } = setup('beacon-owner');
+    card.ownerId = 'P2';
+    const relic = conjure(ctx, 'P1', RELIC(), 'graveyard');
+    cast(ctx, card.id, relic.id);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P2').library.some((entry) => entry.cardId === card.cardId)).toBe(true);
+    expect(playerById(ctx, 'P1').library.some((entry) => entry.cardId === card.cardId)).toBe(false);
+  });
+
+  it('beacon-of-unrest-target-filter — only artifact and creature cards in graveyards are targets', () => {
+    const { ctx, card } = setup('beacon-filter');
+    const creature = conjure(ctx, 'P3', bear(), 'graveyard');
+    const relic = conjure(ctx, 'P2', RELIC(), 'graveyard');
+    const charm = conjure(ctx, 'P1', CHARM(), 'graveyard');
+    const land = conjure(ctx, 'P1', forest(), 'graveyard');
+    const onBattlefield = spawn(ctx, 'P2', bear());
+    const offered = castOptionFor(ctx, 'P1', card.id)!.targets![0]!.options;
+    expect(offered).toEqual(expect.arrayContaining([creature.id, relic.id]));
+    expect(offered).not.toContain(charm.id);
+    expect(offered).not.toContain(land.id);
+    expect(offered).not.toContain(onBattlefield.id);
+  });
+
+  it('beacon-of-unrest-no-target-not-castable — with no artifact or creature card in any graveyard it cannot be cast', () => {
+    const { ctx, card } = setup('beacon-no-target');
+    conjure(ctx, 'P1', CHARM(), 'graveyard');
+    expect(castOptionFor(ctx, 'P1', card.id)).toBeUndefined();
+  });
+
+  it('beacon-of-unrest-fizzle-to-graveyard — an illegal target fizzles; Beacon goes to the graveyard and is not shuffled', () => {
+    const { ctx, card } = setup('beacon-fizzle');
+    const victim = conjure(ctx, 'P2', bear(), 'graveyard');
+    cast(ctx, card.id, victim.id);
+    // The target leaves the graveyard before resolution (CR 608.2b).
+    const p2 = playerById(ctx, 'P2');
+    p2.graveyard = p2.graveyard.filter((entry) => entry.id !== victim.id);
+    victim.zone = 'exile';
+    ctx.state.exile.push(victim);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((entry) => entry.cardId === victim.cardId)).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.some((entry) => entry.cardId === card.cardId)).toBe(
+      true,
+    );
+    expect(playerById(ctx, 'P1').library.some((entry) => entry.cardId === card.cardId)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -388,6 +522,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Attune with Aether',
     sha256: 'e1dc515b653e7e3f91dda25d2ed30a27208e28a623ab2be3604d643119e57c94',
     clauseCount: 1,
+  },
+  {
+    name: 'Beacon of Unrest',
+    sha256: 'e8e9347132f2e3a9e1529d4ac633e47efaa45a78780e6efb21226d155a7c58d4',
+    clauseCount: 2,
   },
 ];
 
@@ -474,7 +613,7 @@ describe('PR01 restoration gate', () => {
         expect(clause.implementation, `${name} implementation`).not.toHaveLength(0);
         expect(clause.engineTestIds, `${name} engine tests`).not.toHaveLength(0);
         expect(clause.viewerScenarioIds, `${name} viewer scenarios`).not.toHaveLength(0);
-        for (const id of clause.engineTestIds) expect(engineSource, id).toContain(`'${id} —`);
+        for (const id of clause.engineTestIds) expect(engineSource, id).toContain(`${id} —`);
         for (const id of clause.viewerScenarioIds) expect(viewerSource, id).toContain(id);
       }
     },

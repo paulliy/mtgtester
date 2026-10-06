@@ -149,3 +149,20 @@ describe('Attune with Aether Card Test Lab scenario', () => {
     replays('attune-with-aether-viewer-reveal-to-hand', steps);
   });
 });
+
+describe('Beacon of Unrest Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Beacon of Unrest', targets: ['Lab Ox'] }];
+
+  it('beacon-of-unrest-viewer-reanimate-and-shuffle — reanimates the creature card and shuffles Beacon into its library', () => {
+    const { state, seat, onBattlefield } = run(
+      'beacon-of-unrest-viewer-reanimate-and-shuffle',
+      steps,
+    );
+    expect(onBattlefield('Lab Ox')[0]?.controllerId).toBe('P1');
+    expect(seat('P1').graveyard).toEqual([]);
+    expect(seat('P1').library.map((card) => card.name)).toEqual(['Beacon of Unrest']);
+    const types = state.eventLog.map((event) => event.type);
+    expect(types.lastIndexOf('shuffle')).toBeGreaterThan(types.indexOf('graveyardToBattlefield'));
+    replays('beacon-of-unrest-viewer-reanimate-and-shuffle', steps);
+  });
+});

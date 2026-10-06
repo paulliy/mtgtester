@@ -563,6 +563,12 @@ export type Effect =
   | { op: 'exileAllGraveyards' }
   /** Put the currently resolving spell card on the bottom of its owner's library. */
   | { op: 'resolvingSpellToLibraryBottom' }
+  /**
+   * "Shuffle ~ into its owner's library" on a resolving spell (Beacon of Unrest): the card goes
+   * from the stack into its owner's library, which that player then shuffles. A spell that
+   * fizzles never reaches this instruction and goes to its owner's graveyard as usual.
+   */
+  | { op: 'resolvingSpellShuffleIntoLibrary' }
   | { op: 'exileTargetPlayerGraveyard'; target: EffectRef }
   | { op: 'returnToHandEach'; selector: Selector }
   | { op: 'graveyardToBattlefieldEach'; filter: Selector; scope?: 'you' | 'all' }

@@ -23,6 +23,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
     expect(pool.cards.map(({ card }) => card.name)).toEqual([
       'Arcane Denial',
       'Attune with Aether',
+      'Beacon of Unrest',
       'Fabled Passage',
       'Forum of Amity',
       'Myriad Landscape',

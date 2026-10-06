@@ -1182,6 +1182,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Attune with Aether: reveal a basic land, then get two energy'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Beacon of Unrest: reanimate a creature card, shuffle Beacon away'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

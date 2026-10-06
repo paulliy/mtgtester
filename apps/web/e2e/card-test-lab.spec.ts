@@ -1785,3 +1785,26 @@ test('Attune with Aether: reveal a basic land, then get two energy', async ({ pa
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Attune Private Library Secret')).toHaveCount(0);
 });
+
+test('Beacon of Unrest: reanimate a creature card, shuffle Beacon away', async ({ page }) => {
+  await runScenario(page, 'Beacon of Unrest: reanimate a creature card, shuffle Beacon away');
+
+  const beacon = handCard(page, 'Beacon of Unrest');
+  await expect(beacon).toHaveClass(/actionable/);
+  await beacon.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.locator('.target-instruction')).toHaveText(
+    'Target 1 of 1: click a highlighted card or player.',
+  );
+  await page
+    .locator('.zone-card-thumb.targetable')
+    .filter({ has: page.getByRole('img', { name: 'Lab Ox', exact: true }) })
+    .click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+  await expect(page.getByText(/Graveyard\s*0/).first()).toBeVisible();
+  await expect(page.getByText(/Library\s*1/).first()).toBeVisible();
+});

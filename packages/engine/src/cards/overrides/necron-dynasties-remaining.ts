@@ -1,8 +1,8 @@
 /** Remaining authored overrides for necron-dynasties.txt. */
 
-import { TAP, mana } from '../templates';
+import { TAP, mana, spell } from '../templates';
 import type { TokenSpec } from '../ability';
-import { allOf, ofType, not, YOURS } from '../selector';
+import { allOf, anyOf, ofType, not, YOURS } from '../selector';
 import { defineCard, unsupportedCard } from './index';
 import { INSECT_1_1_FLYING, NECRON_WARRIOR_2_2 as NECRON_WARRIOR_TOKEN } from '../tokens';
 
@@ -15,11 +15,28 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Anrakyr the Traveller',
     'Artifact-from-hand-or-graveyard life cast is implemented as free casts from hand.',
   );
-  // Catalog audit necron-remaining-batch-2: shuffle this into library is shuffle-only.
-  unsupportedCard(
+  // Coverage PR01 (was contained by necron-remaining-batch-2): the resolving Beacon itself is shuffled into its owner's library.
+  defineCard(
     'aef874fa-93c0-4f86-8b0d-dc24ec51467d',
     'Beacon of Unrest',
-    "Shuffle this into its owner's library is implemented as shuffleLibrary only.",
+    [
+      "Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library.",
+    ],
+    {
+      spellAbility: spell({
+        targets: [
+          {
+            kind: 'cardInGraveyard',
+            filter: anyOf(ofType('Artifact'), ofType('Creature')),
+            graveyardOwnerScope: 'any',
+          },
+        ],
+        effects: [
+          { op: 'graveyardToBattlefield', target: 0 },
+          { op: 'resolvingSpellShuffleIntoLibrary' },
+        ],
+      }),
+    },
   );
   // Catalog audit necron-remaining-batch-4: type change omits spells and other zones.
   unsupportedCard(

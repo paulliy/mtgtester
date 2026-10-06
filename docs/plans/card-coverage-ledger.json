@@ -141,6 +141,24 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "aef874fa-93c0-4f86-8b0d-dc24ec51467d",
+    "name": "Beacon of Unrest",
+    "package": "PR01.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library.\"",
+      "explicitly unsupported: Shuffle this into its owner's library is implemented as shuffleLibrary only."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "011da9c5-aa8a-4fa0-b1f2-62b9f3760476",
     "name": "Belladonna Took",
     "package": "W3",

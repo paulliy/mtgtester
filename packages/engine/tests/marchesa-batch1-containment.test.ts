@@ -195,8 +195,6 @@ const REASONS: Record<string, string> = {
     'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
   'Anrakyr the Traveller':
     'Artifact-from-hand-or-graveyard life cast is implemented as free casts from hand.',
-  'Beacon of Unrest':
-    "Shuffle this into its owner's library is implemented as shuffleLibrary only.",
   'Canoptek Wraith': 'Same-name-as-chosen-land search is implemented as any two basics.',
   'Convergence of Dominion':
     'Graveyard activation cost reduction is claimed without a static effect.',
@@ -327,6 +325,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Beacon of Unrest',
     'Attune with Aether',
     'Forum of Amity',
   ]);

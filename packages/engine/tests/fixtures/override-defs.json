@@ -6554,8 +6554,42 @@
   {
     "oracleId": "aef874fa-93c0-4f86-8b0d-dc24ec51467d",
     "name": "Beacon of Unrest",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": 0
+          },
+          {
+            "op": "resolvingSpellShuffleIntoLibrary"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "graveyardOwnerScope": "any",
+            "kind": "cardInGraveyard"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
@@ -10371,8 +10405,42 @@
   {
     "oracleId": "oracle-beacon-of-unrest",
     "name": "Beacon of Unrest",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library."
+    ],
+    "def": {
+      "spellAbility": {
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": 0
+          },
+          {
+            "op": "resolvingSpellShuffleIntoLibrary"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "graveyardOwnerScope": "any",
+            "kind": "cardInGraveyard"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-bespoke-battlewagon",

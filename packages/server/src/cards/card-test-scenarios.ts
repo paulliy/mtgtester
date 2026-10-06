@@ -4164,6 +4164,35 @@ function attuneWithAetherScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function beaconOfUnrestScenario(gameId: GameId): CardTestScenario {
+  const beacon = pinnedFrom(MARCHESA_BATCH1, 'Beacon of Unrest');
+  return pr01Scenario(gameId, {
+    id: 'beacon-of-unrest-viewer-reanimate-and-shuffle',
+    title: 'Beacon of Unrest: reanimate a creature card, shuffle Beacon away',
+    instructions: [
+      'Cast Beacon of Unrest from your hand with your five lands.',
+      'Target Lab Ox in your graveyard and let the spell resolve.',
+    ],
+    expectedOutcome:
+      'Lab Ox returns to the battlefield under your control, and Beacon of Unrest is shuffled into your library instead of going to your graveyard.',
+    oracleSha256: beacon.sha256,
+    clauseIds: ['beacon-of-unrest-reanimate', 'beacon-of-unrest-shuffle-self'],
+    decks: {
+      P1: [beacon.card, SWAMP, SWAMP, FOREST, FOREST, FOREST, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Beacon of Unrest'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Forest', 'Forest', 'Forest'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4248,6 +4277,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   // Coverage PR01
   'forum-of-amity-viewer-surveil',
   'attune-with-aether-viewer-reveal-to-hand',
+  'beacon-of-unrest-viewer-reanimate-and-shuffle',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4328,6 +4358,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'war-room-viewer-colorless-mana': warRoomManaScenario,
   'forum-of-amity-viewer-surveil': forumOfAmityScenario,
   'attune-with-aether-viewer-reveal-to-hand': attuneWithAetherScenario,
+  'beacon-of-unrest-viewer-reanimate-and-shuffle': beaconOfUnrestScenario,
 };
 
 export function createCardTestScenario(

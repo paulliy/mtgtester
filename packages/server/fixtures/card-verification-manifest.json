@@ -1892,13 +1892,36 @@
     "aef874fa-93c0-4f86-8b0d-dc24ec51467d": {
       "name": "Beacon of Unrest",
       "oracleSha256": "e8e9347132f2e3a9e1529d4ac633e47efaa45a78780e6efb21226d155a7c58d4",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "beacon-of-unrest-reanimate",
+          "oracleText": "Put target artifact or creature card from a graveyard onto the battlefield under your control.",
+          "implementation": [
+            "target cardInGraveyard(filter=Artifact or Creature, graveyardOwnerScope=any)",
+            "graveyardToBattlefield(target 0) under the caster's control"
+          ],
+          "engineTestIds": [
+            "beacon-of-unrest-pinned-oracle-supported",
+            "beacon-of-unrest-reanimate-opponent-creature",
+            "beacon-of-unrest-target-filter",
+            "beacon-of-unrest-no-target-not-castable",
+            "beacon-of-unrest-fizzle-to-graveyard"
+          ],
+          "viewerScenarioIds": ["beacon-of-unrest-viewer-reanimate-and-shuffle"]
+        },
+        {
+          "id": "beacon-of-unrest-shuffle-self",
           "oracleText": "Shuffle Beacon of Unrest into its owner's library.",
-          "implementation": ["explicitly unsupported; shuffleLibrary does not return this spell"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "resolvingSpellShuffleIntoLibrary: the resolving card moves from the stack to its owner's library, which is then shuffled; a fizzled spell goes to the graveyard instead (CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "beacon-of-unrest-shuffles-itself",
+            "beacon-of-unrest-owner-library",
+            "beacon-of-unrest-fizzle-to-graveyard"
+          ],
+          "viewerScenarioIds": ["beacon-of-unrest-viewer-reanimate-and-shuffle"]
         }
       ],
       "gameplayAiScenarioIds": []
