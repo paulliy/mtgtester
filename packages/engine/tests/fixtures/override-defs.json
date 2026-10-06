@@ -8571,8 +8571,57 @@
   {
     "oracleId": "cb377c27-39a6-42b4-8c89-80a9a2350e81",
     "name": "Solar Transformer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this artifact enters, you get {E}{E}{E} .",
+      "{T}, Pay {E}: Add one mana of any color."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 1,
+              "kind": "payEnergy"
+            }
+          ],
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Enters — gain three energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "cb923c4d-1d2e-4039-90bb-72d1981b9738",
@@ -20370,8 +20419,57 @@
   {
     "oracleId": "oracle-solar-transformer",
     "name": "Solar Transformer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this artifact enters, you get {E}{E}{E} .",
+      "{T}, Pay {E}: Add one mana of any color."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 1,
+              "kind": "payEnergy"
+            }
+          ],
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Enters — gain three energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-songbirds-blessing",

@@ -452,6 +452,88 @@ describe('Aether Hub', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.29 Solar Transformer
+// ---------------------------------------------------------------------------------------------
+
+describe('Solar Transformer', () => {
+  const transformer = pinned('Solar Transformer');
+  const bear = (manaCost: string) =>
+    oracle({ name: `Solar Bear ${manaCost}`, typeLine: 'Creature — Bear', manaCost });
+
+  function withTransformer(seed: string, energy: number) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', transformer.card);
+    playerById(ctx, 'P1').energy = energy;
+    return { ctx, source };
+  }
+
+  it('solar-transformer-pinned-oracle-supported — keeps enters-tapped and {T}: Add {C}, appends the energy ability', () => {
+    expect(transformer.sha256).toBe(
+      '2a416da6016481cde18645f08b0a9c28b2da620d08fe234bb82abcf7ef8719a3',
+    );
+    expect(transformer.card.oracleText).toBe(
+      'This artifact enters tapped.\nWhen this artifact enters, you get {E}{E}{E} (three energy counters).\n{T}: Add {C}.\n{T}, Pay {E}: Add one mana of any color.',
+    );
+    expectModeled(transformer.card);
+    expect(getOverride(transformer.card.oracleId)?.compose).toBe('append');
+    const def = interpretCard(transformer.card);
+    expect(def.entersTapped).toBe(true);
+    expect(def.manaAbilities).toEqual([
+      { units: [['C']] },
+      {
+        units: [['W', 'U', 'B', 'R', 'G']],
+        costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 1 }],
+      },
+    ]);
+  });
+
+  it('solar-transformer-cast-enters-tapped-with-energy — cast for {2}, it enters tapped and gives three energy', () => {
+    const ctx = pod('solar-cast');
+    const inHand = conjure(ctx, 'P1', transformer.card, 'hand');
+    addMana(playerById(ctx, 'P1'), generic(2));
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    settle(ctx);
+    const entered = ctx.state.battlefield.find((entry) => entry.cardId === inHand.cardId);
+    expect(entered?.tapped).toBe(true);
+    expect(playerById(ctx, 'P1').energy).toBe(3);
+  });
+
+  it('solar-transformer-tapped-on-entry-makes-no-mana — the turn it enters it cannot pay for anything', () => {
+    const ctx = pod('solar-entry-tapped');
+    const inHand = conjure(ctx, 'P1', transformer.card, 'hand');
+    addMana(playerById(ctx, 'P1'), generic(2));
+    takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', inHand.id)!.payload as PriorityActionPayload);
+    settle(ctx);
+    const follow = conjure(ctx, 'P1', bear('{1}'), 'hand');
+    expect(castOptionFor(ctx, 'P1', follow.id)).toBeUndefined();
+  });
+
+  it('solar-transformer-colorless — {T}: Add {C} pays {1} without spending energy', () => {
+    const { ctx, source } = withTransformer('solar-colorless', 0);
+    const spell = conjure(ctx, 'P1', bear('{1}'), 'hand');
+    takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', spell.id)!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(true);
+    expect(playerById(ctx, 'P1').energy).toBe(0);
+  });
+
+  it('solar-transformer-energy-any-color — {T}, Pay {E} pays {R} and spends one energy', () => {
+    const { ctx, source } = withTransformer('solar-any-color', 3);
+    const spell = conjure(ctx, 'P1', bear('{R}'), 'hand');
+    takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', spell.id)!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(true);
+    expect(playerById(ctx, 'P1').energy).toBe(2);
+  });
+
+  it('solar-transformer-no-energy-no-color — without energy it cannot pay {R}', () => {
+    const { ctx } = withTransformer('solar-no-energy', 0);
+    const spell = conjure(ctx, 'P1', bear('{R}'), 'hand');
+    expect(castOptionFor(ctx, 'P1', spell.id)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -463,6 +545,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Solar Transformer',
+    sha256: '2a416da6016481cde18645f08b0a9c28b2da620d08fe234bb82abcf7ef8719a3',
+    clauseCount: 4,
+  },
   {
     name: 'Aether Hub',
     sha256: 'a6641d8a589b60feec25b6da189a097707da60158d6196778bc6365bcccf88ec',

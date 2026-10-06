@@ -5682,6 +5682,74 @@ function aetherHubColorlessScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_RED_BEAR = card({
+  oracleId: 'lab-red-bear',
+  name: 'Lab Red Bear',
+  typeLine: 'Creature — Bear',
+  manaCost: '{R}',
+  cmc: 1,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  power: '2',
+  toughness: '2',
+});
+
+function solarTransformerEnergyScenario(gameId: GameId): CardTestScenario {
+  const transformer = pinnedFrom(MARCHESA_BATCH1, 'Solar Transformer');
+  return pr01Scenario(gameId, {
+    id: 'solar-transformer-viewer-cast-and-energy-mana',
+    title: 'Solar Transformer: enter tapped for energy, then pay it for red',
+    instructions: [
+      'Cast the Solar Transformer in your hand with your two Forests; it enters tapped and gives three energy.',
+      'Cast Lab Red Bear, paying {R} with the untapped Solar Transformer and one energy.',
+    ],
+    expectedOutcome:
+      'The new Solar Transformer is tapped and gave three energy; the other one taps and spends one for {R}, so Lab Red Bear resolves and you end with two energy.',
+    oracleSha256: transformer.sha256,
+    clauseIds: [
+      'solar-transformer-enters-tapped',
+      'solar-transformer-enters-energy',
+      'solar-transformer-energy-any-color',
+    ],
+    decks: {
+      P1: [transformer.card, transformer.card, FOREST, FOREST, LAB_RED_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Solar Transformer', 'Lab Red Bear'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Solar Transformer', 'Forest', 'Forest'] }],
+    },
+  });
+}
+
+function solarTransformerColorlessScenario(gameId: GameId): CardTestScenario {
+  const transformer = pinnedFrom(MARCHESA_BATCH1, 'Solar Transformer');
+  return pr01Scenario(gameId, {
+    id: 'solar-transformer-viewer-colorless',
+    title: 'Solar Transformer: colorless mana with no energy',
+    instructions: [
+      'With no energy, cast Lab Generic Bear by tapping Solar Transformer for {C}.',
+      'Lab Red Bear stays uncastable: the Transformer cannot make {R} without energy.',
+    ],
+    expectedOutcome:
+      'Solar Transformer taps for {C} and Lab Generic Bear resolves; you still have zero energy and Lab Red Bear is still in hand.',
+    oracleSha256: transformer.sha256,
+    clauseIds: ['solar-transformer-colorless'],
+    decks: {
+      P1: [transformer.card, LAB_RED_BEAR, LAB_GENERIC_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Red Bear', 'Lab Generic Bear'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Solar Transformer'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5808,6 +5876,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'retrofitter-foundry-viewer-servo-thopter-construct',
   'aether-hub-viewer-energy-any-color',
   'aether-hub-viewer-colorless',
+  'solar-transformer-viewer-cast-and-energy-mana',
+  'solar-transformer-viewer-colorless',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5932,6 +6002,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'retrofitter-foundry-viewer-servo-thopter-construct': retrofitterFoundryScenario,
   'aether-hub-viewer-energy-any-color': aetherHubEnergyScenario,
   'aether-hub-viewer-colorless': aetherHubColorlessScenario,
+  'solar-transformer-viewer-cast-and-energy-mana': solarTransformerEnergyScenario,
+  'solar-transformer-viewer-colorless': solarTransformerColorlessScenario,
 };
 
 export function createCardTestScenario(

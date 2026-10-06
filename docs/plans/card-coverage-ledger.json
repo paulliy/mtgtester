@@ -1952,6 +1952,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "cb377c27-39a6-42b4-8c89-80a9a2350e81",
+    "name": "Solar Transformer",
+    "package": "PR02.29",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The colorless mana ability is dropped when the energy mana ability replaces manaAbilities."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "2598294c-a9a7-4bef-a562-23f297a80536",
     "name": "Songbirds' Blessing",
     "package": "W5",

@@ -1345,6 +1345,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['Aether Hub: enter for energy, then pay it for green'],
   },
   { file: 'card-test-lab.spec.ts', titlePath: ['Aether Hub: colorless mana with no energy'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Solar Transformer: enter tapped for energy, then pay it for red'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Solar Transformer: colorless mana with no energy'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

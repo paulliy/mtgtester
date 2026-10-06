@@ -43,7 +43,6 @@ const CATALOG_CONTAINED = new Set([
   'Adaptive Omnitool',
   'Bespoke Battlewagon',
   'Druid of Purification',
-  'Solar Transformer',
   'Chaos Warp',
   'Reality Shift',
 ]);

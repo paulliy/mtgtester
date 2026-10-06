@@ -168,6 +168,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'retrofitter-foundry-viewer-servo-thopter-construct',
       'aether-hub-viewer-energy-any-color',
       'aether-hub-viewer-colorless',
+      'solar-transformer-viewer-cast-and-energy-mana',
+      'solar-transformer-viewer-colorless',
     ]);
   });
 

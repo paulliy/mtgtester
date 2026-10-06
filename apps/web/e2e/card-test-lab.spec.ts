@@ -2900,3 +2900,34 @@ test('Aether Hub: colorless mana with no energy', async ({ page }) => {
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
 });
+
+test('Solar Transformer: enter tapped for energy, then pay it for red', async ({ page }) => {
+  await runScenario(page, 'Solar Transformer: enter tapped for energy, then pay it for red');
+  await expect(handCard(page, 'Lab Red Bear')).not.toHaveClass(/actionable/);
+
+  await castAndResolve(page, 'Solar Transformer');
+  await awaitResolution(page, 'Enters — gain three energy', 0);
+  const transformers = permanent(page, 'Solar Transformer');
+  await expect(transformers.locator('.stack-count-badge')).toHaveCount(0);
+  await expect(transformers).toHaveCount(2);
+
+  await castAndResolve(page, 'Lab Red Bear');
+  await expect(permanent(page, 'Lab Red Bear')).toBeVisible();
+  for (const chip of await transformers.all()) {
+    await expect(chip.locator('.tap-badge')).toHaveText('TAP');
+  }
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});
+
+test('Solar Transformer: colorless mana with no energy', async ({ page }) => {
+  await runScenario(page, 'Solar Transformer: colorless mana with no energy');
+  await expect(handCard(page, 'Lab Red Bear')).not.toHaveClass(/actionable/);
+
+  await castAndResolve(page, 'Lab Generic Bear');
+  await expect(permanent(page, 'Lab Generic Bear')).toBeVisible();
+  await expect(permanent(page, 'Solar Transformer').locator('.tap-badge')).toHaveText('TAP');
+  await expect(handCard(page, 'Lab Red Bear')).toBeVisible();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});

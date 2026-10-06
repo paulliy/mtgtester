@@ -46,6 +46,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Return to Nature',
       'Rishkar, Peema Renegade',
       'Smothering Tithe',
+      'Solar Transformer',
       'Sylvan Reclamation',
       'Thunderfoot Baloth',
       'Tomb Fortress',

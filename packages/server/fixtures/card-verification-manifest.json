@@ -3515,15 +3515,59 @@
     "cb377c27-39a6-42b4-8c89-80a9a2350e81": {
       "name": "Solar Transformer",
       "oracleSha256": "2a416da6016481cde18645f08b0a9c28b2da620d08fe234bb82abcf7ef8719a3",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "{T}: Add {C}.\n{T}, Pay {E}: Add one mana of any color.",
+          "id": "solar-transformer-enters-tapped",
+          "oracleText": "This artifact enters tapped.",
           "implementation": [
-            "explicitly unsupported; colorless mana is dropped when energy mana replaces manaAbilities"
+            "interpreted entersTapped: true (kept: extendCard only appends ability lists)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "solar-transformer-pinned-oracle-supported",
+            "solar-transformer-cast-enters-tapped-with-energy",
+            "solar-transformer-tapped-on-entry-makes-no-mana"
+          ],
+          "viewerScenarioIds": ["solar-transformer-viewer-cast-and-energy-mana"]
+        },
+        {
+          "id": "solar-transformer-enters-energy",
+          "oracleText": "When this artifact enters, you get {E}{E}{E}",
+          "implementation": ["authored enters trigger: gainEnergy(3)"],
+          "engineTestIds": [
+            "solar-transformer-pinned-oracle-supported",
+            "solar-transformer-cast-enters-tapped-with-energy"
+          ],
+          "viewerScenarioIds": ["solar-transformer-viewer-cast-and-energy-mana"]
+        },
+        {
+          "id": "solar-transformer-colorless",
+          "oracleText": "{T}: Add {C}.",
+          "implementation": [
+            "interpreted mana ability {T}: Add {C}, kept because extendCard (compose: 'append') appends the authored mana ability"
+          ],
+          "engineTestIds": [
+            "solar-transformer-pinned-oracle-supported",
+            "extend-card-appends-to-parsed-lists",
+            "solar-transformer-colorless"
+          ],
+          "viewerScenarioIds": ["solar-transformer-viewer-colorless"]
+        },
+        {
+          "id": "solar-transformer-energy-any-color",
+          "oracleText": "{T}, Pay {E}: Add one mana of any color.",
+          "implementation": [
+            "authored mana ability: units [WUBRG], costs [tap, payEnergy(1)], appended to the parsed list"
+          ],
+          "engineTestIds": [
+            "solar-transformer-pinned-oracle-supported",
+            "solar-transformer-energy-any-color",
+            "solar-transformer-no-energy-no-color"
+          ],
+          "viewerScenarioIds": [
+            "solar-transformer-viewer-cast-and-energy-mana",
+            "solar-transformer-viewer-colorless"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

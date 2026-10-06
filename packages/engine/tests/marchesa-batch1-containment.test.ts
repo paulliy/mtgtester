@@ -259,8 +259,6 @@ const REASONS: Record<string, string> = {
   'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  'Solar Transformer':
-    'The colorless mana ability is dropped when the energy mana ability replaces manaAbilities.',
   'Nullmage Shepherd': 'The four creatures cannot include this creature.',
   'Cranial Plating': 'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
   'Dark Confidant':
@@ -322,6 +320,7 @@ describe('Marchesa catalog audit containment', () => {
     // Coverage PR02 (docs/plans/card-coverage-chunks.md).
     'Retrofitter Foundry',
     'Aether Hub',
+    'Solar Transformer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

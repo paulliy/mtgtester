@@ -169,3 +169,36 @@ describe('Aether Hub Card Test Lab scenarios', () => {
     replays('aether-hub-viewer-colorless', colorlessSteps);
   });
 });
+
+describe('Solar Transformer Card Test Lab scenarios', () => {
+  const energySteps: Step[] = [
+    { action: 'Cast Solar Transformer' },
+    { action: 'Cast Lab Red Bear' },
+  ];
+
+  it('solar-transformer-viewer-cast-and-energy-mana — enters tapped with three energy, then the other pays {R}', () => {
+    const { seat, onBattlefield } = run(
+      'solar-transformer-viewer-cast-and-energy-mana',
+      energySteps,
+    );
+    expect(onBattlefield('Lab Red Bear')).toHaveLength(1);
+    expect(onBattlefield('Solar Transformer').map((source) => source.tapped)).toEqual([true, true]);
+    expect(onBattlefield('Forest').every((forest) => forest.tapped)).toBe(true);
+    expect(seat('P1').energy).toBe(2);
+    replays('solar-transformer-viewer-cast-and-energy-mana', energySteps);
+  });
+
+  const colorlessSteps: Step[] = [{ action: 'Cast Lab Generic Bear' }];
+
+  it('solar-transformer-viewer-colorless — taps for {C} with no energy; {R} stays unpayable', () => {
+    const { seat, onBattlefield, offered } = run(
+      'solar-transformer-viewer-colorless',
+      colorlessSteps,
+    );
+    expect(offered.flat().some((action) => action.includes('Cast Lab Red Bear'))).toBe(false);
+    expect(onBattlefield('Lab Generic Bear')).toHaveLength(1);
+    expect(onBattlefield('Solar Transformer')[0]?.tapped).toBe(true);
+    expect(seat('P1').energy).toBe(0);
+    replays('solar-transformer-viewer-colorless', colorlessSteps);
+  });
+});

@@ -964,11 +964,26 @@ export function registerLIVING_ENERGYOverrides(): void {
     },
   );
 
-  // Catalog audit living-energy-batch-6: replacing manaAbilities drops {T}: Add {C}.
-  unsupportedCard(
+  // Coverage PR02: as Aether Hub, the energy mana ability is appended to the parsed {T}: Add {C};
+  // "This artifact enters tapped" stays interpreted.
+  extendCard(
     'cb377c27-39a6-42b4-8c89-80a9a2350e81',
     'Solar Transformer',
-    'The colorless mana ability is dropped when the energy mana ability replaces manaAbilities.',
+    ['When this artifact enters, you get {E}{E}{E} .', '{T}, Pay {E}: Add one mana of any color.'],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [],
+          effects: [{ op: 'gainEnergy', amount: constant(3) }],
+          description: 'Enters — gain three energy',
+        },
+      ],
+      manaAbilities: [
+        { units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, { kind: 'payEnergy', amount: 1 }] },
+      ],
+    },
   );
 
   defineCard(
