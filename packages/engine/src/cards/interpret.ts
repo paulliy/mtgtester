@@ -6594,8 +6594,9 @@ export function interpretCard(card: OracleCard): CardDefinition {
             ability: {
               kind: 'activated',
               targets: [],
+              // CR 702.29a: typecycling's search reveals the found card.
               effects: [
-                { op: 'searchLibrary', filter, destinations: [{ zone: 'hand' }] },
+                { op: 'searchLibrary', filter, destinations: [{ zone: 'hand' }], reveal: true },
                 { op: 'shuffle' },
               ],
               description: line,

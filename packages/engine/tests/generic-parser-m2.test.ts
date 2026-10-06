@@ -61,6 +61,7 @@ describe('Generic Static Parser Expansions (Milestone 2 Task 1)', () => {
           ],
         },
         destinations: [{ zone: 'hand' }],
+        reveal: true,
       },
       { op: 'shuffle' },
     ]);
