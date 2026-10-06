@@ -14,11 +14,15 @@ import { join, resolve } from 'node:path';
 import type { ObjectId, OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
-import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
+import {
+  computePriorityOptions,
+  permanentManaValue,
+  type PriorityActionPayload,
+} from '../src/actions/legal';
 import type { Ability, Effect } from '../src/cards/ability';
 import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
-import { allOf, ofSupertype, ofType } from '../src/cards/selector';
+import { allOf, ofSupertype, ofType, YOURS } from '../src/cards/selector';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
@@ -30,7 +34,7 @@ import { queueStepTriggers, runCombatAndExtraCombats } from '../src/turn/turn';
 import { playPreparedScenario } from '../src/flow/game';
 import { createGame } from '../src/state/game';
 import { prepareScenario, type PreparedScenarioSpec } from '../src/testing/prepared-scenario';
-import { moveObject, playerById } from '../src/state/objects';
+import { moveObject, playerById, transformPermanent } from '../src/state/objects';
 import { manaSourcesFor } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { formatPlayerLog } from '../src/view/spectator';
@@ -1521,6 +1525,38 @@ describe('Mordant Dragon', () => {
     expect(ctx.state.battlefield.some((entry) => entry.id === wall.id)).toBe(false);
   });
 
+  it('mordant-dragon-dies-before-stack — a Dragon removed before its trigger reaches the stack keeps its last known deathtouch', () => {
+    const ctx = pod('mordant-lki-pending');
+    const self = spawn(ctx, 'P1', dragon.card);
+    ctx.state.effects.push({
+      id: 'eff-test-deathtouch',
+      sourceId: self.cardId,
+      description: 'Mordant Dragon gains deathtouch',
+      targetCardIds: [self.cardId],
+      kind: 'grantKeyword',
+      keyword: 'deathtouch',
+      timestamp: ctx.state.nextTimestamp++,
+    });
+    const wall = spawn(ctx, 'P2', big());
+    // The combat-damage trigger has fired; state-based actions remove the Dragon (lethal
+    // damage from a blocker) before the trigger is put on the stack.
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: self.cardId,
+      sourceObjectId: self.id,
+      sourceOracleId: self.oracleId,
+      sourceName: self.name,
+      ability: interpretCard(dragon.card).triggers[0]!,
+      scope: { damageDealt: 1, eventPlayerId: 'P2' },
+    });
+    pump(moveObject(ctx, self, { zone: 'graveyard' }));
+    pump(priorityCheckpoint(ctx), dragonAnswer(wall.id, true));
+    expect(ctx.state.stack).toHaveLength(1);
+    resolveTop(ctx, dragonAnswer(null, true));
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.battlefield.some((entry) => entry.id === wall.id)).toBe(false);
+  });
+
   it('mordant-dragon-lost-deathtouch-before-leaving — deathtouch lost before it left does not apply', () => {
     const ctx = pod('mordant-lki-lost');
     const self = spawn(ctx, 'P1', dragon.card);
@@ -1964,6 +2000,25 @@ describe('Sylvan Reclamation', () => {
     expect(offered).toContain('Target Reclaim Golem');
     expect(offered).not.toContain('Target Test Bear');
     expect(offered).not.toContain('Target Forest');
+  });
+
+  it('sylvan-reclamation-legality-decided-first — exiling one target does not make another illegal mid-resolution', () => {
+    const ctx = pod('reclaim-simultaneous');
+    // The Mutator makes its controller's creatures artifacts, so the Bear is a legal target
+    // only while the Mutator is on the battlefield.
+    const mutator = spawn(ctx, 'P2', charm());
+    const mutatorDef = ctx.defs.get(mutator.oracleId)!;
+    ctx.defs.set(mutator.oracleId, {
+      ...mutatorDef,
+      staticEffects: [
+        { affects: allOf(ofType('Creature'), YOURS), op: { layer: 4, addTypes: ['Artifact'] } },
+      ],
+    });
+    const bear_ = spawn(ctx, 'P2', bear());
+    expect(computeCharacteristics(ctx, bear_).types).toContain('Artifact');
+    cast(ctx, pick('Reclaim Charm', 'Test Bear'));
+    resolveTop(ctx);
+    expect(exiled(ctx, 'P2').sort()).toEqual(['Reclaim Charm', 'Test Bear']);
   });
 
   it('sylvan-reclamation-one-target-left — a target that left does not stop the other exile', () => {
@@ -2669,6 +2724,23 @@ describe('Hunting Wilds', () => {
     expect(ctx.state.creaturesDiedThisTurn).toBe(before + 1);
   });
 
+  it('hunting-wilds-effects-dropped-after-last-forest-leaves — the permanent animation is removed once every Forest it animated has left', () => {
+    const { ctx, forests } = cast('wilds-effects-dropped', true, twoForests);
+    const animating = () =>
+      ctx.state.effects.filter((effect) =>
+        forests.some((forest_) => effect.targetCardIds.includes(forest_.cardId)),
+      );
+    const created = animating().length;
+    expect(created).toBeGreaterThan(0);
+    pump(moveObject(ctx, forests[0]!, { zone: 'hand' }));
+    // The other Forest still holds every effect.
+    expect(animating()).toHaveLength(created);
+    const total = ctx.state.effects.length;
+    pump(moveObject(ctx, forests[1]!, { zone: 'hand' }));
+    expect(animating()).toHaveLength(0);
+    expect(ctx.state.effects).toHaveLength(total - created);
+  });
+
   it('hunting-wilds-kicker-cost — kicking needs the extra {3}{G}; with four mana only the plain cast is offered', () => {
     const ctx = pod('wilds-cost');
     const inHand = conjure(ctx, 'P1', wilds.card, 'hand');
@@ -3317,6 +3389,29 @@ describe('Kairi, the Swirling Sky', () => {
     expect(def.triggers[0]?.modes?.options.map((option) => option.targetSlots)).toEqual([[0], []]);
   });
 
+  it('kairi-the-swirling-sky-budget-rechecked-on-resolution — targets whose total grew past 6 in response are not returned', () => {
+    const ctx = pod('kairi-budget-recheck');
+    const idol = spawn(ctx, 'P2', rock('Kairi Idol', '{3}'));
+    const totem = spawn(ctx, 'P3', rock('Kairi Totem', '{3}'));
+    const self = spawn(ctx, 'P1', kairi.card);
+    pump(moveObject(ctx, self, { zone: 'graveyard' }));
+    const choose = pick('Kairi Idol', 'Kairi Totem');
+    pump(priorityCheckpoint(ctx), (decision, count) =>
+      decision.options.some((option) => BOUNCE.test(option.description))
+        ? optionMatching(decision, BOUNCE)
+        : choose(decision, count),
+    );
+    expect(ctx.state.stack).toHaveLength(1);
+    // In response the Idol becomes a seven-mana permanent (a copy effect, simulated here by
+    // switching its definition): 7 + 3 is past the budget of 6.
+    const seven = interpretCard(rock('Kairi Colossus', '{7}'));
+    ctx.defs.set(seven.oracleId, seven);
+    idol.oracleId = seven.oracleId;
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((entry) => entry.id === idol.id)).toBe(true);
+    expect(ctx.state.battlefield.some((entry) => entry.id === totem.id)).toBe(true);
+  });
+
   it('kairi-the-swirling-sky-copy-token-mana-value — a token copy of a seven-mana permanent counts as seven and is never offered', () => {
     const ctx = pod('kairi-copy-token');
     const colossus = spawn(ctx, 'P2', rock('Kairi Colossus', '{7}'));
@@ -3349,6 +3444,43 @@ describe('Kairi, the Swirling Sky', () => {
     // A copy copies the mana cost (CR 707.2): neither Colossus fits a total of 6.
     expect(offered).toContain('Target Kairi Trinket');
     expect(offered).not.toContain('Target Kairi Colossus');
+  });
+
+  it('kairi-the-swirling-sky-copied-back-face-mana-value-zero — a token copy of a back face has mana value 0, not the front face cost', () => {
+    const ctx = pod('kairi-copy-back-face');
+    const brigidCard = (
+      JSON.parse(
+        readFileSync(
+          join(import.meta.dirname, '../../server/fixtures/coverage-oracle.json'),
+          'utf8',
+        ),
+      ) as OracleCard[]
+    ).find((card) => card.name.startsWith('Brigid, Clachan'))!;
+    const brigid = spawn(ctx, 'P2', brigidCard);
+    const copyOf = (perm: EnginePermanent) => {
+      pump(
+        executeAbility(
+          ctx,
+          { cardId: perm.cardId, oracleId: perm.oracleId, name: perm.name, controllerId: 'P2' },
+          {
+            kind: 'spell',
+            targets: [],
+            effects: [{ op: 'createTokenCopyOf', ref: 'source', count: { kind: 'const', n: 1 } }],
+          },
+          [],
+        ),
+      );
+      return ctx.state.battlefield.filter((entry) => entry.isToken).at(-1)!;
+    };
+    // Front face up: the copy carries the front face's mana value.
+    expect(permanentManaValue(ctx, copyOf(brigid))).toBe(3);
+    // Back face up: the permanent itself keeps the front face's mana value (CR 712.8e), but a
+    // copy of the back face has mana value 0 (CR 202.3b).
+    expect(transformPermanent(ctx, brigid)).toBe(true);
+    expect(permanentManaValue(ctx, brigid)).toBe(3);
+    const backCopy = copyOf(brigid);
+    expect(permanentManaValue(ctx, backCopy)).toBe(0);
+    expect(backCopy.manaCost).toBeNull();
   });
 
   it('kairi-the-swirling-sky-bounce-total-six — returns chosen nonland permanents to their owners while their mana values total 6 or less', () => {
@@ -4210,6 +4342,45 @@ describe('Kogla, the Titan Ape', () => {
     const returned = ctx.state.battlefield.find((entry) => entry.cardId === self.cardId)!;
     expect(returned.damageMarked).toBe(0);
     expect(ctx.state.battlefield.find((entry) => entry.id === rival.id)?.damageMarked).toBe(0);
+  });
+
+  it('kogla-the-titan-ape-not-a-creature — a Kogla that stopped being a creature fights nothing', () => {
+    const ctx = pod('kogla-noncreature');
+    const rival = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Kogla Rival', typeLine: 'Creature — Ape', power: '3', toughness: '3' }),
+    );
+    const { cardId } = enter(ctx, 'P1', kogla.card);
+    const self = ctx.state.battlefield.find((entry) => entry.cardId === cardId)!;
+    pump(priorityCheckpoint(ctx), (decision) =>
+      CHOOSE.test(decision.prompt)
+        ? optionMatching(decision, /^Target Kogla Rival$/)
+        : { index: 0, targets: new Map() },
+    );
+    // In response, Kogla becomes a noncreature artifact; the Rival is still a legal target.
+    ctx.state.effects.push({
+      id: 'eff-test-noncreature',
+      sourceId: self.cardId,
+      description: 'Kogla becomes an artifact',
+      targetCardIds: [self.cardId],
+      kind: 'becomeCreature',
+      duration: 'permanent',
+      becomeCreature: {
+        replaceTypes: ['Artifact'],
+        addSubtypes: [],
+        addKeywords: [],
+        power: 8,
+        toughness: 8,
+      },
+      timestamp: ctx.state.nextTimestamp++,
+    });
+    expect(computeCharacteristics(ctx, self).types).not.toContain('Creature');
+    resolveTop(ctx);
+    // CR 701.14b: neither fights.
+    expect(ctx.state.battlefield.find((entry) => entry.id === rival.id)?.damageMarked).toBe(0);
+    expect(self.damageMarked).toBe(0);
+    expect(ctx.state.eventLog.some((event) => event.type === 'fight')).toBe(false);
   });
 
   it('kogla-the-titan-ape-up-to-one — it may fight nothing', () => {

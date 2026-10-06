@@ -2907,7 +2907,9 @@
             "kairi-the-swirling-sky-bounce-total-six",
             "kairi-the-swirling-sky-budget-and-filter",
             "kairi-the-swirling-sky-bounce-zero",
-            "kairi-the-swirling-sky-copy-token-mana-value"
+            "kairi-the-swirling-sky-copy-token-mana-value",
+            "kairi-the-swirling-sky-copied-back-face-mana-value-zero",
+            "kairi-the-swirling-sky-budget-rechecked-on-resolution"
           ],
           "viewerScenarioIds": ["kairi-viewer-bounce-total-six"]
         },
@@ -2959,7 +2961,8 @@
             "hunting-wilds-kicked",
             "hunting-wilds-forest-cards-only-this-way",
             "hunting-wilds-animation-ends-on-zone-change",
-            "hunting-wilds-animated-forest-dies-as-creature"
+            "hunting-wilds-animated-forest-dies-as-creature",
+            "hunting-wilds-effects-dropped-after-last-forest-leaves"
           ],
           "viewerScenarioIds": ["hunting-wilds-viewer-kicked"]
         }
@@ -3026,7 +3029,8 @@
             "sylvan-reclamation-at-most-two",
             "sylvan-reclamation-zero-targets",
             "sylvan-reclamation-target-filter",
-            "sylvan-reclamation-one-target-left"
+            "sylvan-reclamation-one-target-left",
+            "sylvan-reclamation-legality-decided-first"
           ],
           "viewerScenarioIds": ["sylvan-reclamation-viewer-exile-up-to-two"]
         },
@@ -3145,7 +3149,8 @@
             "mordant-dragon-only-that-players-creatures",
             "mordant-dragon-no-creature-no-trigger",
             "mordant-dragon-last-known-deathtouch",
-            "mordant-dragon-lost-deathtouch-before-leaving"
+            "mordant-dragon-lost-deathtouch-before-leaving",
+            "mordant-dragon-dies-before-stack"
           ],
           "viewerScenarioIds": ["mordant-dragon-viewer-combat-damage-redirect"]
         }
@@ -4199,7 +4204,8 @@
             "kogla-the-titan-ape-pinned-oracle-supported",
             "kogla-the-titan-ape-enters-fight",
             "kogla-the-titan-ape-up-to-one",
-            "kogla-the-titan-ape-blinked-in-response"
+            "kogla-the-titan-ape-blinked-in-response",
+            "kogla-the-titan-ape-not-a-creature"
           ],
           "viewerScenarioIds": ["kogla-viewer-enters-fight"]
         },

@@ -86,8 +86,12 @@ export interface MoveDestination {
  * permanent that has left is dropped from every fixed effect.
  */
 function releaseFixedEffects(ctx: GameContext, cardId: CardId): void {
-  for (const effect of ctx.state.effects)
+  ctx.state.effects = ctx.state.effects.filter((effect) => {
+    if (!effect.targetCardIds.includes(cardId)) return true;
     effect.targetCardIds = effect.targetCardIds.filter((id) => id !== cardId);
+    // A fixed set that has lost its last member affects nothing ever again.
+    return effect.targetCardIds.length > 0;
+  });
 }
 
 /**
@@ -1100,9 +1104,10 @@ export function tokenSpecCopying(
     triggers: def.triggers,
     manaAbilities: def.manaAbilities,
     activatedAbilities: def.activatedAbilities,
-    // A copy copies the mana cost (CR 707.2), so the token's mana value is the original's.
-    manaCost: def.manaCost,
-    manaCostText: perm.manaCost,
+    // A copy copies the mana cost (CR 707.2), so the token's mana value is the original's —
+    // except that a copy of a back face has mana value 0 (CR 202.3b, 712.8e), never the front's.
+    manaCost: perm.transformed ? null : def.manaCost,
+    manaCostText: perm.transformed ? null : perm.manaCost,
   };
 }
 
@@ -1479,7 +1484,7 @@ function remembersEventObject(ability: Ability): boolean {
 
 /**
  * A permanent is leaving: record its damage keywords on every ability of its own waiting on the
- * stack, so damage it deals after it is gone uses the deathtouch, lifelink and infect it had
+ * stack or about to be put there, so damage it deals after it is gone uses the deathtouch, lifelink and infect it had
  * immediately before it left (CR 113.7a, Mordant Dragon). Only recorded when it had any.
  */
 function rememberLeavingSourceDamageKeywords(ctx: GameContext, perm: EnginePermanent): void {
@@ -1489,9 +1494,16 @@ function rememberLeavingSourceDamageKeywords(ctx: GameContext, perm: EnginePerma
       entry.sourceCardId === perm.cardId &&
       (entry.sourceId === perm.id || entry.sourceId === perm.cardId),
   );
-  if (entries.length === 0) return;
+  // Triggers that have fired but are not on the stack yet: combat damage that also kills the
+  // source triggers first, then state-based actions remove the source before it is put there.
+  const pending = ctx.state.pendingTriggers.filter(
+    (trigger) =>
+      trigger.sourceCardId === perm.cardId &&
+      (trigger.sourceObjectId === undefined || trigger.sourceObjectId === perm.id),
+  );
+  if (entries.length === 0 && pending.length === 0) return;
   const keywords = damageKeywordsOf(ctx, perm);
-  for (const entry of entries) {
+  for (const entry of [...entries, ...pending]) {
     if (keywords.length > 0) entry.sourceDamageKeywords = keywords;
     else delete entry.sourceDamageKeywords;
   }

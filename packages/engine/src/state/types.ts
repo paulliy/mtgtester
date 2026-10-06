@@ -373,6 +373,8 @@ export interface CombatState {
 export interface PendingTrigger {
   /** Battlefield incarnation that generated the trigger, retained after it leaves. */
   sourceObjectId?: ObjectId;
+  /** The source's damage keywords as it left before this went on the stack (CR 113.7a). */
+  sourceDamageKeywords?: DamageKeyword[];
   controllerId: PlayerId;
   sourceCardId: CardId;
   sourceOracleId: OracleId;

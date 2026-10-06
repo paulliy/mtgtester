@@ -636,11 +636,15 @@ export function withinTotalManaValue(
   if (budget === undefined) return candidates;
   const manaValue = (id: ObjectId): number => {
     const perm = ctx.state.battlefield.find((candidate) => candidate.id === id);
-    if (perm === undefined) return 0;
-    return candidateOf(ctx, perm, computeCharacteristics(ctx, perm)).manaValue ?? 0;
+    return perm === undefined ? 0 : permanentManaValue(ctx, perm);
   };
   const spent = picked.reduce((total, id) => total + manaValue(id), 0);
   return candidates.filter((id) => manaValue(id) <= budget - spent);
+}
+
+/** A permanent's current mana value, as targeting and budgets read it. */
+export function permanentManaValue(ctx: GameContext, perm: EnginePermanent): number {
+  return candidateOf(ctx, perm, computeCharacteristics(ctx, perm)).manaValue ?? 0;
 }
 
 export function computeTargetOptions(

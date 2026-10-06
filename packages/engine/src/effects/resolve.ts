@@ -12,6 +12,7 @@ import {
   manaPortionOf,
   maxChoicesFor,
   modalSelections,
+  permanentManaValue,
   permanentMatchesKind,
   selectedModeTargetSlots,
   spellMatchesSelector,
@@ -94,6 +95,7 @@ import {
   graveyardTargets,
   hasKeyword,
   hasProtectionFrom,
+  isCreaturePermanent,
   manaRestrictionAllows,
   manaSourcesFor,
   opponentsOf,
@@ -1380,6 +1382,28 @@ export function* executeAbility(
         (source.id === undefined || permanent.id === source.id),
     );
 
+  /**
+   * The chosen permanents of a variable-count slot that are still legal targets, all decided
+   * before any of them is affected (CR 608.2b): removing one must not change whether another
+   * was legal as resolution began. A slot with a collective budget (Kairi's total mana value 6
+   * or less) whose remaining legal targets now exceed it affects none of them.
+   */
+  const legalChosenPermanents = (slot: number): EnginePermanent[] => {
+    const spec = ability.targets[slot];
+    if (spec === undefined) return [];
+    const legal = (countTargets?.[slot] ?? []).flatMap((id) => {
+      if (!stillLegal(id, spec)) return [];
+      const permanent = findPermanent(ctx, id);
+      return permanent === undefined ? [] : [permanent as EnginePermanent];
+    });
+    const budget = spec.totalManaValueAtMost;
+    if (budget !== undefined) {
+      const total = legal.reduce((sum, permanent) => sum + permanentManaValue(ctx, permanent), 0);
+      if (total > budget) return [];
+    }
+    return legal;
+  };
+
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */
   const ref = (r: EffectRef): ObjectId | null => {
     if (r === 'source') return sourcePermanent()?.id ?? null;
@@ -1500,6 +1524,8 @@ export function* executeAbility(
         const first = firstId === null ? undefined : findPermanent(ctx, firstId);
         const second = secondId === null ? undefined : findPermanent(ctx, secondId);
         if (first === undefined || second === undefined || first.id === second.id) break;
+        // CR 701.14b: if either is no longer a creature, neither fights.
+        if (!isCreaturePermanent(ctx, first) || !isCreaturePermanent(ctx, second)) break;
         const firstPower = effectivePT(ctx, first).power;
         const secondPower = effectivePT(ctx, second).power;
         const firstTraits = combatDamageTraits(ctx, first);
@@ -1785,12 +1811,8 @@ export function* executeAbility(
         break;
       }
       case 'exileEachChosen': {
-        const spec = ability.targets[effect.targetSlot];
-        for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !stillLegal(id, spec)) {
-            continue;
-          }
-          const perm = findPermanent(ctx, id);
+        for (const chosen of legalChosenPermanents(effect.targetSlot)) {
+          const perm = findPermanent(ctx, chosen.id);
           if (perm === undefined) continue;
           emit(ctx, 'exile', { target: perm.name, source: source.name });
           yield* moveObject(ctx, perm, { zone: 'exile' });
@@ -1798,12 +1820,8 @@ export function* executeAbility(
         break;
       }
       case 'destroyEachChosen': {
-        const spec = ability.targets[effect.targetSlot];
-        for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !stillLegal(id, spec)) {
-            continue;
-          }
-          const permanent = findPermanent(ctx, id);
+        for (const chosen of legalChosenPermanents(effect.targetSlot)) {
+          const permanent = findPermanent(ctx, chosen.id);
           if (permanent === undefined) continue;
           yield* destroyPermanent(ctx, source, permanent, false);
         }
@@ -2049,12 +2067,8 @@ export function* executeAbility(
         // "Return up to two other target nonland permanents to their owners' hands" (Marang
         // River Regent) — the `returnToHand` analog of `dealDamageEachChosen` above: every
         // object chosen in the variable-count slot is returned independently.
-        const spec = ability.targets[effect.targetSlot];
-        for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !stillLegal(id, spec)) {
-            continue;
-          }
-          const perm = findPermanent(ctx, id);
+        for (const chosen of legalChosenPermanents(effect.targetSlot)) {
+          const perm = findPermanent(ctx, chosen.id);
           if (perm === undefined) continue;
           emit(ctx, 'returnToHand', { target: perm.name, source: source.name });
           yield* moveObject(ctx, perm, { zone: 'hand' });
@@ -4990,9 +5004,14 @@ export function* executeAbility(
         const aId = ref(effect.a);
         const bId = countTargets?.[effect.bSlot]?.[0];
         if (aId === null || bId === undefined) break;
+        // An illegal target fights nothing (CR 701.14b, 608.2b).
+        const bSpec = ability.targets[effect.bSlot];
+        if (bSpec !== undefined && !stillLegal(bId, bSpec)) break;
         const a = findPermanent(ctx, aId);
         const b = findPermanent(ctx, bId);
         if (a === undefined || b === undefined || a.id === b.id) break;
+        // CR 701.14b: if either is no longer a creature, neither fights.
+        if (!isCreaturePermanent(ctx, a) || !isCreaturePermanent(ctx, b)) break;
         const aPower = effectivePT(ctx, a).power;
         const bPower = effectivePT(ctx, b).power;
         const aTraits = combatDamageTraits(ctx, a);

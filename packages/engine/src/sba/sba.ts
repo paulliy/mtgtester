@@ -660,6 +660,9 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       ? { triggerObjectCardId: trigger.triggerObjectCardId }
       : {}),
     ...(trigger.scope !== undefined ? { triggerScope: trigger.scope } : {}),
+    ...(trigger.sourceDamageKeywords !== undefined
+      ? { sourceDamageKeywords: trigger.sourceDamageKeywords }
+      : {}),
     ...(Object.keys(countTargets).length > 0 ? { countTargets } : {}),
     ...(Object.keys(divisionAmounts).length > 0 ? { divisionAmounts } : {}),
   };
