@@ -3521,6 +3521,146 @@ describe('Sweet-Gum Recluse', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.29 Kogla, the Titan Ape
+// ---------------------------------------------------------------------------------------------
+
+describe('Kogla, the Titan Ape', () => {
+  const kogla = pinned('Kogla, the Titan Ape');
+  const CHOOSE = /choose (a|another) target/i;
+  const relic = (name: string) => oracle({ name, typeLine: 'Artifact', manaCost: '{2}' });
+  const charm = (name: string) => oracle({ name, typeLine: 'Enchantment', manaCost: '{1}' });
+  const human = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Human Soldier', power: '1', toughness: '1' });
+
+  /** Cast Kogla from P1's hand and settle its enters fight, choosing `target` or nothing. */
+  function castKogla(ctx: GameContext, target: string | null) {
+    const inHand = conjure(ctx, 'P1', kogla.card, 'hand');
+    addMana(
+      playerById(ctx, 'P1'),
+      Array.from({ length: 6 }, () => ({ symbol: 'G' as const })),
+    );
+    const cast = castOptionFor(ctx, 'P1', inHand.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const { decisions } = settle(ctx, (decision) =>
+      CHOOSE.test(decision.prompt)
+        ? optionMatching(
+            decision,
+            target === null ? /Choose no more targets/ : new RegExp(`^Target ${target}$`),
+          )
+        : { index: 0, targets: new Map() },
+    );
+    return {
+      decisions,
+      self: ctx.state.battlefield.find((entry) => entry.name === 'Kogla, the Titan Ape')!,
+    };
+  }
+
+  it('kogla-the-titan-ape-pinned-oracle-supported — pins the Oracle and models the fight, the attack trigger, and the Human bounce', () => {
+    expect(kogla.sha256).toBe('b4db59d3f23bce59cddf085d47b283059f82bea48ef05cd4a0c110961f4f303d');
+    const def = interpretCard(kogla.card);
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]).toMatchObject({
+      targets: [{ kind: 'creature', controller: 'opponent', count: { min: 0, max: 1 } }],
+      effects: [{ op: 'fightUpToOneChosen', a: 'source', bSlot: 0 }],
+    });
+    expect(def.triggers[1]).toMatchObject({
+      trigger: { when: 'attacks', defendingPlayerIsEventPlayer: true },
+      targets: [{ kind: 'artifactOrEnchantment', controller: 'eventPlayer' }],
+    });
+    expect(def.activatedAbilities[0]?.ability.effects).toEqual([
+      { op: 'returnToHand', target: 0 },
+      { op: 'grantKeywordUntilEot', target: 'source', keyword: 'indestructible' },
+    ]);
+  });
+
+  it('kogla-the-titan-ape-enters-fight — casting it fights the chosen creature you do not control', () => {
+    const ctx = pod('kogla-fight');
+    const victim = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Kogla Rival', typeLine: 'Creature — Ape', power: '3', toughness: '3' }),
+    );
+    spawn(ctx, 'P1', bear());
+    const { decisions, self } = castKogla(ctx, 'Kogla Rival');
+    const choice = decisions.find((decision) => CHOOSE.test(decision.prompt))!;
+    expect(choice.options.map((option) => option.description)).not.toContain('Target Test Bear');
+    expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(false);
+    expect(self.damageMarked).toBe(3);
+  });
+
+  it('kogla-the-titan-ape-up-to-one — it may fight nothing', () => {
+    const ctx = pod('kogla-none');
+    const kept = spawn(ctx, 'P2', bear());
+    const { self } = castKogla(ctx, null);
+    expect(ctx.state.battlefield.some((entry) => entry.id === kept.id)).toBe(true);
+    expect(self.damageMarked).toBe(0);
+  });
+
+  it("kogla-the-titan-ape-attack-destroys-defenders-permanent — only the defending player's artifacts and enchantments are targets", () => {
+    const ctx = pod('kogla-attack');
+    const self = spawn(ctx, 'P1', kogla.card);
+    const relicP3 = spawn(ctx, 'P3', relic('Kogla P3 Relic'));
+    spawn(ctx, 'P3', charm('Kogla P3 Charm'));
+    const otherPlayers = spawn(ctx, 'P2', relic('Kogla P2 Relic'));
+    let offered: string[] = [];
+    runCombat(ctx, { [self.id]: 'P3' }, (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) {
+        offered = slot.options;
+        return { index: 0, targets: new Map([[slot.slot, relicP3.id]]) };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    expect(offered).toHaveLength(2);
+    expect(offered).not.toContain(otherPlayers.id);
+    expect(playerById(ctx, 'P3').graveyard.map((card) => card.name)).toContain('Kogla P3 Relic');
+    expect(ctx.state.battlefield.some((entry) => entry.id === otherPlayers.id)).toBe(true);
+  });
+
+  it("kogla-the-titan-ape-human-bounce — {1}{G} returns a Human you control and Kogla gains indestructible; non-Humans and opponents' Humans are not targets", () => {
+    const ctx = pod('kogla-bounce');
+    const self = spawn(ctx, 'P1', kogla.card);
+    const mine = spawn(ctx, 'P1', human('Kogla Squire'));
+    spawn(ctx, 'P1', bear());
+    const theirs = spawn(ctx, 'P2', human('Kogla Rival Squire'));
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }, { symbol: 'G' }]);
+    const option = activationOf(ctx, 'P1', self);
+    expect(option?.targets?.[0]?.options).toEqual([mine.id]);
+    expect(option?.targets?.[0]?.options).not.toContain(theirs.id);
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, mine.id]]),
+    );
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand.map((card) => card.name)).toContain('Kogla Squire');
+    expect(computeCharacteristics(ctx, self).keywords).toContain('indestructible');
+  });
+
+  it('kogla-the-titan-ape-bounce-fizzles — if the Human leaves first, the ability does nothing at all', () => {
+    const ctx = pod('kogla-fizzle');
+    const self = spawn(ctx, 'P1', kogla.card);
+    const mine = spawn(ctx, 'P1', human('Kogla Squire'));
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }, { symbol: 'G' }]);
+    const option = activationOf(ctx, 'P1', self);
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, mine.id]]),
+    );
+    pump(moveObject(ctx, mine, { zone: 'exile' }));
+    resolveTop(ctx);
+    expect(computeCharacteristics(ctx, self).keywords).not.toContain('indestructible');
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3671,6 +3811,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Sweet-Gum Recluse',
     sha256: 'b7a06140e0022bef19a4a2e2b61c1d72dd7173f61421f1acfe414da5eee7e541',
     clauseCount: 4,
+  },
+  {
+    name: 'Kogla, the Titan Ape',
+    sha256: 'b4db59d3f23bce59cddf085d47b283059f82bea48ef05cd4a0c110961f4f303d',
+    clauseCount: 3,
   },
 ];
 

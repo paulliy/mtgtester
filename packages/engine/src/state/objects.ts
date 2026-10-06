@@ -1213,7 +1213,13 @@ export function queueTriggersForEvent(
           }
           const amounts = group.filter((s) => s.amount !== undefined);
           const eventPlayerId =
-            spec.aggregate === 'byEventPlayer' ? byEventPlayerKey(first) : first.playerId;
+            'defendingPlayerIsEventPlayer' in spec &&
+            spec.defendingPlayerIsEventPlayer === true &&
+            first.permanent.attacking !== null
+              ? first.permanent.attacking
+              : spec.aggregate === 'byEventPlayer'
+                ? byEventPlayerKey(first)
+                : first.playerId;
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),

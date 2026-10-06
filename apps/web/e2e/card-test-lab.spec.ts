@@ -2526,3 +2526,52 @@ test('Sweet-Gum Recluse: counters on creatures that entered this turn', async ({
   await expect(permanent(page, 'Sweet-Gum Recluse')).toContainText('3/6');
   await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
 });
+
+test('Kogla, the Titan Ape: fight up to one creature on entry', async ({ page }) => {
+  await runScenario(page, 'Kogla, the Titan Ape: fight up to one creature on entry');
+
+  const kogla = handCard(page, 'Kogla, the Titan Ape');
+  await expect(kogla).toHaveClass(/actionable/);
+  await kogla.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Up to one: stopping is allowed, and only creatures P1 doesn't control are offered.
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Target Lab Servo' })).toBeVisible();
+  await page.getByRole('button', { name: 'Target Lab Ox' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Kogla, the Titan Ape')).toBeVisible();
+});
+
+test('Kogla, the Titan Ape: bounce a Human, then attack', async ({ page }) => {
+  await runScenario(page, 'Kogla, the Titan Ape: bounce a Human, then attack');
+
+  const kogla = permanent(page, 'Kogla, the Titan Ape');
+  await expect(kogla).toHaveClass(/actionable/);
+  await kogla.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Squire').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(handCard(page, 'Lab Squire')).toBeVisible({ timeout: 15_000 });
+  await expect(kogla).toContainText(/indestructible/i);
+
+  // Both Forests paid for the ability, so nothing is castable and the lab moves on to combat.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Kogla, the Titan Ape' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Lab Hex is P2's only artifact or enchantment, so the target is forced; P3's Lab Idol is not.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Idol')).toBeVisible();
+});

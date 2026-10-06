@@ -1297,6 +1297,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Sweet-Gum Recluse: counters on creatures that entered this turn'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Kogla, the Titan Ape: fight up to one creature on entry'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Kogla, the Titan Ape: bounce a Human, then attack'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

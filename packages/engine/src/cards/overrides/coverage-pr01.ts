@@ -6,6 +6,7 @@
  */
 
 import { allOf, anyOf, ENTERED_THIS_TURN, ofSubtype, ofSupertype, ofType } from '../selector';
+import { activated, mana } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -110,6 +111,53 @@ export function registerCoveragePr01Overrides(): void {
           description:
             'Put three +1/+1 counters on each of any number of target creatures that entered this turn',
         },
+      ],
+    },
+  );
+
+  // Kogla, the Titan Ape: the enters fight is "up to one" (a 0..1 slot), the attack trigger
+  // reads the DEFENDING player, and the activation's indestructible needs its target to still
+  // be legal (CR 608.2b: the whole ability fizzles otherwise).
+  defineCard(
+    '8b21062e-97b0-4967-96df-30e8309f4fba',
+    'Kogla, the Titan Ape',
+    [
+      "When ~ enters, it fights up to one target creature you don't control.",
+      'Whenever ~ attacks, destroy target artifact or enchantment defending player controls.',
+      "{1}{G}: Return target Human you control to its owner's hand. ~ gains indestructible until end of turn.",
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [{ kind: 'creature', controller: 'opponent', count: { min: 0, max: 1 } }],
+          effects: [{ op: 'fightUpToOneChosen', a: 'source', bSlot: 0 }],
+          description: "It fights up to one target creature you don't control",
+        },
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'attacks',
+            subject: { kind: 'self' },
+            defendingPlayerIsEventPlayer: true,
+          },
+          targets: [{ kind: 'artifactOrEnchantment', controller: 'eventPlayer' }],
+          effects: [{ op: 'destroy', target: 0 }],
+          description: 'Destroy target artifact or enchantment defending player controls',
+        },
+      ],
+      activatedAbilities: [
+        activated({
+          costs: [mana('{1}{G}')],
+          targets: [{ kind: 'permanent', controller: 'you', filter: ofSubtype('Human') }],
+          effects: [
+            { op: 'returnToHand', target: 0 },
+            { op: 'grantKeywordUntilEot', target: 'source', keyword: 'indestructible' },
+          ],
+          description:
+            "Return target Human you control to its owner's hand; Kogla gains indestructible until end of turn",
+        }),
       ],
     },
   );

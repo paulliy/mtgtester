@@ -4146,6 +4146,51 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "8b21062e-97b0-4967-96df-30e8309f4fba": {
+      "name": "Kogla, the Titan Ape",
+      "oracleSha256": "b4db59d3f23bce59cddf085d47b283059f82bea48ef05cd4a0c110961f4f303d",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "id": "kogla-the-titan-ape-enters-fight",
+          "oracleText": "When Kogla enters, it fights up to one target creature you don't control.",
+          "implementation": [
+            "enters trigger on self with a 0..1 count slot: creature an opponent controls",
+            "fightUpToOneChosen(source, slot 0): choosing none means no fight"
+          ],
+          "engineTestIds": [
+            "kogla-the-titan-ape-pinned-oracle-supported",
+            "kogla-the-titan-ape-enters-fight",
+            "kogla-the-titan-ape-up-to-one"
+          ],
+          "viewerScenarioIds": ["kogla-viewer-enters-fight"]
+        },
+        {
+          "id": "kogla-the-titan-ape-attack-destroy",
+          "oracleText": "Whenever Kogla attacks, destroy target artifact or enchantment defending player controls.",
+          "implementation": [
+            "attacks trigger on self with the new defendingPlayerIsEventPlayer qualifier: eventPlayer is the player Kogla attacks",
+            "target artifact or enchantment controlled by eventPlayer; destroy"
+          ],
+          "engineTestIds": ["kogla-the-titan-ape-attack-destroys-defenders-permanent"],
+          "viewerScenarioIds": ["kogla-viewer-bounce-and-attack"]
+        },
+        {
+          "id": "kogla-the-titan-ape-human-bounce",
+          "oracleText": "{1}{G}: Return target Human you control to its owner's hand. Kogla gains indestructible until end of turn.",
+          "implementation": [
+            "activated {1}{G}: target permanent you control with the Human subtype; returnToHand",
+            "grantKeywordUntilEot(source, indestructible); if the Human left first the whole ability fizzles (CR 608.2b), so no indestructible"
+          ],
+          "engineTestIds": [
+            "kogla-the-titan-ape-human-bounce",
+            "kogla-the-titan-ape-bounce-fizzles"
+          ],
+          "viewerScenarioIds": ["kogla-viewer-bounce-and-attack"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

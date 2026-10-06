@@ -1216,6 +1216,12 @@ export type TriggerHead =
        * does not remove the ability.
        */
       entersUntapped?: true;
+      /**
+       * "Whenever ~ attacks, destroy target artifact or enchantment **defending player** controls"
+       * (Kogla) — for an `attacks` trigger, `eventPlayer` is the player the creature is attacking
+       * instead of the attacker's controller.
+       */
+      defendingPlayerIsEventPlayer?: true;
     }
   /**
    * "Whenever you cast a Dragon spell" — the subject is a spell on the stack, so it is matched

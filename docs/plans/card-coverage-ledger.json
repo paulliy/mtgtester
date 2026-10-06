@@ -1175,17 +1175,21 @@
   {
     "oracleId": "8b21062e-97b0-4967-96df-30e8309f4fba",
     "name": "Kogla, the Titan Ape",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR01.29",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When ~ enters, it fights up to one target creature you don't control.\"",
       "unrecognized rules text: \"Whenever ~ attacks, destroy target artifact or enchantment defending player controls.\"",
       "unrecognized rules text: \"{1}{G}: Return target Human you control to its owner's hand. ~ gains indestructible until end of turn.\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "3233af43-7826-4895-b67e-03c6102c2cd5",

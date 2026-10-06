@@ -5246,6 +5246,85 @@ function sweetGumRecluseScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function koglaFightScenario(gameId: GameId): CardTestScenario {
+  const kogla = pinnedFrom(COVERAGE_PR01, 'Kogla, the Titan Ape');
+  const forests = Array.from({ length: 6 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'kogla-viewer-enters-fight',
+    title: 'Kogla, the Titan Ape: fight up to one creature on entry',
+    instructions: [
+      'Cast Kogla, the Titan Ape with your six Forests.',
+      "Choose P2's Lab Ox for its enters fight.",
+    ],
+    expectedOutcome:
+      'Kogla (7/6) and Lab Ox (4/4) deal damage to each other: Lab Ox dies and Kogla survives with 4 damage.',
+    oracleSha256: kogla.sha256,
+    clauseIds: ['kogla-the-titan-ape-enters-fight'],
+    decks: {
+      P1: [kogla.card, ...Array.from({ length: 6 }, () => FOREST)],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Kogla, the Titan Ape'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: forests },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function koglaAttackScenario(gameId: GameId): CardTestScenario {
+  const kogla = pinnedFrom(COVERAGE_PR01, 'Kogla, the Titan Ape');
+  const squire = card({
+    oracleId: 'lab-kogla-squire',
+    name: 'Lab Squire',
+    typeLine: 'Creature — Human Soldier',
+    manaCost: '{W}',
+    cmc: 1,
+    colors: ['W'],
+    colorIdentity: ['W'],
+    power: '1',
+    toughness: '1',
+  });
+  const idol = card({
+    oracleId: 'lab-kogla-idol',
+    name: 'Lab Idol',
+    typeLine: 'Artifact',
+    manaCost: '{2}',
+    cmc: 2,
+  });
+  return pr01Scenario(gameId, {
+    id: 'kogla-viewer-bounce-and-attack',
+    title: 'Kogla, the Titan Ape: bounce a Human, then attack',
+    instructions: [
+      'Activate Kogla for {1}{G}, returning your Lab Squire to your hand.',
+      'Attack P2 with Kogla; its attack trigger destroys an artifact or enchantment P2 controls.',
+    ],
+    expectedOutcome:
+      "Lab Squire returns to your hand and Kogla gains indestructible. When Kogla attacks P2, Lab Hex (P2's only artifact or enchantment) is destroyed; P3's Lab Idol is untouched.",
+    oracleSha256: kogla.sha256,
+    clauseIds: ['kogla-the-titan-ape-attack-destroy', 'kogla-the-titan-ape-human-bounce'],
+    decks: {
+      P1: [kogla.card, squire, FOREST, FOREST],
+      P2: [LAB_HEX, FOREST, FOREST],
+      P3: [idol, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Kogla, the Titan Ape', 'Lab Squire', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Hex'] },
+        { playerId: 'P3', cardNames: ['Lab Idol'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5361,6 +5440,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'mystic-sanctuary-viewer-untapped-return',
   'brokers-hideout-viewer-sacrifice-and-search',
   'sweet-gum-recluse-viewer-new-creatures',
+  'kogla-viewer-enters-fight',
+  'kogla-viewer-bounce-and-attack',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5472,6 +5553,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'mystic-sanctuary-viewer-untapped-return': mysticSanctuaryScenario,
   'brokers-hideout-viewer-sacrifice-and-search': brokersHideoutScenario,
   'sweet-gum-recluse-viewer-new-creatures': sweetGumRecluseScenario,
+  'kogla-viewer-enters-fight': koglaFightScenario,
+  'kogla-viewer-bounce-and-attack': koglaAttackScenario,
 };
 
 export function createCardTestScenario(

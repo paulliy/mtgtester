@@ -5512,6 +5512,115 @@
     }
   },
   {
+    "oracleId": "8b21062e-97b0-4967-96df-30e8309f4fba",
+    "name": "Kogla, the Titan Ape",
+    "handledLines": [
+      "When ~ enters, it fights up to one target creature you don't control.",
+      "Whenever ~ attacks, destroy target artifact or enchantment defending player controls.",
+      "{1}{G}: Return target Human you control to its owner's hand. ~ gains indestructible until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Return target Human you control to its owner's hand; Kogla gains indestructible until end of turn",
+            "effects": [
+              {
+                "op": "returnToHand",
+                "target": 0
+              },
+              {
+                "keyword": "indestructible",
+                "op": "grantKeywordUntilEot",
+                "target": "source"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "filter": {
+                  "kind": "subtype",
+                  "value": "Human"
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "It fights up to one target creature you don't control",
+          "effects": [
+            {
+              "a": "source",
+              "bSlot": 0,
+              "op": "fightUpToOneChosen"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Destroy target artifact or enchantment defending player controls",
+          "effects": [
+            {
+              "op": "destroy",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "artifactOrEnchantment"
+            }
+          ],
+          "trigger": {
+            "defendingPlayerIsEventPlayer": true,
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "8b5cffd5-5db3-4151-9275-d91387554412",
     "name": "Cut a Deal",
     "handledLines": [],
@@ -16295,6 +16404,115 @@
     "name": "Killian, Ink Duelist",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-kogla-the-titan-ape",
+    "name": "Kogla, the Titan Ape",
+    "handledLines": [
+      "When ~ enters, it fights up to one target creature you don't control.",
+      "Whenever ~ attacks, destroy target artifact or enchantment defending player controls.",
+      "{1}{G}: Return target Human you control to its owner's hand. ~ gains indestructible until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Return target Human you control to its owner's hand; Kogla gains indestructible until end of turn",
+            "effects": [
+              {
+                "op": "returnToHand",
+                "target": 0
+              },
+              {
+                "keyword": "indestructible",
+                "op": "grantKeywordUntilEot",
+                "target": "source"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "filter": {
+                  "kind": "subtype",
+                  "value": "Human"
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "It fights up to one target creature you don't control",
+          "effects": [
+            {
+              "a": "source",
+              "bSlot": 0,
+              "op": "fightUpToOneChosen"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Destroy target artifact or enchantment defending player controls",
+          "effects": [
+            {
+              "op": "destroy",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "artifactOrEnchantment"
+            }
+          ],
+          "trigger": {
+            "defendingPlayerIsEventPlayer": true,
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-kor-spiritdancer",

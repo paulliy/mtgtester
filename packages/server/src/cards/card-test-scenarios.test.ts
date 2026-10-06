@@ -154,6 +154,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'mystic-sanctuary-viewer-untapped-return',
       'brokers-hideout-viewer-sacrifice-and-search',
       'sweet-gum-recluse-viewer-new-creatures',
+      'kogla-viewer-enters-fight',
+      'kogla-viewer-bounce-and-attack',
     ]);
   });
 

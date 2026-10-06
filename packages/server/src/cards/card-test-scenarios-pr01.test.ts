@@ -786,3 +786,33 @@ describe('Sweet-Gum Recluse Card Test Lab scenario', () => {
     replays('sweet-gum-recluse-viewer-new-creatures', steps);
   });
 });
+
+describe('Kogla, the Titan Ape Card Test Lab scenarios', () => {
+  const fightSteps: Step[] = [{ action: 'Cast Kogla, the Titan Ape' }, { action: 'Target Lab Ox' }];
+  const attackSteps: Step[] = [
+    { action: 'Return target Human you control', targets: ['Lab Squire'] },
+    { action: 'Declare attackers', targets: ['P2'] },
+  ];
+
+  it('kogla-viewer-enters-fight — fights the chosen creature', () => {
+    const { seat, onBattlefield } = run('kogla-viewer-enters-fight', fightSteps);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(onBattlefield('Kogla, the Titan Ape')[0]?.damageMarked).toBe(4);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    replays('kogla-viewer-enters-fight', fightSteps);
+  });
+
+  it("kogla-viewer-bounce-and-attack — bounces the Human, then destroys the defending player's enchantment", () => {
+    const { seat, onBattlefield, scenario } = run('kogla-viewer-bounce-and-attack', attackSteps);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Squire']);
+    expect(
+      scenario.engine
+        .view('P1')
+        .battlefield.find((permanent) => permanent.name === 'Kogla, the Titan Ape')?.keywords,
+    ).toContain('indestructible');
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Hex']);
+    expect(onBattlefield('Lab Idol')).toHaveLength(1);
+    expect(seat('P2').life).toBe(33);
+    replays('kogla-viewer-bounce-and-attack', attackSteps);
+  });
+});
