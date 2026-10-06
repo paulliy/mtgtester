@@ -355,18 +355,24 @@ describe('extendCard ability composition', () => {
     expect(interpretCard(card).manaAbilities).toEqual([{ units: [['G']] }]);
   });
 
-  it('extend-card-leaves-unlisted-fields-alone — fields the override omits stay interpreted', () => {
-    const card = twoLines('Lab Untouched Rock');
+  it('extend-card-leaves-unlisted-fields-alone — lists the override omits stay interpreted', () => {
+    const card = oracle({
+      name: 'Lab Untouched Rock',
+      typeLine: 'Artifact',
+      oracleText: '{T}: Add {C}.\n{3}: Untap this artifact.\nFrobnicate the widget.',
+    });
+    const parsed = interpretCard({ ...card, oracleId: 'lab-untouched-rock-unregistered' });
+    expect(parsed.activatedAbilities).toHaveLength(1);
     registerOverride({
       oracleId: card.oracleId,
       name: card.name,
       handledLines: ['Frobnicate the widget.'],
-      def: { activatedAbilities: [] },
+      def: authored,
       compose: 'append',
     });
     const def = interpretCard(card);
-    expect(def.manaAbilities).toEqual([{ units: [['C']] }]);
-    expect(def.activatedAbilities).toEqual([]);
+    expect(def.manaAbilities).toEqual([{ units: [['C']] }, { units: [['G']] }]);
+    expect(def.activatedAbilities).toEqual(parsed.activatedAbilities);
   });
 });
 
@@ -623,6 +629,9 @@ describe('Bespoke Battlewagon', () => {
 
   it('bespoke-battlewagon-tap-abilities-need-untapped — a tapped Battlewagon offers only the energy animation', () => {
     const { ctx, source } = ready('wagon-tapped', 9);
+    // A legal target exists, so only the tapped Battlewagon keeps "Tap target creature" away.
+    spawn(ctx, 'P2', oracle({ name: 'Wagon Victim', typeLine: 'Creature — Ox' }));
+    expect(activationMatching(ctx, 'P1', source, TAP_TARGET)).toBeDefined();
     source.tapped = true;
     const offered = activationsOf(ctx, 'P1', source).map((option) => option.description);
     expect(offered.some((text) => GAIN.test(text))).toBe(false);
@@ -669,7 +678,7 @@ describe('Bespoke Battlewagon', () => {
     expect(activationMatching(short.ctx, 'P1', short.source, DRAW)).toBeUndefined();
   });
 
-  it('bespoke-battlewagon-animate — Pay {E}{E}{E}{E} makes it a 5/6 artifact creature until end of turn, uncrewed', () => {
+  it('bespoke-battlewagon-animate — Pay {E}{E}{E}{E} makes it a 5/6 artifact creature until end of turn', () => {
     const { ctx, source } = ready('wagon-animate', 4);
     expect(isCreature(ctx, source)).toBe(false);
     const option = activationMatching(ctx, 'P1', source, ANIMATE);
