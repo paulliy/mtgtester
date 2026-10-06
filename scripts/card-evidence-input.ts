@@ -1224,6 +1224,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Thunderfoot Baloth: lieutenant pumps your creatures'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomb Fortress: mill four, then return a creature card'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

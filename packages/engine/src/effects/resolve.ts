@@ -2249,6 +2249,42 @@ export function* executeAbility(
         }
         break;
       }
+      case 'returnOneFromYourGraveyardToBattlefield': {
+        const owner = playerById(ctx, source.controllerId);
+        const candidates = owner.graveyard.filter((card) =>
+          selectMatches(cardZoneCandidate(ctx, card, owner.id), effect.filter, {
+            cardId: source.cardId,
+            controllerId: source.controllerId,
+          }),
+        );
+        if (candidates.length === 0) break;
+        let selected = candidates[0]!;
+        if (new Set(candidates.map((card) => card.name)).size > 1) {
+          const choice = yield {
+            decisionType: 'general',
+            player: source.controllerId,
+            prompt: `${source.name}: choose a card to return from your graveyard to the battlefield`,
+            presentationSource: presentedSource(ctx, source),
+            // No raw `payload`: graveyard cards have no click affordance in the viewer, so a
+            // payload-derived `subjectId` would strand the option (see Kairi above).
+            options: candidates.map((card) =>
+              cardOption(ctx, card, {
+                type: 'choose',
+                description: `Return ${card.name} to the battlefield`,
+                verb: 'Return',
+                role: 'affirm',
+              }),
+            ),
+          };
+          selected = candidates[choice.index] ?? selected;
+        }
+        emit(ctx, 'graveyardToBattlefield', { target: selected.name, source: source.name });
+        yield* moveObject(ctx, selected, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+        });
+        break;
+      }
       case 'grantHasteOnResolution': {
         // Paired with a reanimation op on the same slot, so the returned creature can attack the
         // turn it arrives. Until end of turn, like every other printed "gains haste" rider.

@@ -1748,6 +1748,140 @@ describe('Thunderfoot Baloth', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 1.14 Tomb Fortress
+// ---------------------------------------------------------------------------------------------
+
+describe('Tomb Fortress', () => {
+  const fortress = pinned('Tomb Fortress');
+  const ghoul = () =>
+    oracle({ name: 'Tomb Ghoul', typeLine: 'Creature — Zombie', manaCost: '{3}' });
+  const wraith = () =>
+    oracle({ name: 'Tomb Wraith', typeLine: 'Creature — Spirit', manaCost: '{2}' });
+  const RETURN = /choose a card to return from your graveyard/;
+
+  /** P1 controls an untapped Fortress with {2}{B}{B}{B} floating; `top` sits on its library. */
+  function board(seed: string, top: OracleCard[]) {
+    const ctx = pod(seed);
+    const self = spawn(ctx, 'P1', fortress.card);
+    for (const card of [...top].reverse()) conjure(ctx, 'P1', card, 'library');
+    addMana(
+      playerById(ctx, 'P1'),
+      ['B', 'B', 'B', 'G', 'G'].map((symbol) => ({ symbol: symbol as 'B' | 'G' })),
+    );
+    return { ctx, self };
+  }
+
+  const activation = (ctx: GameContext, self: EnginePermanent) =>
+    priorityOptions(ctx, 'P1').find((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return (
+        payload.kind === 'activateAbility' &&
+        payload.objectId === self.id &&
+        /Mill four/.test(option.description)
+      );
+    });
+
+  function activate(ctx: GameContext, self: EnginePermanent, answer?: Answer) {
+    const option = activation(ctx, self);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    return resolveTop(ctx, answer);
+  }
+
+  it('tomb-fortress-pinned-oracle-supported — pins the Oracle and models the land plus the sorcery-speed reanimation', () => {
+    expect(fortress.sha256).toBe(
+      '65ac436976204aa19616a5462be74a04d8081dd30adaddfeedfe8b3fcaef5329',
+    );
+    const def = interpretCard(fortress.card);
+    expect(def.modeled).toBe(true);
+    expect(def.entersTapped).toBe(true);
+    expect(def.manaAbilities).toEqual([expect.objectContaining({ units: [['B']] })]);
+    expect(def.activatedAbilities).toHaveLength(1);
+    expect(def.activatedAbilities[0]).toMatchObject({
+      timing: 'sorcery',
+      costs: [{ kind: 'mana' }, { kind: 'tap' }, { kind: 'exileSelf' }],
+      ability: {
+        targets: [],
+        effects: [
+          { op: 'mill', count: { kind: 'const', n: 4 } },
+          { op: 'returnOneFromYourGraveyardToBattlefield' },
+        ],
+      },
+    });
+  });
+
+  it('tomb-fortress-returns-milled-creature — a creature card milled by the ability can be the one returned', () => {
+    const { ctx, self } = board('fortress-milled', [forest(), ghoul(), forest(), forest()]);
+    expect(playerById(ctx, 'P1').graveyard).toEqual([]);
+    activate(ctx, self);
+    const returned = ctx.state.battlefield.find((entry) => entry.name === 'Tomb Ghoul');
+    expect(returned?.controllerId).toBe('P1');
+    expect(ctx.state.battlefield.some((entry) => entry.id === self.id)).toBe(false);
+    expect(ctx.state.exile.map((card) => card.name)).toContain('Tomb Fortress');
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual([
+      'Forest',
+      'Forest',
+      'Forest',
+    ]);
+    const types = ctx.state.eventLog.map((event) => event.type);
+    expect(types.lastIndexOf('mill')).toBeLessThan(types.indexOf('graveyardToBattlefield'));
+  });
+
+  it('tomb-fortress-choose-after-mill — the choice offers creature cards already there and ones just milled', () => {
+    const { ctx, self } = board('fortress-choice', [wraith(), forest(), forest(), forest()]);
+    conjure(ctx, 'P1', ghoul(), 'graveyard');
+    const { decisions } = activate(ctx, self, answers([[RETURN, /Return Tomb Wraith/]]));
+    const choice = decisions.find((decision) => RETURN.test(decision.prompt))!;
+    expect(choice.options.map((option) => option.description)).toEqual([
+      'Return Tomb Ghoul to the battlefield',
+      'Return Tomb Wraith to the battlefield',
+    ]);
+    expect(ctx.state.battlefield.some((entry) => entry.name === 'Tomb Wraith')).toBe(true);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toContain('Tomb Ghoul');
+  });
+
+  it('tomb-fortress-no-creature — with no creature card in your graveyard it only mills', () => {
+    const { ctx, self } = board('fortress-none', []);
+    conjure(ctx, 'P2', ghoul(), 'graveyard');
+    activate(ctx, self);
+    expect(playerById(ctx, 'P1').graveyard).toHaveLength(4);
+    expect(ctx.state.battlefield.some((entry) => entry.name === 'Tomb Ghoul')).toBe(false);
+    expect(ctx.state.eventLog.some((event) => event.type === 'graveyardToBattlefield')).toBe(false);
+  });
+
+  it('tomb-fortress-activation-limits — sorcery speed on your turn, with full mana and an untapped Fortress', () => {
+    const { ctx, self } = board('fortress-limits', []);
+    expect(activation(ctx, self)).toBeDefined();
+    ctx.state.phase = 'beginning';
+    ctx.state.step = 'upkeep';
+    expect(activation(ctx, self)).toBeUndefined();
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    self.tapped = true;
+    expect(activation(ctx, self)).toBeUndefined();
+    self.tapped = false;
+    const poor = pod('fortress-poor');
+    const poorSelf = spawn(poor, 'P1', fortress.card);
+    addMana(playerById(poor, 'P1'), [{ symbol: 'B' }, { symbol: 'B' }, { symbol: 'G' }]);
+    expect(activation(poor, poorSelf)).toBeUndefined();
+  });
+
+  it('tomb-fortress-enters-tapped — played as a land it enters tapped', () => {
+    const ctx = pod('fortress-land');
+    const inHand = conjure(ctx, 'P1', fortress.card, 'hand');
+    const play = priorityOptions(ctx, 'P1').find((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'playLand' && payload.objectId === inHand.id;
+    });
+    expect(play).toBeDefined();
+    takeAction(ctx, 'P1', play!.payload as PriorityActionPayload);
+    expect(ctx.state.battlefield.find((entry) => entry.name === 'Tomb Fortress')?.tapped).toBe(
+      true,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1823,6 +1957,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Thunderfoot Baloth',
     sha256: 'ad245d778eb6fdf24778c3037b47c0b0bb89e80346f64557ce250b39123fb23f',
     clauseCount: 2,
+  },
+  {
+    name: 'Tomb Fortress',
+    sha256: '65ac436976204aa19616a5462be74a04d8081dd30adaddfeedfe8b3fcaef5329',
+    clauseCount: 3,
   },
 ];
 

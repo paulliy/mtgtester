@@ -572,6 +572,12 @@ export type Effect =
   | { op: 'exileTargetPlayerGraveyard'; target: EffectRef }
   | { op: 'returnToHandEach'; selector: Selector }
   | { op: 'graveyardToBattlefieldEach'; filter: Selector; scope?: 'you' | 'all' }
+  /**
+   * "Return a creature card from your graveyard to the battlefield" with no target (Tomb
+   * Fortress): the card is chosen as the effect resolves, after any earlier mill in the same
+   * ability, from the cards then in your graveyard. Mandatory when one matches.
+   */
+  | { op: 'returnOneFromYourGraveyardToBattlefield'; filter: Selector }
   | { op: 'graveyardToHandEach'; filter: Selector; scope?: 'you' | 'all' }
   | { op: 'unearth' }
   | { op: 'grantUnearthToArtifactCreaturesInGraveyard'; cost: ParsedManaCost }

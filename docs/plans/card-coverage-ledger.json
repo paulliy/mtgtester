@@ -1993,6 +1993,24 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "986f510c-e2ec-423e-a443-51a169939558",
+    "name": "Tomb Fortress",
+    "package": "PR01.14",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "unrecognized rules text: \"{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery.\"",
+      "explicitly unsupported: The creature return is a target chosen before milling."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr01-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "8a29bd35-33ef-4317-9fe5-8aaff5d7d64d",
     "name": "Tragic Arrogance",
     "package": "W4",

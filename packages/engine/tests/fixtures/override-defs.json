@@ -5511,8 +5511,59 @@
   {
     "oracleId": "986f510c-e2ec-423e-a443-51a169939558",
     "name": "Tomb Fortress",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Mill four cards, then return a creature card from your graveyard to the battlefield",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "mill"
+              },
+              {
+                "filter": {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                "op": "returnOneFromYourGraveyardToBattlefield"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 3,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "exileSelf"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "99140891-face-4015-aacd-1309e87d8f9f",
@@ -19301,8 +19352,59 @@
   {
     "oracleId": "oracle-tomb-fortress",
     "name": "Tomb Fortress",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Mill four cards, then return a creature card from your graveyard to the battlefield",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "mill"
+              },
+              {
+                "filter": {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                "op": "returnOneFromYourGraveyardToBattlefield"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 3,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "exileSelf"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-tomik-wielder-of-law",

@@ -2372,13 +2372,37 @@
     "986f510c-e2ec-423e-a443-51a169939558": {
       "name": "Tomb Fortress",
       "oracleSha256": "65ac436976204aa19616a5462be74a04d8081dd30adaddfeedfe8b3fcaef5329",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Mill four cards, then return a creature card from your graveyard to the battlefield.",
-          "implementation": ["explicitly unsupported; return is a target chosen before mill"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "tomb-fortress-enters-tapped",
+          "oracleText": "This land enters tapped.",
+          "implementation": ["entersTapped (interpreted)"],
+          "engineTestIds": ["tomb-fortress-pinned-oracle-supported", "tomb-fortress-enters-tapped"],
+          "viewerScenarioIds": ["tomb-fortress-viewer-mill-then-return"]
+        },
+        {
+          "id": "tomb-fortress-mana",
+          "oracleText": "{T}: Add {B}.",
+          "implementation": ["mana ability {T}: add {B} (interpreted)"],
+          "engineTestIds": ["tomb-fortress-pinned-oracle-supported"],
+          "viewerScenarioIds": ["tomb-fortress-viewer-mill-then-return"]
+        },
+        {
+          "id": "tomb-fortress-mill-then-return",
+          "oracleText": "{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery.",
+          "implementation": [
+            "activated ability, sorcery timing; costs {2}{B}{B}{B}, tap, exile this land",
+            "mill 4 (controller), then returnOneFromYourGraveyardToBattlefield(Creature): no target; the card is chosen on resolution from the creature cards then in your graveyard, including ones just milled",
+            "mandatory when any creature card is there; nothing happens otherwise"
+          ],
+          "engineTestIds": [
+            "tomb-fortress-returns-milled-creature",
+            "tomb-fortress-choose-after-mill",
+            "tomb-fortress-no-creature",
+            "tomb-fortress-activation-limits"
+          ],
+          "viewerScenarioIds": ["tomb-fortress-viewer-mill-then-return"]
         }
       ],
       "gameplayAiScenarioIds": []

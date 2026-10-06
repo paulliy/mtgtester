@@ -410,3 +410,32 @@ describe('Thunderfoot Baloth Card Test Lab scenario', () => {
     replays('thunderfoot-baloth-viewer-lieutenant', steps);
   });
 });
+
+describe('Tomb Fortress Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Mill four cards' },
+    { action: 'Return Lab Ox to the battlefield' },
+  ];
+
+  it('tomb-fortress-viewer-mill-then-return — mills four, then offers the creature cards in the graveyard, including the milled one', () => {
+    const { state, seat, onBattlefield, offered } = run(
+      'tomb-fortress-viewer-mill-then-return',
+      steps,
+    );
+    const choice = offered.find((options) => options.includes('Return Lab Ox to the battlefield'));
+    expect(choice).toEqual([
+      'Return Lab Servo to the battlefield',
+      'Return Lab Ox to the battlefield',
+    ]);
+    expect(onBattlefield('Lab Ox')[0]?.controllerId).toBe('P1');
+    expect(onBattlefield('Tomb Fortress')).toHaveLength(0);
+    expect(state.exile.map((card) => card.name)).toEqual(['Tomb Fortress']);
+    expect(seat('P1').library).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Forest', 'Forest', 'Forest', 'Lab Servo']);
+    replays('tomb-fortress-viewer-mill-then-return', steps);
+  });
+});

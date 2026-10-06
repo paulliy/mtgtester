@@ -38,6 +38,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Smothering Tithe',
       'Sylvan Reclamation',
       'Thunderfoot Baloth',
+      'Tomb Fortress',
       'War Room',
     ]);
   });

@@ -1,6 +1,7 @@
 /** Remaining authored overrides for necron-dynasties.txt. */
 
-import { TAP, mana, manaCost, spell } from '../templates';
+import { EXILE_SELF, TAP, activated, mana, manaCost, spell } from '../templates';
+import { constant } from '../value';
 import type { TokenSpec } from '../ability';
 import { allOf, anyOf, ofType, not, SELF, YOURS } from '../selector';
 import { defineCard, unsupportedCard } from './index';
@@ -390,11 +391,28 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Tomb Blade',
     'Combat-damage life loss targets any player, not the damaged player.',
   );
-  // Catalog audit necron-remaining-batch-5: return is targeted before mill.
-  unsupportedCard(
+  // Coverage PR01: the creature card is chosen on resolution, after the mill, with no target.
+  defineCard(
     '986f510c-e2ec-423e-a443-51a169939558',
     'Tomb Fortress',
-    'The creature return is a target chosen before milling.',
+    [
+      '{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery.',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{2}{B}{B}{B}'), TAP, EXILE_SELF],
+          timing: 'sorcery',
+          targets: [],
+          effects: [
+            { op: 'mill', count: constant(4) },
+            { op: 'returnOneFromYourGraveyardToBattlefield', filter: ofType('Creature') },
+          ],
+          description:
+            'Mill four cards, then return a creature card from your graveyard to the battlefield',
+        }),
+      ],
+    },
   );
   // Catalog audit necron-remaining-batch-6: graveyard mana abilities omitted.
   unsupportedCard(

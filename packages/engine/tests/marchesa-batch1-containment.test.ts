@@ -220,7 +220,6 @@ const REASONS: Record<string, string> = {
   'Shard of the Nightbringer': 'The if-you-cast-it intervening if is omitted.',
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
-  'Tomb Fortress': 'The creature return is a target chosen before milling.',
   'Mask of Memory': 'Equipped-creature combat damage is implemented as any equipped creature.',
   'Sautekh Immortal': 'Enters-with counters is implemented as an enters trigger.',
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
@@ -312,6 +311,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smothering Tithe',
     'War Room',
     // Coverage PR01 (docs/plans/card-coverage-chunks.md).
+    'Tomb Fortress',
     'Thunderfoot Baloth',
     'Sylvan Reclamation',
     'Plasmancer',

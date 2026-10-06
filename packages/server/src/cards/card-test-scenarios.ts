@@ -4596,6 +4596,50 @@ function thunderfootBalothScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function tombFortressScenario(gameId: GameId): CardTestScenario {
+  const fortress = pinnedFrom(MARCHESA_BATCH1, 'Tomb Fortress');
+  return pr01Scenario(gameId, {
+    id: 'tomb-fortress-viewer-mill-then-return',
+    title: 'Tomb Fortress: mill four, then return a creature card',
+    instructions: [
+      'Activate Tomb Fortress with your five Swamps, tapping and exiling the Fortress.',
+      'After the four cards are milled, choose Lab Ox, which was just milled, to return.',
+    ],
+    expectedOutcome:
+      'Four cards are milled, then you choose among every creature card now in your graveyard (Lab Servo and the milled Lab Ox). Lab Ox enters under your control and Tomb Fortress is exiled.',
+    oracleSha256: fortress.sha256,
+    clauseIds: ['tomb-fortress-mill-then-return'],
+    decks: {
+      P1: [
+        fortress.card,
+        LAB_SERVO,
+        SWAMP,
+        SWAMP,
+        SWAMP,
+        SWAMP,
+        SWAMP,
+        FOREST,
+        LAB_OX,
+        FOREST,
+        FOREST,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Tomb Fortress', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'],
+        },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Servo'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -4692,6 +4736,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'sylvan-reclamation-viewer-exile-up-to-two',
   'sylvan-reclamation-viewer-basic-landcycling',
   'thunderfoot-baloth-viewer-lieutenant',
+  'tomb-fortress-viewer-mill-then-return',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -4784,6 +4829,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'sylvan-reclamation-viewer-exile-up-to-two': sylvanReclamationScenario,
   'sylvan-reclamation-viewer-basic-landcycling': sylvanReclamationLandcyclingScenario,
   'thunderfoot-baloth-viewer-lieutenant': thunderfootBalothScenario,
+  'tomb-fortress-viewer-mill-then-return': tombFortressScenario,
 };
 
 export function createCardTestScenario(

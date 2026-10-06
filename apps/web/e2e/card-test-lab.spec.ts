@@ -2080,3 +2080,28 @@ test('Thunderfoot Baloth: lieutenant pumps your creatures', async ({ page }) => 
   await expect(permanent(page, 'Lab Servo')).not.toContainText(/trample/i);
   await expect(permanent(page, 'Lab Relic')).not.toContainText(/trample/i);
 });
+
+test('Tomb Fortress: mill four, then return a creature card', async ({ page }) => {
+  await runScenario(page, 'Tomb Fortress: mill four, then return a creature card');
+
+  const fortress = permanent(page, 'Tomb Fortress');
+  await expect(fortress).toHaveClass(/actionable/);
+  await fortress.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // The choice comes after the mill, so the just-milled Lab Ox is offered beside Lab Servo.
+  await expect(page.getByText(/choose a card to return from your graveyard/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.locator('.panel-group').filter({ hasText: 'Lab Servo' })).toBeVisible();
+  await page
+    .locator('.panel-group')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'Return' })
+    .click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+  await expect(permanent(page, 'Tomb Fortress')).toHaveCount(0);
+});
