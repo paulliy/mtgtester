@@ -59,9 +59,9 @@ describe('effect executor contracts independent of production cards', () => {
     const { ctx, permanent } = setup();
     const costs = [{ kind: 'exileOtherCardsFromGraveyard' as const, count: 0 }];
     expect(canPayNonManaCosts(ctx, permanent, costs)).toBe(false);
-    expect(() => pump(payAbilityCosts(ctx, ctx.state.players[0]!, permanent, costs, 'tap'))).toThrow(
-      'not a battlefield activation cost',
-    );
+    expect(() =>
+      pump(payAbilityCosts(ctx, ctx.state.players[0]!, permanent, costs, 'tap')),
+    ).toThrow('not a battlefield activation cost');
     expect(ctx.state.battlefield).toContain(permanent);
   });
 });

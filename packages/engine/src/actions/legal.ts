@@ -1,4 +1,11 @@
-import { assertNever } from '../utils/assert-never';
+import { targetCandidates, targetIsLegal } from '../targets/legality';
+export {
+  permanentMatchesKind,
+  isCreatureSpell,
+  spellMatchesSelector,
+  withinTotalManaValue,
+  permanentManaValue,
+} from '../targets/legality';
 import { activationManaSources } from '../mana/activation';
 import {
   abilityModeLabel,
@@ -23,7 +30,7 @@ import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../car
 import type { SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EngineActionOption } from '../decisions';
-import { candidateOf, computeCharacteristics, matchesSelector } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import {
   addGeneric,
@@ -48,23 +55,17 @@ import {
   castingSpellsBlockedFor,
   findPermanent,
   gatherRuleStatics,
-  graveyardTargets,
-  hasProtectionFrom,
   getDefByOracleId,
-  hasKeyword,
   landPlayLimitFor,
   manaSourcesFor,
-  playersInApnapOrder,
   previewLandManaSymbols,
   previewManaAbilities,
   requireModeled,
 } from '../state/queries';
-import { playerById, spellManaValue } from '../state/objects';
 import type {
   EngineCardObject,
   EnginePermanent,
   EnginePlayerState,
-  EngineStackObject,
   GameContext,
 } from '../state/types';
 
@@ -533,262 +534,25 @@ export function activationCostReductionFor(
   return { generic };
 }
 
-/**
- * Does a permanent match a target kind, by its COMPUTED types (ADR 0007) — an animated
- * Mutavault is a legal "target creature" while a Blood-Mooned land is not a legal "target
- * artifact". Shared by option generation and the CR 608.2b re-check at resolution so the two
- * cannot drift.
- */
-export function permanentMatchesKind(
-  ctx: GameContext,
-  perm: EnginePermanent,
-  kind: TargetKind,
-): boolean {
-  const types = computeCharacteristics(ctx, perm).types;
-  switch (kind) {
-    case 'creature':
-      return types.includes('Creature');
-    case 'artifact':
-      return types.includes('Artifact');
-    case 'enchantment':
-      return types.includes('Enchantment');
-    case 'land':
-      return types.includes('Land');
-    case 'planeswalker':
-      return types.includes('Planeswalker');
-    case 'artifactOrEnchantment':
-      return types.includes('Artifact') || types.includes('Enchantment');
-    case 'artifactEnchantmentOrPlaneswalker':
-      return (
-        types.includes('Artifact') ||
-        types.includes('Enchantment') ||
-        types.includes('Planeswalker')
-      );
-    case 'nonlandPermanent':
-    case 'spellOrNonlandPermanent':
-      return !types.includes('Land');
-    case 'permanent':
-      return true;
-    case 'anyTarget':
-      // CR 115.4: "any target" is a creature, player, planeswalker, or battle.
-      return (
-        types.includes('Creature') || types.includes('Planeswalker') || types.includes('Battle')
-      );
-    case 'playerOrPlaneswalker':
-      return types.includes('Planeswalker');
-    case 'player':
-    case 'spell':
-    case 'stackObject':
-    case 'cardInGraveyard':
-    case 'noncreatureSpell':
-    case 'commanderInCommandZone':
-      return false;
-
-    default:
-      assertNever(kind, 'permanent target kind');
-  }
-}
-
-/**
- * Does the object a stack `spell` entry is casting have the Creature type? Shared by
- * `computeTargetOptions` and `isTargetStillLegal` (`effects/resolve.ts`) so "noncreature spell"
- * cannot drift between offering a target and rechecking it at resolution — the same reason
- * `permanentMatchesKind` is shared for battlefield kinds.
- */
-export function isCreatureSpell(ctx: GameContext, entry: EngineStackObject): boolean {
-  const def = getDefByOracleId(ctx, entry.sourceOracleId, entry.description);
-  return def.types.includes('Creature');
-}
-
-/** Legal target object-ids (or player ids) for one target slot, from `caster`'s seat. */
-/** Match a stack spell against a printed-characteristic selector. */
-export function spellMatchesSelector(
-  ctx: GameContext,
-  entry: EngineStackObject,
-  selector: import('../cards/selector').Selector,
-  casterId: PlayerId,
-): boolean {
-  const def = getDefByOracleId(ctx, entry.sourceOracleId, entry.description);
-  const candidate: SelectorCandidate = {
-    cardId: entry.sourceCardId,
-    controllerId: entry.controllerId,
-    types: def.types,
-    supertypes: def.supertypes,
-    subtypes: def.subtypes,
-    colors: def.colors,
-    power: def.power ?? 0,
-    keywords: def.keywords,
-    manaValue: spellManaValue(def, entry.announcedX),
-    isToken: false,
-    enteredThisTurn: false,
-    isCommander: entry.isCommanderCast,
-  };
-  return selectMatches(candidate, selector, { cardId: '', controllerId: casterId });
-}
-/**
- * A count slot's remaining candidates under its `totalManaValueAtMost` budget (Kairi): each must
- * fit within what the already-picked permanents leave. Without a budget, `candidates` is
- * returned unchanged.
- */
-export function withinTotalManaValue(
-  ctx: GameContext,
-  spec: TargetSpec,
-  picked: readonly ObjectId[],
-  candidates: ObjectId[],
-): ObjectId[] {
-  const budget = spec.totalManaValueAtMost;
-  if (budget === undefined) return candidates;
-  const manaValue = (id: ObjectId): number => {
-    const perm = ctx.state.battlefield.find((candidate) => candidate.id === id);
-    return perm === undefined ? 0 : permanentManaValue(ctx, perm);
-  };
-  const spent = picked.reduce((total, id) => total + manaValue(id), 0);
-  return candidates.filter((id) => manaValue(id) <= budget - spent);
-}
-
-/** A permanent's current mana value, as targeting and budgets read it. */
-export function permanentManaValue(ctx: GameContext, perm: EnginePermanent): number {
-  return candidateOf(ctx, perm, computeCharacteristics(ctx, perm)).manaValue ?? 0;
-}
-
+/** Compatibility API; domain generation and rechecking now share targetIsLegal. */
 export function computeTargetOptions(
   ctx: GameContext,
   spec: TargetKind | TargetSpec,
   casterId: PlayerId,
-  /** The targeting source's colors, for protection (CR 702.16). Omitted ⇒ colorless. */
   sourceColors?: readonly Color[],
-  /** The player associated with this trigger event, if target text refers to them. */
   eventPlayerId?: PlayerId,
-  /**
-   * Earlier ordinary slots' chosen ids, keyed by slot index — how `graveyardOwnerSlot`
-   * (Loaming Shaman: "target cards from THEIR graveyard") finds whose graveyard to search.
-   * Omitted when no such lookup is needed, or when this slot is only being previewed before
-   * the referenced slot has been chosen (falls back to the caster's own graveyard).
-   */
   chosenTargets?: readonly ObjectId[],
-  /**
-   * The card id of the spell's or ability's source, so a filter's "another"/"other" (`OTHER`)
-   * excludes that source itself. Omitted ⇒ no source to exclude.
-   */
   sourceCardId = '',
   targeting = true,
 ): ObjectId[] {
-  const { kind, controller, filter } =
-    typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
-
-  if (kind === 'stackObject') {
-    return ctx.state.stack.map((entry) => entry.id);
-  }
-  if (kind === 'spellOrNonlandPermanent') {
-    const permanentSpec = {
-      kind: 'nonlandPermanent' as const,
-      ...(controller !== undefined ? { controller } : {}),
-      ...(filter !== undefined ? { filter } : {}),
-    };
-    const spellSpec = {
-      kind: 'spell' as const,
-      ...(controller !== undefined ? { controller } : {}),
-    };
-    return [
-      ...computeTargetOptions(
-        ctx,
-        spellSpec,
-        casterId,
-        sourceColors,
-        eventPlayerId,
-        chosenTargets,
-        sourceCardId,
-      ),
-      ...computeTargetOptions(
-        ctx,
-        permanentSpec,
-        casterId,
-        sourceColors,
-        eventPlayerId,
-        chosenTargets,
-        sourceCardId,
-      ),
-    ];
-  }
-  if (kind === 'spell' || kind === 'noncreatureSpell') {
-    return ctx.state.stack
-      .filter((s) => s.kind === 'spell')
-      .filter((s) => kind !== 'noncreatureSpell' || !isCreatureSpell(ctx, s))
-      .filter((s) => filter === undefined || spellMatchesSelector(ctx, s, filter, casterId))
-      .filter(
-        (s) =>
-          controller === undefined ||
-          (controller === 'you'
-            ? s.controllerId === casterId
-            : controller === 'opponent'
-              ? s.controllerId !== casterId
-              : s.controllerId === eventPlayerId),
-      )
-      .map((s) => s.id);
-  }
-  if (kind === 'commanderInCommandZone') {
-    const player = playerById(ctx, casterId);
-    return player.commandZone.filter((c) => c.isCommander).map((c) => c.id);
-  }
-  // A card in a graveyard — the caster's own, unless `graveyardOwnerSlot` names an earlier
-  // slot holding the actual owner (Loaming Shaman: "target cards from THEIR graveyard").
-  if (kind === 'cardInGraveyard') {
-    const graveyardOwnerSlot = typeof spec === 'object' ? spec.graveyardOwnerSlot : undefined;
-    const graveyardOwnerScope = typeof spec === 'object' ? spec.graveyardOwnerScope : undefined;
-    if (graveyardOwnerScope === 'any') {
-      return ctx.state.players.flatMap((player) =>
-        graveyardTargets(ctx, player.id, filter).map((c) => c.id),
-      );
-    }
-    const ownerId =
-      graveyardOwnerSlot === undefined
-        ? casterId
-        : ((chosenTargets?.[graveyardOwnerSlot] as PlayerId | undefined) ?? casterId);
-    return graveyardTargets(ctx, ownerId, filter).map((c) => c.id);
-  }
-  const players = playersInApnapOrder(ctx).map((p) => p.id);
-  if (kind === 'player') {
-    return players.filter(
-      (id) =>
-        controller === undefined ||
-        (controller === 'you'
-          ? id === casterId
-          : controller === 'opponent'
-            ? id !== casterId
-            : id === eventPlayerId),
-    );
-  }
-
-  const permanents = ctx.state.battlefield
-    .filter((p) => permanentMatchesKind(ctx, p, kind))
-    // Shroud (CR 702.18) removes a permanent from every target list, its controller's included.
-    .filter((p) => !targeting || !hasKeyword(ctx, p, 'shroud'))
-    // Hexproof: can't be the target of spells/abilities OPPONENTS control (CR 702.11).
-    .filter((p) => !targeting || p.controllerId === casterId || !hasKeyword(ctx, p, 'hexproof'))
-    // Protection (CR 702.16). Kept in lockstep with `isTargetStillLegal`, which re-checks the
-    // same three at resolution — a divergence means offering a target we would then refuse.
-    .filter((p) => sourceColors === undefined || !hasProtectionFrom(ctx, p, sourceColors))
-    .filter(
-      (p) =>
-        controller === undefined ||
-        (controller === 'you'
-          ? p.controllerId === casterId
-          : controller === 'opponent'
-            ? p.controllerId !== casterId
-            : p.controllerId === eventPlayerId),
-    )
-    .filter(
-      (p) =>
-        filter === undefined ||
-        matchesSelector(ctx, p, filter, { cardId: sourceCardId, controllerId: casterId }),
-    )
-    .map((p) => p.id);
-
-  // "Any target" adds players to its permanents (CR 115.4); "player or planeswalker" likewise.
-  // Players are never hexproof-filtered.
-  return kind === 'anyTarget' || kind === 'playerOrPlaneswalker'
-    ? [...permanents, ...players]
-    : permanents;
+  return targetCandidates(ctx, spec, {
+    controllerId: casterId,
+    sourceCardId,
+    targeting,
+    ...(sourceColors === undefined ? {} : { sourceColors }),
+    ...(eventPlayerId === undefined ? {} : { eventPlayerId }),
+    ...(chosenTargets === undefined ? {} : { chosenTargets }),
+  });
 }
 
 /** Life owed by an opposing spell for targeting permanents with a target-life-tax static. */
@@ -1806,8 +1570,14 @@ export function validateChosenTargets(
     if (choice === undefined) {
       throw new Error(`missing target for slot ${slotNum} of ${def.name}`);
     }
-    const legal = computeTargetOptions(ctx, spec, casterId, def.colors);
-    if (!legal.includes(choice)) {
+    if (
+      !targetIsLegal(ctx, spec, choice, {
+        controllerId: casterId,
+        sourceColors: def.colors,
+        chosenTargets: targets,
+        phase: 'announcement',
+      })
+    ) {
       throw new Error(`illegal target ${choice} for slot ${slotNum} of ${def.name}`);
     }
     targets[slotNum] = choice;

@@ -1,3 +1,5 @@
+import { targetIsLegal } from '../targets/legality';
+import { captureResolutionTargets, type ResolutionTargets } from '../targets/resolution';
 import { assertNever } from '../utils/assert-never';
 /**
  * Effect resolution (brief §6.2): applying the mechanical outcome of `EffectSpec`s, plus
@@ -9,14 +11,11 @@ import { ALL_COLORS } from '@mtg/shared';
 import {
   canPaySpellAdditionalCosts,
   computeTargetOptions,
-  isCreatureSpell,
   manaPortionOf,
   maxChoicesFor,
   modalSelections,
   permanentManaValue,
-  permanentMatchesKind,
   selectedModeTargetSlots,
-  spellMatchesSelector,
 } from '../actions/legal';
 import { abilityModeSelections } from '../actions/ability-modes';
 import type { WardCost } from '../cards/ability';
@@ -93,7 +92,6 @@ import {
   effectivePT,
   findPermanent,
   getDefByOracleId,
-  graveyardTargets,
   hasKeyword,
   hasProtectionFrom,
   isCreaturePermanent,
@@ -215,6 +213,8 @@ function findPhysicalObjectByCardId(ctx: GameContext, cardId: string): EngineObj
 
 /** Identity of whatever is dealing damage / causing an effect, for logging + rules. */
 export interface EffectSource {
+  /** Target legality captured before this resolution's first instruction. */
+  resolutionTargets?: ResolutionTargets;
   /** The source incarnation, when resolving an ability of a permanent. */
   id?: ObjectId;
   cardId: string;
@@ -805,84 +805,19 @@ export function isTargetStillLegal(
   targetId: ObjectId,
   spec: TargetKind | TargetSpec,
   spellControllerId: PlayerId,
-  /** The targeting source's colors, for protection (CR 702.16). Omitted ⇒ colorless. */
   sourceColors?: readonly Color[],
-  /** The player associated with this trigger event, if target text refers to them. */
   eventPlayerId?: PlayerId,
-  /** The source's card id, so `OTHER` in a filter excludes the source (see computeTargetOptions). */
   sourceCardId = '',
+  chosenTargets?: readonly ObjectId[],
 ): boolean {
-  const { kind, controller, filter } =
-    typeof spec === 'string' ? { kind: spec, controller: undefined, filter: undefined } : spec;
-
-  if (kind === 'spellOrNonlandPermanent') {
-    const entry = ctx.state.stack.find((s) => s.id === targetId && s.kind === 'spell');
-    if (entry !== undefined)
-      return (
-        controller === undefined ||
-        (controller === 'you'
-          ? entry.controllerId === spellControllerId
-          : controller === 'opponent'
-            ? entry.controllerId !== spellControllerId
-            : entry.controllerId === eventPlayerId)
-      );
-  }
-  if (kind === 'spell' || kind === 'noncreatureSpell') {
-    const entry = ctx.state.stack.find((s) => s.id === targetId && s.kind === 'spell');
-    if (entry === undefined) return false;
-    if (kind === 'noncreatureSpell' && isCreatureSpell(ctx, entry)) return false;
-    if (controller === 'you' && entry.controllerId !== spellControllerId) return false;
-    if (controller === 'opponent' && entry.controllerId === spellControllerId) return false;
-    if (controller === 'eventPlayer' && entry.controllerId !== eventPlayerId) return false;
-    return filter === undefined || spellMatchesSelector(ctx, entry, filter, spellControllerId);
-  }
-  if (kind === 'stackObject') return ctx.state.stack.some((entry) => entry.id === targetId);
-  if (kind === 'commanderInCommandZone') {
-    const player = playerById(ctx, spellControllerId);
-    return player.commandZone.some(
-      (c) => (c.cardId === targetId || c.id === targetId) && c.isCommander,
-    );
-  }
-  if (kind === 'cardInGraveyard') {
-    if (typeof spec === 'object' && spec.graveyardOwnerScope === 'any') {
-      return ctx.state.players.some((player) =>
-        graveyardTargets(ctx, player.id, filter).some((c) => c.id === targetId),
-      );
-    }
-    return graveyardTargets(ctx, spellControllerId, filter).some((c) => c.id === targetId);
-  }
-  const player = ctx.state.players.find((p) => p.id === targetId);
-  if (player !== undefined) {
-    if (
-      !(kind === 'anyTarget' || kind === 'player' || kind === 'playerOrPlaneswalker') ||
-      player.hasLost
-    )
-      return false;
-    if (controller === 'you' && player.id !== spellControllerId) return false;
-    if (controller === 'opponent' && player.id === spellControllerId) return false;
-    if (controller === 'eventPlayer' && player.id !== eventPlayerId) return false;
-    return true;
-  }
-  const perm = findPermanent(ctx, targetId);
-  if (
-    perm === undefined ||
-    !permanentMatchesKind(ctx, perm, kind === 'spellOrNonlandPermanent' ? 'nonlandPermanent' : kind)
-  )
-    return false;
-  if (
-    filter !== undefined &&
-    !matchesSelector(ctx, perm, filter, { cardId: sourceCardId, controllerId: spellControllerId })
-  )
-    return false;
-  // Shroud (CR 702.18): untargetable by anything, including its own controller.
-  if (hasKeyword(ctx, perm, 'shroud')) return false;
-  if (perm.controllerId !== spellControllerId && hasKeyword(ctx, perm, 'hexproof')) return false;
-  // Protection (CR 702.16), the T in DEBT: untargetable by sources of the named colors.
-  if (sourceColors !== undefined && hasProtectionFrom(ctx, perm, sourceColors)) return false;
-  if (controller === 'you' && perm.controllerId !== spellControllerId) return false;
-  if (controller === 'opponent' && perm.controllerId === spellControllerId) return false;
-  if (controller === 'eventPlayer' && perm.controllerId !== eventPlayerId) return false;
-  return true;
+  return targetIsLegal(ctx, spec, targetId, {
+    controllerId: spellControllerId,
+    sourceCardId,
+    phase: 'resolution',
+    ...(sourceColors === undefined ? {} : { sourceColors }),
+    ...(eventPlayerId === undefined ? {} : { eventPlayerId }),
+    ...(chosenTargets === undefined ? {} : { chosenTargets }),
+  });
 }
 
 /**
@@ -1360,16 +1295,25 @@ export function* executeAbility(
    * context the target was chosen under — otherwise a creature that gained protection from the
    * source's color in response would still be hit.
    */
+  const resolutionTargets =
+    source.resolutionTargets ??
+    captureResolutionTargets(ctx, ability.targets, targets, countTargets ?? {}, {
+      controllerId: source.controllerId,
+      sourceCardId: source.cardId,
+      sourceColors: sourceColorsOf(ctx, source.cardId, source.oracleId, source.lastKnownColors),
+      ...(scope.eventPlayerId === undefined ? {} : { eventPlayerId: scope.eventPlayerId }),
+    });
+  source = { ...source, resolutionTargets };
   const stillLegal = (id: ObjectId, spec: TargetSpec): boolean =>
-    isTargetStillLegal(
-      ctx,
-      id,
-      spec,
-      source.controllerId,
-      sourceColorsOf(ctx, source.cardId, source.oracleId, source.lastKnownColors),
-      scope.eventPlayerId,
-      source.cardId,
+    resolutionTargets.legality.get(spec)?.get(id) === true;
+  if (countTargets !== undefined) {
+    countTargets = Object.fromEntries(
+      Object.entries(countTargets).map(([slot, ids]) => {
+        const spec = ability.targets[Number(slot)];
+        return [slot, spec === undefined ? [] : ids.filter((id) => stillLegal(id, spec))];
+      }),
     );
+  }
 
   /**
    * The source permanent "it" names ("sacrifice it", "it fights", "~ gains indestructible"): the

@@ -350,10 +350,8 @@ export type TargetKind =
   /** Any object currently on the stack: spells, activated abilities, or triggered abilities. */
   | 'stackObject'
   /**
-   * "target Dragon permanent card" — a card in a graveyard, not a permanent (CR 111.2). Always
-   * the ability's OWN controller's graveyard: every printed template this engine reads says
-   * "from your graveyard" (Bladewing the Risen); a future "target card in a graveyard" (any
-   * player's) needs its own kind rather than silently widening this one.
+   * A card in a graveyard, not a permanent (CR 111.2). Defaults to the ability controller's
+   * graveyard; TargetSpec can specify another player slot or controller/opponent/any scope.
    */
   | 'cardInGraveyard'
   /**
@@ -376,8 +374,8 @@ export interface TargetSpec {
    */
   controller?: 'you' | 'opponent' | 'eventPlayer';
   /**
-   * Further restriction for a zone-qualified kind (`cardInGraveyard`) — "Dragon permanent
-   * card". Unused for battlefield kinds, which use `permanentMatchesKind` instead.
+   * Additional characteristics after the target domain/kind check. Supports battlefield
+   * permanents, stack spells, and graveyard cards (for example "Dragon permanent card").
    */
   filter?: Selector;
   /**

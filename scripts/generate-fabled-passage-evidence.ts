@@ -18,6 +18,10 @@ const ORACLE_SHA256 = 'fd064f3f1c8289f7cd3a05433a31b03a8676ba4ce9035cd6706bd3708
 const SCENARIO_ID = 'fabled-passage-viewer-search-entry-untap';
 
 const SOURCE_FILES = [
+  'packages/engine/src/utils/assert-never.ts',
+  'packages/engine/src/targets/context.ts',
+  'packages/engine/src/targets/legality.ts',
+  'packages/engine/src/targets/resolution.ts',
   'packages/engine/tests/fixtures/bug-hunt-oracle.json',
   'packages/server/fixtures/coverage-oracle.json',
   'packages/server/src/cards/bug-hunt-scenarios.ts',

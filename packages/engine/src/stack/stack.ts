@@ -7,7 +7,8 @@
 import type { GameGen } from '../decisions';
 import { evaluateCondition } from '../cards/condition';
 import { isPermanentCard } from '../cards/definition';
-import { executeAbility, isTargetStillLegal } from '../effects/resolve';
+import { executeAbility } from '../effects/resolve';
+import { captureResolutionTargets } from '../targets/resolution';
 import { emit, debug } from '../log/log';
 import { moveObject } from '../state/objects';
 import { getDefByOracleId, sourceColorsOf } from '../state/queries';
@@ -54,45 +55,21 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   const specs = top.ability?.targets ?? [];
   // Protection gained in response makes a target illegal too (CR 702.16b, 608.2b).
   const sourceColors = sourceColorsOf(ctx, top.sourceCardId, top.sourceOracleId, top.sourceColors);
-  let anyChosen = false;
-  let anyLegal = false;
-  top.targets.forEach((t, i) => {
-    if (t === undefined) return;
-    anyChosen = true;
-    const kind = specs[i]?.kind;
-    if (
-      kind !== undefined &&
-      isTargetStillLegal(
-        ctx,
-        t,
-        specs[i] ?? kind,
-        top.controllerId,
-        sourceColors,
-        top.triggerScope?.eventPlayerId,
-        top.sourceCardId,
-      )
-    )
-      anyLegal = true;
-  });
-  for (const [slotKey, ids] of Object.entries(top.countTargets ?? {})) {
-    const spec = specs[Number(slotKey)];
-    for (const id of ids) {
-      anyChosen = true;
-      if (
-        spec !== undefined &&
-        isTargetStillLegal(
-          ctx,
-          id,
-          spec,
-          top.controllerId,
-          sourceColors,
-          top.triggerScope?.eventPlayerId,
-          top.sourceCardId,
-        )
-      )
-        anyLegal = true;
-    }
-  }
+  const resolutionTargets = captureResolutionTargets(
+    ctx,
+    specs,
+    top.targets,
+    top.countTargets ?? {},
+    {
+      controllerId: top.controllerId,
+      sourceCardId: top.sourceCardId,
+      sourceColors,
+      ...(top.triggerScope?.eventPlayerId === undefined
+        ? {}
+        : { eventPlayerId: top.triggerScope.eventPlayerId }),
+    },
+  );
+  const { anyChosen, anyLegal } = resolutionTargets;
   if (anyChosen && !anyLegal) {
     emit(ctx, 'fizzle', { description: top.description }, top.controllerId);
     debug(ctx, 'stack', `${top.description} fizzles — all targets illegal`);
@@ -132,6 +109,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         name: top.card?.name ?? top.description,
         oracleId: top.sourceOracleId,
         controllerId: top.controllerId,
+        resolutionTargets,
         ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
         ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
         ...(top.sourceDamageKeywords !== undefined

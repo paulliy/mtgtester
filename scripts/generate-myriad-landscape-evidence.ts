@@ -17,6 +17,10 @@ const ORACLE_ID = '2549bc57-9ffb-4053-9f10-f2a5f792b845';
 const ORACLE_SHA256 = '696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b';
 
 const SOURCE_FILES = [
+  'packages/engine/src/utils/assert-never.ts',
+  'packages/engine/src/targets/context.ts',
+  'packages/engine/src/targets/legality.ts',
+  'packages/engine/src/targets/resolution.ts',
   'packages/engine/tests/fixtures/bug-hunt-oracle.json',
   'packages/server/fixtures/coverage-oracle.json',
   'packages/server/src/cards/bug-hunt-scenarios.ts',
