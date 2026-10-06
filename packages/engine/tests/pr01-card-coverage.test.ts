@@ -843,6 +843,48 @@ describe('Canoptek Wraith', () => {
       ).toEqual(['Canoptek Wraith', 'Test Bear']);
       expect(lands(ctx, 'Island').length).toBeGreaterThan(1);
     });
+
+    it('canoptek-wraith-altars-share-one-creature — two Altars cannot both sacrifice the one other creature', () => {
+      // {3} needs both Altars ({C}{C} each, no floating mana), which needs two creatures besides
+      // the Wraith; there is only the Bear, so the cost is unpayable and nothing is offered.
+      const { ctx, self } = board('wraith-two-altars', [island()], [island()], 0);
+      spawn(ctx, 'P1', altar());
+      spawn(ctx, 'P1', altar());
+      const victim = spawn(ctx, 'P1', bear());
+      expect(scout(ctx, self).decisions).toEqual([]);
+      expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(true);
+      expect(ctx.state.battlefield.some((entry) => entry.cardId === self.cardId)).toBe(true);
+    });
+
+    it('canoptek-wraith-altars-two-creatures — with two other creatures both Altars pay, each sacrificing a different one', () => {
+      const { ctx, self } = board('wraith-two-altars-ok', [island()], [island()], 0);
+      spawn(ctx, 'P1', altar());
+      spawn(ctx, 'P1', altar());
+      spawn(ctx, 'P1', bear());
+      spawn(
+        ctx,
+        'P1',
+        oracle({ name: 'Altar Fodder', typeLine: 'Creature — Elf', power: '1', toughness: '1' }),
+      );
+      const { decisions } = scout(
+        ctx,
+        self,
+        answers([
+          [/pay \{3\} and sacrifice/, /Pay \{3\} and sacrifice/],
+          [/search your library/, /Put Island onto the battlefield tapped/],
+        ]),
+      );
+      expect(
+        decisions.some((decision) =>
+          decision.options.some((option) => option.description === 'Sacrifice Canoptek Wraith'),
+        ),
+      ).toBe(false);
+      expect(
+        playerById(ctx, 'P1')
+          .graveyard.map((card) => card.name)
+          .sort(),
+      ).toEqual(['Altar Fodder', 'Canoptek Wraith', 'Test Bear']);
+    });
   });
 });
 

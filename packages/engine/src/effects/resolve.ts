@@ -4421,9 +4421,7 @@ export function* executeAbility(
           canPay(
             effect.cost,
             controller.manaEntries,
-            manaSourcesFor(ctx, controller.id).filter((manaSource) =>
-              sacrificeCostsPayableWithout(ctx, manaSource, reserved),
-            ),
+            jointlyPayableSources(ctx, manaSourcesFor(ctx, controller.id), reserved),
           );
         if (!payable) break;
         const costText = describeManaCost(effect.cost);
@@ -6324,6 +6322,84 @@ export function endUntilEotEffects(ctx: GameContext): void {
   }
 }
 
+/** One permanent a mana source's "sacrifice another" activation cost needs. */
+type SacrificeDemand = (candidate: EnginePermanent) => boolean;
+
+/** Each sacrifice a mana source's activation costs demand, one entry per permanent. */
+function sacrificeDemandsOf(
+  ctx: GameContext,
+  source: ManaSource,
+): { perm: EnginePermanent; demands: SacrificeDemand[]; sacrificesItself: boolean } | undefined {
+  const perm = ctx.state.battlefield.find((permanent) => permanent.cardId === source.cardId);
+  if (perm === undefined) return undefined;
+  const demands: SacrificeDemand[] = [];
+  for (const cost of source.costs) {
+    if (cost.kind !== 'sacrificeOther') continue;
+    const accepts: SacrificeDemand = (candidate) =>
+      (cost.allowSelf === true || candidate.id !== perm.id) &&
+      candidate.controllerId === perm.controllerId &&
+      matchesSelector(ctx, candidate, cost.selector, {
+        cardId: perm.cardId,
+        controllerId: perm.controllerId,
+      });
+    for (let i = 0; i < (cost.count ?? 1); i++) demands.push(accepts);
+  }
+  return { perm, demands, sacrificesItself: source.costs.some((c) => c.kind === 'sacrificeSelf') };
+}
+
+/** Whether every demand can be met by its own distinct permanent, none of them `unavailable`. */
+function demandsAllocatable(
+  ctx: GameContext,
+  demands: readonly SacrificeDemand[],
+  unavailable: ReadonlySet<string>,
+): boolean {
+  const used = new Set(unavailable);
+  const assign = (index: number): boolean => {
+    const demand = demands[index];
+    if (demand === undefined) return true;
+    for (const candidate of ctx.state.battlefield) {
+      if (used.has(candidate.id) || !demand(candidate)) continue;
+      used.add(candidate.id);
+      if (assign(index + 1)) return true;
+      used.delete(candidate.id);
+    }
+    return false;
+  };
+  return assign(0);
+}
+
+/**
+ * The mana sources that can all be activated together when `reserved` permanents are spoken for
+ * by another part of the same cost (Ashnod's Altar paying for Canoptek Wraith's "{3} and
+ * sacrifice it" may not sacrifice the Wraith). Sacrifice costs must be met by DISTINCT
+ * permanents: two Altars cannot both sacrifice the one other creature. Sources are kept in
+ * order while the kept set stays jointly payable, so the result is deterministic.
+ */
+function jointlyPayableSources(
+  ctx: GameContext,
+  sources: readonly ManaSource[],
+  reserved: ReadonlySet<string>,
+): ManaSource[] {
+  if (reserved.size === 0) return [...sources];
+  const kept: ManaSource[] = [];
+  let demands: SacrificeDemand[] = [];
+  let unavailable = new Set(reserved);
+  for (const source of sources) {
+    const info = sacrificeDemandsOf(ctx, source);
+    if (info === undefined) continue;
+    if (info.sacrificesItself && unavailable.has(info.perm.id)) continue;
+    const nextDemands = [...demands, ...info.demands];
+    const nextUnavailable = info.sacrificesItself
+      ? new Set([...unavailable, info.perm.id])
+      : unavailable;
+    if (!demandsAllocatable(ctx, nextDemands, nextUnavailable)) continue;
+    kept.push(source);
+    demands = nextDemands;
+    unavailable = nextUnavailable;
+  }
+  return kept;
+}
+
 /**
  * Activate sources per plan, add their production to the pool, then spend `cost` from it.
  *
@@ -6334,37 +6410,6 @@ export function endUntilEotEffects(ctx: GameContext): void {
  * A generator because not every mana ability costs {T}: "Sacrifice this creature: Add {R}{R}"
  * moves a permanent to the graveyard, and `moveObject` can ask the CR 903.9b commander question.
  */
-/**
- * Whether a mana source can still be activated when `reserved` permanents are spoken for by
- * another part of the same cost: it must not sacrifice a reserved permanent itself, and each
- * "sacrifice another" cost must have enough candidates left (Ashnod's Altar paying for Canoptek
- * Wraith's "{3} and sacrifice it" may not sacrifice the Wraith).
- */
-function sacrificeCostsPayableWithout(
-  ctx: GameContext,
-  source: ManaSource,
-  reserved: ReadonlySet<string>,
-): boolean {
-  if (reserved.size === 0) return true;
-  const perm = ctx.state.battlefield.find((permanent) => permanent.cardId === source.cardId);
-  if (perm === undefined) return false;
-  return source.costs.every((cost) => {
-    if (cost.kind === 'sacrificeSelf') return !reserved.has(perm.id);
-    if (cost.kind !== 'sacrificeOther') return true;
-    const candidates = ctx.state.battlefield.filter(
-      (candidate) =>
-        !reserved.has(candidate.id) &&
-        (cost.allowSelf === true || candidate.id !== perm.id) &&
-        candidate.controllerId === perm.controllerId &&
-        matchesSelector(ctx, candidate, cost.selector, {
-          cardId: perm.cardId,
-          controllerId: perm.controllerId,
-        }),
-    );
-    return candidates.length >= (cost.count ?? 1);
-  });
-}
-
 export function* payManaCost(
   ctx: GameContext,
   player: EnginePlayerState,
@@ -6375,9 +6420,10 @@ export function* payManaCost(
   reservedObjectIds: ReadonlySet<string> = new Set(),
 ): GameGen<{ spellCantBeCountered: boolean; treasureManaSpent: number; manaSpent: number }> {
   const excluded = new Set(excludedSourceCardIds);
-  const sources = manaSourcesFor(ctx, player.id).filter(
-    (source) =>
-      !excluded.has(source.cardId) && sacrificeCostsPayableWithout(ctx, source, reservedObjectIds),
+  const sources = jointlyPayableSources(
+    ctx,
+    manaSourcesFor(ctx, player.id).filter((source) => !excluded.has(source.cardId)),
+    reservedObjectIds,
   );
   const allows = allowanceFor(ctx, player.id, purpose);
   const plan = planPayment(cost, player.manaEntries, sources, allows, player.life);
@@ -6388,7 +6434,7 @@ export function* payManaCost(
   // goes, rather than tapping everything and then adding it all. The distinction is invisible
   // for a board of ordinary lands — the pool ends up identical — and load-bearing for a source
   // whose own activation costs mana, which can only be paid out of what earlier sources made.
-  for (const source of plan.tapSources) {
+  for (const [sourceIndex, source] of plan.tapSources.entries()) {
     const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
     if (perm === undefined) throw new Error('engine bug: payment source vanished');
     // Read before the cost is paid: a Treasure's cost sacrifices it, so by the time its mana is
@@ -6415,6 +6461,25 @@ export function* payManaCost(
       }
       removeMana(player, spentOnSource);
     }
+    // With permanents reserved, a sacrifice choice must also leave the reserved ones alone and
+    // enough distinct permanents for the sources still to be activated after this one.
+    const canSacrifice =
+      reservedObjectIds.size === 0
+        ? undefined
+        : (candidate: EnginePermanent, remainingHere: number): boolean => {
+            const own = sacrificeDemandsOf(ctx, source)?.demands ?? [];
+            const later = plan.tapSources
+              .slice(sourceIndex + 1)
+              .flatMap((next) => sacrificeDemandsOf(ctx, next)?.demands ?? []);
+            return (
+              !reservedObjectIds.has(candidate.id) &&
+              demandsAllocatable(
+                ctx,
+                [...own.slice(0, remainingHere), ...later],
+                new Set([...reservedObjectIds, candidate.id]),
+              )
+            );
+          };
     yield* payAbilityCosts(
       ctx,
       player,
@@ -6423,7 +6488,7 @@ export function* payManaCost(
       'tapForMana',
       0,
       undefined,
-      reservedObjectIds,
+      canSacrifice,
     );
 
     // Add exactly the mana the planner chose this source to produce — the SPECIFIC symbol per
@@ -6500,8 +6565,11 @@ export function* payAbilityCosts(
   tapEvent: 'tap' | 'tapForMana',
   announcedX = 0,
   canTap?: (candidate: EnginePermanent, remaining: readonly AbilityCost[]) => boolean,
-  /** Permanents reserved for another part of the same payment, never chosen to sacrifice here. */
-  reservedObjectIds: ReadonlySet<string> = new Set(),
+  /**
+   * Whether a permanent may be chosen for a "sacrifice another" cost, given how many more this
+   * cost still needs after it — a payment that reserves permanents for its other parts.
+   */
+  canSacrifice?: (candidate: EnginePermanent, remainingHere: number) => boolean,
 ): GameGen<{ stationPower?: number }> {
   let stationPower: number | undefined;
   for (const [costIndex, cost] of costs.entries()) {
@@ -6622,13 +6690,13 @@ export function* payAbilityCosts(
         for (let i = 0; i < count; i++) {
           const options = ctx.state.battlefield.filter(
             (candidate) =>
-              !reservedObjectIds.has(candidate.id) &&
               (cost.allowSelf === true || candidate.id !== perm.id) &&
               candidate.controllerId === player.id &&
               matchesSelector(ctx, candidate, cost.selector, {
                 cardId: perm.cardId,
                 controllerId: player.id,
-              }),
+              }) &&
+              (canSacrifice?.(candidate, count - i - 1) ?? true),
           );
           if (options.length === 0) throw new Error('engine bug: sacrifice cost became unpayable');
           const outcome = yield {

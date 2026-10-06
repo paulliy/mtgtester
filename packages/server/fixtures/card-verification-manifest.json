@@ -2056,7 +2056,9 @@
             "canoptek-wraith-unpayable",
             "canoptek-wraith-blinked-in-response",
             "canoptek-wraith-reserved-from-mana-sacrifice",
-            "canoptek-wraith-altar-sacrifices-another"
+            "canoptek-wraith-altar-sacrifices-another",
+            "canoptek-wraith-altars-share-one-creature",
+            "canoptek-wraith-altars-two-creatures"
           ],
           "viewerScenarioIds": ["canoptek-wraith-viewer-scout-same-name-search"]
         }
