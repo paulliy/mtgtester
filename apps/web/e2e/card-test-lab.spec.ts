@@ -2957,6 +2957,14 @@ async function runCounterController(page: Page, name: string, own: boolean): Pro
 }
 
 async function runOverloadViewer(page: Page, name: string, overload: boolean): Promise<void> {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
   await runScenario(
     page,
     `${name}: ${overload ? 'overload without targets' : 'one normal target'}`,
@@ -2979,7 +2987,7 @@ async function runOverloadViewer(page: Page, name: string, overload: boolean): P
   await confirm(page);
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Chosen Overload Witness')).toHaveCount(0);
-  await expect(permanent(page, 'Forest')).toHaveCount(3);
+  expect(boards.at(-1)!.filter((card) => card.name === 'Forest')).toHaveLength(3);
   for (const witness of ['Other Overload Witness', 'Protected Overload Witness']) {
     await expect(permanent(page, witness)).toHaveCount(overload ? 0 : 1);
   }
