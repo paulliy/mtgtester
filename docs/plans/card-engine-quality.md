@@ -636,6 +636,13 @@ and report the exact failed action, attempted recovery, and remaining work.
   engine suite (208 files / 2,712 tests) pass with production/test/tooling types and lint.
   The full 38,708-record comparison preserves 6,471 modeled definitions and 487 keys with no
   support changes; the committed-fixture IR audit reports no failures.
+- Nested event references use the exhaustive effect-reference contracts and traverse current
+  conditional/choice instructions without entering separately owned ability/token scopes. Four
+  before-fix normal-cast regressions followed a blinked incarnation or registered the wrong
+  delayed object. Dying subjects, graveyard-functioning triggers and emblems also retain exact
+  event IDs; three further pre-fix boundaries lacked them. The redundant direct-only delayed
+  detection is removed. All 62 focused identity, delayed and existing trigger cases pass with
+  production/test/tooling types and lint. Broader implicit numeric/LKI references remain open.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
