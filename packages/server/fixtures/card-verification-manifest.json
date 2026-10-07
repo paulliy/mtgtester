@@ -4378,6 +4378,57 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "099b8d2c-b482-48dd-b6bc-dedf546d66c5": {
+      "name": "Marang River Regent // Coil and Catch",
+      "oracleSha256": "a61b03077e75c21a2b78e2698ff0ead3653977e2e29c32b34a6fb84e73b72f8d",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Coil and Catch’s draw-three/discard-one clause was replaced with a targeted bounce.",
+      "clauses": [
+        {
+          "oracleText": "Draw three cards, then discard a card. (Then shuffle this card into its owner's library.)",
+          "implementation": [
+            "unsupported: Coil and Catch’s draw-three/discard-one clause was replaced with a targeted bounce."
+          ],
+          "engineTestIds": ["coil-and-catch-substitute-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6d4e7943-1fdf-4085-8af0-658badbd0cb8": {
+      "name": "Monster Manual // Zoological Study",
+      "oracleSha256": "f1a88cb9b7a2583e8fec1dea7413b1c0476db8c46cffd38a9da7928858a7ba1e",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Zoological Study’s mill-five and milled-creature recovery Adventure was omitted.",
+      "clauses": [
+        {
+          "oracleText": "Mill five cards, then return a creature card milled this way to your hand. (Then exile this card. You may cast the artifact later from exile.)",
+          "implementation": [
+            "unsupported: Zoological Study’s mill-five and milled-creature recovery Adventure was omitted."
+          ],
+          "engineTestIds": ["zoological-study-omission-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "da1e019c-2ffb-412d-90d7-f2e5e5c44c4b": {
+      "name": "Bloomvine Regent // Claim Territory",
+      "oracleSha256": "923a1d4e57487e65b17e92d1cfa6fdbf5afbd6b3d0f858826bd94ced7b8b6372",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Claim Territory’s two-Forest split-destination search was replaced with a single basic-land-to-hand search.",
+      "clauses": [
+        {
+          "oracleText": "Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle this card.)",
+          "implementation": [
+            "unsupported: Claim Territory’s two-Forest split-destination search was replaced with a single basic-land-to-hand search."
+          ],
+          "engineTestIds": ["claim-territory-substitute-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

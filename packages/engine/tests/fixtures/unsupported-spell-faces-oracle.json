@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261006090155.jsonl.gz",
+  "retrievedAt": "2026-10-06",
+  "cards": [
+    {
+      "sha256": "a61b03077e75c21a2b78e2698ff0ead3653977e2e29c32b34a6fb84e73b72f8d",
+      "card": {
+        "oracleId": "099b8d2c-b482-48dd-b6bc-dedf546d66c5",
+        "scryfallId": "f890bdc7-32e6-4492-bac7-7cabf54a8bfd",
+        "name": "Marang River Regent // Coil and Catch",
+        "manaCost": "{4}{U}{U} // {3}{U}",
+        "cmc": 6,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Dragon // Instant — Omen",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhen this creature enters, return up to two other target nonland permanents to their owners' hands.",
+        "power": "6",
+        "toughness": "7",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Coil and Catch",
+          "typeLine": "Instant — Omen",
+          "oracleText": "Draw three cards, then discard a card. (Then shuffle this card into its owner's library.)",
+          "manaCost": "{3}{U}",
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "f1a88cb9b7a2583e8fec1dea7413b1c0476db8c46cffd38a9da7928858a7ba1e",
+      "card": {
+        "oracleId": "6d4e7943-1fdf-4085-8af0-658badbd0cb8",
+        "scryfallId": "27223ee4-970a-438a-beff-a1b13b14aff4",
+        "name": "Monster Manual // Zoological Study",
+        "manaCost": "{3}{G} // {2}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Artifact — Book // Sorcery — Adventure",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Book"
+        ],
+        "oracleText": "{1}{G}, {T}: You may put a creature card from your hand onto the battlefield.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Mill"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Zoological Study",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Mill five cards, then return a creature card milled this way to your hand. (Then exile this card. You may cast the artifact later from exile.)",
+          "manaCost": "{2}{G}",
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "923a1d4e57487e65b17e92d1cfa6fdbf5afbd6b3d0f858826bd94ced7b8b6372",
+      "card": {
+        "oracleId": "da1e019c-2ffb-412d-90d7-f2e5e5c44c4b",
+        "scryfallId": "10e0a9a3-f63a-4f92-a083-9d181580e498",
+        "name": "Bloomvine Regent // Claim Territory",
+        "manaCost": "{3}{G}{G} // {2}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Dragon // Sorcery — Omen",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever this creature or another Dragon you control enters, you gain 3 life.",
+        "power": "4",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Claim Territory",
+          "typeLine": "Sorcery — Omen",
+          "oracleText": "Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle this card.)",
+          "manaCost": "{2}{G}",
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    }
+  ]
+}
