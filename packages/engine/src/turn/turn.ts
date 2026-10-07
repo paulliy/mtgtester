@@ -1,3 +1,4 @@
+import { assertTriggerEventFamily } from '../cards/trigger-contracts';
 /**
  * Turn structure (CR 500–514, brief §5.3): beginning (untap/upkeep/draw), precombat main,
  * combat, postcombat main, ending (end/cleanup). Multiplayer: the starting player DOES
@@ -105,6 +106,7 @@ export function queueStepTriggers(
     | 'precombatMain'
     | 'beginningOfCombat',
 ): void {
+  assertTriggerEventFamily(when, 'step');
   const apId = ctx.state.currentTurnPlayer;
   for (const perm of [...ctx.state.battlefield]) {
     for (const ability of triggersOf(ctx, perm)) {

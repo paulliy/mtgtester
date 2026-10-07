@@ -1,4 +1,5 @@
 import { counterCount, setCounterCount } from './counters';
+import { assertTriggerEventFamily } from '../cards/trigger-contracts';
 import { spellDefinitionOf } from './queries';
 /**
  * Object identity and zone movement (CR 400.7, brief §5.2). A card changing zones becomes
@@ -1300,6 +1301,7 @@ export function queueTriggersForEvent(
   when: ObjectTriggerWhen,
   subjects: TriggerEventSubject[],
 ): void {
+  assertTriggerEventFamily(when, 'object');
   if (subjects.length === 0) return;
 
   // A dying permanent is gone from the battlefield but is still an ability source for its own
@@ -1775,6 +1777,7 @@ export function queuePlayerTriggersForEvent(
   playerId: PlayerId,
   amount?: number,
 ): void {
+  assertTriggerEventFamily(when, 'player');
   for (const perm of ctx.state.battlefield) {
     for (const ability of triggersOf(ctx, perm)) {
       const spec = ability.trigger;

@@ -626,6 +626,23 @@ and report the exact failed action, attempted recovery, and remaining work.
   counter costs. The complete engine suite passes 206 files / 2,673 tests with production and
   test/tooling types and lint. Executable remove-counter registrations now require six owned/absent
   prototype-name cases; old receipts cannot satisfy the strengthened contract.
+- Strengthened remove-counter receipts and target builders pass all 85 actual evidence,
+  promotion and builder checks without reporting errors, with test/tooling types.
+- Trigger-head validation classifies every event with an exhaustive dispatcher and validates
+  the event's required subject/caster/player shape rather than a combined field inventory.
+  Eleven malformed shapes passed before the fix. Object, cast, life and step triggers each
+  execute through independent normal casting; specialized dispatchers reject wrong/unknown
+  families before mutation, even with empty subjects. All 37 focused checks and the complete
+  engine suite (208 files / 2,712 tests) pass with production/test/tooling types and lint.
+  The full 38,708-record comparison preserves 6,471 modeled definitions and 487 keys with no
+  support changes; the committed-fixture IR audit reports no failures.
+- Nested event references use the exhaustive effect-reference contracts and traverse current
+  conditional/choice instructions without entering separately owned ability/token scopes. Four
+  before-fix normal-cast regressions followed a blinked incarnation or registered the wrong
+  delayed object. Dying subjects, graveyard-functioning triggers and emblems also retain exact
+  event IDs; three further pre-fix boundaries lacked them. The redundant direct-only delayed
+  detection is removed. All 62 focused identity, delayed and existing trigger cases pass with
+  production/test/tooling types and lint. Broader implicit numeric/LKI references remain open.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR

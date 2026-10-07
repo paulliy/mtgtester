@@ -177,6 +177,9 @@ const SOURCE_FILES = [
   'packages/engine/tests/fixtures/target-untap-oracle.json',
   'packages/server/src/cards/target-untap-scenarios.ts',
   'packages/engine/src/cards/cost-contracts.ts',
+  'packages/engine/src/cards/target-builders.ts',
+  'packages/engine/src/cards/trigger-contracts.ts',
+  'packages/engine/src/state/counters.ts',
 ] as const;
 
 const TRACE_PATHS = {
