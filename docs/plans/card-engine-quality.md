@@ -695,3 +695,27 @@ and report the exact failed action, attempted recovery, and remaining work.
   normal land-drop reminder. The driver now uses the land review's Play land button and
   acknowledges Pass anyway when offered. These are driver corrections; neither failed run
   grants a passing viewer receipt. Complete source-bound evidence remains outstanding.
+- Object facts (`64cb148`, branch contracts at `7e36075` and `6bc1564`): event and ability-source
+  numeric references use the original incarnation's current characteristics, then its departure
+  information; conditional event predicates share that scope. Activation payment retains source
+  facts when sacrifice removes it before stack placement. Fifty-nine independent normal-path
+  cases cover numeric source/event variants, changed facts, blink, destruction, predicates and
+  sacrifice costs; 85 combined lifetime/delayed contracts and test/tooling types/lint pass.
+  The broad engine run retains 2,838 passes and one 30-second multi-seed timeout under concurrent
+  checks. Both isolated full-game cases pass in 21.09 seconds at `6bc1564`. The complete Oracle
+  comparison has no final-IR/status changes or derivation failures (35,063 projections,
+  6,471 modeled definitions, 487 capability keys). Fresh final repository gates remain required.
+- Bounded primitive compositions (`3763eaa`, verified at `c4379aa`): 576 configurations cover
+  three deterministic seeds, Instant/Sorcery, four green/generic costs, four life-gain amounts
+  including 0 and 1,000, one/two instructions, and absent/pool/land resources. All 432 funded
+  compositions apply and resolve with identical complete-context replays; all 144 unfunded
+  compositions reject without changing state, logs or RNG. The definition prerequisite requires
+  both actual matrix executions. Registering the same execution under eight capabilities was
+  rejected by the unchanged evidence validator; executions now bind once to the shared definition
+  prerequisite. Fresh actual primitive execution passes 42 tests and validates nine bounded
+  scopes; the 65 evidence/promotion tests pass. No wider capability certification is inferred.
+- Viewer investigation continues: the captured `f736641` run retains 193 passes, one failure
+  at the real card-named scry controls, and 18 serial skips. The driver now handles successive
+  named scry choices and the current-order decision. The subsequent `fd19b98` run was interrupted
+  by environment replacement before producing a complete JSON report; its partial traces/source
+  capture remain available, but it has no final result and cannot serve as passing evidence.
