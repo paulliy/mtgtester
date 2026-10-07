@@ -176,6 +176,10 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
         : (scope.sourceCountersTotal ?? 0);
     }
     case 'countersOnTarget': {
+      if (value.target === 'source') {
+        const facts = sourceObjectFacts(ctx, scope);
+        return facts === undefined ? 0 : counterCount(facts.counters, value.counter);
+      }
       if (value.target === 'triggerObject') {
         const facts = eventObjectFacts(ctx, scope);
         return facts === undefined ? 0 : counterCount(facts.counters, value.counter);
@@ -186,6 +190,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return perm ? counterCount(perm.counters, value.counter) : 0;
     }
     case 'manaValueOfTarget': {
+      if (value.target === 'source') return sourceObjectFacts(ctx, scope)?.manaValue ?? 0;
       if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.manaValue ?? 0;
       const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
       if (!targetId) return 0;
@@ -236,6 +241,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'toughnessOfSource':
       return sourceObjectFacts(ctx, scope)?.toughness ?? 0;
     case 'powerOfTarget': {
+      if (value.target === 'source') return sourceObjectFacts(ctx, scope)?.power ?? 0;
       if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.power ?? 0;
       const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
       if (targetId === undefined) return 0;

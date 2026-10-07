@@ -38,6 +38,24 @@ const values: { name: string; value: Value; base: number; changed: number }[] = 
   },
 ];
 const sourceValues: typeof values = [
+  {
+    name: 'explicit source power',
+    value: { kind: 'powerOfTarget', target: 'source' },
+    base: 2,
+    changed: 7,
+  },
+  {
+    name: 'explicit source counters',
+    value: { kind: 'countersOnTarget', target: 'source', counter: 'charge' },
+    base: 2,
+    changed: 7,
+  },
+  {
+    name: 'explicit source mana value',
+    value: { kind: 'manaValueOfTarget', target: 'source' },
+    base: 1,
+    changed: 1,
+  },
   { name: 'source power', value: { kind: 'powerOfSource' }, base: 2, changed: 7 },
   { name: 'source toughness', value: { kind: 'toughnessOfSource' }, base: 2, changed: 7 },
   {
