@@ -728,11 +728,6 @@ function* proposeCast(
     targetLifeTax,
     energyAlternativeCost: energyAlternativeCostToPay,
   });
-  if (targetLifeTax > 0) payLife(ctx, player, targetLifeTax);
-  if (energyAlternativeCostToPay > 0) {
-    player.energy -= energyAlternativeCostToPay;
-    emit(ctx, 'energy', { amount: -energyAlternativeCostToPay, total: player.energy }, player.id);
-  }
   const manaPayment = yield* payManaCost(
     ctx,
     player,
@@ -746,6 +741,12 @@ function* proposeCast(
     payment.reservedObjectIds,
     payment.manaPlan,
   );
+  // CR 601.2g precedes 601.2h: finish mana activations before paying spell costs.
+  if (targetLifeTax > 0) payLife(ctx, player, targetLifeTax);
+  if (energyAlternativeCostToPay > 0) {
+    player.energy -= energyAlternativeCostToPay;
+    emit(ctx, 'energy', { amount: -energyAlternativeCostToPay, total: player.energy }, player.id);
+  }
   if (manaPayment.spellCantBeCountered) ability = { ...ability, cantBeCountered: true };
   yield* paySpellAdditionalCosts(
     ctx,

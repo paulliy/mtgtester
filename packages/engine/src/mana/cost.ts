@@ -194,6 +194,8 @@ export interface ManaSource {
   cardId: string;
   /** Distinguishes repeated activations of a source from its alternative abilities. */
   activation?: number;
+  /** Production needs a state-dependent read; the fixed-production witness cannot certify it. */
+  stateDependentProduction?: true;
   /** Shared, finite resources consumed by this activation. */
   resources?: readonly { key: string; amount: number; available: number }[];
   /** Eligible physical cards for each sacrifice in the activation cost. */

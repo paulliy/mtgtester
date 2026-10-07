@@ -9,6 +9,7 @@ import { allowanceFor, cardZoneCandidate, manaSourcesFor } from '../state/querie
 import type { EnginePlayerState, GameContext } from '../state/types';
 import { planPayment } from './cost';
 import type { ManaSource, ParsedManaCost, PaymentPlan } from './cost';
+import { needsStatefulManaPayment, planStatefulManaPayment } from './stateful-payment';
 
 export interface SpellPaymentRequest {
   /** Already locked total mana cost, including reductions and additional mana costs. */
@@ -128,7 +129,8 @@ export function planSpellPayment(
     for (let ordinal = 0; ordinal < count; ordinal++)
       groups.push({ costIndex, ordinal, kind, resource, candidates });
   }
-  if (lifePaid > player.life) return null;
+  const statefulMana = needsStatefulManaPayment(ctx, player, request.mana, lifePaid);
+  if (!statefulMana && lifePaid > 0 && lifePaid > player.life) return null;
   // The caller cannot smuggle a nonexistent or duplicate assignment through a prefix.
   if (
     prefix.some(
@@ -166,55 +168,68 @@ export function planSpellPayment(
           .filter((p) => consumed.has(p.cardId) || taps.has(p.cardId))
           .map((p) => p.cardId),
       );
-      const usable = sources.flatMap((manaSource): ManaSource[] => {
-        if (taps.has(manaSource.cardId) && manaSource.costs.some((cost) => cost.kind === 'tap'))
-          return [];
-        if (
-          reserved.has(manaSource.cardId) &&
-          manaSource.costs.some(
-            (cost) => cost.kind === 'sacrificeSelf' || cost.kind === 'exileSelf',
+      const usableFrom = (payer: EnginePlayerState, currentSources: readonly ManaSource[]) =>
+        currentSources.flatMap((manaSource): ManaSource[] => {
+          if (taps.has(manaSource.cardId) && manaSource.costs.some((cost) => cost.kind === 'tap'))
+            return [];
+          if (
+            reserved.has(manaSource.cardId) &&
+            manaSource.costs.some(
+              (cost) => cost.kind === 'sacrificeSelf' || cost.kind === 'exileSelf',
+            )
           )
-        )
-          return [];
-        const sacrifices = manaSource.sacrifices?.map((candidates) =>
-          candidates.filter((cardId) => !reserved.has(cardId)),
-        );
-        if (sacrifices?.some((candidates) => candidates.length === 0)) return [];
-        const resources = manaSource.resources?.map((resource) =>
-          resource.key === 'energy'
-            ? {
-                ...resource,
-                available: Math.min(
-                  resource.available,
-                  player.energy - (request.energyAlternativeCost ?? 0),
-                ),
-              }
-            : resource,
-        );
-        return [
-          {
-            ...manaSource,
-            ...(sacrifices === undefined ? {} : { sacrifices }),
-            ...(resources === undefined ? {} : { resources }),
-          },
-        ];
-      });
-      const manaPlan = planPayment(
-        request.mana,
-        player.manaEntries,
-        usable,
-        allows,
-        player.life - lifePaid,
+            return [];
+          const sacrifices = manaSource.sacrifices?.map((candidates) =>
+            candidates.filter((cardId) => !reserved.has(cardId)),
+          );
+          if (sacrifices?.some((candidates) => candidates.length === 0)) return [];
+          const resources = manaSource.resources?.map((resource) =>
+            resource.key === 'energy'
+              ? {
+                  ...resource,
+                  available: Math.min(
+                    resource.available,
+                    payer.energy - (request.energyAlternativeCost ?? 0),
+                  ),
+                }
+              : resource,
+          );
+          return [
+            {
+              ...manaSource,
+              ...(sacrifices === undefined ? {} : { sacrifices }),
+              ...(resources === undefined ? {} : { resources }),
+            },
+          ];
+        });
+      const reservedObjectIds = new Set(
+        ctx.state.battlefield.filter((p) => reserved.has(p.cardId)).map((p) => p.id),
       );
+      const manaPlan = statefulMana
+        ? planStatefulManaPayment(
+            ctx,
+            player,
+            request.mana,
+            allows,
+            (context, payer) => usableFrom(payer, manaSourcesFor(context, payer.id)),
+            reservedObjectIds,
+            lifePaid,
+            request.energyAlternativeCost ?? 0,
+          )
+        : planPayment(
+            request.mana,
+            player.manaEntries,
+            usableFrom(player, sources),
+            allows,
+            player.life - lifePaid,
+          );
       if (manaPlan === null) return null;
       return {
         lockedCosts,
         choices: [...choices],
         manaPlan,
         lifePaid,
-        reservedObjectIds: new Set(
-          ctx.state.battlefield.filter((p) => reserved.has(p.cardId)).map((p) => p.id),
-        ),
+        reservedObjectIds,
       };
     }
     const fixed = prefix.find(
