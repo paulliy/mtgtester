@@ -3,6 +3,7 @@ import type { Selector } from './selector';
 import type { Value } from './value';
 import type { Condition } from './condition';
 import type { AuthoringIssue } from './authoring-validation';
+import { validateIRGraph } from './ir-graph';
 
 // This mapped shape makes every discriminator and every declared field a compiler obligation.
 type Shapes<T extends { kind: string }> = {
@@ -229,6 +230,7 @@ export function validateExpression(
   path: string,
   issues: AuthoringIssue[],
 ): void {
+  if (!validateIRGraph(value, path, issues)) return;
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     issue(path, issues, 'expected ' + domain + ' expression');
     return;

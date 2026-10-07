@@ -1,4 +1,6 @@
 import { selectorIsEventOnly } from './selector';
+import { validateIRGraph } from './ir-graph';
+import { validateManaRiders } from './mana-riders';
 import {
   validateExpression,
   validateEffectExpressions,
@@ -388,6 +390,8 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
             path: `${path}.${key}[${index}].ability`,
             message: 'activated entry requires an activated ability',
           });
+        if (key === 'manaAbilities' && ability !== null && typeof ability === 'object')
+          validateManaRiders(ability.onActivate, `${path}.${key}[${index}].onActivate`, issues);
       }
     }
     if (key === 'triggers' && Array.isArray(entry))
@@ -608,6 +612,7 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
 /** Validate the fully merged executable definition rather than trusting an override patch alone. */
 export function validateCardDefinition(definition: CardDefinition): AuthoringIssue[] {
   const issues: AuthoringIssue[] = [];
+  if (!validateIRGraph(definition, 'definition', issues)) return issues;
   for (const field of [
     'types',
     'supertypes',
@@ -664,6 +669,7 @@ export function assertValidModeledDefinition(definition: CardDefinition): CardDe
 /** Validate authored data before it is merged with parser output. */
 export function validateOverrideDefinition(override: CardOverride): AuthoringIssue[] {
   const issues: AuthoringIssue[] = [];
+  if (!validateIRGraph(override.def, 'override.def', issues)) return issues;
   if (override.unsupportedReason === undefined) visit(override.def, 'override.def', issues);
   return issues;
 }
