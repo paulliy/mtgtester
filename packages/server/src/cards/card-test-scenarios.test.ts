@@ -46,6 +46,8 @@ describe('deterministic Card Test Lab scenarios', () => {
 
   it('lists every registered scenario in catalog order', () => {
     expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
+      'mosswort-viewer-free-cast-stack',
+      'mosswort-viewer-land-play-limit',
       'regression-viewer-aura-attachment',
       'regression-viewer-mana-source-order',
       'regression-viewer-token-characteristics',

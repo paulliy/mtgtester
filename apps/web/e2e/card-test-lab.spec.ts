@@ -2795,7 +2795,7 @@ async function runMosswortCasting(page: Page, hiddenLand: boolean): Promise<void
   await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
   const activation = page
     .locator('.playable-now')
-    .getByRole('button', { name: /Mosswort Bridge:/ });
+    .getByRole('button', { name: 'Activate Mosswort Bridge', exact: true });
   await expect(activation).toBeVisible({ timeout: 15_000 });
   await activation.click();
   await confirm(page);

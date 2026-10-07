@@ -732,6 +732,7 @@ export function* castSpell(
       targets,
       fromCommand: payload.fromCommand,
       commanderTax: tax,
+      ...(resolutionPermission === undefined ? {} : { duringResolution: true }),
     },
     player.id,
   );

@@ -29,6 +29,48 @@ const destroy: Effect = { op: 'destroy', target: 0 };
 
 describe('semantic IR contracts', () => {
   it.each([
+    { op: 'draw', count: { kind: 'unknownValue' } },
+    { op: 'draw', count: { kind: 'plus', n: 1 } },
+    { op: 'draw', count: { kind: 'const', n: NaN } },
+    { op: 'destroyEach', selector: { kind: 'allOf', of: [{ kind: 'unknownSelector' }] } },
+    { op: 'destroyEach', selector: { kind: 'controller', who: 'anyone' } },
+    { op: 'conditionalEffect', condition: { kind: 'unknownCondition' }, then: [] },
+    {
+      op: 'conditionalEffect',
+      condition: { kind: 'cardsInYourGraveyard', cmp: '>', n: 1 },
+      then: [],
+    },
+  ])('rejects malformed nested expression operands: %j', (effect) => {
+    expect(issues([], [effect as Effect])).not.toEqual([]);
+  });
+
+  it.each([
+    { hybrid: [['W']] },
+    { hybrid: [['W', 'P']] },
+    { phyrexian: ['C'] },
+    { generic: Infinity },
+  ])('rejects malformed mana symbols: %j', (patch) => {
+    const def = base();
+    expect(
+      validateCardDefinition({
+        ...def,
+        manaCost: { ...def.manaCost!, ...patch } as typeof def.manaCost,
+      }),
+    ).not.toEqual([]);
+  });
+
+  it('rejects choice predicates at trigger and activation checks but permits entry choices', () => {
+    const condition = { kind: 'mayPayLife', n: 2 } as const;
+    expect(
+      issues([], [], {
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: { kind: 'self' }, condition },
+      }),
+    ).not.toEqual([]);
+    expect(validateCardDefinition({ ...base(), entersTappedUnless: condition })).toEqual([]);
+  });
+
+  it.each([
     ['battlefield destruction', { kind: 'cardInGraveyard' }, destroy],
     ['reanimation', { kind: 'player' }, { op: 'graveyardToBattlefield', target: 0 }],
     ['spell countering', { kind: 'permanent' }, { op: 'counter', target: 0 }],

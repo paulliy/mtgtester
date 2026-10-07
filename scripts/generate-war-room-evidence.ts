@@ -17,6 +17,7 @@ const ORACLE_ID = '71c52bf5-2a5d-488e-8b15-7ef290e4b77d';
 const ORACLE_SHA256 = '7014d3a7b8e20db7e2a12576165361775173e73cb28f1106afa40a659d6d0c74';
 const SOURCE_FILES = [
   'packages/engine/src/cards/authoring-validation.ts',
+  'packages/engine/src/cards/expression-validation.ts',
   'packages/engine/src/cards/effect-reference-contracts.ts',
   'packages/engine/src/utils/assert-never.ts',
   'packages/engine/src/targets/context.ts',

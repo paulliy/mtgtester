@@ -1,3 +1,9 @@
+import {
+  validateExpression,
+  validateEffectExpressions,
+  validateParsedManaCost,
+} from './expression-validation';
+import { isChoiceCondition } from './condition';
 import type { AbilityCost, Effect, TargetSpec } from './ability';
 import type { CardDefinition } from './definition';
 import type { CardOverride } from './overrides';
@@ -219,25 +225,7 @@ function validateCost(cost: AbilityCost, path: string, issues: AuthoringIssue[])
     issues.push({ path, message: 'cost amount must be a nonnegative integer' });
 }
 
-function validateManaCost(cost: unknown, path: string, issues: AuthoringIssue[]): void {
-  if (cost === null || typeof cost !== 'object') {
-    issues.push({ path, message: 'invalid parsed mana cost' });
-    return;
-  }
-  const record = cost as Record<string, unknown>;
-  const colored = record['colored'];
-  if (
-    !integer(record['generic']) ||
-    !integer(record['colorless']) ||
-    colored === null ||
-    typeof colored !== 'object' ||
-    ['W', 'U', 'B', 'R', 'G'].some(
-      (color) => !integer((colored as Record<string, unknown>)[color]),
-    ) ||
-    (record['x'] !== undefined && !integer(record['x']))
-  )
-    issues.push({ path, message: 'mana components must be nonnegative integers' });
-}
+const validateManaCost = validateParsedManaCost;
 
 function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: Scope): void {
   if (Array.isArray(value)) {
@@ -263,6 +251,7 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   }
   if (typeof record['op'] === 'string') {
     const op = record['op'] as Effect['op'];
+    validateEffectExpressions(record as unknown as Effect, path, issues);
     if (op === 'noOp')
       issues.push({
         path,
@@ -305,6 +294,44 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     );
 
   for (const [key, entry] of Object.entries(record)) {
+    if (
+      ['selector', 'filter', 'targetFilter', 'affects'].includes(key) &&
+      entry !== undefined &&
+      typeof entry !== 'string'
+    )
+      validateExpression('selector', entry, `${path}.${key}`, issues);
+    if (['condition', 'entersTappedUnless'].includes(key) && entry !== undefined) {
+      const before = issues.length;
+      validateExpression('condition', entry, `${path}.${key}`, issues);
+      if (
+        issues.length === before &&
+        key === 'condition' &&
+        record['op'] !== 'conditionalEffect' &&
+        isChoiceCondition(entry as import('./condition').Condition)
+      )
+        issues.push({
+          path: `${path}.${key}`,
+          message: 'choice condition is prohibited in a pure state predicate',
+        });
+    }
+    if (record['kind'] === 'payLifeValue' && key === 'amount')
+      validateExpression('value', entry, `${path}.${key}`, issues);
+    if (
+      ['removeCounters', 'entersWithCounters'].includes(String(record['kind'])) &&
+      key === 'count' &&
+      typeof entry !== 'number'
+    )
+      validateExpression('value', entry, `${path}.${key}`, issues);
+    if (
+      key === 'entersWithCounters' &&
+      entry !== undefined &&
+      entry !== null &&
+      typeof entry === 'object'
+    )
+      for (const [counter, count] of Object.entries(entry))
+        if (typeof count !== 'number')
+          validateExpression('value', count, `${path}.${key}.${counter}`, issues);
+
     if (
       [
         'costs',

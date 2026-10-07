@@ -3,9 +3,9 @@
  * engine-owned). Phase 2 models the symbols that cover the fixture decks and the vast
  * majority of real cards: generic {N}, the five colors, and colorless {C}.
  *
- * {X}, hybrid ({W/U}, {2/W}), Phyrexian ({G/P}) and snow ({S}) costs are NOT modeled yet —
- * `parseManaCost` reports them as unsupported so the card interpreter can mark the card
- * unmodeled and the engine can halt loudly instead of mispaying (brief §6.3).
+ * Announced {X}, two-color hybrid ({W/U}), and Phyrexian ({G/P}) symbols are modeled.
+ * Two-brid ({2/W}) and snow ({S}) remain unsupported; parsing keeps those cards explicit
+ * rather than substituting a different payment (brief §6.3).
  */
 
 import type { Color, ManaCostString, ManaPool } from '@mtg/shared';
@@ -44,7 +44,7 @@ export interface ParsedManaCost {
 
 export interface ManaCostParseResult {
   cost: ParsedManaCost | null;
-  /** Symbols we cannot model yet ({X}, hybrid, Phyrexian, …); non-empty ⇒ cost is null. */
+  /** Symbols we cannot model ({2/W}, snow, …); non-empty ⇒ cost is null. */
   unsupportedSymbols: string[];
 }
 
