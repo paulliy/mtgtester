@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261006090155.jsonl.gz",
+  "retrievedAt": "2026-10-07",
+  "cards": [
+    {
+      "sha256": "6a3c9be444a6680f94cee9f52ce8059456a80b77f407c19a6c004105138b1eec",
+      "card": {
+        "oracleId": "cc187110-1148-4090-bbb8-e205694a39f5",
+        "scryfallId": "4f616706-ec97-4923-bb1e-11a69fbaa1f8",
+        "name": "Counterspell",
+        "manaCost": "{U}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target spell.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "95d0b259f772498940d17e63d82acb30a3774388579245c6b672d6c38572fc6e",
+      "card": {
+        "oracleId": "3407fe41-fdd3-4119-8f70-4bc4590a379f",
+        "scryfallId": "52d58fe4-6070-4022-9cd7-c35a11b44525",
+        "name": "Negate",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target noncreature spell.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "03099f6c339bfd576aa3e49f1c4da939008e5b5191c5f3531181a570f22d2ba0",
+      "card": {
+        "oracleId": "c61fe162-2202-4e56-9ba0-393547f9875f",
+        "scryfallId": "179236d9-6fe2-4db6-bdfb-f851e8d531a2",
+        "name": "Mana Leak",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target spell unless its controller pays {3}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bdaa41055aa2184ee87b53e0f78353afe78283a064ccc310e3e6984e5c136f40",
+      "card": {
+        "oracleId": "3adc3af3-5086-4d61-b38c-c1dddeaeebe6",
+        "scryfallId": "6f8626c4-306f-4e9d-8840-2bb73fe87e87",
+        "name": "Stubborn Denial",
+        "manaCost": "{U}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target noncreature spell unless its controller pays {1}.\nFerocious — If you control a creature with power 4 or greater, counter that spell instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Ferocious"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

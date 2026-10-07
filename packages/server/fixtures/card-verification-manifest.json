@@ -4429,6 +4429,128 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "cc187110-1148-4090-bbb8-e205694a39f5": {
+      "name": "Counterspell",
+      "oracleSha256": "6a3c9be444a6680f94cee9f52ce8059456a80b77f407c19a6c004105138b1eec",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell.",
+          "implementation": [
+            "controller-neutral spell target legality",
+            "spell-only stack targets",
+            "normal casting, cost payment, and counter resolution"
+          ],
+          "engineTestIds": [
+            "counterspell-target-controller-P1",
+            "counterspell-target-controller-P2",
+            "counterspell-reject-self",
+            "counterspell-spell-only-targets"
+          ],
+          "viewerScenarioIds": [
+            "counterspell-viewer-own-counter",
+            "counterspell-viewer-opponent-counter"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3407fe41-fdd3-4119-8f70-4bc4590a379f": {
+      "name": "Negate",
+      "oracleSha256": "95d0b259f772498940d17e63d82acb30a3774388579245c6b672d6c38572fc6e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target noncreature spell.",
+          "implementation": [
+            "controller-neutral spell target legality",
+            "noncreature restriction",
+            "normal casting, cost payment, and counter resolution"
+          ],
+          "engineTestIds": [
+            "negate-target-controller-P1",
+            "negate-target-controller-P2",
+            "negate-reject-self",
+            "negate-spell-only-targets",
+            "Negate-reject-creature"
+          ],
+          "viewerScenarioIds": ["negate-viewer-own-counter", "negate-viewer-opponent-counter"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c61fe162-2202-4e56-9ba0-393547f9875f": {
+      "name": "Mana Leak",
+      "oracleSha256": "03099f6c339bfd576aa3e49f1c4da939008e5b5191c5f3531181a570f22d2ba0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell unless its controller pays {3}.",
+          "implementation": [
+            "controller-neutral spell target legality",
+            "spell-only stack targets",
+            "normal casting, cost payment, and counter resolution"
+          ],
+          "engineTestIds": [
+            "mana-leak-target-controller-P1",
+            "mana-leak-target-controller-P2",
+            "mana-leak-reject-self",
+            "mana-leak-spell-only-targets",
+            "mana-leak-controller-pays-P1",
+            "mana-leak-controller-pays-P2"
+          ],
+          "viewerScenarioIds": ["mana-leak-viewer-own-counter", "mana-leak-viewer-opponent-counter"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3adc3af3-5086-4d61-b38c-c1dddeaeebe6": {
+      "name": "Stubborn Denial",
+      "oracleSha256": "bdaa41055aa2184ee87b53e0f78353afe78283a064ccc310e3e6984e5c136f40",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target noncreature spell unless its controller pays {1}.",
+          "implementation": [
+            "controller-neutral spell target legality",
+            "noncreature restriction",
+            "normal casting, cost payment, and counter resolution"
+          ],
+          "engineTestIds": [
+            "stubborn-denial-target-controller-P1",
+            "stubborn-denial-target-controller-P2",
+            "stubborn-denial-reject-self",
+            "stubborn-denial-spell-only-targets",
+            "Stubborn Denial-reject-creature",
+            "stubborn-denial-controller-pays-P1",
+            "stubborn-denial-controller-pays-P2"
+          ],
+          "viewerScenarioIds": [
+            "stubborn-denial-viewer-own-counter",
+            "stubborn-denial-viewer-opponent-counter"
+          ]
+        },
+        {
+          "oracleText": "Ferocious — If you control a creature with power 4 or greater, counter that spell instead.",
+          "implementation": [
+            "controller-neutral spell target legality",
+            "noncreature restriction",
+            "resolution-time Ferocious condition"
+          ],
+          "engineTestIds": [
+            "stubborn-denial-ferocious-P1",
+            "stubborn-denial-ferocious-P2",
+            "stubborn-denial-controller-pays-P1",
+            "stubborn-denial-controller-pays-P2"
+          ],
+          "viewerScenarioIds": [
+            "stubborn-denial-viewer-own-counter",
+            "stubborn-denial-viewer-opponent-counter"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
