@@ -3105,7 +3105,7 @@ async function runSelectedFaceViewer(page: Page, name: string, half: boolean): P
       await expect(page.getByRole('button', { name: previousChoice, exact: true })).toBeHidden();
     }
     if (expected.scry > 1)
-      await page.getByRole('button', { name: 'Keep the current top order', exact: true }).click();
+      await page.getByRole('button', { name: 'Keep current order', exact: true }).click();
   }
   if (half && expected.discard)
     await page.getByRole('button', { name: 'Discard', exact: true }).first().click();

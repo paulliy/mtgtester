@@ -767,3 +767,8 @@ and report the exact failed action, attempted recovery, and remaining work.
   Bojuka Bog driver’s assumed Play land dialog, leaving 212 serial skips. Its unchanged source
   manifest and failed report are retained. The driver now follows the established Bojuka Bog
   target-selection and Confirm controls. These failed attempts grant no viewer eligibility.
+- The next captured viewer run at `223bc00` passes 198 cases, including all five Marchesa
+  scenarios, then fails the Take a Glance driver while waiting for an ordering button and
+  skips the remaining 18 cases. Its verified unchanged source manifest and failed report
+  are retained. The trace shows the production presentation verb is “Keep current order”;
+  the driver now selects that exact button. This run grants no passing viewer eligibility.
