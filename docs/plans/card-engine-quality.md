@@ -393,6 +393,19 @@ and report the exact failed action, attempted recovery, and remaining work.
   alternative cost, and consume its type budget. Face timing uses the selected alternative
   when the index is omitted. All 57 affected casting/permission tests pass, with production
   and test typechecks and focused lint. Selected-face characteristics remain outstanding.
+- Combined verification at `8869766`: all 296 repository test files / 3,570 tests and all
+  68 card-gate files / 1,415 tests pass, with production/test typechecks, lint and formatting.
+- Capability derivation traverses final typed IR, including modes, costs, faces, replacement
+  behavior, continuous/rule statics, selectors, values, conditions and nested token abilities.
+  Field and discriminator tables are compiler obligations; unknown fields/tags and cyclic or
+  oversized graphs fail closed. Implicit tap costs remain visible. Canonical aliases require
+  explicit identity, equivalent aliases deduplicate, and differing final definitions conflict.
+  The new `card-capabilities` CLI emits reproducible source/input/definition/capability hashes
+  and both impact maps, with adapter omissions reported separately. Eleven independent cases,
+  production/test types and lint pass; all 6,508 modeled definitions in the 38,708-record bulk
+  traverse without errors, yielding 482 dependency keys. This inventory does not certify
+  primitive behavior or cards. Executable contracts and freshness/eligibility enforcement remain
+  pending, and Phase 5 is not complete.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
