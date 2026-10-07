@@ -27,6 +27,17 @@ let actualImpact: {
   primitiveEvidence: { eligible: number; blocked: number; engineProven: string[] };
 };
 const scratch: string[] = [];
+const expectedCapabilities = [
+  'Ability.effects',
+  'Ability.spell',
+  'CardDefinition',
+  'CardDefinition.manaCost',
+  'CardDefinition.spellAbility',
+  'Effect.gainLife',
+  'Effect.removeCounters',
+  'ParsedManaCost',
+  'Value.const',
+];
 
 beforeAll(() => {
   runDirectory = mkdtempSync(resolve(tmpdir(), 'mtg-primitive-actual-run-'));
@@ -73,7 +84,7 @@ function definition(count: number | Value = 1): CardDefinition {
 describe('primitive evidence and eligibility', () => {
   it('loads evidence from actual independent execution and freezes generated facts', () => {
     const evidence = loadPrimitiveEvidence(root, runDirectory);
-    expect(evidence.capabilities).toEqual(['Effect.removeCounters']);
+    expect(evidence.capabilities).toEqual(expectedCapabilities);
     expect(Object.isFrozen(evidence)).toBe(true);
     expect(Object.isFrozen(evidence.capabilities)).toBe(true);
     validateCurrentPrimitiveEvidence(evidence);
@@ -93,9 +104,10 @@ describe('primitive evidence and eligibility', () => {
   });
 
   it('binds actual capability CLI eligibility to current primitive evidence', () => {
-    expect(actualImpact.primitiveEvidence.engineProven).toEqual(['Effect.removeCounters']);
-    expect(actualImpact.primitiveEvidence.eligible).toBe(0);
-    expect(actualImpact.primitiveEvidence.blocked).toBe(actualImpact.modeled);
+    expect(actualImpact.primitiveEvidence.engineProven).toEqual(expectedCapabilities);
+    expect(actualImpact.primitiveEvidence.blocked + actualImpact.primitiveEvidence.eligible).toBe(
+      actualImpact.modeled,
+    );
     expect(actualImpact.modeled).toBeGreaterThan(600);
   });
 
@@ -119,6 +131,60 @@ describe('primitive evidence and eligibility', () => {
       capability: 'Effect.removeCounters',
       reason: 'outside proven contract scope',
     });
+  });
+
+  it('generates eligibility for the complete bounded life-spell composition', () => {
+    const def = interpretCard({
+      ...bear(),
+      types: ['Sorcery'],
+      typeLine: 'Sorcery',
+      manaCost: '{0}',
+      power: null,
+      toughness: null,
+      oracleText: 'You gain 3 life.',
+    });
+    const evidence = loadPrimitiveEvidence(root, runDirectory);
+    const result = cardPrimitiveEligibility(def, evidence);
+    expect(result.eligible).toBe(true);
+    expect(result.blocked).toEqual([]);
+    expect(result.dependencies).toEqual(
+      expectedCapabilities.filter((capability) => capability !== 'Effect.removeCounters'),
+    );
+  });
+
+  it.each([
+    'dynamic',
+    'targeted',
+    'hybrid',
+    'additionalCost',
+    'keyword',
+    'amountOutsideScope',
+    'manaOutsideScope',
+    'contradictoryModeling',
+  ] as const)('does not promote a life spell outside the composition scope: %s', (variant) => {
+    const base = interpretCard({
+      ...bear(),
+      types: ['Sorcery'],
+      typeLine: 'Sorcery',
+      manaCost: '{0}',
+      power: null,
+      toughness: null,
+      oracleText: 'You gain 3 life.',
+    });
+    const def = structuredClone(base);
+    if (variant === 'dynamic')
+      def.spellAbility!.effects = [{ op: 'gainLife', amount: { kind: 'countOpponents' } }];
+    if (variant === 'targeted') def.spellAbility!.targets = [{ kind: 'player' }];
+    if (variant === 'hybrid') def.manaCost!.hybrid = [['W', 'G']];
+    if (variant === 'additionalCost') def.spellAdditionalCosts = [{ kind: 'payLife', amount: 1 }];
+    if (variant === 'keyword') def.keywords = ['rebound'];
+    if (variant === 'amountOutsideScope')
+      def.spellAbility!.effects = [{ op: 'gainLife', amount: { kind: 'const', n: 1001 } }];
+    if (variant === 'manaOutsideScope') def.manaCost!.colored.G = 2;
+    if (variant === 'contradictoryModeling') def.unmodeledReasons = ['unresolved Oracle clause'];
+    expect(cardPrimitiveEligibility(def, loadPrimitiveEvidence(root, runDirectory)).eligible).toBe(
+      false,
+    );
   });
 
   it('requires a privately loader-validated context', () => {
