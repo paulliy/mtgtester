@@ -18,6 +18,7 @@ const ORACLE_SHA256 = '696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44
 
 const SOURCE_FILES = [
   'packages/engine/src/cards/authoring-validation.ts',
+  'packages/engine/src/cards/expression-validation.ts',
   'packages/engine/src/cards/effect-reference-contracts.ts',
   'packages/engine/src/utils/assert-never.ts',
   'packages/engine/src/targets/context.ts',
