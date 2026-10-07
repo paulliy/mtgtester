@@ -412,8 +412,6 @@ function* proposeCast(
     )
   )
     throw new Error('unknown casting alternative');
-  if ((payload.x ?? 0) > 0 && def.manaCost?.x === undefined && def.announcesX !== true)
-    throw new Error('this spell does not announce X');
   if (resolutionPermission === undefined) {
     const face =
       payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen'
@@ -504,8 +502,7 @@ function* proposeCast(
   };
 
   let cost: ParsedManaCost;
-  let ability: Ability;
-  let targets: ObjectId[];
+  let abilityDef = def;
   let exileOnResolution = false;
   let escaped = false;
   let energyAlternativeCostToPay = 0;
@@ -525,12 +522,6 @@ function* proposeCast(
     }
     energyAlternativeCostToPay = energyAlternativeCost;
     cost = emptyCost();
-    ability = resolveCastAbility(def, undefined, obj.name) ?? {
-      kind: 'spell',
-      targets: [],
-      effects: [],
-    };
-    targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
   } else if (payload.alternativeCast === 'commanderFree') {
     if (
       def.commanderFreeCast !== true ||
@@ -540,16 +531,11 @@ function* proposeCast(
       throw new Error('commander-free alternate cost is not legal');
     }
     cost = emptyCost();
-    ability = resolveCastAbility(def, undefined, obj.name) ?? {
-      kind: 'spell',
-      targets: [],
-      effects: [],
-    };
-    targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
   } else if (payload.alternativeCast === 'nonMana') {
     const alt =
-      def.alternativeCasts?.[payload.altIndex ?? 0] ??
-      def.alternativeCasts?.find((a) => a.kind === 'nonMana');
+      payload.altIndex === undefined
+        ? def.alternativeCasts?.find((a) => a.kind === 'nonMana')
+        : def.alternativeCasts?.[payload.altIndex];
     if (alt?.kind !== 'nonMana') throw new Error('missing non-mana alternative cost');
     if (
       (payload.fromGraveyard === true && alt.from !== 'graveyard') ||
@@ -564,82 +550,78 @@ function* proposeCast(
       throw new Error('non-mana alternative cost condition is not met');
     }
     castingAdditionalCosts = [...castingAdditionalCosts, ...(alt.costs ?? [])];
-    cost = payload.fromGraveyard === true ? alt.manaCost : emptyCost();
+    cost = alt.manaCost;
     exileOnResolution = alt.exileOnResolution === true;
     escaped = alt.escaped === true;
-    ability = resolveCastAbility(def, undefined, obj.name) ?? {
-      kind: 'spell',
-      targets: [],
-      effects: [],
-    };
-    targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
   } else if (payload.alternativeCast === 'overload') {
-    const alt = def.alternativeCasts?.find((a) => a.kind === 'overload');
-    if (!alt) throw new Error('missing overload cost');
+    const alt =
+      payload.altIndex === undefined
+        ? def.alternativeCasts?.find((a) => a.kind === 'overload')
+        : def.alternativeCasts?.[payload.altIndex];
+    if (alt?.kind !== 'overload') throw new Error('missing overload cost');
     cost = alt.manaCost;
-    ability = {
-      kind: 'spell',
-      targets: [],
-      effects: [{ op: 'overloadBounceAllNonlandOpponents' }],
+    abilityDef = {
+      ...def,
+      spellAbility: alt.ability ?? {
+        kind: 'spell',
+        targets: [],
+        effects: [{ op: 'overloadBounceAllNonlandOpponents' }],
+      },
     };
-    targets = [];
   } else if (payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen') {
     const alt =
-      def.alternativeCasts?.[payload.altIndex ?? 0] ??
-      def.alternativeCasts?.find((a) => a.kind === payload.alternativeCast);
-    if (!alt) throw new Error(`missing ${payload.alternativeCast} cost`);
+      payload.altIndex === undefined
+        ? def.alternativeCasts?.find((a) => a.kind === payload.alternativeCast)
+        : def.alternativeCasts?.[payload.altIndex];
+    if (alt?.kind !== payload.alternativeCast)
+      throw new Error(`missing ${payload.alternativeCast} cost`);
     cost = alt.manaCost;
-    ability = alt.ability ?? { kind: 'spell', targets: [], effects: [] };
-    targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
+    if (alt.ability === undefined)
+      throw new Error('alternative spell face has no executable ability');
+    abilityDef = { ...def, spellAbility: alt.ability };
   } else {
-    cost = withX(
-      addGeneric(
-        resolutionPermission === undefined ? (def.manaCost ?? emptyCost()) : emptyCost(),
-        tax,
-      ),
-      payload.x ?? 0,
-    );
-    const selectedModes =
-      payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
-    castingAdditionalCosts = [
-      ...castingAdditionalCosts,
-      ...modeAdditionalCosts(def, selectedModes),
-    ];
-    const optional = def.optionalAdditionalCost;
-    const optionalCostCount = payload.optionalCostCount ?? 0;
-    if (
-      !Number.isSafeInteger(optionalCostCount) ||
-      optionalCostCount < 0 ||
-      (optional?.repeatable !== true && optionalCostCount > 1)
-    ) {
-      throw new Error('engine bug: invalid optional additional-cost count');
-    }
-    if (optionalCostCount > 0 && optional === undefined) {
-      throw new Error('engine bug: optional additional cost is not available');
-    }
-    if (optional !== undefined) {
-      for (let i = 0; i < optionalCostCount; i++) {
-        castingAdditionalCosts.push({ kind: 'mana', cost: optional.cost });
-      }
-    }
-    ability = resolveCastAbility(
-      def,
-      payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined),
-      obj.name,
-      maxChoicesFor(ctx, def, { cardId: obj.cardId, controllerId: player.id }),
-    ) ?? {
-      kind: 'spell',
-      targets: [],
-      effects: [],
-    };
-    targets = validateChosenTargets(
-      ctx,
-      def,
-      player.id,
-      outcome.targets,
-      selectedModeTargetSlots(def, selectedModes),
-    );
+    cost = resolutionPermission === undefined ? (def.manaCost ?? emptyCost()) : emptyCost();
   }
+  // Every alternative cost still announces modes, pays additional costs, and includes the
+  // commander tax (CR 118.9d, 601.2b/f). Only the printed mana-cost component is replaced.
+  if ((payload.x ?? 0) > 0 && (cost.x ?? 0) === 0 && abilityDef.announcesX !== true)
+    throw new Error('this spell does not announce X');
+  cost = withX(addGeneric(cost, tax), payload.x ?? 0);
+  const selectedModes = payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
+  castingAdditionalCosts = [
+    ...castingAdditionalCosts,
+    ...modeAdditionalCosts(abilityDef, selectedModes),
+  ];
+  const optional = abilityDef.optionalAdditionalCost;
+  const optionalCostCount = payload.optionalCostCount ?? 0;
+  if (
+    (optional?.repeatable !== true && optionalCostCount > 1) ||
+    (optionalCostCount > 0 && optional === undefined)
+  ) {
+    throw new Error('invalid optional additional-cost count');
+  }
+  if (optional !== undefined) {
+    for (let i = 0; i < optionalCostCount; i++)
+      castingAdditionalCosts.push({ kind: 'mana', cost: optional.cost });
+  }
+  let ability = resolveCastAbility(
+    abilityDef,
+    selectedModes,
+    obj.name,
+    maxChoicesFor(ctx, abilityDef, { cardId: obj.cardId, controllerId: player.id }),
+  ) ?? {
+    kind: 'spell',
+    targets: [],
+    effects: [],
+  };
+  const targets = validateChosenTargets(
+    ctx,
+    abilityDef,
+    player.id,
+    outcome.targets,
+    selectedModeTargetSlots(abilityDef, selectedModes),
+    obj.cardId,
+  );
 
   // Payment preview narrows targeting continuations before anything is paid.
   const totalMana = applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts)));
@@ -663,10 +645,7 @@ function* proposeCast(
     player.id,
     obj.cardId,
     targets,
-    selectedModeTargetSlots(
-      def,
-      payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined),
-    ),
+    selectedModeTargetSlots(abilityDef, selectedModes),
     def.colors,
     payableTargets,
     payload.x ?? 0,
@@ -768,6 +747,7 @@ function* proposeCast(
     sourceCardId: obj.cardId,
     isCommanderCast: payload.fromCommand,
     ...(payload.alternativeCast ? { alternativeCastKind: payload.alternativeCast } : {}),
+    ...(payload.altIndex === undefined ? {} : { altIndex: payload.altIndex }),
     ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
     ...(spellCard.optionalCostCounts !== undefined
       ? {

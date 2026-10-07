@@ -1,3 +1,4 @@
+import { assertNever } from '../utils/assert-never';
 import { castingPreviewContext } from '../casting/preview';
 import { legalTargetMenus } from '../targets/announcement';
 import { planSpellPayment } from '../mana/spell-payment';
@@ -43,6 +44,7 @@ import {
   planPayment,
   subtractColored,
   subtractGeneric,
+  totalPips,
   withX,
 } from '../mana/cost';
 import type { ManaSource, ParsedManaCost, PaymentPlan } from '../mana/cost';
@@ -494,28 +496,6 @@ export function targetLifeTaxFor(
   }, 0);
 }
 
-/** Target slots for casting a card, or null when a required slot has zero options. */
-function computeCastTargets(
-  ctx: GameContext,
-  def: CardDefinition,
-  casterId: PlayerId,
-  activeSlots?: readonly number[],
-): { slot: number; options: ObjectId[] }[] | null {
-  const slots: { slot: number; options: ObjectId[] }[] = [];
-  for (const [slotNum, spec] of (def.spellAbility?.targets ?? []).entries()) {
-    if (activeSlots !== undefined && !activeSlots.includes(slotNum)) continue;
-    // Protection (CR 702.16): a spell can't target a permanent protected from its colors.
-    const options = computeTargetOptions(ctx, spec, casterId, def.colors);
-    if (spec.count !== undefined) {
-      if (options.length < spec.count.min) return null;
-      continue; // Counted targets are chosen at announcement after the action is selected.
-    }
-    if (options.length === 0) return null; // can't cast without a legal target (CR 601.2c)
-    slots.push({ slot: slotNum, options });
-  }
-  return slots;
-}
-
 /**
  * All legal actions for `player` at a priority window (brief §5.4). Pass is always legal
  * and always option 0 — auto-pass when it is the only option (brief §7.4).
@@ -709,9 +689,7 @@ export function computePriorityOptions(
 
     const normalOptionsStart = options.length;
     if (spellCastingBlocked) return;
-    if (def.manaCost === null) return; // cost-less nonland card: not castable
     const instantSpeed = def.types.includes('Instant') || def.keywords.includes('flash');
-    if (!instantSpeed && !sorcerySpeed) return;
 
     const tax = fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
     const reboundCast = fromExile && obj.reboundCastBy === player.id;
@@ -728,236 +706,250 @@ export function computePriorityOptions(
     paymentCtx = castCtx;
     paymentPlayer = castPlayer;
     paymentSources = castSources;
-    const additionalManaCost = manaPortionOf(spellAdditionalCosts);
     const reduction = costReductionFor(castCtx, castPlayer.id, obj.oracleId, obj.cardId);
-    const unreduced = reboundCast ? emptyCost() : addGeneric(def.manaCost, tax);
-    // CR 601.2f: reductions apply to the TOTAL cost — the mana cost with {X} given a value, plus
-    // every additional cost (kicker, mode costs) — so a reduction can pay for X's share or a
-    // kicker's, not just for whatever generic mana the printed cost happens to have.
-    const reduce = (c: ParsedManaCost): ParsedManaCost => {
-      const colored = reduction.colored === undefined ? c : subtractColored(c, reduction.colored);
-      return subtractGeneric(colored, reduction.generic);
-    };
-    const costWithX = (x: number): ParsedManaCost => withX(unreduced, x);
+    // One configuration/target/payment loop for each permitted mana-cost alternative.
+    // Alternative costs replace only the printed mana cost, never modes or additional costs.
+    const offerCast = (
+      baseCost: ParsedManaCost,
+      spellAdditionalCosts: readonly AbilityCost[],
+      castingDef: CardDefinition = def,
+      variant: Partial<Extract<PriorityActionPayload, { kind: 'castSpell' }>> = {},
+      variantLabel = '',
+      energyCost = 0,
+      familyInstantSpeed = instantSpeed,
+      castName = obj.name,
+    ): void => {
+      if (!familyInstantSpeed && !sorcerySpeed) return;
+      const additionalManaCost = manaPortionOf(spellAdditionalCosts);
+      const unreduced = addGeneric(baseCost, tax);
+      // CR 601.2f: reductions apply to the TOTAL cost — the mana cost with {X} given a value, plus
+      // every additional cost (kicker, mode costs) — so a reduction can pay for X's share or a
+      // kicker's, not just for whatever generic mana the printed cost happens to have.
+      const reduce = (c: ParsedManaCost): ParsedManaCost => {
+        const colored = reduction.colored === undefined ? c : subtractColored(c, reduction.colored);
+        return subtractGeneric(colored, reduction.generic);
+      };
+      const costWithX = (x: number): ParsedManaCost => withX(unreduced, x);
 
-    // {X} is announced as part of casting (CR 601.2b), so each affordable value of X is its own
-    // option. Enumerated rather than asked as a follow-up decision because the option menu is
-    // the contract: an action offered here must be applicable with no further legality check.
-    // Restricted mana ("spend only to cast a Dragon spell") may or may not pay for THIS card,
-    // so affordability is asked with the purpose attached — see `mana/cost.ts::ManaAllowance`.
-    const allows = allowanceFor(castCtx, castPlayer.id, {
-      kind: 'castSpell',
-      oracleId: obj.oracleId,
-      isCommander: obj.isCommander,
-    });
+      // {X} is announced as part of casting (CR 601.2b), so each affordable value of X is its own
+      // option. Enumerated rather than asked as a follow-up decision because the option menu is
+      // the contract: an action offered here must be applicable with no further legality check.
+      // Restricted mana ("spend only to cast a Dragon spell") may or may not pay for THIS card,
+      // so affordability is asked with the purpose attached — see `mana/cost.ts::ManaAllowance`.
+      const allows = allowanceFor(castCtx, castPlayer.id, {
+        kind: 'castSpell',
+        oracleId: obj.oracleId,
+        isCommander: obj.isCommander,
+      });
 
-    const xSymbols = reboundCast ? 0 : (def.manaCost.x ?? 0);
-    const announcesAdditionalX = def.announcesX === true;
-    const xChoices: number[] = [];
-    if (xSymbols === 0 && !announcesAdditionalX) xChoices.push(0);
-    else if (announcesAdditionalX) {
-      for (let x = 0; x <= castPlayer.life; x++) xChoices.push(x);
-    } else {
-      for (let x = 0; ; x++) {
-        if (
-          !canPay(
-            reduce(addManaCosts(costWithX(x), additionalManaCost)),
-            castPlayer.manaEntries,
-            castSources,
-            allows,
-            castPlayer.life,
-          )
-        )
-          break;
-        xChoices.push(x);
-      }
-      if (xChoices.length === 0) return;
-    }
-
-    // A modal spell (CR 700.2) is announced with its mode chosen at cast time, before targets —
-    // so each mode is its own cast option, the same "the option menu is the contract" treatment
-    // {X} gets above. A non-modal spell has exactly one "mode" (undefined), so this loop is a
-    // single iteration when `modes` is absent.
-    const selections = modalSelections(
-      def,
-      maxChoicesFor(castCtx, def, { cardId: obj.cardId, controllerId: castPlayer.id }),
-    );
-
-    for (const x of xChoices) {
-      const cost = costWithX(x);
-      if (!canPay(reduce(cost), castPlayer.manaEntries, castSources, allows, castPlayer.life))
-        continue;
-
-      for (const selectedModes of selections) {
-        const modeCosts = modeAdditionalCosts(def, selectedModes);
-        const optional = def.optionalAdditionalCost;
-        const optionalCounts: number[] = [0];
-        if (optional !== undefined) {
-          const max = optional.repeatable === true ? 100 : 1;
-          for (let count = 1; count <= max; count++) {
-            let prospective = addManaCosts(
-              cost,
-              manaPortionOf([...spellAdditionalCosts, ...modeCosts]),
-            );
-            for (let i = 0; i < count; i++) prospective = addManaCosts(prospective, optional.cost);
-            if (
-              !canPay(
-                reduce(prospective),
-                castPlayer.manaEntries,
-                castSources,
-                allows,
-                castPlayer.life,
-              )
+      const xSymbols = baseCost.x ?? 0;
+      const announcesAdditionalX = castingDef.announcesX === true;
+      const xChoices: number[] = [];
+      if (xSymbols === 0 && !announcesAdditionalX) xChoices.push(0);
+      else if (announcesAdditionalX) {
+        for (let x = 0; x <= castPlayer.life; x++) xChoices.push(x);
+      } else {
+        for (let x = 0; ; x++) {
+          if (
+            !canPay(
+              reduce(addManaCosts(costWithX(x), additionalManaCost)),
+              castPlayer.manaEntries,
+              castSources,
+              allows,
+              castPlayer.life,
             )
-              break;
-            optionalCounts.push(count);
-          }
+          )
+            break;
+          xChoices.push(x);
         }
-        const modeLabel =
-          selectedModes === undefined
-            ? undefined
-            : selectedModes
-                .map(
-                  (mode) =>
-                    def.spellAbility?.modes?.options[mode]?.description ?? `mode ${mode + 1}`,
-                )
-                .join('; ');
-        for (const optionalCostCount of optionalCounts) {
-          const optionalCosts: AbilityCost[] = [];
+        if (xChoices.length === 0) return;
+      }
+
+      // A modal spell (CR 700.2) is announced with its mode chosen at cast time, before targets —
+      // so each mode is its own cast option, the same "the option menu is the contract" treatment
+      // {X} gets above. A non-modal spell has exactly one "mode" (undefined), so this loop is a
+      // single iteration when `modes` is absent.
+      const selections = modalSelections(
+        castingDef,
+        maxChoicesFor(castCtx, castingDef, { cardId: obj.cardId, controllerId: castPlayer.id }),
+      );
+
+      for (const x of xChoices) {
+        const cost = costWithX(x);
+        if (!canPay(reduce(cost), castPlayer.manaEntries, castSources, allows, castPlayer.life))
+          continue;
+
+        for (const selectedModes of selections) {
+          const modeCosts = modeAdditionalCosts(castingDef, selectedModes);
+          const optional = castingDef.optionalAdditionalCost;
+          const optionalCounts: number[] = [0];
           if (optional !== undefined) {
-            for (let i = 0; i < optionalCostCount; i++) {
-              optionalCosts.push({ kind: 'mana', cost: optional.cost });
-            }
-          }
-          const additionalCosts = [...spellAdditionalCosts, ...modeCosts, ...optionalCosts];
-          const selectionCost = reduce(addManaCosts(cost, manaPortionOf(additionalCosts)));
-          const payment = jointPayment(selectionCost, additionalCosts, x);
-          if (payment === null) continue;
-          const targetMenus = legalTargetMenus(
-            castCtx,
-            def.spellAbility ?? { kind: 'spell', targets: [], effects: [] },
-            { controllerId: castPlayer.id, sourceCardId: obj.cardId, sourceColors: def.colors, x },
-            selectedModeTargetSlots(def, selectedModes),
-            (ordinary, counted) =>
-              jointlyPayable(
-                selectionCost,
-                additionalCosts,
-                x,
-                targetLifeTaxFor(castCtx, castPlayer.id, [
-                  ...ordinary,
-                  ...Object.values(counted).flat(),
-                ]),
-              ),
-          );
-          for (const payableTargets of targetMenus) {
-            const optionalLabel =
-              optional !== undefined && optionalCostCount > 0
-                ? ` — ${optional.mechanic} ${optionalCostCount}`
-                : '';
-            const option: EngineActionOption = {
-              type: 'castSpell',
-              description:
-                `Cast ${obj.name} (${describeManaCost(selectionCost)})` +
-                (xSymbols > 0 || announcesAdditionalX ? ` with X=${x}` : '') +
-                (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
-                optionalLabel +
-                (fromCommand
-                  ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}`
-                  : '') +
-                (fromLibraryTop ? ' from the top of your library' : '') +
-                (fromExile ? ' from exile' : '') +
-                (fromGraveyard ? ' from your graveyard' : '') +
-                (reboundCast ? ' without paying its mana cost' : ''),
-              payload: {
-                kind: 'castSpell',
-                objectId: obj.id,
-                fromCommand,
-                ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
-                ...(fromGraveyard ? { fromGraveyard: true } : {}),
-                ...(fromExile
-                  ? { fromExile: true, ...(reboundCast ? { reboundCast: true } : {}) }
-                  : {}),
-                ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
-                ...(selectedModes !== undefined
-                  ? {
-                      modes: selectedModes,
-                      ...(selectedModes.length === 1 ? { mode: selectedModes[0] } : {}),
-                    }
-                  : {}),
-                ...(optionalCostCount > 0 ? { optionalCostCount } : {}),
-              },
-              data: {
-                instantSpeed,
-                sourceName: obj.name,
-                sourceZone: fromCommand
-                  ? 'command'
-                  : fromLibraryTop
-                    ? 'library'
-                    : fromExile
-                      ? 'exile'
-                      : 'hand',
-                manaCost: describeManaCost(selectionCost),
-                ...paymentPreview(
-                  castCtx,
-                  castPlayer,
-                  selectionCost,
+            const max = optional.repeatable === true ? 100 : 1;
+            for (let count = 1; count <= max; count++) {
+              let prospective = addManaCosts(
+                cost,
+                manaPortionOf([...spellAdditionalCosts, ...modeCosts]),
+              );
+              for (let i = 0; i < count; i++)
+                prospective = addManaCosts(prospective, optional.cost);
+              if (
+                !canPay(
+                  reduce(prospective),
+                  castPlayer.manaEntries,
                   castSources,
                   allows,
-                  payment.manaPlan,
-                ),
-                ...(tax > 0 ? { commanderTax: tax } : {}),
-                ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
-                ...(modeLabel !== undefined ? { modeLabel } : {}),
-                ...(optionalCostCount > 0
-                  ? { optionalCostCount, optionalMechanic: optional?.mechanic }
-                  : {}),
-                ...(additionalCosts.length > 0 ? { abilityCosts: additionalCosts } : {}),
+                  castPlayer.life,
+                )
+              )
+                break;
+              optionalCounts.push(count);
+            }
+          }
+          const modeLabel =
+            selectedModes === undefined
+              ? undefined
+              : selectedModes
+                  .map(
+                    (mode) =>
+                      castingDef.spellAbility?.modes?.options[mode]?.description ??
+                      `mode ${mode + 1}`,
+                  )
+                  .join('; ');
+          for (const optionalCostCount of optionalCounts) {
+            const optionalCosts: AbilityCost[] = [];
+            if (optional !== undefined) {
+              for (let i = 0; i < optionalCostCount; i++) {
+                optionalCosts.push({ kind: 'mana', cost: optional.cost });
+              }
+            }
+            const additionalCosts = [...spellAdditionalCosts, ...modeCosts, ...optionalCosts];
+            const selectionCost = reduce(addManaCosts(cost, manaPortionOf(additionalCosts)));
+            const payment = jointPayment(selectionCost, additionalCosts, x, 0, energyCost);
+            if (payment === null) continue;
+            const targetMenus = legalTargetMenus(
+              castCtx,
+              castingDef.spellAbility ?? { kind: 'spell', targets: [], effects: [] },
+              {
+                controllerId: castPlayer.id,
+                sourceCardId: obj.cardId,
+                sourceColors: castingDef.colors,
+                x,
               },
-            };
-            if (payableTargets.length > 0) option.targets = payableTargets;
-            options.push(option);
+              selectedModeTargetSlots(castingDef, selectedModes),
+              (ordinary, counted) =>
+                jointlyPayable(
+                  selectionCost,
+                  additionalCosts,
+                  x,
+                  targetLifeTaxFor(castCtx, castPlayer.id, [
+                    ...ordinary,
+                    ...Object.values(counted).flat(),
+                  ]),
+                  energyCost,
+                ),
+            );
+            for (const payableTargets of targetMenus) {
+              const optionalLabel =
+                optional !== undefined && optionalCostCount > 0
+                  ? ` — ${optional.mechanic} ${optionalCostCount}`
+                  : '';
+              const option: EngineActionOption = {
+                type: 'castSpell',
+                description:
+                  `Cast ${castName} (${describeManaCost(selectionCost)})${variantLabel}` +
+                  (xSymbols > 0 || announcesAdditionalX ? ` with X=${x}` : '') +
+                  (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
+                  optionalLabel +
+                  (fromCommand
+                    ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}`
+                    : '') +
+                  (fromLibraryTop ? ' from the top of your library' : '') +
+                  (fromExile ? ' from exile' : '') +
+                  (fromGraveyard ? ' from your graveyard' : '') +
+                  (reboundCast ? ' without paying its mana cost' : ''),
+                payload: {
+                  kind: 'castSpell',
+                  objectId: obj.id,
+                  fromCommand,
+                  ...variant,
+                  ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
+                  ...(fromGraveyard ? { fromGraveyard: true } : {}),
+                  ...(fromExile
+                    ? { fromExile: true, ...(reboundCast ? { reboundCast: true } : {}) }
+                    : {}),
+                  ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
+                  ...(selectedModes !== undefined
+                    ? {
+                        modes: selectedModes,
+                        ...(selectedModes.length === 1 ? { mode: selectedModes[0] } : {}),
+                      }
+                    : {}),
+                  ...(optionalCostCount > 0 ? { optionalCostCount } : {}),
+                },
+                data: {
+                  instantSpeed: familyInstantSpeed,
+                  ...(variant.alternativeCast === undefined
+                    ? {}
+                    : { castVariant: variant.alternativeCast }),
+                  ...(energyCost > 0 ? { energyCost } : {}),
+                  sourceName: obj.name,
+                  sourceZone: fromCommand
+                    ? 'command'
+                    : fromLibraryTop
+                      ? 'library'
+                      : fromExile
+                        ? 'exile'
+                        : 'hand',
+                  manaCost:
+                    variant.alternativeCast !== undefined && totalPips(selectionCost) === 0
+                      ? 'free'
+                      : describeManaCost(selectionCost),
+                  ...paymentPreview(
+                    castCtx,
+                    castPlayer,
+                    selectionCost,
+                    castSources,
+                    allows,
+                    payment.manaPlan,
+                  ),
+                  ...(tax > 0 ? { commanderTax: tax } : {}),
+                  ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
+                  ...(modeLabel !== undefined ? { modeLabel } : {}),
+                  ...(optionalCostCount > 0
+                    ? { optionalCostCount, optionalMechanic: optional?.mechanic }
+                    : {}),
+                  ...(additionalCosts.length > 0 ? { abilityCosts: additionalCosts } : {}),
+                },
+              };
+              if (payableTargets.length > 0) option.targets = payableTargets;
+              options.push(option);
+            }
           }
         }
       }
-    }
+    };
+    if (def.manaCost !== null)
+      offerCast(reboundCast ? emptyCost() : def.manaCost, spellAdditionalCosts);
     const energyAlternativeCost = castCtx.state.battlefield
       .filter((perm) => perm.controllerId === castPlayer.id)
       .map((perm) => getDefByOracleId(castCtx, perm.oracleId, perm.name).energyAlternativeCost)
       .find((amount): amount is number => amount !== undefined);
-    // Lands are permanents, but they are played rather than cast as permanent spells, so Nissa's
-    // alternate energy cost must never be offered for a land card.
-    const isPermanentSpell = def.types.some((type) =>
-      ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Planeswalker'].includes(type),
-    );
     if (
-      isPermanentSpell &&
+      def.types.some((type) =>
+        ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Planeswalker'].includes(type),
+      ) &&
       energyAlternativeCost !== undefined &&
-      castPlayer.energy >= energyAlternativeCost &&
       !fromExile &&
-      !fromGraveyard &&
-      jointlyPayable(reduce(additionalManaCost), spellAdditionalCosts, 0, 0, energyAlternativeCost)
+      !fromGraveyard
     ) {
-      const targets = computeCastTargets(castCtx, def, castPlayer.id);
-      if (targets !== null) {
-        const option: EngineActionOption = {
-          type: 'castSpell',
-          description:
-            `Cast ${obj.name} by paying ${energyAlternativeCost} energy` +
-            (fromCommand ? ' from the command zone' : ''),
-          payload: { kind: 'castSpell', objectId: obj.id, fromCommand, alternativeCast: 'energy' },
-          data: {
-            instantSpeed,
-            sourceName: obj.name,
-            sourceZone: fromCommand ? 'command' : 'hand',
-            manaCost: `{${energyAlternativeCost}} energy`,
-            energyCost: energyAlternativeCost,
-            castVariant: 'energy',
-            ...(spellAdditionalCosts.length > 0 ? { abilityCosts: spellAdditionalCosts } : {}),
-          },
-        };
-        if (targets.length > 0) option.targets = targets;
-        options.push(option);
-      }
+      offerCast(
+        emptyCost(),
+        spellAdditionalCosts,
+        def,
+        { alternativeCast: 'energy' },
+        ` by paying ${energyAlternativeCost} energy`,
+        energyAlternativeCost,
+      );
     }
     if (
       def.commanderFreeCast === true &&
@@ -965,31 +957,15 @@ export function computePriorityOptions(
       !fromGraveyard &&
       castCtx.state.battlefield.some(
         (perm) => perm.controllerId === castPlayer.id && perm.isCommander,
-      ) &&
-      jointlyPayable(reduce(additionalManaCost), spellAdditionalCosts)
+      )
     ) {
-      const targets = computeCastTargets(castCtx, def, castPlayer.id);
-      if (targets !== null) {
-        options.push({
-          type: 'castSpell',
-          description: `Cast ${obj.name} without paying its mana cost (you control a commander)`,
-          payload: {
-            kind: 'castSpell',
-            objectId: obj.id,
-            fromCommand,
-            alternativeCast: 'commanderFree',
-          },
-          data: {
-            instantSpeed,
-            sourceName: obj.name,
-            sourceZone: 'hand',
-            manaCost: 'free',
-            castVariant: 'commanderFree',
-            ...(spellAdditionalCosts.length > 0 ? { abilityCosts: spellAdditionalCosts } : {}),
-          },
-          ...(targets.length > 0 ? { targets } : {}),
-        });
-      }
+      offerCast(
+        emptyCost(),
+        spellAdditionalCosts,
+        def,
+        { alternativeCast: 'commanderFree' },
+        ' without paying its mana cost (you control a commander)',
+      );
     }
     if (fromGraveyard || fromLibraryTop) {
       const permission = playFromZonePermission(
@@ -1021,140 +997,64 @@ export function computePriorityOptions(
         }
       }
     }
-    const applyRed = (c: ParsedManaCost): ParsedManaCost => {
-      let b = c;
-      if (reduction.colored !== undefined) {
-        b = subtractColored(b, reduction.colored);
-      }
-      return subtractGeneric(b, reduction.generic);
-    };
-
-    // Alternative casts from the top of the library are not offered: their payloads cannot say
-    // where the card is, and a top-of-library permission ("cast creature spells from the top")
-    // has not been checked against them — offering one made `applyPriorityAction` look in hand
-    // and throw (found by fuzzing an Omen card). Fail closed until both are modeled.
-    if (def.alternativeCasts && def.alternativeCasts.length > 0 && !fromExile && !fromLibraryTop) {
-      for (const [index, alt] of def.alternativeCasts.entries()) {
+    // Resolution and temporary exile/library permissions are migrated separately; never
+    // fabricate a source-zone payload for an alternative that has no such permission.
+    if (!fromExile && !fromLibraryTop) {
+      for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
         if (fromGraveyard ? alt.from !== 'graveyard' : alt.from === 'graveyard') continue;
-        if (alt.kind === 'nonMana') {
-          const alternativeCosts = [...spellAdditionalCosts, ...(alt.costs ?? [])];
-          const cost = applyRed(addManaCosts(alt.manaCost, manaPortionOf(alternativeCosts)));
-          if (
-            (alt.condition === undefined ||
-              evaluateCondition(castCtx, alt.condition, {
-                cardId: obj.cardId,
-                controllerId: castPlayer.id,
-              })) &&
-            jointlyPayable(cost, alternativeCosts)
-          ) {
-            const targets = computeCastTargets(castCtx, def, castPlayer.id);
-            if (targets !== null) {
-              options.push({
-                type: 'castSpell',
-                description: fromGraveyard
-                  ? `Cast ${obj.name} from your graveyard (${describeManaCost(cost)})`
-                  : 'Cast ' + obj.name + ' without paying its mana cost (alternate cost)',
-                payload: {
-                  kind: 'castSpell',
-                  objectId: obj.id,
-                  fromCommand,
-                  ...(fromGraveyard ? { fromGraveyard: true } : {}),
-                  alternativeCast: 'nonMana',
-                  altIndex: index,
+        if (
+          alt.condition !== undefined &&
+          !evaluateCondition(castCtx, alt.condition, {
+            cardId: obj.cardId,
+            controllerId: castPlayer.id,
+          })
+        )
+          continue;
+        switch (alt.kind) {
+          case 'nonMana':
+            offerCast(
+              alt.manaCost,
+              [...spellAdditionalCosts, ...(alt.costs ?? [])],
+              def,
+              { alternativeCast: alt.kind, altIndex: index },
+              ' (alternate cost)',
+            );
+            break;
+          case 'overload':
+            offerCast(
+              alt.manaCost,
+              spellAdditionalCosts,
+              {
+                ...def,
+                spellAbility: alt.ability ?? {
+                  kind: 'spell',
+                  targets: [],
+                  effects: [{ op: 'overloadBounceAllNonlandOpponents' }],
                 },
-                data: {
-                  instantSpeed,
-                  sourceName: obj.name,
-                  sourceZone: fromCommand ? 'command' : fromGraveyard ? 'graveyard' : 'hand',
-                  manaCost: fromGraveyard ? describeManaCost(cost) : 'free',
-                  ...paymentPreview(
-                    castCtx,
-                    castPlayer,
-                    cost,
-                    castSources,
-                    allows,
-                    jointPayment(cost, alternativeCosts)?.manaPlan,
-                  ),
-                  castVariant: 'nonMana',
-                  abilityCosts: alternativeCosts,
-                },
-                // `targets` was computed above (and gates castability, CR 601.2c) but was not
-                // attached, so a targeted spell cast for its alternative cost reached
-                // `validateChosenTargets` with slot 0 unanswered and threw. The `energy` and
-                // `commanderFree` branches above attach it exactly this way.
-                ...(targets.length > 0 ? { targets } : {}),
-              });
-            }
-          }
-        } else if (alt.kind === 'overload') {
-          const cost = applyRed(addManaCosts(alt.manaCost, additionalManaCost));
-          if (jointlyPayable(cost, spellAdditionalCosts)) {
-            options.push({
-              type: 'castSpell',
-              description: `Cast ${obj.name} via Overload (${describeManaCost(cost)})`,
-              payload: {
-                kind: 'castSpell',
-                objectId: obj.id,
-                fromCommand,
-                alternativeCast: 'overload',
-                altIndex: index,
               },
-              data: {
-                instantSpeed,
-                sourceName: obj.name,
-                sourceZone: fromCommand ? 'command' : 'hand',
-                manaCost: describeManaCost(cost),
-                ...paymentPreview(
-                  castCtx,
-                  castPlayer,
-                  cost,
-                  castSources,
-                  allows,
-                  jointPayment(cost, spellAdditionalCosts)?.manaPlan,
-                ),
-                castVariant: 'overload',
-              },
-            });
-          }
-        } else if (alt.kind === 'adventure' || alt.kind === 'omen') {
-          // The payload below is hand-only (no commander tax, `fromCommand: false`), so a
-          // commander's Adventure/Omen half is not offered from the command zone rather than
-          // offered at the wrong price and then looked for in hand.
-          if (fromCommand) continue;
-          const cost = applyRed(addManaCosts(alt.manaCost, additionalManaCost));
-          if (jointlyPayable(cost, spellAdditionalCosts)) {
-            const altName = alt.name ?? alt.description;
-            const note =
-              alt.kind === 'omen'
-                ? '[Omen Spell: shuffles into library on resolution]'
-                : '[Adventure Spell: exiles on resolution, cast main face later]';
-            options.push({
-              type: 'castSpell',
-              description: `Cast ${altName} via ${alt.kind === 'omen' ? 'Omen' : 'Adventure'} (${describeManaCost(cost)}) ${note}`,
-              payload: {
-                kind: 'castSpell',
-                objectId: obj.id,
-                fromCommand: false,
-                alternativeCast: alt.kind,
-                altIndex: index,
-              },
-              data: {
-                instantSpeed: alt.typeLine?.includes('Instant') ?? false,
-                sourceName: obj.name,
-                sourceZone: 'hand',
-                manaCost: describeManaCost(cost),
-                ...paymentPreview(
-                  castCtx,
-                  castPlayer,
-                  cost,
-                  castSources,
-                  allows,
-                  jointPayment(cost, spellAdditionalCosts)?.manaPlan,
-                ),
-                castVariant: alt.kind,
-              },
-            });
-          }
+              { alternativeCast: alt.kind, altIndex: index },
+              ' via Overload',
+            );
+            break;
+          case 'adventure':
+          case 'omen':
+            if (fromCommand || alt.ability === undefined) break;
+            offerCast(
+              alt.manaCost,
+              spellAdditionalCosts,
+              { ...def, spellAbility: alt.ability },
+              { alternativeCast: alt.kind, altIndex: index },
+              ` via ${alt.kind === 'omen' ? 'Omen' : 'Adventure'}`,
+              0,
+              alt.typeLine?.includes('Instant') === true,
+              alt.name ?? obj.name,
+            );
+            break;
+          case 'mdfc':
+            // The supported alternate face is a land play, already offered above.
+            break;
+          default:
+            assertNever(alt.kind, 'alternative cast kind');
         }
       }
     }
@@ -1532,8 +1432,21 @@ export function validateChosenTargets(
   casterId: PlayerId,
   chosen: ReadonlyMap<number, ObjectId>,
   activeSlots?: readonly number[],
+  sourceCardId?: string,
 ): ObjectId[] {
   const targets: ObjectId[] = [];
+  const specs = def.spellAbility?.targets ?? [];
+  for (const slot of chosen.keys()) {
+    if (
+      !Number.isSafeInteger(slot) ||
+      slot < 0 ||
+      specs[slot] === undefined ||
+      specs[slot]?.count !== undefined ||
+      (activeSlots !== undefined && !activeSlots.includes(slot))
+    ) {
+      throw new Error(`unexpected ordinary target slot ${slot} of ${def.name}`);
+    }
+  }
   for (const [slotNum, spec] of (def.spellAbility?.targets ?? []).entries()) {
     if (activeSlots !== undefined && !activeSlots.includes(slotNum)) continue;
     if (spec.count !== undefined) continue;
@@ -1545,6 +1458,7 @@ export function validateChosenTargets(
       !targetIsLegal(ctx, spec, choice, {
         controllerId: casterId,
         sourceColors: def.colors,
+        ...(sourceCardId === undefined ? {} : { sourceCardId }),
         chosenTargets: targets,
         phase: 'announcement',
       })
