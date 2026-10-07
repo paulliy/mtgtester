@@ -1317,12 +1317,12 @@ export function* executeAbility(
     });
     switch (effect.op) {
       case 'transformSelf': {
-        const current = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
+        const current = sourcePermanent();
         if (current !== undefined) transformPermanent(ctx, current);
         break;
       }
       case 'selfToLibraryTop': {
-        const current = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
+        const current = sourcePermanent();
         // `moveObject` already routes to the OWNER's library, which is what "its owner's
         // library" asks for even when someone else controls the permanent.
         if (current !== undefined)
@@ -3369,11 +3369,12 @@ export function* executeAbility(
           sourceOracleId: source.oracleId as never,
           controllerId: controller.id,
           targetId: source.cardId,
+          targetObjectId: permanent.id,
           when: 'endStep',
           ability: {
             kind: 'triggered',
             targets: [],
-            effects: [{ op: 'exileSource' }],
+            effects: [{ op: 'exile', target: 'triggerObject' }],
             description: 'Exile this permanent',
           },
           expiry: 'endStep',
@@ -3381,9 +3382,7 @@ export function* executeAbility(
         break;
       }
       case 'exileSource': {
-        const permanent = ctx.state.battlefield.find(
-          (candidate) => candidate.cardId === source.cardId,
-        );
+        const permanent = sourcePermanent();
         if (permanent !== undefined) yield* moveObject(ctx, permanent, { zone: 'exile' });
         break;
       }
