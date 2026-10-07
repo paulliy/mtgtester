@@ -63,6 +63,18 @@ describe('bounded authoring IR graph contracts', () => {
     expect(issues[0]?.message).toContain('budget');
   });
 
+  it('counts primitive leaves in wide arrays against the graph budget', () => {
+    const issues: AuthoringIssue[] = [];
+    expect(
+      validateIRGraph(
+        Array.from({ length: 100_000 }, () => 'leaf'),
+        'root',
+        issues,
+      ),
+    ).toBe(false);
+    expect(issues[0]?.message).toContain('budget');
+  });
+
   it('bounds repeated node occurrences while allowing normal shared data', () => {
     const leaf = {};
     const issues: AuthoringIssue[] = [];

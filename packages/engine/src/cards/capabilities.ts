@@ -1187,7 +1187,7 @@ function object(value: unknown, path: string): Record<string, unknown> {
 }
 
 /** Dependencies present in final IR, including alternate faces and nested token behavior. */
-export function deriveCardCapabilities(definition: CardDefinition): string[] {
+function cardFieldCapabilities(definition: Partial<CardDefinition>): string[] {
   const capabilities = new Set<string>();
   const active = new Set<object>();
   let visited = 0;
@@ -1283,6 +1283,16 @@ export function deriveCardCapabilities(definition: CardDefinition): string[] {
   }
   node(definition, 'CardDefinition', 'card');
   return [...capabilities].sort();
+}
+
+/** Structural field coverage for full definitions and partial authored patches; no evidence claim. */
+export function validateCardIRFields(definition: Partial<CardDefinition>): void {
+  cardFieldCapabilities(definition);
+}
+
+/** Derive dependencies only from a fully typed executable definition. */
+export function deriveCardCapabilities(definition: CardDefinition): string[] {
+  return cardFieldCapabilities(definition);
 }
 
 export interface CapabilityConsumer {

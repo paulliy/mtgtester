@@ -5,12 +5,16 @@ export function validateIRGraph(value: unknown, path: string, issues: AuthoringI
   const active = new Set<object>();
   let nodes = 0;
   function visit(entry: unknown, at: string): boolean {
+    if (++nodes > 100_000) {
+      issues.push({ path: at, message: 'IR graph exceeds depth or node budget' });
+      return false;
+    }
     if (entry === null || typeof entry !== 'object') return true;
     if (active.has(entry)) {
       issues.push({ path: at, message: 'cyclic IR graph' });
       return false;
     }
-    if (active.size >= 128 || ++nodes > 100_000) {
+    if (active.size >= 128) {
       issues.push({ path: at, message: 'IR graph exceeds depth or node budget' });
       return false;
     }
