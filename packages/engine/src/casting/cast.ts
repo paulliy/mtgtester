@@ -618,14 +618,12 @@ function* proposeCast(
   } else if (payload.alternativeCast === 'overload') {
     const alt = selectedAlternative;
     if (alt?.kind !== 'overload') throw new Error('missing overload cost');
+    if (alt.ability === undefined)
+      throw new Error('overload alternative has no executable ability');
     cost = alt.manaCost;
     abilityDef = {
       ...def,
-      spellAbility: alt.ability ?? {
-        kind: 'spell',
-        targets: [],
-        effects: [{ op: 'overloadBounceAllNonlandOpponents' }],
-      },
+      spellAbility: alt.ability,
     };
   } else if (payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen') {
     const alt = selectedAlternative;

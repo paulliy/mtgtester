@@ -11,7 +11,7 @@
  */
 
 import type { Color, OracleCard } from '@mtg/shared';
-import { enforceCardDefinition } from './authoring-validation';
+import { enforceInterpretedDefinition } from './overload';
 import { emptyCost, parseManaCost } from '../mana/cost';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type {
@@ -6903,7 +6903,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   // An authored override may implement lines the grammar cannot read (ADR 0010). It clears
   // only the specific reasons it names, so an errata'd card re-opens loudly rather than
   // silently keeping stale behavior â€” see `overrides/index.ts`.
-  return enforceCardDefinition(
+  return enforceInterpretedDefinition(
     applyOverride({
       oracleId: card.oracleId,
       scryfallId: card.scryfallId,
