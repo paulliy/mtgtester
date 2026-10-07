@@ -6,5 +6,10 @@
     "types": ["node", "bun"],
     "rootDir": "../.."
   },
-  "include": ["*.ts", "../test-primitive-contracts.ts", "../card-capability-impact.ts"]
+  "include": [
+    "*.ts",
+    "../test-primitive-contracts.ts",
+    "../card-capability-impact.ts",
+    "../check-primitive-promotions.ts"
+  ]
 }

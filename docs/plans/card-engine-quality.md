@@ -226,6 +226,12 @@ Register executable primitive contracts and required case IDs once per capabilit
 must actually execute required cases; test-file existence or source-text names are not
 behavioral proof. Changed primitives update their contracts independently of card wiring.
 Source changes within the same discriminator also invalidate prior evidence.
+Historical implementation declarations remain review history; a label alone grants no
+current eligibility. Generate lifecycle states from registered contracts and fresh executions,
+and expose the supported scope beside each proven capability. Enforce primitive prerequisites
+in CI for new or changed reviewed declarations (including changed pinned clauses); preserve
+independent card/viewer gates. A tooling review request for any existing declaration must also
+fail if its current dependencies are experimental or outside proven scope.
 
 Keep capability lifecycle distinct from card evidence. Experimental capabilities cannot
 support reviewed cards. Engine-proven eligibility is generated from current passing
@@ -572,6 +578,17 @@ and report the exact failed action, attempted recovery, and remaining work.
   changing-resource casting checks. Constructor binding guards (`8e3d9d3`) reject local
   re-exports, dynamic imports and aliased stack literals while retaining the explicit trigger
   helper route; all 58 focused combined checks, test/tooling types and lint pass.
+- Capability lifecycle and promotion prerequisites are generated from executable registrations,
+  current loader-validated receipts and exact supported scope. CLI review requests reject
+  experimental/missing dependencies, unproven composition scopes and changed Oracle pins.
+  CI checks new or changed reviewed declarations against the base commit, and retains a
+  current impact/lifecycle artifact alongside the primitive receipts. Historical labels do
+  not grant current certification. Both established complete-projection pin encodings are
+  accepted; changed text/cost is rejected under either encoding.
+  All 65 lifecycle/receipt/promotion contracts pass without reporting errors, with production
+  and test/tooling types and lint. Earlier runs retain their hook/RPC failures separately.
+  Asynchronous child execution and yielding between receipt cases correct event-loop starvation;
+  the hook deadline now covers both independently bounded child operations.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR

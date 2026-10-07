@@ -44,6 +44,15 @@ request:
 The manifest declares requirements and mappings. Tools generate pass/fail/skip evidence; humans do
 not handwrite success flags.
 
+Primitive prerequisites are generated separately from those declarations. Run
+`bun run test:primitive-contracts --output <new-directory>` for current executable receipts,
+then `bun run card-capabilities --primitive-evidence <directory> --review-manifest <manifest>`
+to enforce them for reviewed claims against exact Oracle pins. The CLI fails on unknown or
+experimental dependencies, unsupported contract scope, stale receipts or missing pins.
+CI checks new and changed reviewed declarations against the base commit using
+`bun run primitive-promotions --base <full-commit-sha> --primitive-evidence <directory>`.
+Unchanged historical review labels never supply current primitive, card or viewer evidence.
+
 The Card Test Lab now runs deterministic prepared scenarios through the production engine and
 WebSocket protocol. Its Playwright suite drives the real frontend and backend and retains traces.
 Use it for reproducible clause-level viewer evidence. A curated 100-card match remains necessary
