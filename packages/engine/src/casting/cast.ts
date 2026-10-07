@@ -38,6 +38,7 @@ import {
   getDefByOracleId,
   playFromZonePermission,
   wardCostOf,
+  requireModeled,
 } from '../state/queries';
 import type {
   EngineCardObject,
@@ -390,6 +391,7 @@ function* proposeCast(
         ].find((card) => card === permittedCard && card.id === payload.objectId);
   if (obj === undefined) throw new Error('engine bug: spell to cast not found');
   const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+  requireModeled(def, 'casting a spell');
   if (def.types.includes('Land')) throw new Error('a land cannot be cast as a spell');
   if (
     resolutionPermission === undefined &&

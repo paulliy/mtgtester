@@ -152,7 +152,12 @@ describe('shared free-casting contracts', () => {
         },
       },
     });
-    pump(resolveFreeCard(ctx, card, 'P1'), () => ({ index: 0, targets: new Map() }));
+    pump(resolveFreeCard(ctx, card, 'P1'), (decision) => ({
+      index: 0,
+      targets: new Map(
+        (decision.options[0]?.targets ?? []).map((slot) => [slot.slot, slot.options[0]!]),
+      ),
+    }));
     const stack = ctx.state.stack[0]!;
     expect(stack.targets[0]).toBeUndefined();
     expect(stack.targets[1]).toBe('P1');
@@ -277,6 +282,66 @@ describe('shared free-casting contracts', () => {
     ).toHaveLength(1);
     pump(resolveTopOfStack(ctx));
     expect(target.counters['+1/+1']).toBe(2);
+  });
+
+  it('a permission cannot cast a stale object with the same physical card identity', () => {
+    const { ctx, card } = setup();
+    const before = cloneContractContext(ctx);
+    const stale = { ...card };
+    expect(freeCardIsCastable(ctx, stale, 'P1')).toBe(false);
+    pump(resolveFreeCard(ctx, stale, 'P1'));
+    expect(ctx.state).toEqual(before.state);
+    expect(freeCardIsCastable(ctx, card, 'P1')).toBe(true);
+  });
+
+  it.each(['missing', 'illegal', 'extra'] as const)(
+    'rejects a %s free-cast target response before creating a proposal',
+    (kind) => {
+      const { ctx, card } = setup([], {
+        spellAbility: {
+          kind: 'spell',
+          targets: [{ kind: 'creature' }],
+          effects: [{ op: 'putCounters', target: 0, counter: '+1/+1', count: 1 }],
+        },
+      });
+      const target = spawn(ctx, 'P2', bear());
+      const before = cloneContractContext(ctx);
+      const flow = resolveFreeCard(ctx, card, 'P1');
+      expect(flow.next().done).toBe(false);
+      const response =
+        kind === 'missing'
+          ? new Map()
+          : kind === 'illegal'
+            ? new Map([[0, 'P2']])
+            : new Map([
+                [0, target.id],
+                [999, target.id],
+              ]);
+      expect(() => flow.next({ index: 0, targets: response })).toThrow(
+        'invalid free-cast target response',
+      );
+      expect(ctx.state).toEqual(before.state);
+      expect(ctx.debugLog).toEqual(before.debugLog);
+    },
+  );
+
+  it('a direct casting request cannot bypass explicit unsupported behavior', () => {
+    const { ctx, player, card } = setup([], {
+      modeled: false,
+      unmodeledReasons: ['Unsupported primitive contract'],
+    });
+    const before = cloneContractContext(ctx);
+    expect(() =>
+      pump(
+        applyPriorityAction(
+          ctx,
+          player,
+          { kind: 'castSpell', objectId: card.id, fromCommand: false, fromExile: true },
+          { index: 0, targets: new Map() },
+        ),
+      ),
+    ).toThrow('Unsupported primitive contract');
+    expect(ctx.state).toEqual(before.state);
   });
 
   it.each([

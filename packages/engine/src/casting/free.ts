@@ -41,6 +41,19 @@ function legalFreeCastSelections(
     castingSpellsBlockedFor(ctx, controllerId)
   )
     return [];
+  // Permissions name a particular zone object, never merely its physical card identity.
+  if (
+    ![
+      ...ctx.state.exile,
+      ...ctx.state.players.flatMap((owner) => [
+        ...owner.hand,
+        ...owner.library,
+        ...owner.graveyard,
+        ...owner.commandZone,
+      ]),
+    ].includes(card)
+  )
+    return [];
   const preview = castingPreviewContext(ctx, card, controllerId);
   const previewPlayer = preview.state.players.find((candidate) => candidate.id === controllerId)!;
   const selections: FreeCastSelection[] = [];
@@ -168,8 +181,14 @@ export function* resolveFreeCard(
         : { targets: [...selection.targets].map(([slot, id]) => ({ slot, options: [id] })) }),
     })),
   };
-  const selection = selections[outcome.index];
+  const selection = Number.isSafeInteger(outcome.index) ? selections[outcome.index] : undefined;
   if (selection === undefined) throw new Error('invalid free-cast configuration');
+  if (
+    outcome.targets.size !== selection.targets.size ||
+    [...selection.targets].some(([slot, id]) => outcome.targets.get(slot) !== id)
+  ) {
+    throw new Error('invalid free-cast target response');
+  }
   const player = ctx.state.players.find((candidate) => candidate.id === controllerId)!;
   yield* castSpell(
     ctx,
