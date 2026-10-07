@@ -246,4 +246,52 @@ describe('independent combined spell-payment contracts', () => {
       planSpellPayment(ctx, player, { ...request, mana: emptyCost(), costs: [{ kind: 'tap' }] }),
     ).toBeNull();
   });
+  it('advertises only complete ordinary target assignments when taxes share one life budget', () => {
+    const { ctx, player, spell } = setup([]);
+    player.life = 3;
+    const first = spawn(ctx, 'P2', bear());
+    spawn(ctx, 'P2', bear());
+    ctx.defs.set(first.oracleId, {
+      ...ctx.defs.get(first.oracleId)!,
+      ruleStatics: [{ kind: 'targetLifeTax', amount: 3 }],
+    });
+    ctx.defs.set(spell.oracleId, {
+      ...ctx.defs.get(spell.oracleId)!,
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          { kind: 'creature', controller: 'opponent' },
+          { kind: 'creature', controller: 'opponent' },
+        ],
+        effects: [
+          { op: 'destroy', target: 0 },
+          { op: 'destroy', target: 1 },
+        ],
+      },
+    });
+    const offered = computePriorityOptions(ctx, player).filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'castSpell' && payload.objectId === spell.id;
+    });
+    expect(offered).toHaveLength(2);
+    for (const option of offered) {
+      expect(option.targets?.[0]?.options).toEqual(option.targets?.[1]?.options);
+      const proof = checkContinuations(ctx, function* (branch) {
+        const outcome = yield {
+          decisionType: 'priority',
+          player: 'P1',
+          prompt: 'tax contract',
+          options: [option],
+        };
+        yield* applyPriorityAction(
+          branch,
+          branch.state.players[0]!,
+          option.payload as PriorityActionPayload,
+          outcome,
+        );
+      });
+      expect(proof.failures).toEqual([]);
+      expect(proof.completions).toBe(1);
+    }
+  });
 });

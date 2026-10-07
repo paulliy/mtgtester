@@ -119,6 +119,25 @@ describe('buildSpectatorState', () => {
 });
 
 describe('formatSpectatorLine', () => {
+  it('narrates resolution casts once, including forced configurations', () => {
+    expect(
+      formatSpectatorLine(
+        event({ type: 'castSpell', payload: { name: 'Hidden spell', duringResolution: true } }),
+      )?.text,
+    ).toBe('casts Hidden spell without paying its mana cost');
+    expect(
+      formatSpectatorLine(
+        event({
+          type: 'decision',
+          payload: { actionType: 'castFree', description: 'Cast Hidden spell' },
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      formatSpectatorLine(event({ type: 'castSpell', payload: { name: 'Normal spell' } })),
+    ).toBeNull();
+  });
+
   it('drops priority passes, which are the majority of decisions and say nothing', () => {
     const line = formatSpectatorLine(
       event({ type: 'decision', payload: { description: 'Pass priority' } }),

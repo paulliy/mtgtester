@@ -51,16 +51,6 @@ import {
 import { breakYieldsForStop } from '../turn/stops';
 
 /**
- * The `Ability` a cast actually puts on the stack. A permanent card can print "this spell can't
- * be countered" with no `spellAbility` to carry the flag on (Dragonlord Dromoka) — give such a
- * cast a minimal zero-effect stack ability instead, purely so `protectedFromCounter` can see it.
- *
- * A modal spell's mode was chosen at announcement (CR 601.2b), as part of the option offered by
- * `computePriorityOptions` — substitute the chosen mode's `effects` for the ability's own here,
- * so the executor and every downstream consumer (fizzle check, description) never has to know
- * `modes` exists at all.
- */
-/**
  * Pay a whole activation cost. A source that is itself tapped as a cost must be excluded from
  * the mana plan, so those non-mana costs are paid first. Sacrifice-another costs are different:
  * the player may use the permanent for mana before sacrificing it, and the sacrifice choice is

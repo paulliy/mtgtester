@@ -1,4 +1,5 @@
-import { chooseSpellPayment } from '../mana/spell-payment';
+import { countTargetsCanComplete, type CountedTargetChoices } from '../targets/announcement';
+import { chooseSpellPayment, planSpellPayment } from '../mana/spell-payment';
 /**
  * Shared casting entry point extracted from priority actions. Resolution permissions are
  * migrated here incrementally; this module owns configuration, targeting, payment, and casts.
@@ -32,6 +33,7 @@ import {
 } from '../state/objects';
 import {
   castFromLibraryTopCandidates,
+  castingSpellsBlockedFor,
   getDefByOracleId,
   playFromZonePermission,
   wardCostOf,
@@ -92,6 +94,12 @@ function resolveCastAbility(
   if (indices.length < modes.minChoices || indices.length > (maxChoices ?? modes.maxChoices)) {
     throw new Error(`engine bug: invalid mode count ${indices.length} for ${cardName}`);
   }
+  if (modes.repeatable !== true && new Set(indices).size !== indices.length) {
+    throw new Error(`repeated mode is not legal for ${cardName}`);
+  }
+  if (indices.some((index) => !Number.isSafeInteger(index) || index < 0)) {
+    throw new Error(`invalid mode index for ${cardName}`);
+  }
   const chosen = indices.map((index) => modes.options[index]);
   if (chosen.some((option) => option === undefined)) {
     throw new Error(`engine bug: invalid modes ${indices.join(',')} for ${cardName}`);
@@ -105,7 +113,7 @@ export function queueWardTriggers(
   stackObjectId: ObjectId,
   targets: readonly ObjectId[],
 ): void {
-  for (const targetId of targets) {
+  for (const targetId of new Set(targets)) {
     const perm = ctx.state.battlefield.find((p) => p.id === targetId);
     if (perm === undefined) continue;
     // "an opponent controls" — a permanent's own controller never triggers its ward.
@@ -148,7 +156,7 @@ export function queueBecomesTargetedTriggers(
   sourceControllerId: PlayerId,
   targets: readonly ObjectId[],
 ): void {
-  const subjects = targets
+  const subjects = [...new Set(targets)]
     .map((id) => ctx.state.battlefield.find((p) => p.id === id))
     .filter((p): p is EnginePermanent => p !== undefined)
     .map((permanent) => ({ permanent, sourceControllerId }));
@@ -197,13 +205,26 @@ export function* chooseCountTargets(
   activeSlots?: readonly number[],
   /** The spell's or ability source's colors, for protection (CR 702.16). */
   sourceColors?: readonly Color[],
+  payable: (chosen: CountedTargetChoices) => boolean = () => true,
+  x = 0,
 ): GameGen<{
   countTargets: Record<number, ObjectId[]>;
   divisionAmounts: Record<ObjectId, number>;
 }> {
   const countTargets: Record<number, ObjectId[]> = {};
   const divisionAmounts: Record<ObjectId, number> = {};
-  const chosen = new Set<ObjectId>(ordinaryTargets);
+  const context = {
+    controllerId: playerId,
+    sourceCardId,
+    chosenTargets: ordinaryTargets,
+    x,
+    ...(sourceColors === undefined ? {} : { sourceColors }),
+  };
+  if (!countTargetsCanComplete(ctx, ability, context, {}, activeSlots, payable)) {
+    throw new Error(
+      'spell total cost is not jointly payable: required counted targets have no completion',
+    );
+  }
   for (const [slot, spec] of ability.targets.entries()) {
     if (spec.count === undefined || (activeSlots !== undefined && !activeSlots.includes(slot)))
       continue;
@@ -214,7 +235,7 @@ export function* chooseCountTargets(
     const total =
       divided === undefined
         ? undefined
-        : evaluateValueIn(ctx, divided.total, { controllerId: playerId, sourceCardId });
+        : evaluateValueIn(ctx, divided.total, { controllerId: playerId, sourceCardId, x });
     const maximum = Math.min(spec.count.max, total ?? Infinity);
     const picked: ObjectId[] = [];
     for (let index = 0; index < maximum; index++) {
@@ -230,10 +251,30 @@ export function* chooseCountTargets(
           undefined,
           ordinaryTargets,
           sourceCardId,
-        ).filter((id) => !chosen.has(id)),
+        ).filter(
+          (id) =>
+            !picked.includes(id) &&
+            countTargetsCanComplete(
+              ctx,
+              ability,
+              context,
+              { ...countTargets, [slot]: [...picked, id] },
+              activeSlots,
+              payable,
+            ),
+        ),
       );
       if (candidates.length === 0) break;
-      const canStop = picked.length >= spec.count.min;
+      const canStop =
+        picked.length >= spec.count.min &&
+        countTargetsCanComplete(
+          ctx,
+          ability,
+          context,
+          { ...countTargets, [slot]: picked },
+          activeSlots,
+          payable,
+        );
       const outcome = yield {
         decisionType: 'general',
         player: playerId,
@@ -246,10 +287,15 @@ export function* chooseCountTargets(
           ...(canStop ? [{ type: 'decline', description: 'Choose no more targets' }] : []),
         ],
       };
-      if (outcome.index >= candidates.length) break;
+      if (
+        !Number.isSafeInteger(outcome.index) ||
+        outcome.index < 0 ||
+        outcome.index >= candidates.length + (canStop ? 1 : 0)
+      )
+        throw new Error('invalid counted target choice');
+      if (outcome.index === candidates.length) break;
       const id = candidates[outcome.index] as ObjectId;
       picked.push(id);
-      chosen.add(id);
     }
     if (picked.length < spec.count.min) {
       throw new Error(`missing required counted targets for slot ${slot}`);
@@ -270,7 +316,8 @@ export function* chooseCountTargets(
           prompt: `Assign damage to ${targetId}`,
           options: choices.map((amount) => ({ type: 'assignDamage', description: `${amount}` })),
         };
-        const assigned = choices[outcome.index] ?? 1;
+        const assigned = choices[outcome.index];
+        if (assigned === undefined) throw new Error('invalid damage division');
         divisionAmounts[targetId] = assigned;
         remaining -= assigned;
       }
@@ -284,8 +331,38 @@ export function* castSpell(
   player: EnginePlayerState,
   payload: Extract<PriorityActionPayload, { kind: 'castSpell' }>,
   outcome: DecisionOutcome,
+  /** Internal, immediate permission from the resolving instruction, never a client payload. */
+  resolutionPermission?: { card: EngineCardObject; withoutManaCost: true },
 ): GameGen<void> {
   const s = ctx.state;
+  if (!s.players.includes(player) || player.hasLost) throw new Error('invalid casting player');
+  if (castingSpellsBlockedFor(ctx, player.id)) throw new Error('casting spells is prohibited');
+  const flags = [
+    payload.fromCommand,
+    payload.fromExile,
+    payload.fromLibraryTop,
+    payload.fromGraveyard,
+  ];
+  if (flags.filter((flag) => flag === true).length > 1)
+    throw new Error('conflicting casting source zones');
+  for (const value of [payload.x, payload.optionalCostCount, payload.altIndex]) {
+    if (value !== undefined && (!Number.isSafeInteger(value) || value < 0)) {
+      throw new Error('invalid casting configuration');
+    }
+  }
+  if (
+    payload.modes !== undefined &&
+    payload.mode !== undefined &&
+    (payload.modes.length !== 1 || payload.modes[0] !== payload.mode)
+  ) {
+    throw new Error('conflicting mode configuration');
+  }
+  if (
+    resolutionPermission !== undefined &&
+    (payload.alternativeCast !== undefined || (payload.x ?? 0) !== 0)
+  ) {
+    throw new Error('without-mana-cost permission cannot combine alternative costs or nonzero X');
+  }
 
   const fromZone =
     payload.fromExile === true
@@ -297,15 +374,45 @@ export function* castSpell(
           : payload.fromCommand
             ? player.commandZone
             : player.hand;
-  const obj = fromZone.find((o) => o.id === payload.objectId);
+  const permittedCard = resolutionPermission?.card;
+  const obj =
+    permittedCard === undefined
+      ? fromZone.find((o) => o.id === payload.objectId)
+      : [
+          ...s.exile,
+          ...s.players.flatMap((p) => [...p.hand, ...p.library, ...p.graveyard, ...p.commandZone]),
+        ].find((card) => card === permittedCard && card.id === payload.objectId);
   if (obj === undefined) throw new Error('engine bug: spell to cast not found');
   const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+  if (def.types.includes('Land')) throw new Error('a land cannot be cast as a spell');
+  if (
+    resolutionPermission === undefined &&
+    payload.alternativeCast === undefined &&
+    def.manaCost === null
+  ) {
+    throw new Error('a spell with no mana cost requires an alternative cost');
+  }
+  if (
+    payload.fromLibraryTop === true &&
+    resolutionPermission === undefined &&
+    player.library[0] !== obj
+  ) {
+    throw new Error('card is not on top of the library');
+  }
   let consumeZonePermission: 'libraryTop' | 'graveyard' | undefined;
-  if (payload.fromGraveyard === true && payload.alternativeCast === undefined) {
+  if (
+    resolutionPermission === undefined &&
+    payload.fromGraveyard === true &&
+    payload.alternativeCast === undefined
+  ) {
     validatePlayFromZonePermission(ctx, player, obj, 'graveyard', payload.zoneBudgetType);
     consumeZonePermission = 'graveyard';
   }
-  if (payload.fromLibraryTop === true && payload.alternativeCast === undefined) {
+  if (
+    resolutionPermission === undefined &&
+    payload.fromLibraryTop === true &&
+    payload.alternativeCast === undefined
+  ) {
     const permission = playFromZonePermission(ctx, player.id, obj, 'libraryTop');
     if (permission !== null) {
       validatePlayFromZonePermission(ctx, player, obj, 'libraryTop', payload.zoneBudgetType);
@@ -316,6 +423,7 @@ export function* castSpell(
   }
   let castingAdditionalCosts: AbilityCost[] = [...(def.spellAdditionalCosts ?? [])];
   if (
+    resolutionPermission === undefined &&
     payload.fromExile === true &&
     obj.onAdventure !== true &&
     obj.playableUntilEotBy !== player.id
@@ -425,7 +533,13 @@ export function* castSpell(
     ability = alt.ability ?? { kind: 'spell', targets: [], effects: [] };
     targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
   } else {
-    cost = withX(addGeneric(def.manaCost ?? emptyCost(), tax), payload.x ?? 0);
+    cost = withX(
+      addGeneric(
+        resolutionPermission === undefined ? (def.manaCost ?? emptyCost()) : emptyCost(),
+        tax,
+      ),
+      payload.x ?? 0,
+    );
     const selectedModes =
       payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
     castingAdditionalCosts = [
@@ -434,7 +548,11 @@ export function* castSpell(
     ];
     const optional = def.optionalAdditionalCost;
     const optionalCostCount = payload.optionalCostCount ?? 0;
-    if (optionalCostCount < 0 || (optional?.repeatable !== true && optionalCostCount > 1)) {
+    if (
+      !Number.isSafeInteger(optionalCostCount) ||
+      optionalCostCount < 0 ||
+      (optional?.repeatable !== true && optionalCostCount > 1)
+    ) {
       throw new Error('engine bug: invalid optional additional-cost count');
     }
     if (optionalCostCount > 0 && optional === undefined) {
@@ -464,6 +582,22 @@ export function* castSpell(
     );
   }
 
+  // Payment preview narrows targeting continuations before anything is paid.
+  const totalMana = applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts)));
+  const payableTargets = (chosen: CountedTargetChoices): boolean =>
+    planSpellPayment(ctx, player, {
+      mana: totalMana,
+      costs: castingAdditionalCosts,
+      sourceCardId: obj.cardId,
+      sourceOracleId: obj.oracleId,
+      sourceIsCommander: obj.isCommander,
+      x: payload.x ?? 0,
+      energyAlternativeCost: energyAlternativeCostToPay,
+      targetLifeTax: targetLifeTaxFor(ctx, player.id, [
+        ...targets,
+        ...Object.values(chosen).flat(),
+      ]),
+    }) !== null;
   const counted = yield* chooseCountTargets(
     ctx,
     ability,
@@ -475,11 +609,13 @@ export function* castSpell(
       payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined),
     ),
     def.colors,
+    payableTargets,
+    payload.x ?? 0,
   );
   const allTargets = [...targets, ...Object.values(counted.countTargets).flat()];
   // CR 601.2f: reductions apply once, to the TOTAL — mana cost with X announced plus every
   // additional cost — exactly as `computePriorityOptions` priced the offered action.
-  cost = applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts)));
+  cost = totalMana;
   const targetLifeTax = targetLifeTaxFor(ctx, player.id, allTargets);
   const payment = yield* chooseSpellPayment(ctx, player, {
     mana: cost,
@@ -574,7 +710,8 @@ export function* castSpell(
       : {}),
     ...(exileOnResolution ? { exileOnResolution: true } : {}),
     ...(escaped ? { escaped: true } : {}),
-    ...(payload.fromExile !== true &&
+    ...(resolutionPermission === undefined &&
+    payload.fromExile !== true &&
     payload.fromLibraryTop !== true &&
     payload.fromGraveyard !== true &&
     payload.fromCommand !== true &&
@@ -595,6 +732,7 @@ export function* castSpell(
       targets,
       fromCommand: payload.fromCommand,
       commanderTax: tax,
+      ...(resolutionPermission === undefined ? {} : { duringResolution: true }),
     },
     player.id,
   );

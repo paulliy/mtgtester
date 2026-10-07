@@ -1,3 +1,4 @@
+import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
 import { targetIsLegal } from '../targets/legality';
 import { captureResolutionTargets, type ResolutionTargets } from '../targets/resolution';
 import { assertNever } from '../utils/assert-never';
@@ -8,21 +9,11 @@ import { assertNever } from '../utils/assert-never';
 
 import type { Color, ObjectId, PlayerId } from '@mtg/shared';
 import { ALL_COLORS } from '@mtg/shared';
-import {
-  canPaySpellAdditionalCosts,
-  computeTargetOptions,
-  manaPortionOf,
-  maxChoicesFor,
-  modalSelections,
-  permanentManaValue,
-  selectedModeTargetSlots,
-} from '../actions/legal';
 import { abilityModeSelections } from '../actions/ability-modes';
 import type { WardCost } from '../cards/ability';
 import type {
   Ability,
   AbilityCost,
-  CardDefinition,
   Effect,
   EffectRef,
   SearchDestination,
@@ -73,8 +64,6 @@ import {
   moveObjects,
   movePermanentsToGraveyard,
   playerById,
-  queueCastTriggers,
-  queueKeywordCastTriggers,
   queuePlayerTriggersForEvent,
   queueTriggersForEvent,
   queueTriggersForObject,
@@ -93,6 +82,7 @@ import {
   effectivePT,
   findPermanent,
   getDefByOracleId,
+  landPlayLimitFor,
   hasKeyword,
   hasProtectionFrom,
   isCreaturePermanent,
@@ -113,7 +103,6 @@ import type {
   EngineStackObject,
   GameContext,
 } from '../state/types';
-import { breakYieldsForStop } from '../turn/stops';
 
 function* destroyPermanent(
   ctx: GameContext,
@@ -1039,195 +1028,6 @@ function* resolveReboundCastFromExile(
   yield* resolveFreeCard(ctx, card, controllerId);
 }
 
-function abilityForModes(def: CardDefinition, selectedModes: number[] | undefined): Ability | null {
-  if (def.spellAbility === null) {
-    return def.spellCantBeCountered === true
-      ? { kind: 'spell', targets: [], effects: [], cantBeCountered: true }
-      : null;
-  }
-  const modes = def.spellAbility.modes;
-  if (modes === undefined) return def.spellAbility;
-  const chosen = (selectedModes ?? [0]).map((index) => modes.options[index]);
-  if (chosen.some((option) => option === undefined)) return null;
-  return { ...def.spellAbility, effects: chosen.flatMap((option) => option?.effects ?? []) };
-}
-
-function legalFreeCastSelections(
-  ctx: GameContext,
-  card: EngineCardObject,
-  controllerId: PlayerId,
-): (number[] | undefined)[] {
-  const def = getDefByOracleId(ctx, card.oracleId, card.name);
-  const controller = playerById(ctx, controllerId);
-  const selections = modalSelections(
-    def,
-    maxChoicesFor(ctx, def, { cardId: card.cardId, controllerId }),
-  );
-  return selections.filter((selectedModes) => {
-    const activeSlots = selectedModeTargetSlots(def, selectedModes);
-    const targetSpecs = def.spellAbility?.targets ?? [];
-    const hasTargets = targetSpecs.every((spec, index) =>
-      activeSlots !== undefined && !activeSlots.includes(index)
-        ? true
-        : computeTargetOptions(ctx, spec, controllerId, def.colors).length > 0,
-    );
-    if (!hasTargets) return false;
-    const modeCosts =
-      selectedModes?.flatMap(
-        (mode) => def.spellAbility?.modes?.options[mode]?.additionalCost ?? [],
-      ) ?? [];
-    const costs = [...(def.spellAdditionalCosts ?? []), ...modeCosts];
-    const mana = manaPortionOf(costs);
-    return (
-      canPay(
-        mana,
-        controller.manaEntries,
-        manaSourcesFor(ctx, controllerId),
-        allowanceFor(ctx, controllerId, {
-          kind: 'castSpell',
-          oracleId: card.oracleId,
-          isCommander: card.isCommander,
-        }),
-      ) && canPaySpellAdditionalCosts(ctx, controller, costs, card.cardId, false)
-    );
-  });
-}
-
-/** Cast a card without paying its mana cost, using the normal stack and announcement rules. */
-function* resolveFreeCard(
-  ctx: GameContext,
-  card: EngineCardObject,
-  controllerId: PlayerId,
-): GameGen<void> {
-  const def = getDefByOracleId(ctx, card.oracleId, card.name);
-  const controller = playerById(ctx, controllerId);
-  const selections = legalFreeCastSelections(ctx, card, controllerId);
-  if (selections.length === 0) return;
-  let selectedModes = selections[0];
-  if (selections.length > 1) {
-    const outcome = yield {
-      decisionType: 'general' as const,
-      player: controllerId,
-      prompt: `Choose modes for free-cast ${card.name}.`,
-      options: selections.map((selection) => ({
-        type: 'chooseModes',
-        description:
-          selection === undefined
-            ? `Cast ${card.name}`
-            : selection
-                .map(
-                  (mode) =>
-                    def.spellAbility?.modes?.options[mode]?.description ?? `mode ${mode + 1}`,
-                )
-                .join('; '),
-      })),
-    };
-    selectedModes = selections[outcome.index] ?? selections[0];
-  }
-  const ability = abilityForModes(def, selectedModes);
-  const activeSlots = selectedModeTargetSlots(def, selectedModes);
-  const targetSlots =
-    ability?.targets.flatMap((spec, index) =>
-      activeSlots !== undefined && !activeSlots.includes(index)
-        ? []
-        : [{ slot: index, options: computeTargetOptions(ctx, spec, controllerId, def.colors) }],
-    ) ?? [];
-  const targets: ObjectId[] = [];
-  if (targetSlots.length > 0) {
-    const outcome = yield {
-      decisionType: 'chooseTargets',
-      player: controllerId,
-      prompt: `Choose targets for free-cast ${card.name}.`,
-      options: [
-        {
-          type: 'chooseTargets',
-          description: `Targets for ${card.name}`,
-          targets: targetSlots.map((slot, index) => ({ slot: index, options: slot.options })),
-          interaction: {
-            kind: 'choice',
-            targetSlots: targetSlots.map((slot) => ({ slot: slot.slot, options: slot.options })),
-          },
-        },
-      ],
-    };
-    for (const slot of targetSlots)
-      targets[slot.slot] = outcome.targets.get(slot.slot) ?? (slot.options[0] as ObjectId);
-  }
-
-  const modeCosts =
-    selectedModes?.flatMap(
-      (mode) => def.spellAbility?.modes?.options[mode]?.additionalCost ?? [],
-    ) ?? [];
-  const additionalCosts = [...(def.spellAdditionalCosts ?? []), ...modeCosts];
-  const additionalMana = manaPortionOf(additionalCosts);
-  if (totalPips(additionalMana) > 0) {
-    yield* payManaCost(ctx, controller, additionalMana, {
-      kind: 'castSpell',
-      oracleId: card.oracleId,
-      isCommander: card.isCommander,
-    });
-  }
-  yield* paySpellAdditionalCosts(ctx, controller, additionalCosts, card.cardId, false);
-
-  removeFromCurrentZone(ctx, card);
-  const spellCard: EngineCardObject = {
-    ...card,
-    id: `o-${ctx.state.nextObjectNum++}` as ObjectId,
-    zone: 'stack',
-    ...(def.manaCost?.x !== undefined ? { announcedX: 0 } : {}),
-  };
-
-  const freeSpell: EngineStackObject = {
-    id: spellCard.id,
-    sourceId: spellCard.id,
-    controllerId,
-    kind: 'spell',
-    description: card.name,
-    targets,
-    card: spellCard,
-    ability,
-    sourceOracleId: card.oracleId,
-    sourceCardId: card.cardId,
-    isCommanderCast: false,
-    ...(def.manaCost?.x !== undefined ? { announcedX: 0 } : {}),
-    triggerScope: { manaSpent: totalPips(additionalMana) },
-  };
-  ctx.state.stack.push(freeSpell);
-  breakYieldsForStop(ctx, freeSpell);
-  emit(
-    ctx,
-    'castSpell',
-    {
-      player: controllerId,
-      name: card.name,
-      cardId: card.cardId,
-      targets,
-      fromCommand: false,
-      commanderTax: 0,
-    },
-    controllerId,
-  );
-  queueCastTriggers(ctx, freeSpell);
-  queueKeywordCastTriggers(ctx, freeSpell);
-}
-
-function freeCardIsCastable(
-  ctx: GameContext,
-  card: EngineCardObject,
-  controllerId: PlayerId,
-): boolean {
-  const def = getDefByOracleId(ctx, card.oracleId, card.name);
-  if (def.types.includes('Land') || def.manaCost === null) return false;
-  if (
-    def.spellAbility === null &&
-    !def.types.some((type) =>
-      ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Planeswalker'].includes(type),
-    )
-  )
-    return false;
-  return legalFreeCastSelections(ctx, card, controllerId).length > 0;
-}
-
 /**
  * Execute an ability's effects with pre-chosen targets (ADR 0004). Targeted primitives
  * reference a slot index into `ability.targets`; a slot whose target became illegal is
@@ -1350,19 +1150,25 @@ export function* executeAbility(
       ...(scope.eventPlayerId === undefined ? {} : { eventPlayerId: scope.eventPlayerId }),
     });
   source = { ...source, resolutionTargets };
-  const stillLegal = (id: ObjectId, spec: TargetSpec): boolean =>
-    resolutionTargets.legality.get(spec)?.get(id) === true;
+  const stillLegal = (id: ObjectId, spec: TargetSpec, slot?: number): boolean =>
+    (slot === undefined
+      ? resolutionTargets.legality.get(spec)
+      : resolutionTargets.slotLegality.get(slot)
+    )?.get(id) === true;
   // Legacy slot-based effects and scoped Values must also skip initially illegal targets.
   // Preserve indexes; removing a target must not shift another target into its slot.
   scope.targets = targets.map((id, slot) => {
     const spec = ability.targets[slot];
-    return spec !== undefined && stillLegal(id, spec) ? id : '';
+    return spec !== undefined && stillLegal(id, spec, slot) ? id : '';
   });
   if (countTargets !== undefined) {
     countTargets = Object.fromEntries(
       Object.entries(countTargets).map(([slot, ids]) => {
         const spec = ability.targets[Number(slot)];
-        return [slot, spec === undefined ? [] : ids.filter((id) => stillLegal(id, spec))];
+        return [
+          slot,
+          spec === undefined ? [] : ids.filter((id) => stillLegal(id, spec, Number(slot))),
+        ];
       }),
     );
   }
@@ -1389,15 +1195,10 @@ export function* executeAbility(
     const spec = ability.targets[slot];
     if (spec === undefined) return [];
     const legal = (countTargets?.[slot] ?? []).flatMap((id) => {
-      if (!stillLegal(id, spec)) return [];
+      if (!stillLegal(id, spec, slot)) return [];
       const permanent = findPermanent(ctx, id);
       return permanent === undefined ? [] : [permanent as EnginePermanent];
     });
-    const budget = spec.totalManaValueAtMost;
-    if (budget !== undefined) {
-      const total = legal.reduce((sum, permanent) => sum + permanentManaValue(ctx, permanent), 0);
-      if (total > budget) return [];
-    }
     return legal;
   };
 
@@ -5536,37 +5337,39 @@ export function* executeAbility(
       }
       case 'playExiledCardFree': {
         const card = ctx.state.exile.find(
-          (c: EngineCardObject) => c.attachedToCardId === source.cardId,
+          (candidate) => candidate.attachedToCardId === source.cardId,
         );
-        if (!card) break;
+        if (card === undefined) break;
         const def = getDefByOracleId(ctx, card.oracleId, card.name);
         const isLand = def.types.includes('Land');
+        if (
+          isLand
+            ? ctx.state.currentTurnPlayer !== controller.id ||
+              controller.landsPlayedThisTurn >= landPlayLimitFor(ctx, controller.id)
+            : !freeCardIsCastable(ctx, card, controller.id)
+        )
+          break;
+        const choice = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `Play ${card.name} without paying its mana cost?`,
+          options: [
+            { type: 'playFree', description: `Play ${card.name}` },
+            { type: 'decline', description: 'Leave the card in exile' },
+          ],
+        };
+        if (choice.index !== 0) break;
         if (isLand) {
-          yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: source.controllerId });
-        } else {
-          const isPermanent = def.types.some((t) =>
-            ['Creature', 'Artifact', 'Enchantment', 'Planeswalker', 'Battle'].includes(t),
+          controller.landsPlayedThisTurn++;
+          emit(
+            ctx,
+            'playLand',
+            { player: controller.id, name: card.name, cardId: card.cardId },
+            controller.id,
           );
-          if (isPermanent) {
-            yield* moveObject(ctx, card, {
-              zone: 'battlefield',
-              controllerId: source.controllerId,
-            });
-          } else {
-            const spellAbility = def.spellAbility ?? { kind: 'spell', targets: [], effects: [] };
-            yield* executeAbility(
-              ctx,
-              {
-                cardId: card.cardId,
-                name: card.name,
-                oracleId: card.oracleId,
-                controllerId: source.controllerId,
-              },
-              spellAbility,
-              [],
-            );
-            yield* moveObject(ctx, card, { zone: 'graveyard' });
-          }
+          yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: controller.id });
+        } else {
+          yield* resolveFreeCard(ctx, card, controller.id);
         }
         break;
       }
