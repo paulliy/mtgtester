@@ -2826,65 +2826,110 @@ test('Mosswort Bridge: a hidden land still needs a land play', async ({ page }) 
   await runMosswortCasting(page, true);
 });
 
-const untapPronounOutcomes = [
-  ['Arachnoid Adaptation', '4/4', 'reach', 0],
-  ["Riverguard's Reflexes", '4/4', 'first strike', 0],
-  ['Acrobatic Leap', '3/5', 'flying', 0],
-  ['Burst of Strength', '3/3', undefined, 1],
-  ['Vines of the Recluse', '3/4', 'reach', 0],
-  ['Dragonscale Boon', '4/4', undefined, 2],
-  ["Witch's Web", '5/5', 'reach', 0],
-  ['Pillar Launch', '4/4', 'reach', 0],
-  ["Bull's Strength", '4/4', 'trample', 0],
-  ['High Stride', '3/5', 'reach', 0],
-  ['Wings of the Cosmos', '3/5', 'flying', 0],
-  ["Tethermage's Advantage", '4/4', 'reach', 0],
-  ['Vault Skyward', '2/2', 'flying', 0],
-  ['Leaping Ambush', '3/5', 'reach', 0],
-  ['Escape from Orthanc', '3/5', 'flying', 0],
-  ['Soldier On', '4/4', undefined, 2],
-] as const;
-
-for (const [name, pt, keyword, counters] of untapPronounOutcomes) {
-  test(`${name}: affect and untap one target`, async ({ page }) => {
-    const boards: SpectatorPermanent[][] = [];
-    page.on('websocket', (socket) =>
-      socket.on('framereceived', ({ payload }) => {
-        const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
-        if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
-          boards.push(frame.payload.state.battlefield);
-      }),
-    );
-    await runScenario(page, `${name}: affect and untap one target`);
-    const chosen = permanent(page, 'Chosen Untap Bear');
-    const other = permanent(page, 'Other Tapped Bear');
-    await expect(chosen.locator('.tile')).toHaveClass(/tapped/);
-    await expect(other.locator('.tile')).toHaveClass(/tapped/);
-    const spell = handCard(page, name);
-    await expect(spell).toHaveClass(/actionable/);
-    await spell.click();
-    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
-    await chosen.click();
-    await expect(page.getByText(/All 1 target selected/)).toBeVisible();
-    await confirm(page);
-    await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
-    await expect(chosen).toContainText(pt);
-    if (keyword) await expect(chosen).toContainText(keyword);
-    await expect(chosen.locator('.tap-badge')).toHaveCount(0);
-    await expect(other.locator('.tap-badge')).toHaveCount(1);
-    await expect(other).toContainText('2/2');
-    await expect
-      .poll(
-        () => boards.at(-1)?.find((p) => p.name === 'Chosen Untap Bear')?.counters['+1/+1'] ?? 0,
-      )
-      .toBe(counters);
-    await expect
-      .poll(() => boards.at(-1)?.find((p) => p.name === 'Other Tapped Bear')?.tapped)
-      .toBe(true);
-    await expect(
-      page
-        .getByText(new RegExp(`Cast ${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i'))
-        .first(),
-    ).toBeVisible();
-  });
+async function verifyTargetUntap(
+  page: Page,
+  name: string,
+  pt: string,
+  keyword: string | undefined,
+  counters: number,
+): Promise<void> {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(page, `${name}: affect and untap one target`);
+  const chosen = permanent(page, 'Chosen Untap Bear');
+  const other = permanent(page, 'Other Tapped Bear');
+  await expect(chosen.locator('.tile')).toHaveClass(/tapped/);
+  await expect(other.locator('.tile')).toHaveClass(/tapped/);
+  const spell = handCard(page, name);
+  await expect(spell).toHaveClass(/actionable/);
+  await spell.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await chosen.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(chosen).toContainText(pt);
+  if (keyword) await expect(chosen).toContainText(keyword);
+  await expect(chosen.locator('.tap-badge')).toHaveCount(0);
+  await expect(other.locator('.tap-badge')).toHaveCount(1);
+  await expect(other).toContainText('2/2');
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Chosen Untap Bear')?.counters['+1/+1'] ?? 0)
+    .toBe(counters);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Other Tapped Bear')?.tapped)
+    .toBe(true);
+  await expect(
+    page.getByText(new RegExp(`Cast ${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i')).first(),
+  ).toBeVisible();
 }
+
+test('Arachnoid Adaptation: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Arachnoid Adaptation', '4/4', 'reach', 0);
+});
+
+test("Riverguard's Reflexes: affect and untap one target", async ({ page }) => {
+  await verifyTargetUntap(page, "Riverguard's Reflexes", '4/4', 'first strike', 0);
+});
+
+test('Acrobatic Leap: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Acrobatic Leap', '3/5', 'flying', 0);
+});
+
+test('Burst of Strength: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Burst of Strength', '3/3', undefined, 1);
+});
+
+test('Vines of the Recluse: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Vines of the Recluse', '3/4', 'reach', 0);
+});
+
+test('Dragonscale Boon: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Dragonscale Boon', '4/4', undefined, 2);
+});
+
+test("Witch's Web: affect and untap one target", async ({ page }) => {
+  await verifyTargetUntap(page, "Witch's Web", '5/5', 'reach', 0);
+});
+
+test('Pillar Launch: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Pillar Launch', '4/4', 'reach', 0);
+});
+
+test("Bull's Strength: affect and untap one target", async ({ page }) => {
+  await verifyTargetUntap(page, "Bull's Strength", '4/4', 'trample', 0);
+});
+
+test('High Stride: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'High Stride', '3/5', 'reach', 0);
+});
+
+test('Wings of the Cosmos: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Wings of the Cosmos', '3/5', 'flying', 0);
+});
+
+test("Tethermage's Advantage: affect and untap one target", async ({ page }) => {
+  await verifyTargetUntap(page, "Tethermage's Advantage", '4/4', 'reach', 0);
+});
+
+test('Vault Skyward: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Vault Skyward', '2/2', 'flying', 0);
+});
+
+test('Leaping Ambush: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Leaping Ambush', '3/5', 'reach', 0);
+});
+
+test('Escape from Orthanc: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Escape from Orthanc', '3/5', 'flying', 0);
+});
+
+test('Soldier On: affect and untap one target', async ({ page }) => {
+  await verifyTargetUntap(page, 'Soldier On', '4/4', undefined, 2);
+});

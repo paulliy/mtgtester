@@ -1347,6 +1347,17 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Twinflame Tyrant: double damage from your spell'],
   },
+  ...(
+    JSON.parse(
+      readFileSync(
+        resolve(import.meta.dirname, '../packages/engine/tests/fixtures/target-untap-oracle.json'),
+        'utf8',
+      ),
+    ) as { cards: { card: { name: string } }[] }
+  ).cards.map(({ card }) => ({
+    file: 'card-test-lab.spec.ts',
+    titlePath: [`${card.name}: affect and untap one target`],
+  })),
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);
