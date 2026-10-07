@@ -59,6 +59,42 @@ export function assertDelayedTriggerEvent(when: TriggerHead['when']): void {
     throw new Error(`delayed trigger event ${when} has no supported dispatcher`);
 }
 
+/** Only these dispatchers bind a player independently of the ability controller. */
+export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
+  switch (when) {
+    case 'attacks':
+    case 'enchantedPlayerAttacked':
+    case 'dealsCombatDamageToPlayer':
+    case 'castsSpell':
+    case 'gainsLife':
+    case 'drawsCard':
+    case 'upkeep':
+    case 'endStep':
+    case 'untapStep':
+    case 'drawStep':
+    case 'beginningOfCombat':
+    case 'mainPhase':
+    case 'precombatMain':
+      return true;
+    case 'enters':
+    case 'dies':
+    case 'blocks':
+    case 'becomesBlocked':
+    case 'becomesTapped':
+    case 'fights':
+    case 'becomesTargeted':
+    case 'dealtDamage':
+    case 'sacrificed':
+    case 'tokenCreated':
+    case 'putIntoGraveyardFromAnywhere':
+    case 'leavesGraveyard':
+    case 'transformsInto':
+      return false;
+    default:
+      return assertNever(when, 'event player dispatcher');
+  }
+}
+
 /** A union's combined field inventory is insufficient: each event has its own required shape. */
 export function validateTriggerHead(value: unknown, path: string, issues: AuthoringIssue[]): void {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {

@@ -205,6 +205,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return player?.commanderColorIdentity.length ?? 0;
     }
     case 'lifeTotal': {
+      if (value.scope === 'eventPlayer' && scope.eventPlayerId === undefined)
+        throw new Error('event player life total has no bound event player');
       const targetPlayerId =
         value.scope === 'you' ? scope.controllerId : (scope.eventPlayerId ?? scope.controllerId);
       const player = ctx.state.players.find((p) => p.id === targetPlayerId);

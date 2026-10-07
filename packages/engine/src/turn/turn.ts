@@ -113,7 +113,11 @@ export function queueStepTriggers(
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       if (spec.player === 'you' && perm.controllerId !== apId) continue;
-      const source = { cardId: perm.cardId, controllerId: perm.controllerId };
+      const source = {
+        cardId: perm.cardId,
+        controllerId: perm.controllerId,
+        eventPlayerId: apId,
+      };
       // Intervening-if, first check (CR 603.4) — see `queueTriggersForEvent`.
       if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
       const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
@@ -125,6 +129,7 @@ export function queueStepTriggers(
           sourceOracleId: perm.oracleId,
           sourceName: perm.name,
           ability,
+          scope: { eventPlayerId: apId },
         });
         debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
       }
@@ -143,6 +148,7 @@ export function queueStepTriggers(
           sourceOracleId: '' as never,
           sourceName: emblem.name,
           ability,
+          scope: { eventPlayerId: apId },
         });
         debug(ctx, 'stack', `${when} emblem trigger queued: ${emblem.name}`);
       }

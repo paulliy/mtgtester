@@ -1269,7 +1269,9 @@ export function* executeAbility(
   const ref = (r: EffectRef): ObjectId | null => {
     if (r === 'source') return sourcePermanent()?.id ?? null;
     if (r === 'eventPlayer') {
-      return (scope.eventPlayerId as unknown as ObjectId | undefined) ?? null;
+      if (scope.eventPlayerId === undefined)
+        throw new Error(`engine bug: ${source.name} used event player without a binding`);
+      return scope.eventPlayerId as unknown as ObjectId;
     }
     if (r === 'attachedToSource') {
       const attachment = sourcePermanent();
@@ -4465,7 +4467,7 @@ export function* executeAbility(
       }
       case 'manifestTop': {
         const playerId =
-          effect.player === 'eventPlayer' ? (scope.eventPlayerId ?? controller.id) : controller.id;
+          effect.player === 'eventPlayer' ? drawRecipient('eventPlayer').id : controller.id;
         const player = playerById(ctx, playerId);
         const top = player.library[0];
         if (top === undefined) break;

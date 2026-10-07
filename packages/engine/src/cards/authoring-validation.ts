@@ -1,4 +1,8 @@
-import { assertDelayedTriggerEvent, validateTriggerHead } from './trigger-contracts';
+import {
+  assertDelayedTriggerEvent,
+  validateTriggerHead,
+  triggerProvidesEventPlayer,
+} from './trigger-contracts';
 import { supportsAdditionalXAnnouncement } from './cost-contracts';
 import { spellFaceOf } from './spell-faces';
 import type { AlternativeCast, DynamicManaKind } from './ability';
@@ -31,6 +35,8 @@ interface Scope {
   targets: TargetSpec[];
   eventObject?: 'permanent' | 'card';
   providedEventObject?: 'permanent' | 'card';
+  eventPlayer?: boolean;
+  providedEventPlayer?: boolean;
   movedToBattlefieldSlots?: ReadonlySet<number>;
   activeSlots?: readonly number[];
   narrowedDomains?: ReadonlyMap<number, readonly TargetDomain[]>;
@@ -384,7 +390,18 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
             : ['putIntoGraveyardFromAnywhere', 'leavesGraveyard'].includes(trigger.when ?? '')
               ? 'card'
               : 'permanent';
-    owningScope = { targets, ...(eventObject === undefined ? {} : { eventObject }) };
+    let eventPlayer = false;
+    if (record['kind'] === 'triggered') {
+      if (scope?.providedEventPlayer !== undefined) eventPlayer = scope.providedEventPlayer;
+      else if (trigger !== undefined) {
+        try {
+          eventPlayer = triggerProvidesEventPlayer(trigger.when as import('./ability').TriggerWhen);
+        } catch {
+          // validateTriggerHead reports unsupported event heads.
+        }
+      }
+    }
+    owningScope = { targets, eventPlayer, ...(eventObject === undefined ? {} : { eventObject }) };
   }
   let checkedPermanentPossible = false;
   if (
@@ -428,6 +445,13 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   }
   // Typed value variants that consume ordinary target references, including nested arithmetic.
   const valueKind = record['kind'];
+  if (
+    ['eventPlayerDrawCount', 'notFirstDrawInOwnDrawStep', 'attackingEventPlayer'].includes(
+      String(valueKind),
+    ) &&
+    owningScope?.eventPlayer !== true
+  )
+    issues.push({ path, message: 'event player information has no owning event player scope' });
   if (
     [
       'powerOfTriggerObject',
@@ -502,6 +526,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       });
   }
   for (const [key, entry] of Object.entries(record)) {
+    if (entry === 'eventPlayer' && owningScope?.eventPlayer !== true)
+      issues.push({
+        path: `${path}.${key}`,
+        message: 'event player reference has no owning event player scope',
+      });
     if (['activatedAbilities', 'manaAbilities'].includes(key) && Array.isArray(entry)) {
       for (const [index, ability] of entry.entries()) {
         if (
@@ -742,6 +771,7 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       }
       visit(entry, `${path}.${key}`, issues, {
         targets: [],
+        providedEventPlayer: record['affectedPlayer'] !== undefined,
         ...(providedEventObject === undefined ? {} : { providedEventObject }),
       });
     } else {

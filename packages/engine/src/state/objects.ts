@@ -1278,7 +1278,10 @@ function queueCardZoneTriggers(
             sourceName: source.name,
             ability,
             ...(spec.subject.kind === 'self' ? {} : { triggerObjectCardId: first.cardId }),
-            ...(spec.aggregate === true ? { scope: { triggerCount: firing.length } } : {}),
+            scope: {
+              ...(spec.subject.kind === 'self' ? {} : { eventObjectId: first.id }),
+              ...(spec.aggregate === true ? { triggerCount: firing.length } : {}),
+            },
           });
           debug(ctx, 'stack', `${when} trigger queued: ${source.name}`);
         }
@@ -1393,12 +1396,21 @@ export function queueTriggersForEvent(
       for (let copy = 0; copy <= additionalCopies; copy++) {
         for (const group of firings) {
           const first = group[0] as TriggerEventSubject;
+          const eventPlayerId =
+            'defendingPlayerIsEventPlayer' in spec &&
+            spec.defendingPlayerIsEventPlayer === true &&
+            first.permanent.attacking !== null
+              ? first.permanent.attacking
+              : spec.aggregate === 'byEventPlayer'
+                ? byEventPlayerKey(first)
+                : first.playerId;
           // Intervening-if, first check (CR 603.4), with the event object available for
           // conditions such as "if that creature had to attack".
           if (
             spec.condition !== undefined &&
             !evaluateCondition(ctx, spec.condition, {
               ...from,
+              ...(eventPlayerId === undefined ? {} : { eventPlayerId }),
               ...eventObjectScope(ctx, first.permanent),
               ...(spec.subject.kind === 'self'
                 ? {}
@@ -1409,14 +1421,6 @@ export function queueTriggersForEvent(
             continue;
           }
           const amounts = group.filter((s) => s.amount !== undefined);
-          const eventPlayerId =
-            'defendingPlayerIsEventPlayer' in spec &&
-            spec.defendingPlayerIsEventPlayer === true &&
-            first.permanent.attacking !== null
-              ? first.permanent.attacking
-              : spec.aggregate === 'byEventPlayer'
-                ? byEventPlayerKey(first)
-                : first.playerId;
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
@@ -1659,6 +1663,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       const from: SelectorSource = {
         cardId: source.cardId,
         controllerId: source.controllerId,
+        eventPlayerId: spell.controllerId,
         attachedToCardId:
           source.attachedTo === null
             ? null

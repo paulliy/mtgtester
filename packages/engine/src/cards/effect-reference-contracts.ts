@@ -248,7 +248,9 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   counterUnlessControllerPays: { target: spell },
   unlessPays: {},
   addMana: {},
-  registerDelayedTrigger: { target: optionalRef(anyReference) },
+  registerDelayedTrigger: {
+    target: { ...optionalRef(anyReference), nonTargetRefs: ['triggerObject'] },
+  },
   commandZoneToBattlefield: { target: command },
   commandZoneToHand: {},
   returnToCommandZone: { target: permanent },
