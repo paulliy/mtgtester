@@ -1,3 +1,4 @@
+import { supportsAdditionalXAnnouncement } from './cost-contracts';
 import { spellFaceOf } from './spell-faces';
 import type { AlternativeCast, DynamicManaKind } from './ability';
 import { selectorIsEventOnly } from './selector';
@@ -676,6 +677,11 @@ export function validateCardDefinition(definition: CardDefinition): AuthoringIss
     issues.push({
       path: 'definition',
       message: `card is not fully modeled: ${definition.unmodeledReasons.join('; ')}`,
+    });
+  if (!supportsAdditionalXAnnouncement(definition))
+    issues.push({
+      path: 'definition.announcesX',
+      message: 'additional X requires a direct pay-X-life cost',
     });
   visit(definition, 'definition', issues);
   validateFields(definition, 'definition', issues);

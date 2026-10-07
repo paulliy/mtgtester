@@ -1,3 +1,5 @@
+import { UnmodeledCardError } from '../errors';
+import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
 import { selectedSpellDefinition } from '../cards/spell-faces';
 import { assertNever } from '../utils/assert-never';
 import { castingPreviewContext } from '../casting/preview';
@@ -761,7 +763,34 @@ export function computePriorityOptions(
       const xChoices: number[] = [];
       if (xSymbols === 0 && !announcesAdditionalX) xChoices.push(0);
       else if (announcesAdditionalX) {
-        for (let x = 0; x <= castPlayer.life; x++) xChoices.push(x);
+        const maximumChoices = 1024;
+        if (!supportsAdditionalXAnnouncement(castingDef))
+          throw new UnmodeledCardError(
+            castName,
+            ['additional X requires a direct pay-X-life cost'],
+            'enumerating additional X',
+          );
+        // CR 601.2g-h: mana abilities can gain life before the announced life payment.
+        // The joint witness, rather than the starting life total, bounds payable X.
+        for (let x = 0; ; x++) {
+          if (
+            !jointlyPayable(
+              reduce(addManaCosts(costWithX(x), additionalManaCost)),
+              spellAdditionalCosts,
+              x,
+              0,
+              energyCost,
+            )
+          )
+            break;
+          if (xChoices.length >= maximumChoices)
+            throw new UnmodeledCardError(
+              castName,
+              ['additional life X choice budget exceeded'],
+              'enumerating additional X',
+            );
+          xChoices.push(x);
+        }
       } else {
         for (let x = 0; ; x++) {
           if (
