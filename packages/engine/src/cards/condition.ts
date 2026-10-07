@@ -1,3 +1,4 @@
+import { counterCount } from '../state/counters';
 import { assertNever } from '../utils/assert-never';
 /**
  * `Condition` — a predicate over game state, and the counterpart to `Selector` (ADR 0008).
@@ -261,7 +262,7 @@ export function evaluateCondition(
       // every printing of this shape ("if it has no ice counters on it" cannot fire on a
       // creature that is no longer there to transform).
       if (self === undefined) return false;
-      return compare(self.counters[condition.counter] ?? 0, condition.cmp, condition.n);
+      return compare(counterCount(self.counters, condition.counter), condition.cmp, condition.n);
     }
     case 'notFirstDrawInOwnDrawStep': {
       const eventPlayer = source.eventPlayerId;
@@ -458,7 +459,7 @@ export function evaluateCondition(
           : selectPermanents(ctx, condition.selector, source);
       return matched.some((perm) => {
         const count = condition.counter
-          ? (perm.counters[condition.counter] ?? 0)
+          ? counterCount(perm.counters, condition.counter)
           : Object.values(perm.counters).reduce((a, b) => a + b, 0);
         return compare(count, condition.cmp, condition.n);
       });

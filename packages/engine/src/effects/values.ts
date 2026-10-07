@@ -1,3 +1,4 @@
+import { counterCount } from '../state/counters';
 import { assertNever } from '../utils/assert-never';
 /**
  * Resolution-time `Value` evaluation — the half that reads *current* characteristics.
@@ -166,7 +167,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'countersOnSelf': {
       if (!scope.sourceCardId) return 0;
       const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
-      return perm ? (perm.counters[value.counter] ?? 0) : 0;
+      return perm ? counterCount(perm.counters, value.counter) : 0;
     }
     case 'allCountersOnSelf': {
       if (!scope.sourceCardId) return 0;
@@ -179,12 +180,12 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       if (value.target === 'triggerObject') {
         if (!scope.triggerObjectCardId) return 0;
         const perm = ctx.state.battlefield.find((p) => p.cardId === scope.triggerObjectCardId);
-        return perm ? (perm.counters[value.counter] ?? 0) : 0;
+        return perm ? counterCount(perm.counters, value.counter) : 0;
       }
       const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
       if (!targetId) return 0;
       const perm = ctx.state.battlefield.find((p) => p.id === targetId || p.cardId === targetId);
-      return perm ? (perm.counters[value.counter] ?? 0) : 0;
+      return perm ? counterCount(perm.counters, value.counter) : 0;
     }
     case 'manaValueOfTarget': {
       const targetId =
@@ -299,8 +300,10 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
               .find((c) => c.cardId === scope.triggerObjectCardId));
       if (object === undefined) return 0;
       return 'counters' in object
-        ? (object.counters[value.counter] ?? 0)
-        : (object.rememberedCounters?.[value.counter] ?? 0);
+        ? counterCount(object.counters, value.counter)
+        : object.rememberedCounters === undefined
+          ? 0
+          : counterCount(object.rememberedCounters, value.counter);
     }
 
     default:

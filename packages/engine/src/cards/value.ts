@@ -1,3 +1,4 @@
+import { counterCount } from '../state/counters';
 /**
  * `Value` — a number that is either constant or computed from game state (ADR 0005). This is
  * the abstraction X spells, characteristic-defining abilities (Tarmogoyf), and "equal to its
@@ -372,7 +373,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       if (scope?.sourceCounters === undefined) {
         throw new Error('engine bug: source counters need a layer evaluation scope');
       }
-      return scope.sourceCounters[value.counter] ?? 0;
+      return counterCount(scope.sourceCounters, value.counter);
     case 'countPermanents':
       if (!scope?.countPermanents) {
         throw new Error('engine bug: value countPermanents needs a layer evaluation scope');

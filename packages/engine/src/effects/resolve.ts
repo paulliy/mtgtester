@@ -1,3 +1,4 @@
+import { counterCount, setCounterCount } from '../state/counters';
 import { queueSpellCopy } from '../stack/copy';
 import { spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
@@ -456,10 +457,10 @@ function dealDamageToObject(
       });
       return;
     }
-    const have = perm.counters[counterKind] ?? 0;
+    const have = counterCount(perm.counters, counterKind);
     if (counterKind === 'loyalty' && amount > have)
       ctx.state.excessDamageControllerIds.push(perm.controllerId);
-    perm.counters[counterKind] = Math.max(0, have - amount);
+    setCounterCount(perm.counters, counterKind, Math.max(0, have - amount));
     // Lifelink applies to damage dealt to any object or player (CR 702.15b).
     if (sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
     emit(ctx, 'damage', {
@@ -908,22 +909,22 @@ function addCounters(
 ): void {
   if (count <= 0) return;
   const adjustedCount = counterAmountAfterReplacements(ctx, perm, counter, count);
-  const before = perm.counters[counter] ?? 0;
-  perm.counters[counter] = (perm.counters[counter] ?? 0) + adjustedCount;
+  const before = counterCount(perm.counters, counter);
+  setCounterCount(perm.counters, counter, counterCount(perm.counters, counter) + adjustedCount);
   emit(ctx, 'counters', {
     source: source.name,
     target: perm.name,
     targetCardId: perm.cardId,
     counter,
     added: adjustedCount,
-    total: perm.counters[counter],
+    total: counterCount(perm.counters, counter),
   });
   const def = ctx.defs.get(perm.oracleId);
   for (const threshold of def?.counterThresholdTriggers ?? []) {
     if (
       threshold.counter !== counter ||
       before >= threshold.threshold ||
-      perm.counters[counter] < threshold.threshold
+      counterCount(perm.counters, counter) < threshold.threshold
     )
       continue;
     const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
@@ -2258,11 +2259,11 @@ export function* executeAbility(
         const id = ref(effect.target);
         const permanent = id === null ? undefined : findPermanent(ctx, id);
         if (permanent === undefined) break;
-        const present = permanent.counters[effect.counter] ?? 0;
+        const present = counterCount(permanent.counters, effect.counter);
         const removed = Math.min(present, amountOf(effect.count));
         if (removed <= 0) break;
         if (removed === present) delete permanent.counters[effect.counter];
-        else permanent.counters[effect.counter] = present - removed;
+        else setCounterCount(permanent.counters, effect.counter, present - removed);
         emit(ctx, 'removeCounter', {
           target: permanent.name,
           counter: effect.counter,
@@ -2276,12 +2277,12 @@ export function* executeAbility(
         // the key is deleted at zero so `hasCounters`/`sourceHasCounters` read a clean absence
         // rather than a lingering 0.
         for (const perm of affectedBy(ctx, source, effect.selector)) {
-          const present = perm.counters[effect.counter] ?? 0;
+          const present = counterCount(perm.counters, effect.counter);
           const removed = Math.min(present, amountOf(effect.count));
           if (removed <= 0) continue;
           const left = present - removed;
           if (left === 0) delete perm.counters[effect.counter];
-          else perm.counters[effect.counter] = left;
+          else setCounterCount(perm.counters, effect.counter, left);
           emit(ctx, 'removeCounter', {
             target: perm.name,
             counter: effect.counter,
@@ -3037,7 +3038,11 @@ export function* executeAbility(
         if (target !== undefined && counters !== undefined) {
           for (const [counter, count] of Object.entries(counters)) {
             const adjustedCount = counterAmountAfterReplacements(ctx, target, counter, count);
-            target.counters[counter] = (target.counters[counter] ?? 0) + adjustedCount;
+            setCounterCount(
+              target.counters,
+              counter,
+              counterCount(target.counters, counter) + adjustedCount,
+            );
           }
         }
         break;
@@ -6616,9 +6621,9 @@ export function* payAbilityCosts(
                 controllerId: player.id,
                 sourceCardId: perm.cardId,
               });
-        const have = perm.counters[cost.counter] ?? 0;
+        const have = counterCount(perm.counters, cost.counter);
         if (have < count) throw new Error('engine bug: counter cost became unpayable');
-        perm.counters[cost.counter] = have - count;
+        setCounterCount(perm.counters, cost.counter, have - count);
         emit(
           ctx,
           'counters',
@@ -6627,7 +6632,7 @@ export function* payAbilityCosts(
             targetCardId: perm.cardId,
             counter: cost.counter,
             added: -count,
-            total: perm.counters[cost.counter],
+            total: counterCount(perm.counters, cost.counter),
           },
           player.id,
         );
