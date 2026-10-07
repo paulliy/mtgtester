@@ -82,6 +82,8 @@ export interface AlternativeCast {
   ability?: Ability;
   /** Back-face characteristics for a modal DFC that may be played as a land. */
   landFace?: MdfcLandFace;
+  /** Fully interpreted Adventure/Omen spell characteristics, independent of the front. */
+  spellFace?: import('./definition').CardDefinition;
   /** Flashback/escape-style replacement: exile the card after it leaves the stack. */
   exileOnResolution?: boolean;
   /** The alternative is Escape and marks the resulting stack/permanent object as escaped. */
@@ -168,7 +170,12 @@ export type DynamicManaKind =
  */
 export type PaymentPurpose =
   /** Casting a spell. `card` is the spell's *printed* candidate — it is not on the battlefield. */
-  | { kind: 'castSpell'; oracleId: string; isCommander?: boolean }
+  | {
+      kind: 'castSpell';
+      oracleId: string;
+      isCommander?: boolean;
+      spellDefinition?: import('./definition').CardDefinition;
+    }
   /** Activating an ability of a permanent. */
   | { kind: 'activateAbility'; sourceOracleId: string }
   /**

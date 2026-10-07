@@ -1,0 +1,3456 @@
+{
+  "schemaVersion": 1,
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261006090155.jsonl.gz",
+  "bulkInputSha256": "485a756bb57bcaa478d3ece97c8a01ffdce6debd0534e5740834b241f508d3ad",
+  "projection": "scryfall-projection-v2",
+  "cards": [
+    {
+      "sha256": "f8a80a8a9ac6f361fad42de176c66285eb8752ada6fe734511074149f7414ad9",
+      "card": {
+        "oracleId": "0296d57e-e5b9-456f-bb21-eb584adefb4c",
+        "scryfallId": "6cfaa182-3fec-4907-8814-b4d29c33cec3",
+        "name": "Gollum, Silent Slinker // Meager Meal",
+        "manaCost": "{3}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Legendary Creature — Halfling Horror",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Halfling",
+          "Horror"
+        ],
+        "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)",
+        "power": "4",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Menace"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Meager Meal",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Put a +1/+1 counter on up to one target creature. Target player gains 2 life. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{B}",
+          "colors": [
+            "B"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "188852577f595a0fb00608e655d0f57d4d1054ebe6daed2513fae011a534d2b6",
+      "card": {
+        "oracleId": "04fbb7aa-0dd4-4ac6-837d-822227fb6356",
+        "scryfallId": "e8bbece8-9620-44d9-b991-350fe952538a",
+        "name": "Faerie Guidemother // Gift of the Fae",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Faerie",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Faerie"
+        ],
+        "oracleText": "Flying",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Gift of the Fae",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Target creature gets +2/+1 and gains flying until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "7544b8308d45410e86f6f9c14d264a7033c5a0eb6b2536915a7be277e4491b07",
+      "card": {
+        "oracleId": "09193c40-538c-4154-a671-076eece35e54",
+        "scryfallId": "8bc518fc-904e-4e39-aeda-ffb222bfcc82",
+        "name": "Tuinvale Treefolk // Oaken Boon",
+        "manaCost": "{5}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Treefolk Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Treefolk",
+          "Druid"
+        ],
+        "oracleText": "",
+        "power": "6",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Oaken Boon",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Put two +1/+1 counters on target creature. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{3}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "f1e4440c61a9f4d5942c2589cda75f6a7ce50a02bf2cc4bb1e93c99481355a1b",
+      "card": {
+        "oracleId": "0961b68d-bb0c-4bfb-ad78-01f90b3b97c8",
+        "scryfallId": "57adbd6e-88ec-4472-a9c9-90b679fa881f",
+        "name": "Amethyst Dragon // Explosive Crystal",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, haste",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Haste"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Explosive Crystal",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Explosive Crystal deals 4 damage divided as you choose among any number of targets. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{4}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "e0502f8d5121134d8f7045ff4780abfe7fe98efaba83cf9db6b984784d16d68f",
+      "card": {
+        "oracleId": "09f09d0a-6054-4545-b81e-0295773cc5f0",
+        "scryfallId": "a56a88ba-fcfa-4b56-bdae-a080b297b871",
+        "name": "The Arkenstone // Seek the Heart",
+        "manaCost": "{5}",
+        "cmc": 5,
+        "colors": [],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Artifact",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Creatures you control get +1/+1.\nAt the beginning of your end step, draw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Seek the Heart",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Search your library for a legendary creature card, reveal it, put it into your hand, then shuffle. (Then exile this card. You may cast the artifact later from exile.)",
+          "manaCost": "{2}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "70dec740af0e3e6c4f015d8d470f00534cff0f462eee0ec033eb51718854f54d",
+      "card": {
+        "oracleId": "0f222f3d-f02b-42b9-aedf-fb7ed92d4889",
+        "scryfallId": "70c12e75-7e65-4706-b976-e47835910928",
+        "name": "Two-Headed Hunter // Twice the Rage",
+        "manaCost": "{4}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Giant",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Giant"
+        ],
+        "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)",
+        "power": "5",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Menace"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Twice the Rage",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Target creature gains double strike until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "f11ba0e7da5bb2a6cde3005674f15eddd0fc5f3f7199c2ca7bc7b40628f15186",
+      "card": {
+        "oracleId": "105aea98-8eb9-4fb2-a0cb-7c7513317c5b",
+        "scryfallId": "043718ea-59f6-4d1a-94c5-271704c1a38a",
+        "name": "Twining Twins // Swift Spiral",
+        "manaCost": "{2}{U}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Creature — Faerie Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Faerie",
+          "Wizard"
+        ],
+        "oracleText": "Flying, vigilance, ward {1}",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Vigilance",
+          "Ward"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Swift Spiral",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Exile target nontoken creature. Return it to the battlefield under its owner's control at the beginning of the next end step.",
+          "manaCost": "{1}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "6147ece0c740e8e6f6b52e7a7fc85e9010317a91cca56c6c02c91290cb99d0e4",
+      "card": {
+        "oracleId": "10c0f814-e302-49ff-aded-1b8d8424fd60",
+        "scryfallId": "4676c019-886c-4b0d-9849-c044c0e03da3",
+        "name": "Foulmire Knight // Profane Insight",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Zombie Knight",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Zombie",
+          "Knight"
+        ],
+        "oracleText": "Deathtouch",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Deathtouch"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Profane Insight",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "You draw a card and you lose 1 life. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{B}",
+          "colors": [
+            "B"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "95c85cc00ff930a70266794bc2730818ca201c8039a2a2ffbc84459b519f2160",
+      "card": {
+        "oracleId": "11ad6e75-9bbd-40ea-b04a-e6a61db3bcda",
+        "scryfallId": "1cd477f5-53e9-446a-b717-5796d87672ba",
+        "name": "Smitten Swordmaster // Curry Favor",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Human Knight",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Knight"
+        ],
+        "oracleText": "Lifelink",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Curry Favor",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "You gain X life and each opponent loses X life, where X is the number of Knights you control.",
+          "manaCost": "{B}",
+          "colors": [
+            "B"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "23bbae1af85f057688108e60ba2342889e0d84b5b418629904999968a4f668f1",
+      "card": {
+        "oracleId": "1c751201-24ba-4e5c-bf44-71c3e4693a92",
+        "scryfallId": "f8a0c0f6-fef9-42c5-934d-a2855c11b440",
+        "name": "Conceited Witch // Price of Beauty",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Human Warlock",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Warlock"
+        ],
+        "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Role token",
+          "Menace"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Price of Beauty",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Create a Wicked Role token attached to target creature you control. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{B}",
+          "colors": [
+            "B"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "7e2a0716669c18aa4a333053d947377e29279e27ac99cba374b396b5d9016ebc",
+      "card": {
+        "oracleId": "1f9efad1-9f51-47aa-a5a7-9c8103435a01",
+        "scryfallId": "7acbd812-b994-4e68-8f95-04222796e994",
+        "name": "Hypnotic Sprite // Mesmeric Glare",
+        "manaCost": "{U}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Faerie",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Faerie"
+        ],
+        "oracleText": "Flying",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Mesmeric Glare",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Counter target spell with mana value 3 or less. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "8978c741c951dc259bb2025586aa8bff8167e754b21d92f04a5ef62dbd001951",
+      "card": {
+        "oracleId": "22d82f4c-2896-477e-8d20-8fe43acd4ba2",
+        "scryfallId": "5ebac73a-1ecf-4e6d-87b1-ea560bfeb064",
+        "name": "Picklock Prankster // Free the Fae",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Faerie Rogue",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Faerie",
+          "Rogue"
+        ],
+        "oracleText": "Flying, vigilance",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Vigilance",
+          "Mill"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Free the Fae",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Mill four cards. Then put an instant, sorcery, or Faerie card from among the milled cards into your hand.",
+          "manaCost": "{1}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "9e682154b339327c917e7c35f867307e9bd92a9ca55394fadce81e2479b87ad6",
+      "card": {
+        "oracleId": "23cda76b-6e47-4922-a38d-93f7aae1eb00",
+        "scryfallId": "b1d21a9a-6b0c-4fbc-a427-81be885d326b",
+        "name": "Dirgur Island Dragon // Skimming Strike",
+        "manaCost": "{5}{U}",
+        "cmc": 6,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWard {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Ward"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Skimming Strike",
+          "typeLine": "Instant — Omen",
+          "oracleText": "Tap up to one target creature. Draw a card. (Then shuffle this card into its owner's library.)",
+          "manaCost": "{1}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "6d89104f9c19a53bdce3b26d7bd675305cd296e5d138be404ee0c8e9c9cf955a",
+      "card": {
+        "oracleId": "27e17542-549b-4c05-8091-c10a245c916b",
+        "scryfallId": "c87f6004-e1cf-42b2-9647-322bc4939339",
+        "name": "Great Ugly-Looking Goblin // Clap! Snap!",
+        "manaCost": "{5}{B}",
+        "cmc": 6,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Goblin Soldier",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin",
+          "Soldier"
+        ],
+        "oracleText": "Each creature you control with a +1/+1 counter on it has menace. (It can't be blocked except by two or more creatures.)",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Amass"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Clap! Snap!",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Amass Goblins 2. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{B}",
+          "colors": [
+            "B"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "721dbf7cde3634c197fc3353c980ae9b0bd5ba0bfc635d24518ed6b90d2fb4f4",
+      "card": {
+        "oracleId": "288da486-393c-4995-ad02-c5093a71970d",
+        "scryfallId": "804589b7-3ef9-473d-97cc-c61a2d41f70d",
+        "name": "Beorn, Reluctant Host // Till and Tend",
+        "manaCost": "{4}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Human Bear Shapeshifter",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Bear",
+          "Shapeshifter"
+        ],
+        "oracleText": "Trample",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Trample"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Till and Tend",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "You may play an additional land this turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "185a996cf70329dfb715d86b95f8236ea44428f7633ff11979461e0019b679db",
+      "card": {
+        "oracleId": "38503d34-f4f9-4eeb-9b1e-4fec1df921b3",
+        "scryfallId": "3aa29fe8-1687-486f-b4df-c04977869ab1",
+        "name": "An Unexpected Party // At the Door",
+        "manaCost": "{2}{W}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "As this enchantment enters, choose a creature type.\nCreatures you control of the chosen type get +2/+2.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "At the Door",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Create X 2/2 red Dwarf creature tokens. (Then exile this card. You may cast the enchantment later from exile.)",
+          "manaCost": "{X}{2}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "f3a83ae1eb6eeda1fd96104de73e60b67b686db86e4eab26355ab38d8374b1e0",
+      "card": {
+        "oracleId": "396b088d-f9af-4ee1-843f-dbe1633f9cc8",
+        "scryfallId": "0001e77a-7fff-49d2-a55c-42f6fdf6db08",
+        "name": "Obyra's Attendants // Desperate Parry",
+        "manaCost": "{4}{U}",
+        "cmc": 5,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Faerie Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Faerie",
+          "Wizard"
+        ],
+        "oracleText": "Flying",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Desperate Parry",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Target creature gets -4/-0 until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "e139ce1467890defe4570012d05bc71e1a9f3ab90acd017ac9b18133ededd3e1",
+      "card": {
+        "oracleId": "3ef02f2b-b611-40c3-a1d5-8b34989643cf",
+        "scryfallId": "139f31f5-28f0-4e90-abdf-3f6ed0992dea",
+        "name": "Pollen-Shield Hare // Hare Raising",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Creature — Rabbit",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Rabbit"
+        ],
+        "oracleText": "Creature tokens you control get +1/+1.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Hare Raising",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Target creature you control gains vigilance and gets +X/+X until end of turn, where X is the number of creatures you control.",
+          "manaCost": "{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "54d28d41801700b34e48dc3ca0abc3bf58b3b9392c525366ae3ea71994ae7bb2",
+      "card": {
+        "oracleId": "3fb5fe93-f61a-46bc-85ef-419ed1ea3522",
+        "scryfallId": "59677b9d-2978-4c32-aaab-dc8f7eb5a7d8",
+        "name": "Stonehide Ancient // Warning Tremor",
+        "manaCost": "{3}{G}{U}{R}",
+        "cmc": 6,
+        "colors": [
+          "G",
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, Vigilance\nWhen this creature enters, return all non-Dragon creatures to their owners' hands.",
+        "power": "6",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Vigilance"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "not_legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Warning Tremor",
+          "typeLine": "Sorcery — Omen",
+          "oracleText": "Warning Tremor deals 2 damage to any target.\nThe next Dragon spell you cast costs {2} less to cast.",
+          "manaCost": "{2}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "dff2740deec27a0c8c11296690a612761fecd2de81f776acbd6fb51fcb012e35",
+      "card": {
+        "oracleId": "496c9633-ff17-48df-9b24-1d8cbfd06126",
+        "scryfallId": "194b7a1c-291a-470e-9a40-61b72a46793b",
+        "name": "Garenbrig Carver // Shield's Might",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Human Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Warrior"
+        ],
+        "oracleText": "",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Shield's Might",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Target creature gets +2/+2 until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "80ab53e52dcf211b07b9bb0a5678f1d8afaac6ac0a9c2b9bab7c76a406426ec1",
+      "card": {
+        "oracleId": "4cc014f3-05e0-442e-9dee-03eab1aa65a3",
+        "scryfallId": "548dd152-f0b6-4e8f-9afc-a4ec1671b648",
+        "name": "Lindblum, Industrial Regency // Mage Siege",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Land — Town",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [
+          "Town"
+        ],
+        "oracleText": "This land enters tapped.\n{T}: Add {R}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Mage Siege",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Create a 0/1 black Wizard creature token with \"Whenever you cast a noncreature spell, this token deals 1 damage to each opponent.\"",
+          "manaCost": "{2}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "3ff3a77164f4eefb79fd5179b7f8ab1405381c8ea0b66f5409e3166918d8a3b9",
+      "card": {
+        "oracleId": "4e34a49d-f031-48ac-a458-97b79124b76c",
+        "scryfallId": "8a837256-6bb4-4a60-962d-d2793548d26c",
+        "name": "Midgar, City of Mako // Reactor Raid",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Land — Town",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [
+          "Town"
+        ],
+        "oracleText": "This land enters tapped.\n{T}: Add {B}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Reactor Raid",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "You may sacrifice an artifact or creature. If you do, draw two cards. (Then exile this card. You may play the land later from exile.)",
+          "manaCost": "{2}{B}",
+          "colors": [
+            "B"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "ef44e30f600f256db46e08f62fb1105de5fff5f2affbfe630e424aee16b7f5fb",
+      "card": {
+        "oracleId": "4f4358cb-59df-46d9-be27-69929f5a615c",
+        "scryfallId": "068bc755-9d3d-430b-abc5-c775a5415bf9",
+        "name": "Ishgard, the Holy See // Faith & Grief",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Land — Town",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [
+          "Town"
+        ],
+        "oracleText": "This land enters tapped.\n{T}: Add {W}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Faith & Grief",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Return up to two target artifact and/or enchantment cards from your graveyard to your hand. (Then exile this card. You may play the land later from exile.)",
+          "manaCost": "{3}{W}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "cfd60af08656def49aaf5e3cb2c6587d40c591abb89e8e7c086b8406c39aae8a",
+      "card": {
+        "oracleId": "5005df36-a100-492d-89b9-e221793cfb56",
+        "scryfallId": "559bacc8-facc-4d93-90b5-8ac21d3246f5",
+        "name": "Tempest Hart // Scan the Clouds",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G",
+          "U"
+        ],
+        "typeLine": "Creature — Elemental Elk",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elemental",
+          "Elk"
+        ],
+        "oracleText": "Trample\nWhenever you cast a spell with mana value 5 or greater, put a +1/+1 counter on this creature.",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Trample"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Scan the Clouds",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Draw two cards, then discard two cards. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "ab0ee450b6d1eff6d00fa4c688cb9c5f2b92d9c062062eda4647825866b5c35c",
+      "card": {
+        "oracleId": "50bee80e-89df-48c2-b608-ba66ff3e794a",
+        "scryfallId": "4dbaa855-3f8e-42e6-8ec8-5ffbc5c8acf0",
+        "name": "Imodane's Recruiter // Train Troops",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Creature — Human Knight",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Knight"
+        ],
+        "oracleText": "When this creature enters, creatures you control get +1/+0 and gain haste until end of turn.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Train Troops",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Create two 2/2 white Knight creature tokens with vigilance. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{4}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "b8baefc955e29763b993cc5c44d90dc5baab93aeadf18d720331478d7a7b517b",
+      "card": {
+        "oracleId": "52e439d0-a263-4d53-9ae3-fa1f8aa8293e",
+        "scryfallId": "e2f789b3-3274-4a93-b44b-fabc44c1833c",
+        "name": "Embereth Shieldbreaker // Battle Display",
+        "manaCost": "{1}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Human Knight",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Knight"
+        ],
+        "oracleText": "",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Battle Display",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Destroy target artifact. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "01325c8dd9bb53ff36a07f8d7adebb407a75f90fc3da63121683d0ba8f78fbab",
+      "card": {
+        "oracleId": "56b0cb64-b886-413e-bb20-392bf12d3926",
+        "scryfallId": "384ec8b7-472e-4026-9632-349ab9df2b27",
+        "name": "Crystal Dragon // Rob the Hoard",
+        "manaCost": "{4}{W}{W}",
+        "cmc": 6,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, vigilance",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Vigilance"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Rob the Hoard",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Return target artifact, enchantment, or legendary card from your graveyard to your hand. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "f526863c10d25ef90de79016ff4dfe96da4730d89ba31714f6ac42760b8dfc27",
+      "card": {
+        "oracleId": "5df44b8d-b337-49d8-8427-34253f52cb47",
+        "scryfallId": "315cbbf7-a2ad-4565-9877-1e903d7fd797",
+        "name": "Decadent Dragon // Expensive Taste",
+        "manaCost": "{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, trample\nWhenever this creature attacks, create a Treasure token.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Treasure",
+          "Trample"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Expensive Taste",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Exile the top two cards of target opponent's library face down. You may look at and play those cards for as long as they remain exiled.",
+          "manaCost": "{2}{B}",
+          "colors": [
+            "B"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "7df6a6321a1f34d6c704cba92922a1920876521d88dd4961582a566511308503",
+      "card": {
+        "oracleId": "5f2b3ea8-99ee-47a4-8a1c-4b27478d524c",
+        "scryfallId": "881e4c00-3b9a-47a1-bf66-1badda994c88",
+        "name": "Zanarkand, Ancient Metropolis // Lasting Fayth",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Land — Town",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [
+          "Town"
+        ],
+        "oracleText": "This land enters tapped.\n{T}: Add {G}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Lasting Fayth",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Create a 1/1 colorless Hero creature token. Put a +1/+1 counter on it for each land you control. (Then exile this card. You may play the land later from exile.)",
+          "manaCost": "{4}{G}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "cdc42fa27547837c3d909e26b860727ac825f98c1ef4535874aa1e5680f01896",
+      "card": {
+        "oracleId": "639a8804-8513-4ba4-8683-ea1e2e5a9530",
+        "scryfallId": "2a0d430f-da84-4752-940c-8457c525aac9",
+        "name": "Rosethorn Acolyte // Seasonal Ritual",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elf Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Druid"
+        ],
+        "oracleText": "{T}: Add one mana of any color.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Seasonal Ritual",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Add one mana of any color. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "1a3fa5186e45225f7060aa55ad0db47276957869b58714f870f621af6f4915ad",
+      "card": {
+        "oracleId": "6505a53b-00db-44c4-8eaa-09a1a01451a4",
+        "scryfallId": "5793b8eb-2fc5-454d-8fa2-20346fef167a",
+        "name": "Glóin the Mighty // Easy Pickings",
+        "manaCost": "{3}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Dwarf Warrior",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dwarf",
+          "Warrior"
+        ],
+        "oracleText": "At the beginning of your first main phase, add {R}{R}.",
+        "power": "4",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Easy Pickings",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Easy Pickings deals 1 damage to each creature your opponents control. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "8217032a57a5b897949603680b0ebc4da62c1c018f5155b2028cd9e893f6525c",
+      "card": {
+        "oracleId": "68f36dfa-bbd2-4860-b09b-37e35136be72",
+        "scryfallId": "475d7e9a-759d-4523-a5cd-2a6e0d1b14ea",
+        "name": "Bramble Familiar // Fetch Quest",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elemental Raccoon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elemental",
+          "Raccoon"
+        ],
+        "oracleText": "{T}: Add {G}.\n{1}{G}, {T}, Discard a card: Return this creature to its owner's hand.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Mill"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Fetch Quest",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Mill seven cards. Then put a creature, enchantment, or land card from among the milled cards onto the battlefield.",
+          "manaCost": "{5}{G}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "99ac8436b415aba82ddb34f89b2f6f3422cca4c1db4005d6726481dc91af5eb2",
+      "card": {
+        "oracleId": "6c370299-9803-4cb5-97ba-c17831797b54",
+        "scryfallId": "ca1cedd8-98d3-408f-8de8-fa682ab0227c",
+        "name": "Karvanista, Loyal Lupari // Lupari Shield",
+        "manaCost": "{4}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Alien Dog Soldier",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Alien",
+          "Dog",
+          "Soldier"
+        ],
+        "oracleText": "Vigilance, trample, haste\nWhenever Karvanista attacks, put a +1/+1 counter on each Human you control.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Vigilance",
+          "Haste",
+          "Trample"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Lupari Shield",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Humans you control gain indestructible until your next turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "7d73d1539c5c508aecf86e1c8760198eaca766fdc2d4aad2fda7150b4aa8a2f4",
+      "card": {
+        "oracleId": "6d611800-5b0e-40ca-82a2-5b294a1ebf6d",
+        "scryfallId": "c0b4f0ce-0d18-4546-803d-94a2f4f30951",
+        "name": "Shepherd of the Flock // Usher to Safety",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Peasant",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Peasant"
+        ],
+        "oracleText": "",
+        "power": "3",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Usher to Safety",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Return target permanent you control to its owner's hand. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "0247da919dba19dc57bd78557ec779afe2afe0159981e9ba00a3e53e046fd3d6",
+      "card": {
+        "oracleId": "70a702fe-1dd6-4d7b-a85a-45744ecad741",
+        "scryfallId": "5cc0f994-5048-4898-926e-b56cbc97e0ca",
+        "name": "Velvetwing Butterflies // Gaze in Wonder",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Insect",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Insect"
+        ],
+        "oracleText": "Flying",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Gaze in Wonder",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Tap one or two target creatures. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "8aaeed4c8480ac8d07de92a833494b6a12f561a713bd9c9717d1d01c6ce79ebc",
+      "card": {
+        "oracleId": "788a1d3f-8d73-4ecd-97ac-77906a873cfe",
+        "scryfallId": "d0f31357-3fd2-4355-acad-05d253a04b4a",
+        "name": "Sea Hag // Aquatic Ingress",
+        "manaCost": "{4}{U}",
+        "cmc": 5,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Hag",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Hag"
+        ],
+        "oracleText": "When this creature enters, creatures your opponents control get -4/-0 until end of turn.",
+        "power": "3",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Aquatic Ingress",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Up to two target creatures each get +1/+0 until end of turn and can't be blocked this turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "f997e2d8f7092364903b38c042797174867921f3f62d277c3d8976be2282394b",
+      "card": {
+        "oracleId": "7cee6d43-5dec-4989-85ec-c635ec783ec7",
+        "scryfallId": "d8b43b00-f4d1-436c-bf3f-6d414cd4ce38",
+        "name": "Sagu Wildling // Roost Seek",
+        "manaCost": "{4}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhen this creature enters, you gain 3 life.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Roost Seek",
+          "typeLine": "Sorcery — Omen",
+          "oracleText": "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. (Also shuffle this card.)",
+          "manaCost": "{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "2ac080c4876bc2f35e96353ef6b83f20e9f7f9cb8b4a5d89fd8ffa7507eb2417",
+      "card": {
+        "oracleId": "8a0e35ac-6c03-4922-b3b4-e419419fe3d7",
+        "scryfallId": "6b8e6435-7de4-41d5-bc7d-8e24c11897d0",
+        "name": "Bofur, Reliable Guardian // Concerted Care",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Dwarf Scout",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dwarf",
+          "Scout"
+        ],
+        "oracleText": "Lifelink",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Concerted Care",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Target artifact or creature you control gains hexproof and indestructible until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "3f14e028196c80fd66eb72f20601363ab48397a85ca2842f5e5f6aac3ba3c3bf",
+      "card": {
+        "oracleId": "93e4308e-e701-440e-861a-a30324654095",
+        "scryfallId": "7bd105f3-fa33-4490-aea9-b47ca121b664",
+        "name": "Silverflame Squire // On Alert",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Soldier",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Soldier"
+        ],
+        "oracleText": "",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "On Alert",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Target creature gets +2/+2 until end of turn. Untap it. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "e2de0bea44b3ebe4fcbc504727825bd38da4c3ee45e6262a40957a50cf32a070",
+      "card": {
+        "oracleId": "96aab05a-49bc-418a-9980-f3322955de1e",
+        "scryfallId": "4fe31ab9-d217-464e-96b1-d8a1ca6ad005",
+        "name": "Colossal Badger // Dig Deep",
+        "manaCost": "{5}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Badger",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Badger"
+        ],
+        "oracleText": "When this creature enters, you gain 3 life.",
+        "power": "6",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Mill"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Dig Deep",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Choose target creature. Mill four cards, then put a +1/+1 counter on that creature for each creature card milled this way.",
+          "manaCost": "{1}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "597f192ed6467b83f7eb6fb634fd1d9bd3581329a3916cd83876a495f05b207b",
+      "card": {
+        "oracleId": "9c247a17-361c-435e-90c8-ce9c6b71f7db",
+        "scryfallId": "8a665794-513f-4f78-92c9-1844ec27c79c",
+        "name": "Oakhame Ranger // Bring Back",
+        "manaCost": "{G/W}{G/W}{G/W}{G/W}",
+        "cmc": 4,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Creature — Elf Knight Ranger",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Knight",
+          "Ranger"
+        ],
+        "oracleText": "{T}: Creatures you control get +1/+1 until end of turn.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Bring Back",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Create two 1/1 white Human creature tokens. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{G/W}{G/W}{G/W}{G/W}",
+          "colors": [
+            "W",
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "a24caaea63b65839b17e8182c2a9fcbb7f2649e98e1ef2bfebe8d7066394dbdc",
+      "card": {
+        "oracleId": "a1d17244-9c92-4094-9843-d7ee31c85ea4",
+        "scryfallId": "d6fc6ed9-740a-4726-8f2c-5d662636f687",
+        "name": "Realm-Cloaked Giant // Cast Off",
+        "manaCost": "{5}{W}{W}",
+        "cmc": 7,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Giant",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Giant"
+        ],
+        "oracleText": "Vigilance",
+        "power": "7",
+        "toughness": "7",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Vigilance"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Cast Off",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Destroy all non-Giant creatures. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{3}{W}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "02f950e975bf811cef8ede88a5696b037d694e2bf32db8f67bafc9c9060c6648",
+      "card": {
+        "oracleId": "a2192c80-c48f-44e2-807c-2f9ee1aa1152",
+        "scryfallId": "19f20c0a-22be-4a9c-96ce-4047f7a2d424",
+        "name": "Beanstalk Wurm // Plant Beans",
+        "manaCost": "{4}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Plant Wurm",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Plant",
+          "Wurm"
+        ],
+        "oracleText": "Reach",
+        "power": "5",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Plant Beans",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "You may play an additional land this turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "d251e9cbbeef3703077bb0422ba6f617b5697e4148b560cc472b9b12689a5470",
+      "card": {
+        "oracleId": "a73d9109-36e0-40ea-ab06-5c5f7eb4ac54",
+        "scryfallId": "8bff0aa6-16d9-4c83-b598-ef00a3b33d2c",
+        "name": "Bilbo, Luckwearer // Burglar's Plot",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Halfling Rogue",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Halfling",
+          "Rogue"
+        ],
+        "oracleText": "Bilbo can't be blocked.\nWhenever Bilbo deals combat damage to a player, draw a card, then discard a card.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Burglar's Plot",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Exchange control of two target nonland permanents that share a card type. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{4}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "17dfd03dc045add0607b785bf3fb8bb340aae8c7765419083a736697bcbef928",
+      "card": {
+        "oracleId": "a78b063a-7f74-465a-9670-34f927f4bfe9",
+        "scryfallId": "e6f03f21-aeb9-428b-9167-b2604919bdd8",
+        "name": "Aquatic Alchemist // Bubble Up",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Elemental",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elemental"
+        ],
+        "oracleText": "Whenever you cast your first instant or sorcery spell each turn, this creature gets +2/+0 until end of turn.",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Bubble Up",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Put target instant or sorcery card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "f5f96c0e61f618a8aea7980123840a07d9f904deb5d24d378f6cf1af1bce8d9d",
+      "card": {
+        "oracleId": "ba610f08-61a7-47fe-9a80-32b5ce51b118",
+        "scryfallId": "b9f10623-4783-4773-b9c8-a5a2bcfdb5d9",
+        "name": "Woodland Acolyte // Mend the Wilds",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Creature — Human Cleric",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Cleric"
+        ],
+        "oracleText": "When this creature enters, draw a card.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Mend the Wilds",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Put target permanent card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "b33cc724d4863acca78a3f5112bdfebfd738cfec3da786cc05eaa7dec0113cbc",
+      "card": {
+        "oracleId": "bbb6867f-7186-41de-9828-21be469178c1",
+        "scryfallId": "64c432d5-4f5b-44ac-9d61-891e78460d58",
+        "name": "Frolicking Familiar // Blow Off Steam",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "R",
+          "U"
+        ],
+        "typeLine": "Creature — Otter Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Otter",
+          "Wizard"
+        ],
+        "oracleText": "Flying\nWhenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Blow Off Steam",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Blow Off Steam deals 1 damage to any target. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "ad36b5b3520fdbcece214bf09ffe5c416003629aae1b647bc023a8ffb639eff2",
+      "card": {
+        "oracleId": "bd513d9d-5aa2-4860-bd86-8b5d9430f133",
+        "scryfallId": "98b2d5b5-f85b-4c42-a0f5-a76f6af304ba",
+        "name": "Jidoor, Aristocratic Capital // Overture",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Land — Town",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [
+          "Town"
+        ],
+        "oracleText": "This land enters tapped.\n{T}: Add {U}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Mill"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Overture",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Target opponent mills half their library, rounded down. (Then exile this card. You may play the land later from exile.)",
+          "manaCost": "{4}{U}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "2fdefa93c2d2af46398c3ef33c0c9f231818b156a6bd5d285bfb4bdc52395043",
+      "card": {
+        "oracleId": "bd575e82-99e7-44c7-ab93-d33f5678e1ad",
+        "scryfallId": "dd6ed252-c262-4062-97ba-75c50d6b5579",
+        "name": "Threadbind Clique // Rip the Seams",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Creature — Faerie",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Faerie"
+        ],
+        "oracleText": "Flying",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Rip the Seams",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Destroy target tapped creature. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "c659b8da42cc11db41431201cc87d9ba1b080fc31749f032b8d7008e5572e58e",
+      "card": {
+        "oracleId": "c075637a-e94c-4b8d-8a9e-20ee3dfa8fe7",
+        "scryfallId": "3d74937b-c87f-4894-8f00-36e4d6844ebd",
+        "name": "Fang Dragon // Forktail Sweep",
+        "manaCost": "{5}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying",
+        "power": "6",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Forktail Sweep",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Forktail Sweep deals 1 damage to each creature you don't control. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "2d36f7f1294bfa2620150fc4c5cf95701879be7dfb3d719380a56fdc7b9c1e23",
+      "card": {
+        "oracleId": "c0abbed2-d213-47ef-8d6c-4a21efb9a55f",
+        "scryfallId": "e3435fd6-8f51-4d99-a278-4ddb088acfe1",
+        "name": "Fae of Wishes // Granted",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Faerie Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Faerie",
+          "Wizard"
+        ],
+        "oracleText": "Flying\n{1}{U}, Discard two cards: Return this creature to its owner's hand.",
+        "power": "1",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Granted",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "You may reveal a noncreature card you own from outside the game and put it into your hand.",
+          "manaCost": "{3}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "75c34bf29133acdd938f8f9bf5b683a7013670d2f1ec328fdf9f8d31a9c590ed",
+      "card": {
+        "oracleId": "c5632f18-7904-4a29-82be-6a6ef8e85e18",
+        "scryfallId": "1d07c21e-55dc-45b2-b406-2ac38ca5d871",
+        "name": "Emerald Dragon // Dissonant Wave",
+        "manaCost": "{4}{G}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, trample",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Trample"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Dissonant Wave",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Counter target activated or triggered ability from a noncreature source. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "294c6a6c10bd00986e54805eac0ca985651580e023bd6de062521979da53002f",
+      "card": {
+        "oracleId": "c8f6cc1f-b7e4-470d-8d48-ef848d7c1116",
+        "scryfallId": "99083707-2152-42c0-b5c3-b4f97ec20190",
+        "name": "Lonesome Unicorn // Rider in Need",
+        "manaCost": "{4}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Unicorn",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Unicorn"
+        ],
+        "oracleText": "Vigilance",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Vigilance"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Rider in Need",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Create a 2/2 white Knight creature token with vigilance. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "572d6514b08420cfb62da7bfa626b2d17218b1c7b96beb7d062af4bc4a0c1021",
+      "card": {
+        "oracleId": "ca8535f2-1f96-4836-bd32-5e952f9bee72",
+        "scryfallId": "783adffd-449f-44a6-8faf-3e38a201b05b",
+        "name": "Topaz Dragon // Entropic Cloud",
+        "manaCost": "{4}{B}{B}",
+        "cmc": 6,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, deathtouch",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Deathtouch",
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Entropic Cloud",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Creatures you control gain deathtouch until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{B}",
+          "colors": [
+            "B"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "b23d048f04885d184c1634cb78310f62474c642fee6fd87be43a96c9990a7d77",
+      "card": {
+        "oracleId": "cdb84830-faf2-4beb-8d57-ad696d75876b",
+        "scryfallId": "26ece013-f3ef-4c12-9dea-b2789f61f8a0",
+        "name": "Bellowing Bruiser // Beat a Path",
+        "manaCost": "{4}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Ogre",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Ogre"
+        ],
+        "oracleText": "Haste",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Haste"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Beat a Path",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Up to two target creatures can't block this turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "83286b713c5253e0aea484b73a6f065021a0e7f1918c63194f6369a7824f147f",
+      "card": {
+        "oracleId": "d02179a0-a6b7-49ef-a73e-cf11cabb896f",
+        "scryfallId": "b2419408-e907-4d62-b158-c97afc388c04",
+        "name": "Horn of Valhalla // Ysgard's Call",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Artifact — Equipment",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Equipment"
+        ],
+        "oracleText": "Equipped creature gets +1/+1 for each creature you control.\nEquip {3}",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Equip"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Ysgard's Call",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Create X 1/1 white Soldier creature tokens. (Then exile this card. You may cast the artifact later from exile.)",
+          "manaCost": "{X}{W}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "0e082f2ccac593bc7e6d19f66b24c116a69406f52a6f3fff7dd3139837c2f1a6",
+      "card": {
+        "oracleId": "db6fbdc9-1c45-416f-a08e-2082f65adb65",
+        "scryfallId": "32158458-42eb-41bc-a15a-11af28463eb0",
+        "name": "Animating Faerie // Bring to Life",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Faerie",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Faerie"
+        ],
+        "oracleText": "Flying",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Bring to Life",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on it.",
+          "manaCost": "{2}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "2be9fa04105a999387ae3509ade1fc209111dbc8b9bdb0a6986e68c8ea77e1d4",
+      "card": {
+        "oracleId": "dba1d231-6b03-44ad-ab8c-be0c8fe1b6db",
+        "scryfallId": "4202a678-a5f4-47f9-9c18-e88ab9ad20a4",
+        "name": "Lake-town Mariners // Gone Fishing",
+        "manaCost": "{4}{U}{U}",
+        "cmc": 6,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Human Citizen",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Citizen"
+        ],
+        "oracleText": "Vigilance\nWard {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)",
+        "power": "6",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Vigilance",
+          "Ward"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Gone Fishing",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Exile two target creatures and/or lands you control, then return them to the battlefield under their owner's control.",
+          "manaCost": "{3}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "011c698728670258b5af06f6e981fcea9eee9ed0f9753b95d55bda462ebd70d0",
+      "card": {
+        "oracleId": "df555f60-2164-49dc-be67-00aca9eb0d45",
+        "scryfallId": "5b2a02f3-3921-4f40-9ffa-70bc08b052e1",
+        "name": "Minecart Daredevil // Ride the Rails",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dwarf Knight",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dwarf",
+          "Knight"
+        ],
+        "oracleText": "",
+        "power": "4",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Ride the Rails",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Target creature gets +2/+1 until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "0b9b3446e1622da54ac9b69423c1f9775d874c51d71794e40a880c90da89bea6",
+      "card": {
+        "oracleId": "e0b5b3af-af89-4b91-8b55-947ec095d6f2",
+        "scryfallId": "8f5228dc-ec9d-456f-a89c-1bc592a1bbab",
+        "name": "Ettercap // Web Shot",
+        "manaCost": "{4}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Spider Beast",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Spider",
+          "Beast"
+        ],
+        "oracleText": "Reach",
+        "power": "2",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Web Shot",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Destroy target creature with flying. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "b3f35f2f7f727ffbbf729a33e782b9abdda4b079cd9d23c29e46c1a4c4e73a53",
+      "card": {
+        "oracleId": "e24916ff-7566-4f27-8e31-732311a4a88c",
+        "scryfallId": "0ec92c44-7cf0-48a5-a3ca-bc633496d887",
+        "name": "Stormshriek Feral // Flush Out",
+        "manaCost": "{4}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, haste\n{1}{R}: This creature gets +1/+0 until end of turn.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Haste"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Flush Out",
+          "typeLine": "Sorcery — Omen",
+          "oracleText": "Discard a card. If you do, draw two cards. (Then shuffle this card into its owner's library.)",
+          "manaCost": "{1}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "853803a1a7608887f1d3d1a7a8ba4c532231c0f6b6520088455083135ddc6351",
+      "card": {
+        "oracleId": "e67bd8eb-66db-48af-82f8-74f5595f1928",
+        "scryfallId": "7f78a570-d776-42f2-a609-6da0156c8de7",
+        "name": "Curious Pair // Treats to Share",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Human Peasant",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Peasant"
+        ],
+        "oracleText": "",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Food"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Treats to Share",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Create a Food token. (Then exile this card. You may cast the creature later from exile. A Food token is an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")",
+          "manaCost": "{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "7237cbc8573c2438b73cf9f66ffec61e5e293680e778104f3cffa7e969563c8f",
+      "card": {
+        "oracleId": "ea27c8bf-33c5-443f-b8b2-51235efc2491",
+        "scryfallId": "c7d5e394-8e41-442e-ae97-a478a61e1b9d",
+        "name": "Ardenvale Tactician // Dizzying Swoop",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Knight",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Knight"
+        ],
+        "oracleText": "Flying",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Dizzying Swoop",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Tap up to two target creatures. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{W}",
+          "colors": [
+            "W"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "06196599de9628e77fa563e390ba68a34de2d6a4fdde7d513ddf13a6d7d5b54e",
+      "card": {
+        "oracleId": "f6771d32-395e-4832-b33d-cbc12dff1516",
+        "scryfallId": "481870ee-d1f7-421b-86e1-570ea933bbbc",
+        "name": "Thranduil, Sindarin Liege // Silvan Rally",
+        "manaCost": "{2}{G/U}{G/U}",
+        "cmc": 4,
+        "colors": [
+          "G",
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Elf Noble",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Noble"
+        ],
+        "oracleText": "Other Elves you control get +1/+1.\nLandfall — Whenever a land you control enters, create a 1/1 green Elf creature token.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Mill",
+          "Landfall"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Silvan Rally",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Mill four cards, then put up to two land cards from among them into your hand. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{G/U}{G/U}",
+          "colors": [
+            "U",
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "84dae8d5dda46754cf0940c8ab0ae82c8f482127d11f9a9388faa97907bae26b",
+      "card": {
+        "oracleId": "f762c225-1c8c-4f12-aa88-c8c89e0a7185",
+        "scryfallId": "e77a8fd4-af5f-42b3-a87e-788baf2562dd",
+        "name": "Gingerbread Hunter // Puny Snack",
+        "manaCost": "{4}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "B",
+          "G"
+        ],
+        "typeLine": "Creature — Giant",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Giant"
+        ],
+        "oracleText": "When this creature enters, create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Food"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Puny Snack",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Target creature gets -2/-2 until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{2}{B}",
+          "colors": [
+            "B"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "ee78ac8b837ae0db0dd0a3b940baa65a9bfb9ca289850a43a0d8e72463b4d6b5",
+      "card": {
+        "oracleId": "f88a096e-7497-4297-ab65-f18769b1cc47",
+        "scryfallId": "0b4399b6-e67f-40d8-8676-f5db7e04a6c9",
+        "name": "Merchant of the Vale // Haggle",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Human Peasant",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Peasant"
+        ],
+        "oracleText": "{2}{R}, Discard a card: Draw a card.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Haggle",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "You may discard a card. If you do, draw a card. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "2cf37143ed93f90312075d4043c5beabad860b0dd61f50e0514ba38b4065c46c",
+      "card": {
+        "oracleId": "fa85f9e6-69ff-4669-b70a-440aa7b16c97",
+        "scryfallId": "6a109b3e-9f5b-4625-abb7-6b992c10530b",
+        "name": "Bilbo Baggins, Burglar // Take a Glance",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Halfling Rogue",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Halfling",
+          "Rogue"
+        ],
+        "oracleText": "When Bilbo Baggins enters, draw a card.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Scry"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Take a Glance",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Scry 2. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "e6130c94687539e1de2ca04aea4494e16c57f6d3efa612838be03a3b6f3e6484",
+      "card": {
+        "oracleId": "fc75cfec-e1f6-4cb5-8a3c-2f7b2c39c03f",
+        "scryfallId": "419ca9e5-8413-4378-a4ef-eda5a1024218",
+        "name": "Smaug, the Great Calamity // Spew Flame",
+        "manaCost": "{5}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Dragon",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Spew Flame",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Spew Flame deals 5 damage to target creature. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{4}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "8ae13a55d7a76704207c7cb4f9b4e671599232e33e7124604003d2d6e32a5a96",
+      "card": {
+        "oracleId": "fef67393-9b7b-495d-8b03-865537386d42",
+        "scryfallId": "ac1907e8-0713-47dd-ac42-bf1323c5bec0",
+        "name": "Ferocious Werefox // Guard Change",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elf Fox Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Fox",
+          "Warrior"
+        ],
+        "oracleText": "Trample",
+        "power": "4",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Role token",
+          "Trample"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Guard Change",
+          "typeLine": "Instant — Adventure",
+          "oracleText": "Create a Monster Role token attached to target creature you control. (Enchanted creature gets +1/+1 and has trample.)",
+          "manaCost": "{1}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "e4a32ed5cdf16ad1fb9782f2c9f950187b93d3bc5befa3ad637ab498438aef21",
+      "card": {
+        "oracleId": "ff812a78-3fe7-47bc-9984-1c2380cff5b1",
+        "scryfallId": "2999e3b1-6510-42b2-9429-28c07a64a44f",
+        "name": "Twinmaw Stormbrood // Charring Bite",
+        "manaCost": "{5}{W}",
+        "cmc": 6,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhen this creature enters, you gain 5 life.",
+        "power": "5",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Charring Bite",
+          "typeLine": "Sorcery — Omen",
+          "oracleText": "Charring Bite deals 5 damage to target creature without flying. (Then shuffle this card into its owner's library.)",
+          "manaCost": "{1}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "bd4ccc1fedd99e43490c17e6b0b2c4b4792495d6bcb74460c678af5c64acb025",
+      "card": {
+        "oracleId": "fff28b30-9903-4a0a-a723-31216abd457d",
+        "scryfallId": "56b0f66b-dca9-4a01-9394-20a513c2b225",
+        "name": "Young Blue Dragon // Sand Augury",
+        "manaCost": "{4}{U}",
+        "cmc": 5,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Scry",
+          "Flying"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Sand Augury",
+          "typeLine": "Sorcery — Adventure",
+          "oracleText": "Scry 1, then draw a card. (Then exile this card. You may cast the creature later from exile.)",
+          "manaCost": "{1}{U}",
+          "colors": [
+            "U"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    }
+  ]
+}

@@ -995,6 +995,8 @@ function parseEffectSentence(
   // `parseEffectSentence`'s ", then " split, so the "it" is whatever the first half acted on,
   // which for every printing of this shape is the source itself.
   if (/^untap (?:it|~|this (?:artifact|creature|enchantment|land|permanent))$/.test(s)) {
+    // A bare spell pronoun needs an explicit preceding referent; its source is on the stack.
+    if (card.types.includes('Instant') || card.types.includes('Sorcery')) return null;
     return [{ op: 'untapTarget', target: 'source' }];
   }
   if (s === 'put target artifact card from your graveyard on top of your library') {
@@ -2489,6 +2491,42 @@ function parseDestroyThenLoseLifeEqualToManaValueBlock(
       { op: 'destroy', target: 0 },
     ],
   };
+}
+
+/** One printed target occurrence; the second instruction refers to that same permanent. */
+function parseTargetThenUntapBlock(
+  text: string,
+  card: OracleCard,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const match = text.trim().match(/^(.+?)(?:\.\s+| and |, then )untap it\.?$/i);
+  if (match === null) return null;
+  const targets: TargetSpec[] = [];
+  const alloc: SlotAllocator = (kind, filter, controller) => {
+    targets.push({
+      kind,
+      ...(filter === undefined ? {} : { filter }),
+      ...(controller === undefined ? {} : { controller }),
+    });
+    return targets.length - 1;
+  };
+  const effects = parseEffectSentence(match[1]!, alloc, card);
+  if (
+    effects === null ||
+    targets.length !== 1 ||
+    ![
+      'creature',
+      'artifact',
+      'enchantment',
+      'land',
+      'planeswalker',
+      'permanent',
+      'nonlandPermanent',
+      'artifactOrEnchantment',
+      'artifactEnchantmentOrPlaneswalker',
+    ].includes(targets[0]!.kind)
+  )
+    return null;
+  return { targets, effects: [...effects, { op: 'untapTarget', target: 0 }] };
 }
 
 function parseHellkiteCourserBlock(
@@ -5541,9 +5579,9 @@ interface TransformBackFaceResult {
 }
 
 /** Interpret the second face of a traditional transforming DFC with the normal card grammar. */
-function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | null {
+function interpretSecondFace(card: OracleCard): CardDefinition | null {
   const back = card.backFace;
-  if (card.layout !== 'transform' || back === undefined) return null;
+  if (back === undefined) return null;
 
   const [leftRaw, rightRaw = ''] = back.typeLine.split(/\s+\u2014\s+/);
   const left = (leftRaw ?? '').trim().split(/\s+/).filter(Boolean);
@@ -5561,7 +5599,7 @@ function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | nul
   const subtypes = rightRaw.trim().split(/\s+/).filter(Boolean);
   const synthetic: OracleCard = {
     oracleId: `${card.oracleId}:back` as OracleCard['oracleId'],
-    scryfallId: `${card.scryfallId}:back`,
+    scryfallId: card.scryfallId,
     name: back.name,
     manaCost: back.manaCost,
     cmc: 0,
@@ -5581,7 +5619,13 @@ function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | nul
     commanderLegality: card.commanderLegality,
     isBasicLand: supertypes.includes('Basic') && types.includes('Land'),
   };
-  const def = interpretCard(synthetic);
+  return interpretCard(synthetic);
+}
+
+function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | null {
+  if (card.layout !== 'transform' || card.backFace === undefined) return null;
+  const back = card.backFace;
+  const def = interpretSecondFace(card)!;
   /* eslint-disable no-restricted-syntax -- this is a permanent face descriptor, not a token spec */
   return {
     backFace: {
@@ -5969,6 +6013,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
           spellBlockHandled = true;
         } else {
           const wholeSpell =
+            parseTargetThenUntapBlock(spellBlockText, card) ??
             parseBlinkSpellBlock(spellBlockText) ??
             parseKeywordCountSpellBlock(spellBlockText) ??
             parseHuntersInsightBlock(spellBlockText, card) ??
@@ -6903,7 +6948,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   // An authored override may implement lines the grammar cannot read (ADR 0010). It clears
   // only the specific reasons it names, so an errata'd card re-opens loudly rather than
   // silently keeping stale behavior â€” see `overrides/index.ts`.
-  return enforceInterpretedDefinition(
+  const definition = enforceInterpretedDefinition(
     applyOverride({
       oracleId: card.oracleId,
       scryfallId: card.scryfallId,
@@ -6965,4 +7010,45 @@ export function interpretCard(card: OracleCard): CardDefinition {
       unmodeledReasons: reasons,
     }),
   );
+  if (!definition.modeled || (card.layout !== 'adventure' && card.layout !== 'omen'))
+    return definition;
+  const face = interpretSecondFace(card);
+  if (
+    face === null ||
+    !face.modeled ||
+    face.manaCost === null ||
+    face.types.length !== 1 ||
+    !face.types.some((type) => type === 'Instant' || type === 'Sorcery') ||
+    !face.subtypes.some((type) => type === 'Adventure' || type === 'Omen') ||
+    face.spellAbility === null
+  ) {
+    return {
+      ...definition,
+      modeled: false,
+      unmodeledReasons: [
+        ...definition.unmodeledReasons,
+        ...(face?.unmodeledReasons.length
+          ? face.unmodeledReasons.map((reason) => `${card.backFace!.name}: ${reason}`)
+          : ['missing or unsupported executable spell face']),
+      ],
+    };
+  }
+  const faceKind = face.subtypes.includes('Omen') ? 'omen' : 'adventure';
+  return enforceInterpretedDefinition({
+    ...definition,
+    alternativeCasts: [
+      ...(definition.alternativeCasts ?? []).filter(
+        (alt) => alt.kind !== 'adventure' && alt.kind !== 'omen',
+      ),
+      {
+        kind: faceKind,
+        manaCost: face.manaCost,
+        name: face.name,
+        typeLine: face.typeLine,
+        description: face.name,
+        ability: face.spellAbility,
+        spellFace: face,
+      },
+    ],
+  });
 }

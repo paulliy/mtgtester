@@ -4,6 +4,7 @@ import { computePriorityOptions, type PriorityActionPayload } from '../src/actio
 import type { CardDefinition } from '../src/cards/definition';
 import { manaCost, spell } from '../src/cards/templates';
 import type { EngineActionOption } from '../src/decisions';
+import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 import { checkContinuations, cloneContractContext } from './helpers/contract-harness';
@@ -167,6 +168,17 @@ describe('independent alternative casting contracts', () => {
           kind: 'omen',
           manaCost: manaCost('{0}'),
           description: 'Omen face',
+          spellFace: {
+            ...interpretCard(
+              oracle({
+                name: 'Omen face',
+                typeLine: 'Instant — Omen',
+                manaCost: '{0}',
+                oracleText: 'You gain 1 life.',
+              }),
+            ),
+            spellAbility: ability,
+          },
           typeLine: 'Instant — Omen',
           ability,
         },
@@ -335,6 +347,14 @@ describe('casting configuration source permissions', () => {
           typeLine: 'Instant — Omen',
           manaCost: manaCost('{1}'),
           description: 'Instant probe',
+          spellFace: interpretCard(
+            oracle({
+              name: 'Instant probe',
+              typeLine: 'Instant — Omen',
+              manaCost: '{1}',
+              oracleText: 'You gain 1 life.',
+            }),
+          ),
           ability: spell({ effects: [{ op: 'gainLife', amount: { kind: 'const', n: 1 } }] }),
         },
       ],

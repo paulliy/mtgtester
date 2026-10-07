@@ -1,3 +1,4 @@
+import { spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
 import { targetIsLegal } from '../targets/legality';
 import { captureResolutionTargets, type ResolutionTargets } from '../targets/resolution';
@@ -880,7 +881,12 @@ export function isTargetStillLegal(
 function protectedFromCounter(ctx: GameContext, entry: EngineStackObject): boolean {
   if (entry.ability?.cantBeCountered === true) return true;
   if (entry.kind !== 'spell') return false;
-  return spellProtectedFromCounter(ctx, entry.controllerId, entry.sourceOracleId);
+  return spellProtectedFromCounter(
+    ctx,
+    entry.controllerId,
+    entry.sourceOracleId,
+    spellDefinitionOf(ctx, entry),
+  );
 }
 
 const signed = (n: number): string => `${n >= 0 ? '+' : ''}${n}`;
@@ -2041,11 +2047,7 @@ export function* executeAbility(
           }
           ctx.state.stack.splice(idx, 1);
           if (effect.addManaAtNextMainPhase === true) {
-            const counteredDef = getDefByOracleId(
-              ctx,
-              countered.sourceOracleId,
-              countered.description,
-            );
+            const counteredDef = spellDefinitionOf(ctx, countered);
             const manaValue = spellManaValue(counteredDef, countered.announcedX);
             ctx.state.delayedTriggers.push({
               id: `dt-${ctx.state.nextObjectNum++}`,
@@ -3492,15 +3494,26 @@ export function* executeAbility(
           (entry) => entry.id === targetId && entry.kind === 'spell',
         );
         if (original === undefined || original.ability === null) break;
+        const copyId = `o-${ctx.state.nextObjectNum++}`;
+        const originalDefinition = spellDefinitionOf(ctx, original);
         const copy: EngineStackObject = {
           ...original,
-          id: `o-${ctx.state.nextObjectNum++}`,
-          sourceId: `o-${ctx.state.nextObjectNum++}`,
+          id: copyId,
+          sourceId: copyId,
           card: null,
           description: `Copy of ${original.description}`,
           controllerId: controller.id,
-          sourceCardId: source.cardId,
-          sourceOracleId: source.oracleId,
+          sourceCardId: copyId,
+          sourceOracleId: original.sourceOracleId,
+          spellDefinition: originalDefinition,
+          sourceColors: [...originalDefinition.colors],
+          isCommanderCast: false,
+          sourceDamageKeywords:
+            original.sourceDamageKeywords === undefined
+              ? originalDefinition.keywords.filter((keyword): keyword is DamageKeyword =>
+                  ['infect', 'lifelink', 'deathtouch'].includes(keyword),
+                )
+              : [...original.sourceDamageKeywords],
           targets: [...original.targets],
         };
         ctx.state.stack.push(copy);

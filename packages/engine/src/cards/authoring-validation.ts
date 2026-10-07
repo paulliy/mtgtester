@@ -1,3 +1,5 @@
+import { spellFaceOf } from './spell-faces';
+import type { AlternativeCast } from './ability';
 import { selectorIsEventOnly } from './selector';
 import { validateIRGraph } from './ir-graph';
 import { validateManaRiders } from './mana-riders';
@@ -277,6 +279,16 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   }
   if (value === null || typeof value !== 'object') return;
   const record = value as Record<string, unknown>;
+  if (record['kind'] === 'adventure' || record['kind'] === 'omen') {
+    try {
+      spellFaceOf(record as unknown as AlternativeCast);
+    } catch (error) {
+      issues.push({
+        path: `${path}.spellFace`,
+        message: error instanceof Error ? error.message : 'invalid spell face',
+      });
+    }
+  }
   if (record['kind'] === 'overload') {
     const ability = record['ability'] as { kind?: unknown; targets?: unknown } | undefined;
     if (
