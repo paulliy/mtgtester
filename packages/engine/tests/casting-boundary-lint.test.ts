@@ -17,6 +17,13 @@ describe('casting constructor and export boundary', () => {
     'const spell: EngineStackObject = {...other, kind: dynamicKind};',
     'const spell = {...other} satisfies EngineStackObject;',
     'const spell = {...other} as EngineStackObject;',
+    'function secondCast(): EngineStackObject { return {...original}; }',
+    'const secondCast = (): EngineStackObject => ({...original});',
+    'const secondCast = function(): EngineStackObject { return {...original}; };',
+    'const secondCast: () => EngineStackObject = () => ({...original});',
+    'const secondCast: () => EngineStackObject = () => { return {...original}; };',
+    "import type * as Types from './state/types'; const spell: Types.EngineStackObject = {...other};",
+    "import type {EngineStackObject as Stack} from './state/types'; function secondCast(): Stack { return {...original}; }",
     "import {castSpell as secondCast} from '../casting/cast';",
     "export {castSpell} from './casting/cast';",
     "export * from './casting/preview.js';",
@@ -53,6 +60,18 @@ describe('casting constructor and export boundary', () => {
     ],
     ['effects/resolve.ts', "import * as copies from '../stack/copy'; export {copies};"],
     ['actions/apply.ts', "const casting = await import('../casting/cast.js');"],
+    [
+      'actions/apply.ts',
+      "import {castSpell as cast} from '../casting/cast'; const escaped = cast; export {escaped};",
+    ],
+    [
+      'actions/apply.ts',
+      "export {escaped}; const escaped = cast; import {castSpell as cast} from '../casting/cast';",
+    ],
+    [
+      'actions/apply.ts',
+      "import {castSpell as cast} from '../casting/cast'; export const escaped = cast;",
+    ],
     [
       'index.ts',
       "import type {EngineStackObject as Stack} from './state/types'; const copy: Stack = {...original};",
@@ -91,6 +110,14 @@ describe('casting constructor and export boundary', () => {
     ],
     ['sba/sba.ts', "const ability: EngineStackObject = {kind: 'triggeredAbility', card: null};"],
     ['cards/templates.ts', "const ability = {kind: 'spell', targets: [], effects: []};"],
+    [
+      'sba/sba.ts',
+      "function triggered(): EngineStackObject { return {kind: 'triggeredAbility', card: null}; }",
+    ],
+    [
+      'sba/sba.ts',
+      "const activated = (): EngineStackObject => ({kind: 'activatedAbility', card: null});",
+    ],
   ])('accepts the authorized %s route', async (file, code) => {
     expect(await violations(file, code)).toEqual([]);
   });

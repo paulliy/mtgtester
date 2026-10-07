@@ -615,6 +615,10 @@ and report the exact failed action, attempted recovery, and remaining work.
   prototype-named data keys. All 145 focused contracts, both type checks and lint pass; the 93
   interpretation and 729 override snapshots remain unchanged. Builders do not grant primitive
   or card-review evidence by themselves.
+- Casting constructor guards now also reject typed function/arrow returns, namespace-qualified
+  stack types and locally aliased constructor exports, including exported variable declarations.
+  Explicit triggered/activated returns remain legal. All 60 effective lint contracts and the
+  complete repository lint pass.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
