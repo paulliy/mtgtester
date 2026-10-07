@@ -2992,7 +2992,7 @@ async function runSelectedFaceViewer(page: Page, name: string, half: boolean): P
     await page.getByRole('button', { name: 'Giant', exact: true }).click();
   if (half && expected.scry !== undefined) {
     for (let index = 0; index < expected.scry; index++)
-      await page.getByRole('button', { name: 'Keep on top', exact: true }).click();
+      await page.getByRole('button', { name: /^Keep .+ on top$/ }).click();
     if (expected.scry > 1)
       await page.getByRole('button', { name: 'Put next on the top', exact: true }).first().click();
   }
