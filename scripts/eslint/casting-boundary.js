@@ -2,6 +2,9 @@ import process from 'node:process';
 import { relative } from 'node:path';
 
 const root = 'packages/engine/src/';
+const internalModule = (source) =>
+  typeof source === 'string' &&
+  /\/(?:casting\/(?:cast|preview)|stack\/copy)(?:\.(?:js|ts))?$/.test(source);
 const constructors = new Set(['casting/cast.ts', 'casting/preview.ts', 'stack/copy.ts']);
 const property = (node, name) =>
   node.properties.find(
@@ -29,7 +32,42 @@ export const castingBoundaryPlugin = {
       create(context) {
         const file = relative(process.cwd(), context.filename).replaceAll('\\', '/');
         const path = file.slice(root.length);
+        const internalBindings = new Map();
+        const stackTypes = new Set(['EngineStackObject']);
+        const isStackType = (type) =>
+          type?.type === 'TSTypeReference' && stackTypes.has(type.typeName?.name);
         return {
+          Program(node) {
+            // Discover bindings before checking exports, including exports before imports.
+            for (const statement of node.body) {
+              if (statement.type !== 'ImportDeclaration') continue;
+              for (const specifier of statement.specifiers) {
+                if (internalModule(statement.source.value))
+                  internalBindings.set(specifier.local.name, {
+                    source: statement.source.value,
+                    imported: specifier.imported?.name,
+                  });
+                if (specifier.imported?.name === 'EngineStackObject')
+                  stackTypes.add(specifier.local.name);
+              }
+            }
+            let changed;
+            do {
+              changed = false;
+              for (const statement of node.body) {
+                const alias =
+                  statement.type === 'ExportNamedDeclaration' ? statement.declaration : statement;
+                if (
+                  alias?.type === 'TSTypeAliasDeclaration' &&
+                  isStackType(alias.typeAnnotation) &&
+                  !stackTypes.has(alias.id.name)
+                ) {
+                  stackTypes.add(alias.id.name);
+                  changed = true;
+                }
+              }
+            } while (changed);
+          },
           ObjectExpression(node) {
             if (constructors.has(path)) return;
             const kind = literal(property(node, 'kind')?.value);
@@ -41,12 +79,12 @@ export const castingBoundaryPlugin = {
             while (
               ['TSAsExpression', 'TSSatisfiesExpression', 'TSTypeAssertion'].includes(parent.type)
             ) {
-              assertedStack ||= parent.typeAnnotation?.typeName?.name === 'EngineStackObject';
+              assertedStack ||= isStackType(parent.typeAnnotation);
               parent = parent.parent;
             }
             const typedStack =
               parent.type === 'VariableDeclarator' &&
-              parent.id.typeAnnotation?.typeAnnotation?.typeName?.name === 'EngineStackObject';
+              isStackType(parent.id.typeAnnotation?.typeAnnotation);
             if (
               (kind === 'spell' && stackShape) ||
               ((typedStack || assertedStack) &&
@@ -55,9 +93,31 @@ export const castingBoundaryPlugin = {
               context.report({ node, messageId: 'spell' });
           },
           ImportDeclaration: checkModule,
-          ExportNamedDeclaration: checkModule,
+          ExportNamedDeclaration(node) {
+            checkModule(node);
+            if (node.source) return;
+            for (const specifier of node.specifiers) checkLocalExport(specifier.local);
+          },
+          ExportDefaultDeclaration(node) {
+            checkLocalExport(node.declaration);
+          },
+          ImportExpression(node) {
+            if (internalModule(node.source.value)) context.report({ node, messageId: 'import' });
+          },
           ExportAllDeclaration: checkModule,
         };
+        function checkLocalExport(node) {
+          if (node.type !== 'Identifier') return;
+          const binding = internalBindings.get(node.name);
+          if (!binding) return;
+          if (
+            path === 'actions/apply.ts' &&
+            binding.source.replace(/\.(?:js|ts)$/, '').endsWith('/casting/cast') &&
+            ['queueWardTriggers', 'queueBecomesTargetedTriggers'].includes(binding.imported)
+          )
+            return;
+          context.report({ node, messageId: 'import' });
+        }
         function checkModule(node) {
           const source = node.source?.value;
           if (typeof source !== 'string') return;

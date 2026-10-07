@@ -45,6 +45,35 @@ describe('casting constructor and export boundary', () => {
   });
 
   it.each([
+    ['actions/apply.ts', "import {castSpell as cast} from '../casting/cast'; export {cast};"],
+    ['actions/apply.ts', "export {cast}; import {castSpell as cast} from '../casting/cast';"],
+    [
+      'actions/legal.ts',
+      "import {castingPreviewContext as preview} from '../casting/preview'; export default preview;",
+    ],
+    ['effects/resolve.ts', "import * as copies from '../stack/copy'; export {copies};"],
+    ['actions/apply.ts', "const casting = await import('../casting/cast.js');"],
+    [
+      'index.ts',
+      "import type {EngineStackObject as Stack} from './state/types'; const copy: Stack = {...original};",
+    ],
+    [
+      'index.ts',
+      'type Stack = EngineStackObject; type Copy = Stack; const copy = {...original} satisfies Copy;',
+    ],
+  ])('rejects a binding escape in %s: %s', async (file, code) => {
+    expect(await violations(file, code)).not.toEqual([]);
+  });
+
+  it.each([
+    [
+      'actions/apply.ts',
+      "import {queueWardTriggers as ward} from '../casting/cast'; export {ward};",
+    ],
+    [
+      'sba/sba.ts',
+      "import type {EngineStackObject as Stack} from '../state/types'; const ability: Stack = {kind: 'triggeredAbility', card: null};",
+    ],
     ['casting/cast.ts', "const spell: EngineStackObject = {kind: 'spell', card: obj};"],
     ['casting/preview.ts', "const spell: EngineStackObject = {kind: 'spell', card: obj};"],
     ['stack/copy.ts', 'const copy: EngineStackObject = {...original, card: null};'],
