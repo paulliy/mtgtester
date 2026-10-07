@@ -589,6 +589,22 @@ and report the exact failed action, attempted recovery, and remaining work.
   and test/tooling types and lint. Earlier runs retain their hook/RPC failures separately.
   Asynchronous child execution and yielding between receipt cases correct event-loop starvation;
   the hook deadline now covers both independently bounded child operations.
+- Complete trace receipt at `9f9c666`: all 144 actual Lab cases pass again without skips,
+  retries or flaky outcomes. All 144 retained archives are parsed, checked and hashed against
+  173 source inputs (tested tree `add011e677c9cca78532769bf94c9f24335e108c`, report SHA-256
+  `e55c7a1bd83a72af4d7edcccc4dec4801ec55f5a8f45633a6c850cf41dbd0cf9`).
+  All 169 loader/viewer-gate checks pass, including missing, duplicate and corrupt new untap
+  traces. Subsequent source changes require final fresh receipts; this is checkpoint evidence.
+- Additional life X (`170c5ee`) uses the actual joint mana/payment witness rather than a
+  starting-life ceiling. Two before-fix normal-path regressions omit valid X choices when
+  mana gains life, including a caster starting below zero; both now offer and apply the exact
+  payable range. Final authoring, previews and application require a bounded direct pay-X-life
+  envelope; mixed unproven X expressions are contained. Excessive menus fail with an explicit
+  1,024-choice scope error instead of truncating legal choices. All 303 focused ordinary,
+  alternative, face/free-cast, zero-life and authoring checks pass with production/test/tooling
+  types and lint. Fresh generator discovery includes the shared cost-contract helper;
+  benchmark refresh changes only current engine/card source bindings and dependent content hashes.
+  The actual 38,708-record bulk re-audit retains 6,471 modeled definitions and 487 keys.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
