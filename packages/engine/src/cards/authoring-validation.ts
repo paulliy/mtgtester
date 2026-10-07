@@ -1,6 +1,7 @@
 import { selectorIsEventOnly } from './selector';
 import { validateIRGraph } from './ir-graph';
 import { validateManaRiders } from './mana-riders';
+import { validateCardIRFields } from './capabilities';
 import {
   validateExpression,
   validateEffectExpressions,
@@ -253,6 +254,21 @@ function validateCost(cost: AbilityCost, path: string, issues: AuthoringIssue[])
 }
 
 const validateManaCost = validateParsedManaCost;
+
+function validateFields(
+  definition: Partial<CardDefinition>,
+  path: string,
+  issues: AuthoringIssue[],
+): void {
+  try {
+    validateCardIRFields(definition);
+  } catch (error) {
+    issues.push({
+      path,
+      message: error instanceof Error ? error.message : 'unclassified executable IR',
+    });
+  }
+}
 
 function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: Scope): void {
   if (Array.isArray(value)) {
@@ -636,6 +652,7 @@ export function validateCardDefinition(definition: CardDefinition): AuthoringIss
       message: `card is not fully modeled: ${definition.unmodeledReasons.join('; ')}`,
     });
   visit(definition, 'definition', issues);
+  validateFields(definition, 'definition', issues);
   return issues;
 }
 
@@ -670,6 +687,9 @@ export function assertValidModeledDefinition(definition: CardDefinition): CardDe
 export function validateOverrideDefinition(override: CardOverride): AuthoringIssue[] {
   const issues: AuthoringIssue[] = [];
   if (!validateIRGraph(override.def, 'override.def', issues)) return issues;
-  if (override.unsupportedReason === undefined) visit(override.def, 'override.def', issues);
+  if (override.unsupportedReason === undefined) {
+    visit(override.def, 'override.def', issues);
+    validateFields(override.def, 'override.def', issues);
+  }
   return issues;
 }
