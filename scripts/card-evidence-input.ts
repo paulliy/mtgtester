@@ -88,6 +88,10 @@ export function validateCurrentEvidenceSources(
 }
 
 const hash = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
+/** Evidence documents reject duplicate JSON keys before schema validation. */
+export function parseEvidenceJson(text: string): unknown {
+  return uniqueJson(text);
+}
 function requireInput(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Viewer evidence input: ${message}`);
 }

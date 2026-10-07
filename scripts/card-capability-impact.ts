@@ -7,16 +7,33 @@ import { indexCardCapabilities } from '../packages/engine/src/cards/capabilities
 import { toOracleCard, type RawScryfallCard } from '../packages/server/src/cards/scryfall';
 import { benchmarkSourceHashes } from '../packages/server/src/benchmark/manifest';
 import { sha256 } from '../packages/server/src/benchmark/hash';
+import {
+  cardPrimitiveEligibilityBatch,
+  loadPrimitiveEvidence,
+} from './contracts/primitive-evidence';
 
 const args = process.argv.slice(2);
-if (
-  args.length !== 0 &&
-  (args.length !== 2 || !['--oracle-fixture', '--oracle-bulk'].includes(args[0]!))
-) {
-  throw new Error('Use card-capabilities [--oracle-fixture path | --oracle-bulk path]');
+let inputOption: string | undefined;
+let inputPath: string | undefined;
+let evidencePath: string | undefined;
+for (let index = 0; index < args.length; index += 2) {
+  const key = args[index];
+  const value = args[index + 1];
+  if (!value || value.startsWith('--')) throw new Error('Capability options require paths');
+  if (key === '--oracle-fixture' || key === '--oracle-bulk') {
+    if (inputOption) throw new Error('Choose one capability input');
+    inputOption = key;
+    inputPath = value;
+  } else if (key === '--primitive-evidence') {
+    if (evidencePath) throw new Error('Duplicate primitive evidence option');
+    evidencePath = value;
+  } else
+    throw new Error(
+      'Use card-capabilities [--oracle-fixture path | --oracle-bulk path] [--primitive-evidence directory]',
+    );
 }
-const bulk = args[0] === '--oracle-bulk';
-const path = resolve(args[1] ?? 'packages/server/fixtures/coverage-oracle.json');
+const bulk = inputOption === '--oracle-bulk';
+const path = resolve(inputPath ?? 'packages/server/fixtures/coverage-oracle.json');
 const bytes = readFileSync(path);
 const input: unknown = JSON.parse(bytes.toString('utf8'));
 if (!Array.isArray(input)) throw new Error('Capability input must be an Oracle card array');
@@ -54,6 +71,13 @@ for (const card of cards) {
   definitions[card.oracleId] = sha256(definition);
 }
 const impact = indexCardCapabilities(consumers);
+const evidence = evidencePath ? loadPrimitiveEvidence(process.cwd(), evidencePath) : undefined;
+const eligibility = evidence
+  ? cardPrimitiveEligibilityBatch(
+      consumers.map((consumer) => consumer.definition),
+      evidence,
+    )
+  : undefined;
 if (JSON.stringify(sourceHashes) !== JSON.stringify(benchmarkSourceHashes(process.cwd()))) {
   throw new Error('Capability implementation sources changed during inventory');
 }
@@ -79,6 +103,25 @@ console.log(
         ]),
       ),
       ...impact,
+      ...(evidence && eligibility
+        ? {
+            primitiveEvidence: {
+              testedTree: evidence.testedTree,
+              reportSha256: evidence.reportSha256,
+              engineProven: evidence.capabilities,
+              eligible: eligibility.filter((result) => result.eligible).length,
+              blocked: eligibility.filter((result) => !result.eligible).length,
+              cards: Object.fromEntries(
+                consumers.map((consumer, index) => [
+                  consumer.canonicalOracleId,
+                  eligibility[index],
+                ]),
+              ),
+              scope:
+                'primitive prerequisites only; card, viewer, and gameplay-AI evidence remain separate',
+            },
+          }
+        : {}),
       unsupported: unsupported.sort((a, b) =>
         a.oracleId < b.oracleId ? -1 : a.oracleId > b.oracleId ? 1 : 0,
       ),

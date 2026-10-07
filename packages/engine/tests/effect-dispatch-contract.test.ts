@@ -18,7 +18,7 @@ function setup() {
 }
 
 describe('effect executor contracts independent of production cards', () => {
-  it.each([1, 5])('removes up to %i counters from a targeted permanent', (count) => {
+  it.each([0, 1, 5])('removes up to %i counters from a targeted permanent', (count) => {
     const { ctx, permanent, source } = setup();
     permanent.counters['charge'] = 2;
     permanent.counters['other'] = 3;
@@ -28,9 +28,9 @@ describe('effect executor contracts independent of production cards', () => {
       effects: [{ op: 'removeCounters', target: 0, counter: 'charge', count }],
     };
     pump(executeAbility(ctx, source, ability, [permanent.id]));
-    expect(permanent.counters['charge']).toBe(count === 1 ? 1 : undefined);
+    expect(permanent.counters['charge']).toBe(count < 2 ? 2 - count : undefined);
     expect(permanent.counters['other']).toBe(3);
-    expect(ctx.state.eventLog.some((event) => event.type === 'removeCounter')).toBe(true);
+    expect(ctx.state.eventLog.some((event) => event.type === 'removeCounter')).toBe(count > 0);
   });
 
   it('does not remove counters from an illegal target', () => {
