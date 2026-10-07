@@ -151,6 +151,11 @@ export interface ActivatedAbility {
   zone?: 'hand' | 'battlefield' | 'graveyard';
   /** Boast (CR 702.146): "Activate only if this creature attacked this turn." */
   requiresAttackedThisTurn?: true;
+  /**
+   * Exhaust (CR 702.177): "Activate each exhaust ability only once." Tracked per permanent and
+   * never reset, so a permanent that leaves and returns is a new object that may exhaust again.
+   */
+  exhaust?: true;
 }
 
 /**

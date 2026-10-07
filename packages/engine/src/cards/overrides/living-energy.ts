@@ -467,20 +467,23 @@ const PEEMA_TRAILBLAZER_DEF: Partial<CardDefinition> = {
   ],
   activatedAbilities: [
     {
-      costs: [TAP, { kind: 'payEnergy', amount: 6 }],
+      // Exhaust (CR 702.177a): the cost is only the energy, and the ability works once.
+      costs: [{ kind: 'payEnergy', amount: 6 }],
       timing: 'any',
+      exhaust: true,
       ability: {
         kind: 'activated',
         targets: [],
         effects: [
           { op: 'putCounters', target: 'source', counter: '+1/+1', count: 2 },
+          // Counted on resolution, after the counters: "Then draw cards equal to …".
           {
             op: 'draw',
             count: { kind: 'greatestPowerAmong', selector: ofType('Creature'), scope: 'you' },
           },
         ],
         description:
-          'Tap and pay six energy — put two +1/+1 counters on this creature, then draw cards equal to the greatest power among creatures you control',
+          'Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.',
       },
     },
   ],
@@ -1318,12 +1321,6 @@ export function registerLIVING_ENERGYOverrides(): void {
     '295cd8e1-0830-46c1-9957-556afd4bcee6',
     'Aetheric Amplifier',
     'Choose-one is implemented as two independent activated abilities.',
-  );
-  // Catalog audit living-energy-batch-2: Exhaust omitted; extra tap cost.
-  unsupportedCard(
-    '88600bd4-4dcc-4788-bba4-78b6cf5ad8f8',
-    'Peema Trailblazer',
-    'Exhaust is omitted, and the ability requires tapping this creature.',
   );
   // Catalog audit living-energy-batch-2: extra +1 loyalty is not on the card.
   unsupportedCard(

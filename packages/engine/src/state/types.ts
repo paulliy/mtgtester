@@ -107,6 +107,8 @@ export interface EnginePermanent extends PermanentState, EngineObject {
    * activation, and a permanent that leaves and returns is a new object with a clean slate.
    */
   activationsThisTurn: number[];
+  /** Exhaust abilities (by index) this object has already activated (CR 702.177). */
+  exhaustedAbilities?: number[];
   /** 903.9a: set when a commander arrives in graveyard/exile, cleared at the next SBA
    * check after its owner has been offered the command-zone move.
    */

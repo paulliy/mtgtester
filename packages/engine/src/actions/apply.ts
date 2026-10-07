@@ -932,6 +932,9 @@ export function* applyPriorityAction(
       ) {
         throw new Error('activated ability condition is not met');
       }
+      if (activated.exhaust === true && perm.exhaustedAbilities?.includes(payload.index) === true) {
+        throw new Error('this exhaust ability has already been activated');
+      }
 
       // CR 601.2b/602.2b: a modal ability's mode was announced by the option itself, before
       // targets. Fold it in now so the stack entry, fizzle check and executor see only the
@@ -1070,6 +1073,9 @@ export function* applyPriorityAction(
       // cost itself, not from that flag, so legal.ts's loyalty check must see it either way.
       if (activated.oncePerTurn === true || activated.costs.some((c) => c.kind === 'loyalty')) {
         perm.activationsThisTurn.push(payload.index);
+      }
+      if (activated.exhaust === true) {
+        perm.exhaustedAbilities = [...(perm.exhaustedAbilities ?? []), payload.index];
       }
       s.stack.push(stackEntry);
       breakYieldsForStop(ctx, stackEntry);

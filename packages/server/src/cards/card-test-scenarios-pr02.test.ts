@@ -473,3 +473,29 @@ describe('Illuminor Szeras Card Test Lab scenario', () => {
     replays('illuminor-szeras-viewer-sacrifice-for-black', steps);
   });
 });
+
+describe('Peema Trailblazer Card Test Lab scenarios', () => {
+  const exhaustSteps: Step[] = [{ action: 'Exhaust' }];
+
+  it('peema-trailblazer-viewer-exhaust — two counters, five cards, and the ability is gone', () => {
+    const { seat, onBattlefield, offered } = run('peema-trailblazer-viewer-exhaust', exhaustSteps);
+    expect(onBattlefield('Peema Trailblazer')[0]?.counters['+1/+1']).toBe(2);
+    expect(seat('P1').hand).toHaveLength(5);
+    expect(seat('P1').energy).toBe(0);
+    expect(offered.filter((options) => options.some((o) => o.includes('Exhaust')))).toHaveLength(1);
+    replays('peema-trailblazer-viewer-exhaust', exhaustSteps);
+  });
+
+  const combatSteps: Step[] = [{ action: 'Declare attackers', targets: ['P2'] }];
+
+  it('peema-trailblazer-viewer-combat-energy — three combat damage to P2 gives three energy', () => {
+    const { seat, scenario } = run('peema-trailblazer-viewer-combat-energy', combatSteps);
+    expect(seat('P2').life).toBe(37);
+    expect(seat('P1').energy).toBe(3);
+    const peema = scenario.engine
+      .view('P1')
+      .battlefield.find((permanent) => permanent.name === 'Peema Trailblazer');
+    expect(peema?.keywords).toContain('trample');
+    replays('peema-trailblazer-viewer-combat-energy', combatSteps);
+  });
+});

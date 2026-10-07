@@ -1515,6 +1515,8 @@ export function computePriorityOptions(
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
       // CR 602.5f — "activate only once each turn", tracked on the permanent.
       if (activated.oncePerTurn === true && perm.activationsThisTurn.includes(index)) continue;
+      // CR 702.177: an exhaust ability can be activated only once for this object, ever.
+      if (activated.exhaust === true && perm.exhaustedAbilities?.includes(index) === true) continue;
       // CR 606.3 — a loyalty ability (one with a loyalty cost) may be activated only if no
       // loyalty ability of this permanent has already been activated this turn. The restriction
       // is on the *permanent*, not the specific ability, so any prior activation this turn

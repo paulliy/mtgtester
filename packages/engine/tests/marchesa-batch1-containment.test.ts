@@ -214,7 +214,6 @@ const REASONS: Record<string, string> = {
   'Lightning Runner':
     'Untap all creatures you control is implemented as untapEach of all permanents you control.',
   'Aetheric Amplifier': 'Choose-one is implemented as two independent activated abilities.',
-  'Peema Trailblazer': 'Exhaust is omitted, and the ability requires tapping this creature.',
   'Saheeli, Radiant Creator':
     'The copy is a reflexive trigger after payment; the target is chosen before you decide to pay.',
   'Saheeli, Sublime Artificer': 'A +1 loyalty ability is authored that is not on the card.',
@@ -316,6 +315,7 @@ describe('Marchesa catalog audit containment', () => {
     'Nullmage Shepherd',
     'Sage of Fables',
     'Illuminor Szeras',
+    'Peema Trailblazer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -1752,6 +1752,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "88600bd4-4dcc-4788-bba4-78b6cf5ad8f8",
+    "name": "Peema Trailblazer",
+    "package": "PR02.28",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Exhaust is omitted, and the ability requires tapping this creature."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9af4a832-d634-47aa-91ed-79d44fe08864",
     "name": "Pick Your Poison",
     "package": "W1",

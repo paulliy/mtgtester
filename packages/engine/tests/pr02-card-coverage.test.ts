@@ -34,6 +34,7 @@ import {
   conjure,
   copies,
   declareAttacks,
+  declareBlocks,
   forest,
   gameConfig,
   island,
@@ -1738,6 +1739,137 @@ describe('Illuminor Szeras', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.28 Peema Trailblazer
+// ---------------------------------------------------------------------------------------------
+
+describe('Peema Trailblazer', () => {
+  const peema = pinned('Peema Trailblazer');
+  const big = (power: string) =>
+    oracle({ name: `Peema Giant ${power}`, typeLine: 'Creature — Giant', power, toughness: power });
+
+  function ready(seed: string, energy: number) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', peema.card);
+    playerById(ctx, 'P1').energy = energy;
+    for (let i = 0; i < 8; i++) conjure(ctx, 'P1', SECRET_CARD(`Peema Library ${i}`), 'library');
+    return { ctx, source };
+  }
+
+  it('peema-trailblazer-pinned-oracle-supported — the exhaust ability costs only six energy', () => {
+    expect(peema.sha256).toBe('ac39b4f00910602a5d4f2038f9ed5a9c13f09de367d4c89bc66eaa8efc823f51');
+    expect(peema.card.oracleText).toBe(
+      'Trample\nWhenever this creature deals combat damage to a player, you get that many {E} (energy counters).\nExhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control. (Activate each exhaust ability only once.)',
+    );
+    expectModeled(peema.card);
+    const [exhaust] = interpretCard(peema.card).activatedAbilities;
+    expect(exhaust?.costs).toEqual([{ kind: 'payEnergy', amount: 6 }]);
+    expect(exhaust?.exhaust).toBe(true);
+    expect(interpretCard(peema.card).keywords).toContain('trample');
+  });
+
+  it('peema-trailblazer-combat-damage-energy — combat damage to a player gives that much energy', () => {
+    const ctx = pod('peema-combat');
+    const self = spawn(ctx, 'P1', peema.card);
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        return declareAttacks(decision, (subjectId) => (subjectId === self.id ? 'P2' : null));
+      }
+      if (decision.presentationBlockDeclaration !== undefined) {
+        return { index: 0, targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(playerById(ctx, 'P2').life).toBe(37);
+    expect(playerById(ctx, 'P1').energy).toBe(3);
+  });
+
+  it('peema-trailblazer-trample-excess-energy — blocked by a 1/1, 2 damage tramples over and gives 2 energy', () => {
+    const ctx = pod('peema-trample');
+    const self = spawn(ctx, 'P1', peema.card);
+    const blocker = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Peema Blocker', typeLine: 'Creature — Thrull', power: '1', toughness: '1' }),
+    );
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        return declareAttacks(decision, (subjectId) => (subjectId === self.id ? 'P2' : null));
+      }
+      if (decision.presentationBlockDeclaration !== undefined) {
+        return declareBlocks(decision, (subjectId) => (subjectId === blocker.id ? self.id : null));
+      }
+      if (decision.decisionType === 'assignCombatDamage') {
+        return { index: 0, targets: new Map(), combatDamageSplit: { [blocker.id]: 1, P2: 2 } };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toContain('Peema Blocker');
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    expect(playerById(ctx, 'P1').energy).toBe(2);
+  });
+
+  it('peema-trailblazer-exhaust-counters-then-draw — two counters, then draws the greatest power (after the counters)', () => {
+    const { ctx, source } = ready('peema-exhaust', 6);
+    // Untapped and summoning sick: exhaust has no {T}, so neither matters.
+    source.summoningSick = true;
+    source.tapped = true;
+    const before = playerById(ctx, 'P1').hand.length;
+    const option = activationsOf(ctx, 'P1', source)[0];
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').energy).toBe(0);
+    resolveTop(ctx);
+    expect(source.counters['+1/+1']).toBe(2);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(before + 5);
+  });
+
+  it('peema-trailblazer-exhaust-greatest-power-among-yours — a bigger creature you control sets the draw', () => {
+    const { ctx, source } = ready('peema-greatest', 6);
+    spawn(ctx, 'P1', big('7'));
+    spawn(ctx, 'P2', big('9'));
+    const before = playerById(ctx, 'P1').hand.length;
+    takeAction(ctx, 'P1', activationsOf(ctx, 'P1', source)[0]!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(before + 7);
+  });
+
+  it('peema-trailblazer-exhaust-needs-six — five energy cannot pay it', () => {
+    const { ctx, source } = ready('peema-short', 5);
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+  });
+
+  it('peema-trailblazer-exhaust-only-once — never again for this object, even on a later turn', () => {
+    const { ctx, source } = ready('peema-once', 12);
+    takeAction(ctx, 'P1', activationsOf(ctx, 'P1', source)[0]!.payload as PriorityActionPayload);
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+    resolveTop(ctx);
+    source.activationsThisTurn = [];
+    expect(playerById(ctx, 'P1').energy).toBe(6);
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+  });
+
+  it('peema-trailblazer-new-object-may-exhaust — after leaving and returning it is a new object', () => {
+    const { ctx, source } = ready('peema-blink', 12);
+    takeAction(ctx, 'P1', activationsOf(ctx, 'P1', source)[0]!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    // Exile it and return it through the real zone changes: a new object (CR 400.7).
+    pump(moveObject(ctx, source, { zone: 'exile' }));
+    const exiled = ctx.state.exile.find((card) => card.name === 'Peema Trailblazer')!;
+    pump(moveObject(ctx, exiled, { zone: 'battlefield', controllerId: 'P1' }));
+    const returned = ctx.state.battlefield.find((perm) => perm.name === 'Peema Trailblazer');
+    expect(returned).toBeDefined();
+    expect(returned!.exhaustedAbilities ?? []).toEqual([]);
+    expect(activationsOf(ctx, 'P1', returned!)).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1749,6 +1881,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Peema Trailblazer',
+    sha256: 'ac39b4f00910602a5d4f2038f9ed5a9c13f09de367d4c89bc66eaa8efc823f51',
+    clauseCount: 3,
+  },
   {
     name: 'Illuminor Szeras',
     sha256: '7b83ca63d63f5b6abb39060bab1bc0dd086714872059ed3c0db58a8edb205486',

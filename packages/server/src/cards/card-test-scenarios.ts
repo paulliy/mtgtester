@@ -6364,6 +6364,60 @@ function illuminorSzerasScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_PEEMA_PAGE = card({
+  oracleId: 'lab-peema-page',
+  name: 'Peema Drawn Page',
+  typeLine: 'Creature — Secret',
+});
+
+function peemaExhaustScenario(gameId: GameId): CardTestScenario {
+  const peema = pinnedFrom(MARCHESA_BATCH1, 'Peema Trailblazer');
+  return pr01Scenario(gameId, {
+    id: 'peema-trailblazer-viewer-exhaust',
+    title: 'Peema Trailblazer: exhaust for counters and cards',
+    instructions: [
+      'With six energy, activate the exhaust ability (no tap needed).',
+      'It gets two +1/+1 counters, then you draw five cards (its new power). The ability is then gone.',
+    ],
+    expectedOutcome:
+      'Peema Trailblazer becomes 5/5, you draw five Peema Drawn Pages, you have no energy left, and the exhaust ability is never offered again.',
+    oracleSha256: peema.sha256,
+    clauseIds: ['peema-trailblazer-exhaust'],
+    decks: {
+      P1: [peema.card, ...Array.from({ length: 6 }, () => LAB_PEEMA_PAGE)],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Peema Trailblazer'] }],
+      energy: [{ playerId: 'P1', amount: 6 }],
+    },
+  });
+}
+
+function peemaCombatEnergyScenario(gameId: GameId): CardTestScenario {
+  const peema = pinnedFrom(MARCHESA_BATCH1, 'Peema Trailblazer');
+  return pr01Scenario(gameId, {
+    id: 'peema-trailblazer-viewer-combat-energy',
+    title: 'Peema Trailblazer: combat damage gives energy',
+    instructions: [
+      'Peema Trailblazer shows trample. Attack P2 with it; nobody blocks.',
+      'Trample damage assignment past a blocker stays engine-only: the viewer has no damage-split control.',
+    ],
+    expectedOutcome: 'P2 takes 3 damage and you get three energy.',
+    oracleSha256: peema.sha256,
+    clauseIds: ['peema-trailblazer-combat-energy', 'peema-trailblazer-trample'],
+    decks: { P1: [peema.card, FOREST], P2: PR01_FILLER, P3: PR01_FILLER, P4: PR01_FILLER },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Peema Trailblazer'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -6510,6 +6564,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'nullmage-shepherd-viewer-tap-four',
   'sage-of-fables-viewer-wizard-counter-draw',
   'illuminor-szeras-viewer-sacrifice-for-black',
+  'peema-trailblazer-viewer-exhaust',
+  'peema-trailblazer-viewer-combat-energy',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6654,6 +6710,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'nullmage-shepherd-viewer-tap-four': nullmageShepherdScenario,
   'sage-of-fables-viewer-wizard-counter-draw': sageOfFablesScenario,
   'illuminor-szeras-viewer-sacrifice-for-black': illuminorSzerasScenario,
+  'peema-trailblazer-viewer-exhaust': peemaExhaustScenario,
+  'peema-trailblazer-viewer-combat-energy': peemaCombatEnergyScenario,
 };
 
 export function createCardTestScenario(

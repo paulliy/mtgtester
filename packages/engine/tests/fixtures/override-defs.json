@@ -5524,8 +5524,69 @@
   {
     "oracleId": "88600bd4-4dcc-4788-bba4-78b6cf5ad8f8",
     "name": "Peema Trailblazer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.",
+      "Whenever this creature deals combat damage to a player, you get that many {E} ."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.",
+            "effects": [
+              {
+                "count": 2,
+                "counter": "+1/+1",
+                "op": "putCounters",
+                "target": "source"
+              },
+              {
+                "count": {
+                  "kind": "greatestPowerAmong",
+                  "scope": "you",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "amount": 6,
+              "kind": "payEnergy"
+            }
+          ],
+          "exhaust": true,
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Combat damage to a player — gain that much energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "88b51e15-6630-4e14-a6b8-db0aa12e34ef",
@@ -18817,8 +18878,69 @@
   {
     "oracleId": "oracle-peema-trailblazer",
     "name": "Peema Trailblazer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.",
+      "Whenever this creature deals combat damage to a player, you get that many {E} ."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.",
+            "effects": [
+              {
+                "count": 2,
+                "counter": "+1/+1",
+                "op": "putCounters",
+                "target": "source"
+              },
+              {
+                "count": {
+                  "kind": "greatestPowerAmong",
+                  "scope": "you",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "amount": 6,
+              "kind": "payEnergy"
+            }
+          ],
+          "exhaust": true,
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Combat damage to a player — gain that much energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-pensive-professor",

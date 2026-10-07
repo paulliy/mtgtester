@@ -1416,6 +1416,11 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Illuminor Szeras: sacrifice a creature for black mana'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Peema Trailblazer: exhaust for counters and cards'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Peema Trailblazer: combat damage gives energy'] },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

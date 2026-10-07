@@ -31,7 +31,6 @@ function realCard(name: string): OracleCard {
 const CATALOG_CONTAINED = new Set([
   'Lightning Runner',
   'Aetheric Amplifier',
-  'Peema Trailblazer',
   'Saheeli, Radiant Creator',
   'Saheeli, Sublime Artificer',
   'Attune with Aether',

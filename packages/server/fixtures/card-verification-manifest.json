@@ -2782,13 +2782,49 @@
     "88600bd4-4dcc-4788-bba4-78b6cf5ad8f8": {
       "name": "Peema Trailblazer",
       "oracleSha256": "ac39b4f00910602a5d4f2038f9ed5a9c13f09de367d4c89bc66eaa8efc823f51",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control. (Activate each exhaust ability only once.)",
-          "implementation": ["explicitly unsupported; Exhaust omitted and extra tap cost"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "peema-trailblazer-trample",
+          "oracleText": "Trample",
+          "implementation": [
+            "interpreted keyword trample; with a 1/1 blocker the attacker may split lethal to the blocker and the excess to the player (CR 702.19)",
+            "viewer shows the keyword; trample damage assignment past a blocker is engine-only because the viewer has no damage-split control (as for Hunter's Prowess)"
+          ],
+          "engineTestIds": [
+            "peema-trailblazer-pinned-oracle-supported",
+            "peema-trailblazer-trample-excess-energy"
+          ],
+          "viewerScenarioIds": ["peema-trailblazer-viewer-combat-energy"]
+        },
+        {
+          "id": "peema-trailblazer-combat-energy",
+          "oracleText": "Whenever this creature deals combat damage to a player, you get that many {E}",
+          "implementation": [
+            "authored trigger dealsCombatDamageToPlayer(self): gainEnergy(damage dealt) — trample excess counts"
+          ],
+          "engineTestIds": [
+            "peema-trailblazer-combat-damage-energy",
+            "peema-trailblazer-trample-excess-energy"
+          ],
+          "viewerScenarioIds": ["peema-trailblazer-viewer-combat-energy"]
+        },
+        {
+          "id": "peema-trailblazer-exhaust",
+          "oracleText": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.",
+          "implementation": [
+            "authored activated ability: cost payEnergy(6) only (no {T}), new ActivatedAbility.exhaust (CR 702.177) — recorded per permanent at activation, never reset, cleared only by becoming a new object",
+            "effects: putCounters(self, +1/+1, 2), then draw(greatest power among creatures you control, counted on resolution after the counters)"
+          ],
+          "engineTestIds": [
+            "peema-trailblazer-pinned-oracle-supported",
+            "peema-trailblazer-exhaust-counters-then-draw",
+            "peema-trailblazer-exhaust-greatest-power-among-yours",
+            "peema-trailblazer-exhaust-needs-six",
+            "peema-trailblazer-exhaust-only-once",
+            "peema-trailblazer-new-object-may-exhaust"
+          ],
+          "viewerScenarioIds": ["peema-trailblazer-viewer-exhaust"]
         }
       ],
       "gameplayAiScenarioIds": []

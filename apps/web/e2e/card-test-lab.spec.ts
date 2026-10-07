@@ -3225,3 +3225,31 @@ test('Illuminor Szeras: sacrifice a creature for black mana', async ({ page }) =
   await expect(permanent(page, 'Illuminor Szeras').locator('.tap-badge')).toHaveText('TAP');
   await expect(page.getByText(/Graveyard\s*1/).first()).toBeVisible();
 });
+
+test('Peema Trailblazer: exhaust for counters and cards', async ({ page }) => {
+  await runScenario(page, 'Peema Trailblazer: exhaust for counters and cards');
+  await activateAndResolve(
+    page,
+    'Peema Trailblazer',
+    /Exhaust/,
+    'greatest power among creatures you control.',
+  );
+  await expect(permanent(page, 'Peema Trailblazer')).toContainText('5/5');
+  await expect(page.locator('.human-zone .hand-card')).toHaveCount(5);
+  // Exhausted: the ability is never offered again.
+  await expect(permanent(page, 'Peema Trailblazer')).not.toHaveClass(/actionable/);
+});
+
+test('Peema Trailblazer: combat damage gives energy', async ({ page }) => {
+  await runScenario(page, 'Peema Trailblazer: combat damage gives energy');
+  await expect(permanent(page, 'Peema Trailblazer')).toContainText(/trample/i);
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Peema Trailblazer' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('37');
+});
