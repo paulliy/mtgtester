@@ -24,6 +24,7 @@ const ALLOWED: Record<string, string> = {
   'stack/stack.ts': 'finishSpellCard reads a resolving spell card before it enters the battlefield',
   'actions/apply.ts':
     'reads the printed type of a card being announced from hand or the command zone, before it is a permanent',
+  'casting/free.ts': 'previews cards outside the battlefield for an immediate casting permission',
   'casting/cast.ts':
     'reads the announced card outside the battlefield; casting uses its printed characteristics',
   'actions/legal.ts':

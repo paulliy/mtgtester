@@ -1,3 +1,4 @@
+import { legalTargetMenus } from '../targets/announcement';
 import { planSpellPayment } from '../mana/spell-payment';
 import { targetCandidates, targetIsLegal } from '../targets/legality';
 export {
@@ -777,13 +778,6 @@ export function computePriorityOptions(
       if (!canPay(reduce(cost), player.manaEntries, sources, allows, player.life)) continue;
 
       for (const selectedModes of selections) {
-        const targets = computeCastTargets(
-          ctx,
-          def,
-          player.id,
-          selectedModeTargetSlots(def, selectedModes),
-        );
-        if (targets === null) continue;
         const modeCosts = modeAdditionalCosts(def, selectedModes);
         const optional = def.optionalAdditionalCost;
         const optionalCounts: number[] = [0];
@@ -820,73 +814,80 @@ export function computePriorityOptions(
           const selectionCost = reduce(addManaCosts(cost, manaPortionOf(additionalCosts)));
           const payment = jointPayment(selectionCost, additionalCosts, x);
           if (payment === null) continue;
-          const payableTargets = targets.map((slot) => ({
-            ...slot,
-            options: slot.options.filter((targetId) => {
-              const lifeTax = targetLifeTaxFor(ctx, player.id, [targetId]);
-              return jointlyPayable(selectionCost, additionalCosts, x, lifeTax);
-            }),
-          }));
-          if (payableTargets.some((slot) => slot.options.length === 0)) continue;
-          const optionalLabel =
-            optional !== undefined && optionalCostCount > 0
-              ? ` — ${optional.mechanic} ${optionalCostCount}`
-              : '';
-          const option: EngineActionOption = {
-            type: 'castSpell',
-            description:
-              `Cast ${obj.name} (${describeManaCost(selectionCost)})` +
-              (xSymbols > 0 || announcesAdditionalX ? ` with X=${x}` : '') +
-              (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
-              optionalLabel +
-              (fromCommand
-                ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}`
-                : '') +
-              (fromLibraryTop ? ' from the top of your library' : '') +
-              (fromExile ? ' from exile' : '') +
-              (fromGraveyard ? ' from your graveyard' : '') +
-              (reboundCast ? ' without paying its mana cost' : ''),
-            payload: {
-              kind: 'castSpell',
-              objectId: obj.id,
-              fromCommand,
-              ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
-              ...(fromGraveyard ? { fromGraveyard: true } : {}),
-              ...(fromExile
-                ? { fromExile: true, ...(reboundCast ? { reboundCast: true } : {}) }
-                : {}),
-              ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
-              ...(selectedModes !== undefined
-                ? {
-                    modes: selectedModes,
-                    ...(selectedModes.length === 1 ? { mode: selectedModes[0] } : {}),
-                  }
-                : {}),
-              ...(optionalCostCount > 0 ? { optionalCostCount } : {}),
-            },
-            data: {
-              instantSpeed,
-              sourceName: obj.name,
-              sourceZone: fromCommand
-                ? 'command'
-                : fromLibraryTop
-                  ? 'library'
-                  : fromExile
-                    ? 'exile'
-                    : 'hand',
-              manaCost: describeManaCost(selectionCost),
-              ...paymentPreview(ctx, player, selectionCost, sources, allows, payment.manaPlan),
-              ...(tax > 0 ? { commanderTax: tax } : {}),
-              ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
-              ...(modeLabel !== undefined ? { modeLabel } : {}),
-              ...(optionalCostCount > 0
-                ? { optionalCostCount, optionalMechanic: optional?.mechanic }
-                : {}),
-              ...(additionalCosts.length > 0 ? { abilityCosts: additionalCosts } : {}),
-            },
-          };
-          if (payableTargets.length > 0) option.targets = payableTargets;
-          options.push(option);
+          const targetMenus = legalTargetMenus(
+            ctx,
+            def.spellAbility ?? { kind: 'spell', targets: [], effects: [] },
+            { controllerId: player.id, sourceCardId: obj.cardId, sourceColors: def.colors, x },
+            selectedModeTargetSlots(def, selectedModes),
+            (ordinary, counted) =>
+              jointlyPayable(
+                selectionCost,
+                additionalCosts,
+                x,
+                targetLifeTaxFor(ctx, player.id, [...ordinary, ...Object.values(counted).flat()]),
+              ),
+          );
+          for (const payableTargets of targetMenus) {
+            const optionalLabel =
+              optional !== undefined && optionalCostCount > 0
+                ? ` — ${optional.mechanic} ${optionalCostCount}`
+                : '';
+            const option: EngineActionOption = {
+              type: 'castSpell',
+              description:
+                `Cast ${obj.name} (${describeManaCost(selectionCost)})` +
+                (xSymbols > 0 || announcesAdditionalX ? ` with X=${x}` : '') +
+                (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
+                optionalLabel +
+                (fromCommand
+                  ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}`
+                  : '') +
+                (fromLibraryTop ? ' from the top of your library' : '') +
+                (fromExile ? ' from exile' : '') +
+                (fromGraveyard ? ' from your graveyard' : '') +
+                (reboundCast ? ' without paying its mana cost' : ''),
+              payload: {
+                kind: 'castSpell',
+                objectId: obj.id,
+                fromCommand,
+                ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
+                ...(fromGraveyard ? { fromGraveyard: true } : {}),
+                ...(fromExile
+                  ? { fromExile: true, ...(reboundCast ? { reboundCast: true } : {}) }
+                  : {}),
+                ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
+                ...(selectedModes !== undefined
+                  ? {
+                      modes: selectedModes,
+                      ...(selectedModes.length === 1 ? { mode: selectedModes[0] } : {}),
+                    }
+                  : {}),
+                ...(optionalCostCount > 0 ? { optionalCostCount } : {}),
+              },
+              data: {
+                instantSpeed,
+                sourceName: obj.name,
+                sourceZone: fromCommand
+                  ? 'command'
+                  : fromLibraryTop
+                    ? 'library'
+                    : fromExile
+                      ? 'exile'
+                      : 'hand',
+                manaCost: describeManaCost(selectionCost),
+                ...paymentPreview(ctx, player, selectionCost, sources, allows, payment.manaPlan),
+                ...(tax > 0 ? { commanderTax: tax } : {}),
+                ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
+                ...(modeLabel !== undefined ? { modeLabel } : {}),
+                ...(optionalCostCount > 0
+                  ? { optionalCostCount, optionalMechanic: optional?.mechanic }
+                  : {}),
+                ...(additionalCosts.length > 0 ? { abilityCosts: additionalCosts } : {}),
+              },
+            };
+            if (payableTargets.length > 0) option.targets = payableTargets;
+            options.push(option);
+          }
         }
       }
     }

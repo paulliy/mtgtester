@@ -203,6 +203,10 @@ const COVERAGE_PR01: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr01-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 function pinnedFrom(file: PinnedOracleFile, name: string): { card: OracleCard; sha256: string } {
   const entry = file.cards.find((candidate) => candidate.card.name === name);
   if (entry === undefined) throw new Error(`No pinned Oracle fixture for ${name}`);
@@ -5576,6 +5580,71 @@ function koglaAttackScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function mosswortCastingScenario(gameId: GameId, hiddenLand = false): CardTestScenario {
+  const bridge = pinnedFrom(HIDEAWAY_CASTING, 'Mosswort Bridge');
+  const wake = card({
+    oracleId: 'lab-hideaway-wake',
+    name: 'Lab Wake',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'Untap target permanent.',
+  });
+  const counter = card({
+    oracleId: 'lab-hideaway-witness',
+    name: 'Lab Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'You gain 0 life.',
+  });
+  const titan = card({
+    oracleId: 'lab-hidden-titan',
+    name: 'Lab Hidden Titan',
+    typeLine: 'Creature — Giant',
+    manaCost: '{7}',
+    cmc: 7,
+    power: '7',
+    toughness: '7',
+  });
+  return pr01Scenario(gameId, {
+    id: hiddenLand ? 'mosswort-viewer-land-play-limit' : 'mosswort-viewer-free-cast-stack',
+    title: hiddenLand
+      ? 'Mosswort Bridge: a hidden land still needs a land play'
+      : 'Mosswort Bridge: cast a hidden permanent on the spell stack',
+    instructions: [
+      'Play Mosswort Bridge and hide ' + (hiddenLand ? 'a Forest.' : 'Lab Hidden Titan.'),
+      'Cast Lab Wake targeting the Bridge, then activate its hideaway ability using the Forest.',
+      hiddenLand
+        ? 'The land play was used by Mosswort Bridge, so the hidden Forest cannot be played.'
+        : 'Choose to play Lab Hidden Titan; its spell waits on the stack. Pass priority to let it resolve.',
+    ],
+    expectedOutcome: hiddenLand
+      ? 'The hidden Forest remains in exile and no second land is played.'
+      : 'Lab Hidden Titan is cast exactly once and resolves as a 7/7 creature.',
+    oracleSha256: bridge.sha256,
+    clauseIds: ['mosswort-bridge-hideaway', 'mosswort-bridge-free-play'],
+    decks: {
+      P1: [
+        bridge.card,
+        wake,
+        counter,
+        LAB_OX,
+        LAB_OX,
+        LAB_OX,
+        FOREST,
+        hiddenLand ? FOREST : titan,
+        LAB_SERVO,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Mosswort Bridge', 'Lab Wake', 'Lab Witness'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Ox', 'Lab Ox', 'Lab Ox', 'Forest'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5586,6 +5655,8 @@ export const REVIEWED_BASELINE_SCENARIO_IDS = [
 ] as const;
 
 export const CARD_TEST_SCENARIO_IDS = [
+  'mosswort-viewer-free-cast-stack',
+  'mosswort-viewer-land-play-limit',
   ...BUG_HUNT_SCENARIO_IDS,
   ...REVIEWED_BASELINE_SCENARIO_IDS,
   'swords-viewer-exile-and-gain-life',
@@ -5710,6 +5781,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'nightscape-viewer-activate-regenerate-destroy': nightscapeScenario,
   'thran-viewer-graveyard-departure-trigger': thranVigilScenario,
   'harmonic-viewer-cast-and-double-trigger': harmonicProdigyScenario,
+  'mosswort-viewer-free-cast-stack': (gameId) => mosswortCastingScenario(gameId),
+  'mosswort-viewer-land-play-limit': (gameId) => mosswortCastingScenario(gameId, true),
   'swords-viewer-exile-and-gain-life': swordsScenario,
   'throat-viewer-destroy-nonartifact': throatScenario,
   'defense-viewer-pump-and-hexproof': blossomingScenario,

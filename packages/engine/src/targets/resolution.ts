@@ -2,12 +2,13 @@ import type { ObjectId } from '@mtg/shared';
 import type { TargetSpec } from '../cards/ability';
 import type { GameContext } from '../state/types';
 import type { TargetContext } from './context';
-import { targetIsLegal } from './legality';
+import { permanentManaValue, targetIsLegal } from './legality';
 
 /** Ephemeral resolution context, never serialized into a player view. */
 export interface ResolutionTargets {
   anyChosen: boolean;
   anyLegal: boolean;
+  slotLegality: ReadonlyMap<number, ReadonlyMap<ObjectId, boolean>>;
   legality: ReadonlyMap<TargetSpec, ReadonlyMap<ObjectId, boolean>>;
 }
 
@@ -22,7 +23,7 @@ export function captureResolutionTargets(
   const legality = new Map<TargetSpec, Map<ObjectId, boolean>>();
   const anyChosen =
     ordinary.some((id) => id !== undefined) || Object.values(counted).some((ids) => ids.length > 0);
-  let anyLegal = false;
+  const slotLegality = new Map<number, Map<ObjectId, boolean>>();
   for (const [slot, spec] of specs.entries()) {
     const chosen =
       spec.count === undefined
@@ -30,8 +31,7 @@ export function captureResolutionTargets(
           ? []
           : [ordinary[slot]!]
         : (counted[slot] ?? []);
-    // Builders may reuse one immutable spec in several ordinary occurrences.
-    const results = legality.get(spec) ?? new Map<ObjectId, boolean>();
+    const results = new Map<ObjectId, boolean>();
     for (const id of chosen) {
       const legal = targetIsLegal(ctx, spec, id, {
         ...context,
@@ -39,9 +39,28 @@ export function captureResolutionTargets(
         phase: 'resolution',
       });
       results.set(id, legal);
-      anyLegal ||= legal;
     }
-    legality.set(spec, results);
+    const budget = spec.totalManaValueAtMost;
+    if (budget !== undefined) {
+      const total = chosen.reduce((sum, id) => {
+        const permanent = ctx.state.battlefield.find((candidate) => candidate.id === id);
+        return (
+          sum +
+          (results.get(id) === true && permanent !== undefined
+            ? permanentManaValue(ctx, permanent)
+            : 0)
+        );
+      }, 0);
+      if (total > budget) for (const id of chosen) results.set(id, false);
+    }
+    slotLegality.set(slot, results);
+    // Compatibility for ordinary references; counted groups use their occurrence identity.
+    const merged = legality.get(spec) ?? new Map<ObjectId, boolean>();
+    for (const [id, legal] of results) merged.set(id, legal);
+    legality.set(spec, merged);
   }
-  return { anyChosen, anyLegal, legality };
+  const anyLegal = [...slotLegality.values()].some((results) =>
+    [...results.values()].some(Boolean),
+  );
+  return { anyChosen, anyLegal, legality, slotLegality };
 }

@@ -2775,3 +2775,53 @@ test('Twinflame Tyrant: double damage from your spell', async ({ page }) => {
   ).toHaveText('34');
   await expect(page.getByText(/Lightning Bolt deals 6 to P2/i).first()).toBeVisible();
 });
+
+async function runMosswortCasting(page: Page, hiddenLand: boolean): Promise<void> {
+  await runScenario(
+    page,
+    hiddenLand
+      ? 'Mosswort Bridge: a hidden land still needs a land play'
+      : 'Mosswort Bridge: cast a hidden permanent on the spell stack',
+  );
+  await handCard(page, 'Mosswort Bridge').click();
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Exile face down', exact: true })
+    .first()
+    .click({ timeout: 15_000 });
+  await handCard(page, 'Lab Wake').click();
+  await permanent(page, 'Mosswort Bridge').click();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  const activation = page
+    .locator('.playable-now')
+    .getByRole('button', { name: /Mosswort Bridge:/ });
+  await expect(activation).toBeVisible({ timeout: 15_000 });
+  await activation.click();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  if (!hiddenLand) {
+    await page
+      .getByRole('button', { name: 'Play Lab Hidden Titan', exact: true })
+      .click({ timeout: 15_000 });
+    await expect(permanent(page, 'Lab Hidden Titan')).toHaveCount(0);
+    await expect(page.locator('.stack')).toContainText('Lab Hidden Titan');
+    await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+    await expect(permanent(page, 'Lab Hidden Titan')).toContainText('7/7', { timeout: 15_000 });
+  }
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.log .line', { hasText: 'plays Mosswort Bridge' })).toHaveCount(1);
+  if (hiddenLand)
+    await expect(page.locator('.log .line', { hasText: 'plays Forest' })).toHaveCount(0);
+  else
+    await expect(page.locator('.log .line', { hasText: 'casts Lab Hidden Titan' })).toHaveCount(1);
+}
+
+test('Mosswort Bridge: cast a hidden permanent on the spell stack', async ({ page }) => {
+  await runMosswortCasting(page, false);
+});
+
+test('Mosswort Bridge: a hidden land still needs a land play', async ({ page }) => {
+  await runMosswortCasting(page, true);
+});

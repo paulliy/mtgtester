@@ -983,6 +983,14 @@ export function parseViewerEvidenceOptions(argv: readonly string[]): ViewerInput
 
 // Frozen machine-report identities; independently checked against the spec AST in unit tests.
 export const VIEWER_CATALOG: readonly CatalogSpec[] = [
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mosswort Bridge: cast a hidden permanent on the spell stack'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mosswort Bridge: a hidden land still needs a land play'],
+  },
   { file: 'card-test-lab.spec.ts', titlePath: ['Tribute Mage: exact mana-value search'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Gev, Scaled Scorch: ward — pay 2 life'] },
   {

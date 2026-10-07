@@ -8,6 +8,7 @@ import { executeAbility, isTargetStillLegal } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import { moveObject } from '../src/state/objects';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { captureResolutionTargets } from '../src/targets/resolution';
 import { targetCandidates, targetIsLegal } from '../src/targets/legality';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
@@ -336,5 +337,107 @@ describe('shared target legality contract', () => {
     pump(resolveTopOfStack(ctx));
     expect(ctx.state.players[0]!.hand).toHaveLength(handSize);
     expect(ctx.state.eventLog.some((event) => event.type === 'fizzle')).toBe(true);
+  });
+  it('locks a collective mana-value budget before a prior instruction changes a target', () => {
+    const { ctx } = setup();
+    const small = spawn(ctx, 'P1', bear());
+    const large = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Large copy probe',
+        typeLine: 'Creature',
+        manaCost: '{8}',
+        power: '8',
+        toughness: '8',
+      }),
+    );
+    const ability: Ability = {
+      kind: 'activated',
+      targets: [
+        { kind: 'creature' },
+        { kind: 'nonlandPermanent', count: { min: 0, max: 1 }, totalManaValueAtMost: 2 },
+      ],
+      effects: [
+        { op: 'becomeCopyOf', ref: 0 },
+        { op: 'returnToHandEachChosen', targetSlot: 1 },
+      ],
+    };
+    pump(
+      executeAbility(
+        ctx,
+        {
+          id: small.id,
+          cardId: small.cardId,
+          oracleId: small.oracleId,
+          name: small.name,
+          controllerId: 'P1',
+        },
+        ability,
+        [large.id],
+        undefined,
+        undefined,
+        { 1: [small.id] },
+      ),
+    );
+    expect(ctx.state.battlefield.some((p) => p.cardId === small.cardId)).toBe(false);
+    expect(ctx.state.players[0]!.hand.some((c) => c.cardId === small.cardId)).toBe(true);
+  });
+
+  it('invalidates an over-budget counted group at resolution start, independently of reused specs', () => {
+    const { ctx } = setup();
+    const small = spawn(ctx, 'P1', bear());
+    const large = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Over-budget probe',
+        typeLine: 'Creature',
+        manaCost: '{8}',
+        power: '8',
+        toughness: '8',
+      }),
+    );
+    const shared: TargetSpec = {
+      kind: 'nonlandPermanent',
+      count: { min: 0, max: 2 },
+      totalManaValueAtMost: 2,
+    };
+    const snapshot = captureResolutionTargets(
+      ctx,
+      [shared, shared],
+      [],
+      { 0: [small.id], 1: [small.id, large.id] },
+      { controllerId: 'P1' },
+    );
+    expect(snapshot.slotLegality.get(0)?.get(small.id)).toBe(true);
+    expect(snapshot.slotLegality.get(1)?.get(small.id)).toBe(false);
+    expect(snapshot.slotLegality.get(1)?.get(large.id)).toBe(false);
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: 'budget-source',
+          oracleId: small.oracleId,
+          name: 'Budget probe',
+          controllerId: 'P1',
+          resolutionTargets: snapshot,
+        },
+        {
+          kind: 'activated',
+          targets: [shared, shared],
+          effects: [
+            { op: 'returnToHandEachChosen', targetSlot: 0 },
+            { op: 'returnToHandEachChosen', targetSlot: 1 },
+          ],
+        },
+        [],
+        undefined,
+        undefined,
+        { 0: [small.id], 1: [small.id, large.id] },
+      ),
+    );
+    expect(ctx.state.players[0]!.hand.some((c) => c.cardId === small.cardId)).toBe(true);
+    expect(ctx.state.battlefield.some((p) => p.cardId === large.cardId)).toBe(true);
   });
 });
