@@ -1,3 +1,4 @@
+import { validateTriggerHead } from './trigger-contracts';
 import { supportsAdditionalXAnnouncement } from './cost-contracts';
 import { spellFaceOf } from './spell-faces';
 import type { AlternativeCast, DynamicManaKind } from './ability';
@@ -332,6 +333,8 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     validateTargets(targets, `${path}.targets`, issues);
     owningScope = { targets };
   }
+  if (record['trigger'] !== undefined)
+    validateTriggerHead(record['trigger'], `${path}.trigger`, issues);
   if (typeof record['op'] === 'string') {
     const op = record['op'] as Effect['op'];
     validateEffectExpressions(record as unknown as Effect, path, issues);
@@ -439,10 +442,10 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     }
     if (key === 'triggers' && Array.isArray(entry))
       entry.forEach((ability, index) => {
-        if (ability?.kind !== 'triggered')
+        if (ability?.kind !== 'triggered' || ability.trigger === undefined)
           issues.push({
             path: `${path}.${key}[${index}]`,
-            message: 'trigger entry requires a triggered ability',
+            message: 'trigger entry requires a triggered ability with an event head',
           });
       });
     if (

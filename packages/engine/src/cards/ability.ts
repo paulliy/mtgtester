@@ -1166,32 +1166,7 @@ export type TriggerSubject =
  * all. Collapsing them would give every consumer a subject field that is meaningless two-thirds
  * of the time.
  */
-export type TriggerWhen =
-  | 'enters'
-  | 'dies'
-  | 'attacks'
-  | 'blocks'
-  | 'becomesBlocked'
-  | 'dealsCombatDamageToPlayer'
-  | 'becomesTapped'
-  | 'fights'
-  /**
-   * "Becomes the target of a spell or ability an opponent controls" (Thunderbreak Regent).
-   * Always opponent-sourced — CR gives no printed template for "…a spell YOU control", so
-   * `queueTriggersForEvent` enforces the opponent check itself rather than a variant field.
-   */
-  | 'becomesTargeted'
-  | 'untapStep'
-  | 'drawStep'
-  | 'castsSpell'
-  | 'upkeep'
-  | 'endStep'
-  | 'mainPhase'
-  | 'precombatMain'
-  | 'beginningOfCombat'
-  | 'gainsLife'
-  | 'dealtDamage'
-  | 'drawsCard';
+export type TriggerWhen = TriggerHead['when'];
 
 /** The object-event half of `TriggerHead`. */
 export type ObjectTriggerWhen =
