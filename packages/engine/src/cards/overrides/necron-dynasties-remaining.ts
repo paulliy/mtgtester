@@ -164,11 +164,24 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Hexmark Destroyer',
     'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
   );
-  // Catalog audit necron-remaining-batch-4: sacrifice is an effect, not a cost.
-  unsupportedCard(
+  // Coverage PR02: a mana ability whose {T} and sacrifice are both costs (CR 605.1a), making {B}
+  // equal to the sacrificed creature's mana value. The payment solver sees one source per
+  // candidate creature (amountFromSacrificedManaValue), each pinned to that sacrifice.
+  defineCard(
     '10f274f9-9044-447b-81c9-d4906ad9e6be',
     'Illuminor Szeras',
-    'Sacrifice-another-creature is an effect, not a cost.',
+    [
+      "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
+    ],
+    {
+      manaAbilities: [
+        {
+          units: [['B']],
+          costs: [TAP, { kind: 'sacrificeOther', selector: allOf(ofType('Creature'), YOURS) }],
+          amountFromSacrificedManaValue: true,
+        },
+      ],
+    },
   );
   // Catalog audit necron-remaining-batch-3: leave-graveyard trigger claimed, not authored.
   unsupportedCard(

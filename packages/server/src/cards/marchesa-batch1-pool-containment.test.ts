@@ -39,6 +39,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Harvest Season',
       'Hunting Wilds',
       'Idol of Oblivion',
+      'Illuminor Szeras',
       'Kairi, the Swirling Sky',
       'Land Tax',
       'Loran of the Third Path',

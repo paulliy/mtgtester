@@ -1412,6 +1412,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Sage of Fables: a Wizard enters with a counter, then pay it to draw'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Illuminor Szeras: sacrifice a creature for black mana'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

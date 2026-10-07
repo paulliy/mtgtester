@@ -103,6 +103,7 @@ import {
   sourceColorsOf,
   spellProtectedFromCounter,
   requireModeled,
+  sacrificeCandidateAllowed,
   selfMayTap,
 } from '../state/queries';
 import type {
@@ -6535,7 +6536,7 @@ export function* payManaCost(
             .filter(
               (p) =>
                 p.controllerId === player.id &&
-                (remaining.allowSelf === true || p.id !== perm.id) &&
+                sacrificeCandidateAllowed(remaining, perm, p) &&
                 matchesSelector(ctx, p, remaining.selector, {
                   cardId: perm.cardId,
                   controllerId: player.id,
@@ -6754,7 +6755,7 @@ export function* payAbilityCosts(
         for (let i = 0; i < count; i++) {
           const options = ctx.state.battlefield.filter(
             (candidate) =>
-              (cost.allowSelf === true || candidate.id !== perm.id) &&
+              sacrificeCandidateAllowed(cost, perm, candidate) &&
               candidate.controllerId === player.id &&
               matchesSelector(ctx, candidate, cost.selector, {
                 cardId: perm.cardId,

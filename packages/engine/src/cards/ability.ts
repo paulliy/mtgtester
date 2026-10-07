@@ -47,8 +47,18 @@ export type AbilityCost =
   | { kind: 'sacrificeSelf' }
   /** "Exile this permanent" — a battlefield-only activation cost. */
   | { kind: 'exileSelf' }
-  /** Sacrifice one or more other controlled permanents matching the filter. */
-  | { kind: 'sacrificeOther'; selector: Selector; count?: number; allowSelf?: boolean }
+  /**
+   * Sacrifice one or more other controlled permanents matching the filter. `onlyCardId` is set
+   * only by the engine, never by a card: it pins the sacrifice to one permanent when a mana
+   * source's output depends on which permanent is sacrificed (Illuminor Szeras).
+   */
+  | {
+      kind: 'sacrificeOther';
+      selector: Selector;
+      count?: number;
+      allowSelf?: boolean;
+      onlyCardId?: string;
+    }
   /** "Discard this card". */
   | { kind: 'discardSelf' }
   /** "Discard a card" from the controller's hand as a spell or activation cost. */
@@ -286,6 +296,13 @@ export interface ManaAbilitySpec {
    * that is what this expands into, so nothing downstream needs to know the count was computed.
    */
   amount?: Value;
+  /**
+   * "Add an amount of {B} equal to the sacrificed creature's mana value" (Illuminor Szeras): the
+   * ability makes one `units[0]` per point of mana value of the permanent its `sacrificeOther`
+   * cost sacrifices. `manaSourcesFor` offers one source per sacrifice candidate, each pinned to
+   * that permanent, so the payment solver sees exactly what each choice produces.
+   */
+  amountFromSacrificedManaValue?: true;
 }
 
 /**

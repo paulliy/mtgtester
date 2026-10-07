@@ -198,7 +198,6 @@ const REASONS: Record<string, string> = {
     'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
   'Dread Return': 'Flashback—Sacrifice three creatures is claimed without a flashback alternative.',
-  'Illuminor Szeras': 'Sacrifice-another-creature is an effect, not a cost.',
   'Shard of the Void Dragon': 'Exile-from-battlefield is omitted from the artifact-leaves trigger.',
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
   'Their Number Is Legion': 'Tokens are not created tapped, and graveyard cast is omitted.',
@@ -316,6 +315,7 @@ describe('Marchesa catalog audit containment', () => {
     'Carrion Feeder',
     'Nullmage Shepherd',
     'Sage of Fables',
+    'Illuminor Szeras',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

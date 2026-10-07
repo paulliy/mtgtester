@@ -18,7 +18,12 @@ import { evaluateCondition } from '../cards/condition';
 import { evaluateValue } from '../cards/value';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
-import { computeCharacteristics, matchesSelector, selectPermanents } from '../effects/continuous';
+import {
+  candidateOf,
+  computeCharacteristics,
+  matchesSelector,
+  selectPermanents,
+} from '../effects/continuous';
 import { UnmodeledCardError } from '../errors';
 import type { ManaAllowance, ManaSource, ManaUnit, ParsedManaCost } from '../mana/cost';
 import { manaCostComponent } from '../mana/cost';
@@ -497,6 +502,60 @@ export function resolveConditionalUnits(
  * pool and the full source list, which is the caller's job (`canPay`). Folding it in here would
  * make mana-source enumeration recursive.
  */
+/** May `candidate` pay `cost` (a sacrifice) for an ability of `source`? */
+export function sacrificeCandidateAllowed(
+  cost: { allowSelf?: boolean; onlyCardId?: string },
+  source: EnginePermanent,
+  candidate: EnginePermanent,
+): boolean {
+  if (cost.onlyCardId !== undefined && candidate.cardId !== cost.onlyCardId) return false;
+  return cost.allowSelf === true || candidate.id !== source.id;
+}
+
+/**
+ * Expand a mana ability whose amount is the sacrificed permanent's mana value into one variant
+ * per sacrifice candidate (Illuminor Szeras). Each variant pins its sacrifice (`onlyCardId`) and
+ * makes exactly that candidate's mana value of `units[0]`; a 0-mana-value candidate makes nothing
+ * and is dropped. Every variant keeps the ability's {T}, so the solver uses at most one.
+ */
+function expandSacrificedManaValue(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  ability: ManaAbilitySpec,
+): ManaAbilitySpec[] {
+  if (ability.amountFromSacrificedManaValue !== true) return [ability];
+  const costs = ability.costs ?? TAP_COST;
+  const sacrifice = costs.find((cost) => cost.kind === 'sacrificeOther');
+  const unit = ability.units[0];
+  if (sacrifice === undefined || sacrifice.kind !== 'sacrificeOther' || unit === undefined)
+    return [];
+  const { amountFromSacrificedManaValue: _dropped, ...base } = ability;
+  return ctx.state.battlefield
+    .filter(
+      (candidate) =>
+        candidate.controllerId === perm.controllerId &&
+        sacrificeCandidateAllowed(sacrifice, perm, candidate) &&
+        matchesSelector(ctx, candidate, sacrifice.selector, {
+          cardId: perm.cardId,
+          controllerId: perm.controllerId,
+        }),
+    )
+    .flatMap((candidate) => {
+      const manaValue =
+        candidateOf(ctx, candidate, computeCharacteristics(ctx, candidate)).manaValue ?? 0;
+      if (manaValue <= 0) return [];
+      return [
+        {
+          ...base,
+          units: Array.from({ length: manaValue }, () => unit),
+          costs: costs.map((cost) =>
+            cost === sacrifice ? { ...sacrifice, onlyCardId: candidate.cardId } : cost,
+          ),
+        },
+      ];
+    });
+}
+
 /**
  * May a "tap an untapped … you control" cost tap the ability's own source? Only when the cost says
  * so (`allowSelf`) and the same ability does not also tap the source with {T}: a permanent tapped
@@ -536,7 +595,7 @@ export function canPayNonManaCosts(
         const count = cost.count ?? 1;
         const payable = ctx.state.battlefield.filter(
           (candidate) =>
-            (cost.allowSelf === true || candidate.id !== perm.id) &&
+            sacrificeCandidateAllowed(cost, perm, candidate) &&
             candidate.controllerId === perm.controllerId &&
             matchesSelector(ctx, candidate, cost.selector, {
               cardId: perm.cardId,
@@ -753,6 +812,7 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
       .map((a) => resolveConditionalUnits(ctx, a, perm))
       .map((a) => resolveDynamicUnits(ctx, a, perm))
       .map((a) => resolveDynamicAmount(ctx, a, perm))
+      .flatMap((a) => expandSacrificedManaValue(ctx, perm, a))
       // A dynamic source can resolve to nothing at all — Fellwar Stone with no opposing
       // lands taps for no mana, so it must not be offered as a payment source.
       .filter((a) => a.units.length > 0)
@@ -872,7 +932,7 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
           .filter(
             (p) =>
               p.controllerId === playerId &&
-              (cost.allowSelf === true || p.id !== perm.id) &&
+              sacrificeCandidateAllowed(cost, perm, p) &&
               matchesSelector(ctx, p, cost.selector, {
                 cardId: perm.cardId,
                 controllerId: playerId,

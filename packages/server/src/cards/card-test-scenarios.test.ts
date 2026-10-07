@@ -187,6 +187,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'carrion-feeder-viewer-cant-block',
       'nullmage-shepherd-viewer-tap-four',
       'sage-of-fables-viewer-wizard-counter-draw',
+      'illuminor-szeras-viewer-sacrifice-for-black',
     ]);
   });
 

@@ -1101,6 +1101,21 @@
     "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "10f274f9-9044-447b-81c9-d4906ad9e6be",
+    "name": "Illuminor Szeras",
+    "package": "PR02.15",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Sacrifice-another-creature is an effect, not a cost."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",
     "name": "Illusionist's Gambit",
     "package": "W6",

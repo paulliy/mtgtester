@@ -1629,6 +1629,115 @@ describe('Sage of Fables', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.15 Illuminor Szeras
+// ---------------------------------------------------------------------------------------------
+
+describe('Illuminor Szeras', () => {
+  const szeras = pinned('Illuminor Szeras');
+  const creature = (name: string, manaCost: string, cmc: number) =>
+    oracle({ name, typeLine: 'Creature — Construct', manaCost, cmc, power: '1', toughness: '1' });
+  const blackSpell = (manaCost: string) =>
+    oracle({ name: `Szeras Spell ${manaCost}`, typeLine: 'Creature — Zombie', manaCost });
+
+  function ready(seed: string) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', szeras.card);
+    return { ctx, source };
+  }
+
+  const szerasSources = (ctx: GameContext, source: EnginePermanent) =>
+    manaSourcesFor(ctx, 'P1').filter((entry) => entry.cardId === source.cardId);
+
+  it('illuminor-szeras-pinned-oracle-supported — a {T}+sacrifice mana ability sized by mana value', () => {
+    expect(szeras.sha256).toBe('7b83ca63d63f5b6abb39060bab1bc0dd086714872059ed3c0db58a8edb205486');
+    expect(szeras.card.oracleText).toBe(
+      "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
+    );
+    expectModeled(szeras.card);
+    const def = interpretCard(szeras.card);
+    expect(def.activatedAbilities).toEqual([]);
+    expect(def.manaAbilities).toEqual([
+      {
+        units: [['B']],
+        costs: [
+          { kind: 'tap' },
+          {
+            kind: 'sacrificeOther',
+            selector: {
+              kind: 'allOf',
+              of: [
+                { kind: 'type', value: 'Creature' },
+                { kind: 'controller', who: 'you' },
+              ],
+            },
+          },
+        ],
+        amountFromSacrificedManaValue: true,
+      },
+    ]);
+  });
+
+  it('illuminor-szeras-one-source-per-candidate — each other creature offers its mana value in {B}', () => {
+    const { ctx, source } = ready('szeras-sources');
+    const three = spawn(ctx, 'P1', creature('Szeras Three', '{2}{B}', 3));
+    const one = spawn(ctx, 'P1', creature('Szeras One', '{1}', 1));
+    const token = spawn(ctx, 'P1', creature('Szeras Token', '', 0));
+    token.isToken = true;
+    const offered = szerasSources(ctx, source);
+    expect(offered.map((entry) => [entry.units.length, entry.sacrifices])).toEqual([
+      [3, [[three.cardId]]],
+      [1, [[one.cardId]]],
+    ]);
+    for (const entry of offered)
+      expect(entry.units.every((unit) => unit.join() === 'B')).toBe(true);
+  });
+
+  it('illuminor-szeras-pays-black-by-sacrificing — {B}{B}{B} is paid by sacrificing a 3-mana-value creature', () => {
+    const { ctx, source } = ready('szeras-pay');
+    const fodder = spawn(ctx, 'P1', creature('Szeras Three', '{2}{B}', 3));
+    const spell = conjure(ctx, 'P1', blackSpell('{B}{B}{B}'), 'hand');
+    const cast = castOptionFor(ctx, 'P1', spell.id);
+    expect(cast).toBeDefined();
+    takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(true);
+    expect(ctx.state.battlefield.some((perm) => perm.id === fodder.id)).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toContain('Szeras Three');
+    expect(ctx.state.stack).toHaveLength(1);
+  });
+
+  it('illuminor-szeras-too-small-a-sacrifice — a 1-mana-value creature cannot pay {B}{B}', () => {
+    const { ctx } = ready('szeras-small');
+    spawn(ctx, 'P1', creature('Szeras One', '{1}', 1));
+    const spell = conjure(ctx, 'P1', blackSpell('{B}{B}'), 'hand');
+    expect(castOptionFor(ctx, 'P1', spell.id)).toBeUndefined();
+  });
+
+  it('illuminor-szeras-another-creature-only — alone, it cannot sacrifice itself', () => {
+    const { ctx, source } = ready('szeras-alone');
+    expect(szerasSources(ctx, source)).toEqual([]);
+    spawn(ctx, 'P2', creature('Szeras Rival', '{4}', 4));
+    expect(szerasSources(ctx, source)).toEqual([]);
+  });
+
+  it('illuminor-szeras-summoning-sick — its {T} mana ability is unavailable the turn it arrives', () => {
+    const { ctx, source } = ready('szeras-sick');
+    source.summoningSick = true;
+    spawn(ctx, 'P1', creature('Szeras Three', '{2}{B}', 3));
+    expect(szerasSources(ctx, source)).toEqual([]);
+  });
+
+  it('illuminor-szeras-lands-first — a spell lands can pay never sacrifices a creature', () => {
+    const { ctx, source } = ready('szeras-lands-first');
+    const fodder = spawn(ctx, 'P1', creature('Szeras Three', '{2}{B}', 3));
+    spawn(ctx, 'P1', oracle({ name: 'Swamp', typeLine: 'Basic Land — Swamp', manaCost: null }));
+    const spell = conjure(ctx, 'P1', blackSpell('{B}'), 'hand');
+    takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', spell.id)!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(false);
+    expect(ctx.state.battlefield.some((perm) => perm.id === fodder.id)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1640,6 +1749,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Illuminor Szeras',
+    sha256: '7b83ca63d63f5b6abb39060bab1bc0dd086714872059ed3c0db58a8edb205486',
+    clauseCount: 1,
+  },
   {
     name: 'Sage of Fables',
     sha256: '1423e05e7e7fc5bf74c33c20c1f368ebd1f4224c9c5112df484d654181aeb382',

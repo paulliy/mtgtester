@@ -558,8 +558,42 @@
   {
     "oracleId": "10f274f9-9044-447b-81c9-d4906ad9e6be",
     "name": "Illuminor Szeras",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "amountFromSacrificedManaValue": true,
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            }
+          ],
+          "units": [
+            [
+              "B"
+            ]
+          ]
+        }
+      ]
+    }
   },
   {
     "oracleId": "123d2b6e-114e-4767-860d-50790382ca4a",
@@ -16297,8 +16331,42 @@
   {
     "oracleId": "oracle-illuminor-szeras",
     "name": "Illuminor Szeras",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "amountFromSacrificedManaValue": true,
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            }
+          ],
+          "units": [
+            [
+              "B"
+            ]
+          ]
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-imotekh-the-stormlord",

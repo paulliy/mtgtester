@@ -460,3 +460,16 @@ describe('Sage of Fables Card Test Lab scenario', () => {
     replays('sage-of-fables-viewer-wizard-counter-draw', steps);
   });
 });
+
+describe('Illuminor Szeras Card Test Lab scenario', () => {
+  const steps: Step[] = [{ action: 'Cast Lab Black Ogre' }];
+
+  it('illuminor-szeras-viewer-sacrifice-for-black — sacrifices Lab Ox for four black to cast the Ogre', () => {
+    const { seat, onBattlefield } = run('illuminor-szeras-viewer-sacrifice-for-black', steps);
+    expect(onBattlefield('Lab Black Ogre')).toHaveLength(1);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(onBattlefield('Illuminor Szeras')[0]?.tapped).toBe(true);
+    replays('illuminor-szeras-viewer-sacrifice-for-black', steps);
+  });
+});

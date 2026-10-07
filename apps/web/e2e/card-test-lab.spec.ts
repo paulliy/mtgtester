@@ -3216,3 +3216,12 @@ test('Sage of Fables: a Wizard enters with a counter, then pay it to draw', asyn
   await expect(handCard(page, 'Sage Drawn Page')).toBeVisible();
   await expect(permanent(page, 'Lab Wizard')).toContainText('1/1');
 });
+
+test('Illuminor Szeras: sacrifice a creature for black mana', async ({ page }) => {
+  await runScenario(page, 'Illuminor Szeras: sacrifice a creature for black mana');
+  await castAndResolve(page, 'Lab Black Ogre');
+  await expect(permanent(page, 'Lab Black Ogre')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Illuminor Szeras').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.getByText(/Graveyard\s*1/).first()).toBeVisible();
+});

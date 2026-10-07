@@ -6339,6 +6339,31 @@ function sageOfFablesScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function illuminorSzerasScenario(gameId: GameId): CardTestScenario {
+  const szeras = pinnedFrom(MARCHESA_BATCH1, 'Illuminor Szeras');
+  return pr01Scenario(gameId, {
+    id: 'illuminor-szeras-viewer-sacrifice-for-black',
+    title: 'Illuminor Szeras: sacrifice a creature for black mana',
+    instructions: [
+      'Cast Lab Black Ogre ({B}{B}{B}) with no lands: auto-pay taps Illuminor Szeras and sacrifices Lab Ox (mana value 4).',
+    ],
+    expectedOutcome:
+      'Lab Ox is sacrificed for four black mana, Lab Black Ogre resolves, and Illuminor Szeras is tapped.',
+    oracleSha256: szeras.sha256,
+    clauseIds: ['illuminor-szeras-sacrifice-for-black'],
+    decks: {
+      P1: [szeras.card, LAB_OX, LAB_BLACK_OGRE, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Black Ogre'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Illuminor Szeras', 'Lab Ox'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -6484,6 +6509,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'carrion-feeder-viewer-cant-block',
   'nullmage-shepherd-viewer-tap-four',
   'sage-of-fables-viewer-wizard-counter-draw',
+  'illuminor-szeras-viewer-sacrifice-for-black',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6627,6 +6653,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'carrion-feeder-viewer-cant-block': carrionFeederCantBlockScenario,
   'nullmage-shepherd-viewer-tap-four': nullmageShepherdScenario,
   'sage-of-fables-viewer-wizard-counter-draw': sageOfFablesScenario,
+  'illuminor-szeras-viewer-sacrifice-for-black': illuminorSzerasScenario,
 };
 
 export function createCardTestScenario(

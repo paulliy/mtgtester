@@ -2368,13 +2368,25 @@
     "10f274f9-9044-447b-81c9-d4906ad9e6be": {
       "name": "Illuminor Szeras",
       "oracleSha256": "7b83ca63d63f5b6abb39060bab1bc0dd086714872059ed3c0db58a8edb205486",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "illuminor-szeras-sacrifice-for-black",
           "oracleText": "{T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
-          "implementation": ["explicitly unsupported; sacrifice is an effect, not a cost"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored mana ability (CR 605.1a): costs [tap, sacrificeOther(another creature you control)], units [B], amountFromSacrificedManaValue",
+            "manaSourcesFor expands it into one source per other creature you control with mana value > 0, pinned to that sacrifice (onlyCardId) and producing that many {B}; the payment solver picks among them like any other source, preferring lands"
+          ],
+          "engineTestIds": [
+            "illuminor-szeras-pinned-oracle-supported",
+            "illuminor-szeras-one-source-per-candidate",
+            "illuminor-szeras-pays-black-by-sacrificing",
+            "illuminor-szeras-too-small-a-sacrifice",
+            "illuminor-szeras-another-creature-only",
+            "illuminor-szeras-summoning-sick",
+            "illuminor-szeras-lands-first"
+          ],
+          "viewerScenarioIds": ["illuminor-szeras-viewer-sacrifice-for-black"]
         }
       ],
       "gameplayAiScenarioIds": []

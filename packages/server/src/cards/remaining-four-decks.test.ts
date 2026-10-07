@@ -99,7 +99,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Triarch Stalker',
       'Biotransference',
       'Dread Return',
-      'Illuminor Szeras',
       'Necron Deathmark',
       'Shard of the Void Dragon',
       'The War in Heaven',
