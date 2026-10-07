@@ -387,7 +387,8 @@ and report the exact failed action, attempted recovery, and remaining work.
   and stable player/stack references retain separate rules. Independent positive/negative
   contracts plus delayed-trigger, lifetime, linked-exile, Arcane Denial and Cascade/Rebound
   regressions pass. The broad engine run found only three stale face-support expectations;
-  those are corrected and separately verified by `6549b81`. A combined full run is pending.
+  those are corrected and separately verified by `6549b81`; combined verification is recorded
+  below.
 - Alternative source permissions (`f0ab0df`) reject mismatched face indexes and unsupported
   source combinations, honor Adventure ownership, validate library permission even for an
   alternative cost, and consume its type budget. Face timing uses the selected alternative
@@ -404,8 +405,27 @@ and report the exact failed action, attempted recovery, and remaining work.
   and both impact maps, with adapter omissions reported separately. Eleven independent cases,
   production/test types and lint pass; all 6,508 modeled definitions in the 38,708-record bulk
   traverse without errors, yielding 482 dependency keys. This inventory does not certify
-  primitive behavior or cards. Executable contracts and freshness/eligibility enforcement remain
+  primitive behavior or cards. Broader executable contracts and promotion enforcement remain
   pending, and Phase 5 is not complete.
+- Verification at `561367a`: expanded card gate passes 69 files / 1,426 tests; web build and
+  snapshots pass. All 132 browser checks pass. The separate exact 128-case Card Test Lab run
+  also passes and its report is loader-validated against the unchanged pre-run capture of 163
+  source inputs, with the required trace archives validated. These are tested-checkpoint
+  receipts; subsequent source or tree changes require fresh evidence.
+- Primitive evidence (`ef5d600`) now executes registered independent contracts, captures actual
+  test closures and implementation/framework inputs before execution, verifies them afterward,
+  and binds framework results to source hashes. Skips, retries, repeats, duplicate or missing
+  executions, stale/incomplete sources, and changed report bytes fail closed. The capability CLI
+  accepts only loader-validated current evidence and derives scope-limited prerequisites. The
+  first contract proves fixed-count `removeCounters` on ordinary permanent target slots; other
+  dependencies remain experimental, so this receipt makes no complete card eligible. All 41
+  focused tests, including actual runner/CLI execution, pass with test/tooling typechecks and
+  focused lint. CI retains execution artifacts. Broader registration and reviewed promotion
+  enforcement remain outstanding.
+- Graveyard exile transitions (`4842103`) use `moveObject`, create a new object incarnation,
+  and let other instructions of the same effect follow that exact public-zone transition.
+  Stale physical-card aliases cannot recover targets. All 25 affected target/transition tests,
+  test typechecks and focused lint pass; no production card is promoted by this primitive fix.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
