@@ -1648,24 +1648,14 @@ export function* executeAbility(
       case 'exileTargetGraveyardAndBuffIfCreature': {
         const targetId = scope.targets?.[effect.targetSlot];
         if (!targetId) break;
-        let cardObj: EngineCardObject | undefined;
-        for (const player of ctx.state.players) {
-          const idx = player.graveyard.findIndex(
-            (card) => card.cardId === targetId || String(card.id) === targetId,
-          );
-          if (idx !== -1) {
-            cardObj = player.graveyard.splice(idx, 1)[0];
-            break;
-          }
-        }
+        const cardObj = ctx.state.players
+          .flatMap((player) => player.graveyard)
+          .find((card) => card.id === targetId);
         if (cardObj === undefined) break;
-        ctx.state.exile.push(cardObj);
-        emit(ctx, 'exile', { target: cardObj.name, source: source.name });
         const def = getDefByOracleId(ctx, cardObj.oracleId, cardObj.name);
+        yield* moveObject(ctx, cardObj, { zone: 'exile' });
         if (def.types.includes('Creature')) {
-          const sourcePerm = ctx.state.battlefield.find(
-            (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
-          );
+          const sourcePerm = sourcePermanent();
           if (sourcePerm) addCounters(ctx, source, sourcePerm, '+1/+1', 1);
           const controller = ctx.state.players.find((p) => p.id === source.controllerId);
           if (controller) gainLife(ctx, controller, 1);
