@@ -4,6 +4,7 @@ import { emptyCost, planPayment } from './cost';
 import { payManaCost } from '../effects/resolve';
 import { UnmodeledCardError } from '../errors';
 import { computeCharacteristics } from '../effects/continuous';
+import type { ManaAbilitySpec } from '../cards/ability';
 
 const bounds = { states: 2048, activations: 32, productions: 256 };
 /** Copy engine data without a platform-specific cloning API; preserve aliases and array holes. */
@@ -67,16 +68,19 @@ export function needsStatefulManaPayment(
     .filter((p) => p.controllerId === player.id)
     .flatMap((p) => computeCharacteristics(ctx, p).manaAbilities);
   return (
-    abilities.some((a) => (a.onActivate?.length ?? 0) > 0) &&
-    (lifeReserved > 0 ||
-      (cost.phyrexian?.length ?? 0) > 0 ||
-      abilities.some((a) =>
-        a.costs?.some((c) => ['payLife', 'payLifeValue', 'removeCounters'].includes(c.kind)),
-      ))
+    abilities.some(
+      (a) => a.dynamic !== undefined || a.amount !== undefined || a.conditionalUnits !== undefined,
+    ) ||
+    (abilities.some((a) => (a.onActivate?.length ?? 0) > 0) &&
+      (lifeReserved > 0 ||
+        (cost.phyrexian?.length ?? 0) > 0 ||
+        abilities.some((a) =>
+          a.costs?.some((c) => ['payLife', 'payLifeValue', 'removeCounters'].includes(c.kind)),
+        )))
   );
 }
 
-/** Actual activation replay for fixed-production sources with no strategic cost decisions. */
+/** Actual activation replay, including post-cost production, with no strategic cost decisions. */
 export function planStatefulManaPayment(
   ctx: GameContext,
   player: EnginePlayerState,
@@ -159,7 +163,7 @@ export function planStatefulManaPayment(
       if (deduplicated.has(sourceKey)) continue;
       deduplicated.add(sourceKey);
       if (
-        candidate.stateDependentProduction ||
+        (candidate.stateDependentProduction && candidate.productionSpec === undefined) ||
         candidate.costs.some(
           (c) =>
             ![
@@ -178,7 +182,57 @@ export function planStatefulManaPayment(
         continue;
       }
       const source = { ...candidate, activation: sources.length };
-      for (const units of productions(source, source.activation)) {
+      let currentProduction: Pick<ManaAbilitySpec, 'units' | 'linked'> | undefined;
+      const probeComplete = {};
+      const probe = clone(snapshot);
+      const probing = payManaCost(
+        probe,
+        probe.state.players.find((p) => p.id === player.id)!,
+        emptyCost(),
+        { kind: 'other' },
+        [],
+        reservedObjectIds,
+        {
+          tapSources: [source],
+          tapCardIds: [source.cardId],
+          produced: [],
+          fromPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
+        },
+        (production) => {
+          currentProduction = production;
+          throw probeComplete;
+        },
+      );
+      try {
+        if (!probing.next().done) {
+          outsideScope = true;
+          probing.return(undefined as never);
+          continue;
+        }
+      } catch (error) {
+        if (error !== probeComplete) {
+          if (
+            error instanceof Error &&
+            (error.message === 'life cost became unpayable' ||
+              error.message.endsWith("'s own mana cost became unpayable") ||
+              error.message === 'engine bug: counter cost became unpayable' ||
+              error.message === 'engine bug: energy cost became unpayable')
+          )
+            continue;
+          throw error;
+        }
+      }
+      if (currentProduction === undefined)
+        throw new Error('mana production probe did not reach production');
+      const { linked: _linked, ...sourceWithoutLink } = source;
+      for (const units of productions(
+        {
+          ...sourceWithoutLink,
+          units: currentProduction.units,
+          ...(currentProduction.linked === true ? { linked: true as const } : {}),
+        },
+        source.activation,
+      )) {
         const next = clone(snapshot);
         const nextPlayer = next.state.players.find((p) => p.id === player.id)!;
         const single: PaymentPlan = {
@@ -229,7 +283,7 @@ export function planStatefulManaPayment(
   const result = visit(clone(ctx));
   if (!result && outsideScope)
     unsupported(
-      'payment requires state-dependent production or strategic activation-cost continuation outside the proven scope',
+      'payment requires a static production rider or strategic activation-cost continuation outside the proven scope',
     );
   return result;
 }

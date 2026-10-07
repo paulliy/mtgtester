@@ -95,6 +95,9 @@ import {
   sourceColorsOf,
   spellProtectedFromCounter,
   requireModeled,
+  resolveConditionalUnits,
+  resolveDynamicAmount,
+  resolveDynamicUnits,
 } from '../state/queries';
 import type {
   DamageKeyword,
@@ -6290,6 +6293,10 @@ export function* payManaCost(
   reservedObjectIds: ReadonlySet<string> = new Set(),
   /** Locked by a joint cost planner against this unchanged context. */
   preparedPlan?: PaymentPlan,
+  /** Isolated planner probe; called after costs and before production, never in a live cast. */
+  inspectProduction?: (
+    production: Pick<import('../cards/ability').ManaAbilitySpec, 'units' | 'linked'>,
+  ) => void,
 ): GameGen<{ spellCantBeCountered: boolean; treasureManaSpent: number; manaSpent: number }> {
   const excluded = new Set(excludedSourceCardIds);
   const allows = allowanceFor(ctx, player.id, purpose);
@@ -6372,22 +6379,47 @@ export function* payManaCost(
       },
     );
 
+    const production =
+      source.productionSpec === undefined
+        ? source
+        : resolveDynamicAmount(
+            ctx,
+            resolveDynamicUnits(
+              ctx,
+              resolveConditionalUnits(ctx, source.productionSpec, perm),
+              perm,
+            ),
+            perm,
+          );
+    inspectProduction?.(production);
+    const selectedProduction = plan.produced.filter(
+      (p) => p.cardId === source.cardId && p.activation === source.activation,
+    );
+    if (
+      source.productionSpec !== undefined &&
+      (selectedProduction.length !== production.units.length ||
+        selectedProduction.some(
+          (chosen, index) => !production.units[index]!.includes(chosen.symbol),
+        ) ||
+        (production.linked === true &&
+          selectedProduction.some((chosen) => chosen.symbol !== selectedProduction[0]?.symbol)))
+    )
+      throw new Error('mana production changed after activation costs');
+
     // Add exactly the mana the planner chose this source to produce — the SPECIFIC symbol per
     // unit (correct for multi-color sources, where the first symbol would mispay), carrying
     // whatever restriction, spend trigger and persistence the producing ability attaches.
     // Surplus floats.
     addMana(
       player,
-      plan.produced
-        .filter((p) => p.cardId === source.cardId && p.activation === source.activation)
-        .map(({ symbol }) => ({
-          symbol,
-          ...(source.restriction !== undefined ? { restriction: source.restriction } : {}),
-          ...(source.spendTrigger !== undefined ? { spendTrigger: source.spendTrigger } : {}),
-          ...(source.uncounterableSpell === true ? { uncounterableSpell: true as const } : {}),
-          ...(fromTreasure ? { fromTreasure: true as const } : {}),
-          ...(source.persistent === true ? { persistent: true } : {}),
-        })),
+      selectedProduction.map(({ symbol }) => ({
+        symbol,
+        ...(source.restriction !== undefined ? { restriction: source.restriction } : {}),
+        ...(source.spendTrigger !== undefined ? { spendTrigger: source.spendTrigger } : {}),
+        ...(source.uncounterableSpell === true ? { uncounterableSpell: true as const } : {}),
+        ...(fromTreasure ? { fromTreasure: true as const } : {}),
+        ...(source.persistent === true ? { persistent: true } : {}),
+      })),
     );
     // CR 602.2b / 605.3b: pay the activation costs before resolving the mana ability.
     // A sacrificed source can still deal damage using its last known characteristics;

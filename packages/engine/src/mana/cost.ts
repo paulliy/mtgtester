@@ -18,6 +18,7 @@ import type {
   ManaEntry,
   ManaRestriction,
   ManaSpendTrigger,
+  ManaAbilitySpec,
 } from '../cards/ability';
 import { emptyPool, selectEntriesToSpend, summarize } from './pool';
 
@@ -196,6 +197,8 @@ export interface ManaSource {
   activation?: number;
   /** Production needs a state-dependent read; the fixed-production witness cannot certify it. */
   stateDependentProduction?: true;
+  /** Unresolved printed/granted production, evaluated after this activation pays its costs. */
+  productionSpec?: ManaAbilitySpec;
   /** Shared, finite resources consumed by this activation. */
   resources?: readonly { key: string; amount: number; available: number }[];
   /** Eligible physical cards for each sacrifice in the activation cost. */

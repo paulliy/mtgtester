@@ -242,7 +242,7 @@ describe('actual changing-resource spell payment contracts', () => {
     expect(state.player.hasLost).toBe(false);
   });
 
-  it('does not invent a witness for state-dependent production outside the tested scope', () => {
+  it('uses state-dependent production together with actual mana life gain', () => {
     const state = setup('{G}', [{ kind: 'payLife', amount: 3 }]);
     state.player.life = 1;
     state.source('Dynamic life source', {
@@ -250,9 +250,112 @@ describe('actual changing-resource spell payment contracts', () => {
       amount: { kind: 'const', n: 1 },
       onActivate: [{ op: 'gainLife', amount: { kind: 'const', n: 3 } }],
     });
-    expect(state.offered).toThrow('outside the proven scope');
+    expect(state.offered()).toBeDefined();
     expect(state.player.life).toBe(1);
+    state.cast();
+    expect(state.player.life).toBe(1);
+    expect(state.ctx.state.stack).toHaveLength(1);
   });
+
+  it.each([1, 2, 3])(
+    'reads source counters after paying its counter cost for %s green pips',
+    (pips) => {
+      const state = setup('{G}'.repeat(pips));
+      const source = state.source('Post-cost counters source', {
+        units: [['G']],
+        amount: { kind: 'countersOnSelf', counter: 'charge' },
+        costs: [{ kind: 'tap' }, { kind: 'removeCounters', counter: 'charge', count: 1 }],
+      });
+      source.counters['charge'] = 3;
+      const before = cloneContractContext(state.ctx);
+      if (pips === 3) {
+        expect(state.offered()).toBeUndefined();
+        expect(() =>
+          pump(
+            applyPriorityAction(
+              state.ctx,
+              state.player,
+              { kind: 'castSpell', objectId: state.card.id, fromCommand: false },
+              { index: 0, targets: new Map() },
+            ),
+          ),
+        ).toThrow();
+        expect(state.ctx.state).toEqual(before.state);
+        expect(state.ctx.rng.nextUint32()).toBe(before.rng.nextUint32());
+      } else {
+        state.cast();
+        expect(source.counters['charge']).toBe(2);
+        expect(source.tapped).toBe(true);
+        expect(state.player.manaEntries.map((entry) => entry.symbol)).toEqual(
+          pips === 1 ? ['G'] : [],
+        );
+      }
+    },
+  );
+
+  it('recomputes each successive counter-dependent activation', () => {
+    const state = setup('{G}{G}{G}');
+    const source = state.source('Repeated post-cost source', {
+      units: [['G']],
+      amount: { kind: 'countersOnSelf', counter: 'charge' },
+      costs: [{ kind: 'removeCounters', counter: 'charge', count: 1 }],
+    });
+    source.counters['charge'] = 3;
+    state.cast();
+    expect(source.counters['charge']).toBe(1);
+    expect(source.tapped).toBe(false);
+    expect(state.player.manaEntries).toEqual([]);
+  });
+
+  it.each([1, 2])('evaluates conditional production after tapping for %s green pips', (pips) => {
+    const state = setup('{G}'.repeat(pips));
+    const source = state.source('Conditional post-tap source', {
+      units: [['G']],
+      costs: [{ kind: 'tap' }],
+      conditionalUnits: { condition: { kind: 'isUntapped' }, units: [['G'], ['G']] },
+    });
+    if (pips === 2) {
+      const before = cloneContractContext(state.ctx);
+      expect(state.offered()).toBeUndefined();
+      expect(state.ctx.state).toEqual(before.state);
+      expect(source.tapped).toBe(false);
+    } else {
+      state.cast();
+      expect(source.tapped).toBe(true);
+      expect(state.player.manaEntries).toEqual([]);
+    }
+  });
+
+  it.each(['G', 'R'] as const)(
+    'reads dynamic colors after sacrificing its own colored source for %s',
+    (symbol) => {
+      const state = setup(`{${symbol}}`);
+      const source = state.source('Sacrificed dynamic source', {
+        units: [],
+        dynamic: 'oneColorAmongPermanents',
+        costs: [{ kind: 'sacrificeSelf' }],
+      });
+      state.ctx.defs.set(source.oracleId, {
+        ...state.ctx.defs.get(source.oracleId)!,
+        colors: ['G'],
+      });
+      spawn(
+        state.ctx,
+        'P1',
+        oracle({ name: 'Remaining red permanent', typeLine: 'Artifact', colors: ['R'] }),
+      );
+      const before = cloneContractContext(state.ctx);
+      if (symbol === 'G') {
+        expect(state.offered()).toBeUndefined();
+        expect(state.ctx.state).toEqual(before.state);
+      } else {
+        state.cast();
+        expect(state.ctx.state.battlefield).not.toContain(source);
+        expect(state.player.graveyard.some((card) => card.cardId === source.cardId)).toBe(true);
+        expect(state.player.manaEntries).toEqual([]);
+      }
+    },
+  );
 
   it('fails visibly when an unbounded activation loop exceeds the supported witness budget', () => {
     const state = setup('{40}{G}');
