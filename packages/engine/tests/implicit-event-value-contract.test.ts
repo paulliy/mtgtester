@@ -7,6 +7,7 @@ import { createGame } from '../src/state/game';
 import { applyPriorityAction } from '../src/actions/apply';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
+import { queueStepTriggers } from '../src/turn/turn';
 import { addMana } from '../src/mana/pool';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
@@ -227,7 +228,121 @@ describe('a resolving spell retains its announced source mana value', () => {
   });
 });
 
-function setup(value: Value, sourceReference = false, condition?: Condition) {
+describe('information survives departures made by the resolving ability itself', () => {
+  for (const entry of sourceValues) {
+    it(`${entry.name} reads updated facts after its own source is destroyed`, () => {
+      const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) }))));
+      ctx.state.currentTurnPlayer = 'P1';
+      ctx.state.activePlayerIndex = 0;
+      ctx.state.phase = 'precombatMain';
+      const player = ctx.state.players[0]!;
+      const source = spawn(ctx, 'P1', oracle({ name: 'Independent resolving departure source' }));
+      source.counters = { charge: 2 };
+      const definition = {
+        ...ctx.defs.get(source.oracleId)!,
+        activatedAbilities: [
+          {
+            costs: [],
+            timing: 'any' as const,
+            ability: {
+              kind: 'activated' as const,
+              targets: [],
+              effects: [
+                { op: 'pumpUntilEot' as const, target: 'source' as const, power: 5, toughness: 5 },
+                {
+                  op: 'putCounters' as const,
+                  target: 'source' as const,
+                  counter: 'charge',
+                  count: 5,
+                },
+                { op: 'destroy' as const, target: 'source' as const },
+                { op: 'gainLife' as const, amount: entry.value },
+              ],
+            },
+          },
+        ],
+      };
+      expect(validateCardDefinition(definition)).toEqual([]);
+      ctx.defs.set(source.oracleId, definition);
+      pump(
+        applyPriorityAction(
+          ctx,
+          player,
+          { kind: 'activateAbility', objectId: source.id, index: 0 },
+          { index: 0, targets: new Map() },
+        ),
+      );
+      pump(runPrioritySequence(ctx));
+      expect(player.life).toBe(40 + entry.changed);
+      expect(player.graveyard.some((card) => card.cardId === source.cardId)).toBe(true);
+    });
+  }
+});
+
+describe('event information across moves made by the resolving trigger', () => {
+  for (const entry of values) {
+    it(`${entry.name} reads the event object's changed departure information`, () => {
+      const state = setup(entry.value, false, undefined, [
+        { op: 'pumpUntilEot', target: 'triggerObject', power: 5, toughness: 5 },
+        { op: 'putCounters', target: 'triggerObject', counter: 'charge', count: 5 },
+        { op: 'destroy', target: 'triggerObject' },
+      ]);
+      pump(runPrioritySequence(state.ctx));
+      expect(state.player.life).toBe(40 + entry.changed);
+    });
+  }
+  it('an event-object instruction follows its own public blink across a nested choice', () => {
+    const state = setup({ kind: 'powerOfTriggerObject' }, false, undefined, [
+      {
+        op: 'chooseOne',
+        options: [
+          {
+            description: 'Blink and mark the returned event object',
+            effects: [
+              { op: 'blinkTarget', target: 'triggerObject' },
+              { op: 'putCounters', target: 'triggerObject', counter: 'charge', count: 1 },
+            ],
+          },
+        ],
+      },
+    ]);
+    pump(runPrioritySequence(state.ctx));
+    const returning = state.ctx.state.battlefield.find((object) => object.name === 'Test Bear')!;
+    expect(returning.counters['charge']).toBe(3);
+    expect(state.player.life).toBe(42);
+  });
+  it('a delayed registration remembers the object returned by this effect public blink', () => {
+    const state = setup({ kind: 'const', n: 0 }, false, undefined, [
+      { op: 'blinkTarget', target: 'triggerObject' },
+      {
+        op: 'registerDelayedTrigger',
+        target: 'triggerObject',
+        sameObject: true,
+        when: 'upkeep',
+        expiry: 'onFire',
+        ability: {
+          kind: 'triggered',
+          targets: [],
+          effects: [{ op: 'putCounters', target: 'triggerObject', counter: 'charge', count: 1 }],
+        },
+      },
+    ]);
+    pump(runPrioritySequence(state.ctx));
+    const returning = state.ctx.state.battlefield.find((object) => object.name === 'Test Bear')!;
+    expect(state.ctx.state.delayedTriggers[0]!.targetObjectId).toBe(returning.id);
+    queueStepTriggers(state.ctx, 'upkeep');
+    pump(runPrioritySequence(state.ctx));
+    expect(returning.counters['charge']).toBe(3);
+    expect(state.ctx.state.delayedTriggers).toEqual([]);
+  });
+});
+
+function setup(
+  value: Value,
+  sourceReference = false,
+  condition?: Condition,
+  before: Effect[] = [],
+) {
   const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) }))));
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
@@ -257,7 +372,7 @@ function setup(value: Value, sourceReference = false, condition?: Condition) {
         targets: [],
         effects:
           condition === undefined
-            ? [{ op: 'gainLife' as const, amount: value }]
+            ? [...before, { op: 'gainLife' as const, amount: value }]
             : [
                 {
                   op: 'conditionalEffect' as const,

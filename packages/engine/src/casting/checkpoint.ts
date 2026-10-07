@@ -43,6 +43,8 @@ export function castingCheckpoint(ctx: GameContext): () => void {
   capture(ctx.rng);
   capture(ctx.debugLog);
   capture(ctx.defs);
+  capture(ctx.resolutionObjectMoves);
+  capture(ctx.resolutionObjectFacts);
   return () => {
     for (const revert of restore) revert();
     clearCached(ctx);

@@ -8,6 +8,7 @@ import { createGame } from '../src/state/game';
 import { wardCostOf } from '../src/state/queries';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 import { cloneContractContext } from './helpers/contract-harness';
+import { captureObjectFacts } from '../src/cards/source-identity';
 
 function setup(costs: AbilityCost[] = [], changes: Partial<CardDefinition> = {}, manaCost = '{0}') {
   const ctx = createGame(
@@ -85,6 +86,27 @@ describe('casting phase and recovery contracts', () => {
     expect(() => generator.next({ index: 999, targets: new Map() })).toThrow();
     expect(ctx.state).toEqual(before.state);
     expect(ctx.debugLog).toEqual(before.debugLog);
+  });
+
+  it('cancelling an enclosed proposal restores its enclosing resolution tracking maps in place', () => {
+    const { ctx, cast } = setup([], counted);
+    const original = spawn(ctx, 'P2', bear());
+    const facts = captureObjectFacts(ctx, original);
+    const moves = new Map<string, string | null>([['enclosing-original', original.id]]);
+    const information = new Map([[original.id, facts]]);
+    ctx.resolutionObjectMoves = moves;
+    ctx.resolutionObjectFacts = information;
+    const generator = cast();
+    expect(generator.next().done).toBe(false);
+    moves.set(original.id, null);
+    moves.set('cancelled-public-object', 'cancelled-returning-object');
+    information.clear();
+    information.set('cancelled-public-object', { ...facts, objectId: 'cancelled-public-object' });
+    generator.return(undefined);
+    expect(ctx.resolutionObjectMoves).toBe(moves);
+    expect([...moves]).toEqual([['enclosing-original', original.id]]);
+    expect(ctx.resolutionObjectFacts).toBe(information);
+    expect([...information]).toEqual([[original.id, facts]]);
   });
 
   it('joint preview reads the hand after the proposed spell has departed', () => {

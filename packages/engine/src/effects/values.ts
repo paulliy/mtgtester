@@ -1,4 +1,4 @@
-import { eventObjectFacts, sourceObjectFacts } from '../cards/source-identity';
+import { eventObjectFacts, sourceObjectFacts, targetObjectFacts } from '../cards/source-identity';
 import { counterCount } from '../state/counters';
 import { assertNever } from '../utils/assert-never';
 /**
@@ -185,21 +185,15 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
         const facts = eventObjectFacts(ctx, scope);
         return facts === undefined ? 0 : counterCount(facts.counters, value.counter);
       }
-      const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
-      if (!targetId) return 0;
-      const perm = ctx.state.battlefield.find((p) => p.id === targetId || p.cardId === targetId);
-      return perm ? counterCount(perm.counters, value.counter) : 0;
+      const facts = targetObjectFacts(ctx, scope, value.target);
+      return facts === undefined ? 0 : counterCount(facts.counters, value.counter);
     }
     case 'manaValueOfTarget': {
       assertNumericReference(value.target);
       if (value.target === 'source')
         return sourceObjectFacts(ctx, scope)?.manaValue ?? scope.resolvingSourceManaValue ?? 0;
       if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.manaValue ?? 0;
-      const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
-      if (!targetId) return 0;
-      const perm = ctx.state.battlefield.find((p) => p.id === targetId || p.cardId === targetId);
-      if (perm === undefined) return 0;
-      return spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined);
+      return targetObjectFacts(ctx, scope, value.target)?.manaValue ?? 0;
     }
     case 'commanderCastCount': {
       const player = ctx.state.players.find((p) => p.id === scope.controllerId);
@@ -247,12 +241,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       assertNumericReference(value.target);
       if (value.target === 'source') return sourceObjectFacts(ctx, scope)?.power ?? 0;
       if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.power ?? 0;
-      const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
-      if (targetId === undefined) return 0;
-      const permanent = ctx.state.battlefield.find(
-        (candidate) => candidate.id === targetId || candidate.cardId === targetId,
-      );
-      return permanent === undefined ? 0 : effectivePT(ctx, permanent).power;
+      return targetObjectFacts(ctx, scope, value.target)?.power ?? 0;
     }
     case 'opponentsLostLifeThisTurn':
       return opponentsOf(ctx, scope.controllerId).filter(

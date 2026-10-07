@@ -719,3 +719,14 @@ and report the exact failed action, attempted recovery, and remaining work.
   named scry choices and the current-order decision. The subsequent `fd19b98` run was interrupted
   by environment replacement before producing a complete JSON report; its partial traces/source
   capture remain available, but it has no final result and cannot serve as passing evidence.
+- Information reads during resolution now preserve CR 608.2h departure facts in a private
+  local map, separate from CR 400.7j public-zone object tracking. Seven source and nine ordinary
+  target cases failed before this correction; hidden-zone moves retain public departure information
+  without recovering the hidden object. Event instructions and delayed registrations follow only
+  public moves caused by their own effect, including nested choices; two additional causal cases
+  failed before correction. Existing outside-effect blink boundaries remain passing. Cancelling a
+  nested casting proposal restores both local maps in place. All 399 focused lifetime, payment,
+  face and copy contracts pass. A second environment replacement interrupted result collection
+  for the concurrent type/lint commands. Fresh test/tooling types and lint pass; the complete
+  Oracle comparison retains 6,471 modeled definitions and 487 keys with zero final-IR/status
+  changes or derivation failures. These new contract families are included in the card gate.

@@ -1078,9 +1078,10 @@ export function* executeAbility(
   divisionAmounts?: Record<ObjectId, number>,
 ): GameGen<void> {
   const resolutionObjectMoves = ctx.resolutionObjectMoves ?? new Map<ObjectId, ObjectId | null>();
+  const resolutionObjectFacts = ctx.resolutionObjectFacts ?? new Map<ObjectId, ObjectFacts>();
   // Share the game itself, but carry transition tracking only through this effect's calls.
   // A caller retaining the original context cannot alter these bindings during a yield.
-  ctx = { ...ctx, resolutionObjectMoves };
+  ctx = { ...ctx, resolutionObjectMoves, resolutionObjectFacts };
   const movedReferent = (id: ObjectId): ObjectId | null => {
     let current: ObjectId | null = id;
     while (current !== null && resolutionObjectMoves.has(current)) {
@@ -1149,9 +1150,6 @@ export function* executeAbility(
   };
   /** Evaluate an effect's `Value` amount in this ability's scope. */
   const amountOf = (value: Value | number): number => {
-    if (scope.targets !== undefined) {
-      scope.targets = scope.targets.map((id) => movedReferent(id) ?? '');
-    }
     return typeof value === 'number' ? value : evaluateValueIn(ctx, value, scope);
   };
   /** Resolve an explicitly routed draw recipient without silently falling back to the controller. */
@@ -1279,8 +1277,9 @@ export function* executeAbility(
       // A trigger that acts on its event object remembers it (`eventObjectId`), so a creature
       // blinked in response is a new object it no longer affects (CR 400.7).
       const pinnedId = extraScope?.triggerObjectId ?? extraScope?.eventObjectId;
+      const currentId = pinnedId === undefined ? undefined : movedReferent(pinnedId);
       const perm = ctx.state.battlefield.find(
-        (p) => p.cardId === triggerObjectCardId && (pinnedId === undefined || p.id === pinnedId),
+        (p) => p.cardId === triggerObjectCardId && (pinnedId === undefined || p.id === currentId),
       );
       if (perm === undefined) {
         debug(ctx, 'effect', `${source.name}: trigger object has left the battlefield — skipped`);
@@ -1319,10 +1318,6 @@ export function* executeAbility(
   };
 
   for (const effect of ability.effects ?? []) {
-    scope.targets = targets.map((id, slot) => {
-      const spec = ability.targets[slot];
-      return spec !== undefined && stillLegal(id, spec, slot) ? (movedReferent(id) ?? '') : '';
-    });
     switch (effect.op) {
       case 'transformSelf': {
         const current = sourcePermanent();
@@ -5127,9 +5122,15 @@ export function* executeAbility(
         // The trigger object as it was when the event fired, when the firing trigger captured
         // it: a creature blinked in response is a new object that never fought (CR 400.7).
         const eventObjectId =
-          effect.target === 'triggerObject' ? extraScope?.eventObjectId : undefined;
+          effect.target === 'triggerObject'
+            ? (extraScope?.triggerObjectId ?? extraScope?.eventObjectId)
+            : undefined;
+        const currentEventObjectId =
+          eventObjectId === undefined ? undefined : (movedReferent(eventObjectId) ?? eventObjectId);
         const rememberedObjectId =
-          effect.sameObject === true ? (eventObjectId ?? (t !== null ? t : undefined)) : undefined;
+          effect.sameObject === true
+            ? (currentEventObjectId ?? (t !== null ? t : undefined))
+            : undefined;
         ctx.state.delayedTriggers.push({
           id: `dt-${ctx.state.nextObjectNum++}`,
           sourceCardId: source.cardId,

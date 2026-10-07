@@ -1561,6 +1561,7 @@ function rememberLeavingSourceTraits(
 ): void {
   const facts = batchFacts ?? captureObjectFacts(ctx, perm);
   perm.lastKnownFacts = facts;
+  ctx.resolutionObjectFacts?.set(perm.id, facts);
   for (const entry of ctx.state.stack) {
     const scope = entry.triggerScope;
     if ((scope?.triggerObjectId ?? scope?.eventObjectId) === perm.id)

@@ -523,6 +523,8 @@ export interface GameContext {
    * A hidden-zone destination ends tracking, represented by null.
    */
   resolutionObjectMoves?: Map<ObjectId, ObjectId | null>;
+  /** CR 608.2h departure information for objects moved by the resolving effect. */
+  resolutionObjectFacts?: Map<ObjectId, ObjectFacts>;
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */

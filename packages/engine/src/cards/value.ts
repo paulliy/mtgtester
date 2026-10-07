@@ -26,7 +26,9 @@ import type { ObjectFacts } from './source-identity';
 import type { EffectRef } from './ability';
 
 /** Specialized numeric consumers must reject referents lacking a proven lifetime path. */
-export function assertNumericReference(reference: EffectRef): void {
+export function assertNumericReference(
+  reference: EffectRef,
+): asserts reference is number | 'source' | 'triggerObject' {
   if (typeof reference === 'number') return;
   switch (reference) {
     case 'source':
