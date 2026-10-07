@@ -171,6 +171,62 @@ describe('activation costs preserve source departure facts', () => {
   }
 });
 
+describe('a resolving spell retains its announced source mana value', () => {
+  it.each([
+    { cost: '{0}', x: undefined, expected: 0 },
+    { cost: '{1}{G}', x: undefined, expected: 2 },
+    { cost: '{X}{G}', x: 2, expected: 3 },
+  ])('$cost with X=$x reads mana value $expected', ({ cost, x, expected }) => {
+    const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) }))));
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    ctx.state.phase = 'precombatMain';
+    const player = ctx.state.players[0]!;
+    const card = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Independent spell source value',
+        typeLine: 'Sorcery',
+        manaCost: cost,
+        oracleText: 'You gain 1 life.',
+      }),
+      'hand',
+    );
+    const definition = {
+      ...ctx.defs.get(card.oracleId)!,
+      spellAbility: {
+        kind: 'spell' as const,
+        targets: [],
+        effects: [
+          {
+            op: 'gainLife' as const,
+            amount: { kind: 'manaValueOfTarget' as const, target: 'source' as const },
+          },
+        ],
+      },
+    };
+    expect(validateCardDefinition(definition)).toEqual([]);
+    ctx.defs.set(card.oracleId, definition);
+    addMana(player, [{ symbol: 'G' }, { symbol: 'C' }, { symbol: 'C' }]);
+    pump(
+      applyPriorityAction(
+        ctx,
+        player,
+        {
+          kind: 'castSpell',
+          objectId: card.id,
+          fromCommand: false,
+          ...(x === undefined ? {} : { x }),
+        },
+        { index: 0, targets: new Map() },
+      ),
+    );
+    pump(runPrioritySequence(ctx));
+    expect(player.life).toBe(40 + expected);
+  });
+});
+
 function setup(value: Value, sourceReference = false, condition?: Condition) {
   const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) }))));
   ctx.state.currentTurnPlayer = 'P1';

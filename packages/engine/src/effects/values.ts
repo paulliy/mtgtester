@@ -190,7 +190,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return perm ? counterCount(perm.counters, value.counter) : 0;
     }
     case 'manaValueOfTarget': {
-      if (value.target === 'source') return sourceObjectFacts(ctx, scope)?.manaValue ?? 0;
+      if (value.target === 'source')
+        return sourceObjectFacts(ctx, scope)?.manaValue ?? scope.resolvingSourceManaValue ?? 0;
       if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.manaValue ?? 0;
       const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
       if (!targetId) return 0;

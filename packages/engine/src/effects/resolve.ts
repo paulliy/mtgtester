@@ -1132,6 +1132,14 @@ export function* executeAbility(
     sourceCardId: source.cardId,
     ...(source.id === undefined ? {} : { sourceObjectId: source.id }),
     ...(source.lastKnownFacts === undefined ? {} : { sourceFacts: source.lastKnownFacts }),
+    ...(source.resolvingStackObject === undefined
+      ? {}
+      : {
+          resolvingSourceManaValue: spellManaValue(
+            spellDefinitionOf(ctx, source.resolvingStackObject),
+            source.resolvingStackObject.announcedX,
+          ),
+        }),
     ...(targets !== undefined ? { targets } : {}),
     ...(triggerObjectCardId !== undefined ? { triggerObjectCardId } : {}),
     ...(source.resolvingStackObject?.optionalCostCounts !== undefined

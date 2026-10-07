@@ -34,6 +34,8 @@ export interface ValueScope {
   /** Exact source incarnation and its departure facts for CR 608.2h. */
   sourceObjectId?: string;
   sourceFacts?: ObjectFacts;
+  /** A resolving spell's selected stack characteristics, including announced X. */
+  resolvingSourceManaValue?: number;
   /** The X announced when the spell was cast (CR 601.2b). */
   x?: number;
   /** Damage that caused the trigger — Old Gnawbone's "that many". */
