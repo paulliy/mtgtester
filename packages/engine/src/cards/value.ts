@@ -22,7 +22,7 @@ import { assertNever } from '../utils/assert-never';
 import type { Color, PlayerId } from '@mtg/shared';
 import type { GameContext } from '../state/types';
 import type { Selector } from './selector';
-import type { ObjectFacts } from './source-identity';
+import type { ObjectFacts, SourceCastState } from './source-identity';
 import type { EffectRef } from './ability';
 
 /** Specialized numeric consumers must reject referents lacking a proven lifetime path. */
@@ -54,6 +54,7 @@ export interface ValueScope {
   sourceFacts?: ObjectFacts;
   /** A resolving spell's selected stack characteristics, including announced X. */
   resolvingSourceManaValue?: number;
+  sourceCastState?: SourceCastState;
   /** The X announced when the spell was cast (CR 601.2b). */
   x?: number;
   /** Damage that caused the trigger — Old Gnawbone's "that many". */

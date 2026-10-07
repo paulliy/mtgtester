@@ -1140,6 +1140,13 @@ export function* executeAbility(
             spellDefinitionOf(ctx, source.resolvingStackObject),
             source.resolvingStackObject.announcedX,
           ),
+          sourceCastState: {
+            wasKicked:
+              source.resolvingStackObject.wasKicked === true ||
+              source.resolvingStackObject.kicked === true,
+            announcedX: source.resolvingStackObject.announcedX ?? 0,
+            escaped: source.resolvingStackObject.escaped === true,
+          },
         }),
     ...(targets !== undefined ? { targets } : {}),
     ...(triggerObjectCardId !== undefined ? { triggerObjectCardId } : {}),

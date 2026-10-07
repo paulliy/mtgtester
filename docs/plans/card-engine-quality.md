@@ -730,3 +730,14 @@ and report the exact failed action, attempted recovery, and remaining work.
   for the concurrent type/lint commands. Fresh test/tooling types and lint pass; the complete
   Oracle comparison retains 6,471 modeled definitions and 487 keys with zero final-IR/status
   changes or derivation failures. These new contract families are included in the card gate.
+- Complete engine verification at `b46a464` passes all 218 files / 2,900 tests, including
+  both full-game cases without concurrent checks. Source-predicate lifetime auditing then
+  reproduced 15 wrong-incarnation/departure failures, a missing self-death condition context,
+  and three lost kicker/X/escape predicates on resolving spells. Predicates now read exact
+  source state or departure facts without re-entering continuous layers; currently attacking
+  predicates require a live incarnation. Death-trigger creation captures source facts, and
+  resolving spells carry their announced metadata. Forty-one independent normal-path cases
+  pass, including live/destruction/blink, positive/negative spell metadata and self-death choices.
+  The broader affected checkpoint passes 188 tests; test/tooling types and lint pass after
+  correcting the typed Escape fixture to use the guarded builder. Final whole-suite and viewer
+  receipts remain required after these changes.

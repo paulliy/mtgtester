@@ -86,6 +86,7 @@ export interface SelectorSource {
   /** Exact identities/facts when evaluating a resolving triggered ability. */
   objectId?: string;
   sourceFacts?: import('./source-identity').ObjectFacts;
+  sourceCastState?: import('./source-identity').SourceCastState;
   eventObjectId?: string;
   triggerObjectId?: string;
   triggerObjectFacts?: import('./source-identity').ObjectFacts;

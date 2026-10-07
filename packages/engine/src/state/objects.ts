@@ -1239,6 +1239,8 @@ function queueCardZoneTriggers(
       if (spec === undefined || spec.when !== when || !('subject' in spec)) continue;
       const from: SelectorSource = {
         cardId: source.cardId,
+        objectId: source.id,
+        ...(source.lastKnownFacts === undefined ? {} : { sourceFacts: source.lastKnownFacts }),
         controllerId: source.controllerId,
         attachedToCardId:
           source.attachedTo === null
@@ -1322,6 +1324,8 @@ export function queueTriggersForEvent(
 
       const from: SelectorSource = {
         cardId: source.cardId,
+        objectId: source.id,
+        ...(source.lastKnownFacts === undefined ? {} : { sourceFacts: source.lastKnownFacts }),
         controllerId: source.controllerId,
         attachedToCardId:
           source.attachedTo === null
@@ -1425,6 +1429,7 @@ export function queueTriggersForEvent(
             sourceObjectId: source.id,
             sourceOracleId: source.oracleId,
             sourceName: source.name,
+            ...(source.lastKnownFacts === undefined ? {} : { sourceFacts: source.lastKnownFacts }),
             ability,
             // Only meaningful when the subject is something other than the source itself.
             ...(spec.subject.kind === 'self'
