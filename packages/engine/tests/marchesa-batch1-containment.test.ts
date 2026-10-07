@@ -247,7 +247,6 @@ const REASONS: Record<string, string> = {
   'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  'Nullmage Shepherd': 'The four creatures cannot include this creature.',
   'Cranial Plating': 'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
   'Dark Confidant':
     'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
@@ -316,6 +315,7 @@ describe('Marchesa catalog audit containment', () => {
     'Idol of Oblivion',
     'Mistveil Plains',
     'Carrion Feeder',
+    'Nullmage Shepherd',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -46,6 +46,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Mordant Dragon',
       'Myriad Landscape',
       'Necron Deathmark',
+      'Nullmage Shepherd',
       'Plasmancer',
       'Retrofitter Foundry',
       'Return to Nature',

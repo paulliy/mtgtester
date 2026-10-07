@@ -4307,17 +4307,24 @@ function parseActivationCosts(costText: string, card?: OracleCard): AbilityCost[
       });
       continue;
     }
+    // "Tap an untapped creature you control" may tap the source itself when it is one: the cost
+    // names any untapped creature you control, not "another" (allowSelf).
     if (part === 'tap an untapped creature you control') {
-      costs.push({ kind: 'tapOther', selector: allOf(ofType('Creature'), YOURS) });
+      costs.push({ kind: 'tapOther', selector: allOf(ofType('Creature'), YOURS), allowSelf: true });
       continue;
     }
-    const tapOthers = part.match(/^tap (two|three) untapped (.+) you control$/);
+    const tapOthers = part.match(/^tap (two|three|four) untapped (.+) you control$/);
     if (tapOthers !== null) {
-      const count = tapOthers[1] === 'two' ? 2 : 3;
+      const count = parseAmount(tapOthers[1] as string) as number;
       const noun = tapOthers[2] as string;
       const type = noun === 'artifacts' ? 'Artifact' : noun === 'creatures' ? 'Creature' : null;
       if (type === null) return null;
-      costs.push({ kind: 'tapOthers', selector: allOf(ofType(type), YOURS), count });
+      costs.push({
+        kind: 'tapOthers',
+        selector: allOf(ofType(type), YOURS),
+        count,
+        allowSelf: true,
+      });
       continue;
     }
     if (part === '{t}') {

@@ -103,6 +103,7 @@ import {
   sourceColorsOf,
   spellProtectedFromCounter,
   requireModeled,
+  selfMayTap,
 } from '../state/queries';
 import type {
   DamageKeyword,
@@ -6640,7 +6641,7 @@ export function* payAbilityCosts(
       case 'tapOther': {
         const options = ctx.state.battlefield.filter(
           (candidate) =>
-            candidate.id !== perm.id &&
+            (selfMayTap(cost, costs) || candidate.id !== perm.id) &&
             candidate.controllerId === player.id &&
             !candidate.tapped &&
             matchesSelector(ctx, candidate, cost.selector, {
@@ -6673,7 +6674,7 @@ export function* payAbilityCosts(
         for (let i = 0; i < cost.count; i++) {
           const options = ctx.state.battlefield.filter(
             (candidate) =>
-              candidate.id !== perm.id &&
+              (selfMayTap(cost, costs) || candidate.id !== perm.id) &&
               candidate.controllerId === player.id &&
               !candidate.tapped &&
               matchesSelector(ctx, candidate, cost.selector, {
@@ -6681,7 +6682,12 @@ export function* payAbilityCosts(
                 controllerId: player.id,
               }) &&
               (canTap?.(candidate, [
-                { kind: 'tapOthers', selector: cost.selector, count: cost.count - i - 1 },
+                {
+                  kind: 'tapOthers',
+                  selector: cost.selector,
+                  count: cost.count - i - 1,
+                  ...(cost.allowSelf === true ? { allowSelf: true } : {}),
+                },
                 ...costs.slice(costIndex + 1),
               ]) ??
                 true),

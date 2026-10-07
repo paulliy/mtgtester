@@ -32,7 +32,6 @@ export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = [
   'Harvest Season',
   'Hour of Reckoning',
   "Karametra's Favor",
-  'Nullmage Shepherd',
   'Rishkar, Peema Renegade',
   'Sylvan Reclamation',
   'Thunderfoot Baloth',

@@ -15,6 +15,7 @@ import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
+import { ofType } from '../src/cards/selector';
 import { fixtureOracleId, getOverride, registerOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
@@ -26,7 +27,7 @@ import { runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { prepareScenario } from '../src/testing/prepared-scenario';
 import { playerById } from '../src/state/objects';
-import { manaSourcesFor } from '../src/state/queries';
+import { manaSourcesFor, selfMayTap } from '../src/state/queries';
 import { buildPlayerView } from '../src/view/view';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import {
@@ -1366,6 +1367,135 @@ describe('Carrion Feeder', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.18 Nullmage Shepherd
+// ---------------------------------------------------------------------------------------------
+
+describe('Nullmage Shepherd', () => {
+  const shepherd = pinned('Nullmage Shepherd');
+  const elf = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Elf', power: '1', toughness: '1' });
+  const relic = () => oracle({ name: 'Nullmage Relic', typeLine: 'Artifact', manaCost: '{1}' });
+
+  /** Nullmage Shepherd (summoning sick), `others` other untapped creatures, and P2's artifact. */
+  function ready(seed: string, others: number) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', shepherd.card);
+    source.summoningSick = true;
+    const helpers = Array.from({ length: others }, (_, i) =>
+      spawn(ctx, 'P1', elf(`Nullmage Elf ${i}`)),
+    );
+    const target = spawn(ctx, 'P2', relic());
+    return { ctx, source, helpers, target };
+  }
+
+  it('nullmage-shepherd-pinned-oracle-supported — the interpreter reads tap-four with allowSelf', () => {
+    expect(shepherd.sha256).toBe(
+      '9778d0c0a47ec527656f5c9551f1708cfbf65ce71b0636143efe86c288b3ba1a',
+    );
+    expect(shepherd.card.oracleText).toBe(
+      'Tap four untapped creatures you control: Destroy target artifact or enchantment.',
+    );
+    expect(getOverride(shepherd.card.oracleId)).toBeUndefined();
+    expectModeled(shepherd.card);
+    expect(interpretCard(shepherd.card).activatedAbilities[0]?.costs).toEqual([
+      {
+        kind: 'tapOthers',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'type', value: 'Creature' },
+            { kind: 'controller', who: 'you' },
+          ],
+        },
+        count: 4,
+        allowSelf: true,
+      },
+    ]);
+  });
+
+  it('tap-cost-self-allowed-only-without-tap-symbol — a {T} in the same cost keeps the source out', () => {
+    const tapFour = {
+      kind: 'tapOthers' as const,
+      selector: ofType('Creature'),
+      count: 4,
+      allowSelf: true,
+    };
+    expect(selfMayTap(tapFour, [tapFour])).toBe(true);
+    expect(selfMayTap(tapFour, [{ kind: 'tap' }, tapFour])).toBe(false);
+    expect(selfMayTap({ ...tapFour, allowSelf: false }, [tapFour])).toBe(false);
+  });
+
+  it('nullmage-shepherd-taps-itself-and-three-others — a summoning-sick Shepherd counts toward the four', () => {
+    const { ctx, source, helpers, target } = ready('nullmage-four', 3);
+    const option = activationsOf(ctx, 'P1', source)[0];
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, target.id]]),
+    );
+    expect(source.tapped).toBe(true);
+    for (const helper of helpers) expect(helper.tapped).toBe(true);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.id === target.id)).toBe(false);
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toContain('Nullmage Relic');
+  });
+
+  it('nullmage-shepherd-chooses-four-of-five — with five creatures the controller picks which four tap', () => {
+    const { ctx, source, helpers, target } = ready('nullmage-five', 4);
+    const option = activationsOf(ctx, 'P1', source)[0];
+    const { decisions } = takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      answers([[/to tap as an activation cost/, /Nullmage Elf/]]),
+      new Map([[0, target.id]]),
+    );
+    const taps = decisions.filter((decision) =>
+      /to tap as an activation cost/.test(decision.prompt),
+    );
+    expect(taps).toHaveLength(4);
+    expect(taps[0]?.options.map((choice) => choice.description)).toContain('Tap Nullmage Shepherd');
+    expect(helpers.every((helper) => helper.tapped)).toBe(true);
+    expect(source.tapped).toBe(false);
+  });
+
+  it('nullmage-shepherd-needs-four-untapped — three creatures, or a tapped fourth, cannot pay', () => {
+    const three = ready('nullmage-three', 2);
+    expect(activationsOf(three.ctx, 'P1', three.source)).toEqual([]);
+    const tapped = ready('nullmage-tapped', 3);
+    tapped.helpers[0]!.tapped = true;
+    expect(activationsOf(tapped.ctx, 'P1', tapped.source)).toEqual([]);
+  });
+
+  it('nullmage-shepherd-only-your-creatures — opponents’ creatures never help pay', () => {
+    const { ctx, source } = ready('nullmage-theirs', 2);
+    spawn(ctx, 'P2', elf('Nullmage Opponent Elf'));
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+  });
+
+  it('nullmage-shepherd-artifact-or-enchantment — it destroys an enchantment too; creatures are not targets', () => {
+    expect(interpretCard(shepherd.card).activatedAbilities[0]?.ability.targets).toEqual([
+      { kind: 'artifactOrEnchantment' },
+    ]);
+    const { ctx, source } = ready('nullmage-enchantment', 3);
+    const aura = spawn(ctx, 'P2', oracle({ name: 'Nullmage Hex', typeLine: 'Enchantment' }));
+    const option = activationsOf(ctx, 'P1', source)[0];
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, aura.id]]),
+    );
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toContain('Nullmage Hex');
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1377,6 +1507,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Nullmage Shepherd',
+    sha256: '9778d0c0a47ec527656f5c9551f1708cfbf65ce71b0636143efe86c288b3ba1a',
+    clauseCount: 1,
+  },
   {
     name: 'Carrion Feeder',
     sha256: '7fb3a771052de7acaa2d3eaebe9c39509ae68522bd344b4bd2491f77e6a3e069',

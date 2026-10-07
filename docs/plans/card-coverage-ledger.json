@@ -1681,6 +1681,21 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "4dcfd397-9d29-420c-8fd8-c7c2a99de122",
+    "name": "Nullmage Shepherd",
+    "package": "PR02.18",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: The four creatures cannot include this creature."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b99ada26-9a61-4175-9fb8-15a106960220",
     "name": "Ohran Frostfang",
     "package": "W1",

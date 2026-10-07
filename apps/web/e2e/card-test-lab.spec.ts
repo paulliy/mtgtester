@@ -3159,3 +3159,50 @@ test("Carrion Feeder: it can't block", async ({ page }) => {
     page.locator('.human-zone .life-badge, .seat[data-seat="P1"] .life-badge'),
   ).toHaveText('36');
 });
+
+test('Nullmage Shepherd: tap itself and three others to destroy an enchantment', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Nullmage Shepherd: tap itself and three others to destroy an enchantment',
+  );
+  const shepherd = permanent(page, 'Nullmage Shepherd');
+  await expect(shepherd).toHaveClass(/actionable/);
+  await shepherd.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Hex').click();
+  await confirm(page);
+  // Any remaining tap choices are made by clicking highlighted creatures, then confirming.
+  const thrulls = permanent(page, 'Lab Thrull');
+  await expect
+    .poll(
+      async () => {
+        if (
+          (await page
+            .getByText(/Lab Hex resolves|Destroy target artifact or enchantment\. resolves/)
+            .count()) > 0
+        )
+          return true;
+        if (
+          await page
+            .getByText(/to tap as an activation cost/)
+            .first()
+            .isVisible()
+        ) {
+          await thrulls
+            .filter({ hasNot: page.locator('.tap-badge') })
+            .first()
+            .click();
+          const confirmButton = page.getByRole('button', { name: 'Confirm' });
+          if (await confirmButton.isVisible()) await confirmButton.click();
+        }
+        return false;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(0);
+  await expect(shepherd.locator('.tap-badge')).toHaveText('TAP');
+});

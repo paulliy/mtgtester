@@ -423,3 +423,18 @@ describe('Carrion Feeder Card Test Lab scenarios', () => {
     replays('carrion-feeder-viewer-cant-block', blockSteps);
   });
 });
+
+describe('Nullmage Shepherd Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Tap four untapped creatures you control', targets: ['Lab Hex'] },
+  ];
+
+  it('nullmage-shepherd-viewer-tap-four — taps itself and three Thrulls to destroy Lab Hex', () => {
+    const { seat, onBattlefield } = run('nullmage-shepherd-viewer-tap-four', steps);
+    expect(onBattlefield('Lab Hex')).toEqual([]);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Hex']);
+    expect(onBattlefield('Nullmage Shepherd')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Lab Thrull').every((thrull) => thrull.tapped)).toBe(true);
+    replays('nullmage-shepherd-viewer-tap-four', steps);
+  });
+});

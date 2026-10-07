@@ -1,6 +1,6 @@
 import type { AbilityCost } from '../cards/definition';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
-import { allowanceFor, manaSourcesFor } from '../state/queries';
+import { allowanceFor, manaSourcesFor, selfMayTap } from '../state/queries';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
 import { planPayment, type ParsedManaCost } from './cost';
 
@@ -21,9 +21,7 @@ export function activationManaSources(
   const taps = costs.filter((c) =>
     ['tapOther', 'tapOthers', 'tapXOthers', 'tapCreaturesTotalPower'].includes(c.kind),
   );
-  const candidates = ctx.state.battlefield.filter(
-    (p) => p.controllerId === player.id && p.id !== source.id && !p.tapped,
-  );
+  const candidates = ctx.state.battlefield.filter((p) => p.controllerId === player.id && !p.tapped);
   const allows = allowanceFor(ctx, player.id, {
     kind: 'activateAbility',
     sourceOracleId: source.oracleId,
@@ -48,6 +46,7 @@ export function activationManaSources(
     const options = candidates.filter(
       (p) =>
         !excluded.has(p.cardId) &&
+        (p.id !== source.id || selfMayTap(cost, costs)) &&
         (crew
           ? computeCharacteristics(ctx, p).types.includes('Creature')
           : 'selector' in cost &&

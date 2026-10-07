@@ -3753,15 +3753,25 @@
     "4dcfd397-9d29-420c-8fd8-c7c2a99de122": {
       "name": "Nullmage Shepherd",
       "oracleSha256": "9778d0c0a47ec527656f5c9551f1708cfbf65ce71b0636143efe86c288b3ba1a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "nullmage-shepherd-tap-four-destroy",
           "oracleText": "Tap four untapped creatures you control: Destroy target artifact or enchantment.",
           "implementation": [
-            "explicitly unsupported; the four creatures cannot include this creature"
+            "interpreted activated ability: cost tapOthers(your creatures, count 4, allowSelf) — the source may be one of the four, and a summoning-sick Shepherd can be tapped because the cost has no {T} symbol (CR 302.6); selfMayTap keeps the source out only when the same cost also has {T}",
+            "target artifactOrEnchantment, effect destroy"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "nullmage-shepherd-pinned-oracle-supported",
+            "tap-cost-self-allowed-only-without-tap-symbol",
+            "nullmage-shepherd-taps-itself-and-three-others",
+            "nullmage-shepherd-chooses-four-of-five",
+            "nullmage-shepherd-needs-four-untapped",
+            "nullmage-shepherd-only-your-creatures",
+            "nullmage-shepherd-artifact-or-enchantment"
+          ],
+          "viewerScenarioIds": ["nullmage-shepherd-viewer-tap-four"]
         }
       ],
       "gameplayAiScenarioIds": []

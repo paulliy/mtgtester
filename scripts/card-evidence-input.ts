@@ -1404,6 +1404,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['Carrion Feeder: sacrifice another creature, then itself'],
   },
   { file: 'card-test-lab.spec.ts', titlePath: ["Carrion Feeder: it can't block"] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Nullmage Shepherd: tap itself and three others to destroy an enchantment'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

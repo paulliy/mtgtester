@@ -158,12 +158,8 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       ],
     },
   );
-  // Catalog audit token-triumph-batch-5: tap-four cannot include this creature.
-  unsupportedCard(
-    '4dcfd397-9d29-420c-8fd8-c7c2a99de122',
-    'Nullmage Shepherd',
-    'The four creatures cannot include this creature.',
-  );
+  // Nullmage Shepherd: restored in coverage PR02. "Tap four untapped creatures you control" is
+  // a tapOthers cost with allowSelf, so Nullmage Shepherd may be one of the four.
   // Fortified Village
   defineCard(
     '56f1a16a-9f41-41fb-b580-c200bca27cd6',

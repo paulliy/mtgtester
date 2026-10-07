@@ -28,10 +28,19 @@ export type WardCost = { kind: 'mana'; cost: ParsedManaCost } | { kind: 'life'; 
 export type AbilityCost =
   /** `{T}` — requires untapped, and (for creatures) not summoning-sick without haste. */
   | { kind: 'tap' }
-  /** Tap an untapped controlled permanent, selected while paying the cost. */
-  | { kind: 'tapOther'; selector: Selector; capturePowerForStation?: boolean }
+  /**
+   * Tap an untapped controlled permanent, selected while paying the cost. `allowSelf`: the
+   * source itself may be the one tapped ("Tap an untapped creature you control" on a creature);
+   * that is not the {T} symbol, so summoning sickness does not apply (CR 302.6).
+   */
+  | {
+      kind: 'tapOther';
+      selector: Selector;
+      capturePowerForStation?: boolean;
+      allowSelf?: boolean;
+    }
   /** Tap several distinct untapped controlled permanents selected while paying the cost. */
-  | { kind: 'tapOthers'; selector: Selector; count: number }
+  | { kind: 'tapOthers'; selector: Selector; count: number; allowSelf?: boolean }
   /** Tap X distinct untapped controlled permanents, where X is the announced activation value. */
   | { kind: 'tapXOthers'; selector: Selector }
   /** "Sacrifice this creature" — available even while tapped or summoning-sick. */

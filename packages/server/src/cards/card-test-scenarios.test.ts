@@ -185,6 +185,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'mistveil-plains-viewer-one-white-blocked',
       'carrion-feeder-viewer-sacrifice',
       'carrion-feeder-viewer-cant-block',
+      'nullmage-shepherd-viewer-tap-four',
     ]);
   });
 

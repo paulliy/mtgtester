@@ -6262,6 +6262,38 @@ function carrionFeederCantBlockScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function nullmageShepherdScenario(gameId: GameId): CardTestScenario {
+  const shepherd = pinnedFrom(MARCHESA_BATCH1, 'Nullmage Shepherd');
+  return pr01Scenario(gameId, {
+    id: 'nullmage-shepherd-viewer-tap-four',
+    title: 'Nullmage Shepherd: tap itself and three others to destroy an enchantment',
+    instructions: [
+      "Activate Nullmage Shepherd targeting P2's Lab Hex.",
+      'Tap Nullmage Shepherd itself and your three Lab Thrulls to pay the cost.',
+    ],
+    expectedOutcome:
+      'All four of your creatures tap (the Shepherd counts toward the four) and Lab Hex is destroyed.',
+    oracleSha256: shepherd.sha256,
+    clauseIds: ['nullmage-shepherd-tap-four-destroy'],
+    decks: {
+      P1: [shepherd.card, LAB_THRULL, LAB_THRULL, LAB_THRULL, FOREST],
+      P2: [LAB_HEX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Nullmage Shepherd', 'Lab Thrull', 'Lab Thrull', 'Lab Thrull'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Hex'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -6405,6 +6437,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'mistveil-plains-viewer-one-white-blocked',
   'carrion-feeder-viewer-sacrifice',
   'carrion-feeder-viewer-cant-block',
+  'nullmage-shepherd-viewer-tap-four',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6546,6 +6579,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'mistveil-plains-viewer-one-white-blocked': mistveilBlockedScenario,
   'carrion-feeder-viewer-sacrifice': carrionFeederSacrificeScenario,
   'carrion-feeder-viewer-cant-block': carrionFeederCantBlockScenario,
+  'nullmage-shepherd-viewer-tap-four': nullmageShepherdScenario,
 };
 
 export function createCardTestScenario(

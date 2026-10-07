@@ -497,6 +497,15 @@ export function resolveConditionalUnits(
  * pool and the full source list, which is the caller's job (`canPay`). Folding it in here would
  * make mana-source enumeration recursive.
  */
+/**
+ * May a "tap an untapped … you control" cost tap the ability's own source? Only when the cost says
+ * so (`allowSelf`) and the same ability does not also tap the source with {T}: a permanent tapped
+ * for {T} is no longer untapped (CR 601.2h pays the costs in any order, never one object twice).
+ */
+export function selfMayTap(cost: AbilityCost, costs: readonly AbilityCost[]): boolean {
+  return 'allowSelf' in cost && cost.allowSelf === true && !costs.some((c) => c.kind === 'tap');
+}
+
 export function canPayNonManaCosts(
   ctx: GameContext,
   perm: EnginePermanent,
@@ -540,7 +549,7 @@ export function canPayNonManaCosts(
       case 'tapOther': {
         const payable = ctx.state.battlefield.some(
           (candidate) =>
-            candidate.id !== perm.id &&
+            (selfMayTap(cost, costs) || candidate.id !== perm.id) &&
             candidate.controllerId === perm.controllerId &&
             !candidate.tapped &&
             matchesSelector(ctx, candidate, cost.selector, {
@@ -554,7 +563,7 @@ export function canPayNonManaCosts(
       case 'tapOthers': {
         const payable = ctx.state.battlefield.filter(
           (candidate) =>
-            candidate.id !== perm.id &&
+            (selfMayTap(cost, costs) || candidate.id !== perm.id) &&
             candidate.controllerId === perm.controllerId &&
             !candidate.tapped &&
             matchesSelector(ctx, candidate, cost.selector, {
