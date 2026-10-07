@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { enforceCardDefinition } from '../src/cards/authoring-validation';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import type { AbilityCost, ManaAbilitySpec } from '../src/cards/ability';
@@ -95,6 +96,100 @@ describe('actual changing-resource spell payment contracts', () => {
         .filter((e) => ['lifeGain', 'lifeLoss'].includes(e.type))
         .map((e) => e.type),
     ).toEqual(['lifeGain', 'lifeLoss']);
+  });
+
+  it.each([1, -1])(
+    'offers additional life X funded by actual mana life gain from starting life %s',
+    (life) => {
+      const state = setup('{G}', [{ kind: 'payLifeValue', amount: { kind: 'xValue' } }]);
+      state.ctx.defs.set(state.card.oracleId, {
+        ...state.ctx.defs.get(state.card.oracleId)!,
+        announcesX: true,
+      });
+      state.player.life = life;
+      const source = state.source('Additional-X life source', {
+        units: [['G']],
+        onActivate: [{ op: 'gainLife', amount: { kind: 'const', n: 3 } }],
+      });
+      const before = cloneContractContext(state.ctx);
+      const options = computePriorityOptions(state.ctx, state.player).filter(
+        (option) => (option.payload as PriorityActionPayload).kind === 'castSpell',
+      );
+      expect(options.map((option) => (option.payload as { x: number }).x)).toEqual(
+        life === 1 ? [0, 1, 2, 3, 4] : [0, 1, 2],
+      );
+      expect(state.ctx.state).toEqual(before.state);
+      const option = options.find((option) => (option.payload as { x: number }).x === life + 3)!;
+      pump(
+        applyPriorityAction(state.ctx, state.player, option.payload as PriorityActionPayload, {
+          index: 0,
+          targets: new Map(),
+        }),
+      );
+      expect(source.tapped).toBe(true);
+      expect(state.player.life).toBe(0);
+      expect(state.ctx.state.stack[0]!.announcedX).toBe(life + 3);
+      expect(
+        state.ctx.state.eventLog
+          .filter((event) => ['lifeGain', 'lifeLoss'].includes(event.type))
+          .map((event) => event.type),
+      ).toEqual(['lifeGain', 'lifeLoss']);
+    },
+  );
+
+  it.each(['missing', 'fixed', 'otherValue', 'mixedValue'] as const)(
+    'contains an additional-X announcement without a proven X cost: %s',
+    (variant) => {
+      const state = setup(
+        '{G}',
+        variant === 'missing'
+          ? []
+          : [
+              {
+                kind: 'payLifeValue',
+                amount:
+                  variant === 'fixed'
+                    ? { kind: 'const', n: 1 }
+                    : { kind: 'negate', of: { kind: 'xValue' } },
+              },
+            ],
+      );
+      if (variant === 'mixedValue')
+        state.ctx.defs
+          .get(state.card.oracleId)!
+          .spellAdditionalCosts!.push({ kind: 'payLifeValue', amount: { kind: 'xValue' } });
+      const malformed = { ...state.ctx.defs.get(state.card.oracleId)!, announcesX: true };
+      expect(enforceCardDefinition(malformed).modeled).toBe(false);
+      state.ctx.defs.set(state.card.oracleId, malformed);
+      const before = cloneContractContext(state.ctx);
+      expect(state.offered).toThrow('direct pay-X-life cost');
+      expect(() =>
+        pump(
+          applyPriorityAction(
+            state.ctx,
+            state.player,
+            { kind: 'castSpell', objectId: state.card.id, fromCommand: false, x: 1 },
+            { index: 0, targets: new Map() },
+          ),
+        ),
+      ).toThrow('direct pay-X-life cost');
+      expect(state.ctx.state).toEqual(before.state);
+      expect(state.ctx.rng.nextUint32()).toBe(before.rng.nextUint32());
+    },
+  );
+
+  it('reports an additional-X menu beyond its supported choice budget without mutation', () => {
+    const state = setup('{G}', [{ kind: 'payLifeValue', amount: { kind: 'xValue' } }]);
+    state.ctx.defs.set(state.card.oracleId, {
+      ...state.ctx.defs.get(state.card.oracleId)!,
+      announcesX: true,
+    });
+    state.player.life = 1024;
+    state.source('Large-X fixed source', { units: [['G']] });
+    const before = cloneContractContext(state.ctx);
+    expect(state.offered).toThrow('additional life X choice budget exceeded');
+    expect(state.ctx.state).toEqual(before.state);
+    expect(state.ctx.rng.nextUint32()).toBe(before.rng.nextUint32());
   });
 
   it('finishes mana activations before paying a target life tax', () => {

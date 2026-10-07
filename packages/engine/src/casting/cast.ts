@@ -1,3 +1,4 @@
+import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
 import { selectedSpellDefinition } from '../cards/spell-faces';
 import { castingPreviewContext } from './preview';
 import { castingCheckpoint } from './checkpoint';
@@ -477,6 +478,8 @@ function* proposeCast(
     }
   }
   const printedSpellDef = selectedSpellDefinition(def, selectedAlternative);
+  if (!supportsAdditionalXAnnouncement(printedSpellDef))
+    throw new Error('additional X requires a direct pay-X-life cost');
   if (printedSpellDef.types.includes('Land')) throw new Error('a land cannot be cast as a spell');
   if (
     payload.alternativeCast === 'energy' &&
