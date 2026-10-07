@@ -90,6 +90,7 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/overrides/silverquill-influence-remaining.ts',
   'packages/engine/src/cards/overrides/silverquill-influence.ts',
   'packages/engine/src/cards/overrides/token-triumph.ts',
+  'packages/engine/src/cards/overrides/unsupported-spell-faces.ts',
   'packages/engine/src/cards/overrides/urdragon.ts',
   'packages/engine/src/cards/overrides/w1-remaining.ts',
   'packages/engine/src/cards/overrides/w2-remaining.ts',
