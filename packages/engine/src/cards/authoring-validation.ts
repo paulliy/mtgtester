@@ -1,5 +1,5 @@
 import { spellFaceOf } from './spell-faces';
-import type { AlternativeCast } from './ability';
+import type { AlternativeCast, DynamicManaKind } from './ability';
 import { selectorIsEventOnly } from './selector';
 import { validateIRGraph } from './ir-graph';
 import { validateManaRiders } from './mana-riders';
@@ -33,6 +33,15 @@ interface Scope {
 const integer = (n: unknown): n is number =>
   typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
 const specialRefs = new Set(['source', 'triggerObject', 'attachedToSource', 'eventPlayer']);
+const dynamicManaKinds = {
+  commanderIdentity: true,
+  opponentLandColors: true,
+  chosenColor: true,
+  colorsAmongPermanents: true,
+  oneColorAmongPermanents: true,
+  ownLandTypes: true,
+  legendaryPermanentColors: true,
+} satisfies Record<DynamicManaKind, true>;
 
 function checkReference(
   value: unknown,
@@ -279,6 +288,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   }
   if (value === null || typeof value !== 'object') return;
   const record = value as Record<string, unknown>;
+  if (
+    record['dynamic'] !== undefined &&
+    (typeof record['dynamic'] !== 'string' || !Object.hasOwn(dynamicManaKinds, record['dynamic']))
+  )
+    issues.push({ path: `${path}.dynamic`, message: 'unknown dynamic mana kind' });
   if (record['kind'] === 'adventure' || record['kind'] === 'omen') {
     try {
       spellFaceOf(record as unknown as AlternativeCast);
