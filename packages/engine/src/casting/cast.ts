@@ -1,3 +1,4 @@
+import { castingPreviewContext } from './preview';
 import { castingCheckpoint } from './checkpoint';
 import { countTargetsCanComplete, type CountedTargetChoices } from '../targets/announcement';
 import { chooseSpellPayment, planSpellPayment } from '../mana/spell-payment';
@@ -348,6 +349,7 @@ function* proposeCast(
     payload.fromLibraryTop,
     payload.fromGraveyard,
   ];
+  if (typeof payload.fromCommand !== 'boolean') throw new Error('missing command-zone source flag');
   if (flags.some((flag) => flag !== undefined && typeof flag !== 'boolean'))
     throw new Error('invalid casting source flag');
   if (flags.filter((flag) => flag === true).length > 1)
@@ -356,6 +358,12 @@ function* proposeCast(
     if (value !== undefined && (!Number.isSafeInteger(value) || value < 0)) {
       throw new Error('invalid casting configuration');
     }
+  }
+  if (payload.modes !== undefined && !Array.isArray(payload.modes)) {
+    throw new Error('invalid mode configuration');
+  }
+  if (payload.mode !== undefined && (!Number.isSafeInteger(payload.mode) || payload.mode < 0)) {
+    throw new Error('invalid mode index');
   }
   if (
     payload.modes !== undefined &&
@@ -414,10 +422,60 @@ function* proposeCast(
     )
   )
     throw new Error('unknown casting alternative');
+  const authoredAlternative =
+    payload.alternativeCast === 'nonMana' ||
+    payload.alternativeCast === 'overload' ||
+    payload.alternativeCast === 'adventure' ||
+    payload.alternativeCast === 'omen';
+  if (payload.altIndex !== undefined && !authoredAlternative) {
+    throw new Error('unexpected alternative index');
+  }
+  const selectedAlternative = authoredAlternative
+    ? payload.altIndex === undefined
+      ? def.alternativeCasts?.find((alternative) => alternative.kind === payload.alternativeCast)
+      : def.alternativeCasts?.[payload.altIndex]
+    : undefined;
+  if (authoredAlternative && selectedAlternative?.kind !== payload.alternativeCast) {
+    throw new Error('missing or mismatched casting alternative');
+  }
+  if (selectedAlternative !== undefined) {
+    const from = selectedAlternative.from;
+    if (
+      payload.fromLibraryTop === true ||
+      payload.fromExile === true ||
+      (payload.fromGraveyard === true
+        ? from !== 'graveyard'
+        : from === 'graveyard' || from === 'exile')
+    ) {
+      throw new Error('casting alternative is not supported from this zone');
+    }
+    if (
+      selectedAlternative.condition !== undefined &&
+      !evaluateCondition(
+        castingPreviewContext(ctx, obj, player.id),
+        selectedAlternative.condition,
+        {
+          cardId: obj.cardId,
+          controllerId: player.id,
+        },
+      )
+    ) {
+      throw new Error('casting alternative condition is not met');
+    }
+  }
+  if (
+    payload.alternativeCast === 'energy' &&
+    (payload.fromGraveyard === true || payload.fromExile === true)
+  ) {
+    throw new Error('energy alternative is not supported from this zone');
+  }
+  if (payload.alternativeCast === 'commanderFree' && payload.fromGraveyard === true) {
+    throw new Error('commander-free alternative is not supported from this zone');
+  }
   if (resolutionPermission === undefined) {
     const face =
       payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen'
-        ? def.alternativeCasts?.[payload.altIndex ?? 0]
+        ? selectedAlternative
         : undefined;
     const instantSpeed =
       face === undefined
@@ -437,16 +495,12 @@ function* proposeCast(
   if (
     resolutionPermission === undefined &&
     payload.fromGraveyard === true &&
-    payload.alternativeCast === undefined
+    selectedAlternative?.from !== 'graveyard'
   ) {
     validatePlayFromZonePermission(ctx, player, obj, 'graveyard', payload.zoneBudgetType);
     consumeZonePermission = 'graveyard';
   }
-  if (
-    resolutionPermission === undefined &&
-    payload.fromLibraryTop === true &&
-    payload.alternativeCast === undefined
-  ) {
+  if (resolutionPermission === undefined && payload.fromLibraryTop === true) {
     const permission = playFromZonePermission(ctx, player.id, obj, 'libraryTop');
     if (permission !== null) {
       validatePlayFromZonePermission(ctx, player, obj, 'libraryTop', payload.zoneBudgetType);
@@ -455,11 +509,14 @@ function* proposeCast(
       throw new Error('cast from library top is not legal');
     }
   }
+  if (payload.zoneBudgetType !== undefined && consumeZonePermission === undefined) {
+    throw new Error('unexpected permanent-type budget choice');
+  }
   let castingAdditionalCosts: AbilityCost[] = [...(def.spellAdditionalCosts ?? [])];
   if (
     resolutionPermission === undefined &&
     payload.fromExile === true &&
-    obj.onAdventure !== true &&
+    !(obj.onAdventure === true && obj.ownerId === player.id) &&
     obj.playableUntilEotBy !== player.id
   ) {
     throw new Error('exile cast permission is not legal');
@@ -534,10 +591,7 @@ function* proposeCast(
     }
     cost = emptyCost();
   } else if (payload.alternativeCast === 'nonMana') {
-    const alt =
-      payload.altIndex === undefined
-        ? def.alternativeCasts?.find((a) => a.kind === 'nonMana')
-        : def.alternativeCasts?.[payload.altIndex];
+    const alt = selectedAlternative;
     if (alt?.kind !== 'nonMana') throw new Error('missing non-mana alternative cost');
     if (
       (payload.fromGraveyard === true && alt.from !== 'graveyard') ||
@@ -545,21 +599,12 @@ function* proposeCast(
     ) {
       throw new Error('graveyard alternative cost is not legal from this zone');
     }
-    if (
-      alt.condition !== undefined &&
-      !evaluateCondition(ctx, alt.condition, { cardId: obj.cardId, controllerId: player.id })
-    ) {
-      throw new Error('non-mana alternative cost condition is not met');
-    }
     castingAdditionalCosts = [...castingAdditionalCosts, ...(alt.costs ?? [])];
     cost = alt.manaCost;
     exileOnResolution = alt.exileOnResolution === true;
     escaped = alt.escaped === true;
   } else if (payload.alternativeCast === 'overload') {
-    const alt =
-      payload.altIndex === undefined
-        ? def.alternativeCasts?.find((a) => a.kind === 'overload')
-        : def.alternativeCasts?.[payload.altIndex];
+    const alt = selectedAlternative;
     if (alt?.kind !== 'overload') throw new Error('missing overload cost');
     cost = alt.manaCost;
     abilityDef = {
@@ -571,10 +616,7 @@ function* proposeCast(
       },
     };
   } else if (payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen') {
-    const alt =
-      payload.altIndex === undefined
-        ? def.alternativeCasts?.find((a) => a.kind === payload.alternativeCast)
-        : def.alternativeCasts?.[payload.altIndex];
+    const alt = selectedAlternative;
     if (alt?.kind !== payload.alternativeCast)
       throw new Error(`missing ${payload.alternativeCast} cost`);
     cost = alt.manaCost;

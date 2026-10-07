@@ -1001,7 +1001,12 @@ export function computePriorityOptions(
     // fabricate a source-zone payload for an alternative that has no such permission.
     if (!fromExile && !fromLibraryTop) {
       for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
-        if (fromGraveyard ? alt.from !== 'graveyard' : alt.from === 'graveyard') continue;
+        if (
+          fromGraveyard
+            ? alt.from !== 'graveyard'
+            : alt.from === 'graveyard' || alt.from === 'exile'
+        )
+          continue;
         if (
           alt.condition !== undefined &&
           !evaluateCondition(castCtx, alt.condition, {
