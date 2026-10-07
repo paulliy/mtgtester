@@ -2985,7 +2985,9 @@ async function runSelectedFaceViewer(page: Page, name: string, half: boolean): P
           : 'Chosen Face Bear',
     ).click();
   }
-  if (half || !pin.types.includes('Land')) await confirm(page);
+  if (!half && pin.types.includes('Land'))
+    await page.getByRole('button', { name: 'Play land', exact: true }).click();
+  else await confirm(page);
   if (!half && name === 'An Unexpected Party')
     await page.getByRole('button', { name: 'Giant', exact: true }).click();
   if (half && expected.scry !== undefined) {
