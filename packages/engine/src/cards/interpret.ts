@@ -9,7 +9,7 @@
  * behavior is needed â€” a visible failure is more useful than a wrong game (brief Â§6.3),
  * and the reasons form the backlog of mechanics to implement next.
  */
-
+import { counterSpellTarget } from './target-builders';
 import type { Color, OracleCard } from '@mtg/shared';
 import { enforceInterpretedDefinition } from './overload';
 import { emptyCost, parseManaCost } from '../mana/cost';
@@ -2257,7 +2257,7 @@ function parseCounterUnlessFerociousBlock(
   if (condition === null) return null;
 
   return {
-    targets: [{ kind: 'noncreatureSpell' }],
+    targets: [counterSpellTarget('noncreatureSpell')],
     effects: [
       {
         op: 'conditionalEffect',
@@ -2378,9 +2378,9 @@ function parseCounterAndCreateTokenBlock(
   const qualifier = (m[1] ?? '').toLowerCase();
   let target: TargetSpec;
   if (qualifier === '') {
-    target = { kind: 'spell' };
+    target = counterSpellTarget();
   } else if (qualifier === 'noncreature') {
-    target = { kind: 'noncreatureSpell' };
+    target = counterSpellTarget('noncreatureSpell');
   } else {
     const parts = qualifier.split(/,\s*(?:or\s+)?|\s+or\s+/).filter(Boolean);
     const known = new Set([
@@ -2392,7 +2392,9 @@ function parseCounterAndCreateTokenBlock(
       'planeswalker',
     ]);
     if (parts.length === 0 || parts.some((part) => !known.has(part))) return null;
-    target = { kind: 'spell', filter: anyOf(...parts.map((part) => ofType(titleCase(part)))) };
+    target = counterSpellTarget('spell', {
+      filter: anyOf(...parts.map((part) => ofType(titleCase(part)))),
+    });
   }
   const count = parseAmount((m[2] as string).toLowerCase());
   const tokenPhrase = (m[3] as string).replace(/\.$/, '').replace(/ tokens$/i, ' token');
@@ -6776,7 +6778,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         "counter target spell. at the beginning of your next main phase, add an amount of {c} equal to that spell's mana value"
       ) {
         const target = spellTargets.length;
-        spellTargets.push({ kind: 'spell' });
+        spellTargets.push(counterSpellTarget());
         spellEffects.push({ op: 'counter', target, addManaAtNextMainPhase: true });
         continue;
       }
@@ -6785,7 +6787,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         "counter target noncreature spell. if that spell is countered this way, exile it instead of putting it into its owner's graveyard"
       ) {
         const target = spellTargets.length;
-        spellTargets.push({ kind: 'noncreatureSpell', controller: 'opponent' });
+        spellTargets.push(counterSpellTarget('noncreatureSpell', { controller: 'opponent' }));
         spellEffects.push({ op: 'counter', target, exileIfCountered: true });
         continue;
       }

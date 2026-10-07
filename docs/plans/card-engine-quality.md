@@ -605,6 +605,16 @@ and report the exact failed action, attempted recovery, and remaining work.
   types and lint. Fresh generator discovery includes the shared cost-contract helper;
   benchmark refresh changes only current engine/card source bindings and dependent content hashes.
   The actual 38,708-record bulk re-audit retains 6,471 modeled definitions and 487 keys.
+- Combined verification at `9572c1d`: all 314 repository files / 4,093 tests and all
+  87 card-gate files / 1,941 tests pass, with production/test/tooling types, lint and formatting.
+  No receipt RPC failures recur. Later builder and counter changes require fresh checks.
+- Guarded target builders preserve exact existing IR while requiring explicit graveyard owners
+  and spell domains. Six counter grammar construction sites adopt the spell builder. Independent
+  normal casts prove own/opponent/any graveyard returns and unrestricted/restricted spell targets;
+  malformed options and owner dependencies reject before mutation. Named target slots preserve
+  prototype-named data keys. All 145 focused contracts, both type checks and lint pass; the 93
+  interpretation and 729 override snapshots remain unchanged. Builders do not grant primitive
+  or card-review evidence by themselves.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR

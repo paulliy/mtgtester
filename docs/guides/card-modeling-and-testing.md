@@ -140,6 +140,12 @@ needed — it never guesses or falls back to "close enough" (brief §6.3).
    target, `lord` / `auraBuff` / `costReductionFor` for statics. ESLint blocks the two primitives
    these replace (`registerOverride`, `parseManaCost`) inside `overrides/`.
 
+   Use `graveyardCardTarget(owner, options)` to declare controller/opponent/any graveyard
+   ownership or an earlier ordinary player slot. Use `counterSpellTarget(kind, options)` for
+   stack spells; its default includes all controllers. Both builders preserve absent keys and
+   reject unknown options. The final ability validator still checks slot dependencies and effect
+   domains. `targetSlots` retains every own named key, including prototype-named keys.
+
    `def` may **only compose existing, already-tested `Effect`/`Ability` primitives** — a new
    executor primitive is out of scope for an override and belongs in the engine itself. If a card
    needs a cost or effect that doesn't exist, leave it `unimplemented` rather than approximating.
