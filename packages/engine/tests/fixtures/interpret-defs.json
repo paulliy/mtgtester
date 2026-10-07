@@ -6700,6 +6700,15 @@
     "activatedAbilities": [],
     "alternativeCasts": [
       {
+        "ability": {
+          "effects": [
+            {
+              "op": "overloadBounceAllNonlandOpponents"
+            }
+          ],
+          "kind": "spell",
+          "targets": []
+        },
         "description": "Overload {6}{u}",
         "kind": "overload",
         "manaCost": {

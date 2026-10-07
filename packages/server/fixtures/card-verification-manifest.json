@@ -4551,6 +4551,177 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "d75b9c82-1b49-4c3e-a1b5-aeef57d6644b": {
+      "name": "Cyclonic Rift",
+      "oracleSha256": "e7bcda93b9a5eb7da57ef672cc3d98c8ef99ae5f56ffd1c15eeeb84d5cdace66",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Return target nonland permanent you don't control to its owner's hand.",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "Cyclonic Rift overload affects protected opposing nonlands and leaves yours and lands",
+            "cyclonic-rift-normal-target-restrictions"
+          ],
+          "viewerScenarioIds": ["cyclonic-rift-viewer-normal", "cyclonic-rift-viewer-overload"]
+        },
+        {
+          "oracleText": "Overload {6}{U} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "Cyclonic Rift overload affects protected opposing nonlands and leaves yours and lands",
+            "cyclonic-rift-normal-target-restrictions"
+          ],
+          "viewerScenarioIds": ["cyclonic-rift-viewer-normal", "cyclonic-rift-viewer-overload"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3567c3c8-b3c7-45b7-935b-b1fdbc973720": {
+      "name": "Vandalblast",
+      "oracleSha256": "939b8ed66d5dbaf542fffb63c75bf1731472c8b7a57754627419c4e7c35b25e9",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Destroy target artifact you don't control.",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "Vandalblast overload destroys opposing artifacts through protection but honors indestructible",
+            "normal Vandalblast still targets exactly one legal opposing artifact"
+          ],
+          "viewerScenarioIds": ["vandalblast-viewer-normal", "vandalblast-viewer-overload"]
+        },
+        {
+          "oracleText": "Overload {4}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "Vandalblast overload destroys opposing artifacts through protection but honors indestructible",
+            "normal Vandalblast still targets exactly one legal opposing artifact"
+          ],
+          "viewerScenarioIds": ["vandalblast-viewer-normal", "vandalblast-viewer-overload"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "48ddba1e-2ad7-463f-9307-d2379a800e51": {
+      "name": "Mizzium Mortars",
+      "oracleSha256": "a8b84af0101a57acbab827a74a893cff542c2df54914b65eda9d28335a16642a",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted.",
+      "clauses": [
+        {
+          "oracleText": "Mizzium Mortars deals 4 damage to target creature you don't control.",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Mizzium Mortars-overload-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Overload {3}{R}{R}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Mizzium Mortars-overload-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "99fd4b51-1698-4168-9366-a6ea2df22361": {
+      "name": "Electrickery",
+      "oracleSha256": "ea68376ab3f57c56cfc902f12a38c8a3c0cf553648d70a22cf98d679391c41df",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted.",
+      "clauses": [
+        {
+          "oracleText": "Electrickery deals 1 damage to target creature you don't control.",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Electrickery-overload-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Overload {1}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Electrickery-overload-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "02d998a6-0afd-4be1-a209-05618fcc43ea": {
+      "name": "Mizzium Skin",
+      "oracleSha256": "aa793c5b072acf01aa3eb2ecf691e780b27b2768f1c6f0d989f9ab22a80bf6fa",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted.",
+      "clauses": [
+        {
+          "oracleText": "Target creature you control gets +0/+1 and gains hexproof until end of turn.",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Mizzium Skin-overload-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Overload {1}{U} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Mizzium Skin-overload-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b01d61cc-9844-4191-86a0-f2db6d42d6e5": {
+      "name": "Damn",
+      "oracleSha256": "3ce31ea519774646789dc1b1d4327135f344b35248ec34024a4c7d3c594f1d6d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Destroy target creature. A creature destroyed this way can't be regenerated.",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "damn-overload-destroys-each-creature-without-regeneration",
+            "damn-normal-targets-one-creature-and-prevents-regeneration"
+          ],
+          "viewerScenarioIds": ["damn-viewer-normal", "damn-viewer-overload"]
+        },
+        {
+          "oracleText": "Overload {2}{W}{W} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "damn-overload-destroys-each-creature-without-regeneration",
+            "damn-normal-targets-one-creature-and-prevents-regeneration"
+          ],
+          "viewerScenarioIds": ["damn-viewer-normal", "damn-viewer-overload"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

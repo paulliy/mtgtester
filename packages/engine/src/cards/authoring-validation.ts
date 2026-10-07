@@ -259,6 +259,19 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   }
   if (value === null || typeof value !== 'object') return;
   const record = value as Record<string, unknown>;
+  if (record['kind'] === 'overload') {
+    const ability = record['ability'] as { kind?: unknown; targets?: unknown } | undefined;
+    if (
+      ability?.kind !== 'spell' ||
+      !Array.isArray(ability.targets) ||
+      ability.targets.length !== 0
+    ) {
+      issues.push({
+        path: `${path}.ability`,
+        message: 'overload requires an explicit executable spell ability with no targets',
+      });
+    }
+  }
   let owningScope = scope;
   if (
     ['spell', 'triggered', 'activated'].includes(String(record['kind'])) &&

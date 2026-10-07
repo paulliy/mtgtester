@@ -1029,16 +1029,14 @@ export function computePriorityOptions(
             );
             break;
           case 'overload':
+            if (alt.ability === undefined)
+              throw new Error('overload alternative has no executable ability');
             offerCast(
               alt.manaCost,
               spellAdditionalCosts,
               {
                 ...def,
-                spellAbility: alt.ability ?? {
-                  kind: 'spell',
-                  targets: [],
-                  effects: [{ op: 'overloadBounceAllNonlandOpponents' }],
-                },
+                spellAbility: alt.ability,
               },
               { alternativeCast: alt.kind, altIndex: index },
               ' via Overload',

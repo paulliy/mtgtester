@@ -113,7 +113,16 @@ describe('independent alternative casting contracts', () => {
     (kind) => {
       const { ctx, player, card, options, cast, lands } = setup({
         types: ['Creature'],
-        alternativeCasts: kind === 'energy' ? [] : [{ ...nonMana(), kind }],
+        alternativeCasts:
+          kind === 'energy'
+            ? []
+            : [
+                {
+                  ...nonMana(),
+                  kind,
+                  ...(kind === 'overload' ? { ability: spell({ effects: [] }) } : {}),
+                },
+              ],
       });
       player.hand.splice(0, 1);
       card.zone = 'command';
