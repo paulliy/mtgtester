@@ -81,7 +81,6 @@ import {
   onDies,
   onEtb,
   SAC_SELF,
-  spell,
   TAP,
   triggered,
   whenAttacks,
@@ -5737,40 +5736,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
 
-  if (card.name === 'Bloomvine Regent // Claim Territory') {
-    alternativeCasts = [
-      {
-        kind: 'omen',
-        name: 'Claim Territory',
-        typeLine: 'Sorcery — Omen',
-        manaCost: manaCost('{2}{G}'),
-        description: 'Claim Territory',
-        ability: spell({
-          effects: [
-            {
-              op: 'searchLibrary',
-              filter: allOf(ofSupertype('Basic'), ofType('Land')),
-              destinations: [{ zone: 'hand' }],
-            },
-          ],
-        }),
-      },
-    ];
-  } else if (card.name === 'Marang River Regent // Coil and Catch') {
-    alternativeCasts = [
-      {
-        kind: 'omen',
-        name: 'Coil and Catch',
-        typeLine: 'Instant — Omen',
-        manaCost: manaCost('{3}{U}'),
-        description: 'Coil and Catch',
-        ability: spell({
-          targets: [{ kind: 'nonlandPermanent', controller: 'opponent' }],
-          effects: [{ op: 'returnToHand', target: 0 }],
-        }),
-      },
-    ];
-  } else if (card.name === 'Dragon Tempest') {
+  if (card.name === 'Dragon Tempest') {
     triggers.push(
       triggered(whenEnters(allOf(ofType('Creature'), withKeyword('flying'), YOURS)), {
         effects: [{ op: 'grantKeywordUntilEot', keyword: 'haste', target: 'triggerObject' }],

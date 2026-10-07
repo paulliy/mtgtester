@@ -126,40 +126,6 @@
   },
   {
     "activatedAbilities": [],
-    "alternativeCasts": [
-      {
-        "ability": {
-          "effects": [
-            {
-              "op": "returnToHand",
-              "target": 0
-            }
-          ],
-          "kind": "spell",
-          "targets": [
-            {
-              "controller": "opponent",
-              "kind": "nonlandPermanent"
-            }
-          ]
-        },
-        "description": "Coil and Catch",
-        "kind": "omen",
-        "manaCost": {
-          "colored": {
-            "B": 0,
-            "G": 0,
-            "R": 0,
-            "U": 1,
-            "W": 0
-          },
-          "colorless": 0,
-          "generic": 3
-        },
-        "name": "Coil and Catch",
-        "typeLine": "Instant — Omen"
-      }
-    ],
     "colorIdentity": [
       "U"
     ],
@@ -185,7 +151,7 @@
       "colorless": 0,
       "generic": 4
     },
-    "modeled": true,
+    "modeled": false,
     "name": "Marang River Regent // Coil and Catch",
     "oracleId": "099b8d2c-b482-48dd-b6bc-dedf546d66c5",
     "power": 6,
@@ -233,7 +199,9 @@
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": []
+    "unmodeledReasons": [
+      "explicitly unsupported: Coil and Catch must draw three cards, then discard a card, and shuffle this card into its owner’s library; the former targeted bounce substitute was incorrect."
+    ]
   },
   {
     "activatedAbilities": [],
@@ -2799,7 +2767,7 @@
       "colorless": 0,
       "generic": 3
     },
-    "modeled": true,
+    "modeled": false,
     "name": "Monster Manual // Zoological Study",
     "oracleId": "6d4e7943-1fdf-4085-8af0-658badbd0cb8",
     "power": null,
@@ -2817,7 +2785,9 @@
     "types": [
       "Artifact"
     ],
-    "unmodeledReasons": []
+    "unmodeledReasons": [
+      "explicitly unsupported: Zoological Study must mill five cards and return a creature card milled this way to hand, then exile this card with its Adventure permission; modeling only the artifact face omits an executable spell face."
+    ]
   },
   {
     "activatedAbilities": [],
@@ -6940,52 +6910,6 @@
   },
   {
     "activatedAbilities": [],
-    "alternativeCasts": [
-      {
-        "ability": {
-          "effects": [
-            {
-              "destinations": [
-                {
-                  "zone": "hand"
-                }
-              ],
-              "filter": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "supertype",
-                    "value": "Basic"
-                  },
-                  {
-                    "kind": "type",
-                    "value": "Land"
-                  }
-                ]
-              },
-              "op": "searchLibrary"
-            }
-          ],
-          "kind": "spell",
-          "targets": []
-        },
-        "description": "Claim Territory",
-        "kind": "omen",
-        "manaCost": {
-          "colored": {
-            "B": 0,
-            "G": 1,
-            "R": 0,
-            "U": 0,
-            "W": 0
-          },
-          "colorless": 0,
-          "generic": 2
-        },
-        "name": "Claim Territory",
-        "typeLine": "Sorcery — Omen"
-      }
-    ],
     "colorIdentity": [
       "G"
     ],
@@ -7011,7 +6935,7 @@
       "colorless": 0,
       "generic": 3
     },
-    "modeled": true,
+    "modeled": false,
     "name": "Bloomvine Regent // Claim Territory",
     "oracleId": "da1e019c-2ffb-412d-90d7-f2e5e5c44c4b",
     "power": 4,
@@ -7075,7 +6999,9 @@
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": []
+    "unmodeledReasons": [
+      "explicitly unsupported: Claim Territory must search for up to two basic Forests, reveal them, put one onto the battlefield tapped and the other into hand, and shuffle; the former single basic-land-to-hand substitute was incorrect."
+    ]
   },
   {
     "activatedAbilities": [],
