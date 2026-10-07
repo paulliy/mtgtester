@@ -753,12 +753,12 @@ export function computePriorityOptions(
       } else {
         for (let x = 0; ; x++) {
           if (
-            !canPay(
+            !jointlyPayable(
               reduce(addManaCosts(costWithX(x), additionalManaCost)),
-              castPlayer.manaEntries,
-              castSources,
-              allows,
-              castPlayer.life,
+              spellAdditionalCosts,
+              x,
+              0,
+              energyCost,
             )
           )
             break;
@@ -778,8 +778,7 @@ export function computePriorityOptions(
 
       for (const x of xChoices) {
         const cost = costWithX(x);
-        if (!canPay(reduce(cost), castPlayer.manaEntries, castSources, allows, castPlayer.life))
-          continue;
+        if (!jointlyPayable(reduce(cost), [], x, 0, energyCost)) continue;
 
         for (const selectedModes of selections) {
           const modeCosts = modeAdditionalCosts(castingDef, selectedModes);
@@ -795,12 +794,12 @@ export function computePriorityOptions(
               for (let i = 0; i < count; i++)
                 prospective = addManaCosts(prospective, optional.cost);
               if (
-                !canPay(
+                !jointlyPayable(
                   reduce(prospective),
-                  castPlayer.manaEntries,
-                  castSources,
-                  allows,
-                  castPlayer.life,
+                  [...spellAdditionalCosts, ...modeCosts],
+                  x,
+                  0,
+                  energyCost,
                 )
               )
                 break;

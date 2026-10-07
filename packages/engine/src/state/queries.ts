@@ -740,9 +740,16 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
             controllerId: perm.controllerId,
           }),
       )
-      .map((a) => resolveConditionalUnits(ctx, a, perm))
-      .map((a) => resolveDynamicUnits(ctx, a, perm))
-      .map((a) => resolveDynamicAmount(ctx, a, perm))
+      .map((a) => ({
+        ...resolveDynamicAmount(
+          ctx,
+          resolveDynamicUnits(ctx, resolveConditionalUnits(ctx, a, perm), perm),
+          perm,
+        ),
+        ...(a.dynamic !== undefined || a.amount !== undefined || a.conditionalUnits !== undefined
+          ? { stateDependentProduction: true as const }
+          : {}),
+      }))
       // A dynamic source can resolve to nothing at all — Fellwar Stone with no opposing
       // lands taps for no mana, so it must not be offered as a payment source.
       .filter((a) => a.units.length > 0)
@@ -772,12 +779,17 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
 
       abilities = abilities.map((ability) => {
         if (rider.add.kind === 'fixed') {
-          return { ...ability, units: [...ability.units, ...rider.add.units] };
+          return {
+            ...ability,
+            stateDependentProduction: true as const,
+            units: [...ability.units, ...rider.add.units],
+          };
         }
         const producedTypes = [...new Set(ability.units.flat())];
         if (producedTypes.length === 0) return ability;
         return {
           ...ability,
+          stateDependentProduction: true as const,
           units: [...ability.units, producedTypes],
           ...(ability.linked === true || ability.units.length === 1
             ? { linked: true as const }
@@ -788,9 +800,10 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
     if (abilities.length === 0) continue;
 
     // Group interchangeable abilities, preserving first-seen order for determinism.
-    const groups = new Map<string, ManaAbilitySpec[]>();
+    const groups = new Map<string, (ManaAbilitySpec & { stateDependentProduction?: true })[]>();
     for (const ability of abilities) {
-      const key = interchangeableSignature(ability);
+      const key =
+        interchangeableSignature(ability) + String(ability.stateDependentProduction ?? false);
       const group = groups.get(key);
       if (group === undefined) groups.set(key, [ability]);
       else group.push(ability);
@@ -800,6 +813,9 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
       const first = group[0] as ManaAbilitySpec;
       const rider = {
         costs: first.costs ?? TAP_COST,
+        ...(group.some((a) => a.stateDependentProduction)
+          ? { stateDependentProduction: true as const }
+          : {}),
         // Lifted out of `costs` so the payment solver can see it without knowing what an
         // `AbilityCost` is — a filter land's `{W/B}`, Cabal Coffers' `{2}`.
         ...(manaCostComponent(first.costs ?? TAP_COST) !== undefined
