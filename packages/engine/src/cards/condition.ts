@@ -217,8 +217,18 @@ export function isChoiceCondition(condition: Condition): boolean {
   }
 }
 
-const compare = (actual: number, cmp: Comparison, n: number): boolean =>
-  cmp === '>=' ? actual >= n : cmp === '<=' ? actual <= n : actual === n;
+function compare(actual: number, cmp: Comparison, n: number): boolean {
+  switch (cmp) {
+    case '>=':
+      return actual >= n;
+    case '<=':
+      return actual <= n;
+    case '==':
+      return actual === n;
+    default:
+      return assertNever(cmp, 'Comparison');
+  }
+}
 
 /**
  * Answer a state condition. Throws on a choice condition — see the module comment.

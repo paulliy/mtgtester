@@ -17,6 +17,7 @@
  * silent zero would make an X-valued effect quietly do nothing (brief §6.3).
  */
 
+import { assertNever } from '../utils/assert-never';
 import type { Color, PlayerId } from '@mtg/shared';
 import type { GameContext } from '../state/types';
 import type { Selector } from './selector';
@@ -205,8 +206,52 @@ export function isDynamicValue(value: Value): boolean {
     case 'negate':
     case 'times':
       return isDynamicValue(value.of);
-    default:
+    case 'cardTypesInAllGraveyards':
+    case 'countPermanents':
+    case 'countTappedPermanents':
+    case 'countPermanentsControlledByTarget':
+    case 'aurasYouControlAttachedToCreatures':
+    case 'countCardsInZone':
+    case 'colorsAmongPermanents':
+    case 'devotionTo':
+    case 'countOpponents':
+    case 'greatestToughnessAmong':
+    case 'greatestPowerAmong':
+    case 'greatestManaValueAmong':
+    case 'totalPowerOfAttackers':
+    case 'totalPowerAmong':
+    case 'xValue':
+    case 'optionalCostCount':
+    case 'damageDealt':
+    case 'triggerCount':
+    case 'spellManaValue':
+    case 'manaSpent':
+    case 'treasureManaSpent':
+    case 'energyPaid':
+    case 'energyAvailable':
+    case 'stationPower':
+    case 'countersOnSelf':
+    case 'allCountersOnSelf':
+    case 'countersOnTarget':
+    case 'manaValueOfTarget':
+    case 'commanderCastCount':
+    case 'commanderIdentityColorCount':
+    case 'lifeTotal':
+    case 'countOpponentsWithFewerCreatures':
+    case 'creaturesDiedThisTurn':
+    case 'powerOfSource':
+    case 'toughnessOfSource':
+    case 'powerOfTarget':
+    case 'opponentsLostLifeThisTurn':
+    case 'powerOfTriggerObject':
+    case 'cardsInTargetHand':
+    case 'tappedCreaturesControlledByTarget':
+    case 'attackingCreatures':
+    case 'spellsCastThisTurn':
+    case 'countersOnTriggerObject':
       return true;
+    default:
+      return assertNever(value, 'isDynamicValue');
   }
 }
 
@@ -220,8 +265,51 @@ export function needsScope(value: Value): boolean {
     case 'negate':
     case 'times':
       return needsScope(value.of);
-    default:
+    case 'countPermanents':
+    case 'countTappedPermanents':
+    case 'countPermanentsControlledByTarget':
+    case 'aurasYouControlAttachedToCreatures':
+    case 'countCardsInZone':
+    case 'colorsAmongPermanents':
+    case 'devotionTo':
+    case 'countOpponents':
+    case 'greatestToughnessAmong':
+    case 'greatestPowerAmong':
+    case 'greatestManaValueAmong':
+    case 'totalPowerOfAttackers':
+    case 'totalPowerAmong':
+    case 'xValue':
+    case 'optionalCostCount':
+    case 'damageDealt':
+    case 'triggerCount':
+    case 'spellManaValue':
+    case 'manaSpent':
+    case 'treasureManaSpent':
+    case 'energyPaid':
+    case 'energyAvailable':
+    case 'stationPower':
+    case 'countersOnSelf':
+    case 'allCountersOnSelf':
+    case 'countersOnTarget':
+    case 'manaValueOfTarget':
+    case 'commanderCastCount':
+    case 'commanderIdentityColorCount':
+    case 'lifeTotal':
+    case 'countOpponentsWithFewerCreatures':
+    case 'creaturesDiedThisTurn':
+    case 'powerOfSource':
+    case 'toughnessOfSource':
+    case 'powerOfTarget':
+    case 'opponentsLostLifeThisTurn':
+    case 'powerOfTriggerObject':
+    case 'cardsInTargetHand':
+    case 'tappedCreaturesControlledByTarget':
+    case 'attackingCreatures':
+    case 'spellsCastThisTurn':
+    case 'countersOnTriggerObject':
       return true;
+    default:
+      return assertNever(value, 'needsScope');
   }
 }
 
@@ -319,9 +407,46 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       const player = ctx.state.players.find((p) => p.id === scope.controllerId);
       return player?.commanderColorIdentity.length ?? 0;
     }
-    default:
+    case 'countTappedPermanents':
+    case 'countPermanentsControlledByTarget':
+    case 'countCardsInZone':
+    case 'colorsAmongPermanents':
+    case 'countOpponents':
+    case 'greatestToughnessAmong':
+    case 'greatestPowerAmong':
+    case 'greatestManaValueAmong':
+    case 'totalPowerOfAttackers':
+    case 'totalPowerAmong':
+    case 'xValue':
+    case 'optionalCostCount':
+    case 'damageDealt':
+    case 'triggerCount':
+    case 'spellManaValue':
+    case 'manaSpent':
+    case 'treasureManaSpent':
+    case 'energyPaid':
+    case 'energyAvailable':
+    case 'stationPower':
+    case 'allCountersOnSelf':
+    case 'countersOnTarget':
+    case 'manaValueOfTarget':
+    case 'lifeTotal':
+    case 'countOpponentsWithFewerCreatures':
+    case 'creaturesDiedThisTurn':
+    case 'powerOfSource':
+    case 'toughnessOfSource':
+    case 'powerOfTarget':
+    case 'opponentsLostLifeThisTurn':
+    case 'powerOfTriggerObject':
+    case 'cardsInTargetHand':
+    case 'tappedCreaturesControlledByTarget':
+    case 'attackingCreatures':
+    case 'spellsCastThisTurn':
+    case 'countersOnTriggerObject':
       throw new Error(
         `engine bug: value "${value.kind}" needs a resolving ability's scope — use evaluateValueIn`,
       );
+    default:
+      return assertNever(value, 'layer Value');
   }
 }
