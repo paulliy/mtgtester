@@ -14,6 +14,7 @@ import { evaluateCondition } from '../cards/condition';
 import type { Ability, AbilityCost, CardDefinition } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
 import { payLife, payManaCost, paySpellAdditionalCosts } from '../effects/resolve';
+import { mayCastCommanderFromCommand } from './permissions';
 
 import { evaluateValueIn } from '../effects/values';
 import { emit, debug } from '../log/log';
@@ -398,6 +399,13 @@ function* proposeCast(
           ...s.players.flatMap((p) => [...p.hand, ...p.library, ...p.graveyard, ...p.commandZone]),
         ].find((card) => card === permittedCard && card.id === payload.objectId);
   if (obj === undefined) throw new Error('engine bug: spell to cast not found');
+  if (
+    resolutionPermission === undefined &&
+    payload.fromCommand &&
+    !mayCastCommanderFromCommand(player, obj)
+  ) {
+    throw new Error('command-zone casting permission is not legal');
+  }
   const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
   requireModeled(def, 'casting a spell');
   if (def.types.includes('Land')) throw new Error('a land cannot be cast as a spell');
@@ -443,6 +451,10 @@ function* proposeCast(
     if (
       payload.fromLibraryTop === true ||
       payload.fromExile === true ||
+      (payload.fromCommand &&
+        (from === 'hand' ||
+          selectedAlternative.kind === 'adventure' ||
+          selectedAlternative.kind === 'omen')) ||
       (payload.fromGraveyard === true
         ? from !== 'graveyard'
         : from === 'graveyard' || from === 'exile')
