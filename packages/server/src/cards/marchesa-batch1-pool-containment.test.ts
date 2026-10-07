@@ -51,6 +51,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Retrofitter Foundry',
       'Return to Nature',
       'Rishkar, Peema Renegade',
+      'Sage of Fables',
       'Sceptre of Eternal Glory',
       'Smothering Tithe',
       'Solar Transformer',

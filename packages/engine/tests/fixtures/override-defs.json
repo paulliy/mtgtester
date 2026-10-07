@@ -10359,12 +10359,6 @@
     "def": {}
   },
   {
-    "oracleId": "f53da056-97be-41ad-8cfc-0d92e17dcd7b",
-    "name": "Sage of Fables",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "f55334d9-1ec2-4667-bf28-5a0384d6f053",
     "name": "Thunderfoot Baloth",
     "handledLines": [
@@ -19634,12 +19628,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-sage-of-fables",
-    "name": "Sage of Fables",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-sage-s-reverie",

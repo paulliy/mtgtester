@@ -524,13 +524,34 @@
     "f53da056-97be-41ad-8cfc-0d92e17dcd7b": {
       "name": "Sage of Fables",
       "oracleSha256": "1423e05e7e7fc5bf74c33c20c1f368ebd1f4224c9c5112df484d654181aeb382",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "sage-of-fables-wizard-counter",
+          "oracleText": "Each other Wizard creature you control enters with an additional +1/+1 counter on it.",
+          "implementation": [
+            "interpreted additionalCountersOnEntry: other Wizard creatures you control enter with one more +1/+1 counter"
+          ],
+          "engineTestIds": [
+            "sage-of-fables-pinned-oracle-supported",
+            "sage-of-fables-wizard-enters-with-counter",
+            "sage-of-fables-not-itself-or-opponents"
+          ],
+          "viewerScenarioIds": ["sage-of-fables-viewer-wizard-counter-draw"]
+        },
+        {
+          "id": "sage-of-fables-remove-counter-draw",
           "oracleText": "{2}, Remove a +1/+1 counter from a creature you control: Draw a card.",
-          "implementation": ["explicitly unsupported; removeCounters cost is paid from the source"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted activated ability: costs [mana {2}, new removeCountersFromAmong(+1/+1, 1, your creatures)] — the counter comes off any creature you control (the Sage included), chosen while paying when there is more than one; effect draw(1)"
+          ],
+          "engineTestIds": [
+            "sage-of-fables-pinned-oracle-supported",
+            "sage-of-fables-draw-removing-another-creatures-counter",
+            "sage-of-fables-draw-from-itself",
+            "sage-of-fables-needs-a-counter-you-control"
+          ],
+          "viewerScenarioIds": ["sage-of-fables-viewer-wizard-counter-draw"]
         }
       ],
       "gameplayAiScenarioIds": []

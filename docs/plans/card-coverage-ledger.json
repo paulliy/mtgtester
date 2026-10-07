@@ -1954,6 +1954,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "f53da056-97be-41ad-8cfc-0d92e17dcd7b",
+    "name": "Sage of Fables",
+    "package": "PR02.20",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Remove-a-counter cost is paid from this creature, not a creature you control."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "bd92cacd-c7d8-43a2-a261-ea4754fefdc5",
     "name": "Sage's Reverie",
     "package": "W1",

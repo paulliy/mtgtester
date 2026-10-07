@@ -750,6 +750,15 @@ function actionCost(action: LegalAction): string[] {
           `Remove ${value.count} ${value.counter} counter${value.count === 1 ? '' : 's'}`,
         );
       }
+      if (
+        value.kind === 'removeCountersFromAmong' &&
+        typeof value.counter === 'string' &&
+        typeof value.count === 'number'
+      ) {
+        labels.push(
+          `Remove ${value.count} ${value.counter} counter${value.count === 1 ? '' : 's'} from a permanent you control`,
+        );
+      }
     }
   }
   return labels;

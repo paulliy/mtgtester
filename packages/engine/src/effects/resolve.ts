@@ -6810,6 +6810,48 @@ export function* payAbilityCosts(
         );
         break;
       }
+      case 'removeCountersFromAmong': {
+        const options = ctx.state.battlefield.filter(
+          (candidate) =>
+            candidate.controllerId === player.id &&
+            (candidate.counters[cost.counter] ?? 0) >= cost.count &&
+            matchesSelector(ctx, candidate, cost.selector, {
+              cardId: perm.cardId,
+              controllerId: player.id,
+            }),
+        );
+        if (options.length === 0) throw new Error('engine bug: counter cost became unpayable');
+        let chosen = options[0] as EnginePermanent;
+        if (options.length > 1) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: player.id,
+            prompt: `${perm.name}: choose a permanent to remove ${cost.count === 1 ? 'a' : cost.count} ${cost.counter} counter${cost.count === 1 ? '' : 's'} from as an activation cost.`,
+            options: options.map((candidate) => ({
+              type: 'removeCounterCost',
+              description: `Remove from ${candidate.name}`,
+              payload: candidate.id,
+            })),
+          };
+          const picked = options[outcome.index];
+          if (picked === undefined) throw new Error('engine bug: counter cost choice was invalid');
+          chosen = picked;
+        }
+        chosen.counters[cost.counter] = (chosen.counters[cost.counter] ?? 0) - cost.count;
+        emit(
+          ctx,
+          'counters',
+          {
+            target: chosen.name,
+            targetCardId: chosen.cardId,
+            counter: cost.counter,
+            added: -cost.count,
+            total: chosen.counters[cost.counter],
+          },
+          player.id,
+        );
+        break;
+      }
       case 'payLife':
         // CR 118.8: paying life is legal at any life total ≥ the amount, and the payment is not
         // damage — nothing replaces or prevents it.

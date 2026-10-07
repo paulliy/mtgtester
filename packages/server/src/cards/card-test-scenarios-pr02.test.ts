@@ -438,3 +438,25 @@ describe('Nullmage Shepherd Card Test Lab scenario', () => {
     replays('nullmage-shepherd-viewer-tap-four', steps);
   });
 });
+
+describe('Sage of Fables Card Test Lab scenario', () => {
+  const steps: Step[] = [
+    { action: 'Cast Lab Wizard' },
+    { action: 'Sage of Fables: {2}, Remove a +1/+1 counter' },
+  ];
+
+  it('sage-of-fables-viewer-wizard-counter-draw — the Wizard enters with a counter that then pays for the draw', () => {
+    const { seat, onBattlefield, state } = run('sage-of-fables-viewer-wizard-counter-draw', steps);
+    expect(onBattlefield('Lab Wizard')[0]?.counters['+1/+1'] ?? 0).toBe(0);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Sage Drawn Page']);
+    const counterEvents = state.eventLog
+      .filter((event) => event.type === 'counters')
+      .map((event) => event.payload);
+    // Entering with the counter is not a "counters" event; removing it to pay the cost is, and
+    // leaves zero — so the Wizard entered with exactly one.
+    expect(counterEvents).toEqual([
+      expect.objectContaining({ target: 'Lab Wizard', counter: '+1/+1', added: -1, total: 0 }),
+    ]);
+    replays('sage-of-fables-viewer-wizard-counter-draw', steps);
+  });
+});

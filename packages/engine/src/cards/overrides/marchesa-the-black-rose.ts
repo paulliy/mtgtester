@@ -474,12 +474,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'River Kelpie',
     'Graveyard-origin enters and cast triggers fire on any enter or cast.',
   );
-  // Catalog audit batch 7: counter cost removes from the source, not any creature you control.
-  unsupportedCard(
-    'f53da056-97be-41ad-8cfc-0d92e17dcd7b',
-    'Sage of Fables',
-    'Remove-a-counter cost is paid from this creature, not a creature you control.',
-  );
+  // Sage of Fables: restored in coverage PR02. The draw's cost is removeCountersFromAmong: a
+  // +1/+1 counter from any creature you control, chosen as the cost is paid.
   // Catalog audit batch 7: uncast/no-mana-spent restriction is omitted.
   unsupportedCard(
     '7555c429-5f2d-4171-b6b0-8e3c8da7f314',

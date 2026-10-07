@@ -5732,6 +5732,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: 'Tap four untapped creatures you control' now parses as tapOthers with allowSelf, so the Shepherd may be one of the four; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "f53da056-97be-41ad-8cfc-0d92e17dcd7b",
+      "name": "Sage of Fables",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: 'Remove a +1/+1 counter from a creature you control' now parses as the removeCountersFromAmong cost (any matching creature you control, the Sage included), and the Wizard enters-with-counter line was already interpreted; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

@@ -134,7 +134,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Pensive Professor',
       'Toxic Deluge',
       'Puppeteer Clique',
-      'Sage of Fables',
       'Satoru, the Infiltrator',
       'Siren Stormtamer',
       'Smokestack',

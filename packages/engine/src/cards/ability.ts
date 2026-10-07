@@ -58,6 +58,11 @@ export type AbilityCost =
   | { kind: 'tapCreaturesTotalPower'; minPower: number }
   /** "Remove a gold counter from this artifact". */
   | { kind: 'removeCounters'; counter: string; count: Value | number }
+  /**
+   * "Remove a +1/+1 counter from a creature you control" (Sage of Fables): the counters come off
+   * one controlled permanent matching `selector`, chosen while paying, which may be the source.
+   */
+  | { kind: 'removeCountersFromAmong'; counter: string; count: number; selector: Selector }
   /** "Pay 10 life" (CR 118.8) — payable only if the controller's life is at least this much. */
   | { kind: 'payLife'; amount: number }
   /** Pay a state-derived amount of life, evaluated when the cost is checked and paid. */

@@ -26,7 +26,7 @@ import { runPrioritySequence } from '../src/turn/priority';
 import { runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { prepareScenario } from '../src/testing/prepared-scenario';
-import { playerById } from '../src/state/objects';
+import { moveObject, playerById } from '../src/state/objects';
 import { manaSourcesFor, selfMayTap } from '../src/state/queries';
 import { buildPlayerView } from '../src/view/view';
 import type { EnginePermanent, GameContext } from '../src/state/types';
@@ -172,6 +172,13 @@ function settle(ctx: GameContext, answer?: Answer) {
 }
 
 const SECRET_CARD = (name: string) => oracle({ name, typeLine: 'Creature — Secret' });
+
+/** Move a card onto the battlefield through the normal zone change, queueing its triggers. */
+function enterFor(ctx: GameContext, controllerId: string, card: OracleCard) {
+  const object = conjure(ctx, controllerId, card, 'hand');
+  pump(moveObject(ctx, object, { zone: 'battlefield', controllerId }));
+  return ctx.state.battlefield.find((perm) => perm.cardId === object.cardId);
+}
 
 const generic = (n: number) => Array.from({ length: n }, () => ({ symbol: 'C' as const }));
 
@@ -1496,6 +1503,132 @@ describe('Nullmage Shepherd', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.20 Sage of Fables
+// ---------------------------------------------------------------------------------------------
+
+describe('Sage of Fables', () => {
+  const sage = pinned('Sage of Fables');
+  const wizard = (name: string) =>
+    oracle({
+      name,
+      typeLine: 'Creature — Human Wizard',
+      manaCost: '{1}',
+      power: '1',
+      toughness: '1',
+    });
+  const ogre = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Ogre', manaCost: '{1}', power: '3', toughness: '3' });
+
+  it('sage-of-fables-pinned-oracle-supported — the interpreter reads the Wizard counters and the from-among cost', () => {
+    expect(sage.sha256).toBe('1423e05e7e7fc5bf74c33c20c1f368ebd1f4224c9c5112df484d654181aeb382');
+    expect(sage.card.oracleText).toBe(
+      'Each other Wizard creature you control enters with an additional +1/+1 counter on it.\n{2}, Remove a +1/+1 counter from a creature you control: Draw a card.',
+    );
+    expect(getOverride(sage.card.oracleId)).toBeUndefined();
+    expectModeled(sage.card);
+    const def = interpretCard(sage.card);
+    expect(def.activatedAbilities[0]?.costs[1]).toEqual({
+      kind: 'removeCountersFromAmong',
+      counter: '+1/+1',
+      count: 1,
+      selector: {
+        kind: 'allOf',
+        of: [
+          { kind: 'controller', who: 'you' },
+          { kind: 'type', value: 'Creature' },
+        ],
+      },
+    });
+  });
+
+  it('sage-of-fables-wizard-enters-with-counter — another Wizard you cast enters with a +1/+1 counter; a non-Wizard does not', () => {
+    const ctx = pod('sage-wizard');
+    spawn(ctx, 'P1', sage.card);
+    addMana(playerById(ctx, 'P1'), generic(2));
+    const apprentice = conjure(ctx, 'P1', wizard('Sage Apprentice'), 'hand');
+    takeAction(
+      ctx,
+      'P1',
+      castOptionFor(ctx, 'P1', apprentice.id)!.payload as PriorityActionPayload,
+    );
+    settle(ctx);
+    const brute = conjure(ctx, 'P1', ogre('Sage Brute'), 'hand');
+    takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', brute.id)!.payload as PriorityActionPayload);
+    settle(ctx);
+    const onField = (name: string) => ctx.state.battlefield.find((perm) => perm.name === name);
+    expect(onField('Sage Apprentice')?.counters['+1/+1']).toBe(1);
+    expect(onField('Sage Brute')?.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('sage-of-fables-not-itself-or-opponents — the Sage gets no counter, nor does an opponent’s Wizard', () => {
+    const ctx = pod('sage-other');
+    const self = spawn(ctx, 'P1', sage.card);
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'U' }, ...generic(2)]);
+    const inHand = conjure(ctx, 'P1', sage.card, 'hand');
+    takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', inHand.id)!.payload as PriorityActionPayload);
+    settle(ctx);
+    // The second Sage is another Wizard, so the first Sage gives it a counter; neither gets one
+    // from itself.
+    const second = ctx.state.battlefield.find((perm) => perm.cardId === inHand.cardId);
+    expect(second?.counters['+1/+1']).toBe(1);
+    expect(self.counters['+1/+1'] ?? 0).toBe(0);
+    const theirs = enterFor(ctx, 'P2', wizard('Sage Rival Wizard'));
+    expect(theirs?.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('sage-of-fables-draw-removing-another-creatures-counter — {2} and a counter from any creature you control draws', () => {
+    const ctx = pod('sage-draw');
+    const self = spawn(ctx, 'P1', sage.card);
+    const brute = spawn(ctx, 'P1', ogre('Sage Brute'));
+    brute.counters['+1/+1'] = 2;
+    self.counters['+1/+1'] = 1;
+    addMana(playerById(ctx, 'P1'), generic(2));
+    const before = playerById(ctx, 'P1').hand.length;
+    const option = activationsOf(ctx, 'P1', self)[0];
+    expect(option).toBeDefined();
+    const { decisions } = takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      answers([[/to remove a \+1\/\+1 counter from/, /Remove from Sage Brute/]]),
+    );
+    const choice = decisions.find((decision) =>
+      /to remove a \+1\/\+1 counter from/.test(decision.prompt),
+    );
+    expect(choice?.options.map((option) => option.description)).toEqual([
+      'Remove from Sage of Fables',
+      'Remove from Sage Brute',
+    ]);
+    expect(brute.counters['+1/+1']).toBe(1);
+    expect(self.counters['+1/+1']).toBe(1);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(before + 1);
+  });
+
+  it('sage-of-fables-draw-from-itself — the Sage may pay with its own counter', () => {
+    const ctx = pod('sage-self');
+    const self = spawn(ctx, 'P1', sage.card);
+    self.counters['+1/+1'] = 1;
+    addMana(playerById(ctx, 'P1'), generic(2));
+    takeAction(ctx, 'P1', activationsOf(ctx, 'P1', self)[0]!.payload as PriorityActionPayload);
+    expect(self.counters['+1/+1']).toBe(0);
+  });
+
+  it('sage-of-fables-needs-a-counter-you-control — no counter, or only an opponent’s, offers nothing', () => {
+    const ctx = pod('sage-none');
+    const self = spawn(ctx, 'P1', sage.card);
+    addMana(playerById(ctx, 'P1'), generic(2));
+    expect(activationsOf(ctx, 'P1', self)).toEqual([]);
+    const theirs = spawn(ctx, 'P2', ogre('Sage Rival Ogre'));
+    theirs.counters['+1/+1'] = 3;
+    expect(activationsOf(ctx, 'P1', self)).toEqual([]);
+    const mine = spawn(ctx, 'P1', ogre('Sage Brute'));
+    mine.counters['+1/+1'] = 1;
+    expect(activationsOf(ctx, 'P1', self)).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1507,6 +1640,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Sage of Fables',
+    sha256: '1423e05e7e7fc5bf74c33c20c1f368ebd1f4224c9c5112df484d654181aeb382',
+    clauseCount: 2,
+  },
   {
     name: 'Nullmage Shepherd',
     sha256: '9778d0c0a47ec527656f5c9551f1708cfbf65ce71b0636143efe86c288b3ba1a',

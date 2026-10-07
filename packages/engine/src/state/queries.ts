@@ -595,6 +595,19 @@ export function canPayNonManaCosts(
         if ((perm.counters[cost.counter] ?? 0) < count) return false;
         break;
       }
+      case 'removeCountersFromAmong': {
+        const payable = ctx.state.battlefield.some(
+          (candidate) =>
+            candidate.controllerId === perm.controllerId &&
+            (candidate.counters[cost.counter] ?? 0) >= cost.count &&
+            matchesSelector(ctx, candidate, cost.selector, {
+              cardId: perm.cardId,
+              controllerId: perm.controllerId,
+            }),
+        );
+        if (!payable) return false;
+        break;
+      }
       case 'payLife': {
         // CR 118.8: a player may pay life only down to 0, never into a negative total.
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);

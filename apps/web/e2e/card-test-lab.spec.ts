@@ -3206,3 +3206,13 @@ test('Nullmage Shepherd: tap itself and three others to destroy an enchantment',
   await expect(permanent(page, 'Lab Hex')).toHaveCount(0);
   await expect(shepherd.locator('.tap-badge')).toHaveText('TAP');
 });
+
+test('Sage of Fables: a Wizard enters with a counter, then pay it to draw', async ({ page }) => {
+  await runScenario(page, 'Sage of Fables: a Wizard enters with a counter, then pay it to draw');
+  await expect(permanent(page, 'Sage of Fables')).not.toHaveClass(/actionable/);
+  await castAndResolve(page, 'Lab Wizard');
+  await expect(permanent(page, 'Lab Wizard')).toContainText('2/2');
+  await activateAndResolve(page, 'Sage of Fables', /Draw a card/, 'Draw a card.');
+  await expect(handCard(page, 'Sage Drawn Page')).toBeVisible();
+  await expect(permanent(page, 'Lab Wizard')).toContainText('1/1');
+});

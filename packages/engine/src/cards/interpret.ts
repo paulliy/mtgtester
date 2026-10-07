@@ -4410,6 +4410,24 @@ function parseActivationCosts(costText: string, card?: OracleCard): AbilityCost[
       costs.push({ kind: 'payEnergy', amount: Number(payEnergy[1]) });
       continue;
     }
+    // "Remove a +1/+1 counter from a creature you control" (Sage of Fables): the counter comes off
+    // any matching permanent you control, chosen as the cost is paid.
+    const fromAmong = part.match(
+      /^remove (a|an|one|two) (\+1\/\+1|[a-z]+) counters? from an? (.+) you control$/,
+    );
+    if (fromAmong !== null) {
+      const count = parseAmount(fromAmong[1] as string);
+      if (card === undefined) return null;
+      const noun = parseSubject(`${fromAmong[3] as string}s you control`, card);
+      if (count === null || noun === null) return null;
+      costs.push({
+        kind: 'removeCountersFromAmong',
+        counter: fromAmong[2] as string,
+        count,
+        selector: noun,
+      });
+      continue;
+    }
     const counters = part.match(/^remove (\w+) (\w+) counters? from (.+)$/);
     if (counters !== null) {
       if (!SELF_OBJECT_RE.test(counters[3] as string)) return null;

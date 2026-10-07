@@ -6294,6 +6294,51 @@ function nullmageShepherdScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_WIZARD = card({
+  oracleId: 'lab-wizard',
+  name: 'Lab Wizard',
+  typeLine: 'Creature — Human Wizard',
+  manaCost: '{U}',
+  cmc: 1,
+  colors: ['U'],
+  colorIdentity: ['U'],
+  power: '1',
+  toughness: '1',
+});
+const LAB_SAGE_PAGE = card({
+  oracleId: 'lab-sage-page',
+  name: 'Sage Drawn Page',
+  typeLine: 'Creature — Secret',
+});
+
+function sageOfFablesScenario(gameId: GameId): CardTestScenario {
+  const sage = pinnedFrom(MARCHESA_BATCH1, 'Sage of Fables');
+  return pr01Scenario(gameId, {
+    id: 'sage-of-fables-viewer-wizard-counter-draw',
+    title: 'Sage of Fables: a Wizard enters with a counter, then pay it to draw',
+    instructions: [
+      'Cast Lab Wizard; it enters with an additional +1/+1 counter.',
+      "Activate Sage of Fables for {2}, removing Lab Wizard's +1/+1 counter, and draw.",
+    ],
+    expectedOutcome:
+      'Lab Wizard enters as a 2/2 with a +1/+1 counter, the counter is removed to pay the cost, and you draw Sage Drawn Page.',
+    oracleSha256: sage.sha256,
+    clauseIds: ['sage-of-fables-wizard-counter', 'sage-of-fables-remove-counter-draw'],
+    decks: {
+      P1: [sage.card, ISLAND, ISLAND, ISLAND, LAB_WIZARD, LAB_SAGE_PAGE],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Wizard'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Sage of Fables', 'Island', 'Island', 'Island'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -6438,6 +6483,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'carrion-feeder-viewer-sacrifice',
   'carrion-feeder-viewer-cant-block',
   'nullmage-shepherd-viewer-tap-four',
+  'sage-of-fables-viewer-wizard-counter-draw',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6580,6 +6626,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'carrion-feeder-viewer-sacrifice': carrionFeederSacrificeScenario,
   'carrion-feeder-viewer-cant-block': carrionFeederCantBlockScenario,
   'nullmage-shepherd-viewer-tap-four': nullmageShepherdScenario,
+  'sage-of-fables-viewer-wizard-counter-draw': sageOfFablesScenario,
 };
 
 export function createCardTestScenario(
