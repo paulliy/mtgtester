@@ -1,4 +1,5 @@
 import { counterCount } from '../state/counters';
+import { eventObjectFacts } from './source-identity';
 import { assertNever } from '../utils/assert-never';
 /**
  * `Condition` — a predicate over game state, and the counterpart to `Selector` (ADR 0008).
@@ -28,9 +29,9 @@ import { allowanceFor, manaSourcesFor, opponentsOf } from '../state/queries';
 import type { GameContext } from '../state/types';
 import { canPay, describeManaCost } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
-import { computeCharacteristics, matchesSelector, selectPermanents } from '../effects/continuous';
+import { computeCharacteristics, selectPermanents } from '../effects/continuous';
 import type { Selector, SelectorSource } from './selector';
-import { ofType } from './selector';
+import { ofType, selectMatches } from './selector';
 import type { PlayerId } from '@mtg/shared';
 import type { EnginePermanent } from '../state/types';
 
@@ -370,9 +371,11 @@ export function evaluateCondition(
       return perm?.hadToAttackThisCombat === true;
     }
     case 'triggerObjectMatches': {
-      if (source.triggerObjectCardId === undefined) return false;
-      const perm = ctx.state.battlefield.find((p) => p.cardId === source.triggerObjectCardId);
-      return perm !== undefined && matchesSelector(ctx, perm, condition.selector, source);
+      const facts = eventObjectFacts(ctx, {
+        ...source,
+        controllerId: source.controllerId as PlayerId,
+      });
+      return facts !== undefined && selectMatches(facts.candidate, condition.selector, source);
     }
     case 'chosenOptionIs': {
       if (source?.cardId === undefined) return false;

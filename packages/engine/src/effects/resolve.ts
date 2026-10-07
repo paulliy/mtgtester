@@ -1,4 +1,5 @@
 import { counterCount, setCounterCount } from '../state/counters';
+import type { ObjectFacts } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueSpellCopy } from '../stack/copy';
 import { spellDefinitionOf } from '../state/queries';
@@ -211,6 +212,7 @@ function findPhysicalObjectByCardId(ctx: GameContext, cardId: string): EngineObj
 
 /** Identity of whatever is dealing damage / causing an effect, for logging + rules. */
 export interface EffectSource {
+  lastKnownFacts?: ObjectFacts;
   /** Target legality captured before this resolution's first instruction. */
   resolutionTargets?: ResolutionTargets;
   /** The source incarnation, when resolving an ability of a permanent. */
@@ -1128,6 +1130,8 @@ export function* executeAbility(
   const scope: ValueScope = {
     controllerId: source.controllerId,
     sourceCardId: source.cardId,
+    ...(source.id === undefined ? {} : { sourceObjectId: source.id }),
+    ...(source.lastKnownFacts === undefined ? {} : { sourceFacts: source.lastKnownFacts }),
     ...(targets !== undefined ? { targets } : {}),
     ...(triggerObjectCardId !== undefined ? { triggerObjectCardId } : {}),
     ...(source.resolvingStackObject?.optionalCostCounts !== undefined
@@ -4638,8 +4642,16 @@ export function* executeAbility(
             ? checkTargetCardId
             : triggerObjectCardId;
         const conditionSource = {
+          ...scope,
           cardId: source.cardId,
           controllerId: source.controllerId,
+          ...(source.id === undefined ? {} : { objectId: source.id }),
+          ...(effect.checkTarget === undefined
+            ? {}
+            : {
+                eventObjectId: checkTargetId ?? '',
+                triggerObjectId: checkTargetId ?? '',
+              }),
           ...(effectiveTriggerObjectCardId !== undefined
             ? { triggerObjectCardId: effectiveTriggerObjectCardId }
             : {}),

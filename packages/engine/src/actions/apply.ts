@@ -475,6 +475,7 @@ export function* applyPriorityAction(
         return { ...c, cost: reduced };
       });
       const paymentScope = yield* payActivationCosts(ctx, player, perm, costsToPay, payload.x ?? 0);
+      if (perm.lastKnownFacts !== undefined) stackEntry.sourceFacts = perm.lastKnownFacts;
       if (paymentScope.stationPower !== undefined) {
         stackEntry.triggerScope = {
           ...stackEntry.triggerScope,
