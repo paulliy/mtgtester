@@ -174,6 +174,9 @@ const SOURCE_FILES = [
   'packages/engine/src/mana/stateful-payment.ts',
   'packages/engine/src/cards/capabilities.ts',
   'packages/engine/src/cards/spell-faces.ts',
+  'packages/engine/src/stack/copy.ts',
+  'packages/engine/tests/fixtures/target-untap-oracle.json',
+  'packages/server/src/cards/target-untap-scenarios.ts',
 ] as const;
 
 const TRACE_PATH =

@@ -6,6 +6,7 @@ import type { DecisionProvider, EnginePlayerConfig, PreparedScenarioSpec } from 
 import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } from '@mtg/shared';
 import type { SeatSetup } from '../match/setup';
 import { BUG_HUNT_SCENARIO_IDS, bugHuntScenario } from './bug-hunt-scenarios';
+import { TARGET_UNTAP_SCENARIO_IDS, targetUntapScenario } from './target-untap-scenarios';
 
 export interface CardTestScenario {
   metadata: CardTestScenarioMetadata;
@@ -5660,6 +5661,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'mosswort-viewer-free-cast-stack',
   'mosswort-viewer-land-play-limit',
   ...BUG_HUNT_SCENARIO_IDS,
+  ...TARGET_UNTAP_SCENARIO_IDS,
   ...REVIEWED_BASELINE_SCENARIO_IDS,
   'swords-viewer-exile-and-gain-life',
   'throat-viewer-destroy-nonartifact',
@@ -5775,6 +5777,12 @@ export const CARD_TEST_SCENARIO_IDS = [
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  ...Object.fromEntries(
+    TARGET_UNTAP_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => targetUntapScenario(id, gameId),
+    ]),
+  ),
   ...Object.fromEntries(
     BUG_HUNT_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => bugHuntScenario(id, gameId)]),
   ),
