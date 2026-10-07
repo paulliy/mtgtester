@@ -643,6 +643,16 @@ and report the exact failed action, attempted recovery, and remaining work.
   event IDs; three further pre-fix boundaries lacked them. The redundant direct-only delayed
   detection is removed. All 62 focused identity, delayed and existing trigger cases pass with
   production/test/tooling types and lint. Broader implicit numeric/LKI references remain open.
+- Counter/trigger combined checkpoint: 317 files / 4,172 tests pass; the multi-seed full-game
+  case times out at 30 seconds while other checks are running. This remains a failed full run.
+  An isolated rerun passes both full-game cases in 20.49 seconds. Production/test/tooling types,
+  lint and formatting pass. Final whole-suite verification is still required.
+- Guarded effect envelopes cover graveyard returns, linked temporary exile, linked free play,
+  bounded hand/search free casting, fixed-count library searches and flashback/escape metadata.
+  Unknown options and unsupported origins reject rather than invent permissions. All 79 focused
+  contracts and 209 engine files / 2,739 tests pass with both type checks and lint. The full
+  35,063-projection comparison preserves all final IR, 6,471 modeled definitions and 487 keys;
+  both snapshot sets remain unchanged. These builders do not grant review certification.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR

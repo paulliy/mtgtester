@@ -177,6 +177,7 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/target-builders.ts',
   'packages/engine/src/cards/trigger-contracts.ts',
   'packages/engine/src/state/counters.ts',
+  'packages/engine/src/cards/effect-builders.ts',
 ] as const;
 export const WAR_ROOM_TRACE_PATHS = {
   'war-room-viewer-dynamic-life-activation':
