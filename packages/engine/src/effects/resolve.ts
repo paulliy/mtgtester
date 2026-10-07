@@ -1207,7 +1207,7 @@ export function* executeAbility(
     ctx.state.battlefield.find(
       (permanent) =>
         permanent.cardId === source.cardId &&
-        (source.id === undefined || permanent.id === source.id),
+        (source.id === undefined || permanent.id === movedReferent(source.id)),
     );
 
   /**
@@ -1293,6 +1293,10 @@ export function* executeAbility(
   };
 
   for (const effect of ability.effects ?? []) {
+    scope.targets = targets.map((id, slot) => {
+      const spec = ability.targets[slot];
+      return spec !== undefined && stillLegal(id, spec, slot) ? (movedReferent(id) ?? '') : '';
+    });
     switch (effect.op) {
       case 'transformSelf': {
         const current = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);

@@ -198,6 +198,37 @@ describe('shared target legality contract', () => {
     expect(ctx.resolutionObjectMoves).toBeUndefined();
   });
 
+  it('the same-effect public-zone exception also preserves an explicitly identified source', () => {
+    const { ctx } = setup();
+    const original = spawn(ctx, 'P1', bear());
+    pump(
+      executeAbility(
+        ctx,
+        {
+          id: original.id,
+          cardId: original.cardId,
+          name: original.name,
+          oracleId: original.oracleId,
+          controllerId: 'P1',
+        },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'creature' }],
+          effects: [
+            { op: 'blinkTarget', target: 0 },
+            { op: 'putCounters', target: 'source', counter: '+1/+1', count: 2 },
+          ],
+        },
+        [original.id],
+      ),
+    );
+    const returned = ctx.state.battlefield.find(
+      (permanent) => permanent.cardId === original.cardId,
+    )!;
+    expect(returned.id).not.toBe(original.id);
+    expect(returned.counters['+1/+1']).toBe(2);
+  });
+
   it('preserves counted target occurrences through moves caused by the effect', () => {
     const { ctx } = setup();
     const original = spawn(ctx, 'P1', bear());
