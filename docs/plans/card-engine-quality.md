@@ -317,7 +317,7 @@ and report the exact failed action, attempted recovery, and remaining work.
   data the previously skipped suites were executed, obsolete expectations corrected, and the
   implemented-card gate passed without skips. Current card gate: 1,310 passed. Production/test
   typechecks, lint, formatting, snapshots (93 cards/723 registrations), and web build pass.
-  All 130 browser tests passed earlier at `0ebff01`; browser evidence must be refreshed for the
+  All 130 browser tests passed earlier at `0d8ffe0`; browser evidence must be refreshed for the
   later changes. Compatibility pins are refreshed through the benchmark CLI; inputs/gold are
   unchanged.
 - Legacy authoring protection: stricter ability-envelope/named-slot rules now apply to all
@@ -329,9 +329,24 @@ and report the exact failed action, attempted recovery, and remaining work.
   tree. DB-backed player setup also passes after refreshing the supported-pool seed and
   releasing player seats after failed tests. Subsequent casting behavior still needs fresh
   viewer evidence.
+- Remaining value classifications (`8493c89`) now enumerate all typed variants, including
+  explicit rejection by specialized consumers. The comparison operator also fails closed.
+- Expression validation (`3ddb770`) has compiler-enforced shapes for every Selector, Value,
+  Condition, and expression-bearing Effect field. Nested unknown variants, missing operands,
+  invalid comparisons, malformed hybrid/Phyrexian symbols, and choice predicates in pure checks
+  are rejected. Entry choices remain supported. The 2,146-test engine suite passes; repeating
+  the full 38,708-record audit adds no contained cards or interpreter errors.
+- Shared free casting (`4565355`) replaces duplicate free-spell execution with the normal cast
+  subsystem. It preserves additional/optional costs, modes, slot identities, counted targets,
+  owner/controller, spent-mana metadata, ward, and cast triggers. Hideaway now offers play/decline,
+  casts permanents onto the spell stack, and enforces own-turn land-play limits. Collective
+  counted budgets are checked at resolution start; later instructions retain that result.
+  Target menus preserve joint payment and graveyard-owner dependencies instead of advertising
+  invalid cross-products. Independent engine contracts and all 128 real viewer scenarios pass
+  for the shared-casting stage. Final source-bound viewer receipts still need refreshing.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
-  and explicit cross-zone reference permissions; exhaustive selector/value/condition semantic
+  and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
   validation; all casting proposals/trigger timing/rollback and free-cast migrations; mana
   activation side-effect/resource scope; generated capability contracts/evidence enforcement;
   and guarded representation/builders migration. No phase is declared complete by this record.
