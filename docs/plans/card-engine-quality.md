@@ -344,10 +344,29 @@ and report the exact failed action, attempted recovery, and remaining work.
   Target menus preserve joint payment and graveyard-owner dependencies instead of advertising
   invalid cross-products. Independent engine contracts and all 128 real viewer scenarios pass
   for the shared-casting stage. Final source-bound viewer receipts still need refreshing.
+- Executable-container validation (`f336d45`) rejects malformed target scopes, ability roles,
+  arrays, mode entries, and continuous operands without interpreter crashes. Optional mana
+  activation costs retain their typed default-tap convention. The complete Oracle audit still
+  reports 6,511 modeled definitions, three contained placeholders, and no interpreter errors.
+- Casting proposals (`881489c`) leave the source zone before configuration and cost evaluation;
+  preview projects that same tentative stack state. Target triggers are recorded before payment,
+  and validated permissions remain locked when a granting source is sacrificed. Supported
+  interrupted proposals restore state, RNG, logs, object counters, and held object references.
+  This recovery is not a general CR 733 reversal of irreversible library actions.
+- Repository verification at `f6e82e8`: all 293 test files / 3,531 tests pass with bulk data
+  installed; all 128 Card Test Lab browser tests pass. The latter report is useful regression
+  evidence but has no valid pre-run source capture; do not treat it as a source-bound receipt.
+  Final viewer evidence still requires a fresh captured run after implementation stabilizes.
+- Mana activation ordering (`20c1633`) pays activation costs before resolving production and
+  riders, retains last-known damage keywords for sacrificed sources, and cannot place counters
+  on a vanished battlefield object. Life costs, Phyrexian payments, and ward now pay the exact
+  amount independently of life-loss replacements. Seven independent ordering cases plus affected
+  casting/payment/ward checks pass (45 tests); engine production/test types and focused lint pass.
+  Aggregate rider effects on later payment affordability remain outstanding.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
-  validation; all casting proposals/trigger timing/rollback and free-cast migrations; mana
+  validation; remaining alternative/face casting, interrupted-decision integration, and CR 733 supported-scope proof; mana
   activation side-effect/resource scope; generated capability contracts/evidence enforcement;
   and guarded representation/builders migration. No phase is declared complete by this record.
 - No current environment blocker: Bun is installed in a temporary toolchain, system Chromium
