@@ -353,6 +353,8 @@ export function planPayment(
   allows: ManaAllowance = ALLOW_NOTHING,
   lifeTotal = 0,
 ): PaymentPlan | null {
+  // CR 119.4b: even below zero, no-life payments and Phyrexian pips paid with mana are legal.
+  lifeTotal = Math.max(0, lifeTotal);
   if ((cost.phyrexian?.length ?? 0) > 0) {
     const pips = cost.phyrexian as Color[];
     const expand = (

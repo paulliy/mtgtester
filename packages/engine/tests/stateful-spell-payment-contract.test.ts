@@ -188,6 +188,24 @@ describe('actual changing-resource spell payment contracts', () => {
     expect(state.ctx.state.eventLog.filter((e) => e.type === 'tapForMana')).toHaveLength(0);
   });
 
+  it('preserves a counter named __proto__ while probing a repeatable payment', () => {
+    const state = setup('{G}{G}');
+    const source = state.source('Special-name restoring-counter source', {
+      units: [['G']],
+      costs: [{ kind: 'removeCounters', counter: '__proto__', count: 1 }],
+      onActivate: [{ op: 'putCounters', target: 'source', counter: '__proto__', count: 1 }],
+    });
+    source.counters = JSON.parse('{"__proto__":1}');
+    expect(state.offered()).toBeDefined();
+    expect(source.counters['__proto__']).toBe(1);
+    expect(Object.getPrototypeOf(source.counters)).toBe(Object.prototype);
+    state.cast();
+    expect(source.counters['__proto__']).toBe(1);
+    expect(Object.hasOwn(source.counters, '__proto__')).toBe(true);
+    expect(state.player.manaEntries).toEqual([]);
+    expect(state.ctx.state.stack).toHaveLength(1);
+  });
+
   it.each(['infect', 'lifelink'] as const)(
     'replays actual %s damage instead of treating damage as a life cost',
     (keyword) => {

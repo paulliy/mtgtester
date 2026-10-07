@@ -493,12 +493,13 @@ export function loseLife(ctx: GameContext, player: EnginePlayerState, amount: nu
   emit(ctx, 'lifeLoss', { player: player.id, amount, life: player.life });
 }
 
-/** CR 118.4 / 118.8: life payments are affordable costs, unaffected by life-loss replacements. */
+/** CR 119.4 / 119.4b: positive life payments need enough life; zero is always payable. */
 export function payLife(ctx: GameContext, player: EnginePlayerState, amount: number): void {
-  if (!Number.isSafeInteger(amount) || amount < 0 || amount > player.life) {
+  if (!Number.isSafeInteger(amount) || amount < 0) {
     throw new Error('life cost became unpayable');
   }
   if (amount === 0) return;
+  if (amount > player.life) throw new Error('life cost became unpayable');
   player.life -= amount;
   ctx.state.lifeLostThisTurn[player.id] = true;
   emit(ctx, 'lifeLoss', { player: player.id, amount, life: player.life });
@@ -6619,7 +6620,7 @@ export function* payAbilityCosts(
         break;
       }
       case 'payLife':
-        // CR 118.8: paying life is legal at any life total ≥ the amount, and the payment is not
+        // CR 119.4: positive life payments need a life total ≥ the amount, and payment is not
         // damage — nothing replaces or prevents it.
         payLife(ctx, player, cost.amount);
         break;
