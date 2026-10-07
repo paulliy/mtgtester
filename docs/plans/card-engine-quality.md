@@ -444,6 +444,27 @@ and report the exact failed action, attempted recovery, and remaining work.
   test/tooling types, snapshots and focused lint pass. The sole 93-card snapshot change removes
   Stubborn Denial's incorrect controller restriction. Their clause requirements remain
   implemented-unreviewed with real viewer work pending; no card completion is claimed.
+- Overload alternatives now carry an explicit executable ability. Bounded lowering preserves
+  Cyclonic Rift's opposing-nonland bounce, Vandalblast's opposing-artifact destruction, and
+  Damn's all-creature destruction with its regeneration prohibition. Preview and application
+  reject a missing alternative rather than substituting Cyclonic Rift. Six pinned canonical
+  projections and positive/negative normal-path scenarios cover the supported profiles and
+  remaining unsupported scopes. All 97 affected tests, test/tooling types, snapshots and
+  focused lint pass. The existing card gate passes 73 files / 1,488 tests. The full 38,708-card
+  bulk has no unexpected implementation-status changes or invalid modeled IR; 6,508 remain
+  modeled. Changed card clauses remain implemented-unreviewed pending real viewer evidence.
+- Authoring validation bounds graph depth and node occurrences before semantic recursion,
+  rejecting cycles while accepting shared acyclic subtrees. Definitions, override data, and
+  direct expression checks fail closed; 80 affected contracts pass with test/tooling types
+  and focused lint.
+- Immediate mana riders use a narrow typed union and explicit scope checks. Unsupported
+  effects, targeted counter placement, unavailable ability-relative values, malformed numeric
+  operands, and cyclic values are rejected before preview or activation costs. Prepared plans
+  and direct rider application also enforce the contract. Supported damage, scope-free life
+  gain, and source counters retain actual activation ordering and last-known-source behavior.
+  All 121 affected contracts pass, with test/tooling types, focused lint and snapshots. The
+  full-bulk dependency inventory still reports 6,508 modeled definitions and 482 keys. This
+  does not yet prove a joint witness for changing resources across multiple activations.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
