@@ -82,17 +82,19 @@ export const PRIMITIVE_CONTRACTS: readonly PrimitiveContract[] = [
         file: 'packages/engine/tests/primitive-foundation-contract.test.ts',
         titlePath: ['independent bounded spell foundations', `${capability}: ${role}`],
       })),
-      ...(['positive', 'negative'] as const).map((role) => ({
-        id: `${capability}-bounded-composition-${role}`,
-        role,
-        file: 'packages/engine/tests/primitive-composition-contract.test.ts',
-        titlePath: [
-          'bounded registered primitive compositions',
-          role === 'positive'
-            ? 'every funded composition offers a complete deterministic normal cast'
-            : 'every unfunded composition rejects without changing the complete context',
-        ],
-      })),
+      ...(capability === 'CardDefinition' ? (['positive', 'negative'] as const) : []).map(
+        (role) => ({
+          id: `${capability}-bounded-composition-${role}`,
+          role,
+          file: 'packages/engine/tests/primitive-composition-contract.test.ts',
+          titlePath: [
+            'bounded registered primitive compositions',
+            role === 'positive'
+              ? 'every funded composition offers a complete deterministic normal cast'
+              : 'every unfunded composition rejects without changing the complete context',
+          ],
+        }),
+      ),
     ],
     supports: supportsLifeSpell,
   })),
