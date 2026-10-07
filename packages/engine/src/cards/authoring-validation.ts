@@ -1,5 +1,6 @@
 import { selectorIsEventOnly } from './selector';
 import { validateIRGraph } from './ir-graph';
+import { validateManaRiders } from './mana-riders';
 import {
   validateExpression,
   validateEffectExpressions,
@@ -389,6 +390,8 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
             path: `${path}.${key}[${index}].ability`,
             message: 'activated entry requires an activated ability',
           });
+        if (key === 'manaAbilities' && ability !== null && typeof ability === 'object')
+          validateManaRiders(ability.onActivate, `${path}.${key}[${index}].onActivate`, issues);
       }
     }
     if (key === 'triggers' && Array.isArray(entry))

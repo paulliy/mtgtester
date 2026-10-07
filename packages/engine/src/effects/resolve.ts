@@ -2,6 +2,7 @@ import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
 import { targetIsLegal } from '../targets/legality';
 import { captureResolutionTargets, type ResolutionTargets } from '../targets/resolution';
 import { assertNever } from '../utils/assert-never';
+import { assertManaRiders } from '../cards/mana-riders';
 /**
  * Effect resolution (brief §6.2): applying the mechanical outcome of `EffectSpec`s, plus
  * the shared damage/draw/life primitives used by combat and turn-based actions.
@@ -10,7 +11,7 @@ import { assertNever } from '../utils/assert-never';
 import type { Color, ObjectId, PlayerId } from '@mtg/shared';
 import { ALL_COLORS } from '@mtg/shared';
 import { abilityModeSelections } from '../actions/ability-modes';
-import type { WardCost } from '../cards/ability';
+import type { ManaRider, WardCost } from '../cards/ability';
 import type {
   Ability,
   AbilityCost,
@@ -6287,6 +6288,8 @@ export function* payManaCost(
   if (plan === null) {
     throw new Error(`engine bug: cost for ${player.id} became unpayable at application time`);
   }
+  // Prepared plans cannot bypass the supported immediate-rider scope either.
+  for (const source of plan.tapSources) assertManaRiders(source.cardId, source.onActivate);
   // Activate the sources in the order the plan gives them and add each one's production as it
   // goes, rather than tapping everything and then adding it all. The distinction is invisible
   // for a board of ordinary lands — the pool ends up identical — and load-bearing for a source
@@ -6760,9 +6763,10 @@ export function applyManaRider(
   ctx: GameContext,
   perm: EnginePermanent,
   controller: EnginePlayerState,
-  effect: Effect,
+  effect: ManaRider,
   traits = combatDamageTraits(ctx, perm),
 ): void {
+  assertManaRiders(perm.name, [effect]);
   const source = permanentSource(perm);
   switch (effect.op) {
     case 'damageController':
@@ -6792,11 +6796,7 @@ export function applyManaRider(
       return;
     }
     default:
-      throw new UnmodeledCardError(
-        perm.name,
-        [`mana ability rider "${effect.op}" cannot be applied without the stack`],
-        'activating a mana ability',
-      );
+      assertNever(effect, 'immediate mana rider');
   }
 }
 

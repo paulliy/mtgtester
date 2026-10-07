@@ -14,7 +14,7 @@ import { ALL_COLORS } from '@mtg/shared';
 // `ParsedManaCost` from here).
 import type {
   AbilityCost,
-  Effect,
+  ManaRider,
   ManaEntry,
   ManaRestriction,
   ManaSpendTrigger,
@@ -231,7 +231,7 @@ export interface ManaSource {
    * permanent with several mana abilities has several riders and only the activated one applies;
    * `interchangeableSignature` keeps abilities with different riders in different sources.
    */
-  onActivate?: readonly Effect[];
+  onActivate?: readonly ManaRider[];
   /**
    * "…add two mana of any ONE color" (Ilysian Caryatid) — every unit of this source must
    * resolve to the SAME symbol. Only meaningful with more than one unit; forces the backtracker

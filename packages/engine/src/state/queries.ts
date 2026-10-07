@@ -1,4 +1,5 @@
 import { assertNever } from '../utils/assert-never';
+import { assertManaRiders } from '../cards/mana-riders';
 /**
  * Read-only state queries: definitions, effective characteristics (computed through the CR
  * 613 layer engine — see `effects/continuous.ts`), players in the game, and mana sources.
@@ -718,6 +719,7 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
     // Mana abilities are computed, not printed: a layer-4 subtype change replaces them
     // (Blood Moon → a Mountain that taps for R), layer 6 can remove them outright, and layer 6
     // can also GRANT them (Chromatic Lantern).
+    for (const ability of chars.manaAbilities) assertManaRiders(perm.name, ability.onActivate);
     let abilities = chars.manaAbilities
       /*
        * A mana ability whose cost includes {X} still cannot be honoured. There is nobody to

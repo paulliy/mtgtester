@@ -216,6 +216,11 @@ export interface ManaSpendTrigger {
   ability: Ability;
 }
 
+/** Executable immediate mana riders; scope-free operands are validated before activation. */
+export type ManaRider =
+  | Extract<Effect, { op: 'damageController' | 'gainLife' }>
+  | (Omit<Extract<Effect, { op: 'putCounters' }>, 'target'> & { target: 'source' });
+
 /** A mana ability: "{T}: Add …". Never uses the stack (CR 605). */
 export interface ManaAbilitySpec {
   /** Fixed symbol units. Each unit is one mana; several symbols in a unit are a choice. */
@@ -236,7 +241,7 @@ export interface ManaAbilitySpec {
    * (painlands). Mana abilities never use the stack (CR 605.3a), so the rider applies
    * immediately as the mana is produced, which is exactly the printed behavior.
    */
-  onActivate?: Effect[];
+  onActivate?: ManaRider[];
   /** "Spend this mana only to cast a Dragon creature spell" — rides on the mana produced. */
   restriction?: ManaRestriction;
   /** "When you spend this mana to cast a Dragon creature spell, you gain 2 life." */
