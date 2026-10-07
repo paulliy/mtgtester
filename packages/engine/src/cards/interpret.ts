@@ -9,7 +9,7 @@
  * behavior is needed â€” a visible failure is more useful than a wrong game (brief Â§6.3),
  * and the reasons form the backlog of mechanics to implement next.
  */
-import { counterSpellTarget } from './target-builders';
+import { counterSpellTarget, graveyardCardTarget } from './target-builders';
 import { searchLibraryCards, graveyardAlternativeCost } from './effect-builders';
 import type { Color, OracleCard } from '@mtg/shared';
 import { enforceInterpretedDefinition } from './overload';
@@ -103,6 +103,7 @@ type SlotAllocator = (
   kind: TargetKind,
   filter?: Selector,
   controller?: TargetSpec['controller'],
+  graveyardOwnerScope?: TargetSpec['graveyardOwnerScope'],
 ) => number;
 
 /**
@@ -1501,7 +1502,12 @@ function parseEffectSentence(
       const typePhrase = m[3];
       const filter = typePhrase === undefined ? null : parseCardFilterPhrase(typePhrase, card);
       if (typePhrase === undefined || filter !== null) {
-        const target = alloc('cardInGraveyard', filter ?? undefined);
+        const target = alloc(
+          'cardInGraveyard',
+          filter ?? undefined,
+          undefined,
+          m[4] === 'a' ? 'any' : undefined,
+        );
         return [
           m[5] === 'the battlefield'
             ? { op: 'graveyardToBattlefield', target }
@@ -1513,6 +1519,9 @@ function parseEffectSentence(
       /^return all (.+?) (?:card|cards) from (your|a) graveyard to (the battlefield|your hand)$/,
     );
     if (mMass) {
+      // This primitive only identifies the controller's graveyard. An unspecified graveyard
+      // needs a separate owner choice rather than silently choosing the caster.
+      if (mMass[2] !== 'your') return null;
       const filter = parseCardFilterPhrase(mMass[1] as string, card);
       if (filter !== null) {
         return [
@@ -2093,12 +2102,19 @@ function parseSpreeSpellBlock(
     .filter(Boolean);
   if (lines.length < 3 || lines[0]?.toLowerCase() !== 'spree') return null;
   const targets: TargetSpec[] = [];
-  const alloc: SlotAllocator = (kind, filter, controller) => {
-    targets.push({
-      kind,
-      ...(filter !== undefined ? { filter } : {}),
-      ...(controller !== undefined ? { controller } : {}),
-    });
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter !== undefined ? { filter } : {}),
+            ...(controller !== undefined ? { controller } : {}),
+          },
+    );
     return targets.length - 1;
   };
   const options: NonNullable<Ability['modes']>['options'] = [];
@@ -2153,12 +2169,19 @@ function parseModalSpellBlock(
   if (maxChoicesIf === null) return null;
 
   const targets: TargetSpec[] = [];
-  const alloc: SlotAllocator = (kind, filter, controller) => {
-    targets.push({
-      kind,
-      ...(filter !== undefined ? { filter } : {}),
-      ...(controller !== undefined ? { controller } : {}),
-    });
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter !== undefined ? { filter } : {}),
+            ...(controller !== undefined ? { controller } : {}),
+          },
+    );
     return targets.length - 1;
   };
 
@@ -2504,12 +2527,19 @@ function parseTargetThenUntapBlock(
   const match = text.trim().match(/^(.+?)(?:\.\s+| and |, then )untap it\.?$/i);
   if (match === null) return null;
   const targets: TargetSpec[] = [];
-  const alloc: SlotAllocator = (kind, filter, controller) => {
-    targets.push({
-      kind,
-      ...(filter === undefined ? {} : { filter }),
-      ...(controller === undefined ? {} : { controller }),
-    });
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter === undefined ? {} : { filter }),
+            ...(controller === undefined ? {} : { controller }),
+          },
+    );
     return targets.length - 1;
   };
   const effects = parseEffectSentence(match[1]!, alloc, card);
@@ -3844,12 +3874,19 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // stack (CR 603.3d), which `placePendingTriggers` surfaces as a decision.
   const targets: TargetSpec[] = [];
   if (modalBlock !== null) targets.push(...modalBlock.targets);
-  const alloc: SlotAllocator = (kind, filter, controller) => {
-    targets.push({
-      kind,
-      ...(filter !== undefined ? { filter } : {}),
-      ...(controller !== undefined ? { controller } : {}),
-    });
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter !== undefined ? { filter } : {}),
+            ...(controller !== undefined ? { controller } : {}),
+          },
+    );
     return targets.length - 1;
   };
   // A variable-count slot ("up to two other targets", "any number of target creatures") â€” see
@@ -4769,12 +4806,19 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
   }
 
   const targets: TargetSpec[] = [];
-  const alloc: SlotAllocator = (kind, filter, controller) => {
-    targets.push({
-      kind,
-      ...(filter !== undefined ? { filter } : {}),
-      ...(controller !== undefined ? { controller } : {}),
-    });
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter !== undefined ? { filter } : {}),
+            ...(controller !== undefined ? { controller } : {}),
+          },
+    );
     return targets.length - 1;
   };
   const effects: Effect[] =
@@ -6843,12 +6887,19 @@ export function interpretCard(card: OracleCard): CardDefinition {
       const lineEffects: Effect[] = [];
       const lineTargets: TargetSpec[] = [];
       const base = spellTargets.length;
-      const lineAlloc: SlotAllocator = (kind, filter, controller) => {
-        lineTargets.push({
-          kind,
-          ...(filter !== undefined ? { filter } : {}),
-          ...(controller !== undefined ? { controller } : {}),
-        });
+      const lineAlloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+        lineTargets.push(
+          kind === 'cardInGraveyard'
+            ? graveyardCardTarget(
+                graveyardOwnerScope ?? 'controller',
+                filter === undefined ? {} : { filter },
+              )
+            : {
+                kind,
+                ...(filter !== undefined ? { filter } : {}),
+                ...(controller !== undefined ? { controller } : {}),
+              },
+        );
         return base + lineTargets.length - 1;
       };
       let allParsed = sentences.length > 0;
