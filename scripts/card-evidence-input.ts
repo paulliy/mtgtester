@@ -493,10 +493,11 @@ function reportTargets(
             attachmentFile(outputRoot, reportPath, attachment['path']);
           }
         }
-        const id = Object.entries(SCENARIO_TITLES).find(
-          ([, title]) => titles.length === 0 && title === spec['title'],
-        )?.[0];
-        if (id) {
+        const id =
+          Object.entries(SCENARIO_TITLES).find(
+            ([, title]) => titles.length === 0 && title === spec['title'],
+          )?.[0] ?? key;
+        {
           const traces = attachments.filter((a) => a['name'] === 'trace');
           requireInput(
             traces.length === 1 &&
@@ -513,7 +514,7 @@ function reportTargets(
   }
   walk(array(report['suites'], 'suites'), [], true);
   requireInput(
-    seen.size === expected.size && Object.keys(targets).length === 10,
+    seen.size === expected.size && Object.keys(targets).length === expected.size,
     'missing catalog execution',
   );
   return targets;

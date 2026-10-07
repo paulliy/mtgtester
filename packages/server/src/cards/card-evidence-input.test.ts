@@ -1475,12 +1475,34 @@ sys.stdout.buffer.write(data)
       /complete trio/,
     );
   });
+  it.each(['missing', 'duplicate', 'corrupt'] as const)(
+    'requires a valid retained trace for a new untap execution: %s',
+    async (variant) => {
+      await withFixture(async (f) => {
+        const spec = f.report.suites[0]!.specs.find(
+          (entry) => entry.title === 'Soldier On: affect and untap one target',
+        );
+        expect(spec).toBeDefined();
+        const result = spec!.tests[0]!.results[0]!;
+        if (variant === 'missing') result.attachments = [];
+        if (variant === 'duplicate') result.attachments.push({ ...result.attachments[0]! });
+        if (variant === 'corrupt') {
+          const corrupt = resolve(f.paths.outputRoot, 'corrupt-new-trace.zip');
+          writeFileSync(corrupt, 'not a trace archive');
+          result.attachments[0]!.path = corrupt;
+        }
+        f.seal();
+        await expect(loadViewerEvidence(f.paths, f.options)).rejects.toThrow();
+      });
+    },
+  );
+
   it('loads the complete real-schema catalog with exact report/source/ZIP hashes', async () => {
     await withFixture(async (f) => {
       const result = await loadViewerEvidence(f.paths, f.options);
       expect(result.reportSha256).toBe(f.manifest.reportSha256);
       expect(result.testedTree).toBe(f.manifest.testedTree);
-      expect(Object.keys(result.traces)).toHaveLength(10);
+      expect(Object.keys(result.traces)).toHaveLength(VIEWER_CATALOG.length);
       expect(result.traces['war-room-viewer-colorless-mana']).toEqual({
         path: f.tracePath,
         sha256: hash(f.zip),

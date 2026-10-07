@@ -552,6 +552,26 @@ and report the exact failed action, attempted recovery, and remaining work.
   execution is still required; the clauses remain implemented-unreviewed.
   Fresh generator discovery adds the copy helper, untap fixture and scenario module.
   Full-bulk inventory retains 6,471 modeled definitions and 487 capability keys.
+- Viewer catalog at `ecc8126`: all 144 actual Lab cases pass without skips, retries or
+  flaky outcomes. The source-bound loader validates the complete execution catalog and ten
+  original generator traces against 173 captured inputs (tested tree
+  `ee659d13f8c75306e58efa372e3665b8c983f3d3`, report SHA-256
+  `beb8e93e6d55b887d39a275b5609864fda7262e4f16ed59a146b2060b4c82935`).
+  This exposes a further receipt hole: traces for other catalog cases were retained but were
+  not parsed and hashed by that loader. Every catalog execution now requires a validated trace;
+  the preceding browser result remains checkpoint evidence pending a fresh complete receipt.
+- Bounded spell foundations (`b0ebd1d`) add independent positive/negative contracts for eight
+  final-IR dependencies of ordinary untargeted fixed life-gain spells. Scope includes the
+  tested 0..1000 amount boundary, up to two instructions, and green/generic cost at most {1}{G}.
+  Actual framework execution generates nine primitive facts including remove-counters;
+  complete in-scope compositions become eligible, while unknown dependencies and malformed or
+  out-of-scope definitions remain blocked. All 49 receipt/foundation checks pass in isolation
+  with both type checks and lint. Earlier competing-load runs time out and remain failed records;
+  the successful isolated rerun does not replace them.
+- Post-cost linked symbols and initially empty mana production (`ad27d5e`) pass all 25
+  changing-resource casting checks. Constructor binding guards (`8e3d9d3`) reject local
+  re-exports, dynamic imports and aliased stack literals while retaining the explicit trigger
+  helper route; all 58 focused combined checks, test/tooling types and lint pass.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
