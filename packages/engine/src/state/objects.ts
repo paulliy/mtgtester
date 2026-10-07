@@ -14,7 +14,8 @@ import { spellDefinitionOf } from './queries';
 import type { ObjectId, OracleId, PlayerId, Zone } from '@mtg/shared';
 import { computeTargetOptions } from '../actions/legal';
 import type { Ability, KeywordAbility, ObjectTriggerWhen, TokenSpec } from '../cards/ability';
-import { actsOnItsTriggerObject } from '../cards/source-identity';
+import { captureObjectFacts, eventObjectScope } from '../cards/source-identity';
+import type { ObjectFacts } from '../cards/source-identity';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
 import type { CardDefinition } from '../cards/definition';
 import { assertValidModeledDefinition } from '../cards/authoring-validation';
@@ -66,6 +67,8 @@ export interface MoveDestination {
   reason?: 'sacrifice';
   /** Internal simultaneous-move batch: leave processing is owned by the batch. */
   deferLeaveProcessing?: boolean;
+  /** Shared pre-event snapshot for an internal simultaneous departure batch. */
+  lastKnownFacts?: ObjectFacts;
   /** Internal card-zone batch: queue one aggregate departure event after every move completes. */
   deferCardZoneTriggers?: boolean;
   /** Internal battlefield batch: enters triggers are queued once every object has entered. */
@@ -531,7 +534,8 @@ export function* moveObject(
   }
 
   // Last known information (CR 113.7a), read while it is still on the battlefield.
-  if (from === 'battlefield') rememberLeavingSourceTraits(ctx, obj as EnginePermanent);
+  if (from === 'battlefield')
+    rememberLeavingSourceTraits(ctx, obj as EnginePermanent, target.lastKnownFacts);
 
   if (target.zone === 'battlefield' && !target.faceDown) {
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
@@ -1389,6 +1393,7 @@ export function queueTriggersForEvent(
             spec.condition !== undefined &&
             !evaluateCondition(ctx, spec.condition, {
               ...from,
+              ...eventObjectScope(ctx, first.permanent),
               ...(spec.subject.kind === 'self'
                 ? {}
                 : { triggerObjectCardId: first.permanent.cardId }),
@@ -1409,9 +1414,7 @@ export function queueTriggersForEvent(
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
-            ...(spec.subject.kind !== 'self' && actsOnItsTriggerObject(ability)
-              ? { eventObjectId: first.permanent.id }
-              : {}),
+            ...(spec.subject.kind !== 'self' ? eventObjectScope(ctx, first.permanent) : {}),
             ...(amounts.length > 0
               ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
               : {}),
@@ -1470,9 +1473,7 @@ export function queueTriggersForEvent(
             sourceName: card.name,
             ability,
             triggerObjectCardId: s.permanent.cardId,
-            ...(actsOnItsTriggerObject(ability)
-              ? { scope: { eventObjectId: s.permanent.id } }
-              : {}),
+            scope: eventObjectScope(ctx, s.permanent),
           });
           debug(ctx, 'stack', `graveyard trigger queued: ${card.name}`);
         }
@@ -1499,9 +1500,7 @@ export function queueTriggersForEvent(
             sourceName: emblem.name,
             ability,
             triggerObjectCardId: subject.permanent.cardId,
-            ...(actsOnItsTriggerObject(ability)
-              ? { scope: { eventObjectId: subject.permanent.id } }
-              : {}),
+            scope: eventObjectScope(ctx, subject.permanent),
           });
           debug(ctx, 'stack', `emblem trigger queued: ${emblem.name}`);
         }
@@ -1540,7 +1539,23 @@ export function queueTriggersForEvent(
  * is gone use the colors, deathtouch, lifelink and infect it had immediately before it left
  * (CR 113.7a, Mordant Dragon). Damage keywords are only recorded when it had any.
  */
-function rememberLeavingSourceTraits(ctx: GameContext, perm: EnginePermanent): void {
+function rememberLeavingSourceTraits(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  batchFacts?: ObjectFacts,
+): void {
+  const facts = batchFacts ?? captureObjectFacts(ctx, perm);
+  perm.lastKnownFacts = facts;
+  for (const entry of ctx.state.stack) {
+    const scope = entry.triggerScope;
+    if ((scope?.triggerObjectId ?? scope?.eventObjectId) === perm.id)
+      scope!.triggerObjectFacts = facts;
+  }
+  for (const pending of ctx.state.pendingTriggers) {
+    const scope = pending.scope;
+    if ((scope?.triggerObjectId ?? scope?.eventObjectId) === perm.id)
+      scope!.triggerObjectFacts = facts;
+  }
   const entries = ctx.state.stack.filter(
     (entry) =>
       entry.kind !== 'spell' &&
@@ -1558,6 +1573,7 @@ function rememberLeavingSourceTraits(ctx: GameContext, perm: EnginePermanent): v
   const keywords = damageKeywordsOf(ctx, perm);
   const colors = colorsOf(ctx, perm);
   for (const entry of [...entries, ...pending]) {
+    entry.sourceFacts = facts;
     entry.sourceColors = [...colors];
     if (keywords.length > 0) entry.sourceDamageKeywords = keywords;
     else delete entry.sourceDamageKeywords;
@@ -1720,6 +1736,9 @@ export function* movePermanentsToGraveyard(
   reason?: 'sacrifice',
 ): GameGen<void> {
   if (permanents.length === 0) return;
+  const departureFacts = new Map(
+    permanents.map((perm) => [perm.id, captureObjectFacts(ctx, perm)]),
+  );
   ctx.state.creaturesDiedThisTurn += permanents.filter((perm) =>
     computeCharacteristics(ctx, perm).types.includes('Creature'),
   ).length;
@@ -1735,7 +1754,11 @@ export function* movePermanentsToGraveyard(
     permanents.map((permanent) => ({ permanent })),
   );
   for (const perm of permanents) {
-    yield* moveObject(ctx, perm, { zone: 'graveyard', deferLeaveProcessing: true });
+    yield* moveObject(ctx, perm, {
+      zone: 'graveyard',
+      deferLeaveProcessing: true,
+      lastKnownFacts: departureFacts.get(perm.id)!,
+    });
   }
   // Linked returns happen after every member has left; ETB effects cannot change
   // which other permanents were dying in the same event.

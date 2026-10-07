@@ -33,8 +33,14 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   if (
     intervening !== undefined &&
     !evaluateCondition(ctx, intervening, {
+      ...top.triggerScope,
       cardId: top.sourceCardId,
+      objectId: top.sourceId,
       controllerId: top.controllerId,
+      ...(top.sourceFacts === undefined ? {} : { sourceFacts: top.sourceFacts }),
+      ...(top.triggerObjectCardId === undefined
+        ? {}
+        : { triggerObjectCardId: top.triggerObjectCardId }),
       ...(top.triggerScope?.eventPlayerId === undefined
         ? {}
         : { eventPlayerId: top.triggerScope.eventPlayerId }),
@@ -110,6 +116,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         oracleId: top.sourceOracleId,
         controllerId: top.controllerId,
         resolutionTargets,
+        ...(top.sourceFacts === undefined ? {} : { lastKnownFacts: top.sourceFacts }),
         ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
         ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
         ...(top.sourceDamageKeywords !== undefined

@@ -83,6 +83,12 @@ export interface SelectorCandidate {
 
 /** The object a relative selector ("self", "you control") is resolved against. */
 export interface SelectorSource {
+  /** Exact identities/facts when evaluating a resolving triggered ability. */
+  objectId?: string;
+  sourceFacts?: import('./source-identity').ObjectFacts;
+  eventObjectId?: string;
+  triggerObjectId?: string;
+  triggerObjectFacts?: import('./source-identity').ObjectFacts;
   cardId: string;
   controllerId: string;
   /** For an Aura/Equipment: the card id of the permanent it is attached to, if any. */

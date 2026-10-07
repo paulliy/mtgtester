@@ -1,23 +1,70 @@
-import type { Ability } from './ability';
-import { EFFECT_REFERENCE_CONTRACTS } from './effect-reference-contracts';
+import type { EnginePermanent, GameContext } from '../state/types';
+import type { ValueScope } from './value';
+import type { SelectorCandidate } from './selector';
+import { candidateOf, computeCharacteristics } from '../effects/continuous';
 
-/**
- * References inside conditional/choice instructions retain the same event object as direct
- * instructions (CR 400.7). A nested ability/token is a separate scope and is not executed here.
- */
-export function actsOnItsTriggerObject(ability: Ability): boolean {
-  function visit(value: unknown): boolean {
-    if (Array.isArray(value)) return value.some(visit);
-    if (value === null || typeof value !== 'object') return false;
-    const record = value as Record<string, unknown>;
-    const op = record['op'];
-    if (typeof op === 'string' && Object.hasOwn(EFFECT_REFERENCE_CONTRACTS, op)) {
-      const fields = EFFECT_REFERENCE_CONTRACTS[op as keyof typeof EFFECT_REFERENCE_CONTRACTS];
-      if (Object.keys(fields).some((field) => record[field] === 'triggerObject')) return true;
-    }
-    return Object.entries(record).some(
-      ([key, child]) => key !== 'ability' && key !== 'spec' && visit(child),
-    );
-  }
-  return visit(ability.effects);
+/** Private rules facts for one incarnation; never exposed by player/spectator projections. */
+export interface ObjectFacts {
+  objectId: string;
+  candidate: SelectorCandidate;
+  power: number;
+  toughness: number;
+  manaValue: number;
+  counters: Record<string, number>;
+  tapped: boolean;
+  hadToAttackThisCombat: boolean;
+}
+
+export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent): ObjectFacts {
+  const chars = computeCharacteristics(ctx, permanent);
+  const candidate = candidateOf(ctx, permanent, chars);
+  const counters = { ...permanent.counters };
+  return {
+    objectId: permanent.id,
+    candidate: {
+      ...candidate,
+      types: [...candidate.types],
+      supertypes: [...candidate.supertypes],
+      subtypes: [...candidate.subtypes],
+      colors: [...candidate.colors],
+      keywords: [...candidate.keywords],
+      counters,
+    },
+    power: chars.power,
+    toughness: chars.toughness,
+    manaValue: candidate.manaValue ?? 0,
+    counters,
+    tapped: permanent.tapped,
+    hadToAttackThisCombat: permanent.hadToAttackThisCombat === true,
+  };
+}
+
+export function eventObjectScope(ctx: GameContext, permanent: EnginePermanent) {
+  return {
+    eventObjectId: permanent.id,
+    triggerObjectFacts: permanent.lastKnownFacts ?? captureObjectFacts(ctx, permanent),
+  };
+}
+
+/** Prefer the exact original's current facts; once gone, use that original's LKI. */
+export function eventObjectFacts(ctx: GameContext, scope: ValueScope): ObjectFacts | undefined {
+  const id = scope.triggerObjectId ?? scope.eventObjectId;
+  const permanent =
+    id === undefined
+      ? ctx.state.battlefield.find((permanent) => permanent.cardId === scope.triggerObjectCardId)
+      : ctx.state.battlefield.find((permanent) => permanent.id === id);
+  if (permanent) return captureObjectFacts(ctx, permanent);
+  const facts = scope.triggerObjectFacts;
+  return facts !== undefined && facts.objectId === id ? facts : undefined;
+}
+
+/** An ability retains its source incarnation even when the physical card returns. */
+export function sourceObjectFacts(ctx: GameContext, scope: ValueScope): ObjectFacts | undefined {
+  const id = scope.sourceObjectId;
+  const permanent = ctx.state.battlefield.find((permanent) =>
+    id === undefined ? permanent.cardId === scope.sourceCardId : permanent.id === id,
+  );
+  if (permanent) return captureObjectFacts(ctx, permanent);
+  const facts = scope.sourceFacts;
+  return facts !== undefined && facts.objectId === id ? facts : undefined;
 }

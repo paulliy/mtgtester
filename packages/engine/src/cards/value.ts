@@ -22,6 +22,7 @@ import { assertNever } from '../utils/assert-never';
 import type { Color, PlayerId } from '@mtg/shared';
 import type { GameContext } from '../state/types';
 import type { Selector } from './selector';
+import type { ObjectFacts } from './source-identity';
 import type { EffectRef } from './ability';
 
 /** What a resolving ability knows that the board alone does not. */
@@ -30,6 +31,9 @@ export interface ValueScope {
   controllerId: PlayerId;
   /** The source object's card id, for `self`-relative selectors. */
   sourceCardId?: string;
+  /** Exact source incarnation and its departure facts for CR 608.2h. */
+  sourceObjectId?: string;
+  sourceFacts?: ObjectFacts;
   /** The X announced when the spell was cast (CR 601.2b). */
   x?: number;
   /** Damage that caused the trigger — Old Gnawbone's "that many". */
@@ -66,6 +70,8 @@ export interface ValueScope {
    * looking the card up at resolution, which would find a new object blinked in response.
    */
   eventObjectId?: string;
+  /** Last known facts of that exact event incarnation, refreshed immediately before it leaves. */
+  triggerObjectFacts?: ObjectFacts;
   /** Total counters on an activated ability's source, captured before costs are paid. */
   sourceCountersTotal?: number;
   /**
@@ -92,6 +98,7 @@ export type TriggerScope = Pick<
   | 'sourceCountersTotal'
   | 'triggerObjectId'
   | 'eventObjectId'
+  | 'triggerObjectFacts'
 >;
 
 export type Value =
