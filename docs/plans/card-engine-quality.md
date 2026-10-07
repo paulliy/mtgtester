@@ -496,6 +496,9 @@ and report the exact failed action, attempted recovery, and remaining work.
   Zero-life payment follows CR 119.4b even below zero; Phyrexian pips remain payable with mana.
   All 64 focused payment contracts pass with production/test/tooling types and focused lint.
   The full run is not recorded as passing; combined verification must be repeated.
+- Combined verification at `4aa7aaa`: all 307 repository files / 3,719 tests and all
+  79 card-gate files / 1,564 tests pass, with production/test/tooling types, lint and formatting.
+  The earlier full-game timeout does not recur in this complete run.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
