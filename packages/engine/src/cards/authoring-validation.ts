@@ -1,4 +1,5 @@
 import { selectorIsEventOnly } from './selector';
+import { validateIRGraph } from './ir-graph';
 import {
   validateExpression,
   validateEffectExpressions,
@@ -608,6 +609,7 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
 /** Validate the fully merged executable definition rather than trusting an override patch alone. */
 export function validateCardDefinition(definition: CardDefinition): AuthoringIssue[] {
   const issues: AuthoringIssue[] = [];
+  if (!validateIRGraph(definition, 'definition', issues)) return issues;
   for (const field of [
     'types',
     'supertypes',
@@ -664,6 +666,7 @@ export function assertValidModeledDefinition(definition: CardDefinition): CardDe
 /** Validate authored data before it is merged with parser output. */
 export function validateOverrideDefinition(override: CardOverride): AuthoringIssue[] {
   const issues: AuthoringIssue[] = [];
+  if (!validateIRGraph(override.def, 'override.def', issues)) return issues;
   if (override.unsupportedReason === undefined) visit(override.def, 'override.def', issues);
   return issues;
 }
