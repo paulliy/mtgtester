@@ -489,6 +489,13 @@ and report the exact failed action, attempted recovery, and remaining work.
   bulk retains 6,508 modeled definitions and 484 dependency keys without unexpected containment.
 - The expanded card gate at `ee2067d` passes 76 files / 1,527 tests. Subsequent payment and
   field-boundary changes require combined verification; earlier receipts are checkpoint evidence.
+- Combined run at `b2947ad`: 305 files / 3,707 tests pass; the multi-seed full-game
+  test times out under combined load. Its unchanged-source isolated rerun passes both tests
+  in 23.68 seconds. Production types identify the unavailable platform cloning API; this is
+  corrected with a pure data copy that preserves aliases, sparse arrays and own property names.
+  Zero-life payment follows CR 119.4b even below zero; Phyrexian pips remain payable with mana.
+  All 64 focused payment contracts pass with production/test/tooling types and focused lint.
+  The full run is not recorded as passing; combined verification must be repeated.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
