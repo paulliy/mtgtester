@@ -10,6 +10,7 @@
  * and the reasons form the backlog of mechanics to implement next.
  */
 import { counterSpellTarget } from './target-builders';
+import { searchLibraryCards, graveyardAlternativeCost } from './effect-builders';
 import type { Color, OracleCard } from '@mtg/shared';
 import { enforceInterpretedDefinition } from './overload';
 import { emptyCost, parseManaCost } from '../mana/cost';
@@ -2697,10 +2698,7 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
     // card on top") and the one that matters: shuffling afterwards would bury the card the
     // whole spell exists to set up. Which card is chosen cannot depend on the shuffle, so
     // asking first and shuffling first are the same decision.
-    return [
-      { op: 'shuffle' },
-      { op: 'searchLibrary', filter, destinations: [{ zone: 'libraryTop' }] },
-    ];
+    return [{ op: 'shuffle' }, searchLibraryCards(filter, [{ zone: 'libraryTop' }])];
   }
 
   const m = s.match(/^search your library for (.+?), (?:reveal .+?, )?(put .+?), then shuffle$/);
@@ -2718,13 +2716,10 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
   const count = countMatch === null ? null : parseAmount(countMatch[1] as string);
   if (countMatch !== null && count === null) return null;
   return [
-    {
-      op: 'searchLibrary',
-      filter,
-      destinations,
-      ...(count === null ? {} : { count: constant(count) }),
+    searchLibraryCards(filter, destinations, {
+      ...(count === null ? {} : { count }),
       ...(differentNames ? { differentNames: true } : {}),
-    },
+    }),
     { op: 'shuffle' },
   ];
 }
@@ -6064,19 +6059,12 @@ export function interpretCard(card: OracleCard): CardDefinition {
             : parseGraveyardAlternativeCosts(graveyardAlternative[3] as string);
         if (cost.cost !== null && additionalCosts !== null) {
           if (alternativeCasts === undefined) alternativeCasts = [];
-          alternativeCasts.push({
-            kind: 'nonMana',
-            from: 'graveyard',
-            manaCost: cost.cost,
-            ...(additionalCosts.length > 0 ? { costs: additionalCosts } : {}),
-            // Flashback exiles the card whenever it would leave the stack (CR 702.34a). Escape
-            // has no such rider (CR 702.138): an escaped instant or sorcery returns to the
-            // graveyard and can escape again.
-            ...(graveyardAlternative[1] === 'flashback'
-              ? { exileOnResolution: true }
-              : { escaped: true }),
-            description: line,
-          });
+          alternativeCasts.push(
+            graveyardAlternativeCost(graveyardAlternative[1] as 'flashback' | 'escape', cost.cost, {
+              description: line,
+              ...(additionalCosts.length > 0 ? { costs: additionalCosts } : {}),
+            }),
+          );
           continue;
         }
       }

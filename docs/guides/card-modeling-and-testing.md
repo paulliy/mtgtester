@@ -146,6 +146,15 @@ needed — it never guesses or falls back to "close enough" (brief §6.3).
    reject unknown options. The final ability validator still checks slot dependencies and effect
    domains. `targetSlots` retains every own named key, including prototype-named keys.
 
+   Dangerous effect envelopes also have guarded builders: `returnGraveyardCard` chooses an
+   explicit destination; `searchLibraryCards` keeps library choices separate from targets;
+   `castWithoutManaCost` exposes only existing hand/search routes; and
+   `playLinkedExiledCardWithoutManaCost` uses an existing Hideaway link. Use
+   `graveyardAlternativeCost` for the distinct Flashback/Escape destinations and
+   `exileUntilThisSourceLeaves` for a battlefield source's lifetime. These helpers preserve
+   omitted keys and reject unsupported origins/options. They still require a valid owning
+   ability and independent card evidence; a builder is not a review certificate.
+
    `def` may **only compose existing, already-tested `Effect`/`Ability` primitives** — a new
    executor primitive is out of scope for an override and belongs in the engine itself. If a card
    needs a cost or effect that doesn't exist, leave it `unimplemented` rather than approximating.

@@ -37,6 +37,14 @@
  */
 
 export { graveyardCardTarget, counterSpellTarget } from './target-builders';
+export {
+  returnGraveyardCard,
+  exileUntilThisSourceLeaves,
+  playLinkedExiledCardWithoutManaCost,
+  castWithoutManaCost,
+  searchLibraryCards,
+  graveyardAlternativeCost,
+} from './effect-builders';
 
 import type { Color } from '@mtg/shared';
 import type { ParsedManaCost } from '../mana/cost';
