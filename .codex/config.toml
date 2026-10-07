@@ -1,0 +1,3 @@
+[mcp_servers.antigravity-mcp-server]
+command = "node"
+args = ['C:\Users\paulf\Downloads\antigravity-mcp-server\dist\index.js']
