@@ -2991,10 +2991,15 @@ async function runSelectedFaceViewer(page: Page, name: string, half: boolean): P
   if (!half && name === 'An Unexpected Party')
     await page.getByRole('button', { name: 'Giant', exact: true }).click();
   if (half && expected.scry !== undefined) {
-    for (let index = 0; index < expected.scry; index++)
-      await page.getByRole('button', { name: /^Keep .+ on top$/ }).click();
+    for (let index = 0; index < expected.scry; index++) {
+      const keep = page.getByRole('button', { name: /^Keep .+ on top$/ });
+      await expect(keep).toBeVisible();
+      const previousChoice = await keep.innerText();
+      await keep.click();
+      await expect(page.getByRole('button', { name: previousChoice, exact: true })).toBeHidden();
+    }
     if (expected.scry > 1)
-      await page.getByRole('button', { name: 'Put next on the top', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Keep the current top order', exact: true }).click();
   }
   if (half && expected.discard)
     await page.getByRole('button', { name: 'Discard', exact: true }).first().click();
