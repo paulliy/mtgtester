@@ -1,3 +1,4 @@
+import { counterCount } from './counters';
 import { assertNever } from '../utils/assert-never';
 import { assertManaRiders } from '../cards/mana-riders';
 /**
@@ -597,7 +598,7 @@ export function canPayNonManaCosts(
       }
       case 'removeCounters': {
         const count = typeof cost.count === 'number' ? cost.count : evaluateValue(ctx, cost.count);
-        if ((perm.counters[cost.counter] ?? 0) < count) return false;
+        if (counterCount(perm.counters, cost.counter) < count) return false;
         break;
       }
       case 'payLife': {
@@ -896,7 +897,7 @@ export function manaSourcesFor(
       }
       if (cost.kind === 'removeCounters') {
         const amount = typeof cost.count === 'number' ? cost.count : evaluateValue(ctx, cost.count);
-        const available = perm.counters[cost.counter] ?? 0;
+        const available = counterCount(perm.counters, cost.counter);
         resources.push({ key: `${perm.cardId}:counter:${cost.counter}`, amount, available });
         if (amount > 0) limit = Math.min(limit, Math.floor(available / amount));
       }
