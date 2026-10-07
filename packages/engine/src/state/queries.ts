@@ -589,15 +589,16 @@ export function canPayNonManaCosts(
         break;
       }
       case 'payLife': {
-        // CR 118.8: a player may pay life only down to 0, never into a negative total.
+        // CR 119.4 / 119.4b: positive life payments need enough life; zero is always payable.
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
-        if (controller === undefined || controller.life < cost.amount) return false;
+        if (controller === undefined || (cost.amount > 0 && controller.life < cost.amount))
+          return false;
         break;
       }
       case 'payLifeValue': {
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
         const amount = evaluateValue(ctx, cost.amount, { controllerId: perm.controllerId });
-        if (controller === undefined || controller.life < amount) return false;
+        if (controller === undefined || (amount > 0 && controller.life < amount)) return false;
         break;
       }
       case 'payEnergy': {
@@ -860,7 +861,7 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
           cost.kind === 'payLife'
             ? cost.amount
             : evaluateValue(ctx, cost.amount, { controllerId: playerId });
-        resources.push({ key: 'life', amount, available: player.life });
+        resources.push({ key: 'life', amount, available: Math.max(0, player.life) });
         if (amount > 0) limit = Math.min(limit, Math.floor(player.life / amount));
       }
       if (cost.kind === 'payEnergy') {
