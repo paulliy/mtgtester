@@ -312,3 +312,152 @@ describe('independent alternative casting contracts', () => {
     }
   });
 });
+
+describe('casting configuration source permissions', () => {
+  it('selects the requested face for timing when its index is omitted', () => {
+    const { ctx, player, card, lands } = setup({
+      alternativeCasts: [
+        nonMana(),
+        {
+          kind: 'omen',
+          name: 'Instant probe',
+          typeLine: 'Instant — Omen',
+          manaCost: manaCost('{1}'),
+          description: 'Instant probe',
+          ability: spell({ effects: [{ op: 'gainLife', amount: { kind: 'const', n: 1 } }] }),
+        },
+      ],
+    });
+    lands(1);
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.phase = 'combat';
+    pump(
+      applyPriorityAction(
+        ctx,
+        player,
+        { kind: 'castSpell', objectId: card.id, fromCommand: false, alternativeCast: 'omen' },
+        { index: 0, targets: new Map() },
+      ),
+    );
+    expect(ctx.state.stack[0]?.alternativeCastKind).toBe('omen');
+  });
+
+  it('rejects an alternative index on a normal spell instead of ignoring it', () => {
+    const { ctx, player, card } = setup({}, '{0}');
+    const before = cloneContractContext(ctx);
+    expect(() =>
+      pump(
+        applyPriorityAction(
+          ctx,
+          player,
+          { kind: 'castSpell', objectId: card.id, fromCommand: false, altIndex: 0 },
+          { index: 0, targets: new Map() },
+        ),
+      ),
+    ).toThrow('unexpected alternative index');
+    expect(ctx.state).toEqual(before.state);
+  });
+
+  it('does not offer an exile-only alternative from the hand', () => {
+    const { ctx, player, card, options } = setup({
+      alternativeCasts: [{ ...nonMana(), from: 'exile' }],
+    });
+    expect(options()).toEqual([]);
+    const before = cloneContractContext(ctx);
+    expect(() =>
+      pump(
+        applyPriorityAction(
+          ctx,
+          player,
+          {
+            kind: 'castSpell',
+            objectId: card.id,
+            fromCommand: false,
+            alternativeCast: 'nonMana',
+            altIndex: 0,
+          },
+          { index: 0, targets: new Map() },
+        ),
+      ),
+    ).toThrow('not supported from this zone');
+    expect(ctx.state).toEqual(before.state);
+  });
+
+  it('cannot use another owner’s Adventure permission', () => {
+    const { ctx, player, card } = setup({}, '{0}');
+    player.hand.splice(player.hand.indexOf(card), 1);
+    card.zone = 'exile';
+    card.ownerId = 'P2';
+    card.onAdventure = true;
+    ctx.state.exile.push(card);
+    const before = cloneContractContext(ctx);
+    expect(() =>
+      pump(
+        applyPriorityAction(
+          ctx,
+          player,
+          { kind: 'castSpell', objectId: card.id, fromCommand: false, fromExile: true },
+          { index: 0, targets: new Map() },
+        ),
+      ),
+    ).toThrow('exile cast permission');
+    expect(ctx.state).toEqual(before.state);
+  });
+
+  it('an alternative cost does not grant casting from the top of the library', () => {
+    const { ctx, player, card } = setup({ types: ['Artifact'] });
+    const grant = spawn(
+      ctx,
+      player.id,
+      oracle({ name: 'Energy permission probe', typeLine: 'Enchantment' }),
+    );
+    ctx.defs.set(grant.oracleId, { ...ctx.defs.get(grant.oracleId)!, energyAlternativeCost: 3 });
+    player.energy = 3;
+    player.hand.splice(player.hand.indexOf(card), 1);
+    card.zone = 'library';
+    player.library.unshift(card);
+    const before = cloneContractContext(ctx);
+    expect(() =>
+      pump(
+        applyPriorityAction(
+          ctx,
+          player,
+          {
+            kind: 'castSpell',
+            objectId: card.id,
+            fromCommand: false,
+            fromLibraryTop: true,
+            alternativeCast: 'energy',
+          },
+          { index: 0, targets: new Map() },
+        ),
+      ),
+    ).toThrow('cast from library top is not legal');
+    expect(ctx.state).toEqual(before.state);
+  });
+
+  it('alternative casting consumes the selected source-zone budget', () => {
+    const { ctx, player, card, options, cast } = setup({ types: ['Artifact'] });
+    const grant = spawn(
+      ctx,
+      player.id,
+      oracle({ name: 'Energy budget probe', typeLine: 'Enchantment' }),
+    );
+    ctx.defs.set(grant.oracleId, {
+      ...ctx.defs.get(grant.oracleId)!,
+      energyAlternativeCost: 3,
+      ruleStatics: [{ kind: 'playFromZone', zone: 'libraryTop', permanentTypeBudget: 1 }],
+    });
+    player.energy = 3;
+    player.hand.splice(player.hand.indexOf(card), 1);
+    card.zone = 'library';
+    player.library.unshift(card);
+    const option = options().find(
+      (option) => (option.payload as CastPayload).alternativeCast === 'energy',
+    )!;
+    expect((option.payload as CastPayload).zoneBudgetType).toBe('Artifact');
+    cast(option);
+    expect(player.playFromZoneTypeUsesThisTurn).toEqual({ Artifact: 1 });
+    expect(player.energy).toBe(0);
+  });
+});
