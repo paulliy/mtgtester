@@ -25,6 +25,22 @@ import type { Selector } from './selector';
 import type { ObjectFacts } from './source-identity';
 import type { EffectRef } from './ability';
 
+/** Specialized numeric consumers must reject referents lacking a proven lifetime path. */
+export function assertNumericReference(reference: EffectRef): void {
+  if (typeof reference === 'number') return;
+  switch (reference) {
+    case 'source':
+    case 'triggerObject':
+      return;
+    case 'attachedToSource':
+      throw new Error('numeric attachment references have no supported lifetime contract');
+    case 'eventPlayer':
+      throw new Error('numeric permanent reference cannot refer to an event player');
+    default:
+      assertNever(reference, 'numeric effect reference');
+  }
+}
+
 /** What a resolving ability knows that the board alone does not. */
 export interface ValueScope {
   /** Whose "you" this is. */

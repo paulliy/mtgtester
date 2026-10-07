@@ -11,7 +11,7 @@ import { assertNever } from '../utils/assert-never';
  */
 
 import type { Value, ValueScope } from '../cards/value';
-import { cardTypesInAllGraveyards, devotionTo } from '../cards/value';
+import { assertNumericReference, cardTypesInAllGraveyards, devotionTo } from '../cards/value';
 import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EnginePermanent, GameContext } from '../state/types';
@@ -176,6 +176,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
         : (scope.sourceCountersTotal ?? 0);
     }
     case 'countersOnTarget': {
+      assertNumericReference(value.target);
       if (value.target === 'source') {
         const facts = sourceObjectFacts(ctx, scope);
         return facts === undefined ? 0 : counterCount(facts.counters, value.counter);
@@ -190,6 +191,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return perm ? counterCount(perm.counters, value.counter) : 0;
     }
     case 'manaValueOfTarget': {
+      assertNumericReference(value.target);
       if (value.target === 'source')
         return sourceObjectFacts(ctx, scope)?.manaValue ?? scope.resolvingSourceManaValue ?? 0;
       if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.manaValue ?? 0;
@@ -242,6 +244,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'toughnessOfSource':
       return sourceObjectFacts(ctx, scope)?.toughness ?? 0;
     case 'powerOfTarget': {
+      assertNumericReference(value.target);
       if (value.target === 'source') return sourceObjectFacts(ctx, scope)?.power ?? 0;
       if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.power ?? 0;
       const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;

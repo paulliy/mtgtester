@@ -382,7 +382,12 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       owningScope,
       issues,
     );
-  if (['powerOfTarget', 'countersOnTarget', 'manaValueOfTarget'].includes(String(valueKind)))
+  if (['powerOfTarget', 'countersOnTarget', 'manaValueOfTarget'].includes(String(valueKind))) {
+    if (record['target'] === 'attachedToSource')
+      issues.push({
+        path: `${path}.target`,
+        message: 'numeric attachment references have no supported lifetime contract',
+      });
     checkReference(
       record['target'],
       `${path}.target`,
@@ -390,6 +395,7 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       owningScope,
       issues,
     );
+  }
 
   if (record['layer'] === 7) {
     for (const field of ['power', 'toughness']) {
