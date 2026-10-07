@@ -100,6 +100,8 @@ export function eventObjectFacts(ctx: GameContext, scope: ValueScope): ObjectFac
 export function eventObjectState(ctx: GameContext, scope: ValueScope) {
   const id = scope.triggerObjectId ?? scope.eventObjectId;
   if (id !== undefined) return informationStateOf(ctx, id, scope.triggerObjectFacts);
+  if (scope.triggerObjectCardId === undefined)
+    throw new Error('event object information has no bound event object');
   const permanent = ctx.state.battlefield.find(
     (permanent) => permanent.cardId === scope.triggerObjectCardId,
   );

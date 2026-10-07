@@ -29,6 +29,9 @@ export interface AuthoringIssue {
 }
 interface Scope {
   targets: TargetSpec[];
+  eventObject?: 'permanent' | 'card';
+  providedEventObject?: 'permanent' | 'card';
+  movedToBattlefieldSlots?: ReadonlySet<number>;
   activeSlots?: readonly number[];
   narrowedDomains?: ReadonlyMap<number, readonly TargetDomain[]>;
 }
@@ -54,7 +57,18 @@ function checkReference(
 ): void {
   if (value === undefined && contract.optional === true) return;
   if (typeof value === 'string') {
+    if (value === 'triggerObject' && scope?.eventObject === undefined) {
+      issues.push({ path, message: 'event object reference has no owning event scope' });
+      return;
+    }
     if (contract.nonTargetRefs?.some((ref) => ref === value)) return;
+    if (value === 'triggerObject' && scope?.eventObject === 'card') {
+      issues.push({
+        path,
+        message: 'card event object is incompatible with this permanent reference',
+      });
+      return;
+    }
     if (contract.selection !== 'ordinary' || !specialRefs.has(value)) {
       issues.push({ path, message: 'unknown non-target reference' });
     } else if (value === 'eventPlayer' && !contract.domains.includes('player')) {
@@ -285,7 +299,23 @@ function validateFields(
 
 function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: Scope): void {
   if (Array.isArray(value)) {
-    value.forEach((entry, index) => visit(entry, `${path}[${index}]`, issues, scope));
+    let currentScope = scope;
+    value.forEach((entry, index) => {
+      visit(entry, `${path}[${index}]`, issues, currentScope);
+      if (currentScope === undefined || entry === null || typeof entry !== 'object') return;
+      const effect = entry as Record<string, unknown>;
+      if (
+        ['commandZoneToBattlefield', 'graveyardToBattlefield'].includes(String(effect['op'])) &&
+        typeof effect['target'] === 'number'
+      )
+        currentScope = {
+          ...currentScope,
+          movedToBattlefieldSlots: new Set([
+            ...(currentScope.movedToBattlefieldSlots ?? []),
+            effect['target'],
+          ]),
+        };
+    });
     return;
   }
   if (value === null || typeof value !== 'object') return;
@@ -343,7 +373,37 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     }
     const targets = record['targets'] as TargetSpec[];
     validateTargets(targets, `${path}.targets`, issues);
-    owningScope = { targets };
+    const trigger = record['trigger'] as { when?: string; subject?: { kind?: string } } | undefined;
+    const eventObject =
+      record['kind'] !== 'triggered'
+        ? undefined
+        : trigger === undefined
+          ? scope?.providedEventObject
+          : trigger.subject?.kind !== 'permanent'
+            ? undefined
+            : ['putIntoGraveyardFromAnywhere', 'leavesGraveyard'].includes(trigger.when ?? '')
+              ? 'card'
+              : 'permanent';
+    owningScope = { targets, ...(eventObject === undefined ? {} : { eventObject }) };
+  }
+  let checkedPermanentPossible = false;
+  if (
+    record['op'] === 'conditionalEffect' &&
+    typeof record['checkTarget'] === 'number' &&
+    owningScope !== undefined
+  ) {
+    owningScope = { ...owningScope };
+    delete owningScope.eventObject;
+    const target = owningScope.targets[record['checkTarget']];
+    if (target !== undefined) {
+      try {
+        const domains = targetDomains(target.kind);
+        checkedPermanentPossible = domains.includes('permanent');
+        if (domains.length === 1 && checkedPermanentPossible) owningScope.eventObject = 'permanent';
+      } catch {
+        // validateTargets already reports unknown target domains.
+      }
+    }
   }
   if (record['trigger'] !== undefined)
     validateTriggerHead(record['trigger'], `${path}.trigger`, issues);
@@ -368,6 +428,20 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   }
   // Typed value variants that consume ordinary target references, including nested arithmetic.
   const valueKind = record['kind'];
+  if (
+    [
+      'powerOfTriggerObject',
+      'countersOnTriggerObject',
+      'triggerObjectMatches',
+      'triggerObjectHadToAttackThisCombat',
+      'triggerObjectAttackingOpponent',
+    ].includes(String(valueKind)) &&
+    owningScope?.eventObject !== 'permanent'
+  )
+    issues.push({
+      path,
+      message: 'event object information requires an owning permanent event scope',
+    });
   if (
     [
       'countPermanentsControlledByTarget',
@@ -631,15 +705,44 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       record['op'] === 'conditionalEffect' &&
       owningScope !== undefined &&
       typeof record['checkTarget'] === 'number' &&
+      checkedPermanentPossible &&
       (record['condition'] as { kind?: string } | undefined)?.kind === 'triggerObjectMatches'
     ) {
       // Only the checked slot in this branch can be a battlefield permanent.
       visit(entry, `${path}.${key}`, issues, {
         ...owningScope,
+        eventObject: 'permanent',
         narrowedDomains: new Map([
           ...(owningScope.narrowedDomains ?? []),
           [record['checkTarget'], ['permanent'] as const],
         ]),
+      });
+    } else if (
+      key === 'condition' &&
+      record['op'] === 'conditionalEffect' &&
+      checkedPermanentPossible &&
+      (entry as { kind?: string } | undefined)?.kind === 'triggerObjectMatches' &&
+      owningScope !== undefined
+    ) {
+      visit(entry, `${path}.${key}`, issues, { ...owningScope, eventObject: 'permanent' });
+    } else if (key === 'ability' && record['op'] === 'registerDelayedTrigger') {
+      const target = record['target'];
+      let providedEventObject: Scope['providedEventObject'];
+      if (target === 'triggerObject') providedEventObject = owningScope?.eventObject;
+      else if (target === 'source' || target === 'attachedToSource')
+        providedEventObject = 'permanent';
+      else if (typeof target === 'number' && owningScope?.targets[target] !== undefined) {
+        const domains = targetDomains(owningScope.targets[target]!.kind);
+        if (
+          owningScope.movedToBattlefieldSlots?.has(target) ||
+          (domains.length === 1 && domains[0] === 'permanent')
+        )
+          providedEventObject = 'permanent';
+        else if (domains.length === 1 && domains[0] === 'graveyard') providedEventObject = 'card';
+      }
+      visit(entry, `${path}.${key}`, issues, {
+        targets: [],
+        ...(providedEventObject === undefined ? {} : { providedEventObject }),
       });
     } else {
       if (

@@ -4685,8 +4685,14 @@ export function* executeAbility(
             source,
             { ...ability, effects: chosen },
             targets,
-            triggerObjectCardId,
-            extraScope,
+            effectiveTriggerObjectCardId,
+            effect.checkTarget === undefined
+              ? extraScope
+              : {
+                  ...extraScope,
+                  eventObjectId: checkTargetId ?? '',
+                  triggerObjectId: checkTargetId ?? '',
+                },
             countTargets,
             divisionAmounts,
           );
