@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 5843 modeled non-land cards
+**Total**: 5840 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -572,7 +572,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bloodthrone Vampire
 - Bloom Hulk
 - Bloom Tender
-- Bloomvine Regent // Claim Territory
 - Blossoming Defense
 - Blue Marvel, Adam Brashear
 - Blur of Blades
@@ -3041,7 +3040,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Many Partings
 - Map the Frontier
 - Maraleaf Pixie
-- Marang River Regent // Coil and Catch
 - Marauder's Axe
 - Marauding Brinefang
 - Marauding Knight
@@ -3225,7 +3223,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Monoist Sentry
 - Monologue Tax
 - Mons's Goblin Raiders
-- Monster Manual // Zoological Study
 - Monster Mashup
 - Monstrous Growth
 - Moon Heron
