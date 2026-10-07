@@ -226,6 +226,12 @@ Register executable primitive contracts and required case IDs once per capabilit
 must actually execute required cases; test-file existence or source-text names are not
 behavioral proof. Changed primitives update their contracts independently of card wiring.
 Source changes within the same discriminator also invalidate prior evidence.
+Historical implementation declarations remain review history; a label alone grants no
+current eligibility. Generate lifecycle states from registered contracts and fresh executions,
+and expose the supported scope beside each proven capability. Enforce primitive prerequisites
+in CI for new or changed reviewed declarations (including changed pinned clauses); preserve
+independent card/viewer gates. A tooling review request for any existing declaration must also
+fail if its current dependencies are experimental or outside proven scope.
 
 Keep capability lifecycle distinct from card evidence. Experimental capabilities cannot
 support reviewed cards. Engine-proven eligibility is generated from current passing
@@ -552,6 +558,74 @@ and report the exact failed action, attempted recovery, and remaining work.
   execution is still required; the clauses remain implemented-unreviewed.
   Fresh generator discovery adds the copy helper, untap fixture and scenario module.
   Full-bulk inventory retains 6,471 modeled definitions and 487 capability keys.
+- Viewer catalog at `ecc8126`: all 144 actual Lab cases pass without skips, retries or
+  flaky outcomes. The source-bound loader validates the complete execution catalog and ten
+  original generator traces against 173 captured inputs (tested tree
+  `ee659d13f8c75306e58efa372e3665b8c983f3d3`, report SHA-256
+  `beb8e93e6d55b887d39a275b5609864fda7262e4f16ed59a146b2060b4c82935`).
+  This exposes a further receipt hole: traces for other catalog cases were retained but were
+  not parsed and hashed by that loader. Every catalog execution now requires a validated trace;
+  the preceding browser result remains checkpoint evidence pending a fresh complete receipt.
+- Bounded spell foundations (`b0ebd1d`) add independent positive/negative contracts for eight
+  final-IR dependencies of ordinary untargeted fixed life-gain spells. Scope includes the
+  tested 0..1000 amount boundary, up to two instructions, and green/generic cost at most {1}{G}.
+  Actual framework execution generates nine primitive facts including remove-counters;
+  complete in-scope compositions become eligible, while unknown dependencies and malformed or
+  out-of-scope definitions remain blocked. All 49 receipt/foundation checks pass in isolation
+  with both type checks and lint. Earlier competing-load runs time out and remain failed records;
+  the successful isolated rerun does not replace them.
+- Post-cost linked symbols and initially empty mana production (`ad27d5e`) pass all 25
+  changing-resource casting checks. Constructor binding guards (`8e3d9d3`) reject local
+  re-exports, dynamic imports and aliased stack literals while retaining the explicit trigger
+  helper route; all 58 focused combined checks, test/tooling types and lint pass.
+- Capability lifecycle and promotion prerequisites are generated from executable registrations,
+  current loader-validated receipts and exact supported scope. CLI review requests reject
+  experimental/missing dependencies, unproven composition scopes and changed Oracle pins.
+  CI checks new or changed reviewed declarations against the base commit, and retains a
+  current impact/lifecycle artifact alongside the primitive receipts. Historical labels do
+  not grant current certification. Both established complete-projection pin encodings are
+  accepted; changed text/cost is rejected under either encoding.
+  All 65 lifecycle/receipt/promotion contracts pass without reporting errors, with production
+  and test/tooling types and lint. Earlier runs retain their hook/RPC failures separately.
+  Asynchronous child execution and yielding between receipt cases correct event-loop starvation;
+  the hook deadline now covers both independently bounded child operations.
+- Complete trace receipt at `9f9c666`: all 144 actual Lab cases pass again without skips,
+  retries or flaky outcomes. All 144 retained archives are parsed, checked and hashed against
+  173 source inputs (tested tree `add011e677c9cca78532769bf94c9f24335e108c`, report SHA-256
+  `e55c7a1bd83a72af4d7edcccc4dec4801ec55f5a8f45633a6c850cf41dbd0cf9`).
+  All 169 loader/viewer-gate checks pass, including missing, duplicate and corrupt new untap
+  traces. Subsequent source changes require final fresh receipts; this is checkpoint evidence.
+- Additional life X (`170c5ee`) uses the actual joint mana/payment witness rather than a
+  starting-life ceiling. Two before-fix normal-path regressions omit valid X choices when
+  mana gains life, including a caster starting below zero; both now offer and apply the exact
+  payable range. Final authoring, previews and application require a bounded direct pay-X-life
+  envelope; mixed unproven X expressions are contained. Excessive menus fail with an explicit
+  1,024-choice scope error instead of truncating legal choices. All 303 focused ordinary,
+  alternative, face/free-cast, zero-life and authoring checks pass with production/test/tooling
+  types and lint. Fresh generator discovery includes the shared cost-contract helper;
+  benchmark refresh changes only current engine/card source bindings and dependent content hashes.
+  The actual 38,708-record bulk re-audit retains 6,471 modeled definitions and 487 keys.
+- Combined verification at `9572c1d`: all 314 repository files / 4,093 tests and all
+  87 card-gate files / 1,941 tests pass, with production/test/tooling types, lint and formatting.
+  No receipt RPC failures recur. Later builder and counter changes require fresh checks.
+- Guarded target builders preserve exact existing IR while requiring explicit graveyard owners
+  and spell domains. Six counter grammar construction sites adopt the spell builder. Independent
+  normal casts prove own/opponent/any graveyard returns and unrestricted/restricted spell targets;
+  malformed options and owner dependencies reject before mutation. Named target slots preserve
+  prototype-named data keys. All 145 focused contracts, both type checks and lint pass; the 93
+  interpretation and 729 override snapshots remain unchanged. Builders do not grant primitive
+  or card-review evidence by themselves.
+- Casting constructor guards now also reject typed function/arrow returns, namespace-qualified
+  stack types and locally aliased constructor exports, including exported variable declarations.
+  Explicit triggered/activated returns remain legal. All 60 effective lint contracts and the
+  complete repository lint pass.
+- Shared counter access now uses owned numeric data, including prototype-named counters in
+  removal, collective effects, creation, activation costs, layer/resolution values and remembered
+  values. Nine before-fix normal casts demonstrate phantom removals or nonnumeric creation.
+  All 18 independent counter cases pass, including unchanged-state/RNG rejection of inherited
+  counter costs. The complete engine suite passes 206 files / 2,673 tests with production and
+  test/tooling types and lint. Executable remove-counter registrations now require six owned/absent
+  prototype-name cases; old receipts cannot satisfy the strengthened contract.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR

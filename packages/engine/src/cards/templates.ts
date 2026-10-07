@@ -36,6 +36,8 @@
  * - tokens: `./tokens`
  */
 
+export { graveyardCardTarget, counterSpellTarget } from './target-builders';
+
 import type { Color } from '@mtg/shared';
 import type { ParsedManaCost } from '../mana/cost';
 import { parseManaCost } from '../mana/cost';
@@ -264,9 +266,9 @@ export function onGainsLife(player: 'you' | 'each' = 'you'): TriggerHead {
 /**
  * Target slots.
  *
- * Slot position IS the index every `EffectRef` number points at, and a mismatch fails *silently*:
- * `resolve.ts`'s `ref()` returns null for a missing or wrong-kind slot and the effect is skipped
- * with no error. Two conventions this enforces so callers do not have to remember them:
+ * Slot position is the index every numeric `EffectRef` points at. Final authoring validation
+ * rejects incompatible/out-of-range references; resolution skips objects that are no longer
+ * legal or present. Two conventions keep authored references consistent:
  *
  * - variable-count slots (`count`) are allocated AFTER every ordinary slot, because `targets` must
  *   stay dense over exactly the ordinary slots;
@@ -283,7 +285,7 @@ export function targetSlots<K extends string>(
   const ordinary = entries.filter(([, t]) => t.count === undefined);
   const counted = entries.filter(([, t]) => t.count !== undefined);
   const ordered = [...ordinary, ...counted];
-  const slot = {} as Record<K, number>;
+  const slot = Object.create(null) as Record<K, number>;
   ordered.forEach(([key], index) => {
     slot[key] = index;
   });

@@ -73,6 +73,10 @@ export function capturePrimitiveSources(repoRoot: string): PrimitiveCapture {
     'vitest.config.ts',
     'scripts/test-primitive-contracts.ts',
     'scripts/card-capability-impact.ts',
+    'scripts/check-primitive-promotions.ts',
+    'scripts/contracts/primitive-promotions.ts',
+    '.github/workflows/ci.yml',
+    'packages/server/fixtures/card-verification-manifest.json',
     'scripts/contracts/primitive-contracts.ts',
     'scripts/contracts/primitive-reporter.ts',
     'scripts/contracts/tsconfig.json',
@@ -243,9 +247,14 @@ export function loadPrimitiveEvidence(repoRoot: string, directory: string): Prim
   return evidence;
 }
 
-export function validateCurrentPrimitiveEvidence(evidence: PrimitiveEvidence): void {
+export function validateCurrentPrimitiveEvidence(
+  evidence: PrimitiveEvidence,
+  repoRoot?: string,
+): void {
   const context = contexts.get(evidence);
   requireInput(context, 'loader-validated evidence required');
+  if (repoRoot !== undefined)
+    requireInput(realpathSync(repoRoot) === context.root, 'validated repository changed');
   requireInput(
     JSON.stringify(capturePrimitiveSources(context.root)) === JSON.stringify(context.capture),
     'sources changed after evidence load',
@@ -254,6 +263,83 @@ export function validateCurrentPrimitiveEvidence(evidence: PrimitiveEvidence): v
     sha(readFileSync(context.manifestPath)) === context.manifestSha &&
       sha(readFileSync(context.reportPath)) === evidence.reportSha256,
     'receipt bytes changed',
+  );
+}
+
+export type PrimitiveLifecycle = 'experimental' | 'implemented' | 'engine-proven';
+
+/** Lifecycle facts describe a contract, not arbitrary card compositions using its tag. */
+export function primitiveCapabilityLifecycle(
+  capabilities: readonly string[],
+  evidence?: PrimitiveEvidence,
+) {
+  if (evidence !== undefined) validateCurrentPrimitiveEvidence(evidence);
+  const facts = Object.fromEntries(
+    [...new Set(capabilities)].sort().map((capability) => {
+      const contract = PRIMITIVE_CONTRACTS.find((entry) => entry.capability === capability);
+      const status: PrimitiveLifecycle =
+        contract === undefined
+          ? 'experimental'
+          : evidence?.capabilities.includes(capability)
+            ? 'engine-proven'
+            : 'implemented';
+      return [
+        capability,
+        {
+          status,
+          ...(contract === undefined
+            ? {}
+            : {
+                scope: contract.scope,
+                requiredCases: contract.cases.map((test) => test.id),
+              }),
+          ...(status !== 'engine-proven'
+            ? {}
+            : {
+                testedTree: evidence!.testedTree,
+                reportSha256: evidence!.reportSha256,
+              }),
+        },
+      ];
+    }),
+  );
+  if (evidence !== undefined) validateCurrentPrimitiveEvidence(evidence);
+  return facts;
+}
+
+/** A review/promotion boundary cannot substitute a reviewed declaration for primitive proof. */
+export function requireReviewedPrimitiveEligibility(
+  consumers: readonly { canonicalOracleId: string; definition: CardDefinition }[],
+  reviewedOracleIds: readonly string[],
+  evidence: PrimitiveEvidence,
+): void {
+  requireInput(
+    new Set(reviewedOracleIds).size === reviewedOracleIds.length,
+    'duplicate reviewed identity',
+  );
+  const byId = new Map(
+    consumers.map((consumer) => [consumer.canonicalOracleId, consumer.definition]),
+  );
+  requireInput(byId.size === consumers.length, 'duplicate consumer identity');
+  const definitions = reviewedOracleIds.map((id) => {
+    const definition = byId.get(id);
+    requireInput(definition, `reviewed card missing from current modeled input: ${id}`);
+    return definition;
+  });
+  const results = cardPrimitiveEligibilityBatch(definitions, evidence);
+  const blocked = results.flatMap((result, index) =>
+    result.eligible
+      ? []
+      : [
+          {
+            oracleId: reviewedOracleIds[index],
+            blocked: result.blocked,
+          },
+        ],
+  );
+  requireInput(
+    blocked.length === 0,
+    `reviewed primitives are not proven: ${JSON.stringify(blocked)}`,
   );
 }
 

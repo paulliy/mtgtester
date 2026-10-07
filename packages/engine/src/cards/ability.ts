@@ -368,10 +368,9 @@ export type TargetKind =
   | 'cardInGraveyard'
   /**
    * "Counter target noncreature spell" (Stubborn Denial) — a spell on the stack whose card is
-   * NOT a creature. A separate kind rather than a `filter` on `'spell'`: a spell target has no
-   * permanent to run `permanentMatchesKind` over, so the filter machinery built for
-   * `cardInGraveyard` does not reach it, and one closed-set adjective does not earn a whole
-   * general spell-filter mechanism.
+   * NOT a creature. This common adjective retains its existing kind. General stack-spell
+   * filters use the selected spell frame through shared target legality; a stack spell is
+   * not a battlefield permanent and may have different characteristics from its physical card.
    */
   | 'noncreatureSpell'
   | 'commanderInCommandZone';

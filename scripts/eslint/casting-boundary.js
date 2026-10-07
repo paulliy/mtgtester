@@ -35,7 +35,10 @@ export const castingBoundaryPlugin = {
         const internalBindings = new Map();
         const stackTypes = new Set(['EngineStackObject']);
         const isStackType = (type) =>
-          type?.type === 'TSTypeReference' && stackTypes.has(type.typeName?.name);
+          type?.type === 'TSTypeReference' &&
+          (stackTypes.has(type.typeName?.name) ||
+            (type.typeName?.type === 'TSQualifiedName' &&
+              type.typeName.right.name === 'EngineStackObject'));
         return {
           Program(node) {
             // Discover bindings before checking exports, including exports before imports.
@@ -55,6 +58,24 @@ export const castingBoundaryPlugin = {
             do {
               changed = false;
               for (const statement of node.body) {
+                const declaration =
+                  statement.type === 'ExportNamedDeclaration' ? statement.declaration : statement;
+                if (declaration?.type === 'VariableDeclaration') {
+                  for (const binding of declaration.declarations) {
+                    if (
+                      binding.id.type === 'Identifier' &&
+                      binding.init?.type === 'Identifier' &&
+                      internalBindings.has(binding.init.name) &&
+                      !internalBindings.has(binding.id.name)
+                    ) {
+                      internalBindings.set(
+                        binding.id.name,
+                        internalBindings.get(binding.init.name),
+                      );
+                      changed = true;
+                    }
+                  }
+                }
                 const alias =
                   statement.type === 'ExportNamedDeclaration' ? statement.declaration : statement;
                 if (
@@ -82,9 +103,35 @@ export const castingBoundaryPlugin = {
               assertedStack ||= isStackType(parent.typeAnnotation);
               parent = parent.parent;
             }
-            const typedStack =
+            let typedStack =
               parent.type === 'VariableDeclarator' &&
               isStackType(parent.id.typeAnnotation?.typeAnnotation);
+            // A typed return is just as much a construction as a typed variable initializer.
+            let owner = parent;
+            if (parent.type === 'ReturnStatement') {
+              while (
+                owner &&
+                !['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression'].includes(
+                  owner.type,
+                )
+              )
+                owner = owner.parent;
+            }
+            if (
+              owner &&
+              ['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression'].includes(
+                owner.type,
+              )
+            ) {
+              typedStack ||= isStackType(owner.returnType?.typeAnnotation);
+              const annotation =
+                owner.parent?.type === 'VariableDeclarator'
+                  ? owner.parent.id.typeAnnotation?.typeAnnotation
+                  : undefined;
+              typedStack ||=
+                annotation?.type === 'TSFunctionType' &&
+                isStackType(annotation.returnType?.typeAnnotation);
+            }
             if (
               (kind === 'spell' && stackShape) ||
               ((typedStack || assertedStack) &&
@@ -96,6 +143,8 @@ export const castingBoundaryPlugin = {
           ExportNamedDeclaration(node) {
             checkModule(node);
             if (node.source) return;
+            if (node.declaration?.type === 'VariableDeclaration')
+              for (const binding of node.declaration.declarations) checkLocalExport(binding.id);
             for (const specifier of node.specifiers) checkLocalExport(specifier.local);
           },
           ExportDefaultDeclaration(node) {
