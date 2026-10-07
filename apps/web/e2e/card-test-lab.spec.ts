@@ -108,10 +108,12 @@ async function verifyFirstZoneReturn(
       ))
     ) {
       await handCard(page, 'Bojuka Bog').click();
-      await page.getByRole('button', { name: 'Play land', exact: true }).click();
-      const target = page.getByRole('button', { name: 'Target P2', exact: true });
-      await expect(target).toBeVisible();
-      await target.click();
+      await expect(page.locator('.target-instruction')).toHaveText(
+        'Target 1 of 1: click a highlighted card or player.',
+      );
+      await page.locator('.opponent[data-seat="P2"] > header').click();
+      await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+      await confirm(page);
       bog = true;
       continue;
     }

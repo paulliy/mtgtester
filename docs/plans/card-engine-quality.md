@@ -761,3 +761,9 @@ and report the exact failed action, attempted recovery, and remaining work.
   catalog requirements are added, with fresh installed-Node dependency closures for all five
   evidence generators. Benchmark compatibility hashes are refreshed through the CLI; input
   and gold decisions are unchanged. The resulting 217-case browser catalog is not yet verified.
+- First new viewer attempt stops before any test because orphaned Lab/Vite servers from
+  the interrupted earlier run still own its ports; only those identified test processes were
+  terminated. The next captured 217-case attempt passes four Marchesa cases, then fails the
+  Bojuka Bog driver’s assumed Play land dialog, leaving 212 serial skips. Its unchanged source
+  manifest and failed report are retained. The driver now follows the established Bojuka Bog
+  target-selection and Confirm controls. These failed attempts grant no viewer eligibility.
