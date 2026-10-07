@@ -6952,7 +6952,9 @@ export function interpretCard(card: OracleCard): CardDefinition {
       subtypes: card.subtypes,
       colors: card.colors,
       colorIdentity: card.colorIdentity,
-      manaCost: isLandCard ? null : costResult.cost,
+      // CR 118.6: absence of a printed mana cost is an unpayable cost, distinct from {0}.
+      manaCost:
+        isLandCard || card.manaCost === null || card.manaCost === '' ? null : costResult.cost,
       hasUnsupportedCost: costResult.unsupportedSymbols.length > 0,
       power,
       toughness,
