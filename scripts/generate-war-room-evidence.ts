@@ -178,6 +178,9 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/trigger-contracts.ts',
   'packages/engine/src/state/counters.ts',
   'packages/engine/src/cards/effect-builders.ts',
+  'packages/engine/tests/fixtures/counter-targets-oracle.json',
+  'packages/engine/tests/fixtures/overload-derivation-oracle.json',
+  'packages/server/src/cards/counter-overload-scenarios.ts',
 ] as const;
 export const WAR_ROOM_TRACE_PATHS = {
   'war-room-viewer-dynamic-life-activation':
