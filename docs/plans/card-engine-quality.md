@@ -520,6 +520,16 @@ and report the exact failed action, attempted recovery, and remaining work.
   spells retain their first-clause effects and correctly untap only the selected object.
   Fresh source bindings include the selected-face helper. Combined and viewer verification
   remain required after this checkpoint.
+- Combined verification at `f73884d`: all 309 repository files / 3,951 tests pass, with
+  production/test/tooling types, lint and formatting. The initial card gate has three receipt
+  validation timeouts under competing full-suite load; all 24 unchanged-source receipt tests
+  pass separately, then the complete serial card gate passes 81 files / 1,794 tests. These
+  successful reruns are recorded separately rather than rewriting the initial failed run.
+- Dynamic mana dispatch (`360aa74`) explicitly classifies opponent-land production and rejects
+  unknown runtime variants rather than falling through to it. The authoring boundary validates
+  all seven typed variants, including nested granted abilities and prototype-named inputs.
+  All 36 focused contracts, both type checks and lint pass. This is a subsequent change;
+  the preceding combined results are checkpoint evidence, not current-head proof.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
