@@ -681,3 +681,17 @@ and report the exact failed action, attempted recovery, and remaining work.
 - No current environment blocker: Bun is installed in a temporary toolchain, system Chromium
   replaces the blocked browser download, and the bulk input was recovered. Continue the roadmap
   before opening its completion PR.
+- Delayed object events (`35a652d`, verified first on `a6fad6f`): remembered incarnations
+  cannot match a blinked card; one-shot object registrations are consumed on firing; explicit
+  event-player context survives dispatch. Authoring and execution reject delayed events with
+  no dispatcher and invalid expiry values. Twelve independent normal-path contracts plus
+  existing delayed/nested/event-head contracts pass (54 tests). The complete engine suite
+  passes 2,795 tests across 213 files; production/test/tooling types, lint, and snapshots pass.
+  The complete Oracle comparison has zero definition/status changes or derivation failures
+  (35,063 projected records, 6,471 modeled definitions, 487 capability keys).
+- Selected-face viewer driver investigation: the captured 212-case runs at `212c278` and
+  `0a5298c` are preserved as failed runs, respectively 158 and 159 passing cases followed by
+  one failure and serial skips. The traces showed an unsubmitted land-review dialog, then a
+  normal land-drop reminder. The driver now uses the land review's Play land button and
+  acknowledges Pass anyway when offered. These are driver corrections; neither failed run
+  grants a passing viewer receipt. Complete source-bound evidence remains outstanding.
