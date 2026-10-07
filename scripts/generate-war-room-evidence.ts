@@ -181,6 +181,9 @@ const SOURCE_FILES = [
   'packages/engine/tests/fixtures/selected-spell-faces-oracle.json',
   'packages/server/src/cards/spell-face-lab-expectations.ts',
   'packages/server/src/cards/spell-face-scenarios.ts',
+  'packages/engine/tests/fixtures/counter-targets-oracle.json',
+  'packages/engine/tests/fixtures/overload-derivation-oracle.json',
+  'packages/server/src/cards/counter-overload-scenarios.ts',
 ] as const;
 export const WAR_ROOM_TRACE_PATHS = {
   'war-room-viewer-dynamic-life-activation':

@@ -3279,6 +3279,8 @@ test('Young Blue Dragon: play the ordinary front', async ({ page }) => {
 
 test('Sand Augury: cast the selected spell face', async ({ page }) => {
   await runSelectedFaceViewer(page, 'Young Blue Dragon', true);
+});
+
 async function runCounterController(page: Page, name: string, own: boolean): Promise<void> {
   await runScenario(page, `${name}: counter ${own ? 'your own' : "an opponent's"} spell`);
   const card = handCard(page, name);

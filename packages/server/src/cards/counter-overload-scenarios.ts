@@ -5,18 +5,23 @@ import type { GameId, OracleCard } from '@mtg/shared';
 import type { CardTestScenario } from './card-test-scenarios';
 
 type Pin = { sha256: string; card: OracleCard };
-function pins(path: string): Pin[] {
-  const fixture = JSON.parse(readFileSync(path, 'utf8')) as { cards: Pin[] };
+function pins(fixture: { cards: Pin[] }): Pin[] {
   for (const entry of fixture.cards) {
     if (createHash('sha256').update(JSON.stringify(entry.card)).digest('hex') !== entry.sha256)
       throw new Error(`Counter/overload Oracle fixture drift: ${entry.card.name}`);
   }
   return fixture.cards;
 }
-const counters = pins('packages/engine/tests/fixtures/counter-targets-oracle.json');
-const overloads = pins('packages/engine/tests/fixtures/overload-derivation-oracle.json').filter(
-  ({ card }) => ['Cyclonic Rift', 'Vandalblast', 'Damn'].includes(card.name),
+const counters = pins(
+  JSON.parse(
+    readFileSync('packages/engine/tests/fixtures/counter-targets-oracle.json', 'utf8'),
+  ) as { cards: Pin[] },
 );
+const overloads = pins(
+  JSON.parse(
+    readFileSync('packages/engine/tests/fixtures/overload-derivation-oracle.json', 'utf8'),
+  ) as { cards: Pin[] },
+).filter(({ card }) => ['Cyclonic Rift', 'Vandalblast', 'Damn'].includes(card.name));
 const coverage = JSON.parse(
   readFileSync('packages/server/fixtures/coverage-oracle.json', 'utf8'),
 ) as OracleCard[];
