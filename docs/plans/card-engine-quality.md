@@ -619,6 +619,13 @@ and report the exact failed action, attempted recovery, and remaining work.
   stack types and locally aliased constructor exports, including exported variable declarations.
   Explicit triggered/activated returns remain legal. All 60 effective lint contracts and the
   complete repository lint pass.
+- Shared counter access now uses owned numeric data, including prototype-named counters in
+  removal, collective effects, creation, activation costs, layer/resolution values and remembered
+  values. Nine before-fix normal casts demonstrate phantom removals or nonnumeric creation.
+  All 18 independent counter cases pass, including unchanged-state/RNG rejection of inherited
+  counter costs. The complete engine suite passes 206 files / 2,673 tests with production and
+  test/tooling types and lint. Executable remove-counter registrations now require six owned/absent
+  prototype-name cases; old receipts cannot satisfy the strengthened contract.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR

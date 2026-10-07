@@ -88,6 +88,26 @@ export const PRIMITIVE_CONTRACTS: readonly PrimitiveContract[] = [
     scope:
       'unconditional direct effects with ordinary permanent target slots and fixed nonnegative integer counts; only the named counter is removed, up to the available amount',
     cases: [
+      ...['__proto__', 'constructor', 'toString'].flatMap((counter): PrimitiveCase[] => [
+        {
+          id: `remove-counters-owned-${counter}`,
+          role: 'positive',
+          file: 'packages/engine/tests/counter-name-contract.test.ts',
+          titlePath: [
+            'ordinary counter names use owned data through normal casting',
+            `removes exactly one owned ${counter} counter`,
+          ],
+        },
+        {
+          id: `remove-counters-absent-${counter}`,
+          role: 'negative',
+          file: 'packages/engine/tests/counter-name-contract.test.ts',
+          titlePath: [
+            'ordinary counter names use owned data through normal casting',
+            `does not remove an inherited ${counter} counter through a normal cast`,
+          ],
+        },
+      ]),
       {
         id: 'remove-counters-zero',
         role: 'negative',
