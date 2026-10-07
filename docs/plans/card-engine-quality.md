@@ -653,6 +653,16 @@ and report the exact failed action, attempted recovery, and remaining work.
   contracts and 209 engine files / 2,739 tests pass with both type checks and lint. The full
   35,063-projection comparison preserves all final IR, 6,471 modeled definitions and 487 keys;
   both snapshot sets remain unchanged. These builders do not grant review certification.
+- Generic graveyard-return grammar carries the explicit owner through ordinary, modal, trigger
+  and activation target allocation. An independent ordinary cast previously omitted the opposing
+  graveyard for “a graveyard”; collective unspecified-owner returns also incorrectly claimed
+  support and now remain unsupported. All 109 focused contracts, test/tooling types and lint pass.
+  The complete 35,063-projection audit preserves every final IR and support status (6,471 modeled,
+  487 keys). No current printed card in the bulk population changes from this grammar correction.
+- Added ordinary-front and selected-half real Lab scenarios for all 27 supported pinned spell
+  faces. All 54 engine scenarios and four Lab-wiring checks pass. Independent expectations
+  include entry effects, targeted/collective changes, tokens, draws/discards, scry, and
+  Adventure exile/Omen shuffle. Browser verification and final type checks remain pending.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR

@@ -187,6 +187,9 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/trigger-contracts.ts',
   'packages/engine/src/state/counters.ts',
   'packages/engine/src/cards/effect-builders.ts',
+  'packages/engine/tests/fixtures/selected-spell-faces-oracle.json',
+  'packages/server/src/cards/spell-face-lab-expectations.ts',
+  'packages/server/src/cards/spell-face-scenarios.ts',
 ] as const;
 
 const TRACE_PATHS = {

@@ -1,3 +1,9 @@
+import { readFileSync } from 'node:fs';
+import type { OracleCard } from '@mtg/shared';
+import { SPELL_FACE_LAB_EXPECTATIONS } from '../../../packages/server/src/cards/spell-face-lab-expectations';
+const SPELL_FACE_VIEWER_PINS = JSON.parse(
+  readFileSync('packages/engine/tests/fixtures/selected-spell-faces-oracle.json', 'utf8'),
+) as { cards: { card: OracleCard }[] };
 /**
  * Card Test Lab viewer verification (implementation plan step 12).
  *
@@ -2932,4 +2938,345 @@ test('Escape from Orthanc: affect and untap one target', async ({ page }) => {
 
 test('Soldier On: affect and untap one target', async ({ page }) => {
   await verifyTargetUntap(page, 'Soldier On', '4/4', undefined, 2);
+});
+
+async function runSelectedFaceViewer(page: Page, name: string, half: boolean): Promise<void> {
+  const expected = SPELL_FACE_LAB_EXPECTATIONS.find((entry) => entry.name === name)!;
+  const pin = SPELL_FACE_VIEWER_PINS.cards.find(
+    ({ card }) => card.name.split(' // ')[0] === name,
+  )!.card;
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    half
+      ? `${pin.backFace!.name}: cast the selected spell face`
+      : `${name}: play the ordinary front`,
+  );
+  await handCard(page, name).click();
+  if (half && expected.x !== undefined)
+    await page.locator('.source-actions input[type="number"]').fill(String(expected.x));
+  const buttons = page.locator('.source-actions .source-action-row button');
+  if (half) await buttons.filter({ hasText: /\((adventure|omen)\)/i }).click();
+  else
+    await buttons.filter({ has: page.locator('span', { hasText: /^(Cast|Play land)$/ }) }).click();
+  const targeted =
+    half &&
+    (expected.pt !== undefined ||
+      expected.keyword !== undefined ||
+      expected.counters !== undefined ||
+      expected.bounce ||
+      expected.destroyArtifact ||
+      (expected.damage !== undefined && !expected.opponentsOnly));
+  if (targeted) {
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await permanent(
+      page,
+      expected.bounce
+        ? 'Own Face Bear'
+        : expected.destroyArtifact
+          ? 'Chosen Face Artifact'
+          : 'Chosen Face Bear',
+    ).click();
+  }
+  await confirm(page);
+  if (!half && name === 'An Unexpected Party')
+    await page.getByRole('button', { name: 'Giant', exact: true }).click();
+  if (half && expected.scry !== undefined) {
+    for (let index = 0; index < expected.scry; index++)
+      await page.getByRole('button', { name: 'Keep on top', exact: true }).click();
+    if (expected.scry > 1)
+      await page.getByRole('button', { name: 'Put next on the top', exact: true }).first().click();
+  }
+  if (half && expected.discard)
+    await page.getByRole('button', { name: 'Discard', exact: true }).first().click();
+  if (half && expected.search)
+    await page.getByRole('button', { name: 'Put into your hand', exact: true }).first().click();
+  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const over = page.getByText(/game over/i).first();
+  for (let count = 0; count < 12; count++) {
+    await expect.poll(async () => (await over.isVisible()) || (await pass.isVisible())).toBe(true);
+    if (await over.isVisible()) break;
+    const before = boards.length;
+    await pass.click();
+    await expect.poll(async () => boards.length > before || (await over.isVisible())).toBe(true);
+  }
+  await expect(over).toBeVisible({ timeout: 15_000 });
+  const board = boards.at(-1)!;
+  if (!half) {
+    const front = board.find((card) => card.name === pin.name)!;
+    expect(front).toBeDefined();
+    expect(front.typeLine).toBe(pin.typeLine);
+    if (pin.power !== null)
+      expect(front.power).toBe(Number(pin.power) + (name === "Imodane's Recruiter" ? 1 : 0));
+    if (pin.toughness !== null) expect(front.toughness).toBe(Number(pin.toughness));
+    if (name === 'Lindblum, Industrial Regency') expect(front.tapped).toBe(true);
+    if (name === 'Gingerbread Hunter')
+      expect(board.some((card) => card.name === 'Food')).toBe(true);
+    if (name === 'An Unexpected Party')
+      expect(board.find((card) => card.name === 'Face Giant Witness')!.power).toBe(5);
+    if (name === "Imodane's Recruiter") {
+      const own = board.find((card) => card.name === 'Own Face Bear')!;
+      expect([own.power, own.toughness]).toEqual([3, 2]);
+      expect(own.keywords).toContain('haste');
+    }
+    return;
+  }
+  expect(board.some((card) => card.name === pin.name)).toBe(false);
+  const chosen = board.find((card) => card.name === 'Chosen Face Bear');
+  const own = board.find((card) => card.name === 'Own Face Bear');
+  if (
+    expected.destroyNonGiants ||
+    name === 'Gingerbread Hunter' ||
+    name === 'Smaug, the Great Calamity'
+  )
+    expect(chosen).toBeUndefined();
+  else {
+    expect(chosen).toBeDefined();
+    if (expected.pt) expect([chosen!.power, chosen!.toughness]).toEqual(expected.pt);
+    if (expected.keyword) expect(chosen!.keywords).toContain(expected.keyword);
+    if (expected.counters !== undefined) expect(chosen!.counters['+1/+1']).toBe(expected.counters);
+    if (expected.damage !== undefined) expect(chosen!.damageMarked).toBe(expected.damage);
+    if (expected.untap) expect(chosen!.tapped).toBe(false);
+  }
+  if (expected.bounce || expected.destroyNonGiants) expect(own).toBeUndefined();
+  else expect([own!.power, own!.toughness]).toEqual([2, 2]);
+  expect(board.some((card) => card.name === 'Face Giant Witness')).toBe(true);
+  if (expected.ownKeyword) expect(own!.keywords).toContain(expected.ownKeyword);
+  if (expected.destroyArtifact)
+    expect(board.some((card) => card.name === 'Chosen Face Artifact')).toBe(false);
+  if (expected.tokens !== undefined) {
+    const tokens = board.filter((card) => card.name === expected.tokenName);
+    expect(tokens).toHaveLength(expected.tokens);
+    for (const token of tokens) {
+      if (expected.tokenPt) expect([token.power, token.toughness]).toEqual(expected.tokenPt);
+      if (expected.tokenKeyword) expect(token.keywords).toContain(expected.tokenKeyword);
+    }
+  }
+  if (expected.opponentsOnly) expect(own!.damageMarked).toBe(0);
+  await expect(page.locator('.human-zone .hand-card')).toHaveCount(
+    (expected.draw ?? 0) - (expected.discard ?? 0) + (expected.search || expected.bounce ? 1 : 0),
+  );
+}
+
+test('Faerie Guidemother: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Faerie Guidemother', false);
+});
+
+test('Gift of the Fae: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Faerie Guidemother', true);
+});
+
+test('Tuinvale Treefolk: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Tuinvale Treefolk', false);
+});
+
+test('Oaken Boon: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Tuinvale Treefolk', true);
+});
+
+test('Two-Headed Hunter: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Two-Headed Hunter', false);
+});
+
+test('Twice the Rage: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Two-Headed Hunter', true);
+});
+
+test('Foulmire Knight: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Foulmire Knight', false);
+});
+
+test('Profane Insight: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Foulmire Knight', true);
+});
+
+test('An Unexpected Party: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'An Unexpected Party', false);
+});
+
+test('At the Door: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'An Unexpected Party', true);
+});
+
+test("Obyra's Attendants: play the ordinary front", async ({ page }) => {
+  await runSelectedFaceViewer(page, "Obyra's Attendants", false);
+});
+
+test('Desperate Parry: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, "Obyra's Attendants", true);
+});
+
+test('Garenbrig Carver: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Garenbrig Carver', false);
+});
+
+test("Shield's Might: cast the selected spell face", async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Garenbrig Carver', true);
+});
+
+test('Lindblum, Industrial Regency: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Lindblum, Industrial Regency', false);
+});
+
+test('Mage Siege: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Lindblum, Industrial Regency', true);
+});
+
+test('Tempest Hart: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Tempest Hart', false);
+});
+
+test('Scan the Clouds: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Tempest Hart', true);
+});
+
+test("Imodane's Recruiter: play the ordinary front", async ({ page }) => {
+  await runSelectedFaceViewer(page, "Imodane's Recruiter", false);
+});
+
+test('Train Troops: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, "Imodane's Recruiter", true);
+});
+
+test('Embereth Shieldbreaker: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Embereth Shieldbreaker', false);
+});
+
+test('Battle Display: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Embereth Shieldbreaker', true);
+});
+
+test('Gl\u00f3in the Mighty: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Gl\u00f3in the Mighty', false);
+});
+
+test('Easy Pickings: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Gl\u00f3in the Mighty', true);
+});
+
+test('Shepherd of the Flock: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Shepherd of the Flock', false);
+});
+
+test('Usher to Safety: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Shepherd of the Flock', true);
+});
+
+test('Sagu Wildling: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Sagu Wildling', false);
+});
+
+test('Roost Seek: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Sagu Wildling', true);
+});
+
+test('Silverflame Squire: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Silverflame Squire', false);
+});
+
+test('On Alert: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Silverflame Squire', true);
+});
+
+test('Oakhame Ranger: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Oakhame Ranger', false);
+});
+
+test('Bring Back: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Oakhame Ranger', true);
+});
+
+test('Realm-Cloaked Giant: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Realm-Cloaked Giant', false);
+});
+
+test('Cast Off: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Realm-Cloaked Giant', true);
+});
+
+test('Frolicking Familiar: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Frolicking Familiar', false);
+});
+
+test('Blow Off Steam: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Frolicking Familiar', true);
+});
+
+test('Lonesome Unicorn: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Lonesome Unicorn', false);
+});
+
+test('Rider in Need: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Lonesome Unicorn', true);
+});
+
+test('Topaz Dragon: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Topaz Dragon', false);
+});
+
+test('Entropic Cloud: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Topaz Dragon', true);
+});
+
+test('Horn of Valhalla: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Horn of Valhalla', false);
+});
+
+test("Ysgard's Call: cast the selected spell face", async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Horn of Valhalla', true);
+});
+
+test('Minecart Daredevil: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Minecart Daredevil', false);
+});
+
+test('Ride the Rails: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Minecart Daredevil', true);
+});
+
+test('Curious Pair: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Curious Pair', false);
+});
+
+test('Treats to Share: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Curious Pair', true);
+});
+
+test('Gingerbread Hunter: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Gingerbread Hunter', false);
+});
+
+test('Puny Snack: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Gingerbread Hunter', true);
+});
+
+test('Bilbo Baggins, Burglar: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Bilbo Baggins, Burglar', false);
+});
+
+test('Take a Glance: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Bilbo Baggins, Burglar', true);
+});
+
+test('Smaug, the Great Calamity: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Smaug, the Great Calamity', false);
+});
+
+test('Spew Flame: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Smaug, the Great Calamity', true);
+});
+
+test('Young Blue Dragon: play the ordinary front', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Young Blue Dragon', false);
+});
+
+test('Sand Augury: cast the selected spell face', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Young Blue Dragon', true);
 });
