@@ -492,6 +492,17 @@ export function loseLife(ctx: GameContext, player: EnginePlayerState, amount: nu
   emit(ctx, 'lifeLoss', { player: player.id, amount, life: player.life });
 }
 
+/** CR 118.4 / 118.8: life payments are affordable costs, unaffected by life-loss replacements. */
+export function payLife(ctx: GameContext, player: EnginePlayerState, amount: number): void {
+  if (!Number.isSafeInteger(amount) || amount < 0 || amount > player.life) {
+    throw new Error('life cost became unpayable');
+  }
+  if (amount === 0) return;
+  player.life -= amount;
+  ctx.state.lifeLostThisTurn[player.id] = true;
+  emit(ctx, 'lifeLoss', { player: player.id, amount, life: player.life });
+}
+
 /**
  * Draw cards. Drawing from an empty library sets the loss flag checked at the next SBA
  * check, not an immediate loss (brief §5.6). A generator: a drawn commander (one shuffled
@@ -744,10 +755,10 @@ export function* paySpellAdditionalCosts(
         break;
       }
       case 'payLife':
-        loseLife(ctx, player, cost.amount);
+        payLife(ctx, player, cost.amount);
         break;
       case 'payLifeValue':
-        loseLife(
+        payLife(
           ctx,
           player,
           evaluateValueIn(ctx, cost.amount, {
@@ -5658,9 +5669,14 @@ function* counterUnlessPays(
     cost.kind === 'mana' ? `pay ${describeManaCost(cost.cost)}` : `pay ${cost.amount} life`;
   const canAfford =
     cost.kind === 'mana'
-      ? canPay(cost.cost, controller.manaEntries, manaSourcesFor(ctx, controller.id))
-      : controller.life >= cost.amount &&
-        (ctx.state.lifeFloorPlayers[controller.id] !== true || controller.life - cost.amount >= 1);
+      ? canPay(
+          cost.cost,
+          controller.manaEntries,
+          manaSourcesFor(ctx, controller.id),
+          undefined,
+          controller.life,
+        )
+      : controller.life >= cost.amount;
   if (canAfford) {
     const outcome = yield {
       decisionType: 'general',
@@ -5673,7 +5689,7 @@ function* counterUnlessPays(
     };
     if (outcome.index === 0) {
       if (cost.kind === 'mana') yield* payManaCost(ctx, controller, cost.cost);
-      else loseLife(ctx, controller, cost.amount);
+      else payLife(ctx, controller, cost.amount);
       emit(ctx, 'wardPaid', { source: source.name, spell: entry.description }, controller.id);
       return;
     }
@@ -6306,16 +6322,7 @@ export function* payManaCost(
     // Read before the cost is paid: a Treasure's cost sacrifices it, so by the time its mana is
     // added the permanent is gone and its subtypes are unreadable.
     const fromTreasure = computeCharacteristics(ctx, perm).subtypes.includes('Treasure');
-    // Riders on the mana ability itself — a painland's "deals 1 damage to you". Mana abilities
-    // never use the stack (CR 605.3a), so this resolves immediately rather than being queued.
-    // Applied BEFORE the cost, so a source that sacrifices itself still exists to do it.
-    //
-    // Only the ACTIVATED ability's rider fires. A permanent with several mana abilities has
-    // several riders (Ancient Tomb's {C} costs nothing, its {C}{C} costs 2 life), and applying
-    // every one of them would charge for abilities that were never used.
-    for (const effect of source.onActivate ?? []) {
-      applyManaRider(ctx, perm, player, effect);
-    }
+    const lastKnownTraits = combatDamageTraits(ctx, perm);
     // The mana half of the activation cost (CR 601.2h — costs are paid before the ability does
     // anything), spent only from unrestricted mana, which is the pool `planPayment` proved this
     // order against. See `solveWithCostly` for why restricted mana is held out of it.
@@ -6390,6 +6397,15 @@ export function* payManaCost(
           ...(source.persistent === true ? { persistent: true } : {}),
         })),
     );
+    // CR 602.2b / 605.3b: pay the activation costs before resolving the mana ability.
+    // A sacrificed source can still deal damage using its last known characteristics;
+    // it cannot receive counters once the battlefield object has ceased to exist.
+    const traits = ctx.state.battlefield.includes(perm)
+      ? combatDamageTraits(ctx, perm)
+      : lastKnownTraits;
+    for (const effect of source.onActivate ?? []) {
+      applyManaRider(ctx, perm, player, effect, traits);
+    }
   }
 
   // Spend specific entries, so the right spend triggers fire. Only mana this payment may
@@ -6401,7 +6417,7 @@ export function* payManaCost(
     throw new Error(`engine bug: payment shortfall for ${player.id} after producing mana`);
   }
   removeMana(player, spent);
-  if ((plan.lifePaid ?? 0) > 0) loseLife(ctx, player, plan.lifePaid ?? 0);
+  if ((plan.lifePaid ?? 0) > 0) payLife(ctx, player, plan.lifePaid ?? 0);
 
   // "When you spend this mana to cast a Dragon creature spell, you gain 2 life" — a reflexive
   // trigger, fired once per consumed mana that carries one and whose own condition is met
@@ -6627,10 +6643,10 @@ export function* payAbilityCosts(
       case 'payLife':
         // CR 118.8: paying life is legal at any life total ≥ the amount, and the payment is not
         // damage — nothing replaces or prevents it.
-        loseLife(ctx, player, cost.amount);
+        payLife(ctx, player, cost.amount);
         break;
       case 'payLifeValue':
-        loseLife(
+        payLife(
           ctx,
           player,
           evaluateValueIn(ctx, cost.amount, {
@@ -6770,6 +6786,7 @@ export function applyManaRider(
   perm: EnginePermanent,
   controller: EnginePlayerState,
   effect: Effect,
+  traits = combatDamageTraits(ctx, perm),
 ): void {
   const source = permanentSource(perm);
   switch (effect.op) {
@@ -6777,7 +6794,8 @@ export function applyManaRider(
       dealDamageToPlayer(ctx, source, controller, effect.amount, {
         combat: false,
         sourceIsCommander: false,
-        sourceHasLifelink: false,
+        sourceHasLifelink: traits.lifelink,
+        sourceHasInfect: traits.infect,
       });
       return;
     case 'gainLife':
@@ -6792,6 +6810,7 @@ export function applyManaRider(
           'activating a mana ability',
         );
       }
+      if (!ctx.state.battlefield.includes(perm)) return;
       const count =
         typeof effect.count === 'number' ? effect.count : evaluateValue(ctx, effect.count);
       addCounters(ctx, source, perm, effect.counter, count);

@@ -12,7 +12,7 @@ import type { WardCost } from '../cards/ability';
 import { evaluateCondition } from '../cards/condition';
 import type { Ability, AbilityCost, CardDefinition } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
-import { loseLife, payManaCost, paySpellAdditionalCosts } from '../effects/resolve';
+import { payLife, payManaCost, paySpellAdditionalCosts } from '../effects/resolve';
 
 import { evaluateValueIn } from '../effects/values';
 import { emit, debug } from '../log/log';
@@ -695,7 +695,7 @@ function* proposeCast(
     targetLifeTax,
     energyAlternativeCost: energyAlternativeCostToPay,
   });
-  if (targetLifeTax > 0) loseLife(ctx, player, targetLifeTax);
+  if (targetLifeTax > 0) payLife(ctx, player, targetLifeTax);
   if (energyAlternativeCostToPay > 0) {
     player.energy -= energyAlternativeCostToPay;
     emit(ctx, 'energy', { amount: -energyAlternativeCostToPay, total: player.energy }, player.id);
