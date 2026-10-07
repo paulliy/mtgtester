@@ -184,6 +184,8 @@ const SOURCE_FILES = [
   'packages/engine/tests/fixtures/counter-targets-oracle.json',
   'packages/engine/tests/fixtures/overload-derivation-oracle.json',
   'packages/server/src/cards/counter-overload-scenarios.ts',
+  'packages/engine/tests/fixtures/zone-change-trigger-oracle.json',
+  'packages/server/src/cards/zone-change-trigger-scenarios.ts',
 ] as const;
 export const WAR_ROOM_TRACE_PATHS = {
   'war-room-viewer-dynamic-life-activation':

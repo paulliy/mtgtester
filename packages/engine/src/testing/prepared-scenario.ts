@@ -13,6 +13,8 @@ export interface PreparedScenarioSpec {
     playerId: PlayerId;
     cardNames: string[];
     tapped?: boolean;
+    controllerId?: PlayerId;
+    counters?: Record<string, number>;
   }>;
   graveyard?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /** Arrange already-cast spells below the tested response. */
@@ -83,7 +85,8 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
   for (const entry of spec.battlefield) {
     for (const name of entry.cardNames) {
       const card = takeNamedCard(ctx, entry.playerId, name, true);
-      const permanent = makePermanent(ctx, card, entry.playerId);
+      const permanent = makePermanent(ctx, card, entry.controllerId ?? entry.playerId);
+      if (entry.counters !== undefined) permanent.counters = { ...entry.counters };
       // The arranged position stands in for a settled mid-game board: arranged permanents have
       // been under the player's control since before this turn, so they are neither summoning
       // sick nor "entered this turn".

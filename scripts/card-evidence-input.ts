@@ -988,6 +988,17 @@ export function parseViewerEvidenceOptions(argv: readonly string[]): ViewerInput
 
 // Frozen machine-report identities; independently checked against the spec AST in unit tests.
 export const VIEWER_CATALOG: readonly CatalogSpec[] = [
+  { file: 'card-test-lab.spec.ts', titlePath: ['Marchesa: return your dead creature'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Marchesa: return an opponent-owned creature'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Marchesa: ignore a creature without a +1/+1 counter'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Marchesa: ignore an opponent-controlled creature'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Marchesa: skip the card exiled by Bojuka Bog'] },
   {
     file: 'card-test-lab.spec.ts',
     titlePath: ['Mosswort Bridge: cast a hidden permanent on the spell stack'],

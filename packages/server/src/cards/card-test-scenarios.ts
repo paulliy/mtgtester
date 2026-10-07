@@ -1,5 +1,9 @@
 import { SPELL_FACE_SCENARIO_IDS, spellFaceScenario } from './spell-face-scenarios';
 import {
+  ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
+  zoneChangeTriggerScenario,
+} from './zone-change-trigger-scenarios';
+import {
   COUNTER_OVERLOAD_SCENARIO_IDS,
   counterOverloadScenario,
 } from './counter-overload-scenarios';
@@ -5663,6 +5667,7 @@ export const REVIEWED_BASELINE_SCENARIO_IDS = [
 ] as const;
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
   'mosswort-viewer-free-cast-stack',
   'mosswort-viewer-land-play-limit',
   ...BUG_HUNT_SCENARIO_IDS,
@@ -5784,6 +5789,12 @@ export const CARD_TEST_SCENARIO_IDS = [
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  ...Object.fromEntries(
+    ZONE_CHANGE_TRIGGER_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => zoneChangeTriggerScenario(id, gameId),
+    ]),
+  ),
   ...Object.fromEntries(
     SPELL_FACE_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => spellFaceScenario(id, gameId)]),
   ),

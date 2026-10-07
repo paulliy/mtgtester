@@ -72,6 +72,110 @@ async function confirm(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Confirm' }).click();
 }
 
+async function verifyFirstZoneReturn(
+  page: Page,
+  title: string,
+  owner: 'P1' | 'P2',
+  returns: boolean,
+  exile = false,
+) {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(page, title);
+  await handCard(page, 'Murder').click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'First-Zone Witness').click();
+  await confirm(page);
+  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const over = page.getByText(/game over/i).first();
+  const passAnyway = page.getByRole('button', { name: 'Pass anyway', exact: true });
+  let bog = false;
+  for (let count = 0; count < 16; count++) {
+    await expect.poll(async () => (await over.isVisible()) || (await pass.isVisible())).toBe(true);
+    if (await over.isVisible()) break;
+    if (
+      exile &&
+      !bog &&
+      !boards.at(-1)?.some((card) => card.name === 'First-Zone Witness') &&
+      (await handCard(page, 'Bojuka Bog').evaluate((element) =>
+        element.classList.contains('actionable'),
+      ))
+    ) {
+      await handCard(page, 'Bojuka Bog').click();
+      await page.getByRole('button', { name: 'Play land', exact: true }).click();
+      const target = page.getByRole('button', { name: 'Target P2', exact: true });
+      await expect(target).toBeVisible();
+      await target.click();
+      bog = true;
+      continue;
+    }
+    const before = boards.length;
+    await pass.click();
+    await expect
+      .poll(
+        async () =>
+          boards.length > before || (await over.isVisible()) || (await passAnyway.isVisible()),
+      )
+      .toBe(true);
+    if (await passAnyway.isVisible()) {
+      await passAnyway.click();
+      await expect.poll(async () => boards.length > before || (await over.isVisible())).toBe(true);
+    }
+  }
+  await expect(over).toBeVisible({ timeout: 15_000 });
+  expect(bog).toBe(exile);
+  const returned = boards.at(-1)!.find((card) => card.name === 'First-Zone Witness');
+  if (returns) {
+    expect(returned).toBeDefined();
+    expect(returned!.owner).toBe(owner);
+    expect(returned!.controller).toBe('P1');
+    expect(returned!.counters).toEqual({});
+    await expect(permanent(page, 'First-Zone Witness')).toContainText('2/2');
+  } else {
+    expect(returned).toBeUndefined();
+    await expect(permanent(page, 'First-Zone Witness')).toHaveCount(0);
+  }
+  await expect(permanent(page, 'Marchesa, the Black Rose')).toBeVisible();
+}
+
+test('Marchesa: return your dead creature', async ({ page }) => {
+  await verifyFirstZoneReturn(page, 'Marchesa: return your dead creature', 'P1', true);
+});
+test('Marchesa: return an opponent-owned creature', async ({ page }) => {
+  await verifyFirstZoneReturn(page, 'Marchesa: return an opponent-owned creature', 'P2', true);
+});
+test('Marchesa: ignore a creature without a +1/+1 counter', async ({ page }) => {
+  await verifyFirstZoneReturn(
+    page,
+    'Marchesa: ignore a creature without a +1/+1 counter',
+    'P1',
+    false,
+  );
+});
+test('Marchesa: ignore an opponent-controlled creature', async ({ page }) => {
+  await verifyFirstZoneReturn(
+    page,
+    'Marchesa: ignore an opponent-controlled creature',
+    'P2',
+    false,
+  );
+});
+test('Marchesa: skip the card exiled by Bojuka Bog', async ({ page }) => {
+  await verifyFirstZoneReturn(
+    page,
+    'Marchesa: skip the card exiled by Bojuka Bog',
+    'P2',
+    false,
+    true,
+  );
+});
+
 test('Tribute Mage: exact mana-value search', async ({ page }) => {
   await runScenario(page, 'Tribute Mage: exact mana-value search');
 

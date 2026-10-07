@@ -750,3 +750,14 @@ and report the exact failed action, attempted recovery, and remaining work.
   All 149 affected contracts and test/tooling types/lint pass; all ten independent first-zone
   cases pass. Printed-card IR and review declarations are unchanged. Fresh real-viewer
   coverage for the corrected Marchesa return flow is being added before final gates.
+- Added five pinned Marchesa/Murder/Bojuka Bog real Lab scenarios for own and opponent-owned
+  returns, missing counters, opponent control and loss of the first destination to exile.
+  Prepared scenarios may explicitly arrange separate ownership/control and cloned counters;
+  every later cast, target, payment, land play, trigger and end step uses production flow.
+  All five engine scenarios and the exact Lab catalog pass (105 affected tests total).
+  The catalog inventory now also includes the earlier 54 face and 14 counter/overload scenarios;
+  its previously stale literal expectation was retained as a failed check before correction.
+  Production/test/tooling types and lint pass. Five literal browser cases and source-bound
+  catalog requirements are added, with fresh installed-Node dependency closures for all five
+  evidence generators. Benchmark compatibility hashes are refreshed through the CLI; input
+  and gold decisions are unchanged. The resulting 217-case browser catalog is not yet verified.
