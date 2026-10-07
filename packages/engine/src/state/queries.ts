@@ -331,7 +331,7 @@ export function findObjectByCardId(ctx: GameContext, cardId: string): EngineObje
  * existing call sites are unaffected.
  */
 export type ManaAbilityContext = Pick<EnginePermanent, 'id' | 'cardId' | 'controllerId'> &
-  Partial<Pick<EnginePermanent, 'chosenOption'>>;
+  Partial<Pick<EnginePermanent, 'chosenOption' | 'counters'>>;
 
 /**
  * Derive the symbols of a state-dependent mana ability (`ManaAbilitySpec.dynamic`).
@@ -459,6 +459,7 @@ export function resolveDynamicAmount(
     0,
     evaluateValue(ctx, amount, {
       controllerId: perm.controllerId,
+      sourceCounters: perm.counters ?? {},
       // Counted through the layer engine, so a permanent that has BECOME a creature (or lost
       // the type) counts as it currently is — the same rule `landPlayLimitFor` uses.
       countPermanents: (selector, scope) =>
@@ -710,7 +711,11 @@ function interchangeableSignature(ability: ManaAbilitySpec): string {
  * Seshiro granting "{T}: Add {G}{G}" to a Shaman that already taps for any color used to halt a
  * real pool game on exactly that.
  */
-export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource[] {
+export function manaSourcesFor(
+  ctx: GameContext,
+  playerId: PlayerId,
+  includeZeroProduction = false,
+): ManaSource[] {
   const sources: ManaSource[] = [];
   const permanents = controlledPermanents(ctx, playerId)
     .map((perm, index) => ({ perm, index, chars: computeCharacteristics(ctx, perm) }))
@@ -759,12 +764,14 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
           perm,
         ),
         ...(a.dynamic !== undefined || a.amount !== undefined || a.conditionalUnits !== undefined
-          ? { stateDependentProduction: true as const }
+          ? { stateDependentProduction: true as const, productionSpec: a }
           : {}),
       }))
       // A dynamic source can resolve to nothing at all — Fellwar Stone with no opposing
       // lands taps for no mana, so it must not be offered as a payment source.
-      .filter((a) => a.units.length > 0)
+      .filter(
+        (a) => a.units.length > 0 || (includeZeroProduction && a.productionSpec !== undefined),
+      )
       // Not every mana ability costs {T}: "Sacrifice this creature: Add {R}{R}" is available
       // from a tapped, summoning-sick creature. Availability is per ability, not per permanent.
       .filter((a) => canPayNonManaCosts(ctx, perm, a.costs ?? TAP_COST));
@@ -790,17 +797,19 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
         continue;
 
       abilities = abilities.map((ability) => {
+        const { productionSpec: _productionSpec, ...fixedProduction } = ability;
         if (rider.add.kind === 'fixed') {
           return {
-            ...ability,
+            ...fixedProduction,
             stateDependentProduction: true as const,
             units: [...ability.units, ...rider.add.units],
           };
         }
         const producedTypes = [...new Set(ability.units.flat())];
-        if (producedTypes.length === 0) return ability;
+        if (producedTypes.length === 0)
+          return { ...fixedProduction, stateDependentProduction: true as const };
         return {
-          ...ability,
+          ...fixedProduction,
           stateDependentProduction: true as const,
           units: [...ability.units, producedTypes],
           ...(ability.linked === true || ability.units.length === 1
@@ -812,22 +821,28 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
     if (abilities.length === 0) continue;
 
     // Group interchangeable abilities, preserving first-seen order for determinism.
-    const groups = new Map<string, (ManaAbilitySpec & { stateDependentProduction?: true })[]>();
+    const groups = new Map<
+      string,
+      (ManaAbilitySpec & { stateDependentProduction?: true; productionSpec?: ManaAbilitySpec })[]
+    >();
     for (const ability of abilities) {
       const key =
-        interchangeableSignature(ability) + String(ability.stateDependentProduction ?? false);
+        interchangeableSignature(ability) +
+        String(ability.stateDependentProduction ?? false) +
+        JSON.stringify(ability.productionSpec);
       const group = groups.get(key);
       if (group === undefined) groups.set(key, [ability]);
       else group.push(ability);
     }
 
     for (const group of groups.values()) {
-      const first = group[0] as ManaAbilitySpec;
+      const first = group[0]!;
       const rider = {
         costs: first.costs ?? TAP_COST,
         ...(group.some((a) => a.stateDependentProduction)
           ? { stateDependentProduction: true as const }
           : {}),
+        ...(first.productionSpec === undefined ? {} : { productionSpec: first.productionSpec }),
         // Lifted out of `costs` so the payment solver can see it without knowing what an
         // `AbilityCost` is — a filter land's `{W/B}`, Cabal Coffers' `{2}`.
         ...(manaCostComponent(first.costs ?? TAP_COST) !== undefined

@@ -213,7 +213,7 @@ export function planSpellPayment(
             player,
             request.mana,
             allows,
-            (context, payer) => usableFrom(payer, manaSourcesFor(context, payer.id)),
+            (context, payer) => usableFrom(payer, manaSourcesFor(context, payer.id, true)),
             reservedObjectIds,
             lifePaid,
             request.energyAlternativeCost ?? 0,
