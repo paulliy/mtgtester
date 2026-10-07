@@ -741,3 +741,12 @@ and report the exact failed action, attempted recovery, and remaining work.
   The broader affected checkpoint passes 188 tests; test/tooling types and lint pass after
   correcting the typed Escape fixture to use the guarded builder. Final whole-suite and viewer
   receipts remain required after these changes.
+- Zone-change trigger contracts reproduce five first-destination/owner failures through
+  normal destruction, reanimation, repeated destruction and delayed registration. Departing
+  permanents now retain their first public destination ID (CR 400.7e / 603.6c), and returning
+  effects search the exact remembered incarnation in any owner’s graveyard. Delayed abilities
+  retain this binding rather than acquiring a later incarnation by physical card identity.
+  Target-controller context may use the original event facts when the destination is a card.
+  All 149 affected contracts and test/tooling types/lint pass; all ten independent first-zone
+  cases pass. Printed-card IR and review declarations are unchanged. Fresh real-viewer
+  coverage for the corrected Marchesa return flow is being added before final gates.

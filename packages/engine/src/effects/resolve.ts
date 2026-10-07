@@ -1,5 +1,6 @@
 import { counterCount, setCounterCount } from '../state/counters';
 import type { ObjectFacts } from '../cards/source-identity';
+import { eventObjectFacts } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueSpellCopy } from '../stack/copy';
 import { spellDefinitionOf } from '../state/queries';
@@ -4046,16 +4047,22 @@ export function* executeAbility(
         }
         break;
       case 'graveyardToBattlefield': {
-        const owner = playerById(ctx, source.controllerId);
-        // `ref()` restricts `'triggerObject'` to the battlefield — right for effects that act
-        // on a still-live permanent, but this op exists specifically to revive something that
-        // has already left it (a "dies" trigger's object, by definition, always has). Look
-        // that referent up directly by `triggerObjectCardId` instead of through `ref()`.
+        // CR 400.7e / 603.6c: a death trigger can find its first public destination,
+        // including an opponent-owned card. Leaving that incarnation ends the exception.
+        const eventBinding =
+          scope.triggerObjectId ?? scope.eventObjectDestinationId ?? scope.eventObjectId;
         const cardObj =
           effect.target === 'triggerObject'
             ? triggerObjectCardId === undefined
               ? undefined
-              : owner.graveyard.find((c) => c.cardId === triggerObjectCardId)
+              : eventBinding === undefined
+                ? ctx.state.players
+                    .flatMap((player) => player.graveyard)
+                    .find((card) => card.cardId === triggerObjectCardId)
+                : (() => {
+                    const id = movedReferent(eventBinding);
+                    return id === null ? undefined : findCardInAnyGraveyard(ctx, id);
+                  })()
             : (() => {
                 const t = ref(effect.target);
                 // The target may be a permanent card in ANY player's graveyard, not just the
@@ -5068,18 +5075,25 @@ export function* executeAbility(
         assertDelayedTriggerEvent(effect.when);
         if (!['endStep', 'cleanup', 'onFire'].includes(effect.expiry))
           throw new Error('invalid delayed trigger expiry');
-        // `'triggerObject'` here is deliberately NOT resolved through `ref()`: `ref` restricts
-        // 'triggerObject' to the battlefield (right, for effects that act on a still-live
-        // permanent), but a delayed trigger registered from a 'dies' ability fires with its
-        // triggerObject already in the graveyard — that's the whole premise of "dies". This
-        // effect's job is to remember the object regardless of zone (CR 400.7e for the
-        // object of a zone-change trigger), so it looks the card up directly by
-        // `triggerObjectCardId` across every zone instead.
+        // A delayed ability inherits the exact event/destination binding, including when
+        // that object has already left. It cannot acquire a new incarnation by card identity.
+        const eventBinding =
+          effect.target === 'triggerObject'
+            ? (scope.triggerObjectId ?? scope.eventObjectDestinationId ?? scope.eventObjectId)
+            : undefined;
+        const currentEventBinding =
+          eventBinding === undefined ? undefined : movedReferent(eventBinding);
         const t =
           effect.target === 'triggerObject'
             ? triggerObjectCardId === undefined
               ? null
-              : (findPhysicalObjectByCardId(ctx, triggerObjectCardId)?.id ?? null)
+              : eventBinding === undefined
+                ? (findPhysicalObjectByCardId(ctx, triggerObjectCardId)?.id ?? null)
+                : currentEventBinding !== null &&
+                    currentEventBinding !== undefined &&
+                    findObjectById(ctx, currentEventBinding) !== undefined
+                  ? currentEventBinding
+                  : null
             : effect.target !== undefined
               ? ref(effect.target)
               : null;
@@ -5093,13 +5107,14 @@ export function* executeAbility(
             ? refControllerCache.get(effect.target)
             : (targetPlayer?.id ??
               targetStack?.controllerId ??
-              (targetObject as unknown as { controllerId?: PlayerId } | undefined)?.controllerId);
+              (targetObject as unknown as { controllerId?: PlayerId } | undefined)?.controllerId ??
+              (effect.target === 'triggerObject'
+                ? (eventObjectFacts(ctx, scope)?.candidate.controllerId as PlayerId | undefined)
+                : undefined));
         // A remembered trigger object that no longer exists anywhere (a token that died fighting
         // and ceased to exist) still names its card, so the delayed ability does nothing.
         const goneTriggerObjectCardId =
-          t === null && effect.target === 'triggerObject' && effect.sameObject === true
-            ? triggerObjectCardId
-            : undefined;
+          t === null && effect.target === 'triggerObject' ? triggerObjectCardId : undefined;
         const targetId =
           t === null
             ? goneTriggerObjectCardId
@@ -5108,10 +5123,7 @@ export function* executeAbility(
               : (targetStack?.controllerId ?? targetObject?.cardId);
         const delayedController =
           effect.controller === 'targetController'
-            ? (targetPlayer?.id ??
-              targetStack?.controllerId ??
-              (targetObject as unknown as { controllerId?: PlayerId } | undefined)?.controllerId ??
-              source.controllerId)
+            ? (capturedTargetController ?? source.controllerId)
             : source.controllerId;
         const affectedPlayerId =
           effect.affectedPlayer === 'sourceController'
@@ -5128,16 +5140,12 @@ export function* executeAbility(
         // keeps a graveyard id that no later battlefield object can ever match.
         // The trigger object as it was when the event fired, when the firing trigger captured
         // it: a creature blinked in response is a new object that never fought (CR 400.7).
-        const eventObjectId =
-          effect.target === 'triggerObject'
-            ? (extraScope?.triggerObjectId ?? extraScope?.eventObjectId)
-            : undefined;
-        const currentEventObjectId =
-          eventObjectId === undefined ? undefined : (movedReferent(eventObjectId) ?? eventObjectId);
         const rememberedObjectId =
-          effect.sameObject === true
-            ? (currentEventObjectId ?? (t !== null ? t : undefined))
-            : undefined;
+          eventBinding !== undefined
+            ? (currentEventBinding ?? eventBinding)
+            : effect.sameObject === true || targetObject !== undefined
+              ? (t ?? undefined)
+              : undefined;
         ctx.state.delayedTriggers.push({
           id: `dt-${ctx.state.nextObjectNum++}`,
           sourceCardId: source.cardId,

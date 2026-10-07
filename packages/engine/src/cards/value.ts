@@ -91,6 +91,8 @@ export interface ValueScope {
    * looking the card up at resolution, which would find a new object blinked in response.
    */
   eventObjectId?: string;
+  /** A zone-change event may find only the new object in its first public destination. */
+  eventObjectDestinationId?: string;
   /** Last known facts of that exact event incarnation, refreshed immediately before it leaves. */
   triggerObjectFacts?: ObjectFacts;
   /** Total counters on an activated ability's source, captured before costs are paid. */
@@ -119,6 +121,7 @@ export type TriggerScope = Pick<
   | 'sourceCountersTotal'
   | 'triggerObjectId'
   | 'eventObjectId'
+  | 'eventObjectDestinationId'
   | 'triggerObjectFacts'
 >;
 

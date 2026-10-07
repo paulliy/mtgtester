@@ -62,6 +62,8 @@ export interface EngineObject extends GameObject {
 export interface EnginePermanent extends PermanentState, EngineObject {
   /** Departure facts belong to this old object only; reincarnation never copies them. */
   lastKnownFacts?: ObjectFacts;
+  /** First public destination of this departing incarnation, for CR 400.7e triggers. */
+  firstDestinationObjectId?: ObjectId;
   zone: 'battlefield';
   /** Controller established by entering, distinct from later control-changing effects. */
   defaultControllerId?: PlayerId;

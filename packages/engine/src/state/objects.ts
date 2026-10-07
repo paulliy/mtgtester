@@ -778,6 +778,8 @@ export function* moveObject(
   }
 
   // CR 903.9a — commander newly in graveyard/exile: flag for the next SBA check.
+  if (from === 'battlefield' && target.zone !== 'hand' && target.zone !== 'library')
+    (obj as EnginePermanent).firstDestinationObjectId = next.id;
   if (next.isCommander && (target.zone === 'graveyard' || target.zone === 'exile')) {
     (next as EngineCardObject).commanderSbaPending = true;
   }

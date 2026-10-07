@@ -56,6 +56,9 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
 export function eventObjectScope(ctx: GameContext, permanent: EnginePermanent) {
   return {
     eventObjectId: permanent.id,
+    ...(permanent.firstDestinationObjectId === undefined
+      ? {}
+      : { eventObjectDestinationId: permanent.firstDestinationObjectId }),
     triggerObjectFacts: permanent.lastKnownFacts ?? captureObjectFacts(ctx, permanent),
   };
 }
