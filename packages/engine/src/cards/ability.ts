@@ -223,8 +223,8 @@ export interface ManaAbilitySpec {
   /**
    * Activation cost. Absent means the overwhelmingly common `{T}` (see `TAP_COST`), which is
    * what every land and mana rock the interpreter produced before non-tap costs existed.
-   * A `mana` component is deliberately NOT supported here: paying mana to make mana would make
-   * `planPayment` recursive, so the interpreter leaves such a card unmodeled instead.
+   * A `mana` component is supported: the planner orders earlier production so it can pay
+   * this activation's mana cost before this source produces anything.
    */
   costs?: AbilityCost[];
   /** When set, `units` is ignored and the symbols are derived from state at query time. */
@@ -342,7 +342,7 @@ export type TargetKind =
   /** "target artifact, enchantment, or planeswalker" (Fracture). */
   | 'artifactEnchantmentOrPlaneswalker'
   | 'player'
-  | 'anyTarget' // creature or player (CR 115.4)
+  | 'anyTarget' // creature, player, planeswalker, or battle (CR 115.4)
   | 'playerOrPlaneswalker' // "target player or planeswalker" (Clan Defiance)
   | 'spell'
   /** A spell on the stack or a nonland permanent. */

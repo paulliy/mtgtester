@@ -1,3 +1,4 @@
+import { selectorIsEventOnly } from './selector';
 import {
   validateExpression,
   validateEffectExpressions,
@@ -24,7 +25,8 @@ interface Scope {
   activeSlots?: readonly number[];
   narrowedDomains?: ReadonlyMap<number, readonly TargetDomain[]>;
 }
-const integer = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 0;
+const integer = (n: unknown): n is number =>
+  typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
 const specialRefs = new Set(['source', 'triggerObject', 'attachedToSource', 'eventPlayer']);
 
 function checkReference(
@@ -97,6 +99,28 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
       issues.push({ path: at, message: 'invalid target specification' });
       continue;
     }
+    if (
+      spec.controller !== undefined &&
+      !['you', 'opponent', 'eventPlayer'].includes(spec.controller)
+    )
+      issues.push({ path: `${at}.controller`, message: 'unknown target controller scope' });
+    if (
+      spec.graveyardOwnerScope !== undefined &&
+      !['controller', 'opponent', 'any'].includes(spec.graveyardOwnerScope)
+    )
+      issues.push({ path: `${at}.graveyardOwnerScope`, message: 'unknown graveyard owner scope' });
+    if (
+      spec.controller !== undefined &&
+      ['cardInGraveyard', 'commanderInCommandZone'].includes(spec.kind)
+    )
+      issues.push({
+        path: `${at}.controller`,
+        message: 'card targets require an implemented owner scope rather than permanent control',
+      });
+    const filterIssueCount = issues.length;
+    if (spec.filter !== undefined)
+      validateExpression('selector', spec.filter, `${at}.filter`, issues);
+    const validFilter = issues.length === filterIssueCount;
     let knownDomain = true;
     try {
       targetDomains(spec.kind);
@@ -157,6 +181,7 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
     }
     if (
       spec.filter !== undefined &&
+      validFilter &&
       (['stackObject', 'commanderInCommandZone'].includes(spec.kind) ||
         (['player', 'playerOrPlaneswalker', 'anyTarget'].includes(spec.kind) &&
           !playerFilterAlwaysTrue(spec.filter)))
@@ -293,7 +318,118 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       issues,
     );
 
+  if (record['layer'] === 7) {
+    for (const field of ['power', 'toughness']) {
+      const operand = record[field];
+      if (typeof operand !== 'number')
+        validateExpression('value', operand, `${path}.${field}`, issues);
+      else if (!Number.isFinite(operand))
+        issues.push({
+          path: `${path}.${field}`,
+          message: 'continuous characteristic operand must be finite',
+        });
+    }
+  }
+  if (typeof record['units'] !== 'undefined' && record['amount'] !== undefined)
+    validateExpression('value', record['amount'], `${path}.amount`, issues);
+  if (
+    record['op'] !== undefined &&
+    typeof record['op'] === 'object' &&
+    record['affects'] !== undefined
+  ) {
+    const before = issues.length;
+    validateExpression('selector', record['affects'], `${path}.affects`, issues);
+    if (
+      before === issues.length &&
+      selectorIsEventOnly(record['affects'] as import('./selector').Selector)
+    )
+      issues.push({
+        path: `${path}.affects`,
+        message: 'event-only selector cannot participate in continuous layers',
+      });
+  }
   for (const [key, entry] of Object.entries(record)) {
+    if (['activatedAbilities', 'manaAbilities'].includes(key) && Array.isArray(entry)) {
+      for (const [index, ability] of entry.entries()) {
+        if (
+          ability === null ||
+          typeof ability !== 'object' ||
+          (key === 'activatedAbilities'
+            ? !Array.isArray(ability.costs)
+            : ability.costs !== undefined && !Array.isArray(ability.costs))
+        )
+          issues.push({
+            path: `${path}.${key}[${index}].costs`,
+            message: 'ability costs must be an array',
+          });
+        if (
+          key === 'manaAbilities' &&
+          (ability === null || typeof ability !== 'object' || !Array.isArray(ability.units))
+        )
+          issues.push({
+            path: `${path}.${key}[${index}].units`,
+            message: 'mana units must be an array',
+          });
+        if (key === 'activatedAbilities' && ability?.ability?.kind !== 'activated')
+          issues.push({
+            path: `${path}.${key}[${index}].ability`,
+            message: 'activated entry requires an activated ability',
+          });
+      }
+    }
+    if (key === 'triggers' && Array.isArray(entry))
+      entry.forEach((ability, index) => {
+        if (ability?.kind !== 'triggered')
+          issues.push({
+            path: `${path}.${key}[${index}]`,
+            message: 'trigger entry requires a triggered ability',
+          });
+      });
+    if (
+      key === 'spellAbility' &&
+      entry !== null &&
+      (entry as { kind?: unknown } | undefined)?.kind !== 'spell'
+    )
+      issues.push({
+        path: `${path}.spellAbility`,
+        message: 'spell entry requires a spell ability',
+      });
+
+    if (
+      [
+        'costs',
+        'spellAdditionalCosts',
+        'additionalCost',
+        'additionalCostPerChoiceBeyondFirst',
+        'effects',
+        'targets',
+        'onActivate',
+      ].includes(key) &&
+      entry !== undefined &&
+      !Array.isArray(entry)
+    ) {
+      issues.push({ path: `${path}.${key}`, message: `${key} must be an array` });
+      continue;
+    }
+    if (
+      key === 'units' &&
+      (!Array.isArray(entry) ||
+        entry.some(
+          (unit) =>
+            !Array.isArray(unit) ||
+            unit.length === 0 ||
+            unit.some((symbol) => !['W', 'U', 'B', 'R', 'G', 'C'].includes(symbol)),
+        ))
+    )
+      issues.push({
+        path: `${path}.${key}`,
+        message: 'mana units require nonempty supported symbol choices',
+      });
+    if (key === 'modes' && (entry === null || typeof entry !== 'object')) {
+      issues.push({ path: `${path}.modes`, message: 'invalid modal schema' });
+      continue;
+    }
+
     if (
       ['selector', 'filter', 'targetFilter', 'affects'].includes(key) &&
       entry !== undefined &&
@@ -373,7 +509,18 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       )
         issues.push({ path: `${path}.modes`, message: 'invalid modal choice bounds' });
       for (const [index, option] of modes.options.entries()) {
+        if (option === null || typeof option !== 'object') {
+          issues.push({ path: `${path}.modes.options[${index}]`, message: 'invalid mode option' });
+          continue;
+        }
         const slots = option.targetSlots;
+        if (slots !== undefined && !Array.isArray(slots)) {
+          issues.push({
+            path: `${path}.modes.options[${index}].targetSlots`,
+            message: 'target slots must be an array',
+          });
+          continue;
+        }
         if (
           slots !== undefined &&
           (new Set(slots).size !== slots.length ||
@@ -448,6 +595,21 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
 /** Validate the fully merged executable definition rather than trusting an override patch alone. */
 export function validateCardDefinition(definition: CardDefinition): AuthoringIssue[] {
   const issues: AuthoringIssue[] = [];
+  for (const field of [
+    'types',
+    'supertypes',
+    'subtypes',
+    'colors',
+    'colorIdentity',
+    'keywords',
+    'manaAbilities',
+    'activatedAbilities',
+    'triggers',
+    'staticEffects',
+    'ruleStatics',
+  ] as const)
+    if (!Array.isArray(definition[field]))
+      issues.push({ path: `definition.${field}`, message: `${field} must be an array` });
   if (definition.manaCost !== null)
     validateManaCost(definition.manaCost, 'definition.manaCost', issues);
   if (!definition.modeled || definition.unmodeledReasons.length > 0)

@@ -29,6 +29,54 @@ const destroy: Effect = { op: 'destroy', target: 0 };
 
 describe('semantic IR contracts', () => {
   it.each([
+    { targets: [{ kind: 'cardInGraveyard', graveyardOwnerScope: 'unknown' }] },
+    { targets: [{ kind: 'creature', controller: 'unknown' }] },
+    { targets: [{ kind: 'creature', filter: null }] },
+    { targets: [{ kind: 'cardInGraveyard', controller: 'opponent' }] },
+    { targets: [{ kind: 'creature', count: { min: Number.MAX_SAFE_INTEGER + 1, max: Infinity } }] },
+    { modes: null },
+    { modes: { minChoices: 1, maxChoices: 1, options: [null] } },
+    { modes: { minChoices: 1, maxChoices: 1, options: [{ effects: [], targetSlots: {} }] } },
+  ])('contains malformed target/mode schemas without a validator crash: %j', (patch) => {
+    expect(issues([], [], patch as Partial<Ability>)).not.toEqual([]);
+  });
+
+  it.each([
+    { spellAdditionalCosts: 'free' },
+    { triggers: undefined },
+    { manaAbilities: [{ units: [['Q']], costs: [] }] },
+    { manaAbilities: [{ units: [['G']], costs: null }] },
+    {
+      activatedAbilities: [
+        { timing: 'any', ability: { kind: 'activated', targets: [], effects: [] } },
+      ],
+    },
+    { spellAbility: { kind: 'futureAbility', targets: [], effects: [] } },
+    {
+      staticEffects: [
+        { affects: { kind: 'powerAtLeast', n: 3 }, op: { layer: 6, addKeyword: 'flying' } },
+      ],
+    },
+    {
+      staticEffects: [
+        {
+          affects: { kind: 'self' },
+          op: {
+            layer: 7,
+            sublayer: 'a',
+            power: { kind: 'unknownValue' },
+            toughness: { kind: 'const', n: 1 },
+          },
+        },
+      ],
+    },
+  ])('contains malformed executable containers and continuous expressions: %j', (patch) => {
+    expect(
+      validateCardDefinition({ ...base(), ...patch } as unknown as ReturnType<typeof base>),
+    ).not.toEqual([]);
+  });
+
+  it.each([
     { op: 'draw', count: { kind: 'unknownValue' } },
     { op: 'draw', count: { kind: 'plus', n: 1 } },
     { op: 'draw', count: { kind: 'const', n: NaN } },
