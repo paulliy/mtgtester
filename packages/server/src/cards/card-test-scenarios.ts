@@ -3658,6 +3658,8 @@ function smotheringTitheScenario(gameId: GameId, outcome: 'pay' | 'decline'): Ca
     oracleId: `lab-tithe-secret-${outcome}`,
     name: `Tithe Secret ${outcome === 'pay' ? 'Pay' : 'Decline'}`,
     typeLine: 'Creature — Secret',
+    // This synthetic spell keeps a priority choice available after all three Forests tap.
+    manaCost: '{0}',
   });
   const p1 = player('P1', [ARCANE_PENDING_SPELL, FOREST, FOREST, FOREST, secret]);
   const p2 = player('P2', [tithe.card, FOREST, FOREST]);
