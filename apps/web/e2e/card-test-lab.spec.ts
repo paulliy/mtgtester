@@ -3002,12 +3002,22 @@ async function runSelectedFaceViewer(page: Page, name: string, half: boolean): P
     await page.getByRole('button', { name: 'Put into your hand', exact: true }).first().click();
   const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
   const over = page.getByText(/game over/i).first();
+  const passAnyway = page.getByRole('button', { name: 'Pass anyway', exact: true });
   for (let count = 0; count < 12; count++) {
     await expect.poll(async () => (await over.isVisible()) || (await pass.isVisible())).toBe(true);
     if (await over.isVisible()) break;
     const before = boards.length;
     await pass.click();
-    await expect.poll(async () => boards.length > before || (await over.isVisible())).toBe(true);
+    await expect
+      .poll(
+        async () =>
+          boards.length > before || (await over.isVisible()) || (await passAnyway.isVisible()),
+      )
+      .toBe(true);
+    if (await passAnyway.isVisible()) {
+      await passAnyway.click();
+      await expect.poll(async () => boards.length > before || (await over.isVisible())).toBe(true);
+    }
   }
   await expect(over).toBeVisible({ timeout: 15_000 });
   const board = boards.at(-1)!;
