@@ -408,7 +408,7 @@ export function resolveDynamicUnits(
     if (chosen === 'W' || chosen === 'U' || chosen === 'B' || chosen === 'R' || chosen === 'G') {
       add(chosen);
     }
-  } else {
+  } else if (spec.dynamic === 'opponentLandColors') {
     // "any color that a land an opponent controls could produce" — union over opponents'
     // lands, read through the layer engine so a Blood Moon'd land contributes {R}.
     for (const opponent of opponentsOf(ctx, perm.controllerId)) {
@@ -422,6 +422,8 @@ export function resolveDynamicUnits(
         }
       }
     }
+  } else {
+    assertNever(spec.dynamic, 'dynamic mana kind');
   }
 
   return {
