@@ -426,6 +426,24 @@ and report the exact failed action, attempted recovery, and remaining work.
   and let other instructions of the same effect follow that exact public-zone transition.
   Stale physical-card aliases cannot recover targets. All 25 affected target/transition tests,
   test typechecks and focused lint pass; no production card is promoted by this primitive fix.
+- Combined verification at `1371dea`: all 299 repository files / 3,610 tests and all 71
+  card-gate files / 1,455 tests pass, with production/test/tooling types, lint and formatting.
+  The retained actual primitive run and full-bulk eligibility inventory agree on 6,508 modeled
+  definitions and 482 dependency keys. The single registered primitive scope proves no complete
+  card: all 6,508 definitions remain blocked by other uncontracted prerequisites.
+- Command-zone authorization shares a guard between preview and application: normal casts need
+  the owner's designated commander in that actual zone. Forged ownership/designation/zone
+  records are rejected without proposal side effects. Explicit hand-only alternatives and
+  currently unsupported command-zone Adventure/Omen paths cannot bypass their restrictions.
+  Default alternatives keep normal casting permissions and commander tax. All 53 affected
+  commander/alternative/free-casting tests, test/tooling types and focused lint pass.
+- Generic counterspell parsing no longer invents an opponent-only restriction absent from
+  Oracle. Pinned Counterspell, Negate, Mana Leak and Stubborn Denial projections exercise normal
+  own/opponent casting and resolution, exact tax payment, Ferocious at resolution, creature
+  restrictions, actual activated abilities, and self-target rejection. All 96 affected tests,
+  test/tooling types, snapshots and focused lint pass. The sole 93-card snapshot change removes
+  Stubborn Denial's incorrect controller restriction. Their clause requirements remain
+  implemented-unreviewed with real viewer work pending; no card completion is claimed.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR

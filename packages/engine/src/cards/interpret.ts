@@ -1385,10 +1385,10 @@ function parseEffectSentence(
     }
   }
   if (s === 'counter target spell') {
-    return [{ op: 'counter', target: alloc('spell', undefined, 'opponent') }];
+    return [{ op: 'counter', target: alloc('spell') }];
   }
   if (s === 'counter target noncreature spell') {
-    return [{ op: 'counter', target: alloc('noncreatureSpell', undefined, 'opponent') }];
+    return [{ op: 'counter', target: alloc('noncreatureSpell') }];
   }
   // "Counter target spell unless its controller pays {3}" (Mystic Confluence's first mode).
   // `counterUnlessControllerPays` already exists for Stubborn Denial, but only inside that
@@ -1401,11 +1401,7 @@ function parseEffectSentence(
     if (m !== null) {
       const parsedCost = parseManaCost((m[2] as string).toUpperCase() as never);
       if (parsedCost.cost !== null) {
-        const target = alloc(
-          m[1] === undefined ? 'spell' : 'noncreatureSpell',
-          undefined,
-          'opponent',
-        );
+        const target = alloc(m[1] === undefined ? 'spell' : 'noncreatureSpell');
         return [{ op: 'counterUnlessControllerPays', target, cost: parsedCost.cost }];
       }
     }
@@ -2259,7 +2255,7 @@ function parseCounterUnlessFerociousBlock(
   if (condition === null) return null;
 
   return {
-    targets: [{ kind: 'noncreatureSpell', controller: 'opponent' }],
+    targets: [{ kind: 'noncreatureSpell' }],
     effects: [
       {
         op: 'conditionalEffect',

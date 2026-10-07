@@ -1366,7 +1366,6 @@
       "kind": "spell",
       "targets": [
         {
-          "controller": "opponent",
           "kind": "noncreatureSpell"
         }
       ]
