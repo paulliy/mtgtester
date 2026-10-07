@@ -1409,10 +1409,7 @@ export function queueTriggersForEvent(
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
-            ...(spec.subject.kind !== 'self' &&
-            (remembersEventObject(ability) ||
-              (actsOnItsTriggerObject(ability) &&
-                ctx.state.battlefield.some((permanent) => permanent.id === first.permanent.id)))
+            ...(spec.subject.kind !== 'self' && actsOnItsTriggerObject(ability)
               ? { eventObjectId: first.permanent.id }
               : {}),
             ...(amounts.length > 0
@@ -1473,6 +1470,9 @@ export function queueTriggersForEvent(
             sourceName: card.name,
             ability,
             triggerObjectCardId: s.permanent.cardId,
+            ...(actsOnItsTriggerObject(ability)
+              ? { scope: { eventObjectId: s.permanent.id } }
+              : {}),
           });
           debug(ctx, 'stack', `graveyard trigger queued: ${card.name}`);
         }
@@ -1499,6 +1499,9 @@ export function queueTriggersForEvent(
             sourceName: emblem.name,
             ability,
             triggerObjectCardId: subject.permanent.cardId,
+            ...(actsOnItsTriggerObject(ability)
+              ? { scope: { eventObjectId: subject.permanent.id } }
+              : {}),
           });
           debug(ctx, 'stack', `emblem trigger queued: ${emblem.name}`);
         }
@@ -1529,21 +1532,6 @@ export function queueTriggersForEvent(
     });
     debug(ctx, 'stack', `delayed trigger queued: ${delayed.id}`);
   }
-}
-
-/** The one-subject case, which is every event except attacks and combat damage. */
-/**
- * Whether a trigger's effects remember the exact object that fired it (a `sameObject` delayed
- * trigger on 'triggerObject'). Only those capture the event object's id, so every other
- * trigger's pending entry stays as it was.
- */
-function remembersEventObject(ability: Ability): boolean {
-  return ability.effects.some(
-    (effect) =>
-      effect.op === 'registerDelayedTrigger' &&
-      effect.sameObject === true &&
-      effect.target === 'triggerObject',
-  );
 }
 
 /**
