@@ -1,3 +1,4 @@
+import { queueSpellCopy } from '../stack/copy';
 import { spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
 import { targetIsLegal } from '../targets/legality';
@@ -2249,17 +2250,7 @@ export function* executeAbility(
             (entry) => entry.id === id && entry.kind === 'spell',
           );
           if (original === undefined || original.ability === null) continue;
-          ctx.state.stack.push({
-            ...original,
-            id: `o-${ctx.state.nextObjectNum++}`,
-            sourceId: `o-${ctx.state.nextObjectNum++}`,
-            card: null,
-            description: `Copy of ${original.description}`,
-            controllerId: controller.id,
-            sourceCardId: source.cardId,
-            sourceOracleId: source.oracleId,
-            targets: [...original.targets],
-          });
+          queueSpellCopy(ctx, original, controller.id);
         }
         break;
       }
@@ -3497,29 +3488,7 @@ export function* executeAbility(
           (entry) => entry.id === targetId && entry.kind === 'spell',
         );
         if (original === undefined || original.ability === null) break;
-        const copyId = `o-${ctx.state.nextObjectNum++}`;
-        const originalDefinition = spellDefinitionOf(ctx, original);
-        const copy: EngineStackObject = {
-          ...original,
-          id: copyId,
-          sourceId: copyId,
-          card: null,
-          description: `Copy of ${original.description}`,
-          controllerId: controller.id,
-          sourceCardId: copyId,
-          sourceOracleId: original.sourceOracleId,
-          spellDefinition: originalDefinition,
-          sourceColors: [...originalDefinition.colors],
-          isCommanderCast: false,
-          sourceDamageKeywords:
-            original.sourceDamageKeywords === undefined
-              ? originalDefinition.keywords.filter((keyword): keyword is DamageKeyword =>
-                  ['infect', 'lifelink', 'deathtouch'].includes(keyword),
-                )
-              : [...original.sourceDamageKeywords],
-          targets: [...original.targets],
-        };
-        ctx.state.stack.push(copy);
+        queueSpellCopy(ctx, original, controller.id);
         break;
       }
       case 'damageController':

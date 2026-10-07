@@ -1,6 +1,31 @@
 import type { CardDefinition } from '../cards/definition';
 import type { EngineCardObject, EngineStackObject, GameContext } from '../state/types';
 
+/** Fixture-only settled stack entry; arranging a scenario does not perform or emit a cast. */
+export function preparedScenarioSpell(
+  card: EngineCardObject,
+  definition: CardDefinition,
+  controllerId = card.ownerId,
+): EngineStackObject {
+  if (definition.spellAbility === null)
+    throw new Error(`prepared scenario stack card ${card.name} has no spell ability`);
+  return {
+    id: card.id,
+    sourceId: card.id,
+    controllerId,
+    kind: 'spell',
+    description: card.name,
+    targets: [],
+    card,
+    ability: definition.spellAbility,
+    spellDefinition: definition,
+    sourceColors: [...definition.colors],
+    sourceOracleId: card.oracleId,
+    sourceCardId: card.cardId,
+    isCommanderCast: false,
+  };
+}
+
 /** CR 601.2a projection for pure previews: the card has already left its source zone. */
 export function castingPreviewContext(
   ctx: GameContext,

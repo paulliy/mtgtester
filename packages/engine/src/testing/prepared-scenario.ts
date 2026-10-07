@@ -1,5 +1,6 @@
 import type { Phase, PlayerId, Step } from '@mtg/shared';
 import { makePermanent } from '../state/objects';
+import { preparedScenarioSpell } from '../casting/preview';
 import type { EngineCardObject, GameContext } from '../state/types';
 
 export interface PreparedScenarioSpec {
@@ -110,19 +111,7 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
         throw new Error(`prepared scenario stack card ${name} has no spell ability`);
       }
       card.zone = 'stack';
-      ctx.state.stack.push({
-        id: card.id,
-        sourceId: card.id,
-        controllerId: entry.playerId,
-        kind: 'spell',
-        description: card.name,
-        targets: [],
-        card,
-        ability: def.spellAbility,
-        sourceOracleId: card.oracleId,
-        sourceCardId: card.cardId,
-        isCommanderCast: false,
-      });
+      ctx.state.stack.push(preparedScenarioSpell(card, def, entry.playerId));
     }
   }
 }

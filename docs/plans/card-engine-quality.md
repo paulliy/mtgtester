@@ -520,6 +520,38 @@ and report the exact failed action, attempted recovery, and remaining work.
   spells retain their first-clause effects and correctly untap only the selected object.
   Fresh source bindings include the selected-face helper. Combined and viewer verification
   remain required after this checkpoint.
+- Combined verification at `f73884d`: all 309 repository files / 3,951 tests pass, with
+  production/test/tooling types, lint and formatting. The initial card gate has three receipt
+  validation timeouts under competing full-suite load; all 24 unchanged-source receipt tests
+  pass separately, then the complete serial card gate passes 81 files / 1,794 tests. These
+  successful reruns are recorded separately rather than rewriting the initial failed run.
+- Dynamic mana dispatch (`360aa74`) explicitly classifies opponent-land production and rejects
+  unknown runtime variants rather than falling through to it. The authoring boundary validates
+  all seven typed variants, including nested granted abilities and prototype-named inputs.
+  All 36 focused contracts, both type checks and lint pass. This is a subsequent change;
+  the preceding combined results are checkpoint evidence, not current-head proof.
+- Spell copies (`8e4250e`) share a separate CR 707.10 constructor. A normal-path negative
+  regression demonstrates that counted copying used the copier's identity; both consumers now
+  preserve the original selected frame and allocate independent target/division selections.
+  Nonspells, tentative casts, missing definitions and invalid ability roles reject before mutation.
+  Cast-stack constructors are confined by a tested repository rule, including asserted/spread
+  typed objects and internal import/export routes. Lab stack arrangement uses a guarded fixture
+  constructor inside the casting module. All 347 focused checks, both type checks and lint pass.
+- Post-cost production (`6dc1771`) carries unresolved mana production into actual activation.
+  The isolated witness evaluates it after paying costs and replays the complete activation;
+  live application verifies the selected production against that same post-cost result.
+  Counter-dependent quantities, repeated activations, conditional linked symbols and sacrifice
+  color changes retain exact production. The broader engine checkpoint passes 203 files /
+  2,603 tests; final strict-type fixes separately pass 99 contracts, both type checks and lint.
+  Static mana-production riders and strategic activation continuations remain unsupported
+  witness scopes rather than approximate proofs.
+- Sixteen canonical untap-pronoun cards now have real lab scenarios and browser assertions
+  for the complete first clause, counters/keywords, and the untouched tapped bystander.
+  Both server scenario files pass 102 tests. The combined focused checkpoint passes seven
+  files / 383 tests with production/test/tooling types, lint and formatting. Actual browser
+  execution is still required; the clauses remain implemented-unreviewed.
+  Fresh generator discovery adds the copy helper, untap fixture and scenario module.
+  Full-bulk inventory retains 6,471 modeled definitions and 487 capability keys.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
