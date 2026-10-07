@@ -172,6 +172,148 @@ describe('shared target legality contract', () => {
     expect(isTargetStillLegal(ctx, permanent.id, 'creature', 'P1')).toBe(false);
   });
 
+  it('follows public-zone moves caused by the same effect, including both blink moves', () => {
+    const { ctx } = setup();
+    const original = spawn(ctx, 'P1', bear());
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'probe', name: 'Probe', oracleId: forest().oracleId, controllerId: 'P1' },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'creature' }],
+          effects: [
+            { op: 'blinkTarget', target: 0 },
+            { op: 'putCounters', target: 0, counter: '+1/+1', count: 2 },
+          ],
+        },
+        [original.id],
+      ),
+    );
+    const returned = ctx.state.battlefield.find(
+      (permanent) => permanent.cardId === original.cardId,
+    )!;
+    expect(returned.id).not.toBe(original.id);
+    expect(returned.counters['+1/+1']).toBe(2);
+    expect(ctx.resolutionObjectMoves).toBeUndefined();
+  });
+
+  it('the same-effect public-zone exception also preserves an explicitly identified source', () => {
+    const { ctx } = setup();
+    const original = spawn(ctx, 'P1', bear());
+    pump(
+      executeAbility(
+        ctx,
+        {
+          id: original.id,
+          cardId: original.cardId,
+          name: original.name,
+          oracleId: original.oracleId,
+          controllerId: 'P1',
+        },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'creature' }],
+          effects: [
+            { op: 'blinkTarget', target: 0 },
+            { op: 'putCounters', target: 'source', counter: '+1/+1', count: 2 },
+          ],
+        },
+        [original.id],
+      ),
+    );
+    const returned = ctx.state.battlefield.find(
+      (permanent) => permanent.cardId === original.cardId,
+    )!;
+    expect(returned.id).not.toBe(original.id);
+    expect(returned.counters['+1/+1']).toBe(2);
+  });
+
+  it('preserves counted target occurrences through moves caused by the effect', () => {
+    const { ctx } = setup();
+    const original = spawn(ctx, 'P1', bear());
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'probe', name: 'Probe', oracleId: forest().oracleId, controllerId: 'P1' },
+        {
+          kind: 'spell',
+          targets: [{ kind: 'creature', count: { min: 1, max: 1 } }],
+          effects: [
+            { op: 'blinkEachChosen', targetSlot: 0, returnUnder: 'owner' },
+            { op: 'putCountersEachChosen', targetSlot: 0, counter: '+1/+1', count: 2 },
+          ],
+        },
+        [],
+        undefined,
+        undefined,
+        { 0: [original.id] },
+      ),
+    );
+    const returned = ctx.state.battlefield.find(
+      (permanent) => permanent.cardId === original.cardId,
+    )!;
+    expect(returned.id).not.toBe(original.id);
+    expect(returned.counters['+1/+1']).toBe(2);
+  });
+
+  it('does not follow unrelated public-zone moves while a resolution choice is suspended', () => {
+    const { ctx } = setup();
+    const original = spawn(ctx, 'P1', bear());
+    const resolution = executeAbility(
+      ctx,
+      { cardId: 'probe', name: 'Probe', oracleId: forest().oracleId, controllerId: 'P1' },
+      {
+        kind: 'spell',
+        targets: [{ kind: 'creature' }],
+        effects: [
+          { op: 'putCounters', target: 0, counter: '+1/+1', count: 1 },
+          { op: 'chooseOne', options: [{ description: 'Continue', effects: [] }] },
+          { op: 'putCounters', target: 0, counter: '+1/+1', count: 2 },
+        ],
+      },
+      [original.id],
+    );
+    expect(resolution.next().done).toBe(false);
+    expect(original.counters['+1/+1']).toBe(1);
+    const exiled = pump(moveObject(ctx, original, { zone: 'exile' })).value!;
+    const returned = pump(
+      moveObject(ctx, exiled, { zone: 'battlefield', controllerId: 'P1' }),
+    ).value!;
+    expect(resolution.next({ index: 0, targets: new Map() }).done).toBe(true);
+    expect(
+      ctx.state.battlefield.find((permanent) => permanent.id === returned.id)?.counters['+1/+1'],
+    ).toBeUndefined();
+  });
+
+  it('ends cross-zone tracking when the effect moves its target to a hidden zone', () => {
+    const { ctx } = setup();
+    const original = spawn(ctx, 'P1', bear());
+    const resolution = executeAbility(
+      ctx,
+      { cardId: 'probe', name: 'Probe', oracleId: forest().oracleId, controllerId: 'P1' },
+      {
+        kind: 'spell',
+        targets: [{ kind: 'creature' }],
+        effects: [
+          { op: 'returnToHand', target: 0 },
+          { op: 'chooseOne', options: [{ description: 'Continue', effects: [] }] },
+          { op: 'putCounters', target: 0, counter: '+1/+1', count: 2 },
+        ],
+      },
+      [original.id],
+    );
+    expect(resolution.next().done).toBe(false);
+    const bounced = ctx.state.players[0]!.hand.find((card) => card.cardId === original.cardId)!;
+    const returned = pump(
+      moveObject(ctx, bounced, { zone: 'battlefield', controllerId: 'P1' }),
+    ).value!;
+    expect(resolution.next({ index: 0, targets: new Map() }).done).toBe(true);
+    expect(
+      ctx.state.battlefield.find((permanent) => permanent.id === returned.id)?.counters['+1/+1'],
+    ).toBeUndefined();
+  });
+
   it('preserves both occurrences when builders reuse one target specification', () => {
     const { ctx } = setup();
     const first = spawn(ctx, 'P1', bear());

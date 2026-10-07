@@ -767,6 +767,13 @@ export function* moveObject(
     (next as EngineCardObject).commanderSbaPending = true;
   }
 
+  // CR 400.7j permits other parts of this effect to find the new object only when the
+  // effect moved it to a public zone. This is deliberately scoped to its execution context.
+  ctx.resolutionObjectMoves?.set(
+    obj.id,
+    target.zone === 'hand' || target.zone === 'library' ? null : next.id,
+  );
+
   emit(ctx, 'zoneChange', {
     cardId: obj.cardId,
     name: target.faceDown ? 'Face-down permanent' : obj.name,

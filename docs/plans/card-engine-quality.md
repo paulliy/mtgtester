@@ -99,7 +99,10 @@ Document rechecking semantics for collective mana-value/name/controller constrai
 
 At resolution, compute CR 608.2b target-legality results once before effect execution
 and pass them through all effects. Distinguish initial legality, current object existence,
-and explicitly allowed cross-zone tracking. Do not re-evaluate an initial target condition
+and explicitly allowed cross-zone tracking. CR 400.7j permits other instructions of the
+same effect to find objects it moved to public zones; track those exact transitions, stop
+at hidden zones, and never recover a referent by physical card identity alone. Moves made
+outside that effect while a decision is suspended do not acquire this exception. Do not re-evaluate an initial target condition
 after an earlier instruction changes state. Preserve last-known source information.
 
 Graveyard contracts cover own/opponent/any scope, owner-slot dependencies, selector
@@ -363,6 +366,33 @@ and report the exact failed action, attempted recovery, and remaining work.
   amount independently of life-loss replacements. Seven independent ordering cases plus affected
   casting/payment/ward checks pass (45 tests); engine production/test types and focused lint pass.
   Aggregate rider effects on later payment affordability remain outstanding.
+- Alternative configuration/payment consolidation (`7449368`) shares modes, optional costs,
+  targets, X and commander tax across ordinary, energy, commander-free, nonmana, Overload,
+  Adventure and Omen announcements. The engine suite passes 2,214 tests. Costless spells retain
+  a distinct null mana cost. A Card Test Lab fixture that needs a zero-cost creature now declares
+  `{0}` explicitly (`c3f5415`); all 128 browser tests pass with successful pre-run capture and
+  final unchanged-source verification at that checkpoint. Later changes require new receipts.
+- Free-cast boundaries (`20bfd73`) require the actual zone incarnation and exact advertised
+  target responses; direct casting also rejects unsupported definitions before proposing them.
+- Confirmed spell-face errors (`73a7ba5`) contain Claim Territory's substitute search, Coil and
+  Catch's substitute bounce, and Zoological Study's omitted Adventure. Pinned Oracle hashes,
+  clause mappings and negative engine cases record the exclusions without completed-card claims.
+  The full Oracle audit reports 6,508 modeled definitions and zero interpreter errors; the
+  generated nonland inventory is 5,840. Interpretation/override snapshots reflect exactly these
+  three exclusions. Their new file is included in the audit ledger and all five evidence
+  generators' source bindings (`6549b81`). The 199 affected evidence/inventory tests pass.
+- Resolution references (`9f7eb08`, `24b6ecb`) follow exact transitions made by the same effect
+  to public zones (CR 400.7j), stop at hidden zones, and cannot recover an unrelated incarnation
+  through card identity. Ordinary and counted targets, explicit source identity, scoped values,
+  and stable player/stack references retain separate rules. Independent positive/negative
+  contracts plus delayed-trigger, lifetime, linked-exile, Arcane Denial and Cascade/Rebound
+  regressions pass. The broad engine run found only three stale face-support expectations;
+  those are corrected and separately verified by `6549b81`. A combined full run is pending.
+- Alternative source permissions (`f0ab0df`) reject mismatched face indexes and unsupported
+  source combinations, honor Adventure ownership, validate library permission even for an
+  alternative cost, and consume its type budget. Face timing uses the selected alternative
+  when the index is omitted. All 57 affected casting/permission tests pass, with production
+  and test typechecks and focused lint. Selected-face characteristics remain outstanding.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR

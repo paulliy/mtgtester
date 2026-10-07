@@ -125,10 +125,9 @@ const MODELED = [
   'Kiora, Behemoth Beckoner',
   'Mosswort Bridge',
   'Spinerock Knoll',
-  // Inc 18 â€” Adventure / Omen layouts (dual-face support).
-  'Bloomvine Regent // Claim Territory',
-  'Marang River Regent // Coil and Catch',
-  'Monster Manual // Zoological Study',
+  // The three formerly claimed Adventure/Omen cards are explicitly contained: their
+  // spell faces were substituted or omitted. Pinned negative evidence lives in
+  // unsupported-spell-faces.test.ts; support may return only with faithful face behavior.
   // Inc 19 â€” remaining bespoke Dragon cards (100% coverage milestone).
   'Iymrith, Desert Doom',
   "Lozhan, Dragons' Legacy",
