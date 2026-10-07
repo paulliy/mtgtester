@@ -1,3 +1,4 @@
+import { SPELL_FACE_SCENARIO_IDS, spellFaceScenario } from './spell-face-scenarios';
 import {
   COUNTER_OVERLOAD_SCENARIO_IDS,
   counterOverloadScenario,
@@ -5666,6 +5667,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'mosswort-viewer-land-play-limit',
   ...BUG_HUNT_SCENARIO_IDS,
   ...TARGET_UNTAP_SCENARIO_IDS,
+  ...SPELL_FACE_SCENARIO_IDS,
   ...COUNTER_OVERLOAD_SCENARIO_IDS,
   ...REVIEWED_BASELINE_SCENARIO_IDS,
   'swords-viewer-exile-and-gain-life',
@@ -5782,6 +5784,9 @@ export const CARD_TEST_SCENARIO_IDS = [
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  ...Object.fromEntries(
+    SPELL_FACE_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => spellFaceScenario(id, gameId)]),
+  ),
   ...Object.fromEntries(
     COUNTER_OVERLOAD_SCENARIO_IDS.map((id) => [
       id,

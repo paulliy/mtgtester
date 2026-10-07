@@ -653,6 +653,25 @@ and report the exact failed action, attempted recovery, and remaining work.
   contracts and 209 engine files / 2,739 tests pass with both type checks and lint. The full
   35,063-projection comparison preserves all final IR, 6,471 modeled definitions and 487 keys;
   both snapshot sets remain unchanged. These builders do not grant review certification.
+- Generic graveyard-return grammar carries the explicit owner through ordinary, modal, trigger
+  and activation target allocation. An independent ordinary cast previously omitted the opposing
+  graveyard for “a graveyard”; collective unspecified-owner returns also incorrectly claimed
+  support and now remain unsupported. All 109 focused contracts, test/tooling types and lint pass.
+  The complete 35,063-projection audit preserves every final IR and support status (6,471 modeled,
+  487 keys). No current printed card in the bulk population changes from this grammar correction.
+- Added ordinary-front and selected-half real Lab scenarios for all 27 supported pinned spell
+  faces. All 54 engine scenarios and four Lab-wiring checks pass. Independent expectations
+  include entry effects, targeted/collective changes, tokens, draws/discards, scry, and
+  Adventure exile/Omen shuffle. Browser verification and final type checks remain pending.
+- Counter/overload real viewer checkpoint at `68edecf`: all 158 actual Lab cases pass without
+  skips, retries or flaky outcomes, including eight own/opponent counter cases and six
+  normal/overload cases. All 158 archives are parsed, CRC/DEFLATE-checked and hashed against
+  181 source inputs; tested tree `688c70da3bc7bbc38d735c30e5b92649b09db2e1`, report SHA-256
+  `d4966636197d33f7fa2b6c5b7d5e16991884ec5327387440d4b424736a910f19`.
+  An earlier run retains 153 passes, one grouped-land-chip assertion failure and four serial
+  skips. The corrected assertion counts actual server objects. Subsequent engine and face-scenario
+  additions require a fresh combined receipt. The interrupted effect-builder card-gate run
+  ended without a result; it is not a passing verification record.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
