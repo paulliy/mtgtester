@@ -472,6 +472,23 @@ and report the exact failed action, attempted recovery, and remaining work.
   cases because those frozen lists were incomplete. After closure discovery added the missing
   inputs, all 162 evidence-input contracts pass. This repaired checkpoint still needs a fresh
   complete-suite run before final roadmap sign-off.
+- Changing-resource payment uses isolated actual activation replay for fixed-production mana
+  sources without strategic cost decisions. The search discovers newly affordable activations,
+  recomputes life/counter resources, tries other sources and orders, and preserves actual infect,
+  lifelink and deferred state-based-action semantics. Target life taxes and alternative energy
+  payments follow mana activation. Prechecks use the joint witness rather than separate mana
+  affordability. State-dependent production, strategic activation continuations and exhausted
+  search budgets remain explicit unsupported witness scopes; they are not successful proofs or
+  ordinary unpayable results. The complete engine suite passes 199 files / 2,334 tests with
+  test/tooling types and focused lint. Wider production/continuation scopes remain outstanding.
+- Exhaustive structural IR field tables now run at final-definition and partial-override
+  authoring boundaries, not only in dependency inventory. Unknown fields across abilities,
+  effects, targets, values, selectors, conditions, costs, alternatives and statics cannot execute.
+  Primitive leaves count toward the graph budget. All 94 focused contracts and the complete
+  engine suite (199 files / 2,336 tests) pass with test/tooling types and focused lint. The full
+  bulk retains 6,508 modeled definitions and 484 dependency keys without unexpected containment.
+- The expanded card gate at `ee2067d` passes 76 files / 1,527 tests. Subsequent payment and
+  field-boundary changes require combined verification; earlier receipts are checkpoint evidence.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR

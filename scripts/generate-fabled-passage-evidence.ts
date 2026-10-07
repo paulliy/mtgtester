@@ -171,6 +171,8 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/mana-riders.ts',
   'packages/engine/src/cards/overload.ts',
   'packages/engine/src/casting/permissions.ts',
+  'packages/engine/src/mana/stateful-payment.ts',
+  'packages/engine/src/cards/capabilities.ts',
 ] as const;
 
 const TRACE_PATH =
