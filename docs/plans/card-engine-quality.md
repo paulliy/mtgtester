@@ -663,6 +663,15 @@ and report the exact failed action, attempted recovery, and remaining work.
   faces. All 54 engine scenarios and four Lab-wiring checks pass. Independent expectations
   include entry effects, targeted/collective changes, tokens, draws/discards, scry, and
   Adventure exile/Omen shuffle. Browser verification and final type checks remain pending.
+- Counter/overload real viewer checkpoint at `68edecf`: all 158 actual Lab cases pass without
+  skips, retries or flaky outcomes, including eight own/opponent counter cases and six
+  normal/overload cases. All 158 archives are parsed, CRC/DEFLATE-checked and hashed against
+  181 source inputs; tested tree `688c70da3bc7bbc38d735c30e5b92649b09db2e1`, report SHA-256
+  `d4966636197d33f7fa2b6c5b7d5e16991884ec5327387440d4b424736a910f19`.
+  An earlier run retains 153 passes, one grouped-land-chip assertion failure and four serial
+  skips. The corrected assertion counts actual server objects. Subsequent engine and face-scenario
+  additions require a fresh combined receipt. The interrupted effect-builder card-gate run
+  ended without a result; it is not a passing verification record.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
