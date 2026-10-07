@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import { cardAuthoringPlugin } from './scripts/eslint/card-authoring.js';
+import { castingBoundaryPlugin } from './scripts/eslint/casting-boundary.js';
 import tseslint from 'typescript-eslint';
 import vue from 'eslint-plugin-vue';
 
@@ -63,6 +64,11 @@ export default tseslint.config(
       // Phase 0 scaffolding uses placeholder consts/exports; loosen where noise is expected.
       '@typescript-eslint/no-empty-object-type': 'off',
     },
+  },
+  {
+    files: ['packages/engine/src/**/*.ts'],
+    plugins: { 'casting-boundary': castingBoundaryPlugin },
+    rules: { 'casting-boundary/constructors': 'error' },
   },
   {
     // Authored card overrides go through the shared builders (`cards/templates.ts`). The point of

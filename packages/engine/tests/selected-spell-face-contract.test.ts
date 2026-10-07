@@ -445,65 +445,77 @@ describe('independent selected spell face contracts', () => {
     expect(state.ctx.state).toEqual(before.state);
   });
 
-  it('face-copy retains original spell characteristics after a differently colored spell copies it', () => {
-    const state = setup();
-    const target = spawn(
-      state.ctx,
-      'P2',
-      oracle({
-        name: 'Copy target',
-        typeLine: 'Creature',
-        manaCost: '{3}',
-        power: '3',
-        toughness: '5',
-      }),
-    );
-    const original = state.cast(new Map([[0, target.id]]));
-    const copyingCard = conjure(
-      state.ctx,
-      'P1',
-      oracle({
-        name: 'Green copier',
-        typeLine: 'Instant',
-        manaCost: '{0}',
-        colors: ['G'],
-        oracleText: 'You gain 1 life.',
-      }),
-      'hand',
-    );
-    state.ctx.defs.set(copyingCard.oracleId, {
-      ...state.ctx.defs.get(copyingCard.oracleId)!,
-      spellAbility: {
-        kind: 'spell',
-        targets: [{ kind: 'spell' }],
-        effects: [{ op: 'copyTargetSpell', target: 0 }],
-      },
-    });
-    const option = computePriorityOptions(state.ctx, state.player).find(
-      (option) => (option.payload as { objectId?: string }).objectId === copyingCard.id,
-    )!;
-    pump(
-      applyPriorityAction(state.ctx, state.player, option.payload as PriorityActionPayload, {
-        index: 0,
-        targets: new Map([[0, original.id]]),
-      }),
-    );
-    pump(resolveTopOfStack(state.ctx));
-    const copy = state.ctx.state.stack.at(-1)!;
-    expect(copy.card).toBeNull();
-    expect(isCreatureSpell(state.ctx, copy)).toBe(false);
-    expect(spellDefinitionOf(state.ctx, copy).colors).toEqual(['R']);
-    expect(
-      spellMatchesSelector(state.ctx, copy, { kind: 'subtype', value: 'Adventure' }, 'P2'),
-    ).toBe(true);
-    state.ctx.defs.set(target.oracleId, {
-      ...state.ctx.defs.get(target.oracleId)!,
-      protectionFrom: ['G'],
-    });
-    pump(resolveTopOfStack(state.ctx));
-    expect(target.damageMarked).toBe(2);
-    expect(state.ctx.state.stack).toEqual([original]);
-  });
+  it.each(['copyTargetSpell', 'copyEachTargetedSpell'] as const)(
+    'face-copy %s retains original spell characteristics after a differently colored spell copies it',
+    (op) => {
+      const state = setup();
+      const target = spawn(
+        state.ctx,
+        'P2',
+        oracle({
+          name: 'Copy target',
+          typeLine: 'Creature',
+          manaCost: '{3}',
+          power: '3',
+          toughness: '5',
+        }),
+      );
+      const original = state.cast(new Map([[0, target.id]]));
+      const copyingCard = conjure(
+        state.ctx,
+        'P1',
+        oracle({
+          name: 'Green copier',
+          typeLine: 'Instant',
+          manaCost: '{0}',
+          colors: ['G'],
+          oracleText: 'You gain 1 life.',
+        }),
+        'hand',
+      );
+      state.ctx.defs.set(copyingCard.oracleId, {
+        ...state.ctx.defs.get(copyingCard.oracleId)!,
+        spellAbility: {
+          kind: 'spell',
+          targets: [
+            {
+              kind: 'spell',
+              ...(op === 'copyEachTargetedSpell' ? { count: { min: 1, max: 1 } } : {}),
+            },
+          ],
+          effects: [op === 'copyEachTargetedSpell' ? { op, targetSlot: 0 } : { op, target: 0 }],
+        },
+      });
+      const option = computePriorityOptions(state.ctx, state.player).find(
+        (option) => (option.payload as { objectId?: string }).objectId === copyingCard.id,
+      )!;
+      pump(
+        applyPriorityAction(state.ctx, state.player, option.payload as PriorityActionPayload, {
+          index: 0,
+          targets: op === 'copyEachTargetedSpell' ? new Map() : new Map([[0, original.id]]),
+        }),
+      );
+      pump(resolveTopOfStack(state.ctx));
+      const copy = state.ctx.state.stack.at(-1)!;
+      expect(copy.card).toBeNull();
+      expect(copy.sourceCardId).toBe(copy.id);
+      expect(copy.sourceOracleId).toBe(original.sourceOracleId);
+      expect(copy.sourceColors).toEqual(['R']);
+      expect(copy.isCommanderCast).toBe(false);
+      expect(isCreatureSpell(state.ctx, copy)).toBe(false);
+      expect(spellDefinitionOf(state.ctx, copy).colors).toEqual(['R']);
+      expect(
+        spellMatchesSelector(state.ctx, copy, { kind: 'subtype', value: 'Adventure' }, 'P2'),
+      ).toBe(true);
+      state.ctx.defs.set(target.oracleId, {
+        ...state.ctx.defs.get(target.oracleId)!,
+        protectionFrom: ['G'],
+      });
+      pump(resolveTopOfStack(state.ctx));
+      expect(target.damageMarked).toBe(2);
+      expect(state.ctx.state.stack).toEqual([original]);
+    },
+  );
 
   it('profane-insight-normal-cast resolves its draw and life loss, then permits the front from exile', () => {
     const input = pinned.cards.find((row) => row.card.name.startsWith('Foulmire Knight'))!.card;
