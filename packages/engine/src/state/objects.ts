@@ -1508,17 +1508,27 @@ export function queueTriggersForEvent(
       }
     }
   }
+  const firedDelayedIds = new Set<string>();
   for (const delayed of ctx.state.delayedTriggers) {
     if (delayed.when !== when) continue;
     const matchingSubject =
       delayed.targetId !== undefined
-        ? subjects.find((s) => s.permanent.cardId === delayed.targetId)
+        ? subjects.find(
+            (s) =>
+              s.permanent.cardId === delayed.targetId &&
+              (delayed.targetObjectId === undefined || s.permanent.id === delayed.targetObjectId),
+          )
         : subjects[0];
 
     if (matchingSubject === undefined) continue;
 
     const scope: TriggerScope = {
       ...(matchingSubject.amount !== undefined ? { damageDealt: matchingSubject.amount } : {}),
+      eventObjectId: matchingSubject.permanent.id,
+      ...(delayed.affectedPlayerId === undefined
+        ? {}
+        : { eventPlayerId: delayed.affectedPlayerId }),
+      ...(delayed.targetObjectId === undefined ? {} : { triggerObjectId: delayed.targetObjectId }),
     };
 
     ctx.state.pendingTriggers.push({
@@ -1531,7 +1541,12 @@ export function queueTriggersForEvent(
       ...(Object.keys(scope).length > 0 ? { scope } : {}),
     });
     debug(ctx, 'stack', `delayed trigger queued: ${delayed.id}`);
+    if (delayed.expiry === 'onFire') firedDelayedIds.add(delayed.id);
   }
+  if (firedDelayedIds.size > 0)
+    ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter(
+      (delayed) => !firedDelayedIds.has(delayed.id),
+    );
 }
 
 /**

@@ -1,4 +1,4 @@
-import { validateTriggerHead } from './trigger-contracts';
+import { assertDelayedTriggerEvent, validateTriggerHead } from './trigger-contracts';
 import { supportsAdditionalXAnnouncement } from './cost-contracts';
 import { spellFaceOf } from './spell-faces';
 import type { AlternativeCast, DynamicManaKind } from './ability';
@@ -290,6 +290,18 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   }
   if (value === null || typeof value !== 'object') return;
   const record = value as Record<string, unknown>;
+  if (record['op'] === 'registerDelayedTrigger') {
+    try {
+      assertDelayedTriggerEvent(record['when'] as import('./ability').TriggerWhen);
+    } catch (error) {
+      issues.push({
+        path: `${path}.when`,
+        message: error instanceof Error ? error.message : 'invalid delayed event',
+      });
+    }
+    if (!['endStep', 'cleanup', 'onFire'].includes(record['expiry'] as string))
+      issues.push({ path: `${path}.expiry`, message: 'invalid delayed trigger expiry' });
+  }
   if (
     record['dynamic'] !== undefined &&
     (typeof record['dynamic'] !== 'string' || !Object.hasOwn(dynamicManaKinds, record['dynamic']))
