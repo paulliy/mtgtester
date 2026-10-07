@@ -1,3 +1,4 @@
+import { castingPreviewContext } from '../casting/preview';
 import { legalTargetMenus } from '../targets/announcement';
 import { planSpellPayment } from '../mana/spell-payment';
 import { targetCandidates, targetIsLegal } from '../targets/legality';
@@ -572,6 +573,9 @@ export function computePriorityOptions(
     fromGraveyard = false,
   ): void => {
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+    let paymentCtx = ctx;
+    let paymentPlayer = player;
+    let paymentSources = sources;
     const jointPayment = (
       mana: ParsedManaCost,
       costs: readonly AbilityCost[],
@@ -579,13 +583,13 @@ export function computePriorityOptions(
       targetLifeTax = 0,
       energyAlternativeCost = 0,
     ) =>
-      planSpellPayment(ctx, player, {
+      planSpellPayment(paymentCtx, paymentPlayer, {
         mana,
         costs,
         sourceCardId: obj.cardId,
         sourceOracleId: obj.oracleId,
         sourceIsCommander: obj.isCommander,
-        sources,
+        sources: paymentSources,
         x,
         targetLifeTax,
         energyAlternativeCost,
@@ -718,8 +722,14 @@ export function computePriorityOptions(
       !canPlayFromZone(ctx, player.id, obj, 'graveyard')
     )
       return;
+    const castCtx = castingPreviewContext(ctx, obj, player.id);
+    const castPlayer = castCtx.state.players.find((entry) => entry.id === player.id)!;
+    const castSources = manaSourcesFor(castCtx, player.id);
+    paymentCtx = castCtx;
+    paymentPlayer = castPlayer;
+    paymentSources = castSources;
     const additionalManaCost = manaPortionOf(spellAdditionalCosts);
-    const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
+    const reduction = costReductionFor(castCtx, castPlayer.id, obj.oracleId, obj.cardId);
     const unreduced = reboundCast ? emptyCost() : addGeneric(def.manaCost, tax);
     // CR 601.2f: reductions apply to the TOTAL cost — the mana cost with {X} given a value, plus
     // every additional cost (kicker, mode costs) — so a reduction can pay for X's share or a
@@ -735,7 +745,7 @@ export function computePriorityOptions(
     // the contract: an action offered here must be applicable with no further legality check.
     // Restricted mana ("spend only to cast a Dragon spell") may or may not pay for THIS card,
     // so affordability is asked with the purpose attached — see `mana/cost.ts::ManaAllowance`.
-    const allows = allowanceFor(ctx, player.id, {
+    const allows = allowanceFor(castCtx, castPlayer.id, {
       kind: 'castSpell',
       oracleId: obj.oracleId,
       isCommander: obj.isCommander,
@@ -746,16 +756,16 @@ export function computePriorityOptions(
     const xChoices: number[] = [];
     if (xSymbols === 0 && !announcesAdditionalX) xChoices.push(0);
     else if (announcesAdditionalX) {
-      for (let x = 0; x <= player.life; x++) xChoices.push(x);
+      for (let x = 0; x <= castPlayer.life; x++) xChoices.push(x);
     } else {
       for (let x = 0; ; x++) {
         if (
           !canPay(
             reduce(addManaCosts(costWithX(x), additionalManaCost)),
-            player.manaEntries,
-            sources,
+            castPlayer.manaEntries,
+            castSources,
             allows,
-            player.life,
+            castPlayer.life,
           )
         )
           break;
@@ -770,12 +780,13 @@ export function computePriorityOptions(
     // single iteration when `modes` is absent.
     const selections = modalSelections(
       def,
-      maxChoicesFor(ctx, def, { cardId: obj.cardId, controllerId: player.id }),
+      maxChoicesFor(castCtx, def, { cardId: obj.cardId, controllerId: castPlayer.id }),
     );
 
     for (const x of xChoices) {
       const cost = costWithX(x);
-      if (!canPay(reduce(cost), player.manaEntries, sources, allows, player.life)) continue;
+      if (!canPay(reduce(cost), castPlayer.manaEntries, castSources, allows, castPlayer.life))
+        continue;
 
       for (const selectedModes of selections) {
         const modeCosts = modeAdditionalCosts(def, selectedModes);
@@ -789,7 +800,15 @@ export function computePriorityOptions(
               manaPortionOf([...spellAdditionalCosts, ...modeCosts]),
             );
             for (let i = 0; i < count; i++) prospective = addManaCosts(prospective, optional.cost);
-            if (!canPay(reduce(prospective), player.manaEntries, sources, allows, player.life))
+            if (
+              !canPay(
+                reduce(prospective),
+                castPlayer.manaEntries,
+                castSources,
+                allows,
+                castPlayer.life,
+              )
+            )
               break;
             optionalCounts.push(count);
           }
@@ -815,16 +834,19 @@ export function computePriorityOptions(
           const payment = jointPayment(selectionCost, additionalCosts, x);
           if (payment === null) continue;
           const targetMenus = legalTargetMenus(
-            ctx,
+            castCtx,
             def.spellAbility ?? { kind: 'spell', targets: [], effects: [] },
-            { controllerId: player.id, sourceCardId: obj.cardId, sourceColors: def.colors, x },
+            { controllerId: castPlayer.id, sourceCardId: obj.cardId, sourceColors: def.colors, x },
             selectedModeTargetSlots(def, selectedModes),
             (ordinary, counted) =>
               jointlyPayable(
                 selectionCost,
                 additionalCosts,
                 x,
-                targetLifeTaxFor(ctx, player.id, [...ordinary, ...Object.values(counted).flat()]),
+                targetLifeTaxFor(castCtx, castPlayer.id, [
+                  ...ordinary,
+                  ...Object.values(counted).flat(),
+                ]),
               ),
           );
           for (const payableTargets of targetMenus) {
@@ -875,7 +897,14 @@ export function computePriorityOptions(
                       ? 'exile'
                       : 'hand',
                 manaCost: describeManaCost(selectionCost),
-                ...paymentPreview(ctx, player, selectionCost, sources, allows, payment.manaPlan),
+                ...paymentPreview(
+                  castCtx,
+                  castPlayer,
+                  selectionCost,
+                  castSources,
+                  allows,
+                  payment.manaPlan,
+                ),
                 ...(tax > 0 ? { commanderTax: tax } : {}),
                 ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
                 ...(modeLabel !== undefined ? { modeLabel } : {}),
@@ -891,9 +920,9 @@ export function computePriorityOptions(
         }
       }
     }
-    const energyAlternativeCost = ctx.state.battlefield
-      .filter((perm) => perm.controllerId === player.id)
-      .map((perm) => getDefByOracleId(ctx, perm.oracleId, perm.name).energyAlternativeCost)
+    const energyAlternativeCost = castCtx.state.battlefield
+      .filter((perm) => perm.controllerId === castPlayer.id)
+      .map((perm) => getDefByOracleId(castCtx, perm.oracleId, perm.name).energyAlternativeCost)
       .find((amount): amount is number => amount !== undefined);
     // Lands are permanents, but they are played rather than cast as permanent spells, so Nissa's
     // alternate energy cost must never be offered for a land card.
@@ -903,12 +932,12 @@ export function computePriorityOptions(
     if (
       isPermanentSpell &&
       energyAlternativeCost !== undefined &&
-      player.energy >= energyAlternativeCost &&
+      castPlayer.energy >= energyAlternativeCost &&
       !fromExile &&
       !fromGraveyard &&
       jointlyPayable(reduce(additionalManaCost), spellAdditionalCosts, 0, 0, energyAlternativeCost)
     ) {
-      const targets = computeCastTargets(ctx, def, player.id);
+      const targets = computeCastTargets(castCtx, def, castPlayer.id);
       if (targets !== null) {
         const option: EngineActionOption = {
           type: 'castSpell',
@@ -934,10 +963,12 @@ export function computePriorityOptions(
       def.commanderFreeCast === true &&
       !fromCommand &&
       !fromGraveyard &&
-      ctx.state.battlefield.some((perm) => perm.controllerId === player.id && perm.isCommander) &&
+      castCtx.state.battlefield.some(
+        (perm) => perm.controllerId === castPlayer.id && perm.isCommander,
+      ) &&
       jointlyPayable(reduce(additionalManaCost), spellAdditionalCosts)
     ) {
-      const targets = computeCastTargets(ctx, def, player.id);
+      const targets = computeCastTargets(castCtx, def, castPlayer.id);
       if (targets !== null) {
         options.push({
           type: 'castSpell',
@@ -1010,13 +1041,13 @@ export function computePriorityOptions(
           const cost = applyRed(addManaCosts(alt.manaCost, manaPortionOf(alternativeCosts)));
           if (
             (alt.condition === undefined ||
-              evaluateCondition(ctx, alt.condition, {
+              evaluateCondition(castCtx, alt.condition, {
                 cardId: obj.cardId,
-                controllerId: player.id,
+                controllerId: castPlayer.id,
               })) &&
             jointlyPayable(cost, alternativeCosts)
           ) {
-            const targets = computeCastTargets(ctx, def, player.id);
+            const targets = computeCastTargets(castCtx, def, castPlayer.id);
             if (targets !== null) {
               options.push({
                 type: 'castSpell',
@@ -1037,10 +1068,10 @@ export function computePriorityOptions(
                   sourceZone: fromCommand ? 'command' : fromGraveyard ? 'graveyard' : 'hand',
                   manaCost: fromGraveyard ? describeManaCost(cost) : 'free',
                   ...paymentPreview(
-                    ctx,
-                    player,
+                    castCtx,
+                    castPlayer,
                     cost,
-                    sources,
+                    castSources,
                     allows,
                     jointPayment(cost, alternativeCosts)?.manaPlan,
                   ),
@@ -1074,10 +1105,10 @@ export function computePriorityOptions(
                 sourceZone: fromCommand ? 'command' : 'hand',
                 manaCost: describeManaCost(cost),
                 ...paymentPreview(
-                  ctx,
-                  player,
+                  castCtx,
+                  castPlayer,
                   cost,
-                  sources,
+                  castSources,
                   allows,
                   jointPayment(cost, spellAdditionalCosts)?.manaPlan,
                 ),
@@ -1113,10 +1144,10 @@ export function computePriorityOptions(
                 sourceZone: 'hand',
                 manaCost: describeManaCost(cost),
                 ...paymentPreview(
-                  ctx,
-                  player,
+                  castCtx,
+                  castPlayer,
                   cost,
-                  sources,
+                  castSources,
                   allows,
                   jointPayment(cost, spellAdditionalCosts)?.manaPlan,
                 ),

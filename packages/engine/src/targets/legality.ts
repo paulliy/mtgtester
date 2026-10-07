@@ -136,6 +136,8 @@ export function targetIsLegal(
   ) {
     const entry = ctx.state.stack.find((entry) => entry.id === candidate);
     if (entry !== undefined) {
+      // CR 115.5: a proposed spell cannot target itself during announcement.
+      if (entry.kind === 'spell' && entry.sourceCardId === context.sourceCardId) return false;
       if (!matchesController(entry.controllerId)) return false;
       if (kind !== 'stackObject' && entry.kind !== 'spell') return false;
       if (kind === 'noncreatureSpell' && isCreatureSpell(ctx, entry)) return false;

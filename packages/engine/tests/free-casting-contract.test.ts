@@ -38,6 +38,25 @@ function setup(costs: AbilityCost[] = [], changes: Partial<CardDefinition> = {})
 }
 
 describe('shared free-casting contracts', () => {
+  it('without-mana-cost command-zone casts still pay commander tax', () => {
+    const { ctx, player, card } = setup();
+    ctx.state.exile.splice(ctx.state.exile.indexOf(card), 1);
+    card.zone = 'command';
+    card.isCommander = true;
+    player.commandZone.push(card);
+    player.commanderCastCount[card.cardId] = 2;
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P1', forest());
+    expect(freeCardIsCastable(ctx, card, 'P1')).toBe(false);
+    spawn(ctx, 'P1', forest());
+    expect(freeCardIsCastable(ctx, card, 'P1')).toBe(true);
+    pump(resolveFreeCard(ctx, card, 'P1'));
+    expect(player.commanderCastCount[card.cardId]).toBe(3);
+    expect(ctx.state.stack[0]?.triggerScope?.manaSpent).toBe(4);
+    expect(
+      ctx.state.eventLog.filter((event) => event.type === 'castSpell')[0]?.payload['commanderTax'],
+    ).toBe(4);
+  });
+
   it('a missing printed mana cost can use a without-mana-cost alternative', () => {
     const { ctx, card } = setup([], { manaCost: null });
     expect(freeCardIsCastable(ctx, card, 'P1')).toBe(true);

@@ -1,3 +1,4 @@
+import { castingPreviewContext } from './preview';
 import { countTargetsCanComplete } from '../targets/announcement';
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import {
@@ -12,7 +13,7 @@ import {
 } from '../actions/legal';
 import type { AbilityCost } from '../cards/ability';
 import type { GameGen } from '../decisions';
-import { subtractColored, subtractGeneric } from '../mana/cost';
+import { addGeneric, subtractColored, subtractGeneric } from '../mana/cost';
 import { planSpellPayment } from '../mana/spell-payment';
 import { getDefByOracleId, castingSpellsBlockedFor } from '../state/queries';
 import type { EngineCardObject, GameContext } from '../state/types';
@@ -40,11 +41,13 @@ function legalFreeCastSelections(
     castingSpellsBlockedFor(ctx, controllerId)
   )
     return [];
+  const preview = castingPreviewContext(ctx, card, controllerId);
+  const previewPlayer = preview.state.players.find((candidate) => candidate.id === controllerId)!;
   const selections: FreeCastSelection[] = [];
-  const reduction = costReductionFor(ctx, controllerId, card.oracleId, card.cardId);
+  const reduction = costReductionFor(preview, controllerId, card.oracleId, card.cardId);
   for (const modes of modalSelections(
     def,
-    maxChoicesFor(ctx, def, { cardId: card.cardId, controllerId }),
+    maxChoicesFor(preview, def, { cardId: card.cardId, controllerId }),
   )) {
     const active = selectedModeTargetSlots(def, modes);
     let targetAssignments = [new Map<number, ObjectId>()];
@@ -55,7 +58,7 @@ function legalFreeCastSelections(
         const earlier: ObjectId[] = [];
         for (const [index, id] of targets) earlier[index] = id;
         return computeTargetOptions(
-          ctx,
+          preview,
           spec,
           controllerId,
           def.colors,
@@ -77,7 +80,9 @@ function legalFreeCastSelections(
       ];
       for (let i = 0; i < optionalCostCount; i++)
         costs.push({ kind: 'mana', cost: optional!.cost });
-      let mana = manaPortionOf(costs);
+      const commanderTax =
+        card.zone === 'command' ? 2 * (previewPlayer.commanderCastCount[card.cardId] ?? 0) : 0;
+      let mana = addGeneric(manaPortionOf(costs), commanderTax);
       if (reduction.colored !== undefined) mana = subtractColored(mana, reduction.colored);
       mana = subtractGeneric(mana, reduction.generic);
       for (const targets of targetAssignments) {
@@ -85,7 +90,7 @@ function legalFreeCastSelections(
         for (const [slot, id] of targets) ordinary[slot] = id;
         if (
           countTargetsCanComplete(
-            ctx,
+            preview,
             def.spellAbility ?? { kind: 'spell', targets: [], effects: [] },
             {
               controllerId,
@@ -97,14 +102,14 @@ function legalFreeCastSelections(
             {},
             active,
             (counted) =>
-              planSpellPayment(ctx, player, {
+              planSpellPayment(preview, previewPlayer, {
                 mana,
                 costs,
                 sourceCardId: card.cardId,
                 sourceOracleId: card.oracleId,
                 sourceIsCommander: card.isCommander,
                 x: 0,
-                targetLifeTax: targetLifeTaxFor(ctx, controllerId, [
+                targetLifeTax: targetLifeTaxFor(preview, controllerId, [
                   ...targets.values(),
                   ...Object.values(counted).flat(),
                 ]),
