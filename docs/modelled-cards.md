@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 5840 modeled non-land cards
+**Total**: 5808 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -130,7 +130,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Ambush Paratrooper
 - Ambush Party
 - Ambush Viper
-- Amethyst Dragon // Explosive Crystal
 - Amphin Cutthroat
 - Amphin Pathmage
 - Ampryn Tactician
@@ -175,7 +174,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Angler Turtle
 - Angry Rabble
 - Anguished Unmaking
-- Animating Faerie // Bring to Life
 - Ankle Biter
 - Ankle Shanker
 - Annoyed Altisaur
@@ -197,7 +195,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Applied Biomancy
 - Apprentice Wizard
 - April, Reporter of the Weird
-- Aquatic Alchemist // Bubble Up
 - Aquitect's Defenses
 - Aquus Steed
 - Arachnoid
@@ -233,7 +230,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Archweaver
 - Ardent Elementalist
 - Ardent Militia
-- Ardenvale Tactician // Dizzying Swoop
 - Argentum Armor
 - Argivian Archaeologist
 - Argivian Find
@@ -425,7 +421,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Beacon of Creation
 - Beacon of Destruction
 - Beacon of Unrest
-- Beanstalk Wurm // Plant Beans
 - Bear Cub
 - Bear's Companion
 - Beast Attack
@@ -445,7 +440,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Beledros Witherbloom
 - Belle of the Brawl
 - Belligerent Sliver
-- Bellowing Bruiser // Beat a Path
 - Bellowing Crier
 - Bellows Lizard
 - Benalish Heralds
@@ -454,7 +448,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Benalish Marshal
 - Beneath the Sands
 - Benthic Giant
-- Beorn, Reluctant Host // Till and Tend
 - Bequeathal
 - Beregond of the Guard
 - Berserkers' Onslaught
@@ -471,7 +464,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Big Play
 - Big Score
 - Bilbo Baggins, Burglar // Take a Glance
-- Bilbo, Luckwearer // Burglar's Plot
 - Bilbo's Deadly Slice
 - Bile Urchin
 - Biogenic Ooze
@@ -581,7 +573,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Boar-q-pine
 - Boarding Party
 - Boartusk Liege
-- Bofur, Reliable Guardian // Concerted Care
 - Bog Imp
 - Bog Initiate
 - Bog Witch
@@ -650,7 +641,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Brainstone
 - Brainstorm
 - Brainsurge
-- Bramble Familiar // Fetch Quest
 - Bramblesnap
 - Brambleweft Behemoth
 - Bramblewood Paragon
@@ -946,7 +936,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Collector's Vault
 - Colorful Feiyi Sparrow
 - Colossadactyl
-- Colossal Badger // Dig Deep
 - Colossal Dreadmaw
 - Colossal Majesty
 - Colossal Might
@@ -967,7 +956,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Compassionate Healer
 - Composite Golem
 - Compulsion
-- Conceited Witch // Price of Beauty
 - Concentrate
 - Concentrated Fire
 - Conch Horn
@@ -1085,7 +1073,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Crystal Ball
 - Crystal Carapace
 - Crystal Chimes
-- Crystal Dragon // Rob the Hoard
 - Crystal Seer
 - Crystal Slipper
 - Crystalline Armor
@@ -1101,6 +1088,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Curio Vendor
 - Curiosity Crafter
 - Curious Altisaur
+- Curious Pair // Treats to Share
 - Curse of Chains
 - Cursebreak
 - Cursed Minotaur
@@ -1208,7 +1196,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Deathsprout
 - Debilitating Injury
 - Debris Beetle
-- Decadent Dragon // Expensive Taste
 - Decanter of Endless Water
 - Decisive Denial
 - Decoction Module
@@ -1289,7 +1276,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Dire Wolf Prowler
 - Diregraf Ghoul
 - Diresight
-- Dirgur Island Dragon // Skimming Strike
 - Disallow
 - Disciple of Bolas
 - Disciple of Grace
@@ -1528,10 +1514,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Elvish Warrior
 - Ember Shot
 - Ember-Eye Wolf
+- Embereth Shieldbreaker // Battle Display
 - Emblem of the Warmind
 - Embodiment of Spring
 - Embraal Gear-Smasher
-- Emerald Dragon // Dissonant Wave
 - Emerge from the Cocoon
 - Emergency Weld
 - Emeria Angel
@@ -1605,7 +1591,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Ethersworn Adjudicator
 - Ethersworn Sphinx
 - Etherwrought Page
-- Ettercap // Web Shot
 - Eumidian Terrabotanist
 - Eureka Moment
 - Evacuation
@@ -1649,7 +1634,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Facevaulter
 - Fade into Antiquity
 - Fae Flight
-- Fae of Wishes // Granted
 - Faeburrow Elder
 - Faerie Formation
 - Faerie Guidemother // Gift of the Fae
@@ -1679,7 +1663,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Famine
 - Fanatical Fever
 - Fanatical Strength
-- Fang Dragon // Forktail Sweep
 - Fang of Shigeki
 - Fangren Firstborn
 - Fangren Hunter
@@ -1731,7 +1714,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Feral Shadow
 - Ferocious Charge
 - Ferocious Pup
-- Ferocious Werefox // Guard Change
 - Ferocious Zheng
 - Ferocity of the Wilds
 - Ferrovore
@@ -1964,6 +1946,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Galvanizing Sawship
 - Game-Trail Changeling
 - Gangly Stompling
+- Garenbrig Carver // Shield's Might
 - Garrison Cat
 - Garruk, Primal Hunter
 - Garruk's Companion
@@ -2153,7 +2136,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Goliath Beetle
 - Goliath Sphinx
 - Goliath Spider
-- Gollum, Silent Slinker // Meager Meal
 - Goobbue Gardener
 - Gore Swine
 - Goreclaw, Terror of Qal Sisma
@@ -2187,7 +2169,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Great Oak Guardian
 - Great Sable Stag
 - Great Teacher's Decree
-- Great Ugly-Looking Goblin // Clap! Snap!
 - Great Whale
 - Great-Horn Krushok
 - Greataxe
@@ -2450,7 +2431,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Hydrolash
 - Hydrosurge
 - Hyena Pack
-- Hypnotic Sprite // Mesmeric Glare
 - Hyrax Tower Scout
 - Hysterical Blindness
 - Icatian Crier
@@ -2660,7 +2640,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Karoo Meerkat
 - Karrthus, Tyrant of Jund
 - Karstoderm
-- Karvanista, Loyal Lupari // Lupari Shield
 - Kasimir the Lone Wolf
 - Katara, Heroic Healer
 - Kathari Screecher
@@ -2789,7 +2768,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Lady Orca
 - Lagac Lizard
 - Lagonna-Band Elder
-- Lake-town Mariners // Gone Fishing
 - Lakeshore Apothecary
 - Lampad of Death's Vigil
 - Lance
@@ -3109,7 +3087,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mentor of the Meek
 - Mer-Ek Nightblade
 - Merchant of Secrets
-- Merchant of the Vale // Haggle
 - Merciless Enforcers
 - Merciless Eviction
 - Mercurial Geists
@@ -3161,6 +3138,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mindful Biomancer
 - Mindspring Merfolk
 - Mindstatic
+- Minecart Daredevil // Ride the Rails
 - Miner's Bane
 - Mineshaft Spider
 - Minotaur Abomination
@@ -3641,7 +3619,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Pia Nalaar, Chief Mechanic
 - Pianna, Nomad Captain
 - Pick Your Poison
-- Picklock Prankster // Free the Fae
 - Piety
 - Piggy Bank
 - Pile On
@@ -3693,7 +3670,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Poised Practitioner
 - Poison the Blade
 - Poison-Tip Archer
-- Pollen-Shield Hare // Hare Raising
 - Pollenbright Druid
 - Pollenbright Wings
 - Polluted Dead
@@ -4094,7 +4070,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Rootwater Hunter
 - Rorix Bladewing
 - Rosemane Centaur
-- Rosethorn Acolyte // Seasonal Ritual
 - Rot Shambler
 - Rotlung Reanimator
 - Rotted Hulk
@@ -4288,7 +4263,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Scythe Leopard
 - Sea Eagle
 - Sea Gate Banneret
-- Sea Hag // Aquatic Ingress
 - Sea Legs
 - Sea Scryer
 - Sea Spirit
@@ -4414,6 +4388,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sheltering Boughs
 - Sheltering Light
 - Sheoldred's Edict
+- Shepherd of the Flock // Usher to Safety
 - Shepherd of the Lost
 - Shepherding Spirits
 - Shield Mate
@@ -4493,6 +4468,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Silverchase Fox
 - Silverclaw Griffin
 - Silvercoat Lion
+- Silverflame Squire // On Alert
 - Silvergill Peddler
 - Silverglade Elemental
 - Silverglade Pathfinder
@@ -4595,7 +4571,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Smaug, the Great Calamity // Spew Flame
 - Smelt
 - Smiting Helix
-- Smitten Swordmaster // Curry Favor
 - Smokespew Invoker
 - Smoldering Efreet
 - Smother
@@ -4805,7 +4780,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Stormfront Pegasus
 - Stormkeld Prowler
 - Stormrider Spirit
-- Stormshriek Feral // Flush Out
 - Stormwatch Eagle
 - Story Seeker
 - Storyteller Pixie
@@ -5028,7 +5002,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Thallid Soothsayer
 - Thanos, Death's Consort
 - Thaumaturge's Familiar
-- The Arkenstone // Seek the Heart
 - The Fabulous Frog-Man
 - The Falcon, Sam Wilson
 - The Howling Commandos
@@ -5083,10 +5056,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Thran Power Suit
 - Thran Vigil
 - Thranduil the Strategist
-- Thranduil, Sindarin Liege // Silvan Rally
 - Thrashing Brontodon
 - Thrashing Wumpus
-- Threadbind Clique // Rip the Seams
 - Three Tree Rootweaver
 - Three Visits
 - Thrill of Possibility
@@ -5237,6 +5208,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Trusty Retriever
 - Trygon Predator
 - Tsunami
+- Tuinvale Treefolk // Oaken Boon
 - Tukatongue Thallid
 - Tuknir Deathlock
 - Tuktuk Grunts
@@ -5257,8 +5229,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Twin-Silk Spider
 - Twinblade Blessing
 - Twinflame Tyrant
-- Twining Twins // Swift Spiral
-- Twinmaw Stormbrood // Charring Bite
 - Twinscroll Shaman
 - Twisted Experiment
 - Twisted Spider-Clone
@@ -5402,7 +5372,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Vedalken Outlander
 - Veiled Shade
 - Veloheart Bike
-- Velvetwing Butterflies // Gaze in Wonder
 - Venerable Lammasu
 - Venerable Monk
 - Vengeant Vampire
@@ -5745,7 +5714,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wolfsbane, Highland Hero
 - Wondrous Revival
 - Wood Elves
-- Woodland Acolyte // Mend the Wilds
 - Woodland Changeling
 - Woodland Druid
 - Woodland Liege

@@ -1,3 +1,4 @@
+import { spellDefinitionOf } from '../state/queries';
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { TargetKind, TargetSpec } from '../cards/ability';
 import { playerFilterAlwaysTrue } from '../cards/effect-reference-contracts';
@@ -8,7 +9,6 @@ import { spellManaValue } from '../state/objects';
 import {
   cardZoneCandidate,
   findPermanent,
-  getDefByOracleId,
   hasKeyword,
   hasProtectionFrom,
   playersInApnapOrder,
@@ -250,7 +250,7 @@ export function permanentMatchesKind(
  * `permanentMatchesKind` is shared for battlefield kinds.
  */
 export function isCreatureSpell(ctx: GameContext, entry: EngineStackObject): boolean {
-  const def = getDefByOracleId(ctx, entry.sourceOracleId, entry.description);
+  const def = spellDefinitionOf(ctx, entry);
   return def.types.includes('Creature');
 }
 
@@ -262,7 +262,7 @@ export function spellMatchesSelector(
   selector: import('../cards/selector').Selector,
   casterId: PlayerId,
 ): boolean {
-  const def = getDefByOracleId(ctx, entry.sourceOracleId, entry.description);
+  const def = spellDefinitionOf(ctx, entry);
   const candidate: SelectorCandidate = {
     cardId: entry.sourceCardId,
     controllerId: entry.controllerId,

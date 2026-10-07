@@ -30,6 +30,7 @@ import type {
   EngineObject,
   EnginePermanent,
   EnginePlayerState,
+  EngineStackObject,
   GameContext,
 } from './types';
 import { spellManaValue } from './objects';
@@ -123,6 +124,11 @@ export function hasProtectionFrom(
 /** The current colors of a permanent, through the layer engine. */
 export function colorsOf(ctx: GameContext, perm: EnginePermanent): Color[] {
   return computeCharacteristics(ctx, perm).colors;
+}
+
+/** Selected printed characteristics of a stack spell, including copies. */
+export function spellDefinitionOf(ctx: GameContext, entry: EngineStackObject): CardDefinition {
+  return entry.spellDefinition ?? getDefByOracleId(ctx, entry.sourceOracleId, entry.description);
 }
 
 /**
@@ -225,7 +231,10 @@ export function manaRestrictionAllows(
   const oracleId = (
     purpose.kind === 'castSpell' ? purpose.oracleId : purpose.sourceOracleId
   ) as OracleId;
-  const def = ctx.defs.get(oracleId);
+  const def =
+    purpose.kind === 'castSpell'
+      ? (purpose.spellDefinition ?? ctx.defs.get(oracleId))
+      : ctx.defs.get(oracleId);
   if (def === undefined) return false;
 
   // Matched on PRINTED characteristics: a spell is on the stack and an ability's source is
@@ -1066,8 +1075,9 @@ export function spellProtectedFromCounter(
   ctx: GameContext,
   casterId: PlayerId,
   spellOracleId: OracleId,
+  spellDefinition?: CardDefinition,
 ): boolean {
-  const def = getDefByOracleId(ctx, spellOracleId, spellOracleId);
+  const def = spellDefinition ?? getDefByOracleId(ctx, spellOracleId, spellOracleId);
   const candidate: SelectorCandidate = {
     cardId: '',
     controllerId: casterId,

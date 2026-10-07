@@ -1,3 +1,4 @@
+import type { CardDefinition } from '../cards/definition';
 import type { EngineCardObject, EngineStackObject, GameContext } from '../state/types';
 
 /** CR 601.2a projection for pure previews: the card has already left its source zone. */
@@ -5,6 +6,7 @@ export function castingPreviewContext(
   ctx: GameContext,
   card: EngineCardObject,
   controllerId = card.ownerId,
+  spellDefinition?: CardDefinition,
 ): GameContext {
   const proposedCard: EngineCardObject = {
     ...card,
@@ -24,6 +26,7 @@ export function castingPreviewContext(
     targets: [],
     isCommanderCast: card.zone === 'command',
     castInProgress: true,
+    ...(spellDefinition === undefined ? {} : { spellDefinition }),
   };
   const without = (cards: EngineCardObject[]) => cards.filter((entry) => entry !== card);
   return {

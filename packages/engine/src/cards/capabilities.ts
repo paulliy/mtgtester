@@ -99,6 +99,7 @@ const shapes = {
     typeLine: leaf,
     ability: { node: 'Ability' },
     landFace: { node: 'MdfcLandFace' },
+    spellFace: { node: 'CardDefinition' },
     exileOnResolution: leaf,
     escaped: leaf,
   } satisfies Fields<Objects<AlternativeCast>>,

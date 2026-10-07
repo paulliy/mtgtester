@@ -1,3 +1,4 @@
+import { selectedSpellDefinition } from '../cards/spell-faces';
 import { castingPreviewContext } from './preview';
 import { castingCheckpoint } from './checkpoint';
 import { countTargetsCanComplete, type CountedTargetChoices } from '../targets/announcement';
@@ -43,6 +44,7 @@ import {
   requireModeled,
 } from '../state/queries';
 import type {
+  DamageKeyword,
   EngineCardObject,
   EnginePermanent,
   EnginePlayerState,
@@ -408,7 +410,6 @@ function* proposeCast(
   }
   const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
   requireModeled(def, 'casting a spell');
-  if (def.types.includes('Land')) throw new Error('a land cannot be cast as a spell');
   if (
     resolutionPermission === undefined &&
     payload.alternativeCast === undefined &&
@@ -475,6 +476,8 @@ function* proposeCast(
       throw new Error('casting alternative condition is not met');
     }
   }
+  const printedSpellDef = selectedSpellDefinition(def, selectedAlternative);
+  if (printedSpellDef.types.includes('Land')) throw new Error('a land cannot be cast as a spell');
   if (
     payload.alternativeCast === 'energy' &&
     (payload.fromGraveyard === true || payload.fromExile === true)
@@ -485,14 +488,8 @@ function* proposeCast(
     throw new Error('commander-free alternative is not supported from this zone');
   }
   if (resolutionPermission === undefined) {
-    const face =
-      payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen'
-        ? selectedAlternative
-        : undefined;
     const instantSpeed =
-      face === undefined
-        ? def.types.includes('Instant') || def.keywords.includes('flash')
-        : face.typeLine?.includes('Instant') === true;
+      printedSpellDef.types.includes('Instant') || printedSpellDef.keywords.includes('flash');
     if (
       !instantSpeed &&
       (s.currentTurnPlayer !== player.id ||
@@ -524,7 +521,7 @@ function* proposeCast(
   if (payload.zoneBudgetType !== undefined && consumeZonePermission === undefined) {
     throw new Error('unexpected permanent-type budget choice');
   }
-  let castingAdditionalCosts: AbilityCost[] = [...(def.spellAdditionalCosts ?? [])];
+  let castingAdditionalCosts: AbilityCost[] = [...(printedSpellDef.spellAdditionalCosts ?? [])];
   if (
     resolutionPermission === undefined &&
     payload.fromExile === true &&
@@ -551,7 +548,8 @@ function* proposeCast(
     sourceId: spellCard.id,
     controllerId: player.id,
     kind: 'spell',
-    description: obj.name,
+    description: printedSpellDef.name,
+    spellDefinition: printedSpellDef,
     targets: [],
     card: spellCard,
     ability: null,
@@ -563,7 +561,7 @@ function* proposeCast(
   s.stack.push(spellEntry);
 
   const tax = payload.fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
-  const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
+  const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId, printedSpellDef);
   const applyRed = (c: ParsedManaCost): ParsedManaCost => {
     let base = c;
     if (reduction.colored !== undefined) {
@@ -573,7 +571,7 @@ function* proposeCast(
   };
 
   let cost: ParsedManaCost;
-  let abilityDef = def;
+  let abilityDef = printedSpellDef;
   let exileOnResolution = false;
   let escaped = false;
   let energyAlternativeCostToPay = 0;
@@ -632,7 +630,7 @@ function* proposeCast(
     cost = alt.manaCost;
     if (alt.ability === undefined)
       throw new Error('alternative spell face has no executable ability');
-    abilityDef = { ...def, spellAbility: alt.ability };
+    abilityDef = printedSpellDef;
   } else {
     cost = resolutionPermission === undefined ? (def.manaCost ?? emptyCost()) : emptyCost();
   }
@@ -686,6 +684,7 @@ function* proposeCast(
       sourceCardId: obj.cardId,
       sourceOracleId: obj.oracleId,
       sourceIsCommander: obj.isCommander,
+      spellDefinition: printedSpellDef,
       x: payload.x ?? 0,
       energyAlternativeCost: energyAlternativeCostToPay,
       targetLifeTax: targetLifeTaxFor(ctx, player.id, [
@@ -700,7 +699,7 @@ function* proposeCast(
     obj.cardId,
     targets,
     selectedModeTargetSlots(abilityDef, selectedModes),
-    def.colors,
+    abilityDef.colors,
     payableTargets,
     payload.x ?? 0,
   );
@@ -724,6 +723,7 @@ function* proposeCast(
     sourceCardId: obj.cardId,
     sourceOracleId: obj.oracleId,
     sourceIsCommander: obj.isCommander,
+    spellDefinition: printedSpellDef,
     x: payload.x ?? 0,
     targetLifeTax,
     energyAlternativeCost: energyAlternativeCostToPay,
@@ -736,6 +736,7 @@ function* proposeCast(
       kind: 'castSpell',
       oracleId: obj.oracleId,
       isCommander: obj.isCommander,
+      spellDefinition: printedSpellDef,
     },
     [],
     payment.reservedObjectIds,
@@ -773,10 +774,10 @@ function* proposeCast(
   }
 
   Object.assign(spellCard, {
-    ...(def.optionalAdditionalCost !== undefined && (payload.optionalCostCount ?? 0) > 0
+    ...(abilityDef.optionalAdditionalCost !== undefined && (payload.optionalCostCount ?? 0) > 0
       ? {
           optionalCostCounts: {
-            [def.optionalAdditionalCost.mechanic]: payload.optionalCostCount ?? 0,
+            [abilityDef.optionalAdditionalCost.mechanic]: payload.optionalCostCount ?? 0,
           },
         }
       : {}),
@@ -790,7 +791,12 @@ function* proposeCast(
     sourceId: spellCard.id,
     controllerId: player.id,
     kind: 'spell',
-    description: `${obj.name}`,
+    description: printedSpellDef.name,
+    spellDefinition: printedSpellDef,
+    sourceColors: [...printedSpellDef.colors],
+    sourceDamageKeywords: printedSpellDef.keywords.filter((keyword): keyword is DamageKeyword =>
+      ['infect', 'lifelink', 'deathtouch'].includes(keyword),
+    ),
     targets,
     ...(Object.keys(counted.countTargets).length > 0 ? { countTargets: counted.countTargets } : {}),
     ...(Object.keys(counted.divisionAmounts).length > 0
@@ -817,7 +823,7 @@ function* proposeCast(
     payload.fromLibraryTop !== true &&
     payload.fromGraveyard !== true &&
     payload.fromCommand !== true &&
-    def.keywords.includes('rebound')
+    abilityDef.keywords.includes('rebound')
       ? { reboundPending: true }
       : {}),
     triggerScope: { manaSpent: manaPayment.manaSpent },
@@ -829,7 +835,7 @@ function* proposeCast(
     'castSpell',
     {
       player: player.id,
-      name: obj.name,
+      name: printedSpellDef.name,
       cardId: obj.cardId,
       targets,
       fromCommand: payload.fromCommand,

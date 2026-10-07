@@ -1,3 +1,4 @@
+import { selectedSpellDefinition } from '../cards/spell-faces';
 import { assertNever } from '../utils/assert-never';
 import { castingPreviewContext } from '../casting/preview';
 import { mayCastCommanderFromCommand } from '../casting/permissions';
@@ -301,8 +302,9 @@ export function costReductionFor(
   casterId: PlayerId,
   castOracleId: OracleId,
   castCardId: string,
+  spellDefinition?: CardDefinition,
 ): CostReductionResult {
-  const def = getDefByOracleId(ctx, castOracleId, castOracleId);
+  const def = spellDefinition ?? getDefByOracleId(ctx, castOracleId, castOracleId);
   const candidate: SelectorCandidate = {
     cardId: castCardId,
     controllerId: casterId,
@@ -558,6 +560,7 @@ export function computePriorityOptions(
     let paymentCtx = ctx;
     let paymentPlayer = player;
     let paymentSources = sources;
+    let paymentDefinition = def;
     const jointPayment = (
       mana: ParsedManaCost,
       costs: readonly AbilityCost[],
@@ -571,6 +574,7 @@ export function computePriorityOptions(
         sourceCardId: obj.cardId,
         sourceOracleId: obj.oracleId,
         sourceIsCommander: obj.isCommander,
+        spellDefinition: paymentDefinition,
         sources: paymentSources,
         x,
         targetLifeTax,
@@ -644,7 +648,8 @@ export function computePriorityOptions(
           });
         }
       }
-      return;
+      if (!def.alternativeCasts?.some((alt) => alt.kind === 'adventure' || alt.kind === 'omen'))
+        return;
     }
 
     const mdfcIndex =
@@ -708,7 +713,7 @@ export function computePriorityOptions(
     paymentCtx = castCtx;
     paymentPlayer = castPlayer;
     paymentSources = castSources;
-    const reduction = costReductionFor(castCtx, castPlayer.id, obj.oracleId, obj.cardId);
+
     // One configuration/target/payment loop for each permitted mana-cost alternative.
     // Alternative costs replace only the printed mana cost, never modes or additional costs.
     const offerCast = (
@@ -722,6 +727,12 @@ export function computePriorityOptions(
       castName = obj.name,
     ): void => {
       if (!familyInstantSpeed && !sorcerySpeed) return;
+      const castCtx = castingPreviewContext(ctx, obj, player.id, castingDef);
+      paymentCtx = castCtx;
+      paymentPlayer = castCtx.state.players.find((p) => p.id === player.id)!;
+      paymentDefinition = castingDef;
+      const reduction = costReductionFor(castCtx, player.id, obj.oracleId, obj.cardId, castingDef);
+
       const additionalManaCost = manaPortionOf(spellAdditionalCosts);
       const unreduced = addGeneric(baseCost, tax);
       // CR 601.2f: reductions apply to the TOTAL cost — the mana cost with {X} given a value, plus
@@ -742,6 +753,7 @@ export function computePriorityOptions(
         kind: 'castSpell',
         oracleId: obj.oracleId,
         isCommander: obj.isCommander,
+        spellDefinition: castingDef,
       });
 
       const xSymbols = baseCost.x ?? 0;
@@ -1042,19 +1054,21 @@ export function computePriorityOptions(
             );
             break;
           case 'adventure':
-          case 'omen':
-            if (fromCommand || alt.ability === undefined) break;
+          case 'omen': {
+            if (fromCommand) break;
+            const face = selectedSpellDefinition(def, alt);
             offerCast(
               alt.manaCost,
-              spellAdditionalCosts,
-              { ...def, spellAbility: alt.ability },
+              face.spellAdditionalCosts ?? [],
+              face,
               { alternativeCast: alt.kind, altIndex: index },
               ` via ${alt.kind === 'omen' ? 'Omen' : 'Adventure'}`,
               0,
-              alt.typeLine?.includes('Instant') === true,
-              alt.name ?? obj.name,
+              face.types.includes('Instant') || face.keywords.includes('flash'),
+              face.name,
             );
             break;
+          }
           case 'mdfc':
             // The supported alternate face is a land play, already offered above.
             break;

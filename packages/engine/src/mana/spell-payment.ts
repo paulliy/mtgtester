@@ -18,6 +18,7 @@ export interface SpellPaymentRequest {
   sourceCardId: string;
   sourceOracleId: string;
   sourceIsCommander: boolean;
+  spellDefinition?: import('../cards/definition').CardDefinition;
   x?: number;
   targetLifeTax?: number;
   energyAlternativeCost?: number;
@@ -159,6 +160,7 @@ export function planSpellPayment(
     kind: 'castSpell',
     oracleId: request.sourceOracleId,
     isCommander: request.sourceIsCommander,
+    ...(request.spellDefinition === undefined ? {} : { spellDefinition: request.spellDefinition }),
   });
   function search(index: number): SpellPaymentWitness | null {
     const group = groups[index];

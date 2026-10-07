@@ -54,7 +54,7 @@ describe('toOracleCard', () => {
   });
 
   it('carries the second face separately as backFace, unmerged with the front', () => {
-    // Every OTHER field on OracleCard is the front face's projection (via faceFallback); this
+    // Every OTHER field on OracleCard is the front face's projection; this
     // is the one place a second face's own characteristics survive at all, which is what
     // interpret.ts's modal-DFC-land handling (Pathway lands) needs to see the BACK color too.
     const raw: RawScryfallCard = {
@@ -70,7 +70,7 @@ describe('toOracleCard', () => {
     };
     const card = toOracleCard(raw);
     expect(card?.name).toBe('Blightstep Pathway // Searstep Pathway');
-    expect(card?.oracleText).toBe('{T}: Add {B}.'); // front, via faceFallback
+    expect(card?.oracleText).toBe('{T}: Add {B}.'); // front
     expect(card?.backFace).toEqual({
       name: 'Searstep Pathway',
       typeLine: 'Land',
@@ -82,6 +82,53 @@ describe('toOracleCard', () => {
       loyalty: null,
       defense: null,
     });
+  });
+
+  it('keeps individual Adventure costs and derives omitted face colors from their own symbols', () => {
+    const card = toOracleCard({
+      id: 'spell-halves',
+      oracle_id: 'spell-halves-oracle',
+      name: 'White front // Red Omen',
+      layout: 'adventure',
+      mana_cost: '{5}{W} // {1}{R}',
+      colors: ['W'],
+      type_line: 'Creature — Dragon // Sorcery — Omen',
+      card_faces: [
+        {
+          name: 'White front',
+          mana_cost: '{5}{W}',
+          type_line: 'Creature — Dragon',
+          oracle_text: 'Flying',
+        },
+        {
+          name: 'Red Omen',
+          mana_cost: '{1}{R}',
+          type_line: 'Sorcery — Omen',
+          oracle_text: 'You gain 1 life.',
+        },
+      ],
+    });
+    expect(card?.manaCost).toBe('{5}{W}');
+    expect(card?.typeLine).toBe('Creature — Dragon');
+    expect(card?.colors).toEqual(['W']);
+    expect(card?.backFace?.colors).toEqual(['R']);
+    expect(card?.backFace?.manaCost).toBe('{1}{R}');
+  });
+
+  it('preserves a color indicator and explicit colorless face rather than inferring cost colors', () => {
+    const card = toOracleCard({
+      id: 'face-colors',
+      oracle_id: 'face-colors-oracle',
+      name: 'Indicated front // Colorless back',
+      layout: 'transform',
+      card_faces: [
+        { name: 'Indicated front', mana_cost: '', type_line: 'Creature', color_indicator: ['U'] },
+        { name: 'Colorless back', mana_cost: '{R}', type_line: 'Creature', colors: [] },
+      ],
+    });
+    expect(card?.manaCost).toBeNull();
+    expect(card?.colors).toEqual(['U']);
+    expect(card?.backFace?.colors).toEqual([]);
   });
 
   it('omits backFace for a single-faced card', () => {

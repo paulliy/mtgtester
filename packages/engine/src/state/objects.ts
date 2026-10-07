@@ -1,3 +1,4 @@
+import { spellDefinitionOf } from './queries';
 /**
  * Object identity and zone movement (CR 400.7, brief §5.2). A card changing zones becomes
  * a NEW object with a new `ObjectId`; the stable `cardId` links its zone-visits together.
@@ -1581,8 +1582,7 @@ export function queueTriggersForObject(
  * (CR 603.3b puts it above the spell that caused it).
  */
 export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): void {
-  const def = ctx.defs.get(spell.sourceOracleId);
-  if (def === undefined) return;
+  const def = spellDefinitionOf(ctx, spell);
 
   const caster = playerById(ctx, spell.controllerId);
   caster.spellsCastThisTurn += 1;
@@ -1672,8 +1672,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
  * spell has entered the stack.
  */
 export function queueKeywordCastTriggers(ctx: GameContext, spell: EngineStackObject): void {
-  const def = ctx.defs.get(spell.sourceOracleId);
-  if (def === undefined) return;
+  const def = spellDefinitionOf(ctx, spell);
   const cascadeCount = def.keywords.filter((keyword) => keyword === 'cascade').length;
   if (cascadeCount === 0) return;
 

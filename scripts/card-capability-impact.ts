@@ -88,7 +88,7 @@ console.log(
       scope:
         'final IR dependency inventory; no primitive, card, viewer, or gameplay-AI certification',
       input: {
-        adapter: bulk ? 'scryfall-projection-v1' : 'pinned-oracle-projection-v1',
+        adapter: bulk ? 'scryfall-projection-v2' : 'pinned-oracle-projection-v1',
         sha256: createHash('sha256').update(bytes).digest('hex'),
         population: input.length,
         projections: cards.length,
