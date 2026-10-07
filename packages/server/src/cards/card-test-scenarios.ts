@@ -1,4 +1,8 @@
 import { SPELL_FACE_SCENARIO_IDS, spellFaceScenario } from './spell-face-scenarios';
+import {
+  COUNTER_OVERLOAD_SCENARIO_IDS,
+  counterOverloadScenario,
+} from './counter-overload-scenarios';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
@@ -5664,6 +5668,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   ...BUG_HUNT_SCENARIO_IDS,
   ...TARGET_UNTAP_SCENARIO_IDS,
   ...SPELL_FACE_SCENARIO_IDS,
+  ...COUNTER_OVERLOAD_SCENARIO_IDS,
   ...REVIEWED_BASELINE_SCENARIO_IDS,
   'swords-viewer-exile-and-gain-life',
   'throat-viewer-destroy-nonartifact',
@@ -5781,6 +5786,12 @@ export const CARD_TEST_SCENARIO_IDS = [
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
   ...Object.fromEntries(
     SPELL_FACE_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => spellFaceScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    COUNTER_OVERLOAD_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => counterOverloadScenario(id, gameId),
+    ]),
   ),
   ...Object.fromEntries(
     TARGET_UNTAP_SCENARIO_IDS.map((id) => [
