@@ -52,6 +52,13 @@ export function assertTriggerEventFamily(
     throw new Error(`trigger event ${when} requires a different dispatcher`);
 }
 
+/** Delayed registrations currently have object and step dispatchers only. */
+export function assertDelayedTriggerEvent(when: TriggerHead['when']): void {
+  const family = triggerEventFamily(when);
+  if (family !== 'object' && family !== 'step')
+    throw new Error(`delayed trigger event ${when} has no supported dispatcher`);
+}
+
 /** A union's combined field inventory is insufficient: each event has its own required shape. */
 export function validateTriggerHead(value: unknown, path: string, issues: AuthoringIssue[]): void {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {

@@ -1,5 +1,6 @@
 import { counterCount, setCounterCount } from '../state/counters';
 import type { ObjectFacts } from '../cards/source-identity';
+import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueSpellCopy } from '../stack/copy';
 import { spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
@@ -5055,6 +5056,9 @@ export function* executeAbility(
         break;
       }
       case 'registerDelayedTrigger': {
+        assertDelayedTriggerEvent(effect.when);
+        if (!['endStep', 'cleanup', 'onFire'].includes(effect.expiry))
+          throw new Error('invalid delayed trigger expiry');
         // `'triggerObject'` here is deliberately NOT resolved through `ref()`: `ref` restricts
         // 'triggerObject' to the battlefield (right, for effects that act on a still-live
         // permanent), but a delayed trigger registered from a 'dies' ability fires with its
