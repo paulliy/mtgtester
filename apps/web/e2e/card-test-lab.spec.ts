@@ -2933,3 +2933,103 @@ test('Escape from Orthanc: affect and untap one target', async ({ page }) => {
 test('Soldier On: affect and untap one target', async ({ page }) => {
   await verifyTargetUntap(page, 'Soldier On', '4/4', undefined, 2);
 });
+
+async function runCounterController(page: Page, name: string, own: boolean): Promise<void> {
+  await runScenario(page, `${name}: counter ${own ? 'your own' : "an opponent's"} spell`);
+  const card = handCard(page, name);
+  await expect(card).toHaveClass(/actionable/);
+  await card.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const pending = page.locator('.stack li').filter({ hasText: 'Independent Pending Spell' });
+  await expect(pending).toHaveClass(/targetable/);
+  await pending.click();
+  await confirm(page);
+  if (own && (name === 'Mana Leak' || name === 'Stubborn Denial')) {
+    await page
+      .getByRole('button', { name: /Let .*Independent Pending Spell.* be countered/ })
+      .click();
+  }
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.getByText(new RegExp(`Independent Pending Spell is countered by ${name}`, 'i')),
+  ).toBeVisible();
+  await expect(page.getByText(/gains 3 life/i)).toHaveCount(0);
+}
+
+async function runOverloadViewer(page: Page, name: string, overload: boolean): Promise<void> {
+  await runScenario(
+    page,
+    `${name}: ${overload ? 'overload without targets' : 'one normal target'}`,
+  );
+  const card = handCard(page, name);
+  await expect(card).toHaveClass(/actionable/);
+  await card.click();
+  const actions = page.locator('.source-actions .source-action-row button');
+  await expect(actions).toHaveCount(2);
+  const overloaded = actions.filter({ hasText: /overload/i });
+  if (overload) await overloaded.click();
+  else await actions.filter({ hasNotText: /overload/i }).click();
+  if (overload) {
+    await expect(page.getByText(/Target 1 of 1/)).toHaveCount(0);
+  } else {
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await expect(permanent(page, 'Chosen Overload Witness')).toHaveClass(/targetable/);
+    await permanent(page, 'Chosen Overload Witness').click();
+  }
+  await confirm(page);
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Chosen Overload Witness')).toHaveCount(0);
+  await expect(permanent(page, 'Forest')).toHaveCount(3);
+  for (const witness of ['Other Overload Witness', 'Protected Overload Witness']) {
+    await expect(permanent(page, witness)).toHaveCount(overload ? 0 : 1);
+  }
+  await expect(permanent(page, 'Own Overload Witness')).toHaveCount(
+    overload && name === 'Damn' ? 0 : 1,
+  );
+  await expect(permanent(page, 'Indestructible Overload Witness')).toHaveCount(
+    overload && name === 'Cyclonic Rift' ? 0 : 1,
+  );
+}
+
+test('Counterspell: counter your own spell', async ({ page }) => {
+  await runCounterController(page, 'Counterspell', true);
+});
+test("Counterspell: counter an opponent's spell", async ({ page }) => {
+  await runCounterController(page, 'Counterspell', false);
+});
+test('Negate: counter your own spell', async ({ page }) => {
+  await runCounterController(page, 'Negate', true);
+});
+test("Negate: counter an opponent's spell", async ({ page }) => {
+  await runCounterController(page, 'Negate', false);
+});
+test('Mana Leak: counter your own spell', async ({ page }) => {
+  await runCounterController(page, 'Mana Leak', true);
+});
+test("Mana Leak: counter an opponent's spell", async ({ page }) => {
+  await runCounterController(page, 'Mana Leak', false);
+});
+test('Stubborn Denial: counter your own spell', async ({ page }) => {
+  await runCounterController(page, 'Stubborn Denial', true);
+});
+test("Stubborn Denial: counter an opponent's spell", async ({ page }) => {
+  await runCounterController(page, 'Stubborn Denial', false);
+});
+test('Cyclonic Rift: one normal target', async ({ page }) => {
+  await runOverloadViewer(page, 'Cyclonic Rift', false);
+});
+test('Cyclonic Rift: overload without targets', async ({ page }) => {
+  await runOverloadViewer(page, 'Cyclonic Rift', true);
+});
+test('Vandalblast: one normal target', async ({ page }) => {
+  await runOverloadViewer(page, 'Vandalblast', false);
+});
+test('Vandalblast: overload without targets', async ({ page }) => {
+  await runOverloadViewer(page, 'Vandalblast', true);
+});
+test('Damn: one normal target', async ({ page }) => {
+  await runOverloadViewer(page, 'Damn', false);
+});
+test('Damn: overload without targets', async ({ page }) => {
+  await runOverloadViewer(page, 'Damn', true);
+});

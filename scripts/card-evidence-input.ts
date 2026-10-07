@@ -1359,6 +1359,20 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: [`${card.name}: affect and untap one target`],
   })),
+  { file: 'card-test-lab.spec.ts', titlePath: ['Counterspell: counter your own spell'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Counterspell: counter an opponent's spell"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Negate: counter your own spell'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Negate: counter an opponent's spell"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Mana Leak: counter your own spell'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Mana Leak: counter an opponent's spell"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Stubborn Denial: counter your own spell'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Stubborn Denial: counter an opponent's spell"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Cyclonic Rift: one normal target'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Cyclonic Rift: overload without targets'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Vandalblast: one normal target'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Vandalblast: overload without targets'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Damn: one normal target'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Damn: overload without targets'] },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);
