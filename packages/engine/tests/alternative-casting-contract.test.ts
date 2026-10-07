@@ -117,7 +117,9 @@ describe('independent alternative casting contracts', () => {
       });
       player.hand.splice(0, 1);
       card.zone = 'command';
+      card.isCommander = true;
       player.commandZone.push(card);
+      player.commanderCardIds.push(card.cardId);
       player.commanderCastCount[card.cardId] = 2;
       if (kind === 'energy') {
         const grant = spawn(

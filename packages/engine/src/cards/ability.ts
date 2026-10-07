@@ -69,7 +69,7 @@ export type AbilityCost =
 
 export interface AlternativeCast {
   kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana';
-  /** Zone from which this alternative may be announced. Defaults to the hand. */
+  /** Explicit zone restriction/permission. Omitted alternatives use normal casting permissions. */
   from?: 'hand' | 'graveyard' | 'exile';
   manaCost: ParsedManaCost;
   /** Non-mana components of a cost that replaces the spell's printed mana cost. */

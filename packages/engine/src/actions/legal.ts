@@ -1,5 +1,6 @@
 import { assertNever } from '../utils/assert-never';
 import { castingPreviewContext } from '../casting/preview';
+import { mayCastCommanderFromCommand } from '../casting/permissions';
 import { legalTargetMenus } from '../targets/announcement';
 import { planSpellPayment } from '../mana/spell-payment';
 import { targetCandidates, targetIsLegal } from '../targets/legality';
@@ -552,6 +553,7 @@ export function computePriorityOptions(
     fromExile = false,
     fromGraveyard = false,
   ): void => {
+    if (fromCommand && !mayCastCommanderFromCommand(player, obj)) return;
     const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
     let paymentCtx = ctx;
     let paymentPlayer = player;
@@ -1001,6 +1003,7 @@ export function computePriorityOptions(
     // fabricate a source-zone payload for an alternative that has no such permission.
     if (!fromExile && !fromLibraryTop) {
       for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
+        if (fromCommand && alt.from === 'hand') continue;
         if (
           fromGraveyard
             ? alt.from !== 'graveyard'
