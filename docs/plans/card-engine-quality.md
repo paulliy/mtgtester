@@ -99,7 +99,10 @@ Document rechecking semantics for collective mana-value/name/controller constrai
 
 At resolution, compute CR 608.2b target-legality results once before effect execution
 and pass them through all effects. Distinguish initial legality, current object existence,
-and explicitly allowed cross-zone tracking. Do not re-evaluate an initial target condition
+and explicitly allowed cross-zone tracking. CR 400.7j permits other instructions of the
+same effect to find objects it moved to public zones; track those exact transitions, stop
+at hidden zones, and never recover a referent by physical card identity alone. Moves made
+outside that effect while a decision is suspended do not acquire this exception. Do not re-evaluate an initial target condition
 after an earlier instruction changes state. Preserve last-known source information.
 
 Graveyard contracts cover own/opponent/any scope, owner-slot dependencies, selector

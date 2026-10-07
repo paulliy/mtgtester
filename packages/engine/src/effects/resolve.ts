@@ -1061,6 +1061,17 @@ export function* executeAbility(
   /** The announced division of a `dealDamageDivided` effect's total, keyed by object id. */
   divisionAmounts?: Record<ObjectId, number>,
 ): GameGen<void> {
+  const resolutionObjectMoves = ctx.resolutionObjectMoves ?? new Map<ObjectId, ObjectId | null>();
+  // Share the game itself, but carry transition tracking only through this effect's calls.
+  // A caller retaining the original context cannot alter these bindings during a yield.
+  ctx = { ...ctx, resolutionObjectMoves };
+  const movedReferent = (id: ObjectId): ObjectId | null => {
+    let current: ObjectId | null = id;
+    while (current !== null && resolutionObjectMoves.has(current)) {
+      current = resolutionObjectMoves.get(current) ?? null;
+    }
+    return current;
+  };
   const controller = playerById(ctx, source.controllerId);
 
   // A modal ability's mode belongs to its announcement (CR 700.2a-b): triggers choose it in
@@ -1111,8 +1122,12 @@ export function* executeAbility(
     ...(extraScope ?? {}),
   };
   /** Evaluate an effect's `Value` amount in this ability's scope. */
-  const amountOf = (value: Value | number): number =>
-    typeof value === 'number' ? value : evaluateValueIn(ctx, value, scope);
+  const amountOf = (value: Value | number): number => {
+    if (scope.targets !== undefined) {
+      scope.targets = scope.targets.map((id) => movedReferent(id) ?? '');
+    }
+    return typeof value === 'number' ? value : evaluateValueIn(ctx, value, scope);
+  };
   /** Resolve an explicitly routed draw recipient without silently falling back to the controller. */
   const drawRecipient = (player: 'controller' | 'eventPlayer' | undefined) => {
     if (player !== 'eventPlayer') return controller;
@@ -1131,17 +1146,9 @@ export function* executeAbility(
   /** Stable card identities captured by one effect for later effects in this resolution. */
   const effectBindings = new Map<string, string[]>();
 
-  // CR 608.2b: a target's legality is checked once per resolution, not re-derived from
-  // `ability.targets[r]`'s original zone/kind on every later reference to the same slot. Doing
-  // so would spuriously fail once an earlier effect of THIS SAME ability has itself moved the
-  // object — e.g. Hellkite Courser: `commandZoneToBattlefield` puts the chosen commander onto
-  // the battlefield, then `registerDelayedTrigger` refers to that same slot to remember which
-  // permanent to return. By then it is no longer a legal `commanderInCommandZone` target (even
-  // though nothing illegal happened), and the zone change minted it a new `ObjectId` — only
-  // `cardId` stays stable across that. So the referent is captured by `cardId` the first time a
-  // slot resolves, and re-located via `findObjectByCardId` on every later call, following it
-  // through zone changes the same way `triggerObjectCardId` does.
-  const refCardIdCache = new Map<number, string | null>();
+  // Initial legality (CR 608.2b) and identity (CR 400.7) are separate. A physical
+  // cardId is never enough to recover a vanished target. Only public-zone transitions
+  // performed by this effect may update its referent (CR 400.7j).
   /** Players and stack objects keep their announced identity, including after countering. */
   const refStableIdCache = new Map<number, ObjectId>();
   /** Controller captured when a target slot is first resolved, before an earlier effect moves it. */
@@ -1161,6 +1168,13 @@ export function* executeAbility(
       ...(scope.eventPlayerId === undefined ? {} : { eventPlayerId: scope.eventPlayerId }),
     });
   source = { ...source, resolutionTargets };
+  for (const [slot, id] of targets.entries()) {
+    const player = ctx.state.players.find((candidate) => candidate.id === id);
+    const stack = ctx.state.stack.find((entry) => entry.id === id);
+    const object = findObjectById(ctx, id) as { controllerId?: PlayerId } | undefined;
+    refControllerCache.set(slot, player?.id ?? stack?.controllerId ?? object?.controllerId);
+    if (player !== undefined || stack !== undefined) refStableIdCache.set(slot, id);
+  }
   const stillLegal = (id: ObjectId, spec: TargetSpec, slot?: number): boolean =>
     (slot === undefined
       ? resolutionTargets.legality.get(spec)
@@ -1202,12 +1216,18 @@ export function* executeAbility(
    * was legal as resolution began. A slot with a collective budget (Kairi's total mana value 6
    * or less) whose remaining legal targets now exceed it affects none of them.
    */
+  const chosenReferents = (slot: number): ObjectId[] =>
+    (countTargets?.[slot] ?? []).flatMap((id) => {
+      const currentId = movedReferent(id);
+      return currentId === null ? [] : [currentId];
+    });
   const legalChosenPermanents = (slot: number): EnginePermanent[] => {
     const spec = ability.targets[slot];
     if (spec === undefined) return [];
     const legal = (countTargets?.[slot] ?? []).flatMap((id) => {
       if (!stillLegal(id, spec, slot)) return [];
-      const permanent = findPermanent(ctx, id);
+      const currentId = movedReferent(id);
+      const permanent = currentId === null ? undefined : findPermanent(ctx, currentId);
       return permanent === undefined ? [] : [permanent as EnginePermanent];
     });
     return legal;
@@ -1242,54 +1262,34 @@ export function* executeAbility(
       }
       return perm.id;
     }
-    const stableId = refStableIdCache.get(r);
-    if (stableId !== undefined) return stableId;
-    const cachedCardId = refCardIdCache.get(r);
-    if (cachedCardId !== undefined) {
-      if (cachedCardId === null) return null;
-      // The card itself, wherever it now is — NOT a triggered ability on the stack that merely
-      // shares its source card id (Snakeskin Veil's "it gains hexproof" after its counter, aimed
-      // at a creature whose own ETB trigger is still waiting on the stack). Only a target that is
-      // itself a spell on the stack falls through to the stack lookup.
-      return (
-        findPhysicalObjectByCardId(ctx, cachedCardId)?.id ??
-        findObjectByCardId(ctx, cachedCardId)?.id ??
-        null
-      );
-    }
     const id = targets[r];
     const spec = ability.targets[r];
     if (id === undefined || spec === undefined) {
-      refCardIdCache.set(r, null);
       return null;
     }
-    if (!stillLegal(id, spec)) {
+    if (!stillLegal(id, spec, r)) {
       debug(ctx, 'effect', `${source.name}: target ${id} illegal — skipped`);
-      refCardIdCache.set(r, null);
       return null;
     }
+    const stableId = refStableIdCache.get(r);
+    if (stableId !== undefined) return stableId;
     const targetPlayer = ctx.state.players.find((player) => player.id === id);
     const targetStack = ctx.state.stack.find((entry) => entry.id === id);
     const targetObject = findObjectById(ctx, id) as { controllerId?: PlayerId } | undefined;
-    refControllerCache.set(
-      r,
-      targetPlayer?.id ?? targetStack?.controllerId ?? targetObject?.controllerId,
-    );
-    // Stack objects and players do not have a battlefield cardId to re-resolve through zone
-    // changes -- a stack object's identity is only stable for this resolution (Arcane Denial's
-    // delayed draw plus counter both need the same stack item), and a player's id needs no
-    // re-resolution at all (players don't change zones). Caching either through
-    // `findObjectByCardId` would incorrectly resolve to `undefined` on the SECOND effect that
-    // references the same player slot (e.g. Sign in Blood: draw, then lose life, both off slot
-    // 0) -- `findObjectById` finds no permanent for a PlayerId, so the cache would poison itself
-    // with `null` after the first effect and every later effect referencing that slot would
-    // silently do nothing.
+    if (!refControllerCache.has(r)) {
+      refControllerCache.set(
+        r,
+        targetPlayer?.id ?? targetStack?.controllerId ?? targetObject?.controllerId,
+      );
+    }
+    // Preserve announced player/stack identities and captured controllers even after a
+    // counter instruction removes the stack entry (Arcane Denial's delayed draws).
     if (targetPlayer !== undefined || targetStack !== undefined) {
       refStableIdCache.set(r, id);
       return id;
     }
-    refCardIdCache.set(r, findObjectById(ctx, id)?.cardId ?? null);
-    return id;
+    const currentId = movedReferent(id);
+    return currentId !== null && findObjectById(ctx, currentId) !== undefined ? currentId : null;
   };
 
   for (const effect of ability.effects ?? []) {
@@ -1548,24 +1548,14 @@ export function* executeAbility(
         break;
       }
       case 'dealDamageEachChosen': {
-        // "3 damage to each of up to two other targets" (Drakuseth) — each chosen id gets the
-        // FULL amount independently, unlike `dealDamageDivided`'s shared total.
-        const spec = ability.targets[effect.targetSlot];
         const amount = amountOf(effect.amount);
-        for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !stillLegal(id, spec)) {
-            continue;
-          }
+        for (const id of chosenReferents(effect.targetSlot)) {
           dealDamageToObject(ctx, source, id, amount);
         }
         break;
       }
       case 'grantKeywordEachChosenUntilEot': {
-        const spec = ability.targets[effect.targetSlot];
-        const chosen = (countTargets?.[effect.targetSlot] ?? [])
-          .filter((id) => spec !== undefined && stillLegal(id, spec))
-          .map((id) => findPermanent(ctx, id))
-          .filter((permanent): permanent is EnginePermanent => permanent !== undefined);
+        const chosen = legalChosenPermanents(effect.targetSlot);
         if (chosen.length > 0) {
           ctx.state.effects.push({
             id: `eff-${ctx.state.nextObjectNum++}`,
@@ -1612,15 +1602,9 @@ export function* executeAbility(
         break;
       }
       case 'putCountersEachChosen': {
-        const spec = ability.targets[effect.targetSlot];
         const count = amountOf(effect.count);
-        for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !stillLegal(id, spec)) {
-            continue;
-          }
-          const perm = findPermanent(ctx, id);
-          if (perm === undefined) continue;
-          addCounters(ctx, source, perm as EnginePermanent, effect.counter, count);
+        for (const permanent of legalChosenPermanents(effect.targetSlot)) {
+          addCounters(ctx, source, permanent, effect.counter, count);
         }
         break;
       }
@@ -1642,13 +1626,7 @@ export function* executeAbility(
         break;
       }
       case 'blinkEachChosen': {
-        const spec = ability.targets[effect.targetSlot];
-        for (const id of countTargets?.[effect.targetSlot] ?? []) {
-          if (spec === undefined || !stillLegal(id, spec)) {
-            continue;
-          }
-          const permanent = findPermanent(ctx, id);
-          if (permanent === undefined) continue;
+        for (const permanent of legalChosenPermanents(effect.targetSlot)) {
           const cardId = permanent.cardId;
           const returnControllerId =
             effect.returnUnder === 'owner' ? permanent.ownerId : source.controllerId;
@@ -1900,7 +1878,8 @@ export function* executeAbility(
           if (spec === undefined || !stillLegal(id, spec)) {
             continue;
           }
-          dealDamageToObject(ctx, source, id, amount);
+          const currentId = movedReferent(id);
+          if (currentId !== null) dealDamageToObject(ctx, source, currentId, amount);
         }
         break;
       }
@@ -4842,7 +4821,8 @@ export function* executeAbility(
         const bSpec = ability.targets[effect.bSlot];
         if (bSpec !== undefined && !stillLegal(bId, bSpec)) break;
         const a = findPermanent(ctx, aId);
-        const b = findPermanent(ctx, bId);
+        const currentBId = movedReferent(bId);
+        const b = currentBId === null ? undefined : findPermanent(ctx, currentBId);
         if (a === undefined || b === undefined || a.id === b.id) break;
         // CR 701.14b: if either is no longer a creature, neither fights.
         if (!isCreaturePermanent(ctx, a) || !isCreaturePermanent(ctx, b)) break;
@@ -4908,7 +4888,8 @@ export function* executeAbility(
         if (target === undefined) break;
         const chosenIds = countTargets?.[effect.cardsSlot] ?? [];
         const chosen = chosenIds.flatMap((cardId) => {
-          const card = target.graveyard.find((c) => c.id === cardId || c.cardId === cardId);
+          const currentId = movedReferent(cardId);
+          const card = target.graveyard.find((c) => c.id === currentId);
           return card === undefined ? [] : [card];
         });
         yield* moveObjects(ctx, chosen, { zone: 'library', libraryPosition: 'bottom' });
@@ -5080,8 +5061,8 @@ export function* executeAbility(
         // 'triggerObject' to the battlefield (right, for effects that act on a still-live
         // permanent), but a delayed trigger registered from a 'dies' ability fires with its
         // triggerObject already in the graveyard — that's the whole premise of "dies". This
-        // effect's job is to remember the object regardless of zone (same rationale as the
-        // Hellkite Courser cardId-tracking note above), so it looks the card up directly by
+        // effect's job is to remember the object regardless of zone (CR 400.7e for the
+        // object of a zone-change trigger), so it looks the card up directly by
         // `triggerObjectCardId` across every zone instead.
         const t =
           effect.target === 'triggerObject'

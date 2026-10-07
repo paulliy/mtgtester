@@ -509,6 +509,12 @@ export interface GameContext {
   defs: Map<OracleId, CardDefinition>;
   rng: Prng;
   debugLog: DebugEntry[];
+  /**
+   * Resolution-local CR 400.7j transitions. Only the context executing this effect carries
+   * this map; unrelated moves while a decision is suspended cannot rebind its referents.
+   * A hidden-zone destination ends tracking, represented by null.
+   */
+  resolutionObjectMoves?: Map<ObjectId, ObjectId | null>;
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */
