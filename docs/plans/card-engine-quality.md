@@ -463,8 +463,15 @@ and report the exact failed action, attempted recovery, and remaining work.
   and direct rider application also enforce the contract. Supported damage, scope-free life
   gain, and source counters retain actual activation ordering and last-known-source behavior.
   All 121 affected contracts pass, with test/tooling types, focused lint and snapshots. The
-  full-bulk dependency inventory still reports 6,508 modeled definitions and 482 keys. This
+  full-bulk dependency inventory reports 6,508 modeled definitions and 484 keys; the two new
+  keys are `AlternativeCast.ability` and `Effect.overloadBounceAllNonlandOpponents`. This
   does not yet prove a joint witness for changing resources across multiple activations.
+- Source bindings for the five viewer evidence generators include the actual runtime imports
+  for Overload lowering, command-zone authorization, bounded IR and mana-rider validation.
+  The combined repository run passed 303 files but correctly rejected 132 evidence-input
+  cases because those frozen lists were incomplete. After closure discovery added the missing
+  inputs, all 162 evidence-input contracts pass. This repaired checkpoint still needs a fresh
+  complete-suite run before final roadmap sign-off.
 - Remaining exit work: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
