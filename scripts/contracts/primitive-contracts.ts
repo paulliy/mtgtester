@@ -75,12 +75,25 @@ export const PRIMITIVE_CONTRACTS: readonly PrimitiveContract[] = [
     capability,
     scope:
       'ordinary untargeted Instant/Sorcery spells with at most two fixed nonnegative life-gain instructions (0..1000), green/generic total mana cost at most {1}{G}, and no additional executable dependencies',
-    cases: (['positive', 'negative'] as const).map((role) => ({
-      id: `${capability}-${role}`,
-      role,
-      file: 'packages/engine/tests/primitive-foundation-contract.test.ts',
-      titlePath: ['independent bounded spell foundations', `${capability}: ${role}`],
-    })),
+    cases: [
+      ...(['positive', 'negative'] as const).map((role) => ({
+        id: `${capability}-${role}`,
+        role,
+        file: 'packages/engine/tests/primitive-foundation-contract.test.ts',
+        titlePath: ['independent bounded spell foundations', `${capability}: ${role}`],
+      })),
+      ...(['positive', 'negative'] as const).map((role) => ({
+        id: `${capability}-bounded-composition-${role}`,
+        role,
+        file: 'packages/engine/tests/primitive-composition-contract.test.ts',
+        titlePath: [
+          'bounded registered primitive compositions',
+          role === 'positive'
+            ? 'every funded composition offers a complete deterministic normal cast'
+            : 'every unfunded composition rejects without changing the complete context',
+        ],
+      })),
+    ],
     supports: supportsLifeSpell,
   })),
   {
