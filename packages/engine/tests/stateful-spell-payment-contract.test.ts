@@ -326,6 +326,92 @@ describe('actual changing-resource spell payment contracts', () => {
     }
   });
 
+  it('can activate an initially empty source whose tap cost enables production', () => {
+    const state = setup('{G}');
+    const source = state.source('Post-tap enabled source', {
+      units: [],
+      costs: [{ kind: 'tap' }],
+      conditionalUnits: {
+        condition: { kind: 'not', of: { kind: 'isUntapped' } },
+        units: [['G']],
+      },
+    });
+    const before = cloneContractContext(state.ctx);
+    expect(state.offered()).toBeDefined();
+    expect(state.ctx.state).toEqual(before.state);
+    state.cast();
+    expect(source.tapped).toBe(true);
+    expect(state.player.manaEntries).toEqual([]);
+    expect(state.ctx.state.stack).toHaveLength(1);
+  });
+
+  it.each(['{G}{G}', '{G}{R}'])(
+    'uses the linked constraint that becomes active after tapping for %s',
+    (cost) => {
+      const state = setup(cost);
+      const source = state.source('Post-tap linked source', {
+        units: [
+          ['G', 'R'],
+          ['G', 'R'],
+        ],
+        costs: [{ kind: 'tap' }],
+        conditionalUnits: {
+          condition: { kind: 'not', of: { kind: 'isUntapped' } },
+          units: [
+            ['G', 'R'],
+            ['G', 'R'],
+          ],
+          linked: true,
+        },
+      });
+      const before = cloneContractContext(state.ctx);
+      if (cost === '{G}{R}') {
+        expect(state.offered()).toBeUndefined();
+        expect(state.ctx.state).toEqual(before.state);
+        expect(() =>
+          pump(
+            applyPriorityAction(
+              state.ctx,
+              state.player,
+              { kind: 'castSpell', objectId: state.card.id, fromCommand: false },
+              { index: 0, targets: new Map() },
+            ),
+          ),
+        ).toThrow();
+        expect(state.ctx.state).toEqual(before.state);
+        expect(state.ctx.rng.nextUint32()).toBe(before.rng.nextUint32());
+      } else {
+        state.cast();
+        expect(source.tapped).toBe(true);
+        expect(state.player.manaEntries).toEqual([]);
+        expect(state.ctx.state.stack).toHaveLength(1);
+      }
+    },
+  );
+
+  it('drops a pre-cost linked constraint when tapping selects independent units', () => {
+    const state = setup('{G}{R}');
+    const source = state.source('Post-tap independent source', {
+      units: [
+        ['G', 'R'],
+        ['G', 'R'],
+      ],
+      costs: [{ kind: 'tap' }],
+      conditionalUnits: {
+        condition: { kind: 'isUntapped' },
+        units: [
+          ['G', 'R'],
+          ['G', 'R'],
+        ],
+        linked: true,
+      },
+    });
+    state.cast();
+    expect(source.tapped).toBe(true);
+    expect(state.player.manaEntries).toEqual([]);
+    expect(state.ctx.state.stack).toHaveLength(1);
+  });
+
   it.each(['G', 'R'] as const)(
     'reads dynamic colors after sacrificing its own colored source for %s',
     (symbol) => {
