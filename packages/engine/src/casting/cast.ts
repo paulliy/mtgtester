@@ -1,3 +1,4 @@
+import { castingCheckpoint } from './checkpoint';
 import { countTargetsCanComplete, type CountedTargetChoices } from '../targets/announcement';
 import { chooseSpellPayment, planSpellPayment } from '../mana/spell-payment';
 /**
@@ -89,7 +90,10 @@ function resolveCastAbility(
       : null;
   }
   const modes = def.spellAbility.modes;
-  if (modes === undefined) return def.spellAbility;
+  if (modes === undefined) {
+    if (selectedModes !== undefined) throw new Error('this spell has no modal configuration');
+    return def.spellAbility;
+  }
   const indices = selectedModes ?? [0];
   if (indices.length < modes.minChoices || indices.length > (maxChoices ?? modes.maxChoices)) {
     throw new Error(`engine bug: invalid mode count ${indices.length} for ${cardName}`);
@@ -326,7 +330,7 @@ export function* chooseCountTargets(
   return { countTargets, divisionAmounts };
 }
 
-export function* castSpell(
+function* proposeCast(
   ctx: GameContext,
   player: EnginePlayerState,
   payload: Extract<PriorityActionPayload, { kind: 'castSpell' }>,
@@ -343,6 +347,8 @@ export function* castSpell(
     payload.fromLibraryTop,
     payload.fromGraveyard,
   ];
+  if (flags.some((flag) => flag !== undefined && typeof flag !== 'boolean'))
+    throw new Error('invalid casting source flag');
   if (flags.filter((flag) => flag === true).length > 1)
     throw new Error('conflicting casting source zones');
   for (const value of [payload.x, payload.optionalCostCount, payload.altIndex]) {
@@ -399,6 +405,34 @@ export function* castSpell(
   ) {
     throw new Error('card is not on top of the library');
   }
+  if (
+    payload.alternativeCast !== undefined &&
+    !['energy', 'commanderFree', 'nonMana', 'overload', 'adventure', 'omen'].includes(
+      payload.alternativeCast,
+    )
+  )
+    throw new Error('unknown casting alternative');
+  if ((payload.x ?? 0) > 0 && def.manaCost?.x === undefined && def.announcesX !== true)
+    throw new Error('this spell does not announce X');
+  if (resolutionPermission === undefined) {
+    const face =
+      payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen'
+        ? def.alternativeCasts?.[payload.altIndex ?? 0]
+        : undefined;
+    const instantSpeed =
+      face === undefined
+        ? def.types.includes('Instant') || def.keywords.includes('flash')
+        : face.typeLine?.includes('Instant') === true;
+    if (
+      !instantSpeed &&
+      (s.currentTurnPlayer !== player.id ||
+        s.stack.length > 0 ||
+        !['precombatMain', 'postcombatMain'].includes(s.phase))
+    )
+      throw new Error('casting timing is not legal');
+    if (s.priorityPlayerIndex !== null && s.turnOrder[s.priorityPlayerIndex] !== player.id)
+      throw new Error('casting player does not have priority');
+  }
   let consumeZonePermission: 'libraryTop' | 'graveyard' | undefined;
   if (
     resolutionPermission === undefined &&
@@ -433,6 +467,31 @@ export function* castSpell(
   if (payload.reboundCast === true) {
     throw new Error('rebound cards may be cast only while their delayed trigger resolves');
   }
+
+  // CR 601.2a: the proposed spell leaves its source zone before modes, targets, and cost
+  // evaluation. No cast event or cast trigger exists until the complete payment succeeds.
+  removeFromCurrentZone(ctx, obj);
+  const spellCard: EngineCardObject = {
+    ...obj,
+    id: `o-${s.nextObjectNum++}` as ObjectId,
+    zone: 'stack',
+    ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
+  };
+  const spellEntry: EngineStackObject = {
+    id: spellCard.id,
+    sourceId: spellCard.id,
+    controllerId: player.id,
+    kind: 'spell',
+    description: obj.name,
+    targets: [],
+    card: spellCard,
+    ability: null,
+    sourceOracleId: obj.oracleId,
+    sourceCardId: obj.cardId,
+    isCommanderCast: payload.fromCommand,
+    castInProgress: true,
+  };
+  s.stack.push(spellEntry);
 
   const tax = payload.fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
   const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
@@ -613,6 +672,15 @@ export function* castSpell(
     payload.x ?? 0,
   );
   const allTargets = [...targets, ...Object.values(counted.countTargets).flat()];
+  spellEntry.targets = targets;
+  spellEntry.ability = ability;
+  if (Object.keys(counted.countTargets).length > 0) spellEntry.countTargets = counted.countTargets;
+  if (Object.keys(counted.divisionAmounts).length > 0)
+    spellEntry.divisionAmounts = counted.divisionAmounts;
+  // CR 601.2c: target triggers are recorded now, even if their sources leave during payment.
+  // They are placed only at the enclosing priority checkpoint after this cast/resolution ends.
+  queueWardTriggers(ctx, player.id, spellCard.id, allTargets);
+  queueBecomesTargetedTriggers(ctx, player.id, allTargets);
   // CR 601.2f: reductions apply once, to the TOTAL — mana cost with X announced plus every
   // additional cost — exactly as `computePriorityOptions` priced the offered action.
   cost = totalMana;
@@ -659,19 +727,18 @@ export function* castSpell(
     payment.choices,
   );
   if (consumeZonePermission !== undefined) {
-    consumePlayFromZonePermission(ctx, player, obj, consumeZonePermission, payload.zoneBudgetType);
+    // Permission was validated before the proposal; losing its source while paying does not
+    // retroactively invalidate a legal cast. Its per-turn budget is consumed at finalization.
+    if (payload.zoneBudgetType !== undefined)
+      player.playFromZoneTypeUsesThisTurn[payload.zoneBudgetType] =
+        (player.playFromZoneTypeUsesThisTurn[payload.zoneBudgetType] ?? 0) + 1;
   }
 
   if (payload.fromCommand) {
     player.commanderCastCount[obj.cardId] = (player.commanderCastCount[obj.cardId] ?? 0) + 1;
   }
 
-  removeFromCurrentZone(ctx, obj);
-  const spellCard: EngineCardObject = {
-    ...obj,
-    id: `o-${s.nextObjectNum++}` as ObjectId,
-    zone: 'stack',
-    ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
+  Object.assign(spellCard, {
     ...(def.optionalAdditionalCost !== undefined && (payload.optionalCostCount ?? 0) > 0
       ? {
           optionalCostCounts: {
@@ -683,8 +750,8 @@ export function* castSpell(
       ? { treasureManaSpentToCast: manaPayment.treasureManaSpent }
       : {}),
     ...(escaped ? { escaped: true } : {}),
-  };
-  const spellEntry: EngineStackObject = {
+  });
+  Object.assign(spellEntry, {
     id: spellCard.id,
     sourceId: spellCard.id,
     controllerId: player.id,
@@ -719,8 +786,8 @@ export function* castSpell(
       ? { reboundPending: true }
       : {}),
     triggerScope: { manaSpent: manaPayment.manaSpent },
-  };
-  s.stack.push(spellEntry);
+  });
+  delete spellEntry.castInProgress;
   breakYieldsForStop(ctx, spellEntry);
   emit(
     ctx,
@@ -743,7 +810,17 @@ export function* castSpell(
   // it (CR 603.3b), so the trigger resolves first.
   queueCastTriggers(ctx, spellEntry);
   queueKeywordCastTriggers(ctx, spellEntry);
-  queueWardTriggers(ctx, player.id, spellCard.id, allTargets);
-  queueBecomesTargetedTriggers(ctx, player.id, allTargets);
   return;
+}
+
+/** Complete a cast exactly once; errors and interrupted supported proposals restore in place. */
+export function* castSpell(...args: Parameters<typeof proposeCast>): GameGen<void> {
+  const recover = castingCheckpoint(args[0]);
+  let finalized = false;
+  try {
+    yield* proposeCast(...args);
+    finalized = true;
+  } finally {
+    if (!finalized) recover();
+  }
 }

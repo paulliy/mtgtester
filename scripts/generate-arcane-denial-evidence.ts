@@ -79,6 +79,8 @@ const SOURCE_FILES = [
   'packages/engine/src/actions/apply.ts',
   'packages/engine/src/casting/cast.ts',
   'packages/engine/src/casting/free.ts',
+  'packages/engine/src/casting/checkpoint.ts',
+  'packages/engine/src/casting/preview.ts',
   'packages/engine/src/actions/legal.ts',
   'packages/engine/src/cards/condition.ts',
   'packages/engine/src/cards/creature-types.ts',

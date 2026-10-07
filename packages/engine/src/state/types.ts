@@ -181,6 +181,8 @@ export interface EngineCardObject extends EngineObject {
 export type DamageKeyword = 'deathtouch' | 'lifelink' | 'infect';
 
 export interface EngineStackObject extends StackObject {
+  /** Internal CR 601 proposal; never triggers a cast until payment finalizes. */
+  castInProgress?: true;
   /** The card object being cast, for spells (moves to its destination on resolution). */
   card: EngineCardObject | null;
   /** The ability being resolved (spell or triggered) — drives the executor and fizzle. */
