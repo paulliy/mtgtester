@@ -2628,13 +2628,34 @@
     "8cd45064-2ad9-4247-902e-aefaf3bc1a43": {
       "name": "Their Number Is Legion",
       "oracleSha256": "41b6712d088b044a1c75a4ef825006b3774b32f673850f48bb207b10e00e24a6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Create X tapped 2/2 black Necron Warrior artifact creature tokens, then you gain life equal to the number of artifacts you control. Exile this spell.\nYou may cast this card from your graveyard.",
-          "implementation": ["explicitly unsupported; tokens not tapped; graveyard cast omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "their-number-is-legion-tokens-and-life",
+          "oracleText": "Create X tapped 2/2 black Necron Warrior artifact creature tokens, then you gain life equal to the number of artifacts you control. Exile Their Number Is Legion.",
+          "implementation": [
+            "interpreted spell: createToken X tapped 2/2 black Necron Warrior artifact creature tokens, gainLife countPermanents(artifact, you), then resolvingSpellExile moves the card from the stack to exile"
+          ],
+          "engineTestIds": [
+            "their-number-is-legion-pinned-oracle-supported",
+            "their-number-is-legion-tapped-tokens-and-life",
+            "their-number-is-legion-exiles-itself"
+          ],
+          "viewerScenarioIds": ["their-number-is-legion-viewer-graveyard-x"]
+        },
+        {
+          "id": "their-number-is-legion-graveyard-cast",
+          "oracleText": "You may cast this card from your graveyard.",
+          "implementation": [
+            "interpreted castFromGraveyard: the normal cast path is offered from your graveyard at the full cost with X, sorcery timing, consuming no outside permission"
+          ],
+          "engineTestIds": [
+            "their-number-is-legion-pinned-oracle-supported",
+            "their-number-is-legion-graveyard-cast",
+            "their-number-is-legion-graveyard-sorcery-speed",
+            "their-number-is-legion-graveyard-only-yours"
+          ],
+          "viewerScenarioIds": ["their-number-is-legion-viewer-graveyard-x"]
         }
       ],
       "gameplayAiScenarioIds": []

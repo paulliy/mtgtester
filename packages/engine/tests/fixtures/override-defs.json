@@ -5900,12 +5900,6 @@
     "def": {}
   },
   {
-    "oracleId": "8cd45064-2ad9-4247-902e-aefaf3bc1a43",
-    "name": "Their Number Is Legion",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "8dcb35e5-ae44-455f-86e3-4a77d496ff34",
     "name": "Spark Double",
     "handledLines": [
@@ -21504,12 +21498,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "oracle-their-number-is-legion",
-    "name": "Their Number Is Legion",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-thopter-spy-network",

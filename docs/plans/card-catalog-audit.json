@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 38,
+      "uniqueOracleIds": 37,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 50,
+      "uniqueOracleIds": 49,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -5795,6 +5795,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr02",
       "note": "Unimplemented placeholder registration deleted alongside the silverquill-influence-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "8cd45064-2ad9-4247-902e-aefaf3bc1a43",
+      "name": "Their Number Is Legion",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads the X tapped Necron Warrior tokens, the life gain equal to the artifacts you control, the resolving spell exiling itself (resolvingSpellExile) and the card's own castFromGraveyard permission at its normal cost; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "8cd45064-2ad9-4247-902e-aefaf3bc1a43",
+      "name": "Their Number Is Legion",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
     }
   ]
 }

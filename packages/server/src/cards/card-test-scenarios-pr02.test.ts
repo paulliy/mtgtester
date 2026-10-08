@@ -643,3 +643,17 @@ describe("Raffine's Guidance Card Test Lab scenario", () => {
     replays('raffines-guidance-viewer-graveyard-recast', steps);
   });
 });
+
+describe('Their Number Is Legion Card Test Lab scenario', () => {
+  it('their-number-is-legion-viewer-graveyard-x — X=2 from the graveyard: two tapped Warriors, 2 life, exiled', () => {
+    const steps: Step[] = [{ action: 'X=2' }];
+    const { state, seat, onBattlefield } = run('their-number-is-legion-viewer-graveyard-x', steps);
+    const tokens = onBattlefield('Necron Warrior');
+    expect(tokens).toHaveLength(2);
+    expect(tokens.every((token) => token.tapped)).toBe(true);
+    expect(seat('P1').life).toBe(42);
+    expect(state.exile.map((card) => card.name)).toEqual(['Their Number Is Legion']);
+    expect(seat('P1').graveyard).toEqual([]);
+    replays('their-number-is-legion-viewer-graveyard-x', steps);
+  });
+});

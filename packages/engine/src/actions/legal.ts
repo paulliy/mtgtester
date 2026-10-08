@@ -1012,6 +1012,7 @@ export function computePriorityOptions(
     const sourceInHand = !fromCommand && !fromLibraryTop && !fromExile && !fromGraveyard;
     if (
       fromGraveyard &&
+      def.castFromGraveyard !== true &&
       !(def.alternativeCasts?.some((alt) => alt.from === 'graveyard') ?? false) &&
       !canPlayFromZone(ctx, player.id, obj, 'graveyard')
     )
@@ -1267,7 +1268,9 @@ export function computePriorityOptions(
         });
       }
     }
-    if (fromGraveyard || fromLibraryTop) {
+    // A card's own "you may cast this card from your graveyard" needs no outside permission and
+    // spends no budget of one.
+    if ((fromGraveyard && def.castFromGraveyard !== true) || fromLibraryTop) {
       const permission = playFromZonePermission(
         ctx,
         player.id,

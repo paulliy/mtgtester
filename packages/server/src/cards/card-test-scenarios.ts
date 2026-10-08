@@ -6648,6 +6648,28 @@ function raffinesGuidanceScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function theirNumberIsLegionScenario(gameId: GameId): CardTestScenario {
+  const legion = pinnedFrom(MARCHESA_BATCH1, 'Their Number Is Legion');
+  const lands = [SWAMP, SWAMP, SWAMP, SWAMP, FOREST, FOREST];
+  return pr01Scenario(gameId, {
+    id: 'their-number-is-legion-viewer-graveyard-x',
+    title: 'Their Number Is Legion: cast it from the graveyard with X=2',
+    instructions: [
+      'Their Number Is Legion is in your graveyard. Cast it from there with X=2, paying with your four Swamps and two Forests.',
+    ],
+    expectedOutcome:
+      'Two tapped 2/2 Necron Warrior tokens enter, you gain 2 life (you control two artifacts), and Their Number Is Legion is exiled.',
+    oracleSha256: legion.sha256,
+    clauseIds: ['their-number-is-legion-tokens-and-life', 'their-number-is-legion-graveyard-cast'],
+    decks: { P1: [legion.card, ...lands], P2: PR01_FILLER, P3: PR01_FILLER, P4: PR01_FILLER },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: lands.map((land) => land.name) }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Their Number Is Legion'] }],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -6883,6 +6905,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'blasphemous-edict-viewer-pay-b',
   'dread-return-viewer-flashback',
   'raffines-guidance-viewer-graveyard-recast',
+  'their-number-is-legion-viewer-graveyard-x',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7038,6 +7061,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'blasphemous-edict-viewer-pay-b': blasphemousEdictScenario,
   'dread-return-viewer-flashback': dreadReturnScenario,
   'raffines-guidance-viewer-graveyard-recast': raffinesGuidanceScenario,
+  'their-number-is-legion-viewer-graveyard-x': theirNumberIsLegionScenario,
 };
 
 export function createCardTestScenario(

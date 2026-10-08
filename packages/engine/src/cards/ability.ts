@@ -617,6 +617,12 @@ export type Effect =
   /** Put the currently resolving spell card on the bottom of its owner's library. */
   | { op: 'resolvingSpellToLibraryBottom' }
   /**
+   * "Exile Their Number Is Legion" as an instruction of the resolving spell itself: the card
+   * goes from the stack to exile instead of its owner's graveyard. A spell that fizzles never
+   * reaches this instruction (CR 608.2b) and goes to the graveyard as usual.
+   */
+  | { op: 'resolvingSpellExile' }
+  /**
    * "Shuffle ~ into its owner's library" on a resolving spell (Beacon of Unrest): the card goes
    * from the stack into its owner's library, which that player then shuffles. A spell that
    * fizzles never reaches this instruction and goes to its owner's graveyard as usual.

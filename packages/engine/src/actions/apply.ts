@@ -457,7 +457,11 @@ export function* applyPriorityAction(
       if (obj === undefined) throw new Error('engine bug: spell to cast not found');
       const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
       let consumeZonePermission: 'libraryTop' | 'graveyard' | undefined;
-      if (payload.fromGraveyard === true && payload.alternativeCast === undefined) {
+      if (
+        payload.fromGraveyard === true &&
+        payload.alternativeCast === undefined &&
+        def.castFromGraveyard !== true
+      ) {
         validatePlayFromZonePermission(ctx, player, obj, 'graveyard', payload.zoneBudgetType);
         consumeZonePermission = 'graveyard';
       }

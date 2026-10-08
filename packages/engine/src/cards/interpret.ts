@@ -929,6 +929,18 @@ function parseEffectSentence(
   ) {
     return [{ op: 'noOp' }];
   }
+  // "Exile Their Number Is Legion." on an instant or sorcery: the resolving spell exiles itself.
+  if (s === 'exile ~' && /\b(?:Instant|Sorcery)\b/.test(card.typeLine)) {
+    return [{ op: 'resolvingSpellExile' }];
+  }
+  // "You gain life equal to the number of artifacts you control."
+  {
+    const life = s.match(/^you gain life equal to the number of (.+) you control$/);
+    const selector = life === null ? null : parseSubject(life[1] as string, card);
+    if (selector !== null) {
+      return [{ op: 'gainLife', amount: { kind: 'countPermanents', selector, scope: 'you' } }];
+    }
+  }
   if (s === "shuffle ~ into its owner's library" || s === 'shuffle ~ into your library') {
     return [{ op: 'shuffle' }];
   }
@@ -5926,6 +5938,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   const spellAdditionalCosts: AbilityCost[] = [];
   let commanderFreeCast = false;
   let spellModes: NonNullable<Ability['modes']> | undefined;
+  let castFromGraveyard = false;
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
 
@@ -6235,6 +6248,12 @@ export function interpretCard(card: OracleCard): CardDefinition {
       : knownAbilityWordStripped;
     if (line.length === 0) continue;
     const lower = line.toLowerCase().replace(/\.$/, '');
+    // "You may cast this card from your graveyard." (Their Number Is Legion): the card's own
+    // permission to be cast from there for its normal costs.
+    if (lower === 'you may cast this card from your graveyard' && isSpell) {
+      castFromGraveyard = true;
+      continue;
+    }
     // "You may cast this card from your graveyard by paying {2}{W} rather than paying its mana
     // cost" (Raffine's Guidance): a graveyard alternative cost with no flashback exile, so the
     // card returns to the graveyard (or stays on the battlefield) and can be cast this way again.
@@ -7234,6 +7253,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
     staticEffects,
     ruleStatics,
     ...(alternativeCasts ? { alternativeCasts } : {}),
+    ...(castFromGraveyard ? { castFromGraveyard: true as const } : {}),
     modeled: reasons.length === 0,
     unmodeledReasons: reasons,
   });

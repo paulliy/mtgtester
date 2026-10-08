@@ -374,12 +374,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       },
     },
   );
-  // Catalog audit necron-remaining-batch-4: tokens untapped; graveyard cast omitted.
-  unsupportedCard(
-    '8cd45064-2ad9-4247-902e-aefaf3bc1a43',
-    'Their Number Is Legion',
-    'Tokens are not created tapped, and graveyard cast is omitted.',
-  );
+  // Their Number Is Legion: restored in coverage PR02. The interpreter reads the tapped tokens,
+  // the artifact-count life gain, the self-exile and the graveyard cast permission.
   // Catalog audit necron-remaining-batch-7: combat-damage rider targets any player.
   unsupportedCard(
     'c857de66-f4e0-4e97-ad01-fac623af8225',

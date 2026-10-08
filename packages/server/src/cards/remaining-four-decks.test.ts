@@ -100,7 +100,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Necron Deathmark',
       'Shard of the Void Dragon',
       'The War in Heaven',
-      'Their Number Is Legion',
       'Cryptek',
       'Out of the Tombs',
       'Resurrection Orb',

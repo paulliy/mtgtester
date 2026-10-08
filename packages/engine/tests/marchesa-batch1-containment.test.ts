@@ -191,7 +191,6 @@ const REASONS: Record<string, string> = {
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
   'Shard of the Void Dragon': 'Exile-from-battlefield is omitted from the artifact-leaves trigger.',
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
-  'Their Number Is Legion': 'Tokens are not created tapped, and graveyard cast is omitted.',
   Cryptek: 'The delayed return omits entering tapped.',
   'Out of the Tombs':
     'Enters-with two eon counters is authored; the card only places counters on upkeep.',
@@ -312,6 +311,7 @@ describe('Marchesa catalog audit containment', () => {
     'Blasphemous Edict',
     'Dread Return',
     "Raffine's Guidance",
+    'Their Number Is Legion',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

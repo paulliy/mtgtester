@@ -399,10 +399,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Destroy all nonartifact creatures.',
   ]);
 
-  unimplemented('8cd45064-2ad9-4247-902e-aefaf3bc1a43', 'Their Number Is Legion', [
-    'Create X tapped 2/2 black Necron Warrior artifact creature tokens, then you gain life equal to the number of artifacts you control. Exile ~.',
-    'You may cast this card from your graveyard.',
-  ]);
+  // Their Number Is Legion: restored in coverage PR02 (see necron-dynasties-remaining.ts).
 
   unimplemented('9965d9c5-2ebf-4a6c-930e-55c5890979be', 'Thought Vessel', [
     'You have no maximum hand size.',

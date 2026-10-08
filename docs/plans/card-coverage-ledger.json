@@ -2454,6 +2454,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "8cd45064-2ad9-4247-902e-aefaf3bc1a43",
+    "name": "Their Number Is Legion",
+    "package": "PR02.31",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Tokens are not created tapped, and graveyard cast is omitted."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f55334d9-1ec2-4667-bf28-5a0384d6f053",
     "name": "Thunderfoot Baloth",
     "package": "PR01.13",

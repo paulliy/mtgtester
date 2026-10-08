@@ -2987,6 +2987,107 @@ describe("Raffine's Guidance", () => {
   });
 });
 
+describe('Their Number Is Legion', () => {
+  const legion = pinned('Their Number Is Legion');
+  const fourBlack = () => [
+    { symbol: 'B' as const },
+    { symbol: 'B' as const },
+    { symbol: 'B' as const },
+    { symbol: 'B' as const },
+  ];
+
+  const optionWithX = (ctx: GameContext, objectId: string, x: number) =>
+    castOptionsFor(ctx, 'P1', objectId).find((option) => option.description.includes(`X=${x}`));
+
+  const warriors = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((perm) => perm.name === 'Necron Warrior');
+
+  it('their-number-is-legion-pinned-oracle-supported — tapped Warriors, artifact-count life, self-exile, graveyard cast', () => {
+    expect(legion.sha256).toBe('41b6712d088b044a1c75a4ef825006b3774b32f673850f48bb207b10e00e24a6');
+    expect(legion.card.oracleText).toBe(
+      'Create X tapped 2/2 black Necron Warrior artifact creature tokens, then you gain life equal to the number of artifacts you control. Exile Their Number Is Legion.\nYou may cast this card from your graveyard.',
+    );
+    expectModeled(legion.card);
+    expect(getOverride(legion.card.oracleId)).toBeUndefined();
+    const def = interpretCard(legion.card);
+    expect(def.castFromGraveyard).toBe(true);
+    expect(def.alternativeCasts).toBeUndefined();
+    expect(def.spellAbility?.effects.map((effect) => effect.op)).toEqual([
+      'createToken',
+      'gainLife',
+      'resolvingSpellExile',
+    ]);
+  });
+
+  it('their-number-is-legion-tapped-tokens-and-life — X tapped Warriors, then life for every artifact you control', () => {
+    const ctx = pod('legion-hand');
+    spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Legion Relic', typeLine: 'Artifact', power: null, toughness: null }),
+    );
+    spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Legion Rival Relic', typeLine: 'Artifact', power: null, toughness: null }),
+    );
+    const inHand = conjure(ctx, 'P1', legion.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [...fourBlack(), ...generic(2)]);
+    const option = optionWithX(ctx, inHand.id, 2);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    expect(warriors(ctx)).toHaveLength(2);
+    expect(warriors(ctx).every((token) => token.tapped && token.controllerId === 'P1')).toBe(true);
+    // Two Warriors and the Relic are yours; the opponent's Relic does not count.
+    expect(playerById(ctx, 'P1').life).toBe(43);
+  });
+
+  it('their-number-is-legion-exiles-itself — after resolving it is exiled, not put into the graveyard', () => {
+    const ctx = pod('legion-exile');
+    const inHand = conjure(ctx, 'P1', legion.card, 'hand');
+    addMana(playerById(ctx, 'P1'), fourBlack());
+    takeAction(ctx, 'P1', optionWithX(ctx, inHand.id, 0)!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    expect(warriors(ctx)).toEqual([]);
+    expect(ctx.state.exile.map((card) => card.cardId)).toContain(inHand.cardId);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.cardId)).not.toContain(inHand.cardId);
+  });
+
+  it('their-number-is-legion-graveyard-cast — cast from the graveyard for its full cost, X included', () => {
+    const ctx = pod('legion-graveyard');
+    const inYard = conjure(ctx, 'P1', legion.card, 'graveyard');
+    expect(castOptionsFor(ctx, 'P1', inYard.id)).toEqual([]);
+    addMana(playerById(ctx, 'P1'), [...fourBlack(), ...generic(1)]);
+    const options = castOptionsFor(ctx, 'P1', inYard.id);
+    expect(options.map((option) => option.description)).toEqual([
+      expect.stringMatching(/X=0/),
+      expect.stringMatching(/X=1/),
+    ]);
+    takeAction(ctx, 'P1', optionWithX(ctx, inYard.id, 1)!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+    resolveTop(ctx);
+    expect(warriors(ctx)).toHaveLength(1);
+    expect(ctx.state.exile.map((card) => card.cardId)).toContain(inYard.cardId);
+  });
+
+  it('their-number-is-legion-graveyard-sorcery-speed — a sorcery cast from the graveyard waits for your main phase', () => {
+    const ctx = pod('legion-graveyard-timing');
+    const inYard = conjure(ctx, 'P1', legion.card, 'graveyard');
+    addMana(playerById(ctx, 'P1'), fourBlack());
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(castOptionsFor(ctx, 'P1', inYard.id)).toEqual([]);
+  });
+
+  it('their-number-is-legion-graveyard-only-yours — the permission is for your own graveyard', () => {
+    const ctx = pod('legion-other-yard');
+    const theirs = conjure(ctx, 'P2', legion.card, 'graveyard');
+    addMana(playerById(ctx, 'P1'), fourBlack());
+    expect(castOptionsFor(ctx, 'P1', theirs.id)).toEqual([]);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -2999,6 +3100,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Their Number Is Legion',
+    sha256: '41b6712d088b044a1c75a4ef825006b3774b32f673850f48bb207b10e00e24a6',
+    clauseCount: 2,
+  },
   {
     name: "Raffine's Guidance",
     sha256: '44bdca5ef478f6340f60ac4c911274747431dab346b34c92e2d3c2c092759823',

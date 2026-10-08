@@ -2190,6 +2190,15 @@ export function* executeAbility(
         yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'bottom' });
         break;
       }
+      case 'resolvingSpellExile': {
+        const entry = source.resolvingStackObject;
+        if (entry?.kind !== 'spell' || entry.card === null) break;
+        const card = entry.card;
+        // Clearing the stack entry's card keeps resolution from also moving it to the graveyard.
+        entry.card = null;
+        yield* moveObject(ctx, card, { zone: 'exile' });
+        break;
+      }
       case 'resolvingSpellShuffleIntoLibrary': {
         const entry = source.resolvingStackObject;
         if (entry?.kind !== 'spell' || entry.card === null) break;

@@ -3419,3 +3419,22 @@ test("Raffine's Guidance: cast it from the graveyard for {2}{W}", async ({ page 
   await expect(permanent(page, 'Lab Ox')).toContainText('5/5');
   await expect(permanent(page, "Raffine's Guidance")).toBeVisible();
 });
+
+test('Their Number Is Legion: cast it from the graveyard with X=2', async ({ page }) => {
+  await runScenario(page, 'Their Number Is Legion: cast it from the graveyard with X=2');
+  const legion = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Their Number Is Legion', exact: true }) });
+  await expect(legion).toHaveClass(/actionable/, { timeout: 15_000 });
+  await legion.click();
+  await expect(page.getByText(/Choose X/)).toBeVisible();
+  await page.locator('.x-group input[type="number"]').fill('2');
+  await page.locator('.x-group button').click();
+  const autoPay = page.getByText(/Auto-pay/);
+  if (await autoPay.isVisible()) await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Necron Warrior')).toHaveCount(1);
+  await expect(permanent(page, 'Necron Warrior')).toContainText(/×2/);
+  await expect(legion).toHaveCount(0);
+});

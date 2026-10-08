@@ -199,6 +199,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'blasphemous-edict-viewer-pay-b',
       'dread-return-viewer-flashback',
       'raffines-guidance-viewer-graveyard-recast',
+      'their-number-is-legion-viewer-graveyard-x',
     ]);
   });
 
