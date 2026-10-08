@@ -105,7 +105,11 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
 
   /** Call once per freshly received `playerActionRequired`. Builds a plan; never submits. */
   function onRequest(request: DecisionRequest): void {
-    if (lastRequestId === request.requestId) return;
+    if (lastRequestId === request.requestId) {
+      // A correlated transport rejection republishes this request so it can be edited again.
+      if (mode.value === 'replaying') mode.value = 'composing';
+      return;
+    }
     lastRequestId = request.requestId;
 
     const attackDeclaration = request.presentation?.attackDeclaration;
@@ -167,7 +171,7 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
    * to its first legal option instead of producing a submission the engine would refuse outright.
    */
   function pendingSubmission(request: DecisionRequest): CombatSubmission | null {
-    if (mode.value !== 'replaying') return null;
+    if (mode.value !== 'replaying' || request.requestId !== lastRequestId) return null;
 
     if (kind.value === 'attackers') {
       const decl = request.presentation?.attackDeclaration;
@@ -209,6 +213,12 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
     reset();
   }
 
+  /** Reopen the current board declaration without losing an existing assignment. */
+  function reopen(request: DecisionRequest): void {
+    if (lastRequestId === request.requestId && kind.value !== null) mode.value = 'composing';
+    else onRequest(request);
+  }
+
   return {
     mode,
     kind,
@@ -223,6 +233,7 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
     pendingSubmission,
     confirm,
     cancel,
+    reopen,
     reset,
   };
 });

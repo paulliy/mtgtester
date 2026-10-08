@@ -119,6 +119,25 @@ function blockRequest(
 }
 
 describe('combatPlan — attackers', () => {
+  it('can reopen a stalled submission and retains assignments after a transport rejection', () => {
+    setActivePinia(createPinia());
+    const store = useCombatPlanStore();
+    const req = attackRequest(['A']);
+    store.onRequest(req);
+    store.assign('A', 'P2');
+    store.confirm();
+    expect(store.pendingSubmission({ ...req, requestId: 'stale' })).toBeNull();
+    store.onRequest({ ...req });
+    expect(store.mode).toBe('composing');
+    expect(store.assignment.get('A')).toBe('P2');
+    store.confirm();
+    store.reopen(req);
+    expect(store.mode).toBe('composing');
+    store.cancel();
+    store.onRequest(req);
+    expect(store.mode).toBe('composing');
+    expect(store.assignment.size).toBe(0);
+  });
   beforeEach(() => {
     setActivePinia(createPinia());
   });

@@ -162,6 +162,17 @@ describe('isClientToServerMessage', () => {
     expect(submission({ ...payload, targets: [{ slot: 0, choice: 'P2', amount: 1 }] })).toBe(false);
   });
 
+  it('accepts smart yield and rejects unknown yield modes and fields', () => {
+    const payload = { requestId: 'r1', revision: 1, actionId: 0 };
+    const valid = (extra: Record<string, unknown>) =>
+      isClientToServerMessage({ type: 'yieldPlayerAbility', payload: { ...payload, ...extra } });
+    expect(valid({ mode: 'smart' })).toBe(true);
+    expect(valid({ mode: 'always' })).toBe(true);
+    expect(valid({})).toBe(true);
+    expect(valid({ mode: 'never' })).toBe(false);
+    expect(valid({ unexpected: true })).toBe(false);
+  });
+
   it('validates nested and optional payload fields, not only message discriminants', () => {
     expect(
       isClientToServerMessage({
