@@ -5527,6 +5527,27 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       ];
     }
   }
+  // "As long as you control your commander, activated abilities of cards in your graveyard cost
+  // {2} less to activate. This effect can't reduce the mana in that ability's activation cost to
+  // less than one mana." (Convergence of Dominion)
+  {
+    const m = lower.match(
+      /^(?:as long as you control your commander, )?activated abilities of cards in your graveyard cost \{(\d+)\} less to activate(?:\. this effect can't reduce the mana in that ability's activation cost to less than (one|two) mana)?$/,
+    );
+    if (m !== null) {
+      const commander = lower.startsWith('as long as you control your commander, ');
+      return [
+        {
+          kind: 'costReduction',
+          appliesTo: 'activate',
+          graveyardAbilities: true,
+          amount: constant(Number(m[1])),
+          ...(m[2] !== undefined ? { minimumMana: m[2] === 'one' ? 1 : 2 } : {}),
+          ...(commander ? { condition: { kind: 'controlsYourCommander' } } : {}),
+        },
+      ];
+    }
+  }
   // "Boast abilities you activate cost {1} less to activate for each Dragon you control."
   // (Dragonkin Berserker): every Boast ability you activate, whatever its source.
   {

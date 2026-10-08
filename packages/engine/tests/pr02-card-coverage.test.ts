@@ -3760,6 +3760,111 @@ describe('Dragonkin Berserker', () => {
   });
 });
 
+describe('Convergence of Dominion', () => {
+  const convergence = pinned('Convergence of Dominion');
+  const unearther = (name: string, cost: string) =>
+    oracle({
+      name,
+      typeLine: 'Artifact Creature — Necron',
+      manaCost: '{2}',
+      oracleText: `Unearth ${cost}`,
+    });
+  const UNEARTH = /\(graveyard\): Unearth/;
+
+  function ready(seed: string, withCommander: boolean) {
+    const ctx = pod(seed);
+    spawn(ctx, 'P1', convergence.card);
+    if (withCommander) {
+      spawn(
+        ctx,
+        'P1',
+        oracle({ name: 'Convergence Commander', typeLine: 'Legendary Creature — Necron' }),
+        {
+          isCommander: true,
+        },
+      );
+    }
+    return ctx;
+  }
+  const unearthOption = (ctx: GameContext, playerId: string) =>
+    priorityOptions(ctx, playerId).find((option) => UNEARTH.test(option.description));
+
+  it('convergence-of-dominion-pinned-oracle-supported — a commander-gated graveyard reduction and a mill ability', () => {
+    expect(convergence.sha256).toBe(
+      'd6f51e80f201a57dad225bd9f055c7d41727a5a5e286652550d2825dd828acdc',
+    );
+    expectModeled(convergence.card);
+    expect(getOverride(convergence.card.oracleId)).toBeUndefined();
+    const def = interpretCard(convergence.card);
+    expect(def.ruleStatics).toEqual([
+      {
+        kind: 'costReduction',
+        appliesTo: 'activate',
+        graveyardAbilities: true,
+        amount: constant(2),
+        minimumMana: 1,
+        condition: { kind: 'controlsYourCommander' },
+      },
+    ]);
+  });
+
+  it('convergence-of-dominion-graveyard-reduction — with your commander out, Unearth {3} costs {1}', () => {
+    const ctx = ready('convergence-reduce', true);
+    conjure(ctx, 'P1', unearther('Convergence Warrior', '{3}'), 'graveyard');
+    addMana(playerById(ctx, 'P1'), generic(1));
+    const option = unearthOption(ctx, 'P1');
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Convergence Warrior')).toBe(true);
+  });
+
+  it('convergence-of-dominion-needs-commander — without your commander there is no reduction', () => {
+    const ctx = ready('convergence-no-commander', false);
+    conjure(ctx, 'P1', unearther('Convergence Warrior', '{3}'), 'graveyard');
+    addMana(playerById(ctx, 'P1'), generic(2));
+    expect(unearthOption(ctx, 'P1')).toBeUndefined();
+    addMana(playerById(ctx, 'P1'), generic(1));
+    expect(unearthOption(ctx, 'P1')).toBeDefined();
+  });
+
+  it('convergence-of-dominion-one-mana-floor — a {2} ability still costs {1}, never {0}', () => {
+    const ctx = ready('convergence-floor', true);
+    conjure(ctx, 'P1', unearther('Convergence Scarab', '{2}'), 'graveyard');
+    expect(unearthOption(ctx, 'P1')).toBeUndefined();
+    addMana(playerById(ctx, 'P1'), generic(1));
+    expect(unearthOption(ctx, 'P1')).toBeDefined();
+  });
+
+  it('convergence-of-dominion-only-yours — an opponent’s Convergence does not reduce your graveyard abilities', () => {
+    const ctx = pod('convergence-opponent');
+    spawn(ctx, 'P2', convergence.card);
+    spawn(ctx, 'P2', oracle({ name: 'Rival Commander', typeLine: 'Legendary Creature — Necron' }), {
+      isCommander: true,
+    });
+    conjure(ctx, 'P1', unearther('Convergence Warrior', '{3}'), 'graveyard');
+    addMana(playerById(ctx, 'P1'), generic(1));
+    expect(unearthOption(ctx, 'P1')).toBeUndefined();
+  });
+
+  it('convergence-of-dominion-mill — {3}, {T}: mill three cards', () => {
+    const ctx = pod('convergence-mill');
+    const source = spawn(ctx, 'P1', convergence.card);
+    addMana(playerById(ctx, 'P1'), generic(3));
+    const before = playerById(ctx, 'P1').library.length;
+    takeAction(
+      ctx,
+      'P1',
+      activationMatching(ctx, 'P1', source, /Mill three/)!.payload as PriorityActionPayload,
+    );
+    expect(source.tapped).toBe(true);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').library).toHaveLength(before - 3);
+    expect(playerById(ctx, 'P1').graveyard).toHaveLength(3);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -3772,6 +3877,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Convergence of Dominion',
+    sha256: 'd6f51e80f201a57dad225bd9f055c7d41727a5a5e286652550d2825dd828acdc',
+    clauseCount: 2,
+  },
   {
     name: 'Dragonkin Berserker',
     sha256: '2ad5ad892794762553614df0cd73da106fe1c7e09c0aee7106dd925e95f1dab6',

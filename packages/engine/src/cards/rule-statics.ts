@@ -54,6 +54,15 @@ export type RuleStatic =
        * reduction for Boast abilities only (CR 702.142), whatever permanent has them.
        */
       boastOnly?: true;
+      /**
+       * "Activated abilities of cards in your graveyard cost {2} less to activate" (Convergence of
+       * Dominion): an activation reduction for graveyard-zone abilities only.
+       */
+      graveyardAbilities?: true;
+      /** "This effect can't reduce the mana in that ability's activation cost to less than N". */
+      minimumMana?: number;
+      /** "As long as you control your commander" — the reduction applies only while true. */
+      condition?: import('./condition').Condition;
     }
   /**
    * "Creature spells you control can't be countered" (Rhythm of the Wild) — a STATE-DEPENDENT

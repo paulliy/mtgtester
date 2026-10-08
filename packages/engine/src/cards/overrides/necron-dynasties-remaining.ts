@@ -109,12 +109,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit necron-remaining-batch-2: GY activation discount is claimed, not authored.
-  unsupportedCard(
-    '655aece2-f33a-46e0-8f80-112ae8a457fe',
-    'Convergence of Dominion',
-    'Graveyard activation cost reduction is claimed without a static effect.',
-  );
+  // Convergence of Dominion: restored in coverage PR02. The interpreter reads the conditional
+  // graveyard activation reduction and the mill ability, so no override remains.
   // Catalog audit necron-remaining-batch-7: Equip is dropped by activatedAbilities replace.
   unsupportedCard(
     '75564721-e4e9-463a-b49e-f0c7cd6f53a7',

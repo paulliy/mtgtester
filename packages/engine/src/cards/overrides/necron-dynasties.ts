@@ -116,10 +116,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Atomic Transmutation — {1}, {T}, Sacrifice another artifact: Draw a card.',
   ]);
 
-  unimplemented('655aece2-f33a-46e0-8f80-112ae8a457fe', 'Convergence of Dominion', [
-    "Dynastic Command Node — As long as you control your commander, activated abilities of cards in your graveyard cost {2} less to activate. This effect can't reduce the mana in that ability's activation cost to less than one mana.",
-    'Translocation Protocols — {3}, {T}: Mill three cards.',
-  ]);
+  // Convergence of Dominion: restored in coverage PR02 (see necron-dynasties-remaining.ts).
 
   unimplemented('27a4b633-5a62-4d8c-8cc6-44959c311de9', 'Cryptek', [
     '{1}{B}, {T}: Choose another target artifact creature you control. When that creature dies this turn, return it to the battlefield tapped under your control.',

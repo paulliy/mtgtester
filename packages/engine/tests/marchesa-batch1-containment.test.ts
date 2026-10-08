@@ -173,8 +173,6 @@ const REASONS: Record<string, string> = {
     'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
   Psychomancer:
     'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
-  'Convergence of Dominion':
-    'Graveyard activation cost reduction is claimed without a static effect.',
   'Hexmark Destroyer': 'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
   'Imotekh the Stormlord':
     'The artifact-cards-leave-graveyard trigger is claimed without an implementation.',
@@ -309,6 +307,7 @@ describe('Marchesa catalog audit containment', () => {
     'Hour of Reckoning',
     'Killian, Ink Duelist',
     'Dragonkin Berserker',
+    'Convergence of Dominion',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

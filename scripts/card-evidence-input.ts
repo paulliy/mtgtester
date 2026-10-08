@@ -1482,6 +1482,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Dragonkin Berserker: attack, then Boast for {2}{R}'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Convergence of Dominion: Unearth {3} for {1}'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

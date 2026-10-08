@@ -2277,15 +2277,32 @@
     "655aece2-f33a-46e0-8f80-112ae8a457fe": {
       "name": "Convergence of Dominion",
       "oracleSha256": "d6f51e80f201a57dad225bd9f055c7d41727a5a5e286652550d2825dd828acdc",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "convergence-of-dominion-reduction",
           "oracleText": "As long as you control your commander, activated abilities of cards in your graveyard cost {2} less to activate. This effect can't reduce the mana in that ability's activation cost to less than one mana.",
           "implementation": [
-            "explicitly unsupported; graveyard activation discount claimed without a static"
+            "interpreted costReduction appliesTo activate with graveyardAbilities, minimumMana 1 and condition controlsYourCommander; graveyardActivationCost prices graveyard activations in legality and payment"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "convergence-of-dominion-pinned-oracle-supported",
+            "convergence-of-dominion-graveyard-reduction",
+            "convergence-of-dominion-needs-commander",
+            "convergence-of-dominion-one-mana-floor",
+            "convergence-of-dominion-only-yours"
+          ],
+          "viewerScenarioIds": ["convergence-of-dominion-viewer-cheap-unearth"]
+        },
+        {
+          "id": "convergence-of-dominion-mill",
+          "oracleText": "{3}, {T}: Mill three cards.",
+          "implementation": ["interpreted activated ability: costs {3} and {T}, effect mill 3"],
+          "engineTestIds": [
+            "convergence-of-dominion-pinned-oracle-supported",
+            "convergence-of-dominion-mill"
+          ],
+          "viewerScenarioIds": ["convergence-of-dominion-viewer-cheap-unearth"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -744,3 +744,14 @@ describe('Dragonkin Berserker Card Test Lab scenario', () => {
     replays('dragonkin-berserker-viewer-reduced-boast', steps);
   });
 });
+
+describe('Convergence of Dominion Card Test Lab scenario', () => {
+  it('convergence-of-dominion-viewer-cheap-unearth — with the commander out, Unearth {3} costs {1}', () => {
+    const steps: Step[] = [{ action: 'Lab Unearth Warrior (graveyard): Unearth' }];
+    const { seat, onBattlefield } = run('convergence-of-dominion-viewer-cheap-unearth', steps);
+    expect(onBattlefield('Lab Unearth Warrior')).toHaveLength(1);
+    expect(seat('P1').graveyard).toEqual([]);
+    expect(onBattlefield('Forest')[0]?.tapped).toBe(true);
+    replays('convergence-of-dominion-viewer-cheap-unearth', steps);
+  });
+});

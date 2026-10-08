@@ -4098,12 +4098,6 @@
     "def": {}
   },
   {
-    "oracleId": "655aece2-f33a-46e0-8f80-112ae8a457fe",
-    "name": "Convergence of Dominion",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "6623cb85-fb1e-4561-8b21-0977c25096c2",
     "name": "Tibalt's Trickery",
     "handledLines": [],
@@ -13732,12 +13726,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-convergence-of-dominion",
-    "name": "Convergence of Dominion",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-coretapper",

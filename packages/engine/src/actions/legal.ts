@@ -590,6 +590,8 @@ export function activationCostReductionFor(
   for (const entry of gatherRuleStatics(ctx)) {
     if (entry.static.kind !== 'costReduction' || entry.static.appliesTo !== 'activate') continue;
     if (entry.controllerId !== controllerId) continue;
+    // Graveyard-zone reductions are priced by `graveyardActivationCost`.
+    if (entry.static.graveyardAbilities === true) continue;
     if (entry.static.boastOnly === true && ability?.requiresAttackedThisTurn !== true) continue;
     if (entry.static.filter !== undefined) {
       // The same per-entry re-source the CAST side does above: a "of the chosen type" filter
@@ -609,6 +611,39 @@ export function activationCostReductionFor(
     });
   }
   return { generic };
+}
+
+/**
+ * The mana an activated ability of a card in `controllerId`'s graveyard costs after
+ * "activated abilities of cards in your graveyard cost {2} less" (Convergence of Dominion). A
+ * reduction never takes a cost with mana below its floor ("can't reduce the mana ... to less
+ * than one mana"), and never adds mana to a cost that had none. Both `computePriorityOptions` and
+ * `applyPriorityAction` price graveyard activations through this.
+ */
+export function graveyardActivationCost(
+  ctx: GameContext,
+  controllerId: PlayerId,
+  cost: ParsedManaCost,
+): ParsedManaCost {
+  let reduced = cost;
+  for (const entry of gatherRuleStatics(ctx)) {
+    const rule = entry.static;
+    if (rule.kind !== 'costReduction' || rule.graveyardAbilities !== true) continue;
+    if (entry.controllerId !== controllerId) continue;
+    const source = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
+    if (rule.condition !== undefined && !evaluateCondition(ctx, rule.condition, source)) continue;
+    const amount = Math.max(
+      0,
+      evaluateValueIn(ctx, rule.amount, {
+        controllerId: entry.controllerId,
+        sourceCardId: entry.sourceCardId,
+      }),
+    );
+    const floor = rule.minimumMana ?? 0;
+    const room = Math.max(0, totalPips(reduced) - floor);
+    reduced = subtractGeneric(reduced, Math.min(amount, room));
+  }
+  return reduced;
 }
 
 /**
@@ -1889,7 +1924,7 @@ export function computePriorityOptions(
       // hand path above).
       if (activated.costs.some((c) => c.kind !== 'mana' && c.kind !== 'exileSelfFromGraveyard'))
         continue;
-      const manaCost = manaPortionOf(activated.costs);
+      const manaCost = graveyardActivationCost(ctx, player.id, manaPortionOf(activated.costs));
       if (!canPay(manaCost, player.manaEntries, sources, allows, player.life)) continue;
       if (activated.ability.targets.length > 0) continue; // not needed by any card in this pool
 

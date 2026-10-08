@@ -72,6 +72,7 @@ import {
   modeAdditionalCosts,
   selectedModeTargetSlots,
   targetLifeTaxFor,
+  graveyardActivationCost,
   targetMatchesReduction,
   targetedCostReductionFor,
   targetedReductionAmount,
@@ -906,7 +907,7 @@ export function* applyPriorityAction(
 
         // Every mana component, for the same purpose `computePriorityOptions` priced it with —
         // otherwise mana that may only pay for activations would make an offered action unpayable.
-        const manaCost = manaPortionOf(activated.costs);
+        const manaCost = graveyardActivationCost(ctx, player.id, manaPortionOf(activated.costs));
         if (totalPips(manaCost) > 0) {
           yield* payManaCost(ctx, player, manaCost, {
             kind: 'activateAbility',

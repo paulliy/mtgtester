@@ -3539,3 +3539,18 @@ test('Dragonkin Berserker: attack, then Boast for {2}{R}', async ({ page }) => {
   await expect(permanent(page, 'Dragon')).toBeVisible();
   await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('38');
 });
+
+test('Convergence of Dominion: Unearth {3} for {1}', async ({ page }) => {
+  await runScenario(page, 'Convergence of Dominion: Unearth {3} for {1}');
+  const warrior = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Lab Unearth Warrior', exact: true }) });
+  await expect(warrior).toHaveClass(/actionable/, { timeout: 15_000 });
+  await warrior.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Unearth Warrior')).toBeVisible();
+  await expect(permanent(page, 'Forest').locator('.tap-badge')).toHaveText('TAP');
+});

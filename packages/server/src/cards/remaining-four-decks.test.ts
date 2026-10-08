@@ -89,7 +89,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Psychomancer',
       'Beacon of Unrest',
       'Canoptek Wraith',
-      'Convergence of Dominion',
       'Hexmark Destroyer',
       'Imotekh the Stormlord',
       'Mystic Forge',

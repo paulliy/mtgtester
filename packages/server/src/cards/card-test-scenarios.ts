@@ -6903,6 +6903,57 @@ function dragonkinBerserkerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_NECRON_OVERLORD = card({
+  oracleId: 'lab-necron-overlord',
+  name: 'Lab Necron Overlord',
+  typeLine: 'Legendary Artifact Creature — Necron Noble',
+  manaCost: '{3}{B}',
+  cmc: 4,
+  colors: ['B'],
+  colorIdentity: ['B'],
+  power: '3',
+  toughness: '3',
+});
+const LAB_UNEARTH_WARRIOR = card({
+  oracleId: 'lab-unearth-warrior',
+  name: 'Lab Unearth Warrior',
+  typeLine: 'Artifact Creature — Necron Warrior',
+  manaCost: '{3}',
+  cmc: 3,
+  power: '2',
+  toughness: '2',
+  oracleText: 'Unearth {3}',
+});
+
+function convergenceOfDominionScenario(gameId: GameId): CardTestScenario {
+  const convergence = pinnedFrom(MARCHESA_BATCH1, 'Convergence of Dominion');
+  return pr01Scenario(gameId, {
+    id: 'convergence-of-dominion-viewer-cheap-unearth',
+    title: 'Convergence of Dominion: Unearth {3} for {1}',
+    instructions: [
+      'Your commander, Lab Necron Overlord, is on the battlefield, so graveyard abilities cost {2} less.',
+      'Unearth Lab Unearth Warrior from your graveyard, paying {1} with your Forest.',
+    ],
+    expectedOutcome: 'Lab Unearth Warrior returns with haste for {1}; only the Forest is tapped.',
+    oracleSha256: convergence.sha256,
+    clauseIds: ['convergence-of-dominion-reduction'],
+    decks: {
+      P1: [convergence.card, LAB_UNEARTH_WARRIOR, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    commanders: { P1: [LAB_NECRON_OVERLORD] },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Necron Overlord', 'Convergence of Dominion', 'Forest'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Unearth Warrior'] }],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -7145,6 +7196,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'hour-of-reckoning-viewer-convoke',
   'killian-ink-duelist-viewer-reduced-bolt',
   'dragonkin-berserker-viewer-reduced-boast',
+  'convergence-of-dominion-viewer-cheap-unearth',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7307,6 +7359,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'hour-of-reckoning-viewer-convoke': hourOfReckoningScenario,
   'killian-ink-duelist-viewer-reduced-bolt': killianScenario,
   'dragonkin-berserker-viewer-reduced-boast': dragonkinBerserkerScenario,
+  'convergence-of-dominion-viewer-cheap-unearth': convergenceOfDominionScenario,
 };
 
 export function createCardTestScenario(
