@@ -53,8 +53,10 @@ function permanent(page: Page, name: string) {
   // Live player chips wrap PermanentChip in `.object`. Game-over swaps to spectator SeatPanel,
   // whose battlefield chips are `.seat .tile` with no `.object` ancestor — so a `.object`-only
   // locator would report 0 after unique-pass even if the permanent was still on the board.
+  // A permanent that just left (a blink) stays in the DOM for its leave transition; it is not
+  // on the board, so it is not matched.
   return page
-    .locator('.object, .seat .tile')
+    .locator('.object:not(.board-card-leave-active), .seat .tile')
     .filter({ has: page.getByRole('img', { name, exact: true }) });
 }
 
