@@ -7,12 +7,12 @@ import { expect, test } from '@playwright/test';
  * `playwright.setup.config.ts`, which loads the committed Oracle fixture.
  *
  * The seed fixes the decks, the shuffles, and the built-in bots' choices: P1 first gets priority
- * on turn 3 holding five Forests and Elvish Mystic. After the Mystic resolves P1 has nothing left
- * to do, so the server passes for them until their next turn (turn 7). The generated decks come
+ * on turn 1 holding two Forests and Llanowar Elves. After the Elves resolve P1 has nothing left
+ * to do, so the server passes for them until their next turn (turn 5). The generated decks come
  * from the supported pool, so a change to which cards are modeled can change what a seed deals;
- * re-pick the seed then (coverage PR01 moved this from `e2e-6`).
+ * re-pick the seed then (coverage PR01 moved this from `e2e-6`, PR02 from `e2e-26`).
  */
-const SEED = 'e2e-26';
+const SEED = 'e2e-113';
 
 test('a seeded player game plays a land, casts a spell, and abandons cleanly', async ({ page }) => {
   await page.goto('/');
@@ -26,7 +26,7 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   await page.getByRole('button', { name: 'Keep this hand' }).click({ timeout: 60_000 });
 
   const playable = page.locator('.playable-now');
-  const playForest = playable.getByRole('button', { name: 'Play Forest ×5' });
+  const playForest = playable.getByRole('button', { name: 'Play Forest ×2' });
   await expect(playForest).toBeVisible({ timeout: 60_000 });
   await expect(page.locator('.turn-badge')).toContainText('Your turn');
   await expect(page.getByText('Land drop available')).toBeVisible();
@@ -42,15 +42,15 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   await expect(page.getByText('Land played')).toBeVisible();
   await expect(page.locator('.log .line', { hasText: 'plays Forest' }).last()).toBeVisible();
 
-  await playable.getByRole('button', { name: 'Cast Elvish Mystic' }).click();
+  await playable.getByRole('button', { name: 'Cast Llanowar Elves' }).click();
   await expect(page.getByText(/Auto-pay: Forest/)).toBeVisible();
   await page.locator('.tray-actions').getByRole('button', { name: 'Confirm' }).click();
-  await expect(page.locator('.log .line', { hasText: 'Elvish Mystic resolves' })).toBeVisible({
+  await expect(page.locator('.log .line', { hasText: 'Llanowar Elves resolves' })).toBeVisible({
     timeout: 30_000,
   });
 
-  // The bots take their turns, and the summary reports what they did since the Mystic.
-  await expect(page.locator('.turn-badge')).toContainText('Turn 7 · Your turn', {
+  // The bots take their turns, and the summary reports what they did since the Elves.
+  await expect(page.locator('.turn-badge')).toContainText('Turn 5 · Your turn', {
     timeout: 60_000,
   });
   const summary = page.locator('.bot-summary');
@@ -65,7 +65,7 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   const report = await page.evaluate(() => navigator.clipboard.readText());
   expect(report).toContain('## MTG Tester game report');
   expect(report).toContain(`seed \`${SEED}\``);
-  expect(report).toContain('Position: Turn 7');
+  expect(report).toContain('Position: Turn 5');
   expect(report).toContain('### P1 decklist (engine order)');
   expect(report).not.toMatch(/### P[234] decklist/);
 
