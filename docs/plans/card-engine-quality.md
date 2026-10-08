@@ -1,6 +1,6 @@
 # Card modeling quality and engine hardening
 
-Status: all six phases implemented; final source-bound viewer verification pending. Baseline: `af6b4e3`.
+Status: all six phases implemented. Current verification is reported in [PR #14](https://github.com/paulliy/mtgtester/pull/14). Baseline: `af6b4e3`.
 
 This replaces the supplied **MTGTester Card Modeling Quality & Engine Hardening Plan**.
 The review corrections are incorporated below; there is one roadmap and one completion
@@ -918,3 +918,13 @@ Main subsequently advanced to `6b400d9` with smart-yield/session corrections. Th
 integrates that change and refreshes benchmark compatibility against the combined engine.
 The partial pre-integration browser/full-suite execution is not passing evidence; complete
 verification must use the combined source, including the new smart-yield browser cases.
+
+Combined-source checkpoint: `312c892` / tree
+`cd70c86d3c990391556a656c40ef423faa45cdb8` passed all 339 local test files and
+4,593 tests without skips; current primitive receipts passed 42 contracts and both inventory
+and base-relative promotion consumers. Remote quality, engine, cards and AI/privacy gates
+passed. The remote browser suite passed 234 cases and failed only the new simultaneous-death
+scenario's missing trigger-order input. Its driver now answers both ordinary order decisions,
+waits for each new server request, and asserts both choices were submitted; all original board,
+owner, counter, negative-witness and catalog-completeness assertions remain required. Fresh
+complete browser traces and current-head CI are required to verify this final driver change.

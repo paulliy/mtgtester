@@ -236,9 +236,11 @@ async function verifyFirstZoneReturn(
   batch = false,
 ) {
   const boards: SpectatorPermanent[][] = [];
+  let requestId = '';
   page.on('websocket', (socket) =>
     socket.on('framereceived', ({ payload }) => {
       const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerActionRequired') requestId = frame.payload.request.requestId;
       if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
         boards.push(frame.payload.state.battlefield);
     }),
@@ -259,10 +261,28 @@ async function verifyFirstZoneReturn(
   const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
   const over = page.getByText(/game over/i).first();
   const passAnyway = page.getByRole('button', { name: 'Pass anyway', exact: true });
+  const order = page.getByRole('button', {
+    name: /^(Marchesa, the Black Rose: Whenever|Delayed Trigger: Return that creature)/,
+  });
   let bog = false;
+  let ordered = 0;
   for (let count = 0; count < 16; count++) {
-    await expect.poll(async () => (await over.isVisible()) || (await pass.isVisible())).toBe(true);
+    await expect
+      .poll(
+        async () =>
+          (await over.isVisible()) ||
+          (await pass.isVisible()) ||
+          (batch && (await order.first().isVisible())),
+      )
+      .toBe(true);
     if (await over.isVisible()) break;
+    if (batch && (await order.first().isVisible())) {
+      const before = requestId;
+      await order.first().click();
+      ordered++;
+      await expect.poll(async () => requestId !== before || (await over.isVisible())).toBe(true);
+      continue;
+    }
     if (
       exile &&
       !bog &&
@@ -309,6 +329,7 @@ async function verifyFirstZoneReturn(
   }
   await expect(permanent(page, 'Marchesa, the Black Rose')).toBeVisible();
   if (batch) {
+    expect(ordered).toBe(2);
     await expect(permanent(page, 'Batch No-Counter Witness')).toHaveCount(0);
     expect(
       boards.at(-1)!.find((card) => card.name === 'Marchesa, the Black Rose')!.counters,
