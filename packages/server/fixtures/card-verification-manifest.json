@@ -354,7 +354,7 @@
     "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e": {
       "name": "Blasphemous Edict",
       "oracleSha256": "6994bb591cb20faee9759d2070892083e2cea7b20e36ece110b5cc740790b4d3",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "blasphemous-edict-alternative",
@@ -388,7 +388,7 @@
     "437cfd16-94bc-43ba-afd8-e9e9d028a4ca": {
       "name": "Flare of Denial",
       "oracleSha256": "bf7016907d2dd85f89b718bc7cb81fa45db2423f52bfee50eff788eab5d3ac34",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "flare-of-denial-sacrifice-alternative",
@@ -444,7 +444,7 @@
     "4ce156f8-6b0b-41ce-9e8f-b2735c757406": {
       "name": "Flare of Malice",
       "oracleSha256": "d358e361fe29eb5d7bb7a2b7150da42213f3ec722749868738013cf835d87ec0",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "flare-of-malice-sacrifice-alternative",
@@ -479,7 +479,7 @@
     "afaef788-34d1-460b-b884-9d7ae6ddeb18": {
       "name": "Toxic Deluge",
       "oracleSha256": "8d4c686fcd606a82ad2a0dbba2ab363d1b5ca67300bf21b0a3de199ec277cad9",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "toxic-deluge-pay-x-life",
@@ -582,7 +582,7 @@
     "f53da056-97be-41ad-8cfc-0d92e17dcd7b": {
       "name": "Sage of Fables",
       "oracleSha256": "1423e05e7e7fc5bf74c33c20c1f368ebd1f4224c9c5112df484d654181aeb382",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "sage-of-fables-wizard-counter",
@@ -693,7 +693,7 @@
     "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425": {
       "name": "Carrion Feeder",
       "oracleSha256": "7fb3a771052de7acaa2d3eaebe9c39509ae68522bd344b4bd2491f77e6a3e069",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "carrion-feeder-cant-block",
@@ -752,7 +752,7 @@
     "72aef1d8-11df-4bc2-af83-907b05df73a8": {
       "name": "Grim Haruspex",
       "oracleSha256": "a82c1aeef591b7eaeb584f94d66076ac45cfafde3a65de88cdb36f4ae14866ef",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "grim-haruspex-morph",
@@ -1013,7 +1013,7 @@
     "cdfa9de4-7d7d-4638-8ac4-793ece6372dd": {
       "name": "Changing Loyalty",
       "oracleSha256": "c57a249316e0f083aae223224957ca14c9fd90badb941b38c27ed6c6cab578d0",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "changing-loyalty-replicate",
@@ -1295,7 +1295,7 @@
     "e233cb5b-7237-4271-8157-9179cc897b6c": {
       "name": "Killian, Ink Duelist",
       "oracleSha256": "dc5a598c8b1bda5db8590ef9abe9f717f4d02dd5b97c0900aeec62a96e21e1e2",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "killian-ink-duelist-lifelink",
@@ -1360,7 +1360,7 @@
     "ad3bf726-e0c2-4038-a66e-9a9dff439563": {
       "name": "Raffine's Guidance",
       "oracleSha256": "44bdca5ef478f6340f60ac4c911274747431dab346b34c92e2d3c2c092759823",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "raffines-guidance-enchant",
@@ -1524,7 +1524,7 @@
     "0ff7440b-b831-40a9-81c4-99d77bf93b8d": {
       "name": "Dream Devourer",
       "oracleSha256": "daf65f95778453b46ca292c449635ae2451bb6a70b5133f712dc759774a74fc0",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "dream-devourer-grant",
@@ -1611,7 +1611,7 @@
     "bb5c1817-ac22-4779-9005-251bc354f181": {
       "name": "Mistveil Plains",
       "oracleSha256": "ba245c46e7ecea52425fded3beb73f5bba3666af9f1c85e8234df1a5a3430791",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "mistveil-plains-tap-for-white",
@@ -1789,7 +1789,7 @@
     "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f": {
       "name": "Weathered Wayfarer",
       "oracleSha256": "42ef11f806b155602ccdd9ce54d2cd2e123a4df1d42d90c83dcedad110cfaafd",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "weathered-wayfarer-conditional-search",
@@ -2267,7 +2267,7 @@
     "32476743-c9d4-49ca-bec2-0669c215841b": {
       "name": "Anrakyr the Traveller",
       "oracleSha256": "1f11aa229db25bcdc8cb4b657fc98252b59975ad92a97811bae330033a79dcf9",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "anrakyr-the-traveller-cast-for-life",
@@ -2375,7 +2375,7 @@
     "655aece2-f33a-46e0-8f80-112ae8a457fe": {
       "name": "Convergence of Dominion",
       "oracleSha256": "d6f51e80f201a57dad225bd9f055c7d41727a5a5e286652550d2825dd828acdc",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "convergence-of-dominion-reduction",
@@ -2408,7 +2408,7 @@
     "cb923c4d-1d2e-4039-90bb-72d1981b9738": {
       "name": "Endless Atlas",
       "oracleSha256": "e1d31dc2c8118f97fe833d58fce9caf77240ad6f11bae0a80cb066638303a610",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "endless-atlas-same-name-draw",
@@ -2437,7 +2437,7 @@
     "bb1b4786-3804-486b-9fd9-85848d24d362": {
       "name": "Ghost Ark",
       "oracleSha256": "bd5d0a53132a9b86c3ced3f9f31a6856b362023b2b014b354c27ffdf92d12ffc",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "ghost-ark-flying",
@@ -2618,7 +2618,7 @@
     "352b64d2-2ae5-44ee-a64f-94932ef545d3": {
       "name": "Dread Return",
       "oracleSha256": "bda6e9277a015c56401c6b4f23fca3e7258d3aaeb53a6f234f3610f44b650553",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "dread-return-reanimate",
@@ -2654,7 +2654,7 @@
     "10f274f9-9044-447b-81c9-d4906ad9e6be": {
       "name": "Illuminor Szeras",
       "oracleSha256": "7b83ca63d63f5b6abb39060bab1bc0dd086714872059ed3c0db58a8edb205486",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "illuminor-szeras-sacrifice-for-black",
@@ -2719,7 +2719,7 @@
     "ce08aff3-efe6-4186-9557-274e00a7ca38": {
       "name": "Sceptre of Eternal Glory",
       "oracleSha256": "51ed0fa70d837b566989f2a57ef7b70bf50985d3c5c84b9d713f04a501aac2f5",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "sceptre-of-eternal-glory-any-color",
@@ -2786,7 +2786,7 @@
     "8cd45064-2ad9-4247-902e-aefaf3bc1a43": {
       "name": "Their Number Is Legion",
       "oracleSha256": "41b6712d088b044a1c75a4ef825006b3774b32f673850f48bb207b10e00e24a6",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "their-number-is-legion-tokens-and-life",
@@ -3089,7 +3089,7 @@
     "88600bd4-4dcc-4788-bba4-78b6cf5ad8f8": {
       "name": "Peema Trailblazer",
       "oracleSha256": "ac39b4f00910602a5d4f2038f9ed5a9c13f09de367d4c89bc66eaa8efc823f51",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "peema-trailblazer-trample",
@@ -3267,7 +3267,7 @@
     "1b5e6560-ff2e-4475-96cb-63f64c8a86db": {
       "name": "Soul-Guide Lantern",
       "oracleSha256": "93d00eeabc06f7b9cfb8d6d1ca01b8a6cce4ba7b83905a680d591c3aa5fb93ec",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "soul-guide-lantern-enters-exile",
@@ -3327,7 +3327,7 @@
     "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0": {
       "name": "Bespoke Battlewagon",
       "oracleSha256": "17244fc3e0a51b50c27c6b7583124bd9d6773c9a102cea36f4055792ea885d21",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "bespoke-battlewagon-gain-energy",
@@ -3572,7 +3572,7 @@
     "c232d974-9c65-4bce-b045-e5a7cc0c62e0": {
       "name": "Idol of Oblivion",
       "oracleSha256": "3baa23cd967df7e2c0549ab91ce4f57a51d53fd1282487e1236073936643962b",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "idol-of-oblivion-conditional-draw",
@@ -3692,7 +3692,7 @@
     "06b77a80-4968-4385-960a-fb66bb4faa94": {
       "name": "Dragonkin Berserker",
       "oracleSha256": "2ad5ad892794762553614df0cd73da106fe1c7e09c0aee7106dd925e95f1dab6",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "dragonkin-berserker-first-strike",
@@ -4083,7 +4083,7 @@
     "61c89b11-65c9-4fda-bbcd-d84de25df801": {
       "name": "Aether Hub",
       "oracleSha256": "a6641d8a589b60feec25b6da189a097707da60158d6196778bc6365bcccf88ec",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "aether-hub-enters-energy",
@@ -4128,7 +4128,7 @@
     "cb377c27-39a6-42b4-8c89-80a9a2350e81": {
       "name": "Solar Transformer",
       "oracleSha256": "2a416da6016481cde18645f08b0a9c28b2da620d08fe234bb82abcf7ef8719a3",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "solar-transformer-enters-tapped",
@@ -4188,7 +4188,7 @@
     "4dcfd397-9d29-420c-8fd8-c7c2a99de122": {
       "name": "Nullmage Shepherd",
       "oracleSha256": "9778d0c0a47ec527656f5c9551f1708cfbf65ce71b0636143efe86c288b3ba1a",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "nullmage-shepherd-tap-four-destroy",
@@ -4214,7 +4214,7 @@
     "aaadfe41-b2be-4183-b45e-a70e53a59d2e": {
       "name": "Retrofitter Foundry",
       "oracleSha256": "39cf3707dcf66c91dc222d73e8ee28cb898c9969c597ae3c12a916d1b7537bc3",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "retrofitter-foundry-untap",
@@ -4537,7 +4537,7 @@
     "e938ee4c-d5df-4d93-bd61-9e518fb1dc30": {
       "name": "Conclave Tribunal",
       "oracleSha256": "bead25eae71e919428001104ee03ad6fe6261144a909897511225298eb235fb9",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "conclave-tribunal-convoke",
@@ -4571,7 +4571,7 @@
     "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c": {
       "name": "Hour of Reckoning",
       "oracleSha256": "5eb44a788bb619b66c8ba3006f639178af53b512c0aedf77cbbbcee0c0e8c135",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "hour-of-reckoning-convoke",
@@ -5122,7 +5122,7 @@
     "fe8c2b7e-f80d-4acb-a976-edcf436a78a9": {
       "name": "Kogla and Yidaro",
       "oracleSha256": "2282eee96e7fab34d482770704f913a3f2e579f20336e7ce52bf0c79d1df9fce",
-      "implementationStatus": "implemented-reviewed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "id": "kogla-and-yidaro-enters-modes",

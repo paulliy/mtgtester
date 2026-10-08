@@ -4,8 +4,10 @@
  * Each restored card has a `describe` block whose test names start with the engine test IDs the
  * verification manifest declares for it. The gate at the bottom ties the two together: every
  * restored card must be pinned, modeled under both its real Oracle ID and its fixture alias,
- * declared `implemented-reviewed` in the manifest, and mapped to engine tests in this file and to
- * Card Test Lab scenarios that the real-viewer Playwright spec exercises.
+ * declared `implemented-unreviewed` in the manifest, and mapped to engine tests in this file and to
+ * Card Test Lab scenarios that the real-viewer Playwright spec exercises. A newly declared
+ * `implemented-reviewed` card also needs executable primitive contracts for every capability it
+ * uses (`bun run primitive-promotions`), which these cards do not have yet.
  */
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -5174,13 +5176,13 @@ describe('PR02 restoration gate', () => {
   });
 
   it.each(RESTORED.map((card) => [card.name, card] as const))(
-    '%s declares implemented-reviewed clauses mapped to engine and viewer evidence',
+    '%s declares implemented-unreviewed clauses mapped to engine and viewer evidence',
     (name, expected) => {
       const entry = pinned(name);
       const declared = manifest.cards[entry.card.oracleId];
       expect(declared?.name).toBe(name);
       expect(declared?.oracleSha256).toBe(expected.sha256);
-      expect(declared?.implementationStatus).toBe('implemented-reviewed');
+      expect(declared?.implementationStatus).toBe('implemented-unreviewed');
       expect(declared?.clauses).toHaveLength(expected.clauseCount);
       for (const clause of declared!.clauses) {
         expect(clause.id, `${name} clause id`).toBeTruthy();
