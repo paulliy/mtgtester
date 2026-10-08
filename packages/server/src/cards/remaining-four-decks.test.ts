@@ -87,7 +87,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Hexmark Destroyer',
       'Imotekh the Stormlord',
       'Mystic Forge',
-      'Triarch Praetorian',
       'Triarch Stalker',
       'Biotransference',
       'Shard of the Void Dragon',

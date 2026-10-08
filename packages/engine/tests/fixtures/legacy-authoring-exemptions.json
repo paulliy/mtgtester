@@ -633,7 +633,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "sha256": "d395a1c542f6d214c0a5b05f471c53c1db065ab6a288aa4882740bbe97b15193",
+      "sha256": "7c58aab56df885d8688498ad376b1e4f5063578d4cf64bb2fffb9c227d650443",
       "description": "registerNECRON_DYNASTIESOverrides"
     },
     {

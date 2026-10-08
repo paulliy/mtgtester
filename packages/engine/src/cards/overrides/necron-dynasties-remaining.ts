@@ -403,12 +403,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Trazyn the Infinite',
     'Activated mana abilities of artifacts in the graveyard are omitted.',
   );
-  // Catalog audit necron-remaining-batch-3: graveyard-origin enter is any enter.
-  unsupportedCard(
-    '52aa5a79-db0e-4eaa-b2df-e41674c47794',
-    'Triarch Praetorian',
-    'Enters-from-graveyard is implemented as any enter.',
-  );
+  // Triarch Praetorian: restored in coverage PR03. The interpreter reads "enters from a
+  // graveyard" as an origin-zone enters trigger, so no override remains.
   // Catalog audit necron-remaining-batch-3: chosen-opponent attackers is all in combat.
   unsupportedCard(
     '1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3',

@@ -1,0 +1,131 @@
+/**
+ * Coverage PR03 Card Test Lab scenarios (docs/plans/card-coverage-chunks.md), driven headlessly
+ * through the same Engine the real viewer session uses. The Playwright spec drives the identical
+ * scenarios through the real frontend; this suite pins their authoritative outcomes and replay.
+ */
+import type { DecisionRequest } from '@mtg/shared';
+import { describe, expect, it } from 'vitest';
+import { createCardTestScenario } from './card-test-scenarios';
+import type { CardTestScenario } from './card-test-scenarios';
+
+interface Choice {
+  actionId: number;
+  targets?: Array<{ slot: number; choice: string }>;
+}
+
+/** One scripted step: take the first legal action whose description contains `action`. */
+interface Step {
+  action: string;
+  /** Fill target slots, in order, with the objects or players of these names. */
+  targets?: string[];
+}
+
+function objectNames(scenario: CardTestScenario): Map<string, string> {
+  const names = new Map<string, string>();
+  const state = scenario.engine.getState();
+  for (const perm of state.battlefield) names.set(perm.id, perm.name);
+  for (const player of state.players) {
+    names.set(player.id, player.id);
+    for (const card of player.graveyard) names.set(card.id, card.name);
+    for (const card of player.hand) names.set(card.id, card.name);
+  }
+  for (const card of state.exile) names.set(card.id, card.name);
+  for (const entry of state.stack) names.set(entry.id, entry.description);
+  return names;
+}
+
+/**
+ * Take the scripted steps strictly in order; each step is consumed once. While the next step is
+ * not offered, pass priority (so the stack resolves), and the scenario ends once every player
+ * passes with an empty stack.
+ */
+function scripted(steps: Step[]) {
+  const remaining = [...steps];
+  return (request: DecisionRequest, scenario: CardTestScenario): Choice => {
+    for (const [index, step] of remaining.slice(0, 1).entries()) {
+      const action = request.legalActions.find((candidate) =>
+        candidate.description.includes(step.action),
+      );
+      if (action === undefined) continue;
+      remaining.splice(index, 1);
+      if (step.targets === undefined) return { actionId: action.id };
+      const slots =
+        (
+          action.interaction as
+            { targetSlots?: Array<{ slot: number; options: string[] }> } | undefined
+        )?.targetSlots ??
+        action.targets ??
+        [];
+      const names = objectNames(scenario);
+      const targets = step.targets.map((name, position) => {
+        const slot = slots[position];
+        if (slot === undefined) throw new Error(`${step.action}: no target slot ${position}`);
+        // A name, or a literal option such as a player id or "__no_block__".
+        const choice =
+          slot.options.find((id) => names.get(id) === name) ??
+          (slot.options.includes(name) ? name : undefined);
+        if (choice === undefined) {
+          throw new Error(
+            `${step.action}: no target named ${name} among [${slot.options
+              .map((id) => names.get(id) ?? id)
+              .join(', ')}]`,
+          );
+        }
+        return { slot: slot.slot, choice };
+      });
+      return { actionId: action.id, targets };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { actionId: (pass ?? request.legalActions[0]!).id };
+  };
+}
+
+function run(scenarioId: string, steps: Step[]) {
+  const scenario = createCardTestScenario(scenarioId, 'card-lab-pr03');
+  expect(scenario, scenarioId).not.toBeNull();
+  const choose = scripted(steps);
+  const prompts: string[] = [];
+  const offered: string[][] = [];
+  let decisions = 0;
+  for (;;) {
+    const step = scenario!.engine.advance();
+    if (step.kind === 'gameOver') break;
+    if (step.kind === 'continue') continue;
+    decisions++;
+    prompts.push(step.request.prompt ?? '');
+    offered.push(step.request.legalActions.map((action) => action.description));
+    scenario!.engine.submit({
+      requestId: step.request.requestId,
+      ...choose(step.request, scenario!),
+    });
+    if (decisions > 60) throw new Error(`${scenarioId} did not terminate`);
+  }
+  // A clean lab run ends after its priority window; an engine halt (an unmodeled card reached
+  // play) is a broken scenario, not an outcome.
+  expect(scenario!.engine.getResult()?.haltReason ?? null, scenarioId).toBeNull();
+  const state = scenario!.engine.getState();
+  const seat = (id: string) => state.players.find((candidate) => candidate.id === id)!;
+  const onBattlefield = (name: string) =>
+    state.battlefield.filter((permanent) => permanent.name === name);
+  return { scenario: scenario!, state, seat, onBattlefield, prompts, offered };
+}
+
+function replays(scenarioId: string, steps: Step[]): void {
+  const first = run(scenarioId, steps).state;
+  const second = run(scenarioId, steps).state;
+  expect(second.eventLog).toEqual(first.eventLog);
+}
+
+describe('Triarch Praetorian Card Test Lab scenario', () => {
+  it('triarch-praetorian-viewer-unearth — unearth returns it and the graveyard-origin trigger draws two', () => {
+    const steps: Step[] = [{ action: 'Unearth' }];
+    const { seat, onBattlefield } = run('triarch-praetorian-viewer-unearth', steps);
+    const p1 = seat('P1');
+    expect(p1.hand.map((card) => card.name).sort()).toEqual(['Lab Ox', 'Lab Zombie']);
+    expect(p1.life).toBe(38);
+    expect(p1.graveyard).toEqual([]);
+    expect(onBattlefield('Triarch Praetorian')).toHaveLength(1);
+    expect(onBattlefield('Swamp').every((swamp) => swamp.tapped)).toBe(true);
+    replays('triarch-praetorian-viewer-unearth', steps);
+  });
+});

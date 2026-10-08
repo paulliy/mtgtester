@@ -1709,6 +1709,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Marchesa: return creatures after simultaneous deaths'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Triarch Praetorian: unearth it to draw two cards'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

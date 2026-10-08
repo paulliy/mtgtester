@@ -7387,6 +7387,43 @@ function mosswortCastingScenario(
   });
 }
 
+// ---------------------------------------------------------------------------------------------
+// Coverage PR03 (docs/plans/card-coverage-chunks.md): zone-change history, last-known
+// information, death and return.
+// ---------------------------------------------------------------------------------------------
+
+function triarchPraetorianScenario(gameId: GameId): CardTestScenario {
+  const praetorian = pinnedFrom(MARCHESA_BATCH1, 'Triarch Praetorian');
+  const swamps = [SWAMP, SWAMP, SWAMP, SWAMP, SWAMP];
+  return pr01Scenario(gameId, {
+    id: 'triarch-praetorian-viewer-unearth',
+    title: 'Triarch Praetorian: unearth it to draw two cards',
+    instructions: [
+      'Triarch Praetorian is in your graveyard and five Swamps are on the battlefield.',
+      'Activate its unearth ability from your graveyard for {4}{B}.',
+    ],
+    expectedOutcome:
+      'Triarch Praetorian returns with haste, its enters-from-a-graveyard trigger draws Lab Ox and Lab Zombie and costs 2 life, and it is exiled at the next end step.',
+    oracleSha256: praetorian.sha256,
+    clauseIds: [
+      'triarch-praetorian-flying',
+      'triarch-praetorian-dynastic-codes',
+      'triarch-praetorian-unearth',
+    ],
+    decks: {
+      P1: [praetorian.card, ...swamps, LAB_OX, LAB_ZOMBIE],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: swamps.map((swamp) => swamp.name) }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Triarch Praetorian'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7567,6 +7604,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'grim-haruspex-viewer-morph',
   'dream-devourer-viewer-foretell',
   'dream-devourer-viewer-foretold-cast',
+  'triarch-praetorian-viewer-unearth',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7767,6 +7805,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'grim-haruspex-viewer-morph': grimHaruspexScenario,
   'dream-devourer-viewer-foretell': dreamDevourerForetellScenario,
   'dream-devourer-viewer-foretold-cast': dreamDevourerForetoldCastScenario,
+  'triarch-praetorian-viewer-unearth': triarchPraetorianScenario,
 };
 
 export function createCardTestScenario(

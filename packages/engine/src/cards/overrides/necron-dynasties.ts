@@ -412,9 +412,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Prismatic Gallery — As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard.',
   ]);
 
-  unimplemented('52aa5a79-db0e-4eaa-b2df-e41674c47794', 'Triarch Praetorian', [
-    'Dynastic Codes — When this creature enters from a graveyard, you draw two cards and you lose 2 life.',
-  ]);
+  // Triarch Praetorian: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3', 'Triarch Stalker', [
     'Targeting Relay — At the beginning of combat on your turn, choose an opponent.',

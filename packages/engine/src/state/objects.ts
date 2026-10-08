@@ -335,6 +335,9 @@ export function makePermanent(
     timestamp: ctx.state.nextTimestamp++,
     activationsThisTurn: [],
     enteredTurnNumber: ctx.state.turnNumber,
+    // A token stub or permanent-spell copy is built in the battlefield zone: it entered from
+    // nowhere, so no origin-zone trigger condition can match it.
+    ...(obj.zone === 'battlefield' ? {} : { enteredFromZone: obj.zone }),
     ...((obj as EngineCardObject).optionalCostCounts?.kicker
       ? { wasKicked: true, kicked: true }
       : {}),
@@ -1406,6 +1409,13 @@ export function queueTriggersForEvent(
           return false;
         if ('entersUntapped' in spec && spec.entersUntapped === true && s.permanent.tapped) {
           return false;
+        }
+        if ('entersFrom' in spec && spec.entersFrom !== undefined) {
+          const origin = spec.entersFrom;
+          if (s.permanent.enteredFromZone !== origin.zone) return false;
+          // A card is only ever in its owner's graveyard (CR 404.2).
+          if (origin.graveyardOwner === 'you' && s.permanent.ownerId !== source.controllerId)
+            return false;
         }
         return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId

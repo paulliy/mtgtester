@@ -117,7 +117,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
     'when',
     'condition',
     ...(family === 'object'
-      ? ['subject', 'aggregate', 'entersUntapped', 'defendingPlayerIsEventPlayer']
+      ? ['subject', 'aggregate', 'entersUntapped', 'entersFrom', 'defendingPlayerIsEventPlayer']
       : family === 'cast'
         ? ['caster', 'filter', 'targetFilter', 'ordinal']
         : ['player']),
@@ -159,6 +159,24 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         path: `${path}.entersUntapped`,
         message: 'untapped entry restriction requires an enters event',
       });
+    if (head['entersFrom'] !== undefined) {
+      const origin = head['entersFrom'];
+      const record =
+        origin !== null && typeof origin === 'object' && !Array.isArray(origin)
+          ? (origin as Record<string, unknown>)
+          : undefined;
+      if (
+        head['when'] !== 'enters' ||
+        record === undefined ||
+        record['zone'] !== 'graveyard' ||
+        (record['graveyardOwner'] !== undefined && record['graveyardOwner'] !== 'you') ||
+        Object.keys(record).some((key) => !['zone', 'graveyardOwner'].includes(key))
+      )
+        issues.push({
+          path: `${path}.entersFrom`,
+          message: 'origin-zone entry restriction requires an enters event and a graveyard origin',
+        });
+    }
     if (
       head['defendingPlayerIsEventPlayer'] !== undefined &&
       (head['defendingPlayerIsEventPlayer'] !== true || head['when'] !== 'attacks')

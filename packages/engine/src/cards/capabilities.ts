@@ -321,6 +321,7 @@ const shapes = {
     subject: { node: 'TriggerSubject' },
     aggregate: leaf,
     entersUntapped: leaf,
+    entersFrom: { object: { zone: leaf, graveyardOwner: leaf } },
     defendingPlayerIsEventPlayer: leaf,
     condition: { node: 'Condition' },
     caster: leaf,

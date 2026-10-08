@@ -175,7 +175,6 @@ const REASONS: Record<string, string> = {
     'The artifact-cards-leave-graveyard trigger is claimed without an implementation.',
   'Mystic Forge':
     'Top-of-library cast omits colorless spells, and exile-top is implemented as mill.',
-  'Triarch Praetorian': 'Enters-from-graveyard is implemented as any enter.',
   'Triarch Stalker':
     'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
@@ -308,6 +307,7 @@ describe('Marchesa catalog audit containment', () => {
     'Changing Loyalty',
     'Grim Haruspex',
     'Dream Devourer',
+    'Triarch Praetorian',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

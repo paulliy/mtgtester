@@ -2572,15 +2572,46 @@
     "52aa5a79-db0e-4eaa-b2df-e41674c47794": {
       "name": "Triarch Praetorian",
       "oracleSha256": "19702457c7e73d501b2509808cee1350b8f3944fc392e738b8f0080924578c9d",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "triarch-praetorian-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["triarch-praetorian-pinned-oracle-supported"],
+          "viewerScenarioIds": ["triarch-praetorian-viewer-unearth"]
+        },
+        {
+          "id": "triarch-praetorian-dynastic-codes",
           "oracleText": "When this creature enters from a graveyard, you draw two cards and you lose 2 life.",
           "implementation": [
-            "explicitly unsupported; graveyard-origin enter implemented as any enter"
+            "interpreted enters trigger on self with entersFrom { zone: graveyard }: matches only when the permanent's recorded enteredFromZone is graveyard (CR 603.6a), whoever controls it",
+            "effects draw 2 then loseLife 2 for the trigger's controller"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "triarch-praetorian-pinned-oracle-supported",
+            "triarch-praetorian-unearth-draws-two",
+            "triarch-praetorian-cast-from-hand-no-trigger",
+            "triarch-praetorian-other-origins-no-trigger",
+            "triarch-praetorian-reanimated-triggers",
+            "enters-from-origin-primitive-your-graveyard",
+            "enters-from-origin-primitive-tokens-and-copies",
+            "enters-from-origin-primitive-contract"
+          ],
+          "viewerScenarioIds": ["triarch-praetorian-viewer-unearth"]
+        },
+        {
+          "id": "triarch-praetorian-unearth",
+          "oracleText": "Unearth {4}{B}",
+          "implementation": [
+            "interpreted graveyard activated ability: {4}{B}, sorcery timing, effect unearth (returns with haste, exiled at the next end step or if it would leave, CR 702.84a)"
+          ],
+          "engineTestIds": [
+            "triarch-praetorian-pinned-oracle-supported",
+            "triarch-praetorian-unearth-draws-two",
+            "triarch-praetorian-unearth-needs-mana-and-sorcery-timing"
+          ],
+          "viewerScenarioIds": ["triarch-praetorian-viewer-unearth"]
         }
       ],
       "gameplayAiScenarioIds": []

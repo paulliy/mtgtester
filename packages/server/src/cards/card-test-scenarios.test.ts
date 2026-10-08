@@ -317,6 +317,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'grim-haruspex-viewer-morph',
       'dream-devourer-viewer-foretell',
       'dream-devourer-viewer-foretold-cast',
+      'triarch-praetorian-viewer-unearth',
     ]);
   });
 

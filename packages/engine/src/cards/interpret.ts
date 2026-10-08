@@ -3045,7 +3045,7 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
 const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
 /**
@@ -3973,7 +3973,21 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       if (selector === null) return null;
       subject = { kind: 'permanent', selector };
     }
-    heads = events.map((when) => ({ when, subject }));
+    // "enters from a graveyard" / "enters from your graveyard" (CR 603.6a): the origin zone is
+    // part of the enters event, read off the permanent as it arrives.
+    const origin = event.match(/^enters from (a|your) graveyard$/);
+    heads = events.map((when) =>
+      origin === null
+        ? { when, subject }
+        : {
+            when,
+            subject,
+            entersFrom: {
+              zone: 'graveyard' as const,
+              ...(origin[1] === 'your' ? { graveyardOwner: 'you' as const } : {}),
+            },
+          },
+    );
   }
 
   if (continuation.length > 0) body += '\n' + continuation;

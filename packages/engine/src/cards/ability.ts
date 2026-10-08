@@ -1300,6 +1300,14 @@ export type TriggerHead =
        */
       entersUntapped?: true;
       /**
+       * "When this creature enters **from a graveyard**" (Triarch Praetorian) / "enters **from
+       * your graveyard**" (Flayer of the Hatebound) — part of the enters event: the zone the
+       * permanent moved from (CR 603.6a, 603.10). `graveyardOwner: 'you'` requires the card to
+       * have been in the ability controller's graveyard, which a card only ever is when its owner
+       * is that player.
+       */
+      entersFrom?: { zone: 'graveyard'; graveyardOwner?: 'you' };
+      /**
        * "Whenever ~ attacks, destroy target artifact or enchantment **defending player** controls"
        * (Kogla) — for an `attacks` trigger, `eventPlayer` is the player the creature is attacking
        * instead of the attacker's controller.

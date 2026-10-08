@@ -111,6 +111,8 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
       permanent.tapped = entry.tapped ?? false;
       permanent.summoningSick = false;
       permanent.enteredTurnNumber = spec.turnNumber - 1;
+      // Nor did they arrive from the library the scenario drew them out of.
+      delete permanent.enteredFromZone;
       ctx.state.battlefield.push(permanent);
     }
   }

@@ -3208,12 +3208,6 @@
     "def": {}
   },
   {
-    "oracleId": "52aa5a79-db0e-4eaa-b2df-e41674c47794",
-    "name": "Triarch Praetorian",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "53b2c8f2-db9a-4ab0-a4e8-17385b2fa3bd",
     "name": "Aethertide Whale",
     "handledLines": [
@@ -21967,12 +21961,6 @@
   {
     "oracleId": "oracle-trazyn-the-infinite",
     "name": "Trazyn the Infinite",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-triarch-praetorian",
-    "name": "Triarch Praetorian",
     "handledLines": [],
     "def": {}
   },

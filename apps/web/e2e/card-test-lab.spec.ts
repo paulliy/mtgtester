@@ -3903,13 +3903,16 @@ test("Kogla and Yidaro: discard it to destroy P2's artifact", async ({ page }) =
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await confirm(page);
   await page.getByRole('button', { name: 'Target Lab Anrakyr Relic' }).click({ timeout: 15_000 });
-  // The library holds Kogla and Yidaro and a Forest once it is shuffled in; whichever is drawn,
-  // the ability has resolved. Passing now would stop at the land-drop reminder, so stop here.
+  // Before the shuffle the library holds a Mountain, a Forest and Lab Zombie; Kogla and Yidaro
+  // joins them. Whichever card is drawn, the ability has resolved. Passing now would stop at the
+  // land-drop reminder, so stop here.
   await expect(page.getByText(/Kogla and Yidaro.*resolves/).first()).toBeVisible({
     timeout: 15_000,
   });
   await expect(permanent(page, 'Lab Anrakyr Relic')).toHaveCount(0);
-  await expect(page.getByText(/draws (Forest|Kogla and Yidaro)/).first()).toBeVisible();
+  await expect(
+    page.getByText(/draws (Forest|Mountain|Lab Zombie|Kogla and Yidaro)/).first(),
+  ).toBeVisible();
 });
 
 test("Changing Loyalty: replicate once onto both of P2's creatures", async ({ page }) => {
@@ -4745,4 +4748,21 @@ test('Marchesa: return creatures after simultaneous deaths', async ({ page }) =>
     false,
     true,
   );
+});
+
+test('Triarch Praetorian: unearth it to draw two cards', async ({ page }) => {
+  await runScenario(page, 'Triarch Praetorian: unearth it to draw two cards');
+  const praetorian = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Triarch Praetorian', exact: true }) });
+  await expect(praetorian).toHaveClass(/actionable/, { timeout: 15_000 });
+  await praetorian.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Triarch Praetorian')).toBeVisible();
+  await expect(handCard(page, 'Lab Ox')).toBeVisible();
+  await expect(handCard(page, 'Lab Zombie')).toBeVisible();
+  await expect(page.locator('.log .line', { hasText: /loses 2 life/ }).first()).toBeVisible();
 });

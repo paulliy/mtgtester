@@ -2697,6 +2697,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "52aa5a79-db0e-4eaa-b2df-e41674c47794",
+    "name": "Triarch Praetorian",
+    "package": "PR03.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Enters-from-graveyard is implemented as any enter."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f2ef8bda-373d-4387-900d-0f1b6ccf72e9",
     "name": "Trumpeting Carnosaur",
     "package": "W5",

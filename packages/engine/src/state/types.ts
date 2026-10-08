@@ -25,6 +25,7 @@ import type {
   PlayerId,
   PlayerState,
   StackObject,
+  Zone,
 } from '@mtg/shared';
 import type { ManaEntry, TriggerWhen } from '../cards/ability';
 import type {
@@ -90,6 +91,12 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   timestamp: number;
   /** `state.turnNumber` when this object entered the battlefield — "entered this turn" (Neriv). */
   enteredTurnNumber: number;
+  /**
+   * The zone this object moved from to enter the battlefield ("enters from a graveyard",
+   * CR 603.6a): `stack` for a resolving permanent spell. Absent for a token or a permanent-spell
+   * copy, which did not come from any zone.
+   */
+  enteredFromZone?: Zone;
   /** Independent goad requirements, one for each player that has goaded this permanent. */
   goadedBy?: GoadRequirement[];
   /** Latched during declare attackers for "had to attack this combat" triggers. */

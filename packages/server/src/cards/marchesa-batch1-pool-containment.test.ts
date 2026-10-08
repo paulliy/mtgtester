@@ -78,6 +78,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Thunderfoot Baloth',
       'Tomb Fortress',
       'Toxic Deluge',
+      'Triarch Praetorian',
       'Vastwood Surge',
       'Voice of Many',
       'War Room',
