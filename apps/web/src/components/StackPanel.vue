@@ -44,7 +44,7 @@ const nameOf = computed(() => {
 <template>
   <div class="stack">
     <h3>Stack</h3>
-    <TransitionGroup v-if="topFirst.length > 0" tag="ol" name="stack-item">
+    <TransitionGroup tag="ol" name="stack-item">
       <li
         v-for="(obj, index) in topFirst"
         :key="obj.id"
@@ -68,7 +68,7 @@ const nameOf = computed(() => {
         </span>
       </li>
     </TransitionGroup>
-    <p v-else class="empty">empty</p>
+    <p v-if="topFirst.length === 0" class="empty">empty</p>
   </div>
 </template>
 
@@ -138,13 +138,18 @@ li.chosen-target {
 .stack-item-enter-active,
 .stack-item-leave-active {
   transition:
-    opacity 180ms ease,
-    transform 180ms ease;
+    opacity 280ms ease,
+    transform 280ms cubic-bezier(0.2, 0.7, 0.25, 1),
+    filter 280ms ease;
+}
+.stack-item-move {
+  transition: transform 280ms ease;
 }
 .stack-item-enter-from,
 .stack-item-leave-to {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateY(-9px) scale(0.96);
+  filter: brightness(1.35);
 }
 .stack-item-leave-active {
   position: absolute;

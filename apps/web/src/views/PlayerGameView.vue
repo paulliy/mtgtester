@@ -75,6 +75,14 @@ function seatAnchorRef(seatId: string): (el: Element | ComponentPublicInstance |
 }
 
 const state = computed(() => store.playerState);
+const thinkingLabel = computed(() => {
+  const board = state.value;
+  if (board === null) return 'Getting the game ready…';
+  const seat = board.priorityPlayer ?? board.activePlayer;
+  if (seat === board.viewerSeat) return 'Resolving your action…';
+  const name = board.seats.find((entry) => entry.seat === seat)?.label ?? seat;
+  return `${name} is deciding…`;
+});
 
 /**
  * MTGA-style attack animation (extends §9.8.1): every freshly pushed board is diffed for combat
@@ -1099,7 +1107,7 @@ function abandon(): void {
               </div>
               <span>{{ opponent.handSize }} in hand · {{ opponent.librarySize }} in library</span>
             </div>
-            <div class="permanents">
+            <TransitionGroup tag="div" name="board-card" class="permanents">
               <div
                 v-for="group in groupedPermanentsFor(opponent.seat)"
                 :key="group.permanent.id"
@@ -1126,12 +1134,8 @@ function abandon(): void {
                   :name-by-id="nameById"
                 />
               </div>
-            </div>
-            <div
-              v-if="opponent.graveyard.length > 0 || exileFor(opponent.seat).length > 0"
-              class="zones-strip opponent-zones"
-              @click.stop
-            >
+            </TransitionGroup>
+            <div class="zones-strip opponent-zones" @click.stop>
               <ZoneStrip
                 label="Graveyard"
                 :cards="opponent.graveyard"
@@ -1215,7 +1219,13 @@ function abandon(): void {
             >
           </div>
           <div class="battle-row">
-            <div class="permanents" @dragover.prevent @drop="dropToBattlefield">
+            <TransitionGroup
+              tag="div"
+              name="board-card"
+              class="permanents"
+              @dragover.prevent
+              @drop="dropToBattlefield"
+            >
               <div
                 v-for="group in groupedPermanentsFor(human.seat)"
                 :key="group.permanent.id"
@@ -1244,7 +1254,7 @@ function abandon(): void {
                   :name-by-id="nameById"
                 />
               </div>
-            </div>
+            </TransitionGroup>
             <div
               v-if="human.commanders.some((commander) => commander.zone === 'command')"
               class="command-zone"
@@ -1285,7 +1295,9 @@ function abandon(): void {
             </div>
           </div>
 
-          <div
+          <TransitionGroup
+            tag="div"
+            name="hand-card"
             class="hand"
             :class="{ 'has-playable': playableSources.length > 0 && selectedAction === null }"
           >
@@ -1319,9 +1331,9 @@ function abandon(): void {
               }}</span>
               <span>{{ card.name }}</span>
             </button>
-          </div>
+          </TransitionGroup>
 
-          <div v-if="human.graveyard.length > 0 || humanExile.length > 0" class="zones-strip">
+          <div class="zones-strip">
             <ZoneStrip
               label="Graveyard"
               :cards="human.graveyard"
@@ -1595,7 +1607,10 @@ function abandon(): void {
               />
             </template>
           </template>
-          <p v-else class="thinking">Bots are deciding…</p>
+          <p v-else class="thinking" role="status" aria-live="polite">
+            <span class="thinking-mark" aria-hidden="true" />
+            {{ thinkingLabel }}
+          </p>
           <div v-if="opponentActivity.length > 0" class="bot-summary">
             <strong title="Passing priority doesn't count as an action here."
               >Since your last action</strong
@@ -1899,6 +1914,7 @@ button.selected,
   animation: flashOk 0.9s ease-out;
 }
 .permanents {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -1908,6 +1924,30 @@ button.selected,
   gap: 0.3rem;
   overflow-x: hidden;
   overflow-y: auto;
+}
+.board-card-enter-active,
+.board-card-leave-active {
+  transition:
+    opacity 300ms ease,
+    transform 300ms cubic-bezier(0.2, 0.72, 0.25, 1),
+    filter 300ms ease;
+}
+.board-card-move {
+  transition: transform 300ms ease;
+}
+.board-card-enter-from {
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  filter: brightness(1.3);
+}
+.board-card-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.94);
+  filter: brightness(1.35);
+}
+.board-card-leave-active {
+  position: absolute;
+  pointer-events: none;
 }
 .zones-strip {
   display: flex;
@@ -1978,6 +2018,7 @@ button.selected,
   min-width: 0;
 }
 .hand {
+  position: relative;
   flex-shrink: 0;
   display: flex;
   gap: 0.35rem;
@@ -1985,6 +2026,27 @@ button.selected,
   overflow-y: hidden;
   padding-top: 0.35rem;
   border-top: 1px solid var(--line);
+}
+.hand-card-enter-active,
+.hand-card-leave-active {
+  transition:
+    opacity 300ms ease,
+    transform 300ms cubic-bezier(0.2, 0.72, 0.25, 1);
+}
+.hand-card-move {
+  transition: transform 300ms ease;
+}
+.hand-card-enter-from {
+  opacity: 0;
+  transform: translateY(14px) scale(0.94);
+}
+.hand-card-leave-to {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.92) rotate(-2deg);
+}
+.hand-card-leave-active {
+  position: absolute;
+  pointer-events: none;
 }
 .hand-card {
   position: relative;
@@ -2318,6 +2380,29 @@ button.primary {
 .waiting {
   color: var(--muted);
   font-style: italic;
+}
+.thinking {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.thinking-mark {
+  width: 0.52rem;
+  height: 0.52rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 rgb(96 165 250 / 0.45);
+  animation: thinkingPulse 1.35s ease-out infinite;
+}
+@keyframes thinkingPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(96 165 250 / 0.45);
+  }
+  75%,
+  100% {
+    box-shadow: 0 0 0 0.48rem rgb(96 165 250 / 0);
+  }
 }
 .routine-confirm {
   display: flex;

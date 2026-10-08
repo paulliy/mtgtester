@@ -26,7 +26,7 @@ function onLeave(): void {
 </script>
 
 <template>
-  <div class="hand-strip">
+  <TransitionGroup tag="div" name="hand-thumb" class="hand-strip">
     <div
       v-for="card in cards"
       :key="card.id"
@@ -42,12 +42,13 @@ function onLeave(): void {
         size="small"
       />
     </div>
-    <p v-if="cards.length === 0" class="empty">empty</p>
-  </div>
+    <p v-if="cards.length === 0" key="empty" class="empty">empty</p>
+  </TransitionGroup>
 </template>
 
 <style scoped>
 .hand-strip {
+  position: relative;
   display: flex;
   align-items: flex-end;
   gap: 0.25rem;
@@ -55,6 +56,26 @@ function onLeave(): void {
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0.2rem 0.1rem;
+}
+.hand-thumb-enter-active,
+.hand-thumb-leave-active {
+  transition:
+    opacity 240ms ease,
+    transform 240ms ease;
+}
+.hand-thumb-move {
+  transition: transform 240ms ease;
+}
+.hand-thumb-enter-from {
+  opacity: 0;
+  transform: translateY(8px) scale(0.92);
+}
+.hand-thumb-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.94);
+}
+.hand-thumb-leave-active {
+  position: absolute;
 }
 .thumb {
   width: 40px;
