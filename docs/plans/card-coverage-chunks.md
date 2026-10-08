@@ -23,7 +23,8 @@ same numbers.
 PR01 and PR02 landed exactly as planned: all 29 and all 33 cards are modeled, no card regressed,
 and the remaining count for every deck matches the PR01 and PR02 columns below.
 
-The 302 remaining cards fall into two groups:
+When the plan was prepared, the 302 remaining cards fell into two groups (PR01 and PR02 have since
+modeled 62 of them):
 
 - **Fail-closed (193 cards).** An override exists, but the catalog audit found a semantic gap. The
   card reports `explicitly unsupported: …`, which names the exact gap. These are usually the
