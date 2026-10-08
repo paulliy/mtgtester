@@ -5565,35 +5565,35 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 32,
+      "uniqueOracleIds": 31,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
-      "uniqueOracleIds": 54,
+      "uniqueOracleIds": 53,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 42,
+      "uniqueOracleIds": 35,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 55,
+      "uniqueOracleIds": 47,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 44,
+      "uniqueOracleIds": 41,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5607,21 +5607,21 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 45,
+      "uniqueOracleIds": 42,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 56,
+      "uniqueOracleIds": 53,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "uniqueOracleIds": 31,
+      "uniqueOracleIds": 27,
       "reviewedOracleIds": 31,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5661,6 +5661,258 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr01",
       "note": "Registration deleted: the interpreter models enters-tapped, the {W}/{B} mana ability and the surveil activation; engine and Card Test Lab evidence in packages/engine/tests/pr01-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "aaadfe41-b2be-4183-b45e-a70e53a59d2e",
+      "name": "Retrofitter Foundry",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter models all four activated abilities, including the {2}, {T} Servo ability the authored list used to drop; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "cb923c4d-1d2e-4039-90bb-72d1981b9738",
+      "name": "Endless Atlas",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this contained one and the empty placeholder in necron-dynasties.ts): the interpreter reads the {2}, {T} draw with its 'three or more lands with the same name' activation condition; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "cb923c4d-1d2e-4039-90bb-72d1981b9738",
+      "name": "Endless Atlas",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Empty placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "ce08aff3-efe6-4186-9557-274e00a7ca38",
+      "name": "Sceptre of Eternal Glory",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the empty placeholder in necron-dynasties.ts): the interpreter reads {T}: Add three mana of any one color with its 'three or more lands with the same name' activation condition; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "ce08aff3-efe6-4186-9557-274e00a7ca38",
+      "name": "Sceptre of Eternal Glory",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Empty placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "9a02a9a7-39d9-4763-85d3-747a0540b60b",
+      "name": "Gilded Lotus",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02-grammar",
+      "note": "Override deleted (overrides rule 5) when coverage PR02 taught the grammar 'Add N mana of any one color' for Sceptre of Eternal Glory: the interpreter now derives exactly the linked three-unit mana ability the override authored. Behavior evidence stays in packages/engine/tests/necron-main-engine-batch1.test.ts."
+    },
+    {
+      "oracleId": "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f",
+      "name": "Weathered Wayfarer",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the revealed land search (reveal is now kept by the search grammar) and the 'an opponent controls more lands than you' activation condition; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c232d974-9c65-4bce-b045-e5a7cc0c62e0",
+      "name": "Idol of Oblivion",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the draw's 'you created a token this turn' activation condition and the 10/10 colorless Eldrazi creature token; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "bb5c1817-ac22-4779-9005-251bc354f181",
+      "name": "Mistveil Plains",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the {W}, {T} bottom-of-library activation (new graveyardToLibraryBottom effect) and its 'two or more white permanents' activation condition; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425",
+      "name": "Carrion Feeder",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads \"can't block\" (new grammar) and the sacrifice-a-creature cost, whose allowSelf lets Carrion Feeder sacrifice itself; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4dcfd397-9d29-420c-8fd8-c7c2a99de122",
+      "name": "Nullmage Shepherd",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: 'Tap four untapped creatures you control' now parses as tapOthers with allowSelf, so the Shepherd may be one of the four; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "f53da056-97be-41ad-8cfc-0d92e17dcd7b",
+      "name": "Sage of Fables",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: 'Remove a +1/+1 counter from a creature you control' now parses as the removeCountersFromAmong cost (any matching creature you control, the Sage included), and the Wizard enters-with-counter line was already interpreted; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "bb1b4786-3804-486b-9fd9-85848d24d362",
+      "name": "Ghost Ark",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads 'Whenever this Vehicle becomes crewed' as a becomesCrewed trigger queued only when a crew ability resolves (CR 702.122e), and the until-end-of-turn unearth grant now lasts until cleanup or until the card leaves the graveyard, with unearth's exile-instead replacement (CR 702.84a); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "bb1b4786-3804-486b-9fd9-85848d24d362",
+      "name": "Ghost Ark",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "4ce156f8-6b0b-41ce-9e8f-b2735c757406",
+      "name": "Flare of Malice",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the sacrifice-a-nontoken-black-creature alternative cost (nonMana alternativeCast with a sacrificeOther cost) and the greatest-mana-value edict (sacrificeGreatestEachOpponent over creatures and planeswalkers); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e",
+      "name": "Blasphemous Edict",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the {B} alternative cost with its 'thirteen or more creatures on the battlefield' condition (counted across all players) and 'each player sacrifices thirteen creatures'; the hand alternative-cost path now charges the alternative's mana. Engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "352b64d2-2ae5-44ee-a64f-94932ef545d3",
+      "name": "Dread Return",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads 'Flashback—Sacrifice three creatures' as a graveyard nonMana alternative cast with no mana, a sacrificeOther cost of three creatures and exileOnResolution; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "352b64d2-2ae5-44ee-a64f-94932ef545d3",
+      "name": "Dread Return",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "ad3bf726-e0c2-4038-a66e-9a9dff439563",
+      "name": "Raffine's Guidance",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in silverquill-influence.ts): the interpreter reads the {2}{W} graveyard recast as a graveyard nonMana alternative cast with no exile rider; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "ad3bf726-e0c2-4038-a66e-9a9dff439563",
+      "name": "Raffine's Guidance",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the silverquill-influence-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "8cd45064-2ad9-4247-902e-aefaf3bc1a43",
+      "name": "Their Number Is Legion",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads the X tapped Necron Warrior tokens, the life gain equal to the artifacts you control, the resolving spell exiling itself (resolvingSpellExile) and the card's own castFromGraveyard permission at its normal cost; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "8cd45064-2ad9-4247-902e-aefaf3bc1a43",
+      "name": "Their Number Is Legion",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "32476743-c9d4-49ca-bec2-0669c215841b",
+      "name": "Anrakyr the Traveller",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads the optional attack trigger as castForLifeFromZones over your hand and graveyard, paying life equal to mana value (only with that much life, CR 119.4); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "32476743-c9d4-49ca-bec2-0669c215841b",
+      "name": "Anrakyr the Traveller",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
+      "name": "Toxic Deluge",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads 'As an additional cost to cast this spell, pay X life' as an announced X (announcesX) with a payLifeValue cost paid while casting, and 'All creatures get -X/-X until end of turn' as pumpEachUntilEot with -X/-X; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "e938ee4c-d5df-4d93-bd61-9e518fb1dc30",
+      "name": "Conclave Tribunal",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: convoke is now a real payment (each untapped creature you control taps to pay {1} or one mana of its color while casting, never counted as mana spent), and the interpreter reads the exile-until-this-leaves enters trigger (exileUntilSourceLeaves); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c",
+      "name": "Hour of Reckoning",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: convoke is a real payment (see Conclave Tribunal), and the interpreter now reads 'destroy all nontoken creatures' (the tribal destroy-all rule no longer claims 'nontoken' as a creature type); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",
+      "name": "Killian, Ink Duelist",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in silverquill-influence.ts): the interpreter reads the reduction as a costReduction with targetFilter creature, priced against the chosen targets (legality offers a full-price option without creature targets and a reduced option per creature-capable slot); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",
+      "name": "Killian, Ink Duelist",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the silverquill-influence-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "06b77a80-4968-4385-960a-fb66bb4faa94",
+      "name": "Dragonkin Berserker",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads Boast (activate only if this creature attacked this turn, once each turn, CR 702.142a) and the reduction as an activation costReduction with boastOnly, counted per Dragon you control and applied to every Boast ability you activate; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "655aece2-f33a-46e0-8f80-112ae8a457fe",
+      "name": "Convergence of Dominion",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads the graveyard activation reduction ({2}, floor one mana, only while you control your commander) priced by graveyardActivationCost for both legality and payment, and the {3}, {T} mill ability; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "655aece2-f33a-46e0-8f80-112ae8a457fe",
+      "name": "Convergence of Dominion",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
+      "name": "Changing Loyalty",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (the unsupportedCard in silverquill-influence-remaining.ts and the shadowed unimplemented() in silverquill-influence.ts): Replicate is a repeatable optional cost with a cast trigger copying the spell, copies of a permanent spell resolve into tokens (an Aura copy attached to its target), and the interpreter reads 'When enchanted creature dies, return it to the battlefield under your control'; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
+      "name": "Changing Loyalty",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Shadowed unimplemented() deleted together with the silverquill-influence-remaining.ts registration; see that entry."
+    },
+    {
+      "oracleId": "72aef1d8-11df-4bc2-af83-907b05df73a8",
+      "name": "Grim Haruspex",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: Morph is a face-down cast for {3} (on the stack as a vanilla 2/2 with hidden identity) and a turn-face-up special action for the morph cost, and the interpreter reads Morph {B}; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "0ff7440b-b831-40a9-81c4-99d77bf93b8d",
+      "name": "Dream Devourer",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the foretell grant (a foretell special action for nonland hand cards, castable from exile on a later turn for the mana cost reduced by {2} generic, kept after the Devourer leaves) and the 'whenever you foretell a card' trigger; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

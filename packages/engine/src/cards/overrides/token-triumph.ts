@@ -46,11 +46,8 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       }),
     },
   );
-  unsupportedCard(
-    'c232d974-9c65-4bce-b045-e5a7cc0c62e0',
-    'Idol of Oblivion',
-    'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
-  );
+  // Idol of Oblivion: restored in coverage PR02. The interpreter reads the draw's "Activate only
+  // if you created a token this turn" condition and the 10/10 colorless Eldrazi creature token.
   // Coverage PR01: "up to two" is a 0..2 count slot, so the spell may be cast with no target.
   defineCard(
     'aeec8e85-6571-4da6-8a48-f5d3985ca10b',
@@ -161,12 +158,8 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       ],
     },
   );
-  // Catalog audit token-triumph-batch-5: tap-four cannot include this creature.
-  unsupportedCard(
-    '4dcfd397-9d29-420c-8fd8-c7c2a99de122',
-    'Nullmage Shepherd',
-    'The four creatures cannot include this creature.',
-  );
+  // Nullmage Shepherd: restored in coverage PR02. "Tap four untapped creatures you control" is
+  // a tapOthers cost with allowSelf, so Nullmage Shepherd may be one of the four.
   // Fortified Village
   defineCard(
     '56f1a16a-9f41-41fb-b580-c200bca27cd6',
@@ -584,12 +577,8 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       ],
     },
   );
-  // Catalog audit token-triumph-batch-8: convoke is a dead ruleStatic.
-  unsupportedCard(
-    'e938ee4c-d5df-4d93-bd61-9e518fb1dc30',
-    'Conclave Tribunal',
-    'Convoke is stored as a ruleStatic but never offered as a payment.',
-  );
+  // Conclave Tribunal: restored in coverage PR02. Convoke is a real payment now (creatures
+  // tapped while casting it), so no override remains.
   // Catalog audit token-triumph-batch-7: can't-block is a name check, not a static.
   unsupportedCard(
     'c549b0fd-1e08-4873-952e-a14dc45a0fd2',
@@ -717,10 +706,6 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       },
     },
   );
-  // Catalog audit token-triumph-batch-8: convoke is a dead ruleStatic.
-  unsupportedCard(
-    '3bc13640-03f8-4b19-b0a4-7e7cb5271c0c',
-    'Hour of Reckoning',
-    'Convoke is stored as a ruleStatic but never offered as a payment.',
-  );
+  // Hour of Reckoning: restored in coverage PR02. Convoke is a real payment now, so no override
+  // remains.
 }

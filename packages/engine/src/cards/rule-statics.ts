@@ -42,6 +42,27 @@ export type RuleStatic =
        * here uses.
        */
       appliesTo?: 'cast' | 'activate';
+      /**
+       * "Spells you cast that target a creature cost {2} less to cast" (Killian, Ink Duelist): the
+       * reduction applies only when one of the spell's chosen targets matches. Total cost is
+       * locked in after targets are chosen (CR 601.2c, 601.2f), so `costReductionFor` leaves these
+       * out and `targetedCostReductionFor` prices them against the actual targets.
+       */
+      targetFilter?: Selector;
+      /**
+       * "Boast abilities you activate cost {1} less" (Dragonkin Berserker): an activation
+       * reduction for Boast abilities only (CR 702.142), whatever permanent has them.
+       */
+      boastOnly?: true;
+      /**
+       * "Activated abilities of cards in your graveyard cost {2} less to activate" (Convergence of
+       * Dominion): an activation reduction for graveyard-zone abilities only.
+       */
+      graveyardAbilities?: true;
+      /** "This effect can't reduce the mana in that ability's activation cost to less than N". */
+      minimumMana?: number;
+      /** "As long as you control your commander" — the reduction applies only while true. */
+      condition?: import('./condition').Condition;
     }
   /**
    * "Creature spells you control can't be countered" (Rhythm of the Wild) — a STATE-DEPENDENT
@@ -77,6 +98,12 @@ export type RuleStatic =
     }
   /** "Play with the top card of your library revealed." */
   | { kind: 'revealTopLibrary' }
+  /**
+   * "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal to
+   * its mana cost reduced by {2}." (Dream Devourer, CR 702.143a): the foretell special action
+   * for its controller's hand cards, each keeping that cost once foretold.
+   */
+  | { kind: 'grantForetell'; reduction: number }
   /** Additional land plays available to the controller each turn. */
   | { kind: 'additionalLandDrops'; count: Value }
   /** Opponents/players cannot activate abilities of matching battlefield sources. */

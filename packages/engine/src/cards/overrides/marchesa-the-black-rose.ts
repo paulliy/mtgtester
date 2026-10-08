@@ -1,7 +1,8 @@
 /** Authored overrides for marchesa-the-black-rose.txt. */
 
 import type { CardDefinition } from '../definition';
-import { TAP } from '../templates';
+import { TAP, spell, targetSlots } from '../templates';
+import { counterSpellTarget } from '../target-builders';
 import type { Ability } from '../ability';
 import { constant } from '../value';
 import { allOf, anyOf, hasCounter, IS_TOKEN, OTHER, not, ofType, YOURS } from '../selector';
@@ -144,12 +145,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit batch 5: the {B}-if-13-creatures alternative cost is claimed but not authored.
-  unsupportedCard(
-    '6cf50e21-0f60-4e9a-b910-ebe1bad2a29e',
-    'Blasphemous Edict',
-    'The thirteen-creature {B} alternative cost is claimed without an alternativeCast.',
-  );
+  // Blasphemous Edict: restored in coverage PR02. The interpreter reads the conditional {B}
+  // alternative cost and "each player sacrifices thirteen creatures", so no override remains.
   // Catalog audit batch 2: connive always puts a counter, and the return trigger omits
   // the equal-or-lesser-power filter.
   unsupportedCard(
@@ -164,12 +161,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Bolt Bend',
     'Change-the-target is implemented as copyTargetSpell; a copy is not a retarget.',
   );
-  // Catalog audit batch 8: "Sacrifice a creature" can be this creature; sacrificeOther cannot.
-  unsupportedCard(
-    'a1cc5e37-b09a-4b7f-afd5-77c1c35aa425',
-    'Carrion Feeder',
-    'Sacrifice-a-creature cost uses sacrificeOther, which cannot sacrifice this creature.',
-  );
+  // Carrion Feeder: restored in coverage PR02. The interpreter reads "can't block" and the
+  // sacrifice-a-creature cost, which may sacrifice Carrion Feeder itself (allowSelf).
   // Catalog audit batch 3: control change is permanent, not "for as long as this remains".
   unsupportedCard(
     '026ef98e-4f0a-4a6d-b74f-d17ac8b10e37',
@@ -237,22 +230,25 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       description: 'Counter target noncreature spell',
     },
   });
+  // Coverage PR02: the interpreter reads the sacrifice-a-nontoken-blue-creature alternative cost.
+  // Kept, like Fierce Guardianship, for one difference: the generic "counter target spell" rule
+  // targets only an opponent's spell, while Flare of Denial may counter any spell.
+  const denial = targetSlots({ spell: counterSpellTarget('spell') });
+  defineCard('437cfd16-94bc-43ba-afd8-e9e9d028a4ca', 'Flare of Denial', [], {
+    spellAbility: spell({
+      targets: denial.targets,
+      effects: [{ op: 'counter', target: denial.slot.spell }],
+      description: 'Counter target spell',
+    }),
+  });
   // Catalog audit batch 5: sacrifice-a-nontoken-creature alternative costs are claimed, not authored.
-  unsupportedCard(
-    '437cfd16-94bc-43ba-afd8-e9e9d028a4ca',
-    'Flare of Denial',
-    'Sacrifice-a-nontoken-blue-creature alternative cost is claimed without an alternativeCast.',
-  );
   unsupportedCard(
     'f586ecb8-310c-4f40-a766-6a7ca46a254d',
     'Flare of Duplication',
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
   );
-  unsupportedCard(
-    '4ce156f8-6b0b-41ce-9e8f-b2735c757406',
-    'Flare of Malice',
-    'Sacrifice-a-nontoken-black-creature alternative cost is claimed without an alternativeCast.',
-  );
+  // Flare of Malice: restored in coverage PR02. The interpreter reads the sacrifice alternative
+  // cost and the greatest-mana-value sacrifice, so no override remains.
   // Catalog audit batch 4: any of your creatures entering fires this, not only graveyard origin.
   unsupportedCard(
     'ba9f3c5d-556f-48d1-8d87-723f7893cfcd',
@@ -325,12 +321,6 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
         },
       ],
     },
-  );
-  // Catalog audit batch 8: Morph is stored on the definition but never offered as a cast.
-  unsupportedCard(
-    '72aef1d8-11df-4bc2-af83-907b05df73a8',
-    'Grim Haruspex',
-    'Morph cost is stored but never offered as a face-down alternative cast.',
   );
   defineCard(
     '366a218e-84d3-4cf9-bbc8-f2f8ecce92a3',
@@ -478,12 +468,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'River Kelpie',
     'Graveyard-origin enters and cast triggers fire on any enter or cast.',
   );
-  // Catalog audit batch 7: counter cost removes from the source, not any creature you control.
-  unsupportedCard(
-    'f53da056-97be-41ad-8cfc-0d92e17dcd7b',
-    'Sage of Fables',
-    'Remove-a-counter cost is paid from this creature, not a creature you control.',
-  );
+  // Sage of Fables: restored in coverage PR02. The draw's cost is removeCountersFromAmong: a
+  // +1/+1 counter from any creature you control, chosen as the cost is paid.
   // Catalog audit batch 7: uncast/no-mana-spent restriction is omitted.
   unsupportedCard(
     '7555c429-5f2d-4171-b6b0-8e3c8da7f314',
@@ -522,12 +508,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'The Ooze',
     'Leaves-the-battlefield is implemented as dies.',
   );
-  // Catalog audit batch 5: additional cost is paid at resolution as loseLife.
-  unsupportedCard(
-    'afaef788-34d1-460b-b884-9d7ae6ddeb18',
-    'Toxic Deluge',
-    'Pay-X-life additional cost is implemented as loseLife on resolution.',
-  );
+  // Toxic Deluge: restored in coverage PR02. The interpreter reads the announced pay-X-life
+  // additional cost and the -X/-X sweep, so no override remains.
   // Catalog audit batch 6: graveyard-origin and once-each-turn restrictions are omitted.
   unsupportedCard(
     '05d7222b-cc08-4f1f-8e35-6058599572ba',

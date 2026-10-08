@@ -44,7 +44,7 @@ const OVERRIDES_DIR = join(import.meta.dirname, '../src/cards/overrides');
 function uniqueRegistrations(source: string): Map<string, string> {
   const unique = new Map<string, string>();
   const pattern =
-    /(?:defineCard|unsupportedCard|replaceCard|unimplemented)\(\s*['"]([0-9a-f-]{36})['"],\s*(?:'((?:\\'|[^'])*)'|"((?:\\"|[^"])*)")/g;
+    /(?:defineCard|extendCard|unsupportedCard|replaceCard|unimplemented)\(\s*['"]([0-9a-f-]{36})['"],\s*(?:'((?:\\'|[^'])*)'|"((?:\\"|[^"])*)")/g;
   for (const match of source.matchAll(pattern)) {
     const name = (match[2] ?? match[3] ?? '').replace(/\\'/g, "'").replace(/\\"/g, '"');
     unique.set(match[1]!, name);
@@ -61,18 +61,31 @@ describe('Marchesa override catalog audit inventory', () => {
     );
 
     const unique = uniqueRegistrations(source);
+    // Reviewed cards whose registration was deleted because the interpreter now models them.
+    const restored = new Set(
+      (ledger.interpreterRestored ?? [])
+        .filter((entry) => entry.sourceFile === ledger.sourceFile)
+        .map((entry) => entry.oracleId),
+    );
     const reviewed = new Map<string, string>();
     for (const batch of ledger.batches) {
       if ((batch.sourceFile ?? ledger.sourceFile) !== ledger.sourceFile) continue;
       for (const card of batch.cards) {
+        if (restored.has(card.oracleId)) {
+          expect(unique.has(card.oracleId), `${card.name} must no longer be registered`).toBe(
+            false,
+          );
+          continue;
+        }
         expect(unique.get(card.oracleId), card.name).toBe(card.name);
         reviewed.set(card.oracleId, card.implementationStatus);
       }
     }
 
     const grandfathered = [...unique.entries()].filter(([id]) => !reviewed.has(id));
-    expect(unique.size).toBe(44);
-    expect(reviewed.size).toBe(44);
+    expect(restored.size).toBe(6);
+    expect(unique.size).toBe(44 - restored.size);
+    expect(reviewed.size).toBe(44 - restored.size);
     expect(grandfathered.length).toBe(0);
     expect(
       [...reviewed.values()].every(
@@ -125,6 +138,7 @@ describe('Marchesa override catalog audit inventory', () => {
       'reviewed-five.ts',
       // Coverage PR01 cards with no earlier registration, gated by pr01-card-coverage.test.ts.
       'coverage-pr01.ts',
+      'coverage-pr02.ts',
     ]);
     const remaining = readdirSync(OVERRIDES_DIR)
       .filter((file) => file.endsWith('.ts') && !skip.has(file))

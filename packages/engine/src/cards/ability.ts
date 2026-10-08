@@ -28,18 +28,37 @@ export type WardCost = { kind: 'mana'; cost: ParsedManaCost } | { kind: 'life'; 
 export type AbilityCost =
   /** `{T}` — requires untapped, and (for creatures) not summoning-sick without haste. */
   | { kind: 'tap' }
-  /** Tap an untapped controlled permanent, selected while paying the cost. */
-  | { kind: 'tapOther'; selector: Selector; capturePowerForStation?: boolean }
+  /**
+   * Tap an untapped controlled permanent, selected while paying the cost. `allowSelf`: the
+   * source itself may be the one tapped ("Tap an untapped creature you control" on a creature);
+   * that is not the {T} symbol, so summoning sickness does not apply (CR 302.6).
+   */
+  | {
+      kind: 'tapOther';
+      selector: Selector;
+      capturePowerForStation?: boolean;
+      allowSelf?: boolean;
+    }
   /** Tap several distinct untapped controlled permanents selected while paying the cost. */
-  | { kind: 'tapOthers'; selector: Selector; count: number }
+  | { kind: 'tapOthers'; selector: Selector; count: number; allowSelf?: boolean }
   /** Tap X distinct untapped controlled permanents, where X is the announced activation value. */
   | { kind: 'tapXOthers'; selector: Selector }
   /** "Sacrifice this creature" — available even while tapped or summoning-sick. */
   | { kind: 'sacrificeSelf' }
   /** "Exile this permanent" — a battlefield-only activation cost. */
   | { kind: 'exileSelf' }
-  /** Sacrifice one or more other controlled permanents matching the filter. */
-  | { kind: 'sacrificeOther'; selector: Selector; count?: number; allowSelf?: boolean }
+  /**
+   * Sacrifice one or more other controlled permanents matching the filter. `onlyCardId` is set
+   * only by the engine, never by a card: it pins the sacrifice to one permanent when a mana
+   * source's output depends on which permanent is sacrificed (Illuminor Szeras).
+   */
+  | {
+      kind: 'sacrificeOther';
+      selector: Selector;
+      count?: number;
+      allowSelf?: boolean;
+      onlyCardId?: string;
+    }
   /** "Discard this card". */
   | { kind: 'discardSelf' }
   /** "Discard a card" from the controller's hand as a spell or activation cost. */
@@ -49,6 +68,11 @@ export type AbilityCost =
   | { kind: 'tapCreaturesTotalPower'; minPower: number }
   /** "Remove a gold counter from this artifact". */
   | { kind: 'removeCounters'; counter: string; count: Value | number }
+  /**
+   * "Remove a +1/+1 counter from a creature you control" (Sage of Fables): the counters come off
+   * one controlled permanent matching `selector`, chosen while paying, which may be the source.
+   */
+  | { kind: 'removeCountersFromAmong'; counter: string; count: number; selector: Selector }
   /** "Pay 10 life" (CR 118.8) — payable only if the controller's life is at least this much. */
   | { kind: 'payLife'; amount: number }
   /** Pay a state-derived amount of life, evaluated when the cost is checked and paid. */
@@ -129,6 +153,16 @@ export interface ActivatedAbility {
   zone?: 'hand' | 'battlefield' | 'graveyard';
   /** Boast (CR 702.146): "Activate only if this creature attacked this turn." */
   requiresAttackedThisTurn?: true;
+  /**
+   * A Boast ability (CR 702.142), for effects that name Boast abilities (Dragonkin Berserker's
+   * reduction). Other "activate only if this attacked" abilities are not Boast abilities.
+   */
+  boast?: true;
+  /**
+   * Exhaust (CR 702.177): "Activate each exhaust ability only once." Tracked per permanent and
+   * never reset, so a permanent that leaves and returns is a new object that may exhaust again.
+   */
+  exhaust?: true;
 }
 
 /**
@@ -284,6 +318,13 @@ export interface ManaAbilitySpec {
    * that is what this expands into, so nothing downstream needs to know the count was computed.
    */
   amount?: Value;
+  /**
+   * "Add an amount of {B} equal to the sacrificed creature's mana value" (Illuminor Szeras): the
+   * ability makes one `units[0]` per point of mana value of the permanent its `sacrificeOther`
+   * cost sacrifices. `manaSourcesFor` offers one source per sacrifice candidate, each pinned to
+   * that permanent, so the payment solver sees exactly what each choice produces.
+   */
+  amountFromSacrificedManaValue?: true;
 }
 
 /**
@@ -305,6 +346,11 @@ export interface ManaEntry {
   fromTreasure?: true;
   /** Survives `emptyManaPools` at the end of a step/phase (CR 500.4 exception — Klauth). */
   persistent?: boolean;
+  /**
+   * Stands for a creature tapped for convoke, not real mana (CR 702.51b): it pays the spell's
+   * cost like mana but is never counted as mana spent.
+   */
+  convoked?: true;
 }
 
 /**
@@ -526,6 +572,23 @@ export type Effect =
   | { op: 'preventCombatDamageAll' }
   | { op: 'preventCombatDamageToController' }
   | { op: 'copyTargetSpell'; target: number }
+  /**
+   * Replicate's cast trigger (CR 702.56a): copy the spell `count` times, each copy's controller
+   * choosing to keep or change its targets (CR 707.10c). `spell` is the cast spell as it was put
+   * on the stack — the last known information the copies use if it has left (CR 707.10).
+   */
+  | {
+      op: 'replicateCopies';
+      count: number;
+      spell: {
+        stackObjectId: string;
+        oracleId: string;
+        name: string;
+        targets: string[];
+        oracleText: string;
+        manaCost: string | null;
+      };
+    }
   | { op: 'copyEachTargetedSpell'; targetSlot: number }
   | { op: 'angelGrace' }
   | { op: 'arcbond'; target: EffectRef }
@@ -578,11 +641,29 @@ export type Effect =
   | { op: 'removeCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'removeCountersEach'; selector: Selector; counter: string; count: Value | number }
   | { op: 'crewVehicle'; minPower: number }
+  /**
+   * "This Vehicle becomes an artifact creature until end of turn" from an ability other than
+   * crew (Bespoke Battlewagon's energy ability). Same layer-4 effect as `crewVehicle`, but the
+   * Vehicle does not become crewed (CR 702.122e), so "becomes crewed" triggers do not fire.
+   */
+  | { op: 'becomeArtifactCreature' }
   | { op: 'exileEach'; selector: Selector }
   | { op: 'exileEachOpponentGraveyard' }
   | { op: 'exileAllGraveyards' }
   /** Put the currently resolving spell card on the bottom of its owner's library. */
   | { op: 'resolvingSpellToLibraryBottom' }
+  /**
+   * "Exile Their Number Is Legion" as an instruction of the resolving spell itself: the card
+   * goes from the stack to exile instead of its owner's graveyard. A spell that fizzles never
+   * reaches this instruction (CR 608.2b) and goes to the graveyard as usual.
+   */
+  | { op: 'resolvingSpellExile' }
+  /**
+   * "Shuffle this card into your library from your graveyard" (Kogla and Yidaro): the ability's
+   * source card, if it is still in its owner's graveyard, goes into that library, which is then
+   * shuffled. If the card has left the graveyard, nothing happens.
+   */
+  | { op: 'shuffleSourceFromGraveyardIntoLibrary' }
   /**
    * "Shuffle ~ into its owner's library" on a resolving spell (Beacon of Unrest): the card goes
    * from the stack into its owner's library, which that player then shuffles. A spell that
@@ -790,6 +871,8 @@ export type Effect =
   | { op: 'graveyardToHand'; target: EffectRef }
   /** Put target card from your graveyard on top of your library. */
   | { op: 'graveyardToLibraryTop'; target: EffectRef }
+  /** "Put target card from your graveyard on the bottom of your library" (Mistveil Plains). */
+  | { op: 'graveyardToLibraryBottom'; target: EffectRef }
   /** "Return target creature to its owner's hand" — the general permanent-to-hand bounce. */
   | { op: 'returnToHand'; target: EffectRef }
   /** Return one permanent matching a selector; used by bounce lands' mandatory ETB. */
@@ -1008,6 +1091,13 @@ export type Effect =
     }
   | { op: 'lookAtTopNCastOneFree'; count: number }
   | { op: 'castAnyFromHandFree' }
+  /**
+   * "You may cast an artifact spell from your hand or graveyard by paying life equal to its mana
+   * value rather than paying its mana cost" (Anrakyr the Traveller). Cast during resolution, so
+   * timing permissions are ignored (CR 608.2g); the life is a cost, payable only by a player
+   * with at least that much life (CR 119.4).
+   */
+  | { op: 'castForLifeFromZones'; selector: Selector; zones: ('hand' | 'graveyard')[] }
   | { op: 'castOneFromHandFreeUpTo'; maxManaValue: number }
   | { op: 'setMustBlockThisTurn'; target: EffectRef }
   | { op: 'extraCombatPhase' }
@@ -1177,6 +1267,8 @@ export type ObjectTriggerWhen =
   | 'becomesBlocked'
   | 'dealsCombatDamageToPlayer'
   | 'becomesTapped'
+  /** "Whenever this Vehicle becomes crewed": a crew ability of it resolves (CR 702.122e). */
+  | 'becomesCrewed'
   | 'fights'
   | 'becomesTargeted'
   | 'enchantedPlayerAttacked'
@@ -1247,7 +1339,8 @@ export type TriggerHead =
   | { when: 'precombatMain'; player: 'you' | 'each' }
   /** "Whenever you gain life" (Dawn of Hope) — player-scoped, like the step triggers above. */
   | { when: 'gainsLife'; player: 'you' | 'each' }
-  | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' };
+  | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' }
+  | { when: 'foretells'; player: 'you' };
 
 /**
  * When a triggered ability fires.

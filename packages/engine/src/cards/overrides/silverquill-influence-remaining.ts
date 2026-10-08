@@ -125,12 +125,6 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit silverquill-remaining-batch-1: Replicate claimed without an implementation.
-  unsupportedCard(
-    'cdfa9de4-7d7d-4638-8ac4-793ece6372dd',
-    'Changing Loyalty',
-    'Replicate is claimed without a replicate implementation.',
-  );
   defineCard('dbb8a3d9-6b1b-4ad1-b8b9-f92ead03d1d9', 'Coercive Impetus', [], {
     ...auraBuff(1, 1, [], true),
     triggers: [
@@ -267,12 +261,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Killian, Decisive Mentor',
     'Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.',
   );
-  // Catalog audit silverquill-remaining-batch-2: targeting reduction authored as creature spells.
-  unsupportedCard(
-    'e233cb5b-7237-4271-8157-9179cc897b6c',
-    'Killian, Ink Duelist',
-    'Spells-that-target-a-creature reduction is implemented as creature-spell reduction.',
-  );
+  // Killian, Ink Duelist: restored in coverage PR02. The interpreter reads the target-dependent
+  // cost reduction, so no override remains.
   // Catalog audit silverquill-remaining-batch-2: attached-Aura pump counts all Auras you control.
   unsupportedCard(
     '2bfc7467-1316-43d3-9ca6-ff36cc2de607',
@@ -353,12 +343,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Promise of Loyalty',
     'Keep-one sacrifice, vow counters, and attack restriction are unimplemented.',
   );
-  // Catalog audit silverquill-remaining-batch-2: graveyard recast authored as return to hand.
-  unsupportedCard(
-    'ad3bf726-e0c2-4038-a66e-9a9dff439563',
-    "Raffine's Guidance",
-    'Graveyard recast is implemented as a return-to-hand activated ability.',
-  );
+  // Raffine's Guidance: restored in coverage PR02. The interpreter reads the {2}{W} graveyard
+  // recast as an alternative cost, so no override remains.
   // Catalog audit silverquill-remaining-batch-2: exile activated ability claimed without a def.
   unsupportedCard(
     'c22e5fc6-9b4e-4197-b472-70d168eb4330',

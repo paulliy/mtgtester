@@ -60,6 +60,18 @@ describe('actionLabel', () => {
     );
   });
 
+  it('names the optional-cost count of a cast (replicate, squad, kicker)', () => {
+    expect(
+      actionLabel(
+        action({
+          type: 'castSpell',
+          data: { optionalCostCount: 2, optionalMechanic: 'replicate' },
+        }),
+      ),
+    ).toBe('Cast with replicate 2');
+    expect(actionLabel(action({ type: 'castSpell', data: {} }))).toBe('Cast');
+  });
+
   it('sentence-cases a mode label taken from a lowercased Oracle bullet', () => {
     expect(actionLabel(action({ data: { modeLabel: 'you gain 2 life' } }))).toBe('You gain 2 life');
   });

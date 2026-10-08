@@ -127,6 +127,8 @@ describe('parsing costs', () => {
             { kind: 'controller', who: 'you' },
           ],
         },
+        // Any untapped creature you control, the source included (coverage PR02).
+        allowSelf: true,
       },
     ]);
   });
@@ -153,6 +155,8 @@ describe('parsing costs', () => {
             { kind: 'controller', who: 'you' },
           ],
         },
+        // The artifact itself may be one of the two (Clock of Omens; coverage PR02).
+        allowSelf: true,
       },
     ]);
     expect(def.activatedAbilities[0]?.ability.targets).toEqual([{ kind: 'artifact' }]);

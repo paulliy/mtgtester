@@ -176,7 +176,8 @@ describe('Thunderbreak Regent', () => {
 });
 
 describe('Dragonkin Berserker', () => {
-  it('is catalog-contained because Boast reduction is self-only', () => {
+  // Restored in coverage PR02; behavior is gated by pr02-card-coverage.test.ts.
+  it('is no longer catalog-contained', () => {
     const card = oracle({
       oracleId: '06b77a80-4968-4385-960a-fb66bb4faa94',
       name: 'Dragonkin Berserker',
@@ -186,10 +187,7 @@ describe('Dragonkin Berserker', () => {
       toughness: '2',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Boast cost reduction applies only to this creature, not to Boast abilities you activate.',
-    );
+    expect(def.unmodeledReasons.join('\n')).not.toContain('explicitly unsupported');
   });
 });
 

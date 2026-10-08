@@ -180,6 +180,12 @@ export interface CardDefinition {
   spellCantBeCountered?: boolean;
   /** Alternative casting costs/modes (e.g. Overload). */
   alternativeCasts?: import('./ability').AlternativeCast[];
+  /**
+   * "You may cast this card from your graveyard" (Their Number Is Legion): the card's own
+   * permission, paid at its normal cost (X included). Unlike a `playFromZone` static, nothing is
+   * consumed when it is used.
+   */
+  castFromGraveyard?: true;
   /** "You may cast this spell without paying its mana cost if you control a commander." */
   commanderFreeCast?: boolean;
   /** Additional costs paid while announcing a spell (CR 601.2h), apart from its mana cost. */
@@ -188,7 +194,7 @@ export interface CardDefinition {
   announcesX?: boolean;
   /** An optional announced additional mana cost such as kicker, squad, or offspring. */
   optionalAdditionalCost?: {
-    mechanic: 'kicker' | 'squad' | 'offspring';
+    mechanic: 'kicker' | 'squad' | 'offspring' | 'replicate';
     cost: ParsedManaCost;
     repeatable?: true;
   };

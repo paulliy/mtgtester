@@ -6,7 +6,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { interpretCard } from '../src/cards/interpret';
 import { getOverride } from '../src/cards/overrides';
+import { oracle } from './fixtures';
 import { THOPTER_1_1_FLYING } from '../src/cards/tokens';
 
 describe('Night Scythe', () => {
@@ -61,11 +63,18 @@ describe('Thopter token catalog entry', () => {
     }
   });
 
-  it('excludes explicitly unsupported Retrofitter Foundry from executable token evidence', () => {
-    const retrofitter = getOverride('aaadfe41-b2be-4183-b45e-a70e53a59d2e');
-    expect(retrofitter?.def).toEqual({});
-    expect(retrofitter?.unsupportedReason).toContain(
-      'The {2}, {T} Servo creation is dropped when activatedAbilities replace the parsed abilities.',
+  it('reads Retrofitter Foundry with the catalog Thopter now that no override replaces it', () => {
+    // Coverage PR02 deleted the fail-closed registration; the interpreter models the card.
+    expect(getOverride('aaadfe41-b2be-4183-b45e-a70e53a59d2e')).toBeUndefined();
+    const def = interpretCard(
+      oracle({
+        name: 'Retrofitter Foundry',
+        typeLine: 'Artifact',
+        oracleText:
+          '{1}, {T}, Sacrifice a Servo: Create a 1/1 colorless Thopter artifact creature token with flying.',
+      }),
     );
+    const spec = def.activatedAbilities[0]?.ability.effects.find((e) => e.op === 'createToken');
+    expect((spec as { spec: unknown } | undefined)?.spec).toMatchObject(THOPTER_1_1_FLYING);
   });
 });

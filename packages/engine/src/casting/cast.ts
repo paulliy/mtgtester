@@ -31,6 +31,7 @@ import {
 } from '../mana/cost';
 import {
   additionalTypedTriggerCopies,
+  faceDownSpellOracleId,
   queueCastTriggers,
   queueKeywordCastTriggers,
   queueTriggersForEvent,
@@ -39,6 +40,9 @@ import {
 import {
   castFromLibraryTopCandidates,
   castingSpellsBlockedFor,
+  convokeSourcesFor,
+  manaSourcesFor,
+  spellHasConvoke,
   getDefByOracleId,
   playFromZonePermission,
   wardCostOf,
@@ -62,6 +66,9 @@ import {
   modeAdditionalCosts,
   selectedModeTargetSlots,
   targetLifeTaxFor,
+  targetMatchesReduction,
+  targetedCostReductionFor,
+  targetedReductionAmount,
   validateChosenTargets,
 } from '../actions/legal';
 import { breakYieldsForStop } from '../turn/stops';
@@ -342,7 +349,7 @@ function* proposeCast(
   payload: Extract<PriorityActionPayload, { kind: 'castSpell' }>,
   outcome: DecisionOutcome,
   /** Internal, immediate permission from the resolving instruction, never a client payload. */
-  resolutionPermission?: { card: EngineCardObject; withoutManaCost: true },
+  resolutionPermission?: { card: EngineCardObject; withoutManaCost: true; lifeCost?: number },
 ): GameGen<void> {
   const s = ctx.state;
   if (!s.players.includes(player) || player.hasLost) throw new Error('invalid casting player');
@@ -378,10 +385,9 @@ function* proposeCast(
   }
   if (
     resolutionPermission !== undefined &&
-    ((payload.alternativeCast !== undefined &&
-      payload.alternativeCast !== 'adventure' &&
-      payload.alternativeCast !== 'omen') ||
-      (payload.x ?? 0) !== 0)
+    payload.alternativeCast !== undefined &&
+    payload.alternativeCast !== 'adventure' &&
+    payload.alternativeCast !== 'omen'
   ) {
     throw new Error('without-mana-cost permission cannot combine alternative costs or nonzero X');
   }
@@ -427,6 +433,11 @@ function* proposeCast(
     player.library[0] !== obj
   ) {
     throw new Error('card is not on top of the library');
+  }
+  if (payload.alternativeCast === 'faceDown') {
+    if (resolutionPermission !== undefined) throw new Error('a face-down cast needs no permission');
+    yield* castFaceDown(ctx, player, obj, def);
+    return;
   }
   if (
     payload.alternativeCast !== undefined &&
@@ -488,6 +499,15 @@ function* proposeCast(
     }
   }
   const printedSpellDef = selectedSpellDefinition(def, selectedAlternative);
+  // Without paying the mana cost, an X in the mana cost is 0 (CR 107.3b); an X announced only
+  // for an additional cost ("pay X life", Toxic Deluge) is still chosen (CR 601.2b).
+  if (
+    resolutionPermission !== undefined &&
+    (payload.x ?? 0) !== 0 &&
+    (printedSpellDef.manaCost?.x !== undefined || printedSpellDef.announcesX !== true)
+  ) {
+    throw new Error('without-mana-cost permission cannot combine alternative costs or nonzero X');
+  }
   if (!supportsAdditionalXAnnouncement(printedSpellDef))
     throw new Error('additional X requires a direct pay-X-life cost');
   if (printedSpellDef.types.includes('Land')) throw new Error('a land cannot be cast as a spell');
@@ -517,7 +537,9 @@ function* proposeCast(
   if (
     resolutionPermission === undefined &&
     payload.fromGraveyard === true &&
-    selectedAlternative?.from !== 'graveyard'
+    selectedAlternative?.from !== 'graveyard' &&
+    // A card's own "you may cast this card from your graveyard" needs no outside permission.
+    printedSpellDef.castFromGraveyard !== true
   ) {
     validatePlayFromZonePermission(ctx, player, obj, 'graveyard', payload.zoneBudgetType);
     consumeZonePermission = 'graveyard';
@@ -534,14 +556,33 @@ function* proposeCast(
   if (payload.zoneBudgetType !== undefined && consumeZonePermission === undefined) {
     throw new Error('unexpected permanent-type budget choice');
   }
-  let castingAdditionalCosts: AbilityCost[] = [...(printedSpellDef.spellAdditionalCosts ?? [])];
+  let castingAdditionalCosts: AbilityCost[] = [
+    ...(printedSpellDef.spellAdditionalCosts ?? []),
+    // Life paid rather than the mana cost (Anrakyr) is paid with the other costs (CR 601.2h).
+    ...((resolutionPermission?.lifeCost ?? 0) > 0
+      ? [{ kind: 'payLife' as const, amount: resolutionPermission!.lifeCost! }]
+      : []),
+  ];
+  // A foretold card is cast on a later turn for its foretell cost (CR 702.143a).
+  const foretold =
+    resolutionPermission === undefined &&
+    payload.fromExile === true &&
+    obj.ownerId === player.id &&
+    obj.foretold !== undefined &&
+    obj.foretold.turn < s.turnNumber
+      ? obj.foretold
+      : null;
   if (
     resolutionPermission === undefined &&
     payload.fromExile === true &&
     !(obj.onAdventure === true && obj.ownerId === player.id) &&
-    obj.playableUntilEotBy !== player.id
+    obj.playableUntilEotBy !== player.id &&
+    foretold === null
   ) {
     throw new Error('exile cast permission is not legal');
+  }
+  if (foretold !== null && payload.alternativeCast !== undefined) {
+    throw new Error('a foretold card is cast only for its foretell cost');
   }
   if (payload.reboundCast === true) {
     throw new Error('rebound cards may be cast only while their delayed trigger resolves');
@@ -645,7 +686,12 @@ function* proposeCast(
       throw new Error('alternative spell face has no executable ability');
     abilityDef = printedSpellDef;
   } else {
-    cost = resolutionPermission === undefined ? (def.manaCost ?? emptyCost()) : emptyCost();
+    cost =
+      resolutionPermission !== undefined
+        ? emptyCost()
+        : foretold !== null
+          ? foretold.cost
+          : (def.manaCost ?? emptyCost());
   }
   // Every alternative cost still announces modes, pays additional costs, and includes the
   // commander tax (CR 118.9d, 601.2b/f). Only the printed mana-cost component is replaced.
@@ -689,10 +735,34 @@ function* proposeCast(
     obj.cardId,
   );
 
+  // "Spells you cast that target a creature cost {2} less" (Killian): priced against the targets
+  // just chosen (CR 601.2c before 601.2f), as `computePriorityOptions` offered it.
+  const targeted =
+    (abilityDef.spellAbility?.targets.length ?? 0) > 0
+      ? targetedCostReductionFor(ctx, player.id)
+      : [];
+  const slot = payload.targetReductionSlot;
+  if (slot !== undefined && slot >= 0) {
+    const chosen = targets[slot];
+    if (
+      chosen === undefined ||
+      !targeted.every((entry) => targetMatchesReduction(ctx, chosen, entry))
+    ) {
+      throw new Error('illegal action: the reduced cast needs a matching target');
+    }
+  }
   // Payment preview narrows targeting continuations before anything is paid.
-  const totalMana = applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts)));
+  const totalMana = subtractGeneric(
+    applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts))),
+    targetedReductionAmount(ctx, targeted, targets),
+  );
+  // Convoke (CR 702.51): untapped creatures may help pay for this spell.
+  const convokeSources = spellHasConvoke(printedSpellDef)
+    ? { sources: [...manaSourcesFor(ctx, player.id), ...convokeSourcesFor(ctx, player.id)] }
+    : {};
   const payableTargets = (chosen: CountedTargetChoices): boolean =>
     planSpellPayment(ctx, player, {
+      ...convokeSources,
       mana: totalMana,
       costs: castingAdditionalCosts,
       sourceCardId: obj.cardId,
@@ -729,9 +799,15 @@ function* proposeCast(
   queueBecomesTargetedTriggers(ctx, player.id, allTargets);
   // CR 601.2f: reductions apply once, to the TOTAL — mana cost with X announced plus every
   // additional cost — exactly as `computePriorityOptions` priced the offered action.
-  cost = totalMana;
+  cost = subtractGeneric(
+    applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts))),
+    targetedReductionAmount(ctx, targeted, allTargets),
+  );
   const targetLifeTax = targetLifeTaxFor(ctx, player.id, allTargets);
   const payment = yield* chooseSpellPayment(ctx, player, {
+    ...(spellHasConvoke(printedSpellDef)
+      ? { sources: [...manaSourcesFor(ctx, player.id), ...convokeSourcesFor(ctx, player.id)] }
+      : {}),
     mana: cost,
     costs: castingAdditionalCosts,
     sourceCardId: obj.cardId,
@@ -869,6 +945,74 @@ function* proposeCast(
   queueCastTriggers(ctx, spellEntry);
   queueKeywordCastTriggers(ctx, spellEntry);
   return;
+}
+
+/**
+ * Morph's face-down cast (CR 702.37c, 708.4): from hand, for {3} less any reduction that
+ * applies to a vanilla colorless creature spell, as a 2/2 creature spell with no name, cost,
+ * color or abilities. The stack object carries the face-down definition, so cast triggers and
+ * every other player see only that; the card resolves into a face-down permanent.
+ */
+function* castFaceDown(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  obj: EngineCardObject,
+  def: CardDefinition,
+): GameGen<void> {
+  if (def.morphCost === undefined || !player.hand.some((card) => card.id === obj.id)) {
+    throw new Error('illegal action: this card cannot be cast face down');
+  }
+  const faceDownId = faceDownSpellOracleId(ctx);
+  const reduction = costReductionFor(ctx, player.id, faceDownId, obj.cardId);
+  const base: ParsedManaCost = { ...emptyCost(), generic: 3 };
+  const cost = subtractGeneric(
+    reduction.colored === undefined ? base : subtractColored(base, reduction.colored),
+    reduction.generic,
+  );
+  const manaPayment = yield* payManaCost(ctx, player, cost, {
+    kind: 'castSpell',
+    oracleId: faceDownId,
+    isCommander: false,
+  });
+  removeFromCurrentZone(ctx, obj);
+  const spellCard: EngineCardObject = {
+    ...obj,
+    id: `o-${ctx.state.nextObjectNum++}` as ObjectId,
+    zone: 'stack',
+  };
+  const spellEntry: EngineStackObject = {
+    id: spellCard.id,
+    sourceId: spellCard.id,
+    controllerId: player.id,
+    kind: 'spell',
+    description: 'Face-down creature spell',
+    targets: [],
+    card: spellCard,
+    ability: { kind: 'spell', targets: [], effects: [] },
+    sourceOracleId: faceDownId,
+    sourceCardId: obj.cardId,
+    isCommanderCast: false,
+    alternativeCastKind: 'faceDown',
+    triggerScope: { manaSpent: manaPayment.manaSpent },
+  };
+  ctx.state.stack.push(spellEntry);
+  breakYieldsForStop(ctx, spellEntry);
+  emit(
+    ctx,
+    'castSpell',
+    {
+      player: player.id,
+      name: 'Face-down creature spell',
+      cardId: obj.cardId,
+      targets: [],
+      fromCommand: false,
+      commanderTax: 0,
+      faceDown: true,
+    },
+    player.id,
+  );
+  debug(ctx, 'stack', `${player.id} casts a face-down creature spell`);
+  queueCastTriggers(ctx, spellEntry);
 }
 
 /** Complete a cast exactly once; errors and interrupted supported proposals restore in place. */

@@ -352,6 +352,10 @@ export function activated(
     oncePerTurn?: boolean;
     zone?: 'hand' | 'battlefield' | 'graveyard';
     requiresAttackedThisTurn?: true;
+    /** A Boast ability (CR 702.142), for effects that name Boast abilities. */
+    boast?: true;
+    /** Exhaust (CR 702.177): activate only once for this object. */
+    exhaust?: true;
   },
 ): ActivatedAbility {
   const out: ActivatedAbility = {
@@ -363,6 +367,8 @@ export function activated(
   if (spec.zone !== undefined) out.zone = spec.zone;
   if (spec.requiresAttackedThisTurn !== undefined)
     out.requiresAttackedThisTurn = spec.requiresAttackedThisTurn;
+  if (spec.boast !== undefined) out.boast = spec.boast;
+  if (spec.exhaust !== undefined) out.exhaust = spec.exhaust;
   return out;
 }
 

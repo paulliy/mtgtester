@@ -53,9 +53,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'My Will Be Done — Whenever ~ attacks, mill three cards. You may put an artifact creature card or Vehicle card from among the cards milled this way into your hand.',
   ]);
 
-  unimplemented('32476743-c9d4-49ca-bec2-0669c215841b', 'Anrakyr the Traveller', [
-    'Lord of the Pyrrhian Legions — Whenever ~ attacks, you may cast an artifact spell from your hand or graveyard by paying life equal to its mana value rather than paying its mana cost.',
-  ]);
+  // Anrakyr the Traveller: restored in coverage PR02 (see necron-dynasties-remaining.ts).
 
   unimplemented('aef874fa-93c0-4f86-8b0d-dc24ec51467d', 'Beacon of Unrest', [
     "Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library.",
@@ -118,10 +116,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Atomic Transmutation — {1}, {T}, Sacrifice another artifact: Draw a card.',
   ]);
 
-  unimplemented('655aece2-f33a-46e0-8f80-112ae8a457fe', 'Convergence of Dominion', [
-    "Dynastic Command Node — As long as you control your commander, activated abilities of cards in your graveyard cost {2} less to activate. This effect can't reduce the mana in that ability's activation cost to less than one mana.",
-    'Translocation Protocols — {3}, {T}: Mill three cards.',
-  ]);
+  // Convergence of Dominion: restored in coverage PR02 (see necron-dynasties-remaining.ts).
 
   unimplemented('27a4b633-5a62-4d8c-8cc6-44959c311de9', 'Cryptek', [
     '{1}{B}, {T}: Choose another target artifact creature you control. When that creature dies this turn, return it to the battlefield tapped under your control.',
@@ -174,13 +169,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  unimplemented('352b64d2-2ae5-44ee-a64f-94932ef545d3', 'Dread Return', [
-    'Flashback—Sacrifice three creatures.',
-  ]);
-
-  unimplemented('cb923c4d-1d2e-4039-90bb-72d1981b9738', 'Endless Atlas', [
-    '{2}, {T}: Draw a card. Activate only if you control three or more lands with the same name.',
-  ]);
+  // Dread Return: restored in coverage PR02 (see necron-dynasties-remaining.ts).
 
   defineCard(
     '899415fd-4164-42a5-a0c7-eef1967c5ec5',
@@ -199,27 +188,11 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  unimplemented('bb1b4786-3804-486b-9fd9-85848d24d362', 'Ghost Ark', [
-    'Repair Barge — Whenever this Vehicle becomes crewed, each artifact creature card in your graveyard gains unearth {3} until end of turn.',
-  ]);
+  // Ghost Ark: restored in coverage PR02. The interpreter reads "whenever this Vehicle becomes
+  // crewed" (CR 702.122e) and the until-end-of-turn unearth grant, so no override remains.
 
-  defineCard(
-    '9a02a9a7-39d9-4763-85d3-747a0540b60b',
-    'Gilded Lotus',
-    ['{T}: Add three mana of any one color.'],
-    {
-      manaAbilities: [
-        {
-          units: [
-            ['W', 'U', 'B', 'R', 'G'],
-            ['W', 'U', 'B', 'R', 'G'],
-            ['W', 'U', 'B', 'R', 'G'],
-          ],
-          linked: true,
-        },
-      ],
-    },
-  );
+  // Gilded Lotus: the generic grammar reads "Add three mana of any one color" (coverage PR02),
+  // producing exactly the definition this override authored, so it was deleted (overrides rule 5).
 
   defineCard(
     '2f092562-9e17-43cd-aeb8-d0567f99363e',
@@ -389,10 +362,6 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Elite Troops — ~ enters with a +1/+1 counter on it for each creature that died this turn.',
   ]);
 
-  unimplemented('ce08aff3-efe6-4186-9557-274e00a7ca38', 'Sceptre of Eternal Glory', [
-    '{T}: Add three mana of any one color. Activate only if you control three or more lands with the same name.',
-  ]);
-
   unimplemented('6c85271c-c711-49b0-a72e-9e576c33714d', 'Sculpting Steel', [
     'You may have this artifact enter as a copy of any artifact on the battlefield.',
   ]);
@@ -425,10 +394,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Destroy all nonartifact creatures.',
   ]);
 
-  unimplemented('8cd45064-2ad9-4247-902e-aefaf3bc1a43', 'Their Number Is Legion', [
-    'Create X tapped 2/2 black Necron Warrior artifact creature tokens, then you gain life equal to the number of artifacts you control. Exile ~.',
-    'You may cast this card from your graveyard.',
-  ]);
+  // Their Number Is Legion: restored in coverage PR02 (see necron-dynasties-remaining.ts).
 
   unimplemented('9965d9c5-2ebf-4a6c-930e-55c5890979be', 'Thought Vessel', [
     'You have no maximum hand size.',

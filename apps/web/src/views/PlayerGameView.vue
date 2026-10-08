@@ -110,10 +110,21 @@ const isYourTurn = computed(() => state.value?.activePlayer === state.value?.vie
 const selectedAction = computed(
   () => request.value?.legalActions.find((action) => action.id === selectedActionId.value) ?? null,
 );
+/**
+ * Whether the server can remember a yield for this action — the same test as its
+ * `playerYieldKey`: a spell or a printed activated ability of a source. Special actions (foretell,
+ * turning a face-down permanent face up) have no ability index and are never yielded.
+ */
+function isYieldable(action: LegalAction | null | undefined): action is LegalAction {
+  if (action?.interaction?.kind !== 'source') return false;
+  if (action.type === 'castSpell') return true;
+  return action.type === 'activateAbility' && action.interaction.abilityIndex !== undefined;
+}
+
 const smartYieldAction = computed(() => {
   if (request.value?.decisionType !== 'priority') return null;
   const action = selectedAction.value ?? selectedSourceActions.value[0];
-  return action?.type === 'castSpell' || action?.type === 'activateAbility' ? action : null;
+  return isYieldable(action) ? action : null;
 });
 
 function yieldSelected(mode: 'always' | 'smart'): void {
@@ -428,13 +439,15 @@ const playableVerbById = computed(
   () => new Map(playableSources.value.map((source) => [source.id, source.verb])),
 );
 
+function yieldableSourceAction(id: string): LegalAction | undefined {
+  return sourceActions.value.find(
+    (candidate) => sourceId(candidate) === id && isYieldable(candidate),
+  );
+}
+
 function smartYieldSource(id: string): void {
   if (request.value?.decisionType !== 'priority') return;
-  const action = sourceActions.value.find(
-    (candidate) =>
-      sourceId(candidate) === id &&
-      (candidate.type === 'castSpell' || candidate.type === 'activateAbility'),
-  );
+  const action = yieldableSourceAction(id);
   if (action !== undefined) store.yieldPlayerAbility(action.id, 'smart');
 }
 
@@ -599,6 +612,17 @@ const zoneTargetIds = computed(() => {
   }
   return ids;
 });
+
+/**
+ * Sources of legal actions, for the zone strips: a graveyard card with unearth or flashback is
+ * clicked like a hand card. Hidden while a target choice is pending so a click there is never
+ * ambiguous.
+ */
+const zoneSourceIds = computed(() =>
+  selectedAction.value === null
+    ? [...actionableSourceIds.value].filter((id): id is ObjectId => id !== null)
+    : [],
+);
 
 /** During composing, a click assigns to the plan instead of selecting a real engine action. */
 function tryPlanAssign(target: ObjectId | string): boolean {
@@ -808,6 +832,15 @@ function actionCost(action: LegalAction): string[] {
       ) {
         labels.push(
           `Remove ${value.count} ${value.counter} counter${value.count === 1 ? '' : 's'}`,
+        );
+      }
+      if (
+        value.kind === 'removeCountersFromAmong' &&
+        typeof value.counter === 'string' &&
+        typeof value.count === 'number'
+      ) {
+        labels.push(
+          `Remove ${value.count} ${value.counter} counter${value.count === 1 ? '' : 's'} from a permanent you control`,
         );
       }
     }
@@ -1338,13 +1371,17 @@ function abandon(): void {
               label="Graveyard"
               :cards="human.graveyard"
               :selectable-ids="zoneTargetIds"
+              :actionable-ids="zoneSourceIds"
               @select="chooseTarget"
+              @activate="selectSource"
             />
             <ZoneStrip
               label="Exile"
               :cards="humanExile"
               :selectable-ids="zoneTargetIds"
+              :actionable-ids="zoneSourceIds"
               @select="chooseTarget"
+              @activate="selectSource"
             />
           </div>
 
@@ -1362,7 +1399,7 @@ function abandon(): void {
                 Smart yield
               </button>
               <button
-                v-if="selectedAction?.type === 'activateAbility'"
+                v-if="selectedAction?.type === 'activateAbility' && isYieldable(selectedAction)"
                 type="button"
                 @click="yieldSelected('always')"
               >
@@ -1520,7 +1557,7 @@ function abandon(): void {
                     <small>{{ actionCost(action).join(' · ') }}</small>
                   </button>
                   <button
-                    v-if="action.type === 'activateAbility'"
+                    v-if="action.type === 'activateAbility' && isYieldable(action)"
                     type="button"
                     class="yield-ability"
                     title="Hide this optional ability until you re-enable it"
@@ -1582,7 +1619,11 @@ function abandon(): void {
                       >
                     </button>
                     <button
-                      v-if="request.decisionType === 'priority' && entry.verb !== 'Play'"
+                      v-if="
+                        request.decisionType === 'priority' &&
+                        entry.verb !== 'Play' &&
+                        yieldableSourceAction(entry.ids[0] ?? '') !== undefined
+                      "
                       type="button"
                       :aria-label="`Smart yield ${entry.name}`"
                       title="Skip this opportunity and quiet windows; offer this copy again for new interaction or relevant combat changes"

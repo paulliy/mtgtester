@@ -21,6 +21,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "61c89b11-65c9-4fda-bbcd-d84de25df801",
+    "name": "Aether Hub",
+    "package": "PR02.23",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The colorless mana ability is dropped when the energy mana ability replaces manaAbilities."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "48369aec-a991-4bef-8554-01c84302b063",
     "name": "Aetherspouts",
     "package": "W4",
@@ -100,6 +117,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "32476743-c9d4-49ca-bec2-0669c215841b",
+    "name": "Anrakyr the Traveller",
+    "package": "PR02.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Artifact-from-hand-or-graveyard life cast is implemented as free casts from hand."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "b337c241-f2c4-48e3-a303-371b172fcd18",
@@ -207,6 +241,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0",
+    "name": "Bespoke Battlewagon",
+    "package": "PR02.32",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Crew 4 is dropped when the energy activations replace the parsed activated abilities."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "df72b5d6-6f9e-4d6b-acf6-7dec4ff35468",
     "name": "Bess, Soul Nourisher",
     "package": "W3",
@@ -233,6 +284,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e",
+    "name": "Blasphemous Edict",
+    "package": "PR02.24",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The thirteen-creature {B} alternative cost is claimed without an alternativeCast."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "bf1341dd-41a3-49f6-87ec-63170dde4324",
@@ -354,6 +422,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425",
+    "name": "Carrion Feeder",
+    "package": "PR02.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Sacrifice-a-creature cost uses sacrificeOther, which cannot sacrifice this creature."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "d51136fa-3c13-48a5-83fd-51fe00010a4b",
     "name": "Celebrate the Mountain-king",
     "package": "W5",
@@ -366,6 +451,21 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
+    "name": "Changing Loyalty",
+    "package": "PR02.25",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["Replicate is claimed without a replicate implementation."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "119d9671-61ba-4629-89b1-f94bdec5cb74",
@@ -427,6 +527,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "e938ee4c-d5df-4d93-bd61-9e518fb1dc30",
+    "name": "Conclave Tribunal",
+    "package": "PR02.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Convoke is stored as a ruleStatic but never offered as a payment."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
     "name": "Conjurer's Closet",
     "package": "PR01.06",
@@ -442,6 +559,23 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "655aece2-f33a-46e0-8f80-112ae8a457fe",
+    "name": "Convergence of Dominion",
+    "package": "PR02.07",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Graveyard activation cost reduction is claimed without a static effect."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -556,6 +690,55 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "06b77a80-4968-4385-960a-fb66bb4faa94",
+    "name": "Dragonkin Berserker",
+    "package": "PR02.08",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Boast cost reduction applies only to this creature, not to Boast abilities you activate."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "352b64d2-2ae5-44ee-a64f-94932ef545d3",
+    "name": "Dread Return",
+    "package": "PR02.09",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Flashback—Sacrifice three creatures is claimed without a flashback alternative."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "0ff7440b-b831-40a9-81c4-99d77bf93b8d",
+    "name": "Dream Devourer",
+    "package": "PR02.26",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["Foretell grant is omitted, and the pump fires on any spell you cast."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b90af42d-edb6-4654-b7dc-10f0f272c883",
     "name": "Elite Scaleguard",
     "package": "W3",
@@ -568,6 +751,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "cb923c4d-1d2e-4039-90bb-72d1981b9738",
+    "name": "Endless Atlas",
+    "package": "PR02.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The three-or-more-same-name land restriction is omitted from the draw ability."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "overrides deleted; override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "77ccafd9-6d76-4658-81ab-bde0454fcc15",
@@ -675,6 +875,40 @@
     "interpretationTests": ["packages/engine/tests/w1-filtered-zone-counts.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
+    "name": "Flare of Denial",
+    "package": "PR02.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Sacrifice-a-nontoken-blue-creature alternative cost is claimed without an alternativeCast."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "4ce156f8-6b0b-41ce-9e8f-b2735c757406",
+    "name": "Flare of Malice",
+    "package": "PR02.27",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Sacrifice-a-nontoken-black-creature alternative cost is claimed without an alternativeCast."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "b23a3d30-6b8e-4aad-890f-db0c3af43ace",
@@ -880,6 +1114,21 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "bb1b4786-3804-486b-9fd9-85848d24d362",
+    "name": "Ghost Ark",
+    "package": "PR02.12",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Becomes-crewed is implemented as becomesTapped."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "ec08df88-3c13-4940-a090-0c502b9b12f1",
     "name": "Goblin Spymaster",
     "package": "W6",
@@ -937,6 +1186,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "72aef1d8-11df-4bc2-af83-907b05df73a8",
+    "name": "Grim Haruspex",
+    "package": "PR02.13",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["Morph cost is stored but never offered as a face-down alternative cast."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "7c565975-aebc-4599-ac32-5594c718e2cb",
     "name": "Guard Gomazoa",
     "package": "W8",
@@ -983,6 +1247,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c",
+    "name": "Hour of Reckoning",
+    "package": "PR02.14",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Convoke is stored as a ruleStatic but never offered as a payment."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "d55cb52d-b35c-4602-a518-cd51f155a2d1",
     "name": "Human Torch",
     "package": "W3",
@@ -1013,6 +1294,38 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "c232d974-9c65-4bce-b045-e5a7cc0c62e0",
+    "name": "Idol of Oblivion",
+    "package": "PR02.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "10f274f9-9044-447b-81c9-d4906ad9e6be",
+    "name": "Illuminor Szeras",
+    "package": "PR02.15",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Sacrifice-another-creature is an effect, not a cost."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -1157,20 +1470,36 @@
     "snapshotStatus": "pending"
   },
   {
-    "oracleId": "fe8c2b7e-f80d-4acb-a976-edcf436a78a9",
-    "name": "Kogla and Yidaro",
-    "package": "W4",
-    "status": "pending",
+    "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",
+    "name": "Killian, Ink Duelist",
+    "package": "PR02.16",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
-      "unrecognized rules text: \"When ~ enters, choose one —\"",
-      "unrecognized rules text: \"• It gains trample and haste until end of turn.\"",
-      "unrecognized rules text: \"• It fights target creature you don't control.\"",
-      "unrecognized rules text: \"{2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card.\""
+      "explicitly unsupported: Spells-that-target-a-creature reduction is implemented as creature-spell reduction."
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "fe8c2b7e-f80d-4acb-a976-edcf436a78a9",
+    "name": "Kogla and Yidaro",
+    "package": "PR02.33",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["unrecognized rules text: \"When ~ enters, choose one —\""],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "8b21062e-97b0-4967-96df-30e8309f4fba",
@@ -1391,6 +1720,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "bb5c1817-ac22-4779-9005-251bc354f181",
+    "name": "Mistveil Plains",
+    "package": "PR02.17",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Bottom-of-library is implemented as graveyardToLibraryTop."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3b8eb602-01e8-432e-8dfc-8fdb62c3aa43",
     "name": "Mocking Doppelganger",
     "package": "W7",
@@ -1579,6 +1925,21 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "4dcfd397-9d29-420c-8fd8-c7c2a99de122",
+    "name": "Nullmage Shepherd",
+    "package": "PR02.18",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: The four creatures cannot include this creature."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b99ada26-9a61-4175-9fb8-15a106960220",
     "name": "Ohran Frostfang",
     "package": "W1",
@@ -1618,6 +1979,23 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "88600bd4-4dcc-4788-bba4-78b6cf5ad8f8",
+    "name": "Peema Trailblazer",
+    "package": "PR02.28",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Exhaust is omitted, and the ability requires tapping this creature."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "9af4a832-d634-47aa-91ed-79d44fe08864",
@@ -1710,6 +2088,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "ad3bf726-e0c2-4038-a66e-9a9dff439563",
+    "name": "Raffine's Guidance",
+    "package": "PR02.19",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Graveyard recast is implemented as a return-to-hand activated ability."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "96381388-1e82-411c-8290-1f3e909d3b5f",
     "name": "Reins of Power",
     "package": "W6",
@@ -1721,6 +2116,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "aaadfe41-b2be-4183-b45e-a70e53a59d2e",
+    "name": "Retrofitter Foundry",
+    "package": "PR02.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The {2}, {T} Servo creation is dropped when activatedAbilities replace the parsed abilities."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
@@ -1820,6 +2232,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "f53da056-97be-41ad-8cfc-0d92e17dcd7b",
+    "name": "Sage of Fables",
+    "package": "PR02.20",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Remove-a-counter cost is paid from this creature, not a creature you control."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "bd92cacd-c7d8-43a2-a261-ea4754fefdc5",
     "name": "Sage's Reverie",
     "package": "W1",
@@ -1834,6 +2263,23 @@
     "interpretationTests": ["packages/engine/tests/w1-remaining-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "ce08aff3-efe6-4186-9557-274e00a7ca38",
+    "name": "Sceptre of Eternal Glory",
+    "package": "PR02.21",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The three-or-more-same-name land restriction is omitted from the three-mana ability."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "overrides deleted; override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "64c986f0-e786-419c-9b51-8c316c8fae0e",
@@ -1918,6 +2364,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "cb377c27-39a6-42b4-8c89-80a9a2350e81",
+    "name": "Solar Transformer",
+    "package": "PR02.29",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The colorless mana ability is dropped when the energy mana ability replaces manaAbilities."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "2598294c-a9a7-4bef-a562-23f297a80536",
     "name": "Songbirds' Blessing",
     "package": "W5",
@@ -1930,6 +2393,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "1b5e6560-ff2e-4475-96cb-63f64c8a86db",
+    "name": "Soul-Guide Lantern",
+    "package": "PR02.30",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Opponent-graveyard exile is authored with a free draw instead of a separate {1} draw ability."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "81a51328-b995-4f3b-90bc-a20ae21dd254",
@@ -2120,6 +2600,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "8cd45064-2ad9-4247-902e-aefaf3bc1a43",
+    "name": "Their Number Is Legion",
+    "package": "PR02.31",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Tokens are not created tapped, and graveyard cast is omitted."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f55334d9-1ec2-4667-bf28-5a0384d6f053",
     "name": "Thunderfoot Baloth",
     "package": "PR01.13",
@@ -2167,6 +2664,23 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
+    "name": "Toxic Deluge",
+    "package": "PR02.02",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Pay-X-life additional cost is implemented as loseLife on resolution."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -2413,6 +2927,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f",
+    "name": "Weathered Wayfarer",
+    "package": "PR02.22",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Opponent-controls-more-lands restriction is omitted from the search activation."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override deleted; interpret-defs.json (Kodama's Reach reveal) and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "d8df9813-0376-4d30-8cdc-30451fb67726",
