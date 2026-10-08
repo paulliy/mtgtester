@@ -205,6 +205,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'conclave-tribunal-viewer-convoke',
       'hour-of-reckoning-viewer-convoke',
       'killian-ink-duelist-viewer-reduced-bolt',
+      'dragonkin-berserker-viewer-reduced-boast',
     ]);
   });
 

@@ -3524,3 +3524,18 @@ test('Killian, Ink Duelist: a {2}{R} bolt at a creature for {R}', async ({ page 
   await expect(permanent(page, 'Mountain').locator('.tap-badge')).toHaveText('TAP');
   await expect(page.getByText(/Lab Killian Bolt.*resolves/).first()).toBeVisible();
 });
+
+test('Dragonkin Berserker: attack, then Boast for {2}{R}', async ({ page }) => {
+  await runScenario(page, 'Dragonkin Berserker: attack, then Boast for {2}{R}');
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Dragonkin Berserker' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await activate(page, 'Dragonkin Berserker', /Create a 5\/5 red Dragon/);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Dragon')).toBeVisible();
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('38');
+});

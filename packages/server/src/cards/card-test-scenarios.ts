@@ -6849,6 +6849,60 @@ function killianScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_DRAGON = card({
+  oracleId: 'lab-dragon',
+  name: 'Lab Dragon',
+  typeLine: 'Creature — Dragon',
+  manaCost: '{4}{R}',
+  cmc: 5,
+  colors: ['R'],
+  power: '4',
+  toughness: '4',
+});
+
+function dragonkinBerserkerScenario(gameId: GameId): CardTestScenario {
+  const berserker = pinnedFrom(MARCHESA_BATCH1, 'Dragonkin Berserker');
+  return pr01Scenario(gameId, {
+    id: 'dragonkin-berserker-viewer-reduced-boast',
+    title: 'Dragonkin Berserker: attack, then Boast for {2}{R}',
+    instructions: [
+      'Attack P2 with Dragonkin Berserker only.',
+      'After attackers are declared, activate its Boast. You control two Lab Dragons, so it costs {2}{R}: pay with your Mountain and Forests.',
+    ],
+    expectedOutcome:
+      'A 5/5 flying Dragon token is created, all three lands are tapped, and P2 takes 2 first-strike damage.',
+    oracleSha256: berserker.sha256,
+    clauseIds: [
+      'dragonkin-berserker-first-strike',
+      'dragonkin-berserker-boast-reduction',
+      'dragonkin-berserker-boast',
+    ],
+    decks: {
+      P1: [berserker.card, LAB_DRAGON, LAB_DRAGON, MOUNTAIN, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Dragonkin Berserker',
+            'Lab Dragon',
+            'Lab Dragon',
+            'Mountain',
+            'Forest',
+            'Forest',
+          ],
+        },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -7090,6 +7144,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'conclave-tribunal-viewer-convoke',
   'hour-of-reckoning-viewer-convoke',
   'killian-ink-duelist-viewer-reduced-bolt',
+  'dragonkin-berserker-viewer-reduced-boast',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7251,6 +7306,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'conclave-tribunal-viewer-convoke': conclaveTribunalScenario,
   'hour-of-reckoning-viewer-convoke': hourOfReckoningScenario,
   'killian-ink-duelist-viewer-reduced-bolt': killianScenario,
+  'dragonkin-berserker-viewer-reduced-boast': dragonkinBerserkerScenario,
 };
 
 export function createCardTestScenario(

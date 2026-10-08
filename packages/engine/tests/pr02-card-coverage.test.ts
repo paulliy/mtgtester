@@ -3656,6 +3656,110 @@ describe('Killian, Ink Duelist', () => {
   });
 });
 
+describe('Dragonkin Berserker', () => {
+  const berserker = pinned('Dragonkin Berserker');
+  const BOAST = /Create a 5\/5 red Dragon/;
+  const dragon = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Dragon', colors: ['R'], power: '4', toughness: '4' });
+
+  function ready(seed: string, dragons = 0) {
+    const ctx = pod(seed);
+    const self = spawn(ctx, 'P1', berserker.card);
+    for (let i = 1; i <= dragons; i++) spawn(ctx, 'P1', dragon(`Berserker Dragon ${i}`));
+    return { ctx, self };
+  }
+
+  it('dragonkin-berserker-pinned-oracle-supported — first strike, a Boast ability, and a Boast reduction', () => {
+    expect(berserker.sha256).toBe(
+      '2ad5ad892794762553614df0cd73da106fe1c7e09c0aee7106dd925e95f1dab6',
+    );
+    expect(berserker.card.oracleText).toBe(
+      'First strike\nBoast abilities you activate cost {1} less to activate for each Dragon you control.\nBoast — {4}{R}: Create a 5/5 red Dragon creature token with flying. (Activate only if this creature attacked this turn and only once each turn.)',
+    );
+    expectModeled(berserker.card);
+    expect(getOverride(berserker.card.oracleId)).toBeUndefined();
+    const def = interpretCard(berserker.card);
+    expect(def.keywords).toContain('first strike');
+    expect(def.activatedAbilities[0]).toMatchObject({
+      requiresAttackedThisTurn: true,
+      oncePerTurn: true,
+    });
+    expect(def.ruleStatics).toEqual([
+      expect.objectContaining({ kind: 'costReduction', appliesTo: 'activate', boastOnly: true }),
+    ]);
+  });
+
+  it('dragonkin-berserker-boast-needs-attack — Boast is offered only after it attacked this turn', () => {
+    const { ctx, self } = ready('berserker-attack');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }, ...generic(4)]);
+    expect(activationMatching(ctx, 'P1', self, BOAST)).toBeUndefined();
+    self.attackedThisTurn = true;
+    expect(activationMatching(ctx, 'P1', self, BOAST)).toBeDefined();
+  });
+
+  it('dragonkin-berserker-boast-once-each-turn — a second Boast the same turn is not offered', () => {
+    const { ctx, self } = ready('berserker-once');
+    self.attackedThisTurn = true;
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }, { symbol: 'R' }, ...generic(8)]);
+    takeAction(
+      ctx,
+      'P1',
+      activationMatching(ctx, 'P1', self, BOAST)!.payload as PriorityActionPayload,
+    );
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.filter((perm) => perm.name === 'Dragon')).toHaveLength(1);
+    expect(activationMatching(ctx, 'P1', self, BOAST)).toBeUndefined();
+  });
+
+  it('dragonkin-berserker-boast-reduction-per-dragon — two Dragons make its Boast cost {2}{R}', () => {
+    const { ctx, self } = ready('berserker-reduce', 2);
+    self.attackedThisTurn = true;
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }, ...generic(1)]);
+    expect(activationMatching(ctx, 'P1', self, BOAST)).toBeUndefined();
+    addMana(playerById(ctx, 'P1'), generic(1));
+    const option = activationMatching(ctx, 'P1', self, BOAST);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+  });
+
+  it('dragonkin-berserker-reduces-other-boasts-only — another creature’s Boast is reduced; non-Boast abilities are not', () => {
+    const { ctx } = ready('berserker-other', 1);
+    const boaster = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Berserker Other Boaster',
+        typeLine: 'Creature — Warrior',
+        oracleText: 'Boast — {2}: You gain 2 life.',
+      }),
+    );
+    const altar = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Berserker Plain Altar',
+        typeLine: 'Artifact',
+        oracleText: '{1}: You gain 1 life.',
+        power: null,
+        toughness: null,
+      }),
+    );
+    boaster.attackedThisTurn = true;
+    addMana(playerById(ctx, 'P1'), generic(1));
+    // One Dragon: the other creature's {2} Boast costs {1}, and the plain {1} stays {1}.
+    expect(activationMatching(ctx, 'P1', boaster, /gain 2 life/)).toBeDefined();
+    expect(activationMatching(ctx, 'P1', altar, /gain 1 life/)).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      activationMatching(ctx, 'P1', boaster, /gain 2 life/)!.payload as PriorityActionPayload,
+    );
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    expect(activationMatching(ctx, 'P1', altar, /gain 1 life/)).toBeUndefined();
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -3668,6 +3772,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Dragonkin Berserker',
+    sha256: '2ad5ad892794762553614df0cd73da106fe1c7e09c0aee7106dd925e95f1dab6',
+    clauseCount: 3,
+  },
   {
     name: 'Killian, Ink Duelist',
     sha256: 'dc5a598c8b1bda5db8590ef9abe9f717f4d02dd5b97c0900aeec62a96e21e1e2',

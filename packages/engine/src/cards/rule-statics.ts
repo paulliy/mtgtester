@@ -49,6 +49,11 @@ export type RuleStatic =
        * out and `targetedCostReductionFor` prices them against the actual targets.
        */
       targetFilter?: Selector;
+      /**
+       * "Boast abilities you activate cost {1} less" (Dragonkin Berserker): an activation
+       * reduction for Boast abilities only (CR 702.142), whatever permanent has them.
+       */
+      boastOnly?: true;
     }
   /**
    * "Creature spells you control can't be countered" (Rhythm of the Wild) — a STATE-DEPENDENT

@@ -216,8 +216,6 @@ const REASONS: Record<string, string> = {
     'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
   "Tyrant's Familiar":
     'Defending-player creature targeting uses eventPlayer, which is the attacking player.',
-  'Dragonkin Berserker':
-    'Boast cost reduction applies only to this creature, not to Boast abilities you activate.',
   'Atarka Monument': 'The animation does not make it red and green.',
   'Scourge of Valkas':
     'The entering Dragon is the damage source, implemented as damage from this creature.',
@@ -310,6 +308,7 @@ describe('Marchesa catalog audit containment', () => {
     'Conclave Tribunal',
     'Hour of Reckoning',
     'Killian, Ink Duelist',
+    'Dragonkin Berserker',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

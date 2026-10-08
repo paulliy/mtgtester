@@ -658,6 +658,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "06b77a80-4968-4385-960a-fb66bb4faa94",
+    "name": "Dragonkin Berserker",
+    "package": "PR02.08",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Boast cost reduction applies only to this creature, not to Boast abilities you activate."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "352b64d2-2ae5-44ee-a64f-94932ef545d3",
     "name": "Dread Return",
     "package": "PR02.09",

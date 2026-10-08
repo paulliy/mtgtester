@@ -367,12 +367,6 @@
     "def": {}
   },
   {
-    "oracleId": "06b77a80-4968-4385-960a-fb66bb4faa94",
-    "name": "Dragonkin Berserker",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8",
     "name": "Chaos Warp",
     "handledLines": [],
@@ -14419,12 +14413,6 @@
   {
     "oracleId": "oracle-dragon-tempest",
     "name": "Dragon Tempest",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-dragonkin-berserker",
-    "name": "Dragonkin Berserker",
     "handledLines": [],
     "def": {}
   },

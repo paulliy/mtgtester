@@ -5527,6 +5527,28 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       ];
     }
   }
+  // "Boast abilities you activate cost {1} less to activate for each Dragon you control."
+  // (Dragonkin Berserker): every Boast ability you activate, whatever its source.
+  {
+    const m = lower.match(
+      /^boast abilities you activate cost \{(\d+)\} less to activate(?: for each (.+?))?$/,
+    );
+    const each = m?.[2] === undefined ? undefined : parseSubject(m[2], card);
+    if (m !== null && each !== null) {
+      const per = Number(m[1]);
+      const amount: Value =
+        each === undefined
+          ? constant(per)
+          : per === 1
+            ? { kind: 'countPermanents', selector: each, scope: 'you' }
+            : {
+                kind: 'times',
+                of: { kind: 'countPermanents', selector: each, scope: 'you' },
+                n: per,
+              };
+      return [{ kind: 'costReduction', appliesTo: 'activate', boastOnly: true, amount }];
+    }
+  }
   // "Spells you cast that target a creature cost {2} less to cast." (Killian, Ink Duelist): the
   // reduction depends on the spell's chosen targets (CR 601.2f).
   {
@@ -7072,6 +7094,12 @@ export function interpretCard(card: OracleCard): CardDefinition {
       }
       const activated = parseActivatedLine(activatedText, card);
       if (activated !== null) {
+        // "Boast — [Cost]: [Effect]" adds "Activate only if this creature attacked this turn and
+        // only once each turn" (CR 702.142a). The label itself was stripped as a generic label.
+        if (/^boast\s+[—–-]\s+/i.test(originalLine)) {
+          activated.requiresAttackedThisTurn = true;
+          activated.oncePerTurn = true;
+        }
         activatedAbilities.push(activated);
         if (activationDiscount !== null) ruleStatics.push(activationDiscount);
         lineIndex = activatedEnd;

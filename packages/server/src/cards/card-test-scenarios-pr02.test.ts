@@ -728,3 +728,19 @@ describe('Killian, Ink Duelist Card Test Lab scenario', () => {
     replays('killian-ink-duelist-viewer-reduced-bolt', steps);
   });
 });
+
+describe('Dragonkin Berserker Card Test Lab scenario', () => {
+  it('dragonkin-berserker-viewer-reduced-boast — after attacking, Boast costs {2}{R} with two Dragons', () => {
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['P2', '__no_attack__', '__no_attack__'] },
+      { action: 'Create a 5/5 red Dragon' },
+    ];
+    const { seat, onBattlefield } = run('dragonkin-berserker-viewer-reduced-boast', steps);
+    expect(onBattlefield('Dragon')).toHaveLength(1);
+    expect(
+      ['Mountain', 'Forest'].every((name) => onBattlefield(name).every((land) => land.tapped)),
+    ).toBe(true);
+    expect(seat('P2').life).toBe(38);
+    replays('dragonkin-berserker-viewer-reduced-boast', steps);
+  });
+});

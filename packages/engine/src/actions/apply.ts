@@ -1078,6 +1078,7 @@ export function* applyPriorityAction(
         player.id,
         perm.oracleId,
         perm.cardId,
+        activated,
       );
       // The reduction applies once to the TOTAL mana cost with X announced (CR 601.2f), the way
       // `computePriorityOptions` priced it — spread across mana components, never applied twice.

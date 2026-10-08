@@ -3577,13 +3577,40 @@
     "06b77a80-4968-4385-960a-fb66bb4faa94": {
       "name": "Dragonkin Berserker",
       "oracleSha256": "2ad5ad892794762553614df0cd73da106fe1c7e09c0aee7106dd925e95f1dab6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "dragonkin-berserker-first-strike",
+          "oracleText": "First strike",
+          "implementation": ["interpreted keyword: first strike"],
+          "engineTestIds": ["dragonkin-berserker-pinned-oracle-supported"],
+          "viewerScenarioIds": ["dragonkin-berserker-viewer-reduced-boast"]
+        },
+        {
+          "id": "dragonkin-berserker-boast-reduction",
           "oracleText": "Boast abilities you activate cost {1} less to activate for each Dragon you control.",
-          "implementation": ["explicitly unsupported; reduction applies only to this creature"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted costReduction appliesTo activate with boastOnly: {1} per Dragon you control off any Boast ability you activate (CR 702.142b), never off other abilities"
+          ],
+          "engineTestIds": [
+            "dragonkin-berserker-pinned-oracle-supported",
+            "dragonkin-berserker-boast-reduction-per-dragon",
+            "dragonkin-berserker-reduces-other-boasts-only"
+          ],
+          "viewerScenarioIds": ["dragonkin-berserker-viewer-reduced-boast"]
+        },
+        {
+          "id": "dragonkin-berserker-boast",
+          "oracleText": "Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying.",
+          "implementation": [
+            "interpreted activated ability with requiresAttackedThisTurn and oncePerTurn (Boast, CR 702.142a)"
+          ],
+          "engineTestIds": [
+            "dragonkin-berserker-pinned-oracle-supported",
+            "dragonkin-berserker-boast-needs-attack",
+            "dragonkin-berserker-boast-once-each-turn"
+          ],
+          "viewerScenarioIds": ["dragonkin-berserker-viewer-reduced-boast"]
         }
       ],
       "gameplayAiScenarioIds": []

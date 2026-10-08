@@ -18,7 +18,13 @@ import {
 import { ALL_COLORS } from '@mtg/shared';
 import { evaluateCondition } from '../cards/condition';
 import type { Color, ObjectId, OracleId, PlayerId } from '@mtg/shared';
-import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../cards/definition';
+import type {
+  AbilityCost,
+  ActivatedAbility,
+  CardDefinition,
+  TargetKind,
+  TargetSpec,
+} from '../cards/definition';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EngineActionOption } from '../decisions';
@@ -562,6 +568,8 @@ export function activationCostReductionFor(
   controllerId: PlayerId,
   sourceOracleId: OracleId,
   sourceCardId: string,
+  /** The ability being activated, for reductions that name a kind of ability (Boast). */
+  ability?: ActivatedAbility,
 ): CostReductionResult {
   const def = getDefByOracleId(ctx, sourceOracleId, sourceOracleId);
   const candidate: SelectorCandidate = {
@@ -582,6 +590,7 @@ export function activationCostReductionFor(
   for (const entry of gatherRuleStatics(ctx)) {
     if (entry.static.kind !== 'costReduction' || entry.static.appliesTo !== 'activate') continue;
     if (entry.controllerId !== controllerId) continue;
+    if (entry.static.boastOnly === true && ability?.requiresAttackedThisTurn !== true) continue;
     if (entry.static.filter !== undefined) {
       // The same per-entry re-source the CAST side does above: a "of the chosen type" filter
       // reads the REDUCTION SOURCE's own recorded choice, not the ability's source. Without
@@ -1670,7 +1679,13 @@ export function computePriorityOptions(
         kind: 'activateAbility',
         sourceOracleId: perm.oracleId,
       });
-      const reduction = activationCostReductionFor(ctx, player.id, perm.oracleId, perm.cardId);
+      const reduction = activationCostReductionFor(
+        ctx,
+        player.id,
+        perm.oracleId,
+        perm.cardId,
+        activated,
+      );
       const baseManaCost = manaPortionOf(activated.costs);
       // CR 601.2f (via 602.2b): the reduction applies once X is part of the total.
       const reducedWithX = (x: number): ParsedManaCost =>

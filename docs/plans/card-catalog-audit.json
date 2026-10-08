@@ -5565,7 +5565,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 32,
+      "uniqueOracleIds": 31,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5858,6 +5858,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr02",
       "note": "Unimplemented placeholder registration deleted alongside the silverquill-influence-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "06b77a80-4968-4385-960a-fb66bb4faa94",
+      "name": "Dragonkin Berserker",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads Boast (activate only if this creature attacked this turn, once each turn, CR 702.142a) and the reduction as an activation costReduction with boastOnly, counted per Dragon you control and applied to every Boast ability you activate; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }
