@@ -3318,8 +3318,7 @@ test('Endless Atlas: three Forests unlock the draw', async ({ page }) => {
   await activateAndResolve(page, 'Endless Atlas', /Draw a card/, 'lands with the same name.');
   await expect(handCard(page, 'Atlas Drawn Page')).toBeVisible();
   await expect(permanent(page, 'Endless Atlas').locator('.tap-badge')).toHaveText('TAP');
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
-  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
 });
 
 test('Endless Atlas: two Forests and an Island do not unlock it', async ({ page }) => {
@@ -4059,8 +4058,7 @@ async function runMosswortCasting(page: Page, hiddenLand: boolean): Promise<void
     await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
     await expect(permanent(page, 'Lab Hidden Titan')).toContainText('7/7', { timeout: 15_000 });
   }
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
-  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
   await expect(page.locator('.log .line', { hasText: 'plays Mosswort Bridge' })).toHaveCount(1);
   if (hiddenLand)
     await expect(page.locator('.log .line', { hasText: 'plays Forest' })).toHaveCount(0);
