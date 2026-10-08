@@ -107,7 +107,13 @@ function onLeave(): void {
   <div
     :ref="setTileEl"
     class="tile"
-    :class="{ creature: isCreature, tapped: permanent.tapped, attacking: isAttacking, striking }"
+    :class="{
+      creature: isCreature,
+      tapped: permanent.tapped,
+      attacking: isAttacking,
+      striking,
+      'taking-damage': damageFlash === 'damage',
+    }"
     :style="
       strike
         ? {
@@ -178,6 +184,17 @@ function onLeave(): void {
 .tile.attacking :deep(.card-image) {
   outline: 1px solid var(--danger);
 }
+.tile.taking-damage::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid rgb(248 113 113 / 0.85);
+  border-radius: 7%;
+  box-shadow: 0 0 16px rgb(248 113 113 / 0.65);
+  opacity: 0;
+  pointer-events: none;
+  animation: damageImpact 720ms ease-out;
+}
 .tile.striking {
   animation-name: strike;
   animation-duration: var(--strike-ms, 520ms);
@@ -198,6 +215,24 @@ function onLeave(): void {
   }
   100% {
     transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes damageImpact {
+  0% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(0.98);
+  }
+  42% {
+    opacity: 0.82;
+    transform: scale(1.015);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
   }
 }
 .stack-count-badge {

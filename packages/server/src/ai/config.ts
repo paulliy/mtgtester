@@ -263,7 +263,9 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     models: ['qwen/qwen3.7-flash', 'sao10k/l3-lunaris-8b:nitro', 'poolside/laguna-s-2.1'],
     reasoningEnabled: false,
     reasoningEffort: 'none',
-    maxOutputTokens: 85,
+    // 85 tokens routinely truncates menu decisions once JSON targets are included. Keep a
+    // larger answer budget so provider output limits do not cut off otherwise valid choices.
+    maxOutputTokens: 256,
     reasoningTokenHeadroom: 0,
     requestTimeoutMs: 10000,
     maxRetries: 1,
