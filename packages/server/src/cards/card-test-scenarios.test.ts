@@ -318,6 +318,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'dream-devourer-viewer-foretell',
       'dream-devourer-viewer-foretold-cast',
       'triarch-praetorian-viewer-unearth',
+      'canoptek-tomb-sentinel-viewer-unearth-exile',
     ]);
   });
 

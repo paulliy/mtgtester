@@ -633,7 +633,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "sha256": "7c58aab56df885d8688498ad376b1e4f5063578d4cf64bb2fffb9c227d650443",
+      "sha256": "7161aae9b4735d0e0b177b3d5fb155350ee49bbac0be2fa265e8524ed34c83e3",
       "description": "registerNECRON_DYNASTIESOverrides"
     },
     {
@@ -668,12 +668,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "b9ec9df1367e382a2057c84dfc0e89af05ccadec75d07f1aade55a8940d3ee17",
-      "description": "Loran of the Third Path"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "9e7994ddcc8069cb8f9a13042fcd3135482a032e307784b68420503bac4d2c54",
+      "sha256": "1de251661018194e973447b9cc2082ccf1863736169f5688c4bb30c824d292ed",
       "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
     },
     {

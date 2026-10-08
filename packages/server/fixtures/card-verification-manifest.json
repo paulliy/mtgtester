@@ -1916,7 +1916,7 @@
           "id": "loran-of-the-third-path-destroy-up-to-one",
           "oracleText": "When Loran enters, destroy up to one target artifact or enchantment.",
           "implementation": [
-            "enters trigger on self with a 0..1 count slot: permanent that is an artifact or an enchantment, any controller",
+            "interpreted enters trigger on self with a 0..1 artifactOrEnchantment count slot (any controller); the coverage-pr01 authored trigger was retired in PR03 once the 'destroy up to one target' grammar read it identically",
             "destroyEachChosen(slot 0): honors indestructible; choosing none or having none to choose destroys nothing"
           ],
           "engineTestIds": [
@@ -2209,13 +2209,43 @@
     "678b3fb5-aa9f-4268-9433-2a89dd37b927": {
       "name": "Canoptek Tomb Sentinel",
       "oracleSha256": "8b3b2b8d9dc4c7bc3c7dfa002de18cdd021d265cd16a45096e01e7e9ae29b87a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "canoptek-tomb-sentinel-vigilance",
+          "oracleText": "Vigilance",
+          "implementation": ["keyword vigilance (interpreted)"],
+          "engineTestIds": ["canoptek-tomb-sentinel-pinned-oracle-supported"],
+          "viewerScenarioIds": ["canoptek-tomb-sentinel-viewer-unearth-exile"]
+        },
+        {
+          "id": "canoptek-tomb-sentinel-exile-cannon",
           "oracleText": "When this creature enters from a graveyard, exile up to one target nonland permanent.",
-          "implementation": ["explicitly unsupported; any enter; required target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted enters trigger on self with entersFrom { zone: graveyard } (CR 603.6a)",
+            "a 0..1 nonlandPermanent count slot chosen as the trigger goes on the stack; exileEachChosen slot 0, so no target exiles nothing"
+          ],
+          "engineTestIds": [
+            "canoptek-tomb-sentinel-pinned-oracle-supported",
+            "canoptek-tomb-sentinel-unearth-exiles",
+            "canoptek-tomb-sentinel-up-to-one",
+            "canoptek-tomb-sentinel-cast-no-trigger",
+            "up-to-one-removal-grammar"
+          ],
+          "viewerScenarioIds": ["canoptek-tomb-sentinel-viewer-unearth-exile"]
+        },
+        {
+          "id": "canoptek-tomb-sentinel-unearth",
+          "oracleText": "Unearth {7}",
+          "implementation": [
+            "interpreted graveyard activated ability: {7}, sorcery timing, effect unearth (CR 702.84a)"
+          ],
+          "engineTestIds": [
+            "canoptek-tomb-sentinel-pinned-oracle-supported",
+            "canoptek-tomb-sentinel-unearth-exiles",
+            "canoptek-tomb-sentinel-unearth-needs-seven"
+          ],
+          "viewerScenarioIds": ["canoptek-tomb-sentinel-viewer-unearth-exile"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -82,7 +82,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Promise of Loyalty',
       'Mob Rule',
       'Caged Sun',
-      'Canoptek Tomb Sentinel',
       'Psychomancer',
       'Hexmark Destroyer',
       'Imotekh the Stormlord',

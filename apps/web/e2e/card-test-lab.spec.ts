@@ -4766,3 +4766,23 @@ test('Triarch Praetorian: unearth it to draw two cards', async ({ page }) => {
   await expect(handCard(page, 'Lab Zombie')).toBeVisible();
   await expect(page.locator('.log .line', { hasText: /loses 2 life/ }).first()).toBeVisible();
 });
+
+test("Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox", async ({ page }) => {
+  await runScenario(page, "Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox");
+  const sentinel = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Canoptek Tomb Sentinel', exact: true }) });
+  await expect(sentinel).toHaveClass(/actionable/, { timeout: 15_000 });
+  await sentinel.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // The enters-from-a-graveyard trigger asks for up to one nonland permanent.
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Target Lab Ox' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Canoptek Tomb Sentinel')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+});

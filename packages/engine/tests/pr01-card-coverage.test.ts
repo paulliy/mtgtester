@@ -2964,7 +2964,7 @@ describe('Loran of the Third Path', () => {
     expect(def.modeled).toBe(true);
     expect(def.keywords).toContain('vigilance');
     expect(def.triggers[0]?.targets).toEqual([
-      expect.objectContaining({ kind: 'permanent', count: { min: 0, max: 1 } }),
+      { kind: 'artifactOrEnchantment', count: { min: 0, max: 1 } },
     ]);
     expect(def.triggers[0]?.effects).toEqual([{ op: 'destroyEachChosen', targetSlot: 0 }]);
     expect(def.activatedAbilities[0]).toMatchObject({

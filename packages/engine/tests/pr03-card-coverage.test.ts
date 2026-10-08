@@ -77,6 +77,26 @@ function pod(seed: string): GameContext {
 
 type Answer = (decision: PendingDecision, count: number) => DecisionOutcome;
 
+function optionMatching(decision: PendingDecision, pattern: RegExp): DecisionOutcome {
+  const index = decision.options.findIndex((option) => pattern.test(option.description));
+  if (index < 0) {
+    throw new Error(
+      `no option matching ${String(pattern)} in: ${decision.options.map((o) => o.description).join(' | ')}`,
+    );
+  }
+  return { index, targets: new Map() };
+}
+
+/** Answer each decision whose prompt matches with the option matching the paired pattern. */
+function answers(rules: [prompt: RegExp, option: RegExp][]): Answer {
+  return (decision) => {
+    for (const [prompt, option] of rules) {
+      if (prompt.test(decision.prompt)) return optionMatching(decision, option);
+    }
+    return { index: 0, targets: new Map() };
+  };
+}
+
 function priorityOptions(ctx: GameContext, playerId: string) {
   return computePriorityOptions(ctx, playerById(ctx, playerId));
 }
@@ -329,6 +349,150 @@ describe('Triarch Praetorian', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.01 Canoptek Tomb Sentinel
+// ---------------------------------------------------------------------------------------------
+
+describe('Canoptek Tomb Sentinel', () => {
+  const sentinel = pinned('Canoptek Tomb Sentinel');
+  const relic = oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{2}' });
+  const grove = oracle({ name: 'Lab Grove', typeLine: 'Land' });
+
+  /** Choose `name` for the up-to-one slot, or no target at all. */
+  const exileAnswer = (name: string | null): Answer =>
+    answers([
+      [
+        /choose (a|another) target/i,
+        name === null ? /Choose no more targets/ : new RegExp(`^Target ${name}$`),
+      ],
+    ]);
+
+  function unearthed(seed: string, answer: Answer) {
+    const ctx = pod(seed);
+    const p1 = playerById(ctx, 'P1');
+    const card = conjure(ctx, 'P1', sentinel.card, 'graveyard');
+    addMana(p1, generic(7));
+    const option = optionFor(ctx, 'P1', card.id, /Unearth/);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const settled = settle(ctx, answer);
+    return { ctx, card, settled };
+  }
+
+  it('canoptek-tomb-sentinel-pinned-oracle-supported — the interpreter alone models vigilance, the origin exile and unearth', () => {
+    expect(sentinel.sha256).toBe(
+      '8b3b2b8d9dc4c7bc3c7dfa002de18cdd021d265cd16a45096e01e7e9ae29b87a',
+    );
+    expectNoRegistration(sentinel.card);
+    expectModeled(sentinel.card);
+    const def = interpretCard(sentinel.card);
+    expect(def.keywords).toEqual(['vigilance']);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'enters',
+      subject: { kind: 'self' },
+      entersFrom: { zone: 'graveyard' },
+    });
+    expect(def.triggers[0]!.targets).toEqual([
+      { kind: 'nonlandPermanent', count: { min: 0, max: 1 } },
+    ]);
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'exileEachChosen', targetSlot: 0 }]);
+    expect(def.activatedAbilities.map((entry) => entry.zone)).toEqual(['graveyard']);
+  });
+
+  it("canoptek-tomb-sentinel-unearth-exiles — unearthed for {7}, it exiles an opponent's nonland permanent", () => {
+    const ctx = pod('sentinel-exile');
+    spawn(ctx, 'P2', relic);
+    const p1 = playerById(ctx, 'P1');
+    const card = conjure(ctx, 'P1', sentinel.card, 'graveyard');
+    addMana(p1, generic(7));
+    const option = optionFor(ctx, 'P1', card.id, /Unearth/);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    settle(ctx, exileAnswer('Lab Relic'));
+    expect(ctx.state.battlefield.map((perm) => perm.name)).not.toContain('Lab Relic');
+    expect(ctx.state.exile.map((exiled) => exiled.name)).toEqual(['Lab Relic']);
+    const perm = ctx.state.battlefield.find((candidate) => candidate.cardId === card.cardId)!;
+    expect(perm.unearthed).toBe(true);
+  });
+
+  it('canoptek-tomb-sentinel-up-to-one — choosing no target exiles nothing, and lands are never offered', () => {
+    const { ctx, settled } = unearthed('sentinel-none', exileAnswer(null));
+    expect(ctx.state.exile).toEqual([]);
+    const prompts = settled.decisions.filter((decision) =>
+      /choose (a|another) target/i.test(decision.prompt),
+    );
+    expect(prompts).toHaveLength(1);
+    const offered = prompts[0]!.options.map((option) => option.description);
+    expect(offered).toContain('Choose no more targets');
+
+    const withLand = pod('sentinel-land');
+    spawn(withLand, 'P2', grove);
+    spawn(withLand, 'P2', relic);
+    const card = conjure(withLand, 'P1', sentinel.card, 'graveyard');
+    addMana(playerById(withLand, 'P1'), generic(7));
+    takeAction(
+      withLand,
+      'P1',
+      optionFor(withLand, 'P1', card.id, /Unearth/)!.payload as PriorityActionPayload,
+    );
+    resolveTop(withLand);
+    const seen: string[] = [];
+    settle(withLand, (decision) => {
+      if (/choose (a|another) target/i.test(decision.prompt)) {
+        seen.push(...decision.options.map((option) => option.description));
+        return optionMatching(decision, /Choose no more targets/);
+      }
+      return { index: 0, targets: new Map() };
+    });
+    expect(seen).toContain('Target Lab Relic');
+    expect(seen).not.toContain('Target Lab Grove');
+    expect(withLand.state.battlefield.map((perm) => perm.name)).toContain('Lab Grove');
+  });
+
+  it('canoptek-tomb-sentinel-cast-no-trigger — cast from hand for {4}, it exiles nothing', () => {
+    const ctx = pod('sentinel-cast');
+    spawn(ctx, 'P2', relic);
+    const p1 = playerById(ctx, 'P1');
+    const card = conjure(ctx, 'P1', sentinel.card, 'hand');
+    addMana(p1, generic(4));
+    const option = optionFor(ctx, 'P1', card.id);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    settle(ctx, exileAnswer('Lab Relic'));
+    expect(ctx.state.battlefield.map((perm) => perm.name)).toContain('Lab Relic');
+  });
+
+  it('canoptek-tomb-sentinel-unearth-needs-seven — {6} offers no unearth', () => {
+    const ctx = pod('sentinel-short');
+    const card = conjure(ctx, 'P1', sentinel.card, 'graveyard');
+    addMana(playerById(ctx, 'P1'), generic(6));
+    expect(optionFor(ctx, 'P1', card.id, /Unearth/)).toBeUndefined();
+  });
+
+  it('up-to-one-removal-grammar — "destroy/exile up to one target X" reads as a 0..1 slot', () => {
+    for (const [verb, op] of [
+      ['destroy', 'destroyEachChosen'],
+      ['exile', 'exileEachChosen'],
+    ] as const) {
+      const def = interpretCard(
+        oracle({
+          name: `Lab ${verb} Probe`,
+          typeLine: 'Creature — Probe',
+          oracleText: `When this creature enters, ${verb} up to one target artifact.`,
+        }),
+      );
+      expect(def.modeled, verb).toBe(true);
+      expect(def.triggers[0]!.targets).toEqual([{ kind: 'artifact', count: { min: 0, max: 1 } }]);
+      expect(def.triggers[0]!.effects).toEqual([{ op, targetSlot: 0 }]);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -340,6 +504,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Canoptek Tomb Sentinel',
+    sha256: '8b3b2b8d9dc4c7bc3c7dfa002de18cdd021d265cd16a45096e01e7e9ae29b87a',
+    clauseCount: 3,
+  },
   {
     name: 'Triarch Praetorian',
     sha256: '19702457c7e73d501b2509808cee1350b8f3944fc392e738b8f0080924578c9d',

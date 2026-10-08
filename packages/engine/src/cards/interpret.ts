@@ -1551,6 +1551,24 @@ function parseEffectSentence(
       ];
     }
   }
+  // "exile up to one target nonland permanent" (Canoptek Tomb Sentinel) — a variable-count slot:
+  // choosing no target is legal, and the ability still resolves (CR 115.1d, 601.2c).
+  {
+    const m = s.match(/^(destroy|exile) up to (\w+) target (.+)$/);
+    if (m && opts.allocCount !== undefined) {
+      const max = parseAmount(m[2] as string);
+      const parsed = parseTargetClause(m[3] as string);
+      if (max !== null && parsed !== null) {
+        const targetSlot = opts.allocCount(
+          parsed.kind,
+          { min: 0, max },
+          parsed.controller,
+          parsed.filter,
+        );
+        return [{ op: m[1] === 'destroy' ? 'destroyEachChosen' : 'exileEachChosen', targetSlot }];
+      }
+    }
+  }
   // "destroy target creature" / "exile target monocolored permanent" / "destroy target artifact you don't control" / â€¦
   {
     const m = s.match(/^(destroy|exile) target (.+)$/);

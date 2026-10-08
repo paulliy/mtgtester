@@ -129,3 +129,18 @@ describe('Triarch Praetorian Card Test Lab scenario', () => {
     replays('triarch-praetorian-viewer-unearth', steps);
   });
 });
+
+describe('Canoptek Tomb Sentinel Card Test Lab scenario', () => {
+  it("canoptek-tomb-sentinel-viewer-unearth-exile — unearth returns it and the graveyard-origin trigger exiles P2's Lab Ox", () => {
+    const steps: Step[] = [{ action: 'Unearth' }, { action: 'Target Lab Ox' }];
+    const { state, onBattlefield, offered } = run(
+      'canoptek-tomb-sentinel-viewer-unearth-exile',
+      steps,
+    );
+    expect(onBattlefield('Canoptek Tomb Sentinel')).toHaveLength(1);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(offered.some((actions) => actions.includes('Choose no more targets'))).toBe(true);
+    replays('canoptek-tomb-sentinel-viewer-unearth-exile', steps);
+  });
+});

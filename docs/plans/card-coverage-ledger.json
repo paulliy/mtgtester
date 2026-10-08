@@ -391,6 +391,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "678b3fb5-aa9f-4268-9433-2a89dd37b927",
+    "name": "Canoptek Tomb Sentinel",
+    "package": "PR03.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Enters-from-graveyard is implemented as any enter, and up-to-one is a required target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "61849685-b407-4ed0-aafc-ec3a003200b9",
     "name": "Canoptek Wraith",
     "package": "PR01.05",

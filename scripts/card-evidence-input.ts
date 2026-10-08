@@ -1713,6 +1713,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Triarch Praetorian: unearth it to draw two cards'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -7424,6 +7424,41 @@ function triarchPraetorianScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function canoptekTombSentinelScenario(gameId: GameId): CardTestScenario {
+  const sentinel = pinnedFrom(MARCHESA_BATCH1, 'Canoptek Tomb Sentinel');
+  const swamps = Array.from({ length: 7 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'canoptek-tomb-sentinel-viewer-unearth-exile',
+    title: "Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox",
+    instructions: [
+      'Canoptek Tomb Sentinel is in your graveyard and seven Swamps are on the battlefield.',
+      'Activate its unearth ability for {7}, then target Lab Ox with its enters-from-a-graveyard trigger.',
+    ],
+    expectedOutcome:
+      'Canoptek Tomb Sentinel returns with haste and its trigger exiles Lab Ox; it would exile nothing if you chose no target.',
+    oracleSha256: sentinel.sha256,
+    clauseIds: [
+      'canoptek-tomb-sentinel-vigilance',
+      'canoptek-tomb-sentinel-exile-cannon',
+      'canoptek-tomb-sentinel-unearth',
+    ],
+    decks: {
+      P1: [sentinel.card, ...swamps],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: swamps.map((swamp) => swamp.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Canoptek Tomb Sentinel'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7605,6 +7640,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'dream-devourer-viewer-foretell',
   'dream-devourer-viewer-foretold-cast',
   'triarch-praetorian-viewer-unearth',
+  'canoptek-tomb-sentinel-viewer-unearth-exile',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7806,6 +7842,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'dream-devourer-viewer-foretell': dreamDevourerForetellScenario,
   'dream-devourer-viewer-foretold-cast': dreamDevourerForetoldCastScenario,
   'triarch-praetorian-viewer-unearth': triarchPraetorianScenario,
+  'canoptek-tomb-sentinel-viewer-unearth-exile': canoptekTombSentinelScenario,
 };
 
 export function createCardTestScenario(

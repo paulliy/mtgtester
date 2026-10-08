@@ -103,9 +103,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  unimplemented('678b3fb5-aa9f-4268-9433-2a89dd37b927', 'Canoptek Tomb Sentinel', [
-    'Exile Cannon — When this creature enters from a graveyard, exile up to one target nonland permanent.',
-  ]);
+  // Canoptek Tomb Sentinel: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('61849685-b407-4ed0-aafc-ec3a003200b9', 'Canoptek Wraith', [
     "Wraith Form — ~ can't be blocked.",

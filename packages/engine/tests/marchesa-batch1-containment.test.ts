@@ -166,8 +166,6 @@ const REASONS: Record<string, string> = {
   'Spirit Mantle': 'Protection from creatures is unimplemented.',
   'Mob Rule': 'Until-end-of-turn steal is implemented as permanent gainControl.',
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
-  'Canoptek Tomb Sentinel':
-    'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
   Psychomancer:
     'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
   'Hexmark Destroyer': 'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
@@ -308,6 +306,7 @@ describe('Marchesa catalog audit containment', () => {
     'Grim Haruspex',
     'Dream Devourer',
     'Triarch Praetorian',
+    'Canoptek Tomb Sentinel',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

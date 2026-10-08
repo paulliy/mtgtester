@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 34,
+      "uniqueOracleIds": 33,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 46,
+      "uniqueOracleIds": 45,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -5924,6 +5924,20 @@
     {
       "oracleId": "52aa5a79-db0e-4eaa-b2df-e41674c47794",
       "name": "Triarch Praetorian",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "678b3fb5-aa9f-4268-9433-2a89dd37b927",
+      "name": "Canoptek Tomb Sentinel",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads the enters-from-a-graveyard head and 'exile up to one target nonland permanent' as a 0..1 count slot with exileEachChosen; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "678b3fb5-aa9f-4268-9433-2a89dd37b927",
+      "name": "Canoptek Tomb Sentinel",
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr03",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."

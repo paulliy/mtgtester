@@ -65,12 +65,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit necron-remaining-batch-1: graveyard-origin enter is any enter.
-  unsupportedCard(
-    '678b3fb5-aa9f-4268-9433-2a89dd37b927',
-    'Canoptek Tomb Sentinel',
-    'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
-  );
+  // Canoptek Tomb Sentinel: restored in coverage PR03. The interpreter reads "enters from a
+  // graveyard" and "exile up to one target nonland permanent", so no override remains.
   // Coverage PR01 (was contained by necron-remaining-batch-2): the optional {3}-and-sacrifice
   // payment gates the choice of a land you control and a search for basics with its name.
   defineCard(
