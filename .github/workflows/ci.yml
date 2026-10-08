@@ -87,10 +87,19 @@ jobs:
           bun run card-capabilities
           --primitive-evidence test-results/primitive-contracts
           > test-results/primitive-impact.json
-      - run: >-
-          bun run primitive-promotions
-          --base "${{ github.event.pull_request.base.sha || github.event.before }}"
-          --primitive-evidence test-results/primitive-contracts
+      - name: Check primitive review promotions
+        env:
+          PROMOTION_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [[ -z "$PROMOTION_BASE" || "$PROMOTION_BASE" =~ ^0+$ ]] || ! git cat-file -e "$PROMOTION_BASE^{commit}" 2>/dev/null; then
+            PROMOTION_BASE=$(git rev-parse --verify HEAD^ 2>/dev/null || true)
+            if [[ -z "$PROMOTION_BASE" ]]; then
+              echo "::notice::No prior commit exists; skipping base-relative promotion comparison."
+              exit 0
+            fi
+            echo "::warning::Push base unavailable; comparing promotions with HEAD's first parent."
+          fi
+          bun run primitive-promotions --base "$PROMOTION_BASE" --primitive-evidence test-results/primitive-contracts
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -152,6 +152,17 @@ function plannedActionShapeError(planned: PlannedAction): string | null {
 export interface PlanInstallOptions {
   metadata?: PlanArtifactMetadata;
   sourceView?: PlayerView;
+  acceptedSinceSource?: readonly AcceptedPlanAction[];
+}
+
+/** Actual accepted actions while a strategy's source observation was in flight. */
+export interface AcceptedPlanAction {
+  turn: number;
+  player: string;
+  phase: Phase;
+  step: Step | null;
+  action: LegalAction;
+  targets?: DecisionResponse['targets'];
 }
 
 export class TurnPlanManager {
@@ -245,6 +256,32 @@ export class TurnPlanManager {
         this.emit('impossible_at_source', request, contradiction, sequence, action);
         return false;
       });
+    }
+    for (const accepted of options.acceptedSinceSource ?? []) {
+      if (accepted.turn !== request.turn || accepted.player !== request.activePlayer) continue;
+      if (['pass', 'passAndYieldTurn', 'yieldToAbility'].includes(accepted.action.type)) continue;
+      const index = this.queue.findIndex((action) => {
+        if (plannedActionShapeError(action) !== null) return false;
+        if (compareWindow(accepted.phase, accepted.step, action.phase, action.step) !== 'at')
+          return false;
+        if (this.findMatchingAction(action, [accepted.action]) === null) return false;
+        return (action.targets ?? []).every((target) => {
+          const actual = accepted.targets?.find((choice) => choice.slot === target.slot);
+          if (actual !== undefined) return actual.choice === target.choice;
+          const slot = accepted.action.targets?.find((slot) => slot.slot === target.slot);
+          return slot?.options.length === 1 && slot.options[0] === target.choice;
+        });
+      });
+      if (index < 0) continue;
+      const [action] = this.queue.splice(index, 1);
+      this.completedActionIds.add(action!.id);
+      this.emit(
+        'already_accomplished',
+        request,
+        `engine accepted matching action ${accepted.action.id} after the source observation`,
+        sequence,
+        action,
+      );
     }
     this.emit('installed', request, 'strategy artifact installed', sequence);
     engine?.addDebug('decision', `strategist plan recorded for ${request.activePlayer}`, {

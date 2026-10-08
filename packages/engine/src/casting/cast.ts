@@ -378,7 +378,10 @@ function* proposeCast(
   }
   if (
     resolutionPermission !== undefined &&
-    (payload.alternativeCast !== undefined || (payload.x ?? 0) !== 0)
+    ((payload.alternativeCast !== undefined &&
+      payload.alternativeCast !== 'adventure' &&
+      payload.alternativeCast !== 'omen') ||
+      (payload.x ?? 0) !== 0)
   ) {
     throw new Error('without-mana-cost permission cannot combine alternative costs or nonzero X');
   }
@@ -450,16 +453,16 @@ function* proposeCast(
   }
   if (selectedAlternative !== undefined) {
     const from = selectedAlternative.from;
+    const freeSpellFace =
+      resolutionPermission !== undefined &&
+      (selectedAlternative.kind === 'adventure' || selectedAlternative.kind === 'omen');
     if (
-      payload.fromLibraryTop === true ||
-      payload.fromExile === true ||
-      (payload.fromCommand &&
-        (from === 'hand' ||
-          selectedAlternative.kind === 'adventure' ||
-          selectedAlternative.kind === 'omen')) ||
-      (payload.fromGraveyard === true
-        ? from !== 'graveyard'
-        : from === 'graveyard' || from === 'exile')
+      (!freeSpellFace && (payload.fromLibraryTop === true || payload.fromExile === true)) ||
+      (payload.fromCommand && from === 'hand') ||
+      (!freeSpellFace &&
+        (payload.fromGraveyard === true
+          ? from !== 'graveyard'
+          : from === 'graveyard' || from === 'exile'))
     ) {
       throw new Error('casting alternative is not supported from this zone');
     }
@@ -639,6 +642,7 @@ function* proposeCast(
   }
   // Every alternative cost still announces modes, pays additional costs, and includes the
   // commander tax (CR 118.9d, 601.2b/f). Only the printed mana-cost component is replaced.
+  if (resolutionPermission !== undefined) cost = emptyCost();
   if ((payload.x ?? 0) > 0 && (cost.x ?? 0) === 0 && abilityDef.announcesX !== true)
     throw new Error('this spell does not announce X');
   cost = withX(addGeneric(cost, tax), payload.x ?? 0);
@@ -829,7 +833,10 @@ function* proposeCast(
     abilityDef.keywords.includes('rebound')
       ? { reboundPending: true }
       : {}),
-    triggerScope: { manaSpent: manaPayment.manaSpent },
+    triggerScope: {
+      manaSpent: manaPayment.manaSpent,
+      treasureManaSpent: manaPayment.treasureManaSpent,
+    },
   });
   delete spellEntry.castInProgress;
   breakYieldsForStop(ctx, spellEntry);

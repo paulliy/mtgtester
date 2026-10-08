@@ -28,18 +28,26 @@ const cases = SPELL_FACE_LAB_EXPECTATIONS.flatMap((expected) => {
     createHash('sha256').update(JSON.stringify(pin.card)).digest('hex') !== pin.sha256
   )
     throw new Error(`Spell-face Oracle fixture drift: ${expected.name}`);
-  return (['front', 'half'] as const).map((mode) => ({
+  return (
+    expected.name === 'Glóin the Mighty'
+      ? (['front', 'half', 'commander'] as const)
+      : (['front', 'half'] as const)
+  ).map((mode) => ({
     ...pin,
     expected,
     mode,
     id:
-      mode === 'half'
-        ? `${slug(pin.card.backFace!.name)}-viewer-normal-face`
-        : `${slug(expected.name)}-viewer-front`,
+      mode === 'commander'
+        ? 'easy-pickings-viewer-commander-face'
+        : mode === 'half'
+          ? `${slug(pin.card.backFace!.name)}-viewer-normal-face`
+          : `${slug(expected.name)}-viewer-front`,
     title:
-      mode === 'half'
-        ? `${pin.card.backFace!.name}: cast the selected spell face`
-        : `${expected.name}: play the ordinary front`,
+      mode === 'commander'
+        ? 'Easy Pickings: cast an Adventure commander from the command zone'
+        : mode === 'half'
+          ? `${pin.card.backFace!.name}: cast the selected spell face`
+          : `${expected.name}: play the ordinary front`,
   }));
 });
 export const SPELL_FACE_SCENARIO_IDS = cases.map(({ id }) => id);
@@ -85,10 +93,10 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
   const players = (['P1', 'P2', 'P3', 'P4'] as const).map((seat) => ({
     id: seat,
     deckId: `spell-face-lab-${seat}`,
-    commanders: [],
+    commanders: seat === 'P1' && entry.mode === 'commander' ? [entry.card] : [],
     cards:
       seat === 'P1'
-        ? [entry.card, own, giant, ...mana, ...library]
+        ? [...(entry.mode === 'commander' ? [] : [entry.card]), own, giant, ...mana, ...library]
         : seat === 'P2'
           ? [other, artifact, ...lands]
           : [...lands],
@@ -99,11 +107,11 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
       version: 1,
       title: entry.title,
       instructions: [
-        `Play ${entry.mode === 'half' ? entry.card.backFace!.name : entry.expected.name} through the normal controls.`,
+        `Play ${entry.mode !== 'front' ? entry.card.backFace!.name : entry.expected.name} through the normal controls.`,
         'Choose the indicated witness, complete printed choices, then pass to finish.',
       ],
       expectedOutcome:
-        entry.mode === 'half'
+        entry.mode !== 'front'
           ? 'The printed spell face resolves with its own cost and characteristics, then uses Adventure exile or Omen shuffle.'
           : 'The ordinary front enters with its printed characteristics and entry effects.',
       oracleSha256: entry.sha256,
@@ -131,7 +139,8 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
           phase: 'precombatMain',
           step: null,
           turnNumber: 1,
-          hand: [{ playerId: 'P1', cardNames: [entry.card.name] }],
+          hand:
+            entry.mode === 'commander' ? [] : [{ playerId: 'P1', cardNames: [entry.card.name] }],
           battlefield: [
             { playerId: 'P1', cardNames: [...mana.map((card) => card.name), own.name, giant.name] },
             { playerId: 'P2', cardNames: [other.name], tapped: entry.expected.untap ?? false },

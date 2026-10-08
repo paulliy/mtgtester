@@ -170,3 +170,19 @@ function finish(id: string, name: string, half: boolean, x?: number) {
   expect(ended).toBe(true);
   return engine;
 }
+
+it('face-commander-lab normally casts and resolves Easy Pickings as a commander spell', () => {
+  const engine = finish('easy-pickings-viewer-commander-face', 'Glóin the Mighty', true);
+  const event = engine.getState().eventLog.find((event) => event.type === 'castSpell')!;
+  expect(event.payload['commanderTax']).toBe(0);
+  expect(engine.getState().players[0]!.commanderCastCount).toEqual(
+    expect.objectContaining({
+      [Object.keys(engine.getState().players[0]!.commanderCastCount)[0]!]: 1,
+    }),
+  );
+  expect(
+    engine
+      .getState()
+      .eventLog.some((event) => event.type === 'damage' && event.payload['amount'] === 1),
+  ).toBe(true);
+});

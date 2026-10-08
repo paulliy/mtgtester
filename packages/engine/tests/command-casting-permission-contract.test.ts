@@ -89,7 +89,7 @@ describe('ordinary command-zone casting permission', () => {
   });
 
   it.each(['adventure', 'omen'] as const)(
-    'contains a direct %s command-zone face until that path is supported',
+    'rejects a malformed %s command-zone face without executable characteristics',
     (kind) => {
       const state = setup();
       state.ctx.defs.set(state.card.oracleId, {
@@ -104,16 +104,12 @@ describe('ordinary command-zone casting permission', () => {
           },
         ],
       });
-      expect(
-        state
-          .options()
-          .every(
-            (option) => (option.payload as typeof state.payload).alternativeCast === undefined,
-          ),
-      ).toBe(true);
+      const before = cloneContractContext(state.ctx);
+      expect(() => state.options()).toThrow('spell face');
       expect(() => state.cast({ ...state.payload, alternativeCast: kind, altIndex: 0 })).toThrow(
-        'not supported from this zone',
+        'spell face',
       );
+      expect(state.ctx.state).toEqual(before.state);
     },
   );
 });

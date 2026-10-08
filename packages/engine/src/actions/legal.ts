@@ -868,6 +868,10 @@ export function computePriorityOptions(
             const selectionCost = reduce(addManaCosts(cost, manaPortionOf(additionalCosts)));
             const payment = jointPayment(selectionCost, additionalCosts, x, 0, energyCost);
             if (payment === null) continue;
+            const taxesTargets = gatherRuleStatics(castCtx).some(
+              (entry) =>
+                entry.static.kind === 'targetLifeTax' && entry.controllerId !== castPlayer.id,
+            );
             const targetMenus = legalTargetMenus(
               castCtx,
               castingDef.spellAbility ?? { kind: 'spell', targets: [], effects: [] },
@@ -878,17 +882,19 @@ export function computePriorityOptions(
                 x,
               },
               selectedModeTargetSlots(castingDef, selectedModes),
-              (ordinary, counted) =>
-                jointlyPayable(
-                  selectionCost,
-                  additionalCosts,
-                  x,
-                  targetLifeTaxFor(castCtx, castPlayer.id, [
-                    ...ordinary,
-                    ...Object.values(counted).flat(),
-                  ]),
-                  energyCost,
-                ),
+              taxesTargets
+                ? (ordinary, counted) =>
+                    jointlyPayable(
+                      selectionCost,
+                      additionalCosts,
+                      x,
+                      targetLifeTaxFor(castCtx, castPlayer.id, [
+                        ...ordinary,
+                        ...Object.values(counted).flat(),
+                      ]),
+                      energyCost,
+                    )
+                : undefined,
             );
             for (const payableTargets of targetMenus) {
               const optionalLabel =
@@ -939,9 +945,11 @@ export function computePriorityOptions(
                     ? 'command'
                     : fromLibraryTop
                       ? 'library'
-                      : fromExile
-                        ? 'exile'
-                        : 'hand',
+                      : fromGraveyard
+                        ? 'graveyard'
+                        : fromExile
+                          ? 'exile'
+                          : 'hand',
                   manaCost:
                     variant.alternativeCast !== undefined && totalPips(selectionCost) === 0
                       ? 'free'
@@ -1084,7 +1092,6 @@ export function computePriorityOptions(
             break;
           case 'adventure':
           case 'omen': {
-            if (fromCommand) break;
             const face = selectedSpellDefinition(def, alt);
             offerCast(
               alt.manaCost,

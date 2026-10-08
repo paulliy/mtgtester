@@ -1065,6 +1065,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   { file: 'card-test-lab.spec.ts', titlePath: ['Marchesa: skip the card exiled by Bojuka Bog'] },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Easy Pickings: cast an Adventure commander from the command zone'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mosswort Bridge: cast a hidden Adventure spell face'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Mosswort Bridge: cast a hidden permanent on the spell stack'],
   },
   {
@@ -1502,6 +1510,8 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   { file: 'card-test-lab.spec.ts', titlePath: ["Mana Leak: counter an opponent's spell"] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Stubborn Denial: counter your own spell'] },
   { file: 'card-test-lab.spec.ts', titlePath: ["Stubborn Denial: counter an opponent's spell"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Force of Negation: counter your own spell'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Force of Negation: counter an opponent's spell"] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Cyclonic Rift: one normal target'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Cyclonic Rift: overload without targets'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Vandalblast: one normal target'] },

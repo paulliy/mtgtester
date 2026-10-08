@@ -551,3 +551,50 @@ describe('actual changing-resource spell payment contracts', () => {
     expect(state.player.manaEntries).toEqual([]);
   });
 });
+
+it.each(['commanderIdentity', 'chosenColor'] as const)(
+  'keeps invariant %s mana sources on the fixed solver for impossible and funded casts',
+  (dynamic) => {
+    const state = setup('{99}');
+    const commander = conjure(
+      state.ctx,
+      'P1',
+      oracle({
+        name: 'Invariant commander',
+        typeLine: 'Legendary Creature',
+        colorIdentity: ['W', 'U', 'B', 'R', 'G'],
+      }),
+      'command',
+      { isCommander: true },
+    );
+    state.player.commanderCardIds.push(commander.cardId);
+    const sources = Array.from({ length: 8 }, (_, i) =>
+      state.source(`Invariant source ${i}`, { units: [], dynamic }),
+    );
+    for (const source of sources) source.chosenOption = 'G';
+    const before = cloneContractContext(state.ctx);
+    expect(state.offered()).toBeUndefined();
+    expect(state.ctx.state).toEqual(before.state);
+    expect(state.ctx.rng.nextUint32()).toBe(before.rng.nextUint32());
+    state.ctx.defs.set(state.card.oracleId, {
+      ...state.ctx.defs.get(state.card.oracleId)!,
+      manaCost: { generic: 1, colored: { W: 0, U: 0, B: 0, R: 0, G: 1 }, colorless: 0 },
+    });
+    state.cast();
+    expect(sources.filter((source) => source.tapped)).toHaveLength(2);
+    expect(state.ctx.state.stack[0]?.triggerScope?.manaSpent).toBe(2);
+  },
+);
+
+it('prunes an impossible fixed-production replay before the activation state budget', () => {
+  const state = setup('{99}', [{ kind: 'payLife', amount: 1 }]);
+  for (let i = 0; i < 12; i++)
+    state.source(`Life capacity source ${i}`, {
+      units: [['G']],
+      onActivate: [{ op: 'gainLife', amount: { kind: 'const', n: 1 } }],
+    });
+  const before = cloneContractContext(state.ctx);
+  expect(state.offered()).toBeUndefined();
+  expect(state.ctx.state).toEqual(before.state);
+  expect(state.ctx.rng.nextUint32()).toBe(before.rng.nextUint32());
+});

@@ -6819,7 +6819,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         "counter target noncreature spell. if that spell is countered this way, exile it instead of putting it into its owner's graveyard"
       ) {
         const target = spellTargets.length;
-        spellTargets.push(counterSpellTarget('noncreatureSpell', { controller: 'opponent' }));
+        spellTargets.push(counterSpellTarget('noncreatureSpell'));
         spellEffects.push({ op: 'counter', target, exileIfCountered: true });
         continue;
       }

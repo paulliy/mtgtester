@@ -1,8 +1,9 @@
-import process from 'node:process';
-import { URL } from 'node:url';
+import { URL, fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
+
+const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url));
 
 const ignored = new Set(['parent', 'loc', 'range', 'start', 'end', 'raw', 'tokens', 'comments']);
 export function canonicalAst(value) {
@@ -146,7 +147,7 @@ export const cardAuthoringPlugin = {
         },
       },
       create(context) {
-        const file = relative(process.cwd(), context.filename).replaceAll('\\', '/');
+        const file = relative(repositoryRoot, context.filename).replaceAll('\\', '/');
         const source = context.sourceCode;
         const { bindings } = collectLegacyScopes(source.ast);
         const allowed = (scope) => exemptions.has(`${file}:${fingerprint(scope)}`);

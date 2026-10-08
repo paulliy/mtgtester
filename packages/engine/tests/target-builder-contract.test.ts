@@ -8,7 +8,7 @@ import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { createGame } from '../src/state/game';
 import { resolveTopOfStack } from '../src/stack/stack';
-import { bear, conjure, copies, forest, gameConfig, oracle, pump } from './fixtures';
+import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 import { cloneContractContext } from './helpers/contract-harness';
 
 function setup(typeLine = 'Sorcery') {
@@ -279,4 +279,82 @@ describe('dangerous target builder contracts', () => {
     };
     expect(build).toThrow('target builder:');
   });
+});
+
+it.each([0, 1])('dependent modal counted targets preserve sparse slots with minimum %s', (min) => {
+  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) }))));
+  ctx.state.currentTurnPlayer = 'P1';
+  ctx.state.phase = 'precombatMain';
+  const player = ctx.state.players[0]!;
+  const source = spawn(ctx, 'P1', bear());
+  const own = conjure(ctx, 'P1', bear(), 'graveyard');
+  const other = conjure(ctx, 'P2', bear(), 'graveyard');
+  const definition = {
+    ...ctx.defs.get(source.oracleId)!,
+    activatedAbilities: [
+      {
+        costs: [],
+        timing: 'any' as const,
+        ability: {
+          kind: 'activated' as const,
+          targets: [
+            { kind: 'creature' as const },
+            { kind: 'player' as const },
+            graveyardCardTarget({ playerSlot: 1 }, { count: { min, max: 1 } }),
+          ],
+          effects: [],
+          modes: {
+            minChoices: 1,
+            maxChoices: 1,
+            options: [
+              {
+                description: 'Inactive earlier target',
+                targetSlots: [0],
+                effects: [{ op: 'destroy' as const, target: 0 }],
+              },
+              {
+                description: 'Dependent graveyard',
+                targetSlots: [1, 2],
+                effects: [{ op: 'gainLife' as const, amount: { kind: 'const' as const, n: 1 } }],
+              },
+            ],
+          },
+        },
+      },
+    ],
+  };
+  expect(validateCardDefinition(definition)).toEqual([]);
+  ctx.defs.set(source.oracleId, definition);
+  const option = computePriorityOptions(ctx, player).find((option) => {
+    const payload = option.payload as { kind?: string; objectId?: string; modes?: number[] };
+    return (
+      payload.kind === 'activateAbility' &&
+      payload.objectId === source.id &&
+      payload.modes?.[0] === 1
+    );
+  });
+  expect(option).toBeDefined();
+  const flow = applyPriorityAction(ctx, player, option!.payload as PriorityActionPayload, {
+    index: 0,
+    targets: new Map([[1, 'P2']]),
+  });
+  const next = flow.next();
+  expect(next.done).toBe(false);
+  if (!next.done) {
+    expect(next.value.options.map((option) => option.description)).not.toContain(
+      `Target ${own.id}`,
+    );
+    const index = next.value.options.findIndex((option) =>
+      JSON.stringify(option).includes(other.id),
+    );
+    expect(index).toBeGreaterThanOrEqual(0);
+    const completed = flow.next({ index, targets: new Map() });
+    expect(completed.done).toBe(true);
+  }
+  expect(ctx.state.stack[0]?.targets[1]).toBe('P2');
+  expect(ctx.state.stack[0]?.countTargets).toEqual({ 2: [other.id] });
+  pump(resolveTopOfStack(ctx));
+  expect(player.life).toBe(41);
+  expect(ctx.state.players[1]!.graveyard).toContain(other);
+  expect(player.graveyard).toContain(own);
 });

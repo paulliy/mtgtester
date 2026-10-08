@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import type { AbilityCost, CardDefinition } from '../src/cards/definition';
@@ -365,3 +367,79 @@ describe('shared free-casting contracts', () => {
     expect(ctx.state).toEqual(before.state);
   });
 });
+
+const facePins = JSON.parse(
+  readFileSync(new URL('./fixtures/selected-spell-faces-oracle.json', import.meta.url), 'utf8'),
+) as { cards: { card: OracleCard }[] };
+it.each(['Foulmire Knight', 'Sagu Wildling'])(
+  'free-face normal stack resolves the printed alternate of %s',
+  (name) => {
+    const { ctx, player } = setup();
+    const input = facePins.cards.find(({ card }) => card.name.startsWith(name))!.card;
+    const card = conjure(ctx, 'P1', input, 'exile');
+    let offered: string[] = [];
+    pump(resolveFreeCard(ctx, card, 'P1'), (decision) => {
+      offered = decision.options.map((option) => option.description);
+      const index = decision.options.findIndex(
+        (option) => option.description === `Cast ${input.backFace!.name}`,
+      );
+      expect(index).toBeGreaterThanOrEqual(0);
+      return { index, targets: new Map() };
+    });
+    expect(offered).toContain(`Cast ${input.name}`);
+    const entry = ctx.state.stack.at(-1)!;
+    expect(entry.description).toBe(input.backFace!.name);
+    expect(entry.triggerScope?.manaSpent).toBe(0);
+    expect(entry.alternativeCastKind).toBe(name === 'Foulmire Knight' ? 'adventure' : 'omen');
+    const hand = player.hand.length;
+    pump(resolveTopOfStack(ctx));
+    expect(player.hand).toHaveLength(hand + 1);
+    if (name === 'Foulmire Knight') {
+      expect(player.life).toBe(39);
+      expect(ctx.state.exile.find((object) => object.cardId === card.cardId)?.onAdventure).toBe(
+        true,
+      );
+    } else {
+      expect(player.library.some((object) => object.cardId === card.cardId)).toBe(true);
+      expect(ctx.state.exile.some((object) => object.cardId === card.cardId)).toBe(false);
+    }
+  },
+);
+it.each([2, 3])(
+  'free-face Cascade limit %s excludes Profane Insight even though its front qualifies',
+  (limit) => {
+    const { ctx } = setup();
+    const card = conjure(
+      ctx,
+      'P1',
+      facePins.cards.find(({ card }) => card.name.startsWith('Foulmire Knight'))!.card,
+      'exile',
+    );
+    const flow = resolveFreeCard(ctx, card, 'P1', limit);
+    const decision = flow.next();
+    expect(decision.done).toBe(false);
+    if (!decision.done) {
+      expect(decision.value.options.map((option) => option.description)).toEqual([
+        'Cast Foulmire Knight // Profane Insight',
+      ]);
+    }
+  },
+);
+it.each(['predicate', 'resolution'])(
+  'free-cast %s fails loudly for an unsupported exposed card without mutation',
+  (boundary) => {
+    const { ctx, card } = setup([], {
+      modeled: false,
+      unmodeledReasons: ['Independent unsupported free-cast contract'],
+    });
+    const before = cloneContractContext(ctx);
+    expect(() =>
+      boundary === 'predicate'
+        ? freeCardIsCastable(ctx, card, 'P1')
+        : pump(resolveFreeCard(ctx, card, 'P1')),
+    ).toThrow('Unmodeled card');
+    expect(ctx.state).toEqual(before.state);
+    expect(ctx.debugLog).toEqual(before.debugLog);
+    expect(ctx.rng.nextUint32()).toBe(before.rng.nextUint32());
+  },
+);

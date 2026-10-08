@@ -987,7 +987,7 @@ function* resolveCascade(
   if (hit !== undefined) {
     const hitDef = getDefByOracleId(ctx, hit.oracleId, hit.name);
     requireModeled(hitDef, 'Cascade reveal');
-    if (freeCardIsCastable(ctx, hit, controller.id)) {
+    if (freeCardIsCastable(ctx, hit, controller.id, sourceManaValue)) {
       const outcome = yield {
         decisionType: 'general',
         player: controller.id,
@@ -997,7 +997,7 @@ function* resolveCascade(
           { type: 'decline', description: 'Leave ' + hit.name + ' in exile' },
         ],
       };
-      if (outcome.index === 0) yield* resolveFreeCard(ctx, hit, controller.id);
+      if (outcome.index === 0) yield* resolveFreeCard(ctx, hit, controller.id, sourceManaValue);
     }
   }
 
@@ -3057,8 +3057,7 @@ export function* executeAbility(
           const currentId = ref('triggerObject');
           const entering = currentId === null ? undefined : findPermanent(ctx, currentId);
           if (entering !== undefined) {
-            const adjustedCount = counterAmountAfterReplacements(ctx, entering, '+1/+1', power);
-            entering.counters['+1/+1'] = (entering.counters['+1/+1'] ?? 0) + adjustedCount;
+            addCounters(ctx, source, entering, '+1/+1', power);
           }
         }
         break;
@@ -4026,7 +4025,7 @@ export function* executeAbility(
         // CR 400.7e / 603.6c: a death trigger can find its first public destination,
         // including an opponent-owned card. Leaving that incarnation ends the exception.
         const eventBinding =
-          scope.triggerObjectId ?? scope.eventObjectDestinationId ?? scope.eventObjectId;
+          scope.eventObjectDestinationId ?? scope.triggerObjectId ?? scope.eventObjectId;
         const cardObj =
           effect.target === 'triggerObject'
             ? triggerObjectCardId === undefined
@@ -5061,7 +5060,7 @@ export function* executeAbility(
         // that object has already left. It cannot acquire a new incarnation by card identity.
         const eventBinding =
           effect.target === 'triggerObject'
-            ? (scope.triggerObjectId ?? scope.eventObjectDestinationId ?? scope.eventObjectId)
+            ? (scope.eventObjectDestinationId ?? scope.triggerObjectId ?? scope.eventObjectId)
             : undefined;
         const currentEventBinding =
           eventBinding === undefined ? undefined : movedReferent(eventBinding);

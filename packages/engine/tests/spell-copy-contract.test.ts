@@ -3,6 +3,10 @@ import { applyPriorityAction } from '../src/actions/apply';
 import { createGame } from '../src/state/game';
 import { queueSpellCopy } from '../src/stack/copy';
 import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { createToken } from '../src/state/objects';
+import { TREASURE } from '../src/cards/tokens';
+import { manaCost } from '../src/cards/templates';
+import { resolveTopOfStack } from '../src/stack/stack';
 import { cloneContractContext } from './helpers/contract-harness';
 
 function setup() {
@@ -92,4 +96,59 @@ describe('independent spell copy object contract', () => {
     expect(ctx.debugLog).toEqual(before.debugLog);
     expect(ctx.rng.nextUint32()).toBe(before.rng.nextUint32());
   });
+});
+
+it('a normal spell copy preserves choices while resolving with zero mana spent to cast it', () => {
+  const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) }))));
+  const player = ctx.state.players[0]!;
+  ctx.state.currentTurnPlayer = 'P1';
+  ctx.state.activePlayerIndex = 0;
+  ctx.state.phase = 'precombatMain';
+  ctx.state.turnNumber = 3;
+  const card = conjure(
+    ctx,
+    'P1',
+    oracle({
+      name: 'Independent spent-mana spell',
+      typeLine: 'Sorcery',
+      manaCost: '{X}{G}',
+      oracleText: 'You gain 1 life.',
+    }),
+    'hand',
+  );
+  const definition = {
+    ...ctx.defs.get(card.oracleId)!,
+    optionalAdditionalCost: { mechanic: 'kicker' as const, cost: manaCost('{1}') },
+    spellAbility: {
+      kind: 'spell' as const,
+      targets: [],
+      effects: [
+        { op: 'gainLife' as const, amount: { kind: 'manaSpent' as const } },
+        { op: 'gainLife' as const, amount: { kind: 'treasureManaSpent' as const } },
+      ],
+    },
+  };
+  ctx.defs.set(card.oracleId, definition);
+  spawn(ctx, 'P1', forest());
+  createToken(ctx, TREASURE, 'P1');
+  createToken(ctx, TREASURE, 'P1');
+  pump(
+    applyPriorityAction(
+      ctx,
+      player,
+      { kind: 'castSpell', objectId: card.id, fromCommand: false, x: 1, optionalCostCount: 1 },
+      { index: 0, targets: new Map() },
+    ),
+  );
+  const original = ctx.state.stack[0]!;
+  expect(original.triggerScope).toMatchObject({ manaSpent: 3, treasureManaSpent: 2 });
+  const copy = queueSpellCopy(ctx, original, 'P1');
+  expect(copy.announcedX).toBe(1);
+  expect(copy.optionalCostCounts).toEqual({ kicker: 1 });
+  const life = player.life;
+  pump(resolveTopOfStack(ctx));
+  expect(player.life).toBe(life);
+  expect(original.triggerScope).toMatchObject({ manaSpent: 3, treasureManaSpent: 2 });
+  pump(resolveTopOfStack(ctx));
+  expect(player.life).toBe(life + 5);
 });

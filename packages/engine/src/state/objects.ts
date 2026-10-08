@@ -1533,8 +1533,8 @@ export function queueTriggersForEvent(
     if (matchingSubject === undefined) continue;
 
     const scope: TriggerScope = {
+      ...eventObjectScope(ctx, matchingSubject.permanent),
       ...(matchingSubject.amount !== undefined ? { damageDealt: matchingSubject.amount } : {}),
-      eventObjectId: matchingSubject.permanent.id,
       ...(delayed.affectedPlayerId === undefined
         ? {}
         : { eventPlayerId: delayed.affectedPlayerId }),

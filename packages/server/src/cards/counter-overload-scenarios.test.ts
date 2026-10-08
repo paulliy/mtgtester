@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createCardTestScenario } from './card-test-scenarios';
 
-const counters = ['Counterspell', 'Negate', 'Mana Leak', 'Stubborn Denial'];
+const counters = ['Counterspell', 'Negate', 'Mana Leak', 'Stubborn Denial', 'Force of Negation'];
 const overloads = ['Cyclonic Rift', 'Vandalblast', 'Damn'];
 const slug = (name: string) => name.toLowerCase().replaceAll(' ', '-');
 
@@ -13,7 +13,11 @@ describe('pinned counter and overload lab scenarios', () => {
     expect(engine.getState().stack).toHaveLength(0);
     expect(engine.getState().players.map((player) => player.life)).toEqual([40, 40, 40, 40]);
     const owner = engine.getState().players[mode === 'own-counter' ? 0 : 1]!;
-    expect(owner.graveyard.map((card) => card.name)).toContain('Independent Pending Spell');
+    expect(
+      (name === 'Force of Negation' ? engine.getState().exile : owner.graveyard).map(
+        (card) => card.name,
+      ),
+    ).toContain('Independent Pending Spell');
     expect(engine.getState().players[0]!.graveyard.map((card) => card.name)).toContain(name);
   });
 

@@ -121,6 +121,7 @@ function setup(
   expiry: 'onFire' | 'cleanup',
   acts = false,
   routed = false,
+  registeredEffects?: Effect[],
 ) {
   const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) }))));
   ctx.state.currentTurnPlayer = 'P1';
@@ -174,21 +175,81 @@ function setup(
     ability: {
       kind: 'triggered',
       targets: [],
-      effects: routed
-        ? [{ op: 'draw', count: { kind: 'const', n: 1 }, player: 'eventPlayer' }]
-        : acts
-          ? [
-              {
-                op: 'putCounters',
-                target: 'triggerObject',
-                counter: 'charge',
-                count: { kind: 'const', n: 1 },
-              },
-            ]
-          : [{ op: 'gainLife', amount: { kind: 'const', n: 3 } }],
+      effects:
+        registeredEffects ??
+        (routed
+          ? [{ op: 'draw', count: { kind: 'const', n: 1 }, player: 'eventPlayer' }]
+          : acts
+            ? [
+                {
+                  op: 'putCounters',
+                  target: 'triggerObject',
+                  counter: 'charge',
+                  count: { kind: 'const', n: 1 },
+                },
+              ]
+            : [{ op: 'gainLife', amount: { kind: 'const', n: 3 } }]),
     },
   });
   expect(ctx.state.delayedTriggers).toHaveLength(1);
   expect(ctx.state.delayedTriggers[0]!.targetObjectId).toBe(target.id);
   return { ctx, player, current, cast };
 }
+
+it('a delayed death trigger retains its first graveyard destination and last-known power', () => {
+  const state = setup('dies', 'onFire', false, false, [
+    { op: 'gainLife', amount: { kind: 'powerOfTriggerObject' } },
+    { op: 'graveyardToBattlefield', target: 'triggerObject' },
+  ]);
+  const original = state.current();
+  state.cast({ op: 'destroy', target: 0 });
+  const returned = state.ctx.state.battlefield.find((card) => card.cardId === original.cardId)!;
+  expect(returned.id).not.toBe(original.id);
+  expect(returned.ownerId).toBe('P2');
+  expect(returned.controllerId).toBe('P1');
+  expect(state.player.life).toBe(42);
+});
+
+it('a delayed death trigger cannot follow its first destination through a later zone change', () => {
+  const state = setup('dies', 'onFire', false, false, [
+    { op: 'gainLife', amount: { kind: 'powerOfTriggerObject' } },
+    { op: 'graveyardToBattlefield', target: 'triggerObject' },
+  ]);
+  const original = state.current();
+  state.cast({ op: 'destroy', target: 0 }, undefined, false);
+  expect(
+    state.ctx.state.players[1]!.graveyard.some((card) => card.cardId === original.cardId),
+  ).toBe(true);
+  const response = conjure(
+    state.ctx,
+    'P1',
+    oracle({
+      name: 'Independent graveyard response',
+      typeLine: 'Instant',
+      manaCost: '{0}',
+      oracleText: 'You gain 1 life.',
+    }),
+    'hand',
+  );
+  state.ctx.defs.set(response.oracleId, {
+    ...state.ctx.defs.get(response.oracleId)!,
+    spellAbility: {
+      kind: 'spell',
+      targets: [{ kind: 'player' }],
+      effects: [{ op: 'exileTargetPlayerGraveyard', target: 0 }],
+    },
+  });
+  pump(
+    applyPriorityAction(
+      state.ctx,
+      state.player,
+      { kind: 'castSpell', objectId: response.id, fromCommand: false },
+      { index: 0, targets: new Map([[0, 'P2']]) },
+    ),
+  );
+  pump(resolveTopOfStack(state.ctx));
+  pump(runPrioritySequence(state.ctx));
+  expect(state.ctx.state.battlefield.some((card) => card.cardId === original.cardId)).toBe(false);
+  expect(state.ctx.state.exile.some((card) => card.cardId === original.cardId)).toBe(true);
+  expect(state.player.life).toBe(42);
+});

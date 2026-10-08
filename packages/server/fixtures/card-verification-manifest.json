@@ -73,7 +73,7 @@
       "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Ward\u2014Pay 2 life.",
+          "oracleText": "Ward—Pay 2 life.",
           "implementation": ["structured life-payment ward cost"],
           "engineTestIds": [
             "gev-ward-pay-life",
@@ -277,7 +277,7 @@
       "clauses": [
         {
           "id": "aether-channeler-enters-modes",
-          "oracleText": "When this creature enters, choose one \u2014",
+          "oracleText": "When this creature enters, choose one —",
           "implementation": [
             "enters trigger on self; modal, one mode, chosen as the trigger is put on the stack (CR 700.2a)",
             "a mode whose target cannot be chosen is not offered; targetless modes declare targetSlots: []"
@@ -820,12 +820,12 @@
       "gameplayAiScenarioIds": []
     },
     "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe": {
-      "name": "Ol\u00f3rin's Searing Light",
+      "name": "Olórin's Searing Light",
       "oracleSha256": "74b48c19f85169bedb91b2a35f8d7d0315725b1c5e5f74d820366ace70a43641",
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "If there are two or more instant and/or sorcery cards in your graveyard, Ol\u00f3rin's Searing Light deals damage to each opponent equal to the power of the creature they exiled.",
+          "oracleText": "If there are two or more instant and/or sorcery cards in your graveyard, Olórin's Searing Light deals damage to each opponent equal to the power of the creature they exiled.",
           "implementation": ["explicitly unsupported; threshold damage omitted"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
@@ -1501,8 +1501,8 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "\u22122: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent.",
-          "implementation": ["explicitly unsupported; \u22122 directional restriction omitted"],
+          "oracleText": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent.",
+          "implementation": ["explicitly unsupported; −2 directional restriction omitted"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
         }
@@ -2031,7 +2031,7 @@
       "clauses": [
         {
           "id": "canoptek-wraith-unblockable",
-          "oracleText": "Wraith Form \u2014 This creature can't be blocked.",
+          "oracleText": "Wraith Form — This creature can't be blocked.",
           "implementation": [
             "static layer 6 setCantBeBlocked on self (authored because an executable override disables generic ability-label stripping)"
           ],
@@ -2043,7 +2043,7 @@
         },
         {
           "id": "canoptek-wraith-scout-search",
-          "oracleText": "Transdimensional Scout \u2014 When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+          "oracleText": "Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
           "implementation": [
             "dealsCombatDamageToPlayer trigger on self",
             "mayPayManaAndSacrificeSource({3}): offered only while the Wraith is on the battlefield and {3} is payable",
@@ -2174,7 +2174,7 @@
             "grouped basic-land search enforces a shared land type and permits up to two results"
           ],
           "engineTestIds": [
-            "myriad-landscape-shared-land-type-search \u2014 offers exactly the legal zero-, one-, and two-card grouped choices",
+            "myriad-landscape-shared-land-type-search — offers exactly the legal zero-, one-, and two-card grouped choices",
             "myriad-landscape-search-zero",
             "myriad-landscape-search-one",
             "myriad-landscape-search-two",
@@ -2256,7 +2256,7 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "Flashback\u2014Sacrifice three creatures.",
+          "oracleText": "Flashback—Sacrifice three creatures.",
           "implementation": [
             "explicitly unsupported; flashback claimed without a flashback alternative"
           ],
@@ -2353,7 +2353,7 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "I \u2014 You draw three cards and you lose 3 life.",
+          "oracleText": "I — You draw three cards and you lose 3 life.",
           "implementation": [
             "explicitly unsupported; saga chapters implemented as enter/upkeep/end-step"
           ],
@@ -2628,7 +2628,7 @@
         },
         {
           "id": "canoptek-spyder-artifact-creature-or-vehicle-draw",
-          "oracleText": "Fabricator Claw Array \u2014 Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.",
+          "oracleText": "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.",
           "implementation": [
             "enters trigger on permanent matching other + yours + nontoken + (Artifact and Creature, or subtype Vehicle)",
             "draw(1)"
@@ -2651,7 +2651,7 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "Exhaust \u2014 Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control. (Activate each exhaust ability only once.)",
+          "oracleText": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control. (Activate each exhaust ability only once.)",
           "implementation": ["explicitly unsupported; Exhaust omitted and extra tap cost"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
@@ -2679,7 +2679,7 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.\n\u22122: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types.",
+          "oracleText": "Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.\n−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types.",
           "implementation": ["explicitly unsupported; extra +1 loyalty ability not on the card"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
@@ -2696,7 +2696,7 @@
           "id": "attune-with-aether-search-reveal-energy",
           "oracleText": "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E}",
           "implementation": [
-            "searchLibrary(filter=Basic Land, destination=hand, allowFailToFind=true, reveal=true) \u2014 searchFound carries revealed=true, so every view shows the card (CR 701.16a)",
+            "searchLibrary(filter=Basic Land, destination=hand, allowFailToFind=true, reveal=true) — searchFound carries revealed=true, so every view shows the card (CR 701.16a)",
             "shuffle",
             "gainEnergy(2)"
           ],
@@ -2751,7 +2751,7 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "Imprint \u2014 When this creature enters, you may exile target nontoken creature.",
+          "oracleText": "Imprint — When this creature enters, you may exile target nontoken creature.",
           "implementation": ["explicitly unsupported; optional exile is a required target"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
@@ -2890,7 +2890,7 @@
         },
         {
           "id": "kairi-the-swirling-sky-dies-modes",
-          "oracleText": "When Kairi dies, choose one \u2014",
+          "oracleText": "When Kairi dies, choose one —",
           "implementation": [
             "dies trigger on self; modal, exactly one mode, chosen as the trigger is put on the stack (CR 700.2a); the bounce mode's target slot is active only when that mode is chosen"
           ],
@@ -3207,7 +3207,7 @@
       "clauses": [
         {
           "id": "return-to-nature-choose-one",
-          "oracleText": "Choose one \u2014",
+          "oracleText": "Choose one —",
           "implementation": [
             "modal spell, exactly one mode chosen at cast time; each mode announces only its own target (targetSlots), so a mode without a legal target is not offered and the spell is castable when any mode is"
           ],
@@ -3321,7 +3321,7 @@
         },
         {
           "id": "frontier-siege-khans",
-          "oracleText": "Khans \u2014 At the beginning of each of your main phases, add {G}{G}.",
+          "oracleText": "Khans — At the beginning of each of your main phases, add {G}{G}.",
           "implementation": [
             "mainPhase trigger, player you, condition chosenOptionIs Khans; addMana {G}{G}",
             "fires in each of your main phases and never on another player's turn"
@@ -3335,7 +3335,7 @@
         },
         {
           "id": "frontier-siege-dragons",
-          "oracleText": "Dragons \u2014 Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
+          "oracleText": "Dragons — Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
           "implementation": [
             "enters trigger for creatures you control with flying, condition chosenOptionIs Dragons",
             "target creature an opponent controls (none: no trigger, CR 603.3d); optional on resolution (CR 603.5)",
@@ -4395,12 +4395,12 @@
       "name": "Marang River Regent // Coil and Catch",
       "oracleSha256": "a61b03077e75c21a2b78e2698ff0ead3653977e2e29c32b34a6fb84e73b72f8d",
       "implementationStatus": "unsupported",
-      "unsupportedReason": "Coil and Catch\u2019s draw-three/discard-one clause was replaced with a targeted bounce.",
+      "unsupportedReason": "Coil and Catch’s draw-three/discard-one clause was replaced with a targeted bounce.",
       "clauses": [
         {
           "oracleText": "Draw three cards, then discard a card. (Then shuffle this card into its owner's library.)",
           "implementation": [
-            "unsupported: Coil and Catch\u2019s draw-three/discard-one clause was replaced with a targeted bounce."
+            "unsupported: Coil and Catch’s draw-three/discard-one clause was replaced with a targeted bounce."
           ],
           "engineTestIds": ["coil-and-catch-substitute-contained"],
           "viewerScenarioIds": []
@@ -4412,12 +4412,12 @@
       "name": "Monster Manual // Zoological Study",
       "oracleSha256": "f1a88cb9b7a2583e8fec1dea7413b1c0476db8c46cffd38a9da7928858a7ba1e",
       "implementationStatus": "unsupported",
-      "unsupportedReason": "Zoological Study\u2019s mill-five and milled-creature recovery Adventure was omitted.",
+      "unsupportedReason": "Zoological Study’s mill-five and milled-creature recovery Adventure was omitted.",
       "clauses": [
         {
           "oracleText": "Mill five cards, then return a creature card milled this way to your hand. (Then exile this card. You may cast the artifact later from exile.)",
           "implementation": [
-            "unsupported: Zoological Study\u2019s mill-five and milled-creature recovery Adventure was omitted."
+            "unsupported: Zoological Study’s mill-five and milled-creature recovery Adventure was omitted."
           ],
           "engineTestIds": ["zoological-study-omission-contained"],
           "viewerScenarioIds": []
@@ -4429,12 +4429,12 @@
       "name": "Bloomvine Regent // Claim Territory",
       "oracleSha256": "923a1d4e57487e65b17e92d1cfa6fdbf5afbd6b3d0f858826bd94ced7b8b6372",
       "implementationStatus": "unsupported",
-      "unsupportedReason": "Claim Territory\u2019s two-Forest split-destination search was replaced with a single basic-land-to-hand search.",
+      "unsupportedReason": "Claim Territory’s two-Forest split-destination search was replaced with a single basic-land-to-hand search.",
       "clauses": [
         {
           "oracleText": "Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle this card.)",
           "implementation": [
-            "unsupported: Claim Territory\u2019s two-Forest split-destination search was replaced with a single basic-land-to-hand search."
+            "unsupported: Claim Territory’s two-Forest split-destination search was replaced with a single basic-land-to-hand search."
           ],
           "engineTestIds": ["claim-territory-substitute-contained"],
           "viewerScenarioIds": []
@@ -4544,7 +4544,7 @@
           ]
         },
         {
-          "oracleText": "Ferocious \u2014 If you control a creature with power 4 or greater, counter that spell instead.",
+          "oracleText": "Ferocious — If you control a creature with power 4 or greater, counter that spell instead.",
           "implementation": [
             "controller-neutral spell target legality",
             "noncreature restriction",
@@ -4908,9 +4908,14 @@
             "face-reduction",
             "face-cast-triggers",
             "face-copy",
-            "face-canonical-no-mana"
+            "face-canonical-no-mana",
+            "free-face",
+            "free-face Cascade limit"
           ],
-          "viewerScenarioIds": ["profane-insight-viewer-normal-face"]
+          "viewerScenarioIds": [
+            "profane-insight-viewer-normal-face",
+            "mosswort-viewer-free-adventure-face"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -5367,7 +5372,7 @@
       "unsupportedReason": "Seasonal Ritual: unrecognized rules text: \"Add one mana of any color.\""
     },
     "6505a53b-00db-44c4-8eaa-09a1a01451a4": {
-      "name": "Gl\u00f3in the Mighty // Easy Pickings",
+      "name": "Glóin the Mighty // Easy Pickings",
       "oracleSha256": "1a3fa5186e45225f7060aa55ad0db47276957869b58714f870f621af6f4915ad",
       "implementationStatus": "implemented-unreviewed",
       "clauses": [
@@ -5387,9 +5392,13 @@
             "face-reduction",
             "face-cast-triggers",
             "face-copy",
-            "face-canonical-no-mana"
+            "face-canonical-no-mana",
+            "face-commander-tax"
           ],
-          "viewerScenarioIds": ["easy-pickings-viewer-normal-face"]
+          "viewerScenarioIds": [
+            "easy-pickings-viewer-normal-face",
+            "easy-pickings-viewer-commander-face"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -5511,7 +5520,8 @@
             "face-reduction",
             "face-cast-triggers",
             "face-copy",
-            "face-canonical-no-mana"
+            "face-canonical-no-mana",
+            "free-face"
           ],
           "viewerScenarioIds": ["roost-seek-viewer-normal-face"]
         }
@@ -6534,7 +6544,7 @@
       "unsupportedReason": "The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause.",
       "clauses": [
         {
-          "oracleText": "Lethal Voice \u2014 Whenever Black Bolt becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.",
+          "oracleText": "Lethal Voice — Whenever Black Bolt becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.",
           "implementation": [
             "unsupported: The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause."
           ],
@@ -6638,7 +6648,7 @@
           "id": "marchesa-first-public-destination",
           "oracleText": "Whenever a creature you control with a +1/+1 counter on it dies, return that card to the battlefield under your control at the beginning of the next end step.",
           "implementation": [
-            "Exact first public destination for a controlled creature dying with a +1/+1 counter; one-shot end-step return from any owner\u2019s graveyard; no tracking through intervening exile or a later incarnation"
+            "Exact first public destination for a controlled creature dying with a +1/+1 counter; one-shot end-step return from any owner’s graveyard; no tracking through intervening exile or a later incarnation"
           ],
           "engineTestIds": [
             "marchesa-viewer-first-zone-own",
@@ -6653,6 +6663,32 @@
             "marchesa-viewer-first-zone-no-counter",
             "marchesa-viewer-first-zone-opponent-controlled",
             "marchesa-viewer-first-zone-exiled"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ac2173f9-f223-440a-9231-fd98762bdc6f": {
+      "name": "Force of Negation",
+      "oracleSha256": "b8a0dc17dcd160b416c672ab9e916b5615465e19a3d3a4a2bddcc23138561cf4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target noncreature spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+          "implementation": [
+            "unrestricted noncreature stack-spell targeting",
+            "countered spell moves to exile"
+          ],
+          "engineTestIds": [
+            "force-of-negation-target-controller-P1",
+            "force-of-negation-target-controller-P2",
+            "force-of-negation-reject-self",
+            "force-of-negation-spell-only-targets",
+            "force-of-negation-reject-creature"
+          ],
+          "viewerScenarioIds": [
+            "force-of-negation-viewer-own-counter",
+            "force-of-negation-viewer-opponent-counter"
           ]
         }
       ],

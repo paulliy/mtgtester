@@ -354,3 +354,30 @@ describe('enforced final definition routes', () => {
     expect(() => computePriorityOptions(ctx, ctx.state.players[0]!)).toThrow('Unmodeled card');
   });
 });
+
+it.each([null, { kind: 'unknownTarget' }])(
+  'reports malformed delayed-trigger targets without throwing: %j',
+  (target) => {
+    const definition = {
+      ...base(),
+      spellAbility: {
+        kind: 'spell',
+        targets: [target, { kind: 'creature' }],
+        effects: [
+          { op: 'destroy', target: 1 },
+          {
+            op: 'registerDelayedTrigger',
+            target: 0,
+            ability: {
+              kind: 'triggered',
+              trigger: { when: 'endStep' },
+              targets: [],
+              effects: [],
+            },
+          },
+        ],
+      },
+    } as unknown as ReturnType<typeof base>;
+    expect(validateCardDefinition(definition)).not.toEqual([]);
+  },
+);

@@ -858,3 +858,25 @@ not every capability or card. Unknown, experimental and out-of-scope dependencie
 reviewed claims. Unsupported faces, irreversible payment paths, strategic mana continuations
 and missing dispatch contexts fail closed. Historical review labels and aggregate model counts
 do not grant current evidence. Gameplay-AI observations remain separate from rules verification.
+
+## PR #14 review corrections
+
+The first remote integration run passed the offline card gate and AI benchmark/privacy gate,
+but failed on a departing Vue animation matching the returned object, upstream ZoneStrip
+formatting, and a late same-phase strategist plan repeating an already accepted activation.
+Those failures are retained as historical evidence. The branch now merges main's animation
+and retained-strategy changes. The AI fix consumes one matching already accepted action from
+an arriving plan while preserving the pending request and remaining intent.
+
+The 16 initial inline review findings are addressed in the implementation: usable CI promotion
+bases; accurate primitive registry documentation; target-tax-only repeated payment proofs;
+graveyard presentation; malformed delayed target validation; printed Force of Negation target
+controllers; paid counter events and threshold triggers; bounded invariant mana searches;
+copied-spell payment facts; clean-tree evidence capture; stable lint roots; command-zone
+Adventure faces; selected free spell faces with Cascade bounds; delayed destination facts;
+explicit unsupported free-cast boundaries; and sparse dependent activation slots.
+
+Independent normal-path regressions and pinned real-viewer requirements have been extended.
+Current integrated full-suite, card, primitive, browser and static gates are required before
+these review corrections are considered verified. Earlier successful receipts remain
+historical and are not rebound to this changed source tree.

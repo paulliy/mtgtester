@@ -399,7 +399,7 @@ export function* applyPriorityAction(
           player.id,
           colorsOf(ctx, perm),
           undefined,
-          undefined,
+          targets,
           perm.cardId,
         );
         if (!legal.includes(choice)) {
@@ -413,7 +413,7 @@ export function* applyPriorityAction(
         announced,
         player.id,
         perm.cardId,
-        targets.filter((id): id is ObjectId => id !== undefined),
+        targets,
         activeSlots,
         colorsOf(ctx, perm),
       );

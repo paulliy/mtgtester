@@ -1,6 +1,7 @@
 import { counterCount } from './counters';
 import { assertNever } from '../utils/assert-never';
 import { assertManaRiders } from '../cards/mana-riders';
+import { activationInvariantProduction } from '../cards/mana-production';
 /**
  * Read-only state queries: definitions, effective characteristics (computed through the CR
  * 613 layer engine — see `effects/continuous.ts`), players in the game, and mana sources.
@@ -764,7 +765,7 @@ export function manaSourcesFor(
           resolveDynamicUnits(ctx, resolveConditionalUnits(ctx, a, perm), perm),
           perm,
         ),
-        ...(a.dynamic !== undefined || a.amount !== undefined || a.conditionalUnits !== undefined
+        ...(!activationInvariantProduction(a)
           ? { stateDependentProduction: true as const, productionSpec: a }
           : {}),
       }))

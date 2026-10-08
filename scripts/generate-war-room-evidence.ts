@@ -188,6 +188,7 @@ const SOURCE_FILES = [
   'packages/server/src/cards/zone-change-trigger-scenarios.ts',
   'packages/engine/tests/fixtures/specialized-reference-oracle.json',
   'packages/server/src/cards/specialized-reference-scenarios.ts',
+  'packages/engine/src/cards/mana-production.ts',
 ] as const;
 export const WAR_ROOM_TRACE_PATHS = {
   'war-room-viewer-dynamic-life-activation':

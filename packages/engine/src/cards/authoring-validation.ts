@@ -102,7 +102,10 @@ function checkReference(
   if (
     (spec.count !== undefined) !== (contract.selection === 'counted') ||
     (contract.selection === 'ordinary' &&
-      value >= scope.targets.filter((target) => target.count === undefined).length)
+      value >=
+        scope.targets.filter(
+          (target) => target !== null && typeof target === 'object' && target.count === undefined,
+        ).length)
   ) {
     issues.push({
       path,
@@ -770,14 +773,22 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       if (target === 'triggerObject') providedEventObject = owningScope?.eventObject;
       else if (target === 'source' || target === 'attachedToSource')
         providedEventObject = 'permanent';
-      else if (typeof target === 'number' && owningScope?.targets[target] !== undefined) {
-        const domains = targetDomains(owningScope.targets[target]!.kind);
-        if (
-          owningScope.movedToBattlefieldSlots?.has(target) ||
-          (domains.length === 1 && domains[0] === 'permanent')
-        )
-          providedEventObject = 'permanent';
-        else if (domains.length === 1 && domains[0] === 'graveyard') providedEventObject = 'card';
+      else if (typeof target === 'number') {
+        const spec = owningScope?.targets[target];
+        if (spec !== null && typeof spec === 'object') {
+          try {
+            const domains = targetDomains(spec.kind);
+            if (
+              owningScope?.movedToBattlefieldSlots?.has(target) ||
+              (domains.length === 1 && domains[0] === 'permanent')
+            )
+              providedEventObject = 'permanent';
+            else if (domains.length === 1 && domains[0] === 'graveyard')
+              providedEventObject = 'card';
+          } catch {
+            // validateTargets reports malformed target domains without aborting validation.
+          }
+        }
       }
       visit(entry, `${path}.${key}`, issues, {
         targets: [],

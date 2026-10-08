@@ -67,6 +67,13 @@ export interface PrimitiveCapture {
 /** Capture the actual test closures, all engine sources, runner, registry, and execution tooling. */
 export function capturePrimitiveSources(repoRoot: string): PrimitiveCapture {
   const root = realpathSync(repoRoot);
+  requireInput(
+    execFileSync('git', ['--no-optional-locks', 'status', '--porcelain'], {
+      cwd: root,
+      encoding: 'utf8',
+    }).trim() === '',
+    'working tree must be clean to bind testedTree',
+  );
   const paths = new Set([
     'package.json',
     'bun.lock',

@@ -5,6 +5,9 @@ declared in `scripts/contracts/primitive-contracts.ts` through Vitest. The direc
 new: captured sources, report, and final manifest cannot overwrite an earlier run. CI retains
 these artifacts even when execution fails.
 
+Capture requires a clean Git working tree, including staged, unstaged, and untracked files,
+so the recorded tree identifies the bytes being executed. Commit source changes before capturing.
+
 The runner captures the actual test dependency closures, fixtures, all engine sources,
 contract registry, runner/reporter/loader, execution configuration, installed framework
 bytes, Node runtime identity, and Git tree before running tests. It verifies those inputs
@@ -29,15 +32,17 @@ Every final IR dependency needs a registered, currently passing contract whose m
 scope accepts that definition. Unregistered dependencies remain experimental and block
 eligibility. A proven primitive outside its tested scope also blocks eligibility.
 
-The initial registry covers `Effect.removeCounters` for direct effects on ordinary permanent
-target slots with fixed nonnegative integer counts. It proves zero removal, exact removal,
-removal up to the available count, preservation of other counter kinds, and rejection of an
-illegal target. Dynamic amounts, counted targets, nested effects, and modes are outside this
-initial scope. Other dependencies are deliberately unregistered; this first receipt cannot
-make any complete card eligible by itself.
+The registry covers `Effect.removeCounters` for direct effects on ordinary permanent
+slots with fixed nonnegative integer counts. It also covers eight foundation capabilities:
+`CardDefinition`, `CardDefinition.manaCost`, `CardDefinition.spellAbility`, `Ability.spell`,
+`Ability.effects`, `ParsedManaCost`, `Effect.gainLife`, and `Value.const`. Their bounded scope
+is untargeted Instant/Sorcery spells with at most two fixed life-gain instructions (0–1000)
+and a total cost of at most {1}{G}. A complete card within that composition can be
+primitive-eligible. Other dependencies remain unregistered.
 
 Primitive eligibility is a prerequisite for future reviewed-card promotion. It does not
 replace pinned Oracle clauses, normal casting/activation card scenarios, real viewer
 evidence, or the separate gameplay-AI evidence required by the card modeling guide. Legacy
-card support is not silently promoted by this mechanism. Broader contract registration and
-promotion enforcement remain roadmap work.
+card support is not silently promoted by this mechanism. CI runs `bun run primitive-promotions`
+against the base commit for new or changed reviewed declarations. Broader contract
+registration remains future work.

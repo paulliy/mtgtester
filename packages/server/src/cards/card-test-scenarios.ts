@@ -5596,7 +5596,11 @@ function koglaAttackScenario(gameId: GameId): CardTestScenario {
   });
 }
 
-function mosswortCastingScenario(gameId: GameId, hiddenLand = false): CardTestScenario {
+function mosswortCastingScenario(
+  gameId: GameId,
+  hiddenLand = false,
+  spellFace = false,
+): CardTestScenario {
   const bridge = pinnedFrom(HIDEAWAY_CASTING, 'Mosswort Bridge');
   const wake = card({
     oracleId: 'lab-hideaway-wake',
@@ -5621,23 +5625,44 @@ function mosswortCastingScenario(gameId: GameId, hiddenLand = false): CardTestSc
     power: '7',
     toughness: '7',
   });
+  const face = JSON.parse(
+    readFileSync('packages/engine/tests/fixtures/selected-spell-faces-oracle.json', 'utf8'),
+  ).cards.find((row: { card: OracleCard }) => row.card.name.startsWith('Foulmire Knight')) as {
+    card: OracleCard;
+    sha256: string;
+  };
+  if (createHash('sha256').update(JSON.stringify(face.card)).digest('hex') !== face.sha256)
+    throw new Error('Free face Oracle fixture drift');
   return pr01Scenario(gameId, {
-    id: hiddenLand ? 'mosswort-viewer-land-play-limit' : 'mosswort-viewer-free-cast-stack',
-    title: hiddenLand
-      ? 'Mosswort Bridge: a hidden land still needs a land play'
-      : 'Mosswort Bridge: cast a hidden permanent on the spell stack',
+    id: spellFace
+      ? 'mosswort-viewer-free-adventure-face'
+      : hiddenLand
+        ? 'mosswort-viewer-land-play-limit'
+        : 'mosswort-viewer-free-cast-stack',
+    title: spellFace
+      ? 'Mosswort Bridge: cast a hidden Adventure spell face'
+      : hiddenLand
+        ? 'Mosswort Bridge: a hidden land still needs a land play'
+        : 'Mosswort Bridge: cast a hidden permanent on the spell stack',
     instructions: [
-      'Play Mosswort Bridge and hide ' + (hiddenLand ? 'a Forest.' : 'Lab Hidden Titan.'),
+      'Play Mosswort Bridge and hide ' +
+        (spellFace ? 'Foulmire Knight.' : hiddenLand ? 'a Forest.' : 'Lab Hidden Titan.'),
       'Cast Lab Wake targeting the Bridge, then activate its hideaway ability using the Forest.',
-      hiddenLand
-        ? 'The land play was used by Mosswort Bridge, so the hidden Forest cannot be played.'
-        : 'Choose to play Lab Hidden Titan; its spell waits on the stack. Pass priority to let it resolve.',
+      spellFace
+        ? 'Choose to play Foulmire Knight, then configure Profane Insight. Its Instant spell resolves on the normal stack.'
+        : hiddenLand
+          ? 'The land play was used by Mosswort Bridge, so the hidden Forest cannot be played.'
+          : 'Choose to play Lab Hidden Titan; its spell waits on the stack. Pass priority to let it resolve.',
     ],
-    expectedOutcome: hiddenLand
-      ? 'The hidden Forest remains in exile and no second land is played.'
-      : 'Lab Hidden Titan is cast exactly once and resolves as a 7/7 creature.',
+    expectedOutcome: spellFace
+      ? 'Profane Insight draws one card, loses one life, and leaves its physical card on Adventure in exile.'
+      : hiddenLand
+        ? 'The hidden Forest remains in exile and no second land is played.'
+        : 'Lab Hidden Titan is cast exactly once and resolves as a 7/7 creature.',
     oracleSha256: bridge.sha256,
-    clauseIds: ['mosswort-bridge-hideaway', 'mosswort-bridge-free-play'],
+    clauseIds: spellFace
+      ? ['mosswort-bridge-hideaway', 'mosswort-bridge-free-play', 'profane-insight-free-face']
+      : ['mosswort-bridge-hideaway', 'mosswort-bridge-free-play'],
     decks: {
       P1: [
         bridge.card,
@@ -5647,7 +5672,7 @@ function mosswortCastingScenario(gameId: GameId, hiddenLand = false): CardTestSc
         LAB_OX,
         LAB_OX,
         FOREST,
-        hiddenLand ? FOREST : titan,
+        spellFace ? face.card : hiddenLand ? FOREST : titan,
         LAB_SERVO,
       ],
       P2: PR01_FILLER,
@@ -5673,6 +5698,7 @@ export const REVIEWED_BASELINE_SCENARIO_IDS = [
 export const CARD_TEST_SCENARIO_IDS = [
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
   ...ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
+  'mosswort-viewer-free-adventure-face',
   'mosswort-viewer-free-cast-stack',
   'mosswort-viewer-land-play-limit',
   ...BUG_HUNT_SCENARIO_IDS,
@@ -5829,6 +5855,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'nightscape-viewer-activate-regenerate-destroy': nightscapeScenario,
   'thran-viewer-graveyard-departure-trigger': thranVigilScenario,
   'harmonic-viewer-cast-and-double-trigger': harmonicProdigyScenario,
+  'mosswort-viewer-free-adventure-face': (gameId) => mosswortCastingScenario(gameId, false, true),
   'mosswort-viewer-free-cast-stack': (gameId) => mosswortCastingScenario(gameId),
   'mosswort-viewer-land-play-limit': (gameId) => mosswortCastingScenario(gameId, true),
   'swords-viewer-exile-and-gain-life': swordsScenario,

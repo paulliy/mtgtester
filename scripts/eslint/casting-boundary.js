@@ -1,5 +1,7 @@
-import process from 'node:process';
+import { fileURLToPath, URL } from 'node:url';
 import { relative } from 'node:path';
+
+const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url));
 
 const root = 'packages/engine/src/';
 const internalModule = (source) =>
@@ -30,7 +32,7 @@ export const castingBoundaryPlugin = {
         },
       },
       create(context) {
-        const file = relative(process.cwd(), context.filename).replaceAll('\\', '/');
+        const file = relative(repositoryRoot, context.filename).replaceAll('\\', '/');
         const path = file.slice(root.length);
         const internalBindings = new Map();
         const stackTypes = new Set(['EngineStackObject']);

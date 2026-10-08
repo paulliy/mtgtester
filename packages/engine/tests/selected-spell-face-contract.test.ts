@@ -763,3 +763,30 @@ describe('independent selected spell face contracts', () => {
     expect(() => state.options()).toThrow('Unmodeled card');
   });
 });
+
+it('face-commander-tax offers and casts Easy Pickings from the command zone with tax', () => {
+  const input = pinned.cards.find(({ card }) => card.name.startsWith('Glóin the Mighty'))!.card;
+  const state = setup(input);
+  state.player.hand.splice(state.player.hand.indexOf(state.card), 1);
+  state.card.zone = 'command';
+  state.card.isCommander = true;
+  state.player.commandZone.push(state.card);
+  state.player.commanderCardIds.push(state.card.cardId);
+  state.player.commanderCastCount[state.card.cardId] = 2;
+  const own = spawn(state.ctx, 'P1', bear());
+  const other = spawn(state.ctx, 'P2', bear());
+  addMana(state.player, [
+    ...Array.from({ length: 5 }, () => ({ symbol: 'C' as const })),
+    { symbol: 'R' },
+  ]);
+  expect(state.options()).toEqual([]);
+  addMana(state.player, [{ symbol: 'C' }]);
+  const entry = state.cast();
+  expect(entry.description).toBe('Easy Pickings');
+  expect(entry.isCommanderCast).toBe(true);
+  expect(entry.triggerScope?.manaSpent).toBe(7);
+  expect(state.player.commanderCastCount[state.card.cardId]).toBe(3);
+  pump(resolveTopOfStack(state.ctx));
+  expect(other.damageMarked).toBe(1);
+  expect(own.damageMarked).toBe(0);
+});

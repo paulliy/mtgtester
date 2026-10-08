@@ -116,6 +116,7 @@ export type TriggerScope = Pick<
   | 'triggerCount'
   | 'spellManaValue'
   | 'manaSpent'
+  | 'treasureManaSpent'
   | 'eventPlayerId'
   | 'stationPower'
   | 'sourceCountersTotal'

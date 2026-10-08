@@ -131,7 +131,15 @@ describe('specialized instructions preserve shared object and payment contracts'
       }));
       expect(recipient.counters['charge']).toBe(2);
     });
-  for (const movement of ['live', 'blinked', 'destroyed', 'unfunded', 'declined', 'zero'] as const)
+  for (const movement of [
+    'live',
+    'blinked',
+    'destroyed',
+    'unfunded',
+    'declined',
+    'zero',
+    'threshold',
+  ] as const)
     it(`normal entry-trigger life payment respects a ${movement} event object`, () => {
       const { ctx, player, cast } = setup();
       const watcher = spawn(
@@ -170,6 +178,21 @@ describe('specialized instructions preserve shared object and payment contracts'
         }),
         'hand',
       );
+      if (movement === 'threshold')
+        ctx.defs.set(creature.oracleId, {
+          ...ctx.defs.get(creature.oracleId)!,
+          counterThresholdTriggers: [
+            {
+              counter: '+1/+1',
+              threshold: 2,
+              ability: {
+                kind: 'triggered',
+                targets: [],
+                effects: [{ op: 'gainLife', amount: { kind: 'const', n: 7 } }],
+              },
+            },
+          ],
+        });
       pump(
         applyPriorityAction(
           ctx,
@@ -205,7 +228,15 @@ describe('specialized instructions preserve shared object and payment contracts'
         expect(offeredPayment).toBe(false);
         expect(player.life).toBe(before);
       } else if (movement === 'declined' || movement === 'zero') expect(player.life).toBe(before);
-      else expect(player.life).toBe(before - 2);
-      expect(current?.counters['+1/+1'] ?? 0).toBe(movement === 'live' ? 2 : 0);
+      else expect(player.life).toBe(before - 2 + (movement === 'threshold' ? 7 : 0));
+      expect(current?.counters['+1/+1'] ?? 0).toBe(
+        movement === 'live' || movement === 'threshold' ? 2 : 0,
+      );
+      const counterEvents = ctx.state.eventLog.filter(
+        (event) => event.type === 'counters' && event.payload['targetCardId'] === creature.cardId,
+      );
+      expect(counterEvents).toHaveLength(movement === 'live' || movement === 'threshold' ? 1 : 0);
+      if (movement === 'live')
+        expect(counterEvents[0]!.payload).toMatchObject({ counter: '+1/+1', added: 2, total: 2 });
     });
 });

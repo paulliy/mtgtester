@@ -73,6 +73,7 @@ describe('counterspell target controller follows pinned Oracle clauses', () => {
       'Negate',
       'Mana Leak',
       'Stubborn Denial',
+      'Force of Negation',
     ]);
     for (const entry of fixture.cards) {
       expect(entry.card.oracleId).toMatch(/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/);
@@ -102,7 +103,10 @@ describe('counterspell target controller follows pinned Oracle clauses', () => {
         }));
         expect(state.ctx.state.stack).toHaveLength(0);
         expect(
-          state.targetPlayer.graveyard.some((object) => object.cardId === state.target.cardId),
+          (card.name === 'Force of Negation'
+            ? state.ctx.state.exile
+            : state.targetPlayer.graveyard
+          ).some((object) => object.cardId === state.target.cardId),
         ).toBe(true);
         expect(state.targetPlayer.life).toBe(beforeLife);
       },
@@ -196,7 +200,7 @@ describe('counterspell target controller follows pinned Oracle clauses', () => {
     }
   }
 
-  it.each(['Negate', 'Stubborn Denial'])(
+  it.each(['Negate', 'Stubborn Denial', 'Force of Negation'])(
     '%s-reject-creature: a noncreature counter rejects a creature spell',
     (name) => {
       const card = fixture.cards.find(({ card }) => card.name === name)!.card;
@@ -209,4 +213,20 @@ describe('counterspell target controller follows pinned Oracle clauses', () => {
       );
     },
   );
+});
+
+it('the pinned Force of Negation clause does not invent a controller restriction and preserves the printed alternative', () => {
+  const { card, sha256 } = JSON.parse(
+    readFileSync('packages/engine/tests/fixtures/force-negation-review-oracle.json', 'utf8'),
+  ) as { card: OracleCard; sha256: string };
+  expect(card.oracleId).toBe('ac2173f9-f223-440a-9231-fd98762bdc6f');
+  expect(createHash('sha256').update(JSON.stringify(card)).digest('hex')).toBe(sha256);
+  const definition = interpretCard(card);
+  expect(definition.modeled).toBe(true);
+  expect(definition.spellAbility?.targets).toEqual([{ kind: 'noncreatureSpell' }]);
+  expect(sha256).toBe('b8a0dc17dcd160b416c672ab9e916b5615465e19a3d3a4a2bddcc23138561cf4');
+  expect(definition.alternativeCasts).toHaveLength(1);
+  expect(
+    interpretCard({ ...card, oracleId: 'fixture-force-negation-review' }).spellAbility?.targets,
+  ).toEqual([{ kind: 'noncreatureSpell' }]);
 });

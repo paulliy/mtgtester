@@ -14,6 +14,9 @@ export function queueSpellCopy(
   const id = `o-${ctx.state.nextObjectNum++}`;
   const copy: EngineStackObject = {
     ...original,
+    ...(original.triggerScope === undefined
+      ? {}
+      : { triggerScope: { ...original.triggerScope, manaSpent: 0, treasureManaSpent: 0 } }),
     id,
     sourceId: id,
     card: null,

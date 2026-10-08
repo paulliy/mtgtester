@@ -492,3 +492,25 @@ describe('casting configuration source permissions', () => {
     expect(player.energy).toBe(0);
   });
 });
+
+it('a permitted normal graveyard cast reports the actual source zone', () => {
+  const state = setup({}, '{0}');
+  state.player.hand = state.player.hand.filter((card) => card !== state.card);
+  state.card.zone = 'graveyard';
+  state.player.graveyard.push(state.card);
+  const grant = spawn(
+    state.ctx,
+    'P1',
+    oracle({ name: 'Independent graveyard permission', typeLine: 'Enchantment' }),
+  );
+  state.ctx.defs.set(grant.oracleId, {
+    ...state.ctx.defs.get(grant.oracleId)!,
+    ruleStatics: [{ kind: 'playFromZone', zone: 'graveyard' }],
+  });
+  const option = state.options()[0]!;
+  expect(option.data?.['sourceZone']).toBe('graveyard');
+  expect(option.description).toContain('graveyard');
+  state.cast(option);
+  expect(state.ctx.state.stack).toHaveLength(1);
+  expect(state.player.graveyard).toHaveLength(0);
+});

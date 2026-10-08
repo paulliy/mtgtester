@@ -5,6 +5,8 @@ import { payManaCost } from '../effects/resolve';
 import { UnmodeledCardError } from '../errors';
 import { computeCharacteristics } from '../effects/continuous';
 import type { ManaAbilitySpec } from '../cards/ability';
+import { activationInvariantProduction } from '../cards/mana-production';
+import { totalPips } from './cost';
 
 const bounds = { states: 2048, activations: 32, productions: 256 };
 /** Copy engine data without a platform-specific cloning API; preserve aliases and array holes. */
@@ -68,9 +70,7 @@ export function needsStatefulManaPayment(
     .filter((p) => p.controllerId === player.id)
     .flatMap((p) => computeCharacteristics(ctx, p).manaAbilities);
   return (
-    abilities.some(
-      (a) => a.dynamic !== undefined || a.amount !== undefined || a.conditionalUnits !== undefined,
-    ) ||
+    abilities.some((a) => !activationInvariantProduction(a)) ||
     (abilities.some((a) => (a.onActivate?.length ?? 0) > 0) &&
       (lifeReserved > 0 ||
         (cost.phyrexian?.length ?? 0) > 0 ||
@@ -103,6 +103,23 @@ export function planStatefulManaPayment(
   };
   const sources: ManaSource[] = [];
   const produced: ProducedMana[] = [];
+  // A capacity bound is sound only when no activation can enable another source or increase
+  // production. Ignore colors, restrictions, and activation mana costs: that overestimates
+  // capacity, so it can only prune an impossible payment. Phyrexian pips may use life instead.
+  const fixedCapacity = ctx.state.battlefield
+    .filter((permanent) => permanent.controllerId === player.id)
+    .flatMap((permanent) => computeCharacteristics(ctx, permanent).manaAbilities)
+    .every(
+      (ability) =>
+        activationInvariantProduction(ability) &&
+        ability.condition === undefined &&
+        (ability.costs === undefined ||
+          (ability.costs.some((cost) => cost.kind === 'tap') &&
+            ability.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'mana'))) &&
+        (ability.onActivate ?? []).every(
+          (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
+        ),
+    );
   const productions = (source: ManaSource, activation: number): ProducedMana[][] => {
     let choices: ProducedMana[][] = [[]];
     for (const unit of source.units) {
@@ -119,7 +136,6 @@ export function planStatefulManaPayment(
     return choices;
   };
   const visit = (snapshot: GameContext): PaymentPlan | null => {
-    if (++states > bounds.states) unsupported('mana activation state budget exceeded');
     const payer = snapshot.state.players.find((p) => p.id === player.id)!;
     if ((lifeReserved === 0 || payer.life >= lifeReserved) && payer.energy >= energyReserved) {
       const final = planPayment(
@@ -142,7 +158,7 @@ export function planStatefulManaPayment(
         p.id,
         p.life,
         p.energy,
-        p.manaEntries,
+        p.manaEntries.map((entry) => JSON.stringify(entry)).sort(),
         p.graveyard,
         p.commandZone,
       ]),
@@ -152,6 +168,20 @@ export function planStatefulManaPayment(
     if (seen.has(key)) return null;
     seen.add(key);
     const candidates = sourcesFor(snapshot, payer);
+    if (fixedCapacity && candidates.every((source) => !source.stateDependentProduction)) {
+      const remaining = new Map<string, number>();
+      for (const source of candidates)
+        remaining.set(
+          source.cardId,
+          Math.max(remaining.get(source.cardId) ?? 0, source.units.length),
+        );
+      if (
+        payer.manaEntries.length + [...remaining.values()].reduce((sum, count) => sum + count, 0) <
+        totalPips(cost) - (cost.phyrexian?.length ?? 0)
+      )
+        return null;
+    }
+    if (++states > bounds.states) unsupported('mana activation state budget exceeded');
     if (sources.length >= bounds.activations) {
       if (candidates.length) unsupported('mana activation depth budget exceeded');
       return null;

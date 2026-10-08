@@ -64,13 +64,15 @@ function permanent(page: Page, name: string) {
   // Live player chips wrap PermanentChip in `.object`. Game-over swaps to spectator SeatPanel,
   // whose battlefield chips are `.seat .tile` with no `.object` ancestor — so a `.object`-only
   // locator would report 0 after unique-pass even if the permanent was still on the board.
+  // Vue retains departed objects during leave transitions. They are no longer current game
+  // objects, and can share a card name with a newly returned incarnation.
   return page
-    .locator('.object, .seat .tile')
+    .locator('.object:not(.board-card-leave-active), .seat .tile')
     .filter({ has: page.getByRole('img', { name, exact: true }) });
 }
 
 function handCard(page: Page, name: string) {
-  return page.locator('.hand-card', { hasText: name });
+  return page.locator('.hand-card:not(.hand-card-leave-active)', { hasText: name });
 }
 
 async function confirm(page: Page): Promise<void> {
@@ -3196,7 +3198,12 @@ test('Soldier On: affect and untap one target', async ({ page }) => {
   await verifyTargetUntap(page, 'Soldier On', '4/4', undefined, 2);
 });
 
-async function runSelectedFaceViewer(page: Page, name: string, half: boolean): Promise<void> {
+async function runSelectedFaceViewer(
+  page: Page,
+  name: string,
+  half: boolean,
+  commander = false,
+): Promise<void> {
   const expected = SPELL_FACE_LAB_EXPECTATIONS.find((entry) => entry.name === name)!;
   const pin = SPELL_FACE_VIEWER_PINS.cards.find(
     ({ card }) => card.name.split(' // ')[0] === name,
@@ -3211,11 +3218,14 @@ async function runSelectedFaceViewer(page: Page, name: string, half: boolean): P
   );
   await runScenario(
     page,
-    half
-      ? `${pin.backFace!.name}: cast the selected spell face`
-      : `${name}: play the ordinary front`,
+    commander
+      ? 'Easy Pickings: cast an Adventure commander from the command zone'
+      : half
+        ? `${pin.backFace!.name}: cast the selected spell face`
+        : `${name}: play the ordinary front`,
   );
-  await handCard(page, name).click();
+  if (commander) await page.locator('.command-zone .commander-card').click();
+  else await handCard(page, name).click();
   if (half && expected.x !== undefined)
     await page.locator('.source-actions input[type="number"]').fill(String(expected.x));
   const buttons = page.locator('.source-actions .source-action-row button');
@@ -3660,4 +3670,43 @@ test('Damn: one normal target', async ({ page }) => {
 });
 test('Damn: overload without targets', async ({ page }) => {
   await runOverloadViewer(page, 'Damn', true);
+});
+
+test('Force of Negation: counter your own spell', async ({ page }) => {
+  await runCounterController(page, 'Force of Negation', true);
+});
+test("Force of Negation: counter an opponent's spell", async ({ page }) => {
+  await runCounterController(page, 'Force of Negation', false);
+});
+
+test('Easy Pickings: cast an Adventure commander from the command zone', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Glóin the Mighty', true, true);
+  await expect(page.locator('.log .line', { hasText: 'casts Easy Pickings' })).toHaveCount(1);
+});
+test('Mosswort Bridge: cast a hidden Adventure spell face', async ({ page }) => {
+  await runScenario(page, 'Mosswort Bridge: cast a hidden Adventure spell face');
+  await handCard(page, 'Mosswort Bridge').click();
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await page.getByRole('button', { name: 'Exile face down', exact: true }).first().click();
+  await handCard(page, 'Lab Wake').click();
+  await permanent(page, 'Mosswort Bridge').click();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await page
+    .locator('.playable-now')
+    .getByRole('button', { name: 'Activate Mosswort Bridge', exact: true })
+    .click();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Play Foulmire Knight // Profane Insight', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Cast Profane Insight', exact: true }).click();
+  await expect(page.locator('.stack')).toContainText('Profane Insight');
+  await expect(permanent(page, 'Foulmire Knight // Profane Insight')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('39');
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible();
+  await expect(page.locator('.log .line', { hasText: 'casts Profane Insight' })).toHaveCount(1);
 });
