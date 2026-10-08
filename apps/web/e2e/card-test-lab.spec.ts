@@ -3254,6 +3254,7 @@ async function runSelectedFaceViewer(
   if (!half && pin.types.includes('Land'))
     await page.getByRole('button', { name: 'Play land', exact: true }).click();
   else await confirm(page);
+  if (commander) await expect(page.locator('.stack')).toContainText('Easy Pickings');
   if (!half && name === 'An Unexpected Party')
     await page.getByRole('button', { name: 'Giant', exact: true }).click();
   if (half && expected.scry !== undefined) {
@@ -3681,7 +3682,9 @@ test("Force of Negation: counter an opponent's spell", async ({ page }) => {
 
 test('Easy Pickings: cast an Adventure commander from the command zone', async ({ page }) => {
   await runSelectedFaceViewer(page, 'Glóin the Mighty', true, true);
-  await expect(page.locator('.log .line', { hasText: 'casts Easy Pickings' })).toHaveCount(1);
+  await expect(
+    page.locator('.log .line', { hasText: 'casts Glóin the Mighty // Easy Pickings' }),
+  ).toHaveCount(1);
 });
 test('Mosswort Bridge: cast a hidden Adventure spell face', async ({ page }) => {
   await runScenario(page, 'Mosswort Bridge: cast a hidden Adventure spell face');
