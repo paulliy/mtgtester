@@ -824,6 +824,14 @@ and report the exact failed action, attempted recovery, and remaining work.
   Routing is now tracked rather than banned: all 15 affected routing/inventory/omission cases pass,
   followed by two new-file/confinement cases. Filtered skips are not complete-suite evidence;
   the full 171-case loader suite remains part of the required repository run.
+- Full integrated repository verification at `bf84726` passes all 338 files / 4,537 tests
+  without skips, including all 171 loader cases, 65 primitive evidence/promotion cases,
+  deterministic replay and both full-game cases (20.83 seconds combined). Marchesa's first-zone
+  clause now has an explicit pinned implemented-unreviewed manifest entry for its five required
+  engine/viewer cases; six independent real/fixture-ID pin and normal-scenario checks pass,
+  together with manifest/catalog requirements (12 focused tests). No reviewed declaration is
+  promoted by adding these requirements. Remaining work is final card/static/build/inventory
+  gates, source-bound browser receipts and publication.
 
 The architecture for all six phases is implemented. Final repository gates and a complete,
 current real-viewer receipt remain required before declaring the roadmap complete or opening

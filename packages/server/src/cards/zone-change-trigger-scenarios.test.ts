@@ -1,4 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { interpretCard } from '@mtg/engine';
+import type { OracleCard } from '@mtg/shared';
 import { createCardTestScenario } from './card-test-scenarios';
 
 const expected = [
@@ -10,6 +14,37 @@ const expected = [
 ] as const;
 
 describe('pinned Marchesa first-zone real Lab scenarios', () => {
+  it('pins fully supported printed Marchesa and both normal responses', () => {
+    const fixture = JSON.parse(
+      readFileSync('packages/engine/tests/fixtures/zone-change-trigger-oracle.json', 'utf8'),
+    ) as { cards: { card: OracleCard; sha256: string }[] };
+    const expectedPins: Record<string, string> = {
+      'Marchesa, the Black Rose':
+        'c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3',
+      Murder: '41e727b47d14f27bed6317531dd9ee6c33e680ec786e7cf9975934380b9f8946',
+      'Bojuka Bog': '1204ceae1934ed55c21765dce3247aa82ae4d2dec770774dc6af21f50d9655e5',
+    };
+    expect(fixture.cards.map(({ card }) => card.name).sort()).toEqual([
+      'Bojuka Bog',
+      'Marchesa, the Black Rose',
+      'Murder',
+    ]);
+    for (const { card, sha256 } of fixture.cards) {
+      expect(sha256).toBe(expectedPins[card.name]);
+      expect(createHash('sha256').update(JSON.stringify(card)).digest('hex')).toBe(sha256);
+      for (const id of [
+        card.oracleId,
+        `oracle-${card.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')}`,
+      ]) {
+        const def = interpretCard({ ...card, oracleId: id });
+        expect(def.modeled).toBe(true);
+        expect(def.unmodeledReasons).toEqual([]);
+      }
+    }
+  });
   it.each(expected)('$id applies the independently expected owner and zone outcome', (entry) => {
     const scenario = createCardTestScenario(entry.id, `lab-unit-${entry.id}`)!;
     expect(scenario).not.toBeNull();

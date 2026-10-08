@@ -6628,6 +6628,35 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "17a59d3d-9e01-48cd-bb4a-3eaaa077751c": {
+      "name": "Marchesa, the Black Rose",
+      "oracleSha256": "c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "marchesa-first-public-destination",
+          "oracleText": "Whenever a creature you control with a +1/+1 counter on it dies, return that card to the battlefield under your control at the beginning of the next end step.",
+          "implementation": [
+            "Exact first public destination for a controlled creature dying with a +1/+1 counter; one-shot end-step return from any owner\u2019s graveyard; no tracking through intervening exile or a later incarnation"
+          ],
+          "engineTestIds": [
+            "marchesa-viewer-first-zone-own",
+            "marchesa-viewer-first-zone-opponent-owned",
+            "marchesa-viewer-first-zone-no-counter",
+            "marchesa-viewer-first-zone-opponent-controlled",
+            "marchesa-viewer-first-zone-exiled"
+          ],
+          "viewerScenarioIds": [
+            "marchesa-viewer-first-zone-own",
+            "marchesa-viewer-first-zone-opponent-owned",
+            "marchesa-viewer-first-zone-no-counter",
+            "marchesa-viewer-first-zone-opponent-controlled",
+            "marchesa-viewer-first-zone-exiled"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
