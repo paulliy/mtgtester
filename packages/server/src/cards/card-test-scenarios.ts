@@ -217,6 +217,11 @@ const COVERAGE_PR01: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr01-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+/** Coverage PR02 cards that had no earlier pinned fixture. */
+const COVERAGE_PR02: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr02-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
@@ -5596,6 +5601,1702 @@ function koglaAttackScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+// ---------------------------------------------------------------------------------------------
+// Coverage PR02 (docs/plans/card-coverage-chunks.md): activation and casting costs. Scenarios
+// reuse the PR01 builder (`pr01Scenario`), which is generic over the prepared board.
+// ---------------------------------------------------------------------------------------------
+
+function retrofitterFoundryScenario(gameId: GameId): CardTestScenario {
+  const foundry = pinnedFrom(MARCHESA_BATCH1, 'Retrofitter Foundry');
+  const forests = Array.from({ length: 9 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'retrofitter-foundry-viewer-servo-thopter-construct',
+    title: 'Retrofitter Foundry: Servo, Thopter, then Construct',
+    instructions: [
+      'Activate {2}, {T} to create a Servo, then {3} to untap the Foundry.',
+      'Activate {1}, {T}, sacrificing the Servo, to create a Thopter, then {3} to untap again.',
+      'Activate {T}, sacrificing the Thopter, to create a Construct.',
+    ],
+    expectedOutcome:
+      'All nine Forests are spent; the Servo and Thopter were sacrificed as costs and a 4/4 Construct token remains.',
+    oracleSha256: foundry.sha256,
+    clauseIds: [
+      'retrofitter-foundry-untap',
+      'retrofitter-foundry-servo',
+      'retrofitter-foundry-thopter',
+      'retrofitter-foundry-construct',
+    ],
+    decks: {
+      P1: [foundry.card, ...Array.from({ length: 9 }, () => FOREST)],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Retrofitter Foundry', ...forests] }],
+    },
+  });
+}
+
+const LAB_GREEN_BEAR = card({
+  oracleId: 'lab-green-bear',
+  name: 'Lab Green Bear',
+  typeLine: 'Creature — Bear',
+  manaCost: '{G}',
+  cmc: 1,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  power: '2',
+  toughness: '2',
+});
+const LAB_GENERIC_BEAR = card({
+  oracleId: 'lab-generic-bear',
+  name: 'Lab Generic Bear',
+  typeLine: 'Artifact Creature — Bear',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '1',
+});
+
+function aetherHubEnergyScenario(gameId: GameId): CardTestScenario {
+  const hub = pinnedFrom(MARCHESA_BATCH1, 'Aether Hub');
+  return pr01Scenario(gameId, {
+    id: 'aether-hub-viewer-energy-any-color',
+    title: 'Aether Hub: enter for energy, then pay it for green',
+    instructions: [
+      'Play Aether Hub; its enters trigger gives you one energy.',
+      'Cast Lab Green Bear, paying {G} with Aether Hub and one energy.',
+    ],
+    expectedOutcome:
+      'Aether Hub enters untapped and gives one energy, then taps and spends it for {G}: Lab Green Bear resolves and you end with zero energy.',
+    oracleSha256: hub.sha256,
+    clauseIds: ['aether-hub-enters-energy', 'aether-hub-energy-any-color'],
+    decks: { P1: [hub.card, LAB_GREEN_BEAR], P2: PR01_FILLER, P3: PR01_FILLER, P4: PR01_FILLER },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Aether Hub', 'Lab Green Bear'] }],
+      battlefield: [],
+    },
+  });
+}
+
+function aetherHubColorlessScenario(gameId: GameId): CardTestScenario {
+  const hub = pinnedFrom(MARCHESA_BATCH1, 'Aether Hub');
+  return pr01Scenario(gameId, {
+    id: 'aether-hub-viewer-colorless',
+    title: 'Aether Hub: colorless mana with no energy',
+    instructions: [
+      'With no energy, cast Lab Generic Bear by tapping Aether Hub for {C}.',
+      'Lab Green Bear stays uncastable: the Hub cannot make {G} without energy.',
+    ],
+    expectedOutcome:
+      'Aether Hub taps for {C} and Lab Generic Bear resolves; you still have zero energy and Lab Green Bear is still in hand.',
+    oracleSha256: hub.sha256,
+    clauseIds: ['aether-hub-colorless'],
+    decks: {
+      P1: [hub.card, LAB_GREEN_BEAR, LAB_GENERIC_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Green Bear', 'Lab Generic Bear'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Aether Hub'] }],
+    },
+  });
+}
+
+const LAB_RED_BEAR = card({
+  oracleId: 'lab-red-bear',
+  name: 'Lab Red Bear',
+  typeLine: 'Creature — Bear',
+  manaCost: '{R}',
+  cmc: 1,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  power: '2',
+  toughness: '2',
+});
+
+function solarTransformerEnergyScenario(gameId: GameId): CardTestScenario {
+  const transformer = pinnedFrom(MARCHESA_BATCH1, 'Solar Transformer');
+  return pr01Scenario(gameId, {
+    id: 'solar-transformer-viewer-cast-and-energy-mana',
+    title: 'Solar Transformer: enter tapped for energy, then pay it for red',
+    instructions: [
+      'Cast the Solar Transformer in your hand with your two Forests; it enters tapped and gives three energy.',
+      'Cast Lab Red Bear, paying {R} with the untapped Solar Transformer and one energy.',
+    ],
+    expectedOutcome:
+      'The new Solar Transformer is tapped and gave three energy; the other one taps and spends one for {R}, so Lab Red Bear resolves and you end with two energy.',
+    oracleSha256: transformer.sha256,
+    clauseIds: [
+      'solar-transformer-enters-tapped',
+      'solar-transformer-enters-energy',
+      'solar-transformer-energy-any-color',
+    ],
+    decks: {
+      P1: [transformer.card, transformer.card, FOREST, FOREST, LAB_RED_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Solar Transformer', 'Lab Red Bear'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Solar Transformer', 'Forest', 'Forest'] }],
+    },
+  });
+}
+
+function solarTransformerColorlessScenario(gameId: GameId): CardTestScenario {
+  const transformer = pinnedFrom(MARCHESA_BATCH1, 'Solar Transformer');
+  return pr01Scenario(gameId, {
+    id: 'solar-transformer-viewer-colorless',
+    title: 'Solar Transformer: colorless mana with no energy',
+    instructions: [
+      'With no energy, cast Lab Generic Bear by tapping Solar Transformer for {C}.',
+      'Lab Red Bear stays uncastable: the Transformer cannot make {R} without energy.',
+    ],
+    expectedOutcome:
+      'Solar Transformer taps for {C} and Lab Generic Bear resolves; you still have zero energy and Lab Red Bear is still in hand.',
+    oracleSha256: transformer.sha256,
+    clauseIds: ['solar-transformer-colorless'],
+    decks: {
+      P1: [transformer.card, LAB_RED_BEAR, LAB_GENERIC_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Red Bear', 'Lab Generic Bear'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Solar Transformer'] }],
+    },
+  });
+}
+
+const LAB_GIANT = card({
+  oracleId: 'lab-giant',
+  name: 'Lab Giant',
+  typeLine: 'Creature — Giant',
+  manaCost: '{4}',
+  cmc: 4,
+  power: '4',
+  toughness: '4',
+});
+
+function battlewagonScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    instructions: string[];
+    expectedOutcome: string;
+    clauseIds: string[];
+    energy: number;
+    extras: OracleCard[];
+    opponentBoard?: OracleCard[];
+  },
+): CardTestScenario {
+  const wagon = pinnedFrom(MARCHESA_BATCH1, 'Bespoke Battlewagon');
+  const opponent = spec.opponentBoard ?? [];
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: wagon.sha256,
+    clauseIds: spec.clauseIds,
+    decks: {
+      P1: [wagon.card, ...spec.extras, FOREST],
+      P2: [...opponent, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Bespoke Battlewagon', ...spec.extras.map((extra) => extra.name)],
+        },
+        { playerId: 'P2', cardNames: opponent.map((extra) => extra.name) },
+      ],
+      energy: [{ playerId: 'P1', amount: spec.energy }],
+    },
+  });
+}
+
+const battlewagonGainAndCrewScenario = (gameId: GameId): CardTestScenario =>
+  battlewagonScenario(gameId, {
+    id: 'bespoke-battlewagon-viewer-energy-and-crew',
+    title: 'Bespoke Battlewagon: tap for energy, then crew 4',
+    instructions: ['Activate {T}: You get {E}{E}.', 'Then crew it with Lab Giant (power 4).'],
+    expectedOutcome:
+      'You have two energy, Battlewagon is tapped and is a 5/6 artifact creature, and Lab Giant is tapped for crew.',
+    clauseIds: ['bespoke-battlewagon-gain-energy', 'bespoke-battlewagon-crew'],
+    energy: 0,
+    extras: [LAB_GIANT],
+  });
+
+const battlewagonAnimateAndDrawScenario = (gameId: GameId): CardTestScenario =>
+  battlewagonScenario(gameId, {
+    id: 'bespoke-battlewagon-viewer-animate-and-draw',
+    title: 'Bespoke Battlewagon: pay four energy to animate, then draw',
+    instructions: [
+      'Starting with seven energy, pay {E}{E}{E}{E}: Battlewagon becomes an artifact creature.',
+      'Then activate {T}, Pay {E}{E}{E}: Draw a card.',
+    ],
+    expectedOutcome:
+      'Battlewagon is a 5/6 artifact creature without being crewed, it is tapped, you drew the Forest, and you have no energy left.',
+    clauseIds: ['bespoke-battlewagon-animate', 'bespoke-battlewagon-draw'],
+    energy: 7,
+    extras: [],
+  });
+
+const battlewagonTapTargetScenario = (gameId: GameId): CardTestScenario =>
+  battlewagonScenario(gameId, {
+    id: 'bespoke-battlewagon-viewer-tap-target',
+    title: "Bespoke Battlewagon: pay two energy to tap P2's creature",
+    instructions: ["Starting with two energy, activate {T}, Pay {E}{E} targeting P2's Lab Ox."],
+    expectedOutcome: 'Lab Ox is tapped, Battlewagon is tapped, and you have no energy left.',
+    clauseIds: ['bespoke-battlewagon-tap-target'],
+    energy: 2,
+    extras: [],
+    opponentBoard: [LAB_OX],
+  });
+
+const LAB_ATLAS_PAGE = card({
+  oracleId: 'lab-atlas-page',
+  name: 'Atlas Drawn Page',
+  typeLine: 'Creature — Secret',
+});
+
+function endlessAtlasScenario(gameId: GameId): CardTestScenario {
+  const atlas = pinnedFrom(MARCHESA_BATCH1, 'Endless Atlas');
+  return pr01Scenario(gameId, {
+    id: 'endless-atlas-viewer-same-name-draw',
+    title: 'Endless Atlas: three Forests unlock the draw',
+    instructions: ['With three Forests, activate Endless Atlas for {2} and draw a card.'],
+    expectedOutcome:
+      'Two Forests and Endless Atlas tap; the three Forests still satisfy the same-name condition and you draw Atlas Drawn Page.',
+    oracleSha256: atlas.sha256,
+    clauseIds: ['endless-atlas-same-name-draw'],
+    decks: {
+      P1: [atlas.card, FOREST, FOREST, FOREST, LAB_ATLAS_PAGE],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Endless Atlas', 'Forest', 'Forest', 'Forest'] }],
+    },
+  });
+}
+
+function endlessAtlasBlockedScenario(gameId: GameId): CardTestScenario {
+  const atlas = pinnedFrom(MARCHESA_BATCH1, 'Endless Atlas');
+  return pr01Scenario(gameId, {
+    id: 'endless-atlas-viewer-mixed-names-blocked',
+    title: 'Endless Atlas: two Forests and an Island do not unlock it',
+    instructions: ['With two Forests and an Island, Endless Atlas offers no activation; pass.'],
+    expectedOutcome: 'Endless Atlas is never actionable and you draw nothing.',
+    oracleSha256: atlas.sha256,
+    clauseIds: ['endless-atlas-same-name-draw'],
+    decks: {
+      P1: [atlas.card, FOREST, FOREST, ISLAND, LAB_ATLAS_PAGE],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Endless Atlas', 'Forest', 'Forest', 'Island'] }],
+    },
+  });
+}
+
+const LAB_BLACK_OGRE = card({
+  oracleId: 'lab-black-ogre',
+  name: 'Lab Black Ogre',
+  typeLine: 'Creature — Ogre',
+  manaCost: '{B}{B}{B}',
+  cmc: 3,
+  colors: ['B'],
+  colorIdentity: ['B'],
+  power: '3',
+  toughness: '3',
+});
+const LAB_BLACK_BEAR = card({
+  oracleId: 'lab-black-bear',
+  name: 'Lab Black Bear',
+  typeLine: 'Creature — Bear',
+  manaCost: '{B}',
+  cmc: 1,
+  colors: ['B'],
+  colorIdentity: ['B'],
+  power: '2',
+  toughness: '2',
+});
+
+function sceptreScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    lands: OracleCard[];
+    instructions: string[];
+    expectedOutcome: string;
+  },
+): CardTestScenario {
+  const sceptre = pinnedFrom(MARCHESA_BATCH1, 'Sceptre of Eternal Glory');
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: sceptre.sha256,
+    clauseIds: [
+      'sceptre-of-eternal-glory-any-color',
+      'sceptre-of-eternal-glory-three-of-one-color',
+    ],
+    decks: {
+      P1: [sceptre.card, ...spec.lands, LAB_BLACK_OGRE, LAB_BLACK_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Black Ogre', 'Lab Black Bear'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Sceptre of Eternal Glory'] },
+        { playerId: 'P1', cardNames: spec.lands.map((land) => land.name), tapped: true },
+      ],
+    },
+  });
+}
+
+const sceptreThreeScenario = (gameId: GameId): CardTestScenario =>
+  sceptreScenario(gameId, {
+    id: 'sceptre-of-eternal-glory-viewer-three-black',
+    title: 'Sceptre of Eternal Glory: three Forests unlock {B}{B}{B}',
+    lands: [FOREST, FOREST, FOREST],
+    instructions: [
+      'Your three Forests are tapped but still share a name.',
+      'Cast Lab Black Ogre ({B}{B}{B}) with Sceptre of Eternal Glory alone.',
+    ],
+    expectedOutcome:
+      'Sceptre taps for three black mana and Lab Black Ogre resolves; Lab Black Bear stays in hand.',
+  });
+
+const sceptreOneScenario = (gameId: GameId): CardTestScenario =>
+  sceptreScenario(gameId, {
+    id: 'sceptre-of-eternal-glory-viewer-one-mana',
+    title: 'Sceptre of Eternal Glory: mixed lands give one mana',
+    lands: [FOREST, FOREST, ISLAND],
+    instructions: [
+      'With two Forests and an Island, only the one-mana ability is available.',
+      'Lab Black Ogre is not castable; cast Lab Black Bear ({B}).',
+    ],
+    expectedOutcome:
+      'Sceptre taps for one black mana and Lab Black Bear resolves; Lab Black Ogre stays in hand.',
+  });
+
+const LAB_REVEALED_LAND = card({
+  oracleId: 'lab-wayfarer-land',
+  name: 'Wayfarer Revealed Land',
+  typeLine: 'Land',
+  manaCost: null,
+  cmc: 0,
+});
+
+function weatheredWayfarerScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    opponentLands: number;
+    instructions: string[];
+    expectedOutcome: string;
+  },
+): CardTestScenario {
+  const wayfarer = pinnedFrom(MARCHESA_BATCH1, 'Weathered Wayfarer');
+  const forests = Array.from({ length: spec.opponentLands }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: wayfarer.sha256,
+    clauseIds: ['weathered-wayfarer-conditional-search'],
+    decks: {
+      P1: [wayfarer.card, PLAINS, LAB_REVEALED_LAND, ISLAND],
+      P2: [...forests, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Weathered Wayfarer', 'Plains'] },
+        { playerId: 'P2', cardNames: forests.map((land) => land.name) },
+      ],
+    },
+  });
+}
+
+const weatheredWayfarerSearchScenario = (gameId: GameId): CardTestScenario =>
+  weatheredWayfarerScenario(gameId, {
+    id: 'weathered-wayfarer-viewer-reveal-land',
+    title: 'Weathered Wayfarer: behind on lands, reveal a land',
+    opponentLands: 2,
+    instructions: [
+      'P2 controls two lands to your one, so activate Weathered Wayfarer for {W}.',
+      'Choose Wayfarer Revealed Land from the search.',
+    ],
+    expectedOutcome:
+      'Wayfarer Revealed Land is revealed to every player and put into your hand, and your library is shuffled.',
+  });
+
+const weatheredWayfarerBlockedScenario = (gameId: GameId): CardTestScenario =>
+  weatheredWayfarerScenario(gameId, {
+    id: 'weathered-wayfarer-viewer-equal-lands-blocked',
+    title: 'Weathered Wayfarer: equal lands do not unlock it',
+    opponentLands: 1,
+    instructions: [
+      'No opponent controls more lands than your one, so Weathered Wayfarer offers no activation.',
+    ],
+    expectedOutcome: 'Weathered Wayfarer and the Plains stay untapped and your hand stays empty.',
+  });
+
+const LAB_TOKEN_MAKER = card({
+  oracleId: 'lab-token-maker',
+  name: 'Lab Token Maker',
+  typeLine: 'Artifact',
+  manaCost: '{1}',
+  cmc: 1,
+  oracleText: '{1}: Create a 1/1 colorless Servo artifact creature token.',
+});
+const LAB_IDOL_PAGE = card({
+  oracleId: 'lab-idol-page',
+  name: 'Idol Drawn Page',
+  typeLine: 'Creature — Secret',
+});
+
+function idolDrawScenario(gameId: GameId): CardTestScenario {
+  const idol = pinnedFrom(MARCHESA_BATCH1, 'Idol of Oblivion');
+  return pr01Scenario(gameId, {
+    id: 'idol-of-oblivion-viewer-token-then-draw',
+    title: 'Idol of Oblivion: make a token, then draw',
+    instructions: [
+      'Idol of Oblivion cannot draw yet: you have not created a token this turn.',
+      'Activate Lab Token Maker for {1} to create a Servo, then tap Idol of Oblivion to draw.',
+    ],
+    expectedOutcome:
+      'A Servo token is created, Idol of Oblivion taps, and you draw Idol Drawn Page.',
+    oracleSha256: idol.sha256,
+    clauseIds: ['idol-of-oblivion-conditional-draw'],
+    decks: {
+      P1: [idol.card, LAB_TOKEN_MAKER, FOREST, LAB_IDOL_PAGE],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Idol of Oblivion', 'Lab Token Maker', 'Forest'] },
+      ],
+    },
+  });
+}
+
+function idolEldraziScenario(gameId: GameId): CardTestScenario {
+  const idol = pinnedFrom(MARCHESA_BATCH1, 'Idol of Oblivion');
+  const forests = Array.from({ length: 8 }, () => 'Forest');
+  return pr01Scenario(gameId, {
+    id: 'idol-of-oblivion-viewer-eldrazi',
+    title: 'Idol of Oblivion: sacrifice it for a 10/10 Eldrazi',
+    instructions: ['Activate {8}, {T}, Sacrifice Idol of Oblivion with your eight Forests.'],
+    expectedOutcome:
+      'Idol of Oblivion goes to your graveyard and a 10/10 colorless Eldrazi creature token enters.',
+    oracleSha256: idol.sha256,
+    clauseIds: ['idol-of-oblivion-eldrazi'],
+    decks: {
+      P1: [idol.card, ...Array.from({ length: 8 }, () => FOREST)],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Idol of Oblivion', ...forests] }],
+    },
+  });
+}
+
+const LAB_WHITE_SOLDIER = card({
+  oracleId: 'lab-white-soldier',
+  name: 'Lab White Soldier',
+  typeLine: 'Creature — Soldier',
+  manaCost: '{W}',
+  cmc: 1,
+  colors: ['W'],
+  colorIdentity: ['W'],
+  power: '1',
+  toughness: '1',
+});
+const LAB_BURIED_CARD = card({
+  oracleId: 'lab-mistveil-buried',
+  name: 'Mistveil Buried Card',
+  typeLine: 'Creature — Secret',
+});
+const LAB_LIBRARY_TOP = card({
+  oracleId: 'lab-mistveil-top',
+  name: 'Mistveil Library Top',
+  typeLine: 'Creature — Secret',
+});
+
+function mistveilScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    whites: number;
+    instructions: string[];
+    expectedOutcome: string;
+  },
+): CardTestScenario {
+  const mistveil = pinnedFrom(MARCHESA_BATCH1, 'Mistveil Plains');
+  const soldiers = Array.from({ length: spec.whites }, () => LAB_WHITE_SOLDIER);
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: mistveil.sha256,
+    clauseIds: ['mistveil-plains-bottom-of-library'],
+    decks: {
+      P1: [mistveil.card, PLAINS, ...soldiers, LAB_BURIED_CARD, LAB_LIBRARY_TOP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Mistveil Plains', 'Plains', ...soldiers.map((soldier) => soldier.name)],
+        },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Mistveil Buried Card'] }],
+    },
+  });
+}
+
+const mistveilBottomScenario = (gameId: GameId): CardTestScenario =>
+  mistveilScenario(gameId, {
+    id: 'mistveil-plains-viewer-bottom-of-library',
+    title: 'Mistveil Plains: put a graveyard card on the bottom',
+    whites: 2,
+    instructions: [
+      'With two white creatures, activate Mistveil Plains, paying {W} with the Plains.',
+      'Target Mistveil Buried Card in your graveyard.',
+    ],
+    expectedOutcome:
+      'Mistveil Buried Card moves to the bottom of your library; Mistveil Library Top is still on top.',
+  });
+
+const mistveilBlockedScenario = (gameId: GameId): CardTestScenario =>
+  mistveilScenario(gameId, {
+    id: 'mistveil-plains-viewer-one-white-blocked',
+    title: 'Mistveil Plains: one white permanent does not unlock it',
+    whites: 1,
+    instructions: ['With one white creature, Mistveil Plains offers no activation.'],
+    expectedOutcome: 'Mistveil Buried Card stays in your graveyard.',
+  });
+
+const LAB_THRULL = card({
+  oracleId: 'lab-thrull',
+  name: 'Lab Thrull',
+  typeLine: 'Creature — Thrull',
+  manaCost: '{B}',
+  cmc: 1,
+  colors: ['B'],
+  colorIdentity: ['B'],
+  power: '1',
+  toughness: '1',
+});
+
+function carrionFeederSacrificeScenario(gameId: GameId): CardTestScenario {
+  const feeder = pinnedFrom(MARCHESA_BATCH1, 'Carrion Feeder');
+  return pr01Scenario(gameId, {
+    id: 'carrion-feeder-viewer-sacrifice',
+    title: 'Carrion Feeder: sacrifice another creature, then itself',
+    instructions: [
+      'Activate Carrion Feeder, sacrificing Lab Thrull: it gets a +1/+1 counter.',
+      'Activate it again, sacrificing Carrion Feeder itself.',
+    ],
+    expectedOutcome:
+      'Lab Thrull is sacrificed and Carrion Feeder gets a +1/+1 counter; then Carrion Feeder sacrifices itself and both are in your graveyard.',
+    oracleSha256: feeder.sha256,
+    clauseIds: ['carrion-feeder-sacrifice-a-creature'],
+    decks: {
+      P1: [feeder.card, LAB_THRULL, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Carrion Feeder', 'Lab Thrull'] }],
+    },
+  });
+}
+
+function carrionFeederCantBlockScenario(gameId: GameId): CardTestScenario {
+  const feeder = pinnedFrom(MARCHESA_BATCH1, 'Carrion Feeder');
+  return pr01Scenario(gameId, {
+    id: 'carrion-feeder-viewer-cant-block',
+    title: "Carrion Feeder: it can't block",
+    instructions: [
+      "It is P2's turn. P2 attacks you with Lab Ox.",
+      'Only Lab Thrull is offered as a blocker; Carrion Feeder never is. Declare no blocks.',
+    ],
+    expectedOutcome: 'Carrion Feeder is never offered as a blocker; Lab Ox deals 4 damage to you.',
+    oracleSha256: feeder.sha256,
+    clauseIds: ['carrion-feeder-cant-block'],
+    decks: {
+      P1: [feeder.card, LAB_THRULL, FOREST],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Carrion Feeder', 'Lab Thrull'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackP1WithEverything },
+  });
+}
+
+function nullmageShepherdScenario(gameId: GameId): CardTestScenario {
+  const shepherd = pinnedFrom(MARCHESA_BATCH1, 'Nullmage Shepherd');
+  return pr01Scenario(gameId, {
+    id: 'nullmage-shepherd-viewer-tap-four',
+    title: 'Nullmage Shepherd: tap itself and three others to destroy an enchantment',
+    instructions: [
+      "Activate Nullmage Shepherd targeting P2's Lab Hex.",
+      'Tap Nullmage Shepherd itself and your three Lab Thrulls to pay the cost.',
+    ],
+    expectedOutcome:
+      'All four of your creatures tap (the Shepherd counts toward the four) and Lab Hex is destroyed.',
+    oracleSha256: shepherd.sha256,
+    clauseIds: ['nullmage-shepherd-tap-four-destroy'],
+    decks: {
+      P1: [shepherd.card, LAB_THRULL, LAB_THRULL, LAB_THRULL, FOREST],
+      P2: [LAB_HEX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Nullmage Shepherd', 'Lab Thrull', 'Lab Thrull', 'Lab Thrull'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Hex'] },
+      ],
+    },
+  });
+}
+
+const LAB_WIZARD = card({
+  oracleId: 'lab-wizard',
+  name: 'Lab Wizard',
+  typeLine: 'Creature — Human Wizard',
+  manaCost: '{U}',
+  cmc: 1,
+  colors: ['U'],
+  colorIdentity: ['U'],
+  power: '1',
+  toughness: '1',
+});
+const LAB_SAGE_PAGE = card({
+  oracleId: 'lab-sage-page',
+  name: 'Sage Drawn Page',
+  typeLine: 'Creature — Secret',
+});
+
+function sageOfFablesScenario(gameId: GameId): CardTestScenario {
+  const sage = pinnedFrom(MARCHESA_BATCH1, 'Sage of Fables');
+  return pr01Scenario(gameId, {
+    id: 'sage-of-fables-viewer-wizard-counter-draw',
+    title: 'Sage of Fables: a Wizard enters with a counter, then pay it to draw',
+    instructions: [
+      'Cast Lab Wizard; it enters with an additional +1/+1 counter.',
+      "Activate Sage of Fables for {2}, removing Lab Wizard's +1/+1 counter, and draw.",
+    ],
+    expectedOutcome:
+      'Lab Wizard enters as a 2/2 with a +1/+1 counter, the counter is removed to pay the cost, and you draw Sage Drawn Page.',
+    oracleSha256: sage.sha256,
+    clauseIds: ['sage-of-fables-wizard-counter', 'sage-of-fables-remove-counter-draw'],
+    decks: {
+      P1: [sage.card, ISLAND, ISLAND, ISLAND, LAB_WIZARD, LAB_SAGE_PAGE],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Wizard'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Sage of Fables', 'Island', 'Island', 'Island'] },
+      ],
+    },
+  });
+}
+
+function illuminorSzerasScenario(gameId: GameId): CardTestScenario {
+  const szeras = pinnedFrom(MARCHESA_BATCH1, 'Illuminor Szeras');
+  return pr01Scenario(gameId, {
+    id: 'illuminor-szeras-viewer-sacrifice-for-black',
+    title: 'Illuminor Szeras: sacrifice a creature for black mana',
+    instructions: [
+      'Cast Lab Black Ogre ({B}{B}{B}) with no lands: auto-pay taps Illuminor Szeras and sacrifices Lab Ox (mana value 4).',
+    ],
+    expectedOutcome:
+      'Lab Ox is sacrificed for four black mana, Lab Black Ogre resolves, and Illuminor Szeras is tapped.',
+    oracleSha256: szeras.sha256,
+    clauseIds: ['illuminor-szeras-sacrifice-for-black'],
+    decks: {
+      P1: [szeras.card, LAB_OX, LAB_BLACK_OGRE, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Black Ogre'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Illuminor Szeras', 'Lab Ox'] }],
+    },
+  });
+}
+
+const LAB_PEEMA_PAGE = card({
+  oracleId: 'lab-peema-page',
+  name: 'Peema Drawn Page',
+  typeLine: 'Creature — Secret',
+});
+
+function peemaExhaustScenario(gameId: GameId): CardTestScenario {
+  const peema = pinnedFrom(MARCHESA_BATCH1, 'Peema Trailblazer');
+  return pr01Scenario(gameId, {
+    id: 'peema-trailblazer-viewer-exhaust',
+    title: 'Peema Trailblazer: exhaust for counters and cards',
+    instructions: [
+      'With six energy, activate the exhaust ability (no tap needed).',
+      'It gets two +1/+1 counters, then you draw five cards (its new power). The ability is then gone.',
+    ],
+    expectedOutcome:
+      'Peema Trailblazer becomes 5/5, you draw five Peema Drawn Pages, you have no energy left, and the exhaust ability is never offered again.',
+    oracleSha256: peema.sha256,
+    clauseIds: ['peema-trailblazer-exhaust'],
+    decks: {
+      P1: [peema.card, ...Array.from({ length: 6 }, () => LAB_PEEMA_PAGE)],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Peema Trailblazer'] }],
+      energy: [{ playerId: 'P1', amount: 6 }],
+    },
+  });
+}
+
+function peemaCombatEnergyScenario(gameId: GameId): CardTestScenario {
+  const peema = pinnedFrom(MARCHESA_BATCH1, 'Peema Trailblazer');
+  return pr01Scenario(gameId, {
+    id: 'peema-trailblazer-viewer-combat-energy',
+    title: 'Peema Trailblazer: combat damage gives energy',
+    instructions: [
+      'Peema Trailblazer shows trample. Attack P2 with it; nobody blocks.',
+      'Trample damage assignment past a blocker stays engine-only: the viewer has no damage-split control.',
+    ],
+    expectedOutcome: 'P2 takes 3 damage and you get three energy.',
+    oracleSha256: peema.sha256,
+    clauseIds: ['peema-trailblazer-combat-energy', 'peema-trailblazer-trample'],
+    decks: { P1: [peema.card, FOREST], P2: PR01_FILLER, P3: PR01_FILLER, P4: PR01_FILLER },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Peema Trailblazer'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+const LAB_GRAVE_CARD_P2 = card({
+  oracleId: 'lab-lantern-p2-card',
+  name: 'Lantern P2 Card',
+  typeLine: 'Creature — Spirit',
+});
+const LAB_GRAVE_CARD_P3 = card({
+  oracleId: 'lab-lantern-p3-card',
+  name: 'Lantern P3 Card',
+  typeLine: 'Creature — Spirit',
+});
+const LAB_LANTERN_PAGE = card({
+  oracleId: 'lab-lantern-page',
+  name: 'Lantern Drawn Page',
+  typeLine: 'Creature — Secret',
+});
+
+const LAB_ARK_THOPTER = card({
+  oracleId: 'lab-ark-thopter',
+  name: 'Lab Ark Thopter',
+  typeLine: 'Artifact Creature — Thopter',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '2',
+  toughness: '2',
+});
+const LAB_ARK_SPIRIT = card({
+  oracleId: 'lab-ark-spirit',
+  name: 'Lab Ark Spirit',
+  typeLine: 'Creature — Spirit',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '2',
+  toughness: '2',
+});
+
+function ghostArkScenario(gameId: GameId): CardTestScenario {
+  const ark = pinnedFrom(MARCHESA_BATCH1, 'Ghost Ark');
+  return pr01Scenario(gameId, {
+    id: 'ghost-ark-viewer-crew-and-unearth',
+    title: 'Ghost Ark: crew it, then unearth an artifact creature',
+    instructions: [
+      'Ghost Ark shows flying. Crew it with Lab Giant (Crew 2).',
+      'When the crewed trigger resolves, unearth Lab Ark Thopter from your graveyard for {3}.',
+      'Lab Ark Spirit is not an artifact, so it gets no unearth.',
+    ],
+    expectedOutcome:
+      'Ghost Ark is a 3/3 flying artifact creature, Lab Giant is tapped, Lab Ark Thopter is on the battlefield with haste, all three Forests are tapped, and Lab Ark Spirit stays in your graveyard.',
+    oracleSha256: ark.sha256,
+    clauseIds: ['ghost-ark-flying', 'ghost-ark-crewed-unearth', 'ghost-ark-crew'],
+    decks: {
+      P1: [ark.card, LAB_GIANT, LAB_ARK_THOPTER, LAB_ARK_SPIRIT, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Ghost Ark', 'Lab Giant', 'Forest', 'Forest', 'Forest'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Ark Thopter', 'Lab Ark Spirit'] }],
+    },
+  });
+}
+
+const LAB_BLUE_MERFOLK = card({
+  oracleId: 'lab-blue-merfolk',
+  name: 'Lab Blue Merfolk',
+  typeLine: 'Creature — Merfolk',
+  manaCost: '{U}',
+  cmc: 1,
+  colors: ['U'],
+  power: '1',
+  toughness: '1',
+});
+
+function flareOfDenialScenario(gameId: GameId): CardTestScenario {
+  const flare = pinnedFrom(MARCHESA_BATCH1, 'Flare of Denial');
+  return pr01Scenario(gameId, {
+    id: 'flare-of-denial-viewer-sacrifice-counter',
+    title: "Flare of Denial: sacrifice a blue creature to counter P2's spell",
+    instructions: [
+      "P2's Lab Pending Spell is on the stack and you have no lands.",
+      'Cast Flare of Denial for its alternative cost, sacrificing Lab Blue Merfolk, targeting Lab Pending Spell.',
+    ],
+    expectedOutcome:
+      'Lab Blue Merfolk is sacrificed, Lab Pending Spell is countered, and both cards are in graveyards.',
+    oracleSha256: flare.sha256,
+    clauseIds: ['flare-of-denial-sacrifice-alternative', 'flare-of-denial-counter'],
+    decks: {
+      P1: [flare.card, LAB_BLUE_MERFOLK, FOREST],
+      P2: [ARCANE_PENDING_SPELL, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Flare of Denial'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Blue Merfolk'] }],
+      stack: [{ playerId: 'P2', cardNames: ['Lab Pending Spell'] }],
+    },
+  });
+}
+
+function flareOfMaliceScenario(gameId: GameId): CardTestScenario {
+  const flare = pinnedFrom(MARCHESA_BATCH1, 'Flare of Malice');
+  return pr01Scenario(gameId, {
+    id: 'flare-of-malice-viewer-sacrifice-edict',
+    title: 'Flare of Malice: sacrifice a black creature; P2 loses its biggest creature',
+    instructions: [
+      'You have no lands. Cast Flare of Malice for its alternative cost, sacrificing Lab Black Bear.',
+      'P2 controls Lab Ox (mana value 4) and Lab Generic Bear (mana value 1).',
+    ],
+    expectedOutcome:
+      'Lab Black Bear is sacrificed, P2 sacrifices Lab Ox, and Lab Generic Bear stays.',
+    oracleSha256: flare.sha256,
+    clauseIds: ['flare-of-malice-sacrifice-alternative', 'flare-of-malice-greatest-mana-value'],
+    decks: {
+      P1: [flare.card, LAB_BLACK_BEAR, FOREST],
+      P2: [LAB_OX, LAB_GENERIC_BEAR, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Flare of Malice'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Black Bear'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Generic Bear'] },
+      ],
+    },
+  });
+}
+
+const LAB_ZOMBIE = card({
+  oracleId: 'lab-zombie',
+  name: 'Lab Zombie',
+  typeLine: 'Creature — Zombie',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '1',
+});
+
+function blasphemousEdictScenario(gameId: GameId): CardTestScenario {
+  const edict = pinnedFrom(MARCHESA_BATCH1, 'Blasphemous Edict');
+  const zombies = Array.from({ length: 11 }, () => LAB_ZOMBIE);
+  return pr01Scenario(gameId, {
+    id: 'blasphemous-edict-viewer-pay-b',
+    title: 'Blasphemous Edict: pay {B} with thirteen creatures out',
+    instructions: [
+      'There are thirteen creatures on the battlefield: your Lab Ox and Lab Generic Bear, and P2’s eleven Lab Zombies.',
+      'Cast Blasphemous Edict for {B} with your Swamp.',
+    ],
+    expectedOutcome:
+      'Each player sacrifices thirteen creatures: every creature on the battlefield is sacrificed, with no choice to make, and the Swamp is tapped.',
+    oracleSha256: edict.sha256,
+    clauseIds: ['blasphemous-edict-alternative', 'blasphemous-edict-sacrifice-thirteen'],
+    decks: {
+      P1: [edict.card, SWAMP, LAB_OX, LAB_GENERIC_BEAR],
+      P2: [...zombies, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Blasphemous Edict'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp', 'Lab Ox', 'Lab Generic Bear'] },
+        { playerId: 'P2', cardNames: zombies.map((zombie) => zombie.name) },
+      ],
+    },
+  });
+}
+
+function dreadReturnScenario(gameId: GameId): CardTestScenario {
+  const dread = pinnedFrom(MARCHESA_BATCH1, 'Dread Return');
+  const zombies = [LAB_ZOMBIE, LAB_ZOMBIE, LAB_ZOMBIE];
+  return pr01Scenario(gameId, {
+    id: 'dread-return-viewer-flashback',
+    title: 'Dread Return: flash it back by sacrificing three creatures',
+    instructions: [
+      'Dread Return and Lab Ox are in your graveyard; three Lab Zombies are on the battlefield.',
+      'Cast Dread Return from your graveyard for its flashback cost, targeting Lab Ox.',
+    ],
+    expectedOutcome:
+      'The three Lab Zombies are sacrificed, Lab Ox returns to the battlefield, and Dread Return is exiled.',
+    oracleSha256: dread.sha256,
+    clauseIds: ['dread-return-reanimate', 'dread-return-flashback'],
+    decks: {
+      P1: [dread.card, LAB_OX, ...zombies, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: zombies.map((zombie) => zombie.name) }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Dread Return', 'Lab Ox'] }],
+    },
+  });
+}
+
+function raffinesGuidanceScenario(gameId: GameId): CardTestScenario {
+  const guidance = pinnedFrom(MARCHESA_BATCH1, "Raffine's Guidance");
+  return pr01Scenario(gameId, {
+    id: 'raffines-guidance-viewer-graveyard-recast',
+    title: "Raffine's Guidance: cast it from the graveyard for {2}{W}",
+    instructions: [
+      "Raffine's Guidance is in your graveyard. Cast it from there for {2}{W}, enchanting Lab Ox.",
+    ],
+    expectedOutcome:
+      "Raffine's Guidance enchants Lab Ox, which becomes 5/5, and Plains and both Forests are tapped.",
+    oracleSha256: guidance.sha256,
+    clauseIds: [
+      'raffines-guidance-enchant',
+      'raffines-guidance-pump',
+      'raffines-guidance-graveyard-recast',
+    ],
+    decks: {
+      P1: [guidance.card, LAB_OX, PLAINS, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Ox', 'Plains', 'Forest', 'Forest'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ["Raffine's Guidance"] }],
+    },
+  });
+}
+
+function theirNumberIsLegionScenario(gameId: GameId): CardTestScenario {
+  const legion = pinnedFrom(MARCHESA_BATCH1, 'Their Number Is Legion');
+  const lands = [SWAMP, SWAMP, SWAMP, SWAMP, FOREST, FOREST];
+  return pr01Scenario(gameId, {
+    id: 'their-number-is-legion-viewer-graveyard-x',
+    title: 'Their Number Is Legion: cast it from the graveyard with X=2',
+    instructions: [
+      'Their Number Is Legion is in your graveyard. Cast it from there with X=2, paying with your four Swamps and two Forests.',
+    ],
+    expectedOutcome:
+      'Two tapped 2/2 Necron Warrior tokens enter, you gain 2 life (you control two artifacts), and Their Number Is Legion is exiled.',
+    oracleSha256: legion.sha256,
+    clauseIds: ['their-number-is-legion-tokens-and-life', 'their-number-is-legion-graveyard-cast'],
+    decks: { P1: [legion.card, ...lands], P2: PR01_FILLER, P3: PR01_FILLER, P4: PR01_FILLER },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: lands.map((land) => land.name) }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Their Number Is Legion'] }],
+    },
+  });
+}
+
+const LAB_ANRAKYR_RELIC = card({
+  oracleId: 'lab-anrakyr-relic',
+  name: 'Lab Anrakyr Relic',
+  typeLine: 'Artifact',
+  manaCost: '{3}',
+  cmc: 3,
+});
+const LAB_ANRAKYR_GOLEM = card({
+  oracleId: 'lab-anrakyr-golem',
+  name: 'Lab Anrakyr Golem',
+  typeLine: 'Artifact Creature — Golem',
+  manaCost: '{4}',
+  cmc: 4,
+  power: '3',
+  toughness: '3',
+});
+
+function anrakyrScenario(gameId: GameId): CardTestScenario {
+  const anrakyr = pinnedFrom(MARCHESA_BATCH1, 'Anrakyr the Traveller');
+  return pr01Scenario(gameId, {
+    id: 'anrakyr-the-traveller-viewer-cast-for-life',
+    title: 'Anrakyr the Traveller: attack, then cast an artifact for life',
+    instructions: [
+      'Attack P2 with Anrakyr the Traveller and use its trigger.',
+      'Cast Lab Anrakyr Golem from your graveyard by paying 4 life (Lab Anrakyr Relic in hand would cost 3).',
+    ],
+    expectedOutcome:
+      'You pay 4 life (40 → 36) and spend no mana; Lab Anrakyr Golem enters the battlefield, and Anrakyr deals 4 damage to P2.',
+    oracleSha256: anrakyr.sha256,
+    clauseIds: ['anrakyr-the-traveller-cast-for-life'],
+    decks: {
+      P1: [anrakyr.card, LAB_ANRAKYR_RELIC, LAB_ANRAKYR_GOLEM, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Anrakyr Relic'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Anrakyr the Traveller'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Anrakyr Golem'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function toxicDelugeScenario(gameId: GameId): CardTestScenario {
+  const deluge = pinnedFrom(MARCHESA_BATCH1, 'Toxic Deluge');
+  return pr01Scenario(gameId, {
+    id: 'toxic-deluge-viewer-pay-two-life',
+    title: 'Toxic Deluge: pay 2 life for -2/-2',
+    instructions: [
+      'Cast Toxic Deluge with X=2, paying {2}{B} with your Swamp and Forests and 2 life.',
+    ],
+    expectedOutcome:
+      "You go to 38 life as you cast it; P2's Lab Zombie dies, and Lab Ox and Lab Giant survive as 2/2s until end of turn.",
+    oracleSha256: deluge.sha256,
+    clauseIds: ['toxic-deluge-pay-x-life', 'toxic-deluge-minus-x'],
+    decks: {
+      P1: [deluge.card, SWAMP, FOREST, FOREST, LAB_OX],
+      P2: [LAB_ZOMBIE, LAB_GIANT, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Toxic Deluge'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp', 'Forest', 'Forest', 'Lab Ox'] },
+        { playerId: 'P2', cardNames: ['Lab Zombie', 'Lab Giant'] },
+      ],
+    },
+  });
+}
+
+function conclaveTribunalScenario(gameId: GameId): CardTestScenario {
+  const tribunal = pinnedFrom(MARCHESA_BATCH1, 'Conclave Tribunal');
+  return pr01Scenario(gameId, {
+    id: 'conclave-tribunal-viewer-convoke',
+    title: 'Conclave Tribunal: convoke with three creatures',
+    instructions: [
+      'Cast Conclave Tribunal: your Plains pays {W} and your three creatures convoke for {3}.',
+      "Its enters trigger exiles P2's Lab Anrakyr Relic.",
+    ],
+    expectedOutcome:
+      "Plains, Lab Ox, Lab Generic Bear and Lab Zombie are tapped, and P2's Lab Anrakyr Relic is exiled.",
+    oracleSha256: tribunal.sha256,
+    clauseIds: ['conclave-tribunal-convoke', 'conclave-tribunal-exile'],
+    decks: {
+      P1: [tribunal.card, PLAINS, LAB_OX, LAB_GENERIC_BEAR, LAB_ZOMBIE],
+      P2: [LAB_ANRAKYR_RELIC, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Conclave Tribunal'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Plains', 'Lab Ox', 'Lab Generic Bear', 'Lab Zombie'] },
+        { playerId: 'P2', cardNames: ['Lab Anrakyr Relic'] },
+      ],
+    },
+  });
+}
+
+function hourOfReckoningScenario(gameId: GameId): CardTestScenario {
+  const hour = pinnedFrom(MARCHESA_BATCH1, 'Hour of Reckoning');
+  return pr01Scenario(gameId, {
+    id: 'hour-of-reckoning-viewer-convoke',
+    title: 'Hour of Reckoning: three Plains and four convoked creatures',
+    instructions: [
+      'Cast Hour of Reckoning: three Plains pay {W}{W}{W} and your four creatures convoke for {4}.',
+    ],
+    expectedOutcome:
+      "Every nontoken creature is destroyed, your four convoked creatures and P2's Lab Anrakyr Golem included.",
+    oracleSha256: hour.sha256,
+    clauseIds: ['hour-of-reckoning-convoke', 'hour-of-reckoning-destroy'],
+    decks: {
+      P1: [hour.card, PLAINS, PLAINS, PLAINS, LAB_OX, LAB_GENERIC_BEAR, LAB_ZOMBIE, LAB_GIANT],
+      P2: [LAB_ANRAKYR_GOLEM, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Hour of Reckoning'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Plains',
+            'Plains',
+            'Plains',
+            'Lab Ox',
+            'Lab Generic Bear',
+            'Lab Zombie',
+            'Lab Giant',
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Anrakyr Golem'] },
+      ],
+    },
+  });
+}
+
+const LAB_KILLIAN_BOLT = card({
+  oracleId: 'lab-killian-bolt',
+  name: 'Lab Killian Bolt',
+  typeLine: 'Instant',
+  manaCost: '{2}{R}',
+  cmc: 3,
+  colors: ['R'],
+  oracleText: 'Lab Killian Bolt deals 2 damage to any target.',
+});
+
+function killianScenario(gameId: GameId): CardTestScenario {
+  const killian = pinnedFrom(MARCHESA_BATCH1, 'Killian, Ink Duelist');
+  return pr01Scenario(gameId, {
+    id: 'killian-ink-duelist-viewer-reduced-bolt',
+    title: 'Killian, Ink Duelist: a {2}{R} bolt at a creature for {R}',
+    instructions: [
+      "With only a Mountain, cast Lab Killian Bolt ({2}{R}) at P2's Lab Ox: targeting a creature, it costs {2} less.",
+    ],
+    expectedOutcome:
+      'Lab Killian Bolt costs only {R}; Lab Ox takes 2 damage. P2 is not offered as a target at that price.',
+    oracleSha256: killian.sha256,
+    clauseIds: ['killian-ink-duelist-reduction'],
+    decks: {
+      P1: [killian.card, LAB_KILLIAN_BOLT, MOUNTAIN],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Killian Bolt'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Killian, Ink Duelist', 'Mountain'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+const LAB_DRAGON = card({
+  oracleId: 'lab-dragon',
+  name: 'Lab Dragon',
+  typeLine: 'Creature — Dragon',
+  manaCost: '{4}{R}',
+  cmc: 5,
+  colors: ['R'],
+  power: '4',
+  toughness: '4',
+});
+
+function dragonkinBerserkerScenario(gameId: GameId): CardTestScenario {
+  const berserker = pinnedFrom(MARCHESA_BATCH1, 'Dragonkin Berserker');
+  return pr01Scenario(gameId, {
+    id: 'dragonkin-berserker-viewer-reduced-boast',
+    title: 'Dragonkin Berserker: attack, then Boast for {2}{R}',
+    instructions: [
+      'Attack P2 with Dragonkin Berserker only.',
+      'After attackers are declared, activate its Boast. You control two Lab Dragons, so it costs {2}{R}: pay with your Mountain and Forests.',
+    ],
+    expectedOutcome:
+      'A 5/5 flying Dragon token is created, all three lands are tapped, and P2 takes 2 first-strike damage.',
+    oracleSha256: berserker.sha256,
+    clauseIds: [
+      'dragonkin-berserker-first-strike',
+      'dragonkin-berserker-boast-reduction',
+      'dragonkin-berserker-boast',
+    ],
+    decks: {
+      P1: [berserker.card, LAB_DRAGON, LAB_DRAGON, MOUNTAIN, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Dragonkin Berserker',
+            'Lab Dragon',
+            'Lab Dragon',
+            'Mountain',
+            'Forest',
+            'Forest',
+          ],
+        },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+const LAB_NECRON_OVERLORD = card({
+  oracleId: 'lab-necron-overlord',
+  name: 'Lab Necron Overlord',
+  typeLine: 'Legendary Artifact Creature — Necron Noble',
+  manaCost: '{3}{B}',
+  cmc: 4,
+  colors: ['B'],
+  colorIdentity: ['B'],
+  power: '3',
+  toughness: '3',
+});
+const LAB_UNEARTH_WARRIOR = card({
+  oracleId: 'lab-unearth-warrior',
+  name: 'Lab Unearth Warrior',
+  typeLine: 'Artifact Creature — Necron Warrior',
+  manaCost: '{3}',
+  cmc: 3,
+  power: '2',
+  toughness: '2',
+  oracleText: 'Unearth {3}',
+});
+
+function convergenceOfDominionScenario(gameId: GameId): CardTestScenario {
+  const convergence = pinnedFrom(MARCHESA_BATCH1, 'Convergence of Dominion');
+  return pr01Scenario(gameId, {
+    id: 'convergence-of-dominion-viewer-cheap-unearth',
+    title: 'Convergence of Dominion: Unearth {3} for {1}',
+    instructions: [
+      'Your commander, Lab Necron Overlord, is on the battlefield, so graveyard abilities cost {2} less.',
+      'Unearth Lab Unearth Warrior from your graveyard, paying {1} with your Forest.',
+    ],
+    expectedOutcome: 'Lab Unearth Warrior returns with haste for {1}; only the Forest is tapped.',
+    oracleSha256: convergence.sha256,
+    clauseIds: ['convergence-of-dominion-reduction'],
+    decks: {
+      P1: [convergence.card, LAB_UNEARTH_WARRIOR, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    commanders: { P1: [LAB_NECRON_OVERLORD] },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Necron Overlord', 'Convergence of Dominion', 'Forest'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Unearth Warrior'] }],
+    },
+  });
+}
+
+function koglaYidaroScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    instructions: string[];
+    expectedOutcome: string;
+    clauseIds: string[];
+    inHandOnly: boolean;
+  },
+): CardTestScenario {
+  const kogla = pinnedFrom(COVERAGE_PR02, 'Kogla and Yidaro');
+  const lands = [MOUNTAIN, MOUNTAIN, FOREST, FOREST, FOREST, FOREST];
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: kogla.sha256,
+    clauseIds: spec.clauseIds,
+    decks: {
+      P1: [kogla.card, ...lands, LAB_ZOMBIE],
+      P2: [LAB_OX, LAB_ANRAKYR_RELIC, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Kogla and Yidaro'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: spec.inHandOnly
+            ? ['Mountain', 'Forest', 'Forest', 'Forest']
+            : lands.map((land) => land.name),
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Anrakyr Relic'] },
+      ],
+    },
+  });
+}
+
+const koglaYidaroFightScenario = (gameId: GameId): CardTestScenario =>
+  koglaYidaroScenario(gameId, {
+    id: 'kogla-and-yidaro-viewer-enter-fight',
+    title: "Kogla and Yidaro: enter and fight P2's Lab Ox",
+    instructions: [
+      'Cast Kogla and Yidaro with your six lands.',
+      "Choose its second mode and fight P2's Lab Ox.",
+    ],
+    expectedOutcome: 'Lab Ox dies, and Kogla and Yidaro has 4 damage marked.',
+    clauseIds: ['kogla-and-yidaro-enters-modes'],
+    inHandOnly: false,
+  });
+
+const koglaYidaroDiscardScenario = (gameId: GameId): CardTestScenario =>
+  koglaYidaroScenario(gameId, {
+    id: 'kogla-and-yidaro-viewer-discard',
+    title: "Kogla and Yidaro: discard it to destroy P2's artifact",
+    instructions: [
+      "Activate Kogla and Yidaro's ability from your hand for {2}{R}{G}, targeting P2's Lab Anrakyr Relic.",
+    ],
+    expectedOutcome:
+      'Lab Anrakyr Relic is destroyed, Kogla and Yidaro is shuffled into your library, and you draw a card.',
+    clauseIds: ['kogla-and-yidaro-discard'],
+    inHandOnly: true,
+  });
+
+function grimHaruspexScenario(gameId: GameId): CardTestScenario {
+  const haruspex = pinnedFrom(MARCHESA_BATCH1, 'Grim Haruspex');
+  return pr01Scenario(gameId, {
+    id: 'grim-haruspex-viewer-morph',
+    title: 'Grim Haruspex: cast it face down, turn it face up, then draw',
+    instructions: [
+      'Cast Grim Haruspex face down for {3}.',
+      'Turn it face up for {B}.',
+      'Cast Lab Doom on your Lab Zombie.',
+    ],
+    expectedOutcome: 'Grim Haruspex is a face-up 3/2, Lab Zombie dies, and you draw a card.',
+    oracleSha256: haruspex.sha256,
+    clauseIds: ['grim-haruspex-morph', 'grim-haruspex-draw'],
+    decks: {
+      P1: [haruspex.card, LAB_DOOM, LAB_ZOMBIE, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Grim Haruspex', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Lab Zombie'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+const LAB_FORETELL_BOLT = card({
+  oracleId: 'lab-foretell-bolt',
+  name: 'Lab Foretell Bolt',
+  typeLine: 'Instant',
+  manaCost: '{2}{R}',
+  cmc: 3,
+  colors: ['R'],
+  oracleText: 'Lab Foretell Bolt deals 2 damage to any target.',
+});
+
+function dreamDevourerScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    instructions: string[];
+    expectedOutcome: string;
+    clauseIds: string[];
+    alreadyForetold: boolean;
+  },
+): CardTestScenario {
+  const devourer = pinnedFrom(MARCHESA_BATCH1, 'Dream Devourer');
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: devourer.sha256,
+    clauseIds: spec.clauseIds,
+    decks: {
+      P1: [devourer.card, LAB_FORETELL_BOLT, MOUNTAIN, MOUNTAIN],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: spec.alreadyForetold ? [] : ['Lab Foretell Bolt'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: spec.alreadyForetold
+            ? ['Dream Devourer', 'Mountain']
+            : ['Dream Devourer', 'Mountain', 'Mountain'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      ...(spec.alreadyForetold
+        ? { foretold: [{ playerId: 'P1', cardNames: ['Lab Foretell Bolt'], reduction: 2 }] }
+        : {}),
+    },
+  });
+}
+
+const dreamDevourerForetellScenario = (gameId: GameId): CardTestScenario =>
+  dreamDevourerScenario(gameId, {
+    id: 'dream-devourer-viewer-foretell',
+    title: 'Dream Devourer: foretell a card for {2}',
+    instructions: ['Foretell Lab Foretell Bolt from your hand for {2}.'],
+    expectedOutcome:
+      'Lab Foretell Bolt is exiled face down, and Dream Devourer gets +2/+0 until end of turn.',
+    clauseIds: ['dream-devourer-grant', 'dream-devourer-pump'],
+    alreadyForetold: false,
+  });
+
+const dreamDevourerForetoldCastScenario = (gameId: GameId): CardTestScenario =>
+  dreamDevourerScenario(gameId, {
+    id: 'dream-devourer-viewer-foretold-cast',
+    title: 'Dream Devourer: cast a foretold card for {R}',
+    instructions: [
+      'Lab Foretell Bolt was foretold last turn. Cast it from exile for {R}, targeting P2.',
+    ],
+    expectedOutcome: 'Lab Foretell Bolt deals 2 damage to P2.',
+    clauseIds: ['dream-devourer-grant'],
+    alreadyForetold: true,
+  });
+
+function changingLoyaltyScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    instructions: string[];
+    expectedOutcome: string;
+    clauseIds: string[];
+    withDoom: boolean;
+  },
+): CardTestScenario {
+  const loyalty = pinnedFrom(MARCHESA_BATCH1, 'Changing Loyalty');
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: loyalty.sha256,
+    clauseIds: spec.clauseIds,
+    decks: {
+      P1: [loyalty.card, LAB_DOOM, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, LAB_GENERIC_BEAR, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: spec.withDoom ? ['Changing Loyalty', 'Lab Doom'] : ['Changing Loyalty'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Generic Bear'] },
+      ],
+    },
+  });
+}
+
+const changingLoyaltyReplicateScenario = (gameId: GameId): CardTestScenario =>
+  changingLoyaltyScenario(gameId, {
+    id: 'changing-loyalty-viewer-replicate',
+    title: "Changing Loyalty: replicate once onto both of P2's creatures",
+    instructions: [
+      "Cast Changing Loyalty with replicate 1 for {3}{B}, targeting P2's Lab Ox.",
+      "Choose P2's Lab Generic Bear as the copy's target.",
+    ],
+    expectedOutcome:
+      'Changing Loyalty enchants Lab Ox, and its copy resolves into a Changing Loyalty token enchanting Lab Generic Bear.',
+    clauseIds: ['changing-loyalty-replicate', 'changing-loyalty-enchant'],
+    withDoom: false,
+  });
+
+const changingLoyaltyStealScenario = (gameId: GameId): CardTestScenario =>
+  changingLoyaltyScenario(gameId, {
+    id: 'changing-loyalty-viewer-steal',
+    title: "Changing Loyalty: enchant P2's Lab Ox, destroy it, and take it",
+    instructions: ["Cast Changing Loyalty for {1}{B} on P2's Lab Ox.", 'Cast Lab Doom on Lab Ox.'],
+    expectedOutcome:
+      'Lab Ox dies and returns to the battlefield under your control; Changing Loyalty goes to your graveyard.',
+    clauseIds: ['changing-loyalty-enchant', 'changing-loyalty-steal'],
+    withDoom: true,
+  });
+
+function soulGuideLanternScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    instructions: string[];
+    expectedOutcome: string;
+    clauseIds: string[];
+    inHand: boolean;
+  },
+): CardTestScenario {
+  const lantern = pinnedFrom(MARCHESA_BATCH1, 'Soul-Guide Lantern');
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: lantern.sha256,
+    clauseIds: spec.clauseIds,
+    decks: {
+      P1: [lantern.card, FOREST, LAB_LANTERN_PAGE],
+      P2: [LAB_GRAVE_CARD_P2, FOREST, FOREST],
+      P3: [LAB_GRAVE_CARD_P3, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: spec.inHand ? [{ playerId: 'P1', cardNames: ['Soul-Guide Lantern'] }] : [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: spec.inHand ? ['Forest'] : ['Soul-Guide Lantern', 'Forest'],
+        },
+      ],
+      graveyard: [
+        { playerId: 'P2', cardNames: ['Lantern P2 Card'] },
+        { playerId: 'P3', cardNames: ['Lantern P3 Card'] },
+      ],
+    },
+  });
+}
+
+const soulGuideLanternEntersScenario = (gameId: GameId): CardTestScenario =>
+  soulGuideLanternScenario(gameId, {
+    id: 'soul-guide-lantern-viewer-enters-exile',
+    title: "Soul-Guide Lantern: enter and exile a card from P2's graveyard",
+    instructions: [
+      'Cast Soul-Guide Lantern with your Forest.',
+      "Its enters trigger targets a card in any graveyard: choose P2's Lantern P2 Card.",
+    ],
+    expectedOutcome: "Lantern P2 Card is exiled; P3's graveyard is untouched.",
+    clauseIds: ['soul-guide-lantern-enters-exile'],
+    inHand: true,
+  });
+
+const soulGuideLanternExileScenario = (gameId: GameId): CardTestScenario =>
+  soulGuideLanternScenario(gameId, {
+    id: 'soul-guide-lantern-viewer-exile-graveyards',
+    title: "Soul-Guide Lantern: sacrifice it to exile each opponent's graveyard",
+    instructions: ["Activate {T}, Sacrifice Soul-Guide Lantern: Exile each opponent's graveyard."],
+    expectedOutcome:
+      "P2's and P3's graveyards are exiled, and Soul-Guide Lantern is in your graveyard. No mana is spent.",
+    clauseIds: ['soul-guide-lantern-exile-graveyards'],
+    inHand: false,
+  });
+
+const soulGuideLanternDrawScenario = (gameId: GameId): CardTestScenario =>
+  soulGuideLanternScenario(gameId, {
+    id: 'soul-guide-lantern-viewer-draw',
+    title: 'Soul-Guide Lantern: pay {1} and sacrifice it to draw',
+    instructions: [
+      'Activate {1}, {T}, Sacrifice Soul-Guide Lantern: Draw a card, paying with your Forest.',
+    ],
+    expectedOutcome:
+      'You draw Lantern Drawn Page and the Lantern is in your graveyard; the opponents keep their graveyards.',
+    clauseIds: ['soul-guide-lantern-draw'],
+    inHand: false,
+  });
+
 function mosswortCastingScenario(
   gameId: GameId,
   hiddenLand = false,
@@ -5817,6 +7518,55 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kogla-viewer-enters-fight',
   'kogla-viewer-bounce-and-attack',
   'opponent-graveyard-viewer-reanimate',
+  'retrofitter-foundry-viewer-servo-thopter-construct',
+  'aether-hub-viewer-energy-any-color',
+  'aether-hub-viewer-colorless',
+  'solar-transformer-viewer-cast-and-energy-mana',
+  'solar-transformer-viewer-colorless',
+  'bespoke-battlewagon-viewer-energy-and-crew',
+  'bespoke-battlewagon-viewer-animate-and-draw',
+  'bespoke-battlewagon-viewer-tap-target',
+  'endless-atlas-viewer-same-name-draw',
+  'endless-atlas-viewer-mixed-names-blocked',
+  'sceptre-of-eternal-glory-viewer-three-black',
+  'sceptre-of-eternal-glory-viewer-one-mana',
+  'weathered-wayfarer-viewer-reveal-land',
+  'weathered-wayfarer-viewer-equal-lands-blocked',
+  'idol-of-oblivion-viewer-token-then-draw',
+  'idol-of-oblivion-viewer-eldrazi',
+  'mistveil-plains-viewer-bottom-of-library',
+  'mistveil-plains-viewer-one-white-blocked',
+  'carrion-feeder-viewer-sacrifice',
+  'carrion-feeder-viewer-cant-block',
+  'nullmage-shepherd-viewer-tap-four',
+  'sage-of-fables-viewer-wizard-counter-draw',
+  'illuminor-szeras-viewer-sacrifice-for-black',
+  'peema-trailblazer-viewer-exhaust',
+  'peema-trailblazer-viewer-combat-energy',
+  'soul-guide-lantern-viewer-enters-exile',
+  'soul-guide-lantern-viewer-exile-graveyards',
+  'soul-guide-lantern-viewer-draw',
+  'ghost-ark-viewer-crew-and-unearth',
+  'flare-of-denial-viewer-sacrifice-counter',
+  'flare-of-malice-viewer-sacrifice-edict',
+  'blasphemous-edict-viewer-pay-b',
+  'dread-return-viewer-flashback',
+  'raffines-guidance-viewer-graveyard-recast',
+  'their-number-is-legion-viewer-graveyard-x',
+  'anrakyr-the-traveller-viewer-cast-for-life',
+  'toxic-deluge-viewer-pay-two-life',
+  'conclave-tribunal-viewer-convoke',
+  'hour-of-reckoning-viewer-convoke',
+  'killian-ink-duelist-viewer-reduced-bolt',
+  'dragonkin-berserker-viewer-reduced-boast',
+  'convergence-of-dominion-viewer-cheap-unearth',
+  'kogla-and-yidaro-viewer-enter-fight',
+  'kogla-and-yidaro-viewer-discard',
+  'changing-loyalty-viewer-replicate',
+  'changing-loyalty-viewer-steal',
+  'grim-haruspex-viewer-morph',
+  'dream-devourer-viewer-foretell',
+  'dream-devourer-viewer-foretold-cast',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -5968,6 +7718,55 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kogla-viewer-enters-fight': koglaFightScenario,
   'kogla-viewer-bounce-and-attack': koglaAttackScenario,
   'opponent-graveyard-viewer-reanimate': opponentGraveyardScenario,
+  'retrofitter-foundry-viewer-servo-thopter-construct': retrofitterFoundryScenario,
+  'aether-hub-viewer-energy-any-color': aetherHubEnergyScenario,
+  'aether-hub-viewer-colorless': aetherHubColorlessScenario,
+  'solar-transformer-viewer-cast-and-energy-mana': solarTransformerEnergyScenario,
+  'solar-transformer-viewer-colorless': solarTransformerColorlessScenario,
+  'bespoke-battlewagon-viewer-energy-and-crew': battlewagonGainAndCrewScenario,
+  'bespoke-battlewagon-viewer-animate-and-draw': battlewagonAnimateAndDrawScenario,
+  'bespoke-battlewagon-viewer-tap-target': battlewagonTapTargetScenario,
+  'endless-atlas-viewer-same-name-draw': endlessAtlasScenario,
+  'endless-atlas-viewer-mixed-names-blocked': endlessAtlasBlockedScenario,
+  'sceptre-of-eternal-glory-viewer-three-black': sceptreThreeScenario,
+  'sceptre-of-eternal-glory-viewer-one-mana': sceptreOneScenario,
+  'weathered-wayfarer-viewer-reveal-land': weatheredWayfarerSearchScenario,
+  'weathered-wayfarer-viewer-equal-lands-blocked': weatheredWayfarerBlockedScenario,
+  'idol-of-oblivion-viewer-token-then-draw': idolDrawScenario,
+  'idol-of-oblivion-viewer-eldrazi': idolEldraziScenario,
+  'mistveil-plains-viewer-bottom-of-library': mistveilBottomScenario,
+  'mistveil-plains-viewer-one-white-blocked': mistveilBlockedScenario,
+  'carrion-feeder-viewer-sacrifice': carrionFeederSacrificeScenario,
+  'carrion-feeder-viewer-cant-block': carrionFeederCantBlockScenario,
+  'nullmage-shepherd-viewer-tap-four': nullmageShepherdScenario,
+  'sage-of-fables-viewer-wizard-counter-draw': sageOfFablesScenario,
+  'illuminor-szeras-viewer-sacrifice-for-black': illuminorSzerasScenario,
+  'peema-trailblazer-viewer-exhaust': peemaExhaustScenario,
+  'peema-trailblazer-viewer-combat-energy': peemaCombatEnergyScenario,
+  'soul-guide-lantern-viewer-enters-exile': soulGuideLanternEntersScenario,
+  'soul-guide-lantern-viewer-exile-graveyards': soulGuideLanternExileScenario,
+  'soul-guide-lantern-viewer-draw': soulGuideLanternDrawScenario,
+  'ghost-ark-viewer-crew-and-unearth': ghostArkScenario,
+  'flare-of-denial-viewer-sacrifice-counter': flareOfDenialScenario,
+  'flare-of-malice-viewer-sacrifice-edict': flareOfMaliceScenario,
+  'blasphemous-edict-viewer-pay-b': blasphemousEdictScenario,
+  'dread-return-viewer-flashback': dreadReturnScenario,
+  'raffines-guidance-viewer-graveyard-recast': raffinesGuidanceScenario,
+  'their-number-is-legion-viewer-graveyard-x': theirNumberIsLegionScenario,
+  'anrakyr-the-traveller-viewer-cast-for-life': anrakyrScenario,
+  'toxic-deluge-viewer-pay-two-life': toxicDelugeScenario,
+  'conclave-tribunal-viewer-convoke': conclaveTribunalScenario,
+  'hour-of-reckoning-viewer-convoke': hourOfReckoningScenario,
+  'killian-ink-duelist-viewer-reduced-bolt': killianScenario,
+  'dragonkin-berserker-viewer-reduced-boast': dragonkinBerserkerScenario,
+  'convergence-of-dominion-viewer-cheap-unearth': convergenceOfDominionScenario,
+  'kogla-and-yidaro-viewer-enter-fight': koglaYidaroFightScenario,
+  'kogla-and-yidaro-viewer-discard': koglaYidaroDiscardScenario,
+  'changing-loyalty-viewer-replicate': changingLoyaltyReplicateScenario,
+  'changing-loyalty-viewer-steal': changingLoyaltyStealScenario,
+  'grim-haruspex-viewer-morph': grimHaruspexScenario,
+  'dream-devourer-viewer-foretell': dreamDevourerForetellScenario,
+  'dream-devourer-viewer-foretold-cast': dreamDevourerForetoldCastScenario,
 };
 
 export function createCardTestScenario(

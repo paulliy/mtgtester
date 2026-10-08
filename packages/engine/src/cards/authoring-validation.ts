@@ -246,6 +246,7 @@ function validateCost(cost: AbilityCost, path: string, issues: AuthoringIssue[])
       break;
     case 'tapOthers':
     case 'exileOtherCardsFromGraveyard':
+    case 'removeCountersFromAmong':
       amount = cost.count;
       break;
     case 'tapCreaturesTotalPower':

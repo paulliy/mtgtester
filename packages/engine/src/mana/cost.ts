@@ -203,6 +203,12 @@ export interface ManaSource {
   resources?: readonly { key: string; amount: number; available: number }[];
   /** Eligible physical cards for each sacrifice in the activation cost. */
   sacrifices?: readonly (readonly string[])[];
+  /**
+   * Eligible untapped cards for each "tap an untapped creature you control" in the activation
+   * cost (Springleaf Drum). Each must be a distinct permanent that no source in the same payment
+   * taps, or one creature would pay twice.
+   */
+  taps?: readonly (readonly string[])[];
   /** The units of mana produced when activated, each a choice among symbols. */
   units: ManaUnit[];
   /**
@@ -230,6 +236,13 @@ export interface ManaSource {
   uncounterableSpell?: true;
   /** Rides onto the mana produced — it survives the end-of-step drain (Klauth). */
   persistent?: boolean;
+  /**
+   * Convoke (CR 702.51a): an untapped creature you control, tapped to pay for {1} or one mana of
+   * its color while casting a spell with convoke. Not a mana ability, so summoning sickness does
+   * not matter (CR 302.6); it shares the creature's card id, so the solver never also taps the
+   * creature for a mana ability.
+   */
+  convoke?: true;
   /**
    * Non-mana effects the ability applies when activated — a painland's "deals 1 damage to you",
    * Ancient Tomb's 2. Carried on the SOURCE rather than re-read from the permanent, because a
@@ -501,10 +514,13 @@ function orderForActivation(
       .filter((p) => p.cardId === source.cardId && p.activation === source.activation)
       .map(({ symbol }) => ({ symbol }));
   const order: ManaSource[] = [];
+  // Every source the plan activates is tapped or used by it, so none may also pay a tap cost.
+  const plannedIds = new Set(plan.tapSources.map((s) => s.cardId));
   const search = (
     available: readonly ManaEntry[],
     remaining: readonly ManaSource[],
     removed: ReadonlySet<string>,
+    tapped: ReadonlySet<string>,
   ): boolean => {
     if (remaining.length === 0) return selectEntriesToSpend(available, cost) !== null;
     // Produce with creatures before sacrificing them. Try other orders when a source's
@@ -521,14 +537,29 @@ function orderForActivation(
       const afterSelf = new Set(removed);
       if (source.costs.some((c) => c.kind === 'sacrificeSelf' || c.kind === 'exileSelf'))
         afterSelf.add(source.cardId);
-      const choose = (index: number, gone: ReadonlySet<string>): boolean => {
-        if (index === (source.sacrifices?.length ?? 0)) {
+      const chooseTap = (
+        index: number,
+        gone: ReadonlySet<string>,
+        tappedNow: ReadonlySet<string>,
+      ): boolean => {
+        if (index === (source.taps?.length ?? 0)) {
           order.push(source);
           const next = available.filter((e) => !spent.includes(e));
-          if (search([...next, ...producedBy(source)], rest, gone)) return true;
+          if (search([...next, ...producedBy(source)], rest, gone, tappedNow)) return true;
           order.pop();
           return false;
         }
+        for (const id of source.taps![index]!) {
+          // A source may tap itself for its own "tap an untapped creature" cost when nothing
+          // else taps it (CR 602.5a with `allowSelf`); every other planned source is tapped.
+          const selfTap = id === source.cardId && !source.costs.some((c) => c.kind === 'tap');
+          if (gone.has(id) || tappedNow.has(id) || (plannedIds.has(id) && !selfTap)) continue;
+          if (chooseTap(index + 1, gone, new Set([...tappedNow, id]))) return true;
+        }
+        return false;
+      };
+      const choose = (index: number, gone: ReadonlySet<string>): boolean => {
+        if (index === (source.sacrifices?.length ?? 0)) return chooseTap(0, gone, tapped);
         for (const id of source.sacrifices![index]!) {
           if (gone.has(id) || rest.some((s) => s.cardId === id)) continue;
           if (choose(index + 1, new Set([...gone, id]))) return true;
@@ -539,7 +570,38 @@ function orderForActivation(
     }
     return false;
   };
-  if (!search(poolEntries, plan.tapSources, new Set())) return null;
+  // Tap costs first, as a matching (no ordering can rescue a plan without enough distinct
+  // untapped candidates), so an infeasible plan never reaches the ordering search below.
+  const tapDemands = plan.tapSources.flatMap((source) =>
+    (source.taps ?? []).map((group) =>
+      group.filter(
+        (id) =>
+          !plannedIds.has(id) ||
+          (id === source.cardId && !source.costs.some((c) => c.kind === 'tap')),
+      ),
+    ),
+  );
+  if (!sacrificesArePayable(tapDemands, new Set())) return null;
+  // A source with no mana cost, sacrifice, tap cost or self-removal only adds mana, so
+  // activating it first never hurts; only the others need their order searched. Searching every
+  // order of every source made one failing plan cost n! on a board of mana creatures.
+  const plain = (source: ManaSource): boolean =>
+    source.manaCost === undefined &&
+    source.sacrifices === undefined &&
+    source.taps === undefined &&
+    !source.costs.some((c) => c.kind === 'sacrificeSelf' || c.kind === 'exileSelf');
+  const first = plan.tapSources.filter(plain);
+  order.push(...first);
+  const afterFirst = [...poolEntries, ...first.flatMap(producedBy)];
+  if (
+    !search(
+      afterFirst,
+      plan.tapSources.filter((source) => !plain(source)),
+      new Set(),
+      new Set(),
+    )
+  )
+    return null;
   return { ...plan, tapSources: order, tapCardIds: order.map((s) => s.cardId) };
 }
 
@@ -609,7 +671,9 @@ function solveFrom(
     !hasHybrid &&
     !hasAlternatives &&
     !hasCostly &&
-    !usableSources.some((s) => s.resources !== undefined || s.sacrifices !== undefined) &&
+    !usableSources.some(
+      (s) => s.resources !== undefined || s.sacrifices !== undefined || s.taps !== undefined,
+    ) &&
     usableSources.every((s) => s.units.every((u) => u.length === 1))
   ) {
     return planSingleChoice(need, usableSources, fromPool);
@@ -645,12 +709,38 @@ function solveFrom(
   const hasResources = usableSources.some(
     (s) => s.resources !== undefined || s.sacrifices !== undefined,
   );
+  // Tap costs on mana sources (Springleaf Drum) make a plan's success depend on which tap-cost
+  // sources it uses and on which of their candidates it already taps for mana. When every tap
+  // group draws from the same candidates ("an untapped creature you control"), only HOW MANY
+  // candidates the plan uses matters, so the key counts them; keying on every chosen source
+  // instead made the search exponential in mana creatures.
+  const tapGroups = usableSources.flatMap((s) => [...(s.taps ?? [])]);
+  const tapUniverse = new Set(tapGroups.flat());
+  const uniformTapGroups = tapGroups.every(
+    (group) => group.length === tapUniverse.size && group.every((id) => tapUniverse.has(id)),
+  );
+  const tapKey = (): string => {
+    if (tapGroups.length === 0) return '';
+    const tapSources = chosen
+      .filter((s) => s.taps !== undefined)
+      .map((s) => `${usableSources.indexOf(s)}`)
+      .join(',');
+    const used = chosen.filter((s) => tapUniverse.has(s.cardId));
+    return `|t${tapSources}|${
+      uniformTapGroups
+        ? used.length
+        : used
+            .map((s) => s.cardId)
+            .sort()
+            .join(',')
+    }`;
+  };
   const failed = new Set<string>();
   const stateKey = (srcIdx: number, need2: ParsedManaCost): string =>
     `${srcIdx}|${needKey(need2)}|${chosen
       .filter((s) => hasResources || sharedIds.has(s.cardId))
       .map((s) => `${usableSources.indexOf(s)}`)
-      .join(',')}`;
+      .join(',')}${tapKey()}`;
 
   const solve = (srcIdx: number, need2: ParsedManaCost): boolean => {
     if (totalPips(need2) === 0) {

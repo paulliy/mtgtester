@@ -1,5 +1,6 @@
 import type { Phase, PlayerId, Step } from '@mtg/shared';
 import { makePermanent } from '../state/objects';
+import { subtractGeneric } from '../mana/cost';
 import { preparedScenarioSpell } from '../casting/preview';
 import type { EngineCardObject, GameContext } from '../state/types';
 
@@ -18,6 +19,13 @@ export interface PreparedScenarioSpec {
     counters?: Record<string, number>;
   }>;
   graveyard?: Array<{ playerId: PlayerId; cardNames: string[] }>;
+  /**
+   * Cards already foretold on an earlier turn (CR 702.143a): exiled face down, castable now for
+   * their mana cost reduced by `reduction` generic mana (Dream Devourer's grant).
+   */
+  foretold?: Array<{ playerId: PlayerId; cardNames: string[]; reduction: number }>;
+  /** Starting energy counters (CR 122.1) per player, standing in for energy gained earlier. */
+  energy?: Array<{ playerId: PlayerId; amount: number }>;
   /** Arrange known initial library tops; subsequent moves use ordinary rules. */
   libraryTop?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /** Arrange already-cast spells below the tested response. */
@@ -107,12 +115,33 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
     }
   }
 
+  for (const entry of spec.energy ?? []) {
+    const player = ctx.state.players.find((candidate) => candidate.id === entry.playerId);
+    if (player === undefined)
+      throw new Error(`prepared scenario has unknown player ${entry.playerId}`);
+    player.energy = entry.amount;
+  }
+
   for (const entry of spec.graveyard ?? []) {
     const player = ctx.state.players.find((candidate) => candidate.id === entry.playerId)!;
     for (const name of entry.cardNames) {
       const card = takeNamedCard(ctx, entry.playerId, name);
       card.zone = 'graveyard';
       player.graveyard.push(card);
+    }
+  }
+
+  for (const entry of spec.foretold ?? []) {
+    for (const name of entry.cardNames) {
+      const card = takeNamedCard(ctx, entry.playerId, name);
+      const manaCost = ctx.defs.get(card.oracleId)?.manaCost ?? null;
+      if (manaCost === null) throw new Error(`prepared foretold card ${name} has no mana cost`);
+      card.zone = 'exile';
+      card.foretold = {
+        turn: spec.turnNumber - 1,
+        cost: subtractGeneric(manaCost, entry.reduction),
+      };
+      ctx.state.exile.push(card);
     }
   }
 

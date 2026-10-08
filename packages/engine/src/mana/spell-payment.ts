@@ -280,6 +280,19 @@ export function* chooseSpellPayment(
         planSpellPayment(ctx, player, request, [...prefix, { ...group, objectId: card.id }]) !==
         null,
     );
+    // Exactly as many candidates as sacrifices this cost still owes: every one goes, so there is
+    // nothing to choose (Dread Return's flashback with exactly three creatures).
+    const owed = witness.choices.filter(
+      (other) =>
+        other.costIndex === group.costIndex &&
+        !prefix.some(
+          (made) => made.costIndex === other.costIndex && made.ordinal === other.ordinal,
+        ),
+    ).length;
+    if (kind === 'sacrificeOther' && candidates.length === owed && candidates[0] !== undefined) {
+      prefix.push({ ...group, objectId: candidates[0].id });
+      continue;
+    }
     const verb =
       kind === 'tapOther'
         ? 'Tap'

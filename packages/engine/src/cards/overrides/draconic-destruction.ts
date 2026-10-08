@@ -268,11 +268,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
   // masking a future errata or interpreter regression instead of surfacing it. Removed rather
   // than kept as a no-op-but-redundant registration.
 
-  unsupportedCard(
-    '06b77a80-4968-4385-960a-fb66bb4faa94',
-    'Dragonkin Berserker',
-    'Boast cost reduction applies only to this creature, not to Boast abilities you activate.',
-  );
+  // Dragonkin Berserker: restored in coverage PR02 (no override remains).
 
   defineCard(
     'd1d171de-1c6d-4fb9-817a-9c689c709f3d',

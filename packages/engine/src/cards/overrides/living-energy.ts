@@ -3,17 +3,26 @@
  */
 
 import { constant } from '../value';
-import { SAC_SELF, TAP, mana, manaCost, spell, targetSlots } from '../templates';
+import {
+  SAC_SELF,
+  TAP,
+  activated,
+  mana,
+  manaCost,
+  spell,
+  targetSlots,
+  triggered,
+} from '../templates';
+import { graveyardCardTarget } from '../target-builders';
 import {
   BEAST_3_3_GREEN,
   BEAST_6_6_ARTIFACT,
-  CONSTRUCT_4_4,
   NALAAR_AETHERJET,
   SERVO_1_1,
   THOPTER_1_1_FLYING,
   TREASURE,
 } from '../tokens';
-import { defineCard, replaceCard, unimplemented, unsupportedCard } from './index';
+import { defineCard, extendCard, replaceCard, unimplemented, unsupportedCard } from './index';
 import { allOf, anyOf, not, ofSubtype, ofSupertype, ofType, OTHER, SELF, YOURS } from '../selector';
 import type { CardDefinition } from '../definition';
 
@@ -302,48 +311,6 @@ const RECKLESS_FIREWEAVER_DEF: Partial<CardDefinition> = {
   ],
 };
 
-const RETROFITTER_FOUNDRY_DEF: Partial<CardDefinition> = {
-  activatedAbilities: [
-    {
-      costs: [mana('{3}')],
-      timing: 'any',
-      ability: {
-        kind: 'activated',
-        targets: [],
-        effects: [{ op: 'untapTarget', target: 'source' }],
-        description: 'Pay {3} — untap this artifact',
-      },
-    },
-    {
-      costs: [
-        mana('{1}'),
-        TAP,
-        { kind: 'sacrificeOther', selector: allOf(ofSubtype('Servo'), YOURS), count: 1 },
-      ],
-      timing: 'any',
-      ability: {
-        kind: 'activated',
-        targets: [],
-        effects: [{ op: 'createToken', count: constant(1), spec: THOPTER_1_1_FLYING }],
-        description: 'Pay {1}, tap, and sacrifice a Servo — create a Thopter',
-      },
-    },
-    {
-      costs: [
-        TAP,
-        { kind: 'sacrificeOther', selector: allOf(ofSubtype('Thopter'), YOURS), count: 1 },
-      ],
-      timing: 'any',
-      ability: {
-        kind: 'activated',
-        targets: [],
-        effects: [{ op: 'createToken', count: constant(1), spec: CONSTRUCT_4_4 }],
-        description: 'Tap and sacrifice a Thopter — create a Construct',
-      },
-    },
-  ],
-};
-
 const PIA_NALAAR_CHIEF_MECHANIC_DEF: Partial<CardDefinition> = {
   triggers: [
     {
@@ -500,32 +467,30 @@ const RAMPAGING_AETHERHOOD_DEF: Partial<CardDefinition> = {
 
 const PEEMA_TRAILBLAZER_DEF: Partial<CardDefinition> = {
   triggers: [
-    {
-      kind: 'triggered',
-      trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
-      targets: [],
-      effects: [{ op: 'gainEnergy', amount: { kind: 'damageDealt' } }],
-      description: 'Combat damage to a player — gain that much energy',
-    },
+    triggered(
+      { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
+      {
+        effects: [{ op: 'gainEnergy', amount: { kind: 'damageDealt' } }],
+        description: 'Combat damage to a player — gain that much energy',
+      },
+    ),
   ],
   activatedAbilities: [
-    {
-      costs: [TAP, { kind: 'payEnergy', amount: 6 }],
-      timing: 'any',
-      ability: {
-        kind: 'activated',
-        targets: [],
-        effects: [
-          { op: 'putCounters', target: 'source', counter: '+1/+1', count: 2 },
-          {
-            op: 'draw',
-            count: { kind: 'greatestPowerAmong', selector: ofType('Creature'), scope: 'you' },
-          },
-        ],
-        description:
-          'Tap and pay six energy — put two +1/+1 counters on this creature, then draw cards equal to the greatest power among creatures you control',
-      },
-    },
+    // Exhaust (CR 702.177a): the cost is only the energy, and the ability works once.
+    activated({
+      costs: [{ kind: 'payEnergy', amount: 6 }],
+      exhaust: true,
+      effects: [
+        { op: 'putCounters', target: 'source', counter: '+1/+1', count: 2 },
+        // Counted on resolution, after the counters: "Then draw cards equal to …".
+        {
+          op: 'draw',
+          count: { kind: 'greatestPowerAmong', selector: ofType('Creature'), scope: 'you' },
+        },
+      ],
+      description:
+        'Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.',
+    }),
   ],
 };
 
@@ -799,11 +764,44 @@ export function registerLIVING_ENERGYOverrides(): void {
     CONFISCATION_COUP_DEF,
   );
 
-  // Catalog audit living-energy-batch-4: Crew 4 is overwritten by energy activations.
-  unsupportedCard(
+  // Coverage PR02: the four energy activations are appended to the parsed Crew 4 instead of
+  // replacing activatedAbilities. Paying four energy animates it without crewing it.
+  const battlewagonTap = targetSlots({ creature: { kind: 'creature' } });
+  extendCard(
     'cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0',
     'Bespoke Battlewagon',
-    'Crew 4 is dropped when the energy activations replace the parsed activated abilities.',
+    [
+      '{T}: You get {E}{E} .',
+      '{T}, Pay {E}{E}: Tap target creature.',
+      '{T}, Pay {E}{E}{E}: Draw a card.',
+      'Pay {E}{E}{E}{E}: ~ becomes an artifact creature until end of turn.',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [TAP],
+          effects: [{ op: 'gainEnergy', amount: constant(2) }],
+          description: '{T}: You get {E}{E}.',
+        }),
+        activated({
+          costs: [TAP, { kind: 'payEnergy', amount: 2 }],
+          targets: battlewagonTap.targets,
+          effects: [{ op: 'tapTarget', target: battlewagonTap.slot.creature }],
+          description: '{T}, Pay {E}{E}: Tap target creature.',
+        }),
+        activated({
+          costs: [TAP, { kind: 'payEnergy', amount: 3 }],
+          effects: [{ op: 'draw', count: constant(1) }],
+          description: '{T}, Pay {E}{E}{E}: Draw a card.',
+        }),
+        activated({
+          costs: [{ kind: 'payEnergy', amount: 4 }],
+          effects: [{ op: 'becomeArtifactCreature' }],
+          description:
+            'Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.',
+        }),
+      ],
+    },
   );
 
   defineCard(
@@ -906,16 +904,9 @@ export function registerLIVING_ENERGYOverrides(): void {
     DECOCTION_MODULE_DEF,
   );
 
-  defineCard(
-    'aaadfe41-b2be-4183-b45e-a70e53a59d2e',
-    'Retrofitter Foundry',
-    [
-      '{3}: Untap this artifact.',
-      '{1}, {T}, Sacrifice a Servo: Create a 1/1 colorless Thopter artifact creature token with flying.',
-      '{T}, Sacrifice a Thopter: Create a 4/4 colorless Construct artifact creature token.',
-    ],
-    RETROFITTER_FOUNDRY_DEF,
-  );
+  // Retrofitter Foundry: restored in coverage PR02. The interpreter models all four activated
+  // abilities faithfully, so no override is registered (the authored list used to replace the
+  // parsed one and drop the {2}, {T} Servo ability).
 
   defineCard(
     '397b9dcf-690a-4a58-8637-bb9baab7cc2f',
@@ -946,11 +937,26 @@ export function registerLIVING_ENERGYOverrides(): void {
     PEEMA_AETHER_SEER_DEF,
   );
 
-  // Catalog audit living-energy-batch-6: replacing manaAbilities drops {T}: Add {C}.
-  unsupportedCard(
+  // Coverage PR02: the energy mana ability is appended to the parsed {T}: Add {C} instead of
+  // replacing manaAbilities, which used to drop the colorless ability.
+  extendCard(
     '61c89b11-65c9-4fda-bbcd-d84de25df801',
     'Aether Hub',
-    'The colorless mana ability is dropped when the energy mana ability replaces manaAbilities.',
+    ['When this land enters, you get {E} .', '{T}, Pay {E}: Add one mana of any color.'],
+    {
+      triggers: [
+        triggered(
+          { when: 'enters', subject: { kind: 'self' } },
+          {
+            effects: [{ op: 'gainEnergy', amount: constant(1) }],
+            description: 'Enters — gain one energy',
+          },
+        ),
+      ],
+      manaAbilities: [
+        { units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, { kind: 'payEnergy', amount: 1 }] },
+      ],
+    },
   );
 
   defineCard(
@@ -999,11 +1005,26 @@ export function registerLIVING_ENERGYOverrides(): void {
     },
   );
 
-  // Catalog audit living-energy-batch-6: replacing manaAbilities drops {T}: Add {C}.
-  unsupportedCard(
+  // Coverage PR02: as Aether Hub, the energy mana ability is appended to the parsed {T}: Add {C};
+  // "This artifact enters tapped" stays interpreted.
+  extendCard(
     'cb377c27-39a6-42b4-8c89-80a9a2350e81',
     'Solar Transformer',
-    'The colorless mana ability is dropped when the energy mana ability replaces manaAbilities.',
+    ['When this artifact enters, you get {E}{E}{E} .', '{T}, Pay {E}: Add one mana of any color.'],
+    {
+      triggers: [
+        triggered(
+          { when: 'enters', subject: { kind: 'self' } },
+          {
+            effects: [{ op: 'gainEnergy', amount: constant(3) }],
+            description: 'Enters — gain three energy',
+          },
+        ),
+      ],
+      manaAbilities: [
+        { units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, { kind: 'payEnergy', amount: 1 }] },
+      ],
+    },
   );
 
   defineCard(
@@ -1196,11 +1217,36 @@ export function registerLIVING_ENERGYOverrides(): void {
     PANHARMONICON_DEF,
   );
 
-  // Catalog audit living-energy-batch-3: graveyard exile is mashed with the {1} draw mode.
-  unsupportedCard(
+  // Coverage PR02: the two unparsed lines are appended to the parsed "{1}, {T}, Sacrifice this
+  // artifact: Draw a card." as separate abilities, so the opponent-graveyard exile is its own
+  // free {T}-and-sacrifice ability and the draw keeps its {1}.
+  const lanternExile = targetSlots({ card: graveyardCardTarget('any') });
+  extendCard(
     '1b5e6560-ff2e-4475-96cb-63f64c8a86db',
     'Soul-Guide Lantern',
-    'Opponent-graveyard exile is authored with a free draw instead of a separate {1} draw ability.',
+    [
+      'When this artifact enters, exile target card from a graveyard.',
+      "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'enters', subject: { kind: 'self' } },
+          {
+            targets: lanternExile.targets,
+            effects: [{ op: 'exileCard', target: lanternExile.slot.card }],
+            description: 'Exile target card from a graveyard',
+          },
+        ),
+      ],
+      activatedAbilities: [
+        activated({
+          costs: [TAP, SAC_SELF],
+          effects: [{ op: 'exileEachOpponentGraveyard' }],
+          description: "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+        }),
+      ],
+    },
   );
 
   // Stale claim removed: Scryfall's 2026-08-28 oracle update rewrote this card into current
@@ -1274,19 +1320,6 @@ export function registerLIVING_ENERGYOverrides(): void {
     'replace the earlier generated inline definition with the reviewed shared constant',
   );
   replaceCard(
-    'aaadfe41-b2be-4183-b45e-a70e53a59d2e',
-    'Retrofitter Foundry',
-    [],
-    RETROFITTER_FOUNDRY_DEF,
-    'replace the earlier generated inline definition with the reviewed shared constant',
-  );
-  // Catalog audit living-energy-batch-7: Servo creation is dropped by activatedAbilities replace.
-  unsupportedCard(
-    'aaadfe41-b2be-4183-b45e-a70e53a59d2e',
-    'Retrofitter Foundry',
-    'The {2}, {T} Servo creation is dropped when activatedAbilities replace the parsed abilities.',
-  );
-  replaceCard(
     'ab655810-f67e-4576-9174-35b16f5e3235',
     'Saheeli, Sublime Artificer',
     [
@@ -1300,12 +1333,6 @@ export function registerLIVING_ENERGYOverrides(): void {
     '295cd8e1-0830-46c1-9957-556afd4bcee6',
     'Aetheric Amplifier',
     'Choose-one is implemented as two independent activated abilities.',
-  );
-  // Catalog audit living-energy-batch-2: Exhaust omitted; extra tap cost.
-  unsupportedCard(
-    '88600bd4-4dcc-4788-bba4-78b6cf5ad8f8',
-    'Peema Trailblazer',
-    'Exhaust is omitted, and the ability requires tapping this creature.',
   );
   // Catalog audit living-energy-batch-2: extra +1 loyalty is not on the card.
   unsupportedCard(

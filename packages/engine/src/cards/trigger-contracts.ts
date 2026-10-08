@@ -15,6 +15,7 @@ export function triggerEventFamily(
     case 'becomesBlocked':
     case 'dealsCombatDamageToPlayer':
     case 'becomesTapped':
+    case 'becomesCrewed':
     case 'fights':
     case 'becomesTargeted':
     case 'enchantedPlayerAttacked':
@@ -37,6 +38,7 @@ export function triggerEventFamily(
       return 'step';
     case 'gainsLife':
     case 'drawsCard':
+    case 'foretells':
       return 'player';
     default:
       return assertNever(when, 'trigger event dispatcher');
@@ -68,6 +70,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'castsSpell':
     case 'gainsLife':
     case 'drawsCard':
+    case 'foretells':
     case 'upkeep':
     case 'endStep':
     case 'untapStep':
@@ -81,6 +84,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'blocks':
     case 'becomesBlocked':
     case 'becomesTapped':
+    case 'becomesCrewed':
     case 'fights':
     case 'becomesTargeted':
     case 'dealtDamage':
@@ -178,9 +182,13 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
     )
       issues.push({ path: `${path}.ordinal`, message: 'spell ordinal must be a positive integer' });
   } else if (
-    !(head['when'] === 'drawsCard' ? ['you', 'each', 'opponent'] : ['you', 'each']).includes(
-      head['player'] as string,
-    )
+    !(
+      head['when'] === 'drawsCard'
+        ? ['you', 'each', 'opponent']
+        : head['when'] === 'foretells'
+          ? ['you']
+          : ['you', 'each']
+    ).includes(head['player'] as string)
   )
     issues.push({ path: `${path}.player`, message: 'trigger requires a supported player scope' });
   if (head['condition'] !== undefined)

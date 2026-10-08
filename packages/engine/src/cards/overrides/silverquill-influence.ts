@@ -66,11 +66,6 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying. When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token.',
   ]);
 
-  unimplemented('cdfa9de4-7d7d-4638-8ac4-793ece6372dd', 'Changing Loyalty', [
-    'Replicate {2}',
-    'When enchanted creature dies, return it to the battlefield under your control.',
-  ]);
-
   unimplemented('27c366cf-00d7-47d4-9577-736bfc4a3b81', "Defacing Duskmage // Vandal's Edit", [
     'unsupported layout "prepare"',
     'Whenever an opponent draws their second card each turn, this creature becomes prepared.',
@@ -93,9 +88,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'When enchanted creature dies, return this card from your graveyard to the battlefield.',
   ]);
 
-  unimplemented('ad3bf726-e0c2-4038-a66e-9a9dff439563', "Raffine's Guidance", [
-    'You may cast this card from your graveyard by paying {2}{W} rather than paying its mana cost.',
-  ]);
+  // Raffine's Guidance: restored in coverage PR02 (see silverquill-influence-remaining.ts).
 
   unimplemented('bd92cacd-c7d8-43a2-a261-ea4754fefdc5', "Sage's Reverie", [
     "When this Aura enters, draw a card for each Aura you control that's attached to a creature.",
@@ -189,9 +182,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.',
   ]);
 
-  unimplemented('e233cb5b-7237-4271-8157-9179cc897b6c', 'Killian, Ink Duelist', [
-    'Spells you cast that target a creature cost {2} less to cast.',
-  ]);
+  // Killian, Ink Duelist: restored in coverage PR02 (see silverquill-influence-remaining.ts).
 
   defineCard(
     '3e2ae59a-40a1-46ca-8f24-3231ebd4e4eb',

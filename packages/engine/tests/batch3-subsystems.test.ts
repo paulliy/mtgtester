@@ -172,10 +172,9 @@ describe('Batch 3 subsystems and card overrides', () => {
           'Convoke\nWhen Conclave Tribunal enters, exile target nonland permanent an opponent controls until Conclave Tribunal leaves the battlefield.',
       }),
     );
-    expect(tribunal.modeled).toBe(false);
-    expect(tribunal.unmodeledReasons.join('\n')).toContain(
-      'Convoke is stored as a ruleStatic but never offered as a payment.',
-    );
+    // Restored in coverage PR02: convoke is a real payment (pr02-card-coverage.test.ts).
+    expect(tribunal.modeled).toBe(true);
+    expect(tribunal.ruleStatics).toContainEqual({ kind: 'convoke' });
 
     const champion = interpretCard(
       oracle({

@@ -143,6 +143,16 @@ const NUMBER_WORDS: Record<string, number> = {
   eight: 8,
   nine: 9,
   ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  sixteen: 16,
+  seventeen: 17,
+  eighteen: 18,
+  nineteen: 19,
+  twenty: 20,
 };
 
 function parseAmount(word: string): number | null {
@@ -343,8 +353,10 @@ function stripAbilityWord(line: string): string {
  * original line for drift-guarded unmodeled reasons.
  */
 function stripGenericAbilityLabel(line: string): string {
+  // Capitalized words, with lowercase connectors allowed between them ("Lord of the Pyrrhian
+  // Legions"), never first or last.
   const m = line.match(
-    /^([A-Z][A-Za-z0-9'’/-]*(?: [A-Z0-9][A-Za-z0-9'’/-]*){0,7})\s+[—–-]\s+(.+)$/,
+    /^([A-Z][A-Za-z0-9'’/-]*(?: (?:(?:of|the|and|to|in|for|on|a|an) )*[A-Z0-9][A-Za-z0-9'’/-]*){0,7})\s+[—–-]\s+(.+)$/,
   );
   if (m === null) return line;
   if (/^(?:I|II|III|IV|V|VI|VII|VIII|IX|X)$/.test(m[1] as string)) return line;
@@ -749,6 +761,23 @@ function parseEffectSentence(
       }
     }
   }
+  // "Each opponent sacrifices a creature or planeswalker with the greatest mana value among
+  // creatures and planeswalkers they control" (Flare of Malice). Ties are the sacrificer's choice.
+  {
+    const greatest = s.match(
+      /^each opponent sacrifices a (creature|creature or planeswalker) with the greatest (power|mana value) among (creatures|creatures and planeswalkers) they control$/,
+    );
+    if (greatest !== null && (greatest[1] === 'creature') === (greatest[3] === 'creatures')) {
+      return [
+        {
+          op: 'sacrificeGreatestEachOpponent',
+          selector: greatest[1] === 'creature' ? 'creature' : 'creatureOrPlaneswalker',
+          metric: greatest[2] === 'power' ? 'power' : 'manaValue',
+          action: 'sacrifice',
+        },
+      ];
+    }
+  }
   {
     const sacrifice = s.match(/^each opponent sacrifices an? (.+?)(?: of their choice)?$/);
     if (sacrifice !== null) {
@@ -757,6 +786,56 @@ function parseEffectSentence(
     }
   }
   if (s === 'exile all graveyards') return [{ op: 'exileAllGraveyards' }];
+  // "Exile target nonland permanent an opponent controls until this enchantment leaves the
+  // battlefield" (Conclave Tribunal): it returns when the source leaves (CR 610.3).
+  {
+    const until = s.match(
+      /^exile target (.+) until (?:~|this (?:enchantment|artifact|creature|permanent)) leaves the battlefield$/,
+    );
+    const clause = until === null ? null : parseTargetClause(until[1] as string);
+    if (clause !== null) {
+      const slot = alloc(clause.kind, clause.filter, clause.controller);
+      if (typeof slot === 'number') return [{ op: 'exileUntilSourceLeaves', targetSlot: slot }];
+    }
+  }
+  // "You may cast an artifact spell from your hand or graveyard by paying life equal to its mana
+  // value rather than paying its mana cost" (Anrakyr the Traveller). Inside a trigger the "you
+  // may" has already become the trigger's optional flag; the effect also offers to cast nothing.
+  {
+    const forLife = s.match(
+      /^(?:you may )?cast an? (.+?) spell from your (hand|graveyard|hand or graveyard) by paying life equal to its mana value rather than paying its mana cost$/,
+    );
+    const selector = forLife === null ? null : parseSubject(forLife[1] as string, card);
+    if (forLife !== null && selector !== null) {
+      const zones: ('hand' | 'graveyard')[] =
+        forLife[2] === 'hand'
+          ? ['hand']
+          : forLife[2] === 'graveyard'
+            ? ['graveyard']
+            : ['hand', 'graveyard'];
+      return [{ op: 'castForLifeFromZones', selector, zones }];
+    }
+  }
+  // "Each player sacrifices thirteen creatures of their choice" (Blasphemous Edict).
+  {
+    const many = s.match(/^each player sacrifices (\w+) creatures(?: of their choice)?$/);
+    const count = many === null ? null : parseAmount(many[1] as string);
+    if (count !== null && count > 1)
+      return [{ op: 'sacrificeEachPlayer', count, filter: 'creature' }];
+  }
+  // Ghost Ark: "each artifact creature card in your graveyard gains unearth {3} until end of
+  // turn". The grant ends at cleanup or when that card leaves the graveyard (CR 400.7).
+  {
+    const unearth = s.match(
+      /^each artifact creature card in your graveyard gains unearth ((?:\{[^}]+\})+) until end of turn$/,
+    );
+    if (unearth !== null) {
+      const cost = parseManaCost((unearth[1] as string).toUpperCase() as never);
+      if (cost.cost !== null) {
+        return [{ op: 'grantUnearthToArtifactCreaturesInGraveyard', cost: cost.cost }];
+      }
+    }
+  }
   if (
     /^return (?:~|this (?:creature|artifact|enchantment|permanent)) to its owner's hand$/.test(s)
   ) {
@@ -888,6 +967,18 @@ function parseEffectSentence(
   ) {
     return [{ op: 'noOp' }];
   }
+  // "Exile Their Number Is Legion." on an instant or sorcery: the resolving spell exiles itself.
+  if (s === 'exile ~' && /\b(?:Instant|Sorcery)\b/.test(card.typeLine)) {
+    return [{ op: 'resolvingSpellExile' }];
+  }
+  // "You gain life equal to the number of artifacts you control."
+  {
+    const life = s.match(/^you gain life equal to the number of (.+) you control$/);
+    const selector = life === null ? null : parseSubject(life[1] as string, card);
+    if (selector !== null) {
+      return [{ op: 'gainLife', amount: { kind: 'countPermanents', selector, scope: 'you' } }];
+    }
+  }
   if (s === "shuffle ~ into its owner's library" || s === 'shuffle ~ into your library') {
     return [{ op: 'shuffle' }];
   }
@@ -1004,6 +1095,11 @@ function parseEffectSentence(
   if (s === 'put target artifact card from your graveyard on top of your library') {
     return [{ op: 'graveyardToLibraryTop', target: alloc('cardInGraveyard', ofType('Artifact')) }];
   }
+  // "Put target card from your graveyard on the bottom of your library" (Mistveil Plains): any
+  // card, so the graveyard target carries no filter.
+  if (s === 'put target card from your graveyard on the bottom of your library') {
+    return [{ op: 'graveyardToLibraryBottom', target: alloc('cardInGraveyard') }];
+  }
   if (s === 'exile target attacking or blocking creature') {
     return [{ op: 'exile', target: alloc('creature', { kind: 'inCombat' }) }];
   }
@@ -1091,6 +1187,11 @@ function parseEffectSentence(
     return [{ op: 'noOp' }];
   }
 
+  // "When enchanted creature dies, return it to the battlefield under your control" (Changing
+  // Loyalty): "it" is the card the trigger's subject became, wherever it was put (CR 400.7).
+  if (opts.triggerObject === true && s === 'return it to the battlefield under your control') {
+    return [{ op: 'graveyardToBattlefield', target: 'triggerObject' }];
+  }
   // "it gains double strike until end of turn" â€” the trigger's subject (Atarka, World Render).
   if (opts.triggerObject === true) {
     const m = s.match(/^it gains ([a-z ]+) until end of turn$/);
@@ -1297,6 +1398,30 @@ function parseEffectSentence(
   // "Creatures you control get +3/+3 and gain trample until end of turn" (Overrun). Untargeted:
   // the subject is a selector, evaluated once at resolution (CR 611.2c).
   {
+    // "All creatures get -X/-X until end of turn" (Toxic Deluge): X is the announced value.
+    const x = s.match(/^(.+?) gets? ([+-])x\/([+-])x until end of turn$/);
+    // Only a card that announces X ({X} in its cost, or "pay X life") defines it here; any other
+    // X is defined elsewhere ("where X is …") and is not this rule's.
+    if (
+      x !== null &&
+      ((card.manaCost ?? '').includes('{X}') ||
+        /additional cost to cast this spell, pay x life/i.test(card.oracleText ?? ''))
+    ) {
+      const subject = x[1] as string;
+      const selector =
+        subject === 'all creatures' ? ofType('Creature') : parseSubject(subject, card);
+      if (selector === null) return null;
+      const signed = (sign: string): Value =>
+        sign === '-' ? { kind: 'negate', of: { kind: 'xValue' } } : { kind: 'xValue' };
+      return [
+        {
+          op: 'pumpEachUntilEot',
+          selector,
+          power: signed(x[2] as string),
+          toughness: signed(x[3] as string),
+        },
+      ];
+    }
     const m = s.match(MASS_UNTIL_EOT_RE);
     if (m) {
       const selector = parseSubject(m[1] as string, card);
@@ -1440,9 +1565,9 @@ function parseEffectSentence(
   // modes) â€” the untargeted mass form, by tribe.
   {
     const m = s.match(/^destroy all (non-)?(.+?) creatures$/);
-    if (m) {
-      const subtype = resolveSubtype(m[2] as string, card);
-      if (subtype === null) return null;
+    // Not a creature type ("destroy all nontoken creatures"): leave it to the generic mass form.
+    const subtype = m === null ? null : resolveSubtype(m[2] as string, card);
+    if (m !== null && subtype !== null) {
       const tribe = ofSubtype(subtype);
       const selector = allOf(ofType('Creature'), m[1] !== undefined ? not(tribe) : tribe);
       return [{ op: 'destroyEach', selector }];
@@ -2683,6 +2808,13 @@ function parseMassSubject(phrase: string, card: OracleCard): Selector | null {
     }
   }
 
+  // "destroy all nontoken creatures" (Hour of Reckoning): tokens are spared.
+  const nontoken = noun.match(/^nontoken (.+)$/i);
+  if (nontoken !== null) {
+    parts.push(not(IS_TOKEN));
+    noun = nontoken[1] as string;
+  }
+
   // "artifacts and enchantments" is one mass-removal subject, not two independent effects.
   // Keep the alternation inside the selector so modal bullets such as Cleansing Nova remain
   // single modes and the conservative sentence splitter never sees this conjunction.
@@ -2731,8 +2863,12 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
     return [{ op: 'shuffle' }, searchLibraryCards(filter, [{ zone: 'libraryTop' }])];
   }
 
-  const m = s.match(/^search your library for (.+?), (?:reveal .+?, )?(put .+?), then shuffle$/);
+  const m = s.match(
+    /^search your library for (.+?), (reveal (?:it|them|that card|those cards), )?(put .+?), then shuffle$/,
+  );
   if (m === null) return null;
+  // "…, reveal it, …" (CR 701.16a): the found card is public even when it goes to the hand.
+  const reveal = m[2] !== undefined;
 
   const differentNames = (m[1] as string).endsWith(' with different names');
   const filterText = differentNames
@@ -2740,7 +2876,7 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
     : (m[1] as string);
   const filter = parseSearchFilter(filterText, card);
   if (filter === null) return null;
-  const destinations = parseSearchDestinations(m[2] as string);
+  const destinations = parseSearchDestinations(m[3] as string);
   if (destinations === null) return null;
   const countMatch = (m[1] as string).match(/^up to (\w+) /);
   const count = countMatch === null ? null : parseAmount(countMatch[1] as string);
@@ -2749,6 +2885,7 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
     searchLibraryCards(filter, destinations, {
       ...(count === null ? {} : { count }),
       ...(differentNames ? { differentNames: true } : {}),
+      ...(reveal ? { reveal: true } : {}),
     }),
     { op: 'shuffle' },
   ];
@@ -2908,7 +3045,7 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|dies|attacks|becomes tapped|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
 const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
 /**
@@ -2934,6 +3071,8 @@ const TOKEN_CREATED_TRIGGER_HEAD_RE =
 // `draws?` plus an either-possessive keeps one regex over both rather than two that drift.
 const DRAW_COUNT_TRIGGER_HEAD_RE =
   /^whenever (you|a player|an opponent) draws? (?:their|your) (second|third|fourth|fifth|sixth) card each turn, (.*)$/;
+/** "Whenever you foretell a card" (Dream Devourer): the foretell special action (CR 702.143c). */
+const FORETELL_TRIGGER_HEAD_RE = /^whenever you foretell a card, (.*)$/;
 const DRAW_TRIGGER_HEAD_RE = /^whenever (you|a player|an opponent) draws? (?:a|one) card, (.*)$/;
 const DRAW_EXCEPT_FIRST_TRIGGER_HEAD_RE =
   /^whenever (you|a player|an opponent) draws? a card except the first one they draw in each of their draw steps, (.*)$/;
@@ -3388,6 +3527,17 @@ function parseConditionClause(clause: string, card: OracleCard): Condition | nul
       };
     }
   }
+  // "if there are thirteen or more creatures on the battlefield" (Blasphemous Edict) — every
+  // player's permanents count.
+  {
+    const total = clause.match(/^there are (\w+) or more (.+) on the battlefield$/);
+    if (total !== null) {
+      const n = parseAmount(total[1] as string);
+      const selector = parseSubject(total[2] as string, card);
+      if (n === null || selector === null) return null;
+      return countPermanents(selector, 'all', '>=', n);
+    }
+  }
   // "if you control four or more creatures" — a threshold rather than the bare "you control a
   // creature" below, which is the same condition with an implied n of 1. The subject is stripped
   // of its count before `parseTriggerSubject` sees it, so it reads the same singular grammar.
@@ -3548,6 +3698,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   const drawCount = firstLine.match(DRAW_COUNT_TRIGGER_HEAD_RE);
   const drawExceptFirst = firstLine.match(DRAW_EXCEPT_FIRST_TRIGGER_HEAD_RE);
   const draw = firstLine.match(DRAW_TRIGGER_HEAD_RE);
+  const foretell = firstLine.match(FORETELL_TRIGGER_HEAD_RE);
   const graveyardCrossing = firstLine.match(GRAVEYARD_CROSSING_TRIGGER_HEAD_RE);
   if (enterAndCast !== null) {
     const subjectPhrase = enterAndCast[1] as string;
@@ -3710,6 +3861,9 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       },
     ];
     body = tokenCreated[3] as string;
+  } else if (foretell !== null) {
+    heads = [{ when: 'foretells', player: 'you' }];
+    body = foretell[1] as string;
   } else if (drawCount !== null || draw !== null) {
     const match = drawCount ?? draw;
     if (match === null) return null;
@@ -3804,7 +3958,11 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
               ? // City of Brass. `becomesTapped` is queued from every tap path already, including
                 // `payAbilityCosts(..., 'tapForMana')` - so tapping the land for mana fires it.
                 ['becomesTapped']
-              : ['dealsCombatDamageToPlayer'];
+              : event === 'becomes crewed'
+                ? // Ghost Ark. Queued only when a crew ability resolves (CR 702.122e), never
+                  // from another "becomes an artifact creature" effect.
+                  ['becomesCrewed']
+                : ['dealsCombatDamageToPlayer'];
     body = m[3] as string;
 
     let subject: TriggerSubject;
@@ -4217,6 +4375,36 @@ const MANA_ACTIVATE_ONLY_IF_RE = /^(add [^.]+)\. activate only if you control (?
 /** "Activate only if you control five or more lands." (Temple of the False God) */
 const MANA_ACTIVATE_ONLY_IF_COUNT_RE =
   /^(add [^.]+)\. activate only if you control (\w+) or more (.+)$/;
+/** Any other "Activate only if <condition>." on a mana ability, read by `parseActivationCondition`. */
+const MANA_ACTIVATE_ONLY_IF_ANY_RE = /^(add [^.]+)\. activate only if (.+)$/;
+/** "Add three mana of any one color" (Sceptre of Eternal Glory): N units, all the same color. */
+const MANA_N_OF_ONE_COLOR_RE = /^add (\w+) mana of any one color$/;
+
+/**
+ * The condition of an "Activate only if …" restriction (CR 602.5b), lowercased with no trailing
+ * period. Returns null for any phrasing it does not know, so the ability stays unmodeled rather
+ * than becoming activatable at times the card forbids.
+ */
+function parseActivationCondition(text: string, card: OracleCard): Condition | null {
+  const sameName = text.match(/^you control (\w+) or more lands with the same name$/);
+  if (sameName !== null) {
+    const n = parseAmount(sameName[1] as string);
+    return n === null ? null : { kind: 'controlsLandsWithSameName', n };
+  }
+  const opponentMore = text.match(/^an opponent controls more (.+) than you$/);
+  if (opponentMore !== null) {
+    const selector = parseSubject(opponentMore[1] as string, card);
+    return selector === null ? null : { kind: 'opponentControlsMore', selector };
+  }
+  if (text === 'you created a token this turn') return { kind: 'createdTokenThisTurn' };
+  const counted = text.match(/^you control (\w+) or more (.+)$/);
+  if (counted !== null) {
+    const n = parseAmount(counted[1] as string);
+    const selector = parseSubject(counted[2] as string, card);
+    return n === null || selector === null ? null : countPermanents(selector, 'you', '>=', n);
+  }
+  return null;
+}
 
 /**
  * "â€¦Spend this mana only to cast a Dragon creature spell." (Haven of the Spirit Dragon) â€” a
@@ -4335,17 +4523,24 @@ function parseActivationCosts(costText: string, card?: OracleCard): AbilityCost[
       });
       continue;
     }
+    // "Tap an untapped creature you control" may tap the source itself when it is one: the cost
+    // names any untapped creature you control, not "another" (allowSelf).
     if (part === 'tap an untapped creature you control') {
-      costs.push({ kind: 'tapOther', selector: allOf(ofType('Creature'), YOURS) });
+      costs.push({ kind: 'tapOther', selector: allOf(ofType('Creature'), YOURS), allowSelf: true });
       continue;
     }
-    const tapOthers = part.match(/^tap (two|three) untapped (.+) you control$/);
+    const tapOthers = part.match(/^tap (two|three|four) untapped (.+) you control$/);
     if (tapOthers !== null) {
-      const count = tapOthers[1] === 'two' ? 2 : 3;
+      const count = parseAmount(tapOthers[1] as string) as number;
       const noun = tapOthers[2] as string;
       const type = noun === 'artifacts' ? 'Artifact' : noun === 'creatures' ? 'Creature' : null;
       if (type === null) return null;
-      costs.push({ kind: 'tapOthers', selector: allOf(ofType(type), YOURS), count });
+      costs.push({
+        kind: 'tapOthers',
+        selector: allOf(ofType(type), YOURS),
+        count,
+        allowSelf: true,
+      });
       continue;
     }
     if (part === '{t}') {
@@ -4371,31 +4566,43 @@ function parseActivationCosts(costText: string, card?: OracleCard): AbilityCost[
       const count = countWord === 'a' || countWord === 'an' ? 1 : (parseAmount(countWord) ?? 1);
       const noun = (picked[3] as string).replace(/s$/, '');
       const subtype = card === undefined ? null : resolveSubtype(noun, card);
+      // "Sacrifice a nontoken blue creature" (the Flares' alternative cost): a token or color
+      // qualifier on a creature.
+      const qualified = noun.match(/^(nontoken )?(?:(white|blue|black|red|green) )?creature$/);
+      const qualifiers: Selector[] =
+        qualified === null
+          ? []
+          : [
+              ...(qualified[1] !== undefined ? [not(IS_TOKEN)] : []),
+              ...(qualified[2] !== undefined ? [ofColor(COLOR_WORDS[qualified[2]] as Color)] : []),
+            ];
       const base =
-        noun === 'artifact or creature'
-          ? anyOf(ofType('Artifact'), ofType('Creature'))
-          : noun === 'artifact'
-            ? ofType('Artifact')
-            : noun === 'creature'
-              ? ofType('Creature')
-              : noun === 'land'
-                ? ofType('Land')
-                : noun === 'permanent'
-                  ? anyOf(
-                      ofType('Artifact'),
-                      ofType('Creature'),
-                      ofType('Enchantment'),
-                      ofType('Land'),
-                      ofType('Planeswalker'),
-                      ofType('Battle'),
-                    )
-                  : noun === 'servo'
-                    ? ofSubtype('Servo')
-                    : noun === 'token'
-                      ? IS_TOKEN
-                      : subtype !== null
-                        ? ofSubtype(subtype)
-                        : null;
+        qualifiers.length > 0
+          ? allOf(ofType('Creature'), ...qualifiers)
+          : noun === 'artifact or creature'
+            ? anyOf(ofType('Artifact'), ofType('Creature'))
+            : noun === 'artifact'
+              ? ofType('Artifact')
+              : noun === 'creature'
+                ? ofType('Creature')
+                : noun === 'land'
+                  ? ofType('Land')
+                  : noun === 'permanent'
+                    ? anyOf(
+                        ofType('Artifact'),
+                        ofType('Creature'),
+                        ofType('Enchantment'),
+                        ofType('Land'),
+                        ofType('Planeswalker'),
+                        ofType('Battle'),
+                      )
+                    : noun === 'servo'
+                      ? ofSubtype('Servo')
+                      : noun === 'token'
+                        ? IS_TOKEN
+                        : subtype !== null
+                          ? ofSubtype(subtype)
+                          : null;
       if (base === null) return null;
       costs.push({
         kind: 'sacrificeOther',
@@ -4429,6 +4636,24 @@ function parseActivationCosts(costText: string, card?: OracleCard): AbilityCost[
     const payEnergy = part.match(/^pay (\d+) \{e\}$/);
     if (payEnergy !== null) {
       costs.push({ kind: 'payEnergy', amount: Number(payEnergy[1]) });
+      continue;
+    }
+    // "Remove a +1/+1 counter from a creature you control" (Sage of Fables): the counter comes off
+    // any matching permanent you control, chosen as the cost is paid.
+    const fromAmong = part.match(
+      /^remove (a|an|one|two) (\+1\/\+1|[a-z]+) counters? from an? (.+) you control$/,
+    );
+    if (fromAmong !== null) {
+      const count = parseAmount(fromAmong[1] as string);
+      if (card === undefined) return null;
+      const noun = parseSubject(`${fromAmong[3] as string}s you control`, card);
+      if (count === null || noun === null) return null;
+      costs.push({
+        kind: 'removeCountersFromAmong',
+        counter: fromAmong[2] as string,
+        count,
+        selector: noun,
+      });
       continue;
     }
     const counters = part.match(/^remove (\w+) (\w+) counters? from (.+)$/);
@@ -4470,13 +4695,27 @@ function parseGraveyardAlternativeCosts(costText: string): AbilityCost[] | null 
 /** Parse a non-mana alternate-cost line such as Force of Will's pitch cost. */
 function parseNonManaAlternativeCost(
   line: string,
-): { costs: AbilityCost[]; condition?: Condition } | null {
+  card: OracleCard,
+): { costs: AbilityCost[]; manaCost?: ParsedManaCost; condition?: Condition } | null {
   const match = line.match(
-    /^(if it's not your turn, )?you may (.+) rather than pay (?:this spell's|its) mana cost$/,
+    /^(if it's not your turn, )?you may (.+) rather than pay (?:this spell's|its) mana cost(?: if (.+))?$/,
   );
   if (match === null) return null;
+  // "... if there are thirteen or more creatures on the battlefield" (Blasphemous Edict): a
+  // condition on choosing the alternative cost, checked as the spell is cast.
+  const trailing = match[3] === undefined ? undefined : parseConditionClause(match[3], card);
+  if (trailing === null) return null;
   const costs: AbilityCost[] = [];
+  let manaCost: ParsedManaCost | undefined;
   for (const part of (match[2] as string).split(' and ')) {
+    // "You may pay {B} rather than pay this spell's mana cost": a replacement mana cost.
+    const pay = part.match(/^pay ((?:\{[^}]+\})+)$/);
+    if (pay !== null && manaCost === undefined) {
+      const parsed = parseManaCost((pay[1] as string).toUpperCase() as never);
+      if (parsed.cost === null) return null;
+      manaCost = parsed.cost;
+      continue;
+    }
     const payLife = part.match(/^(?:pay) (\d+) life$/);
     if (payLife !== null) {
       costs.push({ kind: 'payLife', amount: Number(payLife[1]) });
@@ -4497,20 +4736,36 @@ function parseNonManaAlternativeCost(
       });
       continue;
     }
+    // "You may sacrifice a nontoken blue creature rather than pay this spell's mana cost" (the
+    // Flares). A spell is never a permanent, so "a creature" can never be the spell itself.
+    if (/^sacrifice /.test(part)) {
+      const sacrifice = parseActivationCosts(part);
+      if (sacrifice === null || sacrifice.some((cost) => cost.kind !== 'sacrificeOther')) {
+        return null;
+      }
+      costs.push(...sacrifice);
+      continue;
+    }
     return null;
   }
-  return costs.length > 0
-    ? {
-        costs,
-        ...(match[1] !== undefined ? { condition: { kind: 'notYourTurn' } as Condition } : {}),
-      }
-    : null;
+  if (costs.length === 0 && manaCost === undefined) return null;
+  if (match[1] !== undefined && trailing !== undefined) return null;
+  const condition: Condition | undefined =
+    match[1] !== undefined ? { kind: 'notYourTurn' } : trailing;
+  return {
+    costs,
+    ...(manaCost !== undefined ? { manaCost } : {}),
+    ...(condition !== undefined ? { condition } : {}),
+  };
 }
 
 /** Parse the "As an additional cost to cast this spell, ..." header. */
 function parseSpellAdditionalCost(line: string): AbilityCost[] | null {
   const m = line.match(/^as an additional cost to cast this spell, (.+)$/i);
   if (m === null) return null;
+  // "pay X life" (Toxic Deluge): X is announced with the spell (CR 601.2b) and paid as a cost
+  // while casting (CR 601.2h). The caller marks the spell as announcing X.
+  if (m[1] === 'pay x life') return [{ kind: 'payLifeValue', amount: { kind: 'xValue' } }];
   return parseActivationCosts(m[1] as string);
 }
 /** Symbols inside a mana clause, uppercased: "{g} or {w}" â†’ ['G','W']. */
@@ -4534,6 +4789,17 @@ function parseManaProduction(effectText: string, card: OracleCard): ManaAbilityS
       if (base === null) return null;
       const subtype = resolveSubtype(m[2] as string, card) ?? titleCase(m[2] as string);
       return { ...base, condition: countPermanents(ofSubtype(subtype), 'you', '>=', 1) };
+    }
+  }
+  // "Activate only if <condition>" in general (Sceptre of Eternal Glory's same-name lands). Read
+  // before the counted form below, which would claim "three or more lands with the same name".
+  {
+    const m = effectText.match(MANA_ACTIVATE_ONLY_IF_ANY_RE);
+    if (m !== null) {
+      const base = parseManaProduction(m[1] as string, card);
+      const condition = parseActivationCondition(m[2] as string, card);
+      if (base === null || condition === null) return null;
+      return { ...base, condition };
     }
   }
   // "Activate only if you control five or more lands" (Temple of the False God) - the counted
@@ -4625,6 +4891,14 @@ function parseManaProduction(effectText: string, card: OracleCard): ManaAbilityS
     }
   }
   if (MANA_ANY_COLOR_RE.test(effectText)) return { units: [ALL_COLORS] };
+  {
+    const m = effectText.match(MANA_N_OF_ONE_COLOR_RE);
+    if (m !== null) {
+      const count = parseAmount(m[1] as string);
+      if (count === null || count < 1) return null;
+      return { units: Array.from({ length: count }, () => ALL_COLORS), linked: true };
+    }
+  }
   {
     const m = effectText.match(MANA_ANY_COMBINATION_RE);
     if (m !== null) {
@@ -4779,6 +5053,15 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     timing = 'sorcery';
     lower = sorceryOnly[1] as string;
   }
+  // "Activate only if <condition>." (CR 602.5b) — checked when activation is offered and paid.
+  let condition: Condition | undefined;
+  const onlyIf = lower.match(/^(.+)\. activate only if (.+)$/);
+  if (onlyIf !== null) {
+    const parsed = parseActivationCondition(onlyIf[2] as string, card);
+    if (parsed === null) return null;
+    condition = parsed;
+    lower = onlyIf[1] as string;
+  }
 
   const split = splitActivation(lower);
   if (split === null) return null;
@@ -4795,6 +5078,7 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
       costs,
       timing,
       ...(oncePerTurn ? { oncePerTurn: true } : {}),
+      ...(condition === undefined ? {} : { condition }),
       ability: {
         kind: 'activated',
         targets: modal.targets,
@@ -4841,6 +5125,7 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     costs,
     timing,
     ...(oncePerTurn ? { oncePerTurn: true } : {}),
+    ...(condition === undefined ? {} : { condition }),
     // "Discard this card" can only be paid from the hand, so the ability functions there
     // (CR 112.6a) — channel lands, Boseiju and Otawara. Without the zone the battlefield loop
     // would offer it and `canPayNonManaCosts` would refuse the cost, making it dead either way.
@@ -5334,6 +5619,66 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       ];
     }
   }
+  // "As long as you control your commander, activated abilities of cards in your graveyard cost
+  // {2} less to activate. This effect can't reduce the mana in that ability's activation cost to
+  // less than one mana." (Convergence of Dominion)
+  {
+    const m = lower.match(
+      /^(?:as long as you control your commander, )?activated abilities of cards in your graveyard cost \{(\d+)\} less to activate(?:\. this effect can't reduce the mana in that ability's activation cost to less than (one|two) mana)?$/,
+    );
+    if (m !== null) {
+      const commander = lower.startsWith('as long as you control your commander, ');
+      return [
+        {
+          kind: 'costReduction',
+          appliesTo: 'activate',
+          graveyardAbilities: true,
+          amount: constant(Number(m[1])),
+          ...(m[2] !== undefined ? { minimumMana: m[2] === 'one' ? 1 : 2 } : {}),
+          ...(commander ? { condition: { kind: 'controlsYourCommander' } } : {}),
+        },
+      ];
+    }
+  }
+  // "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal
+  // to its mana cost reduced by {2}." (Dream Devourer).
+  {
+    const m = lower.match(
+      /^each nonland card in your hand without foretell has foretell\. its foretell cost is equal to its mana cost reduced by \{(\d+)\}\.?(?:\s*\(.*\))?$/,
+    );
+    if (m !== null) return [{ kind: 'grantForetell', reduction: Number(m[1]) }];
+  }
+  // "Boast abilities you activate cost {1} less to activate for each Dragon you control."
+  // (Dragonkin Berserker): every Boast ability you activate, whatever its source.
+  {
+    const m = lower.match(
+      /^boast abilities you activate cost \{(\d+)\} less to activate(?: for each (.+?))?$/,
+    );
+    const each = m?.[2] === undefined ? undefined : parseSubject(m[2], card);
+    if (m !== null && each !== null) {
+      const per = Number(m[1]);
+      const amount: Value =
+        each === undefined
+          ? constant(per)
+          : per === 1
+            ? { kind: 'countPermanents', selector: each, scope: 'you' }
+            : {
+                kind: 'times',
+                of: { kind: 'countPermanents', selector: each, scope: 'you' },
+                n: per,
+              };
+      return [{ kind: 'costReduction', appliesTo: 'activate', boastOnly: true, amount }];
+    }
+  }
+  // "Spells you cast that target a creature cost {2} less to cast." (Killian, Ink Duelist): the
+  // reduction depends on the spell's chosen targets (CR 601.2f).
+  {
+    const m = lower.match(/^spells you cast that target an? (.+?) cost \{(\d+)\} less to cast$/);
+    const targetFilter = m === null ? null : parseSubject(m[1] as string, card);
+    if (m !== null && targetFilter !== null) {
+      return [{ kind: 'costReduction', amount: constant(Number(m[2])), targetFilter }];
+    }
+  }
   // "Instant and sorcery spells you cast cost {1} less to cast." (Goblin Electromancer) â€” a
   // plain, unconditional, fixed reduction: no Eminence "as long as" wrapper, no Temur
   // Battlecrier-style per-permanent scaling.
@@ -5804,6 +6149,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   const additionalCountersOnEntry: { affects: Selector; counter: string; count: Value }[] = [];
   const ruleStatics: RuleStatic[] = [];
   const entersWithCounters: Record<string, number | Value> = {};
+  let cantBlock = false;
   let entersTapped = false;
   let entersTappedUnless: Condition | undefined;
   let tokenCreationReplacement: TokenSpec | undefined;
@@ -5814,6 +6160,10 @@ export function interpretCard(card: OracleCard): CardDefinition {
   const spellAdditionalCosts: AbilityCost[] = [];
   let commanderFreeCast = false;
   let spellModes: NonNullable<Ability['modes']> | undefined;
+  let announcesX = false;
+  let castFromGraveyard = false;
+  let optionalAdditionalCost: CardDefinition['optionalAdditionalCost'];
+  let morphCost: ParsedManaCost | undefined;
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
 
@@ -6091,6 +6441,52 @@ export function interpretCard(card: OracleCard): CardDefinition {
       : knownAbilityWordStripped;
     if (line.length === 0) continue;
     const lower = line.toLowerCase().replace(/\.$/, '');
+    // "You may cast this card from your graveyard." (Their Number Is Legion): the card's own
+    // permission to be cast from there for its normal costs.
+    if (lower === 'you may cast this card from your graveyard' && isSpell) {
+      castFromGraveyard = true;
+      continue;
+    }
+    // "You may cast this card from your graveyard by paying {2}{W} rather than paying its mana
+    // cost" (Raffine's Guidance): a graveyard alternative cost with no flashback exile, so the
+    // card returns to the graveyard (or stays on the battlefield) and can be cast this way again.
+    {
+      const recast = lower.match(
+        /^you may cast this card from your graveyard by paying ((?:\{[^}]+\})+) rather than paying its mana cost$/,
+      );
+      const cost =
+        recast === null ? null : parseManaCost((recast[1] as string).toUpperCase() as never).cost;
+      if (cost !== null) {
+        if (alternativeCasts === undefined) alternativeCasts = [];
+        alternativeCasts.push({
+          kind: 'nonMana',
+          from: 'graveyard',
+          manaCost: cost,
+          description: line,
+        });
+        continue;
+      }
+    }
+    // "Flashback—Sacrifice three creatures" (Dread Return): a flashback cost with no mana at all.
+    {
+      const nonManaFlashback = lower.match(/^flashback[\u2014\u2013-]\s*([^{].*)$/);
+      const costs =
+        nonManaFlashback === null
+          ? null
+          : parseGraveyardAlternativeCosts(nonManaFlashback[1] as string);
+      if (costs !== null && costs.every((cost) => cost.kind !== 'mana')) {
+        if (alternativeCasts === undefined) alternativeCasts = [];
+        alternativeCasts.push({
+          kind: 'nonMana',
+          from: 'graveyard',
+          manaCost: emptyCost(),
+          costs,
+          exileOnResolution: true,
+          description: line,
+        });
+        continue;
+      }
+    }
     {
       const graveyardAlternative = lower.match(
         /^(flashback|escape)(?:\s+|[\u2014\u2013-])((?:\{[^}]+\})+)(?:,\s*(.+))?$/,
@@ -6117,15 +6513,23 @@ export function interpretCard(card: OracleCard): CardDefinition {
       const additionalCosts = parseSpellAdditionalCost(lower);
       if (additionalCosts !== null) {
         spellAdditionalCosts.push(...additionalCosts);
+        if (
+          card.manaCost?.includes('{X}') !== true &&
+          additionalCosts.some(
+            (cost) => cost.kind === 'payLifeValue' && cost.amount.kind === 'xValue',
+          )
+        ) {
+          announcesX = true;
+        }
         continue;
       }
-      const alternativeCosts = parseNonManaAlternativeCost(lower);
+      const alternativeCosts = parseNonManaAlternativeCost(lower, card);
       if (alternativeCosts !== null) {
         if (alternativeCasts === undefined) alternativeCasts = [];
         alternativeCasts.push({
           kind: 'nonMana',
-          manaCost: parseManaCost('{0}').cost!,
-          costs: alternativeCosts.costs,
+          manaCost: alternativeCosts.manaCost ?? parseManaCost('{0}').cost!,
+          ...(alternativeCosts.costs.length > 0 ? { costs: alternativeCosts.costs } : {}),
           ...(alternativeCosts.condition !== undefined
             ? { condition: alternativeCosts.condition }
             : {}),
@@ -6490,6 +6894,11 @@ export function interpretCard(card: OracleCard): CardDefinition {
     }
     // 4b. A continuous static ability / CDA (ADR 0005). These specific patterns will move to
     //     the authored-override registry; here they prove the layer engine end-to-end.
+    // "~ can't block." — the printed characteristic `combat.ts` checks on the permanent.
+    if (lower === "~ can't block") {
+      cantBlock = true;
+      continue;
+    }
     {
       const stat = parseStaticLine(lower, card);
       if (stat !== null) {
@@ -6675,6 +7084,30 @@ export function interpretCard(card: OracleCard): CardDefinition {
      * and belongs with the other cost-bearing keywords in
      * `docs/plans/post-tier3-card-coverage.md`, not with a one-line parse.
      */
+    // "Morph {B}" (CR 702.37): cast face down as a 2/2 for {3} (`castFaceDown`), and turn it
+    // face up any time you have priority by paying this cost (`turnFaceUp`).
+    {
+      const m = lower.match(/^morph ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
+      if (m) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          morphCost = cost.cost;
+          continue;
+        }
+      }
+    }
+    // "Replicate {2}" (CR 702.56a): an additional cost payable any number of times, and a cast
+    // trigger copying the spell once per payment (`queueKeywordCastTriggers`).
+    {
+      const m = lower.match(/^replicate ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
+      if (m) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          optionalAdditionalCost = { mechanic: 'replicate', cost: cost.cost, repeatable: true };
+          continue;
+        }
+      }
+    }
     {
       const m = lower.match(/^unearth ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
       if (m) {
@@ -6775,6 +7208,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
       }
       const activated = parseActivatedLine(activatedText, card);
       if (activated !== null) {
+        // "Boast — [Cost]: [Effect]" adds "Activate only if this creature attacked this turn and
+        // only once each turn" (CR 702.142a). The label itself was stripped as a generic label.
+        if (/^boast\s+[—–-]\s+/i.test(originalLine)) {
+          activated.requiresAttackedThisTurn = true;
+          activated.oncePerTurn = true;
+          activated.boast = true;
+        }
         activatedAbilities.push(activated);
         if (activationDiscount !== null) ruleStatics.push(activationDiscount);
         lineIndex = activatedEnd;
@@ -7047,6 +7487,11 @@ export function interpretCard(card: OracleCard): CardDefinition {
       staticEffects,
       ruleStatics,
       ...(alternativeCasts ? { alternativeCasts } : {}),
+      ...(cantBlock ? { cantBlock: true } : {}),
+      ...(castFromGraveyard ? { castFromGraveyard: true as const } : {}),
+      ...(announcesX ? { announcesX: true } : {}),
+      ...(optionalAdditionalCost !== undefined ? { optionalAdditionalCost } : {}),
+      ...(morphCost !== undefined ? { morphCost } : {}),
       modeled: reasons.length === 0,
       unmodeledReasons: reasons,
     }),

@@ -2,10 +2,10 @@ import { counterCount, setCounterCount } from '../state/counters';
 import type { ObjectFacts } from '../cards/source-identity';
 import { eventObjectFacts } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
-import { queueSpellCopy } from '../stack/copy';
+import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
-import { permanentManaValue, targetIsLegal } from '../targets/legality';
+import { permanentManaValue, targetCandidates, targetIsLegal } from '../targets/legality';
 import { captureResolutionTargets, type ResolutionTargets } from '../targets/resolution';
 import { assertNever } from '../utils/assert-never';
 import { assertManaRiders } from '../cards/mana-riders';
@@ -28,6 +28,7 @@ import type {
   TargetKind,
   TargetSpec,
 } from '../cards/definition';
+import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
 import { allOf, ofSupertype, ofType, selectMatches } from '../cards/selector';
 import type { GameGen } from '../decisions';
@@ -51,7 +52,8 @@ import {
   totalPips,
   withX,
 } from '../mana/cost';
-import type { ManaSource, ParsedManaCost, PaymentPlan } from '../mana/cost';
+import { withoutReserved } from '../mana/activation';
+import type { ParsedManaCost, PaymentPlan } from '../mana/cost';
 import type { SpellPaymentChoice } from '../mana/spell-payment';
 import { addMana, removeMana, selectEntriesToSpend } from '../mana/pool';
 import type { ManaEntry, PaymentPurpose } from '../cards/ability';
@@ -100,6 +102,11 @@ import {
   sourceColorsOf,
   spellProtectedFromCounter,
   requireModeled,
+  castingSpellsBlockedFor,
+  convokeSourcesFor,
+  spellHasConvoke,
+  sacrificeCandidateAllowed,
+  selfMayTap,
   resolveConditionalUnits,
   resolveDynamicAmount,
   resolveDynamicUnits,
@@ -1991,6 +1998,25 @@ export function* executeAbility(
         yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'bottom' });
         break;
       }
+      case 'shuffleSourceFromGraveyardIntoLibrary': {
+        const owner = ctx.state.players.find((player) =>
+          player.graveyard.some((card) => card.cardId === source.cardId),
+        );
+        const card = owner?.graveyard.find((candidate) => candidate.cardId === source.cardId);
+        if (owner === undefined || card === undefined) break;
+        yield* moveObject(ctx, card, { zone: 'library' });
+        shuffleLibrary(ctx, owner);
+        break;
+      }
+      case 'resolvingSpellExile': {
+        const entry = source.resolvingStackObject;
+        if (entry?.kind !== 'spell' || entry.card === null) break;
+        const card = entry.card;
+        // Clearing the stack entry's card keeps resolution from also moving it to the graveyard.
+        entry.card = null;
+        yield* moveObject(ctx, card, { zone: 'exile' });
+        break;
+      }
       case 'resolvingSpellShuffleIntoLibrary': {
         const entry = source.resolvingStackObject;
         if (entry?.kind !== 'spell' || entry.card === null) break;
@@ -2956,6 +2982,11 @@ export function* executeAbility(
                   computeCharacteristics(ctx, perm).types.includes('Creature')),
             );
             if (candidates.length === 0) break;
+            // Owing at least as many as they have is no choice at all: all of them go.
+            if (candidates.length <= effect.count - i) {
+              selected.push(...candidates);
+              break;
+            }
             const chosen = yield* chooseCard(ctx, {
               player: player.id,
               prompt: `${source.name}: choose a ${effect.filter === 'any' ? 'permanent' : 'creature'} to sacrifice (${i + 1} of ${effect.count})`,
@@ -2993,8 +3024,10 @@ export function* executeAbility(
         break;
       }
       case 'sacrificeGreatestEachOpponent': {
+        // A permanent's own mana value: a face-down permanent's is 0 (CR 708.2).
         const metricOf = (perm: EnginePermanent): number =>
           effect.metric === 'power' ? effectivePT(ctx, perm).power : permanentManaValue(ctx, perm);
+        const selected: EnginePermanent[] = [];
         for (const opponent of opponentsOf(ctx, controller.id)) {
           const candidates = ctx.state.battlefield.filter(
             (perm) =>
@@ -3019,16 +3052,11 @@ export function* executeAbility(
             type: 'sacrifice',
             verb,
           });
-          if (chosen !== null) {
-            yield* moveObject(
-              ctx,
-              chosen,
-              effect.action === 'exile'
-                ? { zone: 'exile' }
-                : { zone: 'graveyard', reason: 'sacrifice' },
-            );
-          }
+          if (chosen !== null) selected.push(chosen as EnginePermanent);
         }
+        // CR 101.4: each opponent chooses in APNAP order, then all of them are moved at once.
+        if (effect.action === 'exile') yield* moveObjects(ctx, selected, { zone: 'exile' });
+        else yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
       }
       case 'transferCountersFromTriggerObject': {
@@ -3350,6 +3378,7 @@ export function* executeAbility(
           (candidate) => candidate.cardId === source.cardId,
         );
         if (permanent === undefined) break;
+        permanent.unearthed = true;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
@@ -3487,6 +3516,10 @@ export function* executeAbility(
       case 'preventCombatDamageToController':
         ctx.state.combatDamagePrevention.players[controller.id] = true;
         break;
+      case 'replicateCopies': {
+        yield* replicateCopies(ctx, controller.id, effect);
+        break;
+      }
       case 'copyTargetSpell': {
         const targetId = ref(effect.target);
         const original = ctx.state.stack.find(
@@ -4077,12 +4110,16 @@ export function* executeAbility(
         loseLife(ctx, controller, manaValue);
         break;
       }
-      case 'graveyardToLibraryTop': {
+      case 'graveyardToLibraryTop':
+      case 'graveyardToLibraryBottom': {
         const t = ref(effect.target);
         if (t === null) break;
         const card = findObjectById(ctx, t);
         if (card !== undefined)
-          yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'top' });
+          yield* moveObject(ctx, card, {
+            zone: 'library',
+            libraryPosition: effect.op === 'graveyardToLibraryTop' ? 'top' : 'bottom',
+          });
         break;
       }
       case 'graveyardToHand': {
@@ -4797,7 +4834,8 @@ export function* executeAbility(
         emit(ctx, 'becomeCreature', { source: source.name, target: perm.name });
         break;
       }
-      case 'crewVehicle': {
+      case 'crewVehicle':
+      case 'becomeArtifactCreature': {
         const t = ref('source');
         if (t === null) break;
         const perm = findPermanent(ctx, t);
@@ -4817,6 +4855,9 @@ export function* executeAbility(
           timestamp: ctx.state.nextTimestamp++,
         });
         emit(ctx, 'becomeCreature', { source: source.name, target: perm.name });
+        // "Whenever this Vehicle becomes crewed" means "whenever a crew ability of it resolves"
+        // (CR 702.122e); another effect that animates the Vehicle does not crew it.
+        if (effect.op === 'crewVehicle') queueTriggersForObject(ctx, 'becomesCrewed', perm);
         break;
       }
       case 'fightUpToOneChosen': {
@@ -5031,6 +5072,41 @@ export function* executeAbility(
           const chosen = eligible[outcome.index];
           if (chosen !== undefined) yield* resolveFreeCard(ctx, chosen, controller.id);
         }
+        break;
+      }
+      case 'castForLifeFromZones': {
+        const lifeFor = (card: EngineCardObject): number =>
+          spellManaValue(getDefByOracleId(ctx, card.oracleId, card.name), undefined);
+        const zoneOf = (card: EngineCardObject): string =>
+          controller.hand.includes(card) ? 'hand' : 'graveyard';
+        const eligible = effect.zones
+          .flatMap((zone) => (zone === 'hand' ? controller.hand : controller.graveyard))
+          .filter(
+            (card) =>
+              selectMatches(cardZoneCandidate(ctx, card, controller.id), effect.selector, {
+                cardId: source.cardId,
+                controllerId: controller.id,
+              }) && freeCardIsCastable(ctx, card, controller.id, Infinity, lifeFor(card)),
+          );
+        if (eligible.length === 0) break;
+        const outcome = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `${source.name}: you may cast an artifact spell by paying life equal to its mana value.`,
+          options: [
+            ...eligible.map((card) =>
+              cardOption(ctx, card, {
+                type: 'castForLife',
+                description: `Cast ${card.name} from your ${zoneOf(card)} for ${lifeFor(card)} life`,
+                verb: 'Cast',
+              }),
+            ),
+            plainOption({ type: 'decline', description: 'Cast no spell', verb: 'Done' }),
+          ],
+        };
+        const chosen = outcome.index < eligible.length ? eligible[outcome.index] : undefined;
+        if (chosen !== undefined)
+          yield* resolveFreeCard(ctx, chosen, controller.id, Infinity, lifeFor(chosen));
         break;
       }
       case 'castAnyFromHandFree': {
@@ -5946,6 +6022,76 @@ function* searchLibraryGroup(
 /** "Search your library for a `<filter>` card and cast that card without paying its mana cost"
  * (Sunforger) — `searchLibrary`'s single-destination search, but the found card is cast for
  * free via `resolveFreeCard` instead of moved to a zone. */
+/**
+ * Replicate's copies (CR 702.56a): `count` copies of the cast spell, each put on the stack with
+ * targets its controller keeps or changes (CR 707.10c). A copy of a permanent spell becomes a
+ * token as it resolves (CR 707.10f). If the spell has left the stack, its last known
+ * information is copied (CR 707.10).
+ */
+function* replicateCopies(
+  ctx: GameContext,
+  controllerId: PlayerId,
+  effect: Extract<Effect, { op: 'replicateCopies' }>,
+): GameGen<void> {
+  const original = ctx.state.stack.find(
+    (entry) => entry.id === effect.spell.stackObjectId && entry.kind === 'spell',
+  );
+  const def =
+    original === undefined
+      ? getDefByOracleId(ctx, effect.spell.oracleId, effect.spell.name)
+      : spellDefinitionOf(ctx, original);
+  const ability = original?.ability ?? def.spellAbility;
+  if (ability === null || ability === undefined) return;
+  const originalTargets = original?.targets ?? (effect.spell.targets as ObjectId[]);
+  for (let copyIndex = 0; copyIndex < effect.count; copyIndex++) {
+    const targets = [...originalTargets];
+    for (const [slot, spec] of ability.targets.entries()) {
+      if (spec.count !== undefined) continue;
+      const current = targets[slot];
+      const fresh = targetCandidates(ctx, spec, {
+        controllerId,
+        sourceCardId: original?.sourceCardId ?? '',
+        sourceColors: def.colors,
+        chosenTargets: targets,
+      }).filter((id) => id !== current);
+      if (fresh.length === 0) continue;
+      const nameOf = (id: ObjectId): string =>
+        ctx.state.battlefield.find((perm) => perm.id === id)?.name ?? String(id);
+      const choices = [...(current === undefined ? [] : [current]), ...fresh];
+      const outcome = yield {
+        decisionType: 'general' as const,
+        player: controllerId,
+        prompt: `${effect.spell.name}: choose a target for copy ${copyIndex + 1} of ${effect.count}.`,
+        options: choices.map((id, index) => ({
+          type: 'chooseTarget',
+          description:
+            index === 0 && current !== undefined
+              ? `Keep ${nameOf(id)} as the target`
+              : `Target ${nameOf(id)}`,
+        })),
+      };
+      targets[slot] = choices[outcome.index] ?? choices[0]!;
+    }
+    const copy = queueReplicateCopy(
+      ctx,
+      controllerId,
+      effect.spell,
+      original,
+      def,
+      ability,
+      targets,
+    );
+    emit(ctx, 'spellCopied', { name: effect.spell.name, targets }, controllerId);
+    // A copy's targets become targets of a spell (ward, "becomes the target") like a cast's.
+    const allTargets = [
+      ...targets.filter((id) => id !== undefined),
+      ...Object.values(copy.countTargets ?? {}).flat(),
+    ];
+    queueWardTriggers(ctx, controllerId, copy.id, allTargets);
+    queueBecomesTargetedTriggers(ctx, controllerId, allTargets);
+  }
+}
+
 function* searchLibraryCastFree(
   ctx: GameContext,
   source: EffectSource,
@@ -5953,9 +6099,13 @@ function* searchLibraryCastFree(
   filter: Selector,
 ): GameGen<void> {
   const selectorSource = { cardId: source.cardId, controllerId: player.id };
-  const matches = player.library.filter((card) =>
-    selectMatches(cardZoneCandidate(ctx, card, player.id), filter, selectorSource),
-  );
+  // A spell that could not be cast now ("players can't cast spells during combat") is not
+  // offered as a find (CR 101.2).
+  const matches = castingSpellsBlockedFor(ctx, player.id)
+    ? []
+    : player.library.filter((card) =>
+        selectMatches(cardZoneCandidate(ctx, card, player.id), filter, selectorSource),
+      );
   if (matches.length === 0) return;
 
   const outcome = yield {
@@ -6242,38 +6392,9 @@ export function endUntilEotEffects(ctx: GameContext): void {
   for (const card of ctx.state.exile) {
     if (card.playableUntilEotBy !== undefined) delete card.playableUntilEotBy;
   }
-}
-
-/**
- * The mana sources a payment may use when `reserved` permanents are spoken for by another part
- * of the same cost (Ashnod's Altar paying for Canoptek Wraith's "{3} and sacrifice it" may not
- * sacrifice the Wraith). A reserved permanent leaves every source's sacrifice candidates, a
- * source left with no candidate for one of its sacrifices is dropped, and a source that would
- * sacrifice a reserved permanent itself is dropped. The planner then keeps the sacrifices
- * distinct (`sacrificesArePayable`).
- */
-function withoutReserved(
-  ctx: GameContext,
-  sources: readonly ManaSource[],
-  reserved: ReadonlySet<string>,
-): ManaSource[] {
-  if (reserved.size === 0) return [...sources];
-  const reservedCards = new Set(
-    ctx.state.battlefield.filter((p) => reserved.has(p.id)).map((p) => p.cardId),
-  );
-  return sources.flatMap((source) => {
-    if (
-      reservedCards.has(source.cardId) &&
-      source.costs.some((cost) => cost.kind === 'sacrificeSelf')
-    ) {
-      return [];
-    }
-    if (source.sacrifices === undefined) return [source];
-    const sacrifices = source.sacrifices.map((group) =>
-      group.filter((id) => !reservedCards.has(id)),
-    );
-    return sacrifices.some((group) => group.length === 0) ? [] : [{ ...source, sacrifices }];
-  });
+  // "Gains unearth {3} until end of turn" (Ghost Ark) ends with the other until-end-of-turn
+  // effects (CR 514.2).
+  ctx.state.temporaryGraveyardAbilities = {};
 }
 
 /**
@@ -6303,9 +6424,17 @@ export function* payManaCost(
 ): GameGen<{ spellCantBeCountered: boolean; treasureManaSpent: number; manaSpent: number }> {
   const excluded = new Set(excludedSourceCardIds);
   const allows = allowanceFor(ctx, player.id, purpose);
+  // Convoke (CR 702.51): the spell's controller may tap creatures to help pay for it.
+  const convoke =
+    purpose.kind === 'castSpell' &&
+    spellHasConvoke(getDefByOracleId(ctx, purpose.oracleId, purpose.oracleId))
+      ? convokeSourcesFor(ctx, player.id)
+      : [];
   const sources = withoutReserved(
     ctx,
-    manaSourcesFor(ctx, player.id).filter((source) => !excluded.has(source.cardId)),
+    [...manaSourcesFor(ctx, player.id), ...convoke].filter(
+      (source) => !excluded.has(source.cardId),
+    ),
     reservedObjectIds,
   );
   const plan = preparedPlan ?? planPayment(cost, player.manaEntries, sources, allows, player.life);
@@ -6342,9 +6471,35 @@ export function* payManaCost(
       player,
       perm,
       source.costs,
-      'tapForMana',
+      // Tapping a creature for convoke is not activating a mana ability (CR 702.51b).
+      source.convoke === true ? 'tap' : 'tapForMana',
       0,
-      undefined,
+      // A tap cost (Springleaf Drum) may not take a permanent a later source of this payment
+      // taps (a convoking creature, a mana elf), and must leave the later tap costs payable —
+      // the distinct assignment `planPayment` proved.
+      (candidate, remainingCosts) => {
+        const taken = new Set([candidate.cardId, ...future.map((s) => s.cardId)]);
+        if (future.some((s) => s.cardId === candidate.cardId)) return false;
+        const untapped = new Set(
+          ctx.state.battlefield.filter((p) => !p.tapped).map((p) => p.cardId),
+        );
+        // This source's own tap costs still to pay are the last entries of its `taps`.
+        const ownLeft = remainingCosts.reduce(
+          (sum, remaining) =>
+            sum +
+            (remaining.kind === 'tapOther'
+              ? 1
+              : remaining.kind === 'tapOthers'
+                ? remaining.count
+                : 0),
+          0,
+        );
+        const own = ownLeft === 0 ? [] : (source.taps ?? []).slice(-ownLeft);
+        const groups = [...own, ...future.flatMap((s) => [...(s.taps ?? [])])].map((group) =>
+          group.filter((id) => untapped.has(id)),
+        );
+        return sacrificesArePayable(groups, taken);
+      },
       (candidate, remainingCosts) => {
         // A permanent reserved for another part of the same cost is never sacrifice fodder.
         if (reservedObjectIds.has(candidate.id)) return false;
@@ -6363,7 +6518,7 @@ export function* payManaCost(
             .filter(
               (p) =>
                 p.controllerId === player.id &&
-                (remaining.allowSelf === true || p.id !== perm.id) &&
+                sacrificeCandidateAllowed(remaining, perm, p) &&
                 matchesSelector(ctx, p, remaining.selector, {
                   cardId: perm.cardId,
                   controllerId: player.id,
@@ -6422,6 +6577,7 @@ export function* payManaCost(
         ...(source.uncounterableSpell === true ? { uncounterableSpell: true as const } : {}),
         ...(fromTreasure ? { fromTreasure: true as const } : {}),
         ...(source.persistent === true ? { persistent: true } : {}),
+        ...(source.convoke === true ? { convoked: true as const } : {}),
       })),
     );
     // CR 602.2b / 605.3b: pay the activation costs before resolving the mana ability.
@@ -6470,7 +6626,8 @@ export function* payManaCost(
       purpose.kind === 'castSpell'
         ? spent.filter((entry) => entry.fromTreasure === true).length
         : 0,
-    manaSpent: totalPips(paidManaCost),
+    // Creatures tapped for convoke paid part of the cost without spending mana (CR 702.51b).
+    manaSpent: totalPips(paidManaCost) - spent.filter((entry) => entry.convoked === true).length,
   };
 }
 
@@ -6503,7 +6660,7 @@ export function* payAbilityCosts(
       case 'tapOther': {
         const options = ctx.state.battlefield.filter(
           (candidate) =>
-            candidate.id !== perm.id &&
+            (selfMayTap(cost, costs) || candidate.id !== perm.id) &&
             candidate.controllerId === player.id &&
             !candidate.tapped &&
             matchesSelector(ctx, candidate, cost.selector, {
@@ -6536,7 +6693,7 @@ export function* payAbilityCosts(
         for (let i = 0; i < cost.count; i++) {
           const options = ctx.state.battlefield.filter(
             (candidate) =>
-              candidate.id !== perm.id &&
+              (selfMayTap(cost, costs) || candidate.id !== perm.id) &&
               candidate.controllerId === player.id &&
               !candidate.tapped &&
               matchesSelector(ctx, candidate, cost.selector, {
@@ -6544,7 +6701,12 @@ export function* payAbilityCosts(
                 controllerId: player.id,
               }) &&
               (canTap?.(candidate, [
-                { kind: 'tapOthers', selector: cost.selector, count: cost.count - i - 1 },
+                {
+                  kind: 'tapOthers',
+                  selector: cost.selector,
+                  count: cost.count - i - 1,
+                  ...(cost.allowSelf === true ? { allowSelf: true } : {}),
+                },
                 ...costs.slice(costIndex + 1),
               ]) ??
                 true),
@@ -6611,7 +6773,7 @@ export function* payAbilityCosts(
         for (let i = 0; i < count; i++) {
           const options = ctx.state.battlefield.filter(
             (candidate) =>
-              (cost.allowSelf === true || candidate.id !== perm.id) &&
+              sacrificeCandidateAllowed(cost, perm, candidate) &&
               candidate.controllerId === player.id &&
               matchesSelector(ctx, candidate, cost.selector, {
                 cardId: perm.cardId,
@@ -6662,6 +6824,48 @@ export function* payAbilityCosts(
             counter: cost.counter,
             added: -count,
             total: counterCount(perm.counters, cost.counter),
+          },
+          player.id,
+        );
+        break;
+      }
+      case 'removeCountersFromAmong': {
+        const options = ctx.state.battlefield.filter(
+          (candidate) =>
+            candidate.controllerId === player.id &&
+            (candidate.counters[cost.counter] ?? 0) >= cost.count &&
+            matchesSelector(ctx, candidate, cost.selector, {
+              cardId: perm.cardId,
+              controllerId: player.id,
+            }),
+        );
+        if (options.length === 0) throw new Error('engine bug: counter cost became unpayable');
+        let chosen = options[0] as EnginePermanent;
+        if (options.length > 1) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: player.id,
+            prompt: `${perm.name}: choose a permanent to remove ${cost.count === 1 ? 'a' : cost.count} ${cost.counter} counter${cost.count === 1 ? '' : 's'} from as an activation cost.`,
+            options: options.map((candidate) => ({
+              type: 'removeCounterCost',
+              description: `Remove from ${candidate.name}`,
+              payload: candidate.id,
+            })),
+          };
+          const picked = options[outcome.index];
+          if (picked === undefined) throw new Error('engine bug: counter cost choice was invalid');
+          chosen = picked;
+        }
+        chosen.counters[cost.counter] = (chosen.counters[cost.counter] ?? 0) - cost.count;
+        emit(
+          ctx,
+          'counters',
+          {
+            target: chosen.name,
+            targetCardId: chosen.cardId,
+            counter: cost.counter,
+            added: -cost.count,
+            total: chosen.counters[cost.counter],
           },
           player.id,
         );
@@ -6796,7 +7000,6 @@ export function* payAbilityCosts(
     emit(ctx, 'exile', { target: perm.name, cardId: perm.cardId }, player.id);
     yield* moveObject(ctx, perm, { zone: 'exile' });
   }
-  ctx.state.temporaryGraveyardAbilities = {};
   return stationPower === undefined ? {} : { stationPower };
 }
 

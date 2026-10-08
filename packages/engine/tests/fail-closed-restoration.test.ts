@@ -66,15 +66,8 @@ const restored = [
   },
 ] as const;
 
+// Toxic Deluge was restored in coverage PR02; its gate is packages/engine/tests/pr02-card-coverage.test.ts.
 const expected = [
-  {
-    oracleId: 'afaef788-34d1-460b-b884-9d7ae6ddeb18',
-    name: 'Toxic Deluge',
-    sha256: '8d4c686fcd606a82ad2a0dbba2ab363d1b5ca67300bf21b0a3de199ec277cad9',
-    reason:
-      'explicitly unsupported: Pay-X-life additional cost is implemented as loseLife on resolution.',
-    clauseCount: 2,
-  },
   {
     oracleId: '07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8',
     name: 'Chaos Warp',

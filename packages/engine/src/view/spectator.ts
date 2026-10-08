@@ -48,7 +48,9 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
   const isCreature = chars.types.includes('Creature');
   return {
     id: perm.id,
-    name: perm.name,
+    // The spectator projection sees everything; `buildPlayerBoardState` redacts a face-down
+    // permanent for everyone but its controller (CR 708.5).
+    name: perm.faceDown === true ? (ctx.defs.get(perm.oracleId)?.name ?? perm.name) : perm.name,
     typeLine: perm.typeLine,
     manaCost: perm.manaCost,
     oracleText: perm.oracleText,
@@ -288,7 +290,10 @@ export function buildPlayerBoardState(ctx: GameContext, playerId: string): Playe
     }),
     exile: spectator.exile.map((card) => {
       const engineCard = ctx.state.exile.find((candidate) => candidate.id === card.id);
-      if (engineCard?.attachedToCardId === undefined || engineCard.ownerId === playerId) {
+      if (
+        (engineCard?.attachedToCardId === undefined && engineCard?.foretold === undefined) ||
+        engineCard.ownerId === playerId
+      ) {
         return card;
       }
       return {
@@ -379,6 +384,15 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
 
     case 'resolved':
       return { ...base, text: `${str(p, 'description') ?? 'spell'} resolves` };
+
+    case 'foretold':
+      return { ...base, text: 'foretells a card' };
+
+    case 'turnedFaceUp':
+      return { ...base, text: `turns ${str(p, 'name') ?? 'a permanent'} face up` };
+
+    case 'spellCopied':
+      return { ...base, text: `copies ${str(p, 'name') ?? 'a spell'}` };
 
     case 'counterSpell':
       return {
@@ -535,16 +549,32 @@ export function formatPlayerLog(
   playerId: string,
 ): SpectatorLogLine[] {
   return formatSpectatorLog(
-    events.filter((event) => {
-      if (event.actorSeat === playerId) return true;
-      // Opponents' draws and library manipulation reveal hidden information only to the
-      // spectator projection. Their public zone changes (discard and mill) remain narrated.
-      if (['draw', 'scry', 'surveil'].includes(event.type)) return false;
-      if (event.type !== 'decision') return true;
-      const decisionType = event.payload['decisionType'];
-      return (
-        decisionType !== 'mulligan' && decisionType !== 'bottomCards' && decisionType !== 'general'
-      );
-    }),
+    events
+      .map((event) => {
+        // Another seat's hidden-information action (a face-down cast) reads as its public
+        // description, never its card's name.
+        const publicDescription = event.payload['publicDescription'];
+        if (
+          event.type !== 'decision' ||
+          event.actorSeat === playerId ||
+          typeof publicDescription !== 'string'
+        ) {
+          return event;
+        }
+        return { ...event, payload: { ...event.payload, description: publicDescription } };
+      })
+      .filter((event) => {
+        if (event.actorSeat === playerId) return true;
+        // Opponents' draws and library manipulation reveal hidden information only to the
+        // spectator projection. Their public zone changes (discard and mill) remain narrated.
+        if (['draw', 'scry', 'surveil'].includes(event.type)) return false;
+        if (event.type !== 'decision') return true;
+        const decisionType = event.payload['decisionType'];
+        return (
+          decisionType !== 'mulligan' &&
+          decisionType !== 'bottomCards' &&
+          decisionType !== 'general'
+        );
+      }),
   );
 }
