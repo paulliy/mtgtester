@@ -7,12 +7,12 @@ import { expect, test } from './setup-test';
  * `playwright.setup.config.ts`, which loads the committed Oracle fixture.
  *
  * The seed fixes the decks, the shuffles, and the built-in bots' choices: P1 first gets priority
- * on turn 2 holding five Forests and Elvish Mystic. After the Mystic resolves P1 has nothing left
- * to do, so the server passes for them until their next turn (turn 6). The generated decks come
+ * on turn 3 holding five Forests and Elvish Mystic. After the Mystic resolves P1 has nothing left
+ * to do, so the server passes for them until their next turn (turn 7). The generated decks come
  * from the supported pool, so a change to which cards are modeled can change what a seed deals;
- * re-pick the seed then (placeholder containment moved this from `e2e-26`).
+ * re-pick the seed then (event-player containment moved this from `e2e-2578`).
  */
-const SEED = 'e2e-2578';
+const SEED = 'e2e-15162';
 
 test('a seeded player game plays a land, casts a spell, and abandons cleanly', async ({ page }) => {
   await page.goto('/');
@@ -50,7 +50,7 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   });
 
   // The bots take their turns, and the summary reports what they did since the Mystic.
-  await expect(page.locator('.turn-badge')).toContainText('Turn 6 · Your turn', {
+  await expect(page.locator('.turn-badge')).toContainText('Turn 7 · Your turn', {
     timeout: 60_000,
   });
   const summary = page.locator('.bot-summary');
@@ -65,7 +65,7 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   const report = await page.evaluate(() => navigator.clipboard.readText());
   expect(report).toContain('## MTG Tester game report');
   expect(report).toContain(`seed \`${SEED}\``);
-  expect(report).toContain('Position: Turn 6');
+  expect(report).toContain('Position: Turn 7');
   expect(report).toContain('### P1 decklist (engine order)');
   expect(report).not.toMatch(/### P[234] decklist/);
 

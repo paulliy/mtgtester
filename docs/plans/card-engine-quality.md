@@ -1,6 +1,6 @@
 # Card modeling quality and engine hardening
 
-Status: implementation in progress. Baseline: `af6b4e3`.
+Status: all six phases implemented; final source-bound viewer verification pending. Baseline: `af6b4e3`.
 
 This replaces the supplied **MTGTester Card Modeling Quality & Engine Hardening Plan**.
 The review corrections are incorporated below; there is one roadmap and one completion
@@ -832,6 +832,13 @@ and report the exact failed action, attempted recovery, and remaining work.
   together with manifest/catalog requirements (12 focused tests). No reviewed declaration is
   promoted by adding these requirements. Remaining work is final card/static/build/inventory
   gates, source-bound browser receipts and publication.
+- Final card gate at `14591be` passes all 2,374 tests in 110 files without skips.
+  Production/test/tooling types, lint, formatting, unchanged IR snapshots, production web
+  build and offline coverage/staples/implemented inventory checks pass. DB-backed setup
+  and player-game checks both pass after re-picking the deterministic supported-pool seed
+  (`e2e-15162`, next player turn 7); both preceding seed-specific failures are preserved.
+  All four web audit smoke checks pass. Final primitive/capability/promotion receipts and
+  the complete current real-viewer receipt are run against the final committed inputs.
 
 The architecture for all six phases is implemented. Final repository gates and a complete,
 current real-viewer receipt remain required before declaring the roadmap complete or opening
