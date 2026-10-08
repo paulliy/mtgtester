@@ -85,9 +85,7 @@ function onCardLeave(): void {
           size="small"
         />
       </div>
-      <div v-if="overflowCount > 0" key="overflow" class="zone-overflow">
-        +{{ overflowCount }}
-      </div>
+      <div v-if="overflowCount > 0" key="overflow" class="zone-overflow">+{{ overflowCount }}</div>
     </TransitionGroup>
   </div>
 </template>
