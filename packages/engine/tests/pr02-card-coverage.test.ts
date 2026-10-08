@@ -1527,6 +1527,26 @@ describe('Nullmage Shepherd', () => {
     expect(source.tapped).toBe(true);
     expect(helper.tapped).toBe(true);
   });
+
+  it('nullmage-shepherd-tap-then-sacrifice-same — one creature may be tapped for one cost and sacrificed for another', () => {
+    const altar = oracle({
+      name: 'Tap Sac Altar',
+      typeLine: 'Artifact',
+      oracleText: 'Tap an untapped creature you control, Sacrifice a creature: Draw a card.',
+      power: null,
+      toughness: null,
+    });
+    const ctx = pod('tap-then-sacrifice');
+    const source = spawn(ctx, 'P1', altar);
+    const lone = spawn(ctx, 'P1', oracle({ name: 'Tap Sac Bear', typeLine: 'Creature — Bear' }));
+    const option = activationMatching(ctx, 'P1', source, /Draw a card/);
+    expect(option).toBeDefined();
+    const before = playerById(ctx, 'P1').hand.length;
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(ctx.state.battlefield.some((perm) => perm.id === lone.id)).toBe(false);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(before + 1);
+  });
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -2609,6 +2629,23 @@ describe('Flare of Malice', () => {
     resolveTop(ctx, answers([[/sacrifice/i, /Malice P3 First/]]));
     expect(onBattlefield(ctx, p2Walker)).toBe(false);
   });
+
+  it('flare-of-malice-face-down-mana-value — a face-down creature has mana value 0 (CR 708.2)', () => {
+    const ctx = pod('malice-face-down');
+    const hidden = spawn(ctx, 'P2', withMV('Malice Hidden Titan', 'Creature — Giant', 6));
+    hidden.faceDown = true;
+    const ogre = spawn(ctx, 'P2', withMV('Malice P2 Ogre', 'Creature — Ogre', 3));
+    spawn(ctx, 'P1', coloredCreature('Malice Black Wizard', 'B'));
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    takeAction(
+      ctx,
+      'P1',
+      castOptionsFor(ctx, 'P1', inHand.id)[0]!.payload as PriorityActionPayload,
+    );
+    resolveTop(ctx);
+    expect(onBattlefield(ctx, ogre)).toBe(false);
+    expect(onBattlefield(ctx, hidden)).toBe(true);
+  });
 });
 
 describe('Blasphemous Edict', () => {
@@ -3199,6 +3236,26 @@ describe('Anrakyr the Traveller', () => {
     expect(offered).toEqual(['Cast Anrakyr Zero Relic from your hand for 0 life']);
     expect(playerById(ctx, 'P1').life).toBe(2);
     expect(onBattlefield(ctx, free.cardId)).toBe(true);
+  });
+
+  it('anrakyr-the-traveller-respects-cast-bans — "can\'t cast spells during combat" stops its cast', () => {
+    const { ctx, self } = ready('anrakyr-ban');
+    spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Anrakyr Combat Ban',
+        typeLine: 'Enchantment',
+        oracleText: "Players can't cast spells during combat.",
+        power: null,
+        toughness: null,
+      }),
+    );
+    const relic = conjure(ctx, 'P1', artifact('Anrakyr Relic', 2), 'hand');
+    const offered = attack(ctx, self, /Anrakyr Relic/);
+    expect(offered).toEqual([]);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    expect(onBattlefield(ctx, relic.cardId)).toBe(false);
   });
 });
 

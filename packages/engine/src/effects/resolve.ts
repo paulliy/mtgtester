@@ -104,6 +104,7 @@ import {
   sourceColorsOf,
   spellProtectedFromCounter,
   requireModeled,
+  castingSpellsBlockedFor,
   sacrificeCandidateAllowed,
   selfMayTap,
 } from '../state/queries';
@@ -1249,6 +1250,8 @@ function freeCardIsCastable(
 ): boolean {
   const def = getDefByOracleId(ctx, card.oracleId, card.name);
   if (def.types.includes('Land') || def.manaCost === null) return false;
+  // "Players can't cast spells during combat" stops a cast during resolution too (CR 101.2).
+  if (castingSpellsBlockedFor(ctx, controllerId)) return false;
   if (
     def.spellAbility === null &&
     !def.types.some((type) =>
@@ -3207,10 +3210,11 @@ export function* executeAbility(
         break;
       }
       case 'sacrificeGreatestEachOpponent': {
+        // A permanent's own mana value: a face-down permanent's is 0 (CR 708.2).
         const metricOf = (perm: EnginePermanent): number =>
           effect.metric === 'power'
             ? effectivePT(ctx, perm).power
-            : spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined);
+            : (candidateOf(ctx, perm, computeCharacteristics(ctx, perm)).manaValue ?? 0);
         for (const opponent of opponentsOf(ctx, controller.id)) {
           const candidates = ctx.state.battlefield.filter(
             (perm) =>

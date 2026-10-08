@@ -94,9 +94,9 @@ function planActivation(
       : { sources: usable, reservedForSacrifice: new Set(reserved) };
   }
 
-  // Sacrifices come after taps. A permanent tapped for a cost may still be sacrificed for
-  // another (only `unavailable` ones are out), but each sacrifice takes a distinct permanent.
-  const unavailableIds = new Set(unavailable);
+  // Sacrifices come after taps. A permanent tapped for one cost may still be sacrificed for
+  // another, and `unavailable` (the source and a candidate being tapped) only keeps permanents
+  // away from the mana payment and the tap costs; each sacrifice takes a distinct permanent.
   function visitSacrifice(index: number): ActivationPlan | null {
     const cost = sacrifices[index];
     if (cost === undefined) return leaf();
@@ -104,7 +104,6 @@ function planActivation(
       (p) =>
         p.controllerId === player.id &&
         !reserved.has(p.id) &&
-        !unavailableIds.has(p.cardId) &&
         sacrificeCandidateAllowed(cost, source, p) &&
         matchesSelector(ctx, p, cost.selector, scope),
     );
