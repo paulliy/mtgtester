@@ -496,6 +496,15 @@ export function creatureTypeChoicesFor(
     .map((type) => ({ key: type, label: type }));
 }
 
+/**
+ * Where a permanent leaving the battlefield for `zone` actually goes: an unearthed permanent is
+ * exiled instead (CR 702.84a). Batch moves read this before queueing "dies" triggers, since a
+ * permanent exiled this way never dies (CR 700.4).
+ */
+export function leavesBattlefieldTo(perm: EnginePermanent, zone: Zone): Zone {
+  return perm.unearthed === true && zone !== 'exile' ? 'exile' : zone;
+}
+
 export function* moveObject(
   ctx: GameContext,
   obj: EngineObject,
@@ -509,8 +518,7 @@ export function* moveObject(
   // the command zone for a move to hand or library.
   if (
     from === 'battlefield' &&
-    (obj as EnginePermanent).unearthed === true &&
-    dest.zone !== 'exile'
+    leavesBattlefieldTo(obj as EnginePermanent, dest.zone) !== dest.zone
   ) {
     target = {
       zone: 'exile',
@@ -1734,7 +1742,9 @@ export function* movePermanentsToGraveyard(
   reason?: 'sacrifice',
 ): GameGen<void> {
   if (permanents.length === 0) return;
-  ctx.state.creaturesDiedThisTurn += permanents.filter((perm) =>
+  // Only what really reaches the graveyard dies; an unearthed permanent is exiled instead.
+  const dying = permanents.filter((perm) => leavesBattlefieldTo(perm, 'graveyard') === 'graveyard');
+  ctx.state.creaturesDiedThisTurn += dying.filter((perm) =>
     computeCharacteristics(ctx, perm).types.includes('Creature'),
   ).length;
   if (reason === 'sacrifice')
@@ -1746,7 +1756,7 @@ export function* movePermanentsToGraveyard(
   queueTriggersForEvent(
     ctx,
     'dies',
-    permanents.map((permanent) => ({ permanent })),
+    dying.map((permanent) => ({ permanent })),
   );
   for (const perm of permanents) {
     yield* moveObject(ctx, perm, { zone: 'graveyard', deferLeaveProcessing: true });

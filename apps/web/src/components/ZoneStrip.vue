@@ -70,7 +70,10 @@ function onCardLeave(): void {
             !props.selectableIds.includes(card.id) && props.actionableIds.includes(card.id),
         }"
         :role="isClickable(card) ? 'button' : undefined"
+        :tabindex="isClickable(card) ? 0 : undefined"
         @click="onCardClick(card)"
+        @keydown.enter.prevent="onCardClick(card)"
+        @keydown.space.prevent="onCardClick(card)"
         @mouseenter="onCardEnter(card, $event)"
         @mousemove="onCardMove"
         @mouseleave="onCardLeave"

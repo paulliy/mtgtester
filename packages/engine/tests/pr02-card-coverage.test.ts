@@ -22,6 +22,7 @@ import { computeCharacteristics } from '../src/effects/continuous';
 import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { runPrioritySequence } from '../src/turn/priority';
 import { queueStepTriggers, runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
@@ -1501,6 +1502,31 @@ describe('Nullmage Shepherd', () => {
     resolveTop(ctx);
     expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toContain('Nullmage Hex');
   });
+
+  it('nullmage-shepherd-tap-and-tap-other — a source that also pays {T} can never be one of the creatures it taps', () => {
+    // CR 302.6 lets a creature tap itself for "tap an untapped creature you control" only when
+    // the same ability does not already cost {T} (Selesnya Evangel, Jaspera Sentinel).
+    const evangel = oracle({
+      name: 'Tap Test Evangel',
+      typeLine: 'Creature — Elf',
+      oracleText:
+        '{1}, {T}, Tap an untapped creature you control: Create a 1/1 green Saproling creature token.',
+    });
+    const ctx = pod('tap-and-tap-other');
+    const source = spawn(ctx, 'P1', evangel);
+    addMana(playerById(ctx, 'P1'), generic(1));
+    expect(activationMatching(ctx, 'P1', source, /Saproling/)).toBeUndefined();
+    const helper = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Tap Test Helper', typeLine: 'Creature — Elf' }),
+    );
+    const option = activationMatching(ctx, 'P1', source, /Saproling/);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(source.tapped).toBe(true);
+    expect(helper.tapped).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -1735,6 +1761,49 @@ describe('Illuminor Szeras', () => {
     takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', spell.id)!.payload as PriorityActionPayload);
     expect(source.tapped).toBe(false);
     expect(ctx.state.battlefield.some((perm) => perm.id === fodder.id)).toBe(true);
+  });
+
+  it('illuminor-szeras-keeps-sacrifice-fodder — its mana never takes what the ability being paid must sacrifice', () => {
+    const altarCard = oracle({
+      name: 'Szeras Construct Altar',
+      typeLine: 'Artifact',
+      manaCost: '{2}',
+      oracleText: '{1}, Sacrifice a Construct: You gain 1 life.',
+      power: null,
+      toughness: null,
+    });
+    // Only one Construct: Szeras sacrificing it for {B} would leave nothing to sacrifice.
+    const lone = ready('szeras-reserve-lone');
+    spawn(lone.ctx, 'P1', creature('Szeras Lone Construct', '{1}', 1));
+    const loneAltar = spawn(lone.ctx, 'P1', altarCard);
+    expect(activationMatching(lone.ctx, 'P1', loneAltar, /gain 1 life/)).toBeUndefined();
+
+    // A second, non-Construct creature pays the {1}; the Construct is kept for the sacrifice.
+    const { ctx } = ready('szeras-reserve-pair');
+    const construct = spawn(ctx, 'P1', creature('Szeras Kept Construct', '{1}', 1));
+    const ox = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Szeras Fodder Ox', typeLine: 'Creature — Ox', manaCost: '{1}', cmc: 1 }),
+    );
+    const altar = spawn(ctx, 'P1', altarCard);
+    const option = activationMatching(ctx, 'P1', altar, /gain 1 life/);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    const graveyard = playerById(ctx, 'P1').graveyard.map((card) => card.cardId);
+    expect(graveyard).toEqual(expect.arrayContaining([construct.cardId, ox.cardId]));
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').life).toBe(41);
+  });
+
+  it('illuminor-szeras-view-mana — the player view credits its largest sacrifice, not their sum', () => {
+    const { ctx } = ready('szeras-view-mana');
+    spawn(ctx, 'P1', creature('Szeras View Three', '{3}', 3));
+    spawn(ctx, 'P1', creature('Szeras View Two', '{2}', 2));
+    spawn(ctx, 'P1', creature('Szeras View One', '{1}', 1));
+    const view = buildPlayerView(ctx, 'P1');
+    // One activation sacrifices one creature: at most {B}{B}{B}, not 3 + 2 + 1.
+    expect(view.availableMana['B']).toBe(3);
   });
 });
 
@@ -2165,6 +2234,50 @@ describe('Ghost Ark', () => {
         ).not.toContain(robot.cardId);
       }
     }
+  });
+
+  it('ghost-ark-unearthed-never-dies — lethal damage exiles it through state-based actions, with no dies trigger', () => {
+    const ctx = pod('ark-unearthed-sba');
+    const source = spawn(ctx, 'P1', ark.card);
+    spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Ark Deckhand', typeLine: 'Creature — Human', power: '2', toughness: '2' }),
+    );
+    const mourner = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Ark Mourning Thopter',
+        typeLine: 'Artifact Creature — Thopter',
+        manaCost: '{1}',
+        power: '1',
+        toughness: '1',
+        oracleText: 'When this creature dies, you gain 3 life.',
+      }),
+      'graveyard',
+    );
+    crewArk(ctx, source);
+    settle(ctx);
+    addMana(playerById(ctx, 'P1'), generic(3));
+    takeAction(
+      ctx,
+      'P1',
+      unearthFor(ctx, 'P1', 'Ark Mourning Thopter')!.payload as PriorityActionPayload,
+    );
+    resolveTop(ctx);
+    const returned = ctx.state.battlefield.find((perm) => perm.cardId === mourner.cardId)!;
+    returned.damageMarked = 3;
+    const diedBefore = ctx.state.creaturesDiedThisTurn;
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.exile.map((card) => card.cardId)).toContain(mourner.cardId);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.cardId)).not.toContain(
+      mourner.cardId,
+    );
+    // It was exiled instead of put into a graveyard, so it never died (CR 700.4, 702.84a).
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    expect(ctx.state.creaturesDiedThisTurn).toBe(diedBefore);
+    expect(playerById(ctx, 'P1').life).toBe(40);
   });
 
   it('ghost-ark-grant-ends-at-cleanup — the unearth grant lasts until end of turn', () => {

@@ -200,21 +200,36 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
   // its alternatives at once): it describes *reachable* colors, not a literal simultaneous
   // total. Nothing treats `availableMana` as ground truth for legality — `canPay`/`planPayment`
   // remain authoritative; this is descriptive context for the AI only.
+  //
+  // A permanent with several mana abilities is one source per ability, all sharing its card id,
+  // and one activation uses only one of them (Illuminor Szeras is one source per creature it
+  // could sacrifice). So each card adds its largest ability's amount of each symbol to
+  // `availableMana`, never the sum. `count` still reports every alternative unit (ADR 0010).
   const availableMana: Record<string, number> = { ...viewer.manaPool };
-  const manaSourcesByCard = new Map<string, { symbols: Set<string>; count: number }>();
+  const manaSourcesByCard = new Map<
+    string,
+    { symbols: Set<string>; count: number; perSymbol: Map<string, number> }
+  >();
   for (const source of manaSourcesFor(ctx, playerId)) {
     let entry = manaSourcesByCard.get(source.cardId);
     if (entry === undefined) {
-      entry = { symbols: new Set<string>(), count: 0 };
+      entry = { symbols: new Set<string>(), count: 0, perSymbol: new Map() };
       manaSourcesByCard.set(source.cardId, entry);
     }
+    entry.count += source.units.length;
+    const perSymbol = new Map<string, number>();
     for (const unit of source.units) {
-      entry.count += 1;
       for (const sym of unit) {
-        availableMana[sym] = (availableMana[sym] ?? 0) + 1;
+        perSymbol.set(sym, (perSymbol.get(sym) ?? 0) + 1);
         entry.symbols.add(sym);
       }
     }
+    for (const [sym, n] of perSymbol) {
+      entry.perSymbol.set(sym, Math.max(entry.perSymbol.get(sym) ?? 0, n));
+    }
+  }
+  for (const entry of manaSourcesByCard.values()) {
+    for (const [sym, n] of entry.perSymbol) availableMana[sym] = (availableMana[sym] ?? 0) + n;
   }
   const manaSources: PlayerView['manaSources'] = [...manaSourcesByCard.entries()].map(
     ([cardId, entry]) => {

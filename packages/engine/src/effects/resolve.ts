@@ -53,7 +53,8 @@ import {
   totalPips,
   withX,
 } from '../mana/cost';
-import type { ManaSource, ParsedManaCost } from '../mana/cost';
+import type { ParsedManaCost } from '../mana/cost';
+import { withoutReserved } from '../mana/activation';
 import { addMana, removeMana, selectEntriesToSpend } from '../mana/pool';
 import type { ManaEntry, PaymentPurpose } from '../cards/ability';
 import { debug, emit } from '../log/log';
@@ -6421,38 +6422,6 @@ export function endUntilEotEffects(ctx: GameContext): void {
   // "Gains unearth {3} until end of turn" (Ghost Ark) ends with the other until-end-of-turn
   // effects (CR 514.2).
   ctx.state.temporaryGraveyardAbilities = {};
-}
-
-/**
- * The mana sources a payment may use when `reserved` permanents are spoken for by another part
- * of the same cost (Ashnod's Altar paying for Canoptek Wraith's "{3} and sacrifice it" may not
- * sacrifice the Wraith). A reserved permanent leaves every source's sacrifice candidates, a
- * source left with no candidate for one of its sacrifices is dropped, and a source that would
- * sacrifice a reserved permanent itself is dropped. The planner then keeps the sacrifices
- * distinct (`sacrificesArePayable`).
- */
-function withoutReserved(
-  ctx: GameContext,
-  sources: readonly ManaSource[],
-  reserved: ReadonlySet<string>,
-): ManaSource[] {
-  if (reserved.size === 0) return [...sources];
-  const reservedCards = new Set(
-    ctx.state.battlefield.filter((p) => reserved.has(p.id)).map((p) => p.cardId),
-  );
-  return sources.flatMap((source) => {
-    if (
-      reservedCards.has(source.cardId) &&
-      source.costs.some((cost) => cost.kind === 'sacrificeSelf')
-    ) {
-      return [];
-    }
-    if (source.sacrifices === undefined) return [source];
-    const sacrifices = source.sacrifices.map((group) =>
-      group.filter((id) => !reservedCards.has(id)),
-    );
-    return sacrifices.some((group) => group.length === 0) ? [] : [{ ...source, sacrifices }];
-  });
 }
 
 /**
