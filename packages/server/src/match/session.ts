@@ -66,7 +66,7 @@ import {
   type ReportSeatSource,
 } from './report';
 import type { SeatSetup } from './setup';
-import { isPlayerActionYielded, playerYieldKey } from './player-yield';
+import { SmartYieldMemory, playerYieldKey } from './player-yield';
 
 /** `HeuristicDecisionProvider` (like the engine's `RandomDecisionProvider` before it) is
  * synchronous; the runner awaits every provider. */
@@ -144,6 +144,7 @@ export class MatchSession {
   private readonly humanProvider: HumanDecisionProvider | null;
   private readonly connectionGate = new PlayerConnectionGate();
   private readonly ignoredAbilities = new Map<string, IgnoredPlayerAbility>();
+  private readonly smartYieldMemory = new SmartYieldMemory();
   private playerRevision = 0;
   /** The human's most recent surfaced decision and answer, for "Copy game report". */
   private lastHumanDecision: {
@@ -773,8 +774,26 @@ export class MatchSession {
       rejected('This is not a single-player game.');
       return;
     }
+    const pending = this.humanProvider.current();
     const error = this.humanProvider.submit(payload);
-    if (error !== null) rejected(error);
+    if (error !== null) {
+      rejected(error);
+      return;
+    }
+    // Record only an accepted pass, before the runner advances the board. A stale or
+    // invalid response must never silence a future opportunity.
+    if (
+      pending?.request.decisionType === 'priority' &&
+      ['pass', 'passAndYieldTurn', 'yieldToAbility'].includes(
+        pending.request.legalActions.find((action) => action.id === payload.actionId)?.type ?? '',
+      )
+    ) {
+      this.smartYieldMemory.dismiss(
+        pending.request.legalActions,
+        this.ignoredAbilities,
+        this.engine.playerState(this.humanSeat!),
+      );
+    }
   }
 
   yieldPlayerAbility(payload: YieldPlayerAbilityPayload): void {
@@ -813,6 +832,13 @@ export class MatchSession {
       label: action.description,
       mode: payload.mode ?? 'always',
     });
+    // Choosing yield also declines the current opportunity, including every mode/X
+    // value sharing this preference. It must not immediately reoffer the same choice.
+    this.smartYieldMemory.dismiss(
+      pending.request.legalActions.filter((candidate) => playerYieldKey(candidate) === key),
+      this.ignoredAbilities,
+      this.engine.playerState(this.humanSeat!),
+    );
     this.sendPlayerActionRequired(pending.request, pending.revision);
   }
 
@@ -824,6 +850,7 @@ export class MatchSession {
       });
       return;
     }
+    this.smartYieldMemory.resume(key);
     const pending = this.humanProvider?.current();
     if (pending !== null && pending !== undefined) {
       this.sendPlayerActionRequired(pending.request, pending.revision);
@@ -906,7 +933,7 @@ export class MatchSession {
     const legalActions =
       request.decisionType === 'priority'
         ? request.legalActions.filter(
-            (action) => !isPlayerActionYielded(action, this.ignoredAbilities, state),
+            (action) => !this.smartYieldMemory.isYielded(action, this.ignoredAbilities, state),
           )
         : request.legalActions;
     const pass = legalActions.find((action) => action.type === 'pass');
@@ -940,7 +967,7 @@ export class MatchSession {
 
   private isIgnoredAbility(action: DecisionRequest['legalActions'][number]): boolean {
     if (this.humanSeat === null || this.ignoredAbilities.size === 0) return false;
-    return isPlayerActionYielded(
+    return this.smartYieldMemory.isYielded(
       action,
       this.ignoredAbilities,
       this.engine.playerState(this.humanSeat),
