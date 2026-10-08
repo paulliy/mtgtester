@@ -513,12 +513,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'The Ooze',
     'Leaves-the-battlefield is implemented as dies.',
   );
-  // Catalog audit batch 5: additional cost is paid at resolution as loseLife.
-  unsupportedCard(
-    'afaef788-34d1-460b-b884-9d7ae6ddeb18',
-    'Toxic Deluge',
-    'Pay-X-life additional cost is implemented as loseLife on resolution.',
-  );
+  // Toxic Deluge: restored in coverage PR02. The interpreter reads the announced pay-X-life
+  // additional cost and the -X/-X sweep, so no override remains.
   // Catalog audit batch 6: graveyard-origin and once-each-turn restrictions are omitted.
   unsupportedCard(
     '05d7222b-cc08-4f1f-8e35-6058599572ba',

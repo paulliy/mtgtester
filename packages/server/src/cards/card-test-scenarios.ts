@@ -6715,6 +6715,34 @@ function anrakyrScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function toxicDelugeScenario(gameId: GameId): CardTestScenario {
+  const deluge = pinnedFrom(MARCHESA_BATCH1, 'Toxic Deluge');
+  return pr01Scenario(gameId, {
+    id: 'toxic-deluge-viewer-pay-two-life',
+    title: 'Toxic Deluge: pay 2 life for -2/-2',
+    instructions: [
+      'Cast Toxic Deluge with X=2, paying {2}{B} with your Swamp and Forests and 2 life.',
+    ],
+    expectedOutcome:
+      "You go to 38 life as you cast it; P2's Lab Zombie dies, and Lab Ox and Lab Giant survive as 2/2s until end of turn.",
+    oracleSha256: deluge.sha256,
+    clauseIds: ['toxic-deluge-pay-x-life', 'toxic-deluge-minus-x'],
+    decks: {
+      P1: [deluge.card, SWAMP, FOREST, FOREST, LAB_OX],
+      P2: [LAB_ZOMBIE, LAB_GIANT, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Toxic Deluge'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp', 'Forest', 'Forest', 'Lab Ox'] },
+        { playerId: 'P2', cardNames: ['Lab Zombie', 'Lab Giant'] },
+      ],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -6952,6 +6980,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'raffines-guidance-viewer-graveyard-recast',
   'their-number-is-legion-viewer-graveyard-x',
   'anrakyr-the-traveller-viewer-cast-for-life',
+  'toxic-deluge-viewer-pay-two-life',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7109,6 +7138,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'raffines-guidance-viewer-graveyard-recast': raffinesGuidanceScenario,
   'their-number-is-legion-viewer-graveyard-x': theirNumberIsLegionScenario,
   'anrakyr-the-traveller-viewer-cast-for-life': anrakyrScenario,
+  'toxic-deluge-viewer-pay-two-life': toxicDelugeScenario,
 };
 
 export function createCardTestScenario(

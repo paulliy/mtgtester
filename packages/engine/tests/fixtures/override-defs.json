@@ -7486,12 +7486,6 @@
     }
   },
   {
-    "oracleId": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
-    "name": "Toxic Deluge",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "b1544f21-7e98-461b-aed5-e748b0168c52",
     "name": "Swords to Plowshares",
     "handledLines": [
@@ -21765,12 +21759,6 @@
   {
     "oracleId": "oracle-tomik-wielder-of-law",
     "name": "Tomik, Wielder of Law",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-toxic-deluge",
-    "name": "Toxic Deluge",
     "handledLines": [],
     "def": {}
   },

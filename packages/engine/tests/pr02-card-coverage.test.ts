@@ -3203,6 +3203,105 @@ describe('Anrakyr the Traveller', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Group E: additional costs, cost keywords and reductions
+// ---------------------------------------------------------------------------------------------
+
+describe('Toxic Deluge', () => {
+  const deluge = pinned('Toxic Deluge');
+  const body = (name: string, size: number) =>
+    oracle({ name, typeLine: 'Creature — Ooze', power: String(size), toughness: String(size) });
+
+  function ready(seed: string, life = 40) {
+    const ctx = pod(seed);
+    playerById(ctx, 'P1').life = life;
+    const inHand = conjure(ctx, 'P1', deluge.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }, ...generic(2)]);
+    return { ctx, inHand };
+  }
+
+  const xs = (ctx: GameContext, objectId: string) =>
+    castOptionsFor(ctx, 'P1', objectId).map(
+      (option) => (option.payload as PriorityActionPayload & { x?: number }).x,
+    );
+
+  it('toxic-deluge-pinned-oracle-supported — an announced pay-X-life cost and a -X/-X sweep', () => {
+    expect(deluge.sha256).toBe('8d4c686fcd606a82ad2a0dbba2ab363d1b5ca67300bf21b0a3de199ec277cad9');
+    expect(deluge.card.oracleText).toBe(
+      'As an additional cost to cast this spell, pay X life.\nAll creatures get -X/-X until end of turn.',
+    );
+    expectModeled(deluge.card);
+    expect(getOverride(deluge.card.oracleId)).toBeUndefined();
+    const def = interpretCard(deluge.card);
+    expect(def.announcesX).toBe(true);
+    expect(def.spellAdditionalCosts).toEqual([
+      { kind: 'payLifeValue', amount: { kind: 'xValue' } },
+    ]);
+    expect(def.spellAbility?.effects).toEqual([
+      {
+        op: 'pumpEachUntilEot',
+        selector: ofType('Creature'),
+        power: { kind: 'negate', of: { kind: 'xValue' } },
+        toughness: { kind: 'negate', of: { kind: 'xValue' } },
+      },
+    ]);
+  });
+
+  it('toxic-deluge-pay-x-life-on-cast — X life is paid while casting, before anyone can respond', () => {
+    const { ctx, inHand } = ready('deluge-pay');
+    const option = castOptionsFor(ctx, 'P1', inHand.id).find(
+      (entry) => (entry.payload as PriorityActionPayload & { x?: number }).x === 3,
+    );
+    expect(option?.description).toMatch(/X=3/);
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    // Paid as a cost (CR 601.2h): already gone with the spell still on the stack.
+    expect(playerById(ctx, 'P1').life).toBe(37);
+    expect(ctx.state.stack.at(-1)?.announcedX).toBe(3);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+  });
+
+  it('toxic-deluge-x-bounded-by-life — X runs from 0 to your life total, never more', () => {
+    const { ctx, inHand } = ready('deluge-bound', 2);
+    expect(xs(ctx, inHand.id)).toEqual([0, 1, 2]);
+  });
+
+  it('toxic-deluge-minus-x-sweep — every creature gets -X/-X until end of turn', () => {
+    const { ctx, inHand } = ready('deluge-sweep');
+    const small = spawn(ctx, 'P1', body('Deluge Own Ooze', 3));
+    const big = spawn(ctx, 'P2', body('Deluge Rival Ooze', 5));
+    const option = castOptionsFor(ctx, 'P1', inHand.id).find(
+      (entry) => (entry.payload as PriorityActionPayload & { x?: number }).x === 3,
+    );
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    expect([
+      computeCharacteristics(ctx, big).power,
+      computeCharacteristics(ctx, big).toughness,
+    ]).toEqual([2, 2]);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.battlefield.some((perm) => perm.id === small.id)).toBe(false);
+    expect(ctx.state.battlefield.some((perm) => perm.id === big.id)).toBe(true);
+    endUntilEotEffects(ctx);
+    expect([
+      computeCharacteristics(ctx, big).power,
+      computeCharacteristics(ctx, big).toughness,
+    ]).toEqual([5, 5]);
+  });
+
+  it('toxic-deluge-x-zero — X=0 costs no life and changes nothing', () => {
+    const { ctx, inHand } = ready('deluge-zero');
+    const ooze = spawn(ctx, 'P2', body('Deluge Rival Ooze', 1));
+    const option = castOptionsFor(ctx, 'P1', inHand.id).find(
+      (entry) => (entry.payload as PriorityActionPayload & { x?: number }).x === 0,
+    );
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    pump(priorityCheckpoint(ctx));
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    expect(ctx.state.battlefield.some((perm) => perm.id === ooze.id)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3214,6 +3313,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Toxic Deluge',
+    sha256: '8d4c686fcd606a82ad2a0dbba2ab363d1b5ca67300bf21b0a3de199ec277cad9',
+    clauseCount: 2,
+  },
   {
     name: 'Anrakyr the Traveller',
     sha256: '1f11aa229db25bcdc8cb4b657fc98252b59975ad92a97811bae330033a79dcf9',

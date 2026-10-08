@@ -479,21 +479,34 @@
     "afaef788-34d1-460b-b884-9d7ae6ddeb18": {
       "name": "Toxic Deluge",
       "oracleSha256": "8d4c686fcd606a82ad2a0dbba2ab363d1b5ca67300bf21b0a3de199ec277cad9",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "toxic-deluge-pay-x-life",
           "oracleText": "As an additional cost to cast this spell, pay X life.",
           "implementation": [
-            "explicitly unsupported; additional cost authored as resolution loseLife"
+            "interpreted spellAdditionalCosts payLifeValue(X) with announcesX: X from 0 to your life total is announced with the cast (CR 601.2b) and the life is paid while casting (CR 601.2h), recorded as the stack object's announcedX"
           ],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "toxic-deluge-pinned-oracle-supported",
+            "toxic-deluge-pay-x-life-on-cast",
+            "toxic-deluge-x-bounded-by-life",
+            "toxic-deluge-x-zero"
+          ],
+          "viewerScenarioIds": ["toxic-deluge-viewer-pay-two-life"]
         },
         {
+          "id": "toxic-deluge-minus-x",
           "oracleText": "All creatures get -X/-X until end of turn.",
-          "implementation": ["explicitly unsupported pending a faithful additional cost"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted spell effect pumpEachUntilEot over all creatures, power and toughness -X"
+          ],
+          "engineTestIds": [
+            "toxic-deluge-pinned-oracle-supported",
+            "toxic-deluge-minus-x-sweep",
+            "toxic-deluge-x-zero"
+          ],
+          "viewerScenarioIds": ["toxic-deluge-viewer-pay-two-life"]
         }
       ],
       "gameplayAiScenarioIds": []

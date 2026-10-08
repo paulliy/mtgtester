@@ -5823,6 +5823,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr02",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
+      "name": "Toxic Deluge",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads 'As an additional cost to cast this spell, pay X life' as an announced X (announcesX) with a payLifeValue cost paid while casting, and 'All creatures get -X/-X until end of turn' as pumpEachUntilEot with -X/-X; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

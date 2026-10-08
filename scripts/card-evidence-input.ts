@@ -1465,6 +1465,7 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Anrakyr the Traveller: attack, then cast an artifact for life'],
   },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Toxic Deluge: pay 2 life for -2/-2'] },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

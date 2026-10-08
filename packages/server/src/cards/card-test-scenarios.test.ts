@@ -201,6 +201,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'raffines-guidance-viewer-graveyard-recast',
       'their-number-is-legion-viewer-graveyard-x',
       'anrakyr-the-traveller-viewer-cast-for-life',
+      'toxic-deluge-viewer-pay-two-life',
     ]);
   });
 

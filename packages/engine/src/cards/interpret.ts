@@ -1373,6 +1373,24 @@ function parseEffectSentence(
   // "Creatures you control get +3/+3 and gain trample until end of turn" (Overrun). Untargeted:
   // the subject is a selector, evaluated once at resolution (CR 611.2c).
   {
+    // "All creatures get -X/-X until end of turn" (Toxic Deluge): X is the announced value.
+    const x = s.match(/^(.+?) gets? ([+-])x\/([+-])x until end of turn$/);
+    if (x !== null) {
+      const subject = x[1] as string;
+      const selector =
+        subject === 'all creatures' ? ofType('Creature') : parseSubject(subject, card);
+      if (selector === null) return null;
+      const signed = (sign: string): Value =>
+        sign === '-' ? { kind: 'negate', of: { kind: 'xValue' } } : { kind: 'xValue' };
+      return [
+        {
+          op: 'pumpEachUntilEot',
+          selector,
+          power: signed(x[2] as string),
+          toughness: signed(x[3] as string),
+        },
+      ];
+    }
     const m = s.match(MASS_UNTIL_EOT_RE);
     if (m) {
       const selector = parseSubject(m[1] as string, card);
@@ -4637,6 +4655,9 @@ function parseNonManaAlternativeCost(
 function parseSpellAdditionalCost(line: string): AbilityCost[] | null {
   const m = line.match(/^as an additional cost to cast this spell, (.+)$/i);
   if (m === null) return null;
+  // "pay X life" (Toxic Deluge): X is announced with the spell (CR 601.2b) and paid as a cost
+  // while casting (CR 601.2h). The caller marks the spell as announcing X.
+  if (m[1] === 'pay x life') return [{ kind: 'payLifeValue', amount: { kind: 'xValue' } }];
   return parseActivationCosts(m[1] as string);
 }
 /** Symbols inside a mana clause, uppercased: "{g} or {w}" â†’ ['G','W']. */
@@ -5958,6 +5979,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   const spellAdditionalCosts: AbilityCost[] = [];
   let commanderFreeCast = false;
   let spellModes: NonNullable<Ability['modes']> | undefined;
+  let announcesX = false;
   let castFromGraveyard = false;
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
@@ -6347,6 +6369,14 @@ export function interpretCard(card: OracleCard): CardDefinition {
       const additionalCosts = parseSpellAdditionalCost(lower);
       if (additionalCosts !== null) {
         spellAdditionalCosts.push(...additionalCosts);
+        if (
+          card.manaCost?.includes('{X}') !== true &&
+          additionalCosts.some(
+            (cost) => cost.kind === 'payLifeValue' && cost.amount.kind === 'xValue',
+          )
+        ) {
+          announcesX = true;
+        }
         continue;
       }
       const alternativeCosts = parseNonManaAlternativeCost(lower, card);
@@ -7274,6 +7304,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
     ruleStatics,
     ...(alternativeCasts ? { alternativeCasts } : {}),
     ...(castFromGraveyard ? { castFromGraveyard: true as const } : {}),
+    ...(announcesX ? { announcesX: true } : {}),
     modeled: reasons.length === 0,
     unmodeledReasons: reasons,
   });

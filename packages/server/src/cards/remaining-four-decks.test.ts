@@ -124,7 +124,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'River Kelpie',
       'Twilight Diviner',
       'Pensive Professor',
-      'Toxic Deluge',
       'Puppeteer Clique',
       'Satoru, the Infiltrator',
       'Siren Stormtamer',

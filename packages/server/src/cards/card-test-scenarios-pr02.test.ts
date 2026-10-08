@@ -678,3 +678,16 @@ describe('Anrakyr the Traveller Card Test Lab scenario', () => {
     replays('anrakyr-the-traveller-viewer-cast-for-life', steps);
   });
 });
+
+describe('Toxic Deluge Card Test Lab scenario', () => {
+  it('toxic-deluge-viewer-pay-two-life — X=2 costs 2 life and kills only the 1/1', () => {
+    const steps: Step[] = [{ action: 'X=2' }];
+    const { state, seat, onBattlefield } = run('toxic-deluge-viewer-pay-two-life', steps);
+    expect(seat('P1').life).toBe(38);
+    expect(onBattlefield('Lab Zombie')).toEqual([]);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(onBattlefield('Lab Giant')).toHaveLength(1);
+    expect(state.effects.map((effect) => effect.description).join(' | ')).toMatch(/-2\/-2|−2\/−2/);
+    replays('toxic-deluge-viewer-pay-two-life', steps);
+  });
+});

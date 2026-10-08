@@ -3459,3 +3459,20 @@ test('Anrakyr the Traveller: attack, then cast an artifact for life', async ({ p
   await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('36');
   await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
 });
+
+test('Toxic Deluge: pay 2 life for -2/-2', async ({ page }) => {
+  await runScenario(page, 'Toxic Deluge: pay 2 life for -2/-2');
+  const deluge = handCard(page, 'Toxic Deluge');
+  await expect(deluge).toHaveClass(/actionable/);
+  await deluge.click();
+  await expect(page.getByText(/Choose X/)).toBeVisible();
+  await page.locator('.x-group input[type="number"]').fill('2');
+  await page.locator('.x-group button').click();
+  const autoPay = page.getByText(/Auto-pay/);
+  if (await autoPay.isVisible()) await confirm(page);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('38', { timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Zombie')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+  await expect(permanent(page, 'Lab Giant')).toBeVisible();
+});

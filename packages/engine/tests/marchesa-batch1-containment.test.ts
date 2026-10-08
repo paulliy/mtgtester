@@ -33,7 +33,6 @@ function canonical(value: unknown): string {
 }
 
 const REASONS: Record<string, string> = {
-  'Toxic Deluge': 'Pay-X-life additional cost is implemented as loseLife on resolution.',
   'Body Launderer':
     'Connive is approximated as unconditional +1/+1, and the return trigger omits equal-or-lesser power.',
   'Bolt Bend': 'Change-the-target is implemented as copyTargetSpell; a copy is not a retarget.',
@@ -311,6 +310,7 @@ describe('Marchesa catalog audit containment', () => {
     "Raffine's Guidance",
     'Their Number Is Legion',
     'Anrakyr the Traveller',
+    'Toxic Deluge',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

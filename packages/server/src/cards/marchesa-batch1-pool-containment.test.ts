@@ -69,6 +69,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Their Number Is Legion',
       'Thunderfoot Baloth',
       'Tomb Fortress',
+      'Toxic Deluge',
       'Vastwood Surge',
       'Voice of Many',
       'War Room',
