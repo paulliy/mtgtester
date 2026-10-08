@@ -1,3 +1,16 @@
+import { SPELL_FACE_SCENARIO_IDS, spellFaceScenario } from './spell-face-scenarios';
+import {
+  SPECIALIZED_REFERENCE_SCENARIO_IDS,
+  specializedReferenceScenario,
+} from './specialized-reference-scenarios';
+import {
+  ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
+  zoneChangeTriggerScenario,
+} from './zone-change-trigger-scenarios';
+import {
+  COUNTER_OVERLOAD_SCENARIO_IDS,
+  counterOverloadScenario,
+} from './counter-overload-scenarios';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
@@ -6,6 +19,7 @@ import type { DecisionProvider, EnginePlayerConfig, PreparedScenarioSpec } from 
 import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } from '@mtg/shared';
 import type { SeatSetup } from '../match/setup';
 import { BUG_HUNT_SCENARIO_IDS, bugHuntScenario } from './bug-hunt-scenarios';
+import { TARGET_UNTAP_SCENARIO_IDS, targetUntapScenario } from './target-untap-scenarios';
 
 export interface CardTestScenario {
   metadata: CardTestScenarioMetadata;
@@ -201,6 +215,10 @@ const MARCHESA_BATCH1: PinnedOracleFile = JSON.parse(
 /** Coverage PR01 cards that had no earlier pinned fixture. */
 const COVERAGE_PR01: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr01-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
+const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
 function pinnedFrom(file: PinnedOracleFile, name: string): { card: OracleCard; sha256: string } {
@@ -3654,6 +3672,8 @@ function smotheringTitheScenario(gameId: GameId, outcome: 'pay' | 'decline'): Ca
     oracleId: `lab-tithe-secret-${outcome}`,
     name: `Tithe Secret ${outcome === 'pay' ? 'Pay' : 'Decline'}`,
     typeLine: 'Creature — Secret',
+    // This synthetic spell keeps a priority choice available after all three Forests tap.
+    manaCost: '{0}',
   });
   const p1 = player('P1', [ARCANE_PENDING_SPELL, FOREST, FOREST, FOREST, secret]);
   const p2 = player('P2', [tithe.card, FOREST, FOREST]);
@@ -5576,6 +5596,96 @@ function koglaAttackScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function mosswortCastingScenario(
+  gameId: GameId,
+  hiddenLand = false,
+  spellFace = false,
+): CardTestScenario {
+  const bridge = pinnedFrom(HIDEAWAY_CASTING, 'Mosswort Bridge');
+  const wake = card({
+    oracleId: 'lab-hideaway-wake',
+    name: 'Lab Wake',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'Untap target permanent.',
+  });
+  const counter = card({
+    oracleId: 'lab-hideaway-witness',
+    name: 'Lab Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'You gain 0 life.',
+  });
+  const titan = card({
+    oracleId: 'lab-hidden-titan',
+    name: 'Lab Hidden Titan',
+    typeLine: 'Creature — Giant',
+    manaCost: '{7}',
+    cmc: 7,
+    power: '7',
+    toughness: '7',
+  });
+  const face = JSON.parse(
+    readFileSync('packages/engine/tests/fixtures/selected-spell-faces-oracle.json', 'utf8'),
+  ).cards.find((row: { card: OracleCard }) => row.card.name.startsWith('Foulmire Knight')) as {
+    card: OracleCard;
+    sha256: string;
+  };
+  if (createHash('sha256').update(JSON.stringify(face.card)).digest('hex') !== face.sha256)
+    throw new Error('Free face Oracle fixture drift');
+  return pr01Scenario(gameId, {
+    id: spellFace
+      ? 'mosswort-viewer-free-adventure-face'
+      : hiddenLand
+        ? 'mosswort-viewer-land-play-limit'
+        : 'mosswort-viewer-free-cast-stack',
+    title: spellFace
+      ? 'Mosswort Bridge: cast a hidden Adventure spell face'
+      : hiddenLand
+        ? 'Mosswort Bridge: a hidden land still needs a land play'
+        : 'Mosswort Bridge: cast a hidden permanent on the spell stack',
+    instructions: [
+      'Play Mosswort Bridge and hide ' +
+        (spellFace ? 'Foulmire Knight.' : hiddenLand ? 'a Forest.' : 'Lab Hidden Titan.'),
+      'Cast Lab Wake targeting the Bridge, then activate its hideaway ability using the Forest.',
+      spellFace
+        ? 'Choose to play Foulmire Knight, then configure Profane Insight. Its Instant spell resolves on the normal stack.'
+        : hiddenLand
+          ? 'The land play was used by Mosswort Bridge, so the hidden Forest cannot be played.'
+          : 'Choose to play Lab Hidden Titan; its spell waits on the stack. Pass priority to let it resolve.',
+    ],
+    expectedOutcome: spellFace
+      ? 'Profane Insight draws one card, loses one life, and leaves its physical card on Adventure in exile.'
+      : hiddenLand
+        ? 'The hidden Forest remains in exile and no second land is played.'
+        : 'Lab Hidden Titan is cast exactly once and resolves as a 7/7 creature.',
+    oracleSha256: bridge.sha256,
+    clauseIds: spellFace
+      ? ['mosswort-bridge-hideaway', 'mosswort-bridge-free-play', 'profane-insight-free-face']
+      : ['mosswort-bridge-hideaway', 'mosswort-bridge-free-play'],
+    decks: {
+      P1: [
+        bridge.card,
+        wake,
+        counter,
+        LAB_OX,
+        LAB_OX,
+        LAB_OX,
+        FOREST,
+        spellFace ? face.card : hiddenLand ? FOREST : titan,
+        LAB_SERVO,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Mosswort Bridge', 'Lab Wake', 'Lab Witness'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Ox', 'Lab Ox', 'Lab Ox', 'Forest'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -5586,7 +5696,15 @@ export const REVIEWED_BASELINE_SCENARIO_IDS = [
 ] as const;
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
+  ...ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
+  'mosswort-viewer-free-adventure-face',
+  'mosswort-viewer-free-cast-stack',
+  'mosswort-viewer-land-play-limit',
   ...BUG_HUNT_SCENARIO_IDS,
+  ...TARGET_UNTAP_SCENARIO_IDS,
+  ...SPELL_FACE_SCENARIO_IDS,
+  ...COUNTER_OVERLOAD_SCENARIO_IDS,
   ...REVIEWED_BASELINE_SCENARIO_IDS,
   'swords-viewer-exile-and-gain-life',
   'throat-viewer-destroy-nonartifact',
@@ -5703,6 +5821,33 @@ export const CARD_TEST_SCENARIO_IDS = [
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
   ...Object.fromEntries(
+    SPECIALIZED_REFERENCE_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => specializedReferenceScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    ZONE_CHANGE_TRIGGER_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => zoneChangeTriggerScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    SPELL_FACE_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => spellFaceScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    COUNTER_OVERLOAD_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => counterOverloadScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    TARGET_UNTAP_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => targetUntapScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
     BUG_HUNT_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => bugHuntScenario(id, gameId)]),
   ),
   'tribute-viewer-cast-search-select-resolve': tributeMageScenario,
@@ -5710,6 +5855,9 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'nightscape-viewer-activate-regenerate-destroy': nightscapeScenario,
   'thran-viewer-graveyard-departure-trigger': thranVigilScenario,
   'harmonic-viewer-cast-and-double-trigger': harmonicProdigyScenario,
+  'mosswort-viewer-free-adventure-face': (gameId) => mosswortCastingScenario(gameId, false, true),
+  'mosswort-viewer-free-cast-stack': (gameId) => mosswortCastingScenario(gameId),
+  'mosswort-viewer-land-play-limit': (gameId) => mosswortCastingScenario(gameId, true),
   'swords-viewer-exile-and-gain-life': swordsScenario,
   'throat-viewer-destroy-nonartifact': throatScenario,
   'defense-viewer-pump-and-hexproof': blossomingScenario,

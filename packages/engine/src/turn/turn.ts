@@ -1,3 +1,4 @@
+import { assertTriggerEventFamily } from '../cards/trigger-contracts';
 /**
  * Turn structure (CR 500–514, brief §5.3): beginning (untap/upkeep/draw), precombat main,
  * combat, postcombat main, ending (end/cleanup). Multiplayer: the starting player DOES
@@ -105,13 +106,18 @@ export function queueStepTriggers(
     | 'precombatMain'
     | 'beginningOfCombat',
 ): void {
+  assertTriggerEventFamily(when, 'step');
   const apId = ctx.state.currentTurnPlayer;
   for (const perm of [...ctx.state.battlefield]) {
     for (const ability of triggersOf(ctx, perm)) {
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       if (spec.player === 'you' && perm.controllerId !== apId) continue;
-      const source = { cardId: perm.cardId, controllerId: perm.controllerId };
+      const source = {
+        cardId: perm.cardId,
+        controllerId: perm.controllerId,
+        eventPlayerId: apId,
+      };
       // Intervening-if, first check (CR 603.4) — see `queueTriggersForEvent`.
       if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
       const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
@@ -123,6 +129,7 @@ export function queueStepTriggers(
           sourceOracleId: perm.oracleId,
           sourceName: perm.name,
           ability,
+          scope: { eventPlayerId: apId },
         });
         debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
       }
@@ -141,6 +148,7 @@ export function queueStepTriggers(
           sourceOracleId: '' as never,
           sourceName: emblem.name,
           ability,
+          scope: { eventPlayerId: apId },
         });
         debug(ctx, 'stack', `${when} emblem trigger queued: ${emblem.name}`);
       }

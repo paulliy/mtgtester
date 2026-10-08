@@ -1,8 +1,9 @@
 # Modelled Cards by Engine
 
 Generated from the engine-supported card pool.
+This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 5791 modeled non-land cards
+**Total**: 5802 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -53,6 +54,7 @@ Generated from the engine-supported card pool.
 - Aeronaut's Wings
 - Aesi, Tyrant of Gyre Strait
 - Aether Adept
+- Aether Channeler
 - Aether Helix
 - Aether Spellbomb
 - Aetherflux Conduit
@@ -128,7 +130,6 @@ Generated from the engine-supported card pool.
 - Ambush Paratrooper
 - Ambush Party
 - Ambush Viper
-- Amethyst Dragon // Explosive Crystal
 - Amphin Cutthroat
 - Amphin Pathmage
 - Ampryn Tactician
@@ -173,7 +174,6 @@ Generated from the engine-supported card pool.
 - Angler Turtle
 - Angry Rabble
 - Anguished Unmaking
-- Animating Faerie // Bring to Life
 - Ankle Biter
 - Ankle Shanker
 - Annoyed Altisaur
@@ -195,7 +195,6 @@ Generated from the engine-supported card pool.
 - Applied Biomancy
 - Apprentice Wizard
 - April, Reporter of the Weird
-- Aquatic Alchemist // Bubble Up
 - Aquitect's Defenses
 - Aquus Steed
 - Arachnoid
@@ -231,7 +230,6 @@ Generated from the engine-supported card pool.
 - Archweaver
 - Ardent Elementalist
 - Ardent Militia
-- Ardenvale Tactician // Dizzying Swoop
 - Argentum Armor
 - Argivian Archaeologist
 - Argivian Find
@@ -257,11 +255,13 @@ Generated from the engine-supported card pool.
 - Arms Dealer
 - Army Ants
 - Army of Allah
+- Arni, Humble Scribe
 - Aron, Benalia's Ruin
 - Arrogant Vampire
 - Artful Dodge
 - Artful Maneuver
 - Artificer's Dragon
+- Artifist Acumen
 - Artillerize
 - Artisan's Sorrow
 - Arvad the Cursed
@@ -290,6 +290,7 @@ Generated from the engine-supported card pool.
 - Attended Socialite
 - Attentive Sunscribe
 - Attercop
+- Attune with Aether
 - Atzocan Seer
 - Audacious Thief
 - Auger Spree
@@ -419,7 +420,7 @@ Generated from the engine-supported card pool.
 - Beacon Hawk
 - Beacon of Creation
 - Beacon of Destruction
-- Beanstalk Wurm // Plant Beans
+- Beacon of Unrest
 - Bear Cub
 - Bear's Companion
 - Beast Attack
@@ -439,7 +440,6 @@ Generated from the engine-supported card pool.
 - Beledros Witherbloom
 - Belle of the Brawl
 - Belligerent Sliver
-- Bellowing Bruiser // Beat a Path
 - Bellowing Crier
 - Bellows Lizard
 - Benalish Heralds
@@ -448,12 +448,12 @@ Generated from the engine-supported card pool.
 - Benalish Marshal
 - Beneath the Sands
 - Benthic Giant
-- Beorn, Reluctant Host // Till and Tend
 - Bequeathal
 - Beregond of the Guard
 - Berserkers' Onslaught
 - Beskir Shieldmate
 - Bespoke Bō
+- Bestial Incursion
 - Bestial Menace
 - Bestow Greatness
 - Betrayal
@@ -464,7 +464,6 @@ Generated from the engine-supported card pool.
 - Big Play
 - Big Score
 - Bilbo Baggins, Burglar // Take a Glance
-- Bilbo, Luckwearer // Burglar's Plot
 - Bilbo's Deadly Slice
 - Bile Urchin
 - Biogenic Ooze
@@ -477,7 +476,6 @@ Generated from the engine-supported card pool.
 - Bitterbloom Bearer
 - Bitterbow Sharpshooters
 - Bituminous Blast
-- Black Bolt, Inhuman King
 - Black Knight
 - Black Market Connections
 - Black Panther, Vanguard
@@ -565,17 +563,14 @@ Generated from the engine-supported card pool.
 - Bloodthrone Vampire
 - Bloom Hulk
 - Bloom Tender
-- Bloomvine Regent // Claim Territory
 - Blossoming Defense
 - Blue Marvel, Adam Brashear
-- Blur of Blades
 - Blur Sliver
 - Blurred Mongoose
 - Boa Constrictor
 - Boar-q-pine
 - Boarding Party
 - Boartusk Liege
-- Bofur, Reliable Guardian // Concerted Care
 - Bog Imp
 - Bog Initiate
 - Bog Witch
@@ -644,7 +639,6 @@ Generated from the engine-supported card pool.
 - Brainstone
 - Brainstorm
 - Brainsurge
-- Bramble Familiar // Fetch Quest
 - Bramblesnap
 - Brambleweft Behemoth
 - Bramblewood Paragon
@@ -742,6 +736,8 @@ Generated from the engine-supported card pool.
 - Candy Trail
 - Cankerbloom
 - Canoptek Scarab Swarm
+- Canoptek Spyder
+- Canoptek Wraith
 - Canopy Baloth
 - Canopy Gorger
 - Canopy Spider
@@ -824,6 +820,7 @@ Generated from the engine-supported card pool.
 - Champion of the Perished
 - Chandra, Novice Pyromancer
 - Chandra's Embercat
+- Chandra's Emberling
 - Changeling Sentinel
 - Changeling Wayfinder
 - Channel the Suns
@@ -835,6 +832,7 @@ Generated from the engine-supported card pool.
 - Charcoal Diamond
 - Chardalyn Dragon
 - Charge
+- Charge the Sanctum
 - Charge Through
 - Charging Badger
 - Charging Monstrosaur
@@ -936,7 +934,6 @@ Generated from the engine-supported card pool.
 - Collector's Vault
 - Colorful Feiyi Sparrow
 - Colossadactyl
-- Colossal Badger // Dig Deep
 - Colossal Dreadmaw
 - Colossal Majesty
 - Colossal Might
@@ -957,7 +954,6 @@ Generated from the engine-supported card pool.
 - Compassionate Healer
 - Composite Golem
 - Compulsion
-- Conceited Witch // Price of Beauty
 - Concentrate
 - Concentrated Fire
 - Conch Horn
@@ -972,10 +968,10 @@ Generated from the engine-supported card pool.
 - Confiscation Coup
 - Confusticate and Bebother
 - Conifer Strider
+- Conjurer's Closet
 - Conscripted Infantry
 - Consecrated Sphinx
 - Consider
-- Consign to the Pit
 - Constricting Tendrils
 - Consulate Dreadnought
 - Consulate Skygate
@@ -1003,6 +999,7 @@ Generated from the engine-supported card pool.
 - Core Prowler
 - Cori Mountain Stalwart
 - Corpse Connoisseur
+- Corpse Hauler
 - Corpse Knight
 - Corroding Dragonstorm
 - Corrosive Gale
@@ -1073,7 +1070,6 @@ Generated from the engine-supported card pool.
 - Crystal Ball
 - Crystal Carapace
 - Crystal Chimes
-- Crystal Dragon // Rob the Hoard
 - Crystal Seer
 - Crystal Slipper
 - Crystalline Armor
@@ -1089,6 +1085,7 @@ Generated from the engine-supported card pool.
 - Curio Vendor
 - Curiosity Crafter
 - Curious Altisaur
+- Curious Pair // Treats to Share
 - Curse of Chains
 - Cursebreak
 - Cursed Minotaur
@@ -1196,7 +1193,6 @@ Generated from the engine-supported card pool.
 - Deathsprout
 - Debilitating Injury
 - Debris Beetle
-- Decadent Dragon // Expensive Taste
 - Decanter of Endless Water
 - Decisive Denial
 - Decoction Module
@@ -1269,7 +1265,6 @@ Generated from the engine-supported card pool.
 - Dimir Informant
 - Dimir Locket
 - Dimir Signet
-- Dingus Staff
 - Dinosaur Stampede
 - Diplomatic Immunity
 - Dire Fleet Hoarder
@@ -1277,7 +1272,6 @@ Generated from the engine-supported card pool.
 - Dire Wolf Prowler
 - Diregraf Ghoul
 - Diresight
-- Dirgur Island Dragon // Skimming Strike
 - Disallow
 - Disciple of Bolas
 - Disciple of Grace
@@ -1364,7 +1358,6 @@ Generated from the engine-supported card pool.
 - Drake Hatchling
 - Drake-Skull Cameo
 - Drakewing Krasis
-- Drakuseth, Maw of Flames
 - Dramatic Rescue
 - Dramatic Reversal
 - Drana, Liberator of Malakir
@@ -1517,10 +1510,10 @@ Generated from the engine-supported card pool.
 - Elvish Warrior
 - Ember Shot
 - Ember-Eye Wolf
+- Embereth Shieldbreaker // Battle Display
 - Emblem of the Warmind
 - Embodiment of Spring
 - Embraal Gear-Smasher
-- Emerald Dragon // Dissonant Wave
 - Emerge from the Cocoon
 - Emergency Weld
 - Emeria Angel
@@ -1594,7 +1587,6 @@ Generated from the engine-supported card pool.
 - Ethersworn Adjudicator
 - Ethersworn Sphinx
 - Etherwrought Page
-- Ettercap // Web Shot
 - Eumidian Terrabotanist
 - Eureka Moment
 - Evacuation
@@ -1624,6 +1616,7 @@ Generated from the engine-supported card pool.
 - Explosive Vegetation
 - Expose to Daylight
 - Exsanguinate
+- Extended Absence
 - Exultant Cultist
 - Exultant Skymarcher
 - Eye of Nowhere
@@ -1637,7 +1630,6 @@ Generated from the engine-supported card pool.
 - Facevaulter
 - Fade into Antiquity
 - Fae Flight
-- Fae of Wishes // Granted
 - Faeburrow Elder
 - Faerie Formation
 - Faerie Guidemother // Gift of the Fae
@@ -1667,7 +1659,6 @@ Generated from the engine-supported card pool.
 - Famine
 - Fanatical Fever
 - Fanatical Strength
-- Fang Dragon // Forktail Sweep
 - Fang of Shigeki
 - Fangren Firstborn
 - Fangren Hunter
@@ -1719,7 +1710,6 @@ Generated from the engine-supported card pool.
 - Feral Shadow
 - Ferocious Charge
 - Ferocious Pup
-- Ferocious Werefox // Guard Change
 - Ferocious Zheng
 - Ferocity of the Wilds
 - Ferrovore
@@ -1842,6 +1832,7 @@ Generated from the engine-supported card pool.
 - Flying Dolphin-Fish
 - Flying Men
 - Fodder Cannon
+- Foe-Razer Regent
 - Folk of the Pines
 - Fomori Nomad
 - Font of Fertility
@@ -1852,7 +1843,6 @@ Generated from the engine-supported card pool.
 - For the Emperor!
 - Foratog
 - Forbidden Friendship
-- Forbidding Spirit
 - Force of Negation
 - Force of Savagery
 - Force of Will
@@ -1904,6 +1894,7 @@ Generated from the engine-supported card pool.
 - Frogmite
 - Frolicking Familiar // Blow Off Steam
 - Frontier Guide
+- Frontier Siege
 - Frost Ogre
 - Frostburn Weird
 - Frostwind Invoker
@@ -1951,6 +1942,7 @@ Generated from the engine-supported card pool.
 - Galvanizing Sawship
 - Game-Trail Changeling
 - Gangly Stompling
+- Garenbrig Carver // Shield's Might
 - Garrison Cat
 - Garruk, Primal Hunter
 - Garruk's Companion
@@ -1962,6 +1954,7 @@ Generated from the engine-supported card pool.
 - Gather the White Lotus
 - Gavony Unhallowed
 - Gaze of Adamaro
+- Geist of Saint Thalia
 - Geist of the Archives
 - Geist of the Moors
 - Geist-Honored Monk
@@ -1969,7 +1962,6 @@ Generated from the engine-supported card pool.
 - Gelatinous Genesis
 - Gelectrode
 - Gemstone Array
-- Generator Servant
 - Generous Ent
 - Generous Gift
 - Generous Stray
@@ -2140,7 +2132,6 @@ Generated from the engine-supported card pool.
 - Goliath Beetle
 - Goliath Sphinx
 - Goliath Spider
-- Gollum, Silent Slinker // Meager Meal
 - Goobbue Gardener
 - Gore Swine
 - Goreclaw, Terror of Qal Sisma
@@ -2174,7 +2165,6 @@ Generated from the engine-supported card pool.
 - Great Oak Guardian
 - Great Sable Stag
 - Great Teacher's Decree
-- Great Ugly-Looking Goblin // Clap! Snap!
 - Great Whale
 - Great-Horn Krushok
 - Greataxe
@@ -2187,6 +2177,7 @@ Generated from the engine-supported card pool.
 - Greedy Freebooter
 - Greel's Caress
 - Greenbelt Guardian
+- Greenhouse Propagator
 - Greenseeker
 - Greenweaver Druid
 - Greenwood Sentinel
@@ -2278,6 +2269,7 @@ Generated from the engine-supported card pool.
 - Harrier Naga
 - Harrow
 - Harrowing Journey
+- Harvest Season
 - Harvester of Misery
 - Harvester of Souls
 - Haunted Cloak
@@ -2423,6 +2415,7 @@ Generated from the engine-supported card pool.
 - Hunted Witness
 - Hunter's Insight
 - Hunter's Prowess
+- Hunting Wilds
 - Hurler Cyclops
 - Hurloon Minotaur
 - Hurly-Burly
@@ -2434,7 +2427,6 @@ Generated from the engine-supported card pool.
 - Hydrolash
 - Hydrosurge
 - Hyena Pack
-- Hypnotic Sprite // Mesmeric Glare
 - Hyrax Tower Scout
 - Hysterical Blindness
 - Icatian Crier
@@ -2508,7 +2500,6 @@ Generated from the engine-supported card pool.
 - Inordinate Rage
 - Insatiable Avarice
 - Insatiable Harpy
-- Insolence
 - Insolent Neonate
 - Inspiration
 - Inspired Charge
@@ -2605,6 +2596,7 @@ Generated from the engine-supported card pool.
 - Jhessian Lookout
 - Jhovall Queen
 - Jhovall Rider
+- Jiang Yanggu, Never Alone
 - Jibbirik Omnivore
 - Join the Dance
 - Join the Ranks
@@ -2627,6 +2619,7 @@ Generated from the engine-supported card pool.
 - Jwari Scuttler
 - Kabuto Moth
 - Kaervek, the Spiteful
+- Kairi, the Swirling Sky
 - Kalain, Reclusive Painter
 - Kalakscion, Hunger Tyrant
 - Kalastria Healer
@@ -2642,7 +2635,6 @@ Generated from the engine-supported card pool.
 - Karoo Meerkat
 - Karrthus, Tyrant of Jund
 - Karstoderm
-- Karvanista, Loyal Lupari // Lupari Shield
 - Kasimir the Lone Wolf
 - Katara, Heroic Healer
 - Kathari Screecher
@@ -2687,6 +2679,7 @@ Generated from the engine-supported card pool.
 - Kinjalli's Caller
 - Kinsbaile Cavalier
 - Kinsbaile Skirmisher
+- Kiora of Fire and Ashes
 - Kiora, Behemoth Beckoner
 - Kiora's Dambreaker
 - Kiora's Follower
@@ -2722,6 +2715,7 @@ Generated from the engine-supported card pool.
 - Kobolds of Kher Keep
 - Kodama of the North Tree
 - Kodama's Reach
+- Kogla, the Titan Ape
 - Kokusho, the Evening Star
 - Komodo Rhino
 - Kongming, "Sleeping Dragon"
@@ -2731,6 +2725,7 @@ Generated from the engine-supported card pool.
 - Kor Celebrant
 - Kor Halberd
 - Korlessa, Scale Singer
+- Koth of the Homestead
 - Kozilek's Channeler
 - Kraken Hatchling
 - Krang, Utrom Warlord
@@ -2768,12 +2763,12 @@ Generated from the engine-supported card pool.
 - Lady Orca
 - Lagac Lizard
 - Lagonna-Band Elder
-- Lake-town Mariners // Gone Fishing
 - Lakeshore Apothecary
 - Lampad of Death's Vigil
 - Lance
 - Lancer Sliver
 - Land Leeches
+- Land Tax
 - Lantern Kami
 - Lantern Scout
 - Lantern Spirit
@@ -2899,6 +2894,7 @@ Generated from the engine-supported card pool.
 - Looming Altisaur
 - Looming Shade
 - Loporrit Scout
+- Loran of the Third Path
 - Lord of the Undead
 - Lord of the Unreal
 - Lorehold Pledgemage
@@ -2922,6 +2918,7 @@ Generated from the engine-supported card pool.
 - Loxodon Wayfarer
 - Loyal Apprentice
 - Loyal Guardian
+- Loyal Tutor
 - Lozhan, Dragons' Legacy
 - Lucent Liminid
 - Lucky Offering
@@ -3016,7 +3013,6 @@ Generated from the engine-supported card pool.
 - Many Partings
 - Map the Frontier
 - Maraleaf Pixie
-- Marang River Regent // Coil and Catch
 - Marauder's Axe
 - Marauding Brinefang
 - Marauding Knight
@@ -3043,6 +3039,7 @@ Generated from the engine-supported card pool.
 - Martyr for the Cause
 - Martyr of Dusk
 - Marvelous Melee
+- Marwyn, the Preserver
 - Mascot Exhibition
 - Mask of Avacyn
 - Mask of Law and Grace
@@ -3085,7 +3082,6 @@ Generated from the engine-supported card pool.
 - Mentor of the Meek
 - Mer-Ek Nightblade
 - Merchant of Secrets
-- Merchant of the Vale // Haggle
 - Merciless Enforcers
 - Merciless Eviction
 - Mercurial Geists
@@ -3137,6 +3133,7 @@ Generated from the engine-supported card pool.
 - Mindful Biomancer
 - Mindspring Merfolk
 - Mindstatic
+- Minecart Daredevil // Ride the Rails
 - Miner's Bane
 - Mineshaft Spider
 - Minotaur Abomination
@@ -3199,7 +3196,6 @@ Generated from the engine-supported card pool.
 - Monoist Sentry
 - Monologue Tax
 - Mons's Goblin Raiders
-- Monster Manual // Zoological Study
 - Monster Mashup
 - Monstrous Growth
 - Moon Heron
@@ -3218,6 +3214,7 @@ Generated from the engine-supported card pool.
 - Morale
 - Morbid Hunger
 - Morbid Plunder
+- Mordant Dragon
 - Morgue Theft
 - Morgue Thrull
 - Morgue Toad
@@ -3252,6 +3249,7 @@ Generated from the engine-supported card pool.
 - Murder
 - Murmuring Mystic
 - Murmuring Phantasm
+- Murmuring Volume
 - Muse Drake
 - Muse's Encouragement
 - Mutagenic Growth
@@ -3303,6 +3301,7 @@ Generated from the engine-supported card pool.
 - Necrogen Scudder
 - Necromancer's Assistant
 - Necromantic Thirst
+- Necron Deathmark
 - Necron Monolith
 - Necron Overlord
 - Necropede
@@ -3615,7 +3614,6 @@ Generated from the engine-supported card pool.
 - Pia Nalaar, Chief Mechanic
 - Pianna, Nomad Captain
 - Pick Your Poison
-- Picklock Prankster // Free the Fae
 - Piety
 - Piggy Bank
 - Pile On
@@ -3648,6 +3646,7 @@ Generated from the engine-supported card pool.
 - Planar Gate
 - Planar Portal
 - Plasma Elemental
+- Plasmancer
 - Plated Crusher
 - Plated Geopede
 - Plated Onslaught
@@ -3666,7 +3665,6 @@ Generated from the engine-supported card pool.
 - Poised Practitioner
 - Poison the Blade
 - Poison-Tip Archer
-- Pollen-Shield Hare // Hare Raising
 - Pollenbright Druid
 - Pollenbright Wings
 - Polluted Dead
@@ -3855,6 +3853,7 @@ Generated from the engine-supported card pool.
 - Rampaging Hippo
 - Rampaging Rendhorn
 - Rampant Growth
+- Rampart Hunter
 - Ramunap Excavator
 - Ranger's Longbow
 - Ranger's Path
@@ -3962,6 +3961,7 @@ Generated from the engine-supported card pool.
 - Resolute Blademaster
 - Resolute Reinforcements
 - Restoration Gearsmith
+- Restore with Empathy
 - Resupply
 - Resurrection
 - Retreat to Emeria
@@ -3972,6 +3972,7 @@ Generated from the engine-supported card pool.
 - Return from the Wilds
 - Return of the Wildspeaker
 - Return to Battle
+- Return to Nature
 - Revel of the Fallen God
 - Revelsong Horn
 - Reverent Hoplite
@@ -4020,6 +4021,7 @@ Generated from the engine-supported card pool.
 - Rise of the Ants
 - Rise to the Challenge
 - Risen Sanctuary
+- Rishkar, Peema Renegade
 - Rishkar's Expertise
 - Rising of the Day
 - Risky Research
@@ -4063,7 +4065,6 @@ Generated from the engine-supported card pool.
 - Rootwater Hunter
 - Rorix Bladewing
 - Rosemane Centaur
-- Rosethorn Acolyte // Seasonal Ritual
 - Rot Shambler
 - Rotlung Reanimator
 - Rotted Hulk
@@ -4136,6 +4137,7 @@ Generated from the engine-supported card pool.
 - Sage's Reverie
 - Sage's Row Savant
 - Sagu Wildling // Roost Seek
+- Saheeli, Jewel of Avishkar
 - Sai, Master Thopterist
 - Sailor of Means
 - Sakura-Tribe Elder
@@ -4148,6 +4150,7 @@ Generated from the engine-supported card pool.
 - Salvager of Secrets
 - Salvation Engine
 - Samite Herbalist
+- Samut, Hazoret's Champion
 - Samut, Tyrant Smasher
 - Samut's Sprint
 - Sanctify
@@ -4193,7 +4196,6 @@ Generated from the engine-supported card pool.
 - Scaled Herbalist
 - Scaled Nurturer
 - Scaled Wurm
-- Scalelord Reckoner
 - Scampering Scorcher
 - Scar
 - Scarblade Scout
@@ -4255,7 +4257,6 @@ Generated from the engine-supported card pool.
 - Scythe Leopard
 - Sea Eagle
 - Sea Gate Banneret
-- Sea Hag // Aquatic Ingress
 - Sea Legs
 - Sea Scryer
 - Sea Spirit
@@ -4375,11 +4376,13 @@ Generated from the engine-supported card pool.
 - Shatterskull Giant
 - Shatterskull Recruit
 - Shatterstorm
+- Shatterwing Pegasus
 - She-Hulk, Jennifer Walters
 - Shelob's Ambush
 - Sheltering Boughs
 - Sheltering Light
 - Sheoldred's Edict
+- Shepherd of the Flock // Usher to Safety
 - Shepherd of the Lost
 - Shepherding Spirits
 - Shield Mate
@@ -4459,6 +4462,7 @@ Generated from the engine-supported card pool.
 - Silverchase Fox
 - Silverclaw Griffin
 - Silvercoat Lion
+- Silverflame Squire // On Alert
 - Silvergill Peddler
 - Silverglade Elemental
 - Silverglade Pathfinder
@@ -4471,6 +4475,7 @@ Generated from the engine-supported card pool.
 - Simic Ragworm
 - Simic Signet
 - Simic Sky Swallower
+- Simulacrum Shaper
 - Sinister Monolith
 - Sinister Sabotage
 - Sinister Starfish
@@ -4480,7 +4485,6 @@ Generated from the engine-supported card pool.
 - Sisay's Ring
 - Sisters of the Flame
 - Sivitri Scarzam
-- Sivitri, Dragon Master
 - Sixth Sense
 - Sizzle
 - Skeletal Crocodile
@@ -4561,10 +4565,10 @@ Generated from the engine-supported card pool.
 - Smaug, the Great Calamity // Spew Flame
 - Smelt
 - Smiting Helix
-- Smitten Swordmaster // Curry Favor
 - Smokespew Invoker
 - Smoldering Efreet
 - Smother
+- Smothering Tithe
 - Snake Basket
 - Snakeskin Veil
 - Snap
@@ -4581,6 +4585,7 @@ Generated from the engine-supported card pool.
 - Social Climber
 - Sokka, Wolf Cove's Protector
 - Sol Ring
+- Solarium Sentry
 - Soldier of the Grey Host
 - Soldier On
 - Solemn Offering
@@ -4769,7 +4774,6 @@ Generated from the engine-supported card pool.
 - Stormfront Pegasus
 - Stormkeld Prowler
 - Stormrider Spirit
-- Stormshriek Feral // Flush Out
 - Stormwatch Eagle
 - Story Seeker
 - Storyteller Pixie
@@ -4863,6 +4867,7 @@ Generated from the engine-supported card pool.
 - Swarm of Rats
 - Swashbuckling
 - Sweatworks Brawler
+- Sweet-Gum Recluse
 - Swell of Growth
 - Sweltering Suns
 - Swift Spinner
@@ -4881,6 +4886,7 @@ Generated from the engine-supported card pool.
 - Sylvan Caryatid
 - Sylvan Might
 - Sylvan Ranger
+- Sylvan Reclamation
 - Sylvan Scrying
 - Sylvan Tutor
 - Sylvok Explorer
@@ -4979,6 +4985,7 @@ Generated from the engine-supported card pool.
 - Terror of Mount Velus
 - Terror of the Fairgrounds
 - Terror of the Peaks
+- Tethermage's Advantage
 - Teyo's Lightshield
 - Tezzeret's Gambit
 - Thalia's Lieutenant
@@ -4989,7 +4996,6 @@ Generated from the engine-supported card pool.
 - Thallid Soothsayer
 - Thanos, Death's Consort
 - Thaumaturge's Familiar
-- The Arkenstone // Seek the Heart
 - The Fabulous Frog-Man
 - The Falcon, Sam Wilson
 - The Howling Commandos
@@ -5004,6 +5010,7 @@ Generated from the engine-supported card pool.
 - Theft of Dreams
 - Their Name Is Death
 - Théoden, King of Rohan
+- Theorix Charm
 - Thermal Glider
 - Thermo-Alchemist
 - Thicket Crasher
@@ -5043,10 +5050,8 @@ Generated from the engine-supported card pool.
 - Thran Power Suit
 - Thran Vigil
 - Thranduil the Strategist
-- Thranduil, Sindarin Liege // Silvan Rally
 - Thrashing Brontodon
 - Thrashing Wumpus
-- Threadbind Clique // Rip the Seams
 - Three Tree Rootweaver
 - Three Visits
 - Thrill of Possibility
@@ -5061,6 +5066,7 @@ Generated from the engine-supported card pool.
 - Thunder Spirit
 - Thunder Strike
 - Thunder Wall
+- Thunderfoot Baloth
 - Thunderhawk Gunship
 - Thunderhead Squadron
 - Thundering Ceratok
@@ -5196,6 +5202,7 @@ Generated from the engine-supported card pool.
 - Trusty Retriever
 - Trygon Predator
 - Tsunami
+- Tuinvale Treefolk // Oaken Boon
 - Tukatongue Thallid
 - Tuknir Deathlock
 - Tuktuk Grunts
@@ -5216,8 +5223,6 @@ Generated from the engine-supported card pool.
 - Twin-Silk Spider
 - Twinblade Blessing
 - Twinflame Tyrant
-- Twining Twins // Swift Spiral
-- Twinmaw Stormbrood // Charring Bite
 - Twinscroll Shaman
 - Twisted Experiment
 - Twisted Spider-Clone
@@ -5263,6 +5268,7 @@ Generated from the engine-supported card pool.
 - Undertaker
 - Underworld Coinsmith
 - Underworld Hermit
+- Undulating Witness
 - Unexpected Assistance
 - Unexpected Windfall
 - Unexplained Disappearance
@@ -5350,6 +5356,7 @@ Generated from the engine-supported card pool.
 - Vassal Soul
 - Vastwood Fortification // Vastwood Thicket
 - Vastwood Gorger
+- Vastwood Surge
 - Vault Plunderer
 - Vault Skirge
 - Vault Skyward
@@ -5359,7 +5366,6 @@ Generated from the engine-supported card pool.
 - Vedalken Outlander
 - Veiled Shade
 - Veloheart Bike
-- Velvetwing Butterflies // Gaze in Wonder
 - Venerable Lammasu
 - Venerable Monk
 - Vengeant Vampire
@@ -5373,6 +5379,7 @@ Generated from the engine-supported card pool.
 - Verdant Automaton
 - Verdant Confluence
 - Verdant Force
+- Verdant Kraken
 - Verdigris
 - Verduran Enchantress
 - Verix Bladewing
@@ -5418,6 +5425,7 @@ Generated from the engine-supported card pool.
 - Vindicate
 - Vindictive Vampire
 - Vine Trellis
+- Vinelasher Adept
 - Vinelasher Kudzu
 - Vines of the Recluse
 - Violent Impact
@@ -5456,6 +5464,7 @@ Generated from the engine-supported card pool.
 - Voice of Duty
 - Voice of Grace
 - Voice of Law
+- Voice of Many
 - Voice of Reason
 - Voice of the Provinces
 - Voice of Truth
@@ -5638,6 +5647,7 @@ Generated from the engine-supported card pool.
 - Wildsize
 - Wildwood Patrol
 - Wildwood Rebirth
+- Will of the Mardu
 - Will-Forged Golem
 - Willow Elf
 - Willow Faerie
@@ -5668,6 +5678,7 @@ Generated from the engine-supported card pool.
 - Wings of Hope
 - Wings of the Cosmos
 - Winter Soldier, Bucky Barnes
+- Winter, Team Player
 - Winter's Grasp
 - Winter's Intervention
 - Wipe Clean
@@ -5697,7 +5708,6 @@ Generated from the engine-supported card pool.
 - Wolfsbane, Highland Hero
 - Wondrous Revival
 - Wood Elves
-- Woodland Acolyte // Mend the Wilds
 - Woodland Changeling
 - Woodland Druid
 - Woodland Liege
@@ -5720,6 +5730,7 @@ Generated from the engine-supported card pool.
 - Wrecking Ball
 - Wrecking Beast
 - Wrecking Crew
+- Wrecking Gecko
 - Wretched Anurid
 - Wretched Confluence
 - Wretched Doll
@@ -5736,6 +5747,7 @@ Generated from the engine-supported card pool.
 - Xira Arien
 - Yargle and Multani
 - Yargle, Glutton of Urborg
+- Yargle, Goliath of Otaria
 - Yavimaya Ancients
 - Yavimaya Barbarian
 - Yavimaya Elder
@@ -5756,6 +5768,7 @@ Generated from the engine-supported card pool.
 - You're Ambushed on the Road
 - Young Blue Dragon // Sand Augury
 - Young Pyromancer
+- Your Fate Ends Here
 - Youthful Knight
 - Youthful Scholar
 - Youthful Valkyrie
@@ -5793,5 +5806,4 @@ Generated from the engine-supported card pool.
 - Zulaport Cutthroat
 - Zuran Orb
 - Zuran Spellcaster
-- Zurgo and Ojutai
 - Zuri, Warrior of Wakanda

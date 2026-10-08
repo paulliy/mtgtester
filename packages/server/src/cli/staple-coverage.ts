@@ -3,19 +3,20 @@
  *
  *   bun run staples
  *   bun run staples --json
+ *   bun run staples --oracle-fixture packages/server/fixtures/coverage-oracle.json
  *
  * The ranking itself is frozen as names only. Card data always comes from the same local,
- * gitignored Scryfall bulk cache used by `bun run coverage`; this command never uses the network.
+ * gitignored Scryfall bulk cache used by `bun run coverage`, or an explicitly selected pinned
+ * Oracle fixture; this command never uses the network. Both routes enforce the same baseline.
  */
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { loadOracleIndexFromFile } from '../cards/oracle-index';
+import { coverageInput } from './coverage-input';
 import { measureCoverage } from '../cards/coverage';
 import { checkCoverageBaseline } from '../cards/coverage-baseline';
 import { assertCompleteCoverage } from '../cards/coverage-contract';
 
-const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const FIXTURE_PATH = 'packages/server/fixtures/edh-staples-200.txt';
 const EXPECTED_CARDS = 200;
 
@@ -32,7 +33,8 @@ function fail(message: string): never {
 }
 
 function main(): void {
-  const json = process.argv.slice(2).includes('--json');
+  const input = coverageInput(process.argv.slice(2));
+  const json = input.args.includes('--json');
   const fixturePath = resolve(FIXTURE_PATH);
   const names = readNames(fixturePath);
 
@@ -43,8 +45,8 @@ function main(): void {
   const duplicates = [...new Set(names.filter((name, index) => names.indexOf(name) !== index))];
   if (duplicates.length > 0) fail(`duplicate names: ${duplicates.join(', ')}`);
 
-  if (!json) console.error(`Loading oracle data from ${BULK_PATH} …`);
-  const index = loadOracleIndexFromFile(resolve(BULK_PATH));
+  if (!json) console.error(`Loading oracle data from ${input.path} …`);
+  const index = input.index;
   const resolved = names.map((name) => ({ name, card: index.resolve(name) }));
   const unresolved = resolved.filter((entry) => entry.card === null).map((entry) => entry.name);
   if (unresolved.length > 0) fail(`unresolved names: ${unresolved.join(', ')}`);

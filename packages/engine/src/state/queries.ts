@@ -1,3 +1,7 @@
+import { counterCount } from './counters';
+import { assertNever } from '../utils/assert-never';
+import { assertManaRiders } from '../cards/mana-riders';
+import { activationInvariantProduction } from '../cards/mana-production';
 /**
  * Read-only state queries: definitions, effective characteristics (computed through the CR
  * 613 layer engine — see `effects/continuous.ts`), players in the game, and mana sources.
@@ -28,6 +32,7 @@ import type {
   EngineObject,
   EnginePermanent,
   EnginePlayerState,
+  EngineStackObject,
   GameContext,
 } from './types';
 import { spellManaValue } from './objects';
@@ -121,6 +126,11 @@ export function hasProtectionFrom(
 /** The current colors of a permanent, through the layer engine. */
 export function colorsOf(ctx: GameContext, perm: EnginePermanent): Color[] {
   return computeCharacteristics(ctx, perm).colors;
+}
+
+/** Selected printed characteristics of a stack spell, including copies. */
+export function spellDefinitionOf(ctx: GameContext, entry: EngineStackObject): CardDefinition {
+  return entry.spellDefinition ?? getDefByOracleId(ctx, entry.sourceOracleId, entry.description);
 }
 
 /**
@@ -223,7 +233,10 @@ export function manaRestrictionAllows(
   const oracleId = (
     purpose.kind === 'castSpell' ? purpose.oracleId : purpose.sourceOracleId
   ) as OracleId;
-  const def = ctx.defs.get(oracleId);
+  const def =
+    purpose.kind === 'castSpell'
+      ? (purpose.spellDefinition ?? ctx.defs.get(oracleId))
+      : ctx.defs.get(oracleId);
   if (def === undefined) return false;
 
   // Matched on PRINTED characteristics: a spell is on the stack and an ability's source is
@@ -320,7 +333,7 @@ export function findObjectByCardId(ctx: GameContext, cardId: string): EngineObje
  * existing call sites are unaffected.
  */
 export type ManaAbilityContext = Pick<EnginePermanent, 'id' | 'cardId' | 'controllerId'> &
-  Partial<Pick<EnginePermanent, 'chosenOption'>>;
+  Partial<Pick<EnginePermanent, 'chosenOption' | 'counters'>>;
 
 /**
  * Derive the symbols of a state-dependent mana ability (`ManaAbilitySpec.dynamic`).
@@ -397,7 +410,7 @@ export function resolveDynamicUnits(
     if (chosen === 'W' || chosen === 'U' || chosen === 'B' || chosen === 'R' || chosen === 'G') {
       add(chosen);
     }
-  } else {
+  } else if (spec.dynamic === 'opponentLandColors') {
     // "any color that a land an opponent controls could produce" — union over opponents'
     // lands, read through the layer engine so a Blood Moon'd land contributes {R}.
     for (const opponent of opponentsOf(ctx, perm.controllerId)) {
@@ -411,6 +424,8 @@ export function resolveDynamicUnits(
         }
       }
     }
+  } else {
+    assertNever(spec.dynamic, 'dynamic mana kind');
   }
 
   return {
@@ -446,6 +461,7 @@ export function resolveDynamicAmount(
     0,
     evaluateValue(ctx, amount, {
       controllerId: perm.controllerId,
+      sourceCounters: perm.counters ?? {},
       // Counted through the layer engine, so a permanent that has BECOME a creature (or lost
       // the type) counts as it currently is — the same rule `landPlayLimitFor` uses.
       countPermanents: (selector, scope) =>
@@ -583,19 +599,20 @@ export function canPayNonManaCosts(
       }
       case 'removeCounters': {
         const count = typeof cost.count === 'number' ? cost.count : evaluateValue(ctx, cost.count);
-        if ((perm.counters[cost.counter] ?? 0) < count) return false;
+        if (counterCount(perm.counters, cost.counter) < count) return false;
         break;
       }
       case 'payLife': {
-        // CR 118.8: a player may pay life only down to 0, never into a negative total.
+        // CR 119.4 / 119.4b: positive life payments need enough life; zero is always payable.
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
-        if (controller === undefined || controller.life < cost.amount) return false;
+        if (controller === undefined || (cost.amount > 0 && controller.life < cost.amount))
+          return false;
         break;
       }
       case 'payLifeValue': {
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
         const amount = evaluateValue(ctx, cost.amount, { controllerId: perm.controllerId });
-        if (controller === undefined || controller.life < amount) return false;
+        if (controller === undefined || (amount > 0 && controller.life < amount)) return false;
         break;
       }
       case 'payEnergy': {
@@ -626,6 +643,12 @@ export function canPayNonManaCosts(
         if (controller === undefined || controller.hand.length < (cost.count ?? 1)) return false;
         break;
       }
+      case 'discardHand':
+        // Discarding the entire hand is payable even when that hand is empty.
+        break;
+      case 'exileOtherCardsFromGraveyard':
+        // Supported only by the spell-cost path, not battlefield activations.
+        return false;
       case 'exileCardFromHand':
         return false;
       case 'discardSelf':
@@ -639,6 +662,9 @@ export function canPayNonManaCosts(
         return false;
       case 'mana':
         break;
+
+      default:
+        assertNever(cost, 'activation affordability');
     }
   }
   return true;
@@ -687,7 +713,11 @@ function interchangeableSignature(ability: ManaAbilitySpec): string {
  * Seshiro granting "{T}: Add {G}{G}" to a Shaman that already taps for any color used to halt a
  * real pool game on exactly that.
  */
-export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource[] {
+export function manaSourcesFor(
+  ctx: GameContext,
+  playerId: PlayerId,
+  includeZeroProduction = false,
+): ManaSource[] {
   const sources: ManaSource[] = [];
   const permanents = controlledPermanents(ctx, playerId)
     .map((perm, index) => ({ perm, index, chars: computeCharacteristics(ctx, perm) }))
@@ -708,6 +738,7 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
     // Mana abilities are computed, not printed: a layer-4 subtype change replaces them
     // (Blood Moon → a Mountain that taps for R), layer 6 can remove them outright, and layer 6
     // can also GRANT them (Chromatic Lantern).
+    for (const ability of chars.manaAbilities) assertManaRiders(perm.name, ability.onActivate);
     let abilities = chars.manaAbilities
       /*
        * A mana ability whose cost includes {X} still cannot be honoured. There is nobody to
@@ -728,12 +759,21 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
             controllerId: perm.controllerId,
           }),
       )
-      .map((a) => resolveConditionalUnits(ctx, a, perm))
-      .map((a) => resolveDynamicUnits(ctx, a, perm))
-      .map((a) => resolveDynamicAmount(ctx, a, perm))
+      .map((a) => ({
+        ...resolveDynamicAmount(
+          ctx,
+          resolveDynamicUnits(ctx, resolveConditionalUnits(ctx, a, perm), perm),
+          perm,
+        ),
+        ...(!activationInvariantProduction(a)
+          ? { stateDependentProduction: true as const, productionSpec: a }
+          : {}),
+      }))
       // A dynamic source can resolve to nothing at all — Fellwar Stone with no opposing
       // lands taps for no mana, so it must not be offered as a payment source.
-      .filter((a) => a.units.length > 0)
+      .filter(
+        (a) => a.units.length > 0 || (includeZeroProduction && a.productionSpec !== undefined),
+      )
       // Not every mana ability costs {T}: "Sacrifice this creature: Add {R}{R}" is available
       // from a tapped, summoning-sick creature. Availability is per ability, not per permanent.
       .filter((a) => canPayNonManaCosts(ctx, perm, a.costs ?? TAP_COST));
@@ -759,13 +799,20 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
         continue;
 
       abilities = abilities.map((ability) => {
+        const { productionSpec: _productionSpec, ...fixedProduction } = ability;
         if (rider.add.kind === 'fixed') {
-          return { ...ability, units: [...ability.units, ...rider.add.units] };
+          return {
+            ...fixedProduction,
+            stateDependentProduction: true as const,
+            units: [...ability.units, ...rider.add.units],
+          };
         }
         const producedTypes = [...new Set(ability.units.flat())];
-        if (producedTypes.length === 0) return ability;
+        if (producedTypes.length === 0)
+          return { ...fixedProduction, stateDependentProduction: true as const };
         return {
-          ...ability,
+          ...fixedProduction,
+          stateDependentProduction: true as const,
           units: [...ability.units, producedTypes],
           ...(ability.linked === true || ability.units.length === 1
             ? { linked: true as const }
@@ -776,18 +823,28 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
     if (abilities.length === 0) continue;
 
     // Group interchangeable abilities, preserving first-seen order for determinism.
-    const groups = new Map<string, ManaAbilitySpec[]>();
+    const groups = new Map<
+      string,
+      (ManaAbilitySpec & { stateDependentProduction?: true; productionSpec?: ManaAbilitySpec })[]
+    >();
     for (const ability of abilities) {
-      const key = interchangeableSignature(ability);
+      const key =
+        interchangeableSignature(ability) +
+        String(ability.stateDependentProduction ?? false) +
+        JSON.stringify(ability.productionSpec);
       const group = groups.get(key);
       if (group === undefined) groups.set(key, [ability]);
       else group.push(ability);
     }
 
     for (const group of groups.values()) {
-      const first = group[0] as ManaAbilitySpec;
+      const first = group[0]!;
       const rider = {
         costs: first.costs ?? TAP_COST,
+        ...(group.some((a) => a.stateDependentProduction)
+          ? { stateDependentProduction: true as const }
+          : {}),
+        ...(first.productionSpec === undefined ? {} : { productionSpec: first.productionSpec }),
         // Lifted out of `costs` so the payment solver can see it without knowing what an
         // `AbilityCost` is — a filter land's `{W/B}`, Cabal Coffers' `{2}`.
         ...(manaCostComponent(first.costs ?? TAP_COST) !== undefined
@@ -832,7 +889,7 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
           cost.kind === 'payLife'
             ? cost.amount
             : evaluateValue(ctx, cost.amount, { controllerId: playerId });
-        resources.push({ key: 'life', amount, available: player.life });
+        resources.push({ key: 'life', amount, available: Math.max(0, player.life) });
         if (amount > 0) limit = Math.min(limit, Math.floor(player.life / amount));
       }
       if (cost.kind === 'payEnergy') {
@@ -841,7 +898,7 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
       }
       if (cost.kind === 'removeCounters') {
         const amount = typeof cost.count === 'number' ? cost.count : evaluateValue(ctx, cost.count);
-        const available = perm.counters[cost.counter] ?? 0;
+        const available = counterCount(perm.counters, cost.counter);
         resources.push({ key: `${perm.cardId}:counter:${cost.counter}`, amount, available });
         if (amount > 0) limit = Math.min(limit, Math.floor(available / amount));
       }
@@ -1037,8 +1094,9 @@ export function spellProtectedFromCounter(
   ctx: GameContext,
   casterId: PlayerId,
   spellOracleId: OracleId,
+  spellDefinition?: CardDefinition,
 ): boolean {
-  const def = getDefByOracleId(ctx, spellOracleId, spellOracleId);
+  const def = spellDefinition ?? getDefByOracleId(ctx, spellOracleId, spellOracleId);
   const candidate: SelectorCandidate = {
     cardId: '',
     controllerId: casterId,

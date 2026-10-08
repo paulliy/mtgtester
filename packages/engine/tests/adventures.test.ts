@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { copies, forest, gameConfig, oracle, pump } from './fixtures';
 import { computePriorityOptions } from '../src/actions/legal';
 import { finishSpellCard } from '../src/stack/stack';
 
@@ -63,51 +63,51 @@ function pod(seed = 'adventures-test'): GameContext {
 }
 
 describe('Increment 18: Adventure & Omen Layouts', () => {
-  it('correctly models Bloomvine Regent, Marang River Regent, and Monster Manual', () => {
-    expect(interpretCard(bloomvineRegent()).modeled).toBe(true);
-    expect(interpretCard(marangRiverRegent()).modeled).toBe(true);
-    expect(interpretCard(monsterManual()).modeled).toBe(true);
-  });
-
-  it('offers both main face and Adventure/Omen alternative cast options from hand', () => {
-    const ctx = pod();
-    const p1 = ctx.state.players[0]!;
-    for (let i = 0; i < 5; i++) {
-      spawn(ctx, 'P1', forest());
-    }
-
-    const def = interpretCard(bloomvineRegent());
-    ctx.defs.set(def.oracleId, def);
-
-    const cardData = bloomvineRegent();
-    p1.hand.push({
-      id: 'obj-1',
-      cardId: 'c-1',
-      oracleId: def.oracleId,
-      ownerId: 'P1',
-      name: cardData.name,
-      typeLine: cardData.typeLine,
-      oracleText: cardData.oracleText,
-      manaCost: cardData.manaCost,
-      isToken: false,
-      isCommander: false,
-      zone: 'hand',
-    });
-
-    const options = computePriorityOptions(ctx, p1);
-    const castOptions = options.filter((o) => o.type === 'castSpell');
-
-    expect(castOptions.some((o) => o.description.includes('Bloomvine Regent'))).toBe(true);
-    expect(castOptions.some((o) => o.description.includes('Claim Territory'))).toBe(true);
-  });
+  it.each([bloomvineRegent, marangRiverRegent, monsterManual])(
+    'does not certify a card whose spell face was omitted or substituted',
+    (card) => {
+      const definition = interpretCard(card());
+      expect(definition.modeled).toBe(false);
+      const ctx = pod();
+      ctx.defs.set(definition.oracleId, definition);
+      const input = card();
+      ctx.state.players[0]!.hand.push({
+        id: 'unsupported-face-object',
+        cardId: 'unsupported-face-card',
+        oracleId: definition.oracleId,
+        ownerId: 'P1',
+        name: input.name,
+        typeLine: input.typeLine,
+        oracleText: input.oracleText,
+        manaCost: input.manaCost,
+        isToken: false,
+        isCommander: false,
+        zone: 'hand',
+      });
+      expect(() => computePriorityOptions(ctx, ctx.state.players[0]!)).toThrow('Unmodeled card');
+      expect(ctx.state.stack).toHaveLength(0);
+    },
+  );
 
   it('Omen spell resolution shuffles card back into owner library', () => {
     const ctx = pod();
     const p1 = ctx.state.players[0]!;
-    const def = interpretCard(bloomvineRegent());
+    const def = interpretCard(
+      oracle({
+        name: 'Synthetic Omen destination',
+        typeLine: 'Sorcery',
+        manaCost: '{0}',
+        oracleText: 'You gain 1 life.',
+      }),
+    );
     ctx.defs.set(def.oracleId, def);
 
-    const cardData = bloomvineRegent();
+    const cardData = oracle({
+      name: 'Synthetic Omen destination',
+      typeLine: 'Sorcery',
+      manaCost: '{0}',
+      oracleText: 'You gain 1 life.',
+    });
     const cardObj = {
       id: 'obj-omen-1',
       cardId: 'c-omen-1',
@@ -133,7 +133,7 @@ describe('Increment 18: Adventure & Omen Layouts', () => {
         description: 'Claim Territory',
         targets: [],
         card: cardObj,
-        ability: def.alternativeCasts![0]!.ability!,
+        ability: def.spellAbility!,
         sourceOracleId: def.oracleId,
         sourceCardId: 'c-omen-1',
         isCommanderCast: false,
@@ -147,10 +147,22 @@ describe('Increment 18: Adventure & Omen Layouts', () => {
 
   it('Adventure spell resolution moves card to exile with onAdventure=true', () => {
     const ctx = pod();
-    const def = interpretCard(monsterManual());
+    const def = interpretCard(
+      oracle({
+        name: 'Synthetic Adventure destination',
+        typeLine: 'Sorcery',
+        manaCost: '{0}',
+        oracleText: 'You gain 1 life.',
+      }),
+    );
     ctx.defs.set(def.oracleId, def);
 
-    const cardData = monsterManual();
+    const cardData = oracle({
+      name: 'Synthetic Adventure destination',
+      typeLine: 'Sorcery',
+      manaCost: '{0}',
+      oracleText: 'You gain 1 life.',
+    });
     const cardObj = {
       id: 'obj-adv-1',
       cardId: 'c-adv-1',
@@ -165,11 +177,7 @@ describe('Increment 18: Adventure & Omen Layouts', () => {
       zone: 'stack' as const,
     };
 
-    // `finishSpellCard`'s adventure-kind handling (exile + onAdventure) is exercised directly
-    // here rather than through `def.alternativeCasts` — the interpreter only ever produces
-    // 'omen' and 'overload' alternative casts (see the Bloomvine/Marang hardcodes above); no
-    // card currently models an actual Adventure spell, so there is nothing in `alternativeCasts`
-    // to pull an 'adventure'-kind ability from.
+    // Exercise the destination primitive without claiming a modeled production Adventure.
     pump(
       finishSpellCard(ctx, {
         id: 'stack-2',

@@ -46,6 +46,16 @@ export class Prng {
     if ((this.s0 | this.s1 | this.s2 | this.s3) === 0) this.s3 = 1;
   }
 
+  /** An independent stream at the current position, rather than a reseeded stream. */
+  clone(): Prng {
+    const copy = new Prng('cloned-stream');
+    copy.s0 = this.s0;
+    copy.s1 = this.s1;
+    copy.s2 = this.s2;
+    copy.s3 = this.s3;
+    return copy;
+  }
+
   /** Next raw 32-bit unsigned integer. */
   nextUint32(): number {
     const rotl = (x: number, k: number): number => ((x << k) | (x >>> (32 - k))) >>> 0;
@@ -65,8 +75,8 @@ export class Prng {
    * `bound` must be a positive integer ≤ 2^32.
    */
   nextInt(bound: number): number {
-    if (!Number.isInteger(bound) || bound <= 0) {
-      throw new RangeError(`Prng.nextInt bound must be a positive integer, got ${bound}`);
+    if (!Number.isInteger(bound) || bound <= 0 || bound > 0x100000000) {
+      throw new RangeError(`Prng.nextInt bound must be an integer in [1, 2^32], got ${bound}`);
     }
     const limit = Math.floor(0x100000000 / bound) * bound;
     let x = this.nextUint32();

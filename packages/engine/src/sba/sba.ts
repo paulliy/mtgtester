@@ -661,6 +661,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     sourceOracleId: trigger.sourceOracleId,
     sourceCardId: trigger.sourceCardId,
     isCommanderCast: false,
+    ...(trigger.sourceFacts === undefined ? {} : { sourceFacts: trigger.sourceFacts }),
     ...(trigger.triggerObjectCardId !== undefined
       ? { triggerObjectCardId: trigger.triggerObjectCardId }
       : {}),

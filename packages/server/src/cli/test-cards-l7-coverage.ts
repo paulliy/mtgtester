@@ -80,7 +80,9 @@ export function runL7CoverageCheck(): CheckResult {
     detail:
       `${verifiedCount}/${VERIFIED_TOKEN_TRIUMPH_CARDS.length} verified names supported; ` +
       `${containedCount}/${EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS.length} audited unsupported names contained; ` +
-      `${totalModeled} modeled non-land cards match the generated inventory`,
+      (inventoryMatches
+        ? `${totalModeled} modeled non-land cards match the generated inventory`
+        : `generated inventory is stale: reports ${documentedTotal}, current pool has ${totalModeled}`),
   };
 }
 

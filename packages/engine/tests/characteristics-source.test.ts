@@ -24,9 +24,15 @@ const ALLOWED: Record<string, string> = {
   'stack/stack.ts': 'finishSpellCard reads a resolving spell card before it enters the battlefield',
   'actions/apply.ts':
     'reads the printed type of a card being announced from hand or the command zone, before it is a permanent',
+  'casting/free.ts': 'previews cards outside the battlefield for an immediate casting permission',
+  'casting/cast.ts':
+    'reads the announced card outside the battlefield; casting uses its printed characteristics',
   'actions/legal.ts':
     'reads cards in hand / the command zone, which no continuous effect reaches — ' +
     'a permanent read here would be a bug',
+  'targets/legality.ts':
+    'spellMatchesSelector and isCreatureSpell read stack spells; battlefield targets still ' +
+    'use computeCharacteristics and candidateOf, not printed CardDefinition properties',
   'state/objects.ts':
     'makePermanent, before the object is on the battlefield: a permanent enters with its ' +
     'printed loyalty/defense (CR 306.5b, 310.6)',

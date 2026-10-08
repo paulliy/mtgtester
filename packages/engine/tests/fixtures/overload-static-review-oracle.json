@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261006090155.jsonl.gz",
+  "retrievedAt": "2026-10-07",
+  "cards": [
+    {
+      "sha256": "4138f66553c4b96b5b3f8a60d2caf4ef7d223b568f0f45ff4efb9e8f69da6fb3",
+      "card": {
+        "oracleId": "ecb198fc-5663-4380-b2da-ad54421e966d",
+        "scryfallId": "8400f1a7-ebf0-49b2-a51d-3b2056c05b61",
+        "name": "Knight Exemplar",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Knight",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Knight"
+        ],
+        "oracleText": "First strike (This creature deals combat damage before creatures without first strike.)\nOther Knight creatures you control get +1/+1 and have indestructible. (Damage and effects that say \"destroy\" don't destroy them.)",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "First strike"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "162a0e2cc0305119f483b7e08a0bf0797a7964083c6c9ccb25a621e4fb307760",
+      "card": {
+        "oracleId": "7a2484a9-04fd-41a0-8224-610c1c07ed10",
+        "scryfallId": "7d4b1d44-126e-4987-9a9f-f0f9627a09cb",
+        "name": "Blasphemous Act",
+        "manaCost": "{8}{R}",
+        "cmc": 9,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {1} less to cast for each creature on the battlefield.\nBlasphemous Act deals 13 damage to each creature.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

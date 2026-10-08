@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261006090155.jsonl.gz",
+  "cards": [
+    {
+      "sha256": "c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3",
+      "card": {
+        "oracleId": "17a59d3d-9e01-48cd-bb4a-3eaaa077751c",
+        "scryfallId": "3242a9f0-2ba3-4852-ac8f-366772ac1c62",
+        "name": "Marchesa, the Black Rose",
+        "manaCost": "{1}{U}{B}{R}",
+        "cmc": 4,
+        "colors": [
+          "B",
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "B",
+          "R",
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Human Wizard",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Wizard"
+        ],
+        "oracleText": "Dethrone (Whenever this creature attacks the player with the most life or tied for most life, put a +1/+1 counter on it.)\nOther creatures you control have dethrone.\nWhenever a creature you control with a +1/+1 counter on it dies, return that card to the battlefield under your control at the beginning of the next end step.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Dethrone"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "41e727b47d14f27bed6317531dd9ee6c33e680ec786e7cf9975934380b9f8946",
+      "card": {
+        "oracleId": "938b4e2c-88d9-4637-bc00-e228920c9a78",
+        "scryfallId": "2c249609-9cf7-46f1-b94c-9329add966bb",
+        "name": "Murder",
+        "manaCost": "{1}{B}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target creature.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1204ceae1934ed55c21765dce3247aa82ae4d2dec770774dc6af21f50d9655e5",
+      "card": {
+        "oracleId": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
+        "scryfallId": "55b5b094-9d2d-4d96-b90c-78fecdae725a",
+        "name": "Bojuka Bog",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "This land enters tapped.\nWhen this land enters, exile target player's graveyard.\n{T}: Add {B}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -1,3 +1,6 @@
+import { eventObjectFacts, sourceObjectFacts, targetObjectFacts } from '../cards/source-identity';
+import { counterCount } from '../state/counters';
+import { assertNever } from '../utils/assert-never';
 /**
  * Resolution-time `Value` evaluation — the half that reads *current* characteristics.
  *
@@ -8,7 +11,7 @@
  */
 
 import type { Value, ValueScope } from '../cards/value';
-import { cardTypesInAllGraveyards, devotionTo } from '../cards/value';
+import { assertNumericReference, cardTypesInAllGraveyards, devotionTo } from '../cards/value';
 import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EnginePermanent, GameContext } from '../state/types';
@@ -163,39 +166,34 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'stationPower':
       return scope.stationPower ?? 0;
     case 'countersOnSelf': {
-      if (!scope.sourceCardId) return 0;
-      const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
-      return perm ? (perm.counters[value.counter] ?? 0) : 0;
+      const facts = sourceObjectFacts(ctx, scope);
+      return facts === undefined ? 0 : counterCount(facts.counters, value.counter);
     }
     case 'allCountersOnSelf': {
-      if (!scope.sourceCardId) return 0;
-      const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
-      return perm
-        ? Object.values(perm.counters).reduce((total, count) => total + count, 0)
+      const facts = sourceObjectFacts(ctx, scope);
+      return facts
+        ? Object.values(facts.counters).reduce((total, count) => total + count, 0)
         : (scope.sourceCountersTotal ?? 0);
     }
     case 'countersOnTarget': {
-      if (value.target === 'triggerObject') {
-        if (!scope.triggerObjectCardId) return 0;
-        const perm = ctx.state.battlefield.find((p) => p.cardId === scope.triggerObjectCardId);
-        return perm ? (perm.counters[value.counter] ?? 0) : 0;
+      assertNumericReference(value.target);
+      if (value.target === 'source') {
+        const facts = sourceObjectFacts(ctx, scope);
+        return facts === undefined ? 0 : counterCount(facts.counters, value.counter);
       }
-      const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
-      if (!targetId) return 0;
-      const perm = ctx.state.battlefield.find((p) => p.id === targetId || p.cardId === targetId);
-      return perm ? (perm.counters[value.counter] ?? 0) : 0;
+      if (value.target === 'triggerObject') {
+        const facts = eventObjectFacts(ctx, scope);
+        return facts === undefined ? 0 : counterCount(facts.counters, value.counter);
+      }
+      const facts = targetObjectFacts(ctx, scope, value.target);
+      return facts === undefined ? 0 : counterCount(facts.counters, value.counter);
     }
     case 'manaValueOfTarget': {
-      const targetId =
-        value.target === 'triggerObject'
-          ? scope.triggerObjectCardId
-          : typeof value.target === 'number'
-            ? scope.targets?.[value.target]
-            : undefined;
-      if (!targetId) return 0;
-      const perm = ctx.state.battlefield.find((p) => p.id === targetId || p.cardId === targetId);
-      if (perm === undefined) return 0;
-      return spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined);
+      assertNumericReference(value.target);
+      if (value.target === 'source')
+        return sourceObjectFacts(ctx, scope)?.manaValue ?? scope.resolvingSourceManaValue ?? 0;
+      if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.manaValue ?? 0;
+      return targetObjectFacts(ctx, scope, value.target)?.manaValue ?? 0;
     }
     case 'commanderCastCount': {
       const player = ctx.state.players.find((p) => p.id === scope.controllerId);
@@ -207,6 +205,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return player?.commanderColorIdentity.length ?? 0;
     }
     case 'lifeTotal': {
+      if (value.scope === 'eventPlayer' && scope.eventPlayerId === undefined)
+        throw new Error('event player life total has no bound event player');
       const targetPlayerId =
         value.scope === 'you' ? scope.controllerId : (scope.eventPlayerId ?? scope.controllerId);
       const player = ctx.state.players.find((p) => p.id === targetPlayerId);
@@ -235,38 +235,22 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     }
     case 'creaturesDiedThisTurn':
       return ctx.state.creaturesDiedThisTurn;
-    case 'powerOfSource': {
-      const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
-      return perm === undefined ? 0 : effectivePT(ctx, perm).power;
-    }
-    case 'toughnessOfSource': {
-      const perm = ctx.state.battlefield.find((p) => p.cardId === scope.sourceCardId);
-      return perm === undefined ? 0 : effectivePT(ctx, perm).toughness;
-    }
+    case 'powerOfSource':
+      return sourceObjectFacts(ctx, scope)?.power ?? 0;
+    case 'toughnessOfSource':
+      return sourceObjectFacts(ctx, scope)?.toughness ?? 0;
     case 'powerOfTarget': {
-      const targetId =
-        value.target === 'triggerObject'
-          ? scope.triggerObjectCardId
-          : typeof value.target === 'number'
-            ? scope.targets?.[value.target]
-            : undefined;
-      if (targetId === undefined) return 0;
-      const permanent = ctx.state.battlefield.find(
-        (candidate) => candidate.id === targetId || candidate.cardId === targetId,
-      );
-      return permanent === undefined ? 0 : effectivePT(ctx, permanent).power;
+      assertNumericReference(value.target);
+      if (value.target === 'source') return sourceObjectFacts(ctx, scope)?.power ?? 0;
+      if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.power ?? 0;
+      return targetObjectFacts(ctx, scope, value.target)?.power ?? 0;
     }
     case 'opponentsLostLifeThisTurn':
       return opponentsOf(ctx, scope.controllerId).filter(
         (player) => ctx.state.lifeLostThisTurn[player.id] === true,
       ).length;
-    case 'powerOfTriggerObject': {
-      const perm =
-        scope.triggerObjectCardId === undefined
-          ? undefined
-          : ctx.state.battlefield.find((p) => p.cardId === scope.triggerObjectCardId);
-      return perm === undefined ? 0 : effectivePT(ctx, perm).power;
-    }
+    case 'powerOfTriggerObject':
+      return eventObjectFacts(ctx, scope)?.power ?? 0;
     case 'cardsInTargetHand': {
       const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
       return ctx.state.players.find((player) => player.id === targetId)?.hand.length ?? 0;
@@ -289,17 +273,19 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
         0
       );
     case 'countersOnTriggerObject': {
-      const object =
-        scope.triggerObjectCardId === undefined
-          ? undefined
-          : (ctx.state.battlefield.find((p) => p.cardId === scope.triggerObjectCardId) ??
-            ctx.state.players
-              .flatMap((p) => p.graveyard)
-              .find((c) => c.cardId === scope.triggerObjectCardId));
-      if (object === undefined) return 0;
-      return 'counters' in object
-        ? (object.counters[value.counter] ?? 0)
-        : (object.rememberedCounters?.[value.counter] ?? 0);
+      const facts = eventObjectFacts(ctx, scope);
+      if (facts !== undefined) return counterCount(facts.counters, value.counter);
+      // A deliberately card-tracking delayed scope may read remembered graveyard counters.
+      if (scope.eventObjectId !== undefined || scope.triggerObjectId !== undefined) return 0;
+      const card = ctx.state.players
+        .flatMap((p) => p.graveyard)
+        .find((card) => card.cardId === scope.triggerObjectCardId);
+      return card?.rememberedCounters === undefined
+        ? 0
+        : counterCount(card.rememberedCounters, value.counter);
     }
+
+    default:
+      assertNever(value, 'resolution value');
   }
 }

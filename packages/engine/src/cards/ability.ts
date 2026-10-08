@@ -69,7 +69,7 @@ export type AbilityCost =
 
 export interface AlternativeCast {
   kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana';
-  /** Zone from which this alternative may be announced. Defaults to the hand. */
+  /** Explicit zone restriction/permission. Omitted alternatives use normal casting permissions. */
   from?: 'hand' | 'graveyard' | 'exile';
   manaCost: ParsedManaCost;
   /** Non-mana components of a cost that replaces the spell's printed mana cost. */
@@ -82,6 +82,8 @@ export interface AlternativeCast {
   ability?: Ability;
   /** Back-face characteristics for a modal DFC that may be played as a land. */
   landFace?: MdfcLandFace;
+  /** Fully interpreted Adventure/Omen spell characteristics, independent of the front. */
+  spellFace?: import('./definition').CardDefinition;
   /** Flashback/escape-style replacement: exile the card after it leaves the stack. */
   exileOnResolution?: boolean;
   /** The alternative is Escape and marks the resulting stack/permanent object as escaped. */
@@ -168,7 +170,12 @@ export type DynamicManaKind =
  */
 export type PaymentPurpose =
   /** Casting a spell. `card` is the spell's *printed* candidate — it is not on the battlefield. */
-  | { kind: 'castSpell'; oracleId: string; isCommander?: boolean }
+  | {
+      kind: 'castSpell';
+      oracleId: string;
+      isCommander?: boolean;
+      spellDefinition?: import('./definition').CardDefinition;
+    }
   /** Activating an ability of a permanent. */
   | { kind: 'activateAbility'; sourceOracleId: string }
   /**
@@ -216,6 +223,11 @@ export interface ManaSpendTrigger {
   ability: Ability;
 }
 
+/** Executable immediate mana riders; scope-free operands are validated before activation. */
+export type ManaRider =
+  | Extract<Effect, { op: 'damageController' | 'gainLife' }>
+  | (Omit<Extract<Effect, { op: 'putCounters' }>, 'target'> & { target: 'source' });
+
 /** A mana ability: "{T}: Add …". Never uses the stack (CR 605). */
 export interface ManaAbilitySpec {
   /** Fixed symbol units. Each unit is one mana; several symbols in a unit are a choice. */
@@ -223,8 +235,8 @@ export interface ManaAbilitySpec {
   /**
    * Activation cost. Absent means the overwhelmingly common `{T}` (see `TAP_COST`), which is
    * what every land and mana rock the interpreter produced before non-tap costs existed.
-   * A `mana` component is deliberately NOT supported here: paying mana to make mana would make
-   * `planPayment` recursive, so the interpreter leaves such a card unmodeled instead.
+   * A `mana` component is supported: the planner orders earlier production so it can pay
+   * this activation's mana cost before this source produces anything.
    */
   costs?: AbilityCost[];
   /** When set, `units` is ignored and the symbols are derived from state at query time. */
@@ -236,7 +248,7 @@ export interface ManaAbilitySpec {
    * (painlands). Mana abilities never use the stack (CR 605.3a), so the rider applies
    * immediately as the mana is produced, which is exactly the printed behavior.
    */
-  onActivate?: Effect[];
+  onActivate?: ManaRider[];
   /** "Spend this mana only to cast a Dragon creature spell" — rides on the mana produced. */
   restriction?: ManaRestriction;
   /** "When you spend this mana to cast a Dragon creature spell, you gain 2 life." */
@@ -342,7 +354,7 @@ export type TargetKind =
   /** "target artifact, enchantment, or planeswalker" (Fracture). */
   | 'artifactEnchantmentOrPlaneswalker'
   | 'player'
-  | 'anyTarget' // creature or player (CR 115.4)
+  | 'anyTarget' // creature, player, planeswalker, or battle (CR 115.4)
   | 'playerOrPlaneswalker' // "target player or planeswalker" (Clan Defiance)
   | 'spell'
   /** A spell on the stack or a nonland permanent. */
@@ -350,18 +362,15 @@ export type TargetKind =
   /** Any object currently on the stack: spells, activated abilities, or triggered abilities. */
   | 'stackObject'
   /**
-   * "target Dragon permanent card" — a card in a graveyard, not a permanent (CR 111.2). Always
-   * the ability's OWN controller's graveyard: every printed template this engine reads says
-   * "from your graveyard" (Bladewing the Risen); a future "target card in a graveyard" (any
-   * player's) needs its own kind rather than silently widening this one.
+   * A card in a graveyard, not a permanent (CR 111.2). Defaults to the ability controller's
+   * graveyard; TargetSpec can specify another player slot or controller/opponent/any scope.
    */
   | 'cardInGraveyard'
   /**
    * "Counter target noncreature spell" (Stubborn Denial) — a spell on the stack whose card is
-   * NOT a creature. A separate kind rather than a `filter` on `'spell'`: a spell target has no
-   * permanent to run `permanentMatchesKind` over, so the filter machinery built for
-   * `cardInGraveyard` does not reach it, and one closed-set adjective does not earn a whole
-   * general spell-filter mechanism.
+   * NOT a creature. This common adjective retains its existing kind. General stack-spell
+   * filters use the selected spell frame through shared target legality; a stack spell is
+   * not a battlefield permanent and may have different characteristics from its physical card.
    */
   | 'noncreatureSpell'
   | 'commanderInCommandZone';
@@ -376,8 +385,8 @@ export interface TargetSpec {
    */
   controller?: 'you' | 'opponent' | 'eventPlayer';
   /**
-   * Further restriction for a zone-qualified kind (`cardInGraveyard`) — "Dragon permanent
-   * card". Unused for battlefield kinds, which use `permanentMatchesKind` instead.
+   * Additional characteristics after the target domain/kind check. Supports battlefield
+   * permanents, stack spells, and graveyard cards (for example "Dragon permanent card").
    */
   filter?: Selector;
   /**
@@ -1157,32 +1166,7 @@ export type TriggerSubject =
  * all. Collapsing them would give every consumer a subject field that is meaningless two-thirds
  * of the time.
  */
-export type TriggerWhen =
-  | 'enters'
-  | 'dies'
-  | 'attacks'
-  | 'blocks'
-  | 'becomesBlocked'
-  | 'dealsCombatDamageToPlayer'
-  | 'becomesTapped'
-  | 'fights'
-  /**
-   * "Becomes the target of a spell or ability an opponent controls" (Thunderbreak Regent).
-   * Always opponent-sourced — CR gives no printed template for "…a spell YOU control", so
-   * `queueTriggersForEvent` enforces the opponent check itself rather than a variant field.
-   */
-  | 'becomesTargeted'
-  | 'untapStep'
-  | 'drawStep'
-  | 'castsSpell'
-  | 'upkeep'
-  | 'endStep'
-  | 'mainPhase'
-  | 'precombatMain'
-  | 'beginningOfCombat'
-  | 'gainsLife'
-  | 'dealtDamage'
-  | 'drawsCard';
+export type TriggerWhen = TriggerHead['when'];
 
 /** The object-event half of `TriggerHead`. */
 export type ObjectTriggerWhen =

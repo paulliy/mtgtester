@@ -9,8 +9,10 @@
  * behavior is needed â€” a visible failure is more useful than a wrong game (brief Â§6.3),
  * and the reasons form the backlog of mechanics to implement next.
  */
-
+import { counterSpellTarget, graveyardCardTarget } from './target-builders';
+import { searchLibraryCards, graveyardAlternativeCost } from './effect-builders';
 import type { Color, OracleCard } from '@mtg/shared';
+import { enforceInterpretedDefinition } from './overload';
 import { emptyCost, parseManaCost } from '../mana/cost';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type {
@@ -80,7 +82,6 @@ import {
   onDies,
   onEtb,
   SAC_SELF,
-  spell,
   TAP,
   triggered,
   whenAttacks,
@@ -102,6 +103,7 @@ type SlotAllocator = (
   kind: TargetKind,
   filter?: Selector,
   controller?: TargetSpec['controller'],
+  graveyardOwnerScope?: TargetSpec['graveyardOwnerScope'],
 ) => number;
 
 /**
@@ -995,6 +997,8 @@ function parseEffectSentence(
   // `parseEffectSentence`'s ", then " split, so the "it" is whatever the first half acted on,
   // which for every printing of this shape is the source itself.
   if (/^untap (?:it|~|this (?:artifact|creature|enchantment|land|permanent))$/.test(s)) {
+    // A bare spell pronoun needs an explicit preceding referent; its source is on the stack.
+    if (card.types.includes('Instant') || card.types.includes('Sorcery')) return null;
     return [{ op: 'untapTarget', target: 'source' }];
   }
   if (s === 'put target artifact card from your graveyard on top of your library') {
@@ -1385,10 +1389,10 @@ function parseEffectSentence(
     }
   }
   if (s === 'counter target spell') {
-    return [{ op: 'counter', target: alloc('spell', undefined, 'opponent') }];
+    return [{ op: 'counter', target: alloc('spell') }];
   }
   if (s === 'counter target noncreature spell') {
-    return [{ op: 'counter', target: alloc('noncreatureSpell', undefined, 'opponent') }];
+    return [{ op: 'counter', target: alloc('noncreatureSpell') }];
   }
   // "Counter target spell unless its controller pays {3}" (Mystic Confluence's first mode).
   // `counterUnlessControllerPays` already exists for Stubborn Denial, but only inside that
@@ -1401,11 +1405,7 @@ function parseEffectSentence(
     if (m !== null) {
       const parsedCost = parseManaCost((m[2] as string).toUpperCase() as never);
       if (parsedCost.cost !== null) {
-        const target = alloc(
-          m[1] === undefined ? 'spell' : 'noncreatureSpell',
-          undefined,
-          'opponent',
-        );
+        const target = alloc(m[1] === undefined ? 'spell' : 'noncreatureSpell');
         return [{ op: 'counterUnlessControllerPays', target, cost: parsedCost.cost }];
       }
     }
@@ -1502,7 +1502,12 @@ function parseEffectSentence(
       const typePhrase = m[3];
       const filter = typePhrase === undefined ? null : parseCardFilterPhrase(typePhrase, card);
       if (typePhrase === undefined || filter !== null) {
-        const target = alloc('cardInGraveyard', filter ?? undefined);
+        const target = alloc(
+          'cardInGraveyard',
+          filter ?? undefined,
+          undefined,
+          m[4] === 'a' ? 'any' : undefined,
+        );
         return [
           m[5] === 'the battlefield'
             ? { op: 'graveyardToBattlefield', target }
@@ -1514,6 +1519,9 @@ function parseEffectSentence(
       /^return all (.+?) (?:card|cards) from (your|a) graveyard to (the battlefield|your hand)$/,
     );
     if (mMass) {
+      // This primitive only identifies the controller's graveyard. An unspecified graveyard
+      // needs a separate owner choice rather than silently choosing the caster.
+      if (mMass[2] !== 'your') return null;
       const filter = parseCardFilterPhrase(mMass[1] as string, card);
       if (filter !== null) {
         return [
@@ -2094,12 +2102,19 @@ function parseSpreeSpellBlock(
     .filter(Boolean);
   if (lines.length < 3 || lines[0]?.toLowerCase() !== 'spree') return null;
   const targets: TargetSpec[] = [];
-  const alloc: SlotAllocator = (kind, filter, controller) => {
-    targets.push({
-      kind,
-      ...(filter !== undefined ? { filter } : {}),
-      ...(controller !== undefined ? { controller } : {}),
-    });
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter !== undefined ? { filter } : {}),
+            ...(controller !== undefined ? { controller } : {}),
+          },
+    );
     return targets.length - 1;
   };
   const options: NonNullable<Ability['modes']>['options'] = [];
@@ -2154,12 +2169,19 @@ function parseModalSpellBlock(
   if (maxChoicesIf === null) return null;
 
   const targets: TargetSpec[] = [];
-  const alloc: SlotAllocator = (kind, filter, controller) => {
-    targets.push({
-      kind,
-      ...(filter !== undefined ? { filter } : {}),
-      ...(controller !== undefined ? { controller } : {}),
-    });
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter !== undefined ? { filter } : {}),
+            ...(controller !== undefined ? { controller } : {}),
+          },
+    );
     return targets.length - 1;
   };
 
@@ -2259,7 +2281,7 @@ function parseCounterUnlessFerociousBlock(
   if (condition === null) return null;
 
   return {
-    targets: [{ kind: 'noncreatureSpell', controller: 'opponent' }],
+    targets: [counterSpellTarget('noncreatureSpell')],
     effects: [
       {
         op: 'conditionalEffect',
@@ -2380,9 +2402,9 @@ function parseCounterAndCreateTokenBlock(
   const qualifier = (m[1] ?? '').toLowerCase();
   let target: TargetSpec;
   if (qualifier === '') {
-    target = { kind: 'spell' };
+    target = counterSpellTarget();
   } else if (qualifier === 'noncreature') {
-    target = { kind: 'noncreatureSpell' };
+    target = counterSpellTarget('noncreatureSpell');
   } else {
     const parts = qualifier.split(/,\s*(?:or\s+)?|\s+or\s+/).filter(Boolean);
     const known = new Set([
@@ -2394,7 +2416,9 @@ function parseCounterAndCreateTokenBlock(
       'planeswalker',
     ]);
     if (parts.length === 0 || parts.some((part) => !known.has(part))) return null;
-    target = { kind: 'spell', filter: anyOf(...parts.map((part) => ofType(titleCase(part)))) };
+    target = counterSpellTarget('spell', {
+      filter: anyOf(...parts.map((part) => ofType(titleCase(part)))),
+    });
   }
   const count = parseAmount((m[2] as string).toLowerCase());
   const tokenPhrase = (m[3] as string).replace(/\.$/, '').replace(/ tokens$/i, ' token');
@@ -2493,6 +2517,49 @@ function parseDestroyThenLoseLifeEqualToManaValueBlock(
       { op: 'destroy', target: 0 },
     ],
   };
+}
+
+/** One printed target occurrence; the second instruction refers to that same permanent. */
+function parseTargetThenUntapBlock(
+  text: string,
+  card: OracleCard,
+): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const match = text.trim().match(/^(.+?)(?:\.\s+| and |, then )untap it\.?$/i);
+  if (match === null) return null;
+  const targets: TargetSpec[] = [];
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter === undefined ? {} : { filter }),
+            ...(controller === undefined ? {} : { controller }),
+          },
+    );
+    return targets.length - 1;
+  };
+  const effects = parseEffectSentence(match[1]!, alloc, card);
+  if (
+    effects === null ||
+    targets.length !== 1 ||
+    ![
+      'creature',
+      'artifact',
+      'enchantment',
+      'land',
+      'planeswalker',
+      'permanent',
+      'nonlandPermanent',
+      'artifactOrEnchantment',
+      'artifactEnchantmentOrPlaneswalker',
+    ].includes(targets[0]!.kind)
+  )
+    return null;
+  return { targets, effects: [...effects, { op: 'untapTarget', target: 0 }] };
 }
 
 function parseHellkiteCourserBlock(
@@ -2661,10 +2728,7 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
     // card on top") and the one that matters: shuffling afterwards would bury the card the
     // whole spell exists to set up. Which card is chosen cannot depend on the shuffle, so
     // asking first and shuffling first are the same decision.
-    return [
-      { op: 'shuffle' },
-      { op: 'searchLibrary', filter, destinations: [{ zone: 'libraryTop' }] },
-    ];
+    return [{ op: 'shuffle' }, searchLibraryCards(filter, [{ zone: 'libraryTop' }])];
   }
 
   const m = s.match(/^search your library for (.+?), (?:reveal .+?, )?(put .+?), then shuffle$/);
@@ -2682,13 +2746,10 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
   const count = countMatch === null ? null : parseAmount(countMatch[1] as string);
   if (countMatch !== null && count === null) return null;
   return [
-    {
-      op: 'searchLibrary',
-      filter,
-      destinations,
-      ...(count === null ? {} : { count: constant(count) }),
+    searchLibraryCards(filter, destinations, {
+      ...(count === null ? {} : { count }),
       ...(differentNames ? { differentNames: true } : {}),
-    },
+    }),
     { op: 'shuffle' },
   ];
 }
@@ -3813,12 +3874,19 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // stack (CR 603.3d), which `placePendingTriggers` surfaces as a decision.
   const targets: TargetSpec[] = [];
   if (modalBlock !== null) targets.push(...modalBlock.targets);
-  const alloc: SlotAllocator = (kind, filter, controller) => {
-    targets.push({
-      kind,
-      ...(filter !== undefined ? { filter } : {}),
-      ...(controller !== undefined ? { controller } : {}),
-    });
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter !== undefined ? { filter } : {}),
+            ...(controller !== undefined ? { controller } : {}),
+          },
+    );
     return targets.length - 1;
   };
   // A variable-count slot ("up to two other targets", "any number of target creatures") â€” see
@@ -4738,12 +4806,19 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
   }
 
   const targets: TargetSpec[] = [];
-  const alloc: SlotAllocator = (kind, filter, controller) => {
-    targets.push({
-      kind,
-      ...(filter !== undefined ? { filter } : {}),
-      ...(controller !== undefined ? { controller } : {}),
-    });
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter !== undefined ? { filter } : {}),
+            ...(controller !== undefined ? { controller } : {}),
+          },
+    );
     return targets.length - 1;
   };
   const effects: Effect[] =
@@ -5545,9 +5620,9 @@ interface TransformBackFaceResult {
 }
 
 /** Interpret the second face of a traditional transforming DFC with the normal card grammar. */
-function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | null {
+function interpretSecondFace(card: OracleCard): CardDefinition | null {
   const back = card.backFace;
-  if (card.layout !== 'transform' || back === undefined) return null;
+  if (back === undefined) return null;
 
   const [leftRaw, rightRaw = ''] = back.typeLine.split(/\s+\u2014\s+/);
   const left = (leftRaw ?? '').trim().split(/\s+/).filter(Boolean);
@@ -5565,7 +5640,7 @@ function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | nul
   const subtypes = rightRaw.trim().split(/\s+/).filter(Boolean);
   const synthetic: OracleCard = {
     oracleId: `${card.oracleId}:back` as OracleCard['oracleId'],
-    scryfallId: `${card.scryfallId}:back`,
+    scryfallId: card.scryfallId,
     name: back.name,
     manaCost: back.manaCost,
     cmc: 0,
@@ -5585,7 +5660,13 @@ function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | nul
     commanderLegality: card.commanderLegality,
     isBasicLand: supertypes.includes('Basic') && types.includes('Land'),
   };
-  const def = interpretCard(synthetic);
+  return interpretCard(synthetic);
+}
+
+function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | null {
+  if (card.layout !== 'transform' || card.backFace === undefined) return null;
+  const back = card.backFace;
+  const def = interpretSecondFace(card)!;
   /* eslint-disable no-restricted-syntax -- this is a permanent face descriptor, not a token spec */
   return {
     backFace: {
@@ -5736,40 +5817,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
 
-  if (card.name === 'Bloomvine Regent // Claim Territory') {
-    alternativeCasts = [
-      {
-        kind: 'omen',
-        name: 'Claim Territory',
-        typeLine: 'Sorcery — Omen',
-        manaCost: manaCost('{2}{G}'),
-        description: 'Claim Territory',
-        ability: spell({
-          effects: [
-            {
-              op: 'searchLibrary',
-              filter: allOf(ofSupertype('Basic'), ofType('Land')),
-              destinations: [{ zone: 'hand' }],
-            },
-          ],
-        }),
-      },
-    ];
-  } else if (card.name === 'Marang River Regent // Coil and Catch') {
-    alternativeCasts = [
-      {
-        kind: 'omen',
-        name: 'Coil and Catch',
-        typeLine: 'Instant — Omen',
-        manaCost: manaCost('{3}{U}'),
-        description: 'Coil and Catch',
-        ability: spell({
-          targets: [{ kind: 'nonlandPermanent', controller: 'opponent' }],
-          effects: [{ op: 'returnToHand', target: 0 }],
-        }),
-      },
-    ];
-  } else if (card.name === 'Dragon Tempest') {
+  if (card.name === 'Dragon Tempest') {
     triggers.push(
       triggered(whenEnters(allOf(ofType('Creature'), withKeyword('flying'), YOURS)), {
         effects: [{ op: 'grantKeywordUntilEot', keyword: 'haste', target: 'triggerObject' }],
@@ -6006,6 +6054,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
           spellBlockHandled = true;
         } else {
           const wholeSpell =
+            parseTargetThenUntapBlock(spellBlockText, card) ??
             parseBlinkSpellBlock(spellBlockText) ??
             parseKeywordCountSpellBlock(spellBlockText) ??
             parseHuntersInsightBlock(spellBlockText, card) ??
@@ -6054,19 +6103,12 @@ export function interpretCard(card: OracleCard): CardDefinition {
             : parseGraveyardAlternativeCosts(graveyardAlternative[3] as string);
         if (cost.cost !== null && additionalCosts !== null) {
           if (alternativeCasts === undefined) alternativeCasts = [];
-          alternativeCasts.push({
-            kind: 'nonMana',
-            from: 'graveyard',
-            manaCost: cost.cost,
-            ...(additionalCosts.length > 0 ? { costs: additionalCosts } : {}),
-            // Flashback exiles the card whenever it would leave the stack (CR 702.34a). Escape
-            // has no such rider (CR 702.138): an escaped instant or sorcery returns to the
-            // graveyard and can escape again.
-            ...(graveyardAlternative[1] === 'flashback'
-              ? { exileOnResolution: true }
-              : { escaped: true }),
-            description: line,
-          });
+          alternativeCasts.push(
+            graveyardAlternativeCost(graveyardAlternative[1] as 'flashback' | 'escape', cost.cost, {
+              description: line,
+              ...(additionalCosts.length > 0 ? { costs: additionalCosts } : {}),
+            }),
+          );
           continue;
         }
       }
@@ -6768,7 +6810,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         "counter target spell. at the beginning of your next main phase, add an amount of {c} equal to that spell's mana value"
       ) {
         const target = spellTargets.length;
-        spellTargets.push({ kind: 'spell' });
+        spellTargets.push(counterSpellTarget());
         spellEffects.push({ op: 'counter', target, addManaAtNextMainPhase: true });
         continue;
       }
@@ -6777,7 +6819,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         "counter target noncreature spell. if that spell is countered this way, exile it instead of putting it into its owner's graveyard"
       ) {
         const target = spellTargets.length;
-        spellTargets.push({ kind: 'noncreatureSpell', controller: 'opponent' });
+        spellTargets.push(counterSpellTarget('noncreatureSpell'));
         spellEffects.push({ op: 'counter', target, exileIfCountered: true });
         continue;
       }
@@ -6845,12 +6887,19 @@ export function interpretCard(card: OracleCard): CardDefinition {
       const lineEffects: Effect[] = [];
       const lineTargets: TargetSpec[] = [];
       const base = spellTargets.length;
-      const lineAlloc: SlotAllocator = (kind, filter, controller) => {
-        lineTargets.push({
-          kind,
-          ...(filter !== undefined ? { filter } : {}),
-          ...(controller !== undefined ? { controller } : {}),
-        });
+      const lineAlloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+        lineTargets.push(
+          kind === 'cardInGraveyard'
+            ? graveyardCardTarget(
+                graveyardOwnerScope ?? 'controller',
+                filter === undefined ? {} : { filter },
+              )
+            : {
+                kind,
+                ...(filter !== undefined ? { filter } : {}),
+                ...(controller !== undefined ? { controller } : {}),
+              },
+        );
         return base + lineTargets.length - 1;
       };
       let allParsed = sentences.length > 0;
@@ -6940,62 +6989,107 @@ export function interpretCard(card: OracleCard): CardDefinition {
   // An authored override may implement lines the grammar cannot read (ADR 0010). It clears
   // only the specific reasons it names, so an errata'd card re-opens loudly rather than
   // silently keeping stale behavior â€” see `overrides/index.ts`.
-  return applyOverride({
-    oracleId: card.oracleId,
-    scryfallId: card.scryfallId,
-    name: frontName,
-    typeLine: card.typeLine,
-    supertypes: card.supertypes,
-    types: card.types,
-    subtypes: card.subtypes,
-    colors: card.colors,
-    colorIdentity: card.colorIdentity,
-    manaCost: isLandCard ? null : costResult.cost,
-    hasUnsupportedCost: costResult.unsupportedSymbols.length > 0,
-    power,
-    toughness,
-    loyalty,
-    defense,
-    ...(transformBack !== null ? { backFace: transformBack.backFace } : {}),
-    keywords,
-    ...(ward !== undefined ? { ward: { kind: 'mana' as const, cost: ward } } : {}),
-    ...(protectionFrom !== undefined ? { protectionFrom } : {}),
-    manaAbilities,
-    activatedAbilities,
-    entersTapped,
-    ...(entersTappedUnless !== undefined ? { entersTappedUnless } : {}),
-    ...(Object.keys(entersWithCounters).length > 0 ? { entersWithCounters } : {}),
-    ...(additionalCountersOnEntry.length > 0 ? { additionalCountersOnEntry } : {}),
-    ...(tokenCreationReplacement !== undefined ? { tokenCreationReplacement } : {}),
-    ...(pathwayLand !== null
-      ? { entersChoosingOption: pathwayLand.entersChoosingOption }
-      : chosenCreatureType
-        ? {
-            entersChoosingOption: {
-              prompt: 'choose a creature type',
-              domain: 'creatureType' as const,
-            },
-          }
-        : {}),
-    spellAbility:
-      (isSpell && (spellEffects.length > 0 || spellModes !== undefined)) ||
-      (card.subtypes.includes('Aura') && spellTargets.length > 0)
-        ? {
-            kind: 'spell',
-            targets: spellTargets,
-            effects: spellEffects,
-            ...(spellModes !== undefined ? { modes: spellModes } : {}),
-            ...(spellCantBeCountered ? { cantBeCountered: true } : {}),
-          }
-        : null,
-    ...(spellCantBeCountered ? { spellCantBeCountered: true } : {}),
-    ...(commanderFreeCast ? { commanderFreeCast: true } : {}),
-    ...(spellAdditionalCosts.length > 0 ? { spellAdditionalCosts } : {}),
-    triggers,
-    staticEffects,
-    ruleStatics,
-    ...(alternativeCasts ? { alternativeCasts } : {}),
-    modeled: reasons.length === 0,
-    unmodeledReasons: reasons,
+  const definition = enforceInterpretedDefinition(
+    applyOverride({
+      oracleId: card.oracleId,
+      scryfallId: card.scryfallId,
+      name: frontName,
+      typeLine: card.typeLine,
+      supertypes: card.supertypes,
+      types: card.types,
+      subtypes: card.subtypes,
+      colors: card.colors,
+      colorIdentity: card.colorIdentity,
+      // CR 118.6: absence of a printed mana cost is an unpayable cost, distinct from {0}.
+      manaCost:
+        isLandCard || card.manaCost === null || card.manaCost === '' ? null : costResult.cost,
+      hasUnsupportedCost: costResult.unsupportedSymbols.length > 0,
+      power,
+      toughness,
+      loyalty,
+      defense,
+      ...(transformBack !== null ? { backFace: transformBack.backFace } : {}),
+      keywords,
+      ...(ward !== undefined ? { ward: { kind: 'mana' as const, cost: ward } } : {}),
+      ...(protectionFrom !== undefined ? { protectionFrom } : {}),
+      manaAbilities,
+      activatedAbilities,
+      entersTapped,
+      ...(entersTappedUnless !== undefined ? { entersTappedUnless } : {}),
+      ...(Object.keys(entersWithCounters).length > 0 ? { entersWithCounters } : {}),
+      ...(additionalCountersOnEntry.length > 0 ? { additionalCountersOnEntry } : {}),
+      ...(tokenCreationReplacement !== undefined ? { tokenCreationReplacement } : {}),
+      ...(pathwayLand !== null
+        ? { entersChoosingOption: pathwayLand.entersChoosingOption }
+        : chosenCreatureType
+          ? {
+              entersChoosingOption: {
+                prompt: 'choose a creature type',
+                domain: 'creatureType' as const,
+              },
+            }
+          : {}),
+      spellAbility:
+        (isSpell && (spellEffects.length > 0 || spellModes !== undefined)) ||
+        (card.subtypes.includes('Aura') && spellTargets.length > 0)
+          ? {
+              kind: 'spell',
+              targets: spellTargets,
+              effects: spellEffects,
+              ...(spellModes !== undefined ? { modes: spellModes } : {}),
+              ...(spellCantBeCountered ? { cantBeCountered: true } : {}),
+            }
+          : null,
+      ...(spellCantBeCountered ? { spellCantBeCountered: true } : {}),
+      ...(commanderFreeCast ? { commanderFreeCast: true } : {}),
+      ...(spellAdditionalCosts.length > 0 ? { spellAdditionalCosts } : {}),
+      triggers,
+      staticEffects,
+      ruleStatics,
+      ...(alternativeCasts ? { alternativeCasts } : {}),
+      modeled: reasons.length === 0,
+      unmodeledReasons: reasons,
+    }),
+  );
+  if (!definition.modeled || (card.layout !== 'adventure' && card.layout !== 'omen'))
+    return definition;
+  const face = interpretSecondFace(card);
+  if (
+    face === null ||
+    !face.modeled ||
+    face.manaCost === null ||
+    face.types.length !== 1 ||
+    !face.types.some((type) => type === 'Instant' || type === 'Sorcery') ||
+    !face.subtypes.some((type) => type === 'Adventure' || type === 'Omen') ||
+    face.spellAbility === null
+  ) {
+    return {
+      ...definition,
+      modeled: false,
+      unmodeledReasons: [
+        ...definition.unmodeledReasons,
+        ...(face?.unmodeledReasons.length
+          ? face.unmodeledReasons.map((reason) => `${card.backFace!.name}: ${reason}`)
+          : ['missing or unsupported executable spell face']),
+      ],
+    };
+  }
+  const faceKind = face.subtypes.includes('Omen') ? 'omen' : 'adventure';
+  return enforceInterpretedDefinition({
+    ...definition,
+    alternativeCasts: [
+      ...(definition.alternativeCasts ?? []).filter(
+        (alt) => alt.kind !== 'adventure' && alt.kind !== 'omen',
+      ),
+      {
+        kind: faceKind,
+        manaCost: face.manaCost,
+        name: face.name,
+        typeLine: face.typeLine,
+        description: face.name,
+        ability: face.spellAbility,
+        spellFace: face,
+      },
+    ],
   });
 }

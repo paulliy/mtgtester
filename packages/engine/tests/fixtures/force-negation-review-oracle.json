@@ -1,0 +1,31 @@
+{
+  "card": {
+    "oracleId": "ac2173f9-f223-440a-9231-fd98762bdc6f",
+    "scryfallId": "1825a719-1b2a-4af9-9cd2-7cb497cd0317",
+    "name": "Force of Negation",
+    "manaCost": "{1}{U}{U}",
+    "cmc": 3,
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "typeLine": "Instant",
+    "supertypes": [],
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "oracleText": "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost.\nCounter target noncreature spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+    "power": null,
+    "toughness": null,
+    "loyalty": null,
+    "defense": null,
+    "keywords": [],
+    "layout": "normal",
+    "commanderLegality": "legal",
+    "isBasicLand": false
+  },
+  "sha256": "b8a0dc17dcd160b416c672ab9e916b5615465e19a3d3a4a2bddcc23138561cf4"
+}
