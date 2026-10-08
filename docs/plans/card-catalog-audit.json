@@ -5607,14 +5607,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 45,
+      "uniqueOracleIds": 44,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 56,
+      "uniqueOracleIds": 55,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5781,6 +5781,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr02",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "ad3bf726-e0c2-4038-a66e-9a9dff439563",
+      "name": "Raffine's Guidance",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in silverquill-influence.ts): the interpreter reads the {2}{W} graveyard recast as a graveyard nonMana alternative cast with no exile rider; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "ad3bf726-e0c2-4038-a66e-9a9dff439563",
+      "name": "Raffine's Guidance",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the silverquill-influence-remaining.ts containment; see that entry."
     }
   ]
 }

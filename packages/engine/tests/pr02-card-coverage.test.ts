@@ -2855,6 +2855,138 @@ describe('Dread Return', () => {
   });
 });
 
+describe("Raffine's Guidance", () => {
+  const guidance = pinned("Raffine's Guidance");
+  const RECAST = /from your graveyard/;
+
+  function setup(seed: string) {
+    const ctx = pod(seed);
+    const knight = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Guidance Knight',
+        typeLine: 'Creature — Knight',
+        power: '2',
+        toughness: '2',
+      }),
+    );
+    const aura = conjure(ctx, 'P1', guidance.card, 'graveyard');
+    return { ctx, knight, aura };
+  }
+
+  const recastOption = (ctx: GameContext, objectId: string) =>
+    castOptionsFor(ctx, 'P1', objectId).find((option) => RECAST.test(option.description));
+
+  const attachedAura = (ctx: GameContext, cardId: string) =>
+    ctx.state.battlefield.find((perm) => perm.cardId === cardId);
+
+  it("raffines-guidance-pinned-oracle-supported — the Aura's +1/+1 and a {2}{W} graveyard alternative cost", () => {
+    expect(guidance.sha256).toBe(
+      '44bdca5ef478f6340f60ac4c911274747431dab346b34c92e2d3c2c092759823',
+    );
+    expect(guidance.card.oracleText).toBe(
+      'Enchant creature\nEnchanted creature gets +1/+1.\nYou may cast this card from your graveyard by paying {2}{W} rather than paying its mana cost.',
+    );
+    expectModeled(guidance.card);
+    expect(getOverride(guidance.card.oracleId)).toBeUndefined();
+    const def = interpretCard(guidance.card);
+    expect(def.alternativeCasts).toEqual([
+      {
+        kind: 'nonMana',
+        from: 'graveyard',
+        manaCost: { generic: 2, colored: { W: 1, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },
+        description:
+          'You may cast this card from your graveyard by paying {2}{W} rather than paying its mana cost.',
+      },
+    ]);
+  });
+
+  it('raffines-guidance-graveyard-recast — pay {2}{W} from the graveyard to enchant a creature for +1/+1', () => {
+    const { ctx, knight, aura } = setup('guidance-recast');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }, ...generic(2)]);
+    const option = recastOption(ctx, aura.id);
+    expect(option).toBeDefined();
+    expect(option?.targets?.[0]?.options).toContain(knight.id);
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, knight.id]]),
+    );
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+    resolveTop(ctx);
+    expect(attachedAura(ctx, aura.cardId)?.attachedTo).toBe(knight.id);
+    const chars = computeCharacteristics(ctx, knight);
+    expect([chars.power, chars.toughness]).toEqual([3, 3]);
+  });
+
+  it('raffines-guidance-recast-needs-two-and-white — {W} alone cannot cast it from the graveyard', () => {
+    const { ctx, aura } = setup('guidance-short');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }, ...generic(1)]);
+    expect(recastOption(ctx, aura.id)).toBeUndefined();
+    addMana(playerById(ctx, 'P1'), generic(1));
+    expect(recastOption(ctx, aura.id)).toBeDefined();
+  });
+
+  it('raffines-guidance-recast-sorcery-speed — an Aura is cast from the graveyard only at sorcery speed', () => {
+    const { ctx, aura } = setup('guidance-timing');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }, ...generic(2)]);
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(recastOption(ctx, aura.id)).toBeUndefined();
+  });
+
+  it('raffines-guidance-recast-again — not exiled: when the creature dies the Aura returns to the graveyard and can be cast again', () => {
+    const { ctx, knight, aura } = setup('guidance-again');
+    const second = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Guidance Squire', typeLine: 'Creature — Human' }),
+    );
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }, ...generic(2)]);
+    takeAction(
+      ctx,
+      'P1',
+      recastOption(ctx, aura.id)!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, knight.id]]),
+    );
+    resolveTop(ctx);
+    pump(moveObject(ctx, knight, { zone: 'graveyard' }));
+    pump(priorityCheckpoint(ctx));
+    const back = playerById(ctx, 'P1').graveyard.find((card) => card.cardId === aura.cardId);
+    expect(back).toBeDefined();
+    expect(ctx.state.exile.map((card) => card.cardId)).not.toContain(aura.cardId);
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }, ...generic(2)]);
+    const again = recastOption(ctx, back!.id);
+    expect(again?.targets?.[0]?.options).toContain(second.id);
+  });
+
+  it('raffines-guidance-normal-cast — {W} from hand casts it normally', () => {
+    const ctx = pod('guidance-hand');
+    const knight = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Guidance Knight', typeLine: 'Creature — Knight' }),
+    );
+    const inHand = conjure(ctx, 'P1', guidance.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }]);
+    const options = castOptionsFor(ctx, 'P1', inHand.id);
+    expect(options).toHaveLength(1);
+    takeAction(
+      ctx,
+      'P1',
+      options[0]!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, knight.id]]),
+    );
+    resolveTop(ctx);
+    expect(attachedAura(ctx, inHand.cardId)?.attachedTo).toBe(knight.id);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -2867,6 +2999,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: "Raffine's Guidance",
+    sha256: '44bdca5ef478f6340f60ac4c911274747431dab346b34c92e2d3c2c092759823',
+    clauseCount: 3,
+  },
   {
     name: 'Dread Return',
     sha256: 'bda6e9277a015c56401c6b4f23fca3e7258d3aaeb53a6f234f3610f44b650553',

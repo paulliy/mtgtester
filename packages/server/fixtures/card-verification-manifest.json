@@ -1255,13 +1255,43 @@
     "ad3bf726-e0c2-4038-a66e-9a9dff439563": {
       "name": "Raffine's Guidance",
       "oracleSha256": "44bdca5ef478f6340f60ac4c911274747431dab346b34c92e2d3c2c092759823",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "raffines-guidance-enchant",
+          "oracleText": "Enchant creature",
+          "implementation": ["interpreted Aura spell: target creature, attaches on resolution"],
+          "engineTestIds": [
+            "raffines-guidance-pinned-oracle-supported",
+            "raffines-guidance-graveyard-recast",
+            "raffines-guidance-normal-cast"
+          ],
+          "viewerScenarioIds": ["raffines-guidance-viewer-graveyard-recast"]
+        },
+        {
+          "id": "raffines-guidance-pump",
+          "oracleText": "Enchanted creature gets +1/+1.",
+          "implementation": ["interpreted static: attachedToSource gets +1/+1 (layer 7c)"],
+          "engineTestIds": [
+            "raffines-guidance-pinned-oracle-supported",
+            "raffines-guidance-graveyard-recast"
+          ],
+          "viewerScenarioIds": ["raffines-guidance-viewer-graveyard-recast"]
+        },
+        {
+          "id": "raffines-guidance-graveyard-recast",
           "oracleText": "You may cast this card from your graveyard by paying {2}{W} rather than paying its mana cost.",
-          "implementation": ["explicitly unsupported; return-to-hand activation"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted graveyard nonMana alternativeCast: mana cost {2}{W}, sorcery timing as an Aura, no exile rider, so it can be cast this way again"
+          ],
+          "engineTestIds": [
+            "raffines-guidance-pinned-oracle-supported",
+            "raffines-guidance-graveyard-recast",
+            "raffines-guidance-recast-needs-two-and-white",
+            "raffines-guidance-recast-sorcery-speed",
+            "raffines-guidance-recast-again"
+          ],
+          "viewerScenarioIds": ["raffines-guidance-viewer-graveyard-recast"]
         }
       ],
       "gameplayAiScenarioIds": []

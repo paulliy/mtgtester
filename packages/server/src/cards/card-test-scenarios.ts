@@ -6618,6 +6618,36 @@ function dreadReturnScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function raffinesGuidanceScenario(gameId: GameId): CardTestScenario {
+  const guidance = pinnedFrom(MARCHESA_BATCH1, "Raffine's Guidance");
+  return pr01Scenario(gameId, {
+    id: 'raffines-guidance-viewer-graveyard-recast',
+    title: "Raffine's Guidance: cast it from the graveyard for {2}{W}",
+    instructions: [
+      "Raffine's Guidance is in your graveyard. Cast it from there for {2}{W}, enchanting Lab Ox.",
+    ],
+    expectedOutcome:
+      "Raffine's Guidance enchants Lab Ox, which becomes 5/5, and Plains and both Forests are tapped.",
+    oracleSha256: guidance.sha256,
+    clauseIds: [
+      'raffines-guidance-enchant',
+      'raffines-guidance-pump',
+      'raffines-guidance-graveyard-recast',
+    ],
+    decks: {
+      P1: [guidance.card, LAB_OX, PLAINS, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Ox', 'Plains', 'Forest', 'Forest'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ["Raffine's Guidance"] }],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -6852,6 +6882,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'flare-of-malice-viewer-sacrifice-edict',
   'blasphemous-edict-viewer-pay-b',
   'dread-return-viewer-flashback',
+  'raffines-guidance-viewer-graveyard-recast',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7006,6 +7037,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'flare-of-malice-viewer-sacrifice-edict': flareOfMaliceScenario,
   'blasphemous-edict-viewer-pay-b': blasphemousEdictScenario,
   'dread-return-viewer-flashback': dreadReturnScenario,
+  'raffines-guidance-viewer-graveyard-recast': raffinesGuidanceScenario,
 };
 
 export function createCardTestScenario(

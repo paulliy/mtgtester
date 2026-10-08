@@ -7412,12 +7412,6 @@
     "def": {}
   },
   {
-    "oracleId": "ad3bf726-e0c2-4038-a66e-9a9dff439563",
-    "name": "Raffine's Guidance",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
     "name": "Deflecting Swat",
     "handledLines": [],
@@ -19340,12 +19334,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-raffine-s-guidance",
-    "name": "Raffine's Guidance",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-rakdos-carnarium",

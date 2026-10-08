@@ -630,3 +630,16 @@ describe('Dread Return Card Test Lab scenario', () => {
     replays('dread-return-viewer-flashback', steps);
   });
 });
+
+describe("Raffine's Guidance Card Test Lab scenario", () => {
+  it('raffines-guidance-viewer-graveyard-recast — {2}{W} from the graveyard enchants Lab Ox', () => {
+    const steps: Step[] = [{ action: 'from your graveyard', targets: ['Lab Ox'] }];
+    const { seat, onBattlefield } = run('raffines-guidance-viewer-graveyard-recast', steps);
+    const ox = onBattlefield('Lab Ox')[0]!;
+    expect(onBattlefield("Raffine's Guidance")[0]?.attachedTo).toBe(ox.id);
+    expect(seat('P1').graveyard).toEqual([]);
+    expect(onBattlefield('Plains')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Forest').every((forest) => forest.tapped)).toBe(true);
+    replays('raffines-guidance-viewer-graveyard-recast', steps);
+  });
+});

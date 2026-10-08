@@ -172,7 +172,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Killian, Ink Duelist',
       'Kor Spiritdancer',
       'Martial Impetus',
-      "Raffine's Guidance",
       'Redemption Arc',
       'Sheltered by Ghosts',
       'Shielded by Faith',

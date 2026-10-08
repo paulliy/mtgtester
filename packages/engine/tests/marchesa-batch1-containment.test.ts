@@ -119,7 +119,6 @@ const REASONS: Record<string, string> = {
   'Kor Spiritdancer': 'Attached-Aura pump counts all Auras you control.',
   'Martial Impetus':
     'Other-attacking-your-opponents pump is implemented as all creatures in combat.',
-  "Raffine's Guidance": 'Graveyard recast is implemented as a return-to-hand activated ability.',
   'Redemption Arc':
     'Exile-enchanted-creature activated ability is claimed without an implementation.',
   'Sheltered by Ghosts': 'Ward {2} is claimed without a ward static.',
@@ -312,6 +311,7 @@ describe('Marchesa catalog audit containment', () => {
     'Flare of Malice',
     'Blasphemous Edict',
     'Dread Return',
+    "Raffine's Guidance",
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

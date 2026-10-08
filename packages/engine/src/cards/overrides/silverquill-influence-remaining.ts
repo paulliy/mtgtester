@@ -353,12 +353,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Promise of Loyalty',
     'Keep-one sacrifice, vow counters, and attack restriction are unimplemented.',
   );
-  // Catalog audit silverquill-remaining-batch-2: graveyard recast authored as return to hand.
-  unsupportedCard(
-    'ad3bf726-e0c2-4038-a66e-9a9dff439563',
-    "Raffine's Guidance",
-    'Graveyard recast is implemented as a return-to-hand activated ability.',
-  );
+  // Raffine's Guidance: restored in coverage PR02. The interpreter reads the {2}{W} graveyard
+  // recast as an alternative cost, so no override remains.
   // Catalog audit silverquill-remaining-batch-2: exile activated ability claimed without a def.
   unsupportedCard(
     'c22e5fc6-9b4e-4197-b472-70d168eb4330',

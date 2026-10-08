@@ -1453,6 +1453,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Dread Return: flash it back by sacrificing three creatures'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Raffine's Guidance: cast it from the graveyard for {2}{W}"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

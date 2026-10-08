@@ -3402,3 +3402,20 @@ test('Dread Return: flash it back by sacrificing three creatures', async ({ page
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(permanent(page, 'Lab Ox')).toBeVisible();
 });
+
+test("Raffine's Guidance: cast it from the graveyard for {2}{W}", async ({ page }) => {
+  await runScenario(page, "Raffine's Guidance: cast it from the graveyard for {2}{W}");
+  const guidance = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: "Raffine's Guidance", exact: true }) });
+  await expect(guidance).toHaveClass(/actionable/, { timeout: 15_000 });
+  await guidance.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toContainText('5/5');
+  await expect(permanent(page, "Raffine's Guidance")).toBeVisible();
+});

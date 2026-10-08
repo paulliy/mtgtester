@@ -1942,6 +1942,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "ad3bf726-e0c2-4038-a66e-9a9dff439563",
+    "name": "Raffine's Guidance",
+    "package": "PR02.19",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Graveyard recast is implemented as a return-to-hand activated ability."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "96381388-1e82-411c-8290-1f3e909d3b5f",
     "name": "Reins of Power",
     "package": "W6",

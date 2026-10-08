@@ -93,9 +93,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'When enchanted creature dies, return this card from your graveyard to the battlefield.',
   ]);
 
-  unimplemented('ad3bf726-e0c2-4038-a66e-9a9dff439563', "Raffine's Guidance", [
-    'You may cast this card from your graveyard by paying {2}{W} rather than paying its mana cost.',
-  ]);
+  // Raffine's Guidance: restored in coverage PR02 (see silverquill-influence-remaining.ts).
 
   unimplemented('bd92cacd-c7d8-43a2-a261-ea4754fefdc5', "Sage's Reverie", [
     "When this Aura enters, draw a card for each Aura you control that's attached to a creature.",

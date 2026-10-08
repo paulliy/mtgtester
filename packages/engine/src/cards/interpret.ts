@@ -6235,6 +6235,26 @@ export function interpretCard(card: OracleCard): CardDefinition {
       : knownAbilityWordStripped;
     if (line.length === 0) continue;
     const lower = line.toLowerCase().replace(/\.$/, '');
+    // "You may cast this card from your graveyard by paying {2}{W} rather than paying its mana
+    // cost" (Raffine's Guidance): a graveyard alternative cost with no flashback exile, so the
+    // card returns to the graveyard (or stays on the battlefield) and can be cast this way again.
+    {
+      const recast = lower.match(
+        /^you may cast this card from your graveyard by paying ((?:\{[^}]+\})+) rather than paying its mana cost$/,
+      );
+      const cost =
+        recast === null ? null : parseManaCost((recast[1] as string).toUpperCase() as never).cost;
+      if (cost !== null) {
+        if (alternativeCasts === undefined) alternativeCasts = [];
+        alternativeCasts.push({
+          kind: 'nonMana',
+          from: 'graveyard',
+          manaCost: cost,
+          description: line,
+        });
+        continue;
+      }
+    }
     // "Flashback—Sacrifice three creatures" (Dread Return): a flashback cost with no mana at all.
     {
       const nonManaFlashback = lower.match(/^flashback[\u2014\u2013-]\s*([^{].*)$/);
