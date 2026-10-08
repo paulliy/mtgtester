@@ -5,9 +5,7 @@ import { resolveTopOfStack } from '../src/stack/stack';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { addMana } from '../src/mana/pool';
 import { createGame } from '../src/state/game';
-import { ofType } from '../src/cards/selector';
-import { buildGuardedCandidateDefinition } from '../src/testing/candidate-definition';
-import { copies, gameConfig, oracle, pump, registerCustomDef, spawn, conjure } from './fixtures';
+import { copies, gameConfig, oracle, pump, spawn, conjure } from './fixtures';
 
 const toxicDeluge = () =>
   oracle({
@@ -36,33 +34,7 @@ function setup(life = 10) {
   const player = ctx.state.players.find((candidate) => candidate.id === 'P1')!;
   player.life = life;
   const spell = conjure(ctx, 'P1', toxicDeluge(), 'hand');
-  registerCustomDef(
-    ctx,
-    buildGuardedCandidateDefinition(
-      toxicDeluge(),
-      [
-        'unrecognized rules text: "As an additional cost to cast this spell, pay X life."',
-        'unrecognized rules text: "All creatures get -X/-X until end of turn."',
-      ],
-      {
-        announcesX: true,
-        spellAdditionalCosts: [{ kind: 'payLifeValue', amount: { kind: 'xValue' } }],
-        spellAbility: {
-          kind: 'spell',
-          targets: [],
-          effects: [
-            {
-              op: 'pumpEachUntilEot',
-              selector: ofType('Creature'),
-              power: 0,
-              toughness: { kind: 'negate', of: { kind: 'xValue' } },
-            },
-          ],
-          description: 'All creatures get -X/-X until end of turn',
-        },
-      },
-    ),
-  );
+  // The interpreter models the card now (coverage PR02): no candidate definition is needed.
   const own = spawn(
     ctx,
     'P1',

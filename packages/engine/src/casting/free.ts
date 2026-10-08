@@ -38,6 +38,8 @@ function legalFreeCastSelections(
   card: EngineCardObject,
   controllerId: PlayerId,
   manaValueLessThan = Infinity,
+  /** Life paid instead of the mana cost (Anrakyr), paid with the other costs (CR 601.2h). */
+  lifeCost = 0,
 ): FreeCastSelection[] {
   const player = ctx.state.players.find((candidate) => candidate.id === controllerId);
   const def = getDefByOracleId(ctx, card.oracleId, card.name);
@@ -119,6 +121,7 @@ function legalFreeCastSelections(
         const costs: AbilityCost[] = [
           ...(definition.spellAdditionalCosts ?? []),
           ...modeAdditionalCosts(definition, modes),
+          ...(lifeCost > 0 ? [{ kind: 'payLife' as const, amount: lifeCost }] : []),
         ];
         for (let i = 0; i < optionalCostCount; i++)
           costs.push({ kind: 'mana', cost: optional!.cost });
@@ -178,8 +181,47 @@ export function freeCardIsCastable(
   card: EngineCardObject,
   controllerId: PlayerId,
   manaValueLessThan = Infinity,
+  lifeCost = 0,
 ): boolean {
-  return legalFreeCastSelections(ctx, card, controllerId, manaValueLessThan).length > 0;
+  return legalFreeCastSelections(ctx, card, controllerId, manaValueLessThan, lifeCost).length > 0;
+}
+
+/**
+ * An X in an additional cost ("pay X life", Toxic Deluge) is still announced (CR 601.2b):
+ * casting without paying the mana cost fixes only an X in the MANA cost at 0 (CR 107.3b).
+ * The values offered are those the whole cost can still be paid with.
+ */
+function freeCastXChoices(
+  ctx: GameContext,
+  card: EngineCardObject,
+  controllerId: PlayerId,
+  selection: FreeCastSelection,
+  lifeCost: number,
+): number[] {
+  const definition = selection.definition;
+  if (definition.announcesX !== true || definition.manaCost?.x !== undefined) return [0];
+  const player = ctx.state.players.find((candidate) => candidate.id === controllerId)!;
+  const costs: AbilityCost[] = [
+    ...(definition.spellAdditionalCosts ?? []),
+    ...modeAdditionalCosts(definition, selection.modes),
+    ...(lifeCost > 0 ? [{ kind: 'payLife' as const, amount: lifeCost }] : []),
+  ];
+  const choices: number[] = [];
+  for (let x = 0; x <= player.life; x++) {
+    const witness = planSpellPayment(ctx, player, {
+      mana: manaPortionOf(costs),
+      costs,
+      sourceCardId: card.cardId,
+      sourceOracleId: card.oracleId,
+      sourceIsCommander: card.isCommander,
+      spellDefinition: definition,
+      x,
+      targetLifeTax: targetLifeTaxFor(ctx, controllerId, [...selection.targets.values()]),
+    });
+    if (witness === null) break;
+    choices.push(x);
+  }
+  return choices;
 }
 
 /** Free spells still announce, pay additional costs, and wait on the normal spell stack. */
@@ -188,8 +230,10 @@ export function* resolveFreeCard(
   card: EngineCardObject,
   controllerId: PlayerId,
   manaValueLessThan = Infinity,
+  /** Life paid instead of the mana cost (Anrakyr). */
+  lifeCost = 0,
 ): GameGen<void> {
-  const selections = legalFreeCastSelections(ctx, card, controllerId, manaValueLessThan);
+  const selections = legalFreeCastSelections(ctx, card, controllerId, manaValueLessThan, lifeCost);
   if (selections.length === 0) return;
   const outcome = yield {
     decisionType: 'chooseTargets',
@@ -226,6 +270,23 @@ export function* resolveFreeCard(
     throw new Error('invalid free-cast target response');
   }
   const player = ctx.state.players.find((candidate) => candidate.id === controllerId)!;
+  const xChoices = freeCastXChoices(ctx, card, controllerId, selection, lifeCost);
+  let x = 0;
+  if (xChoices.length > 1 || (xChoices[0] ?? 0) > 0) {
+    const choice = yield {
+      decisionType: 'general' as const,
+      player: controllerId,
+      prompt: `Choose X for free-cast ${card.name}.`,
+      options: xChoices.map((value) => ({
+        type: 'chooseX',
+        description: `X = ${value}`,
+        payload: value,
+      })),
+    };
+    const picked = Number.isSafeInteger(choice.index) ? xChoices[choice.index] : undefined;
+    if (picked === undefined) throw new Error('invalid free-cast X choice');
+    x = picked;
+  }
   yield* castSpell(
     ctx,
     player,
@@ -244,10 +305,10 @@ export function* resolveFreeCard(
         ? {}
         : { optionalCostCount: selection.optionalCostCount }),
       ...(selection.definition.manaCost?.x !== undefined || selection.definition.announcesX === true
-        ? { x: 0 }
+        ? { x }
         : {}),
     },
     { index: 0, targets: selection.targets },
-    { card, withoutManaCost: true },
+    { card, withoutManaCost: true, ...(lifeCost > 0 ? { lifeCost } : {}) },
   );
 }

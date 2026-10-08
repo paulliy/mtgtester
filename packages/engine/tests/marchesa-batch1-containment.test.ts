@@ -33,33 +33,23 @@ function canonical(value: unknown): string {
 }
 
 const REASONS: Record<string, string> = {
-  'Toxic Deluge': 'Pay-X-life additional cost is implemented as loseLife on resolution.',
-  'Blasphemous Edict':
-    'The thirteen-creature {B} alternative cost is claimed without an alternativeCast.',
   'Body Launderer':
     'Connive is approximated as unconditional +1/+1, and the return trigger omits equal-or-lesser power.',
   'Bolt Bend': 'Change-the-target is implemented as copyTargetSpell; a copy is not a retarget.',
-  'Carrion Feeder':
-    'Sacrifice-a-creature cost uses sacrificeOther, which cannot sacrifice this creature.',
   'Chaos Warp':
     'The top card is not revealed; a nonpermanent remains hidden on top of the library.',
   'Cytoplast Manipulator':
     'Gain-control duration is omitted; gainControlTarget is a permanent steal.',
   'Deflecting Swat':
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
-  'Flare of Denial':
-    'Sacrifice-a-nontoken-blue-creature alternative cost is claimed without an alternativeCast.',
   'Flare of Duplication':
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
-  'Flare of Malice':
-    'Sacrifice-a-nontoken-black-creature alternative cost is claimed without an alternativeCast.',
   'Flayer of the Hatebound':
     'Enters-from-graveyard is implemented as any creature you control entering.',
   'Firkraag, Cunning Instigator':
     'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
   'Gleeful Arsonist': 'Undying is claimed without a persist/undying replacement.',
   'Glen Elendra Archmage': 'Persist is claimed without a persist/undying replacement.',
-  'Grim Haruspex': 'Morph cost is stored but never offered as a face-down alternative cast.',
   'Kardur, Doomscourge':
     'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
   'Mana Sculpt':
@@ -68,7 +58,6 @@ const REASONS: Record<string, string> = {
     'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
   'Puppeteer Clique': 'Stolen creature is not exiled at the beginning of the next end step.',
   'River Kelpie': 'Graveyard-origin enters and cast triggers fire on any enter or cast.',
-  'Sage of Fables': 'Remove-a-counter cost is paid from this creature, not a creature you control.',
   'Satoru, the Infiltrator': 'Enter trigger omits the not-cast-or-no-mana-spent restriction.',
   'Siren Stormtamer':
     'Counter target is any stack object, not only spells or abilities that target you or your creature.',
@@ -95,7 +84,6 @@ const REASONS: Record<string, string> = {
   "Tibalt's Trickery": 'Mill, exile, and free-cast cascade are claimed as a counter-only spell.',
   'Animate Dead': 'Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.',
   'Arcane Lighthouse': 'Hexproof/shroud removal is implemented as granting menace.',
-  'Changing Loyalty': 'Replicate is claimed without a replicate implementation.',
   'Eldrazi Conscription': 'Annihilator 2 is claimed without an annihilator implementation.',
   'Fallen Ideal':
     'Granted sacrifice ability is authored on the Aura, and sacrificeOther cannot sacrifice the enchanted creature.',
@@ -123,12 +111,9 @@ const REASONS: Record<string, string> = {
   'Intermediate Chirography':
     'Class levels and later abilities are claimed without an implementation.',
   'Keen Duelist': 'Mutual reveal is implemented as drawRevealTopLoseManaValue on you only.',
-  'Killian, Ink Duelist':
-    'Spells-that-target-a-creature reduction is implemented as creature-spell reduction.',
   'Kor Spiritdancer': 'Attached-Aura pump counts all Auras you control.',
   'Martial Impetus':
     'Other-attacking-your-opponents pump is implemented as all creatures in combat.',
-  "Raffine's Guidance": 'Graveyard recast is implemented as a return-to-hand activated ability.',
   'Redemption Arc':
     'Exile-enchanted-creature activated ability is claimed without an implementation.',
   'Sheltered by Ghosts': 'Ward {2} is claimed without a ward static.',
@@ -139,13 +124,11 @@ const REASONS: Record<string, string> = {
     'Inklings-cannot-attack-you is omitted, and the token trigger is unscoped.',
   Comeuppance:
     'All-damage prevention and reflection are implemented as preventCombatDamageToController.',
-  'Dream Devourer': 'Foretell grant is omitted, and the pump fires on any spell you cast.',
   'Malakir Rebirth // Malakir Mire': 'Spell face is claimed; only the land back is authored.',
   'Mangara, the Diplomat':
     'Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added.',
   'Michiko Konda, Truth Seeker':
     'Damage-to-you is implemented as damage to permanents you control.',
-  'Mistveil Plains': 'Bottom-of-library is implemented as graveyardToLibraryTop.',
   'Valakut Awakening // Valakut Stoneforge':
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
@@ -158,8 +141,6 @@ const REASONS: Record<string, string> = {
     'All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.',
   'Teyo, Geometric Tactician':
     'The −2 directional attack restriction is claimed without an implementation.',
-  'Weathered Wayfarer':
-    'Opponent-controls-more-lands restriction is omitted from the search activation.',
   'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
   Arcbond: 'The delayed damage is dealt by Arcbond, not by the chosen creature.',
   Backlash: 'Untapped-creature targeting is implemented as any creature.',
@@ -189,12 +170,6 @@ const REASONS: Record<string, string> = {
     'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
   Psychomancer:
     'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
-  'Anrakyr the Traveller':
-    'Artifact-from-hand-or-graveyard life cast is implemented as free casts from hand.',
-  'Convergence of Dominion':
-    'Graveyard activation cost reduction is claimed without a static effect.',
-  'Endless Atlas': 'The three-or-more-same-name land restriction is omitted from the draw ability.',
-  'Ghost Ark': 'Becomes-crewed is implemented as becomesTapped.',
   'Hexmark Destroyer': 'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
   'Imotekh the Stormlord':
     'The artifact-cards-leave-graveyard trigger is claimed without an implementation.',
@@ -204,13 +179,8 @@ const REASONS: Record<string, string> = {
   'Triarch Stalker':
     'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
-  'Dread Return': 'Flashback—Sacrifice three creatures is claimed without a flashback alternative.',
-  'Illuminor Szeras': 'Sacrifice-another-creature is an effect, not a cost.',
-  'Sceptre of Eternal Glory':
-    'The three-or-more-same-name land restriction is omitted from the three-mana ability.',
   'Shard of the Void Dragon': 'Exile-from-battlefield is omitted from the artifact-leaves trigger.',
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
-  'Their Number Is Legion': 'Tokens are not created tapped, and graveyard cast is omitted.',
   Cryptek: 'The delayed return omits entering tapped.',
   'Out of the Tombs':
     'Enters-with two eon counters is authored; the card only places counters on upkeep.',
@@ -224,7 +194,6 @@ const REASONS: Record<string, string> = {
   'Lightning Runner':
     'Untap all creatures you control is implemented as untapEach of all permanents you control.',
   'Aetheric Amplifier': 'Choose-one is implemented as two independent activated abilities.',
-  'Peema Trailblazer': 'Exhaust is omitted, and the ability requires tapping this creature.',
   'Saheeli, Radiant Creator':
     'The copy is a reflexive trigger after payment; the target is chosen before you decide to pay.',
   'Saheeli, Sublime Artificer': 'A +1 loyalty ability is authored that is not on the card.',
@@ -233,23 +202,15 @@ const REASONS: Record<string, string> = {
   'Territorial Aetherkite':
     'The damage is a reflexive trigger after payment, implemented as the same resolution.',
   Duplicant: 'Optional exile is a required target.',
-  'Soul-Guide Lantern':
-    'Opponent-graveyard exile is authored with a free draw instead of a separate {1} draw ability.',
   'Adaptive Omnitool': 'Artifact-from-library is put into hand without revealing.',
-  'Bespoke Battlewagon':
-    'Crew 4 is dropped when the energy activations replace the parsed activated abilities.',
   'Dragon Tempest': 'Dragon-dealt damage is implemented as damage from this enchantment.',
   'Dream Pillager':
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
-  'Idol of Oblivion':
-    'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
   'Flameblast Dragon': 'The damage target is chosen before you decide to pay X.',
   'Thunderbreak Regent':
     'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
   "Tyrant's Familiar":
     'Defending-player creature targeting uses eventPlayer, which is the attacking player.',
-  'Dragonkin Berserker':
-    'Boast cost reduction applies only to this creature, not to Boast abilities you activate.',
   'Atarka Monument': 'The animation does not make it red and green.',
   'Scourge of Valkas':
     'The entering Dragon is the damage source, implemented as damage from this creature.',
@@ -259,13 +220,6 @@ const REASONS: Record<string, string> = {
   'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  'Aether Hub':
-    'The colorless mana ability is dropped when the energy mana ability replaces manaAbilities.',
-  'Solar Transformer':
-    'The colorless mana ability is dropped when the energy mana ability replaces manaAbilities.',
-  'Nullmage Shepherd': 'The four creatures cannot include this creature.',
-  'Retrofitter Foundry':
-    'The {2}, {T} Servo creation is dropped when activatedAbilities replace the parsed abilities.',
   'Cranial Plating': 'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
   'Dark Confidant':
     'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
@@ -282,8 +236,6 @@ const REASONS: Record<string, string> = {
   'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
   'Champion of Lambholt':
     "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
-  'Conclave Tribunal': 'Convoke is stored as a ruleStatic but never offered as a payment.',
-  'Hour of Reckoning': 'Convoke is stored as a ruleStatic but never offered as a payment.',
   'Iron Apprentice':
     "The dies intervening-if checks the battlefield, so it never sees this creature's counters.",
   'Reality Shift':
@@ -323,6 +275,39 @@ describe('Marchesa catalog audit containment', () => {
     'Beacon of Unrest',
     'Attune with Aether',
     'Forum of Amity',
+    // Coverage PR02 (docs/plans/card-coverage-chunks.md).
+    'Retrofitter Foundry',
+    'Aether Hub',
+    'Solar Transformer',
+    'Bespoke Battlewagon',
+    'Endless Atlas',
+    'Sceptre of Eternal Glory',
+    'Weathered Wayfarer',
+    'Idol of Oblivion',
+    'Mistveil Plains',
+    'Carrion Feeder',
+    'Nullmage Shepherd',
+    'Sage of Fables',
+    'Illuminor Szeras',
+    'Peema Trailblazer',
+    'Soul-Guide Lantern',
+    'Ghost Ark',
+    'Flare of Denial',
+    'Flare of Malice',
+    'Blasphemous Edict',
+    'Dread Return',
+    "Raffine's Guidance",
+    'Their Number Is Legion',
+    'Anrakyr the Traveller',
+    'Toxic Deluge',
+    'Conclave Tribunal',
+    'Hour of Reckoning',
+    'Killian, Ink Duelist',
+    'Dragonkin Berserker',
+    'Convergence of Dominion',
+    'Changing Loyalty',
+    'Grim Haruspex',
+    'Dream Devourer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

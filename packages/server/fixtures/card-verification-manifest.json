@@ -354,19 +354,33 @@
     "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e": {
       "name": "Blasphemous Edict",
       "oracleSha256": "6994bb591cb20faee9759d2070892083e2cea7b20e36ece110b5cc740790b4d3",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "blasphemous-edict-alternative",
           "oracleText": "You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield.",
-          "implementation": ["explicitly unsupported; alternativeCast omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted nonMana alternativeCast from hand: mana cost {B}, condition countPermanents(creature, all players) >= 13, checked when cast; the alternative's mana is charged"
+          ],
+          "engineTestIds": [
+            "blasphemous-edict-pinned-oracle-supported",
+            "blasphemous-edict-needs-thirteen-creatures",
+            "blasphemous-edict-alternative-pays-b",
+            "blasphemous-edict-normal-cast"
+          ],
+          "viewerScenarioIds": ["blasphemous-edict-viewer-pay-b"]
         },
         {
+          "id": "blasphemous-edict-sacrifice-thirteen",
           "oracleText": "Each player sacrifices thirteen creatures of their choice.",
-          "implementation": ["explicitly unsupported pending a faithful alternative cost"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted spell effect sacrificeEachPlayer count 13, filter creature: each player chooses in APNAP order, a player with thirteen or fewer creatures sacrifices all of them without a prompt, and all are sacrificed at once"
+          ],
+          "engineTestIds": [
+            "blasphemous-edict-pinned-oracle-supported",
+            "blasphemous-edict-each-player-sacrifices-thirteen"
+          ],
+          "viewerScenarioIds": ["blasphemous-edict-viewer-pay-b"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -374,19 +388,35 @@
     "437cfd16-94bc-43ba-afd8-e9e9d028a4ca": {
       "name": "Flare of Denial",
       "oracleSha256": "bf7016907d2dd85f89b718bc7cb81fa45db2423f52bfee50eff788eab5d3ac34",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "flare-of-denial-sacrifice-alternative",
           "oracleText": "You may sacrifice a nontoken blue creature rather than pay this spell's mana cost.",
-          "implementation": ["explicitly unsupported; alternativeCast omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted nonMana alternativeCast from hand: mana cost {0}, cost sacrificeOther of a nontoken blue creature you control, paid while casting (CR 601.2h)"
+          ],
+          "engineTestIds": [
+            "flare-of-denial-pinned-oracle-supported",
+            "flare-of-denial-sacrifice-alternative",
+            "flare-of-denial-sacrifice-needs-nontoken-blue",
+            "flare-of-denial-needs-a-spell",
+            "flare-of-denial-normal-cast"
+          ],
+          "viewerScenarioIds": ["flare-of-denial-viewer-sacrifice-counter"]
         },
         {
+          "id": "flare-of-denial-counter",
           "oracleText": "Counter target spell.",
-          "implementation": ["explicitly unsupported pending a faithful alternative cost"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored spellAbility: target any spell (the generic grammar limits it to an opponent's spell), effect counter"
+          ],
+          "engineTestIds": [
+            "flare-of-denial-pinned-oracle-supported",
+            "flare-of-denial-sacrifice-alternative",
+            "flare-of-denial-counters-any-spell"
+          ],
+          "viewerScenarioIds": ["flare-of-denial-viewer-sacrifice-counter"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -414,19 +444,34 @@
     "4ce156f8-6b0b-41ce-9e8f-b2735c757406": {
       "name": "Flare of Malice",
       "oracleSha256": "d358e361fe29eb5d7bb7a2b7150da42213f3ec722749868738013cf835d87ec0",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "flare-of-malice-sacrifice-alternative",
           "oracleText": "You may sacrifice a nontoken black creature rather than pay this spell's mana cost.",
-          "implementation": ["explicitly unsupported; alternativeCast omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted nonMana alternativeCast from hand: mana cost {0}, cost sacrificeOther of a nontoken black creature you control, paid while casting (CR 601.2h)"
+          ],
+          "engineTestIds": [
+            "flare-of-malice-pinned-oracle-supported",
+            "flare-of-malice-sacrifice-alternative",
+            "flare-of-malice-sacrifice-needs-nontoken-black",
+            "flare-of-malice-normal-cast"
+          ],
+          "viewerScenarioIds": ["flare-of-malice-viewer-sacrifice-edict"]
         },
         {
+          "id": "flare-of-malice-greatest-mana-value",
           "oracleText": "Each opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control.",
-          "implementation": ["explicitly unsupported pending a faithful alternative cost"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted spell effect sacrificeGreatestEachOpponent: selector creatureOrPlaneswalker, metric manaValue; each opponent chooses among tied permanents"
+          ],
+          "engineTestIds": [
+            "flare-of-malice-pinned-oracle-supported",
+            "flare-of-malice-greatest-mana-value",
+            "flare-of-malice-normal-cast"
+          ],
+          "viewerScenarioIds": ["flare-of-malice-viewer-sacrifice-edict"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -434,21 +479,34 @@
     "afaef788-34d1-460b-b884-9d7ae6ddeb18": {
       "name": "Toxic Deluge",
       "oracleSha256": "8d4c686fcd606a82ad2a0dbba2ab363d1b5ca67300bf21b0a3de199ec277cad9",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "toxic-deluge-pay-x-life",
           "oracleText": "As an additional cost to cast this spell, pay X life.",
           "implementation": [
-            "explicitly unsupported; additional cost authored as resolution loseLife"
+            "interpreted spellAdditionalCosts payLifeValue(X) with announcesX: X from 0 to your life total is announced with the cast (CR 601.2b) and the life is paid while casting (CR 601.2h), recorded as the stack object's announcedX"
           ],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "toxic-deluge-pinned-oracle-supported",
+            "toxic-deluge-pay-x-life-on-cast",
+            "toxic-deluge-x-bounded-by-life",
+            "toxic-deluge-x-zero"
+          ],
+          "viewerScenarioIds": ["toxic-deluge-viewer-pay-two-life"]
         },
         {
+          "id": "toxic-deluge-minus-x",
           "oracleText": "All creatures get -X/-X until end of turn.",
-          "implementation": ["explicitly unsupported pending a faithful additional cost"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted spell effect pumpEachUntilEot over all creatures, power and toughness -X"
+          ],
+          "engineTestIds": [
+            "toxic-deluge-pinned-oracle-supported",
+            "toxic-deluge-minus-x-sweep",
+            "toxic-deluge-x-zero"
+          ],
+          "viewerScenarioIds": ["toxic-deluge-viewer-pay-two-life"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -524,13 +582,34 @@
     "f53da056-97be-41ad-8cfc-0d92e17dcd7b": {
       "name": "Sage of Fables",
       "oracleSha256": "1423e05e7e7fc5bf74c33c20c1f368ebd1f4224c9c5112df484d654181aeb382",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "sage-of-fables-wizard-counter",
+          "oracleText": "Each other Wizard creature you control enters with an additional +1/+1 counter on it.",
+          "implementation": [
+            "interpreted additionalCountersOnEntry: other Wizard creatures you control enter with one more +1/+1 counter"
+          ],
+          "engineTestIds": [
+            "sage-of-fables-pinned-oracle-supported",
+            "sage-of-fables-wizard-enters-with-counter",
+            "sage-of-fables-not-itself-or-opponents"
+          ],
+          "viewerScenarioIds": ["sage-of-fables-viewer-wizard-counter-draw"]
+        },
+        {
+          "id": "sage-of-fables-remove-counter-draw",
           "oracleText": "{2}, Remove a +1/+1 counter from a creature you control: Draw a card.",
-          "implementation": ["explicitly unsupported; removeCounters cost is paid from the source"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted activated ability: costs [mana {2}, new removeCountersFromAmong(+1/+1, 1, your creatures)] — the counter comes off any creature you control (the Sage included), chosen while paying when there is more than one; effect draw(1)"
+          ],
+          "engineTestIds": [
+            "sage-of-fables-pinned-oracle-supported",
+            "sage-of-fables-draw-removing-another-creatures-counter",
+            "sage-of-fables-draw-from-itself",
+            "sage-of-fables-needs-a-counter-you-control"
+          ],
+          "viewerScenarioIds": ["sage-of-fables-viewer-wizard-counter-draw"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -614,15 +693,30 @@
     "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425": {
       "name": "Carrion Feeder",
       "oracleSha256": "7fb3a771052de7acaa2d3eaebe9c39509ae68522bd344b4bd2491f77e6a3e069",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "carrion-feeder-cant-block",
+          "oracleText": "This creature can't block.",
+          "implementation": [
+            "new grammar: '~ can't block' sets the printed cantBlock characteristic, which combat's canBlock checks on the permanent"
+          ],
+          "engineTestIds": ["carrion-feeder-pinned-oracle-supported", "carrion-feeder-cant-block"],
+          "viewerScenarioIds": ["carrion-feeder-viewer-cant-block"]
+        },
+        {
+          "id": "carrion-feeder-sacrifice-a-creature",
           "oracleText": "Sacrifice a creature: Put a +1/+1 counter on this creature.",
           "implementation": [
-            "explicitly unsupported; sacrificeOther cannot sacrifice this creature"
+            "interpreted activated ability: cost sacrificeOther(your creature, allowSelf: true) so Carrion Feeder may sacrifice itself; effect putCountersEach(self, +1/+1, 1)"
           ],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "carrion-feeder-pinned-oracle-supported",
+            "carrion-feeder-sacrifices-another",
+            "carrion-feeder-sacrifices-itself",
+            "carrion-feeder-only-your-creatures"
+          ],
+          "viewerScenarioIds": ["carrion-feeder-viewer-sacrifice"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -658,13 +752,40 @@
     "72aef1d8-11df-4bc2-af83-907b05df73a8": {
       "name": "Grim Haruspex",
       "oracleSha256": "a82c1aeef591b7eaeb584f94d66076ac45cfafde3a65de88cdb36f4ae14866ef",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Morph {B}",
-          "implementation": ["explicitly unsupported; morphCost is never offered as a cast"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "id": "grim-haruspex-morph",
+          "oracleText": "Morph {B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+          "implementation": [
+            "interpreted Morph {B} as morphCost",
+            "castFaceDown: from hand at sorcery speed for {3} (less reductions that apply to a vanilla colorless creature spell), on the stack under a face-down 2/2 definition with no name, color or abilities; resolves into a face-down permanent",
+            "turnFaceUp special action any time you have priority: pay the morph cost, no stack, keeps status, counters and damage, does not re-enter",
+            "hidden information: the stack, castSpell event and other seats' log name only a face-down creature spell until it is turned face up"
+          ],
+          "engineTestIds": [
+            "grim-haruspex-pinned-oracle-supported",
+            "grim-haruspex-face-down-cast",
+            "grim-haruspex-face-down-sorcery-speed",
+            "grim-haruspex-face-down-has-no-abilities",
+            "grim-haruspex-turn-face-up",
+            "grim-haruspex-normal-cast",
+            "grim-haruspex-public-log"
+          ],
+          "viewerScenarioIds": ["grim-haruspex-viewer-morph"]
+        },
+        {
+          "id": "grim-haruspex-draw",
+          "oracleText": "Whenever another nontoken creature you control dies, draw a card.",
+          "implementation": [
+            "interpreted dies trigger: another nontoken creature you control; draw 1. A face-down Haruspex has no abilities, so it does not trigger"
+          ],
+          "engineTestIds": [
+            "grim-haruspex-pinned-oracle-supported",
+            "grim-haruspex-draws-face-up",
+            "grim-haruspex-face-down-has-no-abilities"
+          ],
+          "viewerScenarioIds": ["grim-haruspex-viewer-morph"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -892,13 +1013,55 @@
     "cdfa9de4-7d7d-4638-8ac4-793ece6372dd": {
       "name": "Changing Loyalty",
       "oracleSha256": "c57a249316e0f083aae223224957ca14c9fd90badb941b38c27ed6c6cab578d0",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Replicate {2}",
-          "implementation": ["explicitly unsupported; Replicate is not implemented"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "changing-loyalty-replicate",
+          "oracleText": "Flash\nReplicate {2} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies. Copies become tokens.)",
+          "implementation": [
+            "interpreted flash keyword",
+            "interpreted Replicate {2}: optionalAdditionalCost replicate, repeatable; each affordable count is its own cast option",
+            "queueKeywordCastTriggers puts a replicate trigger on the stack; replicateCopies makes one copy per payment, each keeping or changing its target (CR 707.10c), from last known information if the spell left the stack",
+            "a copy of a permanent spell becomes an uncreated token as it resolves (CR 608.3f), an Aura copy attached to its target"
+          ],
+          "engineTestIds": [
+            "changing-loyalty-pinned-oracle-supported",
+            "changing-loyalty-replicate-counts",
+            "changing-loyalty-copies-become-aura-tokens",
+            "changing-loyalty-copy-may-keep-its-target",
+            "changing-loyalty-copies-use-last-known-information",
+            "changing-loyalty-flash"
+          ],
+          "viewerScenarioIds": ["changing-loyalty-viewer-replicate"]
+        },
+        {
+          "id": "changing-loyalty-enchant",
+          "oracleText": "Enchant creature",
+          "implementation": [
+            "interpreted Aura spell with a creature target; it enters attached to that creature"
+          ],
+          "engineTestIds": [
+            "changing-loyalty-pinned-oracle-supported",
+            "changing-loyalty-copies-become-aura-tokens"
+          ],
+          "viewerScenarioIds": [
+            "changing-loyalty-viewer-replicate",
+            "changing-loyalty-viewer-steal"
+          ]
+        },
+        {
+          "id": "changing-loyalty-steal",
+          "oracleText": "When enchanted creature dies, return it to the battlefield under your control.",
+          "implementation": [
+            "interpreted dies trigger on the permanent the Aura is attached to (attachedToSource, looked back across the death, CR 603.10a)",
+            "graveyardToBattlefield on the trigger object, found in its owner's graveyard, under the trigger controller's control"
+          ],
+          "engineTestIds": [
+            "changing-loyalty-steals-on-death",
+            "changing-loyalty-token-copy-steals-too",
+            "changing-loyalty-unattached-death-does-nothing"
+          ],
+          "viewerScenarioIds": ["changing-loyalty-viewer-steal"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1132,13 +1295,36 @@
     "e233cb5b-7237-4271-8157-9179cc897b6c": {
       "name": "Killian, Ink Duelist",
       "oracleSha256": "dc5a598c8b1bda5db8590ef9abe9f717f4d02dd5b97c0900aeec62a96e21e1e2",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "killian-ink-duelist-lifelink",
+          "oracleText": "Lifelink",
+          "implementation": ["interpreted keyword: lifelink"],
+          "engineTestIds": ["killian-ink-duelist-pinned-oracle-supported"],
+          "viewerScenarioIds": ["killian-ink-duelist-viewer-reduced-bolt"]
+        },
+        {
+          "id": "killian-ink-duelist-menace",
+          "oracleText": "Menace",
+          "implementation": ["interpreted keyword: menace"],
+          "engineTestIds": ["killian-ink-duelist-pinned-oracle-supported"],
+          "viewerScenarioIds": ["killian-ink-duelist-viewer-reduced-bolt"]
+        },
+        {
+          "id": "killian-ink-duelist-reduction",
           "oracleText": "Spells you cast that target a creature cost {2} less to cast.",
-          "implementation": ["explicitly unsupported; creature-spell reduction"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted costReduction {2} with targetFilter creature: applied after targets are chosen (CR 601.2c, 601.2f) when a chosen target is a creature; legality prices a full-price variant whose targets are not creatures and a reduced variant per slot that targets a creature"
+          ],
+          "engineTestIds": [
+            "killian-ink-duelist-pinned-oracle-supported",
+            "killian-ink-duelist-targeting-a-creature",
+            "killian-ink-duelist-targeting-a-player",
+            "killian-ink-duelist-untargeted-spells-full-price",
+            "killian-ink-duelist-only-yours"
+          ],
+          "viewerScenarioIds": ["killian-ink-duelist-viewer-reduced-bolt"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1174,13 +1360,43 @@
     "ad3bf726-e0c2-4038-a66e-9a9dff439563": {
       "name": "Raffine's Guidance",
       "oracleSha256": "44bdca5ef478f6340f60ac4c911274747431dab346b34c92e2d3c2c092759823",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "raffines-guidance-enchant",
+          "oracleText": "Enchant creature",
+          "implementation": ["interpreted Aura spell: target creature, attaches on resolution"],
+          "engineTestIds": [
+            "raffines-guidance-pinned-oracle-supported",
+            "raffines-guidance-graveyard-recast",
+            "raffines-guidance-normal-cast"
+          ],
+          "viewerScenarioIds": ["raffines-guidance-viewer-graveyard-recast"]
+        },
+        {
+          "id": "raffines-guidance-pump",
+          "oracleText": "Enchanted creature gets +1/+1.",
+          "implementation": ["interpreted static: attachedToSource gets +1/+1 (layer 7c)"],
+          "engineTestIds": [
+            "raffines-guidance-pinned-oracle-supported",
+            "raffines-guidance-graveyard-recast"
+          ],
+          "viewerScenarioIds": ["raffines-guidance-viewer-graveyard-recast"]
+        },
+        {
+          "id": "raffines-guidance-graveyard-recast",
           "oracleText": "You may cast this card from your graveyard by paying {2}{W} rather than paying its mana cost.",
-          "implementation": ["explicitly unsupported; return-to-hand activation"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted graveyard nonMana alternativeCast: mana cost {2}{W}, sorcery timing as an Aura, no exile rider, so it can be cast this way again"
+          ],
+          "engineTestIds": [
+            "raffines-guidance-pinned-oracle-supported",
+            "raffines-guidance-graveyard-recast",
+            "raffines-guidance-recast-needs-two-and-white",
+            "raffines-guidance-recast-sorcery-speed",
+            "raffines-guidance-recast-again"
+          ],
+          "viewerScenarioIds": ["raffines-guidance-viewer-graveyard-recast"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1308,13 +1524,42 @@
     "0ff7440b-b831-40a9-81c4-99d77bf93b8d": {
       "name": "Dream Devourer",
       "oracleSha256": "daf65f95778453b46ca292c449635ae2451bb6a70b5133f712dc759774a74fc0",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "dream-devourer-grant",
+          "oracleText": "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal to its mana cost reduced by {2}. (During your turn, you may pay {2} and exile it from your hand face down. Cast it on a later turn for its foretell cost.)",
+          "implementation": [
+            "interpreted rule static grantForetell (reduction 2)",
+            "foretell special action during your turn: pay {2}, exile a nonland hand card face down, recording its foretell cost (mana cost less {2} generic only)",
+            "a foretold card is cast by its owner on a later turn for that cost, kept even if Dream Devourer has left; no other alternative cost",
+            "hidden information: the exiled card shows as a face-down card and other seats' log reads 'Foretell a card'"
+          ],
+          "engineTestIds": [
+            "dream-devourer-pinned-oracle-supported",
+            "dream-devourer-foretell-offered",
+            "dream-devourer-needs-devourer",
+            "dream-devourer-foretell-face-down",
+            "dream-devourer-cast-later-turn",
+            "dream-devourer-colored-cost-stays",
+            "dream-devourer-cost-kept-without-it"
+          ],
+          "viewerScenarioIds": [
+            "dream-devourer-viewer-foretell",
+            "dream-devourer-viewer-foretold-cast"
+          ]
+        },
+        {
+          "id": "dream-devourer-pump",
           "oracleText": "Whenever you foretell a card, this creature gets +2/+0 until end of turn.",
-          "implementation": ["explicitly unsupported; Foretell omitted; pumps on any spell"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted foretells trigger (you), queued by the foretell special action, not by casting a foretold card; pumpEachUntilEot self +2/+0"
+          ],
+          "engineTestIds": [
+            "dream-devourer-pinned-oracle-supported",
+            "dream-devourer-foretell-face-down"
+          ],
+          "viewerScenarioIds": ["dream-devourer-viewer-foretell"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1366,13 +1611,45 @@
     "bb5c1817-ac22-4779-9005-251bc354f181": {
       "name": "Mistveil Plains",
       "oracleSha256": "ba245c46e7ecea52425fded3beb73f5bba3666af9f1c85e8234df1a5a3430791",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "mistveil-plains-tap-for-white",
+          "oracleText": "({T}: Add {W}.)",
+          "implementation": ["interpreted intrinsic Plains mana ability: {T}: Add {W}"],
+          "engineTestIds": [
+            "mistveil-plains-pinned-oracle-supported",
+            "mistveil-plains-taps-for-white"
+          ],
+          "viewerScenarioIds": ["mistveil-plains-viewer-bottom-of-library"]
+        },
+        {
+          "id": "mistveil-plains-enters-tapped",
+          "oracleText": "This land enters tapped.",
+          "implementation": ["interpreted entersTapped: true"],
+          "engineTestIds": [
+            "mistveil-plains-pinned-oracle-supported",
+            "mistveil-plains-enters-tapped"
+          ],
+          "viewerScenarioIds": ["mistveil-plains-viewer-bottom-of-library"]
+        },
+        {
+          "id": "mistveil-plains-bottom-of-library",
           "oracleText": "{W}, {T}: Put target card from your graveyard on the bottom of your library. Activate only if you control two or more white permanents.",
-          "implementation": ["explicitly unsupported; graveyardToLibraryTop"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted activated ability: costs [mana {W}, tap], target card in your graveyard, new effect graveyardToLibraryBottom (moveObject to library, position bottom)",
+            "condition countPermanents(white, you, >= 2) from the 'Activate only if' grammar; the land itself is colorless"
+          ],
+          "engineTestIds": [
+            "mistveil-plains-pinned-oracle-supported",
+            "mistveil-plains-bottom-of-library",
+            "mistveil-plains-needs-two-white-permanents",
+            "mistveil-plains-own-graveyard-only"
+          ],
+          "viewerScenarioIds": [
+            "mistveil-plains-viewer-bottom-of-library",
+            "mistveil-plains-viewer-one-white-blocked"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1512,13 +1789,29 @@
     "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f": {
       "name": "Weathered Wayfarer",
       "oracleSha256": "42ef11f806b155602ccdd9ce54d2cd2e123a4df1d42d90c83dcedad110cfaafd",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Activate only if an opponent controls more lands than you.",
-          "implementation": ["explicitly unsupported; more-lands restriction omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "weathered-wayfarer-conditional-search",
+          "oracleText": "{W}, {T}: Search your library for a land card, reveal it, put it into your hand, then shuffle. Activate only if an opponent controls more lands than you.",
+          "implementation": [
+            "interpreted activated ability: costs [mana {W}, tap], effects searchLibrary(Land → hand, reveal) then shuffle",
+            "the generic search grammar now keeps 'reveal it' as reveal: true, so searchFound is public (CR 701.16a)",
+            "condition opponentControlsMore(Land) from the 'Activate only if' grammar: some single opponent controls more lands than you (not opponents pooled)"
+          ],
+          "engineTestIds": [
+            "weathered-wayfarer-pinned-oracle-supported",
+            "activation-condition-parses-known-phrasings",
+            "weathered-wayfarer-search-reveals-land",
+            "weathered-wayfarer-only-lands-match",
+            "weathered-wayfarer-equal-lands-blocked",
+            "weathered-wayfarer-single-opponent-not-pooled",
+            "weathered-wayfarer-costs"
+          ],
+          "viewerScenarioIds": [
+            "weathered-wayfarer-viewer-reveal-land",
+            "weathered-wayfarer-viewer-equal-lands-blocked"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1974,15 +2267,22 @@
     "32476743-c9d4-49ca-bec2-0669c215841b": {
       "name": "Anrakyr the Traveller",
       "oracleSha256": "1f11aa229db25bcdc8cb4b657fc98252b59975ad92a97811bae330033a79dcf9",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "anrakyr-the-traveller-cast-for-life",
           "oracleText": "Whenever Anrakyr the Traveller attacks, you may cast an artifact spell from your hand or graveyard by paying life equal to its mana value rather than paying its mana cost.",
           "implementation": [
-            "explicitly unsupported; life-from-hand-or-graveyard is free hand casts"
+            "interpreted optional attacks trigger (self), effect castForLifeFromZones: artifact cards in your hand or graveyard that are castable and whose mana value is at most your life; the chosen one is cast during resolution, paying that much life as its cost, or none is cast"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "anrakyr-the-traveller-pinned-oracle-supported",
+            "anrakyr-the-traveller-cast-from-hand-for-life",
+            "anrakyr-the-traveller-cast-from-graveyard-for-life",
+            "anrakyr-the-traveller-only-your-artifacts",
+            "anrakyr-the-traveller-needs-the-life"
+          ],
+          "viewerScenarioIds": ["anrakyr-the-traveller-viewer-cast-for-life"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2075,15 +2375,32 @@
     "655aece2-f33a-46e0-8f80-112ae8a457fe": {
       "name": "Convergence of Dominion",
       "oracleSha256": "d6f51e80f201a57dad225bd9f055c7d41727a5a5e286652550d2825dd828acdc",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "convergence-of-dominion-reduction",
           "oracleText": "As long as you control your commander, activated abilities of cards in your graveyard cost {2} less to activate. This effect can't reduce the mana in that ability's activation cost to less than one mana.",
           "implementation": [
-            "explicitly unsupported; graveyard activation discount claimed without a static"
+            "interpreted costReduction appliesTo activate with graveyardAbilities, minimumMana 1 and condition controlsYourCommander; graveyardActivationCost prices graveyard activations in legality and payment"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "convergence-of-dominion-pinned-oracle-supported",
+            "convergence-of-dominion-graveyard-reduction",
+            "convergence-of-dominion-needs-commander",
+            "convergence-of-dominion-one-mana-floor",
+            "convergence-of-dominion-only-yours"
+          ],
+          "viewerScenarioIds": ["convergence-of-dominion-viewer-cheap-unearth"]
+        },
+        {
+          "id": "convergence-of-dominion-mill",
+          "oracleText": "{3}, {T}: Mill three cards.",
+          "implementation": ["interpreted activated ability: costs {3} and {T}, effect mill 3"],
+          "engineTestIds": [
+            "convergence-of-dominion-pinned-oracle-supported",
+            "convergence-of-dominion-mill"
+          ],
+          "viewerScenarioIds": ["convergence-of-dominion-viewer-cheap-unearth"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2091,13 +2408,28 @@
     "cb923c4d-1d2e-4039-90bb-72d1981b9738": {
       "name": "Endless Atlas",
       "oracleSha256": "e1d31dc2c8118f97fe833d58fce9caf77240ad6f11bae0a80cb066638303a610",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "endless-atlas-same-name-draw",
           "oracleText": "{2}, {T}: Draw a card. Activate only if you control three or more lands with the same name.",
-          "implementation": ["explicitly unsupported; same-name land restriction omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted activated ability: costs [mana {2}, tap], effect draw(1)",
+            "generic 'Activate only if <condition>' grammar (CR 602.5b) → condition controlsLandsWithSameName(3): some name shared by three lands you control, tapped or not; checked when the activation is offered and when it is paid"
+          ],
+          "engineTestIds": [
+            "endless-atlas-pinned-oracle-supported",
+            "activation-condition-parses-known-phrasings",
+            "activation-condition-unknown-phrasing-stays-unmodeled",
+            "endless-atlas-draws-with-three-same-name-lands",
+            "endless-atlas-mixed-names-blocked",
+            "endless-atlas-only-your-lands",
+            "endless-atlas-costs"
+          ],
+          "viewerScenarioIds": [
+            "endless-atlas-viewer-same-name-draw",
+            "endless-atlas-viewer-mixed-names-blocked"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2105,13 +2437,46 @@
     "bb1b4786-3804-486b-9fd9-85848d24d362": {
       "name": "Ghost Ark",
       "oracleSha256": "bd5d0a53132a9b86c3ced3f9f31a6856b362023b2b014b354c27ffdf92d12ffc",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "ghost-ark-flying",
+          "oracleText": "Flying",
+          "implementation": ["interpreted keyword: flying"],
+          "engineTestIds": ["ghost-ark-pinned-oracle-supported", "ghost-ark-flying"],
+          "viewerScenarioIds": ["ghost-ark-viewer-crew-and-unearth"]
+        },
+        {
+          "id": "ghost-ark-crewed-unearth",
           "oracleText": "Whenever this Vehicle becomes crewed, each artifact creature card in your graveyard gains unearth {3} until end of turn.",
-          "implementation": ["explicitly unsupported; becomes-crewed implemented as becomesTapped"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted trigger: when becomesCrewed (queued only when a crew ability resolves, CR 702.122e), subject self, effect grantUnearthToArtifactCreaturesInGraveyard {3}; the grant ends at cleanup or when the card leaves the graveyard, and unearth exiles the permanent instead of letting it leave any other way (CR 702.84a)"
+          ],
+          "engineTestIds": [
+            "ghost-ark-pinned-oracle-supported",
+            "ghost-ark-crewed-grants-unearth",
+            "ghost-ark-only-crew-fires",
+            "ghost-ark-unearth-returns-with-haste",
+            "ghost-ark-unearth-is-sorcery-speed",
+            "ghost-ark-unearthed-exiled-instead",
+            "ghost-ark-grant-ends-at-cleanup",
+            "ghost-ark-grant-survives-other-costs",
+            "ghost-ark-grant-ends-when-card-leaves-graveyard"
+          ],
+          "viewerScenarioIds": ["ghost-ark-viewer-crew-and-unearth"]
+        },
+        {
+          "id": "ghost-ark-crew",
+          "oracleText": "Crew 2",
+          "implementation": [
+            "interpreted activated ability: cost tapCreaturesTotalPower 2, effect crewVehicle"
+          ],
+          "engineTestIds": [
+            "ghost-ark-pinned-oracle-supported",
+            "ghost-ark-crew-two",
+            "ghost-ark-flying"
+          ],
+          "viewerScenarioIds": ["ghost-ark-viewer-crew-and-unearth"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2253,15 +2618,35 @@
     "352b64d2-2ae5-44ee-a64f-94932ef545d3": {
       "name": "Dread Return",
       "oracleSha256": "bda6e9277a015c56401c6b4f23fca3e7258d3aaeb53a6f234f3610f44b650553",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "dread-return-reanimate",
+          "oracleText": "Return target creature card from your graveyard to the battlefield.",
+          "implementation": [
+            "interpreted spell: target cardInGraveyard creature (yours), effect graveyardToBattlefield"
+          ],
+          "engineTestIds": [
+            "dread-return-pinned-oracle-supported",
+            "dread-return-flashback-sacrifice-three",
+            "dread-return-normal-cast"
+          ],
+          "viewerScenarioIds": ["dread-return-viewer-flashback"]
+        },
+        {
+          "id": "dread-return-flashback",
           "oracleText": "Flashback—Sacrifice three creatures.",
           "implementation": [
-            "explicitly unsupported; flashback claimed without a flashback alternative"
+            "interpreted graveyard nonMana alternativeCast: mana cost {0}, sacrificeOther count 3 of your creatures paid while casting, sorcery timing, exileOnResolution (CR 702.34a); exactly three candidates are sacrificed without a prompt"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "dread-return-pinned-oracle-supported",
+            "dread-return-flashback-sacrifice-three",
+            "dread-return-flashback-needs-three-creatures",
+            "dread-return-flashback-sorcery-speed",
+            "dread-return-flashback-exiled-when-countered-by-rules"
+          ],
+          "viewerScenarioIds": ["dread-return-viewer-flashback"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2269,13 +2654,25 @@
     "10f274f9-9044-447b-81c9-d4906ad9e6be": {
       "name": "Illuminor Szeras",
       "oracleSha256": "7b83ca63d63f5b6abb39060bab1bc0dd086714872059ed3c0db58a8edb205486",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "illuminor-szeras-sacrifice-for-black",
           "oracleText": "{T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
-          "implementation": ["explicitly unsupported; sacrifice is an effect, not a cost"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored mana ability (CR 605.1a): costs [tap, sacrificeOther(another creature you control)], units [B], amountFromSacrificedManaValue",
+            "manaSourcesFor expands it into one source per other creature you control with mana value > 0, pinned to that sacrifice (onlyCardId) and producing that many {B}; the payment solver picks among them like any other source, preferring lands"
+          ],
+          "engineTestIds": [
+            "illuminor-szeras-pinned-oracle-supported",
+            "illuminor-szeras-one-source-per-candidate",
+            "illuminor-szeras-pays-black-by-sacrificing",
+            "illuminor-szeras-too-small-a-sacrifice",
+            "illuminor-szeras-another-creature-only",
+            "illuminor-szeras-summoning-sick",
+            "illuminor-szeras-lands-first"
+          ],
+          "viewerScenarioIds": ["illuminor-szeras-viewer-sacrifice-for-black"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2322,13 +2719,36 @@
     "ce08aff3-efe6-4186-9557-274e00a7ca38": {
       "name": "Sceptre of Eternal Glory",
       "oracleSha256": "51ed0fa70d837b566989f2a57ef7b70bf50985d3c5c84b9d713f04a501aac2f5",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "sceptre-of-eternal-glory-any-color",
+          "oracleText": "{T}: Add one mana of any color.",
+          "implementation": ["interpreted mana ability: units [WUBRG]"],
+          "engineTestIds": [
+            "sceptre-of-eternal-glory-pinned-oracle-supported",
+            "sceptre-of-eternal-glory-one-of-any-color"
+          ],
+          "viewerScenarioIds": ["sceptre-of-eternal-glory-viewer-one-mana"]
+        },
+        {
+          "id": "sceptre-of-eternal-glory-three-of-one-color",
           "oracleText": "{T}: Add three mana of any one color. Activate only if you control three or more lands with the same name.",
-          "implementation": ["explicitly unsupported; same-name land restriction omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted mana ability: three [WUBRG] units, linked (all one color) — new 'Add N mana of any one color' grammar",
+            "condition controlsLandsWithSameName(3) from the generic mana 'Activate only if <condition>' grammar, evaluated when mana sources are listed"
+          ],
+          "engineTestIds": [
+            "sceptre-of-eternal-glory-pinned-oracle-supported",
+            "sceptre-of-eternal-glory-three-of-one-color",
+            "sceptre-of-eternal-glory-one-color-only",
+            "sceptre-of-eternal-glory-condition-is-yours",
+            "sceptre-of-eternal-glory-one-of-any-color"
+          ],
+          "viewerScenarioIds": [
+            "sceptre-of-eternal-glory-viewer-three-black",
+            "sceptre-of-eternal-glory-viewer-one-mana"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2366,13 +2786,34 @@
     "8cd45064-2ad9-4247-902e-aefaf3bc1a43": {
       "name": "Their Number Is Legion",
       "oracleSha256": "41b6712d088b044a1c75a4ef825006b3774b32f673850f48bb207b10e00e24a6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Create X tapped 2/2 black Necron Warrior artifact creature tokens, then you gain life equal to the number of artifacts you control. Exile this spell.\nYou may cast this card from your graveyard.",
-          "implementation": ["explicitly unsupported; tokens not tapped; graveyard cast omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "their-number-is-legion-tokens-and-life",
+          "oracleText": "Create X tapped 2/2 black Necron Warrior artifact creature tokens, then you gain life equal to the number of artifacts you control. Exile Their Number Is Legion.",
+          "implementation": [
+            "interpreted spell: createToken X tapped 2/2 black Necron Warrior artifact creature tokens, gainLife countPermanents(artifact, you), then resolvingSpellExile moves the card from the stack to exile"
+          ],
+          "engineTestIds": [
+            "their-number-is-legion-pinned-oracle-supported",
+            "their-number-is-legion-tapped-tokens-and-life",
+            "their-number-is-legion-exiles-itself"
+          ],
+          "viewerScenarioIds": ["their-number-is-legion-viewer-graveyard-x"]
+        },
+        {
+          "id": "their-number-is-legion-graveyard-cast",
+          "oracleText": "You may cast this card from your graveyard.",
+          "implementation": [
+            "interpreted castFromGraveyard: the normal cast path is offered from your graveyard at the full cost with X, sorcery timing, consuming no outside permission"
+          ],
+          "engineTestIds": [
+            "their-number-is-legion-pinned-oracle-supported",
+            "their-number-is-legion-graveyard-cast",
+            "their-number-is-legion-graveyard-sorcery-speed",
+            "their-number-is-legion-graveyard-only-yours"
+          ],
+          "viewerScenarioIds": ["their-number-is-legion-viewer-graveyard-x"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2648,13 +3089,49 @@
     "88600bd4-4dcc-4788-bba4-78b6cf5ad8f8": {
       "name": "Peema Trailblazer",
       "oracleSha256": "ac39b4f00910602a5d4f2038f9ed5a9c13f09de367d4c89bc66eaa8efc823f51",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control. (Activate each exhaust ability only once.)",
-          "implementation": ["explicitly unsupported; Exhaust omitted and extra tap cost"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "peema-trailblazer-trample",
+          "oracleText": "Trample",
+          "implementation": [
+            "interpreted keyword trample; with a 1/1 blocker the attacker may split lethal to the blocker and the excess to the player (CR 702.19)",
+            "viewer shows the keyword; trample damage assignment past a blocker is engine-only because the viewer has no damage-split control (as for Hunter's Prowess)"
+          ],
+          "engineTestIds": [
+            "peema-trailblazer-pinned-oracle-supported",
+            "peema-trailblazer-trample-excess-energy"
+          ],
+          "viewerScenarioIds": ["peema-trailblazer-viewer-combat-energy"]
+        },
+        {
+          "id": "peema-trailblazer-combat-energy",
+          "oracleText": "Whenever this creature deals combat damage to a player, you get that many {E}",
+          "implementation": [
+            "authored trigger dealsCombatDamageToPlayer(self): gainEnergy(damage dealt) — trample excess counts"
+          ],
+          "engineTestIds": [
+            "peema-trailblazer-combat-damage-energy",
+            "peema-trailblazer-trample-excess-energy"
+          ],
+          "viewerScenarioIds": ["peema-trailblazer-viewer-combat-energy"]
+        },
+        {
+          "id": "peema-trailblazer-exhaust",
+          "oracleText": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.",
+          "implementation": [
+            "authored activated ability: cost payEnergy(6) only (no {T}), new ActivatedAbility.exhaust (CR 702.177) — recorded per permanent at activation, never reset, cleared only by becoming a new object",
+            "effects: putCounters(self, +1/+1, 2), then draw(greatest power among creatures you control, counted on resolution after the counters)"
+          ],
+          "engineTestIds": [
+            "peema-trailblazer-pinned-oracle-supported",
+            "peema-trailblazer-exhaust-counters-then-draw",
+            "peema-trailblazer-exhaust-greatest-power-among-yours",
+            "peema-trailblazer-exhaust-needs-six",
+            "peema-trailblazer-exhaust-only-once",
+            "peema-trailblazer-new-object-may-exhaust"
+          ],
+          "viewerScenarioIds": ["peema-trailblazer-viewer-exhaust"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2790,13 +3267,45 @@
     "1b5e6560-ff2e-4475-96cb-63f64c8a86db": {
       "name": "Soul-Guide Lantern",
       "oracleSha256": "93d00eeabc06f7b9cfb8d6d1ca01b8a6cce4ba7b83905a680d591c3aa5fb93ec",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "{T}, Sacrifice this artifact: Exile each opponent's graveyard.\n{1}, {T}, Sacrifice this artifact: Draw a card.",
-          "implementation": ["explicitly unsupported; graveyard exile mashed with a free draw"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "soul-guide-lantern-enters-exile",
+          "oracleText": "When this artifact enters, exile target card from a graveyard.",
+          "implementation": [
+            "authored enters trigger (appended by extendCard): target cardInGraveyard with graveyardOwnerScope 'any', effect exileCard"
+          ],
+          "engineTestIds": [
+            "soul-guide-lantern-pinned-oracle-supported",
+            "soul-guide-lantern-enters-exiles-any-graveyard-card"
+          ],
+          "viewerScenarioIds": ["soul-guide-lantern-viewer-enters-exile"]
+        },
+        {
+          "id": "soul-guide-lantern-exile-graveyards",
+          "oracleText": "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+          "implementation": [
+            "authored activated ability (appended): costs [tap, sacrificeSelf] — no mana — effect exileEachOpponentGraveyard"
+          ],
+          "engineTestIds": [
+            "soul-guide-lantern-pinned-oracle-supported",
+            "soul-guide-lantern-exile-opponents-graveyards",
+            "soul-guide-lantern-exile-costs-no-mana"
+          ],
+          "viewerScenarioIds": ["soul-guide-lantern-viewer-exile-graveyards"]
+        },
+        {
+          "id": "soul-guide-lantern-draw",
+          "oracleText": "{1}, {T}, Sacrifice this artifact: Draw a card.",
+          "implementation": [
+            "interpreted activated ability: costs [mana {1}, tap, sacrificeSelf], effect draw(1) — kept because extendCard appends instead of replacing"
+          ],
+          "engineTestIds": [
+            "soul-guide-lantern-pinned-oracle-supported",
+            "soul-guide-lantern-exile-costs-no-mana",
+            "soul-guide-lantern-draw"
+          ],
+          "viewerScenarioIds": ["soul-guide-lantern-viewer-draw"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2818,15 +3327,71 @@
     "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0": {
       "name": "Bespoke Battlewagon",
       "oracleSha256": "17244fc3e0a51b50c27c6b7583124bd9d6773c9a102cea36f4055792ea885d21",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.\nCrew 4",
+          "id": "bespoke-battlewagon-gain-energy",
+          "oracleText": "{T}: You get {E}{E}",
           "implementation": [
-            "explicitly unsupported; Crew 4 dropped by replacement activatedAbilities"
+            "authored activated ability (appended by extendCard): costs [tap], effect gainEnergy(2)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "bespoke-battlewagon-pinned-oracle-supported",
+            "bespoke-battlewagon-gain-energy",
+            "bespoke-battlewagon-tap-abilities-need-untapped"
+          ],
+          "viewerScenarioIds": ["bespoke-battlewagon-viewer-energy-and-crew"]
+        },
+        {
+          "id": "bespoke-battlewagon-tap-target",
+          "oracleText": "{T}, Pay {E}{E}: Tap target creature.",
+          "implementation": [
+            "authored activated ability: costs [tap, payEnergy(2)], target creature, effect tapTarget"
+          ],
+          "engineTestIds": [
+            "bespoke-battlewagon-tap-target-creature",
+            "bespoke-battlewagon-tap-target-needs-two-energy",
+            "bespoke-battlewagon-tap-abilities-need-untapped"
+          ],
+          "viewerScenarioIds": ["bespoke-battlewagon-viewer-tap-target"]
+        },
+        {
+          "id": "bespoke-battlewagon-draw",
+          "oracleText": "{T}, Pay {E}{E}{E}: Draw a card.",
+          "implementation": [
+            "authored activated ability: costs [tap, payEnergy(3)], effect draw(1)"
+          ],
+          "engineTestIds": [
+            "bespoke-battlewagon-draw",
+            "bespoke-battlewagon-tap-abilities-need-untapped"
+          ],
+          "viewerScenarioIds": ["bespoke-battlewagon-viewer-animate-and-draw"]
+        },
+        {
+          "id": "bespoke-battlewagon-animate",
+          "oracleText": "Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.",
+          "implementation": [
+            "authored activated ability: costs [payEnergy(4)], effect becomeArtifactCreature — the crew layer-4 becomeCreature effect at printed 5/6 without crewing it (CR 702.122b)"
+          ],
+          "engineTestIds": [
+            "bespoke-battlewagon-animate",
+            "bespoke-battlewagon-animate-needs-four-energy",
+            "prepared-scenario-energy"
+          ],
+          "viewerScenarioIds": ["bespoke-battlewagon-viewer-animate-and-draw"]
+        },
+        {
+          "id": "bespoke-battlewagon-crew",
+          "oracleText": "Crew 4",
+          "implementation": [
+            "interpreted Crew 4 (tapCreaturesTotalPower 4 → crewVehicle), kept because extendCard appends instead of replacing activatedAbilities"
+          ],
+          "engineTestIds": [
+            "bespoke-battlewagon-pinned-oracle-supported",
+            "bespoke-battlewagon-crew-kept",
+            "bespoke-battlewagon-crew-needs-power-four"
+          ],
+          "viewerScenarioIds": ["bespoke-battlewagon-viewer-energy-and-crew"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3007,15 +3572,36 @@
     "c232d974-9c65-4bce-b045-e5a7cc0c62e0": {
       "name": "Idol of Oblivion",
       "oracleSha256": "3baa23cd967df7e2c0549ab91ce4f57a51d53fd1282487e1236073936643962b",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "{T}: Draw a card. Activate only if you created a token this turn.\n{8}, {T}, Sacrifice this artifact: Create a 10/10 colorless Eldrazi creature token.",
+          "id": "idol-of-oblivion-conditional-draw",
+          "oracleText": "{T}: Draw a card. Activate only if you created a token this turn.",
           "implementation": [
-            "explicitly unsupported; restriction is a resolution no-op; wrong Eldrazi token"
+            "interpreted activated ability: costs [tap], effect draw(1)",
+            "condition createdTokenThisTurn from the 'Activate only if' grammar — set by token creation under your control, cleared after each untap step; checked when offered and when paid"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "idol-of-oblivion-pinned-oracle-supported",
+            "activation-condition-parses-known-phrasings",
+            "idol-of-oblivion-draw-blocked-without-token",
+            "idol-of-oblivion-draw-after-token",
+            "idol-of-oblivion-opponent-token-does-not-count"
+          ],
+          "viewerScenarioIds": ["idol-of-oblivion-viewer-token-then-draw"]
+        },
+        {
+          "id": "idol-of-oblivion-eldrazi",
+          "oracleText": "{8}, {T}, Sacrifice this artifact: Create a 10/10 colorless Eldrazi creature token.",
+          "implementation": [
+            "interpreted activated ability: costs [mana {8}, tap, sacrificeSelf], effect createToken(Eldrazi 10/10 colorless creature — not an artifact)"
+          ],
+          "engineTestIds": [
+            "idol-of-oblivion-pinned-oracle-supported",
+            "idol-of-oblivion-eldrazi",
+            "idol-of-oblivion-eldrazi-needs-eight"
+          ],
+          "viewerScenarioIds": ["idol-of-oblivion-viewer-eldrazi"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3106,13 +3692,40 @@
     "06b77a80-4968-4385-960a-fb66bb4faa94": {
       "name": "Dragonkin Berserker",
       "oracleSha256": "2ad5ad892794762553614df0cd73da106fe1c7e09c0aee7106dd925e95f1dab6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "dragonkin-berserker-first-strike",
+          "oracleText": "First strike",
+          "implementation": ["interpreted keyword: first strike"],
+          "engineTestIds": ["dragonkin-berserker-pinned-oracle-supported"],
+          "viewerScenarioIds": ["dragonkin-berserker-viewer-reduced-boast"]
+        },
+        {
+          "id": "dragonkin-berserker-boast-reduction",
           "oracleText": "Boast abilities you activate cost {1} less to activate for each Dragon you control.",
-          "implementation": ["explicitly unsupported; reduction applies only to this creature"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted costReduction appliesTo activate with boastOnly: {1} per Dragon you control off any Boast ability you activate (CR 702.142b), never off other abilities"
+          ],
+          "engineTestIds": [
+            "dragonkin-berserker-pinned-oracle-supported",
+            "dragonkin-berserker-boast-reduction-per-dragon",
+            "dragonkin-berserker-reduces-other-boasts-only"
+          ],
+          "viewerScenarioIds": ["dragonkin-berserker-viewer-reduced-boast"]
+        },
+        {
+          "id": "dragonkin-berserker-boast",
+          "oracleText": "Boast — {4}{R}: Create a 5/5 red Dragon creature token with flying.",
+          "implementation": [
+            "interpreted activated ability with requiresAttackedThisTurn and oncePerTurn (Boast, CR 702.142a)"
+          ],
+          "engineTestIds": [
+            "dragonkin-berserker-pinned-oracle-supported",
+            "dragonkin-berserker-boast-needs-attack",
+            "dragonkin-berserker-boast-once-each-turn"
+          ],
+          "viewerScenarioIds": ["dragonkin-berserker-viewer-reduced-boast"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3470,15 +4083,44 @@
     "61c89b11-65c9-4fda-bbcd-d84de25df801": {
       "name": "Aether Hub",
       "oracleSha256": "a6641d8a589b60feec25b6da189a097707da60158d6196778bc6365bcccf88ec",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "{T}: Add {C}.\n{T}, Pay {E}: Add one mana of any color.",
+          "id": "aether-hub-enters-energy",
+          "oracleText": "When this land enters, you get {E}",
+          "implementation": ["authored enters trigger: gainEnergy(1)"],
+          "engineTestIds": ["aether-hub-pinned-oracle-supported", "aether-hub-enters-energy"],
+          "viewerScenarioIds": ["aether-hub-viewer-energy-any-color"]
+        },
+        {
+          "id": "aether-hub-colorless",
+          "oracleText": "{T}: Add {C}.",
           "implementation": [
-            "explicitly unsupported; colorless mana is dropped when energy mana replaces manaAbilities"
+            "interpreted mana ability {T}: Add {C}, kept because extendCard (compose: 'append') appends the authored mana ability instead of replacing manaAbilities"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "aether-hub-pinned-oracle-supported",
+            "extend-card-appends-to-parsed-lists",
+            "extend-card-default-merge-still-replaces",
+            "extend-card-leaves-unlisted-fields-alone",
+            "aether-hub-colorless-without-energy",
+            "aether-hub-one-mana-per-tap"
+          ],
+          "viewerScenarioIds": ["aether-hub-viewer-colorless"]
+        },
+        {
+          "id": "aether-hub-energy-any-color",
+          "oracleText": "{T}, Pay {E}: Add one mana of any color.",
+          "implementation": [
+            "authored mana ability: units [WUBRG], costs [tap, payEnergy(1)], appended to the parsed list"
+          ],
+          "engineTestIds": [
+            "aether-hub-pinned-oracle-supported",
+            "aether-hub-energy-any-color",
+            "aether-hub-no-energy-no-color",
+            "aether-hub-one-mana-per-tap"
+          ],
+          "viewerScenarioIds": ["aether-hub-viewer-energy-any-color", "aether-hub-viewer-colorless"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3486,15 +4128,59 @@
     "cb377c27-39a6-42b4-8c89-80a9a2350e81": {
       "name": "Solar Transformer",
       "oracleSha256": "2a416da6016481cde18645f08b0a9c28b2da620d08fe234bb82abcf7ef8719a3",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "{T}: Add {C}.\n{T}, Pay {E}: Add one mana of any color.",
+          "id": "solar-transformer-enters-tapped",
+          "oracleText": "This artifact enters tapped.",
           "implementation": [
-            "explicitly unsupported; colorless mana is dropped when energy mana replaces manaAbilities"
+            "interpreted entersTapped: true (kept: extendCard only appends ability lists)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "solar-transformer-pinned-oracle-supported",
+            "solar-transformer-cast-enters-tapped-with-energy",
+            "solar-transformer-tapped-on-entry-makes-no-mana"
+          ],
+          "viewerScenarioIds": ["solar-transformer-viewer-cast-and-energy-mana"]
+        },
+        {
+          "id": "solar-transformer-enters-energy",
+          "oracleText": "When this artifact enters, you get {E}{E}{E}",
+          "implementation": ["authored enters trigger: gainEnergy(3)"],
+          "engineTestIds": [
+            "solar-transformer-pinned-oracle-supported",
+            "solar-transformer-cast-enters-tapped-with-energy"
+          ],
+          "viewerScenarioIds": ["solar-transformer-viewer-cast-and-energy-mana"]
+        },
+        {
+          "id": "solar-transformer-colorless",
+          "oracleText": "{T}: Add {C}.",
+          "implementation": [
+            "interpreted mana ability {T}: Add {C}, kept because extendCard (compose: 'append') appends the authored mana ability"
+          ],
+          "engineTestIds": [
+            "solar-transformer-pinned-oracle-supported",
+            "extend-card-appends-to-parsed-lists",
+            "solar-transformer-colorless"
+          ],
+          "viewerScenarioIds": ["solar-transformer-viewer-colorless"]
+        },
+        {
+          "id": "solar-transformer-energy-any-color",
+          "oracleText": "{T}, Pay {E}: Add one mana of any color.",
+          "implementation": [
+            "authored mana ability: units [WUBRG], costs [tap, payEnergy(1)], appended to the parsed list"
+          ],
+          "engineTestIds": [
+            "solar-transformer-pinned-oracle-supported",
+            "solar-transformer-energy-any-color",
+            "solar-transformer-no-energy-no-color"
+          ],
+          "viewerScenarioIds": [
+            "solar-transformer-viewer-cast-and-energy-mana",
+            "solar-transformer-viewer-colorless"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3502,15 +4188,25 @@
     "4dcfd397-9d29-420c-8fd8-c7c2a99de122": {
       "name": "Nullmage Shepherd",
       "oracleSha256": "9778d0c0a47ec527656f5c9551f1708cfbf65ce71b0636143efe86c288b3ba1a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "nullmage-shepherd-tap-four-destroy",
           "oracleText": "Tap four untapped creatures you control: Destroy target artifact or enchantment.",
           "implementation": [
-            "explicitly unsupported; the four creatures cannot include this creature"
+            "interpreted activated ability: cost tapOthers(your creatures, count 4, allowSelf) — the source may be one of the four, and a summoning-sick Shepherd can be tapped because the cost has no {T} symbol (CR 302.6); selfMayTap keeps the source out only when the same cost also has {T}",
+            "target artifactOrEnchantment, effect destroy"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "nullmage-shepherd-pinned-oracle-supported",
+            "tap-cost-self-allowed-only-without-tap-symbol",
+            "nullmage-shepherd-taps-itself-and-three-others",
+            "nullmage-shepherd-chooses-four-of-five",
+            "nullmage-shepherd-needs-four-untapped",
+            "nullmage-shepherd-only-your-creatures",
+            "nullmage-shepherd-artifact-or-enchantment"
+          ],
+          "viewerScenarioIds": ["nullmage-shepherd-viewer-tap-four"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3518,15 +4214,61 @@
     "aaadfe41-b2be-4183-b45e-a70e53a59d2e": {
       "name": "Retrofitter Foundry",
       "oracleSha256": "39cf3707dcf66c91dc222d73e8ee28cb898c9969c597ae3c12a916d1b7537bc3",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "{3}: Untap this artifact.\n{2}, {T}: Create a 1/1 colorless Servo artifact creature token.\n{1}, {T}, Sacrifice a Servo: Create a 1/1 colorless Thopter artifact creature token with flying.\n{T}, Sacrifice a Thopter: Create a 4/4 colorless Construct artifact creature token.",
+          "id": "retrofitter-foundry-untap",
+          "oracleText": "{3}: Untap this artifact.",
           "implementation": [
-            "explicitly unsupported; Servo creation is dropped when activatedAbilities are replaced"
+            "interpreted activated ability: costs [mana {3}], effect untapTarget(source)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "retrofitter-foundry-pinned-oracle-supported",
+            "retrofitter-foundry-untap",
+            "retrofitter-foundry-untap-needs-three",
+            "retrofitter-foundry-full-chain"
+          ],
+          "viewerScenarioIds": ["retrofitter-foundry-viewer-servo-thopter-construct"]
+        },
+        {
+          "id": "retrofitter-foundry-servo",
+          "oracleText": "{2}, {T}: Create a 1/1 colorless Servo artifact creature token.",
+          "implementation": [
+            "interpreted activated ability: costs [mana {2}, tap], effect createToken(Servo 1/1 colorless artifact creature) — no override replaces the parsed list any more"
+          ],
+          "engineTestIds": [
+            "retrofitter-foundry-pinned-oracle-supported",
+            "retrofitter-foundry-servo",
+            "retrofitter-foundry-servo-needs-mana-and-untapped",
+            "retrofitter-foundry-full-chain"
+          ],
+          "viewerScenarioIds": ["retrofitter-foundry-viewer-servo-thopter-construct"]
+        },
+        {
+          "id": "retrofitter-foundry-thopter",
+          "oracleText": "{1}, {T}, Sacrifice a Servo: Create a 1/1 colorless Thopter artifact creature token with flying.",
+          "implementation": [
+            "interpreted activated ability: costs [mana {1}, tap, sacrificeOther(your Servo)], effect createToken(Thopter 1/1 flying)"
+          ],
+          "engineTestIds": [
+            "retrofitter-foundry-thopter",
+            "retrofitter-foundry-thopter-needs-own-servo",
+            "retrofitter-foundry-full-chain"
+          ],
+          "viewerScenarioIds": ["retrofitter-foundry-viewer-servo-thopter-construct"]
+        },
+        {
+          "id": "retrofitter-foundry-construct",
+          "oracleText": "{T}, Sacrifice a Thopter: Create a 4/4 colorless Construct artifact creature token.",
+          "implementation": [
+            "interpreted activated ability: costs [tap, sacrificeOther(your Thopter)], effect createToken(Construct 4/4)"
+          ],
+          "engineTestIds": [
+            "retrofitter-foundry-construct",
+            "retrofitter-foundry-construct-needs-thopter",
+            "retrofitter-foundry-full-chain"
+          ],
+          "viewerScenarioIds": ["retrofitter-foundry-viewer-servo-thopter-construct"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3795,13 +4537,33 @@
     "e938ee4c-d5df-4d93-bd61-9e518fb1dc30": {
       "name": "Conclave Tribunal",
       "oracleSha256": "bead25eae71e919428001104ee03ad6fe6261144a909897511225298eb235fb9",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nWhen this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.",
-          "implementation": ["explicitly unsupported; convoke is never offered as a payment"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "conclave-tribunal-convoke",
+          "oracleText": "Convoke",
+          "implementation": [
+            "interpreted convoke ruleStatic; legality and payment add a convoke source per untapped creature you control (summoning sickness ignored) that pays {1} or one mana of the creature's color, shares the creature's card id so it is never also tapped for mana, and is excluded from mana spent (CR 702.51)"
+          ],
+          "engineTestIds": [
+            "conclave-tribunal-pinned-oracle-supported",
+            "conclave-tribunal-convoke-generic",
+            "conclave-tribunal-convoke-colored",
+            "conclave-tribunal-convoke-taps-once"
+          ],
+          "viewerScenarioIds": ["conclave-tribunal-viewer-convoke"]
+        },
+        {
+          "id": "conclave-tribunal-exile",
+          "oracleText": "When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.",
+          "implementation": [
+            "interpreted enters trigger: target nonland permanent an opponent controls, effect exileUntilSourceLeaves (returns when the enchantment leaves, CR 610.3)"
+          ],
+          "engineTestIds": [
+            "conclave-tribunal-pinned-oracle-supported",
+            "conclave-tribunal-exile-until-leaves"
+          ],
+          "viewerScenarioIds": ["conclave-tribunal-viewer-convoke"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3809,13 +4571,30 @@
     "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c": {
       "name": "Hour of Reckoning",
       "oracleSha256": "5eb44a788bb619b66c8ba3006f639178af53b512c0aedf77cbbbcee0c0e8c135",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nDestroy all nontoken creatures.",
-          "implementation": ["explicitly unsupported; convoke is never offered as a payment"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "hour-of-reckoning-convoke",
+          "oracleText": "Convoke",
+          "implementation": [
+            "interpreted convoke ruleStatic: untapped creatures you control pay {1} or one mana of their color while casting, not counted as mana spent (CR 702.51)"
+          ],
+          "engineTestIds": [
+            "hour-of-reckoning-pinned-oracle-supported",
+            "hour-of-reckoning-convoke-seven",
+            "hour-of-reckoning-convoke-needs-white"
+          ],
+          "viewerScenarioIds": ["hour-of-reckoning-viewer-convoke"]
+        },
+        {
+          "id": "hour-of-reckoning-destroy",
+          "oracleText": "Destroy all nontoken creatures.",
+          "implementation": ["interpreted destroyEach over nontoken creatures"],
+          "engineTestIds": [
+            "hour-of-reckoning-pinned-oracle-supported",
+            "hour-of-reckoning-destroys-nontoken"
+          ],
+          "viewerScenarioIds": ["hour-of-reckoning-viewer-convoke"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4336,6 +5115,44 @@
           ],
           "engineTestIds": ["Phyrexian Tower must allow its chosen sacrifice"],
           "viewerScenarioIds": ["regression-viewer-mana-source-order"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fe8c2b7e-f80d-4acb-a976-edcf436a78a9": {
+      "name": "Kogla and Yidaro",
+      "oracleSha256": "2282eee96e7fab34d482770704f913a3f2e579f20336e7ce52bf0c79d1df9fce",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "kogla-and-yidaro-enters-modes",
+          "oracleText": "When Kogla and Yidaro enters, choose one —\n• It gains trample and haste until end of turn.\n• It fights target creature you don't control.",
+          "implementation": [
+            "coverage-pr02 override: modal enters trigger on self; mode 1 grants trample and haste to the source until end of turn",
+            "mode 2 fights (source, slot 0) with a creature an opponent controls; with no such creature the mode is not offered"
+          ],
+          "engineTestIds": [
+            "kogla-and-yidaro-pinned-oracle-supported",
+            "kogla-and-yidaro-trample-haste",
+            "kogla-and-yidaro-fight",
+            "kogla-and-yidaro-fight-needs-a-target"
+          ],
+          "viewerScenarioIds": ["kogla-and-yidaro-viewer-enter-fight"]
+        },
+        {
+          "id": "kogla-and-yidaro-discard",
+          "oracleText": "{2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card.",
+          "implementation": [
+            "coverage-pr02 override: hand-zone activated ability costing {2}{R}{G} and discardSelf, with a 0..1 artifact-or-enchantment slot",
+            "destroyEachChosen slot 0, then shuffleSourceFromGraveyardIntoLibrary (a no-op once the card has left the graveyard), then draw 1"
+          ],
+          "engineTestIds": [
+            "kogla-and-yidaro-pinned-oracle-supported",
+            "kogla-and-yidaro-discard-ability",
+            "kogla-and-yidaro-up-to-one",
+            "kogla-and-yidaro-left-graveyard"
+          ],
+          "viewerScenarioIds": ["kogla-and-yidaro-viewer-discard"]
         }
       ],
       "gameplayAiScenarioIds": []

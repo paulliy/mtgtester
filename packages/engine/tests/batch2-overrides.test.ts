@@ -132,19 +132,18 @@ describe('Batch 2 card overrides', () => {
     expect(def.triggers).toHaveLength(1);
   });
 
-  it('contains Idol of Oblivion', () => {
+  it('models Idol of Oblivion through the activation-condition grammar (coverage PR02)', () => {
     const card = oracle({
       oracleId: 'c232d974-9c65-4bce-b045-e5a7cc0c62e0',
       name: 'Idol of Oblivion',
       typeLine: 'Artifact',
       manaCost: '{2}',
-      oracleText: '{T}: Draw a card. Activate only if you created a token this turn.',
+      oracleText:
+        '{T}: Draw a card. Activate only if you created a token this turn.\n{8}, {T}, Sacrifice this artifact: Create a 10/10 colorless Eldrazi creature token.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'The draw restriction is a resolution no-op, and the token is an Eldrazi Construct artifact instead of an Eldrazi creature.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.activatedAbilities[0]?.condition).toEqual({ kind: 'createdTokenThisTurn' });
   });
 
   it('models Trostani Discordant', () => {

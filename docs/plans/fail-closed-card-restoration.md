@@ -2,7 +2,7 @@
 
 **Status date:** 2026-09-28 (re-audit and gate repair; restoration status unchanged since 2026-09-24)  
 **Scope:** Arcane Denial, Chaos Warp, Deflecting Swat, Fabled Passage, Myriad Landscape, Smothering Tithe, Toxic Deluge, and War Room.  
-**Current state:** Arcane Denial, Smothering Tithe, Fabled Passage, Myriad Landscape, and War Room are implemented-reviewed; Chaos Warp, Deflecting Swat, and Toxic Deluge remain explicitly unsupported. Do not remove any remaining containment guard until that card's completion gate is satisfied.
+**Current state:** Arcane Denial, Smothering Tithe, Fabled Passage, Myriad Landscape, and War Room are implemented-reviewed; Toxic Deluge was restored in coverage PR02 (gate: `packages/engine/tests/pr02-card-coverage.test.ts`); Chaos Warp and Deflecting Swat remain explicitly unsupported. Do not remove any remaining containment guard until that card's completion gate is satisfied.
 
 ## Objective
 

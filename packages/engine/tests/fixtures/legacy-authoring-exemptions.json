@@ -148,7 +148,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "07edca5dbb8e6625528a6e397719db34d3ecb8fb4a3aea650873c2f4506a983c",
+      "sha256": "b6e8392625a27cc5c75072dccf063902549cb084bd306f0b28ed66cf2aef3253",
       "description": "registerDRACONIC_DESTRUCTIONOverrides"
     },
     {
@@ -263,11 +263,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "81be4c3c6520a1e31d8b2699a82626dae921ee24e0d9b4708cb58de066aa2fe1",
-      "description": "RETROFITTER_FOUNDRY_DEF"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/living-energy.ts",
       "sha256": "0abb0ce058cb174ccad404aa0ff394625966beeb7a565ac83f6a2bd722c416fe",
       "description": "PIA_NALAAR_CHIEF_MECHANIC_DEF"
     },
@@ -295,11 +290,6 @@
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
       "sha256": "18375a13ed25dd50b1e5e8d5735eb14a1c102dcaedf207362239c400fa173eb3",
       "description": "RAMPAGING_AETHERHOOD_DEF"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "b4dc1a8f019a7dac9c6be496c8b0b8e462d618008ffc2c16e75d0f65965f3695",
-      "description": "PEEMA_TRAILBLAZER_DEF"
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
@@ -363,7 +353,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "51f022624bf3140def72b9e3344da1902a23bcf383b86f192cacc40ae5e35962",
+      "sha256": "2d5ee1bea055ab1e174613083774638a1b876598cabcfb83639ba8bc14ef9d18",
       "description": "registerLIVING_ENERGYOverrides"
     },
     {
@@ -418,11 +408,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "b7c45cea9112ed727dacf8ad329bafeba64c5cbbb52dd5cd0bfdc6795c6f395b",
-      "description": "Peema Trailblazer"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/living-energy.ts",
       "sha256": "babbf65cefbd615bb2b4df1f767a44d4bb969031fec25a3fcfe6fa9dbe46ea97",
       "description": "Architect of the Untamed"
     },
@@ -430,11 +415,6 @@
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
       "sha256": "0f218f1ba3f4c3e5769c81fa81675ea5a0cc886872c9ea08195d770423ff818a",
       "description": "Decoction Module"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "04dfd07c5afb4652543b1582e86ef0e37b9aac4ab5fffee1dc6c3bfac9d0887d",
-      "description": "Retrofitter Foundry"
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
@@ -548,7 +528,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "91d02c5b98c95a59db5b97a0e9f1dd97993bdfdfe0ac529284814a88f647ad0b",
+      "sha256": "8278e3d25e1e43295035caaadb5b69781bfaf049984b9307f616ead10a3d4a84",
       "description": "registerMARCHESA_THE_BLACK_ROSEOverrides"
     },
     {
@@ -653,7 +633,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "sha256": "f4fbe1a9f0f5ac2a73c6e12f66bd57850904f4f9ca39e82b269883b2b3633e8d",
+      "sha256": "d395a1c542f6d214c0a5b05f471c53c1db065ab6a288aa4882740bbe97b15193",
       "description": "registerNECRON_DYNASTIESOverrides"
     },
     {
@@ -693,7 +673,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "cd86237d3b00e7327f3e81ec64a17a82481081c97edfb68132b38f4a8776be7d",
+      "sha256": "9e7994ddcc8069cb8f9a13042fcd3135482a032e307784b68420503bac4d2c54",
       "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
     },
     {
@@ -858,7 +838,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "c4ca88bdec8ca30c045eeef30469e07ce708ea75ea3ee11b67fb8b8fbf72c793",
+      "sha256": "f97f107805a1080efd621707fa68a2252eeec81b0e053518584b14ec903bf8e4",
       "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {

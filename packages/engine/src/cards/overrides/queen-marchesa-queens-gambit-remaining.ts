@@ -205,12 +205,6 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Display of Power',
     'Cannot-be-copied is omitted, and copies keep original targets instead of choosing new ones.',
   );
-  // Catalog audit queen-batch-2: Foretell claimed as any-cast pump.
-  unsupportedCard(
-    '0ff7440b-b831-40a9-81c4-99d77bf93b8d',
-    'Dream Devourer',
-    'Foretell grant is omitted, and the pump fires on any spell you cast.',
-  );
   // Catalog audit queen-batch-3: optional once-per-attack-group is a per-attacker grant.
   unsupportedCard(
     '5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb',
@@ -303,12 +297,8 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Michiko Konda, Truth Seeker',
     'Damage-to-you is implemented as damage to permanents you control.',
   );
-  // Catalog audit queen-batch-2: bottom of library authored as library top.
-  unsupportedCard(
-    'bb5c1817-ac22-4779-9005-251bc354f181',
-    'Mistveil Plains',
-    'Bottom-of-library is implemented as graveyardToLibraryTop.',
-  );
+  // Mistveil Plains: restored in coverage PR02. The interpreter reads the bottom-of-library
+  // activation (graveyardToLibraryBottom) and its two-white-permanents condition.
   // Catalog audit queen-batch-1: power uses all graveyards, not opponents' graveyards.
   unsupportedCard(
     '379ed4ec-8f2e-448b-9ed2-a3181e2f877e',
@@ -390,12 +380,8 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Verrak, Warped Sengir',
     'Copy-activated-ability when life was paid is unimplemented.',
   );
-  // Catalog audit queen-batch-3: more-lands restriction omitted.
-  unsupportedCard(
-    '1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f',
-    'Weathered Wayfarer',
-    'Opponent-controls-more-lands restriction is omitted from the search activation.',
-  );
+  // Weathered Wayfarer: restored in coverage PR02. The interpreter reads the revealed land search
+  // and its "an opponent controls more lands than you" activation condition.
   // Catalog audit queen-batch-3: opponent-gains-control omitted.
   unsupportedCard(
     '81c70ae7-3c18-4c9b-8505-e4db9e0e6518',

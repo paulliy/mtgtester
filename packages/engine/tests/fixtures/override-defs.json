@@ -367,12 +367,6 @@
     "def": {}
   },
   {
-    "oracleId": "06b77a80-4968-4385-960a-fb66bb4faa94",
-    "name": "Dragonkin Berserker",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8",
     "name": "Chaos Warp",
     "handledLines": [],
@@ -556,22 +550,44 @@
     "def": {}
   },
   {
-    "oracleId": "0ff7440b-b831-40a9-81c4-99d77bf93b8d",
-    "name": "Dream Devourer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f",
-    "name": "Weathered Wayfarer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "10f274f9-9044-447b-81c9-d4906ad9e6be",
     "name": "Illuminor Szeras",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "amountFromSacrificedManaValue": true,
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            }
+          ],
+          "units": [
+            [
+              "B"
+            ]
+          ]
+        }
+      ]
+    }
   },
   {
     "oracleId": "123d2b6e-114e-4767-860d-50790382ca4a",
@@ -1257,8 +1273,60 @@
   {
     "oracleId": "1b5e6560-ff2e-4475-96cb-63f64c8a86db",
     "name": "Soul-Guide Lantern",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this artifact enters, exile target card from a graveyard.",
+      "{T}, Sacrifice this artifact: Exile each opponent's graveyard."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+            "effects": [
+              {
+                "op": "exileEachOpponentGraveyard"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Exile target card from a graveyard",
+          "effects": [
+            {
+              "op": "exileCard",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "graveyardOwnerScope": "any",
+              "kind": "cardInGraveyard"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "1d5ff280-7f4d-4801-aefd-9b6e6b1f2818",
@@ -2120,12 +2188,6 @@
     }
   },
   {
-    "oracleId": "32476743-c9d4-49ca-bec2-0669c215841b",
-    "name": "Anrakyr the Traveller",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "33f52df8-4b44-4422-8b0a-37fead9c894b",
     "name": "Vineglimmer Snarl",
     "handledLines": [
@@ -2201,12 +2263,6 @@
         ]
       }
     }
-  },
-  {
-    "oracleId": "352b64d2-2ae5-44ee-a64f-94932ef545d3",
-    "name": "Dread Return",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "355603d1-f62d-407a-8fa9-74e7dca8ecf9",
@@ -2583,12 +2639,6 @@
     }
   },
   {
-    "oracleId": "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c",
-    "name": "Hour of Reckoning",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
     "name": "Backlash",
     "handledLines": [],
@@ -2695,7 +2745,23 @@
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
     "name": "Flare of Denial",
     "handledLines": [],
-    "def": {}
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell",
+        "effects": [
+          {
+            "op": "counter",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "441b51b0-ecd0-466d-9ca8-e754eb563aec",
@@ -2965,12 +3031,6 @@
     "def": {}
   },
   {
-    "oracleId": "4ce156f8-6b0b-41ce-9e8f-b2735c757406",
-    "name": "Flare of Malice",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1",
     "name": "Frontier Siege",
     "handledLines": [
@@ -3069,12 +3129,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "4dcfd397-9d29-420c-8fd8-c7c2a99de122",
-    "name": "Nullmage Shepherd",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "4eaa100c-f1ef-4a2b-9370-5dad7f3a95f2",
@@ -3798,8 +3852,57 @@
   {
     "oracleId": "61c89b11-65c9-4fda-bbcd-d84de25df801",
     "name": "Aether Hub",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this land enters, you get {E} .",
+      "{T}, Pay {E}: Add one mana of any color."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 1,
+              "kind": "payEnergy"
+            }
+          ],
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Enters — gain one energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "63394e24-a456-4cc6-9885-8c62447b050a",
@@ -3995,12 +4098,6 @@
     "def": {}
   },
   {
-    "oracleId": "655aece2-f33a-46e0-8f80-112ae8a457fe",
-    "name": "Convergence of Dominion",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "6623cb85-fb1e-4561-8b21-0977c25096c2",
     "name": "Tibalt's Trickery",
     "handledLines": [],
@@ -4175,12 +4272,6 @@
   {
     "oracleId": "6c948f71-5c86-450c-8828-df4d8deaf1dd",
     "name": "Intermediate Chirography",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e",
-    "name": "Blasphemous Edict",
     "handledLines": [],
     "def": {}
   },
@@ -4512,12 +4603,6 @@
         }
       }
     }
-  },
-  {
-    "oracleId": "72aef1d8-11df-4bc2-af83-907b05df73a8",
-    "name": "Grim Haruspex",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "73413bd5-8c40-4d45-8f05-c20c39ee4017",
@@ -5465,8 +5550,69 @@
   {
     "oracleId": "88600bd4-4dcc-4788-bba4-78b6cf5ad8f8",
     "name": "Peema Trailblazer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.",
+      "Whenever this creature deals combat damage to a player, you get that many {E} ."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.",
+            "effects": [
+              {
+                "count": 2,
+                "counter": "+1/+1",
+                "op": "putCounters",
+                "target": "source"
+              },
+              {
+                "count": {
+                  "kind": "greatestPowerAmong",
+                  "scope": "you",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "amount": 6,
+              "kind": "payEnergy"
+            }
+          ],
+          "exhaust": true,
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Combat damage to a player — gain that much energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "88b51e15-6630-4e14-a6b8-db0aa12e34ef",
@@ -5726,12 +5872,6 @@
   {
     "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
     "name": "Angelic Destiny",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "8cd45064-2ad9-4247-902e-aefaf3bc1a43",
-    "name": "Their Number Is Legion",
     "handledLines": [],
     "def": {}
   },
@@ -6171,43 +6311,6 @@
       "You have no maximum hand size."
     ],
     "def": {}
-  },
-  {
-    "oracleId": "9a02a9a7-39d9-4763-85d3-747a0540b60b",
-    "name": "Gilded Lotus",
-    "handledLines": [
-      "{T}: Add three mana of any one color."
-    ],
-    "def": {
-      "manaAbilities": [
-        {
-          "linked": true,
-          "units": [
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ],
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ],
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ]
-          ]
-        }
-      ]
-    }
   },
   {
     "oracleId": "9a107e48-3d50-4941-95b1-10f2b29a4245",
@@ -6796,12 +6899,6 @@
     }
   },
   {
-    "oracleId": "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425",
-    "name": "Carrion Feeder",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
     "name": "Reverberate",
     "handledLines": [],
@@ -7064,12 +7161,6 @@
     }
   },
   {
-    "oracleId": "aaadfe41-b2be-4183-b45e-a70e53a59d2e",
-    "name": "Retrofitter Foundry",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "ab1cc360-b9de-48d9-9983-4dfe4a7d2a37",
     "name": "Arcane Denial",
     "handledLines": [
@@ -7291,12 +7382,6 @@
     "def": {}
   },
   {
-    "oracleId": "ad3bf726-e0c2-4038-a66e-9a9dff439563",
-    "name": "Raffine's Guidance",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
     "name": "Deflecting Swat",
     "handledLines": [],
@@ -7381,12 +7466,6 @@
         ]
       }
     }
-  },
-  {
-    "oracleId": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
-    "name": "Toxic Deluge",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "b1544f21-7e98-461b-aed5-e748b0168c52",
@@ -7871,18 +7950,6 @@
     "def": {}
   },
   {
-    "oracleId": "bb1b4786-3804-486b-9fd9-85848d24d362",
-    "name": "Ghost Ark",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "bb5c1817-ac22-4779-9005-251bc354f181",
-    "name": "Mistveil Plains",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
     "name": "Kardur, Doomscourge",
     "handledLines": [],
@@ -8312,12 +8379,6 @@
     "def": {}
   },
   {
-    "oracleId": "c232d974-9c65-4bce-b045-e5a7cc0c62e0",
-    "name": "Idol of Oblivion",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
     "name": "Reliquary Tower",
     "handledLines": [
@@ -8540,14 +8601,57 @@
   {
     "oracleId": "cb377c27-39a6-42b4-8c89-80a9a2350e81",
     "name": "Solar Transformer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "cb923c4d-1d2e-4039-90bb-72d1981b9738",
-    "name": "Endless Atlas",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this artifact enters, you get {E}{E}{E} .",
+      "{T}, Pay {E}: Add one mana of any color."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 1,
+              "kind": "payEnergy"
+            }
+          ],
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Enters — gain three energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "cba58942-b98c-45aa-8651-7dc666e31c93",
@@ -8651,22 +8755,113 @@
     }
   },
   {
-    "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
-    "name": "Changing Loyalty",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0",
     "name": "Bespoke Battlewagon",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "ce08aff3-efe6-4186-9557-274e00a7ca38",
-    "name": "Sceptre of Eternal Glory",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Pay {E}{E}{E}{E}: ~ becomes an artifact creature until end of turn.",
+      "{T}, Pay {E}{E}: Tap target creature.",
+      "{T}, Pay {E}{E}{E}: Draw a card.",
+      "{T}: You get {E}{E} ."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}: You get {E}{E}.",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 2
+                },
+                "op": "gainEnergy"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "{T}, Pay {E}{E}: Tap target creature.",
+            "effects": [
+              {
+                "op": "tapTarget",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 2,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "{T}, Pay {E}{E}{E}: Draw a card.",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 3,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.",
+            "effects": [
+              {
+                "op": "becomeArtifactCreature"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "amount": 4,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "cf7352bf-3971-4bb7-88b9-65ab9a219289",
@@ -9787,12 +9982,6 @@
     "def": {}
   },
   {
-    "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",
-    "name": "Killian, Ink Duelist",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "e26f0fcd-d6d2-4e7b-82dd-711bc0b9dad3",
     "name": "Cryptothrall",
     "handledLines": [
@@ -9921,12 +10110,6 @@
   {
     "oracleId": "e91240bc-4a13-4131-9379-5ddac6555f4a",
     "name": "Adaptive Omnitool",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "e938ee4c-d5df-4d93-bd61-9e518fb1dc30",
-    "name": "Conclave Tribunal",
     "handledLines": [],
     "def": {}
   },
@@ -10257,12 +10440,6 @@
   {
     "oracleId": "f43f5855-f297-4433-984b-18263b734cfc",
     "name": "Eriette of the Charmed Apple",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "f53da056-97be-41ad-8cfc-0d92e17dcd7b",
-    "name": "Sage of Fables",
     "handledLines": [],
     "def": {}
   },
@@ -11021,6 +11198,126 @@
     }
   },
   {
+    "oracleId": "fe8c2b7e-f80d-4acb-a976-edcf436a78a9",
+    "name": "Kogla and Yidaro",
+    "handledLines": [
+      "When ~ enters, choose one —",
+      "{2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card.",
+      "• It fights target creature you don't control.",
+      "• It gains trample and haste until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Destroy up to one target artifact or enchantment, shuffle this card into your library, then draw a card",
+            "effects": [
+              {
+                "op": "destroyEachChosen",
+                "targetSlot": 0
+              },
+              {
+                "op": "shuffleSourceFromGraveyardIntoLibrary"
+              },
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "count": {
+                  "max": 1,
+                  "min": 0
+                },
+                "kind": "artifactOrEnchantment"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When Kogla and Yidaro enters, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "It gains trample and haste until end of turn",
+                "effects": [
+                  {
+                    "keyword": "trample",
+                    "op": "grantKeywordUntilEot",
+                    "target": "source"
+                  },
+                  {
+                    "keyword": "haste",
+                    "op": "grantKeywordUntilEot",
+                    "target": "source"
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "It fights target creature you don't control",
+                "effects": [
+                  {
+                    "first": "source",
+                    "op": "fight",
+                    "second": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ff0ab867-b710-4b1a-baed-95fc3cf68f79",
     "name": "Valakut Awakening // Valakut Stoneforge",
     "handledLines": [],
@@ -11220,8 +11517,57 @@
   {
     "oracleId": "oracle-aether-hub",
     "name": "Aether Hub",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this land enters, you get {E} .",
+      "{T}, Pay {E}: Add one mana of any color."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 1,
+              "kind": "payEnergy"
+            }
+          ],
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Enters — gain one energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-aetherflux-conduit",
@@ -11735,12 +12081,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-anrakyr-the-traveller",
-    "name": "Anrakyr the Traveller",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-arcane-denial",
     "name": "Arcane Denial",
     "handledLines": [
@@ -12115,8 +12455,111 @@
   {
     "oracleId": "oracle-bespoke-battlewagon",
     "name": "Bespoke Battlewagon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Pay {E}{E}{E}{E}: ~ becomes an artifact creature until end of turn.",
+      "{T}, Pay {E}{E}: Tap target creature.",
+      "{T}, Pay {E}{E}{E}: Draw a card.",
+      "{T}: You get {E}{E} ."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}: You get {E}{E}.",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 2
+                },
+                "op": "gainEnergy"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "{T}, Pay {E}{E}: Tap target creature.",
+            "effects": [
+              {
+                "op": "tapTarget",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 2,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "{T}, Pay {E}{E}{E}: Draw a card.",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 3,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        },
+        {
+          "ability": {
+            "description": "Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.",
+            "effects": [
+              {
+                "op": "becomeArtifactCreature"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "amount": 4,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-biotransference",
@@ -12146,12 +12589,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-blasphemous-edict",
-    "name": "Blasphemous Edict",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-bloomvine-regent-claim-territory",
@@ -12796,12 +13233,6 @@
     }
   },
   {
-    "oracleId": "oracle-carrion-feeder",
-    "name": "Carrion Feeder",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-chain-reaction",
     "name": "Chain Reaction",
     "handledLines": [
@@ -12868,12 +13299,6 @@
   {
     "oracleId": "oracle-champion-of-lambholt",
     "name": "Champion of Lambholt",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-changing-loyalty",
-    "name": "Changing Loyalty",
     "handledLines": [],
     "def": {}
   },
@@ -13338,12 +13763,6 @@
     }
   },
   {
-    "oracleId": "oracle-conclave-tribunal",
-    "name": "Conclave Tribunal",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-confiscation-coup",
     "name": "Confiscation Coup",
     "handledLines": [
@@ -13427,12 +13846,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-convergence-of-dominion",
-    "name": "Convergence of Dominion",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-coretapper",
@@ -14112,24 +14525,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-dragonkin-berserker",
-    "name": "Dragonkin Berserker",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-dread-return",
-    "name": "Dread Return",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-dream-devourer",
-    "name": "Dream Devourer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-dream-pillager",
     "name": "Dream Pillager",
     "handledLines": [],
@@ -14320,12 +14715,6 @@
   {
     "oracleId": "oracle-eldrazi-conscription",
     "name": "Eldrazi Conscription",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-endless-atlas",
-    "name": "Endless Atlas",
     "handledLines": [],
     "def": {}
   },
@@ -14769,17 +15158,27 @@
     "oracleId": "oracle-flare-of-denial",
     "name": "Flare of Denial",
     "handledLines": [],
-    "def": {}
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell",
+        "effects": [
+          {
+            "op": "counter",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-flare-of-duplication",
     "name": "Flare of Duplication",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-flare-of-malice",
-    "name": "Flare of Malice",
     "handledLines": [],
     "def": {}
   },
@@ -15521,12 +15920,6 @@
     }
   },
   {
-    "oracleId": "oracle-ghost-ark",
-    "name": "Ghost Ark",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-ghoulish-impetus",
     "name": "Ghoulish Impetus",
     "handledLines": [],
@@ -15537,43 +15930,6 @@
     "name": "Gift of Immortality",
     "handledLines": [],
     "def": {}
-  },
-  {
-    "oracleId": "oracle-gilded-lotus",
-    "name": "Gilded Lotus",
-    "handledLines": [
-      "{T}: Add three mana of any one color."
-    ],
-    "def": {
-      "manaAbilities": [
-        {
-          "linked": true,
-          "units": [
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ],
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ],
-            [
-              "W",
-              "U",
-              "B",
-              "R",
-              "G"
-            ]
-          ]
-        }
-      ]
-    }
   },
   {
     "oracleId": "oracle-gisela-blade-of-goldnight",
@@ -15748,12 +16104,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-grim-haruspex",
-    "name": "Grim Haruspex",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-gut-true-soul-zealot",
@@ -16007,12 +16357,6 @@
     }
   },
   {
-    "oracleId": "oracle-hour-of-reckoning",
-    "name": "Hour of Reckoning",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-humble-defector",
     "name": "Humble Defector",
     "handledLines": [],
@@ -16106,16 +16450,44 @@
     }
   },
   {
-    "oracleId": "oracle-idol-of-oblivion",
-    "name": "Idol of Oblivion",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-illuminor-szeras",
     "name": "Illuminor Szeras",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "amountFromSacrificedManaValue": true,
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            }
+          ],
+          "units": [
+            [
+              "B"
+            ]
+          ]
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-imotekh-the-stormlord",
@@ -16424,10 +16796,124 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-killian-ink-duelist",
-    "name": "Killian, Ink Duelist",
-    "handledLines": [],
-    "def": {}
+    "oracleId": "oracle-kogla-and-yidaro",
+    "name": "Kogla and Yidaro",
+    "handledLines": [
+      "When ~ enters, choose one —",
+      "{2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card.",
+      "• It fights target creature you don't control.",
+      "• It gains trample and haste until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Destroy up to one target artifact or enchantment, shuffle this card into your library, then draw a card",
+            "effects": [
+              {
+                "op": "destroyEachChosen",
+                "targetSlot": 0
+              },
+              {
+                "op": "shuffleSourceFromGraveyardIntoLibrary"
+              },
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "count": {
+                  "max": 1,
+                  "min": 0
+                },
+                "kind": "artifactOrEnchantment"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When Kogla and Yidaro enters, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "It gains trample and haste until end of turn",
+                "effects": [
+                  {
+                    "keyword": "trample",
+                    "op": "grantKeywordUntilEot",
+                    "target": "source"
+                  },
+                  {
+                    "keyword": "haste",
+                    "op": "grantKeywordUntilEot",
+                    "target": "source"
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "It fights target creature you don't control",
+                "effects": [
+                  {
+                    "first": "source",
+                    "op": "fight",
+                    "second": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-kogla-the-titan-ape",
@@ -17412,12 +17898,6 @@
     }
   },
   {
-    "oracleId": "oracle-mistveil-plains",
-    "name": "Mistveil Plains",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-mob-rule",
     "name": "Mob Rule",
     "handledLines": [],
@@ -18109,12 +18589,6 @@
     }
   },
   {
-    "oracleId": "oracle-nullmage-shepherd",
-    "name": "Nullmage Shepherd",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-ol-rin-s-searing-light",
     "name": "Olórin's Searing Light",
     "handledLines": [],
@@ -18590,8 +19064,69 @@
   {
     "oracleId": "oracle-peema-trailblazer",
     "name": "Peema Trailblazer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.",
+      "Whenever this creature deals combat damage to a player, you get that many {E} ."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.",
+            "effects": [
+              {
+                "count": 2,
+                "counter": "+1/+1",
+                "op": "putCounters",
+                "target": "source"
+              },
+              {
+                "count": {
+                  "kind": "greatestPowerAmong",
+                  "scope": "you",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "amount": 6,
+              "kind": "payEnergy"
+            }
+          ],
+          "exhaust": true,
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Combat damage to a player — gain that much energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-pensive-professor",
@@ -18957,12 +19492,6 @@
     }
   },
   {
-    "oracleId": "oracle-raffine-s-guidance",
-    "name": "Raffine's Guidance",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-rakdos-carnarium",
     "name": "Rakdos Carnarium",
     "handledLines": [
@@ -19181,12 +19710,6 @@
   {
     "oracleId": "oracle-resurrection-orb",
     "name": "Resurrection Orb",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-retrofitter-foundry",
-    "name": "Retrofitter Foundry",
     "handledLines": [],
     "def": {}
   },
@@ -19477,12 +20000,6 @@
     }
   },
   {
-    "oracleId": "oracle-sage-of-fables",
-    "name": "Sage of Fables",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-sage-s-reverie",
     "name": "Sage's Reverie",
     "handledLines": [
@@ -19615,12 +20132,6 @@
   {
     "oracleId": "oracle-scavenging-ooze",
     "name": "Scavenging Ooze",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-sceptre-of-eternal-glory",
-    "name": "Sceptre of Eternal Glory",
     "handledLines": [],
     "def": {}
   },
@@ -20320,8 +20831,57 @@
   {
     "oracleId": "oracle-solar-transformer",
     "name": "Solar Transformer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this artifact enters, you get {E}{E}{E} .",
+      "{T}, Pay {E}: Add one mana of any color."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 1,
+              "kind": "payEnergy"
+            }
+          ],
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Enters — gain three energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-songbirds-blessing",
@@ -20332,8 +20892,60 @@
   {
     "oracleId": "oracle-soul-guide-lantern",
     "name": "Soul-Guide Lantern",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this artifact enters, exile target card from a graveyard.",
+      "{T}, Sacrifice this artifact: Exile each opponent's graveyard."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+            "effects": [
+              {
+                "op": "exileEachOpponentGraveyard"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Exile target card from a graveyard",
+          "effects": [
+            {
+              "op": "exileCard",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "graveyardOwnerScope": "any",
+              "kind": "cardInGraveyard"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-spark-double",
@@ -21050,12 +21662,6 @@
     }
   },
   {
-    "oracleId": "oracle-their-number-is-legion",
-    "name": "Their Number Is Legion",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-thopter-spy-network",
     "name": "Thopter Spy Network",
     "handledLines": [
@@ -21333,12 +21939,6 @@
   {
     "oracleId": "oracle-tomik-wielder-of-law",
     "name": "Tomik, Wielder of Law",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-toxic-deluge",
-    "name": "Toxic Deluge",
     "handledLines": [],
     "def": {}
   },
@@ -21908,12 +22508,6 @@
   {
     "oracleId": "oracle-wear-tear",
     "name": "Wear // Tear",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-weathered-wayfarer",
-    "name": "Weathered Wayfarer",
     "handledLines": [],
     "def": {}
   },

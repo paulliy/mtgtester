@@ -3623,8 +3623,9 @@ describe('Kairi, the Swirling Sky', () => {
     // CR 708.2: a face-down permanent has no mana cost, so its mana value is 0.
     expect(permanentManaValue(ctx, faceDown)).toBe(0);
     spawn(ctx, 'P2', rock('Kairi Idol', '{6}'));
-    // 0 + 6 fits the budget of 6; at mana value 7 the face-down card would never be offered.
-    dies(ctx, BOUNCE, pick('Kairi Colossus', 'Kairi Idol'));
+    // 0 + 6 fits the budget of 6; at mana value 7 the face-down card would never be offered. It
+    // is offered by its face-down name: a face-down permanent has none (CR 708.2a).
+    dies(ctx, BOUNCE, pick('Face-down permanent', 'Kairi Idol'));
     expect(
       playerById(ctx, 'P2')
         .hand.map((entry) => entry.name)

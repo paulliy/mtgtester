@@ -6,7 +6,7 @@ import {
   consumePlayFromZonePermission,
 } from '../casting/cast';
 export { queueWardTriggers, queueBecomesTargetedTriggers } from '../casting/cast';
-import { activationManaSources } from '../mana/activation';
+import { activationManaSources, activationSacrificeReservation } from '../mana/activation';
 
 /**
  * Applying a chosen priority action: playing a land, casting a spell (with auto-payment),
@@ -32,8 +32,13 @@ import { computeCharacteristics } from '../effects/continuous';
 import { emit, debug } from '../log/log';
 
 import { emptyCost, subtractGeneric, totalPips, withX } from '../mana/cost';
-import { makePermanent, moveObject } from '../state/objects';
-import { activatingAbilitiesBlockedFor, colorsOf, getDefByOracleId } from '../state/queries';
+import { makePermanent, moveObject, queuePlayerTriggersForEvent } from '../state/objects';
+import {
+  activatingAbilitiesBlockedFor,
+  colorsOf,
+  gatherRuleStatics,
+  getDefByOracleId,
+} from '../state/queries';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -47,6 +52,7 @@ import {
   computeTargetOptions,
   handActivationCost,
   manaPortionOf,
+  graveyardActivationCost,
 } from './legal';
 import { breakYieldsForStop } from '../turn/stops';
 
@@ -73,12 +79,18 @@ function* payActivationCosts(
       const spendsSource = costs.some(
         (cost) => cost.kind === 'tap' || cost.kind === 'sacrificeSelf' || cost.kind === 'exileSelf',
       );
+      // Mana is paid before the ability's own sacrifice, so keep what that sacrifice needs away
+      // from mana abilities that sacrifice (Illuminor Szeras), as legality priced it.
+      const reserved = paysManaBeforeSacrifice
+        ? activationSacrificeReservation(ctx, player, perm, costs, mana, announcedX)
+        : null;
       yield* payManaCost(
         ctx,
         player,
         mana,
         { kind: 'activateAbility', sourceOracleId: perm.oracleId },
         spendsSource ? [perm.cardId] : [],
+        reserved ?? new Set(),
       );
     }
   };
@@ -294,7 +306,7 @@ export function* applyPriorityAction(
 
         // Every mana component, for the same purpose `computePriorityOptions` priced it with —
         // otherwise mana that may only pay for activations would make an offered action unpayable.
-        const manaCost = manaPortionOf(activated.costs);
+        const manaCost = graveyardActivationCost(ctx, player.id, manaPortionOf(activated.costs));
         if (totalPips(manaCost) > 0) {
           yield* payManaCost(ctx, player, manaCost, {
             kind: 'activateAbility',
@@ -349,6 +361,9 @@ export function* applyPriorityAction(
         })
       ) {
         throw new Error('activated ability condition is not met');
+      }
+      if (activated.exhaust === true && perm.exhaustedAbilities?.includes(payload.index) === true) {
+        throw new Error('this exhaust ability has already been activated');
       }
 
       // CR 601.2b/602.2b: a modal ability's mode was announced by the option itself, before
@@ -463,6 +478,7 @@ export function* applyPriorityAction(
         player.id,
         perm.oracleId,
         perm.cardId,
+        activated,
       );
       // The reduction applies once to the TOTAL mana cost with X announced (CR 601.2f), the way
       // `computePriorityOptions` priced it — spread across mana components, never applied twice.
@@ -490,6 +506,9 @@ export function* applyPriorityAction(
       if (activated.oncePerTurn === true || activated.costs.some((c) => c.kind === 'loyalty')) {
         perm.activationsThisTurn.push(payload.index);
       }
+      if (activated.exhaust === true) {
+        perm.exhaustedAbilities = [...(perm.exhaustedAbilities ?? []), payload.index];
+      }
       s.stack.push(stackEntry);
       breakYieldsForStop(ctx, stackEntry);
       emit(
@@ -507,6 +526,57 @@ export function* applyPriorityAction(
       debug(ctx, 'stack', `${player.id} activates ${perm.name} — ${description}`);
       queueWardTriggers(ctx, player.id, id, allTargets);
       queueBecomesTargetedTriggers(ctx, player.id, allTargets);
+      return;
+    }
+
+    case 'foretell': {
+      // Foretell (CR 702.143a/b): a special action during your turn — pay {2}, exile the card
+      // face down. It keeps the foretell cost it had in hand (Dream Devourer's mana cost
+      // reduced by {2}) and may be cast after this turn.
+      const card = player.hand.find((candidate) => candidate.id === payload.objectId);
+      const grant = gatherRuleStatics(ctx).find(
+        (entry) => entry.static.kind === 'grantForetell' && entry.controllerId === player.id,
+      );
+      const def = card === undefined ? undefined : getDefByOracleId(ctx, card.oracleId, card.name);
+      if (
+        card === undefined ||
+        grant === undefined ||
+        grant.static.kind !== 'grantForetell' ||
+        s.currentTurnPlayer !== player.id ||
+        def === undefined ||
+        def.types.includes('Land') ||
+        def.manaCost === null
+      ) {
+        throw new Error('illegal action: this card cannot be foretold');
+      }
+      const foretellCost = subtractGeneric(def.manaCost, grant.static.reduction);
+      yield* payManaCost(ctx, player, { ...emptyCost(), generic: 2 });
+      const exiled = yield* moveObject(ctx, card, { zone: 'exile', faceDown: true });
+      if (exiled !== null && exiled.zone === 'exile') {
+        (exiled as EngineCardObject).foretold = { turn: s.turnNumber, cost: foretellCost };
+      }
+      emit(ctx, 'foretold', { player: player.id }, player.id);
+      queuePlayerTriggersForEvent(ctx, 'foretells', player.id);
+      return;
+    }
+
+    case 'turnFaceUp': {
+      const perm = s.battlefield.find((candidate) => candidate.id === payload.objectId);
+      const morphCost =
+        perm === undefined ? undefined : getDefByOracleId(ctx, perm.oracleId, perm.name).morphCost;
+      if (
+        perm === undefined ||
+        perm.controllerId !== player.id ||
+        perm.faceDown !== true ||
+        morphCost === undefined
+      ) {
+        throw new Error('illegal action: nothing to turn face up');
+      }
+      yield* payManaCost(ctx, player, morphCost);
+      // CR 708.8: it keeps its status, counters and damage, and does not enter the battlefield.
+      perm.faceDown = false;
+      perm.name = getDefByOracleId(ctx, perm.oracleId, perm.name).name;
+      emit(ctx, 'turnedFaceUp', { name: perm.name, cardId: perm.cardId }, player.id);
       return;
     }
 

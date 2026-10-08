@@ -214,6 +214,9 @@ export function changeController(
   perm.statuses = perm.statuses.filter((status) => status !== 'attacking' && status !== 'blocking');
 }
 
+/** What a face-down permanent is called while face down (CR 708.2a). */
+export const FACE_DOWN_PERMANENT_NAME = 'Face-down permanent';
+
 /** Build the battlefield form of an object (used by moveObject and by casting). */
 export function makePermanent(
   ctx: GameContext,
@@ -304,6 +307,9 @@ export function makePermanent(
   }
   return {
     ...reincarnate(ctx, obj, 'battlefield'),
+    // A face-down permanent has no name (CR 708.2a): every event, prompt and view that names it
+    // reads this, so its identity reaches no other player. The definition keeps the real one.
+    ...(faceDown ? { name: FACE_DOWN_PERMANENT_NAME } : {}),
     zone: 'battlefield',
     controllerId,
     defaultControllerId: controllerId,
@@ -511,6 +517,15 @@ export function creatureTypeChoicesFor(
     .map((type) => ({ key: type, label: type }));
 }
 
+/**
+ * Where a permanent leaving the battlefield for `zone` actually goes: an unearthed permanent is
+ * exiled instead (CR 702.84a). Batch moves read this before queueing "dies" triggers, since a
+ * permanent exiled this way never dies (CR 700.4).
+ */
+export function leavesBattlefieldTo(perm: EnginePermanent, zone: Zone): Zone {
+  return perm.unearthed === true && zone !== 'exile' ? 'exile' : zone;
+}
+
 export function* moveObject(
   ctx: GameContext,
   obj: EngineObject,
@@ -519,15 +534,34 @@ export function* moveObject(
   const from = obj.zone;
   let target: MoveDestination = dest;
 
+  // CR 702.84a: an unearthed permanent that would leave the battlefield is exiled instead. Applied
+  // before the commander replacement below; either order ends in exile, since 903.9b only offers
+  // the command zone for a move to hand or library.
+  if (
+    from === 'battlefield' &&
+    leavesBattlefieldTo(obj as EnginePermanent, dest.zone) !== dest.zone
+  ) {
+    target = {
+      zone: 'exile',
+      ...(dest.reason !== undefined ? { reason: dest.reason } : {}),
+      ...(dest.deferLeaveProcessing !== undefined
+        ? { deferLeaveProcessing: dest.deferLeaveProcessing }
+        : {}),
+      ...(dest.deferCardZoneTriggers !== undefined
+        ? { deferCardZoneTriggers: dest.deferCardZoneTriggers }
+        : {}),
+    };
+  }
+
   // CR 903.9b — commander headed to hand or library: owner may redirect to command zone.
-  if (obj.isCommander && (dest.zone === 'hand' || dest.zone === 'library')) {
+  if (obj.isCommander && (target.zone === 'hand' || target.zone === 'library')) {
     const outcome = yield {
       decisionType: 'commanderReplacement',
       player: obj.ownerId,
-      prompt: `${obj.name} would be put into your ${dest.zone}. Put it into the command zone instead?`,
+      prompt: `${obj.name} would be put into your ${target.zone}. Put it into the command zone instead?`,
       options: [
         { type: 'commanderToCommandZone', description: `Put ${obj.name} into the command zone` },
-        { type: 'keepMoving', description: `Let ${obj.name} go to your ${dest.zone}` },
+        { type: 'keepMoving', description: `Let ${obj.name} go to your ${target.zone}` },
       ],
     };
     if (outcome.index === 0) target = { zone: 'command' };
@@ -580,6 +614,9 @@ export function* moveObject(
   // animated land that dies is a creature dying (CR 113.7a, 603.10a).
   const keepForLeaveProcessing = from === 'battlefield' && target.zone !== 'battlefield';
   removeFromCurrentZone(ctx, obj, keepForLeaveProcessing);
+  // An ability granted to a card in a graveyard ("gains unearth {3} until end of turn") does not
+  // follow it to a new zone: it is a new object there (CR 400.7).
+  if (from === 'graveyard') delete ctx.state.temporaryGraveyardAbilities[obj.cardId];
 
   if (from === 'battlefield' && target.zone === 'graveyard') {
     (obj as unknown as EngineCardObject).rememberedCounters = {
@@ -793,7 +830,12 @@ export function* moveObject(
 
   emit(ctx, 'zoneChange', {
     cardId: obj.cardId,
-    name: target.faceDown ? 'Face-down permanent' : obj.name,
+    // A face-down permanent leaving the battlefield is revealed (CR 708.9).
+    name: target.faceDown
+      ? FACE_DOWN_PERMANENT_NAME
+      : obj.zone === 'battlefield' && (obj as EnginePermanent).faceDown === true
+        ? (ctx.defs.get(obj.oracleId)?.name ?? obj.name)
+        : obj.name,
     from,
     to: target.zone,
     owner: obj.ownerId,
@@ -902,6 +944,24 @@ export function* moveObjects(
  *
  * The id is derived from the spec, so N Treasures share one definition entry.
  */
+/**
+ * The definition a face-down spell is cast with (CR 708.2a, 708.4): a 2/2 creature with no
+ * name, mana cost, color, types beyond creature, or abilities. A morph card cast face down is
+ * put on the stack under this definition, so cast triggers, reductions and restrictions see
+ * only what is public.
+ */
+export function faceDownSpellOracleId(ctx: GameContext): OracleId {
+  return registerTokenDef(ctx, {
+    name: 'Face-down creature spell',
+    typeLine: 'Creature',
+    types: ['Creature'],
+    subtypes: [],
+    colors: [],
+    power: 2,
+    toughness: 2,
+  });
+}
+
 function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
   const evalPower =
     spec.power === null || spec.power === undefined
@@ -1332,10 +1392,12 @@ export function queueTriggersForEvent(
         objectId: source.id,
         ...(source.lastKnownFacts === undefined ? {} : { sourceFacts: source.lastKnownFacts }),
         controllerId: source.controllerId,
+        // "When enchanted creature dies" looks back (CR 603.10a): the dying permanent has left
+        // the battlefield, but the Aura is still attached to it until state-based actions run.
         attachedToCardId:
           source.attachedTo === null
             ? null
-            : (ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId ?? null),
+            : (sources.find((perm) => perm.id === source.attachedTo)?.cardId ?? null),
       };
       const matched = subjects.filter((s) => {
         // "an opponent controls" (Thunderbreak Regent) — the watcher's own targeting spells
@@ -1716,6 +1778,36 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
  */
 export function queueKeywordCastTriggers(ctx: GameContext, spell: EngineStackObject): void {
   const def = spellDefinitionOf(ctx, spell);
+  // Replicate (CR 702.56a): "When you cast this spell, if a replicate cost was paid for it, copy
+  // it for each time its replicate cost was paid."
+  const replicated = spell.optionalCostCounts?.replicate ?? 0;
+  if (def.optionalAdditionalCost?.mechanic === 'replicate' && replicated > 0) {
+    ctx.state.pendingTriggers.push({
+      controllerId: spell.controllerId,
+      sourceCardId: spell.sourceCardId,
+      sourceOracleId: spell.sourceOracleId,
+      sourceName: spell.description,
+      ability: {
+        kind: 'triggered',
+        targets: [],
+        effects: [
+          {
+            op: 'replicateCopies',
+            count: replicated,
+            spell: {
+              stackObjectId: spell.id,
+              oracleId: spell.sourceOracleId,
+              name: spell.description,
+              targets: [...spell.targets],
+              oracleText: spell.card?.oracleText ?? '',
+              manaCost: spell.card?.manaCost ?? null,
+            },
+          },
+        ],
+        description: `${spell.description}: Replicate ${replicated}`,
+      },
+    });
+  }
   const cascadeCount = def.keywords.filter((keyword) => keyword === 'cascade').length;
   if (cascadeCount === 0) return;
 
@@ -1767,7 +1859,9 @@ export function* movePermanentsToGraveyard(
   const departureFacts = new Map(
     permanents.map((perm) => [perm.id, captureObjectFacts(ctx, perm)]),
   );
-  ctx.state.creaturesDiedThisTurn += permanents.filter((perm) =>
+  // Only what really reaches the graveyard dies; an unearthed permanent is exiled instead.
+  const dying = permanents.filter((perm) => leavesBattlefieldTo(perm, 'graveyard') === 'graveyard');
+  ctx.state.creaturesDiedThisTurn += dying.filter((perm) =>
     computeCharacteristics(ctx, perm).types.includes('Creature'),
   ).length;
   const pendingStart = ctx.state.pendingTriggers.length;
@@ -1780,7 +1874,7 @@ export function* movePermanentsToGraveyard(
   queueTriggersForEvent(
     ctx,
     'dies',
-    permanents.map((permanent) => ({ permanent })),
+    dying.map((permanent) => ({ permanent })),
   );
   // Watchers and last-known facts are captured before any member leaves. Destination
   // incarnations become available only during movement; bind them to these exact firings.
@@ -1834,7 +1928,7 @@ export function* returnExiledUntilLeaves(ctx: GameContext, sourceCardId: CardId)
 
 export function queuePlayerTriggersForEvent(
   ctx: GameContext,
-  when: 'gainsLife' | 'drawsCard',
+  when: 'gainsLife' | 'drawsCard' | 'foretells',
   playerId: PlayerId,
   amount?: number,
 ): void {

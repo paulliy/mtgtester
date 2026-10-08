@@ -18,15 +18,36 @@ const props = withDefaults(
      * other card stays display-only.
      */
     selectableIds?: string[];
+    /**
+     * Object ids of cards in this zone that are themselves sources of a legal action right now —
+     * an unearth or flashback in a graveyard. Clicking one opens its actions, as a hand card or
+     * permanent does. A pending target choice takes precedence.
+     */
+    actionableIds?: string[];
   }>(),
-  { max: Infinity, selectableIds: () => [] },
+  { max: Infinity, selectableIds: () => [], actionableIds: () => [] },
 );
 
-const emit = defineEmits<{ select: [id: string] }>();
+const emit = defineEmits<{ select: [id: string]; activate: [id: string] }>();
+
+function isClickable(card: SpectatorCard): boolean {
+  return props.selectableIds.includes(card.id) || props.actionableIds.includes(card.id);
+}
 
 function onCardClick(card: SpectatorCard): void {
-  if (!props.selectableIds.includes(card.id)) return;
-  emit('select', card.id);
+  if (props.selectableIds.includes(card.id)) emit('select', card.id);
+  else if (props.actionableIds.includes(card.id)) emit('activate', card.id);
+}
+
+/**
+ * Enter or Space on a clickable card acts on it, and only on it: the board's window shortcut
+ * handler (Enter confirms, Space passes priority) must not also see the key.
+ */
+function onCardKey(card: SpectatorCard, event: KeyboardEvent): void {
+  if (!isClickable(card)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  onCardClick(card);
 }
 
 const visibleCards = computed(() => props.cards.slice(0, props.max));
@@ -54,9 +75,16 @@ function onCardLeave(): void {
         v-for="card in visibleCards"
         :key="card.id"
         class="zone-card-thumb"
-        :class="{ targetable: props.selectableIds.includes(card.id) }"
-        :role="props.selectableIds.includes(card.id) ? 'button' : undefined"
+        :class="{
+          targetable: props.selectableIds.includes(card.id),
+          actionable:
+            !props.selectableIds.includes(card.id) && props.actionableIds.includes(card.id),
+        }"
+        :role="isClickable(card) ? 'button' : undefined"
+        :tabindex="isClickable(card) ? 0 : undefined"
         @click="onCardClick(card)"
+        @keydown.enter="onCardKey(card, $event)"
+        @keydown.space="onCardKey(card, $event)"
         @mouseenter="onCardEnter(card, $event)"
         @mousemove="onCardMove"
         @mouseleave="onCardLeave"
@@ -128,6 +156,14 @@ function onCardLeave(): void {
   outline: 2px solid var(--accent, #7ab3f5);
   outline-offset: 1px;
   border-radius: 4px;
+}
+/* Same affordance as an actionable hand card or permanent on the board. */
+.zone-card-thumb.actionable {
+  cursor: pointer;
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 2px rgb(96 165 250 / 0.45),
+    0 0 14px rgb(96 165 250 / 0.35);
 }
 .zone-overflow {
   flex-shrink: 0;

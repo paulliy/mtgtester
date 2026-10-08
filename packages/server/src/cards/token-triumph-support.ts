@@ -32,10 +32,6 @@ export const VERIFIED_TOKEN_TRIUMPH_CARDS = [
 export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = [
   'Champion of Lambholt',
   'Scavenging Ooze',
-  'Conclave Tribunal',
   'Curse of Bounty',
-  'Hour of Reckoning',
-  'Idol of Oblivion',
   "Karametra's Favor",
-  'Nullmage Shepherd',
 ] as const;

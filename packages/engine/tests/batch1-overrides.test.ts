@@ -51,7 +51,7 @@ describe('Batch 1 card overrides', () => {
     expect(def.manaAbilities?.[0]?.conditionalUnits).toBeDefined();
   });
 
-  it('is catalog-contained because the four creatures cannot include this creature', () => {
+  it('models the tap-four cost including this creature (coverage PR02)', () => {
     const card = oracle({
       oracleId: '4dcfd397-9d29-420c-8fd8-c7c2a99de122',
       name: 'Nullmage Shepherd',
@@ -61,10 +61,10 @@ describe('Batch 1 card overrides', () => {
         'Tap four untapped creatures you control: Destroy target artifact or enchantment.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'The four creatures cannot include this creature.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.activatedAbilities[0]?.costs).toEqual([
+      expect.objectContaining({ kind: 'tapOthers', count: 4, allowSelf: true }),
+    ]);
   });
 
   it('models the lieutenant buff for creatures only (coverage PR01)', () => {

@@ -10,12 +10,8 @@ import { INSECT_1_1_FLYING, NECRON_WARRIOR_2_2 as NECRON_WARRIOR_TOKEN } from '.
 const NECRON: TokenSpec = NECRON_WARRIOR_TOKEN;
 
 export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
-  // Catalog audit necron-remaining-batch-2: life-from-GY/hand is free hand casts.
-  unsupportedCard(
-    '32476743-c9d4-49ca-bec2-0669c215841b',
-    'Anrakyr the Traveller',
-    'Artifact-from-hand-or-graveyard life cast is implemented as free casts from hand.',
-  );
+  // Anrakyr the Traveller: restored in coverage PR02. The interpreter reads the attack trigger's
+  // pay-life cast from hand or graveyard (castForLifeFromZones), so no override remains.
   // Coverage PR01 (was contained by necron-remaining-batch-2): the resolving Beacon itself is shuffled into its owner's library.
   defineCard(
     'aef874fa-93c0-4f86-8b0d-dc24ec51467d',
@@ -113,12 +109,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit necron-remaining-batch-2: GY activation discount is claimed, not authored.
-  unsupportedCard(
-    '655aece2-f33a-46e0-8f80-112ae8a457fe',
-    'Convergence of Dominion',
-    'Graveyard activation cost reduction is claimed without a static effect.',
-  );
+  // Convergence of Dominion: restored in coverage PR02. The interpreter reads the conditional
+  // graveyard activation reduction and the mill ability, so no override remains.
   // Catalog audit necron-remaining-batch-7: Equip is dropped by activatedAbilities replace.
   unsupportedCard(
     '75564721-e4e9-463a-b49e-f0c7cd6f53a7',
@@ -144,35 +136,34 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       },
     },
   );
-  // Catalog audit necron-remaining-batch-4: flashback claimed without a flashback alternative.
-  unsupportedCard(
-    '352b64d2-2ae5-44ee-a64f-94932ef545d3',
-    'Dread Return',
-    'Flashback—Sacrifice three creatures is claimed without a flashback alternative.',
-  );
-  // Catalog audit necron-remaining-batch-3: same-name land restriction omitted.
-  unsupportedCard(
-    'cb923c4d-1d2e-4039-90bb-72d1981b9738',
-    'Endless Atlas',
-    'The three-or-more-same-name land restriction is omitted from the draw ability.',
-  );
-  // Catalog audit necron-remaining-batch-3: crewed is implemented as becomesTapped.
-  unsupportedCard(
-    'bb1b4786-3804-486b-9fd9-85848d24d362',
-    'Ghost Ark',
-    'Becomes-crewed is implemented as becomesTapped.',
-  );
+  // Dread Return: restored in coverage PR02. The interpreter reads "Flashback—Sacrifice three
+  // creatures" as a graveyard alternative cast, so no override remains.
+  // Endless Atlas: restored in coverage PR02. The interpreter reads "Activate only if you control
+  // three or more lands with the same name" as an activation condition, so no override remains.
   // Catalog audit necron-remaining-batch-3: except-six-or-more is unconditional unblockable.
   unsupportedCard(
     'b3329240-c812-45ea-a7f8-4d79cd4ed515',
     'Hexmark Destroyer',
     'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
   );
-  // Catalog audit necron-remaining-batch-4: sacrifice is an effect, not a cost.
-  unsupportedCard(
+  // Coverage PR02: a mana ability whose {T} and sacrifice are both costs (CR 605.1a), making {B}
+  // equal to the sacrificed creature's mana value. The payment solver sees one source per
+  // candidate creature (amountFromSacrificedManaValue), each pinned to that sacrifice.
+  defineCard(
     '10f274f9-9044-447b-81c9-d4906ad9e6be',
     'Illuminor Szeras',
-    'Sacrifice-another-creature is an effect, not a cost.',
+    [
+      "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
+    ],
+    {
+      manaAbilities: [
+        {
+          units: [['B']],
+          costs: [TAP, { kind: 'sacrificeOther', selector: allOf(ofType('Creature'), YOURS) }],
+          amountFromSacrificedManaValue: true,
+        },
+      ],
+    },
   );
   // Catalog audit necron-remaining-batch-3: leave-graveyard trigger claimed, not authored.
   unsupportedCard(
@@ -301,12 +292,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Sautekh Immortal',
     'Enters-with counters is implemented as an enters trigger.',
   );
-  // Catalog audit necron-remaining-batch-4: same-name land restriction omitted from mana.
-  unsupportedCard(
-    'ce08aff3-efe6-4186-9557-274e00a7ca38',
-    'Sceptre of Eternal Glory',
-    'The three-or-more-same-name land restriction is omitted from the three-mana ability.',
-  );
+  // Sceptre of Eternal Glory: restored in coverage PR02. The interpreter reads the three-mana
+  // ability and its same-name-lands condition, so no override remains.
   defineCard(
     '6c85271c-c711-49b0-a72e-9e576c33714d',
     'Sculpting Steel',
@@ -379,12 +366,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       },
     },
   );
-  // Catalog audit necron-remaining-batch-4: tokens untapped; graveyard cast omitted.
-  unsupportedCard(
-    '8cd45064-2ad9-4247-902e-aefaf3bc1a43',
-    'Their Number Is Legion',
-    'Tokens are not created tapped, and graveyard cast is omitted.',
-  );
+  // Their Number Is Legion: restored in coverage PR02. The interpreter reads the tapped tokens,
+  // the artifact-count life gain, the self-exile and the graveyard cast permission.
   // Catalog audit necron-remaining-batch-7: combat-damage rider targets any player.
   unsupportedCard(
     'c857de66-f4e0-4e97-ad01-fac623af8225',

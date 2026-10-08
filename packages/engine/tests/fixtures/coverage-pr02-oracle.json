@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-08",
+  "cards": [
+    {
+      "sha256": "2282eee96e7fab34d482770704f913a3f2e579f20336e7ce52bf0c79d1df9fce",
+      "card": {
+        "oracleId": "fe8c2b7e-f80d-4acb-a976-edcf436a78a9",
+        "scryfallId": "b760ebdf-bea6-4c43-a187-4a02ebf95ebf",
+        "name": "Kogla and Yidaro",
+        "manaCost": "{2}{R}{R}{G}{G}",
+        "cmc": 6,
+        "colors": [
+          "G",
+          "R"
+        ],
+        "colorIdentity": [
+          "G",
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Ape Dinosaur Turtle",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Ape",
+          "Dinosaur",
+          "Turtle"
+        ],
+        "oracleText": "When Kogla and Yidaro enters, choose one —\n• It gains trample and haste until end of turn.\n• It fights target creature you don't control.\n{2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card.",
+        "power": "7",
+        "toughness": "7",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Fight"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

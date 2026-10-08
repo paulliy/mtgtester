@@ -1431,6 +1431,185 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Twinflame Tyrant: double damage from your spell'],
   },
+  // Coverage PR02 (docs/plans/card-coverage-chunks.md).
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Retrofitter Foundry: Servo, Thopter, then Construct'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aether Hub: enter for energy, then pay it for green'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Aether Hub: colorless mana with no energy'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Solar Transformer: enter tapped for energy, then pay it for red'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Solar Transformer: colorless mana with no energy'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Bespoke Battlewagon: tap for energy, then crew 4'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Bespoke Battlewagon: pay four energy to animate, then draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Bespoke Battlewagon: pay two energy to tap P2's creature"],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Endless Atlas: three Forests unlock the draw'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Endless Atlas: two Forests and an Island do not unlock it'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sceptre of Eternal Glory: three Forests unlock {B}{B}{B}'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sceptre of Eternal Glory: mixed lands give one mana'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Weathered Wayfarer: behind on lands, reveal a land'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Weathered Wayfarer: equal lands do not unlock it'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Idol of Oblivion: make a token, then draw'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Idol of Oblivion: sacrifice it for a 10/10 Eldrazi'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mistveil Plains: put a graveyard card on the bottom'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mistveil Plains: one white permanent does not unlock it'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Carrion Feeder: sacrifice another creature, then itself'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Carrion Feeder: it can't block"] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Nullmage Shepherd: tap itself and three others to destroy an enchantment'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sage of Fables: a Wizard enters with a counter, then pay it to draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Illuminor Szeras: sacrifice a creature for black mana'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Peema Trailblazer: exhaust for counters and cards'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Peema Trailblazer: combat damage gives energy'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Soul-Guide Lantern: enter and exile a card from P2's graveyard"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Soul-Guide Lantern: sacrifice it to exile each opponent's graveyard"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Soul-Guide Lantern: pay {1} and sacrifice it to draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Ghost Ark: crew it, then unearth an artifact creature'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Flare of Denial: sacrifice a blue creature to counter P2's spell"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Flare of Malice: sacrifice a black creature; P2 loses its biggest creature'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Blasphemous Edict: pay {B} with thirteen creatures out'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Dread Return: flash it back by sacrificing three creatures'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Raffine's Guidance: cast it from the graveyard for {2}{W}"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Their Number Is Legion: cast it from the graveyard with X=2'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Anrakyr the Traveller: attack, then cast an artifact for life'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Toxic Deluge: pay 2 life for -2/-2'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Conclave Tribunal: convoke with three creatures'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hour of Reckoning: three Plains and four convoked creatures'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Killian, Ink Duelist: a {2}{R} bolt at a creature for {R}'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Dragonkin Berserker: attack, then Boast for {2}{R}'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Convergence of Dominion: Unearth {3} for {1}'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Kogla and Yidaro: enter and fight P2's Lab Ox"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Kogla and Yidaro: discard it to destroy P2's artifact"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Changing Loyalty: replicate once onto both of P2's creatures"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Changing Loyalty: enchant P2's Lab Ox, destroy it, and take it"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Grim Haruspex: cast it face down, turn it face up, then draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Dream Devourer: foretell a card for {2}'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Dream Devourer: cast a foretold card for {R}'],
+  },
   ...(
     JSON.parse(
       readFileSync(
