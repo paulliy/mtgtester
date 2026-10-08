@@ -1134,6 +1134,8 @@ function* resolveFreeCard(
 ): GameGen<void> {
   const def = getDefByOracleId(ctx, card.oracleId, card.name);
   const controller = playerById(ctx, controllerId);
+  // "Players can't cast spells during combat" stops a cast during resolution too (CR 101.2).
+  if (castingSpellsBlockedFor(ctx, controllerId)) return;
   const selections = legalFreeCastSelections(ctx, card, controllerId);
   if (selections.length === 0) return;
   let selectedModes = selections[0];
@@ -1193,6 +1195,23 @@ function* resolveFreeCard(
     ) ?? [];
   const additionalCosts = [...(def.spellAdditionalCosts ?? []), ...modeCosts];
   const additionalMana = manaPortionOf(additionalCosts);
+  // An X in an additional cost ("pay X life", Toxic Deluge) is still announced (CR 601.2b):
+  // casting without paying the mana cost fixes only an X in the MANA cost at 0 (CR 107.3b).
+  let announcedX = 0;
+  if (def.announcesX === true) {
+    const most = Math.max(0, controller.life - lifeCost);
+    const outcome = yield {
+      decisionType: 'general' as const,
+      player: controllerId,
+      prompt: `Choose X for free-cast ${card.name}.`,
+      options: Array.from({ length: most + 1 }, (_, x) => ({
+        type: 'chooseX',
+        description: `X = ${x}`,
+        payload: x,
+      })),
+    };
+    announcedX = Math.min(most, Math.max(0, outcome.index));
+  }
   if (lifeCost > 0) loseLife(ctx, controller, lifeCost);
   if (totalPips(additionalMana) > 0) {
     yield* payManaCost(ctx, controller, additionalMana, {
@@ -1201,14 +1220,15 @@ function* resolveFreeCard(
       isCommander: card.isCommander,
     });
   }
-  yield* paySpellAdditionalCosts(ctx, controller, additionalCosts, card.cardId, false);
+  yield* paySpellAdditionalCosts(ctx, controller, additionalCosts, card.cardId, false, announcedX);
 
+  const hasX = def.manaCost?.x !== undefined || def.announcesX === true;
   removeFromCurrentZone(ctx, card);
   const spellCard: EngineCardObject = {
     ...card,
     id: `o-${ctx.state.nextObjectNum++}` as ObjectId,
     zone: 'stack',
-    ...(def.manaCost?.x !== undefined ? { announcedX: 0 } : {}),
+    ...(hasX ? { announcedX } : {}),
   };
 
   const freeSpell: EngineStackObject = {
@@ -1223,7 +1243,7 @@ function* resolveFreeCard(
     sourceOracleId: card.oracleId,
     sourceCardId: card.cardId,
     isCommanderCast: false,
-    ...(def.manaCost?.x !== undefined ? { announcedX: 0 } : {}),
+    ...(hasX ? { announcedX } : {}),
     triggerScope: { manaSpent: totalPips(additionalMana) },
   };
   ctx.state.stack.push(freeSpell);
@@ -6201,9 +6221,13 @@ function* searchLibraryCastFree(
   filter: Selector,
 ): GameGen<void> {
   const selectorSource = { cardId: source.cardId, controllerId: player.id };
-  const matches = player.library.filter((card) =>
-    selectMatches(cardZoneCandidate(ctx, card, player.id), filter, selectorSource),
-  );
+  // A spell that could not be cast now ("players can't cast spells during combat") is not
+  // offered as a find (CR 101.2).
+  const matches = castingSpellsBlockedFor(ctx, player.id)
+    ? []
+    : player.library.filter((card) =>
+        selectMatches(cardZoneCandidate(ctx, card, player.id), filter, selectorSource),
+      );
   if (matches.length === 0) return;
 
   const outcome = yield {
@@ -6573,7 +6597,32 @@ export function* payManaCost(
       // Tapping a creature for convoke is not activating a mana ability (CR 702.51b).
       source.convoke === true ? 'tap' : 'tapForMana',
       0,
-      undefined,
+      // A tap cost (Springleaf Drum) may not take a permanent a later source of this payment
+      // taps (a convoking creature, a mana elf), and must leave the later tap costs payable —
+      // the distinct assignment `planPayment` proved.
+      (candidate, remainingCosts) => {
+        const taken = new Set([candidate.cardId, ...future.map((s) => s.cardId)]);
+        if (future.some((s) => s.cardId === candidate.cardId)) return false;
+        const untapped = new Set(
+          ctx.state.battlefield.filter((p) => !p.tapped).map((p) => p.cardId),
+        );
+        // This source's own tap costs still to pay are the last entries of its `taps`.
+        const ownLeft = remainingCosts.reduce(
+          (sum, remaining) =>
+            sum +
+            (remaining.kind === 'tapOther'
+              ? 1
+              : remaining.kind === 'tapOthers'
+                ? remaining.count
+                : 0),
+          0,
+        );
+        const own = ownLeft === 0 ? [] : (source.taps ?? []).slice(-ownLeft);
+        const groups = [...own, ...future.flatMap((s) => [...(s.taps ?? [])])].map((group) =>
+          group.filter((id) => untapped.has(id)),
+        );
+        return sacrificesArePayable(groups, taken);
+      },
       (candidate, remainingCosts) => {
         // A permanent reserved for another part of the same cost is never sacrifice fodder.
         if (reservedObjectIds.has(candidate.id)) return false;

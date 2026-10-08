@@ -84,9 +84,16 @@ function planActivation(
   const reserved = new Set<string>();
 
   function leaf(): ActivationPlan | null {
+    // A mana source's own tap cost (Springleaf Drum) may not tap a permanent the ability's tap
+    // costs already take.
     const usable = withoutReserved(
       ctx,
-      sources.filter((s) => !excluded.has(s.cardId)),
+      sources.flatMap((s) => {
+        if (excluded.has(s.cardId)) return [];
+        if (s.taps === undefined) return [s];
+        const taps = s.taps.map((group) => group.filter((id) => !excluded.has(id)));
+        return taps.some((group) => group.length === 0) ? [] : [{ ...s, taps }];
+      }),
       reserved,
     );
     return planPayment(mana, player.manaEntries, usable, allows, player.life) === null

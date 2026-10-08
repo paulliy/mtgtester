@@ -152,6 +152,11 @@ export interface ActivatedAbility {
   /** Boast (CR 702.146): "Activate only if this creature attacked this turn." */
   requiresAttackedThisTurn?: true;
   /**
+   * A Boast ability (CR 702.142), for effects that name Boast abilities (Dragonkin Berserker's
+   * reduction). Other "activate only if this attacked" abilities are not Boast abilities.
+   */
+  boast?: true;
+  /**
    * Exhaust (CR 702.177): "Activate each exhaust ability only once." Tracked per permanent and
    * never reset, so a permanent that leaves and returns is a new object that may exhaust again.
    */

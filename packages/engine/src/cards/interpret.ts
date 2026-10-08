@@ -1391,7 +1391,13 @@ function parseEffectSentence(
   {
     // "All creatures get -X/-X until end of turn" (Toxic Deluge): X is the announced value.
     const x = s.match(/^(.+?) gets? ([+-])x\/([+-])x until end of turn$/);
-    if (x !== null) {
+    // Only a card that announces X ({X} in its cost, or "pay X life") defines it here; any other
+    // X is defined elsewhere ("where X is …") and is not this rule's.
+    if (
+      x !== null &&
+      ((card.manaCost ?? '').includes('{X}') ||
+        /additional cost to cast this spell, pay x life/i.test(card.oracleText ?? ''))
+    ) {
       const subject = x[1] as string;
       const selector =
         subject === 'all creatures' ? ofType('Creature') : parseSubject(subject, card);
@@ -7120,6 +7126,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
         if (/^boast\s+[—–-]\s+/i.test(originalLine)) {
           activated.requiresAttackedThisTurn = true;
           activated.oncePerTurn = true;
+          activated.boast = true;
         }
         activatedAbilities.push(activated);
         if (activationDiscount !== null) ruleStatics.push(activationDiscount);

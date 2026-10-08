@@ -198,6 +198,12 @@ export interface ManaSource {
   resources?: readonly { key: string; amount: number; available: number }[];
   /** Eligible physical cards for each sacrifice in the activation cost. */
   sacrifices?: readonly (readonly string[])[];
+  /**
+   * Eligible untapped cards for each "tap an untapped creature you control" in the activation
+   * cost (Springleaf Drum). Each must be a distinct permanent that no source in the same payment
+   * taps, or one creature would pay twice.
+   */
+  taps?: readonly (readonly string[])[];
   /** The units of mana produced when activated, each a choice among symbols. */
   units: ManaUnit[];
   /**
@@ -501,10 +507,13 @@ function orderForActivation(
       .filter((p) => p.cardId === source.cardId && p.activation === source.activation)
       .map(({ symbol }) => ({ symbol }));
   const order: ManaSource[] = [];
+  // Every source the plan activates is tapped or used by it, so none may also pay a tap cost.
+  const plannedIds = new Set(plan.tapSources.map((s) => s.cardId));
   const search = (
     available: readonly ManaEntry[],
     remaining: readonly ManaSource[],
     removed: ReadonlySet<string>,
+    tapped: ReadonlySet<string>,
   ): boolean => {
     if (remaining.length === 0) return selectEntriesToSpend(available, cost) !== null;
     // Produce with creatures before sacrificing them. Try other orders when a source's
@@ -521,14 +530,26 @@ function orderForActivation(
       const afterSelf = new Set(removed);
       if (source.costs.some((c) => c.kind === 'sacrificeSelf' || c.kind === 'exileSelf'))
         afterSelf.add(source.cardId);
-      const choose = (index: number, gone: ReadonlySet<string>): boolean => {
-        if (index === (source.sacrifices?.length ?? 0)) {
+      const chooseTap = (
+        index: number,
+        gone: ReadonlySet<string>,
+        tappedNow: ReadonlySet<string>,
+      ): boolean => {
+        if (index === (source.taps?.length ?? 0)) {
           order.push(source);
           const next = available.filter((e) => !spent.includes(e));
-          if (search([...next, ...producedBy(source)], rest, gone)) return true;
+          if (search([...next, ...producedBy(source)], rest, gone, tappedNow)) return true;
           order.pop();
           return false;
         }
+        for (const id of source.taps![index]!) {
+          if (gone.has(id) || tappedNow.has(id) || plannedIds.has(id)) continue;
+          if (chooseTap(index + 1, gone, new Set([...tappedNow, id]))) return true;
+        }
+        return false;
+      };
+      const choose = (index: number, gone: ReadonlySet<string>): boolean => {
+        if (index === (source.sacrifices?.length ?? 0)) return chooseTap(0, gone, tapped);
         for (const id of source.sacrifices![index]!) {
           if (gone.has(id) || rest.some((s) => s.cardId === id)) continue;
           if (choose(index + 1, new Set([...gone, id]))) return true;
@@ -539,7 +560,7 @@ function orderForActivation(
     }
     return false;
   };
-  if (!search(poolEntries, plan.tapSources, new Set())) return null;
+  if (!search(poolEntries, plan.tapSources, new Set(), new Set())) return null;
   return { ...plan, tapSources: order, tapCardIds: order.map((s) => s.cardId) };
 }
 
@@ -609,7 +630,9 @@ function solveFrom(
     !hasHybrid &&
     !hasAlternatives &&
     !hasCostly &&
-    !usableSources.some((s) => s.resources !== undefined || s.sacrifices !== undefined) &&
+    !usableSources.some(
+      (s) => s.resources !== undefined || s.sacrifices !== undefined || s.taps !== undefined,
+    ) &&
     usableSources.every((s) => s.units.every((u) => u.length === 1))
   ) {
     return planSingleChoice(need, usableSources, fromPool);
@@ -643,7 +666,7 @@ function solveFrom(
     usableSources.map((s) => s.cardId).filter((id, i, ids) => ids.indexOf(id) !== i),
   );
   const hasResources = usableSources.some(
-    (s) => s.resources !== undefined || s.sacrifices !== undefined,
+    (s) => s.resources !== undefined || s.sacrifices !== undefined || s.taps !== undefined,
   );
   const failed = new Set<string>();
   const stateKey = (srcIdx: number, need2: ParsedManaCost): string =>

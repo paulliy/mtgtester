@@ -528,6 +528,53 @@ export function targetedReductionAmount(
 }
 
 /**
+ * One cast option per price under target-dependent reductions (Killian): without them, the
+ * spell as is; with them, a full-price option whose targets match no reduction, and a reduced
+ * option for each slot that can hold a target matching every reduction. A mix that matches only
+ * some reductions is left out rather than mispriced. `slot` is the SPEC slot number (what
+ * `validateChosenTargets` indexes by), -1 for the full-price option.
+ */
+function targetReductionVariants(
+  ctx: GameContext,
+  targeted: readonly TargetedCostReduction[],
+  targets: { slot: number; options: ObjectId[] }[],
+  fullCost: ParsedManaCost,
+): { slot: number | undefined; selectionCost: ParsedManaCost; slots: typeof targets }[] {
+  if (targeted.length === 0 || targets.length === 0) {
+    return [{ slot: undefined, selectionCost: fullCost, slots: targets }];
+  }
+  const matchesNone = (id: ObjectId): boolean =>
+    targeted.every((entry) => !targetMatchesReduction(ctx, id, entry));
+  const matchesAll = (id: ObjectId): boolean =>
+    targeted.every((entry) => targetMatchesReduction(ctx, id, entry));
+  const variants: {
+    slot: number | undefined;
+    selectionCost: ParsedManaCost;
+    slots: typeof targets;
+  }[] = [
+    {
+      slot: -1,
+      selectionCost: fullCost,
+      slots: targets.map((slot) => ({ ...slot, options: slot.options.filter(matchesNone) })),
+    },
+  ];
+  const reducedCost = subtractGeneric(
+    fullCost,
+    targeted.reduce((sum, entry) => sum + entry.generic, 0),
+  );
+  targets.forEach((slot, index) => {
+    const matching = slot.options.filter(matchesAll);
+    if (matching.length === 0) return;
+    variants.push({
+      slot: slot.slot,
+      selectionCost: reducedCost,
+      slots: targets.map((other, i) => (i === index ? { ...other, options: matching } : other)),
+    });
+  });
+  return variants;
+}
+
+/**
  * Like `costReductionFor`, but for ACTIVATING an ability — "Boast abilities you activate cost
  * {1} less to activate for each Dragon you control" (Dragonkin Berserker). Matched against the
  * ACTIVATED ABILITY'S SOURCE permanent's characteristics, not a spell's.
@@ -592,7 +639,7 @@ export function activationCostReductionFor(
     if (entry.controllerId !== controllerId) continue;
     // Graveyard-zone reductions are priced by `graveyardActivationCost`.
     if (entry.static.graveyardAbilities === true) continue;
-    if (entry.static.boastOnly === true && ability?.requiresAttackedThisTurn !== true) continue;
+    if (entry.static.boastOnly === true && ability?.boast !== true) continue;
     if (entry.static.filter !== undefined) {
       // The same per-entry re-source the CAST side does above: a "of the chosen type" filter
       // reads the REDUCTION SOURCE's own recorded choice, not the ability's source. Without
@@ -1252,39 +1299,7 @@ export function computePriorityOptions(
           // them, a full-price option whose targets match no reduction, and a reduced option for
           // each slot that can hold a target matching every reduction. A mix that matches only
           // some reductions is left out rather than mispriced.
-          const variants: {
-            slot: number | undefined;
-            selectionCost: ParsedManaCost;
-            slots: typeof targets;
-          }[] = [];
-          if (targeted.length === 0 || targets.length === 0) {
-            variants.push({ slot: undefined, selectionCost: fullCost, slots: targets });
-          } else {
-            const matchesNone = (id: ObjectId): boolean =>
-              targeted.every((entry) => !targetMatchesReduction(ctx, id, entry));
-            const matchesAll = (id: ObjectId): boolean =>
-              targeted.every((entry) => targetMatchesReduction(ctx, id, entry));
-            variants.push({
-              slot: -1,
-              selectionCost: fullCost,
-              slots: targets.map((slot) => ({
-                ...slot,
-                options: slot.options.filter(matchesNone),
-              })),
-            });
-            const reducedCost = subtractGeneric(fullCost, bestTargeted);
-            targets.forEach((slot, index) => {
-              const matching = slot.options.filter(matchesAll);
-              if (matching.length === 0) return;
-              variants.push({
-                slot: index,
-                selectionCost: reducedCost,
-                slots: targets.map((other, i) =>
-                  i === index ? { ...other, options: matching } : other,
-                ),
-              });
-            });
-          }
+          const variants = targetReductionVariants(ctx, targeted, targets, fullCost);
           for (const variant of variants) {
             const { selectionCost } = variant;
             if (!canPay(selectionCost, player.manaEntries, sources, allows, player.life)) continue;
@@ -1487,25 +1502,36 @@ export function computePriorityOptions(
         if (fromGraveyard ? alt.from !== 'graveyard' : alt.from === 'graveyard') continue;
         if (alt.kind === 'nonMana') {
           const alternativeCosts = [...spellAdditionalCosts, ...(alt.costs ?? [])];
-          const cost = applyRed(addManaCosts(alt.manaCost, manaPortionOf(alternativeCosts)));
+          const fullCost = applyRed(addManaCosts(alt.manaCost, manaPortionOf(alternativeCosts)));
           if (
             (alt.condition === undefined ||
               evaluateCondition(ctx, alt.condition, {
                 cardId: obj.cardId,
                 controllerId: player.id,
               })) &&
-            canPay(cost, player.manaEntries, sources, allows, player.life) &&
+            canPay(reduceBest(fullCost), player.manaEntries, sources, allows, player.life) &&
             canPaySpellAdditionalCosts(ctx, player, alternativeCosts, obj.cardId, sourceInHand)
           ) {
             const targets = computeCastTargets(ctx, def, player.id);
-            if (targets !== null) {
+            // Killian prices a flashback or graveyard cast by its targets exactly as a normal
+            // cast (CR 601.2f applies reductions to any total cost).
+            const variants =
+              targets === null ? [] : targetReductionVariants(ctx, targeted, targets, fullCost);
+            for (const variant of variants) {
+              const cost = variant.selectionCost;
+              if (!canPay(cost, player.manaEntries, sources, allows, player.life)) continue;
+              if (variant.slots.some((slot) => slot.options.length === 0)) continue;
               options.push({
                 type: 'castSpell',
-                description: fromGraveyard
-                  ? `Cast ${obj.name} from your graveyard (${describeManaCost(cost)})`
-                  : totalPips(cost) > 0
-                    ? `Cast ${obj.name} for ${describeManaCost(cost)} (alternate cost)`
-                    : 'Cast ' + obj.name + ' without paying its mana cost (alternate cost)',
+                description:
+                  (fromGraveyard
+                    ? `Cast ${obj.name} from your graveyard (${describeManaCost(cost)})`
+                    : totalPips(cost) > 0
+                      ? `Cast ${obj.name} for ${describeManaCost(cost)} (alternate cost)`
+                      : 'Cast ' + obj.name + ' without paying its mana cost (alternate cost)') +
+                  (variant.slot !== undefined && variant.slot >= 0
+                    ? ' — reduced for its target'
+                    : ''),
                 payload: {
                   kind: 'castSpell',
                   objectId: obj.id,
@@ -1513,6 +1539,7 @@ export function computePriorityOptions(
                   ...(fromGraveyard ? { fromGraveyard: true } : {}),
                   alternativeCast: 'nonMana',
                   altIndex: index,
+                  ...(variant.slot !== undefined ? { targetReductionSlot: variant.slot } : {}),
                 },
                 data: {
                   instantSpeed,
@@ -1523,11 +1550,11 @@ export function computePriorityOptions(
                   castVariant: 'nonMana',
                   abilityCosts: alternativeCosts,
                 },
-                // `targets` was computed above (and gates castability, CR 601.2c) but was not
-                // attached, so a targeted spell cast for its alternative cost reached
-                // `validateChosenTargets` with slot 0 unanswered and threw. The `energy` and
-                // `commanderFree` branches above attach it exactly this way.
-                ...(targets.length > 0 ? { targets } : {}),
+                // `targets` gates castability (CR 601.2c) and must be attached, or a targeted
+                // spell cast for its alternative cost reaches `validateChosenTargets` with slot 0
+                // unanswered and throws. The `energy` and `commanderFree` branches above attach
+                // it exactly this way.
+                ...(variant.slots.length > 0 ? { targets: variant.slots } : {}),
               });
             }
           }

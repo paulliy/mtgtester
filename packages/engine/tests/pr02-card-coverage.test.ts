@@ -13,7 +13,12 @@ import { join, resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
-import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
+import {
+  activationCostReductionFor,
+  computePriorityOptions,
+  type PriorityActionPayload,
+} from '../src/actions/legal';
+import type { ActivatedAbility } from '../src/cards/ability';
 import { interpretCard } from '../src/cards/interpret';
 import { constant } from '../src/cards/value';
 import { allOf, IS_TOKEN, not, ofType } from '../src/cards/selector';
@@ -21,6 +26,7 @@ import { fixtureOracleId, getOverride, registerOverride } from '../src/cards/ove
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
+import { parseManaCost } from '../src/mana/cost';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { priorityCheckpoint } from '../src/sba/sba';
@@ -3377,6 +3383,84 @@ describe('Toxic Deluge', () => {
     expect(playerById(ctx, 'P1').life).toBe(40);
     expect(ctx.state.battlefield.some((perm) => perm.id === ooze.id)).toBe(true);
   });
+
+  it('toxic-deluge-x-needs-an-announced-x — "-X/-X until end of turn" on a card with no announced X is not modeled as one', () => {
+    const def = interpretCard(
+      oracle({
+        name: 'Deluge No X',
+        typeLine: 'Sorcery',
+        manaCost: '{2}',
+        oracleText: 'Creatures get -X/-X until end of turn.',
+        power: null,
+        toughness: null,
+      }),
+    );
+    expect(def.modeled).toBe(false);
+  });
+
+  /** A free search-and-cast of the Deluge from the library (a Sunforger-style effect). */
+  function freeCast(ctx: GameContext, answer: Answer) {
+    const tutor = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Deluge Tutor', typeLine: 'Artifact', power: null, toughness: null }),
+    );
+    return pump(
+      executeAbility(
+        ctx,
+        { cardId: tutor.cardId, name: tutor.name, oracleId: tutor.oracleId, controllerId: 'P1' },
+        {
+          kind: 'activated',
+          targets: [],
+          effects: [{ op: 'searchLibraryCastFree', filter: ofType('Sorcery') }],
+        },
+        [],
+      ),
+      answer,
+    );
+  }
+
+  it('toxic-deluge-free-cast-announces-x — cast without paying its mana cost, X is still announced and paid in life', () => {
+    const ctx = pod('deluge-free');
+    conjure(ctx, 'P1', deluge.card, 'library');
+    const ox = spawn(ctx, 'P2', body('Deluge Free Ox', 3));
+    const prompts: string[] = [];
+    freeCast(ctx, (decision) => {
+      prompts.push(decision.prompt ?? '');
+      if (/Choose X/.test(decision.prompt ?? '')) {
+        expect(decision.options).toHaveLength(41);
+        return { index: 3, targets: new Map() };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    expect(prompts.some((prompt) => /Choose X for free-cast Toxic Deluge/.test(prompt))).toBe(true);
+    expect(playerById(ctx, 'P1').life).toBe(37);
+    expect(ctx.state.stack.at(-1)?.announcedX).toBe(3);
+    resolveTop(ctx);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.battlefield.some((perm) => perm.id === ox.id)).toBe(false);
+  });
+
+  it('toxic-deluge-free-cast-respects-cast-bans — a search-and-cast finds nothing while casting is banned', () => {
+    const ctx = pod('deluge-free-ban');
+    conjure(ctx, 'P1', deluge.card, 'library');
+    spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Deluge Combat Ban',
+        typeLine: 'Enchantment',
+        oracleText: "Players can't cast spells during combat.",
+        power: null,
+        toughness: null,
+      }),
+    );
+    ctx.state.phase = 'combat';
+    const { decisions } = freeCast(ctx, () => ({ index: 0, targets: new Map() }));
+    expect(decisions).toEqual([]);
+    expect(ctx.state.stack).toEqual([]);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+  });
 });
 
 describe('Conclave Tribunal', () => {
@@ -3451,6 +3535,79 @@ describe('Conclave Tribunal', () => {
     expect(castOptionFor(ctx, 'P1', inHand.id)).toBeUndefined();
     spawn(ctx, 'P1', soldier('Tribunal Second Soldier'));
     expect(castOptionFor(ctx, 'P1', inHand.id)).toBeDefined();
+  });
+
+  it('conclave-tribunal-convoke-with-a-tap-cost-source — a creature tapped for a Drum cannot also convoke', () => {
+    const ctx = pod('tribunal-drum');
+    const land = spawn(ctx, 'P1', plains());
+    const drum = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Tribunal Drum',
+        typeLine: 'Artifact',
+        power: null,
+        toughness: null,
+        oracleText: '{T}, Tap an untapped creature you control: Add one mana of any color.',
+      }),
+    );
+    const crew = [spawn(ctx, 'P1', soldier('Tribunal Soldier 1'))];
+    crew.push(spawn(ctx, 'P1', soldier('Tribunal Soldier 2')));
+    const inHand = conjure(ctx, 'P1', tribunal.card, 'hand');
+    // The Plains, the Drum (tapping one Soldier) and the other Soldier pay three of four.
+    expect(castOptionFor(ctx, 'P1', inHand.id)).toBeUndefined();
+    crew.push(spawn(ctx, 'P1', soldier('Tribunal Soldier 3')));
+    const option = castOptionFor(ctx, 'P1', inHand.id);
+    expect(option).toBeDefined();
+    const before = ctx.state.eventLog.length;
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect([land, drum, ...crew].every((perm) => tapped(ctx, perm))).toBe(true);
+    // Each Soldier is tapped exactly once: one for the Drum's cost, two for convoke.
+    const tapEvents = ctx.state.eventLog
+      .slice(before)
+      .filter((event) => event.type === 'tap' || event.type === 'tapForMana')
+      .map((event) => (event.payload as { cardId: string }).cardId);
+    expect(new Set(tapEvents).size).toBe(tapEvents.length);
+    expect(tapEvents).toHaveLength(5);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+  });
+
+  it('conclave-tribunal-drum-and-elf — a Drum cannot tap the elf that is also paying mana', () => {
+    const ctx = pod('drum-elf');
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Drum Only Drum',
+        typeLine: 'Artifact',
+        power: null,
+        toughness: null,
+        oracleText: '{T}, Tap an untapped creature you control: Add one mana of any color.',
+      }),
+    );
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Drum Elf',
+        typeLine: 'Creature — Elf',
+        colors: ['G'],
+        oracleText: '{T}: Add {G}.',
+      }),
+    );
+    const two = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Drum Two Drop',
+        typeLine: 'Artifact',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+      }),
+      'hand',
+    );
+    expect(castOptionFor(ctx, 'P1', two.id)).toBeUndefined();
   });
 
   it('conclave-tribunal-exile-until-leaves — its enters trigger exiles an opponent’s permanent until it leaves', () => {
@@ -3603,7 +3760,7 @@ describe('Killian, Ink Duelist', () => {
     const options = castOptionsFor(ctx, 'P1', shock.id);
     // Only {R}: just the reduced option, and it can only target a creature.
     expect(options.map((option) => payloadOf(option).targetReductionSlot)).toEqual([0]);
-    expect(options[0]?.description).toMatch(/\{R\}/);
+    expect(options[0]?.description).toMatch(/\(\{R\}\)/);
     expect(options[0]?.targets?.[0]?.options).toEqual(expect.arrayContaining([ox.id]));
     expect(options[0]?.targets?.[0]?.options).not.toContain('P2');
     takeAction(
@@ -3645,6 +3802,77 @@ describe('Killian, Ink Duelist', () => {
     ]);
   });
 
+  it('killian-ink-duelist-modal-second-slot — a mode whose target is spec slot 1 is reduced and applies', () => {
+    const { ctx, ox } = ready('killian-modal');
+    const charm = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Killian Lab Charm',
+        typeLine: 'Instant',
+        manaCost: '{2}{B}',
+        colors: ['B'],
+        oracleText: 'Choose one —\n• Target player loses 1 life.\n• Destroy target creature.',
+        power: null,
+        toughness: null,
+      }),
+      'hand',
+    );
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }]);
+    const options = castOptionsFor(ctx, 'P1', charm.id);
+    expect(options).toHaveLength(1);
+    const reduced = options[0]!;
+    expect(reduced.description).toMatch(/\(\{B\}\).*Destroy target creature.*reduced/);
+    // The slot is the spec slot the destroy mode uses, the one the cast validates against.
+    expect(reduced.targets?.[0]?.slot).toBe(1);
+    expect(payloadOf(reduced).targetReductionSlot).toBe(1);
+    takeAction(
+      ctx,
+      'P1',
+      reduced.payload as PriorityActionPayload,
+      undefined,
+      new Map([[1, ox.id]]),
+    );
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.id === ox.id)).toBe(false);
+  });
+
+  it('killian-ink-duelist-flashback — a flashback cast targeting a creature is offered and charged {2} less', () => {
+    const { ctx, ox } = ready('killian-flashback');
+    const flash = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Killian Lab Flash',
+        typeLine: 'Instant',
+        manaCost: '{1}{R}',
+        colors: ['R'],
+        oracleText:
+          'Killian Lab Flash deals 2 damage to target creature.\nFlashback {3}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)',
+        power: null,
+        toughness: null,
+      }),
+      'graveyard',
+    );
+    // {1}{R} pays only the reduced flashback cost.
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }, ...generic(1)]);
+    const options = castOptionsFor(ctx, 'P1', flash.id);
+    expect(options.map((option) => option.description)).toEqual([
+      expect.stringMatching(/from your graveyard \(\{1\}\{R\}\) — reduced for its target/),
+    ]);
+    takeAction(
+      ctx,
+      'P1',
+      options[0]!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, ox.id]]),
+    );
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    resolveTop(ctx);
+    expect(ox.damageMarked).toBe(2);
+  });
+
   it('killian-ink-duelist-only-yours — an opponent’s Killian does not reduce your spells', () => {
     const ctx = pod('killian-opponent');
     spawn(ctx, 'P2', killian.card);
@@ -3683,6 +3911,7 @@ describe('Dragonkin Berserker', () => {
     expect(def.activatedAbilities[0]).toMatchObject({
       requiresAttackedThisTurn: true,
       oncePerTurn: true,
+      boast: true,
     });
     expect(def.ruleStatics).toEqual([
       expect.objectContaining({ kind: 'costReduction', appliesTo: 'activate', boastOnly: true }),
@@ -3721,6 +3950,30 @@ describe('Dragonkin Berserker', () => {
     expect(option).toBeDefined();
     takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
     expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+  });
+
+  it('dragonkin-berserker-only-boast-abilities — an "activate only if it attacked" ability that is not Boast is not reduced', () => {
+    const { ctx } = ready('berserker-not-boast', 1);
+    const raider = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Berserker Raider', typeLine: 'Creature — Warrior' }),
+    );
+    const notBoast: ActivatedAbility = {
+      costs: [{ kind: 'mana', cost: parseManaCost('{2}').cost! }],
+      timing: 'any',
+      requiresAttackedThisTurn: true,
+      ability: { kind: 'activated', targets: [], effects: [] },
+    };
+    expect(
+      activationCostReductionFor(ctx, 'P1', raider.oracleId, raider.cardId, notBoast).generic,
+    ).toBe(0);
+    expect(
+      activationCostReductionFor(ctx, 'P1', raider.oracleId, raider.cardId, {
+        ...notBoast,
+        boast: true,
+      }).generic,
+    ).toBe(1);
   });
 
   it('dragonkin-berserker-reduces-other-boasts-only — another creature’s Boast is reduced; non-Boast abilities are not', () => {

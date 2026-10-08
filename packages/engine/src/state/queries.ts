@@ -905,6 +905,7 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
     const player = ctx.state.players.find((p) => p.id === playerId)!;
     const resources: NonNullable<ManaSource['resources']>[number][] = [];
     const sacrifices: string[][] = [];
+    const taps: string[][] = [];
     let limit = Infinity;
     for (const cost of source.costs) {
       if (cost.kind === 'tap' || cost.kind === 'sacrificeSelf' || cost.kind === 'exileSelf')
@@ -943,10 +944,27 @@ export function manaSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource
         for (let i = 0; i < count; i++) sacrifices.push(candidates);
         limit = Math.min(limit, Math.floor(candidates.length / count));
       }
+      if (cost.kind === 'tapOther' || cost.kind === 'tapOthers') {
+        const candidates = ctx.state.battlefield
+          .filter(
+            (p) =>
+              (selfMayTap(cost, source.costs) || p.id !== perm.id) &&
+              p.controllerId === playerId &&
+              !p.tapped &&
+              matchesSelector(ctx, p, cost.selector, {
+                cardId: perm.cardId,
+                controllerId: playerId,
+              }),
+          )
+          .map((p) => p.cardId);
+        const count = cost.kind === 'tapOthers' ? cost.count : 1;
+        for (let i = 0; i < count; i++) taps.push(candidates);
+      }
     }
     const shared = {
       ...(resources.length > 0 ? { resources } : {}),
       ...(sacrifices.length > 0 ? { sacrifices } : {}),
+      ...(taps.length > 0 ? { taps } : {}),
     };
     if (!Number.isFinite(limit) || limit <= 1) return [{ ...source, ...shared }];
     return Array.from({ length: limit }, (_, activation) => ({ ...source, ...shared, activation }));
