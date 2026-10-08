@@ -329,6 +329,11 @@ export interface ManaEntry {
   fromTreasure?: true;
   /** Survives `emptyManaPools` at the end of a step/phase (CR 500.4 exception — Klauth). */
   persistent?: boolean;
+  /**
+   * Stands for a creature tapped for convoke, not real mana (CR 702.51b): it pays the spell's
+   * cost like mana but is never counted as mana spent.
+   */
+  convoked?: true;
 }
 
 /**

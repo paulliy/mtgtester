@@ -27,7 +27,6 @@ export const VERIFIED_TOKEN_TRIUMPH_CARDS = [
 export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = [
   'Champion of Lambholt',
   'Scavenging Ooze',
-  'Conclave Tribunal',
   'Curse of Bounty',
   'Harvest Season',
   'Hour of Reckoning',

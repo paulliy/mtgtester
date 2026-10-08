@@ -691,3 +691,17 @@ describe('Toxic Deluge Card Test Lab scenario', () => {
     replays('toxic-deluge-viewer-pay-two-life', steps);
   });
 });
+
+describe('Conclave Tribunal Card Test Lab scenario', () => {
+  it('conclave-tribunal-viewer-convoke — the Plains and three convoked creatures pay for it; the Relic is exiled', () => {
+    const steps: Step[] = [{ action: 'Cast Conclave Tribunal' }];
+    const { state, onBattlefield } = run('conclave-tribunal-viewer-convoke', steps);
+    for (const name of ['Plains', 'Lab Ox', 'Lab Generic Bear', 'Lab Zombie']) {
+      expect(onBattlefield(name)[0]?.tapped, name).toBe(true);
+    }
+    expect(onBattlefield('Conclave Tribunal')).toHaveLength(1);
+    expect(onBattlefield('Lab Anrakyr Relic')).toEqual([]);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Anrakyr Relic']);
+    replays('conclave-tribunal-viewer-convoke', steps);
+  });
+});

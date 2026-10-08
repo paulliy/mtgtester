@@ -784,6 +784,18 @@ function parseEffectSentence(
     }
   }
   if (s === 'exile all graveyards') return [{ op: 'exileAllGraveyards' }];
+  // "Exile target nonland permanent an opponent controls until this enchantment leaves the
+  // battlefield" (Conclave Tribunal): it returns when the source leaves (CR 610.3).
+  {
+    const until = s.match(
+      /^exile target (.+) until (?:~|this (?:enchantment|artifact|creature|permanent)) leaves the battlefield$/,
+    );
+    const clause = until === null ? null : parseTargetClause(until[1] as string);
+    if (clause !== null) {
+      const slot = alloc(clause.kind, clause.filter, clause.controller);
+      if (typeof slot === 'number') return [{ op: 'exileUntilSourceLeaves', targetSlot: slot }];
+    }
+  }
   // "You may cast an artifact spell from your hand or graveyard by paying life equal to its mana
   // value rather than paying its mana cost" (Anrakyr the Traveller). Inside a trigger the "you
   // may" has already become the trigger's optional flag; the effect also offers to cast nothing.

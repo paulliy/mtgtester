@@ -3476,3 +3476,18 @@ test('Toxic Deluge: pay 2 life for -2/-2', async ({ page }) => {
   await expect(permanent(page, 'Lab Ox')).toBeVisible();
   await expect(permanent(page, 'Lab Giant')).toBeVisible();
 });
+
+test('Conclave Tribunal: convoke with three creatures', async ({ page }) => {
+  await runScenario(page, 'Conclave Tribunal: convoke with three creatures');
+  const tribunal = handCard(page, 'Conclave Tribunal');
+  await expect(tribunal).toHaveClass(/actionable/);
+  await tribunal.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Conclave Tribunal')).toBeVisible();
+  await expect(permanent(page, 'Lab Anrakyr Relic')).toHaveCount(0);
+  for (const name of ['Lab Ox', 'Lab Generic Bear', 'Lab Zombie']) {
+    await expect(permanent(page, name).locator('.tap-badge')).toHaveText('TAP');
+  }
+});

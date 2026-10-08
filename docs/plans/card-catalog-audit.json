@@ -5621,7 +5621,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "uniqueOracleIds": 29,
+      "uniqueOracleIds": 28,
       "reviewedOracleIds": 31,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5830,6 +5830,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: the interpreter reads 'As an additional cost to cast this spell, pay X life' as an announced X (announcesX) with a payLifeValue cost paid while casting, and 'All creatures get -X/-X until end of turn' as pumpEachUntilEot with -X/-X; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "e938ee4c-d5df-4d93-bd61-9e518fb1dc30",
+      "name": "Conclave Tribunal",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: convoke is now a real payment (each untapped creature you control taps to pay {1} or one mana of its color while casting, never counted as mana spent), and the interpreter reads the exile-until-this-leaves enters trigger (exileUntilSourceLeaves); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

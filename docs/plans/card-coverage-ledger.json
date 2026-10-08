@@ -512,6 +512,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "e938ee4c-d5df-4d93-bd61-9e518fb1dc30",
+    "name": "Conclave Tribunal",
+    "package": "PR02.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Convoke is stored as a ruleStatic but never offered as a payment."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
     "name": "Conjurer's Closet",
     "package": "PR01.06",

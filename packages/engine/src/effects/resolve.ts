@@ -105,6 +105,8 @@ import {
   spellProtectedFromCounter,
   requireModeled,
   castingSpellsBlockedFor,
+  convokeSourcesFor,
+  spellHasConvoke,
   sacrificeCandidateAllowed,
   selfMayTap,
 } from '../state/queries';
@@ -6504,9 +6506,17 @@ export function* payManaCost(
 ): GameGen<{ spellCantBeCountered: boolean; treasureManaSpent: number; manaSpent: number }> {
   const excluded = new Set(excludedSourceCardIds);
   const allows = allowanceFor(ctx, player.id, purpose);
+  // Convoke (CR 702.51): the spell's controller may tap creatures to help pay for it.
+  const convoke =
+    purpose.kind === 'castSpell' &&
+    spellHasConvoke(getDefByOracleId(ctx, purpose.oracleId, purpose.oracleId))
+      ? convokeSourcesFor(ctx, player.id)
+      : [];
   const sources = withoutReserved(
     ctx,
-    manaSourcesFor(ctx, player.id).filter((source) => !excluded.has(source.cardId)),
+    [...manaSourcesFor(ctx, player.id), ...convoke].filter(
+      (source) => !excluded.has(source.cardId),
+    ),
     reservedObjectIds,
   );
   const plan = planPayment(cost, player.manaEntries, sources, allows, player.life);
@@ -6550,7 +6560,8 @@ export function* payManaCost(
       player,
       perm,
       source.costs,
-      'tapForMana',
+      // Tapping a creature for convoke is not activating a mana ability (CR 702.51b).
+      source.convoke === true ? 'tap' : 'tapForMana',
       0,
       undefined,
       (candidate, remainingCosts) => {
@@ -6605,6 +6616,7 @@ export function* payManaCost(
           ...(source.uncounterableSpell === true ? { uncounterableSpell: true as const } : {}),
           ...(fromTreasure ? { fromTreasure: true as const } : {}),
           ...(source.persistent === true ? { persistent: true } : {}),
+          ...(source.convoke === true ? { convoked: true as const } : {}),
         })),
     );
   }
@@ -6644,7 +6656,8 @@ export function* payManaCost(
       purpose.kind === 'castSpell'
         ? spent.filter((entry) => entry.fromTreasure === true).length
         : 0,
-    manaSpent: totalPips(paidManaCost),
+    // Creatures tapped for convoke paid part of the cost without spending mana (CR 702.51b).
+    manaSpent: totalPips(paidManaCost) - spent.filter((entry) => entry.convoked === true).length,
   };
 }
 

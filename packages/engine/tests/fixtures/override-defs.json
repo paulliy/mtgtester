@@ -10138,12 +10138,6 @@
     "def": {}
   },
   {
-    "oracleId": "e938ee4c-d5df-4d93-bd61-9e518fb1dc30",
-    "name": "Conclave Tribunal",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "e958144e-01bc-46ff-8f56-ddf2eb098630",
     "name": "Thundermaw Hellkite",
     "handledLines": [],
@@ -13671,12 +13665,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-conclave-tribunal",
-    "name": "Conclave Tribunal",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-confiscation-coup",

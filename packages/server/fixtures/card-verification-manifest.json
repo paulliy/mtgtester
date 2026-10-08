@@ -4372,13 +4372,33 @@
     "e938ee4c-d5df-4d93-bd61-9e518fb1dc30": {
       "name": "Conclave Tribunal",
       "oracleSha256": "bead25eae71e919428001104ee03ad6fe6261144a909897511225298eb235fb9",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nWhen this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.",
-          "implementation": ["explicitly unsupported; convoke is never offered as a payment"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "conclave-tribunal-convoke",
+          "oracleText": "Convoke",
+          "implementation": [
+            "interpreted convoke ruleStatic; legality and payment add a convoke source per untapped creature you control (summoning sickness ignored) that pays {1} or one mana of the creature's color, shares the creature's card id so it is never also tapped for mana, and is excluded from mana spent (CR 702.51)"
+          ],
+          "engineTestIds": [
+            "conclave-tribunal-pinned-oracle-supported",
+            "conclave-tribunal-convoke-generic",
+            "conclave-tribunal-convoke-colored",
+            "conclave-tribunal-convoke-taps-once"
+          ],
+          "viewerScenarioIds": ["conclave-tribunal-viewer-convoke"]
+        },
+        {
+          "id": "conclave-tribunal-exile",
+          "oracleText": "When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.",
+          "implementation": [
+            "interpreted enters trigger: target nonland permanent an opponent controls, effect exileUntilSourceLeaves (returns when the enchantment leaves, CR 610.3)"
+          ],
+          "engineTestIds": [
+            "conclave-tribunal-pinned-oracle-supported",
+            "conclave-tribunal-exile-until-leaves"
+          ],
+          "viewerScenarioIds": ["conclave-tribunal-viewer-convoke"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -58,6 +58,8 @@ import {
   previewLandManaSymbols,
   previewManaAbilities,
   requireModeled,
+  convokeSourcesFor,
+  spellHasConvoke,
 } from '../state/queries';
 import { playerById, spellManaValue } from '../state/objects';
 import type {
@@ -874,6 +876,7 @@ export function computePriorityOptions(
     (s.phase === 'precombatMain' || s.phase === 'postcombatMain');
 
   const sources = manaSourcesFor(ctx, player.id);
+  const baseCastSources = sources;
   const landPlayLimit = landPlayLimitFor(ctx, player.id);
 
   // "Your opponents can't cast spells during your turn" (Dragonlord Dromoka) — computed once;
@@ -1002,6 +1005,10 @@ export function computePriorityOptions(
 
     const normalOptionsStart = options.length;
     if (spellCastingBlocked) return;
+    // Convoke (CR 702.51): untapped creatures help pay for this spell, in every way it is cast.
+    const sources = spellHasConvoke(def)
+      ? [...baseCastSources, ...convokeSourcesFor(ctx, player.id)]
+      : baseCastSources;
     if (def.manaCost === null) return; // cost-less nonland card: not castable
     const instantSpeed = def.types.includes('Instant') || def.keywords.includes('flash');
     if (!instantSpeed && !sorcerySpeed) return;

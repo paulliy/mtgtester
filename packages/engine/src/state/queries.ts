@@ -1204,6 +1204,34 @@ export function playFromZonePermission(
   return budgetTypes.length > 0 ? { budgetTypes: [...budgetTypes] } : null;
 }
 
+/** Does this spell have convoke (CR 702.51)? */
+export function spellHasConvoke(def: CardDefinition): boolean {
+  return def.ruleStatics.some((rule) => rule.kind === 'convoke');
+}
+
+/**
+ * The creatures a convoke spell's controller may tap to help pay for it (CR 702.51a): each
+ * untapped creature they control pays for {1} or one mana of one of its colors. A colorless
+ * creature pays generic mana only; its unit is {C}, which a spell's generic cost accepts.
+ */
+export function convokeSourcesFor(ctx: GameContext, playerId: PlayerId): ManaSource[] {
+  return ctx.state.battlefield.flatMap((perm) => {
+    if (perm.controllerId !== playerId || perm.tapped) return [];
+    const chars = computeCharacteristics(ctx, perm);
+    if (!chars.types.includes('Creature')) return [];
+    const colors = COLOR_ORDER_FOR_CONVOKE.filter((color) => chars.colors.includes(color));
+    return [
+      {
+        cardId: perm.cardId,
+        units: [colors.length > 0 ? colors : ['C']],
+        costs: [{ kind: 'tap' }],
+        convoke: true as const,
+      },
+    ];
+  });
+}
+const COLOR_ORDER_FOR_CONVOKE = ['W', 'U', 'B', 'R', 'G'] as const;
+
 /** Does `playerId` currently have a static permission to play `card` from `zone`? */
 export function canPlayFromZone(
   ctx: GameContext,

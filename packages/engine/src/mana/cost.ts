@@ -226,6 +226,13 @@ export interface ManaSource {
   /** Rides onto the mana produced — it survives the end-of-step drain (Klauth). */
   persistent?: boolean;
   /**
+   * Convoke (CR 702.51a): an untapped creature you control, tapped to pay for {1} or one mana of
+   * its color while casting a spell with convoke. Not a mana ability, so summoning sickness does
+   * not matter (CR 302.6); it shares the creature's card id, so the solver never also taps the
+   * creature for a mana ability.
+   */
+  convoke?: true;
+  /**
    * Non-mana effects the ability applies when activated — a painland's "deals 1 damage to you",
    * Ancient Tomb's 2. Carried on the SOURCE rather than re-read from the permanent, because a
    * permanent with several mana abilities has several riders and only the activated one applies;

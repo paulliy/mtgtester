@@ -6743,6 +6743,35 @@ function toxicDelugeScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function conclaveTribunalScenario(gameId: GameId): CardTestScenario {
+  const tribunal = pinnedFrom(MARCHESA_BATCH1, 'Conclave Tribunal');
+  return pr01Scenario(gameId, {
+    id: 'conclave-tribunal-viewer-convoke',
+    title: 'Conclave Tribunal: convoke with three creatures',
+    instructions: [
+      'Cast Conclave Tribunal: your Plains pays {W} and your three creatures convoke for {3}.',
+      "Its enters trigger exiles P2's Lab Anrakyr Relic.",
+    ],
+    expectedOutcome:
+      "Plains, Lab Ox, Lab Generic Bear and Lab Zombie are tapped, and P2's Lab Anrakyr Relic is exiled.",
+    oracleSha256: tribunal.sha256,
+    clauseIds: ['conclave-tribunal-convoke', 'conclave-tribunal-exile'],
+    decks: {
+      P1: [tribunal.card, PLAINS, LAB_OX, LAB_GENERIC_BEAR, LAB_ZOMBIE],
+      P2: [LAB_ANRAKYR_RELIC, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Conclave Tribunal'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Plains', 'Lab Ox', 'Lab Generic Bear', 'Lab Zombie'] },
+        { playerId: 'P2', cardNames: ['Lab Anrakyr Relic'] },
+      ],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -6981,6 +7010,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'their-number-is-legion-viewer-graveyard-x',
   'anrakyr-the-traveller-viewer-cast-for-life',
   'toxic-deluge-viewer-pay-two-life',
+  'conclave-tribunal-viewer-convoke',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7139,6 +7169,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'their-number-is-legion-viewer-graveyard-x': theirNumberIsLegionScenario,
   'anrakyr-the-traveller-viewer-cast-for-life': anrakyrScenario,
   'toxic-deluge-viewer-pay-two-life': toxicDelugeScenario,
+  'conclave-tribunal-viewer-convoke': conclaveTribunalScenario,
 };
 
 export function createCardTestScenario(

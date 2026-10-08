@@ -3378,6 +3378,113 @@ describe('Toxic Deluge', () => {
   });
 });
 
+describe('Conclave Tribunal', () => {
+  const tribunal = pinned('Conclave Tribunal');
+  const soldier = (name: string, colors: ('W' | 'G')[] = []) =>
+    oracle({ name, typeLine: 'Creature — Soldier', colors, manaCost: '{1}' });
+
+  const tapped = (ctx: GameContext, perm: EnginePermanent) =>
+    ctx.state.battlefield.find((candidate) => candidate.id === perm.id)?.tapped;
+
+  it('conclave-tribunal-pinned-oracle-supported — convoke and an exile-until-it-leaves enters trigger', () => {
+    expect(tribunal.sha256).toBe(
+      'bead25eae71e919428001104ee03ad6fe6261144a909897511225298eb235fb9',
+    );
+    expect(tribunal.card.oracleText).toBe(
+      "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nWhen this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.",
+    );
+    expectModeled(tribunal.card);
+    expect(getOverride(tribunal.card.oracleId)).toBeUndefined();
+    const def = interpretCard(tribunal.card);
+    expect(def.ruleStatics).toContainEqual({ kind: 'convoke' });
+    expect(def.triggers[0]?.targets).toEqual([
+      { kind: 'nonlandPermanent', controller: 'opponent' },
+    ]);
+    expect(def.triggers[0]?.effects).toEqual([{ op: 'exileUntilSourceLeaves', targetSlot: 0 }]);
+  });
+
+  it('conclave-tribunal-convoke-generic — three creatures pay {3} and a Plains pays {W}, summoning sickness and all', () => {
+    const ctx = pod('tribunal-generic');
+    const land = spawn(ctx, 'P1', plains());
+    const crew = [
+      spawn(ctx, 'P1', soldier('Tribunal Soldier 1'), { summoningSick: true }),
+      spawn(ctx, 'P1', soldier('Tribunal Soldier 2')),
+      spawn(ctx, 'P1', soldier('Tribunal Soldier 3')),
+    ];
+    const inHand = conjure(ctx, 'P1', tribunal.card, 'hand');
+    const option = castOptionFor(ctx, 'P1', inHand.id);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(tapped(ctx, land)).toBe(true);
+    expect(crew.every((creature) => tapped(ctx, creature))).toBe(true);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    // Convoke is not mana (CR 702.51b): only the Plains' {W} counts as mana spent.
+    expect(ctx.state.stack.at(-1)?.triggerScope?.manaSpent).toBe(1);
+  });
+
+  it('conclave-tribunal-convoke-colored — a white creature pays {W}; nonwhite ones cannot', () => {
+    const ctx = pod('tribunal-colored');
+    for (let i = 1; i <= 4; i++) spawn(ctx, 'P1', soldier(`Tribunal Green ${i}`, ['G']));
+    const inHand = conjure(ctx, 'P1', tribunal.card, 'hand');
+    expect(castOptionFor(ctx, 'P1', inHand.id)).toBeUndefined();
+    spawn(ctx, 'P1', soldier('Tribunal White', ['W']));
+    expect(castOptionFor(ctx, 'P1', inHand.id)).toBeDefined();
+  });
+
+  it('conclave-tribunal-convoke-taps-once — a mana creature pays once, by mana or by convoke, never both', () => {
+    const ctx = pod('tribunal-once');
+    spawn(ctx, 'P1', plains());
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Tribunal Elf',
+        typeLine: 'Creature — Elf',
+        colors: ['G'],
+        oracleText: '{T}: Add {G}.',
+      }),
+    );
+    spawn(ctx, 'P1', soldier('Tribunal Soldier'));
+    const inHand = conjure(ctx, 'P1', tribunal.card, 'hand');
+    // Three permanents can pay three of its four mana.
+    expect(castOptionFor(ctx, 'P1', inHand.id)).toBeUndefined();
+    spawn(ctx, 'P1', soldier('Tribunal Second Soldier'));
+    expect(castOptionFor(ctx, 'P1', inHand.id)).toBeDefined();
+  });
+
+  it('conclave-tribunal-exile-until-leaves — its enters trigger exiles an opponent’s permanent until it leaves', () => {
+    const ctx = pod('tribunal-exile');
+    for (let i = 1; i <= 4; i++) spawn(ctx, 'P1', soldier(`Tribunal White ${i}`, ['W']));
+    const relic = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Tribunal Relic', typeLine: 'Artifact', power: null, toughness: null }),
+    );
+    spawn(ctx, 'P2', forest());
+    const inHand = conjure(ctx, 'P1', tribunal.card, 'hand');
+    takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', inHand.id)!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const offered: string[][] = [];
+    settle(ctx, (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot === undefined) return { index: 0, targets: new Map() };
+      offered.push([...slot.options]);
+      return { index: 0, targets: new Map([[slot.slot, relic.id]]) };
+    });
+    // Nonland and an opponent's: the Relic is the only legal target, so it is chosen unasked;
+    // the Forest and P1's own creatures are never offered.
+    expect(offered.flat().every((id) => id === relic.id)).toBe(true);
+    expect(ctx.state.exile.map((card) => card.cardId)).toContain(relic.cardId);
+    const self = ctx.state.battlefield.find((perm) => perm.cardId === inHand.cardId)!;
+    pump(moveObject(ctx, self, { zone: 'graveyard' }));
+    expect(
+      ctx.state.battlefield.some(
+        (perm) => perm.cardId === relic.cardId && perm.controllerId === 'P2',
+      ),
+    ).toBe(true);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -3390,6 +3497,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Conclave Tribunal',
+    sha256: 'bead25eae71e919428001104ee03ad6fe6261144a909897511225298eb235fb9',
+    clauseCount: 2,
+  },
   {
     name: 'Toxic Deluge',
     sha256: '8d4c686fcd606a82ad2a0dbba2ab363d1b5ca67300bf21b0a3de199ec277cad9',
