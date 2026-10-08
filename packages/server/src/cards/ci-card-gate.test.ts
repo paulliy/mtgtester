@@ -10,7 +10,10 @@ const workflow = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
 describe('mandatory card CI gate', () => {
   it('exposes stable required-check names on pull requests', () => {
     expect(workflow).toContain('pull_request:');
-    expect(workflow).toContain('name: Quality / Typecheck, lint, format');
+    expect(workflow).toContain('name: Quality / Format');
+    expect(workflow).toContain('name: Quality / Typecheck');
+    expect(workflow).toContain('name: Quality / Lint');
+    expect(workflow).toContain('name: Quality / Web build');
     expect(workflow).toContain('name: Engine / Full test suite');
     expect(workflow).toContain('name: Cards / Offline verification gate');
   });
