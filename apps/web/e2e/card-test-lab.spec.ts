@@ -90,6 +90,8 @@ async function verifyOptionalLife(
 ) {
   const states: (PlayerBoardState | SpectatorState)[] = [];
   let requestId = '';
+  let offeredTypes: string[] = [];
+  let offeredDescriptions: string[] = [];
   page.on('websocket', (socket) =>
     socket.on('framereceived', ({ payload }) => {
       const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
@@ -97,13 +99,19 @@ async function verifyOptionalLife(
         states.push(frame.payload.state);
       if (frame.type === 'playerActionRequired') {
         requestId = frame.payload.request.requestId;
+        offeredTypes = frame.payload.request.legalActions.map((action) => action.type);
+        offeredDescriptions = frame.payload.request.legalActions.map(
+          (action) => action.description,
+        );
         states.push(frame.payload.state);
       }
     }),
   );
   await runScenario(page, title);
   await handCard(page, 'Optional-Life Witness').click();
+  const castRequestId = requestId;
   await confirm(page);
+  await expect.poll(() => requestId !== castRequestId).toBe(true);
   const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
   const passAnyway = page.getByRole('button', { name: 'Pass anyway', exact: true });
   const over = page.getByText(/game over/i).first();
@@ -114,7 +122,11 @@ async function verifyOptionalLife(
   for (let count = 0; count < 24; count++) {
     await expect
       .poll(
-        async () => (await over.isVisible()) || (await pay.isVisible()) || (await pass.isVisible()),
+        async () =>
+          (await over.isVisible()) ||
+          (offeredDescriptions.includes('Pay 2 life and add 2 counter(s)') &&
+            (await pay.isVisible())) ||
+          (offeredTypes.includes('pass') && (await pass.isVisible())),
       )
       .toBe(true);
     if (await over.isVisible()) break;
@@ -141,7 +153,7 @@ async function verifyOptionalLife(
       continue;
     }
     const before = requestId;
-    if (await pay.isVisible()) {
+    if (offeredDescriptions.includes('Pay 2 life and add 2 counter(s)')) {
       choices++;
       await (decline ? page.getByRole('button', { name: 'Decline', exact: true }) : pay).click();
     } else {
