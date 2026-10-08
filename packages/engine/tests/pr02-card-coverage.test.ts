@@ -2646,6 +2646,26 @@ describe('Flare of Malice', () => {
     expect(onBattlefield(ctx, ogre)).toBe(false);
     expect(onBattlefield(ctx, hidden)).toBe(true);
   });
+
+  it('flare-of-malice-simultaneous — every opponent chooses first, then all sacrifice at once (CR 101.4)', () => {
+    const { ctx, p2Walker, p3First } = boards('malice-simultaneous');
+    spawn(ctx, 'P1', coloredCreature('Malice Black Wizard', 'B'));
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    takeAction(
+      ctx,
+      'P1',
+      castOptionsFor(ctx, 'P1', inHand.id)[0]!.payload as PriorityActionPayload,
+    );
+    // When P3 chooses, P2's planeswalker must still be on the battlefield.
+    let walkerAtChoice: boolean | undefined;
+    resolveTop(ctx, (decision) => {
+      walkerAtChoice = onBattlefield(ctx, p2Walker);
+      return optionMatching(decision, /Malice P3 First/);
+    });
+    expect(walkerAtChoice).toBe(true);
+    expect(onBattlefield(ctx, p2Walker)).toBe(false);
+    expect(onBattlefield(ctx, p3First)).toBe(false);
+  });
 });
 
 describe('Blasphemous Edict', () => {

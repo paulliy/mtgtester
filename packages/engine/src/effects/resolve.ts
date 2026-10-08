@@ -3215,6 +3215,7 @@ export function* executeAbility(
           effect.metric === 'power'
             ? effectivePT(ctx, perm).power
             : (candidateOf(ctx, perm, computeCharacteristics(ctx, perm)).manaValue ?? 0);
+        const selected: EnginePermanent[] = [];
         for (const opponent of opponentsOf(ctx, controller.id)) {
           const candidates = ctx.state.battlefield.filter(
             (perm) =>
@@ -3239,16 +3240,11 @@ export function* executeAbility(
             type: 'sacrifice',
             verb,
           });
-          if (chosen !== null) {
-            yield* moveObject(
-              ctx,
-              chosen,
-              effect.action === 'exile'
-                ? { zone: 'exile' }
-                : { zone: 'graveyard', reason: 'sacrifice' },
-            );
-          }
+          if (chosen !== null) selected.push(chosen as EnginePermanent);
         }
+        // CR 101.4: each opponent chooses in APNAP order, then all of them are moved at once.
+        if (effect.action === 'exile') yield* moveObjects(ctx, selected, { zone: 'exile' });
+        else yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
       }
       case 'transferCountersFromTriggerObject': {
