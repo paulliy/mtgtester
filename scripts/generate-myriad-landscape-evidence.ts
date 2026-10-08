@@ -108,6 +108,7 @@ const SOURCE_FILES = [
   'packages/engine/src/state/game.ts',
   'packages/engine/src/state/objects.ts',
   'packages/engine/src/state/queries.ts',
+  'packages/engine/src/state/targeting-triggers.ts',
   'packages/engine/src/testing/prepared-scenario.ts',
   'packages/engine/src/turn/mulligan.ts',
   'packages/engine/src/turn/priority.ts',

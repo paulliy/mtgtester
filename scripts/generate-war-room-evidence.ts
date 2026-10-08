@@ -34,6 +34,7 @@ const SOURCE_FILES = [
   'packages/engine/src/effects/values.ts',
   'packages/engine/src/effects/resolve.ts',
   'packages/engine/src/state/queries.ts',
+  'packages/engine/src/state/targeting-triggers.ts',
   'packages/engine/src/cards/overrides/silverquill-influence-remaining.ts',
   'packages/engine/tests/war-room.test.ts',
   'packages/server/src/cards/card-test-scenarios.ts',

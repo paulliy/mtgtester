@@ -3567,8 +3567,16 @@ test('Convergence of Dominion: Unearth {3} for {1}', async ({ page }) => {
     .locator('.zone-card-thumb')
     .filter({ has: page.getByRole('img', { name: 'Lab Unearth Warrior', exact: true }) });
   await expect(warrior).toHaveClass(/actionable/, { timeout: 15_000 });
-  await warrior.click();
+  // By keyboard: the key acts on the card only, so the board's Enter shortcut must not also
+  // confirm the payment before it is reviewed. (Other graveyard tests click.)
+  await warrior.focus();
+  await page.keyboard.press('Enter');
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Confirm' })).toBeVisible();
+  // Nothing was submitted: give a stray confirm time to reach the server, then check.
+  await page.waitForTimeout(1_000);
+  await expect(page.locator('.log .line', { hasText: 'Unearth' })).toHaveCount(0);
+  await expect(warrior).toBeVisible();
   await confirm(page);
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(permanent(page, 'Lab Unearth Warrior')).toBeVisible();
@@ -3697,9 +3705,13 @@ test('Dream Devourer: foretell a card for {2}', async ({ page }) => {
   await runScenario(page, 'Dream Devourer: foretell a card for {2}');
   const bolt = handCard(page, 'Lab Foretell Bolt');
   await expect(bolt).toHaveClass(/actionable/);
+  // Foretelling is a special action with no ability to yield.
+  await expect(page.getByRole('button', { name: 'Smart yield Lab Foretell Bolt' })).toHaveCount(0);
   // Two Mountains cannot cast it, so foretelling is the card's only action.
   await bolt.click();
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Yield always' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Smart yield', exact: true })).toHaveCount(0);
   await confirm(page);
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(page.getByText(/Foretell Lab Foretell Bolt/).first()).toBeVisible();

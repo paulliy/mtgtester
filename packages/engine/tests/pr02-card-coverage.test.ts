@@ -3879,6 +3879,29 @@ describe('Changing Loyalty', () => {
     expect(ctx.state.eventLog.some((event) => event.type === 'tokenCreated')).toBe(false);
   });
 
+  it('changing-loyalty-copy-triggers-ward — a copy retargeted onto a ward creature is countered unless ward is paid', () => {
+    const { ctx, ox, inHand } = ready('loyalty-ward', 4);
+    const warded = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Loyalty Warded Wolf', typeLine: 'Creature — Wolf', oracleText: 'Ward {2}' }),
+    );
+    cast(ctx, inHand.id, 1, ox.id);
+    // P1 has no mana left, so the copy aimed at the warded Wolf cannot pay for ward.
+    settle(ctx, (decision) =>
+      /choose a target for copy/.test(decision.prompt ?? '')
+        ? optionMatching(decision, /Target Loyalty Warded Wolf/)
+        : { index: decision.options.length - 1, targets: new Map() },
+    );
+    expect(
+      ctx.state.eventLog.some(
+        (event) => event.type === 'counterSpell' || event.type === 'unlessNotPaid',
+      ),
+    ).toBe(true);
+    expect(attachedTo(ctx, warded.id)).toEqual([]);
+    expect(attachedTo(ctx, ox.id)).toHaveLength(1);
+  });
+
   it('changing-loyalty-copy-may-keep-its-target — the copy may keep the original target', () => {
     const { ctx, ox, inHand } = ready('loyalty-keep', 4);
     cast(ctx, inHand.id, 1, ox.id);

@@ -39,6 +39,17 @@ function onCardClick(card: SpectatorCard): void {
   else if (props.actionableIds.includes(card.id)) emit('activate', card.id);
 }
 
+/**
+ * Enter or Space on a clickable card acts on it, and only on it: the board's window shortcut
+ * handler (Enter confirms, Space passes priority) must not also see the key.
+ */
+function onCardKey(card: SpectatorCard, event: KeyboardEvent): void {
+  if (!isClickable(card)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  onCardClick(card);
+}
+
 const visibleCards = computed(() => props.cards.slice(0, props.max));
 const overflowCount = computed(() => Math.max(0, props.cards.length - props.max));
 
@@ -72,8 +83,8 @@ function onCardLeave(): void {
         :role="isClickable(card) ? 'button' : undefined"
         :tabindex="isClickable(card) ? 0 : undefined"
         @click="onCardClick(card)"
-        @keydown.enter.prevent="onCardClick(card)"
-        @keydown.space.prevent="onCardClick(card)"
+        @keydown.enter="onCardKey(card, $event)"
+        @keydown.space="onCardKey(card, $event)"
         @mouseenter="onCardEnter(card, $event)"
         @mousemove="onCardMove"
         @mouseleave="onCardLeave"

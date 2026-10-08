@@ -31,6 +31,7 @@ import type {
   TargetSpec,
 } from '../cards/definition';
 import { isPermanentCard } from '../cards/definition';
+import { queueBecomesTargetedTriggers, queueWardTriggers } from '../state/targeting-triggers';
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
 import { allOf, ofSupertype, ofType, selectMatches } from '../cards/selector';
 import type { GameGen } from '../decisions';
@@ -6305,6 +6306,13 @@ function* replicateCopies(
     };
     ctx.state.stack.push(copy);
     emit(ctx, 'spellCopied', { name: effect.spell.name, targets }, controllerId);
+    // A copy's targets become targets of a spell (ward, "becomes the target") like a cast's.
+    const allTargets = [
+      ...targets.filter((id) => id !== undefined),
+      ...Object.values(copy.countTargets ?? {}).flat(),
+    ];
+    queueWardTriggers(ctx, controllerId, copyId, allTargets);
+    queueBecomesTargetedTriggers(ctx, controllerId, allTargets);
   }
 }
 
