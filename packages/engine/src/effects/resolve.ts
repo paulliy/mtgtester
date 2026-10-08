@@ -3183,9 +3183,7 @@ export function* executeAbility(
       }
       case 'sacrificeGreatestEachOpponent': {
         const metricOf = (perm: EnginePermanent): number =>
-          effect.metric === 'power'
-            ? effectivePT(ctx, perm).power
-            : spellManaValue(getDefByOracleId(ctx, perm.oracleId, perm.name), undefined);
+          effect.metric === 'power' ? effectivePT(ctx, perm).power : permanentManaValue(ctx, perm);
         for (const opponent of opponentsOf(ctx, controller.id)) {
           const candidates = ctx.state.battlefield.filter(
             (perm) =>
