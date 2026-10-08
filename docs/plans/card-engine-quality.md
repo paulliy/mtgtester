@@ -672,7 +672,7 @@ and report the exact failed action, attempted recovery, and remaining work.
   skips. The corrected assertion counts actual server objects. Subsequent engine and face-scenario
   additions require a fresh combined receipt. The interrupted effect-builder card-gate run
   ended without a result; it is not a passing verification record.
-- Remaining exit work: remaining union consumers;
+- Remaining exit work at this historical checkpoint: remaining union consumers;
   wider malformed-action/free-cast/payment contracts; target relationships/collective rechecks
   and explicit cross-zone reference permissions; remaining implicit-reference/continuous IR
   validation; remaining alternative/face casting, interrupted-decision integration, and CR 733 supported-scope proof; mana
@@ -772,3 +772,57 @@ and report the exact failed action, attempted recovery, and remaining work.
   skips the remaining 18 cases. Its verified unchanged source manifest and failed report
   are retained. The trace shows the production presentation verb is “Keep current order”;
   the driver now selects that exact button. This run grants no passing viewer eligibility.
+- The captured viewer attempt at `18200df` passes 207 cases, including all selected-face
+  scenarios, then stops at Mana Leak's initial scenario-title assertion with nine serial skips.
+  The trace contains the correct title and shows the browser page closing during the assertion;
+  the root cause is not yet established. No out-of-memory kill is recorded by the environment.
+  The unchanged source manifest and failed report are retained; no passing receipt is claimed.
+- Owning event scopes (`d0621ca`, `4741431`) reject implicit event-object/player references
+  without a producing dispatcher. Checked permanent targets propagate their own binding into
+  conditional instructions; delayed registrations provide only their explicit remembered object
+  and affected player. Card-zone events retain exact destination IDs. Independent normal-path
+  contracts cover absent contexts, mixed player/permanent branches, earlier versus later moves,
+  step-player provenance, opponent casts, discard/reanimation and intervening zone changes.
+  The complete 35,063-projection comparison deliberately contains six invalid event-player
+  consumers: Insolence, Blur of Blades, Dingus Staff, Scalelord Reckoner, Black Bolt and
+  Consign to the Pit. Their pinned negative actions preserve state, logs and RNG. It reports
+  6,465 modeled definitions, 487 capability keys and no derivation failures; all other final IR
+  and support statuses match the stable casting baseline. The isolated full engine checkpoint
+  retains 3,010 passes and one stale Black Bolt grammar expectation, which is now corrected.
+- Specialized instructions now use the shared incarnation contract: regeneration cannot shield
+  a blinked source, a repeated command-zone return cannot substitute another commander, counter
+  transfer reads the departed object's counters, and optional entry-trigger payments use current
+  or last-known power with genuine life affordability. Counters are applied only to the bound
+  incarnation. Seven independent specialized failures and the regeneration regression were
+  reproduced before correction; the corrected affected checkpoint passes 72 tests. Five pinned
+  Madame Null real Lab scenarios cover pay, decline, insufficient life, instant blink and departure.
+  Ghostly Flicker and Murder use their fully interpreted printed clauses and normal casting;
+  counted targets select the Witness and a land without replacing the printed spell. The blink
+  scenario resolves both entry triggers and independently expects 36 life and only two counters
+  on the returned creature. All six pin/scenario checks pass. The combined checkpoint passes
+  182 tests, production/test/tooling types and lint. Madame Null's historical review declaration
+  is demoted to implemented-unreviewed while fresh evidence is required. The complete Oracle
+  comparison still has exactly the six intentional containments above and no additional changes.
+  All five generator dependency closures and benchmark compatibility hashes are refreshed;
+  benchmark inputs and gold choices remain unchanged. The real Lab catalog now has 222 cases.
+
+## Current exit audit
+
+The architecture for all six phases is implemented. Final repository gates and a complete,
+current real-viewer receipt remain required before declaring the roadmap complete or opening
+its completion PR. The earlier execution records describe checkpoints, not current blockers.
+
+| Phase | Implemented exit mechanism                                                                                                                                          | Independent verification route                                                                               |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 1     | Exhaustive dispatch/classification, cumulative override lint, exact AST legacy records, reachable final-IR validation                                               | Union coverage, actual ESLint contracts, semantic/field-boundary contracts, production and tooling types     |
+| 2     | Bounded targeting/payment/cast continuations with independent full-context recreation, malformed-action rejection and deterministic replay                          | Action, targeting, payment, free-casting and 576-configuration composition contracts                         |
+| 3     | Shared target domains and assignment rules, captured resolution legality, exact public transitions, source/event/target facts, explicit implicit-context provenance | Target/value lifetime, cross-zone, nested event, reference scope, copied spell and graveyard-owner contracts |
+| 4     | Shared normal/free/alternative cast phases, joint payment witnesses, proposal recovery, supported stateful mana activation                                          | Casting proposal/alternative/face/order contracts, constructor-boundary lint and CR 733 negative cases       |
+| 5     | Typed final-IR impact derivation, source-bound executable primitive receipts, supported-scope validation and CI promotion enforcement                               | Actual primitive runner, evidence mutation/negative tests, capability CLI and base-relative promotion gate   |
+| 6     | Separate target domains/choices, guarded target/effect envelopes, named-slot identity and touched-override migration enforcement                                    | Builder/grammar/authoring lint contracts and complete pinned-Oracle IR comparison                            |
+
+Supported scope is explicit: primitive receipts currently certify nine bounded foundations,
+not every capability or card. Unknown, experimental and out-of-scope dependencies block new
+reviewed claims. Unsupported faces, irreversible payment paths, strategic mana continuations
+and missing dispatch contexts fail closed. Historical review labels and aggregate model counts
+do not grant current evidence. Gameplay-AI observations remain separate from rules verification.

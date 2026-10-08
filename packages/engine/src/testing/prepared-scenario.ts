@@ -8,6 +8,7 @@ export interface PreparedScenarioSpec {
   phase: Phase;
   step: Step | null;
   turnNumber: number;
+  lifeTotals?: Array<{ playerId: PlayerId; life: number }>;
   hand: Array<{ playerId: PlayerId; cardNames: string[] }>;
   battlefield: Array<{
     playerId: PlayerId;
@@ -72,6 +73,13 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
   ctx.state.phase = spec.phase;
   ctx.state.step = spec.step;
   ctx.state.priorityPlayerIndex = null;
+
+  for (const entry of spec.lifeTotals ?? []) {
+    const player = ctx.state.players.find((player) => player.id === entry.playerId);
+    if (player === undefined || !Number.isSafeInteger(entry.life) || entry.life <= 0)
+      throw new Error('prepared scenario requires a positive life total for a known player');
+    player.life = entry.life;
+  }
 
   for (const entry of spec.hand) {
     const player = ctx.state.players.find((candidate) => candidate.id === entry.playerId)!;

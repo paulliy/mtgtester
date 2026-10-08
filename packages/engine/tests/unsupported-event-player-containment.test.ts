@@ -20,6 +20,14 @@ const expectedPins: Record<string, string> = {
   Insolence: '27763625e27b1e341fb84b8ec0ad0699da88842e1fb68d3cdcfedc28cfa1565e',
   'Scalelord Reckoner': 'a6a82e4dd70176ed433a4e46d925a47cf78b67c1d75217f031d10d1a75fb54dc',
 };
+const caseIds: Record<string, string> = {
+  'Black Bolt, Inhuman King': 'black-bolt-inhuman-king-event-player-contained',
+  'Blur of Blades': 'blur-of-blades-event-player-contained',
+  'Consign to the Pit': 'consign-to-the-pit-event-player-contained',
+  'Dingus Staff': 'dingus-staff-event-player-contained',
+  Insolence: 'insolence-event-player-contained',
+  'Scalelord Reckoner': 'scalelord-reckoner-event-player-contained',
+};
 const names = [
   'Black Bolt, Inhuman King',
   'Blur of Blades',
@@ -32,7 +40,7 @@ describe('printed clauses with unsupported event-player provenance remain contai
   it('covers exactly the six independently identified Oracle consumers', () =>
     expect(fixture.cards.map(({ card }) => card.name)).toEqual(names));
   for (const name of names)
-    it(`${name} rejects normal action generation for both Oracle identities without mutation`, () => {
+    it(`${caseIds[name]}: ${name} rejects normal action generation for both Oracle identities without mutation`, () => {
       const pin = fixture.cards.find(({ card }) => card.name === name)!;
       expect(pin.sha256).toBe(expectedPins[name]);
       expect(createHash('sha256').update(JSON.stringify(pin.card)).digest('hex')).toBe(pin.sha256);

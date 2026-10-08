@@ -988,6 +988,11 @@ export function parseViewerEvidenceOptions(argv: readonly string[]): ViewerInput
 
 // Frozen machine-report identities; independently checked against the spec AST in unit tests.
 export const VIEWER_CATALOG: readonly CatalogSpec[] = [
+  { file: 'card-test-lab.spec.ts', titlePath: ['Madame Null: pay life for the entering creature'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Madame Null: decline the life payment'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Madame Null: skip an unaffordable life payment'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Madame Null: keep separate blinked incarnations'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Madame Null: read the departed creature's power"] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Marchesa: return your dead creature'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Marchesa: return an opponent-owned creature'] },
   {

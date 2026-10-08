@@ -175,29 +175,10 @@ function addGoadRequirement(ctx: GameContext, perm: EnginePermanent, goaderId: P
   perm.goadedBy = [...existing, { goaderId, appliedTurn: ctx.state.turnNumber }];
 }
 
-/** Locate a physical card after a zone change, whose object id is deliberately no longer stable. */
-function findObjectByCardId(ctx: GameContext, cardId: string): EngineObject | undefined {
-  const foundStack = ctx.state.stack.find(
-    (object) => object.sourceCardId === cardId || object.card?.cardId === cardId,
-  );
-  if (foundStack !== undefined) return foundStack as unknown as EngineObject;
-  const zones: EngineObject[][] = [ctx.state.battlefield, ctx.state.exile];
-  for (const player of ctx.state.players) {
-    zones.push(player.hand, player.library, player.graveyard, player.commandZone);
-  }
-  for (const zone of zones) {
-    const found = zone.find((object) => object.cardId === cardId);
-    if (found !== undefined) return found;
-  }
-  return undefined;
-}
-
 /**
  * Locate a physical card by `cardId`, in whatever non-stack zone it currently occupies.
- * Unlike `findObjectByCardId`, this never matches a stack entry — it exists for referents that
- * are themselves permanents/cards (a delayed trigger's remembered `'triggerObject'`), where a
- * same-source triggered ability that happens to *also* be sitting on the stack (sharing that
- * `sourceCardId`) would otherwise be mistaken for the object itself.
+ * Legacy unpinned callers exclude stack entries: an ability sharing `sourceCardId` must not
+ * be mistaken for its source card. Exact bindings use `findObjectById` instead.
  */
 function findPhysicalObjectByCardId(ctx: GameContext, cardId: string): EngineObject | undefined {
   const zones: EngineObject[][] = [ctx.state.battlefield, ctx.state.exile];
@@ -1917,11 +1898,9 @@ export function* executeAbility(
         break;
       }
       case 'regenerate': {
-        const t = effect.target === 'source' ? source.cardId : ref(effect.target);
+        const t = ref(effect.target);
         if (t === null) break;
-        const perm = ctx.state.battlefield.find(
-          (candidate) => candidate.id === t || candidate.cardId === t,
-        );
+        const perm = findPermanent(ctx, t);
         if (perm !== undefined) {
           perm.regenerationShields++;
           emit(
@@ -3045,14 +3024,7 @@ export function* executeAbility(
       case 'transferCountersFromTriggerObject': {
         const targetId = ref(effect.target);
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);
-        const trigger =
-          triggerObjectCardId === undefined
-            ? undefined
-            : findObjectByCardId(ctx, triggerObjectCardId);
-        const counters =
-          trigger !== undefined && trigger.zone !== 'battlefield'
-            ? (trigger as EngineCardObject).rememberedCounters
-            : undefined;
+        const counters = eventObjectFacts(ctx, scope)?.counters;
         if (target !== undefined && counters !== undefined) {
           for (const [counter, count] of Object.entries(counters)) {
             const adjustedCount = counterAmountAfterReplacements(ctx, target, counter, count);
@@ -3066,26 +3038,28 @@ export function* executeAbility(
         break;
       }
       case 'mayPayLifeForTriggerPowerAndCounter': {
-        // Queued enters triggers store `cardId`, not battlefield object id.
-        const entering =
-          triggerObjectCardId === undefined
-            ? undefined
-            : ctx.state.battlefield.find((perm) => perm.cardId === triggerObjectCardId);
-        if (entering === undefined || entering.controllerId !== controller.id) break;
-        const power = effectivePT(ctx, entering).power;
+        const facts = eventObjectFacts(ctx, scope);
+        if (facts === undefined) break;
+        const power = Math.max(0, facts.power);
+        // Life is a payment, including zero, rather than loss that may drive life negative.
+        if (power > 0 && controller.life < power) break;
         const outcome = yield {
           decisionType: 'general',
           player: controller.id,
-          prompt: `${source.name}: pay ${power} life to put ${power} +1/+1 counter(s) on ${entering.name}?`,
+          prompt: `${source.name}: pay ${power} life to put ${power} +1/+1 counter(s) on the entering creature?`,
           options: [
             { type: 'payLife', description: `Pay ${power} life and add ${power} counter(s)` },
             { type: 'decline', description: 'Decline' },
           ],
         };
         if (outcome.index === 0) {
-          loseLife(ctx, controller, power);
-          const adjustedCount = counterAmountAfterReplacements(ctx, entering, '+1/+1', power);
-          entering.counters['+1/+1'] = (entering.counters['+1/+1'] ?? 0) + adjustedCount;
+          payLife(ctx, controller, power);
+          const currentId = ref('triggerObject');
+          const entering = currentId === null ? undefined : findPermanent(ctx, currentId);
+          if (entering !== undefined) {
+            const adjustedCount = counterAmountAfterReplacements(ctx, entering, '+1/+1', power);
+            entering.counters['+1/+1'] = (entering.counters['+1/+1'] ?? 0) + adjustedCount;
+          }
         }
         break;
       }
@@ -5183,8 +5157,7 @@ export function* executeAbility(
         const t = ref(effect.target);
         if (t === null) break;
         const player = playerById(ctx, source.controllerId);
-        const card =
-          player.commandZone.find((c) => c.cardId === t || c.id === t) ?? player.commandZone[0];
+        const card = player.commandZone.find((c) => c.id === t);
         if (card) {
           yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: source.controllerId });
           if (effect.entersHaste) {

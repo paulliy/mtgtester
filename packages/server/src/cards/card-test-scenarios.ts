@@ -1,5 +1,9 @@
 import { SPELL_FACE_SCENARIO_IDS, spellFaceScenario } from './spell-face-scenarios';
 import {
+  SPECIALIZED_REFERENCE_SCENARIO_IDS,
+  specializedReferenceScenario,
+} from './specialized-reference-scenarios';
+import {
   ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
   zoneChangeTriggerScenario,
 } from './zone-change-trigger-scenarios';
@@ -5667,6 +5671,7 @@ export const REVIEWED_BASELINE_SCENARIO_IDS = [
 ] as const;
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
   ...ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
   'mosswort-viewer-free-cast-stack',
   'mosswort-viewer-land-play-limit',
@@ -5789,6 +5794,12 @@ export const CARD_TEST_SCENARIO_IDS = [
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  ...Object.fromEntries(
+    SPECIALIZED_REFERENCE_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => specializedReferenceScenario(id, gameId),
+    ]),
+  ),
   ...Object.fromEntries(
     ZONE_CHANGE_TRIGGER_SCENARIO_IDS.map((id) => [
       id,

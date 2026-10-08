@@ -15,7 +15,12 @@ const SPELL_FACE_VIEWER_PINS = JSON.parse(
  * The lab backend holds a single live session, so these tests run serially.
  */
 import { expect, test, type Page } from '@playwright/test';
-import type { ServerToClientMessage, SpectatorPermanent } from '@mtg/shared';
+import type {
+  ServerToClientMessage,
+  SpectatorPermanent,
+  PlayerBoardState,
+  SpectatorState,
+} from '@mtg/shared';
 
 test.describe.configure({ mode: 'serial' });
 test.use({ trace: 'on', screenshot: 'on' });
@@ -71,6 +76,133 @@ function handCard(page: Page, name: string) {
 async function confirm(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Confirm' }).click();
 }
+
+async function verifyOptionalLife(
+  page: Page,
+  title: string,
+  life: number,
+  counters: number,
+  payments: number,
+  response: 'Ghostly Flicker' | 'Murder' | null = null,
+  decline = false,
+) {
+  const states: (PlayerBoardState | SpectatorState)[] = [];
+  let requestId = '';
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        states.push(frame.payload.state);
+      if (frame.type === 'playerActionRequired') {
+        requestId = frame.payload.request.requestId;
+        states.push(frame.payload.state);
+      }
+    }),
+  );
+  await runScenario(page, title);
+  await handCard(page, 'Optional-Life Witness').click();
+  await confirm(page);
+  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const passAnyway = page.getByRole('button', { name: 'Pass anyway', exact: true });
+  const over = page.getByText(/game over/i).first();
+  const pay = page.getByRole('button', { name: 'Pay 2 life and add 2 counter(s)', exact: true });
+  let responded = false;
+  let choices = 0;
+  let originalId: string | undefined;
+  for (let count = 0; count < 24; count++) {
+    await expect
+      .poll(
+        async () => (await over.isVisible()) || (await pay.isVisible()) || (await pass.isVisible()),
+      )
+      .toBe(true);
+    if (await over.isVisible()) break;
+    const witness = states
+      .at(-1)
+      ?.battlefield.find((card) => card.name === 'Optional-Life Witness');
+    originalId ??= witness?.id;
+    if (response !== null && !responded && witness !== undefined && (await pass.isVisible())) {
+      await handCard(page, response).click();
+      if (response === 'Murder') {
+        await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+        await permanent(page, 'Optional-Life Witness').click();
+      }
+      await confirm(page);
+      if (response === 'Ghostly Flicker') {
+        await expect(page.getByText('Choose target 1 for ability', { exact: true })).toBeVisible();
+        await page
+          .getByRole('button', { name: 'Target Optional-Life Witness', exact: true })
+          .click();
+        await expect(page.getByText('Choose target 2 for ability', { exact: true })).toBeVisible();
+        await page.getByRole('button', { name: 'Target Island', exact: true }).first().click();
+      }
+      responded = true;
+      continue;
+    }
+    const before = requestId;
+    if (await pay.isVisible()) {
+      choices++;
+      await (decline ? page.getByRole('button', { name: 'Decline', exact: true }) : pay).click();
+    } else {
+      await pass.click();
+      await expect
+        .poll(
+          async () =>
+            requestId !== before || (await over.isVisible()) || (await passAnyway.isVisible()),
+        )
+        .toBe(true);
+      if (await passAnyway.isVisible()) await passAnyway.click();
+    }
+    await expect.poll(async () => requestId !== before || (await over.isVisible())).toBe(true);
+  }
+  await expect(over).toBeVisible({ timeout: 15_000 });
+  expect(choices).toBe(payments);
+  expect(responded).toBe(response !== null);
+  const final = states.at(-1)!;
+  expect(final.seats.find((seat) => seat.seat === 'P1')!.life).toBe(life);
+  const witness = final.battlefield.find((card) => card.name === 'Optional-Life Witness');
+  if (response === 'Murder') {
+    expect(witness).toBeUndefined();
+    await expect(permanent(page, 'Optional-Life Witness')).toHaveCount(0);
+  } else {
+    expect(witness).toBeDefined();
+    expect(witness!.counters['+1/+1'] ?? 0).toBe(counters);
+    await expect(permanent(page, 'Optional-Life Witness')).toContainText(
+      counters === 2 ? '4/4' : '2/2',
+    );
+    if (response === 'Ghostly Flicker') expect(witness!.id).not.toBe(originalId);
+  }
+  await expect(permanent(page, 'Madame Null, Power Broker')).toBeVisible();
+}
+
+test('Madame Null: pay life for the entering creature', async ({ page }) => {
+  await verifyOptionalLife(page, 'Madame Null: pay life for the entering creature', 38, 2, 1);
+});
+test('Madame Null: decline the life payment', async ({ page }) => {
+  await verifyOptionalLife(page, 'Madame Null: decline the life payment', 40, 0, 1, null, true);
+});
+test('Madame Null: skip an unaffordable life payment', async ({ page }) => {
+  await verifyOptionalLife(page, 'Madame Null: skip an unaffordable life payment', 1, 0, 0);
+});
+test('Madame Null: keep separate blinked incarnations', async ({ page }) => {
+  await verifyOptionalLife(
+    page,
+    'Madame Null: keep separate blinked incarnations',
+    36,
+    2,
+    2,
+    'Ghostly Flicker',
+  );
+});
+test("Madame Null: read the departed creature's power", async ({ page }) => {
+  await verifyOptionalLife(
+    page,
+    "Madame Null: read the departed creature's power",
+    38,
+    0,
+    1,
+    'Murder',
+  );
+});
 
 async function verifyFirstZoneReturn(
   page: Page,

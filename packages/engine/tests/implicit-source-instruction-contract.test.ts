@@ -13,6 +13,7 @@ const effects: Effect[] = [
   { op: 'transformSelf' },
   { op: 'selfToLibraryTop' },
   { op: 'exileSource' },
+  { op: 'regenerate', target: 'source' },
 ];
 describe('implicit source instructions respect their originating incarnation', () => {
   for (const effect of effects)
@@ -108,6 +109,9 @@ describe('implicit source instructions respect their originating incarnation', (
           expect(current).toBeDefined();
           expect(current!.transformed).toBe(false);
           expect(current!.power).toBe(2);
+          if (effect.op === 'regenerate') expect(current!.regenerationShields).toBe(0);
+        } else if (effect.op === 'regenerate') {
+          expect(current!.regenerationShields).toBe(1);
         } else if (effect.op === 'transformSelf') {
           expect(current!.transformed).toBe(true);
           expect(current!.name).toBe('Independent source back');

@@ -73,7 +73,7 @@
       "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Ward—Pay 2 life.",
+          "oracleText": "Ward\u2014Pay 2 life.",
           "implementation": ["structured life-payment ward cost"],
           "engineTestIds": [
             "gev-ward-pay-life",
@@ -277,7 +277,7 @@
       "clauses": [
         {
           "id": "aether-channeler-enters-modes",
-          "oracleText": "When this creature enters, choose one —",
+          "oracleText": "When this creature enters, choose one \u2014",
           "implementation": [
             "enters trigger on self; modal, one mode, chosen as the trigger is put on the stack (CR 700.2a)",
             "a mode whose target cannot be chosen is not offered; targetless modes declare targetSlots: []"
@@ -820,12 +820,12 @@
       "gameplayAiScenarioIds": []
     },
     "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe": {
-      "name": "Olórin's Searing Light",
+      "name": "Ol\u00f3rin's Searing Light",
       "oracleSha256": "74b48c19f85169bedb91b2a35f8d7d0315725b1c5e5f74d820366ace70a43641",
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "If there are two or more instant and/or sorcery cards in your graveyard, Olórin's Searing Light deals damage to each opponent equal to the power of the creature they exiled.",
+          "oracleText": "If there are two or more instant and/or sorcery cards in your graveyard, Ol\u00f3rin's Searing Light deals damage to each opponent equal to the power of the creature they exiled.",
           "implementation": ["explicitly unsupported; threshold damage omitted"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
@@ -1501,8 +1501,8 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent.",
-          "implementation": ["explicitly unsupported; −2 directional restriction omitted"],
+          "oracleText": "\u22122: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent.",
+          "implementation": ["explicitly unsupported; \u22122 directional restriction omitted"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
         }
@@ -2031,7 +2031,7 @@
       "clauses": [
         {
           "id": "canoptek-wraith-unblockable",
-          "oracleText": "Wraith Form — This creature can't be blocked.",
+          "oracleText": "Wraith Form \u2014 This creature can't be blocked.",
           "implementation": [
             "static layer 6 setCantBeBlocked on self (authored because an executable override disables generic ability-label stripping)"
           ],
@@ -2043,7 +2043,7 @@
         },
         {
           "id": "canoptek-wraith-scout-search",
-          "oracleText": "Transdimensional Scout — When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
+          "oracleText": "Transdimensional Scout \u2014 When this creature deals combat damage to a player, you may pay {3} and sacrifice it. If you do, choose a land you control. Then search your library for up to two basic land cards which have the same name as the chosen land, put them onto the battlefield tapped, then shuffle.",
           "implementation": [
             "dealsCombatDamageToPlayer trigger on self",
             "mayPayManaAndSacrificeSource({3}): offered only while the Wraith is on the battlefield and {3} is payable",
@@ -2174,7 +2174,7 @@
             "grouped basic-land search enforces a shared land type and permits up to two results"
           ],
           "engineTestIds": [
-            "myriad-landscape-shared-land-type-search — offers exactly the legal zero-, one-, and two-card grouped choices",
+            "myriad-landscape-shared-land-type-search \u2014 offers exactly the legal zero-, one-, and two-card grouped choices",
             "myriad-landscape-search-zero",
             "myriad-landscape-search-one",
             "myriad-landscape-search-two",
@@ -2256,7 +2256,7 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "Flashback—Sacrifice three creatures.",
+          "oracleText": "Flashback\u2014Sacrifice three creatures.",
           "implementation": [
             "explicitly unsupported; flashback claimed without a flashback alternative"
           ],
@@ -2353,7 +2353,7 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "I — You draw three cards and you lose 3 life.",
+          "oracleText": "I \u2014 You draw three cards and you lose 3 life.",
           "implementation": [
             "explicitly unsupported; saga chapters implemented as enter/upkeep/end-step"
           ],
@@ -2628,7 +2628,7 @@
         },
         {
           "id": "canoptek-spyder-artifact-creature-or-vehicle-draw",
-          "oracleText": "Fabricator Claw Array — Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.",
+          "oracleText": "Fabricator Claw Array \u2014 Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.",
           "implementation": [
             "enters trigger on permanent matching other + yours + nontoken + (Artifact and Creature, or subtype Vehicle)",
             "draw(1)"
@@ -2651,7 +2651,7 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control. (Activate each exhaust ability only once.)",
+          "oracleText": "Exhaust \u2014 Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control. (Activate each exhaust ability only once.)",
           "implementation": ["explicitly unsupported; Exhaust omitted and extra tap cost"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
@@ -2679,7 +2679,7 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.\n−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types.",
+          "oracleText": "Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.\n\u22122: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types.",
           "implementation": ["explicitly unsupported; extra +1 loyalty ability not on the card"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
@@ -2696,7 +2696,7 @@
           "id": "attune-with-aether-search-reveal-energy",
           "oracleText": "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You get {E}{E}",
           "implementation": [
-            "searchLibrary(filter=Basic Land, destination=hand, allowFailToFind=true, reveal=true) — searchFound carries revealed=true, so every view shows the card (CR 701.16a)",
+            "searchLibrary(filter=Basic Land, destination=hand, allowFailToFind=true, reveal=true) \u2014 searchFound carries revealed=true, so every view shows the card (CR 701.16a)",
             "shuffle",
             "gainEnergy(2)"
           ],
@@ -2751,7 +2751,7 @@
       "implementationStatus": "unsupported",
       "clauses": [
         {
-          "oracleText": "Imprint — When this creature enters, you may exile target nontoken creature.",
+          "oracleText": "Imprint \u2014 When this creature enters, you may exile target nontoken creature.",
           "implementation": ["explicitly unsupported; optional exile is a required target"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
@@ -2890,7 +2890,7 @@
         },
         {
           "id": "kairi-the-swirling-sky-dies-modes",
-          "oracleText": "When Kairi dies, choose one —",
+          "oracleText": "When Kairi dies, choose one \u2014",
           "implementation": [
             "dies trigger on self; modal, exactly one mode, chosen as the trigger is put on the stack (CR 700.2a); the bounce mode's target slot is active only when that mode is chosen"
           ],
@@ -3207,7 +3207,7 @@
       "clauses": [
         {
           "id": "return-to-nature-choose-one",
-          "oracleText": "Choose one —",
+          "oracleText": "Choose one \u2014",
           "implementation": [
             "modal spell, exactly one mode chosen at cast time; each mode announces only its own target (targetSlots), so a mode without a legal target is not offered and the spell is castable when any mode is"
           ],
@@ -3321,7 +3321,7 @@
         },
         {
           "id": "frontier-siege-khans",
-          "oracleText": "Khans — At the beginning of each of your main phases, add {G}{G}.",
+          "oracleText": "Khans \u2014 At the beginning of each of your main phases, add {G}{G}.",
           "implementation": [
             "mainPhase trigger, player you, condition chosenOptionIs Khans; addMana {G}{G}",
             "fires in each of your main phases and never on another player's turn"
@@ -3335,7 +3335,7 @@
         },
         {
           "id": "frontier-siege-dragons",
-          "oracleText": "Dragons — Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
+          "oracleText": "Dragons \u2014 Whenever a creature you control with flying enters, you may have it fight target creature you don't control.",
           "implementation": [
             "enters trigger for creatures you control with flying, condition chosenOptionIs Dragons",
             "target creature an opponent controls (none: no trigger, CR 603.3d); optional on resolution (CR 603.5)",
@@ -4046,20 +4046,32 @@
     },
     "73413bd5-8c40-4d45-8f05-c20c39ee4017": {
       "name": "Madame Null, Power Broker",
-      "oracleSha256": "ecce90e398a9e1b95406e24aef4c745d0798766a21b1477bcda9253a7bdda293",
-      "implementationStatus": "implemented-reviewed",
+      "oracleSha256": "3fd679e8d950b507d99a4a070fcc8d785e9eaae1ffc54f74694a0460a67e32ed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Whenever another creature you control enters, you may pay life equal to its power. If you do, put that many +1/+1 counters on it.",
           "implementation": [
-            "mayPayLifeForTriggerPowerAndCounter looking up the entering creature by cardId"
+            "mayPayLifeForTriggerPowerAndCounter: exact event-object facts and last-known power; payLife affordability; counters only on the bound incarnation"
           ],
           "engineTestIds": [
             "madame-null-pay-life-for-counters",
             "madame-null-decline",
-            "madame-null-not-self-or-opponent"
+            "madame-null-not-self-or-opponent",
+            "madame-null-viewer-pay-life",
+            "madame-null-viewer-decline",
+            "madame-null-viewer-unfunded",
+            "madame-null-viewer-blink",
+            "madame-null-viewer-destroyed"
           ],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": [
+            "madame-null-viewer-pay-life",
+            "madame-null-viewer-decline",
+            "madame-null-viewer-unfunded",
+            "madame-null-viewer-blink",
+            "madame-null-viewer-destroyed"
+          ],
+          "id": "madame-null-event-identity-life-payment"
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4383,12 +4395,12 @@
       "name": "Marang River Regent // Coil and Catch",
       "oracleSha256": "a61b03077e75c21a2b78e2698ff0ead3653977e2e29c32b34a6fb84e73b72f8d",
       "implementationStatus": "unsupported",
-      "unsupportedReason": "Coil and Catch’s draw-three/discard-one clause was replaced with a targeted bounce.",
+      "unsupportedReason": "Coil and Catch\u2019s draw-three/discard-one clause was replaced with a targeted bounce.",
       "clauses": [
         {
           "oracleText": "Draw three cards, then discard a card. (Then shuffle this card into its owner's library.)",
           "implementation": [
-            "unsupported: Coil and Catch’s draw-three/discard-one clause was replaced with a targeted bounce."
+            "unsupported: Coil and Catch\u2019s draw-three/discard-one clause was replaced with a targeted bounce."
           ],
           "engineTestIds": ["coil-and-catch-substitute-contained"],
           "viewerScenarioIds": []
@@ -4400,12 +4412,12 @@
       "name": "Monster Manual // Zoological Study",
       "oracleSha256": "f1a88cb9b7a2583e8fec1dea7413b1c0476db8c46cffd38a9da7928858a7ba1e",
       "implementationStatus": "unsupported",
-      "unsupportedReason": "Zoological Study’s mill-five and milled-creature recovery Adventure was omitted.",
+      "unsupportedReason": "Zoological Study\u2019s mill-five and milled-creature recovery Adventure was omitted.",
       "clauses": [
         {
           "oracleText": "Mill five cards, then return a creature card milled this way to your hand. (Then exile this card. You may cast the artifact later from exile.)",
           "implementation": [
-            "unsupported: Zoological Study’s mill-five and milled-creature recovery Adventure was omitted."
+            "unsupported: Zoological Study\u2019s mill-five and milled-creature recovery Adventure was omitted."
           ],
           "engineTestIds": ["zoological-study-omission-contained"],
           "viewerScenarioIds": []
@@ -4417,12 +4429,12 @@
       "name": "Bloomvine Regent // Claim Territory",
       "oracleSha256": "923a1d4e57487e65b17e92d1cfa6fdbf5afbd6b3d0f858826bd94ced7b8b6372",
       "implementationStatus": "unsupported",
-      "unsupportedReason": "Claim Territory’s two-Forest split-destination search was replaced with a single basic-land-to-hand search.",
+      "unsupportedReason": "Claim Territory\u2019s two-Forest split-destination search was replaced with a single basic-land-to-hand search.",
       "clauses": [
         {
           "oracleText": "Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle this card.)",
           "implementation": [
-            "unsupported: Claim Territory’s two-Forest split-destination search was replaced with a single basic-land-to-hand search."
+            "unsupported: Claim Territory\u2019s two-Forest split-destination search was replaced with a single basic-land-to-hand search."
           ],
           "engineTestIds": ["claim-territory-substitute-contained"],
           "viewerScenarioIds": []
@@ -4532,7 +4544,7 @@
           ]
         },
         {
-          "oracleText": "Ferocious — If you control a creature with power 4 or greater, counter that spell instead.",
+          "oracleText": "Ferocious \u2014 If you control a creature with power 4 or greater, counter that spell instead.",
           "implementation": [
             "controller-neutral spell target legality",
             "noncreature restriction",
@@ -5355,7 +5367,7 @@
       "unsupportedReason": "Seasonal Ritual: unrecognized rules text: \"Add one mana of any color.\""
     },
     "6505a53b-00db-44c4-8eaa-09a1a01451a4": {
-      "name": "Glóin the Mighty // Easy Pickings",
+      "name": "Gl\u00f3in the Mighty // Easy Pickings",
       "oracleSha256": "1a3fa5186e45225f7060aa55ad0db47276957869b58714f870f621af6f4915ad",
       "implementationStatus": "implemented-unreviewed",
       "clauses": [
@@ -6511,6 +6523,108 @@
           ],
           "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
           "viewerScenarioIds": ["soldier-on-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a30f30e3-dbbf-4cb2-b3d0-76f57dffb2dd": {
+      "name": "Black Bolt, Inhuman King",
+      "oracleSha256": "db53d857faae9d00e9f233eae5e77aaefaf2798661c14cc011220e1f7e5a5c23",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause.",
+      "clauses": [
+        {
+          "oracleText": "Lethal Voice \u2014 Whenever Black Bolt becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.",
+          "implementation": [
+            "unsupported: The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause."
+          ],
+          "engineTestIds": ["black-bolt-inhuman-king-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "65410f7a-c749-4b23-ad61-8a7136efcad2": {
+      "name": "Blur of Blades",
+      "oracleSha256": "ea522ddfaffffbcb02069421f8a25bba4867265aa0281ac0b9b4bfcb76e80dc7",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The ordinary spell does not bind the chosen creature controller for its second damage instruction.",
+      "clauses": [
+        {
+          "oracleText": "Put a -1/-1 counter on target creature. Blur of Blades deals 2 damage to that creature's controller.",
+          "implementation": [
+            "unsupported: The ordinary spell does not bind the chosen creature controller for its second damage instruction."
+          ],
+          "engineTestIds": ["blur-of-blades-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b0c50079-5376-47ff-82c5-d52dbf49afdf": {
+      "name": "Consign to the Pit",
+      "oracleSha256": "432ac6b2fdf0e5ca024d50ffc83ff7c4678a76afc4d1f3126d4c9a3d5fef3f06",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The ordinary spell does not retain the destroyed creature controller for its second damage instruction.",
+      "clauses": [
+        {
+          "oracleText": "Destroy target creature. Consign to the Pit deals 2 damage to that creature's controller.",
+          "implementation": [
+            "unsupported: The ordinary spell does not retain the destroyed creature controller for its second damage instruction."
+          ],
+          "engineTestIds": ["consign-to-the-pit-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7127fc35-600c-4397-8c01-5327d3c4944b": {
+      "name": "Dingus Staff",
+      "oracleSha256": "fa26a662e0d1a4e2bdabcbb0164f9e7d8df110cd13333ee0af014c9e00c5a825",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The dies dispatcher does not bind the dead creature controller required by the damage clause.",
+      "clauses": [
+        {
+          "oracleText": "Whenever a creature dies, this artifact deals 2 damage to that creature's controller.",
+          "implementation": [
+            "unsupported: The dies dispatcher does not bind the dead creature controller required by the damage clause."
+          ],
+          "engineTestIds": ["dingus-staff-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "33a6d78a-a3c7-44f1-8ce9-d6632123fec1": {
+      "name": "Insolence",
+      "oracleSha256": "27763625e27b1e341fb84b8ec0ad0699da88842e1fb68d3cdcfedc28cfa1565e",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The becomes-tapped dispatcher does not bind the enchanted creature controller required by the damage clause.",
+      "clauses": [
+        {
+          "oracleText": "Whenever enchanted creature becomes tapped, this Aura deals 2 damage to that creature's controller.",
+          "implementation": [
+            "unsupported: The becomes-tapped dispatcher does not bind the enchanted creature controller required by the damage clause."
+          ],
+          "engineTestIds": ["insolence-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9da65d66-71f0-4e17-a1f9-6da6cd1cfa8a": {
+      "name": "Scalelord Reckoner",
+      "oracleSha256": "a6a82e4dd70176ed433a4e46d925a47cf78b67c1d75217f031d10d1a75fb54dc",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause.",
+      "clauses": [
+        {
+          "oracleText": "Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.",
+          "implementation": [
+            "unsupported: The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause."
+          ],
+          "engineTestIds": ["scalelord-reckoner-event-player-contained"],
+          "viewerScenarioIds": []
         }
       ],
       "gameplayAiScenarioIds": []

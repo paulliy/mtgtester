@@ -446,6 +446,16 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   // Typed value variants that consume ordinary target references, including nested arithmetic.
   const valueKind = record['kind'];
   if (
+    ['transferCountersFromTriggerObject', 'mayPayLifeForTriggerPowerAndCounter'].includes(
+      String(record['op']),
+    ) &&
+    owningScope?.eventObject !== 'permanent'
+  )
+    issues.push({
+      path,
+      message: 'implicit event effect requires an owning permanent event scope',
+    });
+  if (
     ['eventPlayerDrawCount', 'notFirstDrawInOwnDrawStep', 'attackingEventPlayer'].includes(
       String(valueKind),
     ) &&

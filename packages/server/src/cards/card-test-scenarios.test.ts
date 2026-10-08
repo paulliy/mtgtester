@@ -46,6 +46,11 @@ describe('deterministic Card Test Lab scenarios', () => {
 
   it('lists every registered scenario in catalog order', () => {
     expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
+      'madame-null-viewer-pay-life',
+      'madame-null-viewer-decline',
+      'madame-null-viewer-unfunded',
+      'madame-null-viewer-blink',
+      'madame-null-viewer-destroyed',
       'marchesa-viewer-first-zone-own',
       'marchesa-viewer-first-zone-opponent-owned',
       'marchesa-viewer-first-zone-no-counter',
