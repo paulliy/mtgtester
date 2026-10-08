@@ -1474,6 +1474,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Hour of Reckoning: three Plains and four convoked creatures'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Killian, Ink Duelist: a {2}{R} bolt at a creature for {R}'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

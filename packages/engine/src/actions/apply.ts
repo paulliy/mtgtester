@@ -72,6 +72,9 @@ import {
   modeAdditionalCosts,
   selectedModeTargetSlots,
   targetLifeTaxFor,
+  targetMatchesReduction,
+  targetedCostReductionFor,
+  targetedReductionAmount,
   validateChosenTargets,
 } from './legal';
 import { breakYieldsForStop } from '../turn/stops';
@@ -643,6 +646,22 @@ export function* applyPriorityAction(
       // CR 601.2f: reductions apply once, to the TOTAL — mana cost with X announced plus every
       // additional cost — exactly as `computePriorityOptions` priced the offered action.
       cost = applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts)));
+      // "Spells you cast that target a creature cost {2} less" (Killian): priced against the
+      // targets just chosen (CR 601.2c before 601.2f), as `computePriorityOptions` offered it.
+      const targeted = targetedCostReductionFor(ctx, player.id);
+      if (targeted.length > 0) {
+        const slot = payload.targetReductionSlot;
+        if (slot !== undefined && slot >= 0) {
+          const chosen = targets[slot];
+          if (
+            chosen === undefined ||
+            !targeted.every((entry) => targetMatchesReduction(ctx, chosen, entry))
+          ) {
+            throw new Error('illegal action: the reduced cast needs a matching target');
+          }
+        }
+        cost = subtractGeneric(cost, targetedReductionAmount(ctx, targeted, allTargets));
+      }
       const targetLifeTax = targetLifeTaxFor(ctx, player.id, allTargets);
       if (player.life < targetLifeTax) {
         throw new Error('engine bug: target life tax became unpayable at application time');

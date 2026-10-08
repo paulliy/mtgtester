@@ -42,6 +42,13 @@ export type RuleStatic =
        * here uses.
        */
       appliesTo?: 'cast' | 'activate';
+      /**
+       * "Spells you cast that target a creature cost {2} less to cast" (Killian, Ink Duelist): the
+       * reduction applies only when one of the spell's chosen targets matches. Total cost is
+       * locked in after targets are chosen (CR 601.2c, 601.2f), so `costReductionFor` leaves these
+       * out and `targetedCostReductionFor` prices them against the actual targets.
+       */
+      targetFilter?: Selector;
     }
   /**
    * "Creature spells you control can't be countered" (Rhythm of the Wild) — a STATE-DEPENDENT

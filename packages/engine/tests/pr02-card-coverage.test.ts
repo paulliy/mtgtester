@@ -15,6 +15,7 @@ import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
+import { constant } from '../src/cards/value';
 import { allOf, IS_TOKEN, not, ofType } from '../src/cards/selector';
 import { fixtureOracleId, getOverride, registerOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
@@ -3554,6 +3555,107 @@ describe('Hour of Reckoning', () => {
   });
 });
 
+describe('Killian, Ink Duelist', () => {
+  const killian = pinned('Killian, Ink Duelist');
+  const SHOCK = oracle({
+    name: 'Killian Lab Shock',
+    typeLine: 'Instant',
+    manaCost: '{2}{R}',
+    colors: ['R'],
+    oracleText: 'Killian Lab Shock deals 2 damage to any target.',
+    power: null,
+    toughness: null,
+  });
+  const BEAR = oracle({
+    name: 'Killian Lab Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{2}{G}',
+  });
+
+  function ready(seed: string) {
+    const ctx = pod(seed);
+    spawn(ctx, 'P1', killian.card);
+    const ox = spawn(ctx, 'P2', oracle({ name: 'Killian Rival Ox', typeLine: 'Creature — Ox' }));
+    return { ctx, ox };
+  }
+
+  const payloadOf = (option: { payload?: unknown }) =>
+    option.payload as PriorityActionPayload & { targetReductionSlot?: number };
+
+  it('killian-ink-duelist-pinned-oracle-supported — lifelink, menace, and a target-dependent reduction', () => {
+    expect(killian.sha256).toBe('dc5a598c8b1bda5db8590ef9abe9f717f4d02dd5b97c0900aeec62a96e21e1e2');
+    expect(killian.card.oracleText).toBe(
+      "Lifelink\nMenace (This creature can't be blocked except by two or more creatures.)\nSpells you cast that target a creature cost {2} less to cast.",
+    );
+    expectModeled(killian.card);
+    expect(getOverride(killian.card.oracleId)).toBeUndefined();
+    const def = interpretCard(killian.card);
+    expect(def.keywords).toEqual(expect.arrayContaining(['lifelink', 'menace']));
+    expect(def.ruleStatics).toEqual([
+      { kind: 'costReduction', amount: constant(2), targetFilter: ofType('Creature') },
+    ]);
+  });
+
+  it('killian-ink-duelist-targeting-a-creature — a spell targeting a creature costs {2} less', () => {
+    const { ctx, ox } = ready('killian-creature');
+    const shock = conjure(ctx, 'P1', SHOCK, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }]);
+    const options = castOptionsFor(ctx, 'P1', shock.id);
+    // Only {R}: just the reduced option, and it can only target a creature.
+    expect(options.map((option) => payloadOf(option).targetReductionSlot)).toEqual([0]);
+    expect(options[0]?.description).toMatch(/\{R\}/);
+    expect(options[0]?.targets?.[0]?.options).toEqual(expect.arrayContaining([ox.id]));
+    expect(options[0]?.targets?.[0]?.options).not.toContain('P2');
+    takeAction(
+      ctx,
+      'P1',
+      options[0]!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, ox.id]]),
+    );
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    resolveTop(ctx);
+    expect(ox.damageMarked).toBe(2);
+  });
+
+  it('killian-ink-duelist-targeting-a-player — targeting a player pays full price', () => {
+    const { ctx } = ready('killian-player');
+    const shock = conjure(ctx, 'P1', SHOCK, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }, ...generic(2)]);
+    const full = castOptionsFor(ctx, 'P1', shock.id).find(
+      (option) => payloadOf(option).targetReductionSlot === -1,
+    );
+    expect(full?.description).toMatch(/\{2\}\{R\}/);
+    expect(full?.targets?.[0]?.options).toContain('P2');
+    expect(full?.targets?.[0]?.options.some((id) => id.startsWith('o-'))).toBe(false);
+    takeAction(ctx, 'P1', full!.payload as PriorityActionPayload, undefined, new Map([[0, 'P2']]));
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P2').life).toBe(38);
+  });
+
+  it('killian-ink-duelist-untargeted-spells-full-price — a creature spell that targets nothing gets no reduction', () => {
+    const { ctx } = ready('killian-bear');
+    const bear = conjure(ctx, 'P1', BEAR, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }]);
+    expect(castOptionsFor(ctx, 'P1', bear.id)).toEqual([]);
+    addMana(playerById(ctx, 'P1'), generic(2));
+    expect(castOptionsFor(ctx, 'P1', bear.id).map((option) => option.description)).toEqual([
+      expect.stringMatching(/\{2\}\{G\}/),
+    ]);
+  });
+
+  it('killian-ink-duelist-only-yours — an opponent’s Killian does not reduce your spells', () => {
+    const ctx = pod('killian-opponent');
+    spawn(ctx, 'P2', killian.card);
+    const ox = spawn(ctx, 'P2', oracle({ name: 'Killian Rival Ox', typeLine: 'Creature — Ox' }));
+    const shock = conjure(ctx, 'P1', SHOCK, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }]);
+    expect(castOptionsFor(ctx, 'P1', shock.id)).toEqual([]);
+    expect(ox.damageMarked).toBe(0);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -3566,6 +3668,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Killian, Ink Duelist',
+    sha256: 'dc5a598c8b1bda5db8590ef9abe9f717f4d02dd5b97c0900aeec62a96e21e1e2',
+    clauseCount: 3,
+  },
   {
     name: 'Hour of Reckoning',
     sha256: '5eb44a788bb619b66c8ba3006f639178af53b512c0aedf77cbbbcee0c0e8c135',

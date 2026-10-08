@@ -267,12 +267,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Killian, Decisive Mentor',
     'Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.',
   );
-  // Catalog audit silverquill-remaining-batch-2: targeting reduction authored as creature spells.
-  unsupportedCard(
-    'e233cb5b-7237-4271-8157-9179cc897b6c',
-    'Killian, Ink Duelist',
-    'Spells-that-target-a-creature reduction is implemented as creature-spell reduction.',
-  );
+  // Killian, Ink Duelist: restored in coverage PR02. The interpreter reads the target-dependent
+  // cost reduction, so no override remains.
   // Catalog audit silverquill-remaining-batch-2: attached-Aura pump counts all Auras you control.
   unsupportedCard(
     '2bfc7467-1316-43d3-9ca6-ff36cc2de607',

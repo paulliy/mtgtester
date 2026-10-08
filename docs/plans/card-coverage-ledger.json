@@ -1391,6 +1391,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",
+    "name": "Killian, Ink Duelist",
+    "package": "PR02.16",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Spells-that-target-a-creature reduction is implemented as creature-spell reduction."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "fe8c2b7e-f80d-4acb-a976-edcf436a78a9",
     "name": "Kogla and Yidaro",
     "package": "W4",

@@ -9994,12 +9994,6 @@
     "def": {}
   },
   {
-    "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",
-    "name": "Killian, Ink Duelist",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "e26f0fcd-d6d2-4e7b-82dd-711bc0b9dad3",
     "name": "Cryptothrall",
     "handledLines": [
@@ -16714,12 +16708,6 @@
   {
     "oracleId": "oracle-killian-decisive-mentor",
     "name": "Killian, Decisive Mentor",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-killian-ink-duelist",
-    "name": "Killian, Ink Duelist",
     "handledLines": [],
     "def": {}
   },

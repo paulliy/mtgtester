@@ -5607,14 +5607,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 44,
+      "uniqueOracleIds": 43,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 55,
+      "uniqueOracleIds": 54,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5844,6 +5844,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: convoke is a real payment (see Conclave Tribunal), and the interpreter now reads 'destroy all nontoken creatures' (the tribal destroy-all rule no longer claims 'nontoken' as a creature type); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",
+      "name": "Killian, Ink Duelist",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in silverquill-influence.ts): the interpreter reads the reduction as a costReduction with targetFilter creature, priced against the chosen targets (legality offers a full-price option without creature targets and a reduced option per creature-capable slot); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",
+      "name": "Killian, Ink Duelist",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the silverquill-influence-remaining.ts containment; see that entry."
     }
   ]
 }

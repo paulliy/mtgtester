@@ -187,9 +187,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.',
   ]);
 
-  unimplemented('e233cb5b-7237-4271-8157-9179cc897b6c', 'Killian, Ink Duelist', [
-    'Spells you cast that target a creature cost {2} less to cast.',
-  ]);
+  // Killian, Ink Duelist: restored in coverage PR02 (see silverquill-influence-remaining.ts).
 
   defineCard(
     '3e2ae59a-40a1-46ca-8f24-3231ebd4e4eb',

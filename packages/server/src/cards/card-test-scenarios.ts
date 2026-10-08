@@ -6811,6 +6811,44 @@ function hourOfReckoningScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_KILLIAN_BOLT = card({
+  oracleId: 'lab-killian-bolt',
+  name: 'Lab Killian Bolt',
+  typeLine: 'Instant',
+  manaCost: '{2}{R}',
+  cmc: 3,
+  colors: ['R'],
+  oracleText: 'Lab Killian Bolt deals 2 damage to any target.',
+});
+
+function killianScenario(gameId: GameId): CardTestScenario {
+  const killian = pinnedFrom(MARCHESA_BATCH1, 'Killian, Ink Duelist');
+  return pr01Scenario(gameId, {
+    id: 'killian-ink-duelist-viewer-reduced-bolt',
+    title: 'Killian, Ink Duelist: a {2}{R} bolt at a creature for {R}',
+    instructions: [
+      "With only a Mountain, cast Lab Killian Bolt ({2}{R}) at P2's Lab Ox: targeting a creature, it costs {2} less.",
+    ],
+    expectedOutcome:
+      'Lab Killian Bolt costs only {R}; Lab Ox takes 2 damage. P2 is not offered as a target at that price.',
+    oracleSha256: killian.sha256,
+    clauseIds: ['killian-ink-duelist-reduction'],
+    decks: {
+      P1: [killian.card, LAB_KILLIAN_BOLT, MOUNTAIN],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Killian Bolt'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Killian, Ink Duelist', 'Mountain'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -7051,6 +7089,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'toxic-deluge-viewer-pay-two-life',
   'conclave-tribunal-viewer-convoke',
   'hour-of-reckoning-viewer-convoke',
+  'killian-ink-duelist-viewer-reduced-bolt',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7211,6 +7250,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'toxic-deluge-viewer-pay-two-life': toxicDelugeScenario,
   'conclave-tribunal-viewer-convoke': conclaveTribunalScenario,
   'hour-of-reckoning-viewer-convoke': hourOfReckoningScenario,
+  'killian-ink-duelist-viewer-reduced-bolt': killianScenario,
 };
 
 export function createCardTestScenario(

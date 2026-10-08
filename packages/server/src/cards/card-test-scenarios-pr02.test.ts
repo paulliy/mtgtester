@@ -715,3 +715,16 @@ describe('Hour of Reckoning Card Test Lab scenario', () => {
     replays('hour-of-reckoning-viewer-convoke', steps);
   });
 });
+
+describe('Killian, Ink Duelist Card Test Lab scenario', () => {
+  it('killian-ink-duelist-viewer-reduced-bolt — the bolt costs {R} at a creature', () => {
+    const steps: Step[] = [{ action: 'reduced for its target', targets: ['Lab Ox'] }];
+    const { onBattlefield, offered } = run('killian-ink-duelist-viewer-reduced-bolt', steps);
+    expect(offered[0]?.filter((action) => action.includes('Lab Killian Bolt'))).toEqual([
+      expect.stringMatching(/\{R\}.*reduced for its target/),
+    ]);
+    expect(onBattlefield('Lab Ox')[0]?.damageMarked).toBe(2);
+    expect(onBattlefield('Mountain')[0]?.tapped).toBe(true);
+    replays('killian-ink-duelist-viewer-reduced-bolt', steps);
+  });
+});

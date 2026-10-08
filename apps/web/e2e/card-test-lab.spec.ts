@@ -3510,3 +3510,17 @@ test('Hour of Reckoning: three Plains and four convoked creatures', async ({ pag
     await expect(permanent(page, name)).toHaveCount(0);
   }
 });
+
+test('Killian, Ink Duelist: a {2}{R} bolt at a creature for {R}', async ({ page }) => {
+  await runScenario(page, 'Killian, Ink Duelist: a {2}{R} bolt at a creature for {R}');
+  const bolt = handCard(page, 'Lab Killian Bolt');
+  await expect(bolt).toHaveClass(/actionable/);
+  await bolt.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Mountain').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.getByText(/Lab Killian Bolt.*resolves/).first()).toBeVisible();
+});

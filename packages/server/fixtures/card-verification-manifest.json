@@ -1226,13 +1226,36 @@
     "e233cb5b-7237-4271-8157-9179cc897b6c": {
       "name": "Killian, Ink Duelist",
       "oracleSha256": "dc5a598c8b1bda5db8590ef9abe9f717f4d02dd5b97c0900aeec62a96e21e1e2",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "killian-ink-duelist-lifelink",
+          "oracleText": "Lifelink",
+          "implementation": ["interpreted keyword: lifelink"],
+          "engineTestIds": ["killian-ink-duelist-pinned-oracle-supported"],
+          "viewerScenarioIds": ["killian-ink-duelist-viewer-reduced-bolt"]
+        },
+        {
+          "id": "killian-ink-duelist-menace",
+          "oracleText": "Menace",
+          "implementation": ["interpreted keyword: menace"],
+          "engineTestIds": ["killian-ink-duelist-pinned-oracle-supported"],
+          "viewerScenarioIds": ["killian-ink-duelist-viewer-reduced-bolt"]
+        },
+        {
+          "id": "killian-ink-duelist-reduction",
           "oracleText": "Spells you cast that target a creature cost {2} less to cast.",
-          "implementation": ["explicitly unsupported; creature-spell reduction"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted costReduction {2} with targetFilter creature: applied after targets are chosen (CR 601.2c, 601.2f) when a chosen target is a creature; legality prices a full-price variant whose targets are not creatures and a reduced variant per slot that targets a creature"
+          ],
+          "engineTestIds": [
+            "killian-ink-duelist-pinned-oracle-supported",
+            "killian-ink-duelist-targeting-a-creature",
+            "killian-ink-duelist-targeting-a-player",
+            "killian-ink-duelist-untargeted-spells-full-price",
+            "killian-ink-duelist-only-yours"
+          ],
+          "viewerScenarioIds": ["killian-ink-duelist-viewer-reduced-bolt"]
         }
       ],
       "gameplayAiScenarioIds": []

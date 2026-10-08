@@ -19,7 +19,7 @@ import { ALL_COLORS } from '@mtg/shared';
 import { evaluateCondition } from '../cards/condition';
 import type { Color, ObjectId, OracleId, PlayerId } from '@mtg/shared';
 import type { AbilityCost, CardDefinition, TargetKind, TargetSpec } from '../cards/definition';
-import type { SelectorCandidate, SelectorSource } from '../cards/selector';
+import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EngineActionOption } from '../decisions';
 import { candidateOf, computeCharacteristics, matchesSelector } from '../effects/continuous';
@@ -106,6 +106,11 @@ export type PriorityActionPayload =
       optionalCostCount?: number;
       alternativeCast?: 'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree';
       altIndex?: number;
+      /**
+       * The option priced with target-dependent reductions (Killian): the target slot that must
+       * hold a matching target, or -1 for the variant that targets nothing matching.
+       */
+      targetReductionSlot?: number;
     }
   /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
   | {
@@ -416,6 +421,8 @@ export function costReductionFor(
   for (const entry of [...gatherRuleStatics(ctx), ...ownReductions]) {
     if (entry.static.kind !== 'costReduction') continue;
     if ((entry.static.appliesTo ?? 'cast') !== 'cast') continue;
+    // Target-dependent reductions are priced once targets are known: `targetedCostReductionFor`.
+    if (entry.static.targetFilter !== undefined) continue;
     if (entry.controllerId !== casterId) continue;
     if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== casterId) continue;
     if (entry.static.excludesSelf === true && entry.sourceCardId === castCardId) continue;
@@ -452,6 +459,66 @@ export function costReductionFor(
     }
   }
   return { generic, ...(colored !== undefined ? { colored } : {}) };
+}
+
+/** An active "spells you cast that target a <filter> cost {N} less" reduction (Killian). */
+export interface TargetedCostReduction {
+  generic: number;
+  targetFilter: Selector;
+  source: SelectorSource;
+}
+
+/**
+ * The target-dependent cast reductions active for `casterId` (Killian, Ink Duelist). Each one
+ * applies when at least one chosen target matches its filter (CR 601.2f prices the spell after
+ * targets are chosen in 601.2c).
+ */
+export function targetedCostReductionFor(
+  ctx: GameContext,
+  casterId: PlayerId,
+): TargetedCostReduction[] {
+  const result: TargetedCostReduction[] = [];
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'costReduction') continue;
+    if (entry.static.targetFilter === undefined) continue;
+    if ((entry.static.appliesTo ?? 'cast') !== 'cast') continue;
+    if (entry.controllerId !== casterId) continue;
+    if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== casterId) continue;
+    const source: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
+    result.push({
+      generic: Math.max(
+        0,
+        evaluateValueIn(ctx, entry.static.amount, {
+          controllerId: entry.controllerId,
+          sourceCardId: entry.sourceCardId,
+        }),
+      ),
+      targetFilter: entry.static.targetFilter,
+      source,
+    });
+  }
+  return result;
+}
+
+/** Does the chosen target `id` match a targeted reduction's filter? Only permanents can. */
+export function targetMatchesReduction(
+  ctx: GameContext,
+  id: ObjectId,
+  reduction: TargetedCostReduction,
+): boolean {
+  const perm = ctx.state.battlefield.find((candidate) => candidate.id === id);
+  return perm !== undefined && matchesSelector(ctx, perm, reduction.targetFilter, reduction.source);
+}
+
+/** The generic mana the chosen targets take off a spell's cost (Killian). */
+export function targetedReductionAmount(
+  ctx: GameContext,
+  reductions: readonly TargetedCostReduction[],
+  targetIds: readonly ObjectId[],
+): number {
+  return reductions
+    .filter((reduction) => targetIds.some((id) => targetMatchesReduction(ctx, id, reduction)))
+    .reduce((sum, reduction) => sum + reduction.generic, 0);
 }
 
 /**
@@ -1035,6 +1102,14 @@ export function computePriorityOptions(
       return subtractGeneric(colored, reduction.generic);
     };
     const costWithX = (x: number): ParsedManaCost => withX(unreduced, x);
+    // "Spells you cast that target a creature cost {2} less" (Killian): the price depends on the
+    // targets, so affordability pre-checks use the best case and each option is priced exactly
+    // below, per target variant.
+    const targeted =
+      (def.spellAbility?.targets.length ?? 0) > 0 ? targetedCostReductionFor(ctx, player.id) : [];
+    const bestTargeted = targeted.reduce((sum, entry) => sum + entry.generic, 0);
+    const reduceBest = (c: ParsedManaCost): ParsedManaCost =>
+      subtractGeneric(reduce(c), bestTargeted);
 
     // {X} is announced as part of casting (CR 601.2b), so each affordable value of X is its own
     // option. Enumerated rather than asked as a follow-up decision because the option menu is
@@ -1057,7 +1132,7 @@ export function computePriorityOptions(
       for (let x = 0; ; x++) {
         if (
           !canPay(
-            reduce(addManaCosts(costWithX(x), additionalManaCost)),
+            reduceBest(addManaCosts(costWithX(x), additionalManaCost)),
             player.manaEntries,
             sources,
             allows,
@@ -1081,7 +1156,7 @@ export function computePriorityOptions(
 
     for (const x of xChoices) {
       const cost = costWithX(x);
-      if (!canPay(reduce(cost), player.manaEntries, sources, allows, player.life)) continue;
+      if (!canPay(reduceBest(cost), player.manaEntries, sources, allows, player.life)) continue;
 
       for (const selectedModes of selections) {
         const targets = computeCastTargets(
@@ -1102,7 +1177,7 @@ export function computePriorityOptions(
               manaPortionOf([...spellAdditionalCosts, ...modeCosts]),
             );
             for (let i = 0; i < count; i++) prospective = addManaCosts(prospective, optional.cost);
-            if (!canPay(reduce(prospective), player.manaEntries, sources, allows, player.life))
+            if (!canPay(reduceBest(prospective), player.manaEntries, sources, allows, player.life))
               break;
             optionalCounts.push(count);
           }
@@ -1124,85 +1199,129 @@ export function computePriorityOptions(
             }
           }
           const additionalCosts = [...spellAdditionalCosts, ...modeCosts, ...optionalCosts];
-          const selectionCost = reduce(addManaCosts(cost, manaPortionOf(additionalCosts)));
-          if (!canPay(selectionCost, player.manaEntries, sources, allows, player.life)) continue;
+          const fullCost = reduce(addManaCosts(cost, manaPortionOf(additionalCosts)));
           if (
             !canPaySpellAdditionalCosts(ctx, player, additionalCosts, obj.cardId, sourceInHand, x)
           )
             continue;
-          const payableTargets = targets.map((slot) => ({
-            ...slot,
-            options: slot.options.filter((targetId) => {
-              const lifeTax = targetLifeTaxFor(ctx, player.id, [targetId]);
-              return canPay(
-                selectionCost,
-                player.manaEntries,
-                sources,
-                allows,
-                player.life - lifeTax,
-              );
-            }),
-          }));
-          if (payableTargets.some((slot) => slot.options.length === 0)) continue;
-          const optionalLabel =
-            optional !== undefined && optionalCostCount > 0
-              ? ` — ${optional.mechanic} ${optionalCostCount}`
-              : '';
-          const option: EngineActionOption = {
-            type: 'castSpell',
-            description:
-              `Cast ${obj.name} (${describeManaCost(selectionCost)})` +
-              (xSymbols > 0 || announcesAdditionalX ? ` with X=${x}` : '') +
-              (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
-              optionalLabel +
-              (fromCommand
-                ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}`
-                : '') +
-              (fromLibraryTop ? ' from the top of your library' : '') +
-              (fromExile ? ' from exile' : '') +
-              (fromGraveyard ? ' from your graveyard' : '') +
-              (reboundCast ? ' without paying its mana cost' : ''),
-            payload: {
-              kind: 'castSpell',
-              objectId: obj.id,
-              fromCommand,
-              ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
-              ...(fromGraveyard ? { fromGraveyard: true } : {}),
-              ...(fromExile
-                ? { fromExile: true, ...(reboundCast ? { reboundCast: true } : {}) }
-                : {}),
-              ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
-              ...(selectedModes !== undefined
-                ? {
-                    modes: selectedModes,
-                    ...(selectedModes.length === 1 ? { mode: selectedModes[0] } : {}),
-                  }
-                : {}),
-              ...(optionalCostCount > 0 ? { optionalCostCount } : {}),
-            },
-            data: {
-              instantSpeed,
-              sourceName: obj.name,
-              sourceZone: fromCommand
-                ? 'command'
-                : fromLibraryTop
-                  ? 'library'
-                  : fromExile
-                    ? 'exile'
-                    : 'hand',
-              manaCost: describeManaCost(selectionCost),
-              ...paymentPreview(ctx, player, selectionCost, sources, allows),
-              ...(tax > 0 ? { commanderTax: tax } : {}),
-              ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
-              ...(modeLabel !== undefined ? { modeLabel } : {}),
-              ...(optionalCostCount > 0
-                ? { optionalCostCount, optionalMechanic: optional?.mechanic }
-                : {}),
-              ...(additionalCosts.length > 0 ? { abilityCosts: additionalCosts } : {}),
-            },
-          };
-          if (payableTargets.length > 0) option.targets = payableTargets;
-          options.push(option);
+          // One option per price: without target-dependent reductions, the spell as is; with
+          // them, a full-price option whose targets match no reduction, and a reduced option for
+          // each slot that can hold a target matching every reduction. A mix that matches only
+          // some reductions is left out rather than mispriced.
+          const variants: {
+            slot: number | undefined;
+            selectionCost: ParsedManaCost;
+            slots: typeof targets;
+          }[] = [];
+          if (targeted.length === 0 || targets.length === 0) {
+            variants.push({ slot: undefined, selectionCost: fullCost, slots: targets });
+          } else {
+            const matchesNone = (id: ObjectId): boolean =>
+              targeted.every((entry) => !targetMatchesReduction(ctx, id, entry));
+            const matchesAll = (id: ObjectId): boolean =>
+              targeted.every((entry) => targetMatchesReduction(ctx, id, entry));
+            variants.push({
+              slot: -1,
+              selectionCost: fullCost,
+              slots: targets.map((slot) => ({
+                ...slot,
+                options: slot.options.filter(matchesNone),
+              })),
+            });
+            const reducedCost = subtractGeneric(fullCost, bestTargeted);
+            targets.forEach((slot, index) => {
+              const matching = slot.options.filter(matchesAll);
+              if (matching.length === 0) return;
+              variants.push({
+                slot: index,
+                selectionCost: reducedCost,
+                slots: targets.map((other, i) =>
+                  i === index ? { ...other, options: matching } : other,
+                ),
+              });
+            });
+          }
+          for (const variant of variants) {
+            const { selectionCost } = variant;
+            if (!canPay(selectionCost, player.manaEntries, sources, allows, player.life)) continue;
+            const payableTargets = variant.slots.map((slot) => ({
+              ...slot,
+              options: slot.options.filter((targetId) => {
+                const lifeTax = targetLifeTaxFor(ctx, player.id, [targetId]);
+                return canPay(
+                  selectionCost,
+                  player.manaEntries,
+                  sources,
+                  allows,
+                  player.life - lifeTax,
+                );
+              }),
+            }));
+            if (payableTargets.some((slot) => slot.options.length === 0)) continue;
+            const optionalLabel =
+              optional !== undefined && optionalCostCount > 0
+                ? ` — ${optional.mechanic} ${optionalCostCount}`
+                : '';
+            const option: EngineActionOption = {
+              type: 'castSpell',
+              description:
+                `Cast ${obj.name} (${describeManaCost(selectionCost)})` +
+                (xSymbols > 0 || announcesAdditionalX ? ` with X=${x}` : '') +
+                (modeLabel !== undefined ? ` — ${modeLabel}` : '') +
+                optionalLabel +
+                (fromCommand
+                  ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}`
+                  : '') +
+                (fromLibraryTop ? ' from the top of your library' : '') +
+                (fromExile ? ' from exile' : '') +
+                (fromGraveyard ? ' from your graveyard' : '') +
+                (reboundCast ? ' without paying its mana cost' : '') +
+                (variant.slot !== undefined && variant.slot >= 0
+                  ? ' — reduced for its target'
+                  : ''),
+              payload: {
+                kind: 'castSpell',
+                objectId: obj.id,
+                fromCommand,
+                ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
+                ...(fromGraveyard ? { fromGraveyard: true } : {}),
+                ...(fromExile
+                  ? { fromExile: true, ...(reboundCast ? { reboundCast: true } : {}) }
+                  : {}),
+                ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
+                ...(selectedModes !== undefined
+                  ? {
+                      modes: selectedModes,
+                      ...(selectedModes.length === 1 ? { mode: selectedModes[0] } : {}),
+                    }
+                  : {}),
+                ...(optionalCostCount > 0 ? { optionalCostCount } : {}),
+                ...(variant.slot !== undefined ? { targetReductionSlot: variant.slot } : {}),
+              },
+              data: {
+                instantSpeed,
+                sourceName: obj.name,
+                sourceZone: fromCommand
+                  ? 'command'
+                  : fromLibraryTop
+                    ? 'library'
+                    : fromExile
+                      ? 'exile'
+                      : 'hand',
+                manaCost: describeManaCost(selectionCost),
+                ...paymentPreview(ctx, player, selectionCost, sources, allows),
+                ...(tax > 0 ? { commanderTax: tax } : {}),
+                ...(xSymbols > 0 || announcesAdditionalX ? { x } : {}),
+                ...(modeLabel !== undefined ? { modeLabel } : {}),
+                ...(optionalCostCount > 0
+                  ? { optionalCostCount, optionalMechanic: optional?.mechanic }
+                  : {}),
+                ...(additionalCosts.length > 0 ? { abilityCosts: additionalCosts } : {}),
+              },
+            };
+            if (payableTargets.length > 0) option.targets = payableTargets;
+            options.push(option);
+          }
         }
       }
     }

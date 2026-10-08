@@ -204,6 +204,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'toxic-deluge-viewer-pay-two-life',
       'conclave-tribunal-viewer-convoke',
       'hour-of-reckoning-viewer-convoke',
+      'killian-ink-duelist-viewer-reduced-bolt',
     ]);
   });
 

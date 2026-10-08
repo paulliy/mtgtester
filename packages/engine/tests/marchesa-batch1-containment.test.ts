@@ -113,8 +113,6 @@ const REASONS: Record<string, string> = {
   'Intermediate Chirography':
     'Class levels and later abilities are claimed without an implementation.',
   'Keen Duelist': 'Mutual reveal is implemented as drawRevealTopLoseManaValue on you only.',
-  'Killian, Ink Duelist':
-    'Spells-that-target-a-creature reduction is implemented as creature-spell reduction.',
   'Kor Spiritdancer': 'Attached-Aura pump counts all Auras you control.',
   'Martial Impetus':
     'Other-attacking-your-opponents pump is implemented as all creatures in combat.',
@@ -311,6 +309,7 @@ describe('Marchesa catalog audit containment', () => {
     'Toxic Deluge',
     'Conclave Tribunal',
     'Hour of Reckoning',
+    'Killian, Ink Duelist',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

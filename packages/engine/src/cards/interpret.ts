@@ -5527,6 +5527,15 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       ];
     }
   }
+  // "Spells you cast that target a creature cost {2} less to cast." (Killian, Ink Duelist): the
+  // reduction depends on the spell's chosen targets (CR 601.2f).
+  {
+    const m = lower.match(/^spells you cast that target an? (.+?) cost \{(\d+)\} less to cast$/);
+    const targetFilter = m === null ? null : parseSubject(m[1] as string, card);
+    if (m !== null && targetFilter !== null) {
+      return [{ kind: 'costReduction', amount: constant(Number(m[2])), targetFilter }];
+    }
+  }
   // "Instant and sorcery spells you cast cost {1} less to cast." (Goblin Electromancer) â€” a
   // plain, unconditional, fixed reduction: no Eminence "as long as" wrapper, no Temur
   // Battlecrier-style per-permanent scaling.
