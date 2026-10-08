@@ -75,6 +75,14 @@ function seatAnchorRef(seatId: string): (el: Element | ComponentPublicInstance |
 }
 
 const state = computed(() => store.playerState);
+const thinkingLabel = computed(() => {
+  const board = state.value;
+  if (board === null) return 'Getting the game ready…';
+  const seat = board.priorityPlayer ?? board.activePlayer;
+  if (seat === board.viewerSeat) return 'Resolving your action…';
+  const name = board.seats.find((entry) => entry.seat === seat)?.label ?? seat;
+  return `${name} is deciding…`;
+});
 
 /**
  * MTGA-style attack animation (extends §9.8.1): every freshly pushed board is diffed for combat
@@ -102,6 +110,20 @@ const isYourTurn = computed(() => state.value?.activePlayer === state.value?.vie
 const selectedAction = computed(
   () => request.value?.legalActions.find((action) => action.id === selectedActionId.value) ?? null,
 );
+const smartYieldAction = computed(() => {
+  if (request.value?.decisionType !== 'priority') return null;
+  const action = selectedAction.value ?? selectedSourceActions.value[0];
+  return action?.type === 'castSpell' || action?.type === 'activateAbility' ? action : null;
+});
+
+function yieldSelected(mode: 'always' | 'smart'): void {
+  const action = smartYieldAction.value;
+  if (action === null) return;
+  selectedActionId.value = null;
+  focusedSourceId.value = null;
+  chosenTargets.value = {};
+  store.yieldPlayerAbility(action.id, mode);
+}
 const immediateActions = computed(
   () => request.value?.legalActions.filter((action) => isImmediate(action)) ?? [],
 );
@@ -354,7 +376,11 @@ const fallbackRequest = computed<DecisionRequest | null>(() => {
   return { ...request.value, legalActions: fallbackActions.value };
 });
 const actionableSourceIds = computed(
-  () => new Set(sourceActions.value.map(sourceId).filter(Boolean)),
+  () =>
+    new Set([
+      ...sourceActions.value.map(sourceId).filter(Boolean),
+      ...(combatPlan.mode === 'composing' ? combatPlan.order.map((entry) => entry.subjectId) : []),
+    ]),
 );
 
 /** The ordinary things a source can do right now, best first: a land plays, a spell casts. */
@@ -401,6 +427,16 @@ const playableList = computed(() => {
 const playableVerbById = computed(
   () => new Map(playableSources.value.map((source) => [source.id, source.verb])),
 );
+
+function smartYieldSource(id: string): void {
+  if (request.value?.decisionType !== 'priority') return;
+  const action = sourceActions.value.find(
+    (candidate) =>
+      sourceId(candidate) === id &&
+      (candidate.type === 'castSpell' || candidate.type === 'activateAbility'),
+  );
+  if (action !== undefined) store.yieldPlayerAbility(action.id, 'smart');
+}
 
 /**
  * Passing a main phase with a land drop unused is an easy mistake: the engine only offers
@@ -503,6 +539,11 @@ function isRoutineAction(action: LegalAction): boolean {
 }
 
 function chooseAction(action: LegalAction): void {
+  if (action.type === 'attackDeclaration' || action.type === 'blockDeclaration') {
+    selectedActionId.value = null;
+    if (request.value !== null) combatPlan.reopen(request.value);
+    return;
+  }
   if (needsLandReminder(action)) {
     pendingPass.value = action;
     return;
@@ -521,6 +562,13 @@ function chooseAction(action: LegalAction): void {
   if (isRoutineAction(action)) {
     store.submitPlayerAction(action.id);
   }
+}
+
+function chooseFallbackAction(actionId: number): void {
+  const action = request.value?.legalActions.find((candidate) => candidate.id === actionId);
+  if (action?.type === 'attackDeclaration' || action?.type === 'blockDeclaration')
+    chooseAction(action);
+  else store.submitPlayerAction(actionId);
 }
 
 function chooseTarget(id: ObjectId | string): boolean {
@@ -649,10 +697,17 @@ watch(canConfirm, (ready) => {
  * Phase 4 — both attackers and blockers submit this way now).
  */
 function confirmCombatPlan(): void {
+  if (request.value === null || combatPlan.mode !== 'composing') return;
   combatPlan.confirm();
-  if (request.value === null) return;
   const submission = combatPlan.pendingSubmission(request.value);
   if (submission !== null) store.submitPlayerAction(submission.actionId, submission.targets);
+  else combatPlan.reopen(request.value);
+}
+
+function cancelCombatPlan(): void {
+  combatPlan.cancel();
+  focusedSourceId.value = null;
+  if (request.value !== null) combatPlan.onRequest(request.value);
 }
 
 const confirmButtonRef = ref<HTMLButtonElement | null>(null);
@@ -664,12 +719,17 @@ watch(selectedAction, (action) => {
 });
 
 /**
- * Enter/Escape/Space, scoped to this view (brief — Workstream 6). Ignored while a real text
- * input has focus, though none currently exists in this view; the guard is defensive.
+ * Enter/Escape/Space, scoped to this view. Inputs and native button/link activation own their
+ * keys; Escape still cancels an open action or resets a declaration when a button is focused.
  */
 function onKeyDown(event: KeyboardEvent): void {
   const target = event.target;
-  if (target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(target.tagName)) return;
+  if (
+    target instanceof HTMLElement &&
+    (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
+      (target.closest('button, a') && ['Enter', ' '].includes(event.key)))
+  )
+    return;
   // An open dialog owns the keyboard: Space on its focused button must not also pass priority.
   if (confirmingAbandon.value || pendingPass.value !== null) return;
 
@@ -679,7 +739,7 @@ function onKeyDown(event: KeyboardEvent): void {
       confirm();
     } else if (combatPlan.mode === 'composing') {
       event.preventDefault();
-      combatPlan.confirm();
+      confirmCombatPlan();
     }
     return;
   }
@@ -689,7 +749,7 @@ function onKeyDown(event: KeyboardEvent): void {
       cancel();
     } else if (combatPlan.mode === 'composing') {
       event.preventDefault();
-      combatPlan.cancel();
+      cancelCombatPlan();
     }
     return;
   }
@@ -1067,7 +1127,7 @@ function abandon(): void {
               </div>
               <span>{{ opponent.handSize }} in hand · {{ opponent.librarySize }} in library</span>
             </div>
-            <div class="permanents">
+            <TransitionGroup tag="div" name="board-card" class="permanents">
               <div
                 v-for="group in groupedPermanentsFor(opponent.seat)"
                 :key="group.permanent.id"
@@ -1094,12 +1154,8 @@ function abandon(): void {
                   :name-by-id="nameById"
                 />
               </div>
-            </div>
-            <div
-              v-if="opponent.graveyard.length > 0 || exileFor(opponent.seat).length > 0"
-              class="zones-strip opponent-zones"
-              @click.stop
-            >
+            </TransitionGroup>
+            <div class="zones-strip opponent-zones" @click.stop>
               <ZoneStrip
                 label="Graveyard"
                 :cards="opponent.graveyard"
@@ -1183,7 +1239,13 @@ function abandon(): void {
             >
           </div>
           <div class="battle-row">
-            <div class="permanents" @dragover.prevent @drop="dropToBattlefield">
+            <TransitionGroup
+              tag="div"
+              name="board-card"
+              class="permanents"
+              @dragover.prevent
+              @drop="dropToBattlefield"
+            >
               <div
                 v-for="group in groupedPermanentsFor(human.seat)"
                 :key="group.permanent.id"
@@ -1212,7 +1274,7 @@ function abandon(): void {
                   :name-by-id="nameById"
                 />
               </div>
-            </div>
+            </TransitionGroup>
             <div
               v-if="human.commanders.some((commander) => commander.zone === 'command')"
               class="command-zone"
@@ -1253,7 +1315,9 @@ function abandon(): void {
             </div>
           </div>
 
-          <div
+          <TransitionGroup
+            tag="div"
+            name="hand-card"
             class="hand"
             :class="{ 'has-playable': playableSources.length > 0 && selectedAction === null }"
           >
@@ -1287,9 +1351,9 @@ function abandon(): void {
               }}</span>
               <span>{{ card.name }}</span>
             </button>
-          </div>
+          </TransitionGroup>
 
-          <div v-if="human.graveyard.length > 0 || humanExile.length > 0" class="zones-strip">
+          <div class="zones-strip">
             <ZoneStrip
               label="Graveyard"
               :cards="human.graveyard"
@@ -1313,6 +1377,22 @@ function abandon(): void {
             class="interaction-tray"
             :class="{ targeting: selectedAction !== null }"
           >
+            <div v-if="smartYieldAction" class="tray-actions">
+              <button
+                type="button"
+                title="Skip quiet priority windows; offer this again for your combat, attacks against you, or any opponent spell or ability on the stack"
+                @click="yieldSelected('smart')"
+              >
+                Smart yield
+              </button>
+              <button
+                v-if="selectedAction?.type === 'activateAbility'"
+                type="button"
+                @click="yieldSelected('always')"
+              >
+                Yield always
+              </button>
+            </div>
             <template v-if="selectedAction">
               <div class="tray-heading">
                 <strong>{{
@@ -1375,7 +1455,8 @@ function abandon(): void {
                 flagged creature(s) and confirm again.
               </p>
               <p v-else class="target-instruction">
-                Click an option below for every creature. Unassigned creatures
+                Click a creature, then its opponent or target, or choose an option below. Unassigned
+                creatures
                 {{ combatPlan.kind === 'attackers' ? 'stay home' : 'do not block' }}.
               </p>
               <div class="combat-assignments">
@@ -1415,7 +1496,7 @@ function abandon(): void {
                 </div>
               </div>
               <div class="tray-actions">
-                <button type="button" @click="combatPlan.cancel()">Cancel</button>
+                <button type="button" @click="cancelCombatPlan">Reset declaration</button>
                 <button type="button" class="primary" @click="confirmCombatPlan">
                   Confirm {{ combatPlan.kind === 'attackers' ? 'attacks' : 'blocks' }}
                 </button>
@@ -1491,7 +1572,7 @@ function abandon(): void {
             <DecisionPanel
               v-if="fallbackRequest && immediateActions.length === 0"
               :request="fallbackRequest"
-              @choose="store.submitPlayerAction"
+              @choose="chooseFallbackAction"
             />
             <template v-else>
               <h3>Your action</h3>
@@ -1517,18 +1598,27 @@ function abandon(): void {
               >
                 <strong>Playable now</strong>
                 <div class="playable-list">
-                  <button
-                    v-for="entry in playableList"
-                    :key="entry.key"
-                    type="button"
-                    :class="{ focused: entry.ids.includes(focusedSourceId ?? '') }"
-                    @click="selectSource(entry.ids[0] ?? '')"
-                  >
-                    <span class="verb">{{ entry.verb }}</span> {{ entry.name
-                    }}<span v-if="entry.ids.length > 1" class="count">
-                      ×{{ entry.ids.length }}</span
+                  <div v-for="entry in playableList" :key="entry.key" class="playable-entry">
+                    <button
+                      type="button"
+                      :class="{ focused: entry.ids.includes(focusedSourceId ?? '') }"
+                      @click="selectSource(entry.ids[0] ?? '')"
                     >
-                  </button>
+                      <span class="verb">{{ entry.verb }}</span> {{ entry.name
+                      }}<span v-if="entry.ids.length > 1" class="count">
+                        ×{{ entry.ids.length }}</span
+                      >
+                    </button>
+                    <button
+                      v-if="request.decisionType === 'priority' && entry.verb !== 'Play'"
+                      type="button"
+                      :aria-label="`Smart yield ${entry.name}`"
+                      title="Yield this copy during quiet priority windows"
+                      @click="smartYieldSource(entry.ids[0] ?? '')"
+                    >
+                      Smart yield
+                    </button>
+                  </div>
                 </div>
               </div>
               <p
@@ -1536,16 +1626,19 @@ function abandon(): void {
                 class="yield-explanation"
               >
                 All other optional actions are currently yielded. Pass priority to continue, or
-                resume an ability below to make it available again.
+                resume a spell or ability below to make it available again.
               </p>
               <DecisionPanel
                 v-if="fallbackRequest"
                 :request="fallbackRequest"
-                @choose="store.submitPlayerAction"
+                @choose="chooseFallbackAction"
               />
             </template>
           </template>
-          <p v-else class="thinking">Bots are deciding…</p>
+          <p v-else class="thinking" role="status" aria-live="polite">
+            <span class="thinking-mark" aria-hidden="true" />
+            {{ thinkingLabel }}
+          </p>
           <div v-if="opponentActivity.length > 0" class="bot-summary">
             <strong title="Passing priority doesn't count as an action here."
               >Since your last action</strong
@@ -1559,9 +1652,9 @@ function abandon(): void {
             </div>
           </div>
           <div v-if="store.ignoredAbilities.length > 0" class="ignored-abilities">
-            <strong>Yielded abilities</strong>
+            <strong>Yielded spells &amp; abilities</strong>
             <div v-for="ability in store.ignoredAbilities" :key="ability.key" class="action-row">
-              <span>{{ ability.label }}</span>
+              <span>{{ ability.label }}{{ ability.mode === 'smart' ? ' · Smart yield' : '' }}</span>
               <button type="button" @click="store.resumePlayerAbility(ability.key)">Resume</button>
             </div>
           </div>
@@ -1849,6 +1942,7 @@ button.selected,
   animation: flashOk 0.9s ease-out;
 }
 .permanents {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -1858,6 +1952,30 @@ button.selected,
   gap: 0.3rem;
   overflow-x: hidden;
   overflow-y: auto;
+}
+.board-card-enter-active,
+.board-card-leave-active {
+  transition:
+    opacity 300ms ease,
+    transform 300ms cubic-bezier(0.2, 0.72, 0.25, 1),
+    filter 300ms ease;
+}
+.board-card-move {
+  transition: transform 300ms ease;
+}
+.board-card-enter-from {
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  filter: brightness(1.3);
+}
+.board-card-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.94);
+  filter: brightness(1.35);
+}
+.board-card-leave-active {
+  position: absolute;
+  pointer-events: none;
 }
 .zones-strip {
   display: flex;
@@ -1928,6 +2046,7 @@ button.selected,
   min-width: 0;
 }
 .hand {
+  position: relative;
   flex-shrink: 0;
   display: flex;
   gap: 0.35rem;
@@ -1935,6 +2054,27 @@ button.selected,
   overflow-y: hidden;
   padding-top: 0.35rem;
   border-top: 1px solid var(--line);
+}
+.hand-card-enter-active,
+.hand-card-leave-active {
+  transition:
+    opacity 300ms ease,
+    transform 300ms cubic-bezier(0.2, 0.72, 0.25, 1);
+}
+.hand-card-move {
+  transition: transform 300ms ease;
+}
+.hand-card-enter-from {
+  opacity: 0;
+  transform: translateY(14px) scale(0.94);
+}
+.hand-card-leave-to {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.92) rotate(-2deg);
+}
+.hand-card-leave-active {
+  position: absolute;
+  pointer-events: none;
 }
 .hand-card {
   position: relative;
@@ -2206,6 +2346,11 @@ button.selected,
 .playable-list button {
   border-color: var(--accent);
 }
+.playable-entry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
 .playable-list button.focused {
   background: var(--accent);
   color: #fff;
@@ -2263,6 +2408,29 @@ button.primary {
 .waiting {
   color: var(--muted);
   font-style: italic;
+}
+.thinking {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.thinking-mark {
+  width: 0.52rem;
+  height: 0.52rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 rgb(96 165 250 / 0.45);
+  animation: thinkingPulse 1.35s ease-out infinite;
+}
+@keyframes thinkingPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(96 165 250 / 0.45);
+  }
+  75%,
+  100% {
+    box-shadow: 0 0 0 0.48rem rgb(96 165 250 / 0);
+  }
 }
 .routine-confirm {
   display: flex;

@@ -1364,6 +1364,17 @@ async function runArcaneDenial(page: Page, drawCount: 0 | 2): Promise<void> {
 
   const arcane = handCard(page, 'Arcane Denial');
   await expect(arcane).toHaveClass(/actionable/);
+  // Yield directly from the playable list without selecting/casting, even with auto-confirm on.
+  await page.getByLabel('Skip confirm step').check();
+  await page.getByRole('button', { name: 'Smart yield Arcane Denial', exact: true }).click();
+  await expect(page.locator('.ignored-abilities')).toContainText('Smart yield');
+  await expect(arcane).toHaveClass(/actionable/);
+  await page.getByLabel('Skip confirm step').uncheck();
+  await arcane.click();
+  // An opponent's spell is already on the stack: smart yield must keep this response available.
+  await page.getByRole('button', { name: 'Smart yield', exact: true }).click();
+  await expect(page.locator('.ignored-abilities')).toContainText('Smart yield');
+  await expect(arcane).toHaveClass(/actionable/);
   await arcane.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   const pending = page.locator('.stack li').filter({ hasText: 'Lab Pending Spell' });
@@ -2660,12 +2671,19 @@ test('Kogla, the Titan Ape: bounce a Human, then attack', async ({ page }) => {
 
   // Both Forests paid for the ability, so nothing is castable and the lab moves on to combat.
   await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Reset declaration' }).click();
+  await expect(page.getByRole('button', { name: 'Confirm attacks' })).toBeVisible();
+  // Selecting the creature on the actual battlefield focuses its declaration row.
+  await kogla.click();
+  await expect(page.locator('.combat-assignment-row.focused')).toContainText('Kogla');
   await page
     .locator('.combat-assignment-row')
     .filter({ hasText: 'Kogla, the Titan Ape' })
     .getByRole('button', { name: 'P2' })
     .click();
-  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  // Blur the assignment button to exercise the view-level Enter shortcut, not a native click.
+  await page.locator('.interaction-tray .tray-heading').click();
+  await page.keyboard.press('Enter');
 
   // Lab Hex is P2's only artifact or enchantment, so the target is forced; P3's Lab Idol is not.
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });

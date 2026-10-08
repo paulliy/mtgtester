@@ -452,19 +452,9 @@ export class StrategyCoordinator {
 
   recordAcceptedDecision(request: DecisionRequest, response: DecisionResponse): void {
     this.turnPlan.recordAccepted(request, response, this.engine);
-    const chosen = request.legalActions.find((action) => action.id === response.actionId);
-    if (
-      this.strategy === null &&
-      this.activeGeneration !== 0 &&
-      request.decidingPlayer === request.activePlayer &&
-      chosen !== undefined &&
-      !['pass', 'passAndYieldTurn', 'yieldToAbility'].includes(chosen.type)
-    ) {
-      // A pending strategy was written before this action. Discard it rather than
-      // installing instructions that can repeat an action the engine already accepted.
-      this.activeGeneration = 0;
-      this.abortController?.abort();
-    }
+    // An action taken while the strategist is thinking does not cancel or invalidate the
+    // response. Its intent remains useful; TurnPlanManager checks the current phase and legal
+    // action menu before executing any planned step.
   }
 
   planLifecycle() {

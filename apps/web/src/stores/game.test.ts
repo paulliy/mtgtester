@@ -10,7 +10,12 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import type { ClientToServerMessage, ServerToClientMessage, SpectatorLogLine } from '@mtg/shared';
+import type {
+  ClientToServerMessage,
+  ServerToClientMessage,
+  SpectatorLogLine,
+  PlayerActionRequiredPayload,
+} from '@mtg/shared';
 import type { ConnectionState } from '../lib/socket';
 
 /** Frames the store handed to the socket, newest last. */
@@ -270,6 +275,24 @@ describe('spectator store — server-confirmed position', () => {
       },
     });
     expect(store.lastPlayerActionSequence).toBeNull();
+  });
+
+  it('sends smart yield and republishes only a matching rejected request for editing', () => {
+    store.playerAction = {
+      request: { requestId: 'r1', legalActions: [] },
+      revision: 3,
+    } as unknown as PlayerActionRequiredPayload;
+    store.yieldPlayerAbility(7, 'smart');
+    expect(sent.at(-1)).toEqual({
+      type: 'yieldPlayerAbility',
+      payload: { requestId: 'r1', revision: 3, actionId: 7, mode: 'smart' },
+    });
+    const request = store.playerAction!.request;
+    inbound?.({ type: 'error', payload: { message: 'Old error', requestId: 'old', revision: 3 } });
+    expect(store.playerAction!.request).toBe(request);
+    inbound?.({ type: 'error', payload: { message: 'Retry', requestId: 'r1', revision: 3 } });
+    expect(store.playerAction!.request).not.toBe(request);
+    expect(store.playerAction!.request.requestId).toBe('r1');
   });
 
   it('starts a player game at the next meaningful choice without racing a second frame', () => {

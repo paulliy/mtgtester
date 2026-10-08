@@ -249,10 +249,11 @@ export interface PlayerStateSnapshotPayload {
   ignoredAbilities: IgnoredPlayerAbility[];
 }
 
-/** A non-rules UI preference: hide an optional activated ability until the player re-enables it. */
+/** A player preference for an optional spell or activated ability; never changes legality. */
 export interface IgnoredPlayerAbility {
   key: string;
   label: string;
+  mode?: 'always' | 'smart';
 }
 
 /** A real, untimed engine decision that only the selected human seat may answer. */
@@ -413,11 +414,12 @@ export interface SubmitPlayerActionPayload {
   targets?: TargetChoice[];
 }
 
-/** Hide one currently offered optional activated ability across future turns. */
+/** Yield an optional activation, or smart-yield a spell, across future turns. */
 export interface YieldPlayerAbilityPayload {
   requestId: string;
   actionId: number;
   revision: number;
+  mode?: 'always' | 'smart';
 }
 
 /** Restore an ability previously hidden with `yieldPlayerAbility`. */
@@ -599,6 +601,12 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
       );
     case 'yieldPlayerAbility':
       return (
+        Object.keys(payload).every((key) =>
+          ['requestId', 'revision', 'actionId', 'mode'].includes(key),
+        ) &&
+        (payload['mode'] === undefined ||
+          payload['mode'] === 'always' ||
+          payload['mode'] === 'smart') &&
         typeof payload['requestId'] === 'string' &&
         payload['requestId'].length > 0 &&
         Number.isInteger(payload['actionId']) &&

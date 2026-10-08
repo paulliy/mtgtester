@@ -433,6 +433,14 @@ export const useGameStore = defineStore('game', () => {
           ),
         ];
         errors.value = detail;
+        const pending = playerAction.value;
+        if (
+          pending !== null &&
+          message.payload.requestId === pending.request.requestId &&
+          message.payload.revision === pending.revision
+        ) {
+          playerAction.value = { ...pending, request: { ...pending.request } };
+        }
         break;
       }
     }
@@ -653,7 +661,7 @@ export const useGameStore = defineStore('game', () => {
     });
   }
 
-  function yieldPlayerAbility(actionId: number): void {
+  function yieldPlayerAbility(actionId: number, mode: 'always' | 'smart' = 'always'): void {
     const pending = playerAction.value;
     if (pending === null) return;
     socket?.send({
@@ -662,6 +670,7 @@ export const useGameStore = defineStore('game', () => {
         requestId: pending.request.requestId,
         actionId,
         revision: pending.revision,
+        mode,
       },
     });
   }

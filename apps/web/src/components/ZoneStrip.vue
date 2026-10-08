@@ -57,9 +57,9 @@ function onCardLeave(): void {
 </script>
 
 <template>
-  <div v-if="props.cards.length > 0" class="zone">
-    <h4>{{ props.label }} ({{ props.cards.length }})</h4>
-    <div class="cards-strip">
+  <div class="zone" :class="{ empty: props.cards.length === 0 }">
+    <h4 v-if="props.cards.length > 0">{{ props.label }} ({{ props.cards.length }})</h4>
+    <TransitionGroup tag="div" name="zone-card" class="cards-strip">
       <div
         v-for="card in visibleCards"
         :key="card.id"
@@ -85,8 +85,10 @@ function onCardLeave(): void {
           size="small"
         />
       </div>
-      <div v-if="overflowCount > 0" class="zone-overflow">+{{ overflowCount }}</div>
-    </div>
+      <div v-if="overflowCount > 0" key="overflow" class="zone-overflow">
+        +{{ overflowCount }}
+      </div>
+    </TransitionGroup>
   </div>
 </template>
 
@@ -95,6 +97,12 @@ function onCardLeave(): void {
   border-top: 1px solid var(--line);
   padding-top: 0.4rem;
 }
+.zone.empty {
+  height: 0;
+  overflow: visible;
+  border: 0;
+  padding: 0;
+}
 .zone h4 {
   margin: 0 0 0.2rem;
   font-size: 0.68rem;
@@ -102,6 +110,7 @@ function onCardLeave(): void {
   font-weight: 600;
 }
 .cards-strip {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
@@ -112,6 +121,26 @@ function onCardLeave(): void {
 .zone-card-thumb {
   width: 52px;
   flex-shrink: 0;
+}
+.zone-card-enter-active,
+.zone-card-leave-active {
+  transition:
+    opacity 260ms ease,
+    transform 260ms cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+.zone-card-move {
+  transition: transform 260ms ease;
+}
+.zone-card-enter-from {
+  opacity: 0;
+  transform: translateY(10px) scale(0.9);
+}
+.zone-card-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.94);
+}
+.zone-card-leave-active {
+  position: absolute;
 }
 .zone-card-thumb.targetable {
   cursor: pointer;

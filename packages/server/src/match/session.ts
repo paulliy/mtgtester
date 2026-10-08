@@ -66,6 +66,7 @@ import {
   type ReportSeatSource,
 } from './report';
 import type { SeatSetup } from './setup';
+import { isPlayerActionYielded, playerYieldKey } from './player-yield';
 
 /** `HeuristicDecisionProvider` (like the engine's `RandomDecisionProvider` before it) is
  * synchronous; the runner awaits every provider. */
@@ -794,19 +795,24 @@ export class MatchSession {
     );
     const interaction = action?.interaction;
     if (
-      action?.type !== 'activateAbility' ||
+      pending.request.decisionType !== 'priority' ||
+      action === undefined ||
       interaction?.kind !== 'source' ||
-      interaction.sourceCardId === undefined ||
-      interaction.abilityIndex === undefined
+      playerYieldKey(action) === null ||
+      (action.type === 'castSpell' && payload.mode !== 'smart')
     ) {
       this.opts.send({
         type: 'error',
-        payload: { message: 'Only an optional activated ability can be yielded.' },
+        payload: { message: 'Yield an optional activation, or smart yield an optional spell.' },
       });
       return;
     }
-    const key = `${interaction.sourceCardId}:${interaction.abilityIndex}`;
-    this.ignoredAbilities.set(key, { key, label: action.description });
+    const key = playerYieldKey(action)!;
+    this.ignoredAbilities.set(key, {
+      key,
+      label: action.description,
+      mode: payload.mode ?? 'always',
+    });
     this.sendPlayerActionRequired(pending.request, pending.revision);
   }
 
@@ -896,28 +902,48 @@ export class MatchSession {
 
   private sendPlayerActionRequired(request: DecisionRequest, revision: number): void {
     if (this.humanSeat === null) return;
+    const state = this.engine.playerState(this.humanSeat);
+    const legalActions =
+      request.decisionType === 'priority'
+        ? request.legalActions.filter(
+            (action) => !isPlayerActionYielded(action, this.ignoredAbilities, state),
+          )
+        : request.legalActions;
+    const pass = legalActions.find((action) => action.type === 'pass');
+    if (
+      request.decisionType === 'priority' &&
+      pass !== undefined &&
+      legalActions.length < request.legalActions.length &&
+      legalActions.every((action) =>
+        ['pass', 'passAndYieldTurn', 'yieldToAbility'].includes(action.type),
+      )
+    ) {
+      // Only the player's explicit preference removes optional choices. Keep costs, targeting,
+      // combat declarations and every unyielded action in the ordinary human decision flow.
+      this.publishPlayerState(false);
+      this.humanProvider?.submit({ requestId: request.requestId, revision, actionId: pass.id });
+      return;
+    }
     this.opts.send({
       type: 'playerActionRequired',
       payload: {
         request: {
           ...request,
-          legalActions: request.legalActions.filter((action) => !this.isIgnoredAbility(action)),
+          legalActions,
         },
         revision,
-        state: this.engine.playerState(this.humanSeat),
+        state,
         ignoredAbilities: this.ignoredAbilityList(),
       },
     });
   }
 
   private isIgnoredAbility(action: DecisionRequest['legalActions'][number]): boolean {
-    const interaction = action.interaction;
-    return (
-      action.type === 'activateAbility' &&
-      interaction?.kind === 'source' &&
-      interaction.sourceCardId !== undefined &&
-      interaction.abilityIndex !== undefined &&
-      this.ignoredAbilities.has(`${interaction.sourceCardId}:${interaction.abilityIndex}`)
+    if (this.humanSeat === null || this.ignoredAbilities.size === 0) return false;
+    return isPlayerActionYielded(
+      action,
+      this.ignoredAbilities,
+      this.engine.playerState(this.humanSeat),
     );
   }
 
