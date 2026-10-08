@@ -22,6 +22,11 @@ const overloads = pins(
     readFileSync('packages/engine/tests/fixtures/overload-derivation-oracle.json', 'utf8'),
   ) as { cards: Pin[] },
 ).filter(({ card }) => ['Cyclonic Rift', 'Vandalblast', 'Damn'].includes(card.name));
+const exemplar = pins(
+  JSON.parse(
+    readFileSync('packages/engine/tests/fixtures/overload-static-review-oracle.json', 'utf8'),
+  ) as { cards: Pin[] },
+)[0]!.card;
 const coverage = JSON.parse(
   readFileSync('packages/server/fixtures/coverage-oracle.json', 'utf8'),
 ) as OracleCard[];
@@ -89,8 +94,20 @@ export function counterOverloadScenario(id: string, gameId: GameId): CardTestSce
     `Shroud\nProtection from ${entry.card.name === 'Cyclonic Rift' ? 'blue' : entry.card.name === 'Damn' ? 'white' : 'red'}`,
   );
   const indestructible = witness('Indestructible Overload Witness', type, 'Indestructible');
+  const knight = {
+    ...witness('Granted Indestructible Knight', 'Creature'),
+    typeLine: 'Creature — Knight',
+    subtypes: ['Knight'],
+  };
   const mana = [...lands, ...lands];
-  const opposing = [chosen, bystander, protectedCard, indestructible, lands[0]!];
+  const opposing = [
+    chosen,
+    bystander,
+    protectedCard,
+    indestructible,
+    ...(entry.card.name === 'Damn' ? [exemplar, knight] : []),
+    lands[0]!,
+  ];
   const seed = `card-lab-${id}-v1`;
   const players = (['P1', 'P2', 'P3', 'P4'] as const).map((seat) => ({
     id: seat,
@@ -108,7 +125,7 @@ export function counterOverloadScenario(id: string, gameId: GameId): CardTestSce
   return {
     metadata: {
       id,
-      version: 1,
+      version: entry.card.name === 'Damn' ? 2 : 1,
       title: entry.title,
       instructions: isCounter
         ? [

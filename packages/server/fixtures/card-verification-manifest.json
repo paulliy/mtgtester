@@ -4716,7 +4716,8 @@
           ],
           "engineTestIds": [
             "damn-overload-destroys-each-creature-without-regeneration",
-            "damn-normal-targets-one-creature-and-prevents-regeneration"
+            "damn-normal-targets-one-creature-and-prevents-regeneration",
+            "damn-simultaneous-indestructible"
           ],
           "viewerScenarioIds": ["damn-viewer-normal", "damn-viewer-overload"]
         },
@@ -4910,11 +4911,14 @@
             "face-copy",
             "face-canonical-no-mana",
             "free-face",
-            "free-face Cascade limit"
+            "free-face Cascade limit",
+            "face-impulse-permission",
+            "face-impulse-lab"
           ],
           "viewerScenarioIds": [
             "profane-insight-viewer-normal-face",
-            "mosswort-viewer-free-adventure-face"
+            "mosswort-viewer-free-adventure-face",
+            "profane-insight-viewer-impulse-face"
           ]
         }
       ],
@@ -5521,9 +5525,11 @@
             "face-cast-triggers",
             "face-copy",
             "face-canonical-no-mana",
-            "free-face"
+            "free-face",
+            "face-impulse-permission",
+            "face-impulse-lab"
           ],
-          "viewerScenarioIds": ["roost-seek-viewer-normal-face"]
+          "viewerScenarioIds": ["roost-seek-viewer-normal-face", "roost-seek-viewer-impulse-face"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -6655,14 +6661,17 @@
             "marchesa-viewer-first-zone-opponent-owned",
             "marchesa-viewer-first-zone-no-counter",
             "marchesa-viewer-first-zone-opponent-controlled",
-            "marchesa-viewer-first-zone-exiled"
+            "marchesa-viewer-first-zone-exiled",
+            "batch-death-first-destination",
+            "marchesa-viewer-simultaneous-deaths"
           ],
           "viewerScenarioIds": [
             "marchesa-viewer-first-zone-own",
             "marchesa-viewer-first-zone-opponent-owned",
             "marchesa-viewer-first-zone-no-counter",
             "marchesa-viewer-first-zone-opponent-controlled",
-            "marchesa-viewer-first-zone-exiled"
+            "marchesa-viewer-first-zone-exiled",
+            "marchesa-viewer-simultaneous-deaths"
           ]
         }
       ],

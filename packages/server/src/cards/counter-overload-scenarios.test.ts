@@ -30,6 +30,10 @@ describe('pinned counter and overload lab scenarios', () => {
       expect(board).not.toContain('Chosen Overload Witness');
       expect(board).toContain('Forest');
       expect(state.players[0]!.graveyard.map((card) => card.name)).toContain(name);
+      if (name === 'Damn') {
+        expect(board).toContain('Granted Indestructible Knight');
+        expect(board.includes('Knight Exemplar')).toBe(mode === 'normal');
+      }
       const expectedZone =
         name === 'Cyclonic Rift' ? state.players[1]!.hand : state.players[1]!.graveyard;
       expect(expectedZone.map((card) => card.name)).toContain('Chosen Overload Witness');

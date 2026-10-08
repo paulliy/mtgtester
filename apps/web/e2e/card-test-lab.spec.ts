@@ -233,6 +233,7 @@ async function verifyFirstZoneReturn(
   owner: 'P1' | 'P2',
   returns: boolean,
   exile = false,
+  batch = false,
 ) {
   const boards: SpectatorPermanent[][] = [];
   page.on('websocket', (socket) =>
@@ -243,9 +244,17 @@ async function verifyFirstZoneReturn(
     }),
   );
   await runScenario(page, title);
-  await handCard(page, 'Murder').click();
-  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
-  await permanent(page, 'First-Zone Witness').click();
+  await handCard(page, batch ? 'Damn' : 'Murder').click();
+  if (batch) {
+    await page
+      .locator('.source-actions .source-action-row button')
+      .filter({ hasText: /overload/i })
+      .click();
+    await expect(page.getByText(/Target 1 of 1/)).toHaveCount(0);
+  } else {
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await permanent(page, 'First-Zone Witness').click();
+  }
   await confirm(page);
   const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
   const over = page.getByText(/game over/i).first();
@@ -299,6 +308,12 @@ async function verifyFirstZoneReturn(
     await expect(permanent(page, 'First-Zone Witness')).toHaveCount(0);
   }
   await expect(permanent(page, 'Marchesa, the Black Rose')).toBeVisible();
+  if (batch) {
+    await expect(permanent(page, 'Batch No-Counter Witness')).toHaveCount(0);
+    expect(
+      boards.at(-1)!.find((card) => card.name === 'Marchesa, the Black Rose')!.counters,
+    ).toEqual({});
+  }
 }
 
 test('Marchesa: return your dead creature', async ({ page }) => {
@@ -3224,6 +3239,7 @@ async function runSelectedFaceViewer(
   name: string,
   half: boolean,
   commander = false,
+  impulse = false,
 ): Promise<void> {
   const expected = SPELL_FACE_LAB_EXPECTATIONS.find((entry) => entry.name === name)!;
   const pin = SPELL_FACE_VIEWER_PINS.cards.find(
@@ -3239,13 +3255,30 @@ async function runSelectedFaceViewer(
   );
   await runScenario(
     page,
-    commander
-      ? 'Easy Pickings: cast an Adventure commander from the command zone'
-      : half
-        ? `${pin.backFace!.name}: cast the selected spell face`
-        : `${name}: play the ordinary front`,
+    impulse
+      ? `${pin.backFace!.name}: cast the spell face from temporary exile`
+      : commander
+        ? 'Easy Pickings: cast an Adventure commander from the command zone'
+        : half
+          ? `${pin.backFace!.name}: cast the selected spell face`
+          : `${name}: play the ordinary front`,
   );
-  if (commander) await page.locator('.command-zone .commander-card').click();
+  if (impulse) {
+    await handCard(page, 'Independent Impulse Permission').click();
+    await confirm(page);
+    await expect(page.locator('.stack')).toContainText('Independent Impulse Permission');
+    await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+    const castFace = page
+      .locator('.playable-now')
+      .getByRole('button', { name: `Cast ${pin.name}`, exact: true });
+    const reminder = page.getByRole('button', { name: 'Pass anyway', exact: true });
+    await expect
+      .poll(async () => (await castFace.isVisible()) || (await reminder.isVisible()))
+      .toBe(true);
+    if (await reminder.isVisible()) await reminder.click();
+    await expect(castFace).toBeVisible();
+    await castFace.click();
+  } else if (commander) await page.locator('.command-zone .commander-card').click();
   else await handCard(page, name).click();
   if (half && expected.x !== undefined)
     await page.locator('.source-actions input[type="number"]').fill(String(expected.x));
@@ -3276,6 +3309,10 @@ async function runSelectedFaceViewer(
     await page.getByRole('button', { name: 'Play land', exact: true }).click();
   else await confirm(page);
   if (commander) await expect(page.locator('.stack')).toContainText('Easy Pickings');
+  if (impulse) {
+    await expect(page.locator('.stack')).toContainText(pin.backFace!.name);
+    await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  }
   if (!half && name === 'An Unexpected Party')
     await page.getByRole('button', { name: 'Giant', exact: true }).click();
   if (half && expected.scry !== undefined) {
@@ -3366,7 +3403,7 @@ async function runSelectedFaceViewer(
   }
   if (expected.opponentsOnly) expect(own!.damageMarked).toBe(0);
   await expect(page.locator('.human-zone .hand-card')).toHaveCount(
-    (commander ? 1 : 0) +
+    (commander || impulse ? 1 : 0) +
       (expected.draw ?? 0) -
       (expected.discard ?? 0) +
       (expected.search || expected.bounce ? 1 : 0),
@@ -3642,6 +3679,10 @@ async function runOverloadViewer(page: Page, name: string, overload: boolean): P
   await confirm(page);
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Chosen Overload Witness')).toHaveCount(0);
+  if (name === 'Damn') {
+    await expect(permanent(page, 'Granted Indestructible Knight')).toHaveCount(1);
+    await expect(permanent(page, 'Knight Exemplar')).toHaveCount(overload ? 0 : 1);
+  }
   expect(boards.at(-1)!.filter((card) => card.name === 'Forest')).toHaveLength(3);
   for (const witness of ['Other Overload Witness', 'Protected Overload Witness']) {
     await expect(permanent(page, witness)).toHaveCount(overload ? 0 : 1);
@@ -3707,7 +3748,9 @@ test("Force of Negation: counter an opponent's spell", async ({ page }) => {
 test('Easy Pickings: cast an Adventure commander from the command zone', async ({ page }) => {
   await runSelectedFaceViewer(page, 'Glóin the Mighty', true, true);
   await expect(
-    page.locator('.log .line', { hasText: 'casts Glóin the Mighty // Easy Pickings' }),
+    page.locator('.log .line', {
+      hasText: 'Cast Easy Pickings ({2}{R}) via Adventure from the command zone',
+    }),
   ).toHaveCount(1);
 });
 test('Mosswort Bridge: cast a hidden Adventure spell face', async ({ page }) => {
@@ -3736,4 +3779,22 @@ test('Mosswort Bridge: cast a hidden Adventure spell face', async ({ page }) => 
   await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
   await expect(page.getByText(/game over/i).first()).toBeVisible();
   await expect(page.locator('.log .line', { hasText: 'casts Profane Insight' })).toHaveCount(1);
+});
+
+test('Profane Insight: cast the spell face from temporary exile', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Foulmire Knight', true, false, true);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('39');
+});
+test('Roost Seek: cast the spell face from temporary exile', async ({ page }) => {
+  await runSelectedFaceViewer(page, 'Sagu Wildling', true, false, true);
+});
+test('Marchesa: return creatures after simultaneous deaths', async ({ page }) => {
+  await verifyFirstZoneReturn(
+    page,
+    'Marchesa: return creatures after simultaneous deaths',
+    'P2',
+    true,
+    false,
+    true,
+  );
 });

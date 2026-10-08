@@ -214,3 +214,60 @@ it('face-commander-stack-lab retains a real response choice while Easy Pickings 
     ),
   ).toBe(true);
 });
+
+it.each(['Foulmire Knight', 'Sagu Wildling'])(
+  'face-impulse-lab casts the pinned spell half of %s through a normal temporary permission',
+  (name) => {
+    const pin = pins.cards.find(({ card }) => card.name.startsWith(name))!.card;
+    const engine = createCardTestScenario(
+      `${slug(pin.backFace!.name)}-viewer-impulse-face`,
+      `impulse-lab-${slug(name)}`,
+    )!.engine;
+    let impulse = false,
+      face = false,
+      ended = false;
+    for (let count = 0; count < 100; count++) {
+      const step = engine.advance();
+      if (step.kind === 'gameOver') {
+        ended = true;
+        break;
+      }
+      if (step.kind !== 'decision') continue;
+      const request = step.request;
+      const main =
+        request.decidingPlayer === 'P1' &&
+        request.legalActions.find(
+          (action) =>
+            action.type === 'castSpell' &&
+            ((!impulse && action.description.includes('Independent Impulse Permission')) ||
+              (impulse &&
+                !face &&
+                action.data?.['castVariant'] ===
+                  (name === 'Sagu Wildling' ? 'omen' : 'adventure'))),
+        );
+      const action =
+        main ||
+        request.legalActions.find((action) => action.type === 'pass') ||
+        request.legalActions[0]!;
+      if (main) {
+        if (!impulse) impulse = true;
+        else face = true;
+      }
+      engine.submit({ requestId: request.requestId, actionId: action.id });
+    }
+    expect(impulse && face && ended).toBe(true);
+    expect(engine.view('P1').hand).toHaveLength(2);
+    expect(engine.getState().battlefield.some((card) => card.name === pin.name)).toBe(false);
+    if (name === 'Foulmire Knight') {
+      expect(engine.view('P1').life).toBe(39);
+      expect(engine.getState().exile.some((card) => card.name === pin.name)).toBe(true);
+    } else {
+      expect(engine.getState().players[0]!.library.some((card) => card.name === pin.name)).toBe(
+        true,
+      );
+      expect(engine.view('P1').hand.some((card) => card.typeLine?.includes('Basic Land'))).toBe(
+        true,
+      );
+    }
+  },
+);

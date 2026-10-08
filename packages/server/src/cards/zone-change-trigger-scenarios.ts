@@ -64,6 +64,14 @@ const cases = [
     counters: true,
     bog: true,
   },
+  {
+    id: 'marchesa-viewer-simultaneous-deaths',
+    title: 'Marchesa: return creatures after simultaneous deaths',
+    owner: 'P2',
+    controller: 'P1',
+    counters: true,
+    bog: false,
+  },
 ] as const;
 export const ZONE_CHANGE_TRIGGER_SCENARIO_IDS = cases.map((entry) => entry.id);
 
@@ -73,6 +81,16 @@ export function zoneChangeTriggerScenario(id: string, gameId: GameId): CardTestS
   const marchesa = pinned('Marchesa, the Black Rose');
   const murder = pinned('Murder').card;
   const bog = pinned('Bojuka Bog').card;
+  const batch = id === 'marchesa-viewer-simultaneous-deaths';
+  const wipePin = JSON.parse(
+    readFileSync('packages/engine/tests/fixtures/overload-derivation-oracle.json', 'utf8'),
+  ).cards.find((pin: { card: OracleCard }) => pin.card.name === 'Damn') as {
+    card: OracleCard;
+    sha256: string;
+  };
+  if (createHash('sha256').update(JSON.stringify(wipePin.card)).digest('hex') !== wipePin.sha256)
+    throw new Error('Batch-death Damn Oracle pin drift');
+  const removal = batch ? wipePin.card : murder;
   const witness: OracleCard = {
     ...lands[0]!,
     oracleId: 'lab-first-zone-witness',
@@ -92,6 +110,12 @@ export function zoneChangeTriggerScenario(id: string, gameId: GameId): CardTestS
     toughness: '2',
   };
   const mana = [...lands, ...lands];
+  const noCounter = {
+    ...witness,
+    oracleId: 'lab-batch-no-counter',
+    scryfallId: 'lab-batch-no-counter',
+    name: 'Batch No-Counter Witness',
+  };
   const seed = `card-lab-${id}-v1`;
   const players = (['P1', 'P2', 'P3', 'P4'] as const).map((seat) => ({
     id: seat,
@@ -99,17 +123,27 @@ export function zoneChangeTriggerScenario(id: string, gameId: GameId): CardTestS
     commanders: [],
     cards: [
       ...lands,
-      ...(seat === 'P1' ? [marchesa.card, murder, ...mana, ...(entry.bog ? [bog] : [])] : []),
+      ...(seat === 'P1'
+        ? [
+            marchesa.card,
+            removal,
+            ...mana,
+            ...(batch ? [noCounter] : []),
+            ...(entry.bog ? [bog] : []),
+          ]
+        : []),
       ...(seat === entry.owner ? [witness] : []),
     ],
   }));
   return {
     metadata: {
       id,
-      version: 1,
+      version: batch ? 2 : 1,
       title: entry.title,
       instructions: [
-        'Cast Murder on First-Zone Witness.',
+        batch
+          ? 'Cast Damn with overload, destroying all creatures simultaneously.'
+          : 'Cast Murder on First-Zone Witness.',
         ...(entry.bog ? ['After it dies, play Bojuka Bog and exile P2’s graveyard.'] : []),
         'Pass to the next end step.',
       ],
@@ -143,9 +177,17 @@ export function zoneChangeTriggerScenario(id: string, gameId: GameId): CardTestS
           phase: 'precombatMain',
           step: null,
           turnNumber: 1,
-          hand: [{ playerId: 'P1', cardNames: [murder.name, ...(entry.bog ? [bog.name] : [])] }],
+          hand: [{ playerId: 'P1', cardNames: [removal.name, ...(entry.bog ? [bog.name] : [])] }],
           battlefield: [
-            { playerId: 'P1', cardNames: [marchesa.card.name, ...mana.map((card) => card.name)] },
+            {
+              playerId: 'P1',
+              cardNames: [...mana.map((card) => card.name), ...(batch ? [noCounter.name] : [])],
+            },
+            {
+              playerId: 'P1',
+              cardNames: [marchesa.card.name],
+              ...(batch ? { counters: { '+1/+1': 1 } } : {}),
+            },
             {
               playerId: entry.owner,
               controllerId: entry.controller,

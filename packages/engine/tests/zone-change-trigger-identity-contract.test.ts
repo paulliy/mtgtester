@@ -1,7 +1,11 @@
+import { readFileSync } from 'node:fs';
+import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import type { Effect, TargetSpec } from '../src/cards/ability';
 import { validateCardDefinition } from '../src/cards/authoring-validation';
 import { createGame } from '../src/state/game';
+import { addMana } from '../src/mana/pool';
+import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { applyPriorityAction } from '../src/actions/apply';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -128,3 +132,96 @@ describe('zone-change triggers remember only the first public destination incarn
           } else expect(returned).toBeUndefined();
         });
 });
+
+it.each(['stayed', 'after registration'])(
+  'batch-death-first-destination preserves separate identities after %s',
+  (movement) => {
+    const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) }))));
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    ctx.state.phase = 'precombatMain';
+    const player = ctx.state.players[0]!;
+    const pins = JSON.parse(
+      readFileSync('packages/engine/tests/fixtures/zone-change-trigger-oracle.json', 'utf8'),
+    ) as { cards: { card: OracleCard }[] };
+    const marchesa = spawn(
+      ctx,
+      'P1',
+      pins.cards.find(({ card }) => card.name === 'Marchesa, the Black Rose')!.card,
+    );
+    const own = spawn(ctx, 'P1', oracle({ name: 'Independent batch own victim' }));
+    const theirs = spawn(ctx, 'P2', oracle({ name: 'Independent batch stolen victim' }));
+    theirs.controllerId = 'P1';
+    for (const permanent of [marchesa, own, theirs]) permanent.counters['+1/+1'] = 1;
+    const batchPins = JSON.parse(
+      readFileSync('packages/engine/tests/fixtures/overload-static-review-oracle.json', 'utf8'),
+    ) as { cards: { card: OracleCard }[] };
+    const spell = conjure(
+      ctx,
+      'P1',
+      batchPins.cards.find(({ card }) => card.name === 'Blasphemous Act')!.card,
+      'hand',
+    );
+    addMana(
+      player,
+      Array.from({ length: 9 }, () => ({ symbol: 'R' as const })),
+    );
+    const action = computePriorityOptions(ctx, player).find(
+      (option) =>
+        (option.payload as PriorityActionPayload).kind === 'castSpell' &&
+        (option.payload as { objectId?: string }).objectId === spell.id,
+    )!;
+    expect(action).toBeDefined();
+    pump(
+      applyPriorityAction(ctx, player, action.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
+    pump(resolveTopOfStack(ctx));
+    pump(runPrioritySequence(ctx));
+    expect(ctx.state.delayedTriggers).toHaveLength(3);
+    const destinations = ctx.state.delayedTriggers.map((trigger) => trigger.targetObjectId);
+    expect(new Set(destinations).size).toBe(3);
+    // A normal graveyard response cannot make a delayed return follow a later incarnation.
+    if (movement !== 'stayed') {
+      const response = conjure(
+        ctx,
+        'P1',
+        oracle({
+          name: 'Independent batch graveyard response',
+          typeLine: 'Instant',
+          manaCost: '{0}',
+          oracleText: 'You gain 1 life.',
+        }),
+        'hand',
+      );
+      ctx.defs.set(response.oracleId, {
+        ...ctx.defs.get(response.oracleId)!,
+        spellAbility: {
+          kind: 'spell',
+          targets: [{ kind: 'player' }],
+          effects: [{ op: 'exileTargetPlayerGraveyard', target: 0 }],
+        },
+      });
+      pump(
+        applyPriorityAction(
+          ctx,
+          player,
+          { kind: 'castSpell', objectId: response.id, fromCommand: false },
+          { index: 0, targets: new Map([[0, 'P2']]) },
+        ),
+      );
+      pump(resolveTopOfStack(ctx));
+    }
+    queueStepTriggers(ctx, 'endStep');
+    pump(runPrioritySequence(ctx));
+    expect(ctx.state.battlefield.some((card) => card.cardId === own.cardId)).toBe(true);
+    expect(ctx.state.battlefield.some((card) => card.cardId === marchesa.cardId)).toBe(true);
+    const returned = ctx.state.battlefield.find((card) => card.cardId === theirs.cardId);
+    if (movement === 'stayed') {
+      expect(returned?.ownerId).toBe('P2');
+      expect(returned?.controllerId).toBe('P1');
+    } else expect(returned).toBeUndefined();
+  },
+);

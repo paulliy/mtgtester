@@ -11,6 +11,7 @@ const expected = [
   { id: 'marchesa-viewer-first-zone-no-counter', owner: 'P1', returns: false },
   { id: 'marchesa-viewer-first-zone-opponent-controlled', owner: 'P2', returns: false },
   { id: 'marchesa-viewer-first-zone-exiled', owner: 'P2', returns: false },
+  { id: 'marchesa-viewer-simultaneous-deaths', owner: 'P2', returns: true },
 ] as const;
 
 describe('pinned Marchesa first-zone real Lab scenarios', () => {
@@ -64,7 +65,11 @@ describe('pinned Marchesa first-zone real Lab scenarios', () => {
         request.decidingPlayer === 'P1' &&
         request.legalActions.find(
           (action) =>
-            (!murder && action.type === 'castSpell' && action.description.includes('Murder')) ||
+            (!murder &&
+              action.type === 'castSpell' &&
+              (entry.id === 'marchesa-viewer-simultaneous-deaths'
+                ? action.description.includes('Damn') && action.description.includes('Overload')
+                : action.description.includes('Murder'))) ||
             (murder &&
               !bog &&
               action.type === 'playLand' &&
@@ -112,7 +117,23 @@ describe('pinned Marchesa first-zone real Lab scenarios', () => {
       !entry.returns && !bog,
     );
     expect(state.exile.some((card) => card.name === 'First-Zone Witness')).toBe(bog);
-    expect(state.players[0]!.graveyard.filter((card) => card.name === 'Murder')).toHaveLength(1);
+    expect(
+      state.players[0]!.graveyard.filter(
+        (card) =>
+          card.name === (entry.id === 'marchesa-viewer-simultaneous-deaths' ? 'Damn' : 'Murder'),
+      ),
+    ).toHaveLength(1);
+    if (entry.id === 'marchesa-viewer-simultaneous-deaths') {
+      expect(
+        state.battlefield.find((card) => card.name === 'Marchesa, the Black Rose')?.counters,
+      ).toEqual({});
+      expect(state.battlefield.some((card) => card.name === 'Batch No-Counter Witness')).toBe(
+        false,
+      );
+      expect(
+        state.players[0]!.graveyard.some((card) => card.name === 'Batch No-Counter Witness'),
+      ).toBe(true);
+    }
     expect(JSON.stringify(engine.view('P1'))).not.toMatch(
       /firstDestinationObjectId|lastKnownFacts|resolutionObjectFacts|sourceCastState/,
     );

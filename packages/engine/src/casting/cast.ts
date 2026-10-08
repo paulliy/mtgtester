@@ -456,9 +456,16 @@ function* proposeCast(
     const freeSpellFace =
       resolutionPermission !== undefined &&
       (selectedAlternative.kind === 'adventure' || selectedAlternative.kind === 'omen');
+    const temporaryExileSpellFace =
+      payload.fromExile === true &&
+      obj.playableUntilEotBy === player.id &&
+      (selectedAlternative.kind === 'adventure' || selectedAlternative.kind === 'omen');
     if (
-      (!freeSpellFace && (payload.fromLibraryTop === true || payload.fromExile === true)) ||
+      (!freeSpellFace &&
+        (payload.fromLibraryTop === true ||
+          (payload.fromExile === true && !temporaryExileSpellFace))) ||
       (payload.fromCommand && from === 'hand') ||
+      (payload.fromExile === true && from === 'hand') ||
       (!freeSpellFace &&
         (payload.fromGraveyard === true
           ? from !== 'graveyard'

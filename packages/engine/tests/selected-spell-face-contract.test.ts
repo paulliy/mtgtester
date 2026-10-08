@@ -790,3 +790,49 @@ it('face-commander-tax offers and casts Easy Pickings from the command zone with
   expect(other.damageMarked).toBe(1);
   expect(own.damageMarked).toBe(0);
 });
+
+it.each(['Foulmire Knight', 'Sagu Wildling'])(
+  'face-impulse-permission pays and resolves the selected face of %s',
+  (name) => {
+    const input = pinned.cards.find(({ card }) => card.name.startsWith(name))!.card;
+    const state = setup(input);
+    state.player.hand.splice(state.player.hand.indexOf(state.card), 1);
+    state.card.zone = 'exile';
+    state.ctx.state.exile.push(state.card);
+    const payload: Extract<PriorityActionPayload, { kind: 'castSpell' }> = {
+      kind: 'castSpell',
+      objectId: state.card.id,
+      fromCommand: false,
+      fromExile: true,
+      alternativeCast: name === 'Sagu Wildling' ? 'omen' : 'adventure',
+      altIndex: 0,
+    };
+    state.card.onAdventure = true;
+    expect(state.options()).toEqual([]);
+    const before = cloneContractContext(state.ctx);
+    expect(() =>
+      pump(applyPriorityAction(state.ctx, state.player, payload, { index: 0, targets: new Map() })),
+    ).toThrow(/not supported from this zone/);
+    expect(state.ctx.state).toEqual(before.state);
+    state.card.playableUntilEotBy = 'P2';
+    expect(state.options()).toEqual([]);
+    state.card.playableUntilEotBy = 'P1';
+    expect(state.options()).toEqual([]);
+    plentifulMana(state.player);
+    const entry = state.cast();
+    expect(entry.description).toBe(input.backFace!.name);
+    expect(entry.triggerScope?.manaSpent).toBe(name === 'Sagu Wildling' ? 1 : 3);
+    const handBefore = state.player.hand.length;
+    pump(resolveTopOfStack(state.ctx));
+    expect(state.player.hand.length).toBe(handBefore + 1);
+    if (name === 'Foulmire Knight') {
+      expect(state.player.life).toBe(39);
+      expect(
+        state.ctx.state.exile.find((card) => card.cardId === state.card.cardId)?.onAdventure,
+      ).toBe(true);
+    } else {
+      expect(state.player.library.some((card) => card.cardId === state.card.cardId)).toBe(true);
+      expect(state.ctx.state.exile.some((card) => card.cardId === state.card.cardId)).toBe(false);
+    }
+  },
+);

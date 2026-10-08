@@ -350,3 +350,38 @@ describe('guarded Overload lowering and casting', () => {
     expect(state.ctx.state).toEqual(before.state);
   });
 });
+
+it.each([false, true])(
+  'damn-simultaneous-indestructible is independent of battlefield order %s',
+  (reverse) => {
+    const state = setup('Damn');
+    const pin = JSON.parse(
+      readFileSync('packages/engine/tests/fixtures/overload-static-review-oracle.json', 'utf8'),
+    ) as { cards: { card: OracleCard; sha256: string }[] };
+    const exemplarPin = pin.cards.find(({ card }) => card.name === 'Knight Exemplar')!;
+    expect(createHash('sha256').update(JSON.stringify(exemplarPin.card)).digest('hex')).toBe(
+      exemplarPin.sha256,
+    );
+    const exemplar = spawn(state.ctx, 'P2', exemplarPin.card);
+    const knight = spawn(
+      state.ctx,
+      'P2',
+      oracle({
+        name: 'Independent protected Knight',
+        typeLine: 'Creature — Knight',
+        power: '2',
+        toughness: '2',
+      }),
+    );
+    const ordinary = spawn(state.ctx, 'P2', bear());
+    if (reverse) state.ctx.state.battlefield.reverse();
+    const option = state
+      .options()
+      .find((option) => (option.payload as Cast).alternativeCast === 'overload')!;
+    state.cast(option.payload as Cast);
+    pump(resolveTopOfStack(state.ctx));
+    expect(state.ctx.state.battlefield).toContain(knight);
+    expect(state.ctx.state.battlefield).not.toContain(exemplar);
+    expect(state.ctx.state.battlefield).not.toContain(ordinary);
+  },
+);

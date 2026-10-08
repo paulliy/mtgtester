@@ -193,6 +193,7 @@ const SOURCE_FILES = [
   'packages/engine/tests/fixtures/specialized-reference-oracle.json',
   'packages/server/src/cards/specialized-reference-scenarios.ts',
   'packages/engine/src/cards/mana-production.ts',
+  'packages/engine/tests/fixtures/overload-static-review-oracle.json',
 ] as const;
 
 const TRACE_PATH =

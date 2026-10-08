@@ -1770,6 +1770,7 @@ export function* movePermanentsToGraveyard(
   ctx.state.creaturesDiedThisTurn += permanents.filter((perm) =>
     computeCharacteristics(ctx, perm).types.includes('Creature'),
   ).length;
+  const pendingStart = ctx.state.pendingTriggers.length;
   if (reason === 'sacrifice')
     queueTriggersForEvent(
       ctx,
@@ -1781,12 +1782,21 @@ export function* movePermanentsToGraveyard(
     'dies',
     permanents.map((permanent) => ({ permanent })),
   );
+  // Watchers and last-known facts are captured before any member leaves. Destination
+  // incarnations become available only during movement; bind them to these exact firings.
+  const departureTriggers = ctx.state.pendingTriggers.slice(pendingStart);
   for (const perm of permanents) {
     yield* moveObject(ctx, perm, {
       zone: 'graveyard',
       deferLeaveProcessing: true,
       lastKnownFacts: departureFacts.get(perm.id)!,
     });
+    if (perm.firstDestinationObjectId !== undefined) {
+      for (const trigger of departureTriggers) {
+        if (trigger.scope?.eventObjectId === perm.id)
+          trigger.scope.eventObjectDestinationId = perm.firstDestinationObjectId;
+      }
+    }
   }
   // Linked returns happen after every member has left; ETB effects cannot change
   // which other permanents were dying in the same event.

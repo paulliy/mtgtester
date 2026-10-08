@@ -18,6 +18,8 @@ export interface PreparedScenarioSpec {
     counters?: Record<string, number>;
   }>;
   graveyard?: Array<{ playerId: PlayerId; cardNames: string[] }>;
+  /** Arrange known initial library tops; subsequent moves use ordinary rules. */
+  libraryTop?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /** Arrange already-cast spells below the tested response. */
   stack?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /** Lab-only finite continuation used to exercise next-upkeep delayed triggers. */
@@ -112,6 +114,12 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
       card.zone = 'graveyard';
       player.graveyard.push(card);
     }
+  }
+
+  for (const entry of spec.libraryTop ?? []) {
+    const player = ctx.state.players.find((candidate) => candidate.id === entry.playerId)!;
+    const cards = entry.cardNames.map((name) => takeNamedCard(ctx, entry.playerId, name));
+    player.library.unshift(...cards);
   }
 
   for (const entry of spec.stack ?? []) {

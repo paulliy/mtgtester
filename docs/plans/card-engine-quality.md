@@ -897,3 +897,19 @@ the server's new decision and its matching controls, including a direct terminal
 payment is possible. These are scenario/driver corrections; printed clauses and outcome
 assertions are retained. The affected final scenario/manifest/face contracts pass 360 tests.
 Latest-head CI and a fresh complete viewer receipt remain required for review closure.
+
+The next review round identified three further correctness gaps. Broad temporary exile
+permissions now offer and validate selected Adventure/Omen faces while Adventure's own
+permission remains limited to the permanent face. Simultaneous graveyard departures bind
+each already captured event scope to its exact first destination. `destroyEach` evaluates
+indestructibility before any static-granting permanent leaves and moves the destroyed set
+as one event. New regressions use pinned Knight Exemplar, Damn, Blasphemous Act, Marchesa,
+Foulmire Knight and Sagu Wildling; the Lab catalog now requires 229 browser cases, including
+temporary exile faces and simultaneous deaths. The commander log assertion uses the actual
+normal-action description while retaining the once-only cast and public-stack assertions.
+
+This round passed 428 focused normal-path and manifest tests, production/test/tooling types,
+lint, format, build, and unchanged interpretation/override snapshots. The new Oracle fixture
+is included in all five generator source closures, and benchmark compatibility hashes are
+refreshed. Complete engine, browser, primitive and current-head CI evidence is still pending;
+interrupted and failed iterations remain historical, without generated passing claims.

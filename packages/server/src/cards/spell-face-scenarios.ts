@@ -31,23 +31,29 @@ const cases = SPELL_FACE_LAB_EXPECTATIONS.flatMap((expected) => {
   return (
     expected.name === 'Glóin the Mighty'
       ? (['front', 'half', 'commander'] as const)
-      : (['front', 'half'] as const)
+      : expected.name === 'Foulmire Knight' || expected.name === 'Sagu Wildling'
+        ? (['front', 'half', 'impulse'] as const)
+        : (['front', 'half'] as const)
   ).map((mode) => ({
     ...pin,
     expected,
     mode,
     id:
-      mode === 'commander'
-        ? 'easy-pickings-viewer-commander-face'
-        : mode === 'half'
-          ? `${slug(pin.card.backFace!.name)}-viewer-normal-face`
-          : `${slug(expected.name)}-viewer-front`,
+      mode === 'impulse'
+        ? `${slug(pin.card.backFace!.name)}-viewer-impulse-face`
+        : mode === 'commander'
+          ? 'easy-pickings-viewer-commander-face'
+          : mode === 'half'
+            ? `${slug(pin.card.backFace!.name)}-viewer-normal-face`
+            : `${slug(expected.name)}-viewer-front`,
     title:
-      mode === 'commander'
-        ? 'Easy Pickings: cast an Adventure commander from the command zone'
-        : mode === 'half'
-          ? `${pin.card.backFace!.name}: cast the selected spell face`
-          : `${expected.name}: play the ordinary front`,
+      mode === 'impulse'
+        ? `${pin.card.backFace!.name}: cast the spell face from temporary exile`
+        : mode === 'commander'
+          ? 'Easy Pickings: cast an Adventure commander from the command zone'
+          : mode === 'half'
+            ? `${pin.card.backFace!.name}: cast the selected spell face`
+            : `${expected.name}: play the ordinary front`,
   }));
 });
 export const SPELL_FACE_SCENARIO_IDS = cases.map(({ id }) => id);
@@ -82,6 +88,11 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
   const artifact = witness('Chosen Face Artifact', 'Artifact');
   const giant = witness('Face Giant Witness', 'Creature — Giant');
   const response = witness('Independent Commander Response', 'Instant', 'You gain 1 life.');
+  const impulse = witness(
+    'Independent Impulse Permission',
+    'Instant',
+    'Choose one —\n• Exile the top one card of your library. You may play it this turn.',
+  );
   const mana = [...lands, ...lands];
   const library = entry.expected.search
     ? [...lands]
@@ -98,7 +109,11 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
     cards:
       seat === 'P1'
         ? [
-            ...(entry.mode === 'commander' ? [response] : [entry.card]),
+            ...(entry.mode === 'commander'
+              ? [response]
+              : entry.mode === 'impulse'
+                ? [entry.card, impulse, response]
+                : [entry.card]),
             own,
             giant,
             ...mana,
@@ -111,9 +126,12 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
   return {
     metadata: {
       id,
-      version: 1,
+      version: entry.mode === 'impulse' ? 2 : 1,
       title: entry.title,
       instructions: [
+        ...(entry.mode === 'impulse'
+          ? ['Cast Independent Impulse Permission, pass, then choose the exiled spell face.']
+          : []),
         `Play ${entry.mode !== 'front' ? entry.card.backFace!.name : entry.expected.name} through the normal controls.`,
         'Choose the indicated witness, complete printed choices, then pass to finish.',
       ],
@@ -149,7 +167,10 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
           hand: [
             {
               playerId: 'P1',
-              cardNames: [entry.mode === 'commander' ? response.name : entry.card.name],
+              cardNames:
+                entry.mode === 'impulse'
+                  ? [impulse.name, response.name]
+                  : [entry.mode === 'commander' ? response.name : entry.card.name],
             },
           ],
           battlefield: [
@@ -157,6 +178,9 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
             { playerId: 'P2', cardNames: [other.name], tapped: entry.expected.untap ?? false },
             { playerId: 'P2', cardNames: [artifact.name] },
           ],
+          ...(entry.mode === 'impulse'
+            ? { libraryTop: [{ playerId: 'P1' as const, cardNames: [entry.card.name] }] }
+            : {}),
         },
       },
     ),

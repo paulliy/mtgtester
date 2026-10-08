@@ -1949,10 +1949,22 @@ export function* executeAbility(
         break;
       }
       case 'destroyEach': {
-        // The affected set is fixed here (CR 611.2c), mirroring `damageEach`/`putCountersEach`.
-        for (const perm of affectedBy(ctx, source, effect.selector)) {
-          yield* destroyPermanent(ctx, source, perm, effect.cantRegenerate === true);
+        // CR 701.7: evaluate indestructibility before any static-granting permanent leaves.
+        // Replacements and all death watchers likewise see one simultaneous departure event.
+        const affected = affectedBy(ctx, source, effect.selector);
+        const protectedIds = new Set(
+          affected.filter((perm) => hasKeyword(ctx, perm, 'indestructible')).map((perm) => perm.id),
+        );
+        const destroyed: EnginePermanent[] = [];
+        for (const perm of affected) {
+          if (protectedIds.has(perm.id)) {
+            emit(ctx, 'destroyPrevented', { target: perm.name, source: source.name });
+          } else if (!consumeRegenerationShield(ctx, perm, effect.cantRegenerate === true)) {
+            emit(ctx, 'destroy', { target: perm.name, source: source.name });
+            destroyed.push(perm);
+          }
         }
+        yield* movePermanentsToGraveyard(ctx, destroyed);
         break;
       }
       case 'exileTargetPlayerGraveyard': {

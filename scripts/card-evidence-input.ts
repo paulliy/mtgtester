@@ -1518,6 +1518,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   { file: 'card-test-lab.spec.ts', titlePath: ['Vandalblast: overload without targets'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Damn: one normal target'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Damn: overload without targets'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Profane Insight: cast the spell face from temporary exile'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Roost Seek: cast the spell face from temporary exile'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Marchesa: return creatures after simultaneous deaths'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

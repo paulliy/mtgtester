@@ -1047,10 +1047,12 @@ export function computePriorityOptions(
         }
       }
     }
-    // Resolution and temporary exile/library permissions are migrated separately; never
-    // fabricate a source-zone payload for an alternative that has no such permission.
-    if (!fromExile && !fromLibraryTop) {
+    // Adventure's own exile permission allows only the permanent face. A broad temporary
+    // play permission also permits choosing a spell face, without granting alternate costs.
+    if ((!fromExile || obj.playableUntilEotBy === player.id) && !fromLibraryTop) {
       for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
+        if (fromExile && alt.kind !== 'adventure' && alt.kind !== 'omen') continue;
+        if (fromExile && alt.from === 'hand') continue;
         if (fromCommand && alt.from === 'hand') continue;
         if (
           fromGraveyard
