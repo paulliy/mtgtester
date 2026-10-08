@@ -2645,12 +2645,6 @@
     }
   },
   {
-    "oracleId": "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c",
-    "name": "Hour of Reckoning",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
     "name": "Backlash",
     "handledLines": [],
@@ -16283,12 +16277,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-hour-of-reckoning",
-    "name": "Hour of Reckoning",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-humble-defector",

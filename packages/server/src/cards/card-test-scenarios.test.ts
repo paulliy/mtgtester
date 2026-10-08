@@ -203,6 +203,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'anrakyr-the-traveller-viewer-cast-for-life',
       'toxic-deluge-viewer-pay-two-life',
       'conclave-tribunal-viewer-convoke',
+      'hour-of-reckoning-viewer-convoke',
     ]);
   });
 

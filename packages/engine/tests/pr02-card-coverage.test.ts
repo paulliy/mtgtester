@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
-import { ofType } from '../src/cards/selector';
+import { allOf, IS_TOKEN, not, ofType } from '../src/cards/selector';
 import { fixtureOracleId, getOverride, registerOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
@@ -3485,6 +3485,75 @@ describe('Conclave Tribunal', () => {
   });
 });
 
+describe('Hour of Reckoning', () => {
+  const hour = pinned('Hour of Reckoning');
+  const knight = (name: string, colors: 'W'[] = []) =>
+    oracle({ name, typeLine: 'Creature — Knight', colors, manaCost: '{1}' });
+
+  it('hour-of-reckoning-pinned-oracle-supported — convoke and a nontoken-creature wipe', () => {
+    expect(hour.sha256).toBe('5eb44a788bb619b66c8ba3006f639178af53b512c0aedf77cbbbcee0c0e8c135');
+    expect(hour.card.oracleText).toBe(
+      "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nDestroy all nontoken creatures.",
+    );
+    expectModeled(hour.card);
+    expect(getOverride(hour.card.oracleId)).toBeUndefined();
+    const def = interpretCard(hour.card);
+    expect(def.ruleStatics).toContainEqual({ kind: 'convoke' });
+    expect(def.spellAbility?.effects).toEqual([
+      { op: 'destroyEach', selector: allOf(not(IS_TOKEN), ofType('Creature')) },
+    ]);
+  });
+
+  it('hour-of-reckoning-convoke-seven — seven creatures, three of them white, pay {4}{W}{W}{W}', () => {
+    const ctx = pod('hour-convoke');
+    const crew = [
+      ...[1, 2, 3].map((i) => spawn(ctx, 'P1', knight(`Hour White ${i}`, ['W']))),
+      ...[1, 2, 3, 4].map((i) => spawn(ctx, 'P1', knight(`Hour Plain ${i}`))),
+    ];
+    const inHand = conjure(ctx, 'P1', hour.card, 'hand');
+    const option = castOptionFor(ctx, 'P1', inHand.id);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(crew.every((creature) => creature.tapped)).toBe(true);
+    expect(ctx.state.stack.at(-1)?.triggerScope?.manaSpent).toBe(0);
+  });
+
+  it('hour-of-reckoning-convoke-needs-white — two white creatures cannot pay {W}{W}{W}', () => {
+    const ctx = pod('hour-no-white');
+    for (let i = 1; i <= 7; i++) spawn(ctx, 'P1', knight(`Hour Plain ${i}`));
+    spawn(ctx, 'P1', knight('Hour White 1', ['W']));
+    spawn(ctx, 'P1', knight('Hour White 2', ['W']));
+    const inHand = conjure(ctx, 'P1', hour.card, 'hand');
+    // Nine creatures but only two white: the third {W} has no payer.
+    expect(castOptionFor(ctx, 'P1', inHand.id)).toBeUndefined();
+    spawn(ctx, 'P1', plains());
+    expect(castOptionFor(ctx, 'P1', inHand.id)).toBeDefined();
+  });
+
+  it('hour-of-reckoning-destroys-nontoken — every nontoken creature dies, the convokers included; tokens stay', () => {
+    const ctx = pod('hour-destroy');
+    for (let i = 1; i <= 3; i++) spawn(ctx, 'P1', knight(`Hour White ${i}`, ['W']));
+    for (let i = 1; i <= 4; i++) spawn(ctx, 'P1', knight(`Hour Plain ${i}`));
+    const token = spawn(ctx, 'P1', knight('Hour Soldier Token', ['W']), { isToken: true });
+    const rival = spawn(ctx, 'P2', knight('Hour Rival'));
+    const relic = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Hour Relic', typeLine: 'Artifact', power: null, toughness: null }),
+    );
+    const inHand = conjure(ctx, 'P1', hour.card, 'hand');
+    takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', inHand.id)!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const names = ctx.state.battlefield.map((perm) => perm.name);
+    expect(
+      names.filter((name) => name.startsWith('Hour White') || name.startsWith('Hour Plain')),
+    ).toEqual([]);
+    expect(ctx.state.battlefield.some((perm) => perm.id === rival.id)).toBe(false);
+    expect(ctx.state.battlefield.some((perm) => perm.id === token.id)).toBe(true);
+    expect(ctx.state.battlefield.some((perm) => perm.id === relic.id)).toBe(true);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -3497,6 +3566,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Hour of Reckoning',
+    sha256: '5eb44a788bb619b66c8ba3006f639178af53b512c0aedf77cbbbcee0c0e8c135',
+    clauseCount: 2,
+  },
   {
     name: 'Conclave Tribunal',
     sha256: 'bead25eae71e919428001104ee03ad6fe6261144a909897511225298eb235fb9',

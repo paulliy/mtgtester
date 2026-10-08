@@ -6772,6 +6772,45 @@ function conclaveTribunalScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function hourOfReckoningScenario(gameId: GameId): CardTestScenario {
+  const hour = pinnedFrom(MARCHESA_BATCH1, 'Hour of Reckoning');
+  return pr01Scenario(gameId, {
+    id: 'hour-of-reckoning-viewer-convoke',
+    title: 'Hour of Reckoning: three Plains and four convoked creatures',
+    instructions: [
+      'Cast Hour of Reckoning: three Plains pay {W}{W}{W} and your four creatures convoke for {4}.',
+    ],
+    expectedOutcome:
+      "Every nontoken creature is destroyed, your four convoked creatures and P2's Lab Anrakyr Golem included.",
+    oracleSha256: hour.sha256,
+    clauseIds: ['hour-of-reckoning-convoke', 'hour-of-reckoning-destroy'],
+    decks: {
+      P1: [hour.card, PLAINS, PLAINS, PLAINS, LAB_OX, LAB_GENERIC_BEAR, LAB_ZOMBIE, LAB_GIANT],
+      P2: [LAB_ANRAKYR_GOLEM, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Hour of Reckoning'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Plains',
+            'Plains',
+            'Plains',
+            'Lab Ox',
+            'Lab Generic Bear',
+            'Lab Zombie',
+            'Lab Giant',
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Anrakyr Golem'] },
+      ],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -7011,6 +7050,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'anrakyr-the-traveller-viewer-cast-for-life',
   'toxic-deluge-viewer-pay-two-life',
   'conclave-tribunal-viewer-convoke',
+  'hour-of-reckoning-viewer-convoke',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7170,6 +7210,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'anrakyr-the-traveller-viewer-cast-for-life': anrakyrScenario,
   'toxic-deluge-viewer-pay-two-life': toxicDelugeScenario,
   'conclave-tribunal-viewer-convoke': conclaveTribunalScenario,
+  'hour-of-reckoning-viewer-convoke': hourOfReckoningScenario,
 };
 
 export function createCardTestScenario(

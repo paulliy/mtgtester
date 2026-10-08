@@ -1554,9 +1554,9 @@ function parseEffectSentence(
   // modes) â€” the untargeted mass form, by tribe.
   {
     const m = s.match(/^destroy all (non-)?(.+?) creatures$/);
-    if (m) {
-      const subtype = resolveSubtype(m[2] as string, card);
-      if (subtype === null) return null;
+    // Not a creature type ("destroy all nontoken creatures"): leave it to the generic mass form.
+    const subtype = m === null ? null : resolveSubtype(m[2] as string, card);
+    if (m !== null && subtype !== null) {
       const tribe = ofSubtype(subtype);
       const selector = allOf(ofType('Creature'), m[1] !== undefined ? not(tribe) : tribe);
       return [{ op: 'destroyEach', selector }];
@@ -2728,6 +2728,13 @@ function parseMassSubject(phrase: string, card: OracleCard): Selector | null {
       parts.push(keywordClause[2] === undefined ? leaf : not(leaf));
       noun = keywordClause[1] as string;
     }
+  }
+
+  // "destroy all nontoken creatures" (Hour of Reckoning): tokens are spared.
+  const nontoken = noun.match(/^nontoken (.+)$/i);
+  if (nontoken !== null) {
+    parts.push(not(IS_TOKEN));
+    noun = nontoken[1] as string;
   }
 
   // "artifacts and enchantments" is one mass-removal subject, not two independent effects.

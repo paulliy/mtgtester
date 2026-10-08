@@ -1470,6 +1470,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Conclave Tribunal: convoke with three creatures'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hour of Reckoning: three Plains and four convoked creatures'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

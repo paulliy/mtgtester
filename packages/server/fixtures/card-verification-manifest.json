@@ -4406,13 +4406,30 @@
     "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c": {
       "name": "Hour of Reckoning",
       "oracleSha256": "5eb44a788bb619b66c8ba3006f639178af53b512c0aedf77cbbbcee0c0e8c135",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nDestroy all nontoken creatures.",
-          "implementation": ["explicitly unsupported; convoke is never offered as a payment"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "hour-of-reckoning-convoke",
+          "oracleText": "Convoke",
+          "implementation": [
+            "interpreted convoke ruleStatic: untapped creatures you control pay {1} or one mana of their color while casting, not counted as mana spent (CR 702.51)"
+          ],
+          "engineTestIds": [
+            "hour-of-reckoning-pinned-oracle-supported",
+            "hour-of-reckoning-convoke-seven",
+            "hour-of-reckoning-convoke-needs-white"
+          ],
+          "viewerScenarioIds": ["hour-of-reckoning-viewer-convoke"]
+        },
+        {
+          "id": "hour-of-reckoning-destroy",
+          "oracleText": "Destroy all nontoken creatures.",
+          "implementation": ["interpreted destroyEach over nontoken creatures"],
+          "engineTestIds": [
+            "hour-of-reckoning-pinned-oracle-supported",
+            "hour-of-reckoning-destroys-nontoken"
+          ],
+          "viewerScenarioIds": ["hour-of-reckoning-viewer-convoke"]
         }
       ],
       "gameplayAiScenarioIds": []

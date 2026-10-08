@@ -245,7 +245,6 @@ const REASONS: Record<string, string> = {
   'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
   'Champion of Lambholt':
     "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
-  'Hour of Reckoning': 'Convoke is stored as a ruleStatic but never offered as a payment.',
   'Iron Apprentice':
     "The dies intervening-if checks the battlefield, so it never sees this creature's counters.",
   'Reality Shift':
@@ -311,6 +310,7 @@ describe('Marchesa catalog audit containment', () => {
     'Anrakyr the Traveller',
     'Toxic Deluge',
     'Conclave Tribunal',
+    'Hour of Reckoning',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

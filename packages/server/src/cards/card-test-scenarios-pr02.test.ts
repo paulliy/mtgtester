@@ -705,3 +705,13 @@ describe('Conclave Tribunal Card Test Lab scenario', () => {
     replays('conclave-tribunal-viewer-convoke', steps);
   });
 });
+
+describe('Hour of Reckoning Card Test Lab scenario', () => {
+  it('hour-of-reckoning-viewer-convoke — three Plains and four convoked creatures pay; every nontoken creature dies', () => {
+    const steps: Step[] = [{ action: 'Cast Hour of Reckoning' }];
+    const { state, onBattlefield } = run('hour-of-reckoning-viewer-convoke', steps);
+    expect(state.battlefield.filter((perm) => perm.typeLine.includes('Creature'))).toEqual([]);
+    expect(onBattlefield('Plains').every((land) => land.tapped)).toBe(true);
+    replays('hour-of-reckoning-viewer-convoke', steps);
+  });
+});

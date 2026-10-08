@@ -3491,3 +3491,22 @@ test('Conclave Tribunal: convoke with three creatures', async ({ page }) => {
     await expect(permanent(page, name).locator('.tap-badge')).toHaveText('TAP');
   }
 });
+
+test('Hour of Reckoning: three Plains and four convoked creatures', async ({ page }) => {
+  await runScenario(page, 'Hour of Reckoning: three Plains and four convoked creatures');
+  const hour = handCard(page, 'Hour of Reckoning');
+  await expect(hour).toHaveClass(/actionable/);
+  await hour.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  for (const name of [
+    'Lab Ox',
+    'Lab Generic Bear',
+    'Lab Zombie',
+    'Lab Giant',
+    'Lab Anrakyr Golem',
+  ]) {
+    await expect(permanent(page, name)).toHaveCount(0);
+  }
+});

@@ -706,10 +706,6 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       },
     },
   );
-  // Catalog audit token-triumph-batch-8: convoke is a dead ruleStatic.
-  unsupportedCard(
-    '3bc13640-03f8-4b19-b0a4-7e7cb5271c0c',
-    'Hour of Reckoning',
-    'Convoke is stored as a ruleStatic but never offered as a payment.',
-  );
+  // Hour of Reckoning: restored in coverage PR02. Convoke is a real payment now, so no override
+  // remains.
 }

@@ -44,6 +44,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Frontier Siege',
       'Ghost Ark',
       'Harvest Season',
+      'Hour of Reckoning',
       'Hunting Wilds',
       'Idol of Oblivion',
       'Illuminor Szeras',

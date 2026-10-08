@@ -29,7 +29,6 @@ export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = [
   'Scavenging Ooze',
   'Curse of Bounty',
   'Harvest Season',
-  'Hour of Reckoning',
   "Karametra's Favor",
   'Rishkar, Peema Renegade',
   'Sylvan Reclamation',

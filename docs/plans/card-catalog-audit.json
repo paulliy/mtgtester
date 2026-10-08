@@ -5621,7 +5621,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "uniqueOracleIds": 28,
+      "uniqueOracleIds": 27,
       "reviewedOracleIds": 31,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5837,6 +5837,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: convoke is now a real payment (each untapped creature you control taps to pay {1} or one mana of its color while casting, never counted as mana spent), and the interpreter reads the exile-until-this-leaves enters trigger (exileUntilSourceLeaves); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c",
+      "name": "Hour of Reckoning",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: convoke is a real payment (see Conclave Tribunal), and the interpreter now reads 'destroy all nontoken creatures' (the tribal destroy-all rule no longer claims 'nontoken' as a creature type); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }
